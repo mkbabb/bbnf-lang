@@ -6,7 +6,6 @@
 pub mod debug;
 pub mod hints;
 pub mod import;
-pub mod pretty;
 pub mod recover;
 pub mod token;
 pub mod ws;

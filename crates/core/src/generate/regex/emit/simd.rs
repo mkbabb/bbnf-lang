@@ -261,18 +261,6 @@ pub fn emit_negated_scan(targets: &[u8], quantifier: ScanQuantifier) -> Option<T
     Some(body)
 }
 
-/// Plus-quantifier wrapper for backwards call-site compatibility.
-/// Routes through `emit_structural_bitmap_kernel` unconditionally.
-pub fn emit_negated_scan_plus(targets: &[u8]) -> Option<TokenStream> {
-    emit_negated_scan(targets, ScanQuantifier::Plus)
-}
-
-/// Star-quantifier wrapper for backwards call-site compatibility.
-/// Routes through `emit_structural_bitmap_kernel` unconditionally.
-pub fn emit_negated_scan_star(targets: &[u8]) -> Option<TokenStream> {
-    emit_negated_scan(targets, ScanQuantifier::Star)
-}
-
 /// Emit a ws-interleaved negated-class scan (Star quantifier).
 ///
 /// When the grammar has `@ws` with block-comment-aware whitespace,

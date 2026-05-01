@@ -65,27 +65,9 @@ pub fn emit_regex_unsupported(pattern: &str) -> TokenStream {
 ///
 /// The fused number path is keyed on the JSON-style integer alternation
 /// (`reject_leading_zero`) plus an exponent — i.e. patterns whose
-/// canonical shape is the JSON `Number` production.
-///
-/// Prefer passing an `EmitOpts` with `ir` set so the classification is
-/// resolved from the cache. This shim exists for call sites where the
-/// caller only has the pattern string; it pays a full HIR parse.
-pub fn is_fused_number_regex(pattern: &str) -> bool {
-    use parse_that::regex::classify::classify_regex;
-    matches!(
-        classify_regex(pattern),
-        RegexClass::Numeric {
-            allows_sign: true,
-            allows_fraction: true,
-            allows_exponent: true,
-            reject_leading_zero: true,
-            ..
-        }
-    )
-}
-
-/// Cached variant of [`is_fused_number_regex`] — resolves via
-/// `ir.regex_info[sid].classification` when the pattern is interned.
+/// canonical shape is the JSON `Number` production. Resolution goes
+/// through `ir.regex_info[sid].classification` when the pattern is
+/// interned; callers without IR access do not exist.
 pub fn is_fused_number_regex_cached(ir: &bbnf_ir::GrammarIR, pattern: &str) -> bool {
     let opts = EmitOpts::new(&CostModel::DEFAULT).with_ir(ir);
     matches!(
@@ -181,10 +163,11 @@ fn emit_regex_fast_path(pattern: &str, opts: &EmitOpts) -> Option<TokenStream> {
         // Tranche AU.2.7 v2 — single structural-bitmap kernel path.
         // Subsumes memchr1/2/3 (1–3 needles) and nibble-LUT (4–8
         // needles) in one emitter; no hybrid, no fallback.
-        let result = match quantifier {
-            NegCharClassQuantifier::Plus => simd::emit_negated_scan_plus(&excluded),
-            NegCharClassQuantifier::Star => simd::emit_negated_scan_star(&excluded),
+        let scan_quantifier = match quantifier {
+            NegCharClassQuantifier::Plus => simd::ScanQuantifier::Plus,
+            NegCharClassQuantifier::Star => simd::ScanQuantifier::Star,
         };
+        let result = simd::emit_negated_scan(&excluded, scan_quantifier);
         if result.is_some() {
             return result;
         }
@@ -324,9 +307,10 @@ fn try_emit_simd_positive_class(pattern: &str, opts: &EmitOpts) -> Option<TokenS
         return None;
     }
 
-    if is_plus {
-        simd::emit_negated_scan_plus(&excluded)
+    let scan_quantifier = if is_plus {
+        simd::ScanQuantifier::Plus
     } else {
-        simd::emit_negated_scan_star(&excluded)
-    }
+        simd::ScanQuantifier::Star
+    };
+    simd::emit_negated_scan(&excluded, scan_quantifier)
 }

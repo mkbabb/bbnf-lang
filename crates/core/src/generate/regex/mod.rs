@@ -24,5 +24,5 @@ pub mod phf;
 pub use cost_model::{CostModel, EmitOpts, LengthHint};
 pub use emit::{
     RegexStrategy, emit_regex, emit_regex_direct_call, emit_regex_unsupported,
-    is_fused_number_regex, is_fused_number_regex_cached, solve_regex_strategy,
+    is_fused_number_regex_cached, solve_regex_strategy,
 };

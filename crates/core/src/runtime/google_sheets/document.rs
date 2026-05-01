@@ -337,6 +337,43 @@ fn write_compound<'p>(doc: &SheetsDocument<'p>, id: SheetsCompoundId, out: &mut 
                 write_value(doc, child, kind, out);
             }
         }
+        // Operator-tag rules — the Flat / Keyword shape lands the
+        // typed `Tag(b)` discriminant directly. The compound carries
+        // a single Tag child whose lexeme depends on the rule's role
+        // alphabet (`compare_op` indexes into the comparison
+        // alphabet, `add_op` into +/-, etc.). Render by routing the
+        // child through `write_value` with the rule's own kind so
+        // `tag_lexeme(kind, n)` picks the right alphabet.
+        SheetsCompoundKind::CompareOp
+        | SheetsCompoundKind::AddOp
+        | SheetsCompoundKind::MulOp
+        | SheetsCompoundKind::UnaryPrefix => {
+            for child in entry.children {
+                write_value(doc, child, kind, out);
+            }
+        }
+        // `error_literal` compound carries the typed `Tag(b)` /
+        // `Error(b)` discriminant. Render via `error_lexeme(n)` which
+        // maps the byte to the canonical `#N/A` / `#NAME?` lexeme.
+        SheetsCompoundKind::ErrorLiteral => {
+            for child in entry.children {
+                match *child {
+                    SheetsValue::Tag(n) | SheetsValue::Error(n) => {
+                        out.push_str(error_lexeme(n));
+                    }
+                    _ => write_value(doc, child, kind, out),
+                }
+            }
+        }
+        // `sheet_prefix` compound — the Tag projection alone carries
+        // the discriminator; the borrowed span comes through the
+        // `SheetPrefix { tag, text }` leaf directly when the
+        // specialised builder entry fires.
+        SheetsCompoundKind::SheetPrefix => {
+            for child in entry.children {
+                write_value(doc, child, kind, out);
+            }
+        }
         // Transparent / wrap / forwarder shapes.
         SheetsCompoundKind::Formula
         | SheetsCompoundKind::Expression
@@ -403,8 +440,25 @@ fn error_lexeme(n: u8) -> &'static str {
 /// Resolve a `Tag(n)` discriminator to its operator lexeme. The
 /// enclosing compound's [`SheetsCompoundKind`] disambiguates which
 /// operator alphabet the tag indexes into.
+///
+/// The operator-tower compounds (`AddExpr`, `MulExpr`, `ExpExpr`,
+/// `ConcatExpr`, `ComparisonExpr`) consume Pratt's
+/// `PRECEDENCE_ENTRIES_<rule>` discriminator alphabet — Pratt assigns
+/// its own discriminator order (longest-prefix-first by op width)
+/// rather than the grammar's declaration order. The
+/// `ComparisonExpr` table is `<> = 0`, `<= = 1`, `>= = 2`, `< = 3`,
+/// `> = 4`, `= = 5` (per `PRECEDENCE_ENTRIES_comparison_expr`).
+///
+/// The own-rule keyword compounds (`AddOp`, `MulOp`, `CompareOp`,
+/// `UnaryPrefix`) deposit `Tag(b)` directly via the keyword shape's
+/// per-branch payload extraction; the grammar's declaration order
+/// is the discriminator alphabet for these. The grammar declares:
+/// - `compare_op = "<>" -> 0u8 | "<=" -> 1u8 | ">=" -> 2u8 | "=" -> 3u8 | "<" -> 4u8 | ">" -> 5u8`
+/// - `add_op` / `unary_prefix = "+" -> 0u8 | "-" -> 1u8`
+/// - `mul_op = "*" -> 0u8 | "/" -> 1u8`
 fn tag_lexeme(parent: SheetsCompoundKind, n: u8) -> &'static str {
     match (parent, n) {
+        // Pratt-tower discriminants (PRECEDENCE_ENTRIES_<rule> order).
         (SheetsCompoundKind::AddExpr, 0) | (SheetsCompoundKind::UnaryExpr, 0) => "+",
         (SheetsCompoundKind::AddExpr, 1) | (SheetsCompoundKind::UnaryExpr, 1) => "-",
         (SheetsCompoundKind::MulExpr, 0) => "*",
@@ -417,6 +471,17 @@ fn tag_lexeme(parent: SheetsCompoundKind, n: u8) -> &'static str {
         (SheetsCompoundKind::ComparisonExpr, 3) => "<",
         (SheetsCompoundKind::ComparisonExpr, 4) => ">",
         (SheetsCompoundKind::ComparisonExpr, 5) => "=",
+        // Own-rule keyword discriminants (grammar declaration order).
+        (SheetsCompoundKind::AddOp, 0) | (SheetsCompoundKind::UnaryPrefix, 0) => "+",
+        (SheetsCompoundKind::AddOp, 1) | (SheetsCompoundKind::UnaryPrefix, 1) => "-",
+        (SheetsCompoundKind::MulOp, 0) => "*",
+        (SheetsCompoundKind::MulOp, 1) => "/",
+        (SheetsCompoundKind::CompareOp, 0) => "<>",
+        (SheetsCompoundKind::CompareOp, 1) => "<=",
+        (SheetsCompoundKind::CompareOp, 2) => ">=",
+        (SheetsCompoundKind::CompareOp, 3) => "=",
+        (SheetsCompoundKind::CompareOp, 4) => "<",
+        (SheetsCompoundKind::CompareOp, 5) => ">",
         // Fallback — unknown tag/parent pairing emits empty so the
         // serializer remains deterministic; consumers asserting the
         // round-trip notice the lossy emission via the fixed-point

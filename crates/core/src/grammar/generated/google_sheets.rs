@@ -2674,6 +2674,7 @@ mod __googlesheetsparser_emit_impl {
                                 });
                             }
                             *p = end;
+                            builder.push_branch_tag(0u32);
                             Ok(())
                         })();
                         match __alt_result {
@@ -2720,6 +2721,7 @@ mod __googlesheetsparser_emit_impl {
                                             });
                                         }
                                         *p = end;
+                                        builder.push_branch_tag(4u32);
                                         Ok(())
                                     })();
                                     match __alt_result {
@@ -2749,6 +2751,7 @@ mod __googlesheetsparser_emit_impl {
                                             });
                                         }
                                         *p = end;
+                                        builder.push_branch_tag(6u32);
                                         Ok(())
                                     })();
                                     match __alt_result {
@@ -2779,6 +2782,7 @@ mod __googlesheetsparser_emit_impl {
                                             });
                                         }
                                         *p = end;
+                                        builder.push_branch_tag(5u32);
                                         Ok(())
                                     })();
                                     match __alt_result {
@@ -2826,6 +2830,7 @@ mod __googlesheetsparser_emit_impl {
                                 });
                             }
                             *p = end;
+                            builder.push_branch_tag(1u32);
                             Ok(())
                         })();
                         match __alt_result {
@@ -2856,6 +2861,7 @@ mod __googlesheetsparser_emit_impl {
                                 });
                             }
                             *p = end;
+                            builder.push_branch_tag(3u32);
                             Ok(())
                         })();
                         match __alt_result {
@@ -2886,6 +2892,7 @@ mod __googlesheetsparser_emit_impl {
                                 });
                             }
                             *p = end;
+                            builder.push_branch_tag(7u32);
                             Ok(())
                         })();
                         match __alt_result {
@@ -2916,6 +2923,7 @@ mod __googlesheetsparser_emit_impl {
                                 });
                             }
                             *p = end;
+                            builder.push_branch_tag(8u32);
                             Ok(())
                         })();
                         match __alt_result {
@@ -2946,6 +2954,7 @@ mod __googlesheetsparser_emit_impl {
                                 });
                             }
                             *p = end;
+                            builder.push_branch_tag(2u32);
                             Ok(())
                         })();
                         match __alt_result {
@@ -3263,7 +3272,7 @@ mod __googlesheetsparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(4u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -3275,7 +3284,7 @@ mod __googlesheetsparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(3u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -3287,14 +3296,14 @@ mod __googlesheetsparser_emit_impl {
                     let at = *p;
                     let end = at + 2usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(2u32);
                     return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [62u8] {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(5u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -3334,7 +3343,7 @@ mod __googlesheetsparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -3346,7 +3355,7 @@ mod __googlesheetsparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(1u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -3386,7 +3395,7 @@ mod __googlesheetsparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -3398,7 +3407,7 @@ mod __googlesheetsparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(1u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -3438,7 +3447,7 @@ mod __googlesheetsparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -3450,7 +3459,7 @@ mod __googlesheetsparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(1u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {

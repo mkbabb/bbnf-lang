@@ -43,8 +43,25 @@ fn rule_type_desc(rule: &IrRule, ir: &GrammarIR) -> Option<TypeDesc> {
 }
 
 /// Per-branch StructDirect emission: pick `push_leaf_with_bool` /
-/// `push_leaf_with_unit` based on the rule's projected `TypeDesc` plus
-/// the branch payload.
+/// `push_branch_tag` / `push_leaf_with_unit` based on the rule's
+/// projected `TypeDesc` plus the branch payload.
+///
+/// `TypeDesc::U8` Alt-of-literals (Sheets `add_op`, `mul_op`,
+/// `unary_prefix`, `compare_op`; CSS `dirKeyword`-style discriminators)
+/// route through `push_branch_tag(payload as u32)` so the parsed
+/// branch's typed discriminator reaches the `StructBuilder`'s
+/// per-grammar tag surface (`SheetsValue::Tag` / equivalent). The
+/// `null = "null" -> 0u8` JSON pattern, by contrast, has no usable
+/// discriminator (the rule is single-literal, payload value is
+/// `0u8`, and JSON's `JsonStructBuilder::push_branch_tag` is a no-op
+/// audit hook); JSON's `null` rule continues to land via
+/// `push_leaf_with_unit()` because there is no other branch to
+/// distinguish.
+///
+/// The discriminator between "tag emission" and "unit emission" for
+/// `TypeDesc::U8` is whether the rule has an `branch_payload` (a
+/// per-branch typed value): an Alt-of-literals carries one;
+/// JSON's single-literal `null` does not.
 fn struct_direct_leaf_emit_for(
     rule_ty: Option<&TypeDesc>,
     branch_bool_payload: Option<bool>,
@@ -56,6 +73,18 @@ fn struct_direct_leaf_emit_for(
         };
     }
 
+    // Per-branch typed payload wins over rule-level `TypeDesc`. The
+    // `branch_payload` carries the typed value the grammar's `->`
+    // declaration produced for THIS branch — when present, it is the
+    // finer-grained truth; the rule-level `rule_ty` is the coarse
+    // unification of all branches and may be `None` / `Tuple` /
+    // unsolved when the type-inference pass under-typed the rule.
+    //
+    // `IntLit` payloads route through `push_branch_tag(value)` so
+    // grammar-specific `StructBuilder` implementations (Sheets's
+    // `Tag(b)` / `Error(b)` deposits, JSON's no-op audit hook) observe
+    // the declared discriminator. Bool-rule rule_ty + Bool payloads
+    // continue to route through `push_leaf_with_bool`.
     match (rule_ty, branch_payload) {
         // `bool` rule branches carry `Some(0u32)` / `Some(1u32)` per
         // `payload_from_fn`; convert to the matching `bool` literal.
@@ -68,24 +97,19 @@ fn struct_direct_leaf_emit_for(
         (Some(TypeDesc::Bool), None) => quote! {
             builder.push_leaf_with_bool(true);
         },
-        // `null = "null" -> 0u8` and other `TypeDesc::U8` keywords
-        // whose value is zero project to the unit (null) marker per
-        // `JsonStructBuilder::push_leaf_with_unit` (see runtime docs).
-        // Sheets / CSS U8 keywords with non-zero discriminators are
-        // not yet admitted under W2; W3 lights them up with the
-        // matching `push_leaf_with_u64` shape.
-        (Some(TypeDesc::U8), _) => quote! {
-            builder.push_leaf_with_unit();
+        // Per-branch IntLit / typed payload — route through
+        // `push_branch_tag(payload)` regardless of rule-level type.
+        // Sheets `add_op`, `mul_op`, `compare_op`, `unary_prefix`,
+        // `error_literal`, `sheet_prefix` all land here when their
+        // branches declare `-> Nu8`. JSON's `null = "null" -> 0u8`
+        // also lands here (single-literal: per-branch payload is
+        // `0u32`); JSON's `JsonStructBuilder::push_branch_tag` is a
+        // no-op audit hook so the call is signature-compatible.
+        (_, Some(payload)) => quote! {
+            builder.push_branch_tag(#payload);
         },
-        // Untyped keyword (no `->` annotation) — push unit; the
-        // record carries no payload.
-        (None, _) => quote! {
-            builder.push_leaf_with_unit();
-        },
-        // Other typed keywords (defensive — JSON has only U8 / Bool;
-        // future grammars admitted by `for_grammar` will widen this
-        // arm with the matching `push_leaf_with_*` call).
-        (Some(_), _) => quote! {
+        // No payload — fall back to the unit-marker convention.
+        (_, None) => quote! {
             builder.push_leaf_with_unit();
         },
     }

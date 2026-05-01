@@ -94,6 +94,34 @@ pub enum SheetsCompoundKind {
     RangeEnd,
     /// `cell_or_range = range_ref | cell` — Wrap forwarder.
     CellOrRange,
+    /// `error_literal = "#N/A" -> 0u8 | … | "#SPILL!" -> 8u8` — the
+    /// Flat-shape compound carries the per-branch typed `Tag(b)` /
+    /// `Error(b)` discriminant. Serializer routes the parent kind to
+    /// `error_lexeme(n)` so the compact form re-emits the canonical
+    /// `#NAME?` lexeme rather than the operator-tag fallback.
+    ErrorLiteral,
+    /// `sheet_prefix = /'…'!/ -> 0u8 | /[A-Za-z…]!/ -> 1u8` — the
+    /// borrowed span lands as `SheetPrefix { tag, text }` directly so
+    /// no compound kind is needed for serialization, but the
+    /// structural-kind tag distinguishes `Tag(0)` inside `SheetPrefix`
+    /// from operator usage.
+    SheetPrefix,
+    /// `compare_op = "<>" -> 0u8 | … (6 branches)` — Keyword-shape
+    /// rule whose typed `Tag(b)` discriminator routes through
+    /// `tag_lexeme(ComparisonExpr, b)` when nested inside a
+    /// comparison expression. The own-rule kind exists so the kind
+    /// discriminator survives Wrap-collapse for direct `compare_op`
+    /// emissions.
+    CompareOp,
+    /// `add_op = "+" -> 0u8 | "-" -> 1u8` — Keyword-shape `+`/`-`
+    /// discriminator. Emits via `tag_lexeme(AddExpr, b)`.
+    AddOp,
+    /// `mul_op = "*" -> 0u8 | "/" -> 1u8` — Keyword-shape `*`/`/`
+    /// discriminator. Emits via `tag_lexeme(MulExpr, b)`.
+    MulOp,
+    /// `unary_prefix = "+" -> 0u8 | "-" -> 1u8` — Keyword-shape
+    /// unary-prefix discriminator.
+    UnaryPrefix,
     /// Any other transparent / wrap-shape rule that admits a single
     /// child forwarded through `OpenFrame::Wrap`.
     Wrap,
@@ -145,6 +173,12 @@ impl SheetsCompoundKind {
             "range_ref" => Self::RangeRef,
             "range_end" => Self::RangeEnd,
             "cell_or_range" => Self::CellOrRange,
+            "error_literal" => Self::ErrorLiteral,
+            "sheet_prefix" => Self::SheetPrefix,
+            "compare_op" => Self::CompareOp,
+            "add_op" => Self::AddOp,
+            "mul_op" => Self::MulOp,
+            "unary_prefix" => Self::UnaryPrefix,
             // Transparent / wrap-shape rules and the structural
             // fallback. The single-child forwarding behaviour matches
             // JSON's `OpenFrame::Wrap` discipline.

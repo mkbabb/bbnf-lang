@@ -101,6 +101,44 @@ fn quote_layout_kind(kind: LayoutKind) -> TokenStream {
     }
 }
 
+/// Resolve a `Map { fn_id }` annotation to the matching
+/// `StructBuilder` push call.
+///
+/// Sheets / CSS `-> Nu8` declarations lower to `MapExpr::IntLit(n)`;
+/// the per-branch discriminator routes through `push_branch_tag(n)`
+/// so the grammar's tag surface (`SheetsValue::Tag(b)` /
+/// `SheetsValue::Error(b)` via per-rule specialised builder entries,
+/// or the no-op JSON audit hook) observes the declared variant
+/// index. `MapExpr::BoolLit(b)` routes through
+/// `push_leaf_with_bool(b)`.
+///
+/// Returns `quote! {}` for any other `MapExpr` (StringLit / Span /
+/// Aggregate / F64 / U32 / U64 / etc.); the corresponding payload
+/// surfaces are owned by the per-rule shape emitter (HRegex / String
+/// / Number) — the Flat path's Map descent is purely structural
+/// when the inner is itself a typed sub-rule call.
+fn map_payload_push(fn_id: u32, ir: &GrammarIR) -> TokenStream {
+    use bbnf_ir::{FnDescriptor, MapExpr};
+    let Some(FnDescriptor::Expr { expr, .. }) = ir.fns.get(fn_id as usize) else {
+        return quote! {};
+    };
+    match expr {
+        MapExpr::IntLit(n) => {
+            let v = *n as u32;
+            quote! {
+                builder.push_branch_tag(#v);
+            }
+        }
+        MapExpr::BoolLit(b) => {
+            let v = *b;
+            quote! {
+                builder.push_leaf_with_bool(#v);
+            }
+        }
+        _ => quote! {},
+    }
+}
+
 /// Construct a runtime `bbnf_ir::StructLayout` literal carrying the
 /// rule's registered metadata. The `fields` / `rule_type` slots are
 /// defaulted because `JsonStructBuilder::begin_compound`'s dispatch
@@ -390,13 +428,41 @@ fn emit_position_core_struct_direct(
             }
             quote! { #(#out)* }
         }
-        IrNode::Map { inner, .. } => emit_position_core_struct_direct(
-            inner,
-            support_mod,
-            dispatcher_ident,
-            grammar_suffix,
-            ir,
-        ),
+        // `Map { inner, fn_id }` carries the typed `-> Nu8` / `-> bool`
+        // / `-> input : Span` annotation that converts the inner
+        // structural match into a typed leaf push. The inner runs
+        // first (byte match advances `*p`); on success we emit the
+        // matching `StructBuilder` push for the typed payload value.
+        //
+        // For `IntLit` payloads (Sheets `error_literal -> Nu8`,
+        // `add_op -> Nu8`, etc. when the rule's body is Flat /
+        // factored Alt) the discriminator routes through
+        // `push_branch_tag(value)` so the grammar's tag surface
+        // (`SheetsValue::Tag(b)` / `SheetsValue::Error(b)` via the
+        // builder's per-rule specialised entry point) observes the
+        // declared variant index. JSON's `JsonStructBuilder::
+        // push_branch_tag` is a no-op audit hook; the call is
+        // signature-compatible across grammars.
+        //
+        // `BoolLit` payloads route through `push_leaf_with_bool`
+        // (the canonical bool projection). Other payload shapes
+        // (StringLit / Aggregate / F64) fall through to the inner
+        // walk; their typed surfaces are owned by the per-shape
+        // emitter for the rule type (HRegex, String, Number).
+        IrNode::Map { inner, fn_id } => {
+            let inner_emit = emit_position_core_struct_direct(
+                inner,
+                support_mod,
+                dispatcher_ident,
+                grammar_suffix,
+                ir,
+            );
+            let payload_push = map_payload_push(*fn_id, ir);
+            quote! {
+                #inner_emit
+                #payload_push
+            }
+        }
         IrNode::Epsilon => quote! {},
         // AZ-II.cutover.F — inline Alt position. Emit byte-dispatch
         // over the branches' first-byte sets without pushing a

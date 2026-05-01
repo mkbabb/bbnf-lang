@@ -8,8 +8,23 @@ on:
 
 jobs:
   rust:
-    name: Rust — preflight + workspace close
+    name: Rust — preflight + workspace close (shard ${{ matrix.partition }}/${{ matrix.total }})
     runs-on: ubuntu-latest
+    # ── Nextest partitioning (AZ-III.W0p.5) ────────────────────────────
+    # The workspace test step runs as a 3-shard matrix via
+    # `cargo nextest --partition count:N/M`; nextest deterministically
+    # bins each test binary into one of the three shards by hashing,
+    # so each runner exercises ~1/3 of the workspace test surface in
+    # parallel. Preflight and parity steps gate to partition 1 only
+    # (`if: matrix.partition == 1`) — they are single-instance gates
+    # that derive no benefit from sharding (preflight is fast; parity
+    # suites are focused single-binary invocations). Junit artifacts
+    # upload per-shard so all three shards' results are preserved.
+    strategy:
+      fail-fast: false
+      matrix:
+        partition: [1, 2, 3]
+        total: [3]
     steps:
       - uses: actions/checkout@v4
       # Pinned toolchain lives in rust-toolchain.toml (B1.W0.a).
@@ -26,6 +41,7 @@ jobs:
         with:
           tool: nextest
       - name: install cargo-expand
+        if: matrix.partition == 1
         run: cargo install cargo-expand --locked
 
       # ── Preflight (routine surface) ────────────────────────────────
@@ -34,34 +50,43 @@ jobs:
       # a tempdir + diffs against checked-in; non-zero exit blocks PR),
       # clippy, and compile-gate via the iter-check alias (excludes the
       # heavy link-time crates per B1.md invariant 10). Short timeout —
-      # this block is the iteration loop, not the close gate.
+      # this block is the iteration loop, not the close gate. Pinned to
+      # partition 1 so the preflight gate runs once per workflow.
       - name: preflight — regen check (xtask)
+        if: matrix.partition == 1
         timeout-minutes: 5
         run: cargo xtask regen --check
       - name: preflight — clippy (ax-iter)
+        if: matrix.partition == 1
         timeout-minutes: 10
         run: cargo iter-clippy
       - name: preflight — iter-check (ax-iter compile-gate)
+        if: matrix.partition == 1
         timeout-minutes: 5
         run: cargo iter-check
 
       # ── Heavy (wave-close gates) ───────────────────────────────────
       # Full-workspace correctness via nextest under the ci profile
-      # (retries=1, fail-fast=false, junit output). Parity suites run
-      # under the release profile. These are the close gates; they
-      # pay the full release cost and are explicitly separated from
-      # the preflight block above.
-      - name: heavy — workspace tests (nextest, ci profile)
-        run: cargo nextest run --workspace --profile ci
+      # (retries=1, fail-fast=false, junit output). Sharded into 3
+      # partitions (count:N/3) for parallel CI wall-time reclaim.
+      # Parity suites run under the release profile; they are pinned
+      # to partition 1 because they are focused single-test invocations
+      # that don't benefit from partitioning. These are the close
+      # gates; they pay the full release cost and are explicitly
+      # separated from the preflight block above.
+      - name: heavy — workspace tests (nextest, ci profile, shard ${{ matrix.partition }}/${{ matrix.total }})
+        run: cargo nextest run --workspace --profile ci --partition count:${{ matrix.partition }}/${{ matrix.total }}
       - name: heavy — sonic-rs JSON parity
+        if: matrix.partition == 1
         run: cargo nextest run -p bbnf --test sonic_rs_parity --profile ci --cargo-profile release
       - name: heavy — lightningcss CSS parity
+        if: matrix.partition == 1
         run: cargo nextest run -p bbnf --test lightningcss_parity --profile ci --cargo-profile release
       - name: upload nextest junit artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: nextest-junit
+          name: nextest-junit-${{ matrix.partition }}
           path: target/nextest/ci/junit.xml
           if-no-files-found: warn
 

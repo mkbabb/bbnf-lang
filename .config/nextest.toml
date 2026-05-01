@@ -20,6 +20,16 @@
 #     backtracking automatically, preventing workspace-test hangs.
 #   - leak-timeout: detects detached threads / background workers.
 #   - retries = 1: masks flakes without hiding real regressions.
+#
+# CI partitions (AZ-III.W0p.5): the workspace test step is sharded across
+# 3 runners via `cargo nextest --partition count:N/3` driven by a matrix
+# strategy in `.github/workflows/ci.yml`. Sharding is workflow-driven (no
+# per-profile override required) because nextest's `--partition` flag is
+# the canonical upstream surface and applies on top of the `ci` profile.
+# Each shard emits a junit.xml under `target/nextest/ci/` (per-shard via
+# `nextest-junit-${{ matrix.partition }}` artifacts), and the `ci`
+# profile's `fail-fast = false` ensures all three shards drive to
+# completion independently.
 # ─────────────────────────────────────────────────────────────────────────────
 
 # Store path: nextest keeps per-invocation artefacts here (junit, timings,
@@ -64,6 +74,9 @@ success-output = "never"
 test-threads = 4
 
 # ── ci: GitHub Actions runs ──────────────────────────────────────────────────
+# Sharded into 3 partitions via `cargo nextest --partition count:N/3` from
+# the workflow matrix in `.github/workflows/ci.yml` (AZ-III.W0p.5). The
+# profile itself is shard-agnostic; partitioning is applied at invocation.
 [profile.ci]
 slow-timeout   = { period = "60s", terminate-after = 2 }
 leak-timeout   = "200ms"

@@ -11,11 +11,13 @@
 //! in the workspace `Cargo.toml`; this module reads it via
 //! `cargo_metadata`.
 //!
-//! Mirrors `crates/derive/src/lib.rs` lines 281-361 — the proc-macro
-//! entry that calls `bbnf::pipeline::compile_paths_request` +
-//! `bbnf::generate::generate_all`, formats via
-//! `prettyplease::unparse(&syn::parse2(stream)?)`, and writes the
-//! result to disk.
+//! Mirrors the retired proc-macro entry preserved at commit
+//! `6142387f feat(b2): retire crates/derive proc-macro crate; purge
+//! bbnf_derive deps (B2.W2)`. That commit deleted `crates/derive/src/
+//! lib.rs`; the entry's mechanism — `bbnf::pipeline::compile_paths_
+//! request` + `bbnf::generate::generate_all`, formatted through
+//! `prettyplease::unparse(&syn::parse2(stream)?)` and written to
+//! disk — survives here verbatim as the canonical execution surface.
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -110,8 +112,8 @@ impl GrammarEntry {
     }
 
     /// `ParserAttributes` reconstructed from the manifest's `features`
-    /// list. Mirrors the proc-macro's `#[parser(...)]` attribute
-    /// parsing (`crates/derive/src/lib.rs:226-278`).
+    /// list. Mirrors the retired proc-macro's `#[parser(...)]` attribute
+    /// parsing preserved at commit `6142387f`.
     ///
     /// Populates both `paths` (absolute, for the IR pipeline to read
     /// grammar source bytes at codegen time) and `grammar_rel_paths`
@@ -359,7 +361,7 @@ fn regen_grammar(workspace_root: &Path, entry: &GrammarEntry, target_path: &Path
     );
 
     // Run `generate_all` to produce the inner `TokenStream` — same
-    // call the proc-macro makes at `crates/derive/src/lib.rs:324`.
+    // call the retired proc-macro made (preserved at commit `6142387f`).
     let t1 = std::time::Instant::now();
     let inner: TokenStream = bbnf::generate::generate_all(&prepared, &parser_attrs, &marker_ident);
     eprintln!(
@@ -369,12 +371,11 @@ fn regen_grammar(workspace_root: &Path, entry: &GrammarEntry, target_path: &Path
     );
 
     // Wrap the inner stream in the per-grammar emit-impl module —
-    // mirrors the proc-macro's wrapping at
-    // `crates/derive/src/lib.rs:335-353`. The module name is
-    // `__<lowered_ident>_emit_impl`; the `pub use ...::*;` re-export
-    // lifts every emitted item to the parent path. The inner-attribute
-    // `#![allow(...)]` swallows the lint surface the IR codegen
-    // generates.
+    // mirrors the retired proc-macro's wrapping (preserved at commit
+    // `6142387f`). The module name is `__<lowered_ident>_emit_impl`;
+    // the `pub use ...::*;` re-export lifts every emitted item to the
+    // parent path. The inner-attribute `#![allow(...)]` swallows the
+    // lint surface the IR codegen generates.
     let mod_name = format_ident!("__{}_emit_impl", marker_ident.to_string().to_lowercase());
     let body: TokenStream = quote! {
         pub struct #marker_ident;

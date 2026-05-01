@@ -4,12 +4,26 @@
 [target.wasm32-unknown-unknown]
 rustflags = ["-C", "link-arg=-zstack-size=8388608", "-C", "target-feature=+simd128"]
 
-# Local development overrides
+# Local development overrides — sibling-repo path resolution.
+#
+# B2.W2 retired the in-tree `crates/derive` proc-macro crate; the matching
+# `bbnf_derive = { path = "../crates/derive" }` patch is excised here so
+# `cargo metadata --locked` resolves cleanly. The published `bbnf_derive
+# 0.2.x` artefact still exists on crates.io as a transitive of
+# `regex-bootstrap` from parse-that — AZ-IV.W0.2.c eradicates that edge by
+# converting parse-that's bootstrap crate into a thin re-export, after
+# which the published `bbnf_derive` lock entry drops on regen.
+#
+# `gorgeous` resolves through the published `gorgeous = "0.1"` dep listed
+# in `wasm/Cargo.toml`; the prior `path = "../../gorgeous"` patch pointed
+# at a non-existent sibling tree (gorgeous lives at
+# `../crates/gorgeous` in this workspace), and `wasm/` is workspace-
+# excluded so we keep the registry edge until a future sub-crate plan
+# routes wasm into the workspace proper.
 [patch.crates-io]
-gorgeous = { path = "../../gorgeous" }
 pprint = { path = "../../pprint/rust" }
 pprint_derive = { path = "../../pprint/rust/derive" }
 parse_that = { path = "../../parse-that/rust/parse_that" }
 bbnf-ir = { path = "../crates/ir" }
 bbnf = { path = "../crates/core" }
-bbnf_derive = { path = "../crates/derive" }
+gorgeous = { path = "../crates/gorgeous" }

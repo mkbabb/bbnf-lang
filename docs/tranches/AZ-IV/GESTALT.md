@@ -44,6 +44,8 @@ Any surface outside that route is either:
 - internal diagnostic/dev tooling with explicit docs and tests;
 - deleted or frozen as historical.
 
+The route is grammar-derived end-to-end. Production runtime never branches on a literal grammar parser-struct ident or a literal rule-name string outside `#[cfg(test)]`; discriminators come from `StructRegistry`, `TypeDesc`, `FactAuthority`, manifest metadata, or generated projection tables. Per-grammar runtime arena/builder duplication is the one-pass migration target inside W1 — `from_rule_name(&str) -> Kind` impls retire in favour of registry-projected `compound_kind` reads, and the substrate.rs JSON-builder fallback retires in favour of a hard panic at construction time.
+
 ## BA/BB Folding Rule
 
 BA path-query ambitions and BB rewrite/ruler ambitions are not abandoned. AZ-IV preserves the functional requirements while changing the mechanism where the old mechanism would create a second path.
@@ -66,7 +68,13 @@ AZ-IV deletes before adding:
 - no DTA walker fallback;
 - no second path-query crate;
 - no generated tape/view bridge;
-- no "consumer later" hooks.
+- no "consumer later" hooks;
+- no `from_rule_name(&str) -> Kind` arm-list per grammar (registry projects);
+- no `(layout.kind, rule_name)` builder dispatch (registry projects);
+- no `dfa_codegen` misnomer (it's the regex-scan adapter; rename or fold);
+- no `backend/rust/view/color` shim (CSS uses `runtime::css_l4::CssColor`);
+- no `recognize_*_legacy` patterns (rename or migrate Pratt then delete);
+- no `substrate_path` JSON-builder fallback (panic on invalid binding).
 
 If deletion is unsafe because a current consumer exists, the wave must name the consumer and refactor the surface to match its real role.
 
@@ -80,4 +88,6 @@ AZ-IV closes only when:
 4. existing optimization substrates produce emitted/runtime effects across their full denominator;
 5. legacy claims are deleted or renamed;
 6. benchmark rows beat post-AU/post-AZ floors and are measured, not watchdog-routed;
-7. BA/BB coverage is lossless: every requirement is landed, retired with evidence, or routed to a named successor because it cannot fit the AZ-IV thesis.
+7. BA/BB coverage is lossless: every requirement is landed, retired with evidence, or routed to a named successor because it cannot fit the AZ-IV thesis;
+8. every non-routable carry (per `AZ-IV.md` §Non-Routable Carries) closes inside AZ-IV with cited evidence — none route to a successor letter;
+9. dev-iteration baseline gate passes: cold and warm walls for `cargo iter-check`, `cargo iter-test-leaf`, `cargo bench-iter-json --no-run`, `cargo nextest run --workspace --cargo-profile ax-iter`, and `cargo xtask regen --check` are recorded in `W0-dev-baseline.txt` with no regression vs the AZ-III baseline.

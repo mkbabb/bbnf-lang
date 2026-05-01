@@ -16,6 +16,8 @@ The system already chose the right architecture: grammar-derived Rust struct gra
 6. **Direct struct projection must perform**: parse-only speed is not enough. StructDirect document/value/path projection rows must beat or match same-harness competitor rows where a competitor exists, especially sonic-rs JSON value/path access.
 7. **No legacy code**: stale DTA/walker/tape wording, dead functions, compat exports, no-op emitter hooks, and fallback-to-JSON surfaces are wave-owned deletion/refactor targets.
 8. **Evidence closes gates**: no gate closes on API existence, grep-only runtime claims, disabled tests, or "consumer later" scaffolding.
+9. **No grammar overfitting**: production runtime/builder/dispatch paths derive discriminants and selection from `StructRegistry`, `TypeDesc`, `FactAuthority`, manifest metadata, or generated projection tables. Literal grammar parser-struct idents (`JsonParser`, `BbnfParser`, etc.) appear only at registry-binding entry points; literal rule-name match arms appear nowhere outside `#[cfg(test)]`. A static AST scan enforces this.
+10. **No silent fallback**: no production code path swallows a malformed substrate path, missing rule, unrecognised parser ident, or unknown grammar by routing into a default builder, default discriminant, or per-rule allowlist. Failure is a `panic!` with a named binding string at construction time, not a runtime divergence.
 
 ## Carry Ledger
 
@@ -34,6 +36,30 @@ The system already chose the right architecture: grammar-derived Rust struct gra
 | Rewrite/ruler substrate unconsumed | second hardening | W2 - Optimization Substrate Activation | every non-empty loaded ruleset proves load, search/apply, extraction, writeback, generated diff, and oracle/bench evidence |
 | Full substrate denominator | third hardening | W2 - Optimization Substrate Activation, W3 - Measurement And Close | every mined fact, sidecar, rule, template, shape, scan, Pratt, view, regex, CSP, and egraph decision has generated/runtime evidence or is deleted |
 | Post-AU and sonic-rs performance floor | AU through AZ-III | W3 - Measurement And Close | fat-LTO `post-AZ-IV.json` beats post-AU/post-AZ floors row-by-row and same-harness JSON projection rows are parity-or-better against sonic-rs |
+
+## Non-Routable Carries
+
+The 13 items below have been deferred >= 3 tranches across B5, AZ-I, AZ-II, AZ-III, and AZ-IV-planned per `docs/tranches/AZ-IV/audit/HARDENING-2026-05-01-boole.md` §b.2. They are designated **non-routable in AZ-IV**: AZ-IV cannot close by routing them to a successor letter. They land inside AZ-IV with evidence, or AZ-IV does not close.
+
+| # | Item | Owner wave | Closure proof |
+|---|---|---|---|
+| 1 | Strict regen drift (7/9 grammars red) | W0 - Truth And Canonical Regen | `cargo xtask regen --check` green live for 9/9; archive `W0-regen.txt` |
+| 2 | Egraph `Map` wrapper preservation | W0 - Truth And Canonical Regen | extraction preserves typed `Map { fn_id }`; named test fails before / passes after |
+| 3 | Sheets parity gap | W1 - Runtime Surface And Semantic Parity | full Sheets parity GREEN from regenerated tempdir output; named regression to 115/133 reverted |
+| 4 | Tailwind regex_scan perf timeout | W2 - Optimization Substrate Activation | `profiles/tailwind-profile.json.gz` plus named hot regex/scan op + non-watchdog measured row |
+| 5 | TS backend executable parity | W1 - Runtime Surface And Semantic Parity | TS backend emits + typechecks + Node-executes representative grammars |
+| 6 | Watchdog rows under cross-profile | W3 - Measurement And Close | fat-LTO + bench-iter matrices have zero watchdog rows; named fix or thesis review per row |
+| 7 | JSON value/path vs sonic-rs perf | W3 - Measurement And Close | `bbnf_value_*` parity-or-better against `sonic_value_*` same-harness, fat-LTO |
+| 8 | CSS named_color runtime activation | W1 - Runtime Surface And Semantic Parity (binds W0 `Map`) | named_color payload parity vs lightningcss; W1 close blocked until W0 `Map` preservation closes |
+| 9 | PatternAnnotations migration | W2 - Optimization Substrate Activation | every consumer migrated or PatternAnnotations deleted |
+| 10 | Bootstrap/derive residue (sibling) | W0 - Truth And Canonical Regen | `cargo metadata --locked` at root + wasm/ + parse-that; `cargo deny` rule rejects `bbnf_derive` |
+| 11 | DTA/dfa naming and cleanup | W2 - Optimization Substrate Activation | every DTA reference enumerated with current consumer; non-consumed deleted, consumed renamed |
+| 12 | `backend/rust/view/color` hack | W1 - Runtime Surface And Semantic Parity | shim deleted; CSS continues through `runtime::css_l4::CssColor`; legacy decoder is test-support only |
+| 13 | Substrate denominator (CSP/regex/SIMD/Pratt/view) | W2 - Optimization Substrate Activation | exhaustive ledger machine-checkable; 100 % rows resolved (CONSUMED with cited call site, or DELETED with deletion proof) |
+| 14 | Rewrite/ruler production wiring | W2 - Optimization Substrate Activation | every non-empty ruleset proves load/apply/extract/writeback/generated diff/oracle/bench |
+| 15 | WASM/sibling derive residue | W0 - Truth And Canonical Regen | locks clean at root + wasm/ + parse-that; sibling sync gate live |
+
+A non-routable item that cannot land inside AZ-IV does not get a new successor letter; it triggers a triumvirate scope-reveal review of the AZ-IV thesis itself (per `docs/precepts/instructions/ORCHESTRATION.md` §Triumvirate and §Hardening Pass).
 
 ## Wave Table
 
@@ -68,6 +94,9 @@ The system already chose the right architecture: grammar-derived Rust struct gra
 7. Before every commit, use the local `commit-discipline` skill: inspect dirty/staged state, preserve unrelated staged work, stage only intended paths, review `git diff --cached`, and stop if the slice cannot be isolated.
 8. Broad, generated, deletion, benchmark, profiling, gate/status, and cross-repo commits require bodies naming why, what landed, evidence, and routed remainder. No AI/tool authorship.
 9. Profiling agents may share one prepared absolute target only after preparation; no two cargo invocations run concurrently against the same target dir.
+10. Every dispatch carries `HARD CAP: N min. At 0.9N commit, at N halt.` Defaults: research 20, plan 15, redress 30, audit 25 (per `docs/precepts/instructions/ORCHESTRATION.md` §Triumvirate and `LESSONS-LEARNED.md` 2026-04-30). Read-only audit/research agents do not commit at the cap; write-authorized agents commit at 0.9N only when the staged slice is clean and owned.
+11. Triumvirate auto-triggers (no user prompt required): JSONL transcript quiet >15 minutes, first-pass return with no commit and no evidence, three diagnostic-loop iterations without isolating root cause, or scope reveal that invalidates file bounds / hard gates / substrate-with-consumer wiring. The orchestrator records the trigger condition and dispatch time alongside the wave's progress log.
+12. Sub-agent prompts must remain self-contained and stay within ~700 words of instructions; if a prompt grows larger, the task is mis-scoped and decomposes into sequential mini-units before dispatch.
 
 ## Hard Gates
 
@@ -83,10 +112,18 @@ The system already chose the right architecture: grammar-derived Rust struct gra
 10. Legacy audit closes: `emit_dfa_inline_body`, DTA walker/tape wording, old color compatibility, fallback-to-JSON substrate path, discarded Rust per-rule compile work, derive/bootstrap residue, duplicated host shims, stale package locks, and sidecar authority are deleted, renamed, or justified by current consumers.
 11. Fat-LTO `post-AZ-IV.json` carries row-by-row post-AU floor, post-AZ same-profile deltas, AZ-III bench-iter deltas, status, and pass/fail. No row may be watchdog-routed.
 12. Same-harness JSON direct struct projection rows close parity-or-better against sonic-rs (`bbnf_value_* <= sonic_value_*` on time, or equivalent throughput ratio). Parse-only rows cannot satisfy projection performance.
+13. **Grammar-overfit static scan green**: `crates/core/tests/no_grammar_name_branch.rs` (a CI-enforced AST scan over `crates/core/src/runtime/**` and `crates/core/src/backend/rust/emitter/shapes/**`, excluding `generated/` and `#[cfg(test)]`) fails closed if any `match <expr> { "<literal-rule-name>" => ... }` arm or `match (<expr>, "<literal-rule-name>") => ...` arm appears in production code. Replacement is type-inference-derived discriminator (`StructRegistry::compound_kind(layout)`, `TypeDesc::*` projection), not hand allowlists. (Per `audit/HARDENING-2026-05-01-fermat.md`.)
+14. **Manifest-driven strategy binding**: `EmitStrategy::for_grammar` reads parsed manifest metadata, not a literal Rust source arm-list. A synthetic grammar `__test_strategy_synth__` registered only via manifest round-trips codegen without adding a Rust arm; `crates/core/tests/synthetic_grammar_strategy.rs` enforces the regression closed.
+15. **Substrate path hard-fail**: `crates/core/src/backend/rust/emitter/shapes/substrate.rs` no longer falls back to `JsonStructBuilder` (or any default builder) on `syn::parse_str` failure; it `panic!`s with the offending binding string and the strategy authoring path. (Per `audit/HARDENING-2026-05-01-heisenberg.md` F7 and `fermat.md` F4.)
+16. **Non-routable carry blockers**: every row in §Non-Routable Carries closes inside AZ-IV with cited evidence or AZ-IV does not close. A non-routable carry that survives close is a process failure, not a deferral.
 
 ## Cross-Tranche Debt
 
-AZ-IV absorbs BA and BB functionally while rejecting their stale or contradictory mechanisms. BA's typed path/query requirements land through the existing runtime/document/type-inference surface. BB's rewrite/ruler requirements land through the existing `crates/ir/src/rewrites`, `crates/egraph/src/ruler`, `xtask`, and egraph pipeline. BC.W5/W6 debug/minimise tooling is not opened unless W3 proves a close blocker that needs it; if so, it enters a named scope-reveal ledger before implementation. If any BA/BB item cannot land inside AZ-IV without changing the thesis, `FINAL.md` must name the exact successor destination and cite the artefact that proves why it cannot be absorbed.
+AZ-IV absorbs BA and BB functionally while rejecting their stale or contradictory mechanisms. BA's typed path/query requirements land through the existing runtime/document/type-inference surface. BB's rewrite/ruler requirements land through the existing `crates/ir/src/rewrites`, `crates/egraph/src/ruler`, `xtask`, and egraph pipeline.
+
+AZ-IV is also lossless with respect to the 13 non-routable carries (see §Non-Routable Carries). Routing a non-routable item to a successor letter is forbidden. If a non-routable item cannot land inside AZ-IV without changing the AZ-IV thesis, the response is a triumvirate review of the thesis - not a new tranche letter.
+
+BC.W5/W6 debug/minimise tooling is not opened unless W3 proves a close blocker that needs it; if so, it enters a named scope-reveal ledger before implementation. If any BA/BB item cannot land inside AZ-IV without changing the thesis, `FINAL.md` must name the exact successor destination and cite the artefact that proves why it cannot be absorbed.
 
 ## Brittleness Window
 

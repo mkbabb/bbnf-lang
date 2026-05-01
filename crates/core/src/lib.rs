@@ -13,8 +13,11 @@ pub use parse_that::Span;
 // Host shims for grammar-side `-> crate::<module>::<fn>(...)` map
 // annotations. Pre-B2 these lived in test-common modules; post-B2.W1
 // the xtask-emitted source resides under `bbnf` lib so `crate::`
-// resolves here. Tests now reach the symbol via
-// `bbnf::css_types::parse_hex_color`.
+// resolves here. Production callers (binaries, benches, library
+// consumers) reach the symbol via `bbnf::css_types::parse_hex_color`;
+// some test crates still inline a `mod css_types { ... }` shadow for
+// hermetic-compilation reasons (tracked by REAUDIT-2026-04-30 lane 3
+// §5.1 as a pending mechanical-fix item).
 pub mod css_types;
 
 pub mod grammar;

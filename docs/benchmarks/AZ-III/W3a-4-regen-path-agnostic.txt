@@ -1,0 +1,240 @@
+================================================================================
+AZ-III.W3a.4 - Regen Path-Agnostic Shape Detection - HALT (root cause is W2/W3c)
+================================================================================
+
+Date          : 2026-04-30
+Worktree      : /Users/mkbabb/Programming/bbnf-wt-azIII-w3a-regen
+Status        : HALTED at root-cause-isolation; redress requires a carve outside
+                W3a's `crates/ir/...` file bounds.
+Lane HARD CAP : 50 min (W3a.4 dispatch, post-W2.4.s follow-up)
+
+--------------------------------------------------------------------------------
+1. Restated dispatch
+--------------------------------------------------------------------------------
+
+W2.4.s closed BBNF parity on the canonical `generated::BbnfBootstrap::parse`
+path with `bootstrap_parser.rs` deleted, but flagged regen --check drift:
+8 of 9 grammars drift after a clean canonical regen. The dispatch hypothesis
+was that IR shape-detection passes (`crates/ir/src/passes/recognizers/**`)
+under-classify the canonical AST so the same IR produces a different shape
+tag than the historical bootstrap_parser-derived path.
+
+W3a.4 was instructed to make the recognizer path-agnostic. It must not edit
+emitter (`crates/core/src/backend/rust/emitter/**` is W3c carve) or the
+generated tree.
+
+--------------------------------------------------------------------------------
+2. Reproduction
+--------------------------------------------------------------------------------
+
+  CARGO_TARGET_DIR=$WT/target/w3a-regen cargo xtask regen --check
+  -> "Error: regen --check: 8 of 9 grammars drifted" (exit 0; see §6 below).
+  -> drift list: bbnf, json, css_l4, css_pretty, google_sheets, ebnf, bnf, csv.
+  -> only `math` is byte-identical.
+
+Per-grammar regen (`--grammar csv` / `--grammar bnf`) into the worktree
+followed by `git diff` against the checked-in tree:
+
+  csv : -79 net LOC, removes outer iteration loops on `record` and `csv`.
+  bnf : -322 net LOC, removes iteration loops on `expression`, `alternation`,
+        `grammar`.
+
+The reduction is structural. The canonical regen produces a SINGLE-iteration
+body where the historical regen produces a `__iter_count`-driven loop.
+
+--------------------------------------------------------------------------------
+3. Root cause — Repeat dropped during canonical lowering
+--------------------------------------------------------------------------------
+
+I dumped the IR for `csv` via `dump_ir` (the dispatch-shape lowering harness):
+
+  === rule #2 record (entry=false) ===
+  Seq[2]
+    Alt[2] +dispatch
+      Ref(#1 escaped)
+      Ref(#0 textdata)
+    Next                       <-- !! NOT Repeat !!
+      Literal(",")
+      Alt[2] +dispatch
+        Ref(#1 escaped)
+        Ref(#0 textdata)
+
+  === rule #3 csv (entry=true) ===
+  Seq[2]
+    Ref(#2 record)
+    Next                       <-- !! NOT Repeat !!
+      Regex("\\r?\\n")
+      Ref(#2 record)
+
+The grammar source is
+
+  record = field, ( "," >> field ) * ;
+  csv    = record, ( /\r?\n/ >> record ) * ;
+
+Both source bodies carry an explicit `*` Kleene-star modifier on the inner
+group. The canonical lowering emits IR without the corresponding
+`Repeat(_, 0, MAX)` wrapper. The same defect appears in BBNF's own
+`concatenation = ( binary_factor ?w , "," ? ) +` (IR is `Seq([Ref, Lit])`,
+missing the outer `Repeat(_, 1, MAX)` and the optional comma) and in BNF's
+`alternation = expression, ( /[ \t]*/ , "|" , /[ \t]*/ , expression ) *`
+(IR is `Seq([Ref, Seq])`, missing the outer Repeat).
+
+Inspecting the canonical-codegen vs the now-deleted bootstrap_parser shows
+the divergence:
+
+  bootstrap_parser::parse_modifier (HISTORICAL, deleted in W2.4.s):
+    self.push_span(lo, self.pos);     // pushes a SPAN with text "*" / "+" etc
+
+  generated::parse_keyword_BbnfBootstrap_modifier (CANONICAL):
+    builder.push_leaf_with_unit();    // pushes a UNIT leaf with no span
+
+`lower_factor` (`crates/core/src/lower/expression/repeat.rs`) classifies the
+`factor` compound's children by their trimmed `span_text()`. Unit leaves
+have empty `span_text()`, so the `if matches!(trimmed, "?w" | "?" | "*" | "+")`
+admission never fires. `modifier_text` stays `None`, `apply_modifier` is
+never called, and the Repeat wrapper is silently lost.
+
+This is the FOURTH codegen-vs-bootstrap_parser divergence, on top of the
+three W2.4.s already absorbed (Term punctuator dispatch, binary-factor gap
+operator recovery, PrettyHint argument recovery). The pattern is the same:
+the canonical Keyword/keyword-like emitter pushes Unit, the bootstrap_parser
+pushed Span, and the lowering recovery (or the recognizer) needs a
+path-agnostic source-gap scan.
+
+--------------------------------------------------------------------------------
+4. Why W3a's recognizer carve cannot fix this cleanly
+--------------------------------------------------------------------------------
+
+The "path-agnostic recognizer" framing assumes the IR is the same and only
+the recognizer's classification differs. My investigation shows the IR
+itself diverges — the canonical IR is genuinely missing nodes (Repeat
+wrappers and optional-Literal markers).
+
+A recognizer-only fix would have to admit `Seq([head, Next(op, rhs)])` (no
+Repeat) as if it were an iterated operator chain. That is lossy:
+
+  - `escaped = DQUOTE >> /[^"]*/ << DQUOTE`           — Skip-rooted; not Seq.
+  - `assign  = ident, "=" >> value`                   — Seq([Ref, Next(Lit,Ref)]),
+    no `*` in source, semantics is exactly one assignment. A path-agnostic
+    recognizer that admits this as iterated would generate a parser that
+    repeats the assignment. WRONG.
+
+Distinguishing the two requires either (a) the source modifier text or
+(b) a CST-level marker that survives lowering. Neither is currently in the
+IR. `IrRule.source_span` covers the whole rule's source range but is not
+node-scoped; per-node source positions are not preserved through lowering.
+
+A `crates/ir/src/passes/transform/**` rewrite that re-injects Repeats by
+heuristic shape inspection would be a workaround, not a root cause fix —
+zero-tolerance per `feedback_no_workarounds`.
+
+--------------------------------------------------------------------------------
+5. Routes that close this cleanly
+--------------------------------------------------------------------------------
+
+Three options exist; none of them stays inside W3a's file bounds.
+
+(W2 lowering recovery — analogue of W2.4.s fix B)
+  In `crates/core/src/lower/expression/repeat.rs::lower_factor`, when no
+  `modifier_text` was found via children inspection, scan the source gap
+  between the `term` child's `byte_span().hi` and the `factor`'s
+  `byte_span().hi` for `?w` / `?` / `*` / `+` (using
+  `super::find_unquoted` to skip quoted strings). Apply the recovered
+  modifier via `apply_modifier`. Mirrors the W2.4.s `recover_binary_op`
+  fix exactly.
+
+  Same recovery is required for the optional-comma marker on
+  `concatenation = (binary_factor ?w , "," ?) +` and the optional-pipe
+  marker on `alternation`, but those are concentrated in `lower/expression/alt.rs`.
+
+(W3c emitter change — keyword shape pushes Span, not Unit)
+  Modify the Keyword-shape Rust emitter
+  (`crates/core/src/backend/rust/emitter/shapes/keyword/...`) to push a
+  Span leaf with the matched literal text rather than `push_leaf_with_unit`.
+  Then `lower_factor`'s existing children-iteration finds the modifier
+  child as a Span and the path-agnostic case collapses. The canonical
+  AST then matches the bootstrap_parser shape on this slot.
+
+  This is the cleanest architectural fix (Unit was a regression in the
+  Keyword codegen), but it touches `crates/core/src/backend/rust/emitter/**`
+  which is W3c's modify-carve, not W3a.
+
+(W2 carve reopen — alt.rs sister fixes)
+  `lower_concatenation` and `lower_alternation` already iterate the
+  `(content, optional_sep)` pairs — extending them to also wrap the
+  result in `Repeat(0, MAX, _)` when the rule body's source `+`/`*`
+  modifier indicates iteration is the same recovery pattern.
+
+W3a's `crates/ir/src/passes/{recognizers,transform,sets}/**` carve
+cannot host any of these fixes without crossing module boundaries.
+
+--------------------------------------------------------------------------------
+6. xtask exit-code anomaly (orthogonal note)
+--------------------------------------------------------------------------------
+
+`cargo xtask regen --check` prints "Error: regen --check: 8 of 9 grammars
+drifted" but the process exits with code 0. The diagnostic text suggests
+the `--check` arm constructs an `Err` but the wrapper unwraps it as Ok.
+This is an xtask-level bug that would also benefit from a same-W3a
+follow-up commit, since it lets CI / `make doctor` falsely report green.
+Not in scope for this lane (xtask is not in the W3a file bounds), but
+worth noting.
+
+--------------------------------------------------------------------------------
+7. Verdict
+--------------------------------------------------------------------------------
+
+BLOCKED — W3a hard gate 1 (`cargo xtask regen --check` green) cannot
+close inside W3a's file bounds. Routing options:
+
+  A. Reopen W2 carve for a `lower_factor` / `lower_concatenation` /
+     `lower_alternation` source-gap recovery commit. Smallest delta;
+     mirrors the W2.4.s recovery pattern; W2 owner runs.
+
+  B. Open a W3c carve for the Keyword-shape emitter to push Span text
+     rather than Unit. Architecturally cleanest; eliminates the
+     post-hoc lowering recovery; W3c owner runs.
+
+Recommendation: route A first — it closes regen --check immediately and
+keeps the canonical IR consistent with the bootstrap_parser shape on the
+modifier slot. Route B can land later as an architectural follow-up
+(eliminating the need for the lower-side recovery).
+
+W3a.4 made no source-code commits. Working tree is clean.
+
+--------------------------------------------------------------------------------
+8. Files of interest (for the redress dispatch)
+--------------------------------------------------------------------------------
+
+  crates/core/src/lower/expression/repeat.rs::lower_factor
+    Iterates `factor` children by `span_text()`; Unit modifier child
+    is skipped because `trimmed.is_empty()`. This is the primary
+    modifier-recovery site.
+
+  crates/core/src/lower/expression/alt.rs::lower_concatenation
+                                       lower_alternation
+    Iteration-pair wrapper handling. The optional-separator slot is
+    similarly Unit-emitted on canonical and dropped silently.
+
+  crates/core/src/grammar/generated/bbnf.rs::parse_keyword_BbnfBootstrap_modifier
+    The codegen-emitted modifier parser. Pushes Unit; would need to push
+    Span to support route B.
+
+  crates/ir/src/passes/recognizers/node_facts.rs::check_operator_chain
+                                              ::is_operator_chain_repeat_body
+    The shape predicate. Currently admits `Seq([head, Repeat(Seq/Next/Skip)])`.
+    A path-agnostic admission of `Seq([head, Next/Skip(...)])` would also
+    falsely classify non-iterated `assign = ident, "=" >> value`-style
+    rules. Cannot close W3a.4 alone.
+
+--------------------------------------------------------------------------------
+9. Time accounting
+--------------------------------------------------------------------------------
+
+  Read tranche/wave docs + W2.4.s close packet  :  ~5 min
+  Reproduce drift, isolate regen output         :  ~5 min
+  IR dump + diagnose Repeat loss                : ~10 min
+  Inspect lower/expression + grammar generated  : ~10 min
+  Cross-check against bootstrap_parser source   :  ~5 min
+  Decide carve fit + write evidence             : ~10 min
+  Total                                         : ~45 min (within 50 min cap)

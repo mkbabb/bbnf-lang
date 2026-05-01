@@ -79,6 +79,7 @@ fn base_ir() -> GrammarIR {
         pattern_alphabets: HashMap::new(),
         ctns_lifts: HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
+        type_obligations: Vec::new(),
     }
 }
 

@@ -510,6 +510,165 @@ fn seq_of_refs_composes_f64_u8_aggregate() {
 
 // ─── AU.2.5 factor-pass type-loss tests ────────────────────────
 
+// ─── AZ-III.W3a.3 — heterogeneous Alt obligation surfacing ─────
+
+/// CSS-like `value = ident | length | percentage | color` shape.
+///
+/// Each branch has a distinct typed payload (`Span` for `ident`,
+/// `F64` for `length`/`percentage`, `U32` for `color`). The
+/// historical `BoxedEnum` fallback at `revise.rs:123` swallowed
+/// these without diagnostic. AZ-III.W3a.3 lifts the join into a
+/// `TypeDesc::HeterogeneousAltJoin` carrying the deduplicated
+/// branch types AND populates `GrammarIR::type_obligations` with a
+/// matching `TypeObligation::HeterogeneousAltJoin` entry.
+#[test]
+fn heterogeneous_css_alt_surfaces_named_obligation() {
+    // rule 0 = Alt(Ref(1), Ref(2), Ref(3), Ref(4))   -> HeterogeneousAltJoin
+    // rule 1 = Map(Lit, f0)  fn 0 = Expr { return Span }  (ident-shape)
+    // rule 2 = Map(Lit, f1)  fn 1 = Expr { return F64  }  (length)
+    // rule 3 = Map(Lit, f2)  fn 2 = Expr { return F64  }  (percentage)
+    // rule 4 = Map(Lit, f3)  fn 3 = Expr { return U32  }  (color)
+    let mut ir = make_ir_with_fns(
+        vec![
+            rule(
+                0,
+                alt(vec![
+                    IrNode::Ref(1),
+                    IrNode::Ref(2),
+                    IrNode::Ref(3),
+                    IrNode::Ref(4),
+                ]),
+            ),
+            rule(
+                1,
+                IrNode::Map {
+                    inner: Box::new(IrNode::Literal(3)),
+                    fn_id: 0,
+                },
+            ),
+            rule(
+                2,
+                IrNode::Map {
+                    inner: Box::new(IrNode::Literal(3)),
+                    fn_id: 1,
+                },
+            ),
+            rule(
+                3,
+                IrNode::Map {
+                    inner: Box::new(IrNode::Literal(3)),
+                    fn_id: 2,
+                },
+            ),
+            rule(
+                4,
+                IrNode::Map {
+                    inner: Box::new(IrNode::Literal(3)),
+                    fn_id: 3,
+                },
+            ),
+        ],
+        vec![
+            expr_fn(TypeDesc::Span),
+            expr_fn(TypeDesc::F64),
+            expr_fn(TypeDesc::F64),
+            expr_fn(TypeDesc::U32),
+        ],
+        vec![
+            "value".into(),
+            "ident".into(),
+            "length".into(),
+            "percentage".into(),
+            "color".into(),
+        ],
+    );
+    bbnf_ir::dag::ensure_dag(&mut ir);
+    project_types(&mut ir);
+
+    // The join surfaces the distinct branch types as a named
+    // obligation in `ir.types`. The deduplicated set is
+    // `[Span, F64, U32]` — `length` and `percentage` collapse to a
+    // single `F64` entry preserving first-appearance order.
+    let projected = get_type(&ir, 0);
+    match projected {
+        TypeDesc::HeterogeneousAltJoin(branches) => {
+            assert_eq!(
+                branches,
+                &vec![TypeDesc::Span, TypeDesc::F64, TypeDesc::U32],
+                "heterogeneous CSS alt must lift distinct branch types into the obligation",
+            );
+        }
+        other => panic!(
+            "expected `TypeDesc::HeterogeneousAltJoin`, got {:?} — silent BoxedEnum fallback resurrected?",
+            other,
+        ),
+    }
+
+    // The obligation also surfaces in the diagnostic stream so
+    // downstream consumers (audit, codegen, debug adapters) see the
+    // join site without re-walking `ir.types`.
+    assert!(
+        !ir.type_obligations.is_empty(),
+        "heterogeneous Alt must emit at least one TypeObligation",
+    );
+    let surfaced = ir
+        .type_obligations
+        .iter()
+        .find(|ob| {
+            matches!(
+                ob,
+                TypeObligation::HeterogeneousAltJoin { rule: Some(0), .. }
+            )
+        })
+        .expect("obligation stream must include rule 0's heterogeneous join");
+    if let TypeObligation::HeterogeneousAltJoin { branches, .. } = surfaced {
+        assert_eq!(
+            branches,
+            &vec![TypeDesc::Span, TypeDesc::F64, TypeDesc::U32],
+            "obligation evidence must match the lifted TypeDesc payload",
+        );
+    } else {
+        unreachable!("matched above");
+    }
+}
+
+/// Sanity: the homogeneous Alt path still does NOT emit an
+/// obligation. Only heterogeneous joins surface as obligations; an
+/// `Alt(Ref(F64), Ref(F64))` collapses to `F64` cleanly and the
+/// stream stays empty.
+#[test]
+fn homogeneous_alt_emits_no_obligation() {
+    let mut ir = make_ir_with_fns(
+        vec![
+            rule(0, alt(vec![IrNode::Ref(1), IrNode::Ref(2)])),
+            rule(
+                1,
+                IrNode::Map {
+                    inner: Box::new(IrNode::Literal(3)),
+                    fn_id: 0,
+                },
+            ),
+            rule(
+                2,
+                IrNode::Map {
+                    inner: Box::new(IrNode::Literal(3)),
+                    fn_id: 0,
+                },
+            ),
+        ],
+        vec![expr_fn(TypeDesc::F64)],
+        vec!["value".into(), "a".into(), "b".into(), "lit".into()],
+    );
+    bbnf_ir::dag::ensure_dag(&mut ir);
+    project_types(&mut ir);
+    assert_eq!(*get_type(&ir, 0), TypeDesc::F64);
+    assert!(
+        ir.type_obligations.is_empty(),
+        "homogeneous join must not emit an obligation; got {:?}",
+        ir.type_obligations,
+    );
+}
+
 #[test]
 fn factored_prefix_alt_projects_scalar() {
     // AU.2.5: `factor_common_prefixes` rewrites
@@ -650,6 +809,7 @@ fn compound_ref_obligation_surfaces() {
                 && !*cyclic
                 && *structural_type == TypeDesc::Vec(Box::new(TypeDesc::U8))
         }
+        TypeObligation::HeterogeneousAltJoin { .. } => false,
     });
     assert!(
         compound_obligation.is_some(),
@@ -679,6 +839,7 @@ fn cyclic_ref_obligation_surfaces() {
             cyclic,
             ..
         } => *target_rule == 0 && *cyclic,
+        TypeObligation::HeterogeneousAltJoin { .. } => false,
     });
     let cyclic_for_rule_1 = ir.type_obligations.iter().any(|o| match o {
         TypeObligation::UnresolvedCompoundRef {
@@ -686,6 +847,7 @@ fn cyclic_ref_obligation_surfaces() {
             cyclic,
             ..
         } => *target_rule == 1 && *cyclic,
+        TypeObligation::HeterogeneousAltJoin { .. } => false,
     });
 
     assert!(

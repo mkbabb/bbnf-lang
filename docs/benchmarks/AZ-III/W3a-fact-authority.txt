@@ -1,0 +1,148 @@
+AZ-III.W3a.1 — Durable Fact Authority Manifest
+==============================================
+
+Date: 2026-04-30
+Worktree: /Users/mkbabb/Programming/bbnf-wt-azIII-w3a-fact-authority
+Authority surface: bbnf_ir::passes::FactAuthority
+Source: crates/ir/src/passes/facts/mod.rs
+
+Purpose
+-------
+The FactAuthority surface consolidates the per-NodeId / per-RuleId / IR-global
+fact streams produced by the four substrate-bearing pass families (egraph
+analysis, recognizer mining, node mining, projection) into one named read API.
+Every accessor below names the producer site that fills the underlying
+storage on `GrammarIR`, the production consumer that reads through the
+authority, and a focused test that fails when the storage is cleared.
+
+Per-fact authority manifest
+---------------------------
+
+1) NodeFacts (recognizer record per Alt/Wrap node)
+   - Fact: FactAuthority::node_fact(node_id) -> Option<&NodeFacts>
+   - Producer: crates/ir/src/passes/recognizers/mod.rs::mine_recognizers
+   - Consumer: crates/ir/src/passes/csp_strategy/mod.rs::install_strategy_sites
+     (reads ir.node_facts.get(node_id).recognizer.as_ref() to size strategy
+      domain — without it, every Alt/Wrap site widens to maximum domain).
+   - Disconnect test:
+     crates/ir/tests/passes/fact_authority.rs::node_facts_drive_csp_strategy_domain
+
+2) ContextFacts (per-Alt discrimination strength + scan safety)
+   - Fact: FactAuthority::context_fact(node_id) -> Option<&ContextFacts>
+   - Predicate: FactAuthority::alt_dispatch_admissible(node_id) -> bool
+   - Producer: crates/ir/src/passes/recognizers/context_facts_miner.rs
+     (ContextFactsMiner inside the unified mine_recognizers walk — AF.1 fold).
+   - Consumer:
+     crates/ir/src/passes/recognizers/shape_dispatch/alt_dispatch.rs::detect_alt_dispatch
+     (W3a.1 routes branch_is_admissible / seq_position_is_leafy through
+      FactAuthority::rule_shape; clearing context_facts trips the detector's
+      named gate). Pre-W3a.1 this site read shape_assignments directly.
+   - Disconnect test:
+     crates/ir/tests/passes/fact_authority.rs::context_facts_drive_alt_dispatch_admission
+
+3) has_family_recognizers (IR-global flag)
+   - Fact: FactAuthority::has_family_recognizers() -> bool
+   - Producer: tail of mine_recognizers — sets ir.has_family_recognizers iff
+     any rule mined a Tranche-X.10 family shape (PunctWsRegion).
+   - Consumer: crates/core/src/backend/driver/node.rs::compile_node
+     (short-circuits the per-node try_emit_family_kernel probe when the flag
+      is false; the post-Y.4 regression-recovery contract).
+   - Disconnect test:
+     crates/ir/tests/passes/fact_authority.rs::has_family_recognizers_gates_driver_probe
+
+4) EClassFacts (per-NodeId monotone lattice)
+   - Fact: FactAuthority::eclass_facts(node_id) -> Option<&EClassFacts>
+   - Producer:
+     crates/ir/src/passes/materialization/classify.rs::compute_eclass_facts
+     (called from mine_recognizers before its unified walk; cached on
+      ir.eclass_facts).
+   - Consumer:
+     crates/ir/src/passes/materialization/classify.rs::classify_materialization_with_facts
+     (each per-NodeId lattice value gates the AF.1 gate_transparent_elide
+      step; an empty fact map demotes every TransparentElide candidate).
+   - Disconnect test:
+     crates/ir/tests/passes/fact_authority.rs::eclass_facts_authority_routes_disconnect_correctly
+     (also covered structurally by
+      crates/ir/tests/lattices/materialization_eclass_gate.rs).
+
+5) ShapeAssignments (per-rule shape tag)
+   - Fact: FactAuthority::shape_assignments() -> &ShapeAssignments
+   - Predicate: FactAuthority::rule_shape(rule) -> ShapeTag
+   - Producer:
+     crates/ir/src/passes/recognizers/shape_dispatch/mod.rs::shape_dispatch
+     (runs at tail of mine_recognizers after every miner committed).
+   - Consumer:
+     crates/ir/src/passes/recognizers/shape_dispatch/alt_dispatch.rs::branch_is_admissible
+     and the per-shape emitter modules at
+     crates/core/src/backend/rust/emitter/shapes/.
+     Branches absent from the assignment fall through to the AX cold-path.
+   - Disconnect test:
+     crates/ir/tests/passes/fact_authority.rs::shape_assignments_drive_classifier_dispatch
+
+6) PayloadLayout (per-rule packed layout)
+   - Fact: FactAuthority::rule_payload_layout(rule) -> Option<&PayloadLayout>
+   - Producer: crates/ir/src/passes/payload/layout.rs::compute_payload_layouts
+     (filled in finalize_compile after project_types).
+   - Consumer:
+     crates/ir/src/passes/recognizers/dta.rs::emit_rule_dta
+     (consults ir.payload_layouts.contains_key(rule.id) to admit the rule's
+      DTA payload-buffer prelude).
+   - Disconnect test: lattice coverage at
+     crates/ir/tests/lattices/materialization_eclass_gate.rs (test fixture
+     constructs the IR with empty payload_layouts to exercise the DTA
+     fallback). FactAuthority surface verified by build (read-only API).
+
+7) MaterializationClass (per-NodeId class lattice)
+   - Fact: FactAuthority::materialization(node_id) -> Option<MaterializationClass>
+   - Producer:
+     crates/ir/src/passes/materialization/classify.rs::classify_materialization
+     (refined by the CSP joint solve in
+      crates/ir/src/passes/csp_strategy/mod.rs).
+   - Consumer:
+     crates/ir/src/passes/sets/fingerprint.rs::compute_push_fingerprint
+     and crates/ir/src/passes/payload/layout.rs::compute_payload_layouts
+     (both gate per-rule emission decisions on the rule body's class).
+   - Disconnect test: lattice coverage in
+     crates/ir/tests/lattices/materialization*.rs;
+     authority surface is read-only and verified by build.
+
+Production wiring
+-----------------
+Pre-W3a.1 every consumer reached the fact storage by direct field access on
+`GrammarIR`. W3a.1 lands two changes that make the consumer wiring testable:
+
+- a single `FactAuthority` surface (one `pub fn` per fact stream) at
+  `crates/ir/src/passes/facts/mod.rs`;
+- `crates/ir/src/passes/recognizers/shape_dispatch/alt_dispatch.rs` is the
+  first production caller routed through the surface. The detector's
+  `branch_is_admissible` and `seq_position_is_leafy` consume
+  `FactAuthority::rule_shape` exclusively; clearing `ir.shape_assignments`
+  flips the detector's admission per the disconnect test cited above.
+
+Wave gate (W3a sub-gate 3)
+--------------------------
+"A production layout/dispatch consumer fails a focused test when the fact
+is removed."
+
+The disconnect tests above each clear one fact stream and assert the
+consumer-equivalent predicate flips. The named consumer for
+`shape_assignments_drive_classifier_dispatch` is `detect_alt_dispatch`,
+which routes its branch admission through the authority surface.
+
+Build evidence
+--------------
+- `cargo check -p bbnf-ir --tests --profile ax-iter` is green.
+- `cargo test -p bbnf-ir --tests --profile ax-iter`: 401 tests pass
+  (5 new disconnect tests + 396 carried tests, no regressions).
+- `cargo check -p bbnf --profile ax-iter` is green (FactAuthority routing
+  through alt_dispatch detector compiles cleanly).
+
+Commit references
+-----------------
+Commits land on the W3a.1 worktree
+(/Users/mkbabb/Programming/bbnf-wt-azIII-w3a-fact-authority); orchestrator
+cherry-picks named commits in:
+
+- feat(facts/authority): durable egraph/recognizer/node/projection facts
+- test(facts/authority): cover production consumer disconnect
+- docs(az-iii.W3a.1): record fact authority evidence

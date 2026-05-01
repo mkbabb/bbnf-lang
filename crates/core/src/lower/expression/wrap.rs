@@ -23,7 +23,7 @@ use super::super::value_expr::{
     deep_unwrap_value, extract_value_func_name, is_type_name, lower_value_expr,
     split_numeric_suffix, unwrap_value_ident_str,
 };
-use super::repeat::{apply_modifier, recover_modifier};
+use super::repeat::apply_modifier;
 use super::{dispatch_expression, find_unquoted, lower_leaf_by_span_text_str, lower_rhs};
 
 /// The four grouped-term flavors, discriminated by the opening delimiter
@@ -76,10 +76,12 @@ pub(crate) fn lower_mapped_factor<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx
     let mut type_annotation: Option<BbnfView<'a, 'a>> = None;
     let mut has_unit_marker = false;
     for c in body.children() {
-        // The codegen modifier emitter pushes a `Unit` leaf via
-        // `push_leaf_with_unit` — it carries no source span. Record
-        // its presence so the source-gap recovery below can resolve
-        // the punctuator.
+        // AZ-IV.W1.6 (Fermat F8): the canonical generated modifier
+        // emitter pushes the matched token as a typed Span via
+        // `push_leaf_with_str` — Unit children would mean a
+        // degenerate emitter push. Record its presence for the
+        // typed-materialization invariant; the source-byte modifier
+        // recovery is deleted (`recover_modifier` retired).
         if matches!(c.kind(), BbnfKind::Unit) {
             has_unit_marker = true;
             continue;
@@ -125,18 +127,22 @@ pub(crate) fn lower_mapped_factor<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx
             value_expr_head = Some(c);
         }
     }
-    // Source-gap modifier recovery: under the codegen alt_dispatch
-    // shape the `modifier?` slot pushes a `Unit` leaf with no span,
-    // so the children-text classification above never sees the
-    // punctuator. When the Unit marker is present and no span-text
-    // classification resolved a modifier, scan forward from the
-    // term's source end for the punctuator.
-    if modifier_text.is_none() && has_unit_marker {
-        if let Some(term) = term_node {
-            if let Some(text) = recover_modifier(term) {
-                modifier_text = Some(text.to_string());
-            }
-        }
+    // AZ-IV.W1.6 typed-materialization invariant: a `Unit` modifier
+    // marker without a structural span-text resolution means the
+    // codegen modifier emitter ran without pushing a typed Span
+    // — same defect class as the pre-W1.6 source-byte recovery
+    // covered up. Surface it loudly so the canonical parser is
+    // fixed at source rather than the lower path absorbing the
+    // information loss.
+    if has_unit_marker && modifier_text.is_none() {
+        panic!(
+            "mapped_factor: Unit modifier marker without typed-Span resolution \
+             in span {:?} ({} children) — typed-materialization invariant \
+             violated. Post-W1.6 the modifier emitter pushes typed Span via \
+             push_leaf_with_str.",
+            node.span_text(),
+            node.num_children(),
+        );
     }
     // AW-II.W5b.2 — group wrapping (`{ ... }` / `[ ... ]` / `@{...}`)
     // is the responsibility of the term dispatch, not the

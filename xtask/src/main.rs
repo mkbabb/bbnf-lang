@@ -34,6 +34,16 @@ enum Cmd {
         /// exit non-zero on drift. Used by CI + pre-commit hook.
         #[arg(long)]
         check: bool,
+        /// Restrict the `--check` regen loop to grammars whose source
+        /// path or generated output path is in the `git diff --cached
+        /// --name-only` set. Combined with `--check` this gives the
+        /// pre-commit hook an O(staged-grammars) fast path: when no
+        /// staged file matches `grammar/`, `crates/core/src/grammar/
+        /// generated/`, or `xtask/src/regen`, the command returns 0
+        /// immediately without compiling the IR pipeline against any
+        /// grammar. Has no effect without `--check`.
+        #[arg(long)]
+        staged: bool,
         /// Override the output directory. When set, generated files
         /// land at `<output>/<ident>.rs` instead of the default
         /// `crates/core/src/grammar/generated/<ident>.rs`. Used by the
@@ -48,8 +58,11 @@ enum Cmd {
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     match cli.cmd {
-        Cmd::Regen { grammar, check, output } => {
-            regen::run(grammar.as_deref(), check, output.as_deref())
-        }
+        Cmd::Regen {
+            grammar,
+            check,
+            staged,
+            output,
+        } => regen::run(grammar.as_deref(), check, staged, output.as_deref()),
     }
 }

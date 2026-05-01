@@ -1,19 +1,25 @@
 #!/usr/bin/env bash
 # bbnf-lang pre-commit hook — regen drift gate.
 #
-# Runs `cargo xtask regen --check` when the staged change touches a grammar
-# source, the per-grammar generated tree, or the regen entrypoint. Skips
-# during rebase/merge so half-applied trees do not block conflict resolution.
-# CI carries the canonical enforcement; this hook is the local fast-fail.
+# Routes through `cargo xtask regen --check --staged`: xtask reads
+# `git diff --cached --name-only` itself, returns 0 immediately when
+# no staged file touches a grammar source, the per-grammar generated
+# tree, or the regen entrypoint, and otherwise restricts the regen
+# loop to grammars whose source or generated output is in the staged
+# set. Centralising the staged-filter inside xtask keeps a single
+# source of truth for what "grammar-relevant" means and avoids the
+# duplicated grep pattern this hook used to carry. Skips during
+# rebase/merge so half-applied trees do not block conflict
+# resolution. CI carries the canonical enforcement
+# (`cargo xtask regen --check`, full surface); this hook is the
+# local fast-fail.
 set -euo pipefail
 
 if [ -f .git/MERGE_HEAD ] || [ -f .git/REBASE_HEAD ] || [ -d .git/rebase-merge ] || [ -d .git/rebase-apply ]; then
     exit 0
 fi
 
-if git diff --cached --name-only | grep -qE '^(grammar/|crates/core/src/grammar/generated/|xtask/src/regen)'; then
-    if ! cargo xtask regen --check; then
-        echo "error: cargo xtask regen --check failed; run 'cargo xtask regen' and stage the result" >&2
-        exit 1
-    fi
+if ! cargo xtask regen --check --staged; then
+    echo "error: cargo xtask regen --check --staged failed; run 'cargo xtask regen' and stage the result" >&2
+    exit 1
 fi

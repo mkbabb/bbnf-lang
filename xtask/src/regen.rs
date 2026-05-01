@@ -17,7 +17,9 @@
 //! `prettyplease::unparse(&syn::parse2(stream)?)`, and writes the
 //! result to disk.
 
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 use anyhow::{Context, Result, anyhow, bail};
 use bbnf::ParserAttributes;
@@ -58,7 +60,12 @@ impl GrammarEntry {
         source
             .parent()
             .map(|p| p.join("rewrites"))
-            .unwrap_or_else(|| workspace_root.join("grammar").join(&self.ident).join("rewrites"))
+            .unwrap_or_else(|| {
+                workspace_root
+                    .join("grammar")
+                    .join(&self.ident)
+                    .join("rewrites")
+            })
     }
 
     /// Marker-struct ident emitted into the per-grammar file. Mirrors
@@ -114,7 +121,10 @@ impl GrammarEntry {
                     // manifest is the source of truth and unknown
                     // entries indicate a forthcoming feature this
                     // xtask doesn't yet recognise.
-                    eprintln!("xtask::regen: warning — unknown feature `{other}` on grammar `{}`", self.ident);
+                    eprintln!(
+                        "xtask::regen: warning — unknown feature `{other}` on grammar `{}`",
+                        self.ident
+                    );
                 }
             }
         }
@@ -141,25 +151,34 @@ fn pascal_case(input: &str) -> String {
 /// Top-level entry. `grammar = None` regenerates every grammar in the
 /// workspace manifest; `Some(ident)` regenerates that grammar only.
 /// `check = true` regenerates to a tempdir + diffs against the
-/// checked-in tree, exiting non-zero on drift. `output_override`
-/// redirects every per-grammar emission to `<output_override>/<ident>.rs`
-/// — used by the AZ-II.cutover.B reproducibility CI gate to capture
-/// successive regen outputs into a tempdir without disturbing the
-/// checked-in `crates/core/src/grammar/generated/` tree.
+/// checked-in tree, exiting non-zero on drift. `staged = true`
+/// (only meaningful with `check = true`) restricts the check loop to
+/// grammars whose source or generated path overlaps the
+/// `git diff --cached --name-only` set, returning Ok(()) early when
+/// no staged file matches the grammar/regen trigger pattern.
+/// `output_override` redirects every per-grammar emission to
+/// `<output_override>/<ident>.rs` — used by the AZ-II.cutover.B
+/// reproducibility CI gate to capture successive regen outputs into a
+/// tempdir without disturbing the checked-in
+/// `crates/core/src/grammar/generated/` tree.
 pub fn run(
     grammar: Option<&str>,
     check: bool,
+    staged: bool,
     output_override: Option<&Path>,
 ) -> Result<()> {
     let (workspace_root, grammars) = load_manifest()?;
 
     if check {
-        regen_check(&workspace_root, &grammars)
+        if staged {
+            regen_check_staged(&workspace_root, &grammars)
+        } else {
+            regen_check(&workspace_root, &grammars)
+        }
     } else if let Some(ident) = grammar {
-        let entry = grammars
-            .iter()
-            .find(|g| g.ident == ident)
-            .ok_or_else(|| anyhow!("grammar `{ident}` not found in [workspace.metadata.bbnf.grammars]"))?;
+        let entry = grammars.iter().find(|g| g.ident == ident).ok_or_else(|| {
+            anyhow!("grammar `{ident}` not found in [workspace.metadata.bbnf.grammars]")
+        })?;
         let target = match output_override {
             Some(dir) => dir.join(format!("{}.rs", entry.ident)),
             None => output_path(&workspace_root, &entry.ident),
@@ -218,11 +237,7 @@ fn output_path(workspace_root: &Path, ident: &str) -> PathBuf {
 /// Regenerate a single grammar. Reads the grammar source, runs the
 /// 17-pass IR pipeline, runs `generate_all`, writes the formatted
 /// output to `target_path`.
-fn regen_grammar(
-    workspace_root: &Path,
-    entry: &GrammarEntry,
-    target_path: &Path,
-) -> Result<usize> {
+fn regen_grammar(workspace_root: &Path, entry: &GrammarEntry, target_path: &Path) -> Result<usize> {
     let grammar_path = entry.grammar_source(workspace_root);
     if !grammar_path.exists() {
         bail!(
@@ -349,9 +364,8 @@ fn regen_grammar(
 
     // Ensure the parent directory exists.
     if let Some(parent) = target_path.parent() {
-        std::fs::create_dir_all(parent).with_context(|| {
-            format!("create parent dir for `{}`", target_path.display())
-        })?;
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("create parent dir for `{}`", target_path.display()))?;
     }
 
     let bytes = output.len();
@@ -444,6 +458,18 @@ fn regen_all(workspace_root: &Path, grammars: &[GrammarEntry]) -> Result<()> {
 /// Regenerate to a tempdir; diff against the checked-in tree; exit
 /// non-zero on drift. Used by CI + pre-commit hook.
 fn regen_check(workspace_root: &Path, grammars: &[GrammarEntry]) -> Result<()> {
+    regen_check_filtered(workspace_root, grammars, grammars.len())
+}
+
+/// Inner: run the tempdir+diff loop over an already-filtered grammar
+/// list. `total_count` is the original (unfiltered) workspace grammar
+/// count; the success message reports it so a `--staged`-filtered
+/// run that touched 1 of 9 grammars prints "matched 1 of 9".
+fn regen_check_filtered(
+    workspace_root: &Path,
+    grammars: &[GrammarEntry],
+    total_count: usize,
+) -> Result<()> {
     let tmpdir = tempfile::tempdir().context("create tempdir for regen --check")?;
     let mut drift = Vec::new();
 
@@ -477,8 +503,9 @@ fn regen_check(workspace_root: &Path, grammars: &[GrammarEntry]) -> Result<()> {
 
     if drift.is_empty() {
         println!(
-            "regen --check: clean ({} grammars matched)",
-            grammars.len()
+            "regen --check: clean ({} of {} grammars matched)",
+            grammars.len(),
+            total_count,
         );
         Ok(())
     } else {
@@ -491,4 +518,107 @@ fn regen_check(workspace_root: &Path, grammars: &[GrammarEntry]) -> Result<()> {
             grammars.len()
         );
     }
+}
+
+/// Staged variant of `regen_check`. Reads `git diff --cached
+/// --name-only`, intersects against grammar source paths and the
+/// `crates/core/src/grammar/generated/<ident>.rs` outputs, and runs
+/// `regen_check_filtered` on the intersection. Returns Ok(()) early
+/// (with a `regen --check --staged: nothing staged for grammar-relevant
+/// files` log) when no staged file matches the grammar/regen trigger
+/// pattern. Pre-commit hook entrypoint.
+///
+/// When the trigger pattern fires only via `xtask/src/regen*` (regen
+/// logic changed but no grammar source/generated path is staged) the
+/// filtered grammar list is empty: we still return Ok(()) early
+/// rather than escalating to the full surface. CI's
+/// `cargo xtask regen --check` (no `--staged`) carries the global
+/// gate against xtask logic changes; the staged path's contract is
+/// strictly to fail when a *staged grammar* drifts from its
+/// regenerated form.
+fn regen_check_staged(workspace_root: &Path, grammars: &[GrammarEntry]) -> Result<()> {
+    let staged = staged_paths(workspace_root)?;
+
+    if !staged_has_grammar_relevant(&staged) {
+        println!("regen --check --staged: nothing staged for grammar-relevant files");
+        return Ok(());
+    }
+
+    let filtered: Vec<GrammarEntry> = grammars
+        .iter()
+        .filter(|entry| grammar_overlaps_staged(entry, &staged))
+        .cloned()
+        .collect();
+
+    if filtered.is_empty() {
+        // Trigger pattern fired via `xtask/src/regen*` only, with no
+        // grammar source or generated output staged. No grammar
+        // drift can result from this commit; the CI-side
+        // `cargo xtask regen --check` (no --staged) covers xtask
+        // logic changes against the full grammar fleet.
+        println!(
+            "regen --check --staged: no grammar source or generated output staged ({} workspace grammars unchanged)",
+            grammars.len()
+        );
+        return Ok(());
+    }
+
+    regen_check_filtered(workspace_root, &filtered, grammars.len())
+}
+
+/// `git diff --cached --name-only`, parsed into a workspace-relative
+/// path set. Empty set when nothing is staged. Errors propagate so a
+/// missing git binary / non-repo invocation fails loudly rather than
+/// silently regenerating nothing.
+fn staged_paths(workspace_root: &Path) -> Result<BTreeSet<String>> {
+    let output = Command::new("git")
+        .arg("-C")
+        .arg(workspace_root)
+        .args(["diff", "--cached", "--name-only", "-z"])
+        .output()
+        .context("invoke `git diff --cached --name-only`")?;
+
+    if !output.status.success() {
+        bail!(
+            "`git diff --cached --name-only` exited non-zero: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+
+    // -z gives NUL-terminated records; tolerates filenames with
+    // newlines. We deliberately keep the workspace-relative POSIX form
+    // git emits — every comparison below uses the same shape.
+    let stdout = String::from_utf8(output.stdout)
+        .context("`git diff --cached --name-only -z` produced non-UTF8 output")?;
+
+    Ok(stdout
+        .split('\0')
+        .filter(|s| !s.is_empty())
+        .map(|s| s.to_owned())
+        .collect())
+}
+
+/// True when any staged path matches the same trigger pattern the
+/// pre-commit hook used to evaluate inline:
+/// `^(grammar/|crates/core/src/grammar/generated/|xtask/src/regen)`.
+/// Centralising the pattern in xtask keeps a single source of truth
+/// for what "grammar-relevant" means.
+fn staged_has_grammar_relevant(staged: &BTreeSet<String>) -> bool {
+    staged.iter().any(|p| {
+        p.starts_with("grammar/")
+            || p.starts_with("crates/core/src/grammar/generated/")
+            || p.starts_with("xtask/src/regen")
+    })
+}
+
+/// True when the grammar's source path or the conventional generated
+/// output path is in the staged set. Both comparisons are
+/// workspace-relative POSIX strings: the manifest's `path` is already
+/// in that form, and the output path is reconstructed via the same
+/// `crates/core/src/grammar/generated/<ident>.rs` convention as
+/// `output_path`.
+fn grammar_overlaps_staged(entry: &GrammarEntry, staged: &BTreeSet<String>) -> bool {
+    let source = entry.path.replace('\\', "/");
+    let generated = format!("crates/core/src/grammar/generated/{}.rs", entry.ident);
+    staged.contains(&source) || staged.contains(&generated)
 }

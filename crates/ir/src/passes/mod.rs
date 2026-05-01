@@ -7,6 +7,7 @@ pub mod audit;
 pub mod context;
 pub mod csp_domains;
 pub mod csp_strategy;
+pub mod facts;
 pub mod inspect;
 pub mod lr;
 pub mod materialization;
@@ -40,6 +41,7 @@ pub use csp_strategy::{
     components::{GrammarComponents, UnionFind, partition_by_call_graph},
     extract_regex_engine_decisions, solve_grammar_components,
 };
+pub use facts::FactAuthority;
 pub use lr::{eliminate_direct_lr, eliminate_indirect_lr};
 pub use materialization::{MaterializationClass, classify_materialization, mat_join};
 pub use metadata::{compute_aliases, compute_transparent, has_named_return_type};

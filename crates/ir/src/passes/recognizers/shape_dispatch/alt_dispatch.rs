@@ -57,11 +57,19 @@
 //! [`GrammarIR::shape_assignments`] to check that every `Ref` branch
 //! targets a classified rule.
 
+use crate::passes::FactAuthority;
 use crate::passes::inspect::unwrap_map_ow;
 use crate::passes::recognizers::shape_dispatch::ShapeTag;
 use crate::types::{GrammarIR, IrNode, RuleId};
 
 /// Detect AltDispatch-shape: a generalized leaf-dispatch Alt.
+///
+/// Tranche AZ-III.W3a.1 — branch admission consults the per-rule
+/// `shape_assignments` fact stream via [`FactAuthority::rule_shape`].
+/// The disconnect test
+/// `crates/ir/tests/passes/fact_authority.rs::shape_assignments_drive_classifier_dispatch`
+/// proves that clearing `ir.shape_assignments` flips this detector's
+/// admission for any branch that targets a previously-classified rule.
 pub fn detect_alt_dispatch(rule_id: RuleId, ir: &GrammarIR) -> bool {
     let rule = &ir.rules[rule_id as usize];
     let body = unwrap_map_ow(&rule.body);
@@ -71,7 +79,10 @@ pub fn detect_alt_dispatch(rule_id: RuleId, ir: &GrammarIR) -> bool {
     if branches.is_empty() {
         return false;
     }
-    branches.iter().all(|b| branch_is_admissible(&b.node, ir))
+    let auth = FactAuthority::new(ir);
+    branches
+        .iter()
+        .all(|b| branch_is_admissible(&b.node, &auth))
 }
 
 /// Whether a single Alt branch's body is an admissible AltDispatch
@@ -83,17 +94,17 @@ pub fn detect_alt_dispatch(rule_id: RuleId, ir: &GrammarIR) -> bool {
 /// - A Seq whose positions are ALL literals / regexes — covers
 ///   prefix-tree factoring (BBNF `type_name` Seqs like
 ///   `Seq(Literal("u"), Alt(Literal("8"), Literal("16"), ...))`).
-pub(super) fn branch_is_admissible(node: &IrNode, ir: &GrammarIR) -> bool {
+pub(super) fn branch_is_admissible(node: &IrNode, auth: &FactAuthority<'_>) -> bool {
     match unwrap_map_ow(node) {
-        IrNode::Ref(rid) => ir.shape_assignments.get(*rid).is_classified(),
+        IrNode::Ref(rid) => auth.rule_shape(*rid).is_classified(),
         IrNode::Regex(_) | IrNode::Literal(_) => true,
         // Seq / Next / Skip branches are admissible when every position
         // resolves to a Literal / Regex — this is the prefix-tree
         // factoring case (BBNF `type_name`'s `Seq(Literal("u"),
         // Alt(Literal("8"), …))` after optimization).
-        IrNode::Seq(children) => children.iter().all(|c| seq_position_is_leafy(c, ir)),
+        IrNode::Seq(children) => children.iter().all(|c| seq_position_is_leafy(c, auth)),
         IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
-            seq_position_is_leafy(lhs, ir) && seq_position_is_leafy(rhs, ir)
+            seq_position_is_leafy(lhs, auth) && seq_position_is_leafy(rhs, auth)
         }
         // Any other structure (nested Alt, Repeat, etc.) — reject.
         _ => false,
@@ -103,20 +114,22 @@ pub(super) fn branch_is_admissible(node: &IrNode, ir: &GrammarIR) -> bool {
 /// Whether a position inside a Seq branch is a leaf-like node (Literal
 /// / Regex / nested Seq of leaves / Alt of leaves / Ref-to-classified /
 /// Repeat of leafy inner).
-fn seq_position_is_leafy(node: &IrNode, ir: &GrammarIR) -> bool {
+fn seq_position_is_leafy(node: &IrNode, auth: &FactAuthority<'_>) -> bool {
     match unwrap_map_ow(node) {
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => true,
-        IrNode::Ref(rid) => ir.shape_assignments.get(*rid).is_classified(),
-        IrNode::Alt(branches, _) => branches.iter().all(|b| seq_position_is_leafy(&b.node, ir)),
-        IrNode::Seq(children) => children.iter().all(|c| seq_position_is_leafy(c, ir)),
+        IrNode::Ref(rid) => auth.rule_shape(*rid).is_classified(),
+        IrNode::Alt(branches, _) => branches
+            .iter()
+            .all(|b| seq_position_is_leafy(&b.node, auth)),
+        IrNode::Seq(children) => children.iter().all(|c| seq_position_is_leafy(c, auth)),
         IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
-            seq_position_is_leafy(lhs, ir) && seq_position_is_leafy(rhs, ir)
+            seq_position_is_leafy(lhs, auth) && seq_position_is_leafy(rhs, auth)
         }
         // AX.W0a.2.b — `Repeat(lo, hi, inner)` is leafy when its
         // inner is itself leafy. Covers CSS `typeSelector = wqName |
         // nsPrefix? , "*"` whose second branch is
         // `Seq(Repeat(0,1,Ref(nsPrefix)), Literal("*"))`.
-        IrNode::Repeat { inner, .. } => seq_position_is_leafy(inner, ir),
+        IrNode::Repeat { inner, .. } => seq_position_is_leafy(inner, auth),
         _ => false,
     }
 }

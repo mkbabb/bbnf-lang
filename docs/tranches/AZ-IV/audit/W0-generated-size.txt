@@ -1,0 +1,24 @@
+# W0 Generated-Size Budget Verification
+
+**Recorded**: 2026-05-01 by orchestrator at W0 close (HEAD `57ca2cb2`)
+**Pre-W0 baseline**: `docs/tranches/AZ-IV/audit/W0-pre-baseline.md` (commit `01c15564`)
+
+## Per-grammar LOC delta (post-W0.3 regen vs pre-W0)
+
+| Generated artefact | Pre-W0 LOC | Post-W0 LOC | Δ      | %       | Status |
+|---|---:|---:|---:|---:|---|
+| `crates/core/src/grammar/generated/bbnf.rs`          | 17260  | 17346  | +86    | +0.50 % | MET    |
+| `crates/core/src/grammar/generated/bnf.rs`           | 2500   | 2500   | 0      | 0.00 %  | MET    |
+| `crates/core/src/grammar/generated/css_l4.rs`        | 88213  | 85618  | -2595  | -2.94 % | MET    |
+| `crates/core/src/grammar/generated/css_pretty.rs`    | 4927   | 4930   | +3     | +0.06 % | MET    |
+| `crates/core/src/grammar/generated/csv.rs`           | 1227   | 1227   | 0      | 0.00 %  | MET    |
+| `crates/core/src/grammar/generated/ebnf.rs`          | 6047   | 6235   | +188   | +3.11 % | MET    |
+| `crates/core/src/grammar/generated/google_sheets.rs` | 11623  | 11113  | -510   | -4.39 % | MET    |
+| `crates/core/src/grammar/generated/json.rs`          | 2173   | 2176   | +3     | +0.14 % | MET    |
+| `crates/core/src/grammar/generated/math.rs`          | 624    | 624    | 0      | 0.00 %  | MET    |
+| `crates/core/src/grammar/generated/mod.rs`           | 35     | 35     | 0      | 0.00 %  | MET    |
+| **total**                                            | **134629** | **131804** | **-2825** | **-2.10 %** | **MET** |
+
+All grammars within the per-file ±5 % budget. Negative deltas (css_l4 -2.94 %, google_sheets -4.39 %) trace to the W0.3 lowering quartet eliminating redundant scaffolding for canonical-parser-tree compounds (the same defect class that drove the regen drift). No regression to flag.
+
+Source: `wc -l crates/core/src/grammar/generated/*.rs` at HEAD `57ca2cb2`.

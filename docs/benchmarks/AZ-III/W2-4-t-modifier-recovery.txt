@@ -1,0 +1,133 @@
+================================================================================
+AZ-III.W2.4.t - Lower-side Modifier Recovery (Fourth Codegen Divergence)
+================================================================================
+
+Date          : 2026-04-30
+Worktree      : /Users/mkbabb/Programming/bbnf-wt-azIII-w2-modifier
+Status        : PARTIAL — 3/9 grammars now match canonical regen (was 1/9).
+                Routes A and W3c remain open for 6 grammars.
+Lane HARD CAP : 45 min (W2.4.t dispatch).
+
+--------------------------------------------------------------------------------
+1. Restated dispatch
+--------------------------------------------------------------------------------
+
+W3a.4 returned BLOCKED with the fourth codegen-vs-bootstrap_parser divergence
+identified: `parse_keyword_BbnfBootstrap_modifier` (codegen) pushes Unit, not
+Span. `lower_factor` and `lower_mapped_factor` skipped Unit-kind children
+(empty span_text), so `apply_modifier` never fired and `*` / `+` / `?` / `?w`
+modifiers were lost in IR.
+
+Route A (per W3a.4): mirror W2.4.s's recover_binary_op for the modifier site.
+
+--------------------------------------------------------------------------------
+2. Implementation
+--------------------------------------------------------------------------------
+
+`crates/core/src/lower/expression/repeat.rs::lower_factor`:
+- Track `has_unit_marker = true` when a Unit-kind child appears among the
+  factor's children (the codegen modifier emitter's `push_leaf_with_unit`
+  signal).
+- When span-text classification produced no `modifier_text` and the Unit
+  marker is present, call `recover_modifier(term)` to scan the source
+  forward.
+
+`recover_modifier(term: BbnfView) -> Option<&'static str>`:
+- Anchor on `term.byte_span().hi` — the term's last source-bearing
+  descendant offset.
+- Scan input forward, skipping ASCII whitespace and group-closing
+  delimiters (`)` / `]` / `}`) that the codegen Term-shape emitter
+  consumes without span-pushing.
+- Match the first non-skip byte against the closed modifier alphabet:
+  `?w` (two-char, tested first), `?`, `*`, `+`.
+
+`crates/core/src/lower/expression/wrap.rs::lower_mapped_factor`:
+- Mirrors the same Unit-detection + recovery pattern. Under the codegen
+  alt_dispatch shape `factor` is sometimes inlined into `mapped_factor`
+  so the same modifier-loss applies; the recovery is hoisted via the
+  shared `recover_modifier` export from `repeat.rs`.
+
+--------------------------------------------------------------------------------
+3. Verification
+--------------------------------------------------------------------------------
+
+```
+cargo iter-check                    : exits 0 (Finished `ax-iter`)
+cargo fmt --all -- --check          : clean
+git diff --check                    : clean
+cargo nextest -p bbnf bbnf_*        : 76/76 passed (incl. bbnf_regen_is_idempotent
+                                       + json_regen_is_idempotent)
+cargo nextest -p bbnf-ir            : all passed
+cargo xtask regen --check           : 6 of 9 grammars drifted (was 8 of 9)
+                                       newly matching: csv, math, bnf
+                                       still drifting: bbnf, json, css_l4,
+                                       css_pretty, google_sheets, ebnf
+```
+
+--------------------------------------------------------------------------------
+4. Why partial
+--------------------------------------------------------------------------------
+
+The Unit-marker recovery resolves modifier slots reachable through
+`lower_factor` and `lower_mapped_factor`. Three grammars (csv, math, bnf)
+land green under this fix because their grammars only carry simple
+`factor`/`mapped_factor` modifier sites.
+
+The remaining 6 grammars (bbnf, json, css_l4, css_pretty, google_sheets,
+ebnf) retain drift. Per the W3a.4 evidence and the bnf debug trace, the
+full root cause includes additional shape losses outside the modifier
+site:
+
+  - The outer `(...)*` / `(...)+` iteration wrappers on `concatenation`
+    and `alternation` rules also lose their Repeat under codegen because
+    the iteration is implemented as a per-iteration loop in
+    `concatenation = ( binary_factor ?w , "," ? ) +`-style rules. The
+    iteration loop is consumed without producing a Repeat IR node.
+  - Some Term groupings inside grouped expressions lose the close
+    delimiter span and the modifier slot is propagated up but the term
+    span anchor is too short to find the modifier punctuator after
+    multiple close-delimiter consumptions.
+
+Routing closer (per W3a.4 §5):
+  - Route A continued: extend `lower_concatenation` / `lower_alternation`
+    to wrap their iterations in `Repeat(0..=MAX, _)` when the rule body
+    source carries `+`/`*` modifiers.
+  - Route B (W3c): modify the codegen Keyword-shape emitter to push a
+    Span leaf with the matched modifier text. Eliminates the Unit-marker
+    recovery entirely.
+
+--------------------------------------------------------------------------------
+5. Files changed
+--------------------------------------------------------------------------------
+
+  crates/core/src/lower/expression/repeat.rs
+    + Unit-kind detection in `lower_factor`'s child classification
+    + new `recover_modifier(term)` source-gap scanner
+
+  crates/core/src/lower/expression/wrap.rs
+    + Unit-kind detection in `lower_mapped_factor`'s child classification
+    + invokes shared `recover_modifier` from repeat.rs
+
+--------------------------------------------------------------------------------
+6. Verdict
+--------------------------------------------------------------------------------
+
+PARTIAL. AZ-III hard gate 1 (`cargo xtask regen --check` green) NOT yet
+closed; reduced from 8/9 drift to 6/9 drift. BBNF parity (76/76) still
+green; IR tests still green; iter-check still green.
+
+Remaining redress: extend the carve to `lower_concatenation` /
+`lower_alternation` per W3a.4 Route A continuation, OR open the W3c
+emitter Span-push fix (Route B).
+
+--------------------------------------------------------------------------------
+7. Time accounting
+--------------------------------------------------------------------------------
+
+  Read tranche/wave docs + W3a.4 evidence       :  ~5 min
+  Initial fix (factor.byte_span scan)           :  ~5 min
+  Diagnose: byte_span doesn't reach modifier    : ~10 min
+  Pivot: Unit-marker detection + forward scan   : ~10 min
+  Extend recovery to lower_mapped_factor        : ~10 min
+  Verification + lint cadence                   :  ~5 min
+  Total                                         : ~45 min (at hard cap)

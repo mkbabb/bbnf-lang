@@ -1,0 +1,142 @@
+# W0 Dev-Iteration Baseline (cold + warm walls)
+Recorded: 2026-05-01 by orchestrator at W0 close (HEAD 57ca2cb2)
+Reference: AZ-III baseline at docs/benchmarks/archive/AZ-III/W0p-bench-iter-walls.txt
+
+Method: target dir cleaned before cold; warm run immediately follows.
+
+## cargo iter-check
+### Cold
+     |
+6716 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: `bbnf` (lib) generated 186 warnings (run `cargo fix --lib -p bbnf` to apply 8 suggestions)
+    Checking xtask v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/xtask)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 10.82s
+real 10.89
+user 11.71
+sys 3.54
+(stdout truncated; tail in /tmp/dev-baseline-out.txt)
+### Warm
+    --> crates/core/src/grammar/generated/google_sheets.rs:6716:24
+     |
+6716 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: `bbnf` (lib) generated 186 warnings (run `cargo fix --lib -p bbnf` to apply 8 suggestions)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 41.61s
+real 41.65
+user 0.10
+sys 0.12
+
+## cargo iter-test-leaf
+### Cold
+        PASS [   0.010s] (549/553) egraph::saturation pure_union_rule_counted_as_work
+        PASS [   0.009s] (550/553) egraph::unionfind make_set_distinct
+        PASS [   0.011s] (551/553) egraph::saturation multi_iteration_flatten_reaches_fixed_point
+        PASS [   0.010s] (552/553) egraph::unionfind path_compression
+        PASS [   0.011s] (553/553) egraph::saturation no_op_saturates_in_one_iteration
+────────────
+     Summary [   0.388s] 553 tests run: 553 passed, 6 skipped
+real 52.89
+user 195.98
+sys 10.96
+(stdout truncated; tail in /tmp/dev-baseline-out.txt)
+### Warm
+        PASS [   0.008s] (549/553) egraph::saturation no_op_saturates_in_one_iteration
+        PASS [   0.008s] (550/553) egraph::unionfind make_set_distinct
+        PASS [   0.009s] (551/553) egraph::saturation pure_union_rule_counted_as_work
+        PASS [   0.008s] (552/553) egraph::unionfind path_compression
+        PASS [   0.007s] (553/553) egraph::unionfind union_and_find
+────────────
+     Summary [   0.351s] 553 tests run: 553 passed, 6 skipped
+real 45.07
+user 2.51
+sys 2.14
+
+## cargo iter-check-full
+### Cold
+    |
+176 | pub(crate) fn is_grouped_term(node: BbnfView<'_, '_>) -> bool {
+    |               ^^^^^^^^^^^^^^^
+
+warning: `bbnf-analysis` (lib) generated 2 warnings
+    Checking bbnf-lsp v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/crates/lsp)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 12.47s
+real 12.52
+user 15.44
+sys 3.82
+(stdout truncated; tail in /tmp/dev-baseline-out.txt)
+### Warm
+   --> crates/analysis/src/state/ast_utils/mod.rs:176:15
+    |
+176 | pub(crate) fn is_grouped_term(node: BbnfView<'_, '_>) -> bool {
+    |               ^^^^^^^^^^^^^^^
+
+warning: `bbnf-analysis` (lib) generated 2 warnings
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 0.28s
+real 0.32
+user 0.09
+sys 0.10
+
+## cargo bench-iter-json --no-run
+### Cold
+error: no such command: `bench-iter-json --no-run`
+
+help: view all installed commands with `cargo --list`
+help: find a package to install `bench-iter-json --no-run` with `cargo search cargo-bench-iter-json --no-run`
+real 0.03
+user 0.01
+sys 0.00
+(stdout truncated; tail in /tmp/dev-baseline-out.txt)
+### Warm
+error: no such command: `bench-iter-json --no-run`
+
+help: view all installed commands with `cargo --list`
+help: find a package to install `bench-iter-json --no-run` with `cargo search cargo-bench-iter-json --no-run`
+real 0.02
+user 0.01
+sys 0.00
+
+## cargo xtask regen --check
+### Cold
+error: no such command: `xtask regen --check`
+
+help: view all installed commands with `cargo --list`
+help: find a package to install `xtask regen --check` with `cargo search cargo-xtask regen --check`
+real 0.02
+user 0.01
+sys 0.00
+(stdout truncated; tail in /tmp/dev-baseline-out.txt)
+### Warm
+error: no such command: `xtask regen --check`
+
+help: view all installed commands with `cargo --list`
+help: find a package to install `xtask regen --check` with `cargo search cargo-xtask regen --check`
+real 0.02
+user 0.01
+sys 0.00
+
+## cargo nextest run --workspace --cargo-profile ax-iter
+### Cold
+  |
+4 | use bbnf::lower::{DirectiveSet, lower_to_ir};
+  |                   ^^^^^^^^^^^^  ^^^^^^^^^^^
+
+warning: `bbnf` (test "pipeline") generated 3 warnings (run `cargo fix --test "pipeline" -p bbnf` to apply 3 suggestions)
+warning: `bbnf` (lib test) generated 186 warnings (186 duplicates)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 1m 30s
+real 114.68
+user 409.13
+sys 53.74
+### Warm
+   |    ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `bbnf` (lib test) generated 186 warnings (186 duplicates)
+warning: `bbnf-ir` (test "vm") generated 3 warnings (run `cargo fix --test "vm" -p bbnf-ir` to apply 2 suggestions)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 0.39s
+real 1.24
+user 1.26
+sys 1.05

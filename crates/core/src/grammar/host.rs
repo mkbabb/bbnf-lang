@@ -358,21 +358,50 @@ fn collect_pretty_hint_descendants<'a>(view: BbnfView<'a, 'a>, out: &mut Vec<Cow
 /// Directives with the shape `@keyword (identifier | "*") ;` —
 /// `@token` (identifier only) and `@debug` (identifier or `*`).
 ///
-/// The `*` wildcard branch projects no identifier child; we scan
-/// the directive's span text after stripping the leading keyword.
-fn decode_single_name<'a>(item: BbnfView<'a, 'a>, keyword: &str) -> Option<Cow<'a, str>> {
+/// The `*` wildcard branch projects no identifier child; we descend
+/// the directive's view structurally looking for a `*` Span leaf.
+///
+/// **AZ-IV.W1.5 (Fermat F10) — grammar-derived recovery**: pre-W1.5
+/// the wildcard fallback used `text.strip_prefix(keyword)` over the
+/// directive's full span text. Per the audit, the keyword strings
+/// (`"@token"`, `"@debug"`) are hand-coded literals — exactly the
+/// rule-name overfit the hardening pass names as a deletion target.
+/// The structural descend below reads the typed `BbnfView` tree
+/// produced by the canonical generated parser; the keyword-strip
+/// argument is now unused.
+fn decode_single_name<'a>(item: BbnfView<'a, 'a>, _keyword: &str) -> Option<Cow<'a, str>> {
     if let Some(name) = find_first_identifier(item) {
         if !name.is_empty() {
             return Some(Cow::Owned(name.to_string()));
         }
     }
-    let text = item.span_text();
-    let body = text.strip_prefix(keyword).unwrap_or(text);
-    if body.trim_start().starts_with('*') {
+    if find_wildcard_span(item) {
         Some(Cow::Borrowed("*"))
     } else {
         None
     }
+}
+
+/// Descend `view` looking for a `*` Span leaf among descendants.
+///
+/// The `@debug *` wildcard branch projects a single `*` Span leaf
+/// past the keyword leaf. `find_first_identifier` rejects `*`
+/// because it isn't an identifier, so this companion descent
+/// confirms the wildcard's structural presence without
+/// keyword-stripping.
+fn find_wildcard_span(view: BbnfView<'_, '_>) -> bool {
+    fn descend(view: BbnfView<'_, '_>) -> bool {
+        if view.kind() == BbnfKind::Span && view.span_text().trim() == "*" {
+            return true;
+        }
+        for child in view.children() {
+            if descend(child) {
+                return true;
+            }
+        }
+        false
+    }
+    descend(view)
 }
 
 /// `@ws /regex/ ;` — find the regex leaf and strip the surrounding

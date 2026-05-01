@@ -204,24 +204,25 @@ fn write_audit_coverage_artefact(ir: &GrammarIR) {
     if ir.rules.is_empty() {
         return;
     }
-    // Resolve the grammar's entry-rule name as the row key. The
-    // `Custom(&'static str)` variant is the safe default for
-    // arbitrary grammars; JSON / CSS L4 / Sheets exercise the typed
-    // variants. `Box::leak` produces the required `&'static str`;
-    // each pipeline compile leaks one ident-sized string — a
-    // bounded, one-shot allocation matching cargo's per-build
-    // process lifetime.
+    // AZ-IV.W1.5 (Fermat F6) — per `audit/HARDENING-2026-05-01-fermat.md`
+    // the prior rule-name → `GrammarAuditTag` aliasing arm-list (`"value"
+    // | "json"` → `Json`, `"stylesheet" | "css_l4" | "cssL4"` → `CssL4`,
+    // ...) was hard-coded grammar-entry-name aliasing — exactly the
+    // overfit class AZ-IV §Invariants 2 names as a deletion target.
+    // The audit-coverage artefact is a debug-only diagnostic
+    // (`#[cfg(debug_assertions)]` below), so keying directly on the
+    // entry-rule string preserves the artefact contract while removing
+    // every literal grammar-name branch from production runtime.
+    //
+    // `Box::leak` produces the required `&'static str`; each pipeline
+    // compile leaks one ident-sized string — a bounded, one-shot
+    // allocation matching cargo's per-build process lifetime.
     let entry_name: &'static str = Box::leak(
         ir.get_string(ir.rules[ir.entry as usize].name)
             .to_string()
             .into_boxed_str(),
     );
-    let tag = match entry_name {
-        "value" | "json" => GrammarAuditTag::Json,
-        "stylesheet" | "css_l4" | "cssL4" => GrammarAuditTag::CssL4,
-        "spreadsheet" | "sheets" | "google_sheets" => GrammarAuditTag::Sheets,
-        other => GrammarAuditTag::Custom(other),
-    };
+    let tag = GrammarAuditTag::Custom(entry_name);
     let coverage = audit_payload_coverage(ir, tag.clone(), &&ir.struct_registry);
 
     // AZ-I.W2-act.close A.fix — wire-or-delete decay item. The

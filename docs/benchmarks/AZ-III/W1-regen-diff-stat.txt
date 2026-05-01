@@ -1,0 +1,65 @@
+## AZ-III.W1.1 Regen — Pre/post-regen diff stat
+
+Run: `cd /Users/mkbabb/Programming/bbnf-wt-azIII-w1-regen && cargo xtask regen`
+HEAD: 6063460c (`docs(az-iii.progress): mark W0 and W0p complete with hard-gate counts`)
+Date: 2026-04-30
+
+### git status --porcelain (before regen)
+
+```
+(empty — worktree clean against HEAD)
+```
+
+### cargo xtask regen (full surface, all 9 grammars)
+
+```
+regen bbnf: wrote 1118619 bytes to crates/core/src/grammar/generated/bbnf.rs
+regen json: wrote 79872 bytes to crates/core/src/grammar/generated/json.rs
+regen css_l4: wrote 7080807 bytes to crates/core/src/grammar/generated/css_l4.rs
+regen css_pretty: wrote 250097 bytes to crates/core/src/grammar/generated/css_pretty.rs
+regen google_sheets: wrote 705022 bytes to crates/core/src/grammar/generated/google_sheets.rs
+regen ebnf: wrote 246660 bytes to crates/core/src/grammar/generated/ebnf.rs
+regen bnf: wrote 95961 bytes to crates/core/src/grammar/generated/bnf.rs
+regen csv: wrote 47376 bytes to crates/core/src/grammar/generated/csv.rs
+regen math: wrote 25767 bytes to crates/core/src/grammar/generated/math.rs
+EXIT=0
+```
+
+### git status --porcelain (after regen)
+
+```
+(empty — content-equality skip preserved every file's mtime; no diff against HEAD)
+```
+
+### git diff --stat -- crates/core/src/grammar/generated/
+
+```
+(empty — generated tree byte-identical pre and post regen)
+```
+
+### Per-grammar LOC (steady state at HEAD)
+
+```
+   16984 crates/core/src/grammar/generated/bbnf.rs
+    2440 crates/core/src/grammar/generated/bnf.rs
+   86268 crates/core/src/grammar/generated/css_l4.rs
+    4795 crates/core/src/grammar/generated/css_pretty.rs
+    1188 crates/core/src/grammar/generated/csv.rs
+    6002 crates/core/src/grammar/generated/ebnf.rs
+   11269 crates/core/src/grammar/generated/google_sheets.rs
+    2164 crates/core/src/grammar/generated/json.rs
+     624 crates/core/src/grammar/generated/math.rs
+      35 crates/core/src/grammar/generated/mod.rs
+  131769 total
+```
+
+### Conclusion
+
+The regen substrate's content-equality skip (xtask/src/regen.rs:402-407) means
+bytes never change when the regenerated output equals the on-disk file. The
+empty diff-stat is the deterministic substrate's affirmation that the
+checked-in generated tree at HEAD agrees with the generator at HEAD.
+
+Hard gate 1 (`cargo xtask regen --check` green) is met at HEAD without any
+source change. See `W1-regen-root-cause.md` for the audit-vs-HEAD
+reconciliation.

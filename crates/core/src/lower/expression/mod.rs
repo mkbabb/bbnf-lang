@@ -77,15 +77,33 @@ pub(crate) fn dispatch_expression<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx
     // their input is the semantic head.
     let node = peel_transparent(node);
 
-    // Leaf fast-path: only when the node's span is a SINGLE closed
-    // bbnf leaf token — a bare identifier, an unquoted epsilon
-    // keyword, a regex literal bounded by `/ ... /`, or a string
-    // literal bounded by matching quotes with no interior punctuation
-    // that would indicate a compound expression. The guard prevents
-    // a multi-branch alternation whose full-source span happens to
-    // start and end with the same quote byte (e.g. `literal`'s body)
-    // from being swallowed as a single `Literal` IR node.
-    if is_single_token_span(node) {
+    // Leaf fast-path — STRUCTURAL gate (AZ-IV.W0.3): admit only true
+    // `BbnfKind::Span` leaves. The previous span-text predicate
+    // (`is_single_token_span`) accepted any compound whose
+    // `span_text()` happened to be a bare identifier / epsilon /
+    // bounded literal / bounded regex, which silently bypassed
+    // structural lowering for compounds whose Unit modifier markers
+    // and group delimiters consume bytes without contributing spans.
+    //
+    // For example, the BBNF `grammar = ( grammar_item ?w ) *` rule
+    // produces an Alternation → Concatenation → BinaryFactor →
+    // MappedFactor → Factor → Term wrapper chain whose every
+    // `byte_span()` aggregates only the `"grammar_item"` Span
+    // descendant — so the predicate would resolve the whole rule
+    // to `Ref(grammar_item)` instead of
+    // `Repeat(OptionalWhitespace(Ref(grammar_item)))`, dropping
+    // both the outer `*` and inner `?w` modifiers from the IR.
+    //
+    // Per `feedback_typed-materialization-invariant`, every
+    // structural element of the grammar must reach the IR shape;
+    // predicate-driven detection that loses information on a
+    // span-text coincidence is the same defect class as the triad
+    // in `wrap.rs` / `repeat.rs` / `alt.rs`. The structural answer
+    // is to gate on `kind() == BbnfKind::Span` — compound views
+    // (whether kind-enumerated, anonymous-`Other`, or otherwise)
+    // always route through compound dispatch so wrapping compounds
+    // carrying modifier / Map / Repeat content are descended into.
+    if matches!(node.kind(), BbnfKind::Span) {
         if let Some(leaf) = lower_leaf_by_span_text(node, ctx) {
             return leaf;
         }
@@ -177,10 +195,11 @@ pub(crate) fn dispatch_expression<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx
         | Some(BbnfCompoundKind::HostDirective)
         | Some(BbnfCompoundKind::Directive) => IrNode::Epsilon,
 
-        // Span / leaf focus that survived `is_single_token_span` —
-        // dispatch by content. Covers Span-projected leaves (raw
-        // identifier, literal text, regex text) plus Other compounds
-        // already handled above.
+        // No compound kind — this is a leaf that the Span fast-path
+        // above didn't classify (e.g. a Span whose text shape
+        // doesn't match the closed leaf vocabulary, or an Int/Float
+        // /Bool/Tag/Unit leaf). Route to `lower_term` for content-
+        // based classification with panic-on-unmatched-shape.
         None => lower_term(node, ctx),
 
         // Fallback: every other compound kind (Rule, Lhs, Rhs,
@@ -193,82 +212,6 @@ pub(crate) fn dispatch_expression<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx
 }
 
 // ─── Term layer (leaf + grouped-term routing) ─────────────────────────────────
-
-/// Whether `node`'s trimmed span is a single closed bbnf leaf
-/// token — a bare identifier, `epsilon` / `ε`, a regex literal,
-/// or a quoted string with no interior break into a compound
-/// expression.
-///
-/// The gate stops the leaf fast-path in `dispatch_expression`
-/// from swallowing a multi-branch alternation whose full-source
-/// span happens to start and end with the same quote / bracket
-/// byte (e.g. `literal`'s body, which begins with `"` and ends
-/// with another `"` on the last branch after a run of `,` / `|`
-/// compounds in between).
-fn is_single_token_span(node: BbnfView<'_, '_>) -> bool {
-    let trimmed = node.span_text().trim();
-    if trimmed.is_empty() {
-        return false;
-    }
-    let bytes = trimmed.as_bytes();
-    // Regex literal `/ ... /` — forbid a `/` inside the body that
-    // would imply multiple regex literals concatenated.
-    if bytes[0] == b'/' && bytes.len() >= 2 && bytes[bytes.len() - 1] == b'/' {
-        let interior = &trimmed[1..trimmed.len() - 1];
-        let mut escaped = false;
-        for ch in interior.chars() {
-            if escaped {
-                escaped = false;
-                continue;
-            }
-            if ch == '\\' {
-                escaped = true;
-                continue;
-            }
-            if ch == '/' {
-                return false;
-            }
-        }
-        return true;
-    }
-    // String literal `"..."` / `'...'` / `` `...` `` — forbid
-    // unescaped interior quotes.
-    if let first @ (b'"' | b'\'' | b'`') = bytes[0] {
-        if bytes.len() < 2 || bytes[bytes.len() - 1] != first {
-            return false;
-        }
-        let quote = first as char;
-        let interior = &trimmed[1..trimmed.len() - 1];
-        let mut escaped = false;
-        for ch in interior.chars() {
-            if escaped {
-                escaped = false;
-                continue;
-            }
-            if ch == '\\' {
-                escaped = true;
-                continue;
-            }
-            if ch == quote {
-                return false;
-            }
-        }
-        return true;
-    }
-    // Epsilon keyword.
-    if trimmed == "epsilon" || trimmed == "ε" {
-        return true;
-    }
-    // Bare identifier — matches the bbnf `identifier` regex.
-    if (bytes[0].is_ascii_alphabetic() || bytes[0] == b'_')
-        && bytes
-            .iter()
-            .all(|b| b.is_ascii_alphanumeric() || *b == b'_' || *b == b'-')
-    {
-        return true;
-    }
-    false
-}
 
 /// Span-text variant of [`lower_leaf_by_span_text`] that operates
 /// on a bare `&str` (rather than a view). Used by

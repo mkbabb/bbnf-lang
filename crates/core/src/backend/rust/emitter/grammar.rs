@@ -195,15 +195,6 @@ impl RustEmitter {
             super::precedence::emit_precedence_lut(ident.to_string().as_str(), &chain_facts)
         };
 
-        // Debug trace depth counter (only emitted if any rule
-        // uses @debug).
-        let has_debug = ir.debug_all || ir.rules.iter().any(|r| r.meta.directives.debug);
-        let depth_counter = if has_debug {
-            crate::backend::rust::trace::emit_depth_counter()
-        } else {
-            quote! {}
-        };
-
         let extra = &self.extra_impl_methods;
 
         // AW-V.W3.2 — per-shape emitter modules.
@@ -336,7 +327,6 @@ impl RustEmitter {
             #type_defs
 
             impl #ident {
-                #depth_counter
                 #extra
 
                 #parse_docs

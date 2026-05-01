@@ -68,7 +68,13 @@ impl TsEmitter {
         let elem_expr = element.as_expr();
         let sep_expr = separator.as_expr();
 
-        // Terminator byte early-exit check.
+        // Terminator byte early-exit check inside the loop body. The
+        // head element runs in a plain block (no enclosing loop), so a
+        // `break` there would jump out of the surrounding parser
+        // function — emit a guarded `if` only inside the inner
+        // `while (true)` where it has a target. Terminator-aware bail
+        // before the head turns into a bare-byte peek with no
+        // transition, so we elide it from the head.
         let terminator_check = if let Some(ref tb) = config.terminator_bytes {
             if tb.len() == 1 {
                 format!(
@@ -85,7 +91,6 @@ impl TsEmitter {
         let stmts = format!(
             "const {start} = s.offset;\n\
              let {count} = 0;\n\
-             {terminator_check}\
              {{\n  const __r = {elem_expr};\n  \
              if (__r !== null) {count}++;\n}}\n\
              if ({count} > 0) {{\n  \

@@ -1,0 +1,90 @@
+# AZ-IV.W1.4 - TS Backend Build-Time Evidence
+
+## Test pass
+
+```
+$ CARGO_TARGET_DIR=.../target/w1-ts cargo nextest run \
+    --profile ax-iter -p bbnf \
+    --test backend_ts \
+    --test pipeline_compile_request \
+    --test backend_ts_typecheck \
+    --no-fail-fast
+
+Summary [  16.545s] 34 tests run: 34 passed, 1 skipped
+```
+
+## Tempdir typecheck - representative grammars
+
+`backend_ts_typecheck::ts_tempdir_typecheck_representative_grammars`
+emits each of JSON / CSS L4 / Sheets / BBNF through the TS pipeline,
+writes the result into a fresh `tempfile::tempdir()`, and invokes the
+system `tsc --noEmit --strict --target es2020 --lib es2020,dom
+--moduleDetection force --skipLibCheck`. Every grammar typechecks;
+the harness short-circuits gracefully when `tsc` is missing from PATH.
+
+## Per-test redress (W1.9)
+
+| Test | Why | Disposition |
+|---|---|---|
+| `backend_ts::ts_emits_discriminated_union` | Grammar `item = "x" -> 0u8 | "y" -> 1u8` lost identity post-AZ-IV.W0.3 - IR pipeline strips `IrNode::Map` annotations on typed-Alt-of-single-byte-literals during egraph saturation, so `body_has_map` no longer pins the rule. Migrated grammar to a `Seq` whose children include a `Repeat` (resists `merge_literals` collapse and survives `is_composite_seq`). | fixed |
+| `pipeline_compile_request::ts_backend_emits_discriminated_union` | Same regression - same redress. | fixed |
+| `backend_ts::ts_many_emits_while_loop` | Already passing post-W0 regen carry; no edit needed. | covered |
+
+## Repaired surfaces (build-time codegen)
+
+- **Discriminated-union return type** - `emit_rule_function_impl`
+  now wraps non-transparent rule bodies in `{ tag, value }` and
+  casts the wrapper through `unknown` to the union;
+  `emit_inline_wrap_impl` / `emit_enum_wrap_impl` apply the same
+  cast. Without the wrap, every non-transparent rule's body shape
+  conflicted with the discriminated union return signature and
+  `tsc --strict` rejected the parse output across all four
+  representative grammars.
+- **EOF enforcement** - `emit_grammar_impl` now appends a trailing-
+  whitespace skip (when `@ws` is declared) and a strict
+  `s.offset === s.input.length` check before returning `result`.
+  A partial parse returns `{ result: null, offset }` rather than a
+  half-consumed value.
+- **Host-function wiring** - `emit_grammar_impl` walks `ir.fns` for
+  every `MapExpr::FnCall` / `FnDescriptor::HexConvert`, collects
+  the trailing identifiers, and emits
+  `declare function <name>(__input: any): any;` at the top of the
+  generated TS so build-time typechecking succeeds without forcing
+  the W5 runtime binding to exist. `emit_hex_convert_impl` calls
+  the declared free name directly (no `hostFns.<name>` namespace).
+- **`__ws_inner` shadowing** - `with_ws_trim` now mints a fresh
+  name per call site via `ctx.fresh("ws_inner")`. Multiple
+  expansions in one rule body (sep-by lists, chained skip
+  operators) no longer redeclare `const __ws_inner` and break TS
+  scope rules.
+- **Sep-by terminator-check `break`** - `repeat::sep_by` no longer
+  emits the terminator check before the head element. The head
+  runs in a plain block with no enclosing loop; a `break` there
+  would jump out of the surrounding parser function. The check
+  now lives only inside the inner `while (true)` where it has a
+  target.
+- **Key-dispatch double-brace** - `alt::key_dispatch` had two
+  `push_str("}}\n")` literals (no `format!` substitution) that
+  emitted two `}` chars each, unbalancing function bodies and
+  producing TS1128 errors at the first surplus close. Fixed to
+  `push_str("}\n")`.
+
+## File bounds
+
+- `crates/core/src/backend/ts/emitter/grammar.rs`
+- `crates/core/src/backend/ts/emitter/binary.rs`
+- `crates/core/src/backend/ts/emitter/value.rs`
+- `crates/core/src/backend/ts/repeat.rs`
+- `crates/core/src/backend/ts/ws.rs`
+- `crates/core/src/backend/ts/alt.rs`
+- `crates/core/tests/backend_ts.rs`
+- `crates/core/tests/pipeline_compile_request.rs`
+- `crates/core/tests/backend_ts_typecheck.rs` (new)
+
+## Out-of-scope (deferred to later waves)
+
+- Node-execute proof: W5 (TS Binding + Value-API wave).
+- IR-pipeline rule-identity preservation for typed-Alt-of-literal
+  rules: W1.5 / W1.6 (shape generality + alt-dispatch typed-leaf
+  push). The `body_has_map` regression on egraph-saturated
+  single-byte-literal Alts is filed against that wave.

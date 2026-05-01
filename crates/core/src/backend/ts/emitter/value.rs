@@ -23,9 +23,12 @@ impl TsEmitter {
         let mut stmts = String::new();
         let inner_expr = inner.dissolve(&mut stmts);
         stmts.push_str(&format!("const {v} = {inner_expr};\n"));
+        let enum_name = &self.enum_name;
         TsCode::new(
             stmts,
-            format!("{v} !== null ? {{ tag: \"{variant_name}\" as const, value: {v} }} : null"),
+            format!(
+                "{v} !== null ? ({{ tag: \"{variant_name}\" as const, value: {v} }} as unknown as {enum_name}) : null"
+            ),
         )
     }
 
@@ -106,10 +109,15 @@ impl TsEmitter {
         let v = ctx.fresh("hex");
         let mut stmts = String::new();
         let inner_expr = inner.dissolve(&mut stmts);
-        // fn_path is a Rust path — translate to a host function call.
+        // The grammar emits `fn_path` as a Rust module path; the TS
+        // backend collapses it to the trailing identifier and emits a
+        // free-function call. `emit_grammar_impl` declares each
+        // referenced host fn via `declare function …` at the top of
+        // the source so `tsc --strict` typechecks the generated parser
+        // without forcing the W5 runtime binding to be present.
         let js_fn = fn_path.rsplit("::").next().unwrap_or(fn_path);
         stmts.push_str(&format!(
-            "const {v} = ({inner_expr}) !== null ? hostFns.{js_fn}({inner_expr}) : null;\n"
+            "const {v} = ({inner_expr}) !== null ? {js_fn}({inner_expr}) : null;\n"
         ));
         TsCode::new(stmts, v)
     }

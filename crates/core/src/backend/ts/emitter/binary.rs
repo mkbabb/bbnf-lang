@@ -33,7 +33,17 @@ impl TsEmitter {
             let mut stmts = String::new();
             let body_expr = body.dissolve(&mut stmts);
             stmts.push_str(&format!("const {v} = {body_expr};\n"));
-            let expr = format!("{v} !== null ? {{ tag: \"{name}\" as const, value: {v} }} : null");
+            // Cast the literal to the union via `unknown` — TypeScript
+            // would otherwise narrow the inferred shape on the inline
+            // wrap site (`{ tag: name; value: <body-shape> }`) and
+            // reject mismatches against the variant declared in the
+            // type definitions. The W1.4 TS runtime models grouped /
+            // repeated rules as raw spans; the W5 typed-materialiser
+            // closes the structural gap.
+            let enum_name = &self.enum_name;
+            let expr = format!(
+                "{v} !== null ? ({{ tag: \"{name}\" as const, value: {v} }} as unknown as {enum_name}) : null"
+            );
             TsCode::new(stmts, expr)
         } else {
             body

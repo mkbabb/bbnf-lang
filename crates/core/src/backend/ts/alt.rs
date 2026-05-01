@@ -137,13 +137,17 @@ impl TsEmitter {
             let expr = kd_branch.body.dissolve(&mut stmts);
             stmts.push_str(&format!("    {result} = {expr};\n  }}\n"));
         }
-        stmts.push_str("}}\n");
+        // `push_str` is a literal copy — a doubled brace here would
+        // emit two `}` chars and unbalance the function body. The
+        // closing `}` matches the `if (__kd_m !== null) {` opened
+        // above; the second close lives in the fallback block.
+        stmts.push_str("}\n");
         stmts.push_str(&format!("if ({result} === null) {{\n  s.offset = {cp};\n"));
         if let Some((_info, fb)) = fallback {
             let expr = fb.dissolve(&mut stmts);
             stmts.push_str(&format!("  {result} = {expr};\n}}\n"));
         } else {
-            stmts.push_str("}}\n");
+            stmts.push_str("}\n");
         }
         TsCode::new(stmts, result)
     }

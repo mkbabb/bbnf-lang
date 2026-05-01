@@ -60,15 +60,26 @@ fn ts_emits_span_helper() {
 
 #[test]
 fn ts_emits_discriminated_union() {
-    // AW-I.W2.5: `item = "x" | "y"` is a small untyped Alt rule that
-    // post-fuse gets inlined into `list`. For the discriminated-union
-    // codegen to survive, retain the typed Alt shape via a `->`
-    // annotation on each branch — this attaches an `IrNode::Map` per
-    // branch and the `body_has_map` guard in fuse / inline preserves
-    // the rule's identity.
+    // AZ-IV.W1.4: keep `item` alive across the structural
+    // normaliser's inline+fuse gates with a body shape that resists
+    // both literal merging and aggressive inlining. A `Seq` whose
+    // children include a `Repeat` survives `is_composite_seq` (the
+    // gate preserves rules whose body has two or more children of
+    // distinct kinds), so the rule's identity reaches the TS
+    // emitter and the discriminated union retains the `item`
+    // variant.
+    //
+    // The previous `item = "x" -> 0u8 | "y" -> 1u8` shape relied on
+    // `body_has_map`, but the AZ-IV.W0.3 IR pipeline strips Map
+    // annotations during egraph saturation when the rule body is a
+    // typed Alt of single-byte literals, so the identity contract
+    // evaporated. A literal-Seq form like `"x", "y"` collapses
+    // through `merge_literals` into a single `Lit("xy")` and
+    // becomes inlinable on the next iteration; the
+    // `Repeat`-bearing Seq below avoids both pitfalls.
     let source = compile_ts(
         r#"
-        item = "x" -> 0u8 | "y" -> 1u8 ;
+        item = "x", { "y" } ;
         list = item, { item } ;
     "#,
     );

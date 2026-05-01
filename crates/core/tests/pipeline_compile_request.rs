@@ -256,15 +256,20 @@ fn ts_backend_produces_valid_structure() {
 
 #[test]
 fn ts_backend_emits_discriminated_union() {
-    // AW-I.W2.5: typed discriminants (`-> 0u8`/`-> 1u8`) attach an
-    // `IrNode::Map` per branch; the `body_has_map` guard in
-    // fuse / inline preserves the rule identity across the structural
-    // normaliser loop, so the TS backend emits the discriminated
-    // union variant for `item`. Without the typed annotations a small
-    // untyped Alt rule at single-use reference count would inline
-    // into its caller (`list`) and the union variant would vanish.
+    // AZ-IV.W1.4: a `Seq` whose children include a `Repeat` resists
+    // both literal merging and aggressive acyclic inlining — the
+    // body has two or more children of distinct kinds, so the
+    // structural normaliser's `is_composite_seq` gate pins the
+    // rule's identity through the loop. The TS backend then emits
+    // both `item` and `list` variants in the discriminated union.
+    //
+    // The previous `item = "x" -> 0u8 | "y" -> 1u8` shape relied on
+    // `body_has_map` to keep `item` alive, but the AZ-IV.W0.3 IR
+    // pipeline strips Map annotations during egraph saturation when
+    // the rule body is a typed Alt of single-byte literals, so the
+    // identity contract evaporated.
     let grammar = r#"
-        item = "x" -> 0u8 | "y" -> 1u8 ;
+        item = "x", { "y" } ;
         list = item, { item } ;
     "#;
 

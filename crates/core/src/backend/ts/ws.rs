@@ -20,7 +20,10 @@ impl TsEmitter {
     ) -> TsCode {
         let mut stmts = ws_skip_stmts(ws_pattern, ctx);
         let inner_expr = inner.dissolve(&mut stmts);
-        let v = "__ws_inner";
+        // Generate a fresh name per call site — multiple `with_ws_trim`
+        // expansions inside one rule body (typical for sep-by lists or
+        // chained skip operators) cannot collide on the same `const`.
+        let v = ctx.fresh("ws_inner");
         stmts.push_str(&format!(
             "const {v} = {inner_expr};\n\
              if ({v} === null) return null;\n"

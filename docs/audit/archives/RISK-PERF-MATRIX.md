@@ -1,3 +1,9 @@
+> **STATUS: ARCHIVED at master b9863bf3 (2026-05-01).** This file moved from `docs/RISK-PERF-MATRIX.md` to `docs/audit/archives/RISK-PERF-MATRIX.md` per the archaeology-only policy. The probability table it carries is pre-AZ-III; the runway sequence in the title (B1 → ... → BB) is retired (BB subsumed; BA recycled). Live successors: `docs/tranches/AZ-IV/AZ-IV.md` §Carry Ledger + §Non-Routable Carries, `docs/GESTALT.md` §6 measurement discipline.
+>
+> Do NOT cite this file as authoritative.
+
+---
+
 # Risk and Performance Matrix — B1 → B3 → B4 → B2 → B5 → AY-II → AZ-I → AZ-II → BA → BB
 
 A calibrated estimate of landing probability per wave and per

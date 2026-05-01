@@ -1,3 +1,9 @@
+> **STATUS: ARCHIVED at master b9863bf3 (2026-05-01).** This file moved from `docs/META-AUDIT-PROMPT.md` to `docs/audit/archives/META-AUDIT-PROMPT.md` per the archaeology-only policy. It is preserved for historical provenance — the meta-audit it kicked off produced the eight axis reports under `docs/audit/archives/2026-04-23-meta-audit/` and informed B-series + AZ-I + AZ-II planning. Live successors: `docs/GESTALT.md` (synthesis), `docs/tranches/AZ-IV/AZ-IV.md` (active plan), `docs/precepts/instructions/` (precepts canon).
+>
+> Do NOT cite this file as authoritative.
+
+---
+
 # bbnf-lang — Begat Meta-Audit Prompt
 
 A comprehensive audit, archaeology, and gestalt brief of the

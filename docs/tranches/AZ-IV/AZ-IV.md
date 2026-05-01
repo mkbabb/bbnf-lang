@@ -6,6 +6,24 @@ AZ-IV is the union tranche. It absorbs the AZ-III carry burn-down, every overfit
 
 The system already chose the right architecture: grammar-derived Rust struct graphs are the materialized parse form, `cargo xtask regen` is the canonical Rust generation path, and CSP/egraph/shape/Pratt/regex/SIMD/view substrate exist to make that path general and fast. AZ-IV closes the remaining gap by consuming or deleting every existing substrate, eliminating every overfit, landing the typed compile-time `path!` macro and the path-driven lazy recognizer, executing the TS binding to parity, and redressing every failing test. No parallel parser, no shadow path system, no unconsumed substrate, no chronic deferral — every named carry closes inside this tranche or AZ-IV does not close.
 
+For the project-level synthesis (architecture from first principles, SOTA union, generalization vision, fleet shape, measurement discipline, instruction-layer discipline) read `docs/GESTALT.md`. This file is the AZ-IV plan only.
+
+## Active Contradictions (motivation)
+
+These eleven contradictions between the chosen architecture and the actual code are why AZ-IV exists. Each maps to one or more carry-ledger rows below; closing AZ-IV resolves every contradiction.
+
+1. BA's typed `path!` macro and lazy bail-out parse were planned but never landed; the current `Path<'a>` is an untyped slice. Eager-then-walk lazy lane is 2953x slower than sonic-rs `get`. `parse()` materializes the full tree before path resolution.
+2. `xtask regen` is canonical, yet strict regeneration is red for most manifest grammars.
+3. CSP decisions exist, but selected engines/layout/dispatch choices still pass through sidecars or independent emitter ladders.
+4. Rewrite/ruler storage exists, but loaded rules do not drive production egraph saturation/codegen — `RuleSet` is loaded into an `eprintln`-only sink.
+5. DTA is live as a fact source, but comments still describe walker/tape runtime emission. `dfa_codegen.rs` is the regex-scan adapter, not a DFA codegen module.
+6. Runtime CSS color has a current typed model, but `backend/rust/view/color.rs` (290 LOC, zero production consumers) still ships as a shim.
+7. TS backend builds, but tests prove only string-presence; no Node-execute proof; no TS template-tag binding for `path!`.
+8. Sibling repositories still carry derive (parse-that bootstrap + 2 Cargo.lock entries), csp-solver canonical-source split (bbnf-lang vs csc411 with 22 shared files diverging), npm staleness, and docs-sync drift.
+9. Per-grammar arena/builder pairs (9 of them) re-encode the rule vocabulary the `StructRegistry` already knows; `from_rule_name(&str) -> Kind` impls + `(layout.kind, rule_name)` builder dispatches violate grammar generality.
+10. Substrate-with-consumer rule is declared but unenforceable; 5 WIRED-NOT-CONSUMED + 3 DEAD substrates surfaced by Babbage's third-pass audit.
+11. 118 failing tests at AZ-III close (workspace nextest 92.1 % pass); 36 `#[ignore]`d tests; the failure backlog has compounded across 4 tranches without close-discipline enforcement.
+
 ## Invariants
 
 1. **One parse path**: generated StructDirect parsers are the Rust runtime path. Tape, bootstrap parser, derive-generated parser, and DTA walker fallbacks stay retired. Two parse modes live on this path — eager (full-tree materialization) and lazy (path-driven bail-out); they share generated code and differ only in entry-point dispatch.
@@ -155,6 +173,28 @@ The 30 items below cannot route to a successor letter. AZ-IV closes inside these
 21. **Per-grammar value-enum dedup (skeleton)**: one `Arena<G>` + `Builder<G>` template parameterised by `StructRegistry`; per-grammar typed `*Value` enums survive untouched (semantic richness preserved).
 22. **AscentStrategy hybrid sidecar**: trait + reversal seam landed in W2; default sidecar implementation chosen by W2 micro-bench on citm/tailwind/sheets fixtures; results commit at W2 close.
 23. **Non-routable carry blockers**: every row in §Non-Routable Carries closes inside AZ-IV with cited evidence or AZ-IV does not close. A non-routable carry that survives close is a process failure, not a deferral.
+
+## Deletion Bias
+
+AZ-IV deletes before adding. Forbidden patterns in the AZ-IV diff:
+
+- no `*_v2` modules;
+- no compatibility feature flags;
+- no restored derive pipeline;
+- no DTA walker fallback;
+- no second path-query crate;
+- no generated tape/view bridge;
+- no "consumer later" hooks;
+- no `from_rule_name(&str) -> Kind` arm-list per grammar (registry projects);
+- no `(layout.kind, rule_name)` builder dispatch (registry projects);
+- no `dfa_codegen` misnomer (it is the regex-scan adapter; rename or fold);
+- no `backend/rust/view/color` shim (CSS uses `runtime::css_l4::CssColor`);
+- no `recognize_*_legacy` patterns (rename or migrate Pratt then delete);
+- no `substrate_path` JSON-builder fallback (panic on invalid binding);
+- no per-grammar value-enum dedup that touches typed `*Value` enums (semantic richness preserved per `feedback_preserve-rich-ast`; only the structural skeleton dedups);
+- no Python binding path (Python is dropped from the thesis per Q-final-4).
+
+If deletion is unsafe because a current consumer exists, the wave must name the consumer and refactor the surface to match its real role.
 
 ## Cross-Tranche Debt
 

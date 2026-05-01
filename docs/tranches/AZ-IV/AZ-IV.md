@@ -1,86 +1,117 @@
-# AZ-IV - Canonical Activation
+# AZ-IV — Canonical Activation, Grammar Generality, Path/Value API, Test Redress
 
-AZ-IV completes the AZ-III carry burn-down by making the checked-in tree, regenerated tree, runtime parser surface, optimization substrate, sibling topology, and benchmark evidence describe one system. It is also lossless with respect to BA and BB: old BA/BB file layouts may be retired, but their functional requirements must either land inside AZ-IV with evidence or be retired by an explicit artefact-backed decision.
+AZ-IV is the union tranche. It absorbs the AZ-III carry burn-down, every overfit-elimination and substrate-activation item the third hardening pass surfaced, the typed path/query product (formerly BA), the lazy bail-out parse + sonic-rs same-harness floor (formerly BA stretch), the value-API and per-grammar projection consolidation (formerly BB perf items), and a complete failing-test redress. The post-AZ-IV residual is one tranche of pure rule-discovery work; the BA letter is recycled for that.
 
 ## Thesis
 
-The system already chose the right architecture: grammar-derived Rust struct graphs are the materialized parse form, `cargo xtask regen` is the canonical Rust generation path, and CSP/egraph/shape/Pratt/regex/SIMD/view support exist to make that path general and fast. AZ-IV closes the remaining gap by consuming or deleting every existing substrate. No derive revival, tape facade, generated tape view layer, parent-pointer sidecar, or compatibility shim is allowed. BA's typed path/query product is implemented through the existing runtime/document/type-inference surface, not through a second parser or shadow path system.
+The system already chose the right architecture: grammar-derived Rust struct graphs are the materialized parse form, `cargo xtask regen` is the canonical Rust generation path, and CSP/egraph/shape/Pratt/regex/SIMD/view substrate exist to make that path general and fast. AZ-IV closes the remaining gap by consuming or deleting every existing substrate, eliminating every overfit, landing the typed compile-time `path!` macro and the path-driven lazy recognizer, executing the TS binding to parity, and redressing every failing test. No parallel parser, no shadow path system, no unconsumed substrate, no chronic deferral — every named carry closes inside this tranche or AZ-IV does not close.
 
 ## Invariants
 
-1. **One parse path**: generated StructDirect parsers are the Rust runtime path. Tape, bootstrap parser, derive-generated parser, and DTA walker fallbacks stay retired.
-2. **Grammar generality**: parser binding, shape dispatch, regex payloads, typed projections, and backend strategy selection derive from grammar/manifest facts, not literal parser names or JSON-family assumptions.
-3. **Substrate with consumer**: rewrites, ruler, CSP decisions, regex HIR/egraph facts, shape dictionaries, structural scan, Pratt metadata, and views either change generated/runtime behavior in the same wave or are deleted/retired.
+1. **One parse path**: generated StructDirect parsers are the Rust runtime path. Tape, bootstrap parser, derive-generated parser, and DTA walker fallbacks stay retired. Two parse modes live on this path — eager (full-tree materialization) and lazy (path-driven bail-out); they share generated code and differ only in entry-point dispatch.
+2. **Grammar generality**: parser binding, shape dispatch, regex payloads, typed projections, and backend strategy selection derive from grammar/manifest facts, not literal parser names or JSON-family assumptions. A static AST scan enforces no-grammar-name-branch in production runtime.
+3. **Substrate with consumer**: rewrites, ruler, CSP decisions, regex HIR/egraph facts, shape dictionaries, structural scan, Pratt metadata, and views either change generated/runtime behavior in the same wave or are deleted. The substrate-audit test is permanent (`crates/ir/src/passes/tests/substrate_audit.rs`) and CI-gated.
 4. **Semantic parity is type-inference driven**: `TypeDesc`, `StructRegistry`, obligations, grammar facts, and generated projection tables define parity. Hand-coded normalizers, rule-name dispatch tables, host-shim duplicates, and synthetic payload defaults are supplementary diagnostics, not parity proof.
 5. **Semantic parity is current**: JSON uses sonic-rs as oracle, CSS uses lightningcss, Sheets uses the full parity corpus, BBNF self-host uses generated BbnfBootstrap, and TS is executable rather than string-checked.
 6. **Direct struct projection must perform**: parse-only speed is not enough. StructDirect document/value/path projection rows must beat or match same-harness competitor rows where a competitor exists, especially sonic-rs JSON value/path access.
-7. **No legacy code**: stale DTA/walker/tape wording, dead functions, compat exports, no-op emitter hooks, and fallback-to-JSON surfaces are wave-owned deletion/refactor targets.
-8. **Evidence closes gates**: no gate closes on API existence, grep-only runtime claims, disabled tests, or "consumer later" scaffolding.
-9. **No grammar overfitting**: production runtime/builder/dispatch paths derive discriminants and selection from `StructRegistry`, `TypeDesc`, `FactAuthority`, manifest metadata, or generated projection tables. Literal grammar parser-struct idents (`JsonParser`, `BbnfParser`, etc.) appear only at registry-binding entry points; literal rule-name match arms appear nowhere outside `#[cfg(test)]`. A static AST scan enforces this.
-10. **No silent fallback**: no production code path swallows a malformed substrate path, missing rule, unrecognised parser ident, or unknown grammar by routing into a default builder, default discriminant, or per-rule allowlist. Failure is a `panic!` with a named binding string at construction time, not a runtime divergence.
+7. **Path is grammar-typed at compile time**: `path!(Json, "statuses", 0, "text")` resolves at compile time against the grammar's `StructRegistry` produced by `project_types`; an invalid path fails to compile with a grammar-aware diagnostic; runtime path errors do not exist for compiled paths.
+8. **Path resolution uses source rule names**: the `path_check` IR pass runs after `project_types` and re-resolves inlined paths through the inline-trace sidecar. A path that names a rule the user wrote always resolves, even when post-pipeline transformations inline it.
+9. **Lazy parse is a parse mode**: `JsonParser::parse_with(input, &path)` runs the path-driven recognizer that skips subtrees the path does not visit. Lazy mode silently elides parse errors past the path's reach (the contract); eager mode reports all parse errors. Same `Option<T>` return semantics; mode choice is parse-time.
+10. **Wildcard returns lazy iterators**: `path!(..., "*", ...)` returns `Iter<Item = T>` with no allocation; `.with_anchors()` yields `(Path<'_>, T)` for re-anchorable usage; `.collect()` materializes if the caller wants.
+11. **Variant-selection path step**: when the typed value is a sum, a name-keyed step selects the variant per grammar `->` annotation. `path!(CssL4, ..., "value", "color")` returns `Option<&CssColor>`.
+12. **No legacy code**: stale DTA/walker/tape wording, dead functions, compat exports, no-op emitter hooks, and fallback-to-JSON surfaces are wave-owned deletion/refactor targets.
+13. **No silent fallback**: no production code path swallows a malformed substrate path, missing rule, unrecognised parser ident, or unknown grammar by routing into a default builder, default discriminant, or per-rule allowlist. Failure is a `panic!` with a named binding string at construction time, not a runtime divergence.
+14. **Evidence closes gates**: no gate closes on API existence, grep-only runtime claims, disabled tests, or "consumer later" scaffolding.
+15. **Failing-test census is canonical**: workspace nextest is 100 % pass — fail-count zero, ignore-count justified per spec. Every `#[ignore]` carries an owner, deadline commit, and reason; tests that cannot be fixed inside AZ-IV are deleted with a per-test commit-body justification (per `commit-discipline` and the W1 redress workflow).
 
-## Carry Ledger
+## Carry Ledger — AZ-III + BA + BB Absorption
 
 | Carry | Source | AZ-IV destination | Close condition |
 |---|---|---|---|
-| Strict regen drift | AZ-III C1 | W0 - Truth And Canonical Regen | `cargo xtask regen --check` green live for all manifest grammars; parity run against regenerated tempdir output |
-| Egraph `Map` stripping | AZ-III C2 | W0 - Truth And Canonical Regen | extraction preserves typed `Map { fn_id }` when payload semantics require it |
-| Sheets parity gap | AZ-III C3 | W1 - Runtime Surface And Semantic Parity | full Sheets parity surface green, including string, array, range, and prefix cases |
-| TS discriminated union | AZ-III C4 | W1 - Runtime Surface And Semantic Parity | TS backend emits, typechecks, and executes representative grammars |
-| Tailwind regex timeout | AZ-III C5 | W2 - Optimization Substrate Activation | emitted scanner path resolves timeout class without per-call map overhead |
-| Watchdog bench rows | AZ-III C6 | W3 - Measurement And Close | fat-LTO and bench-iter matrices have no unresolved watchdog rows |
-| WASM/derive residue | second hardening | W0 - Truth And Canonical Regen | no production `bbnf_derive` or deleted `crates/derive` references in active workspace/wasm/sibling paths |
-| BA typed path/query product | BA | W1 - Runtime Surface And Semantic Parity | existing `runtime::path`, `path!`, and per-document `*PathQuery` surfaces become type-inference driven, zero-allocation, and benchmarked against sonic-rs/simdjson where comparable |
-| BA host-binding isomorphism | BA.W2 | W1 - Runtime Surface And Semantic Parity | TS path/parser binding executes from generated output; every missing Python/host path binding has an explicit no-surface decision or lands with isomorphic signatures/errors |
-| BB rewrite/ruler program | BB | W2 - Optimization Substrate Activation | Ruler enumeration, egraph residue, VM oracle, ranker/tiering, schema/provenance, grammar rewrite dirs, and CI/review ledgers are either production-wired or explicitly retired with evidence |
-| Rewrite/ruler substrate unconsumed | second hardening | W2 - Optimization Substrate Activation | every non-empty loaded ruleset proves load, search/apply, extraction, writeback, generated diff, and oracle/bench evidence |
-| Full substrate denominator | third hardening | W2 - Optimization Substrate Activation, W3 - Measurement And Close | every mined fact, sidecar, rule, template, shape, scan, Pratt, view, regex, CSP, and egraph decision has generated/runtime evidence or is deleted |
-| Post-AU and sonic-rs performance floor | AU through AZ-III | W3 - Measurement And Close | fat-LTO `post-AZ-IV.json` beats post-AU/post-AZ floors row-by-row and same-harness JSON projection rows are parity-or-better against sonic-rs |
+| Strict regen drift (7/9 grammars red) | AZ-III C1 | W0 - Truth And Canonical Regen | `cargo xtask regen --check` green live for 9/9 |
+| Egraph `Map { fn_id }` preservation | AZ-III C2 | W0 - Truth And Canonical Regen | extraction preserves typed wrapper; named test fails before / passes after |
+| Sheets parity gap (115/133 regression) | AZ-III C3 | W1 - Grammar Generality + Test Redress | full Sheets parity GREEN from regenerated tempdir output; 133/133 |
+| TS discriminated union test | AZ-III C4 | W1 - Grammar Generality + Test Redress (parity) and W5 - TS Binding + Value-API + Substrate Audit (executable) | TS backend emits, typechecks, executes representative grammars |
+| Tailwind regex_scan perf timeout | AZ-III C5 | W4 - Optimization Substrate Activation | emitted scanner path resolves timeout class without per-call map overhead |
+| Cross-profile watchdog bench rows | AZ-III C6 | W6 - Measurement And Close | fat-LTO + bench-iter matrices have zero watchdog rows |
+| WASM/derive residue | hardening pass 2 | W0 - Truth And Canonical Regen | zero `bbnf_derive` references in active workspace/wasm/sibling paths |
+| Rewrite/ruler substrate unconsumed | hardening pass 2 | W4 - Optimization Substrate Activation | unconsumed `RuleSet` and `egraph::ruler::*` deleted; BA recreates clean |
+| Full substrate denominator | hardening pass 3 (Babbage) | W5 - TS Binding + Value-API + Substrate Audit | permanent `substrate_audit.rs` test enumerates every `pub` substrate; CI fails on zero-caller substrate |
+| Path IR + `path!` macro (compile-time typed) | BA — formerly BA.W0/W1 | W2 - Path IR + Typed Path<G,T> + AscentStrategy | `path!(Json, "a", 0, "b")` resolves at compile time; invalid path = compile error with grammar-aware diagnostic |
+| Lazy bail-out parse (sonic-class) | BA — formerly BA.W1 stretch | W3 - Lazy Bail-Out Parse | `parse_with(input, &path)` skips unvisited subtrees on JSON, CSS L4, Sheets, BBNF |
+| AscentStrategy + hybrid sidecar | BA — formerly BA.W0 | W2 - Path IR + Typed Path<G,T> + AscentStrategy | `AscentStrategy` trait; sidecar default; reversal seam preserved |
+| Per-grammar value-enum dedup (structural skeleton) | BA — formerly BA.W1 | W5 - TS Binding + Value-API + Substrate Audit | one generic `Arena<G>` + `Builder<G>` parameterised by `StructRegistry`; per-grammar `*Value` enums survive |
+| TS template-literal tag binding | BA.W2 | W5 - TS Binding + Value-API + Substrate Audit | `crates/bbnf-path-ts/` cdylib + wasm-bindgen; isomorphic error taxonomy |
+| Sonic-rs same-harness performance floor | BA.W3 + BB perf | W6 - Measurement And Close | same-harness `bbnf_value_*` parity-or-better against `sonic_value_*` (fat-LTO); lazy lane closes ≤ 5x sonic on `bbnf_get_*` |
+| post-AU 17-row floor | AU through AZ-III | W6 - Measurement And Close | `floors` block in post-AZ-IV.json holds AU floor row-by-row |
+| Rule discovery + Ruler + VM oracle + ranker | BB — formerly BB.W0-W4 | **routed to BA (recycled)** | post-AZ-IV tranche; BA opens after AZ-IV close |
 
-## Non-Routable Carries
+## Non-Routable Carries (Expanded)
 
-The 13 items below have been deferred >= 3 tranches across B5, AZ-I, AZ-II, AZ-III, and AZ-IV-planned per `docs/tranches/AZ-IV/audit/HARDENING-2026-05-01-boole.md` §b.2. They are designated **non-routable in AZ-IV**: AZ-IV cannot close by routing them to a successor letter. They land inside AZ-IV with evidence, or AZ-IV does not close.
+The 30 items below cannot route to a successor letter. AZ-IV closes inside these or AZ-IV does not close. A non-routable carry that survives close is a process failure.
 
 | # | Item | Owner wave | Closure proof |
 |---|---|---|---|
-| 1 | Strict regen drift (7/9 grammars red) | W0 - Truth And Canonical Regen | `cargo xtask regen --check` green live for 9/9; archive `W0-regen.txt` |
-| 2 | Egraph `Map` wrapper preservation | W0 - Truth And Canonical Regen | extraction preserves typed `Map { fn_id }`; named test fails before / passes after |
-| 3 | Sheets parity gap | W1 - Runtime Surface And Semantic Parity | full Sheets parity GREEN from regenerated tempdir output; named regression to 115/133 reverted |
-| 4 | Tailwind regex_scan perf timeout | W2 - Optimization Substrate Activation | `profiles/tailwind-profile.json.gz` plus named hot regex/scan op + non-watchdog measured row |
-| 5 | TS backend executable parity | W1 - Runtime Surface And Semantic Parity | TS backend emits + typechecks + Node-executes representative grammars |
-| 6 | Watchdog rows under cross-profile | W3 - Measurement And Close | fat-LTO + bench-iter matrices have zero watchdog rows; named fix or thesis review per row |
-| 7 | JSON value/path vs sonic-rs perf | W3 - Measurement And Close | `bbnf_value_*` parity-or-better against `sonic_value_*` same-harness, fat-LTO |
-| 8 | CSS named_color runtime activation | W1 - Runtime Surface And Semantic Parity (binds W0 `Map`) | named_color payload parity vs lightningcss; W1 close blocked until W0 `Map` preservation closes |
-| 9 | PatternAnnotations migration | W2 - Optimization Substrate Activation | every consumer migrated or PatternAnnotations deleted |
-| 10 | Bootstrap/derive residue (sibling) | W0 - Truth And Canonical Regen | `cargo metadata --locked` at root + wasm/ + parse-that; `cargo deny` rule rejects `bbnf_derive` |
-| 11 | DTA/dfa naming and cleanup | W2 - Optimization Substrate Activation | every DTA reference enumerated with current consumer; non-consumed deleted, consumed renamed |
-| 12 | `backend/rust/view/color` hack | W1 - Runtime Surface And Semantic Parity | shim deleted; CSS continues through `runtime::css_l4::CssColor`; legacy decoder is test-support only |
-| 13 | Substrate denominator (CSP/regex/SIMD/Pratt/view) | W2 - Optimization Substrate Activation | exhaustive ledger machine-checkable; 100 % rows resolved (CONSUMED with cited call site, or DELETED with deletion proof) |
-| 14 | Rewrite/ruler production wiring | W2 - Optimization Substrate Activation | every non-empty ruleset proves load/apply/extract/writeback/generated diff/oracle/bench |
-| 15 | WASM/sibling derive residue | W0 - Truth And Canonical Regen | locks clean at root + wasm/ + parse-that; sibling sync gate live |
-
-A non-routable item that cannot land inside AZ-IV does not get a new successor letter; it triggers a triumvirate scope-reveal review of the AZ-IV thesis itself (per `docs/precepts/instructions/ORCHESTRATION.md` §Triumvirate and §Hardening Pass).
+| 1 | Strict regen drift (7/9 grammars red) | W0 | `cargo xtask regen --check` green 9/9 |
+| 2 | Egraph `Map { fn_id }` preservation | W0 | named test fails before / passes after |
+| 3 | Sheets parity (133/133) | W1 | regenerated-tempdir parity green |
+| 4 | TS backend executable (Node-execute) | W5 | tempdir TS typechecks + Node executes representative grammars |
+| 5 | Tailwind regex_scan perf timeout | W4 | profile.json.gz + named hot regex op + non-watchdog measured row |
+| 6 | Cross-profile watchdog rows | W6 | fat-LTO + bench-iter matrices have zero watchdog rows |
+| 7 | JSON value/path vs sonic-rs perf | W6 | `bbnf_value_*` parity-or-better; `bbnf_get_*` ≤ 5x sonic same-harness |
+| 8 | CSS named_color runtime activation | W1 (parity) + W4 (egraph extractor binding) | named_color payload parity vs lightningcss |
+| 9 | PatternAnnotations migration | W4 | every consumer migrated or PatternAnnotations deleted |
+| 10 | Bootstrap/derive residue (sibling) | W0 | `cargo metadata --locked` + `cargo deny` rule rejects `bbnf_derive` |
+| 11 | DTA/dfa naming + cleanup | W4 | every DTA reference enumerated; non-consumed deleted, consumed renamed |
+| 12 | `backend/rust/view/color` shim | W1 | shim deleted; CSS uses `runtime::css_l4::CssColor`; legacy decoder test-support only |
+| 13 | Substrate denominator (permanent test) | W5 | `crates/ir/src/passes/tests/substrate_audit.rs` CI-gated; zero unconsumed substrate |
+| 14 | Unconsumed `RuleSet` deletion | W4 | `pipeline.rs` `CompileOptions::rewrites` field deleted; `egraph::ruler::*` deleted |
+| 15 | WASM/sibling derive residue | W0 | locks clean root + wasm/ + parse-that |
+| 16 | csp-solver canonical-source split | W0 | diff-clean between bbnf-lang and csc411 sibling |
+| 17 | bbnf-bootstrap cache nuke | W0 | cycle-2 wall ≤ 10 % of cycle-1 wall |
+| 18 | Dev-iteration baseline gate | W0 | `W0-dev-baseline.txt` row-by-row deltas vs AZ-III |
+| 19 | Generated-size budget | W0 | per-grammar LOC ±5 % of pre-W0 baseline |
+| 20 | 7 `from_rule_name(&str)` impls eliminated | W1 | static AST scan returns zero match arms keyed on literal rule names |
+| 21 | `(layout.kind, rule_name)` builder dispatches eliminated | W1 | `OpenFrame::from_layout(layout, &registry)` projects discriminator |
+| 22 | `EmitStrategy::for_grammar` 9-arm allowlist eliminated | W1 | manifest-driven binding registry; synthetic-grammar test passes |
+| 23 | `substrate_path` JSON-builder fallback retired | W1 | `panic!` on invalid binding; W0 manifest gate enforces well-formed paths |
+| 24 | `recover_modifier`/`recover_binary_op` deleted | W1 | alt_dispatch typed-leaf push activated; `rg` returns zero hits |
+| 25 | Per-grammar arena/builder dedup (skeleton) | W5 | one `Arena<G>` + `Builder<G>` template; per-grammar `*Value` enums preserved |
+| 26 | All failing tests redressed (1527/1527 pass) | W1 | nextest workspace pass-count = total-count; ignores justified per spec |
+| 27 | Path IR + compile-time `path!` macro | W2 | `path!(Json, ...)` compile-time typed; invalid path = compile error |
+| 28 | `path_check` IR pass after `project_types` | W2 | inline-trace sidecar; source rule names always resolve |
+| 29 | AscentStrategy hybrid sidecar | W2 | trait + reversal seam; default impl picked by W2 micro-bench |
+| 30 | Lazy bail-out parse on 4 production grammars | W3 | path-driven recognizer skips unvisited subtrees on JSON/CSS/Sheets/BBNF |
+| 31 | TS template-literal tag binding | W5 | `crates/bbnf-path-ts/` cdylib + wasm-bindgen |
+| 32 | Variant-selection path step (typed-enum step) | W2 | `path!(CssL4, ..., "color")` returns `Option<&CssColor>` from sum type |
+| 33 | Wildcard yields `Iter<Item = T>` (default) | W2 | zero-allocation default lane; `.with_anchors()` and `.collect()` adapters |
 
 ## Wave Table
 
 | Wave | Agents | Closes on evidence | Status |
 |---|---:|---|---|
-| W0 - Truth And Canonical Regen | 5 parallel | workspace/doc truth, strict regen, manifest strategy, `Map` preservation, metadata gates | planned |
-| W1 - Runtime Surface And Semantic Parity | 5 parallel | typed path/query product, type-inference projection parity, CSS/Sheets/JSON/BBNF/TS parity, shape generality | planned |
-| W2 - Optimization Substrate Activation | 5 parallel | full rewrite/ruler program, CSP/regex authority, shape_dict/SIMD, Pratt/view, legacy deletion | planned |
-| W3 - Measurement And Close | 3 parallel | post-AU/post-AZ/sonic-rs performance floors, substrate denominator ledger, workspace gates, close docs | planned |
+| W0 - Truth And Canonical Regen | 5 parallel | strict regen, manifest binding, `Map` preservation, sibling derive eradication, dev-iteration baseline, **failing-test census + GESTALT.md excision** | planned |
+| W1 - Grammar Generality + Test Redress | 5 parallel | overfit elimination + view/color delete + substrate panic + recover_* delete + EmitStrategy manifest + Sheets/CSS/JSON/BBNF parity green + **all failing tests redressed (fix-with-spec or delete-with-justification)** | planned |
+| W2 - Path IR + Typed Path<G,T> + AscentStrategy | 5 parallel | source-rule-resolved path checker; `path_check` IR pass after `project_types`; inline-trace sidecar; bespoke path lexer via bbnf-regex HIR; hybrid sidecar `AscentStrategy`; `path!` proc-macro; compile-time variant-selection step; wildcard `Iter<Item = T>` with `.with_anchors()` adapter | planned |
+| W3 - Lazy Bail-Out Parse | 5 parallel | path-driven recognizer; floor: JSON + CSS L4 + Sheets + BBNF; lazy + eager same `Option<T>` semantics; lazy mode silently elides errors past path reach (documented contract) | planned |
+| W4 - Optimization Substrate Activation | 5 parallel | CSP authority globalized; SIMD consumed; Pratt generality; tailwind regex; DTA cleanup; **`RuleSet` field + `egraph::ruler::*` deleted** (BA recreates clean); PatternAnnotations migration | planned |
+| W5 - TS Binding + Value-API + Substrate Audit | 5 parallel | `crates/bbnf-path-ts/` cdylib + wasm-bindgen + template-literal tag; per-grammar value-enum dedup (structural skeleton, leaves preserved); permanent `substrate_audit.rs` CI test; isomorphic error taxonomy; TS Node-executes representative grammars | planned |
+| W6 - Measurement And Close | 3 parallel | post-AZ-IV.json (rows grow per `docs/benchmarks/SPEC.md` §D5; AU floor preserved in `floors` block); samply 7-artefact contract per `docs/instructions/PROFILING.md`; close-honesty checklist; FINAL.md | planned |
 
 ## Critical Files And Ownership
 
 | Surface | Owner wave | Primary paths |
 |---|---|---|
-| Active plan truth | W0, W3 | `docs/GESTALT.md`, `docs/codegen-paths.md`, `docs/tranches/REMAINING-TRAJECTORY.md`, `docs/tranches/BA/**`, `docs/tranches/BB/**`, `docs/tranches/AZ-IV/**` |
-| Regen and manifest binding | W0 | `xtask/src/regen.rs`, `Cargo.toml`, `crates/ir/src/registry/strategy.rs`, `crates/core/src/grammar/generated/**` |
-| Egraph payload preservation | W0, W2 | `crates/ir/src/egraph/**`, `crates/egraph/src/**`, `crates/ir/src/rewrites/**` |
-| Runtime path, view, projection | W1 | `crates/core/src/runtime/path.rs`, `crates/core/src/runtime/view.rs`, `crates/core/src/runtime/*/document.rs`, `crates/core/src/runtime/css_l4/**`, `crates/core/src/backend/rust/view/**`, `crates/core/benches/json/value.rs` |
-| Grammar parity | W1 | `grammar/**`, `crates/core/tests/*parity*.rs`, `crates/core/tests/backend_ts.rs`, `crates/core/tests/pipeline_compile_request.rs` |
-| CSP/regex/shape/Pratt/SIMD | W2 | `crates/ir/src/passes/csp_strategy/**`, `crates/core/src/generate/regex/**`, `crates/core/src/backend/rust/emitter/shapes/**`, `crates/simd-scan/**` |
-| Benchmark and profiling | W3 | `crates/core/benches/**`, `scripts/*bench*`, `scripts/prepare-profile-wave.sh` + `scripts/profile-bench-headless.sh` (orchestration contract per `docs/instructions/PROFILING.md`), `docs/benchmarks/post-AZ-IV.json` (canonical close matrix per `docs/benchmarks/SPEC.md`), `docs/benchmarks/profiles/post-AZ-IV/**` (seven-artefact contract per `PROFILING.md` §Profile a single entry), `docs/benchmarks/post-AU.json` and `docs/benchmarks/post-AZ-*.json` (read-only floor refs); wave evidence at `docs/tranches/AZ-IV/audit/W3-*.{txt,md,json}`; samply prepared-wave artefacts at `.profiles/samply/post-AZ-IV/` |
+| Active plan truth + GESTALT excision | W0 | `docs/GESTALT.md`, `docs/codegen-paths.md`, `docs/tranches/REMAINING-TRAJECTORY.md`, `docs/tranches/AZ-IV/**`, `docs/tranches/BA/**` (recycled), `docs/tranches/BB/**` (subsumed banner) |
+| Regen + manifest binding | W0 | `xtask/src/regen.rs`, `Cargo.toml`, `crates/ir/src/registry/strategy.rs`, `crates/core/src/grammar/generated/**` |
+| Egraph payload preservation | W0 | `crates/ir/src/egraph/cost.rs`, `crates/egraph/src/extract/**`, `crates/ir/src/rewrites/**` |
+| Failing-test census | W0 | `docs/tranches/AZ-IV/audit/W0-failing-test-census.txt` |
+| Runtime overfit elimination + test redress | W1 | `crates/core/src/runtime/{bbnf,bnf,csv,css_pretty,ebnf,google_sheets,json,math}/**`, `crates/core/src/backend/rust/view/**`, `crates/core/src/backend/rust/emitter/shapes/substrate.rs`, `crates/core/src/lower/expression/{repeat,pratt,wrap}.rs`, `grammar/**`, `crates/core/tests/**` |
+| Path IR + macro + AscentStrategy | W2 | `crates/core/src/path/{ir,type_check,error,ascent,lexer}.rs`, `crates/ir/src/passes/path_check.rs`, `crates/bbnf-path/src/path_macro.rs`, `crates/bbnf-regex/src/path_lexer.rs` (custom HIR API) |
+| Lazy bail-out parse | W3 | `crates/core/src/path/executor.rs`, `crates/core/src/runtime/{json,css_l4,google_sheets,bbnf}/parse_with.rs`, generated parser dispatch tables |
+| CSP/regex/shape/Pratt/SIMD/DTA cleanup | W4 | `crates/ir/src/passes/csp_strategy/**`, `crates/core/src/generate/regex/**`, `crates/core/src/backend/rust/emitter/shapes/**`, `crates/simd-scan/**`, `crates/core/src/backend/rust/emitter/dfa_codegen.rs` (rename + content rewrite) |
+| TS binding + value-API dedup + substrate audit | W5 | `crates/bbnf-path-ts/**` (new cdylib), `crates/core/src/runtime/{arena_template,builder_template}.rs` (new), `crates/ir/src/passes/tests/substrate_audit.rs` (new permanent test) |
+| Benchmark + profiling | W6 | `crates/core/benches/**`, `scripts/prepare-profile-wave.sh` + `scripts/profile-bench-headless.sh` (per `docs/instructions/PROFILING.md`), `docs/benchmarks/post-AZ-IV.json` (per `docs/benchmarks/SPEC.md`), `docs/benchmarks/profiles/post-AZ-IV/**`, wave evidence at `docs/tranches/AZ-IV/audit/W6-*.{txt,md,json}`, `.profiles/samply/post-AZ-IV/` |
 | Sibling topology | W0 | `wasm/**`, `/Users/mkbabb/Programming/parse-that/**`, `/Users/mkbabb/Programming/pprint/**`, `.cargo/config.toml`, package locks |
 
 ## Orchestration Rules
@@ -94,36 +125,56 @@ A non-routable item that cannot land inside AZ-IV does not get a new successor l
 7. Before every commit, use the local `commit-discipline` skill: inspect dirty/staged state, preserve unrelated staged work, stage only intended paths, review `git diff --cached`, and stop if the slice cannot be isolated.
 8. Broad, generated, deletion, benchmark, profiling, gate/status, and cross-repo commits require bodies naming why, what landed, evidence, and routed remainder. No AI/tool authorship.
 9. Profiling agents may share one prepared absolute target only after preparation; no two cargo invocations run concurrently against the same target dir.
-10. Every dispatch carries `HARD CAP: N min. At 0.9N commit, at N halt.` Defaults: research 20, plan 15, redress 30, audit 25 (per `docs/precepts/instructions/ORCHESTRATION.md` §Triumvirate and `LESSONS-LEARNED.md` 2026-04-30). Read-only audit/research agents do not commit at the cap; write-authorized agents commit at 0.9N only when the staged slice is clean and owned.
-11. Triumvirate auto-triggers (no user prompt required): JSONL transcript quiet >15 minutes, first-pass return with no commit and no evidence, three diagnostic-loop iterations without isolating root cause, or scope reveal that invalidates file bounds / hard gates / substrate-with-consumer wiring. The orchestrator records the trigger condition and dispatch time alongside the wave's progress log.
-12. Sub-agent prompts must remain self-contained and stay within ~700 words of instructions; if a prompt grows larger, the task is mis-scoped and decomposes into sequential mini-units before dispatch.
+10. Every dispatch carries `HARD CAP: N min. At 0.9N commit, at N halt.` Defaults: research 20, plan 15, redress 30, audit 25 (per `docs/precepts/instructions/ORCHESTRATION.md` §Triumvirate). Read-only audit/research agents do not commit at the cap; write-authorized agents commit at 0.9N only when the staged slice is clean and owned.
+11. **HARD CAP expansion on overrun.** If a wave's HARD CAP is exceeded by an in-flight write-authorized agent without commit, the orchestrator extends the cap (not split the work) and records the extension reason in `PROGRESS.md`. Triumvirates are not pre-allocated per wave; they fire on the auto-triggers in §11.
+12. Triumvirate auto-triggers (no user prompt required): JSONL transcript quiet >15 minutes, first-pass return with no commit and no evidence, three diagnostic-loop iterations without isolating root cause, or scope reveal that invalidates file bounds / hard gates / substrate-with-consumer wiring.
+13. Sub-agent prompts must remain self-contained and stay within ~700 words of instructions; if a prompt grows larger, the task is mis-scoped and decomposes into sequential mini-units before dispatch.
 
 ## Hard Gates
 
 1. `cargo xtask regen --check` passes live for all manifest grammars and is archived at `docs/tranches/AZ-IV/audit/W0-regen.txt` (wave evidence; per `docs/benchmarks/SPEC.md` archive policy).
-2. Parser strategy binding is manifest/registry driven; a synthetic grammar rename/addition test fails if a new literal parser-name arm is required.
+2. Parser strategy binding is manifest/registry driven; a synthetic grammar rename/addition test fails if a new literal parser-name arm is required (`crates/core/tests/synthetic_grammar_strategy.rs`).
 3. Regenerated tempdir outputs run the parity matrix; checked-in freshness and runtime parity cannot be proven by separate stale artefacts.
 4. JSON, CSS, Sheets, BBNF, and TS parity gates are current, green, regenerated-output based, and type-inference driven. CSS/Sheets parity cannot close on early-return payload gaps, hand normalizer equivalence, rule-name projection, or synthetic default payloads.
 5. Egraph extraction preserves semantic wrappers such as `Map { fn_id }`; a named test fails if extraction strips typed payloads.
-6. BA path/query requirements close inside the existing runtime surface: `path!`, `Path`, `PathSegment`, and every active `*PathQuery` trait are type-inference checked, zero-allocation on traversal, externally benchmarked, and host-binding status is explicit.
-7. Every non-empty loaded rewrite/ruler ruleset traverses the full production chain: RON load, egraph search/apply, VM-residue oracle where egraph is silent, rank/tier, extraction, writeback, generated Rust diff, oracle proof, and benchmark/parity non-regression.
-8. CSP decisions that select a regex/layout/dispatch engine are reflected at emitted consumers or the dead decision surface is deleted. Sidecars may carry payloads after CSP selection; they may not choose strategy.
-9. Every active shape, miner, Pratt, view, structural scan, regex HIR, CSP, and egraph fact is in the denominator ledger and has generated/runtime consumer evidence or deletion proof.
-10. Legacy audit closes: `emit_dfa_inline_body`, DTA walker/tape wording, old color compatibility, fallback-to-JSON substrate path, discarded Rust per-rule compile work, derive/bootstrap residue, duplicated host shims, stale package locks, and sidecar authority are deleted, renamed, or justified by current consumers.
-11. Fat-LTO `post-AZ-IV.json` carries row-by-row post-AU floor, post-AZ same-profile deltas, AZ-III bench-iter deltas, status, and pass/fail. No row may be watchdog-routed.
-12. Same-harness JSON direct struct projection rows close parity-or-better against sonic-rs (`bbnf_value_* <= sonic_value_*` on time, or equivalent throughput ratio). Parse-only rows cannot satisfy projection performance.
-13. **Grammar-overfit static scan green**: `crates/core/tests/no_grammar_name_branch.rs` (a CI-enforced AST scan over `crates/core/src/runtime/**` and `crates/core/src/backend/rust/emitter/shapes/**`, excluding `generated/` and `#[cfg(test)]`) fails closed if any `match <expr> { "<literal-rule-name>" => ... }` arm or `match (<expr>, "<literal-rule-name>") => ...` arm appears in production code. Replacement is type-inference-derived discriminator (`StructRegistry::compound_kind(layout)`, `TypeDesc::*` projection), not hand allowlists. (Per `audit/HARDENING-2026-05-01-fermat.md`.)
-14. **Manifest-driven strategy binding**: `EmitStrategy::for_grammar` reads parsed manifest metadata, not a literal Rust source arm-list. A synthetic grammar `__test_strategy_synth__` registered only via manifest round-trips codegen without adding a Rust arm; `crates/core/tests/synthetic_grammar_strategy.rs` enforces the regression closed.
-15. **Substrate path hard-fail**: `crates/core/src/backend/rust/emitter/shapes/substrate.rs` no longer falls back to `JsonStructBuilder` (or any default builder) on `syn::parse_str` failure; it `panic!`s with the offending binding string and the strategy authoring path. (Per `audit/HARDENING-2026-05-01-heisenberg.md` F7 and `fermat.md` F4.)
-16. **Non-routable carry blockers**: every row in §Non-Routable Carries closes inside AZ-IV with cited evidence or AZ-IV does not close. A non-routable carry that survives close is a process failure, not a deferral.
+6. **Workspace nextest is 100 % pass.** Fail-count zero. Every `#[ignore]` carries an owner-named comment with a deadline commit, reason, and follow-up ticket; ignores without that triplet fail the close-honesty checklist.
+7. **Path IR + compile-time `path!` macro**: `path!(Json, "statuses", 0, "text")` expands to a typed accessor at `cargo build` time. An invalid path fails to compile with a `proc_macro2::Span`-anchored grammar-aware diagnostic naming the segment, the resolved struct type, and valid alternatives at that position.
+8. **`path_check` IR pass + inline-trace sidecar**: paths resolve against source rule names; an inlined rule remains addressable through the inline trace.
+9. **Lazy bail-out parse coverage**: `parse_with(input, &path)` works on JSON, CSS L4, Sheets, BBNF; the recognizer skips subtrees the path does not visit. Lazy + eager modes share generated code and dispatch on entry-point only.
+10. **Variant-selection path step**: `path!(CssL4, "rules", 0, "declarations", 0, "value", "color")` returns `Option<&CssColor>` from `CssTypedValue::Color(_)`; the macro reads the grammar's `->` annotations to know variant names.
+11. **Wildcard returns lazy iterators**: `path!(..., "*", ...)` default lane is `Iter<Item = T>` zero-allocation; `.with_anchors()` adapter yields `(Path<'_>, T)`; `.collect()` materializes when caller wants.
+12. CSP decisions that select a regex/layout/dispatch engine are reflected at emitted consumers or the dead decision surface is deleted. Sidecars may carry payloads after CSP selection; they may not choose strategy.
+13. **Permanent substrate-audit test**: `crates/ir/src/passes/tests/substrate_audit.rs` enumerates every `pub` substrate at compile time and fails the build if any has zero callers in production code (excluding `tests/`, `examples/`, `#[cfg(test)]`). CI-gated.
+14. Legacy audit closes: `emit_dfa_inline_body`, DTA walker/tape wording, old color compatibility, fallback-to-JSON substrate path, `RuleSet` + `egraph::ruler::*` (deleted; BA recreates), discarded Rust per-rule compile work, derive/bootstrap residue, duplicated host shims, stale package locks, and sidecar authority are deleted, renamed, or justified by current consumers.
+15. Fat-LTO `post-AZ-IV.json` carries row-by-row post-AU floor in the `floors` block, post-AZ same-profile deltas, AZ-III bench-iter deltas, status, and pass/fail per `docs/benchmarks/SPEC.md`. No row may be watchdog-routed. Row count grows from the AU 17 baseline as the lazy/path/TS lanes add new rows.
+16. Same-harness JSON direct struct projection rows close parity-or-better against sonic-rs (`bbnf_value_* <= sonic_value_*` on time, or equivalent throughput ratio). Lazy lane (`bbnf_get_twitter`) closes ≤ 5x sonic on same-harness comparison; the AZ-IV stretch target of ≤ 1.0x routes only with profile evidence.
+17. **Grammar-overfit static scan green**: `crates/core/tests/no_grammar_name_branch.rs` (a CI-enforced AST scan over `crates/core/src/runtime/**` and `crates/core/src/backend/rust/emitter/shapes/**`, excluding `generated/` and `#[cfg(test)]`) fails closed if any literal-rule-name match arm appears in production code.
+18. **Manifest-driven strategy binding**: `EmitStrategy::for_grammar` reads parsed manifest metadata, not a literal Rust source arm-list.
+19. **Substrate path hard-fail**: `crates/core/src/backend/rust/emitter/shapes/substrate.rs` no longer falls back to `JsonStructBuilder` (or any default builder); it `panic!`s with the offending binding string.
+20. **TS binding executable**: `crates/bbnf-path-ts/` cdylib + wasm-bindgen template-literal tag executes against representative grammars; isomorphic error taxonomy with the Rust frontend.
+21. **Per-grammar value-enum dedup (skeleton)**: one `Arena<G>` + `Builder<G>` template parameterised by `StructRegistry`; per-grammar typed `*Value` enums survive untouched (semantic richness preserved).
+22. **AscentStrategy hybrid sidecar**: trait + reversal seam landed in W2; default sidecar implementation chosen by W2 micro-bench on citm/tailwind/sheets fixtures; results commit at W2 close.
+23. **Non-routable carry blockers**: every row in §Non-Routable Carries closes inside AZ-IV with cited evidence or AZ-IV does not close. A non-routable carry that survives close is a process failure, not a deferral.
 
 ## Cross-Tranche Debt
 
-AZ-IV absorbs BA and BB functionally while rejecting their stale or contradictory mechanisms. BA's typed path/query requirements land through the existing runtime/document/type-inference surface. BB's rewrite/ruler requirements land through the existing `crates/ir/src/rewrites`, `crates/egraph/src/ruler`, `xtask`, and egraph pipeline.
+AZ-IV absorbs BA's pre-recycle scope and BB's perf/value/struct-projection scope into one tranche. The BA letter is recycled for the post-AZ-IV residual: pure rule-discovery work (Ruler CVC enumerator, VM oracle on residue, ranker, Class-1/2/3 tiering, `crates/ir/src/rewrites/`, grammar-colocated rewrite dirs, Tranche H rediscovery ≥ 80 %, ≥ 5 accepted rules per production grammar). Old BA scope is preserved at `docs/tranches/BA/historical/` for archaeology; the new BA is the rule-discovery successor.
 
-AZ-IV is also lossless with respect to the 13 non-routable carries (see §Non-Routable Carries). Routing a non-routable item to a successor letter is forbidden. If a non-routable item cannot land inside AZ-IV without changing the AZ-IV thesis, the response is a triumvirate review of the thesis - not a new tranche letter.
+BB is subsumed: perf items into AZ-IV; rule-discovery items into recycled BA. `docs/tranches/BB/` carries a `STATUS: SUBSUMED` banner pointing at the two destinations.
 
-BC.W5/W6 debug/minimise tooling is not opened unless W3 proves a close blocker that needs it; if so, it enters a named scope-reveal ledger before implementation. If any BA/BB item cannot land inside AZ-IV without changing the thesis, `FINAL.md` must name the exact successor destination and cite the artefact that proves why it cannot be absorbed.
+If a non-routable item cannot land inside AZ-IV without changing the AZ-IV thesis, the response is a triumvirate review of the thesis — not a new tranche letter.
+
+## Cross-Repo Future Work (Out of AZ-IV scope)
+
+Future tranches (not AZ-IV) will move bench/optimization sub-crates into their own repositories or relocate them inside parse-that:
+
+- `crates/csp-solver` → its own repo (canonical-source policy already declared between bbnf-lang and csc411 sibling)
+- `crates/egraph` → its own repo (general-purpose infra crate per `feedback_general-infra-crates`)
+- `crates/simd-scan` → its own repo or into parse-that
+- `xtask` → relocated within `crates/` repo as `crates/xtask`
+- `bbnf-regex` → sub-crate of parse-that (regex source-of-truth lives in one place)
+
+These are recorded for plan continuity. AZ-IV does not move them; AZ-IV exposes a custom path-lexer API from bbnf-regex (W2.D1) that the future relocation can preserve cleanly.
 
 ## Brittleness Window
 

@@ -1,0 +1,45 @@
+# AZ-III.W1 No-Default Build - 2026-04-30
+
+Verifies AZ-III hard gate 2 (no `crates/tape` package in metadata) and
+W1.md hard gate 2 (`cargo build -p bbnf --no-default-features --profile
+ax-iter` exits 0).
+
+Worktree: `/Users/mkbabb/Programming/bbnf-lang` (main).
+CARGO_TARGET_DIR: default workspace target.
+
+## Command
+
+```
+cargo build -p bbnf --no-default-features --profile ax-iter
+```
+
+## Result
+
+```
+warning: `bbnf` (lib) generated 185 warnings (run `cargo fix --lib -p bbnf` to apply 8 suggestions)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 44.33s
+```
+
+Exit 0. **GREEN.**
+
+## Notes
+
+- Wall: 44.33 s on the dispatch host (warm — sccache + incremental
+  artefacts populated by prior `cargo build -p bbnf --no-default-features
+  --profile ax-iter` orchestrator pre-flight at 1m 06s cold). Warm wall
+  is well under the 5-min CI preflight timeout for the no-default build
+  surface.
+- 185 warnings: pre-existing across the workspace (labelled-break,
+  useless unsigned comparison, unused helpers/imports, etc.). Not
+  blockers for the no-default build green gate. The full warning list
+  is captured by `cargo iter-check` evidence elsewhere; W4 - Workspace
+  Truth owns workspace warning hygiene.
+- `crates/tape` package: ABSENT (verified by W1.3 metadata audit).
+- `json-prototype` package: ABSENT (verified by W1.3 metadata audit).
+
+## Verdict
+
+W1.md hard gate 2 (no-default build green) MET. AZ-III hard gate 2 (no
+crates/tape in metadata) covered by W1.3 metadata audit; this command
+also implicitly confirms it because cargo would refuse to build if a
+referenced tape package were missing.

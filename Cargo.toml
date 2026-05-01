@@ -28,6 +28,33 @@ grammars = [
     { ident = "math",          path = "grammar/misc/math.bbnf",                   features = ["serialize"] },
 ]
 
+# AZ-IV.W1.8 — manifest-driven `EmitStrategy::for_grammar` binding
+# table per Fermat hardening pass §F5 + AZ-IV §Hard Gates 18 + 22.
+# Replaces the 9-arm allow-list previously hard-coded in
+# `crates/ir/src/registry/strategy.rs::EmitStrategy::for_grammar`.
+# Each row carries every parser-struct ident the grammar advertises
+# plus the Rust-backend `StructBuilder` / `Document` paths the emitter
+# splices into the generated `parse()` body.
+#
+# The canonical run-time mirror lives at
+# `crates/ir/src/registry/strategy.rs::PRODUCTION_MANIFEST_TABLE`;
+# adding a new grammar requires both a row here AND the matching
+# `PRODUCTION_MANIFEST_TABLE` entry. The synthetic-grammar test in
+# `crates/core/tests/synthetic_grammar_strategy.rs` proves the
+# resolver consults the table without source-arm edits.
+[workspace.metadata.bbnf-strategy]
+grammars = [
+    { idents = ["JsonParser", "JsonGrammar"], rust_builder_path = "crate::runtime::json::JsonStructBuilder", rust_document_path = "crate::runtime::json::JsonDocument" },
+    { idents = ["GoogleSheetsParser", "GoogleSheetsGrammar"], rust_builder_path = "crate::runtime::google_sheets::SheetsStructBuilder", rust_document_path = "crate::runtime::google_sheets::SheetsDocument" },
+    { idents = ["CssL4Parser"], rust_builder_path = "crate::runtime::css_l4::CssStructBuilder", rust_document_path = "crate::runtime::css_l4::CssDocument" },
+    { idents = ["BbnfBootstrap", "BbnfParser"], rust_builder_path = "crate::runtime::bbnf::BbnfStructBuilder", rust_document_path = "crate::runtime::bbnf::BbnfDocument" },
+    { idents = ["CsvParser", "CsvGrammar"], rust_builder_path = "crate::runtime::csv::CsvStructBuilder", rust_document_path = "crate::runtime::csv::CsvDocument" },
+    { idents = ["MathParser", "MathGrammar"], rust_builder_path = "crate::runtime::math::MathStructBuilder", rust_document_path = "crate::runtime::math::MathDocument" },
+    { idents = ["BnfParser", "BnfGrammar"], rust_builder_path = "crate::runtime::bnf::BnfStructBuilder", rust_document_path = "crate::runtime::bnf::BnfDocument" },
+    { idents = ["EbnfParser", "EbnfGrammar"], rust_builder_path = "crate::runtime::ebnf::EbnfStructBuilder", rust_document_path = "crate::runtime::ebnf::EbnfDocument" },
+    { idents = ["CssPrettyParser", "CssPrettyGrammar"], rust_builder_path = "crate::runtime::css_pretty::CssPrettyStructBuilder", rust_document_path = "crate::runtime::css_pretty::CssPrettyDocument" },
+]
+
 # ─── Profile tiers (B0.W1.a) ────────────────────────────────────────────
 #
 # Three intentional tiers cover routine iteration, profiling preparation,

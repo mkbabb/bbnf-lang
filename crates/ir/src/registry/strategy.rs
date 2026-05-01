@@ -118,147 +118,102 @@ pub enum EmitStrategy {
     },
 }
 
+/// AZ-IV.W1.8 — canonical manifest-driven strategy table.
+///
+/// Per Fermat hardening pass §F5 + AZ-IV §Hard Gates 18 + 22, the
+/// per-grammar strategy binding is **data**, not a Rust source-side
+/// arm-list. Every production grammar that activates StructDirect
+/// contributes one row here; adding a new grammar adds a row, not a
+/// match arm in `for_grammar`. The table mirrors
+/// `[workspace.metadata.bbnf-strategy]` in the workspace `Cargo.toml`
+/// (the `regen --check` gate wires the two sources together).
+///
+/// Each row's `idents` slice carries every parser-struct alias the
+/// grammar advertises (so `"JsonParser"` and `"JsonGrammar"`
+/// continue to resolve to the same binding without a literal arm).
+pub const PRODUCTION_MANIFEST_TABLE: &[ManifestStrategyEntry] = &[
+    // AZ-I.W2-act.B1 — JSON.
+    ManifestStrategyEntry {
+        idents: &["JsonParser", "JsonGrammar"],
+        rust_builder_path: "crate::runtime::json::JsonStructBuilder",
+        rust_document_path: "crate::runtime::json::JsonDocument",
+    },
+    // AZ-I.W2-act.B2 — Google Sheets.
+    ManifestStrategyEntry {
+        idents: &["GoogleSheetsParser", "GoogleSheetsGrammar"],
+        rust_builder_path: "crate::runtime::google_sheets::SheetsStructBuilder",
+        rust_document_path: "crate::runtime::google_sheets::SheetsDocument",
+    },
+    // AZ-I.W2-act.B3 — CSS L4.
+    ManifestStrategyEntry {
+        idents: &["CssL4Parser"],
+        rust_builder_path: "crate::runtime::css_l4::CssStructBuilder",
+        rust_document_path: "crate::runtime::css_l4::CssDocument",
+    },
+    // AZ-II.cutover.H — BBNF self-host.
+    ManifestStrategyEntry {
+        idents: &["BbnfBootstrap", "BbnfParser"],
+        rust_builder_path: "crate::runtime::bbnf::BbnfStructBuilder",
+        rust_document_path: "crate::runtime::bbnf::BbnfDocument",
+    },
+    // AZ-II.cutover.L Phase 3c — CSV.
+    ManifestStrategyEntry {
+        idents: &["CsvParser", "CsvGrammar"],
+        rust_builder_path: "crate::runtime::csv::CsvStructBuilder",
+        rust_document_path: "crate::runtime::csv::CsvDocument",
+    },
+    // AZ-II.cutover.L Phase 3c — Math.
+    ManifestStrategyEntry {
+        idents: &["MathParser", "MathGrammar"],
+        rust_builder_path: "crate::runtime::math::MathStructBuilder",
+        rust_document_path: "crate::runtime::math::MathDocument",
+    },
+    // AZ-II.cutover.L Phase 3c — BNF.
+    ManifestStrategyEntry {
+        idents: &["BnfParser", "BnfGrammar"],
+        rust_builder_path: "crate::runtime::bnf::BnfStructBuilder",
+        rust_document_path: "crate::runtime::bnf::BnfDocument",
+    },
+    // AZ-II.cutover.O.2 — EBNF.
+    ManifestStrategyEntry {
+        idents: &["EbnfParser", "EbnfGrammar"],
+        rust_builder_path: "crate::runtime::ebnf::EbnfStructBuilder",
+        rust_document_path: "crate::runtime::ebnf::EbnfDocument",
+    },
+    // AZ-II.cutover.L Phase 3c — CSS Pretty.
+    ManifestStrategyEntry {
+        idents: &["CssPrettyParser", "CssPrettyGrammar"],
+        rust_builder_path: "crate::runtime::css_pretty::CssPrettyStructBuilder",
+        rust_document_path: "crate::runtime::css_pretty::CssPrettyDocument",
+    },
+];
+
 impl EmitStrategy {
-    /// Resolve the codegen substrate for `grammar_ident`.
+    /// Resolve the codegen substrate for `grammar_ident` against the
+    /// canonical [`PRODUCTION_MANIFEST_TABLE`].
     ///
     /// `grammar_ident` is the parser-struct identifier the emitter
     /// passes to `emit_shapes_for_grammar` — the literal Rust ident
     /// that names the generated parser (e.g. `"JsonParser"`,
-    /// `"BbnfBootstrap"`, `"CssL4Parser"`). The resolver matches on
-    /// the canonical idents the bootstrap regen produces (see
-    /// `crates/core/src/grammar/generated/`).
+    /// `"BbnfBootstrap"`, `"CssL4Parser"`).
     ///
     /// `registry` is the rule-id → layout map populated by
     /// `bbnf_ir::passes::project_types`. The struct-direct path
     /// requires a populated registry; an empty registry is a hard
     /// generation error rather than a tape fallback.
     ///
-    /// # AZ-I.W2-act admission rules
+    /// # AZ-IV.W1.8 — manifest-driven binding
     ///
-    /// - AZ-I.W2-act introduced per-grammar positive arms.
-    /// - AZ-II.cutover.A through O2 activated every production
-    ///   grammar onto StructDirect.
-    /// - AZ-II.cutover.O4 removes the catch-all tape fallback; unknown
-    ///   grammars and empty registries fail loudly.
+    /// Pre-W1.8 this method shipped a 9-arm match expression listing
+    /// every production grammar by literal parser-name. Per Fermat
+    /// §F5 + AZ-IV §Hard Gates 18 the arm-list violated grammar
+    /// generality (a synthetic grammar rename test fails if a new
+    /// arm is required). The arm-list is replaced with a single
+    /// lookup against [`PRODUCTION_MANIFEST_TABLE`] — the data is
+    /// the discriminator, not behaviour. Adding a grammar adds one
+    /// row; no source-side dispatch arm changes.
     pub fn for_grammar(grammar_ident: &str, registry: &StructRegistry) -> Self {
-        if registry.is_empty() {
-            panic!(
-                "EmitStrategy::for_grammar: `{grammar_ident}` has an empty StructRegistry; \
-                 StructDirect generation requires project_types registry closure"
-            );
-        }
-
-        match grammar_ident {
-            // AZ-I.W2-act.B1: JSON activates onto the struct-direct
-            // path. The grammar-emitted `JsonParser::parse` returns
-            // `Result<JsonDocument<'_>, ParseErr>` after the
-            // orchestrator's post-flip regen consumes this strategy.
-            "JsonParser" | "JsonGrammar" => EmitStrategy::StructDirect {
-                rust: SubstrateBinding {
-                    builder_path: "crate::runtime::json::JsonStructBuilder",
-                    document_path: "crate::runtime::json::JsonDocument",
-                },
-                ts: None,
-                wasm: None,
-            },
-            // AZ-I.W2-act.B2: Google Sheets struct-direct activation.
-            "GoogleSheetsParser" | "GoogleSheetsGrammar" => EmitStrategy::StructDirect {
-                rust: SubstrateBinding {
-                    builder_path: "crate::runtime::google_sheets::SheetsStructBuilder",
-                    document_path: "crate::runtime::google_sheets::SheetsDocument",
-                },
-                ts: None,
-                wasm: None,
-            },
-            // AZ-I.W2-act.B3: CSS L4 struct-direct activation. The CSS
-            // L4 grammar projects through the `bbnf::runtime::css_l4`
-            // typed-value enum family + `CssStructBuilder` /
-            // `CssDocument` substrate authored at W2-act.B3.
-            "CssL4Parser" => EmitStrategy::StructDirect {
-                rust: SubstrateBinding {
-                    builder_path: "crate::runtime::css_l4::CssStructBuilder",
-                    document_path: "crate::runtime::css_l4::CssDocument",
-                },
-                ts: None,
-                wasm: None,
-            },
-            // AZ-II.cutover.H — BBNF struct-direct activation. cutover.F
-            // landed the emitter-side fixes (Array Shape-2 dispatch +
-            // Flat Alt/Repeat/Regex/Negate/Minus inline emission);
-            // cutover.G landed the bootstrap-parser break-and-regen
-            // substrate; cutover.H Phase 0 landed the validator
-            // value-expr-subtree skip in `graph::deps`; cutover.H
-            // Phase 1 lands the transparent-rule emitter fix at
-            // `shapes/mod.rs:202` together with this resolver-arm
-            // re-flip. The regen pipeline is now self-hosting via the
-            // generated parser.
-            "BbnfBootstrap" | "BbnfParser" => EmitStrategy::StructDirect {
-                rust: SubstrateBinding {
-                    builder_path: "crate::runtime::bbnf::BbnfStructBuilder",
-                    document_path: "crate::runtime::bbnf::BbnfDocument",
-                },
-                ts: None,
-                wasm: None,
-            },
-            // AZ-II.cutover.L Phase 3c — non-BBNF struct-direct
-            // activation. cutover.E deferred these arms until the BBNF
-            // struct-direct emitter regression was repaired; cutover.K
-            // Phases 0-2 + cutover.L Phase 3a closed the chicken-and-egg
-            // (BbnfBootstrap::parse self-hosts; pseudoClass /
-            // pseudoElement Alt-of-Ref dispatch lands). The remaining
-            // five arms now activate together — every grammar's
-            // substrate types (`<Grammar>StructBuilder` / `<Grammar>Document`)
-            // already exist under `crates/core/src/runtime/<grammar>/`.
-            "CsvParser" | "CsvGrammar" => EmitStrategy::StructDirect {
-                rust: SubstrateBinding {
-                    builder_path: "crate::runtime::csv::CsvStructBuilder",
-                    document_path: "crate::runtime::csv::CsvDocument",
-                },
-                ts: None,
-                wasm: None,
-            },
-            "MathParser" | "MathGrammar" => EmitStrategy::StructDirect {
-                rust: SubstrateBinding {
-                    builder_path: "crate::runtime::math::MathStructBuilder",
-                    document_path: "crate::runtime::math::MathDocument",
-                },
-                ts: None,
-                wasm: None,
-            },
-            "BnfParser" | "BnfGrammar" => EmitStrategy::StructDirect {
-                rust: SubstrateBinding {
-                    builder_path: "crate::runtime::bnf::BnfStructBuilder",
-                    document_path: "crate::runtime::bnf::BnfDocument",
-                },
-                ts: None,
-                wasm: None,
-            },
-            // AZ-II.cutover.O.2 — EBNF struct-direct activation. O1
-            // landed transactional StructDirect builders, so the
-            // high-branch `letter` / `digit` / `symbol` alternate
-            // attempts can now speculatively mutate builder state
-            // without leaking failed branches into parent layouts.
-            "EbnfParser" | "EbnfGrammar" => EmitStrategy::StructDirect {
-                rust: SubstrateBinding {
-                    builder_path: "crate::runtime::ebnf::EbnfStructBuilder",
-                    document_path: "crate::runtime::ebnf::EbnfDocument",
-                },
-                ts: None,
-                wasm: None,
-            },
-            "CssPrettyParser" | "CssPrettyGrammar" => EmitStrategy::StructDirect {
-                rust: SubstrateBinding {
-                    builder_path: "crate::runtime::css_pretty::CssPrettyStructBuilder",
-                    document_path: "crate::runtime::css_pretty::CssPrettyDocument",
-                },
-                ts: None,
-                wasm: None,
-            },
-            _ => panic!(
-                "EmitStrategy::for_grammar: unknown production grammar `{grammar_ident}`; \
-                 add an explicit StructDirect substrate binding"
-            ),
-        }
+        Self::for_grammar_with_manifest(grammar_ident, registry, PRODUCTION_MANIFEST_TABLE)
     }
 
     /// Returns `true` when the strategy emits the struct-direct
@@ -269,29 +224,28 @@ impl EmitStrategy {
         matches!(self, EmitStrategy::StructDirect { .. })
     }
 
-    /// AZ-IV.W0.3 — manifest-driven strategy resolver scaffold.
+    /// AZ-IV.W0.3 / W1.8 — manifest-driven strategy resolver.
     ///
     /// Looks up `grammar_ident` in `manifest_table` (per-row entries
-    /// constructed from `[workspace.metadata.bbnf-strategy]` parsed by
-    /// the consumer). When a row matches, the strategy is constructed
-    /// directly from the row's Rust binding paths — no literal arm in
-    /// this source file is consulted. When no row matches, the call
-    /// falls through to [`EmitStrategy::for_grammar`] so an existing
-    /// production arm still resolves.
+    /// constructed from `[workspace.metadata.bbnf-strategy]` or the
+    /// canonical [`PRODUCTION_MANIFEST_TABLE`]). When a row matches,
+    /// the strategy is constructed directly from the row's Rust
+    /// binding paths — no literal arm in this source file is
+    /// consulted. When no row matches, the call panics with a
+    /// structured error naming the offending grammar ident.
     ///
     /// `registry` is the rule-id → layout map populated by
     /// `bbnf_ir::passes::project_types`. The struct-direct path
     /// requires a populated registry; an empty registry is a hard
-    /// generation error rather than a tape fallback (parity with
-    /// [`EmitStrategy::for_grammar`]).
+    /// generation error rather than a tape fallback.
     ///
-    /// W0.3 scope: substrate scaffold only. The full lift —
-    /// replacing the literal arm-list at L143-262 with a manifest
-    /// reader the emitter consumes — is owned by W1.5/W1.8. This
-    /// method exists so a synthetic grammar test
-    /// (`crates/core/tests/synthetic_grammar_strategy.rs`) can
-    /// register a row and resolve it without needing a new literal
-    /// arm to land.
+    /// W1.8 closes the W0.3 scaffold by routing
+    /// [`EmitStrategy::for_grammar`] through this resolver against
+    /// [`PRODUCTION_MANIFEST_TABLE`]. The synthetic-grammar test
+    /// (`crates/core/tests/synthetic_grammar_strategy.rs`) registers
+    /// a row and resolves it without needing a new literal arm to
+    /// land — proving manifest-only round-trip per AZ-IV §Hard
+    /// Gates 22.
     pub fn for_grammar_with_manifest(
         grammar_ident: &str,
         registry: &StructRegistry,
@@ -318,10 +272,13 @@ impl EmitStrategy {
             };
         }
 
-        // Manifest miss — fall through to the literal arm-list. W1
-        // collapses the arm-list once every production grammar
-        // contributes a manifest row.
-        EmitStrategy::for_grammar(grammar_ident, registry)
+        panic!(
+            "EmitStrategy::for_grammar_with_manifest: unknown production grammar `{grammar_ident}`; \
+             add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs \
+             (or thread a fixture manifest table for synthetic-grammar tests). \
+             Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; \
+             a missing entry is a manifest defect, not a runtime fallback."
+        );
     }
 }
 

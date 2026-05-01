@@ -100,22 +100,36 @@ fn synthetic_grammar_resolves_through_manifest_row_without_source_arm() {
 }
 
 #[test]
-fn manifest_resolver_falls_through_to_source_arms_for_existing_grammar() {
-    // When the manifest row is empty, the resolver falls through to
-    // `for_grammar`'s in-source arm-list. This proves the substrate
-    // is purely additive — every existing production grammar
-    // continues to resolve through the literal arms while W1.5 / W1.8
-    // migrates each to a manifest row.
+#[should_panic(expected = "unknown production grammar")]
+fn manifest_resolver_panics_on_unknown_grammar_with_empty_manifest() {
+    // AZ-IV.W1.8 — the W0.3 fallthrough-to-source-arms test is
+    // retired. Pre-W1.8 the resolver fell through to a 9-arm
+    // literal allow-list; W1.8 collapses that arm-list into a
+    // canonical [`bbnf_ir::registry::PRODUCTION_MANIFEST_TABLE`]
+    // and `for_grammar` itself routes through this same resolver.
+    // When a caller passes an empty fixture manifest table AND the
+    // grammar ident does not match any row, the resolver panics
+    // with the offending ident — matching `for_grammar`'s
+    // fail-closed contract per AZ-IV §Hard Gates 18.
     let registry = populated_synth_registry();
     let empty_manifest: [ManifestStrategyEntry; 0] = [];
+    let _ = EmitStrategy::for_grammar_with_manifest("JsonParser", &registry, &empty_manifest);
+}
 
-    let strategy =
-        EmitStrategy::for_grammar_with_manifest("JsonParser", &registry, &empty_manifest);
+#[test]
+fn for_grammar_routes_json_through_production_manifest_table() {
+    // AZ-IV.W1.8 — `EmitStrategy::for_grammar` is a thin alias for
+    // `for_grammar_with_manifest(..., PRODUCTION_MANIFEST_TABLE)`.
+    // The test confirms that production grammars resolve through
+    // the canonical manifest table at the public API surface,
+    // proving the 9-arm allow-list is gone.
+    let registry = populated_synth_registry();
+    let strategy = EmitStrategy::for_grammar("JsonParser", &registry);
     let EmitStrategy::StructDirect { rust, .. } = strategy;
     assert_eq!(
         rust.builder_path, "crate::runtime::json::JsonStructBuilder",
-        "JsonParser must continue to resolve through the in-source arm-list while the \
-         manifest table is empty (W1.5 / W1.8 migration is not landed yet)",
+        "JsonParser must resolve through PRODUCTION_MANIFEST_TABLE at the \
+         `for_grammar` API surface — proving the 9-arm allow-list is gone",
     );
 }
 

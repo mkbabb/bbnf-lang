@@ -67,13 +67,25 @@ pub fn document_path(strategy: &EmitStrategy) -> TokenStream {
 /// existing parsing infrastructure (the proc-macro retired at B2 but
 /// the emitter still pulls in syn for token-stream construction
 /// across the codegen surface).
+///
+/// **AZ-IV.W1.8 (Fermat F4) — hard fail**: a malformed binding string
+/// is a manifest-side defect. Per AZ-IV §Hard Gates 19 + Invariants
+/// 13 (No silent fallback), the resolver does NOT route a parse
+/// failure into a default builder; it `panic!`s with the offending
+/// binding so the manifest gate (W0) catches it loudly. The previous
+/// `JsonStructBuilder` fallback emitted code that drove JSON's
+/// compound family for non-JSON grammars — exactly the substrate the
+/// AZ-IV thesis names as a deletion target.
 fn substrate_path(path: &'static str) -> TokenStream {
-    // Parse via syn::Path so we get a structured TokenStream rather
-    // than embedding the raw string. Falls back to JsonStructBuilder
-    // on parse failure so codegen never silently emits broken paths.
     match syn::parse_str::<syn::Path>(path) {
         Ok(parsed) => quote! { #parsed },
-        Err(_) => quote! { ::bbnf::runtime::JsonStructBuilder },
+        Err(err) => panic!(
+            "substrate_path: invalid binding {path:?}: {err}; the substrate-binding \
+             must be a fully-qualified Rust type path (e.g. \
+             `crate::runtime::json::JsonStructBuilder`). Per AZ-IV §Hard Gates 19 \
+             the manifest gate enforces well-formed paths; a parse failure here \
+             means the registry/manifest landed a malformed entry."
+        ),
     }
 }
 

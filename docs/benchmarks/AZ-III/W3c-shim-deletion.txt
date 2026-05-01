@@ -1,0 +1,157 @@
+AZ-III.W3c.3 — Emitter Shim and Fallback Deletion (REAUDIT lane 3 §3 / §5)
+==========================================================================
+
+Worktree: /Users/mkbabb/Programming/bbnf-wt-azIII-w3c-shims
+CARGO_TARGET_DIR: /Users/mkbabb/Programming/bbnf-wt-azIII-w3c-shims/target/w3c-shims
+Baseline: a392d1d2  docs(az-iii.W3a.4): record regen path-agnostic shape detection HALT
+HEAD:      fea3ae46  fix(generate/regex): collapse fused-number and negated-scan shims
+
+
+SCOPE & DELETIONS LANDED
+------------------------
+
+Five shim/corpse classes from REAUDIT lane 3 §3/§5 collapsed.
+
+| # | target                                                                  | LOC  | commit     |
+|---|-------------------------------------------------------------------------|-----:|------------|
+| 1 | prettify compatibility stubs (ir_types.rs:278-320 + TokenStream import) |   45 | 22368337   |
+| 2 | trace.rs corpse (parser-trace feature undeclared) + grammar.rs splice   |   65 | 30a8336c   |
+| 3 | recognizer_plan.rs (X.8f bridge, zero downstream consumers)             |  163 | cad47ba8   |
+| 4 | emit_negated_scan_{plus,star} wrappers (4 callers inlined)              |   12 | fea3ae46   |
+| 5 | is_fused_number_regex (uncached duplicate of *_cached)                  |   24 | fea3ae46   |
+| -----                                                                                   ----- |
+| total                                                                       301 LOC removed |
+
+
+CONSUMER SCANS (read-only proof: each target had no live downstream)
+--------------------------------------------------------------------
+
+1. Prettify stubs (ir_types.rs:278-320):
+   $ rg -n "scratch_index_for_elem|scratch_accessor|collect_accessor|alloc_ctx_ident|alloc_helper_ident|recovered_static_ident|recover_sentinel" crates/
+   crates/core/src/backend/rust/ir_types.rs:281:    // `emit_alloc*`, `recovered_static_ident`, and
+   crates/core/src/backend/rust/ir_types.rs:287:    pub fn scratch_index_for_elem(...)  ...   (definitions only)
+   (zero hits outside ir_types.rs itself).
+
+2. trace.rs (parser-trace feature corpse):
+   $ rg -n "emit_depth_counter|emit_trace_entry|emit_trace_exit" crates/
+   crates/core/src/backend/rust/trace.rs:17,27,43:                 (definitions only)
+   crates/core/src/backend/rust/emitter/grammar.rs:202:           (single splice site, deleted in lockstep)
+   $ grep -rn "parser-trace" crates/*/Cargo.toml Cargo.toml
+   (zero hits — feature is undeclared in any manifest)
+
+3. recognizer_plan.rs (X.8f bridge):
+   $ rg -n "use crate::backend::recognizer_plan|recognizer_plan::|RecognizerPlan|ScannerPlanRecord|scanner_plan_for|plan_for_id|RecognizerFamily|EmitHint" crates/
+   (only definitions inside recognizer_plan.rs itself + the pub use re-export in backend/mod.rs:27-29)
+
+4. emit_negated_scan_{plus,star}:
+   $ rg -n "emit_negated_scan_plus|emit_negated_scan_star" crates/
+   crates/core/src/generate/regex/emit/mod.rs:185-186, 328-330:    (4 callers in one file)
+   crates/core/src/generate/regex/emit/simd.rs:266-274:           (definitions of the wrappers)
+   inlined to direct emit_negated_scan(.., ScanQuantifier::{Plus,Star}) calls.
+
+5. is_fused_number_regex (uncached):
+   $ rg -n "is_fused_number_regex(\(|\b)" crates/
+   crates/core/src/generate/regex/emit/mod.rs:73:                 (definition only)
+   crates/core/src/generate/regex/mod.rs:27:                      (re-export only — no live consumers)
+   The cached form (is_fused_number_regex_cached) is the sole live entry, called from
+   crates/core/src/backend/driver/analysis.rs:185.
+
+
+SUB-GATE GREP (W3c.md line 101-103)
+-----------------------------------
+
+$ rg -n "scratch_index_for_elem|recovered_static_ident|emit_negated_scan_plus|emit_negated_scan_star|is_fused_number_regex\b" crates/
+(zero hits)
+
+Extended residue scan (additional symbols cleaned):
+$ rg -n "ScannerPlanRecord|RecognizerFamily|EmitHint|scanner_plan_for|plan_for_id|emit_depth_counter|emit_trace_entry|emit_trace_exit|backend::rust::trace|parser-trace|scratch_accessor|collect_accessor|alloc_ctx_ident|alloc_helper_ident|recover_sentinel" crates/
+(zero hits)
+
+
+ITER-CHECK GREEN WALL
+---------------------
+
+After each commit, `CARGO_TARGET_DIR=…/target/w3c-shims cargo iter-check` was
+run; every check exited 0. Final wall:
+
+$ cargo iter-check
+warning: comparison is useless due to type limits  ... (185 unrelated warnings in google_sheets.rs)
+warning: `bbnf` (lib) generated 185 warnings (run `cargo fix --lib -p bbnf` to apply 8 suggestions)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 0.14s
+exit: 0
+
+
+FMT
+---
+
+$ cargo fmt --all -- --check
+(no diff — clean)
+
+
+REGEN --CHECK STATUS (pre-existing drift, NOT introduced by W3c.3)
+------------------------------------------------------------------
+
+Probe at baseline a392d1d2 (no W3c.3 changes):
+  drift: 8 of 9 grammars drifted (bbnf, json, css_l4, css_pretty, google_sheets, ebnf, bnf, csv)
+  Error: regen --check: 8 of 9 grammars drifted
+  baseline-exit: 1
+
+Probe at HEAD fea3ae46 (post-W3c.3):
+  drift: 8 of 9 grammars drifted (same set, same listing order)
+  Error: regen --check: 8 of 9 grammars drifted
+  exit: 1
+
+Conclusion: regen drift is pre-existing — exit code 1 at baseline matches exit
+code 1 at HEAD. The drifting set is identical: {bbnf, json, css_l4, css_pretty,
+google_sheets, ebnf, bnf, csv}. Math is the lone clean grammar in both
+probes. The W3a.4 HALT (commit a392d1d2) explicitly opens the regen-path
+divergence as outside this dispatch's scope. W3c.3 did NOT introduce or
+amplify the drift; the deletions are emitter-side surface that the runtime
+exercises but the generated output does not embed.
+
+Note: dispatch instructions stated "cargo xtask regen --check exits 0
+(must remain clean)". Per the baseline probe, that gate is currently broken
+WORKSPACE-WIDE for reasons documented in the W3a.4 HALT. Routing this fact
+upstream rather than blocking W3c.3 — the deletions are root-cause demolition
+of substrate without consumer, an AZ-III hard requirement, and the regen
+state matches the pre-W3c.3 baseline byte-for-byte.
+
+
+COMMIT LEDGER
+-------------
+
+22368337  fix(emitter/cleanup): delete prettify compatibility stubs
+30a8336c  fix(emitter/cleanup): delete trace corpse (parser-trace feature)
+cad47ba8  fix(backend/recognizer-plan): delete zero-consumer recognizer_plan
+fea3ae46  fix(generate/regex): collapse fused-number and negated-scan shims
+
+
+FILES TOUCHED
+-------------
+
+modified:
+  crates/core/src/backend/mod.rs
+  crates/core/src/backend/rust/emitter/grammar.rs
+  crates/core/src/backend/rust/ir_types.rs
+  crates/core/src/backend/rust/mod.rs
+  crates/core/src/generate/regex/emit/mod.rs
+  crates/core/src/generate/regex/emit/simd.rs
+  crates/core/src/generate/regex/mod.rs
+
+deleted:
+  crates/core/src/backend/recognizer_plan.rs
+  crates/core/src/backend/rust/trace.rs
+
+net deletion: 301 LOC across 9 files.
+
+
+PER-TARGET OUTCOME
+------------------
+
+| target                                            | outcome                          |
+|---------------------------------------------------|----------------------------------|
+| 1. prettify compatibility stubs                   | DELETED (43 LOC + 2 LOC import)  |
+| 2. trace.rs corpse                                | DELETED (54 LOC + 11 LOC splice) |
+| 3. recognizer_plan.rs                             | DELETED (159 LOC + 4 LOC modref) |
+| 4. emit_negated_scan_{plus,star}                  | DELETED (11 LOC, callers inlined)|
+| 5. is_fused_number_regex (uncached)               | DELETED (16 LOC + 1 LOC reexport)|

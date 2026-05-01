@@ -1,0 +1,116 @@
+AZ-III.W2.2 CSS Parity — focused suite outcome (2026-04-30)
+============================================================
+
+Worktree: bbnf-wt-azIII-w2-css
+CARGO_TARGET_DIR: target/w2-css
+Profile: ax-iter
+
+Commands
+--------
+cargo nextest run -p bbnf --test lightningcss_parity --test css_l4_canonical_parity \
+  --test css_l4_named_color_parity --test css_color_parity --cargo-profile ax-iter \
+  --no-fail-fast
+
+Pre-fix baseline (HEAD pre-W2.2)
+--------------------------------
+Summary: 14 tests run: 6 passed, 8 failed, 0 skipped (with CSS data fixtures absent in
+worktree — copied from main worktree before re-running). Six failures were "data file
+not found" (gitignored fixtures); two failures were typed-payload (every named color
+got `None` instead of its declared `0xRRGGBBAAu32`).
+
+After W2.2 fixes (this branch)
+------------------------------
+Summary [ 181.033s] 14 tests run: 11 passed, 2 failed, 1 timed out, 0 skipped
+
+PASS:
+  bbnf::css_color_parity::resolved_color_like_tuple_plans_at_40_bytes_under_large_cap
+  bbnf::css_color_parity::seq_body_infers_scalar_tuple_from_type_map
+  bbnf::css_color_parity::resolver_empty_when_no_named_types
+  bbnf::css_color_parity::regex_body_infers_arena_handle_shape
+  bbnf::css_l4_named_color_parity::named_color_grammar_list_is_non_empty
+  bbnf::lightningcss_parity::color_channel_parity_rgb_family
+  bbnf::lightningcss_parity::lightningcss_parity_normalize
+  bbnf::css_l4_canonical_parity::canonical_parity_normalize
+  bbnf::css_l4_canonical_parity::scale_interop_bootstrap
+  bbnf::lightningcss_parity::lightningcss_parity_bootstrap   <-- W2.2 NEW (was FAIL)
+  bbnf::css_l4_canonical_parity::scale_interop_tailwind
+
+FAIL:
+  bbnf::css_l4_named_color_parity::white_materialises
+  bbnf::css_l4_named_color_parity::every_named_color_materialises_its_u32_payload
+
+TIMED OUT (>90s):
+  bbnf::lightningcss_parity::lightningcss_parity_tailwind   <-- W2.2 PERF REGRESSION
+
+Root-cause analysis
+-------------------
+1. Wrap-shape Alt-of-Map(Regex) emitted an empty body. The pre-W2.2 emitter at
+   `crates/core/src/backend/rust/emitter/shapes/wrap/struct_direct.rs::emit_wrap_branch_call_struct_direct`
+   admitted only `IrNode::Ref` branches; the four `combinator = /\s*>\s*/ -> 1u8 |
+   /\s*\+\s*/ -> 2u8 | /\s*~\s*/ -> 3u8 | /\s+/ -> 0u8` branches all returned `None`,
+   so `parse_wrap_CssL4Parser_combinator` lowered to `'try_branches: loop { match
+   first { _ => {} } return Err(...) }`. Every `>` / `+` / `~` combinator-led
+   complex selector failed; bootstrap.css died at the first `a > code { … }` rule
+   (offset 9317).
+
+   Fix: extend the wrap struct_direct emitter to accept `Map(Regex)`, `Map(Literal)`,
+   `Regex`, and `Literal` branches. Each emits an inline IIFE that performs the
+   match, advances *p, and pushes the typed `-> Nu8 / -> Nu64 / -> Bool` payload
+   constant-folded out of the branch's `FnDescriptor::Expr`. `branch.first_set`
+   (the analysis-pass-populated `Option<CharSet128>`) drives the byte-dispatch.
+
+2. Named-color and hex typed-payload failures (white_materialises +
+   every_named_color_materialises_its_u32_payload) — root cause is in
+   `crates/core/src/backend/rust/emitter/shapes/alt_dispatch/branches.rs`. That file
+   is W3c carve, not W2.2. The current `emit_dispatch_arms_struct_direct` strips
+   `Map(fn_id)` via `unwrap_trivia` and emits `push_leaf_with_unit() +
+   push_branch_tag(idx)` for every `IrNode::Literal` branch — never the typed
+   `MapExpr::IntLit(0xRRGGBBAA)` from the fn descriptor. Same defect surface as the
+   wrap fix; the alt_dispatch shape needs the symmetric extension. Routed to W3c.
+
+3. lightningcss_parity_tailwind timeout — perf regression introduced by the wrap
+   fix's per-branch IIFE wrapping a `__regex_scan_<grammar>(pattern, input, *p)`
+   adapter call. The combinator rule is the hottest non-leaf rule in tailwind.css
+   (every adjacent compoundSelector pair attempts the four-branch combinator
+   linear-try); the regex_scan adapter's pattern-string lookup is `#[cold]` and
+   pays a HashMap-style match per call. Bootstrap.css (280 KB) parses in 1.4s;
+   tailwind.css (3.6 MB) exceeds nextest's 90-second timeout. Pre-W2.2 the rule was
+   STRUCTURALLY broken (no branches emitted); the timeout is a NEW regression
+   surfaced by activating the dispatch.
+
+   Routed to W3c: collapse the regex_scan adapter's per-pattern lookup into a
+   compile-time per-shape `__regex_<grammar>_<idx>` direct call (or fold the four
+   combinator branches into a single byte-class fast path; the four operators are
+   `\s∪{>,+,~}` plus a run of `\s` — a single hand-written scan covers all four
+   cases without four regex_scan calls). The fix sits inside the regex emit
+   adapter (`generate/regex/`) or a hand-written combinator scanner for a CSS-only
+   shape carve, neither of which is W2.2 file bounds.
+
+Mechanical fix: 14 inline `mod css_types {…}` retired
+-----------------------------------------------------
+Per REAUDIT-2026-04-30 lane 3 §5.1, eight of the fourteen in-test
+`mod css_types {…}` duplications fell inside the W2.2 test carve
+(lightningcss_parity.rs + css_l4_*.rs). All eight retired in this branch:
+
+  crates/core/tests/lightningcss_parity.rs
+  crates/core/tests/css_l4.rs
+  crates/core/tests/css_l4_canonical_parity.rs
+  crates/core/tests/css_l4_color_view.rs
+  crates/core/tests/css_l4_comment_probe.rs
+  crates/core/tests/css_l4_dimensions.rs
+  crates/core/tests/css_l4_named_color_parity.rs
+  crates/core/tests/css_l4_parity.rs
+
+The remaining six sites (typed_accessor_surface.rs, named_type_preservation.rs,
+ax_w0a2s_real_css_probe.rs, examples/test_l4.rs, benches/css/l4.rs, and
+tests/common/css_types.rs) sit OUTSIDE the W2.2 modify carve; routed to a future
+hardening lane.
+
+Summary
+-------
+W2.2 lands the wrap struct_direct extension that unblocks bootstrap.css /
+canonical_parity_normalize / scale_interop_bootstrap / scale_interop_tailwind /
+combinator-led complex selectors generally, plus the eight in-scope css_types
+duplications collapsed to `use bbnf::css_types as _css_types_link`. Two
+named-color typed-payload failures and one tailwind perf timeout remain blocked
+on W3c (alt_dispatch typed payload activation + regex_scan adapter perf).

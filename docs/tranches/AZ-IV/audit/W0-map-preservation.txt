@@ -1,0 +1,78 @@
+AZ-IV.W0.4 — Map { fn_id } preservation evidence
+==================================================
+
+Test name
+---------
+crates/ir/tests/egraph/egraph_map_preservation.rs::map_wrapper_preserved_when_inner_equivalent_in_class
+
+Failing assertion (before fix)
+------------------------------
+panicked at crates/ir/tests/egraph/egraph_map_preservation.rs:102:18:
+  extraction stripped the Map wrapper; elected non-Map node Literal(1)
+  from a class containing Map { fn_id: 7, .. }. The host-fn semantic
+  transformation has been silently dropped.
+
+Cost / extraction fix
+---------------------
+crates/ir/src/egraph/cost.rs:130-152
+  GrammarENode::Map { inner, fn_id: _ } => {
+      const MAP_PRESERVE_BONUS: f64 = 1.0e6;
+      (child_cost(*inner) - MAP_PRESERVE_BONUS).max(f64::MIN / 2.0)
+  }
+
+Mechanism: Map's cost subtracts a preservation bonus so the wrapper
+always undercuts any non-Map sibling sharing its e-class. Every non-Map
+e-node carries at least Epsilon's 0.5 of structural mass; a 1e6 bonus
+keeps the wrapper safely below that floor while child_cost(*inner)
+keeps distinct Maps (different fn_ids, different inners) ranked
+against one another. The f64::MIN/2 floor caps deeply-nested Map cost
+at a finite negative value.
+
+Before-fix run (cost.rs left at structural + child_cost(*inner))
+----------------------------------------------------------------
+Nextest run ID a9638a0c-a0c6-403a-8298-d189f809eb2c with nextest profile: ax-iter
+    Starting 1 test across 1 binary (36 tests skipped)
+        FAIL [   0.006s] (1/1) bbnf-ir::egraph egraph_map_preservation::map_wrapper_preserved_when_inner_equivalent_in_class
+  stdout:
+    running 1 test
+    test egraph_map_preservation::map_wrapper_preserved_when_inner_equivalent_in_class ... FAILED
+    failures:
+        egraph_map_preservation::map_wrapper_preserved_when_inner_equivalent_in_class
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 36 filtered out
+  stderr:
+    thread 'egraph_map_preservation::map_wrapper_preserved_when_inner_equivalent_in_class' panicked at
+      crates/ir/tests/egraph/egraph_map_preservation.rs:102:18:
+    extraction stripped the Map wrapper; elected non-Map node Literal(1)
+    from a class containing Map { fn_id: 7, .. }. The host-fn semantic
+    transformation has been silently dropped.
+    Summary [   0.008s] 1 test run: 0 passed, 1 failed, 36 skipped
+        FAIL [   0.006s] (1/1) bbnf-ir::egraph egraph_map_preservation::map_wrapper_preserved_when_inner_equivalent_in_class
+    error: test run failed
+
+After-fix run (MAP_PRESERVE_BONUS applied at cost.rs:149-152)
+-------------------------------------------------------------
+Nextest run ID fb8706bd-78df-4473-9dbf-a0decc1b3ac1 with nextest profile: ax-iter
+    Starting 1 test across 1 binary (36 tests skipped)
+     Summary [   0.010s] 1 test run: 1 passed, 36 skipped
+
+Broader bbnf-ir nextest after fix
+---------------------------------
+Nextest run ID 7b594d81-b078-41ba-8fc3-336d5666a505 with nextest profile: ax-iter
+Summary [   0.681s] 412 tests run: 412 passed, 0 skipped
+
+Files
+-----
+- crates/ir/src/egraph/cost.rs (cost-model fix at lines 130-152)
+- crates/ir/tests/egraph/egraph_map_preservation.rs (named test)
+- crates/ir/tests/egraph/main.rs (test module registration)
+
+Provenance
+----------
+Routed forward from AZ-III W3c.1 priority 1 (FINAL.md:122,
+PROGRESS.md:33). The named-color alt_dispatch emitter substrate
+landed in W3c.1 but runtime activation stalled because the
+cost-guided extractor preferred the bare inner form over the
+Map { fn_id } wrapper that carried the MapExpr::IntLit projection.
+The cost-model preservation here pins the wrapper through extraction
+so downstream codegen (alt_dispatch named_color, css_color, and any
+future Map-projecting emitter) sees the host fn it expects.

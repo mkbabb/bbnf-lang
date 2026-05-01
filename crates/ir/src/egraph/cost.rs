@@ -127,7 +127,29 @@ impl CostModel<GrammarENode> for GrammarCostModel {
                 structural + child_cost(*inner)
             }
 
-            GrammarENode::Map { inner, fn_id: _ } => structural + child_cost(*inner),
+            // `Map { fn_id, inner }` is a semantic wrapper, not a
+            // structural shape — the host fn it carries cannot be
+            // recovered by extracting any non-Map equivalent in the
+            // same e-class. AZ-III W3c.1 traced this exactly: a class
+            // unioned its `Map`-wrapped form with an equivalent bare
+            // form, and the cost-cheapest pick was the bare form. The
+            // wrapper disappeared; named-color emission never
+            // activated at runtime.
+            //
+            // The fix bonds Map to a hard preserve. Every non-Map
+            // e-node carries at least Epsilon's `0.5` of structural
+            // mass, so a fixed bonus of `1e6` keeps the wrapper below
+            // any sibling that would elide it. `child_cost(*inner)`
+            // remains the dominant term so distinct `Map` variants
+            // (different fn_ids, different inner classes) stay
+            // distinguishable when more than one shares a class. The
+            // floor at `f64::MIN / 2.0` keeps repeated nesting
+            // numerically safe without saturating to a non-finite
+            // cost.
+            GrammarENode::Map { inner, fn_id: _ } => {
+                const MAP_PRESERVE_BONUS: f64 = 1.0e6;
+                (child_cost(*inner) - MAP_PRESERVE_BONUS).max(f64::MIN / 2.0)
+            }
 
             GrammarENode::TokenDispatch {
                 token,

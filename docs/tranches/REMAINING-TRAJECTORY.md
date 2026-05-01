@@ -389,7 +389,7 @@ Rule(
 )
 ```
 
-Shape: path accessors navigate typed CSS structure, and inferred rewrite
+Shape: path accessors traverse typed CSS structure, and inferred rewrite
 rules simplify selector/value IR before codegen.
 
 ## 7. Throughput Trajectory and Competitor Delta
@@ -441,7 +441,7 @@ Yes, under the hard version of the plan:
    improvements. That is AZ-I.W3's reason to exist. A string-preserving
    parser that skips typed semantics would be faster and wrong for this
    project.
-4. **Cross-grammar leverage** is where bbnf should exceed hand-written
+4. **Cross-grammar reach** is where bbnf should exceed hand-written
    peers architecturally: a rule inferred for regex HIR, scanner choice,
    payload placement, or path traversal can apply to JSON, CSS, Sheets, and
    BBNF without writing four bespoke parsers.

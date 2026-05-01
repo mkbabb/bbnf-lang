@@ -1,6 +1,6 @@
 # bbnf-lang — Begat Meta-Audit Prompt
 
-A comprehensive audit, archaeology, and gestalt brief of the
+An audit, archaeology, and gestalt brief of the
 bbnf-lang system across its ~2000-commit history. Authored per the
 user's 2026-04-23T16:01:55Z exhortation ("Relay a prompt to me to
 handoff to an auditor for every facet herein"). The brief's purpose
@@ -1582,7 +1582,7 @@ auditor produces.
 5. **Purview-scaffold population** (§Gestalt, §Archaeology,
    §Performance arc, §Abandoned paths, §External integration,
    §Open contradictions). Populate the deliverable each scaffold
-   names. These are the comprehensive-audit sections; an audit that
+   names. These are the auditor-populated sections; an audit that
    leaves any scaffold in its placeholder state is incomplete.
 
 6. **Failure-mode recurrence check** (§Failure-mode catalogue). For

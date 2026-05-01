@@ -32,7 +32,7 @@ fn source_aot_enables_prettify_for_pretty_directive() {
     };
 
     assert!(prepared.prep.effective_prettify);
-    let tokens = render_tokens(&prepared, &ParserAttributes::default(), "PrettyOnlyParser");
+    let tokens = render_tokens(&prepared, &ParserAttributes::default(), "BbnfParser");
     assert!(
         tokens.contains("value_prettify"),
         "missing prettify method: {tokens}"
@@ -51,11 +51,7 @@ fn source_aot_respects_explicit_prettify_without_directives() {
     };
 
     assert!(prepared.prep.effective_prettify);
-    let tokens = render_tokens(
-        &prepared,
-        &ParserAttributes::default(),
-        "ExplicitPrettyParser",
-    );
+    let tokens = render_tokens(&prepared, &ParserAttributes::default(), "BbnfParser");
     assert!(
         tokens.contains("value_prettify"),
         "missing prettify method: {tokens}"
@@ -74,7 +70,7 @@ fn source_aot_skips_prettify_without_flag_or_directive() {
     };
 
     assert!(!prepared.prep.effective_prettify);
-    let tokens = render_tokens(&prepared, &ParserAttributes::default(), "PlainParser");
+    let tokens = render_tokens(&prepared, &ParserAttributes::default(), "BbnfParser");
     assert!(
         !tokens.contains("value_prettify"),
         "unexpected prettify method: {tokens}"
@@ -109,7 +105,7 @@ fn compile_request_preserves_split_pretty_hint_for_codegen_error() {
     };
 
     assert!(prepared.prep.effective_prettify);
-    let tokens = render_tokens(&prepared, &ParserAttributes::default(), "SplitPrettyParser");
+    let tokens = render_tokens(&prepared, &ParserAttributes::default(), "BbnfParser");
     assert!(
         tokens.contains("split(\\\",\\\")"),
         "missing explicit split compile error: {tokens}"
@@ -173,7 +169,7 @@ fn compile_paths_preserves_pretty_directives_across_multiple_explicit_paths() {
 
     assert!(prepared.prep.effective_prettify);
     let attrs = ParserAttributes::with_paths(paths);
-    let tokens = render_tokens(&prepared, &attrs, "MultiPathParser");
+    let tokens = render_tokens(&prepared, &attrs, "BbnfParser");
     assert!(
         tokens.contains("foo_prettify"),
         "missing prettify method: {tokens}"
@@ -211,7 +207,7 @@ fn compile_paths_preserves_pretty_directives_through_import_resolution() {
 
     assert!(prepared.prep.effective_prettify);
     let attrs = ParserAttributes::with_paths(paths);
-    let tokens = render_tokens(&prepared, &attrs, "ImportPrettyParser");
+    let tokens = render_tokens(&prepared, &attrs, "BbnfParser");
     assert!(
         tokens.contains("child_prettify"),
         "missing prettify method: {tokens}"

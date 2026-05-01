@@ -1,33 +1,27 @@
-//! AW.0.5 — CSS L4 colour-function `LargeAggregate` view smoke tests.
+//! CSS L4 colour-function 40 B aggregate decoder smoke tests.
 //!
 //! Two layers of coverage:
 //!
 //! 1. **Standalone decoder** (`decode_*` / `from_tuple_*`): stable
-//!    against fabricated 40 B byte arrays. These verify the
-//!    [`Color`] struct decode contract under every `ColorSpace`
-//!    discriminant + the NaN-alpha passthrough. They do not depend
-//!    on the parser, the emitter, or bootstrap regen — they run
-//!    from first commit.
+//!    against fabricated 40 B byte arrays. Verifies the [`Color`]
+//!    struct decode contract under every `ColorSpace` discriminant
+//!    plus NaN-alpha passthrough. Decoder lives in
+//!    `tests/common/legacy_color_payload.rs` — production CSS uses
+//!    [`bbnf::runtime::css_l4::CssColor`] directly.
 //!
-//! 2. **End-to-end view** (`view_*`): parses a CSS value through
-//!    `CssL4Parser` and walks to the inner `colorFunction` /
-//!    `colorFn` record to call `.as_color()`. These depend on the
-//!    colour-function rules actually routing through
-//!    `LargeAggregate` at parse time, which in turn depends on:
-//!    - the emitter (W0b) actually driving payload writes on the
-//!      colour-function body;
-//!    - bootstrap regen (orchestrator post-wave) folding the new
-//!      `.as_color()` shim into `crates/core/src/grammar/generated.rs`.
+//! 2. **Parser acceptance**: smoke that `CssL4Parser` admits the
+//!    representative colour-function inputs (`rgb(...)` /
+//!    `oklch(...)` / `hsl(...)`) without error.
 //!
-//!    Until those land, the end-to-end tests are expected to fail
-//!    gracefully at either `parse` or at the `.as_color()` dispatch.
-//!    They are kept live (not `#[ignore]`d) so the post-regen green
-//!    transition is observable without un-ignoring.
+//! Layer 3 (Named admission gate) remains `#[ignore]`-deferred per
+//! AY.W2.2 deferral noted on the test itself.
 
-use bbnf::runtime::view::{COLOR_PAYLOAD_BYTES, Color, ColorSpace};
+mod common;
+
+use common::legacy_color_payload::{COLOR_PAYLOAD_BYTES, Color, ColorSpace};
 // Host function `parse_hex_color` referenced by
 // `grammar/css/l4/color.bbnf` lives in `bbnf::css_types` (the canonical
-// shim). REAUDIT-2026-04-30 lane 3 §5.1 retired the inline duplicates.
+// shim).
 #[allow(unused_imports)]
 use bbnf::css_types as _css_types_link;
 

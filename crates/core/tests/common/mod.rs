@@ -9,3 +9,6 @@ pub mod css_normalize;
 
 #[allow(dead_code)]
 pub mod css_types;
+
+#[allow(dead_code)]
+pub mod legacy_color_payload;

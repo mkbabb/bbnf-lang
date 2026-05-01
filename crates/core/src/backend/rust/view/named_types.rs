@@ -54,7 +54,29 @@ use rustc_hash::FxHashMap;
 use bbnf_ir::passes::NamedTypeResolver;
 use bbnf_ir::{GrammarIR, IrNode, RuleId, StringId, TypeDesc};
 
-use super::peel::unwrap_structural_wrappers;
+/// Strip structural wrappers (`Map`, `OptionalWhitespace`, `Skip`,
+/// `Next`, `Negate`) from a node, returning the inner kernel.
+///
+/// For `Skip` / `Next` the left operand is followed — the right
+/// operand is the discarded boundary (closing delimiter, trailing
+/// whitespace). The peel is iterative so deeply-nested wrapper chains
+/// do not recurse on the host stack.
+fn unwrap_structural_wrappers(node: &IrNode) -> &IrNode {
+    let mut cur = node;
+    loop {
+        match cur {
+            IrNode::Map { inner, .. }
+            | IrNode::OptionalWhitespace(inner)
+            | IrNode::Negate(inner) => {
+                cur = inner.as_ref();
+            }
+            IrNode::Skip(l, _) | IrNode::Next(l, _) => {
+                cur = l.as_ref();
+            }
+            _ => return cur,
+        }
+    }
+}
 
 /// Rust-backend resolver for backend-specific named types.
 ///

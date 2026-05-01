@@ -1,45 +1,33 @@
-//! AW-IV.W5.2 — lightningcss CSS parity harness.
+//! lightningcss CSS parity harness.
 //!
-//! The harness is a CI-gate that pins cross-parser parity between
-//! bbnf's CSS L4 grammar and lightningcss. Per W5.2 there are three
-//! canonical fixtures — normalize / bootstrap / tailwind — and two
-//! shapes of equivalence under test:
+//! Two shapes of equivalence under test:
 //!
-//! 1. **Corpus admission** (per-fixture). Both parsers must admit the
-//!    same byte range of the input, to EOF. A parse failure on either
-//!    side is a divergence. Where lightningcss rejects a pattern bbnf
-//!    admits (or vice-versa), the divergence is recorded explicitly
-//!    at the call site with rationale — no silent tolerance.
+//! 1. **Corpus admission** (per-fixture, normalize / bootstrap /
+//!    tailwind). Both parsers must admit the same byte range of the
+//!    input, to EOF. A parse failure on either side is a divergence.
 //!
 //! 2. **Colour-channel equivalence** (focused sub-test). A fabricated
 //!    fixture exercises the `rgb(r, g, b)` colour-function grammar
-//!    path. bbnf's aggregate payload decodes via
-//!    [`bbnf::runtime::view::Color`]; lightningcss's
-//!    `lightningcss::values::color::CssColor::RGBA(RGBA)` carries the
-//!    u8 channels. The comparator projects both sides to a
-//!    `(f64, f64, f64, f64)` 0..=255 tuple and asserts channel-for-
-//!    channel equivalence up to a ½-quantisation-step band.
+//!    path. bbnf's typed [`CssColor`] variants project into the
+//!    legacy `(space, c1, c2, c3, alpha)` shape via
+//!    `common::legacy_color_payload::Color`; lightningcss's
+//!    `CssColor::RGBA(RGBA)` carries u8 channels. The comparator
+//!    projects both sides to a `(f64, f64, f64, f64)` 0..=255 tuple
+//!    and asserts channel-for-channel equivalence up to a ½-
+//!    quantisation-step band.
 //!
 //! ## Why not per-declaration counting?
 //!
-//! An earlier draft of this harness counted declarations on each side
-//! via a textual-shape heuristic over the bbnf tape. The heuristic
-//! diverges from lightningcss's internal DeclarationBlock by ~2×
-//! because bbnf's tape emits the grammar's rule boundaries rather
-//! than lightningcss's DeclarationBlock boundaries — CSS L4's
-//! typed-declaration dispatch produces a distinct rule per
-//! declaration family, and the tape's Rule records do not align 1:1
-//! with lightningcss's `Vec<Property>`. Counting declarations is a
-//! structural test against the wrong structure.
-//!
-//! The corpus-admission test is the semantically-meaningful parity
-//! gate: if both parsers admit the same bytes, they agree on the
-//! grammar; any future regression in either parser surfaces as a
-//! parse failure on one side. Colour-channel equivalence is the
-//! field-for-field data test per the W5.2 plan's explicit call-out
-//! to `Color::RGBA` projection.
+//! An earlier draft counted declarations on each side via a textual-
+//! shape heuristic. The heuristic diverged from lightningcss's
+//! internal DeclarationBlock by ~2× because bbnf's grammar emits
+//! distinct rules per declaration family. Counting declarations
+//! tests the wrong structure; corpus admission is the semantically-
+//! meaningful parity gate.
 
-use bbnf::runtime::view::Color;
+mod common;
+
+use common::legacy_color_payload::Color;
 use lightningcss::properties::Property;
 use lightningcss::rules::CssRule;
 use lightningcss::stylesheet::{ParserOptions, StyleSheet};
@@ -174,7 +162,7 @@ fn bbnf_find_colors(input: &str) -> Vec<Color> {
     use ::bbnf::runtime::css_l4::{
         CssColor, CssColorFunction, CssColorPredefined, CssColorSpace, CssColorType, CssTypedValue,
     };
-    use ::bbnf::runtime::view::ColorSpace;
+    use common::legacy_color_payload::ColorSpace;
 
     fn project_function(f: &CssColorFunction) -> Color {
         let space = match f.kind {
@@ -198,14 +186,12 @@ fn bbnf_find_colors(input: &str) -> Vec<Color> {
     }
 
     fn project_predefined(p: &CssColorPredefined) -> Color {
-        // Map the colour-space discriminant onto the closest
-        // `crate::runtime::view::ColorSpace` variant. The W2-act.close
-        // ColorSpace surface admits only the legacy view-side
-        // discriminants; CSS L4's wider `CssColorSpace` (display-p3 /
-        // a98-rgb / xyz-d50 / etc.) resolves to the closest match for
-        // the field-for-field RGB comparator below — every space that
-        // isn't directly representable lands on `Rgb`, mirroring the
-        // pre-W2-act decoder's RGB-family bias.
+        // Map the colour-space discriminant onto the closest legacy
+        // [`ColorSpace`] variant. CSS L4's wider [`CssColorSpace`]
+        // (display-p3 / a98-rgb / xyz-d50 / etc.) resolves to the
+        // closest match for the field-for-field RGB comparator below
+        // — every space that isn't directly representable lands on
+        // `Rgb`, mirroring the legacy decoder's RGB-family bias.
         let space = match p.space {
             CssColorSpace::Hsl => ColorSpace::Hsl,
             CssColorSpace::Hwb => ColorSpace::Hwb,
@@ -334,7 +320,7 @@ c { background-color: rgb(100, 200, 50); }
         return;
     }
 
-    use bbnf::runtime::view::ColorSpace;
+    use common::legacy_color_payload::ColorSpace;
     let bbnf_rgba: Vec<(f64, f64, f64, f64)> = bbnf_colors
         .iter()
         .filter(|c| matches!(c.space, ColorSpace::Rgb | ColorSpace::Rgba))

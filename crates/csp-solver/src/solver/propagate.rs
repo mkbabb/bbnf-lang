@@ -1,10 +1,10 @@
 //! Forward checking and AC-FC hybrid propagation.
 
-use crate::SolveStats;
 use crate::adjacency::Adjacency;
 use crate::constraint::{ConstraintEnum, VarId};
 use crate::domain::Domain;
 use crate::variable::Variable;
+use crate::SolveStats;
 
 /// Forward checking using assign-check-unassign.
 ///
@@ -39,11 +39,11 @@ where
             for &ci in adjacency.constraints_for(neighbor) {
                 let ci = ci as usize;
                 let scope = constraints[ci].scope();
-                if scope.iter().all(|&v| assignment[v as usize].is_some()) {
-                    if !constraints[ci].check(assignment) {
-                        valid = false;
-                        break;
-                    }
+                if scope.iter().all(|&v| assignment[v as usize].is_some())
+                    && !constraints[ci].check(assignment)
+                {
+                    valid = false;
+                    break;
                 }
             }
 
@@ -76,15 +76,7 @@ pub fn ac_fc<D: Domain>(
 where
     D::Value: PartialEq,
 {
-    if forward_check(
-        var,
-        variables,
-        constraints,
-        adjacency,
-        assignment,
-        stats,
-        depth,
-    ) {
+    if forward_check(var, variables, constraints, adjacency, assignment, stats, depth) {
         return true;
     }
 
@@ -109,15 +101,7 @@ where
         let singleton_val = variables[v as usize].domain.singleton_value().unwrap();
         assignment[v as usize] = Some(singleton_val);
 
-        if forward_check(
-            v,
-            variables,
-            constraints,
-            adjacency,
-            assignment,
-            stats,
-            depth,
-        ) {
+        if forward_check(v, variables, constraints, adjacency, assignment, stats, depth) {
             assignment[v as usize] = None;
             return true;
         }

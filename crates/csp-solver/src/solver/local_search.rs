@@ -135,7 +135,12 @@ where
         let conflicts = conflicting_variables(&assignment, constraints, adjacency);
         if conflicts.is_empty() {
             // All constraints satisfied — extract solution.
-            return Some(assignment.into_iter().map(|v| v.unwrap()).collect());
+            return Some(
+                assignment
+                    .into_iter()
+                    .map(|v| v.unwrap())
+                    .collect(),
+            );
         }
 
         // Pick a random conflicting variable.
@@ -168,3 +173,4 @@ where
     // Budget exhausted.
     None
 }
+

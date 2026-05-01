@@ -85,11 +85,7 @@ pub trait Constraint<D: Domain>: Debug {
             return Revision::Unsatisfiable;
         }
 
-        if changed {
-            Revision::Changed
-        } else {
-            Revision::Unchanged
-        }
+        if changed { Revision::Changed } else { Revision::Unchanged }
     }
 }
 

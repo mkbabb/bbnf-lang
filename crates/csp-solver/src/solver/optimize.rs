@@ -3,16 +3,51 @@
 //! Extends backtracking with cost tracking: at each search node, computes a
 //! lower bound on the total cost of any completion. Prunes when the bound
 //! exceeds the incumbent solution's cost.
+//!
+//! # Deferred extensions (Phase 2 design decisions)
+//!
+//! **`TieredCostEval` / lazy cost evaluation** — deferred because the
+//! [`CostFiniteDomain::min_cost`] incremental `Cell` cache (landed in
+//! Phase 2A) covers the immediate bottleneck: `optimistic_bound` was
+//! calling `min_cost()` O(domain) per node, and the cache amortizes that
+//! to O(1). A tiered evaluator (cheap proxy lower bound + expensive actual
+//! cost with memoization) only pays its API cost when a second consumer
+//! with a genuinely non-trivial cost function appears. The existing
+//! [`DomainCostEval`] trait is the extension point — implement a new
+//! evaluator type, no solver-core changes needed.
+//!
+//! **`solve_with_warm_start`** — deferred because no consumer currently
+//! demands incremental re-solving (accepting a previous solution as the
+//! initial incumbent for tighter B&B pruning from node zero). The
+//! implementation is ~20 LOC: add a `warm_start: Option<&Solution>` field
+//! to [`OptimizeConfig`] and seed `best_cost` / `best_solution` before
+//! the first `bb_recurse` call. Land it when the first incremental
+//! consumer (e.g., a playground animation scrubber) appears.
+//!
+//! **Unified `Constraint` trait** — the current `ConstraintEnum` dispatch
+//! and separate `SoftConstraint` trait are adequate for the constraint
+//! vocabulary in use. Collapsing them into a single trait with a default
+//! `penalty() -> f64::INFINITY` method is a readability improvement, not a
+//! performance one (the enum dispatch is already inlined by the compiler).
+//! Land when the constraint vocabulary grows enough to justify the
+//! refactor.
+//!
+//! **`tracing` instrumentation** — adding `#[instrument]` spans on
+//! `branch_and_bound`, `propagate`, `ac3_from_variable` would enable
+//! production diagnostics (measure propagation time, identify bottleneck
+//! constraints). Deferred as polish — the `SolveStats` struct already
+//! tracks `nodes_explored`, `backtracks`, `propagations`, and
+//! `budget_exceeded`, which covers the coarse-grained profiling needs.
 
-use crate::adjacency::Adjacency;
 use crate::constraint::{ConstraintEnum, VarId};
 use crate::domain::Domain;
 use crate::ordering::{self, Ordering};
 use crate::solver::ac3;
 use crate::solver::backtrack::Solution;
 use crate::solver::propagate;
+use crate::solver::SearchContext;
 use crate::variable::Variable;
-use crate::{Pruning, SolveStats};
+use crate::Pruning;
 
 /// Configuration for branch-and-bound optimization.
 pub struct OptimizeConfig {
@@ -85,14 +120,22 @@ struct ScoredSolution<D: Domain> {
     cost: f64,
 }
 
+/// Mutable accumulator for branch-and-bound: scored solutions found so far
+/// and the best (effective) cost seen, threaded through the recursive search
+/// to avoid per-function argument bloat.
+struct BranchBoundState<D: Domain> {
+    scored: Vec<ScoredSolution<D>>,
+    best_cost: f64,
+}
+
 /// Run branch-and-bound search. Returns up to `max_solutions` solutions,
 /// sorted by cost (best first according to the optimization direction).
 pub fn branch_and_bound<D: Domain>(
     variables: &mut [Variable<D>],
     constraints: &[ConstraintEnum<D>],
-    adjacency: &Adjacency,
+    adjacency: &crate::adjacency::Adjacency,
     config: &OptimizeConfig,
-    stats: &mut SolveStats,
+    stats: &mut crate::SolveStats,
     cost_eval: &dyn DomainCostEval<D>,
 ) -> Vec<Solution<D>>
 where
@@ -101,72 +144,33 @@ where
     let num_vars = variables.len();
     let mut assignment: Vec<Option<D::Value>> = vec![None; num_vars];
     let mut stack: Vec<VarId> = (0..num_vars as u32).collect();
-    let mut scored: Vec<ScoredSolution<D>> = Vec::new();
-    let mut best_cost = f64::INFINITY;
-
-    // Pre-collect indices of soft constraints so the hot-path cost
-    // functions (`optimistic_bound`, `assignment_cost`) only iterate
-    // the soft subset instead of scanning all N constraints. On real
-    // grammars the soft fraction is <10% of the total constraint
-    // count, turning an O(N_constraints) per-node scan into O(N_soft).
-    let soft_indices: Vec<usize> = constraints
-        .iter()
-        .enumerate()
-        .filter_map(|(i, c)| if c.is_soft() { Some(i) } else { None })
-        .collect();
-
-    // Incremental bound: start with the optimistic bound of the empty
-    // assignment (every variable contributes its min/max cost). The
-    // recursive search maintains this incrementally as variables are
-    // assigned/unassigned, avoiding the O(N_vars) full recomputation
-    // at every node.
-    let initial_bound = if config.maximize {
-        variables
-            .iter()
-            .map(|v| cost_eval.max_cost(&v.domain))
-            .sum::<f64>()
-    } else {
-        variables
-            .iter()
-            .map(|v| cost_eval.min_cost(&v.domain))
-            .sum::<f64>()
+    let mut ctx = SearchContext { variables, constraints, adjacency, stats };
+    let mut bb = BranchBoundState {
+        scored: Vec::new(),
+        best_cost: f64::INFINITY,
     };
 
     bb_recurse(
-        variables,
-        constraints,
-        adjacency,
+        &mut ctx,
         config,
-        stats,
         cost_eval,
         &mut assignment,
         &mut stack,
-        &mut scored,
-        &mut best_cost,
-        &soft_indices,
-        initial_bound,
+        &mut bb,
         0,
     );
 
     // Sort by cost: best first (lowest for minimize, highest for maximize).
     if config.maximize {
-        scored.sort_by(|a, b| {
-            b.cost
-                .partial_cmp(&a.cost)
-                .unwrap_or(std::cmp::Ordering::Equal)
-        });
+        bb.scored.sort_by(|a, b| b.cost.partial_cmp(&a.cost).unwrap_or(std::cmp::Ordering::Equal));
     } else {
-        scored.sort_by(|a, b| {
-            a.cost
-                .partial_cmp(&b.cost)
-                .unwrap_or(std::cmp::Ordering::Equal)
-        });
+        bb.scored.sort_by(|a, b| a.cost.partial_cmp(&b.cost).unwrap_or(std::cmp::Ordering::Equal));
     }
 
     // Keep only the best `max_solutions`.
-    scored.truncate(config.max_solutions);
+    bb.scored.truncate(config.max_solutions);
 
-    scored.into_iter().map(|s| s.solution).collect()
+    bb.scored.into_iter().map(|s| s.solution).collect()
 }
 
 /// Compute the cost of a complete assignment.
@@ -174,7 +178,6 @@ fn assignment_cost<D: Domain>(
     assignment: &[Option<D::Value>],
     variables: &[Variable<D>],
     constraints: &[ConstraintEnum<D>],
-    soft_indices: &[usize],
     cost_eval: &dyn DomainCostEval<D>,
 ) -> f64
 where
@@ -189,29 +192,65 @@ where
         }
     }
 
-    // Soft constraint penalties — only iterate the pre-indexed soft
-    // subset. Hard constraints always return 0.0 for soft_penalty,
-    // so skipping them is correct and avoids an O(N_constraints) scan.
-    for &idx in soft_indices {
-        cost += constraints[idx].soft_penalty(assignment);
+    // Soft constraint penalties.
+    for c in constraints {
+        cost += c.soft_penalty(assignment);
     }
 
     cost
 }
 
-fn bb_recurse<D: Domain>(
-    variables: &mut [Variable<D>],
+/// Compute the optimistic bound on the cost of any completion.
+///
+/// For minimize: returns a lower bound (assigned vars use actual cost,
+/// unassigned use min_cost).
+/// For maximize: returns an upper bound (assigned vars use actual cost,
+/// unassigned use max_cost). This is then negated by the caller to
+/// compare against the negated incumbent.
+fn optimistic_bound<D: Domain>(
+    assignment: &[Option<D::Value>],
+    variables: &[Variable<D>],
     constraints: &[ConstraintEnum<D>],
-    adjacency: &Adjacency,
+    cost_eval: &dyn DomainCostEval<D>,
+    maximize: bool,
+) -> f64
+where
+    D::Value: PartialEq,
+{
+    let mut bound = 0.0;
+
+    for (i, val) in assignment.iter().enumerate() {
+        match val {
+            Some(v) => bound += cost_eval.cost(&variables[i].domain, v),
+            None => {
+                if maximize {
+                    bound += cost_eval.max_cost(&variables[i].domain);
+                } else {
+                    bound += cost_eval.min_cost(&variables[i].domain);
+                }
+            }
+        }
+    }
+
+    // Soft constraint penalties for fully-assigned scopes.
+    // (Partially-assigned scopes contribute 0 optimistically.)
+    for c in constraints {
+        let scope = c.scope();
+        if scope.iter().all(|&v| assignment[v as usize].is_some()) {
+            bound += c.soft_penalty(assignment);
+        }
+    }
+
+    bound
+}
+
+fn bb_recurse<D: Domain>(
+    ctx: &mut SearchContext<'_, D>,
     config: &OptimizeConfig,
-    stats: &mut SolveStats,
     cost_eval: &dyn DomainCostEval<D>,
     assignment: &mut Vec<Option<D::Value>>,
     stack: &mut Vec<VarId>,
-    scored: &mut Vec<ScoredSolution<D>>,
-    best_cost: &mut f64,
-    soft_indices: &[usize],
-    domain_bound: f64,
+    bb: &mut BranchBoundState<D>,
     depth: usize,
 ) -> bool
 where
@@ -219,21 +258,18 @@ where
 {
     // Complete assignment — record solution.
     if stack.is_empty() {
-        let cost = assignment_cost(assignment, variables, constraints, soft_indices, cost_eval);
+        let cost = assignment_cost(assignment, ctx.variables, ctx.constraints, cost_eval);
         let effective_cost = if config.maximize { -cost } else { cost };
 
-        if effective_cost < *best_cost {
-            *best_cost = effective_cost;
+        if effective_cost < bb.best_cost {
+            bb.best_cost = effective_cost;
         }
 
         let sol: Solution<D> = assignment
             .iter()
             .map(|v| v.as_ref().unwrap().clone())
             .collect();
-        scored.push(ScoredSolution {
-            solution: sol,
-            cost,
-        });
+        bb.scored.push(ScoredSolution { solution: sol, cost });
 
         // For optimization, keep searching for better solutions.
         return false;
@@ -246,40 +282,27 @@ where
     // is set so callers can distinguish best-so-far from optimal.
     // Checked before `nodes_explored += 1` so the post-budget node is
     // never counted and the flag is set exactly once per search.
-    if let Some(budget) = config.node_budget {
-        if stats.nodes_explored >= budget {
-            stats.budget_exceeded = true;
-            return true;
-        }
+    if let Some(budget) = config.node_budget
+        && ctx.stats.nodes_explored >= budget
+    {
+        ctx.stats.budget_exceeded = true;
+        return true;
     }
 
-    stats.nodes_explored += 1;
+    ctx.stats.nodes_explored += 1;
 
-    // Bound check: use the incrementally-maintained domain bound
-    // plus soft constraint penalties. The domain_bound tracks the
-    // sum of (actual cost for assigned vars, min/max cost for
-    // unassigned vars) without recomputing from scratch.
-    let soft_penalty: f64 = soft_indices
-        .iter()
-        .filter_map(|&idx| {
-            let c = &constraints[idx];
-            let scope = c.scope();
-            if scope.iter().all(|&v| assignment[v as usize].is_some()) {
-                Some(c.soft_penalty(assignment))
-            } else {
-                None
-            }
-        })
-        .sum();
-    let ob = domain_bound + soft_penalty;
+    // Bound check: prune if the optimistic bound can't beat the incumbent.
+    let ob = optimistic_bound(
+        assignment, ctx.variables, ctx.constraints, cost_eval, config.maximize,
+    );
     let effective_ob = if config.maximize { -ob } else { ob };
-    if effective_ob >= *best_cost {
+    if effective_ob >= bb.best_cost {
         return false;
     }
 
     let idx = ordering::select_variable(
         stack,
-        variables,
+        ctx.variables,
         config.ordering,
         &config.constraint_weights,
         &config.var_constraint_ids,
@@ -288,17 +311,10 @@ where
 
     let var = stack.swap_remove(idx);
 
-    // The optimistic contribution of this variable before assignment.
-    let var_optimistic = if config.maximize {
-        cost_eval.max_cost(&variables[var as usize].domain)
-    } else {
-        cost_eval.min_cost(&variables[var as usize].domain)
-    };
-
     // Value ordering: sort by cost (lowest first for minimize, highest for maximize).
-    let mut values: Vec<_> = variables[var as usize].domain.iter().collect();
+    let mut values: Vec<_> = ctx.variables[var as usize].domain.iter().collect();
     {
-        let domain = &variables[var as usize].domain;
+        let domain = &ctx.variables[var as usize].domain;
         if config.maximize {
             values.sort_by(|a, b| {
                 let ca = cost_eval.cost(domain, b);
@@ -315,23 +331,18 @@ where
     }
 
     for val in values {
-        // Update the incremental bound: replace the optimistic
-        // contribution of this variable with the actual cost.
-        let actual_cost = cost_eval.cost(&variables[var as usize].domain, &val);
-        let new_bound = domain_bound - var_optimistic + actual_cost;
-
         assignment[var as usize] = Some(val.clone());
-        variables[var as usize].restrict_to(&val, depth);
+        ctx.variables[var as usize].restrict_to(&val, depth);
 
         let mut valid = true;
-        for &ci in adjacency.constraints_for(var) {
+        for &ci in ctx.adjacency.constraints_for(var) {
             let ci = ci as usize;
-            let scope = constraints[ci].scope();
-            if scope.iter().all(|&v| assignment[v as usize].is_some()) {
-                if !constraints[ci].check(assignment) {
-                    valid = false;
-                    break;
-                }
+            let scope = ctx.constraints[ci].scope();
+            if scope.iter().all(|&v| assignment[v as usize].is_some())
+                && !ctx.constraints[ci].check(assignment)
+            {
+                valid = false;
+                break;
             }
         }
 
@@ -340,57 +351,45 @@ where
                 Pruning::None => false,
                 Pruning::ForwardChecking => propagate::forward_check(
                     var,
-                    variables,
-                    constraints,
-                    adjacency,
+                    ctx.variables,
+                    ctx.constraints,
+                    ctx.adjacency,
                     assignment.as_mut_slice(),
-                    stats,
+                    ctx.stats,
                     depth,
                 ),
                 Pruning::Ac3 => ac3::ac3_from_variable(
-                    var,
-                    variables,
-                    constraints,
-                    adjacency,
-                    assignment,
-                    stats,
-                    depth,
+                    var, ctx.variables, ctx.constraints, ctx.adjacency, assignment, ctx.stats, depth,
                 ),
                 Pruning::AcFc => propagate::ac_fc(
                     var,
-                    variables,
-                    constraints,
-                    adjacency,
+                    ctx.variables,
+                    ctx.constraints,
+                    ctx.adjacency,
                     assignment.as_mut_slice(),
-                    stats,
+                    ctx.stats,
                     depth,
                 ),
             };
 
-            if !dwo {
-                if bb_recurse(
-                    variables,
-                    constraints,
-                    adjacency,
+            if !dwo
+                && bb_recurse(
+                    ctx,
                     config,
-                    stats,
                     cost_eval,
                     assignment,
                     stack,
-                    scored,
-                    best_cost,
-                    soft_indices,
-                    new_bound,
+                    bb,
                     depth + 1,
-                ) {
-                    return true;
-                }
+                )
+            {
+                return true;
             }
         }
 
-        stats.backtracks += 1;
+        ctx.stats.backtracks += 1;
         assignment[var as usize] = None;
-        for v in variables.iter_mut() {
+        for v in ctx.variables.iter_mut() {
             v.restore(depth);
         }
     }

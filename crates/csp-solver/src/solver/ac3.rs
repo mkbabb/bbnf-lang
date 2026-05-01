@@ -2,11 +2,11 @@
 //!
 //! Uses a bitset worklist for lower overhead than VecDeque + Vec<bool>.
 
-use crate::SolveStats;
 use crate::adjacency::Adjacency;
 use crate::constraint::{ConstraintEnum, Revision, VarId};
 use crate::domain::Domain;
 use crate::variable::Variable;
+use crate::{SolveStats, Unsatisfiable};
 
 /// A simple bitset worklist — O(1) insert/membership, O(words) scan for next.
 struct BitsetWorklist {
@@ -15,14 +15,14 @@ struct BitsetWorklist {
 
 impl BitsetWorklist {
     fn new(capacity: usize) -> Self {
-        let num_words = (capacity + 63) / 64;
+        let num_words = capacity.div_ceil(64);
         Self {
             words: vec![0; num_words],
         }
     }
 
     fn new_full(capacity: usize) -> Self {
-        let num_words = (capacity + 63) / 64;
+        let num_words = capacity.div_ceil(64);
         let mut words = vec![u64::MAX; num_words];
         let remainder = capacity % 64;
         if remainder != 0 && !words.is_empty() {
@@ -53,14 +53,14 @@ impl BitsetWorklist {
 
 /// Run AC-3 propagation over all constraints.
 ///
-/// Returns `Err(())` if a domain wipe-out is detected (unsatisfiable).
+/// Returns `Err(Unsatisfiable)` if a domain wipe-out is detected.
 pub fn ac3_full<D: Domain>(
     variables: &mut [Variable<D>],
     constraints: &[ConstraintEnum<D>],
     adjacency: &Adjacency,
     stats: &mut SolveStats,
     depth: usize,
-) -> Result<(), ()>
+) -> Result<(), Unsatisfiable>
 where
     D::Value: PartialEq,
 {
@@ -75,7 +75,7 @@ where
                     worklist.insert(neighbor as usize);
                 }
             }
-            Revision::Unsatisfiable => return Err(()),
+            Revision::Unsatisfiable => return Err(Unsatisfiable),
         }
     }
 
@@ -100,10 +100,7 @@ where
     for &ci in adjacency.constraints_for(var) {
         let ci = ci as usize;
         let scope = constraints[ci].scope();
-        if scope
-            .iter()
-            .any(|&v| v != var && assignment[v as usize].is_none())
-        {
+        if scope.iter().any(|&v| v != var && assignment[v as usize].is_none()) {
             worklist.insert(ci);
         }
     }

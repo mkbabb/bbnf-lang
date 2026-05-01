@@ -1,2 +1,8 @@
 unstable_features = true
-ignore = ["crates/core/src/grammar/generated"]
+ignore = [
+  "crates/core/src/grammar/generated",
+  # csp-solver/src is byte-mirrored from the csc411 sibling per
+  # AZ-IV.W0.2.b canonical-source policy; running rustfmt against it
+  # would diverge from the canonical-source diff gate.
+  "crates/csp-solver/src",
+]

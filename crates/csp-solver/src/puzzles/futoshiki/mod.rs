@@ -4,4 +4,4 @@
 
 pub mod csp;
 
-pub use csp::{FutoshikiPuzzle, create_futoshiki_csp, solve_futoshiki};
+pub use csp::{create_futoshiki_csp, solve_futoshiki, FutoshikiPuzzle};

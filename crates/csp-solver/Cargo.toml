@@ -2,7 +2,14 @@
 name = "csp-solver"
 version = "0.1.0"
 edition = "2024"
-description = "Generalized CSP/COP substrate vendored from the sibling csc411 course repo. See crates/CLAUDE.md for the Tranche AA.2 vendoring rationale."
+description = "Generalized CSP/COP substrate; bench home of bbnf-lang. Source-of-truth tracked at csc411 commit b70098676f2fc09979f1969341f5115bd774cbd5 — `diff -rq` against that sibling tree closes AZ-IV.W0.2.b. The `py` feature is declared for cfg-recognition only; the PyO3 surface in `src/py.rs` is csc411-only and unused by bbnf-lang."
+
+[features]
+default = []
+# Declared so `#[cfg(feature = "py")]` in src/lib.rs and src/py.rs is
+# recognised under cfg-check. bbnf-lang never enables this feature; the
+# PyO3 binding is csc411's algorithm-evolution territory.
+py = []
 
 [dependencies]
 

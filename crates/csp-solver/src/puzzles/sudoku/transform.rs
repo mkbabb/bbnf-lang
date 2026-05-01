@@ -49,7 +49,7 @@ impl SudokuTransform {
         let mut stack_perm: Vec<usize> = (0..n).collect();
         rng.shuffle(&mut stack_perm);
 
-        let do_transpose = rng.next_u64() % 2 == 0;
+        let do_transpose = rng.next_u64().is_multiple_of(2);
 
         Self {
             digit_perm,
@@ -69,7 +69,7 @@ impl SudokuTransform {
 
         let mut result = vec![0u32; total];
 
-        for old_pos in 0..total {
+        for (old_pos, &val) in board.iter().enumerate().take(total) {
             let old_row = old_pos / m;
             let old_col = old_pos % m;
 
@@ -91,12 +91,7 @@ impl SudokuTransform {
             }
 
             let new_pos = new_row * m + new_col;
-            let val = board[old_pos];
-            result[new_pos] = if val == 0 {
-                0
-            } else {
-                self.digit_perm[val as usize]
-            };
+            result[new_pos] = if val == 0 { 0 } else { self.digit_perm[val as usize] };
         }
 
         result

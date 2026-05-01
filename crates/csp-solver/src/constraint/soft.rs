@@ -2,6 +2,7 @@
 
 use crate::domain::Domain;
 
+use super::lambda::CheckerFn;
 use super::traits::{Constraint, SoftConstraint, VarId};
 
 /// A soft constraint backed by a closure, analogous to `LambdaConstraint`.
@@ -10,7 +11,7 @@ use super::traits::{Constraint, SoftConstraint, VarId};
 /// `penalty` is added to the objective during optimization search.
 pub struct SoftLambdaConstraint<D: Domain> {
     pub(crate) scope: Vec<VarId>,
-    pub(crate) checker: Box<dyn Fn(&[Option<D::Value>]) -> bool>,
+    pub(crate) checker: CheckerFn<D>,
     pub(crate) penalty: f64,
     label: String,
 }

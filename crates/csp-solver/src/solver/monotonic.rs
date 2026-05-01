@@ -4,10 +4,10 @@
 //! and undo-log overhead. Domains only grow (join/union), so no backtracking
 //! is needed — simple iteration until convergence.
 
-use crate::SolveStats;
 use crate::constraint::{ConstraintEnum, Revision};
 use crate::domain::Domain;
 use crate::variable::Variable;
+use crate::{SolveStats, Unsatisfiable};
 
 /// Propagate constraints over lattice domains to a fixed point.
 ///
@@ -16,13 +16,13 @@ use crate::variable::Variable;
 /// constraints until none produce changes — appropriate when domains are
 /// monotonic (only grow via join) and the constraint graph is small.
 ///
-/// Returns `Err(())` if a constraint reports unsatisfiable (shouldn't happen
-/// for well-formed lattice CSPs).
+/// Returns `Err(Unsatisfiable)` if a constraint reports unsatisfiable
+/// (shouldn't happen for well-formed lattice CSPs).
 pub fn propagate_monotonic<D: Domain>(
     variables: &mut [Variable<D>],
     constraints: &[ConstraintEnum<D>],
     stats: &mut SolveStats,
-) -> Result<(), ()>
+) -> Result<(), Unsatisfiable>
 where
     D::Value: PartialEq,
 {
@@ -35,7 +35,7 @@ where
                     changed = true;
                     stats.propagations += 1;
                 }
-                Revision::Unsatisfiable => return Err(()),
+                Revision::Unsatisfiable => return Err(Unsatisfiable),
             }
         }
         if !changed {
@@ -62,7 +62,7 @@ pub fn propagate_stratified<D: Domain>(
     scc_ids: &[usize],
     cyclic_sccs: &[bool],
     stats: &mut SolveStats,
-) -> Result<(), ()>
+) -> Result<(), Unsatisfiable>
 where
     D::Value: PartialEq,
 {
@@ -77,7 +77,7 @@ where
                 Revision::Unchanged | Revision::Changed => {
                     stats.propagations += 1;
                 }
-                Revision::Unsatisfiable => return Err(()),
+                Revision::Unsatisfiable => return Err(Unsatisfiable),
             }
             i += 1;
         } else {
@@ -97,7 +97,7 @@ where
                             changed = true;
                             stats.propagations += 1;
                         }
-                        Revision::Unsatisfiable => return Err(()),
+                        Revision::Unsatisfiable => return Err(Unsatisfiable),
                     }
                 }
                 if !changed {

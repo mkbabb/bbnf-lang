@@ -32,26 +32,22 @@ impl NotEqual {
         let xj = self.scope[1] as usize;
         let mut changed = false;
 
-        if let Some(v) = vars[xi].domain.singleton_value() {
-            if vars[xj].prune(&v, depth) {
-                changed = true;
-            }
+        if let Some(v) = vars[xi].domain.singleton_value()
+            && vars[xj].prune(&v, depth)
+        {
+            changed = true;
         }
-        if let Some(v) = vars[xj].domain.singleton_value() {
-            if vars[xi].prune(&v, depth) {
-                changed = true;
-            }
+        if let Some(v) = vars[xj].domain.singleton_value()
+            && vars[xi].prune(&v, depth)
+        {
+            changed = true;
         }
 
         if vars[xi].domain.is_empty() || vars[xj].domain.is_empty() {
             return Revision::Unsatisfiable;
         }
 
-        if changed {
-            Revision::Changed
-        } else {
-            Revision::Unchanged
-        }
+        if changed { Revision::Changed } else { Revision::Unchanged }
     }
 }
 
@@ -59,13 +55,7 @@ impl<D: Domain> Constraint<D> for NotEqual
 where
     D::Value: PartialEq,
 {
-    fn scope(&self) -> &[VarId] {
-        &self.scope
-    }
-    fn check(&self, assignment: &[Option<D::Value>]) -> bool {
-        self.check_impl(assignment)
-    }
-    fn revise(&self, vars: &mut [Variable<D>], depth: usize) -> Revision {
-        self.revise_impl(vars, depth)
-    }
+    fn scope(&self) -> &[VarId] { &self.scope }
+    fn check(&self, assignment: &[Option<D::Value>]) -> bool { self.check_impl(assignment) }
+    fn revise(&self, vars: &mut [Variable<D>], depth: usize) -> Revision { self.revise_impl(vars, depth) }
 }

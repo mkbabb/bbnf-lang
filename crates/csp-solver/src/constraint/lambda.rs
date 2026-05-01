@@ -4,9 +4,12 @@ use crate::domain::Domain;
 
 use super::traits::{Constraint, VarId};
 
+/// Boxed predicate over a partial assignment.
+pub(crate) type CheckerFn<D> = Box<dyn Fn(&[Option<<D as Domain>::Value>]) -> bool>;
+
 pub struct LambdaConstraint<D: Domain> {
     pub(crate) scope: Vec<VarId>,
-    pub(crate) checker: Box<dyn Fn(&[Option<D::Value>]) -> bool>,
+    pub(crate) checker: CheckerFn<D>,
     label: String,
 }
 
@@ -22,19 +25,11 @@ impl<D: Domain> LambdaConstraint<D> {
         checker: impl Fn(&[Option<D::Value>]) -> bool + 'static,
         label: impl Into<String>,
     ) -> Self {
-        Self {
-            scope,
-            checker: Box::new(checker),
-            label: label.into(),
-        }
+        Self { scope, checker: Box::new(checker), label: label.into() }
     }
 }
 
 impl<D: Domain> Constraint<D> for LambdaConstraint<D> {
-    fn scope(&self) -> &[VarId] {
-        &self.scope
-    }
-    fn check(&self, assignment: &[Option<D::Value>]) -> bool {
-        (self.checker)(assignment)
-    }
+    fn scope(&self) -> &[VarId] { &self.scope }
+    fn check(&self, assignment: &[Option<D::Value>]) -> bool { (self.checker)(assignment) }
 }

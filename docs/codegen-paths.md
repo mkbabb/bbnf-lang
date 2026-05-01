@@ -209,9 +209,9 @@ Dynamic parser construction. Builds `parse-that` combinator tree at runtime.
 crates/core/
   src/
     pipeline/           Parse -> lower -> IR passes -> egraph -> emit orchestration
-    backend/rust/       Rust emitter, shape emitters, StructDirect/TapeDirect bodies
+    backend/rust/       Rust emitter, shape emitters, StructDirect bodies
     grammar/generated/  Checked-in per-grammar Rust output from cargo xtask regen
-    runtime/            Grammar-specific documents/builders plus remaining Parsed/tape facade
+    runtime/            Grammar-specific documents/builders for the StructDirect path
     generate/regex/     HIR-based regex/scanner emission
   tests/                Grammar, parity, projection, reproducibility tests
   benches/              Divan bench suites

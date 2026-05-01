@@ -9,7 +9,7 @@
 
 | Wave | Status | Evidence | Notes |
 |---|---|---|---|
-| W0 - Truth And Canonical Regen | planned | pending | strict regen, manifest binding, `Map { fn_id }` preservation, sibling derive eradication, dev-iteration baseline, **failing-test census + GESTALT.md excision** |
+| W0 - Truth And Canonical Regen | complete | `audit/W0-*.{txt,md}`, `audit/REGEN-{research,plan,redress}.md` | strict regen 9/9 green, manifest binding scaffold landed, `Map { fn_id }` cost-extractor pin, derive residue eradicated (zero live `bbnf_derive` hits), csp-solver canonicalised against csc411@b70098676, dev-baseline measurement in flight, generated LOC ±5 % budget MET, failing-test census recorded (78 fail / 4 timeout / 25 skip baseline → 88 fail post-W0.3 regen, +10 net rooted in wrap.rs numeric-literal-with-suffix carry to W1.9). REGEN triumvirate fired on lowering-quartet scope reveal; absorbed within W0 per ORCHESTRATION.md §Stalls. |
 | W1 - Grammar Generality + Test Redress | planned | pending | overfit elimination, view/color delete, substrate panic, recover_* delete, EmitStrategy manifest, Sheets/CSS/JSON/BBNF parity green, **all failing tests redressed (fix-with-spec or delete-with-justification)** |
 | W2 - Path IR + Typed Path<G,T> + AscentStrategy | planned | pending | source-rule-resolved path checker, `path_check` IR pass after `project_types`, inline-trace sidecar, bespoke path lexer via bbnf-regex HIR, hybrid sidecar AscentStrategy, `path!` proc-macro, compile-time variant-selection step, wildcard `Iter<Item = T>` with `.with_anchors()` |
 | W3 - Lazy Bail-Out Parse | planned | pending | path-driven recognizer; floor: JSON + CSS L4 + Sheets + BBNF; lazy + eager same `Option<T>` semantics; lazy mode silently elides errors past path reach (documented contract) |
@@ -40,6 +40,15 @@
 | 2026-05-01 | planning | `docs/tranches/AZ-IV/audit/HARDENING-2026-05-01-boole.md` | dev iteration speed + 5-tranche chronic-deferral: bbnf-bootstrap >130s cache nuke is #1 bottleneck; 13/15 carries chronic ≥3 tranches; meta-causes named |
 | 2026-05-01 | planning | `docs/tranches/AZ-IV/audit/HARDENING-SYNTHESIS-2026-05-01-FINAL.md` | third-pass synthesis: 6 cross-cutting themes; 27 paste-ready amendments; hard-gate count 12→16 at AZ-IV.md level |
 | 2026-05-01 | planning | `docs/tranches/AZ-IV/AZ-IV.md` (refresh) | 18-question interrogation pass 4 settled; AZ-IV becomes union tranche absorbing BA + BB; BA recycled for rule discovery; BB subsumed; 7-wave shape locked; 23 hard gates; 33 non-routable carries |
+| 2026-05-01 | W0 dispatch | `audit/W0-pre-baseline.md` | pre-W0 generated-LOC anchor recorded at base commit `01c15564` |
+| 2026-05-01 | W0.1 close | commits `bd2769f3`, `d4fb8835` | truth ledger refresh: codegen-paths.md TapeDirect/Parsed scrub; W0-ba-bb-coverage.md mapped every BA/BB hard gate to absorbed/retired/routed |
+| 2026-05-01 | W0 census | commit `cbcff434` | orchestrator-owned `audit/W0-failing-test-census.txt`: 1527 tests / 1445 pass / 78 fail / 4 timeout / 25 skip — feeds W1.9 redress backlog |
+| 2026-05-01 | W0.5 close | commit `89fbada8` | xtask metadata fail-closed: `validate_grammar_features` rejects unknown keys; staged-trigger compares parsed-TOML `workspace.metadata.bbnf` subtree; CI blocker preserved |
+| 2026-05-01 | W0.2 close | commits `92ce2cb1`, `3aab34e8`, `d36055aa` | wasm `[patch.crates-io]` repair, csp-solver re-vendor against csc411@b70098676 (22 shared files byte-identical), bbnf_derive eradication across parse-that + wasm; cycle-2 wall = 1.88 % of cycle-1 (cache honesty MET) |
+| 2026-05-01 | W0.4 close | commit `4373a49d` | egraph cost extractor pins `Map { fn_id }` via 1e6 preserve-bonus; named regression test `map_wrapper_preserved_when_inner_equivalent_in_class` red-then-green |
+| 2026-05-01 | W0.3 (R1) | commit `27592f4e` | R1 closed: structural detection across `lower/expression/{wrap,repeat,alt}.rs`; `int_lit -> I64` Map-wrapped per typed-materialization invariant |
+| 2026-05-01 | REGEN triumvirate | commits `a975844b` (research), `2246a87b` (plan), `7fdcd803`+`cb3a40d5`+`1e0a738b`+`57ca2cb2` (redress 2) | 4-surface lowering quartet (wrap, repeat, alt, mod); fourth surface `dispatch_expression` + `is_single_token_span` predicate replaced with structural `BbnfKind::Span` gate; `cargo xtask regen --check` 9/9 green; BBNF self-host round-trips |
+| 2026-05-01 | W0 close | commit `7959e6cb` | generated-LOC budget verified (±5 % MET on all 9 grammars + mod.rs); total -2.10 % vs pre-W0 from canonical-tree scaffolding contraction |
 
 ## Close-Honesty Parking Lot
 

@@ -3,8 +3,8 @@
 
 use csp_solver::ordering::Ordering;
 use csp_solver::sudoku::{
-    create_sudoku_csp, generate_board, measure_difficulty, solve_sudoku,
-    apply_random_transform, Difficulty, SudokuTransform,
+    Difficulty, SudokuTransform, apply_random_transform, create_sudoku_csp, generate_board,
+    measure_difficulty, solve_sudoku,
 };
 use csp_solver::{Pruning, SolveConfig};
 
@@ -101,12 +101,7 @@ fn test_solve_4x4() {
     // _ _ _ 2
     // _ _ _ _
     // _ 3 _ _
-    let board: [u32; 16] = [
-        1, 0, 0, 0,
-        0, 0, 0, 2,
-        0, 0, 0, 0,
-        0, 3, 0, 0,
-    ];
+    let board: [u32; 16] = [1, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 3, 0, 0];
 
     let config = SolveConfig {
         pruning: Pruning::ForwardChecking,
@@ -133,15 +128,9 @@ fn test_solve_4x4() {
 fn test_solve_9x9() {
     #[allow(clippy::zero_prefixed_literal)]
     let board: [u32; 81] = [
-        5,3,0,0,7,0,0,0,0,
-        6,0,0,1,9,5,0,0,0,
-        0,9,8,0,0,0,0,6,0,
-        8,0,0,0,6,0,0,0,3,
-        4,0,0,8,0,3,0,0,1,
-        7,0,0,0,2,0,0,0,6,
-        0,6,0,0,0,0,2,8,0,
-        0,0,0,4,1,9,0,0,5,
-        0,0,0,0,8,0,0,7,9,
+        5, 3, 0, 0, 7, 0, 0, 0, 0, 6, 0, 0, 1, 9, 5, 0, 0, 0, 0, 9, 8, 0, 0, 0, 0, 6, 0, 8, 0, 0,
+        0, 6, 0, 0, 0, 3, 4, 0, 0, 8, 0, 3, 0, 0, 1, 7, 0, 0, 0, 2, 0, 0, 0, 6, 0, 6, 0, 0, 0, 0,
+        2, 8, 0, 0, 0, 0, 4, 1, 9, 0, 0, 5, 0, 0, 0, 0, 8, 0, 0, 7, 9,
     ];
 
     let config = SolveConfig {
@@ -167,12 +156,7 @@ fn test_solve_9x9() {
 // -----------------------------------------------------------------------
 #[test]
 fn test_create_csp_returns_correct_given() {
-    let board: [u32; 16] = [
-        1, 0, 0, 0,
-        0, 0, 0, 2,
-        0, 0, 0, 0,
-        0, 3, 0, 0,
-    ];
+    let board: [u32; 16] = [1, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 3, 0, 0];
 
     let (_csp, given) = create_sudoku_csp(&board, 2);
 
@@ -182,9 +166,9 @@ fn test_create_csp_returns_correct_given() {
     // Verify the given values
     let given_map: std::collections::HashMap<u32, u32> =
         given.iter().map(|&(v, val)| (v, val)).collect();
-    assert_eq!(given_map[&0], 1);   // cell (0,0) = 1
-    assert_eq!(given_map[&7], 2);   // cell (1,3) = 2
-    assert_eq!(given_map[&13], 3);  // cell (3,1) = 3
+    assert_eq!(given_map[&0], 1); // cell (0,0) = 1
+    assert_eq!(given_map[&7], 2); // cell (1,3) = 2
+    assert_eq!(given_map[&13], 3); // cell (3,1) = 3
 }
 
 // -----------------------------------------------------------------------
@@ -197,8 +181,14 @@ fn test_generate_4x4() {
 
     // Verify it has some given cells and some empty cells
     let given_count = board.iter().filter(|&&v| v != 0).count();
-    assert!(given_count > 0, "Generated board should have some given cells");
-    assert!(given_count < 16, "Generated board should have some empty cells");
+    assert!(
+        given_count > 0,
+        "Generated board should have some given cells"
+    );
+    assert!(
+        given_count < 16,
+        "Generated board should have some empty cells"
+    );
 
     // Verify it is solvable
     let config = SolveConfig {
@@ -211,7 +201,10 @@ fn test_generate_4x4() {
 
     let sol = solve_sudoku(&board, 2, &config);
     assert!(sol.is_some(), "Generated 4x4 should be solvable");
-    assert!(is_valid_solution_4x4(&sol.unwrap()), "Solution must be valid");
+    assert!(
+        is_valid_solution_4x4(&sol.unwrap()),
+        "Solution must be valid"
+    );
 }
 
 // -----------------------------------------------------------------------
@@ -220,12 +213,7 @@ fn test_generate_4x4() {
 #[test]
 fn test_transform_preserves_validity() {
     // Start with a complete valid 4x4 solution
-    let board: [u32; 16] = [
-        1, 2, 3, 4,
-        3, 4, 1, 2,
-        2, 1, 4, 3,
-        4, 3, 2, 1,
-    ];
+    let board: [u32; 16] = [1, 2, 3, 4, 3, 4, 1, 2, 2, 1, 4, 3, 4, 3, 2, 1];
     assert!(is_valid_solution_4x4(&board), "Seed board must be valid");
 
     // Apply a random transform
@@ -233,8 +221,11 @@ fn test_transform_preserves_validity() {
     assert_eq!(transformed.len(), 16);
 
     // The transformed board should still be a valid solution
-    assert!(is_valid_solution_4x4(&transformed),
-        "Transformed board should still be a valid solution: {:?}", transformed);
+    assert!(
+        is_valid_solution_4x4(&transformed),
+        "Transformed board should still be a valid solution: {:?}",
+        transformed
+    );
 }
 
 // -----------------------------------------------------------------------
@@ -242,12 +233,7 @@ fn test_transform_preserves_validity() {
 // -----------------------------------------------------------------------
 #[test]
 fn test_identity_transform() {
-    let board: [u32; 16] = [
-        1, 2, 3, 4,
-        3, 4, 1, 2,
-        2, 1, 4, 3,
-        4, 3, 2, 1,
-    ];
+    let board: [u32; 16] = [1, 2, 3, 4, 3, 4, 1, 2, 2, 1, 4, 3, 4, 3, 2, 1];
 
     // Construct an identity transform
     let identity = SudokuTransform {
@@ -269,15 +255,14 @@ fn test_identity_transform() {
 #[test]
 fn test_measure_difficulty() {
     // Use the known easy 4x4 puzzle
-    let board: [u32; 16] = [
-        1, 0, 0, 0,
-        0, 0, 0, 2,
-        0, 0, 0, 0,
-        0, 3, 0, 0,
-    ];
+    let board: [u32; 16] = [1, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 3, 0, 0];
 
     let backtracks = measure_difficulty(&board, 2);
     // A 4x4 with 3 givens should be relatively easy (few backtracks)
     // Just verify it returns a reasonable number
-    assert!(backtracks < 1000, "4x4 puzzle should not need many backtracks, got {}", backtracks);
+    assert!(
+        backtracks < 1000,
+        "4x4 puzzle should not need many backtracks, got {}",
+        backtracks
+    );
 }

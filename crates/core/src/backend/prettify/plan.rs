@@ -50,12 +50,12 @@ impl PrettyPolicy {
             None => SeparatorPolicy::None,
         };
 
-        let is_ws_rule = if let (IrNode::Regex(body_sid), Some(ws_sid)) = (&rule.body, ir.ws_pattern)
-        {
-            *body_sid == ws_sid
-        } else {
-            false
-        };
+        let is_ws_rule =
+            if let (IrNode::Regex(body_sid), Some(ws_sid)) = (&rule.body, ir.ws_pattern) {
+                *body_sid == ws_sid
+            } else {
+                false
+            };
 
         let split = hints.and_then(|h| h.split.clone());
 
@@ -145,7 +145,9 @@ fn max_alt_branches(node: &IrNode) -> usize {
                 .map(|arm| max_alt_branches(&arm.continuation))
                 .max()
                 .unwrap_or(0);
-            max_alt_branches(token).max(arm_max).max(max_alt_branches(fallback))
+            max_alt_branches(token)
+                .max(arm_max)
+                .max(max_alt_branches(fallback))
         }
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon | IrNode::Ref(_) => 0,
     }

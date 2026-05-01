@@ -56,8 +56,7 @@ fn load_dir(dir: &str) -> Vec<(String, String)> {
 #[divan::bench]
 fn json(b: divan::Bencher) {
     let input = load("json/json.bbnf");
-    BbnfBootstrap::parse(&input)
-        .unwrap_or_else(|e| panic!("json.bbnf: parse failed: {:?}", e));
+    BbnfBootstrap::parse(&input).unwrap_or_else(|e| panic!("json.bbnf: parse failed: {:?}", e));
     bench_with_timeout(
         b,
         limits::PARSE_DEFAULT,
@@ -72,8 +71,7 @@ fn json(b: divan::Bencher) {
 #[divan::bench]
 fn ebnf(b: divan::Bencher) {
     let input = load("ebnf/ebnf.bbnf");
-    BbnfBootstrap::parse(&input)
-        .unwrap_or_else(|e| panic!("ebnf.bbnf: parse failed: {:?}", e));
+    BbnfBootstrap::parse(&input).unwrap_or_else(|e| panic!("ebnf.bbnf: parse failed: {:?}", e));
     bench_with_timeout(
         b,
         limits::PARSE_DEFAULT,
@@ -123,8 +121,7 @@ fn google_sheets(b: divan::Bencher) {
 fn bbnf_self(b: divan::Bencher) {
     let files = load_dir("bbnf");
     for (name, content) in &files {
-        BbnfBootstrap::parse(content)
-            .unwrap_or_else(|e| panic!("{}: parse failed: {:?}", name, e));
+        BbnfBootstrap::parse(content).unwrap_or_else(|e| panic!("{}: parse failed: {:?}", name, e));
     }
     bench_with_timeout(
         b,
@@ -143,8 +140,7 @@ fn bbnf_self(b: divan::Bencher) {
 fn css_l4_grammar(b: divan::Bencher) {
     let files = load_dir("css/l4");
     for (name, content) in &files {
-        BbnfBootstrap::parse(content)
-            .unwrap_or_else(|e| panic!("{}: parse failed: {:?}", name, e));
+        BbnfBootstrap::parse(content).unwrap_or_else(|e| panic!("{}: parse failed: {:?}", name, e));
     }
     bench_with_timeout(
         b,

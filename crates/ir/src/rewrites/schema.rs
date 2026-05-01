@@ -131,7 +131,10 @@ impl std::fmt::Display for SchemaError {
             SchemaError::Decode(s) => write!(f, "decode: {s}"),
             SchemaError::Encode(s) => write!(f, "encode: {s}"),
             SchemaError::VersionMismatch { expected, got } => {
-                write!(f, "schema version mismatch: file says {got}, build expects {expected}")
+                write!(
+                    f,
+                    "schema version mismatch: file says {got}, build expects {expected}"
+                )
             }
         }
     }
@@ -145,4 +148,3 @@ impl std::error::Error for SchemaError {
         }
     }
 }
-

@@ -73,11 +73,7 @@ pub fn format_range(state: &DocumentState, range: Range) -> Option<Vec<TextEdit>
         });
     }
 
-    if edits.is_empty() {
-        None
-    } else {
-        Some(edits)
-    }
+    if edits.is_empty() { None } else { Some(edits) }
 }
 
 /// Format the rule that was just completed (triggered by typing `;`).
@@ -137,10 +133,7 @@ fn format_expression(node: BbnfView<'_, '_>, indent_level: usize) -> String {
 
     // Span leaves — the source slice IS the formatted form.
     if !node.is_compound() {
-        return node
-            .span_text_opt()
-            .map(str::to_string)
-            .unwrap_or_default();
+        return node.span_text_opt().map(str::to_string).unwrap_or_default();
     }
 
     match node.compound_kind() {

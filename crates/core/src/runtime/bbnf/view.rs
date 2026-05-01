@@ -36,10 +36,10 @@
 //! - [`BbnfView::span_text`] — convenience: byte-span resolved against
 //!   the document input. Empty string for spanless focuses.
 
+use crate::runtime::RuntimeView;
 use crate::runtime::bbnf::arena::{BbnfCompound, BbnfCompoundKind};
 use crate::runtime::bbnf::document::{BbnfKind, BbnfView};
 use crate::runtime::bbnf::value::BbnfValue;
-use crate::runtime::RuntimeView;
 
 impl<'a, 'p: 'a> RuntimeView<'p> for BbnfView<'a, 'p> {
     type Kind = BbnfKind;
@@ -126,14 +126,16 @@ impl<'a, 'p: 'a> BbnfView<'a, 'p> {
         self.byte_span()
     }
 
-
     /// Positional child access. Leaves yield `None`; compounds yield
     /// the `i`th child's view, or `None` when `i` is out of range.
     pub fn child(&self, i: usize) -> Option<BbnfView<'a, 'p>> {
         match self.focus {
             BbnfValue::Compound(id) => {
                 let entry = self.doc.compound(id);
-                entry.children.get(i).map(|v| BbnfView::focused(self.doc, *v))
+                entry
+                    .children
+                    .get(i)
+                    .map(|v| BbnfView::focused(self.doc, *v))
             }
             _ => None,
         }

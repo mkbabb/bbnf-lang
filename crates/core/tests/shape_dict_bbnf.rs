@@ -18,12 +18,12 @@
 use std::path::PathBuf;
 
 use bbnf::pipeline::{
-    compile_paths_request, CompileOutput, CompileRequest, CompileTarget, PipelineOptions,
-};
-use bbnf_ir::passes::recognizers::shape_dict_bbnf::{
-    compute_bbnf_shape_hash, mine_bbnf_shape_templates, BbnfShapeKind,
+    CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_paths_request,
 };
 use bbnf_ir::GrammarIR;
+use bbnf_ir::passes::recognizers::shape_dict_bbnf::{
+    BbnfShapeKind, compute_bbnf_shape_hash, mine_bbnf_shape_templates,
+};
 
 // ─── Shared helpers ──────────────────────────────────────────────────
 
@@ -41,8 +41,8 @@ fn vm_request() -> CompileRequest {
 
 fn compile_entry(rel_entry: &str) -> GrammarIR {
     let entry = grammar_path(rel_entry);
-    let out = compile_paths_request(std::slice::from_ref(&entry), &vm_request())
-        .unwrap_or_else(|err| {
+    let out =
+        compile_paths_request(std::slice::from_ref(&entry), &vm_request()).unwrap_or_else(|err| {
             panic!("shape_dict_bbnf: compile_paths_request failed for {rel_entry}: {err}")
         });
     match out {

@@ -92,7 +92,11 @@ impl SudokuTransform {
 
             let new_pos = new_row * m + new_col;
             let val = board[old_pos];
-            result[new_pos] = if val == 0 { 0 } else { self.digit_perm[val as usize] };
+            result[new_pos] = if val == 0 {
+                0
+            } else {
+                self.digit_perm[val as usize]
+            };
         }
 
         result

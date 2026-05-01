@@ -31,7 +31,6 @@ use sonic_rs::{JsonContainerTrait, JsonType, JsonValueTrait};
 use ::bbnf::grammar::generated::json::*;
 use bbnf::runtime::{JsonNumber, JsonValue};
 
-
 // ─── Shared projection type ──────────────────────────────────────────
 //
 // `RefValue` is the common denominator: both bbnf's tape projection
@@ -67,10 +66,7 @@ fn bbnf_project(input: &str) -> RefValue {
     project_value(&doc, doc.root())
 }
 
-fn project_value<'p>(
-    doc: &bbnf::runtime::JsonDocument<'p>,
-    value: &JsonValue<'p>,
-) -> RefValue {
+fn project_value<'p>(doc: &bbnf::runtime::JsonDocument<'p>, value: &JsonValue<'p>) -> RefValue {
     match value {
         JsonValue::Null => RefValue::Null,
         JsonValue::Bool(b) => RefValue::Bool(*b),
@@ -117,9 +113,7 @@ fn sonic_project(v: &sonic_rs::Value) -> RefValue {
             let f = v.as_f64().expect("number accessor");
             RefValue::Number(f)
         }
-        JsonType::String => {
-            RefValue::String(v.as_str().expect("string accessor").to_string())
-        }
+        JsonType::String => RefValue::String(v.as_str().expect("string accessor").to_string()),
         JsonType::Array => {
             let arr = v.as_array().expect("array accessor");
             let mut out = Vec::with_capacity(arr.len());
@@ -168,10 +162,7 @@ fn assert_value_eq(bbnf: &RefValue, sonic: &RefValue, path: &str) {
             )
         }
         (RefValue::String(a), RefValue::String(b)) => {
-            assert_eq!(
-                a, b,
-                "string mismatch at {path}: bbnf={a:?} sonic={b:?}"
-            )
+            assert_eq!(a, b, "string mismatch at {path}: bbnf={a:?} sonic={b:?}")
         }
         (RefValue::Array(a), RefValue::Array(b)) => {
             assert_eq!(
@@ -213,8 +204,8 @@ fn assert_value_eq(bbnf: &RefValue, sonic: &RefValue, path: &str) {
 
 fn run_parity(fixture: &str) {
     let path = format!("../../data/json/{}", fixture);
-    let input = std::fs::read_to_string(&path)
-        .unwrap_or_else(|e| panic!("{path}: read failed: {e}"));
+    let input =
+        std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path}: read failed: {e}"));
     let bbnf_value = bbnf_project(&input);
     let sonic_raw: sonic_rs::Value = sonic_rs::from_str(&input)
         .unwrap_or_else(|e| panic!("{fixture}: sonic-rs parse failed: {e}"));

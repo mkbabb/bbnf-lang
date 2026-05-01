@@ -106,11 +106,7 @@ pub fn compact_stripe_pext(
 /// new structural bytes. Called per-stripe by the kernel when the
 /// stripe mask popcount is non-zero.
 #[inline]
-pub fn reserve(
-    positions: &mut Vec<u32>,
-    kinds: &mut Vec<u8>,
-    additional: usize,
-) {
+pub fn reserve(positions: &mut Vec<u32>, kinds: &mut Vec<u8>, additional: usize) {
     positions.reserve(additional);
     kinds.reserve(additional);
 }

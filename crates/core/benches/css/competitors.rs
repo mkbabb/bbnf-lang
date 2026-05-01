@@ -1,4 +1,3 @@
-
 //! CSS parsing competitor benchmarks.
 //!
 //! Competitors:
@@ -157,7 +156,9 @@ fn lightningcss_normalize(b: divan::Bencher) {
     StyleSheet::parse(&input, ParserOptions::default())
         .expect("normalize.css: lightningcss parse failed");
     b.counter(bytes).bench_local(|| {
-        divan::black_box(StyleSheet::parse(divan::black_box(&input), ParserOptions::default()).unwrap())
+        divan::black_box(
+            StyleSheet::parse(divan::black_box(&input), ParserOptions::default()).unwrap(),
+        )
     });
 }
 
@@ -168,7 +169,9 @@ fn lightningcss_bootstrap(b: divan::Bencher) {
     StyleSheet::parse(&input, ParserOptions::default())
         .expect("bootstrap.css: lightningcss parse failed");
     b.counter(bytes).bench_local(|| {
-        divan::black_box(StyleSheet::parse(divan::black_box(&input), ParserOptions::default()).unwrap())
+        divan::black_box(
+            StyleSheet::parse(divan::black_box(&input), ParserOptions::default()).unwrap(),
+        )
     });
 }
 
@@ -183,7 +186,9 @@ fn lightningcss_tailwind(b: divan::Bencher) {
         return;
     }
     b.counter(bytes).bench_local(|| {
-        divan::black_box(StyleSheet::parse(divan::black_box(&input), ParserOptions::default()).unwrap())
+        divan::black_box(
+            StyleSheet::parse(divan::black_box(&input), ParserOptions::default()).unwrap(),
+        )
     });
 }
 

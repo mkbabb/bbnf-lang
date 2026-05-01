@@ -44,9 +44,8 @@ impl WasmEmitter {
                 })
                 .collect();
 
-            let mut condition = format!(
-                "(i32.le_u (i32.add (local.get $off) (i32.const {len})) (local.get $len))"
-            );
+            let mut condition =
+                format!("(i32.le_u (i32.add (local.get $off) (i32.const {len})) (local.get $len))");
             for check in checks {
                 condition = format!("(i32.and {condition} {check})");
             }

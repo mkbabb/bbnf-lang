@@ -153,7 +153,6 @@ impl RustEmitCtx {
         self.payload_types.iter().any(|t| t == td)
     }
 
-
     /// AT.1: return the 1-based tag for a payload type in a multi-type
     /// Alt. Returns `None` when payload_types has at most one element
     /// (single-type path doesn't use tags). Returns `Some(tag)` when
@@ -175,9 +174,7 @@ impl RustEmitCtx {
     /// has already consumed every field. Leaf-payload emitters call
     /// this in payload-write order so each scalar capture lands at
     /// the correct buffer offset.
-    pub fn next_aggregate_field(
-        &mut self,
-    ) -> Option<bbnf_ir::passes::PayloadField> {
+    pub fn next_aggregate_field(&mut self) -> Option<bbnf_ir::passes::PayloadField> {
         let layout = self.payload_layout.as_ref()?;
         let idx = self.aggregate_field_cursor;
         let field = layout.fields.get(idx).cloned()?;

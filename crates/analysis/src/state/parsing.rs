@@ -47,9 +47,8 @@ pub struct CachedParseResult<'a> {
 /// tape-first error path (`ParseErr::Syntax { offset, rule }`) and
 /// will be threaded back through diagnostics in a follow-up tranche.
 pub fn parse_once(src: &str) -> (Option<CachedParseResult<'_>>, ParseDiagnostics) {
-    let parse_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        grammar::parse(src)
-    }));
+    let parse_result =
+        std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| grammar::parse(src)));
 
     match parse_result {
         Ok(result) => {

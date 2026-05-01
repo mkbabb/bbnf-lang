@@ -148,10 +148,7 @@ pub(super) fn emit_class_quantified(info: &ClassRangeInfo) -> Option<TokenStream
 /// Matches a literal prefix exactly, then scans a quantified char class
 /// tail. Routes through `kernels::prefix_class::emit_call_opt` first;
 /// falls through to inline emission for unrecognized shapes.
-pub(super) fn emit_prefix_then_class(
-    prefix: &[u8],
-    tail: &ClassRangeInfo,
-) -> Option<TokenStream> {
+pub(super) fn emit_prefix_then_class(prefix: &[u8], tail: &ClassRangeInfo) -> Option<TokenStream> {
     let ClassRangeInfo {
         chars,
         negated,
@@ -191,8 +188,7 @@ pub(super) fn emit_prefix_then_class(
             }
         };
         if min_usize > 0 {
-            let total_min_lit =
-                proc_macro2::Literal::usize_unsuffixed(prefix_len + min_usize);
+            let total_min_lit = proc_macro2::Literal::usize_unsuffixed(prefix_len + min_usize);
             (
                 scan,
                 quote! {
@@ -332,10 +328,7 @@ fn extract_ranges(chars: &CharSet128) -> Vec<(u8, u8)> {
 }
 
 /// Try to recognize common shorthand predicates for compact emission.
-fn try_shorthand_predicate(
-    chars: &CharSet128,
-    ranges: &[(u8, u8)],
-) -> Option<TokenStream> {
+fn try_shorthand_predicate(chars: &CharSet128, ranges: &[(u8, u8)]) -> Option<TokenStream> {
     // \w → [0-9A-Za-z_]
     let mut word_chars = CharSet128::new();
     word_chars.add_range(b'0', b'9');

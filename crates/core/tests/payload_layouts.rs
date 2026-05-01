@@ -46,8 +46,8 @@ fn vm_request() -> CompileRequest {
 /// graphs uniformly via `compile_paths_request`.
 fn compile_grammar_ir(rel_entry: &str) -> GrammarIR {
     let entry = grammar_path(rel_entry);
-    let out = compile_paths_request(std::slice::from_ref(&entry), &vm_request())
-        .unwrap_or_else(|err| {
+    let out =
+        compile_paths_request(std::slice::from_ref(&entry), &vm_request()).unwrap_or_else(|err| {
             panic!(
                 "payload_layouts: compile_paths_request failed for {}: {}",
                 rel_entry, err
@@ -80,8 +80,7 @@ fn compile_and_compute_layouts(
     for (rule_id, ty) in &ir.types {
         let rule_name = ir.get_string(ir.get_rule(*rule_id).name);
         let has_layout = layouts.contains_key(rule_id);
-        let is_interesting =
-            matches!(ty, bbnf_ir::TypeDesc::Tuple(_)) || ty.is_scalar_payload();
+        let is_interesting = matches!(ty, bbnf_ir::TypeDesc::Tuple(_)) || ty.is_scalar_payload();
         if is_interesting {
             eprintln!(
                 "  rule {:>3} ({:30}) {:?} => layout={}",
@@ -102,10 +101,7 @@ fn compile_and_compute_layouts(
             layout.total_bytes,
         );
         for (i, field) in layout.fields.iter().enumerate() {
-            eprintln!(
-                "    field[{}]: {:?} @ offset {}",
-                i, field.ty, field.offset
-            );
+            eprintln!("    field[{}]: {:?} @ offset {}", i, field.ty, field.offset);
         }
     }
 
@@ -162,8 +158,7 @@ fn test_bbnf_payload_layouts_baseline() {
 
 #[test]
 fn test_sheets_payload_layouts_baseline() {
-    let (_ir, layouts) =
-        compile_and_compute_layouts("sheets", "google-sheets/google-sheets.bbnf");
+    let (_ir, layouts) = compile_and_compute_layouts("sheets", "google-sheets/google-sheets.bbnf");
     eprintln!("sheets: {} layouts", layouts.len());
 }
 
@@ -241,8 +236,7 @@ fn test_bbnf_payload_layouts() {
 
 #[test]
 fn test_sheets_payload_layouts() {
-    let (_ir, layouts) =
-        compile_and_compute_layouts("sheets", "google-sheets/google-sheets.bbnf");
+    let (_ir, layouts) = compile_and_compute_layouts("sheets", "google-sheets/google-sheets.bbnf");
     eprintln!("sheets assertion: {} layouts", layouts.len());
 }
 
@@ -277,8 +271,7 @@ fn test_total_payload_layouts() {
     let (_, json) = compile_and_compute_layouts("json", "json/json.bbnf");
     let (_, css_l4) = compile_and_compute_layouts("css_l4", "css/l4/stylesheet.bbnf");
     let (_, bbnf) = compile_and_compute_layouts("bbnf", "bbnf/bbnf.bbnf");
-    let (_, sheets) =
-        compile_and_compute_layouts("sheets", "google-sheets/google-sheets.bbnf");
+    let (_, sheets) = compile_and_compute_layouts("sheets", "google-sheets/google-sheets.bbnf");
     let (_, ebnf) = compile_and_compute_layouts("ebnf", "ebnf/ebnf.bbnf");
     let (_, css_pretty) = compile_and_compute_layouts("css_pretty", "css/pretty.bbnf");
 

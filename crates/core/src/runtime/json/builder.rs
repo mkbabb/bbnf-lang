@@ -188,10 +188,7 @@ impl<'p> JsonStructBuilder<'p> {
             Some(OpenFrame::Array { items }) => {
                 items.push(value);
             }
-            Some(OpenFrame::Object {
-                pairs,
-                pending_key,
-            }) => {
+            Some(OpenFrame::Object { pairs, pending_key }) => {
                 // AZ-I.W2-act.close A.fix — the JSON struct-direct
                 // emitter calls `parse_string_JsonParser_string`
                 // directly against the open Object frame (no enclosing
@@ -266,9 +263,7 @@ impl<'p> StructBuilder for JsonStructBuilder<'p> {
             // The `array` rule: collect `JsonValue` elements.
             (LayoutKind::Struct, "array")
             | (LayoutKind::TaggedEnum, "array")
-            | (LayoutKind::UntaggedEnum, "array") => OpenFrame::Array {
-                items: Vec::new(),
-            },
+            | (LayoutKind::UntaggedEnum, "array") => OpenFrame::Array { items: Vec::new() },
             // The `object` rule: collect `JsonPair` entries.
             (LayoutKind::Struct, "object")
             | (LayoutKind::TaggedEnum, "object")
@@ -325,9 +320,7 @@ impl<'p> StructBuilder for JsonStructBuilder<'p> {
                 // well-formed generation.
                 JsonValue::String(key)
             }
-            OpenFrame::Wrap { value } => {
-                value.expect("Wrap closed without forwarded value")
-            }
+            OpenFrame::Wrap { value } => value.expect("Wrap closed without forwarded value"),
         };
         self.deposit(value);
     }

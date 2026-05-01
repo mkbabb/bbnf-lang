@@ -14,14 +14,14 @@
 //! — both pipelines share the same facts-to-strategy-to-emission shape.
 
 pub mod alt_strategy;
-pub mod repeat_strategy;
 pub mod ref_strategy;
+pub mod repeat_strategy;
 pub mod seq_strategy;
 pub mod wrap_strategy;
 
 pub use alt_strategy::AltStrategy;
-pub use repeat_strategy::RepeatStrategy;
 pub use ref_strategy::RefStrategy;
+pub use repeat_strategy::RepeatStrategy;
 pub use seq_strategy::SeqStrategy;
 pub use wrap_strategy::WrapStrategy;
 

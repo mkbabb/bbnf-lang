@@ -1,10 +1,10 @@
+use bbnf::ParserAttributes;
 use bbnf::backend::PreparedGrammar;
 use bbnf::generate::generate_all;
 use bbnf::pipeline::{
     CompileError, CompileOutput, CompileRequest, CompileTarget, PipelineOptions,
     compile_grammar_request, compile_paths_request,
 };
-use bbnf::ParserAttributes;
 use tempfile::tempdir;
 
 fn aot_request(requested_prettify: bool) -> CompileRequest {
@@ -239,11 +239,23 @@ fn ts_backend_produces_valid_structure() {
     };
 
     // Structural checks: has runtime types, parser functions, public API.
-    assert!(output.contains("interface ParserState"), "missing ParserState: {output}");
+    assert!(
+        output.contains("interface ParserState"),
+        "missing ParserState: {output}"
+    );
     assert!(output.contains("interface Span"), "missing Span: {output}");
-    assert!(output.contains("function __value"), "missing __value function: {output}");
-    assert!(output.contains("export function parse"), "missing public parse: {output}");
-    assert!(output.contains("type valueValue"), "missing discriminated union: {output}");
+    assert!(
+        output.contains("function __value"),
+        "missing __value function: {output}"
+    );
+    assert!(
+        output.contains("export function parse"),
+        "missing public parse: {output}"
+    );
+    assert!(
+        output.contains("type valueValue"),
+        "missing discriminated union: {output}"
+    );
 }
 
 #[test]
@@ -266,8 +278,14 @@ fn ts_backend_emits_discriminated_union() {
     };
 
     // Non-transparent rules should appear as union variants.
-    assert!(output.contains("tag: \"item\""), "missing item variant: {output}");
-    assert!(output.contains("tag: \"list\""), "missing list variant: {output}");
+    assert!(
+        output.contains("tag: \"item\""),
+        "missing item variant: {output}"
+    );
+    assert!(
+        output.contains("tag: \"list\""),
+        "missing list variant: {output}"
+    );
 }
 
 // ── WASM backend tests ──────────────────────────────────────────────────
@@ -291,10 +309,22 @@ fn wasm_backend_produces_valid_wat() {
     };
 
     // Structural checks: valid WAT module with functions and exports.
-    assert!(output.contains("(module $"), "missing module declaration: {output}");
-    assert!(output.contains("(func $__value"), "missing __value function: {output}");
-    assert!(output.contains("(export \"parse\""), "missing parse export: {output}");
-    assert!(output.contains("(memory"), "missing memory declaration: {output}");
+    assert!(
+        output.contains("(module $"),
+        "missing module declaration: {output}"
+    );
+    assert!(
+        output.contains("(func $__value"),
+        "missing __value function: {output}"
+    );
+    assert!(
+        output.contains("(export \"parse\""),
+        "missing parse export: {output}"
+    );
+    assert!(
+        output.contains("(memory"),
+        "missing memory declaration: {output}"
+    );
 }
 
 #[test]
@@ -309,8 +339,14 @@ fn wasm_backend_emits_literal_matching() {
     };
 
     // Should contain byte-level comparisons for "hello" (h=104, e=101, l=108, l=108, o=111).
-    assert!(output.contains("i32.const 104"), "missing 'h' byte check: {output}");
-    assert!(output.contains("i32.load8_u"), "missing byte load: {output}");
+    assert!(
+        output.contains("i32.const 104"),
+        "missing 'h' byte check: {output}"
+    );
+    assert!(
+        output.contains("i32.load8_u"),
+        "missing byte load: {output}"
+    );
 }
 
 #[test]

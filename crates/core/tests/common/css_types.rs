@@ -24,10 +24,7 @@ pub fn parse_hex_color(s: &str) -> u32 {
             let g = hex_digit(hex[1]);
             let b = hex_digit(hex[2]);
             let a = hex_digit(hex[3]);
-            ((r << 4 | r) << 24)
-                | ((g << 4 | g) << 16)
-                | ((b << 4 | b) << 8)
-                | (a << 4 | a)
+            ((r << 4 | r) << 24) | ((g << 4 | g) << 16) | ((b << 4 | b) << 8) | (a << 4 | a)
         }
         6 => {
             let r = hex_byte(hex[0], hex[1]);

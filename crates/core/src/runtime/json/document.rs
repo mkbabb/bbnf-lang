@@ -121,7 +121,10 @@ impl<'p> JsonDocument<'p> {
     /// kind discriminator).
     #[inline]
     pub fn view<'a>(&'a self) -> JsonView<'a, 'p> {
-        JsonView { doc: self, focus: self.root }
+        JsonView {
+            doc: self,
+            focus: self.root,
+        }
     }
 
     /// AZ-I.W2-act.A — borrowed root value.

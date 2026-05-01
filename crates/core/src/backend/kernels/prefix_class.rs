@@ -26,7 +26,7 @@ use bbnf_ir::CharSet128;
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use super::charset_shapes::{matches_set, ALNUM, DIGITS, HEX};
+use super::charset_shapes::{ALNUM, DIGITS, HEX, matches_set};
 
 /// Tail class shape for prefix-class routing.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -113,4 +113,3 @@ pub fn emit_call_opt(prefix: &[u8], tail_class: &CharSet128) -> Option<TokenStre
         }
     })
 }
-

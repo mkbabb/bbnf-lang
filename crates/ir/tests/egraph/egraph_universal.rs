@@ -16,9 +16,9 @@
 
 use rustc_hash::FxHashMap;
 
+use bbnf_ir::egraph::SharedStrings;
 use bbnf_ir::egraph::node::GrammarENode;
 use bbnf_ir::egraph::rules::{AltOfSingle, ConcatLiterals, RepeatOfSingle, WrapOfEpsilonScalar};
-use bbnf_ir::egraph::SharedStrings;
 use bbnf_ir::{GrammarIR, RuleId, TypeDesc};
 use egraph::{EGraph, NoAnalysis, Rewrite};
 
@@ -77,7 +77,11 @@ fn repeat_of_single_collapses_to_inner() {
 
     let rule = RepeatOfSingle;
     let matches = rule.search(&eg);
-    assert_eq!(matches.len(), 1, "G2 expected to match Repeat {{lo:1,hi:1}}");
+    assert_eq!(
+        matches.len(),
+        1,
+        "G2 expected to match Repeat {{lo:1,hi:1}}"
+    );
     for (class_id, m) in matches {
         rule.apply(&mut eg, class_id, m);
     }
@@ -254,8 +258,8 @@ fn make_pool() -> (GrammarIR, SharedStrings) {
         structural_alphabet: None,
         push_fingerprint: None,
         dedup_eligible_rules: Vec::new(),
-        shape_assignments:
-            bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
+        shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
+        ),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -348,11 +352,7 @@ fn concat_literals_fuses_multi_run() {
         "G4 expected one match with two internal runs"
     );
     for (class_id, m) in matches {
-        assert_eq!(
-            m.runs.len(),
-            2,
-            "G4 match should carry both literal runs"
-        );
+        assert_eq!(m.runs.len(), 2, "G4 match should carry both literal runs");
         rule.apply(&mut eg, class_id, m);
     }
     eg.rebuild();

@@ -4,7 +4,7 @@
 
 use std::collections::HashMap;
 
-use bbnf_ir::egraph::{build_and_saturate, write_back_optimized, GrammarCostModel};
+use bbnf_ir::egraph::{GrammarCostModel, build_and_saturate, write_back_optimized};
 use bbnf_ir::{AltBranch, GrammarIR, IrNode, IrRule, RuleMeta};
 
 fn empty_ir() -> GrammarIR {
@@ -29,15 +29,18 @@ fn empty_ir() -> GrammarIR {
         context_facts: std::collections::HashMap::new(),
         has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
-        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
+        dag: None,
+        cost_config: bbnf_ir::CostConfig::default(),
+        type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
         structural_alphabet: None,
         push_fingerprint: None,
-            dedup_eligible_rules: Vec::new(),
+        dedup_eligible_rules: Vec::new(),
 
-            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
+        shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
+        ),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -94,8 +97,14 @@ fn roundtrip_json_like_grammar() {
         "bool",
         IrNode::Alt(
             vec![
-                AltBranch { node: IrNode::Literal(true_lit), first_set: None },
-                AltBranch { node: IrNode::Literal(false_lit), first_set: None },
+                AltBranch {
+                    node: IrNode::Literal(true_lit),
+                    first_set: None,
+                },
+                AltBranch {
+                    node: IrNode::Literal(false_lit),
+                    first_set: None,
+                },
             ],
             None,
         ),
@@ -115,7 +124,11 @@ fn roundtrip_json_like_grammar() {
     push_rule(
         &mut ir,
         "array",
-        IrNode::Seq(vec![IrNode::Literal(lb), IrNode::Ref(6), IrNode::Literal(rb)]),
+        IrNode::Seq(vec![
+            IrNode::Literal(lb),
+            IrNode::Ref(6),
+            IrNode::Literal(rb),
+        ]),
     );
 
     // rule 5: object = "{" string ":" value "}"
@@ -140,12 +153,30 @@ fn roundtrip_json_like_grammar() {
         "value",
         IrNode::Alt(
             vec![
-                AltBranch { node: IrNode::Ref(0), first_set: None },
-                AltBranch { node: IrNode::Ref(1), first_set: None },
-                AltBranch { node: IrNode::Ref(2), first_set: None },
-                AltBranch { node: IrNode::Ref(3), first_set: None },
-                AltBranch { node: IrNode::Ref(4), first_set: None },
-                AltBranch { node: IrNode::Ref(5), first_set: None },
+                AltBranch {
+                    node: IrNode::Ref(0),
+                    first_set: None,
+                },
+                AltBranch {
+                    node: IrNode::Ref(1),
+                    first_set: None,
+                },
+                AltBranch {
+                    node: IrNode::Ref(2),
+                    first_set: None,
+                },
+                AltBranch {
+                    node: IrNode::Ref(3),
+                    first_set: None,
+                },
+                AltBranch {
+                    node: IrNode::Ref(4),
+                    first_set: None,
+                },
+                AltBranch {
+                    node: IrNode::Ref(5),
+                    first_set: None,
+                },
             ],
             None,
         ),

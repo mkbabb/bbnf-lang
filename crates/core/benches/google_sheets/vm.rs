@@ -1,4 +1,3 @@
-
 //! Google Sheets formula VM benchmark — bytecode interpreter.
 
 #[global_allocator]
@@ -42,7 +41,8 @@ fn compile(b: divan::Bencher) {
     b.counter(BytesCount::new(bytes))
         .with_inputs(|| grammar.clone())
         .bench_values(|grammar| {
-            let ir = compile_grammar(divan::black_box(&grammar), &PipelineOptions::default()).unwrap();
+            let ir =
+                compile_grammar(divan::black_box(&grammar), &PipelineOptions::default()).unwrap();
             let _program = compile_bytecode(&ir);
         });
 }
@@ -63,12 +63,11 @@ fn parse_pathological(b: divan::Bencher) {
         );
     }
     let bytes = PATHOLOGICAL.len();
-    b.counter(BytesCount::new(bytes))
-        .bench_local(|| {
-            let mut interp = Interpreter::new(&program, divan::black_box(PATHOLOGICAL));
-            let r = interp.run();
-            divan::black_box(r.offset);
-        });
+    b.counter(BytesCount::new(bytes)).bench_local(|| {
+        let mut interp = Interpreter::new(&program, divan::black_box(PATHOLOGICAL));
+        let r = interp.run();
+        divan::black_box(r.offset);
+    });
 }
 
 #[divan::bench]
@@ -88,12 +87,11 @@ fn parse_1kb(b: divan::Bencher) {
         );
     }
     let bytes = input.len();
-    b.counter(BytesCount::new(bytes))
-        .bench_local(|| {
-            let mut interp = Interpreter::new(&program, divan::black_box(&input));
-            let r = interp.run();
-            divan::black_box(r.offset);
-        });
+    b.counter(BytesCount::new(bytes)).bench_local(|| {
+        let mut interp = Interpreter::new(&program, divan::black_box(&input));
+        let r = interp.run();
+        divan::black_box(r.offset);
+    });
 }
 
 #[divan::bench]
@@ -113,12 +111,11 @@ fn parse_10kb(b: divan::Bencher) {
         );
     }
     let bytes = input.len();
-    b.counter(BytesCount::new(bytes))
-        .bench_local(|| {
-            let mut interp = Interpreter::new(&program, divan::black_box(&input));
-            let r = interp.run();
-            divan::black_box(r.offset);
-        });
+    b.counter(BytesCount::new(bytes)).bench_local(|| {
+        let mut interp = Interpreter::new(&program, divan::black_box(&input));
+        let r = interp.run();
+        divan::black_box(r.offset);
+    });
 }
 
 fn main() {

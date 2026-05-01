@@ -33,9 +33,7 @@ impl TsEmitter {
             let mut stmts = String::new();
             let body_expr = body.dissolve(&mut stmts);
             stmts.push_str(&format!("const {v} = {body_expr};\n"));
-            let expr = format!(
-                "{v} !== null ? {{ tag: \"{name}\" as const, value: {v} }} : null"
-            );
+            let expr = format!("{v} !== null ? {{ tag: \"{name}\" as const, value: {v} }} : null");
             TsCode::new(stmts, expr)
         } else {
             body
@@ -113,11 +111,7 @@ impl TsEmitter {
         TsCode::new(stmts, result)
     }
 
-    pub(super) fn emit_negate_impl(
-        &mut self,
-        inner: TsCode,
-        ctx: &mut TsEmitCtx,
-    ) -> TsCode {
+    pub(super) fn emit_negate_impl(&mut self, inner: TsCode, ctx: &mut TsEmitCtx) -> TsCode {
         let save = ctx.fresh("save");
         let inner_var = ctx.fresh("neg");
         let mut stmts = format!("const {save} = s.offset;\n");

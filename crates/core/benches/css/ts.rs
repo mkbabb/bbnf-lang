@@ -1,4 +1,3 @@
-
 //! BBNF CSS L4 TypeScript backend benchmark — codegen throughput.
 
 #[global_allocator]

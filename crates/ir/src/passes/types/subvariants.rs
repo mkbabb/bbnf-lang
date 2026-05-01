@@ -36,11 +36,7 @@ pub(super) fn collect_sub_variants_raw(
     variants
 }
 
-fn lookup_node_type(
-    node: &IrNode,
-    type_map: &TypeMap,
-    dag: &GrammarDag,
-) -> TypeDesc {
+fn lookup_node_type(node: &IrNode, type_map: &TypeMap, dag: &GrammarDag) -> TypeDesc {
     dag.node_for(node)
         .and_then(|id| type_map.node_type(id).cloned())
         .unwrap_or(TypeDesc::Span)

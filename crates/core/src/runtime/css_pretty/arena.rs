@@ -82,11 +82,17 @@ impl CssPrettyCompoundId {
     pub const EMPTY: Self = Self(0);
 
     #[inline]
-    pub const fn is_empty(self) -> bool { self.0 == 0 }
+    pub const fn is_empty(self) -> bool {
+        self.0 == 0
+    }
 
     #[inline]
     fn slab_index(self) -> Option<usize> {
-        if self.0 == 0 { None } else { Some((self.0 - 1) as usize) }
+        if self.0 == 0 {
+            None
+        } else {
+            Some((self.0 - 1) as usize)
+        }
     }
 }
 
@@ -98,7 +104,9 @@ pub struct CssPrettyArena<'p> {
 
 impl<'p> CssPrettyArena<'p> {
     #[inline]
-    pub fn new() -> Self { Self::default() }
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     #[inline]
     pub fn with_capacity(compounds: usize) -> Self {
@@ -124,9 +132,13 @@ impl<'p> CssPrettyArena<'p> {
     }
 
     #[inline]
-    pub fn compound_count(&self) -> usize { self.compounds.len() }
+    pub fn compound_count(&self) -> usize {
+        self.compounds.len()
+    }
 
     /// Roll back the arena to a prior compound-count snapshot.
     #[inline]
-    pub fn truncate(&mut self, compounds: usize) { self.compounds.truncate(compounds); }
+    pub fn truncate(&mut self, compounds: usize) {
+        self.compounds.truncate(compounds);
+    }
 }

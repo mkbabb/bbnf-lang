@@ -1,8 +1,8 @@
 //! Build a `GrammarDag` from a `GrammarIR` — bottom-up interning of every
 //! sub-expression.
 
-use super::node::{DagNode, DagTokenDispatchArm, NodeId};
 use super::GrammarDag;
+use super::node::{DagNode, DagTokenDispatchArm, NodeId};
 use crate::{GrammarIR, IrNode, IrRule};
 
 /// Build a `GrammarDag` by interning every sub-expression in every rule.

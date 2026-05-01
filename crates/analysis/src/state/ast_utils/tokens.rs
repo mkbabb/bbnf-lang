@@ -14,10 +14,7 @@ use bbnf::runtime::bbnf::{BbnfCompoundKind, BbnfView};
 use super::super::types::{SemanticTokenInfo, token_types};
 
 /// Collect semantic tokens from a [`BbnfView`].
-pub fn collect_semantic_tokens(
-    node: BbnfView<'_, '_>,
-    tokens: &mut Vec<SemanticTokenInfo>,
-) {
+pub fn collect_semantic_tokens(node: BbnfView<'_, '_>, tokens: &mut Vec<SemanticTokenInfo>) {
     // Span leaves carry their own byte-span via the BbnfValue::Span
     // payload. Classify by leading byte under the analysis layer's
     // pre-existing scheme (identifier-like → RULE_REFERENCE, quoted
@@ -51,9 +48,10 @@ pub fn collect_semantic_tokens(
                         }
                     }
                     // Recurse into call-arg children.
-                    for c in node.children().filter(|c| {
-                        c.compound_kind() == Some(BbnfCompoundKind::CallArg)
-                    }) {
+                    for c in node
+                        .children()
+                        .filter(|c| c.compound_kind() == Some(BbnfCompoundKind::CallArg))
+                    {
                         collect_semantic_tokens(c, tokens);
                     }
                 }

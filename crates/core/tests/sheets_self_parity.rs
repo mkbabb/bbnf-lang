@@ -21,7 +21,6 @@
 
 use ::bbnf::grammar::generated::google_sheets::*;
 
-
 // ── Helpers ─────────────────────────────────────────────────────────
 
 /// Parse once, emit the `serialize_compact` canonical form.

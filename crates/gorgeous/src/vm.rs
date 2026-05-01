@@ -26,7 +26,12 @@ pub fn format_value(
 }
 
 /// Format a parse result (legacy alias).
-pub fn format_ir(ir: &GrammarIR, value: &Value, input: &str, config: &PrinterConfig) -> Option<String> {
+pub fn format_ir(
+    ir: &GrammarIR,
+    value: &Value,
+    input: &str,
+    config: &PrinterConfig,
+) -> Option<String> {
     format_value(ir, value, input, config)
 }
 
@@ -44,7 +49,10 @@ fn value_to_ops<'a>(
             let text = &input[*start as usize..*end as usize];
             if text.is_empty() {
                 false
-            } else if text.bytes().all(|b| matches!(b, b' ' | b'\t' | b'\n' | b'\r')) {
+            } else if text
+                .bytes()
+                .all(|b| matches!(b, b' ' | b'\t' | b'\n' | b'\r'))
+            {
                 // Whitespace-only spans are structural — skip emission.
                 true
             } else {
@@ -53,7 +61,11 @@ fn value_to_ops<'a>(
             }
         }
 
-        Value::Tagged { tag, span, children } => {
+        Value::Tagged {
+            tag,
+            span,
+            children,
+        } => {
             let rule = ir.rules.iter().find(|r| r.name == *tag);
             let hints = rule.and_then(|r| r.meta.directives.pretty.as_ref());
             let span_text = &input[span.0 as usize..span.1 as usize];
@@ -75,7 +87,9 @@ fn value_to_ops<'a>(
                 if span_text.is_empty() {
                     return false;
                 }
-                emit_with_hints(builder, hints, |b| { b.text(span_text); });
+                emit_with_hints(builder, hints, |b| {
+                    b.text(span_text);
+                });
                 return true;
             }
 
@@ -112,7 +126,13 @@ fn value_to_ops<'a>(
                         builder.indent_open();
                         builder.break_line();
                         // Inner content
-                        emit_children_with_sep(ir, &flat_children[1..flat_children.len()-1], input, builder, hints);
+                        emit_children_with_sep(
+                            ir,
+                            &flat_children[1..flat_children.len() - 1],
+                            input,
+                            builder,
+                            hints,
+                        );
                         builder.indent_close();
                         builder.break_line();
                         // Close delimiter
@@ -182,8 +202,12 @@ enum SepAction {
 }
 
 fn sep_action_from_hints(hints: Option<&PrettyHints>) -> SepAction {
-    let Some(h) = hints else { return SepAction::None };
-    if h.off || h.compact { return SepAction::None; }
+    let Some(h) = hints else {
+        return SepAction::None;
+    };
+    if h.off || h.compact {
+        return SepAction::None;
+    }
     if let Some(ref sep_str) = h.sep {
         if sep_str.len() <= 8 {
             let mut buf = [0u8; 8];
@@ -192,21 +216,36 @@ fn sep_action_from_hints(hints: Option<&PrettyHints>) -> SepAction {
         }
         // >8-byte separators: fall through to default (shouldn't happen in practice)
     }
-    if h.blankline { SepAction::DoubleHardline }
-    else if h.block || h.hardbreak || h.fast { SepAction::Hardline }
-    else if h.nobreak { SepAction::Space }
-    else if h.softbreak { SepAction::Softline }
-    else { SepAction::None }
+    if h.blankline {
+        SepAction::DoubleHardline
+    } else if h.block || h.hardbreak || h.fast {
+        SepAction::Hardline
+    } else if h.nobreak {
+        SepAction::Space
+    } else if h.softbreak {
+        SepAction::Softline
+    } else {
+        SepAction::None
+    }
 }
 
 /// Emit separator between items using pre-computed action.
 fn emit_separator(builder: &mut FmtBuilder<'_>, action: SepAction) {
     match action {
         SepAction::None => {}
-        SepAction::Hardline => { builder.hardline(); }
-        SepAction::DoubleHardline => { builder.hardline(); builder.hardline(); }
-        SepAction::Softline => { builder.softline(); }
-        SepAction::Space => { builder.text(" "); }
+        SepAction::Hardline => {
+            builder.hardline();
+        }
+        SepAction::DoubleHardline => {
+            builder.hardline();
+            builder.hardline();
+        }
+        SepAction::Softline => {
+            builder.softline();
+        }
+        SepAction::Space => {
+            builder.text(" ");
+        }
         SepAction::Sep(flat, flat_len) => {
             // Sep with empty brk: flat → emit flat bytes, break → newline.
             let flat_str = std::str::from_utf8(&flat[..flat_len as usize]).unwrap_or("");
@@ -257,15 +296,29 @@ fn children_span_range<'a>(children: impl Iterator<Item = &'a Value>) -> Option<
     let mut any = false;
     for child in children {
         match child {
-            Value::Span(s, e) => { min_start = min_start.min(*s); max_end = max_end.max(*e); any = true; }
-            Value::Tagged { span, .. } => { min_start = min_start.min(span.0); max_end = max_end.max(span.1); any = true; }
+            Value::Span(s, e) => {
+                min_start = min_start.min(*s);
+                max_end = max_end.max(*e);
+                any = true;
+            }
+            Value::Tagged { span, .. } => {
+                min_start = min_start.min(span.0);
+                max_end = max_end.max(span.1);
+                any = true;
+            }
             Value::Array(items) => {
                 if let Some((s, e)) = children_span_range(items.iter()) {
-                    min_start = min_start.min(s); max_end = max_end.max(e); any = true;
+                    min_start = min_start.min(s);
+                    max_end = max_end.max(e);
+                    any = true;
                 }
             }
             Value::Nil => {}
         }
     }
-    if any { Some((min_start, max_end)) } else { None }
+    if any {
+        Some((min_start, max_end))
+    } else {
+        None
+    }
 }

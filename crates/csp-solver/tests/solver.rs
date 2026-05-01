@@ -2,9 +2,9 @@
 //! Extracted from lib.rs inline tests.
 
 use csp_solver::constraint::{AllDifferent, LambdaConstraint, NotEqual, VarId};
+use csp_solver::domain::Domain;
 use csp_solver::domain::bitset::BitsetDomain;
 use csp_solver::domain::finite::FiniteDomain;
-use csp_solver::domain::Domain;
 use csp_solver::ordering::Ordering;
 use csp_solver::{Csp, Pruning, SolveConfig};
 
@@ -18,10 +18,22 @@ fn test_australia_map_coloring() {
     let mut csp = Csp::new();
     let domain = BitsetDomain::new(0..3);
     let vars = csp.add_variables(&domain, 7);
-    let [wa, nt, sa, q, nsw, v, _t] = [vars[0], vars[1], vars[2], vars[3], vars[4], vars[5], vars[6]];
+    let [wa, nt, sa, q, nsw, v, _t] = [
+        vars[0], vars[1], vars[2], vars[3], vars[4], vars[5], vars[6],
+    ];
 
     // Adjacent regions must have different colors
-    let edges = [(wa, nt), (wa, sa), (nt, sa), (nt, q), (sa, q), (sa, nsw), (sa, v), (q, nsw), (nsw, v)];
+    let edges = [
+        (wa, nt),
+        (wa, sa),
+        (nt, sa),
+        (nt, q),
+        (sa, q),
+        (sa, nsw),
+        (sa, v),
+        (q, nsw),
+        (nsw, v),
+    ];
     for (a, b) in edges {
         csp.add_constraint(NotEqual::new(a, b));
     }
@@ -55,13 +67,26 @@ fn test_australia_map_coloring() {
 // -----------------------------------------------------------------------
 #[test]
 fn test_australia_all_pruning() {
-    for pruning in [Pruning::None, Pruning::ForwardChecking, Pruning::Ac3, Pruning::AcFc] {
+    for pruning in [
+        Pruning::None,
+        Pruning::ForwardChecking,
+        Pruning::Ac3,
+        Pruning::AcFc,
+    ] {
         let mut csp = Csp::new();
         let domain = BitsetDomain::new(0..3);
         let _vars = csp.add_variables(&domain, 7);
 
         let edges: [(VarId, VarId); 9] = [
-            (0, 1), (0, 2), (1, 2), (1, 3), (2, 3), (2, 4), (2, 5), (3, 4), (4, 5),
+            (0, 1),
+            (0, 2),
+            (1, 2),
+            (1, 3),
+            (2, 3),
+            (2, 4),
+            (2, 5),
+            (3, 4),
+            (4, 5),
         ];
         for (a, b) in edges {
             csp.add_constraint(NotEqual::new(a, b));
@@ -108,14 +133,15 @@ fn test_4_queens() {
             let diff = j - i;
             csp.add_constraint(LambdaConstraint::new(
                 vec![vi, vj],
-                move |assignment: &[Option<u32>]| {
-                    match (&assignment[vi as usize], &assignment[vj as usize]) {
-                        (Some(ri), Some(rj)) => {
-                            let row_diff = ri.abs_diff(*rj);
-                            row_diff != diff
-                        }
-                        _ => true,
+                move |assignment: &[Option<u32>]| match (
+                    &assignment[vi as usize],
+                    &assignment[vj as usize],
+                ) {
+                    (Some(ri), Some(rj)) => {
+                        let row_diff = ri.abs_diff(*rj);
+                        row_diff != diff
                     }
+                    _ => true,
                 },
                 format!("diag({i},{j})"),
             ));
@@ -134,7 +160,11 @@ fn test_4_queens() {
 
     let solutions = csp.solve(&config);
     // 4-Queens has exactly 2 solutions
-    assert_eq!(solutions.len(), 2, "4-Queens should have exactly 2 solutions");
+    assert_eq!(
+        solutions.len(),
+        2,
+        "4-Queens should have exactly 2 solutions"
+    );
 
     // Verify solutions
     for sol in &solutions {
@@ -197,9 +227,9 @@ fn test_4x4_sudoku() {
     // _ _ _ _
     // _ 3 _ _
     let given = vec![
-        (vars[0], 1u32),   // (0,0) = 1
-        (vars[7], 2u32),   // (1,3) = 2
-        (vars[13], 3u32),  // (3,1) = 3
+        (vars[0], 1u32),  // (0,0) = 1
+        (vars[7], 2u32),  // (1,3) = 2
+        (vars[13], 3u32), // (3,1) = 3
     ];
 
     let config = SolveConfig {
@@ -211,7 +241,10 @@ fn test_4x4_sudoku() {
     };
 
     let solutions = csp.solve_with_given(&config, &given);
-    assert!(!solutions.is_empty(), "Should find a solution for 4x4 sudoku");
+    assert!(
+        !solutions.is_empty(),
+        "Should find a solution for 4x4 sudoku"
+    );
 
     let sol = &solutions[0];
 
@@ -299,7 +332,15 @@ fn test_backjumping() {
     let _vars = csp.add_variables(&domain, 7);
 
     let edges: [(VarId, VarId); 9] = [
-        (0, 1), (0, 2), (1, 2), (1, 3), (2, 3), (2, 4), (2, 5), (3, 4), (4, 5),
+        (0, 1),
+        (0, 2),
+        (1, 2),
+        (1, 3),
+        (2, 3),
+        (2, 4),
+        (2, 5),
+        (3, 4),
+        (4, 5),
     ];
     for (a, b) in edges {
         csp.add_constraint(NotEqual::new(a, b));
@@ -334,7 +375,15 @@ fn test_dom_wdeg_ordering() {
     let _vars = csp.add_variables(&domain, 7);
 
     let edges: [(VarId, VarId); 9] = [
-        (0, 1), (0, 2), (1, 2), (1, 3), (2, 3), (2, 4), (2, 5), (3, 4), (4, 5),
+        (0, 1),
+        (0, 2),
+        (1, 2),
+        (1, 3),
+        (2, 3),
+        (2, 4),
+        (2, 5),
+        (3, 4),
+        (4, 5),
     ];
     for (a, b) in edges {
         csp.add_constraint(NotEqual::new(a, b));
@@ -373,14 +422,15 @@ fn test_8_queens() {
             let diff = j - i;
             csp.add_constraint(LambdaConstraint::new(
                 vec![vi, vj],
-                move |assignment: &[Option<u32>]| {
-                    match (&assignment[vi as usize], &assignment[vj as usize]) {
-                        (Some(ri), Some(rj)) => {
-                            let row_diff = ri.abs_diff(*rj);
-                            row_diff != diff
-                        }
-                        _ => true,
+                move |assignment: &[Option<u32>]| match (
+                    &assignment[vi as usize],
+                    &assignment[vj as usize],
+                ) {
+                    (Some(ri), Some(rj)) => {
+                        let row_diff = ri.abs_diff(*rj);
+                        row_diff != diff
                     }
+                    _ => true,
                 },
                 format!("diag({i},{j})"),
             ));
@@ -398,7 +448,11 @@ fn test_8_queens() {
     };
 
     let solutions = csp.solve(&config);
-    assert_eq!(solutions.len(), 92, "8-Queens should have exactly 92 solutions");
+    assert_eq!(
+        solutions.len(),
+        92,
+        "8-Queens should have exactly 92 solutions"
+    );
 }
 
 // -----------------------------------------------------------------------
@@ -423,7 +477,10 @@ fn test_unsatisfiable() {
     };
 
     let solutions = csp.solve(&config);
-    assert!(solutions.is_empty(), "Should find no solutions (pigeonhole)");
+    assert!(
+        solutions.is_empty(),
+        "Should find no solutions (pigeonhole)"
+    );
 }
 
 // -----------------------------------------------------------------------
@@ -740,11 +797,12 @@ fn build_nqueens(n: u32) -> Csp<BitsetDomain> {
             let diff = j - i;
             csp.add_constraint(LambdaConstraint::new(
                 vec![vi, vj],
-                move |assignment: &[Option<u32>]| {
-                    match (&assignment[vi as usize], &assignment[vj as usize]) {
-                        (Some(ri), Some(rj)) => ri.abs_diff(*rj) != diff,
-                        _ => true,
-                    }
+                move |assignment: &[Option<u32>]| match (
+                    &assignment[vi as usize],
+                    &assignment[vj as usize],
+                ) {
+                    (Some(ri), Some(rj)) => ri.abs_diff(*rj) != diff,
+                    _ => true,
                 },
                 format!("diag({i},{j})"),
             ));
@@ -820,7 +878,11 @@ fn validate_sudoku_solution(sol: &[u32]) {
                 .flat_map(|di| (0..3).map(move |dj| sol[(bi * 3 + di) * 9 + (bj * 3 + dj)]))
                 .collect();
             bx.sort();
-            assert_eq!(bx, vec![1, 2, 3, 4, 5, 6, 7, 8, 9], "Box ({bi},{bj}) invalid");
+            assert_eq!(
+                bx,
+                vec![1, 2, 3, 4, 5, 6, 7, 8, 9],
+                "Box ({bi},{bj}) invalid"
+            );
         }
     }
 }
@@ -862,8 +924,17 @@ fn test_simple_4var() {
 // -----------------------------------------------------------------------
 #[test]
 fn test_cross_config_correctness_map_coloring() {
-    let prunings = [Pruning::None, Pruning::ForwardChecking, Pruning::Ac3, Pruning::AcFc];
-    let orderings = [Ordering::Chronological, Ordering::FailFirst, Ordering::DomWdeg];
+    let prunings = [
+        Pruning::None,
+        Pruning::ForwardChecking,
+        Pruning::Ac3,
+        Pruning::AcFc,
+    ];
+    let orderings = [
+        Ordering::Chronological,
+        Ordering::FailFirst,
+        Ordering::DomWdeg,
+    ];
 
     for pruning in &prunings {
         for ordering in &orderings {
@@ -872,7 +943,15 @@ fn test_cross_config_correctness_map_coloring() {
             let _vars = csp.add_variables(&domain, 7);
 
             let edges: [(VarId, VarId); 9] = [
-                (0, 1), (0, 2), (1, 2), (1, 3), (2, 3), (2, 4), (2, 5), (3, 4), (4, 5),
+                (0, 1),
+                (0, 2),
+                (1, 2),
+                (1, 3),
+                (2, 3),
+                (2, 4),
+                (2, 5),
+                (3, 4),
+                (4, 5),
             ];
             for (a, b) in edges {
                 csp.add_constraint(NotEqual::new(a, b));
@@ -891,7 +970,8 @@ fn test_cross_config_correctness_map_coloring() {
             assert!(
                 !solutions.is_empty(),
                 "Map coloring failed with pruning={:?}, ordering={:?}",
-                pruning, ordering
+                pruning,
+                ordering
             );
 
             let sol = &solutions[0];
@@ -972,7 +1052,11 @@ fn test_ac_fc_hybrid_solve() {
     };
 
     let solutions = csp.solve(&config);
-    assert_eq!(solutions.len(), 6, "AC-FC should find all 3! = 6 permutations");
+    assert_eq!(
+        solutions.len(),
+        6,
+        "AC-FC should find all 3! = 6 permutations"
+    );
 }
 
 // -----------------------------------------------------------------------
@@ -985,7 +1069,15 @@ fn test_ac_fc_map_coloring() {
     let _vars = csp.add_variables(&domain, 7);
 
     let edges: [(VarId, VarId); 9] = [
-        (0, 1), (0, 2), (1, 2), (1, 3), (2, 3), (2, 4), (2, 5), (3, 4), (4, 5),
+        (0, 1),
+        (0, 2),
+        (1, 2),
+        (1, 3),
+        (2, 3),
+        (2, 4),
+        (2, 5),
+        (3, 4),
+        (4, 5),
     ];
     for (a, b) in edges {
         csp.add_constraint(NotEqual::new(a, b));
@@ -1009,7 +1101,12 @@ fn test_ac_fc_map_coloring() {
 // -----------------------------------------------------------------------
 #[test]
 fn test_domain_wipeout_all_pruning() {
-    for pruning in [Pruning::None, Pruning::ForwardChecking, Pruning::Ac3, Pruning::AcFc] {
+    for pruning in [
+        Pruning::None,
+        Pruning::ForwardChecking,
+        Pruning::Ac3,
+        Pruning::AcFc,
+    ] {
         let mut csp = Csp::new();
         let domain = BitsetDomain::new(0..2);
         let vars = csp.add_variables(&domain, 3);
@@ -1045,11 +1142,9 @@ fn test_single_variable() {
     // Unary constraint: value must be 3
     csp.add_constraint(LambdaConstraint::new(
         vec![var],
-        move |assignment: &[Option<u32>]| {
-            match &assignment[var as usize] {
-                Some(v) => *v == 3,
-                None => true,
-            }
+        move |assignment: &[Option<u32>]| match &assignment[var as usize] {
+            Some(v) => *v == 3,
+            None => true,
         },
         "var == 3",
     ));
@@ -1112,7 +1207,10 @@ fn test_backjumping_unsatisfiable() {
     };
 
     let solutions = csp.solve(&config);
-    assert!(solutions.is_empty(), "Backjumping on unsolvable should return empty");
+    assert!(
+        solutions.is_empty(),
+        "Backjumping on unsolvable should return empty"
+    );
 }
 
 // -----------------------------------------------------------------------
@@ -1125,7 +1223,15 @@ fn test_backjumping_fewer_backtracks() {
         let domain = BitsetDomain::new(0..3);
         let _vars = csp.add_variables(&domain, 7);
         let edges: [(VarId, VarId); 9] = [
-            (0, 1), (0, 2), (1, 2), (1, 3), (2, 3), (2, 4), (2, 5), (3, 4), (4, 5),
+            (0, 1),
+            (0, 2),
+            (1, 2),
+            (1, 3),
+            (2, 3),
+            (2, 4),
+            (2, 5),
+            (3, 4),
+            (4, 5),
         ];
         for (a, b) in edges {
             csp.add_constraint(NotEqual::new(a, b));
@@ -1256,7 +1362,11 @@ fn test_solve_resets_state() {
     // Solve twice - should get same results
     let sol1 = csp.solve(&config);
     let sol2 = csp.solve(&config);
-    assert_eq!(sol1.len(), sol2.len(), "Repeated solve should give same count");
+    assert_eq!(
+        sol1.len(),
+        sol2.len(),
+        "Repeated solve should give same count"
+    );
 }
 
 // -----------------------------------------------------------------------
@@ -1265,37 +1375,37 @@ fn test_solve_resets_state() {
 
 #[allow(clippy::zero_prefixed_literal)]
 const AL_ESCARGOT: [u32; 81] = [
-    1,0,0,0,0,7,0,9,0, 0,3,0,0,2,0,0,0,8, 0,0,9,6,0,0,5,0,0,
-    0,0,5,3,0,0,9,0,0, 0,1,0,0,8,0,0,0,2, 6,0,0,0,0,4,0,0,0,
-    3,0,0,0,0,0,0,1,0, 0,4,0,0,0,0,0,0,7, 0,0,7,0,0,0,3,0,0,
+    1, 0, 0, 0, 0, 7, 0, 9, 0, 0, 3, 0, 0, 2, 0, 0, 0, 8, 0, 0, 9, 6, 0, 0, 5, 0, 0, 0, 0, 5, 3, 0,
+    0, 9, 0, 0, 0, 1, 0, 0, 8, 0, 0, 0, 2, 6, 0, 0, 0, 0, 4, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+    4, 0, 0, 0, 0, 0, 0, 7, 0, 0, 7, 0, 0, 0, 3, 0, 0,
 ];
 
 #[allow(clippy::zero_prefixed_literal)]
 const INKALA_2010: [u32; 81] = [
-    0,0,5,3,0,0,0,0,0, 8,0,0,0,0,0,0,2,0, 0,7,0,0,1,0,5,0,0,
-    4,0,0,0,0,5,3,0,0, 0,1,0,0,7,0,0,0,6, 0,0,3,2,0,0,0,8,0,
-    0,6,0,5,0,0,0,0,9, 0,0,4,0,0,0,0,3,0, 0,0,0,0,0,9,7,0,0,
+    0, 0, 5, 3, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 2, 0, 0, 7, 0, 0, 1, 0, 5, 0, 0, 4, 0, 0, 0, 0,
+    5, 3, 0, 0, 0, 1, 0, 0, 7, 0, 0, 0, 6, 0, 0, 3, 2, 0, 0, 0, 8, 0, 0, 6, 0, 5, 0, 0, 0, 0, 9, 0,
+    0, 4, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 9, 7, 0, 0,
 ];
 
 #[allow(clippy::zero_prefixed_literal)]
 const GOLDEN_NUGGET: [u32; 81] = [
-    0,0,0,0,0,0,0,3,9, 0,0,0,0,0,1,0,0,5, 0,0,3,0,5,0,8,0,0,
-    0,0,8,0,9,0,0,0,6, 0,7,0,0,0,2,0,0,0, 1,0,0,4,0,0,0,0,0,
-    0,0,9,0,8,0,0,5,0, 0,2,0,0,0,0,6,0,0, 4,0,0,7,0,0,0,0,0,
+    0, 0, 0, 0, 0, 0, 0, 3, 9, 0, 0, 0, 0, 0, 1, 0, 0, 5, 0, 0, 3, 0, 5, 0, 8, 0, 0, 0, 0, 8, 0, 9,
+    0, 0, 0, 6, 0, 7, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 9, 0, 8, 0, 0, 5, 0, 0,
+    2, 0, 0, 0, 0, 6, 0, 0, 4, 0, 0, 7, 0, 0, 0, 0, 0,
 ];
 
 #[allow(clippy::zero_prefixed_literal)]
 const PLATINUM_BLONDE: [u32; 81] = [
-    0,0,0,0,0,0,0,1,2, 0,0,0,0,3,5,0,0,0, 0,0,0,6,0,0,0,7,0,
-    7,0,0,0,0,0,3,0,0, 0,0,0,0,0,0,0,0,0, 0,0,1,0,0,0,0,0,8,
-    0,4,0,0,0,2,0,0,0, 0,0,0,1,8,0,0,0,0, 2,5,0,0,0,0,0,0,0,
+    0, 0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0, 3, 5, 0, 0, 0, 0, 0, 0, 6, 0, 0, 0, 7, 0, 7, 0, 0, 0, 0,
+    0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 8, 0, 4, 0, 0, 0, 2, 0, 0, 0, 0,
+    0, 0, 1, 8, 0, 0, 0, 0, 2, 5, 0, 0, 0, 0, 0, 0, 0,
 ];
 
 #[allow(clippy::zero_prefixed_literal)]
 const MINIMAL_17: [u32; 81] = [
-    0,0,0,0,0,0,0,1,0, 4,0,0,0,0,0,0,0,0, 0,2,0,0,0,0,0,0,0,
-    0,0,0,0,5,0,4,0,7, 0,0,8,0,0,0,3,0,0, 0,0,1,0,9,0,0,0,0,
-    3,0,0,4,0,0,2,0,0, 0,5,0,1,0,0,0,0,0, 0,0,0,8,0,6,0,0,0,
+    0, 0, 0, 0, 0, 0, 0, 1, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5,
+    0, 4, 0, 7, 0, 0, 8, 0, 0, 0, 3, 0, 0, 0, 0, 1, 0, 9, 0, 0, 0, 0, 3, 0, 0, 4, 0, 0, 2, 0, 0, 0,
+    5, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 6, 0, 0, 0,
 ];
 
 // -----------------------------------------------------------------------
@@ -1305,15 +1415,9 @@ const MINIMAL_17: [u32; 81] = [
 fn test_9x9_sudoku_medium() {
     #[allow(clippy::zero_prefixed_literal)]
     let grid: [u32; 81] = [
-        5,3,0,0,7,0,0,0,0,
-        6,0,0,1,9,5,0,0,0,
-        0,9,8,0,0,0,0,6,0,
-        8,0,0,0,6,0,0,0,3,
-        4,0,0,8,0,3,0,0,1,
-        7,0,0,0,2,0,0,0,6,
-        0,6,0,0,0,0,2,8,0,
-        0,0,0,4,1,9,0,0,5,
-        0,0,0,0,8,0,0,7,9,
+        5, 3, 0, 0, 7, 0, 0, 0, 0, 6, 0, 0, 1, 9, 5, 0, 0, 0, 0, 9, 8, 0, 0, 0, 0, 6, 0, 8, 0, 0,
+        0, 6, 0, 0, 0, 3, 4, 0, 0, 8, 0, 3, 0, 0, 1, 7, 0, 0, 0, 2, 0, 0, 0, 6, 0, 6, 0, 0, 0, 0,
+        2, 8, 0, 0, 0, 0, 4, 1, 9, 0, 0, 5, 0, 0, 0, 0, 8, 0, 0, 7, 9,
     ];
 
     let (mut csp, given) = build_sudoku_9x9(&grid);
@@ -1442,7 +1546,9 @@ fn test_hard_sudoku_all_configs() {
         assert!(
             !solutions.is_empty(),
             "Al Escargot failed with pruning={:?}, ordering={:?}, bj={:?}",
-            pruning, ordering, backjumping
+            pruning,
+            ordering,
+            backjumping
         );
         validate_sudoku_solution(&solutions[0]);
     }
@@ -1455,15 +1561,9 @@ fn test_hard_sudoku_all_configs() {
 fn test_fail_first_fewer_backtracks_sudoku() {
     #[allow(clippy::zero_prefixed_literal)]
     let grid: [u32; 81] = [
-        5,3,0,0,7,0,0,0,0,
-        6,0,0,1,9,5,0,0,0,
-        0,9,8,0,0,0,0,6,0,
-        8,0,0,0,6,0,0,0,3,
-        4,0,0,8,0,3,0,0,1,
-        7,0,0,0,2,0,0,0,6,
-        0,6,0,0,0,0,2,8,0,
-        0,0,0,4,1,9,0,0,5,
-        0,0,0,0,8,0,0,7,9,
+        5, 3, 0, 0, 7, 0, 0, 0, 0, 6, 0, 0, 1, 9, 5, 0, 0, 0, 0, 9, 8, 0, 0, 0, 0, 6, 0, 8, 0, 0,
+        0, 6, 0, 0, 0, 3, 4, 0, 0, 8, 0, 3, 0, 0, 1, 7, 0, 0, 0, 2, 0, 0, 0, 6, 0, 6, 0, 0, 0, 0,
+        2, 8, 0, 0, 0, 0, 4, 1, 9, 0, 0, 5, 0, 0, 0, 0, 8, 0, 0, 7, 9,
     ];
 
     let (mut csp_chrono, given_chrono) = build_sudoku_9x9(&grid);
@@ -1536,7 +1636,11 @@ fn test_5_queens() {
     };
 
     let solutions = csp.solve(&config);
-    assert_eq!(solutions.len(), 10, "5-Queens should have exactly 10 solutions");
+    assert_eq!(
+        solutions.len(),
+        10,
+        "5-Queens should have exactly 10 solutions"
+    );
 }
 
 // -----------------------------------------------------------------------
@@ -1555,5 +1659,9 @@ fn test_6_queens() {
     };
 
     let solutions = csp.solve(&config);
-    assert_eq!(solutions.len(), 4, "6-Queens should have exactly 4 solutions");
+    assert_eq!(
+        solutions.len(),
+        4,
+        "6-Queens should have exactly 4 solutions"
+    );
 }

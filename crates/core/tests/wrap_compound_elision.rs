@@ -21,8 +21,8 @@
 //! arena slabs (`array_count + object_count`) at the budget the
 //! pre-flip record-count budget approximated.
 
-use bbnf::runtime::{JsonNumber, JsonValue};
 use ::bbnf::grammar::generated::json::*;
+use bbnf::runtime::{JsonNumber, JsonValue};
 
 #[test]
 fn json_scalar_at_top_level_emits_one_record() {

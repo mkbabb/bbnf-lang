@@ -35,10 +35,10 @@
 
 #![cfg(target_arch = "wasm32")]
 
+use crate::StructuralIndex;
 use crate::alphabet::{KernelShape, NibbleLut, StructuralAlphabet};
 use crate::compaction;
 use crate::parity;
-use crate::StructuralIndex;
 
 use core::arch::wasm32::*;
 
@@ -112,10 +112,9 @@ fn scan_nibble(input: &[u8], alphabet: &StructuralAlphabet) -> StructuralIndex {
     // Scalar epilogue for < 64 residual bytes. Mirrors NEON's tail
     // state machine: track per-class quote parity, backslash parity,
     // and digraph first-byte emission.
-    let mut active_class: Option<usize> =
-        quote_carries[..alphabet.quote_classes.len()]
-            .iter()
-            .position(|&b| b);
+    let mut active_class: Option<usize> = quote_carries[..alphabet.quote_classes.len()]
+        .iter()
+        .position(|&b| b);
     let mut prev_was_bs = bs_carry;
     while i < input.len() {
         let b = unsafe { *input.get_unchecked(i) };
@@ -199,10 +198,9 @@ fn scan_multi(input: &[u8], alphabet: &StructuralAlphabet) -> StructuralIndex {
         i += STRIPE;
     }
 
-    let mut active_class: Option<usize> =
-        quote_carries[..alphabet.quote_classes.len()]
-            .iter()
-            .position(|&b| b);
+    let mut active_class: Option<usize> = quote_carries[..alphabet.quote_classes.len()]
+        .iter()
+        .position(|&b| b);
     let mut prev_was_bs = bs_carry;
     while i < input.len() {
         let b = unsafe { *input.get_unchecked(i) };
@@ -292,11 +290,7 @@ fn digraph_stripe(ptr: *const u8, pairs: &[(u8, u8)]) -> u64 {
 /// class `qi` (bit j set iff `input[stripe_base+j]` equals
 /// `quotes[qi]`). Return value is the 64-bit raw backslash mask.
 #[inline(always)]
-fn raw_quotes_and_bs_stripe(
-    ptr: *const u8,
-    quotes: &[u8],
-    out_qmasks: &mut [u64],
-) -> u64 {
+fn raw_quotes_and_bs_stripe(ptr: *const u8, quotes: &[u8], out_qmasks: &mut [u64]) -> u64 {
     debug_assert_eq!(out_qmasks.len(), quotes.len());
     for slot in out_qmasks.iter_mut() {
         *slot = 0;

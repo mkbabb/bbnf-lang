@@ -16,7 +16,11 @@ use bbnf::runtime::bbnf::{BbnfCompoundKind, BbnfView};
 fn contains_regex(node: BbnfView<'_, '_>) -> bool {
     let text = node.span_text();
     text.trim_start().starts_with('/')
-        && text.trim_end().trim_end_matches(';').trim_end().ends_with('/')
+        && text
+            .trim_end()
+            .trim_end_matches(';')
+            .trim_end()
+            .ends_with('/')
         || text.contains(" /") && text.contains("/ ")
 }
 

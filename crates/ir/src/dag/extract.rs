@@ -5,8 +5,8 @@
 //! produces a cloned subtree per parent (no structural sharing at the
 //! `IrNode` level).
 
-use super::node::{DagNode, NodeId};
 use super::GrammarDag;
+use super::node::{DagNode, NodeId};
 use crate::{AltBranch, IrNode, TokenDispatchArm};
 
 impl GrammarDag {
@@ -37,18 +37,15 @@ impl GrammarDag {
                 lo: *lo,
                 hi: *hi,
             },
-            DagNode::Skip(a, b) => IrNode::Skip(
-                Box::new(self.extract(*a)),
-                Box::new(self.extract(*b)),
-            ),
-            DagNode::Next(a, b) => IrNode::Next(
-                Box::new(self.extract(*a)),
-                Box::new(self.extract(*b)),
-            ),
-            DagNode::Minus(a, b) => IrNode::Minus(
-                Box::new(self.extract(*a)),
-                Box::new(self.extract(*b)),
-            ),
+            DagNode::Skip(a, b) => {
+                IrNode::Skip(Box::new(self.extract(*a)), Box::new(self.extract(*b)))
+            }
+            DagNode::Next(a, b) => {
+                IrNode::Next(Box::new(self.extract(*a)), Box::new(self.extract(*b)))
+            }
+            DagNode::Minus(a, b) => {
+                IrNode::Minus(Box::new(self.extract(*a)), Box::new(self.extract(*b)))
+            }
             DagNode::Negate(inner) => IrNode::Negate(Box::new(self.extract(*inner))),
             DagNode::Map { inner, fn_id } => IrNode::Map {
                 inner: Box::new(self.extract(*inner)),

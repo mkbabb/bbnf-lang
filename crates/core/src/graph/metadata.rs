@@ -61,9 +61,7 @@ fn extract_alias_target<'a>(view: BbnfView<'a, 'a>) -> Option<&'a str> {
         Some(BbnfCompoundKind::GrammarItem)
         | Some(BbnfCompoundKind::Directive)
         | Some(BbnfCompoundKind::Lhs)
-        | Some(BbnfCompoundKind::Rhs) => {
-            view.child(0).and_then(extract_alias_target)
-        }
+        | Some(BbnfCompoundKind::Rhs) => view.child(0).and_then(extract_alias_target),
 
         // `term = ε | identifier (call_args)? | literal | regex
         //       | "(" rhs ")" | "[" rhs "]" | "{" rhs "}" | "@{" rhs "}"`.
@@ -90,7 +88,9 @@ fn extract_alias_target<'a>(view: BbnfView<'a, 'a>) -> Option<&'a str> {
             // Bare term: the compound holds an identifier Span child
             // and (optionally) a CallArg compound child. Alias only
             // when the CallArg slot is absent.
-            let has_call_args = view.find_descendant_by_kind(BbnfCompoundKind::CallArg).is_some();
+            let has_call_args = view
+                .find_descendant_by_kind(BbnfCompoundKind::CallArg)
+                .is_some();
             if has_call_args {
                 return None;
             }

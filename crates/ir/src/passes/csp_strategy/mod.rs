@@ -140,13 +140,13 @@ use std::collections::HashMap;
 
 use bbnf_regex::EngineSet;
 use csp_solver::{
+    Csp, OptimizationMode, Pruning, SolveConfig,
     constraint::{ImplicationConstraint, VarId},
     domain::{CostDomain, Domain},
-    Csp, OptimizationMode, Pruning, SolveConfig,
 };
 use rustc_hash::FxHashMap;
 
-use self::components::{partition_by_call_graph, GrammarComponents};
+use self::components::{GrammarComponents, partition_by_call_graph};
 use crate::dag::NodeId;
 use crate::passes::inspect::visit_children_alt;
 use crate::passes::materialization::MaterializationClass;
@@ -372,10 +372,7 @@ impl CostDomain for StrategyDomain {
 /// cheaper (or pin-satisfying) assignment.
 pub fn solve_grammar_components(
     ir: &GrammarIR,
-) -> (
-    RecognizerDecisionMap,
-    HashMap<NodeId, MaterializationClass>,
-) {
+) -> (RecognizerDecisionMap, HashMap<NodeId, MaterializationClass>) {
     let dag = match ir.dag.as_ref() {
         Some(d) => d,
         None => return (HashMap::new(), HashMap::new()),
@@ -458,8 +455,7 @@ fn solve_component(
     // variables that live in other rules within the same component.
     let mut csp = Csp::<StrategyDomain>::new();
     let mut sites: Vec<(VarId, Site)> = Vec::new();
-    let mut by_node: ByNodeVars =
-        FxHashMap::default();
+    let mut by_node: ByNodeVars = FxHashMap::default();
 
     // Track which rules contributed at least one variable; used
     // below for the post-solve fallback walk and for the "no
@@ -531,8 +527,7 @@ fn solve_component(
         let Some(rule) = rule_by_id.get(&rid).copied() else {
             continue;
         };
-        constraints_added +=
-            add_token_dispatch_constraints(&rule.body, dag, &by_node, &mut csp);
+        constraints_added += add_token_dispatch_constraints(&rule.body, dag, &by_node, &mut csp);
     }
 
     // Cross-rule: install the AF.3 constraint sub-modules.
@@ -545,12 +540,8 @@ fn solve_component(
     // entirely degenerate (single rule, no Refs, no regex
     // variables) the solve is skipped.
     let _ = components; // partition consumed below for component slicing
-    let component_constraints_added = install_cross_rule_constraints(
-        &mut csp,
-        member_rules,
-        &engine_vars,
-        ir,
-    );
+    let component_constraints_added =
+        install_cross_rule_constraints(&mut csp, member_rules, &engine_vars, ir);
     constraints_added += component_constraints_added;
 
     // Fast path: when no cross-variable constraint applies to this
@@ -924,7 +915,10 @@ fn build_alt_domain(
     let w = &cfg.egraph.weights;
 
     // Universal fallback — always legal, highest cost.
-    values.push((StrategyValue::Alt(AltMode::Checkpoint), 10.0 * cfg.literal_cost));
+    values.push((
+        StrategyValue::Alt(AltMode::Checkpoint),
+        10.0 * cfg.literal_cost,
+    ));
 
     // AG.5 — dispatch cost via the per-arm formula. Defaults:
     // `dispatch_branch = 0.0`, `dispatch_table = 0.0`, so under
@@ -936,10 +930,7 @@ fn build_alt_domain(
     let dispatch_cost = (arm_count as f64) * w.dispatch_branch + w.dispatch_table;
 
     if has_byte_dispatch {
-        values.push((
-            StrategyValue::Alt(AltMode::ByteDispatch),
-            dispatch_cost,
-        ));
+        values.push((StrategyValue::Alt(AltMode::ByteDispatch), dispatch_cost));
     }
 
     if let Some(rec) = fact {
@@ -949,19 +940,11 @@ fn build_alt_domain(
         // unified. `fuse_token_dispatch` converts the strongest
         // TokenLed shapes into `IrNode::TokenDispatch` upstream
         // regardless of the CSP choice.
-        if matches!(rec.shape, RecognizerShape::TokenLedBranches { .. })
-            && !has_byte_dispatch
-        {
-            values.push((
-                StrategyValue::Alt(AltMode::ByteDispatch),
-                dispatch_cost,
-            ));
+        if matches!(rec.shape, RecognizerShape::TokenLedBranches { .. }) && !has_byte_dispatch {
+            values.push((StrategyValue::Alt(AltMode::ByteDispatch), dispatch_cost));
         }
         if matches!(rec.shape, RecognizerShape::KeywordPrefix { .. }) {
-            values.push((
-                StrategyValue::Alt(AltMode::KeyDispatch),
-                dispatch_cost,
-            ));
+            values.push((StrategyValue::Alt(AltMode::KeyDispatch), dispatch_cost));
         }
     }
 
@@ -973,7 +956,10 @@ fn build_wrap_domain(fact: Option<&Recognizer>, cfg: &CostConfig) -> StrategyDom
     let mut values: Vec<(StrategyValue, f64)> = Vec::with_capacity(4);
 
     // Universal fallback.
-    values.push((StrategyValue::Wrap(WrapMode::Generic), 10.0 * cfg.literal_cost));
+    values.push((
+        StrategyValue::Wrap(WrapMode::Generic),
+        10.0 * cfg.literal_cost,
+    ));
 
     if let Some(rec) = fact {
         match &rec.shape {
@@ -1062,29 +1048,53 @@ fn build_engine_domain(feasible: EngineSet, cfg: &CostConfig) -> StrategyDomain 
     let mut values: Vec<(StrategyValue, f64)> = Vec::with_capacity(8);
 
     if feasible.contains(EngineSet::FAMILY_HELPER) {
-        values.push((StrategyValue::Engine(RegexEngine::FamilyHelper), dispatch_bonus));
+        values.push((
+            StrategyValue::Engine(RegexEngine::FamilyHelper),
+            dispatch_bonus,
+        ));
     }
     if feasible.contains(EngineSet::MEMCHR1) {
-        values.push((StrategyValue::Engine(RegexEngine::Memchr1), dispatch_bonus + 0.1));
+        values.push((
+            StrategyValue::Engine(RegexEngine::Memchr1),
+            dispatch_bonus + 0.1,
+        ));
     }
     if feasible.contains(EngineSet::MEMCHR2) {
-        values.push((StrategyValue::Engine(RegexEngine::Memchr2), dispatch_bonus + 0.2));
+        values.push((
+            StrategyValue::Engine(RegexEngine::Memchr2),
+            dispatch_bonus + 0.2,
+        ));
     }
     if feasible.contains(EngineSet::MEMCHR3) {
-        values.push((StrategyValue::Engine(RegexEngine::Memchr3), dispatch_bonus + 0.3));
+        values.push((
+            StrategyValue::Engine(RegexEngine::Memchr3),
+            dispatch_bonus + 0.3,
+        ));
     }
     if feasible.contains(EngineSet::NIBBLE_LUT) {
-        values.push((StrategyValue::Engine(RegexEngine::NibbleLut), dispatch_bonus + 0.5));
+        values.push((
+            StrategyValue::Engine(RegexEngine::NibbleLut),
+            dispatch_bonus + 0.5,
+        ));
     }
     if feasible.contains(EngineSet::ONE_PASS) {
-        values.push((StrategyValue::Engine(RegexEngine::OnePass), dispatch_bonus + 1.0));
+        values.push((
+            StrategyValue::Engine(RegexEngine::OnePass),
+            dispatch_bonus + 1.0,
+        ));
     }
     if feasible.contains(EngineSet::SMALL_DFA) {
-        values.push((StrategyValue::Engine(RegexEngine::SmallDfa), dispatch_bonus + 2.0));
+        values.push((
+            StrategyValue::Engine(RegexEngine::SmallDfa),
+            dispatch_bonus + 2.0,
+        ));
     }
     // DFA is the universal fallback — always legal even when feasible
     // is empty (e.g., complex patterns with no narrower engine).
-    values.push((StrategyValue::Engine(RegexEngine::Dfa), dispatch_bonus + 5.0));
+    values.push((
+        StrategyValue::Engine(RegexEngine::Dfa),
+        dispatch_bonus + 5.0,
+    ));
 
     StrategyDomain::new(values)
 }
@@ -1235,10 +1245,7 @@ fn project_regex_decisions(
 ) {
     if let IrNode::Regex(sid) = node {
         if let Some(nid) = dag.node_for(node) {
-            if let Some(engine) = decisions
-                .get(&nid)
-                .and_then(|d| d.regex_engine.as_ref())
-            {
+            if let Some(engine) = decisions.get(&nid).and_then(|d| d.regex_engine.as_ref()) {
                 // Prefer the lowest-tier (fastest) engine when the
                 // same pattern has multiple per-NodeId decisions.
                 match out.get(sid) {
@@ -1269,4 +1276,3 @@ fn engine_tier(e: &RegexEngine) -> u8 {
         RegexEngine::Dfa => 7,
     }
 }
-

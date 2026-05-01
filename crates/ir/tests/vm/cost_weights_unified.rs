@@ -31,12 +31,12 @@ use bbnf_ir::egraph::{
     GrammarAnalysis, GrammarCostModel, GrammarENode, build_and_saturate, write_back_optimized,
 };
 use bbnf_ir::passes::{
-    classify_materialization, compute_first_sets, generate_dispatch_tables,
-    solve_grammar_components, AltMode, MaterializationClass, RecognizerDecisionMap,
+    AltMode, MaterializationClass, RecognizerDecisionMap, classify_materialization,
+    compute_first_sets, generate_dispatch_tables, solve_grammar_components,
 };
 use bbnf_ir::{
-    AltBranch, AltDispatch, CharSet128, CostConfig, GrammarIR, IrNode, IrRule, RuleMeta,
-    StringId, TypeDescInterner,
+    AltBranch, AltDispatch, CharSet128, CostConfig, GrammarIR, IrNode, IrRule, RuleMeta, StringId,
+    TypeDescInterner,
 };
 
 // ── Fixture builders ─────────────────────────────────────────────────────────
@@ -80,9 +80,10 @@ fn empty_ir() -> GrammarIR {
         payload_layouts: HashMap::new(),
         structural_alphabet: None,
         push_fingerprint: None,
-            dedup_eligible_rules: Vec::new(),
+        dedup_eligible_rules: Vec::new(),
 
-            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
+        shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
+        ),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -364,10 +365,7 @@ fn egraph_extraction_cost_tracks_dispatch_bonus() {
         table: vec![255; 128],
         fallback_idx: None,
     };
-    let alt_node = GrammarENode::Alt(
-        Box::from([Id::from(0u32), Id::from(1u32)]),
-        Some(dispatch),
-    );
+    let alt_node = GrammarENode::Alt(Box::from([Id::from(0u32), Id::from(1u32)]), Some(dispatch));
     // Child cost closure returns a constant 1.0 per child — the test
     // cares about the delta caused by `dispatch_bonus`, not by the
     // child values.
@@ -462,9 +460,7 @@ fn write_back_optimized_accepts_patched_weights() {
 /// e-graph. Used only for the defensive sanity assertion in
 /// `write_back_optimized_accepts_patched_weights`; factored out so
 /// the iteration over `egraph` classes is localized.
-fn egraph_alt_class_count(
-    _egraph: &EGraph<GrammarENode, GrammarAnalysis>,
-) -> usize {
+fn egraph_alt_class_count(_egraph: &EGraph<GrammarENode, GrammarAnalysis>) -> usize {
     // `EGraph` does not currently expose a public iterator over its
     // classes at the stable API level (Tranche E experiment). The
     // placeholder returns 0; the call site uses only the no-panic
@@ -509,10 +505,7 @@ fn dispatch_branch_scales_with_arm_count() {
     let mut ir = build_three_way_alt_fixture(cfg);
     let decisions = solve_and_merge(&mut ir);
     // 3 arms x 1_000 = 3_000, overwhelming the 10.0 checkpoint.
-    assert_eq!(
-        body_alt_mode(&ir, &decisions),
-        Some(AltMode::Checkpoint),
-    );
+    assert_eq!(body_alt_mode(&ir, &decisions), Some(AltMode::Checkpoint),);
 }
 
 // ── Sanity: materialization gate did not introduce a private knob ────────────

@@ -555,10 +555,7 @@ pub fn estimate_expansion_cost(node: &IrNode) -> usize {
 /// projections of [`CostWeights::call_overhead`] and
 /// [`CostWeights::inline_body_size_penalty`]. See
 /// [`CostBudgets::from_weights`] for the derivation.
-pub(crate) fn estimate_expansion_cost_with_budgets(
-    node: &IrNode,
-    budgets: &CostBudgets,
-) -> usize {
+pub(crate) fn estimate_expansion_cost_with_budgets(node: &IrNode, budgets: &CostBudgets) -> usize {
     match node {
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => budgets.leaf_cost,
         IrNode::Ref(_) => budgets.ref_cost,

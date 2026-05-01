@@ -176,7 +176,9 @@ fn fold_via_parent_span_split<'a, 'p: 'a>(
     );
 
     let mut iter = operands.into_iter();
-    let first = iter.next().expect("fold_value_chain: missing first operand");
+    let first = iter
+        .next()
+        .expect("fold_value_chain: missing first operand");
     let mut result = dispatch_value_expr(first, ctx);
 
     for (operand, op_text) in iter.zip(split.operators.into_iter()) {
@@ -277,9 +279,7 @@ fn split_chain_at_operators<'p>(text: &'p str, layer: &PrecedenceLayer) -> Chain
 /// Note: a single-operand chain compound (no operators) collapses
 /// to one element; the loop in `fold_value_chain` simply returns
 /// that operand's lowering unchanged.
-pub(super) fn collect_chain_operands<'a, 'p: 'a>(
-    node: BbnfView<'a, 'p>,
-) -> Vec<BbnfView<'a, 'p>> {
+pub(super) fn collect_chain_operands<'a, 'p: 'a>(node: BbnfView<'a, 'p>) -> Vec<BbnfView<'a, 'p>> {
     let mut children = RuntimeView::children(&node);
     let Some(first) = children.next() else {
         return Vec::new();
@@ -293,9 +293,7 @@ pub(super) fn collect_chain_operands<'a, 'p: 'a>(
     // (in which case the chain children are already flat).
     let mut operands = vec![first];
     let rest: Vec<BbnfView<'a, 'p>> = children.collect();
-    if rest.len() == 1 && rest[0].kind() == BbnfKind::Compound
-        && is_iteration_wrapper(rest[0])
-    {
+    if rest.len() == 1 && rest[0].kind() == BbnfKind::Compound && is_iteration_wrapper(rest[0]) {
         for child in RuntimeView::children(&rest[0]) {
             operands.push(child);
         }

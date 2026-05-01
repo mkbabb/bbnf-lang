@@ -44,8 +44,8 @@
 
 use std::collections::HashSet;
 
-use crate::dag::NodeId;
 use crate::IrNode;
+use crate::dag::NodeId;
 
 use super::{MineOutputs, RecognizerMineCtx, RecognizerMiner};
 

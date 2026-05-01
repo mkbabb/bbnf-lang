@@ -94,7 +94,10 @@ fn test_prettify_minified_css() {
     let output = result.unwrap();
     assert!(output.contains("html"), "should contain html selector");
     assert!(output.contains("line-height"), "should contain line-height");
-    assert!(output.contains("-webkit-text-size-adjust"), "should contain vendor prefix");
+    assert!(
+        output.contains("-webkit-text-size-adjust"),
+        "should contain vendor prefix"
+    );
     assert!(output.contains("body"), "should contain body selector");
 }
 
@@ -114,7 +117,10 @@ fn test_prettify_no_trailing_semicolon() {
     let config = PrinterConfig::default();
     let input = "body{color:red}";
     let result = prettify_css(input, &config);
-    assert!(result.is_some(), "should parse CSS without trailing semicolon");
+    assert!(
+        result.is_some(),
+        "should parse CSS without trailing semicolon"
+    );
     let output = result.unwrap();
     assert!(output.contains("color"), "should contain property");
     assert!(output.contains("red"), "should contain value");
@@ -142,7 +148,10 @@ fn test_prettify_selector_with_pseudo_class() {
     let config = PrinterConfig::default();
     let input = ":is(.a, .b), .c { color: red; }";
     let result = prettify_css(input, &config).unwrap();
-    assert!(result.contains(":is(.a, .b)"), "should preserve :is() pseudo-class");
+    assert!(
+        result.contains(":is(.a, .b)"),
+        "should preserve :is() pseudo-class"
+    );
     assert!(result.contains(".c"), "should contain .c selector");
     let second = prettify_css(&result, &config).unwrap();
     assert_eq!(

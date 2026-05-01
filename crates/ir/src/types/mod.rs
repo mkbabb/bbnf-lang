@@ -35,9 +35,7 @@ pub mod type_desc_interner;
 pub use fn_descriptor::FnDescriptor;
 pub use grammar::GrammarIR;
 pub use map_expr::{MapBinOp, MapExpr, MapUnaryOp};
-pub use node::{
-    AltBranch, AltDispatch, GrammarSpan, IrNode, TokenDispatchArm, count_nodes,
-};
+pub use node::{AltBranch, AltDispatch, GrammarSpan, IrNode, TokenDispatchArm, count_nodes};
 pub use recognizer_configs::{
     DelimScanConfig, DetectedBranch, KeyClass, KeyDispatchConfig, KeyDispatchMatch,
     key_class_regex_pattern,

@@ -39,11 +39,7 @@
 #[inline]
 pub fn prefix_xor_64(mask: u64, carry_in: bool) -> u64 {
     let prefix = prefix_xor_impl(mask);
-    if carry_in {
-        !prefix
-    } else {
-        prefix
-    }
+    if carry_in { !prefix } else { prefix }
 }
 
 /// Compute the per-byte "escaped" mask — bit `i` set iff byte `i`

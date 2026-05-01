@@ -2,18 +2,18 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-#[cfg(feature = "json-grammar")]
-pub mod json;
 #[cfg(feature = "bbnf-grammar")]
 pub mod bbnf;
-#[cfg(feature = "ebnf-grammar")]
-pub mod ebnf;
 #[cfg(feature = "bnf-grammar")]
 pub mod bnf;
 #[cfg(feature = "css-grammar")]
 pub mod css;
+#[cfg(feature = "ebnf-grammar")]
+pub mod ebnf;
 #[cfg(feature = "sheets-grammar")]
 pub mod google_sheets;
+#[cfg(feature = "json-grammar")]
+pub mod json;
 
 #[cfg(feature = "vm")]
 pub mod vm;

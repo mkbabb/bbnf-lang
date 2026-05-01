@@ -73,8 +73,8 @@ fn empty_ir() -> GrammarIR {
         structural_alphabet: None,
         push_fingerprint: None,
         dedup_eligible_rules: Vec::new(),
-        shape_assignments:
-            bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
+        shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
+        ),
         eclass_facts: HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -243,7 +243,12 @@ fn css_l4_fixture() -> GrammarIR {
     let f_rem = add_fn(&mut ir, expr_typed(TypeDesc::U8));
     let f_pct = add_fn(&mut ir, expr_typed(TypeDesc::U8));
     let hex_path_sid = intern(&mut ir, "color::from_hex");
-    let f_hex = add_fn(&mut ir, FnDescriptor::HexConvert { fn_path: hex_path_sid });
+    let f_hex = add_fn(
+        &mut ir,
+        FnDescriptor::HexConvert {
+            fn_path: hex_path_sid,
+        },
+    );
     let color_enum_sid = intern(&mut ir, "ColorEnum");
     let f_named = add_fn(&mut ir, expr_typed(TypeDesc::Named(color_enum_sid)));
 
@@ -314,18 +319,21 @@ fn w0_baseline_pending_status_for_every_grammar() {
             tag.key()
         );
         assert_eq!(
-            coverage.mapped_markers, 0,
+            coverage.mapped_markers,
+            0,
             "grammar {} should be 0% mapped under AbsentRegistryProbe",
             tag.key()
         );
         assert_eq!(
-            coverage.pending_markers, coverage.total_markers,
+            coverage.pending_markers,
+            coverage.total_markers,
             "grammar {} should report every marker as Pending under \
              AbsentRegistryProbe",
             tag.key()
         );
         assert_eq!(
-            coverage.missing_markers, 0,
+            coverage.missing_markers,
+            0,
             "grammar {} should report no Missing markers in W0 baseline",
             tag.key()
         );
@@ -482,18 +490,16 @@ fn write_audit_coverage_json_to_w0_path() {
     assert_eq!(report.missing_markers, 0);
 
     let manifest_dir = env!("CARGO_MANIFEST_DIR");
-    let path = PathBuf::from(manifest_dir)
-        .join("../../docs/benchmarks/AZ-I/W0/audit-coverage.json");
-    let bytes_written =
-        write_coverage_report(&report, &path).expect("write coverage report");
+    let path =
+        PathBuf::from(manifest_dir).join("../../docs/benchmarks/AZ-I/W0/audit-coverage.json");
+    let bytes_written = write_coverage_report(&report, &path).expect("write coverage report");
     assert!(bytes_written > 0);
     assert!(path.exists());
 
     // Round-trip the JSON to confirm the output is valid and the
     // coverage rows survive serialise → deserialise unchanged.
     let raw = std::fs::read_to_string(&path).expect("read written report");
-    let round: AuditCoverageReport =
-        serde_json::from_str(&raw).expect("deserialize round trip");
+    let round: AuditCoverageReport = serde_json::from_str(&raw).expect("deserialize round trip");
     assert_eq!(round.grammars.len(), report.grammars.len());
     assert_eq!(round.total_markers, report.total_markers);
 }

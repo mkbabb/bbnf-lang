@@ -16,7 +16,13 @@ const CSS_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_parts(
 
 const BBNF_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_parts(
     &[b'{', b'}', b'(', b')', b';', b':', b','],
-    &[(b'/', b'*'), (b'*', b'/'), (b'-', b'>'), (b'(', b'*'), (b'*', b')')],
+    &[
+        (b'/', b'*'),
+        (b'*', b'/'),
+        (b'-', b'>'),
+        (b'(', b'*'),
+        (b'*', b')'),
+    ],
     &[b'"'],
 );
 

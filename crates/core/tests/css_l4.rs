@@ -130,7 +130,6 @@ mod css_types {
 
 use ::bbnf::grammar::generated::css_l4::*;
 
-
 fn load_css(name: &str) -> String {
     let candidates = [
         format!("../../data/css/{}", name),

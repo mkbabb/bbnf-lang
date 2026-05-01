@@ -42,14 +42,20 @@ pub struct WidthBound {
 
 impl Default for WidthBound {
     fn default() -> Self {
-        Self { min: 0, max: Some(0) }
+        Self {
+            min: 0,
+            max: Some(0),
+        }
     }
 }
 
 impl WidthBound {
     /// Unit-width bound: exactly `n` bytes.
     pub fn exact(n: u32) -> Self {
-        Self { min: n, max: Some(n) }
+        Self {
+            min: n,
+            max: Some(n),
+        }
     }
 
     /// Unknown upper bound: `≥ min`, unbounded above.
@@ -140,7 +146,10 @@ impl EClassFacts {
         Self {
             first_set: CharSet128::new(),
             nullable: true,
-            width: WidthBound { min: 0, max: Some(0) },
+            width: WidthBound {
+                min: 0,
+                max: Some(0),
+            },
             literal_sid: None,
             regex_sid: None,
             elision_safe: true,

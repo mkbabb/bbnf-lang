@@ -3,7 +3,6 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 use ::bbnf::grammar::generated::json::*;
 
-
 fn main() {
     for name in [
         "data.json",

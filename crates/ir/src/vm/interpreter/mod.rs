@@ -317,8 +317,7 @@ impl<'prog> Interpreter<'prog> {
     /// and the repeat finalizer.
     #[inline(always)]
     pub(super) fn collect_values_from(&mut self, start: usize) -> ValueSlice {
-        let collected =
-            ValueSlice::from_vec(self.values[start..].to_vec());
+        let collected = ValueSlice::from_vec(self.values[start..].to_vec());
         self.values.truncate(start);
         collected
     }

@@ -1,4 +1,3 @@
-
 //! parse_that built-in JSON parser benchmark — baseline comparison (not BBNF).
 
 #[global_allocator]

@@ -49,7 +49,9 @@ pub fn collect_references(node: BbnfView<'_, '_>, refs: &mut Vec<ReferenceInfo>)
                 Some(1) => {
                     // Identifier with optional call-args.
                     if let Some(ident) = node.child(0) {
-                        if let (Some(text), Some((lo, hi))) = (ident.span_text_opt(), ident.span_range()) {
+                        if let (Some(text), Some((lo, hi))) =
+                            (ident.span_text_opt(), ident.span_range())
+                        {
                             let trimmed = text.trim();
                             if !trimmed.is_empty() && is_ident(trimmed) {
                                 let lead_ws = text.len() - text.trim_start().len();

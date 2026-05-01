@@ -121,7 +121,8 @@ pub fn is_empty_rhs(node: BbnfView<'_, '_>) -> bool {
             // Heuristic: any non-Factor compound child indicates a
             // mapping is attached.
             let mapping_present = node.children().skip(1).any(|c| {
-                c.compound_kind().is_some_and(|k| k != BbnfCompoundKind::Factor)
+                c.compound_kind()
+                    .is_some_and(|k| k != BbnfCompoundKind::Factor)
             });
             if mapping_present {
                 false

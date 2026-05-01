@@ -40,9 +40,7 @@ impl TsEmitter {
                     "  if (({cond}) && s.offset < s.input.length && s.input.charCodeAt(s.offset) === {guard}) {{ {result} = {cont_expr}; }}\n"
                 ));
             } else {
-                stmts.push_str(&format!(
-                    "  if ({cond}) {{ {result} = {cont_expr}; }}\n"
-                ));
+                stmts.push_str(&format!("  if ({cond}) {{ {result} = {cont_expr}; }}\n"));
             }
         }
         stmts.push_str("}\n");

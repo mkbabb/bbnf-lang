@@ -99,9 +99,16 @@ pub(crate) fn compile_node<E: Emitter>(
         // Structural.
         IrNode::Seq(_) => compile_seq(node, alloc, ir, dstate, emitter, ctx),
 
-        IrNode::Alt(branches, dispatch) => {
-            compile_alt(node, branches, dispatch.as_ref(), alloc, ir, dstate, emitter, ctx)
-        }
+        IrNode::Alt(branches, dispatch) => compile_alt(
+            node,
+            branches,
+            dispatch.as_ref(),
+            alloc,
+            ir,
+            dstate,
+            emitter,
+            ctx,
+        ),
 
         IrNode::Repeat { inner, lo, hi } => {
             compile_repeat(inner, *lo, *hi, alloc, ir, dstate, emitter, ctx)
@@ -146,9 +153,7 @@ pub(crate) fn compile_node<E: Emitter>(
         }
 
         // Host integration.
-        IrNode::Map { inner, fn_id } => {
-            compile_map(inner, *fn_id, alloc, ir, dstate, emitter, ctx)
-        }
+        IrNode::Map { inner, fn_id } => compile_map(inner, *fn_id, alloc, ir, dstate, emitter, ctx),
 
         // Whitespace trim.
         IrNode::OptionalWhitespace(inner) => {
@@ -169,8 +174,7 @@ pub(crate) fn compile_node<E: Emitter>(
                 let fallback_out = compile_node(fallback, alloc, ir, dstate, emitter, ctx);
                 return emitter.emit_next(token_out, fallback_out, ctx);
             }
-            let token_out =
-                compile_node(token, ValuePlacement::Inline, ir, dstate, emitter, ctx);
+            let token_out = compile_node(token, ValuePlacement::Inline, ir, dstate, emitter, ctx);
             let compiled_arms: Vec<TokenDispatchArmCompiled<E::Output>> = arms
                 .iter()
                 .map(|arm| {

@@ -6,11 +6,11 @@
 
 use bbnf_ir::{GrammarIR, IrNode, RuleId};
 
+use crate::backend::Emitter;
 use crate::backend::prettify::{
     PrettyRulePlan, SeparatorPolicy, SilentPosition, analysis, build_rule_plans,
     split_inner_for_sep,
 };
-use crate::backend::Emitter;
 
 /// Compile prettify grammar: build plans, compile each rule, assemble.
 pub fn compile_prettify_grammar<E: Emitter>(
@@ -86,7 +86,12 @@ fn compile_prettify_node<E: Emitter>(
         IrNode::Alt(branches, dispatch) => {
             if branches.len() == 1 {
                 return compile_prettify_node(
-                    &branches[0].node, current_rule, plans, ir, emitter, ctx,
+                    &branches[0].node,
+                    current_rule,
+                    plans,
+                    ir,
+                    emitter,
+                    ctx,
                 );
             }
             if let Some(table) = dispatch {
@@ -105,9 +110,8 @@ fn compile_prettify_node<E: Emitter>(
                 let branch_data: Vec<_> = branches
                     .iter()
                     .map(|b| {
-                        let body = compile_prettify_node(
-                            &b.node, current_rule, plans, ir, emitter, ctx,
-                        );
+                        let body =
+                            compile_prettify_node(&b.node, current_rule, plans, ir, emitter, ctx);
                         let is_atomic = analysis::emits_only_on_success(&b.node, plans, ir);
                         (body, is_atomic)
                     })
@@ -128,24 +132,24 @@ fn compile_prettify_node<E: Emitter>(
             if iterated {
                 if let SeparatorPolicy::Custom(sep) = &plan.policy.separator {
                     if let Some((main, silent, pos)) = split_inner_for_sep(inner, sep, ir) {
-                        let main_out = compile_prettify_node(
-                            &main, current_rule, plans, ir, emitter, ctx,
-                        );
-                        let silent_inner = compile_prettify_node(
-                            &silent, current_rule, plans, ir, emitter, ctx,
-                        );
+                        let main_out =
+                            compile_prettify_node(&main, current_rule, plans, ir, emitter, ctx);
+                        let silent_inner =
+                            compile_prettify_node(&silent, current_rule, plans, ir, emitter, ctx);
                         let silent_out = emitter.emit_prettify_silent(silent_inner, ctx);
                         match pos {
                             SilentPosition::After => {
                                 // `main << sep` — main emits first, sep-
                                 // parse is silent, outer Repeat emits the
                                 // pprint separator *between* iterations.
-                                let combined = emitter.emit_prettify_seq(
-                                    vec![main_out, silent_out],
-                                    ctx,
-                                );
+                                let combined =
+                                    emitter.emit_prettify_seq(vec![main_out, silent_out], ctx);
                                 return emitter.emit_prettify_repeat(
-                                    combined, *lo, *hi, &plan.policy, ctx,
+                                    combined,
+                                    *lo,
+                                    *hi,
+                                    &plan.policy,
+                                    ctx,
                                 );
                             }
                             SilentPosition::Before => {
@@ -156,16 +160,17 @@ fn compile_prettify_node<E: Emitter>(
                                 // separator token, then emit main. The
                                 // outer Repeat runs with `None` separator
                                 // policy to avoid double-emitting.
-                                let sep_out =
-                                    emitter.emit_prettify_sep_inline(sep, ctx);
-                                let combined = emitter.emit_prettify_seq(
-                                    vec![sep_out, silent_out, main_out],
-                                    ctx,
-                                );
+                                let sep_out = emitter.emit_prettify_sep_inline(sep, ctx);
+                                let combined = emitter
+                                    .emit_prettify_seq(vec![sep_out, silent_out, main_out], ctx);
                                 let mut inline_policy = plan.policy.clone();
                                 inline_policy.separator = SeparatorPolicy::None;
                                 return emitter.emit_prettify_repeat(
-                                    combined, *lo, *hi, &inline_policy, ctx,
+                                    combined,
+                                    *lo,
+                                    *hi,
+                                    &inline_policy,
+                                    ctx,
                                 );
                             }
                         }
@@ -227,7 +232,8 @@ fn compile_prettify_node<E: Emitter>(
                     compile_prettify_node(&arm.continuation, current_rule, plans, ir, emitter, ctx)
                 })
                 .collect();
-            let fallback_out = compile_prettify_node(fallback, current_rule, plans, ir, emitter, ctx);
+            let fallback_out =
+                compile_prettify_node(fallback, current_rule, plans, ir, emitter, ctx);
             // Combine as sequential: token + dispatch arms (emitter handles structure).
             emitter.emit_prettify_seq(
                 std::iter::once(token_out)

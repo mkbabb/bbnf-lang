@@ -19,10 +19,8 @@ mod css_types {
 
 use ::bbnf::grammar::generated::css_l4::*;
 
-
 fn assert_parses_full(label: &str, path: &str) {
-    let input = std::fs::read_to_string(path)
-        .unwrap_or_else(|e| panic!("read {path}: {e}"));
+    let input = std::fs::read_to_string(path).unwrap_or_else(|e| panic!("read {path}: {e}"));
     let size = input.len();
     match CssL4Parser::parse(&input) {
         Ok(doc) => {
@@ -35,9 +33,7 @@ fn assert_parses_full(label: &str, path: &str) {
             // non-empty typed graph.
             let rule_count = doc.rules(doc.root().rules).len();
             let decl_count = doc.walk_declarations().count();
-            eprintln!(
-                "{label}: {size} bytes -> rules={rule_count} decls={decl_count}"
-            );
+            eprintln!("{label}: {size} bytes -> rules={rule_count} decls={decl_count}");
         }
         Err(e) => panic!(
             "{label} ({size} bytes) failed: {e:?} — \

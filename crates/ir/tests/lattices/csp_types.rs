@@ -9,9 +9,16 @@ fn make_ir(rules: Vec<IrRule>, fns: Vec<FnDescriptor>) -> GrammarIR {
         rules,
         entry,
         strings: vec![
-            "rule0".into(), "rule1".into(), "rule2".into(),
-            "hello".into(), "world".into(), "[a-z]+".into(),
-            "[0-9]+".into(), "f64".into(), "a".into(), "b".into(),
+            "rule0".into(),
+            "rule1".into(),
+            "rule2".into(),
+            "hello".into(),
+            "world".into(),
+            "[a-z]+".into(),
+            "[0-9]+".into(),
+            "f64".into(),
+            "a".into(),
+            "b".into(),
             "x".into(),
         ],
         fns,
@@ -26,7 +33,9 @@ fn make_ir(rules: Vec<IrRule>, fns: Vec<FnDescriptor>) -> GrammarIR {
         context_facts: std::collections::HashMap::new(),
         has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
-        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
+        dag: None,
+        cost_config: bbnf_ir::CostConfig::default(),
+        type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
@@ -37,9 +46,10 @@ fn make_ir(rules: Vec<IrRule>, fns: Vec<FnDescriptor>) -> GrammarIR {
         debug_labels: vec![],
         structural_alphabet: None,
         push_fingerprint: None,
-            dedup_eligible_rules: Vec::new(),
+        dedup_eligible_rules: Vec::new(),
 
-            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
+        shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
+        ),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -80,7 +90,10 @@ fn solve_rule_type(ir: &GrammarIR, rule_id: RuleId) -> TypeDesc {
 fn csp_seq_of_spans_compresses() {
     // value = "hello" , /[a-z]+/ → Seq(Span, Span) → Span (compressed)
     let ir = make_ir(
-        vec![rule(0, IrNode::Seq(vec![IrNode::Literal(3), IrNode::Regex(5)]))],
+        vec![rule(
+            0,
+            IrNode::Seq(vec![IrNode::Literal(3), IrNode::Regex(5)]),
+        )],
         vec![],
     );
     assert_eq!(solve_rule_type(&ir, 0), TypeDesc::Span);
@@ -94,8 +107,14 @@ fn csp_alt_homogeneous_spans() {
             0,
             IrNode::Alt(
                 vec![
-                    AltBranch { node: IrNode::Literal(8), first_set: None },
-                    AltBranch { node: IrNode::Literal(9), first_set: None },
+                    AltBranch {
+                        node: IrNode::Literal(8),
+                        first_set: None,
+                    },
+                    AltBranch {
+                        node: IrNode::Literal(9),
+                        first_set: None,
+                    },
                 ],
                 None,
             ),
@@ -181,10 +200,7 @@ fn csp_skip_keeps_left() {
     let ir = make_ir(
         vec![rule(
             0,
-            IrNode::Skip(
-                Box::new(IrNode::Literal(8)),
-                Box::new(IrNode::Literal(9)),
-            ),
+            IrNode::Skip(Box::new(IrNode::Literal(8)), Box::new(IrNode::Literal(9))),
         )],
         vec![],
     );
@@ -197,10 +213,7 @@ fn csp_next_keeps_right() {
     let ir = make_ir(
         vec![rule(
             0,
-            IrNode::Next(
-                Box::new(IrNode::Literal(8)),
-                Box::new(IrNode::Literal(9)),
-            ),
+            IrNode::Next(Box::new(IrNode::Literal(8)), Box::new(IrNode::Literal(9))),
         )],
         vec![],
     );
@@ -218,7 +231,9 @@ fn csp_number_convert() {
                 fn_id: 0,
             },
         )],
-        vec![FnDescriptor::NumberConvert { allow_leading_dot: false }],
+        vec![FnDescriptor::NumberConvert {
+            allow_leading_dot: false,
+        }],
     );
     assert_eq!(solve_rule_type(&ir, 0), TypeDesc::F64);
 }

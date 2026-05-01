@@ -59,7 +59,6 @@ mod css_types {
 
 use ::bbnf::grammar::generated::css_l4::*;
 
-
 /// Extract `(name, hex)` pairs from the namedColor section of
 /// `grammar/css/l4/color.bbnf`. Each grammar line of the form
 /// `"name" -> 0xRRGGBBAAu32` yields one pair.
@@ -100,7 +99,8 @@ fn load_named_color_map() -> Vec<(String, u32)> {
         let name_end = trimmed[name_start + 1..]
             .find('"')
             .expect("closing quote present")
-            + name_start + 1;
+            + name_start
+            + 1;
         let name = trimmed[name_start + 1..name_end].to_string();
 
         let hex_digits: String = after_arrow[2..]

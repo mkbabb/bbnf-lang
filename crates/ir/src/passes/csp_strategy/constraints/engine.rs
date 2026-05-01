@@ -82,12 +82,12 @@
 //! compiled-engine family and let the existing cost model decide
 //! which engine the component should settle on.
 
-use csp_solver::constraint::{ImplicationConstraint, VarId};
 use csp_solver::Csp;
+use csp_solver::constraint::{ImplicationConstraint, VarId};
 
 use super::ConstraintCtx;
-use crate::passes::csp_strategy::{RegexEngine, StrategyDomain, StrategyValue};
 use crate::GrammarIR;
+use crate::passes::csp_strategy::{RegexEngine, StrategyDomain, StrategyValue};
 
 /// Install the `EnginePropagation` pairwise equality
 /// constraint across every regex variable in the component.

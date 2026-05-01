@@ -161,10 +161,7 @@ fn typed_leaf_rules_project_to_newtype_or_struct() {
         "`number` projects to NewtypeWrapper or Struct (got {:?})",
         number.kind,
     );
-    assert!(
-        number.field_count() >= 1,
-        "`number` has at least one field",
-    );
+    assert!(number.field_count() >= 1, "`number` has at least one field",);
 
     // ── `boolean` — `... -> true | ... -> false` is an Alt with two
     //    Bool branches; projects to TaggedEnum or UntaggedEnum (when

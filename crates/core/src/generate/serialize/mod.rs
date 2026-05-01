@@ -68,8 +68,8 @@ pub fn generate_serialize_methods(ir: &GrammarIR, ctx: &IrCodegenCtx) -> TokenSt
         // Check if the entry rule has a serialize function (non-transparent
         // and non-TransparentElide). If it does, call it directly. Otherwise,
         // use __dispatch_serialize which routes on variant_idx.
-        let entry_has_method = !entry_rule.meta.is_transparent
-            && serialize::rule_pushes_tape_record(ir, entry_rule);
+        let entry_has_method =
+            !entry_rule.meta.is_transparent && serialize::rule_pushes_tape_record(ir, entry_rule);
 
         if entry_has_method {
             methods.push(quote! {

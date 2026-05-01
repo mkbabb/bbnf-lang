@@ -70,7 +70,10 @@ impl Default for BackoffScheduler {
 impl<N: Language, A: Analysis<N>> Scheduler<N, A> for BackoffScheduler {
     fn run(&self, egraph: &mut EGraph<N, A>, rules: &[&dyn RewriteFn<N, A>]) -> RunReport {
         let mut report = RunReport::default();
-        report.per_rule = rules.iter().map(|r| (r.name().to_string(), 0usize)).collect();
+        report.per_rule = rules
+            .iter()
+            .map(|r| (r.name().to_string(), 0usize))
+            .collect();
         let initial_nodes = egraph.total_nodes().max(1);
 
         for iter in 0..self.iter_limit {

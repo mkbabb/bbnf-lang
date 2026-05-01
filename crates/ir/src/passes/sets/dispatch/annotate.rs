@@ -115,7 +115,14 @@ pub(super) fn annotate_node(
         | IrNode::Negate(inner)
         | IrNode::OptionalWhitespace(inner)
         | IrNode::Map { inner, .. } => {
-            annotate_node(inner, containing_follow, dag, rule_metas, strings, eligibility);
+            annotate_node(
+                inner,
+                containing_follow,
+                dag,
+                rule_metas,
+                strings,
+                eligibility,
+            );
         }
         IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
             annotate_node(a, containing_follow, dag, rule_metas, strings, eligibility);
@@ -126,7 +133,14 @@ pub(super) fn annotate_node(
             arms,
             fallback,
         } => {
-            annotate_node(token, containing_follow, dag, rule_metas, strings, eligibility);
+            annotate_node(
+                token,
+                containing_follow,
+                dag,
+                rule_metas,
+                strings,
+                eligibility,
+            );
             for arm in arms {
                 annotate_node(
                     &mut arm.continuation,

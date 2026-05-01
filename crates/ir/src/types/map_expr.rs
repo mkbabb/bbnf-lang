@@ -42,16 +42,30 @@ pub enum MapExpr {
 /// Binary operators for value expressions.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Copy)]
 pub enum MapBinOp {
-    Add, Sub, Mul, Div, Mod,
-    Eq, Ne, Lt, Gt, Le, Ge,
-    And, Or,
-    BitAnd, BitOr, Shl, Shr,
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Mod,
+    Eq,
+    Ne,
+    Lt,
+    Gt,
+    Le,
+    Ge,
+    And,
+    Or,
+    BitAnd,
+    BitOr,
+    Shl,
+    Shr,
 }
 
 /// Unary operators for value expressions.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Copy)]
 pub enum MapUnaryOp {
-    Neg, Not,
+    Neg,
+    Not,
 }
 
 impl MapExpr {
@@ -98,30 +112,48 @@ impl MapExpr {
 
         // Then fold this node.
         let folded = match self {
-            MapExpr::BinOp { op, lhs, rhs } => {
-                match (op, lhs.as_ref(), rhs.as_ref()) {
-                    (MapBinOp::Add, MapExpr::IntLit(a), MapExpr::IntLit(b)) => Some(MapExpr::IntLit(a.wrapping_add(*b))),
-                    (MapBinOp::Sub, MapExpr::IntLit(a), MapExpr::IntLit(b)) => Some(MapExpr::IntLit(a.wrapping_sub(*b))),
-                    (MapBinOp::Mul, MapExpr::IntLit(a), MapExpr::IntLit(b)) => Some(MapExpr::IntLit(a.wrapping_mul(*b))),
-                    (MapBinOp::Div, MapExpr::IntLit(a), MapExpr::IntLit(b)) if *b != 0 => Some(MapExpr::IntLit(a / b)),
-                    (MapBinOp::Mod, MapExpr::IntLit(a), MapExpr::IntLit(b)) if *b != 0 => Some(MapExpr::IntLit(a % b)),
-                    (MapBinOp::Add, MapExpr::FloatLit(a), MapExpr::FloatLit(b)) => Some(MapExpr::FloatLit(a + b)),
-                    (MapBinOp::Sub, MapExpr::FloatLit(a), MapExpr::FloatLit(b)) => Some(MapExpr::FloatLit(a - b)),
-                    (MapBinOp::Mul, MapExpr::FloatLit(a), MapExpr::FloatLit(b)) => Some(MapExpr::FloatLit(a * b)),
-                    (MapBinOp::Div, MapExpr::FloatLit(a), MapExpr::FloatLit(b)) if *b != 0.0 => Some(MapExpr::FloatLit(a / b)),
-                    (MapBinOp::And, MapExpr::BoolLit(a), MapExpr::BoolLit(b)) => Some(MapExpr::BoolLit(*a && *b)),
-                    (MapBinOp::Or, MapExpr::BoolLit(a), MapExpr::BoolLit(b)) => Some(MapExpr::BoolLit(*a || *b)),
-                    _ => None,
+            MapExpr::BinOp { op, lhs, rhs } => match (op, lhs.as_ref(), rhs.as_ref()) {
+                (MapBinOp::Add, MapExpr::IntLit(a), MapExpr::IntLit(b)) => {
+                    Some(MapExpr::IntLit(a.wrapping_add(*b)))
                 }
-            }
-            MapExpr::UnaryOp { op, inner } => {
-                match (op, inner.as_ref()) {
-                    (MapUnaryOp::Neg, MapExpr::IntLit(a)) => Some(MapExpr::IntLit(-a)),
-                    (MapUnaryOp::Neg, MapExpr::FloatLit(a)) => Some(MapExpr::FloatLit(-a)),
-                    (MapUnaryOp::Not, MapExpr::BoolLit(a)) => Some(MapExpr::BoolLit(!a)),
-                    _ => None,
+                (MapBinOp::Sub, MapExpr::IntLit(a), MapExpr::IntLit(b)) => {
+                    Some(MapExpr::IntLit(a.wrapping_sub(*b)))
                 }
-            }
+                (MapBinOp::Mul, MapExpr::IntLit(a), MapExpr::IntLit(b)) => {
+                    Some(MapExpr::IntLit(a.wrapping_mul(*b)))
+                }
+                (MapBinOp::Div, MapExpr::IntLit(a), MapExpr::IntLit(b)) if *b != 0 => {
+                    Some(MapExpr::IntLit(a / b))
+                }
+                (MapBinOp::Mod, MapExpr::IntLit(a), MapExpr::IntLit(b)) if *b != 0 => {
+                    Some(MapExpr::IntLit(a % b))
+                }
+                (MapBinOp::Add, MapExpr::FloatLit(a), MapExpr::FloatLit(b)) => {
+                    Some(MapExpr::FloatLit(a + b))
+                }
+                (MapBinOp::Sub, MapExpr::FloatLit(a), MapExpr::FloatLit(b)) => {
+                    Some(MapExpr::FloatLit(a - b))
+                }
+                (MapBinOp::Mul, MapExpr::FloatLit(a), MapExpr::FloatLit(b)) => {
+                    Some(MapExpr::FloatLit(a * b))
+                }
+                (MapBinOp::Div, MapExpr::FloatLit(a), MapExpr::FloatLit(b)) if *b != 0.0 => {
+                    Some(MapExpr::FloatLit(a / b))
+                }
+                (MapBinOp::And, MapExpr::BoolLit(a), MapExpr::BoolLit(b)) => {
+                    Some(MapExpr::BoolLit(*a && *b))
+                }
+                (MapBinOp::Or, MapExpr::BoolLit(a), MapExpr::BoolLit(b)) => {
+                    Some(MapExpr::BoolLit(*a || *b))
+                }
+                _ => None,
+            },
+            MapExpr::UnaryOp { op, inner } => match (op, inner.as_ref()) {
+                (MapUnaryOp::Neg, MapExpr::IntLit(a)) => Some(MapExpr::IntLit(-a)),
+                (MapUnaryOp::Neg, MapExpr::FloatLit(a)) => Some(MapExpr::FloatLit(-a)),
+                (MapUnaryOp::Not, MapExpr::BoolLit(a)) => Some(MapExpr::BoolLit(!a)),
+                _ => None,
+            },
             _ => None,
         };
         if let Some(result) = folded {
@@ -132,7 +164,10 @@ impl MapExpr {
     /// Returns true if this is a simple constant (no input dependency).
     pub fn is_constant(&self) -> bool {
         match self {
-            MapExpr::IntLit(_) | MapExpr::FloatLit(_) | MapExpr::BoolLit(_) | MapExpr::StringLit(_) => true,
+            MapExpr::IntLit(_)
+            | MapExpr::FloatLit(_)
+            | MapExpr::BoolLit(_)
+            | MapExpr::StringLit(_) => true,
             MapExpr::Input | MapExpr::InputProp { .. } => false,
             MapExpr::FnCall { args, .. } => args.iter().all(|a| a.is_constant()),
             MapExpr::BinOp { lhs, rhs, .. } => lhs.is_constant() && rhs.is_constant(),

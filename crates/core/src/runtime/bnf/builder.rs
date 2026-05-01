@@ -3,11 +3,11 @@
 
 use bbnf_ir::registry::StructLayout;
 
-use crate::runtime::builder::StructBuilder;
-use crate::runtime::handle::CompoundHandle;
 use crate::runtime::bnf::arena::{BnfArena, BnfCompound, BnfCompoundKind};
 use crate::runtime::bnf::document::BnfDocument;
 use crate::runtime::bnf::value::BnfValue;
+use crate::runtime::builder::StructBuilder;
+use crate::runtime::handle::CompoundHandle;
 
 #[derive(Debug, Clone)]
 struct OpenFrame<'p> {
@@ -34,7 +34,9 @@ pub struct BnfStructCheckpoint<'p> {
 }
 
 impl<'p> Default for BnfStructBuilder<'p> {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<'p> BnfStructBuilder<'p> {
@@ -104,13 +106,20 @@ impl<'p> StructBuilder for BnfStructBuilder<'p> {
 
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
         let kind = BnfCompoundKind::from_rule_name(layout.rule_name.as_str());
-        self.stack.push(OpenFrame { kind, branch_tag: None, children: Vec::new() });
+        self.stack.push(OpenFrame {
+            kind,
+            branch_tag: None,
+            children: Vec::new(),
+        });
         self.next_handle = self.next_handle.wrapping_add(1);
         CompoundHandle::new(self.next_handle, 0)
     }
 
     fn end_compound(&mut self, _handle: CompoundHandle) {
-        let frame = self.stack.pop().expect("BnfStructBuilder::end_compound on empty stack");
+        let frame = self
+            .stack
+            .pop()
+            .expect("BnfStructBuilder::end_compound on empty stack");
         let id = self.arena.push_compound(BnfCompound {
             kind: frame.kind,
             branch_tag: frame.branch_tag,
@@ -119,10 +128,22 @@ impl<'p> StructBuilder for BnfStructBuilder<'p> {
         self.deposit(BnfValue::Compound(id));
     }
 
-    #[inline] fn push_leaf_with_f64(&mut self, _v: f64)  { self.deposit(BnfValue::Unit); }
-    #[inline] fn push_leaf_with_i64(&mut self, _v: i64)  { self.deposit(BnfValue::Unit); }
-    #[inline] fn push_leaf_with_u64(&mut self, _v: u64)  { self.deposit(BnfValue::Unit); }
-    #[inline] fn push_leaf_with_bool(&mut self, _v: bool) { self.deposit(BnfValue::Unit); }
+    #[inline]
+    fn push_leaf_with_f64(&mut self, _v: f64) {
+        self.deposit(BnfValue::Unit);
+    }
+    #[inline]
+    fn push_leaf_with_i64(&mut self, _v: i64) {
+        self.deposit(BnfValue::Unit);
+    }
+    #[inline]
+    fn push_leaf_with_u64(&mut self, _v: u64) {
+        self.deposit(BnfValue::Unit);
+    }
+    #[inline]
+    fn push_leaf_with_bool(&mut self, _v: bool) {
+        self.deposit(BnfValue::Unit);
+    }
 
     #[inline]
     fn push_leaf_with_str(&mut self, value: &str) {

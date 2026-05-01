@@ -47,10 +47,7 @@ pub(crate) enum GroupKind {
 /// starts with `->` / `=>`, the mapping group carries the value
 /// expression and optional type annotation as children of the
 /// mapping subtree.
-pub(crate) fn lower_mapped_factor<'a>(
-    node: BbnfView<'a, 'a>,
-    ctx: &mut LowerCtx<'a>,
-) -> IrNode {
+pub(crate) fn lower_mapped_factor<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx<'a>) -> IrNode {
     // Under struct-direct, `factor` is inlined into `mapped_factor`,
     // so this compound's children are
     //   `[big_comment?, term, modifier?, big_comment?, mapping?]`
@@ -139,9 +136,7 @@ pub(crate) fn lower_mapped_factor<'a>(
 /// descend depth-first looking for the first non-empty,
 /// non-arrow-token candidate that's NOT a type-annotation
 /// compound.
-fn find_value_expr_child<'a>(
-    node: BbnfView<'a, 'a>,
-) -> Option<BbnfView<'a, 'a>> {
+fn find_value_expr_child<'a>(node: BbnfView<'a, 'a>) -> Option<BbnfView<'a, 'a>> {
     fn is_value_expr_head_kind(kind: Option<BbnfCompoundKind>) -> bool {
         matches!(
             kind,
@@ -162,10 +157,7 @@ fn find_value_expr_child<'a>(
             ),
         )
     }
-    fn descend<'a>(
-        view: BbnfView<'a, 'a>,
-        out: &mut Option<BbnfView<'a, 'a>>,
-    ) {
+    fn descend<'a>(view: BbnfView<'a, 'a>, out: &mut Option<BbnfView<'a, 'a>>) {
         if out.is_some() {
             return;
         }
@@ -225,12 +217,8 @@ fn find_value_expr_child<'a>(
 /// `type_annotation = ":" ?w , type_name` — its compound kind is
 /// `Other` (sub-grammar), discriminated structurally by the
 /// leading `:` byte of its span.
-fn find_type_annotation_child<'a>(
-    node: BbnfView<'a, 'a>,
-) -> Option<BbnfView<'a, 'a>> {
-    fn descend<'a>(
-        view: BbnfView<'a, 'a>,
-    ) -> Option<BbnfView<'a, 'a>> {
+fn find_type_annotation_child<'a>(node: BbnfView<'a, 'a>) -> Option<BbnfView<'a, 'a>> {
+    fn descend<'a>(view: BbnfView<'a, 'a>) -> Option<BbnfView<'a, 'a>> {
         let trimmed = view.span_text().trim();
         if trimmed.starts_with(':') {
             // Confirm it's not just a literal `:` standalone — a
@@ -256,9 +244,7 @@ fn find_type_annotation_child<'a>(
 /// wrapped in one or more anonymous (`Other`-kinded) compounds.
 /// Collapse single-anonymous-child chains until the view's direct
 /// children are the semantic slots.
-fn peel_mapped_factor_body<'a>(
-    mut view: BbnfView<'a, 'a>,
-) -> BbnfView<'a, 'a> {
+fn peel_mapped_factor_body<'a>(mut view: BbnfView<'a, 'a>) -> BbnfView<'a, 'a> {
     loop {
         let children: Vec<BbnfView<'a, 'a>> = view.children().collect();
         if children.len() != 1 {
@@ -319,9 +305,7 @@ pub(super) fn lower_grouped_term<'a>(
 /// `Concatenation`, `BinaryFactor`, `MappedFactor`, `Factor`,
 /// `Term`). First match wins — the outermost class that surfaces
 /// is the root of the inner subtree.
-fn find_inner_expression<'a>(
-    node: BbnfView<'a, 'a>,
-) -> Option<BbnfView<'a, 'a>> {
+fn find_inner_expression<'a>(node: BbnfView<'a, 'a>) -> Option<BbnfView<'a, 'a>> {
     const EXPRESSION_KINDS: &[BbnfCompoundKind] = &[
         BbnfCompoundKind::Rhs,
         BbnfCompoundKind::Closure,
@@ -419,11 +403,7 @@ fn lower_map_arrow<'a>(
         };
         let is_bool = (t.starts_with("true") && is_word_boundary(t, 4))
             || (t.starts_with("false") && is_word_boundary(t, 5));
-        if is_bool {
-            Some(TypeDesc::Bool)
-        } else {
-            None
-        }
+        if is_bool { Some(TypeDesc::Bool) } else { None }
     });
 
     // @host return type propagation.
@@ -486,9 +466,7 @@ fn try_specialize_map_fn(inner: &IrNode, fn_id: FnId, ctx: &mut LowerCtx<'_>) ->
                 {
                     let fn_path_str = ctx.strings.resolve(*name).to_owned();
                     let path_sid = ctx.strings.intern(&fn_path_str);
-                    return ctx
-                        .fns
-                        .push(FnDescriptor::HexConvert { fn_path: path_sid });
+                    return ctx.fns.push(FnDescriptor::HexConvert { fn_path: path_sid });
                 }
             }
             return fn_id;
@@ -506,7 +484,10 @@ fn try_specialize_map_fn(inner: &IrNode, fn_id: FnId, ctx: &mut LowerCtx<'_>) ->
     match type_name_owned.as_str() {
         "f64" => {
             if matches!(expr, MapExpr::Input) {
-                if let RegexClass::Numeric { allow_leading_dot, .. } = classify_regex(&pattern) {
+                if let RegexClass::Numeric {
+                    allow_leading_dot, ..
+                } = classify_regex(&pattern)
+                {
                     ctx.fns
                         .push(FnDescriptor::NumberConvert { allow_leading_dot })
                 } else {

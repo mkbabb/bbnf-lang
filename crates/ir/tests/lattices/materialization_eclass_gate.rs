@@ -25,6 +25,7 @@
 
 use std::collections::HashMap;
 
+use bbnf_ir::egraph::analysis::{EClassFacts, WidthBound};
 use bbnf_ir::passes::materialization::{
     EClassFactsMap, MaterializationClass, classify_materialization,
     classify_materialization_with_facts, compute_eclass_facts,
@@ -32,7 +33,6 @@ use bbnf_ir::passes::materialization::{
 use bbnf_ir::{
     AltBranch, CostConfig, GrammarIR, IrNode, IrRule, RuleMeta, StringId, TypeDescInterner,
 };
-use bbnf_ir::egraph::analysis::{EClassFacts, WidthBound};
 use bbnf_regex::sets::charset::CharSet128;
 
 // ── Fixture grammar helpers ──────────────────────────────────────────
@@ -68,9 +68,10 @@ fn make_ir_with_entry(rules: Vec<IrRule>, strings: Vec<String>, entry: u32) -> G
         payload_layouts: HashMap::new(),
         structural_alphabet: None,
         push_fingerprint: None,
-            dedup_eligible_rules: Vec::new(),
+        dedup_eligible_rules: Vec::new(),
 
-            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
+        shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
+        ),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -99,9 +100,7 @@ fn rule_class(ir: &GrammarIR, rule_id: u32) -> MaterializationClass {
     let dag = ir.dag.as_ref().expect("dag present");
     let body = &ir.rules[rule_id as usize].body;
     let id = dag.node_for(body).expect("body interned in dag");
-    *ir.materialization
-        .get(&id)
-        .expect("rule body classified")
+    *ir.materialization.get(&id).expect("rule body classified")
 }
 
 /// Look up the `NodeId` for a rule's body.
@@ -117,7 +116,10 @@ fn all_bits_agree() -> EClassFacts {
     EClassFacts {
         first_set: CharSet128::new(),
         nullable: true,
-        width: WidthBound { min: 0, max: Some(0) },
+        width: WidthBound {
+            min: 0,
+            max: Some(0),
+        },
         literal_sid: None,
         regex_sid: None,
         elision_safe: true,
@@ -135,7 +137,10 @@ fn fixed_shape_false_only() -> EClassFacts {
     EClassFacts {
         first_set: CharSet128::new(),
         nullable: true,
-        width: WidthBound { min: 0, max: Some(0) },
+        width: WidthBound {
+            min: 0,
+            max: Some(0),
+        },
         literal_sid: None,
         regex_sid: None,
         elision_safe: true,
@@ -160,10 +165,7 @@ fn structural_and_facts_agree_yields_transparent_elide() {
     // Two rules: rule 0 (Epsilon body, tested) + rule 1 (Literal body,
     // entry rule). rule 0 is NOT referenced from rule 1, so pin_sweep
     // leaves it alone.
-    let rules = vec![
-        rule(0, 0, IrNode::Epsilon),
-        rule(1, 1, IrNode::Literal(2)),
-    ];
+    let rules = vec![rule(0, 0, IrNode::Epsilon), rule(1, 1, IrNode::Literal(2))];
     let mut ir = make_ir_with_entry(rules, strings, 1);
 
     // Happy path: compute facts via the live helper. Since the body is
@@ -183,17 +185,10 @@ fn structural_and_facts_agree_yields_transparent_elide() {
 /// lattice disagrees.
 #[test]
 fn is_fixed_shape_false_demotes_transparent_elide_to_tape_span_only() {
-    let strings = vec![
-        "test".to_string(),
-        "entry".to_string(),
-        "x".to_string(),
-    ];
+    let strings = vec!["test".to_string(), "entry".to_string(), "x".to_string()];
     // rule 0 body is Epsilon — structurally TransparentElide.
     // rule 1 body is Literal — entry rule, isolates the test.
-    let rules = vec![
-        rule(0, 0, IrNode::Epsilon),
-        rule(1, 1, IrNode::Literal(2)),
-    ];
+    let rules = vec![rule(0, 0, IrNode::Epsilon), rule(1, 1, IrNode::Literal(2))];
     let mut ir = make_ir_with_entry(rules, strings, 1);
 
     // Manually build a fact map that DISAGREES on is_fixed_shape for
@@ -215,15 +210,8 @@ fn is_fixed_shape_false_demotes_transparent_elide_to_tape_span_only() {
 /// fact record with `elision_safe == false` also demotes.
 #[test]
 fn elision_safe_false_demotes_transparent_elide() {
-    let strings = vec![
-        "test".to_string(),
-        "entry".to_string(),
-        "x".to_string(),
-    ];
-    let rules = vec![
-        rule(0, 0, IrNode::Epsilon),
-        rule(1, 1, IrNode::Literal(2)),
-    ];
+    let strings = vec!["test".to_string(), "entry".to_string(), "x".to_string()];
+    let rules = vec![rule(0, 0, IrNode::Epsilon), rule(1, 1, IrNode::Literal(2))];
     let mut ir = make_ir_with_entry(rules, strings, 1);
 
     let rule0_body_id = rule_body_id(&ir, 0);
@@ -239,15 +227,8 @@ fn elision_safe_false_demotes_transparent_elide() {
 /// `closure_free == false` also demotes.
 #[test]
 fn closure_free_false_demotes_transparent_elide() {
-    let strings = vec![
-        "test".to_string(),
-        "entry".to_string(),
-        "x".to_string(),
-    ];
-    let rules = vec![
-        rule(0, 0, IrNode::Epsilon),
-        rule(1, 1, IrNode::Literal(2)),
-    ];
+    let strings = vec!["test".to_string(), "entry".to_string(), "x".to_string()];
+    let rules = vec![rule(0, 0, IrNode::Epsilon), rule(1, 1, IrNode::Literal(2))];
     let mut ir = make_ir_with_entry(rules, strings, 1);
 
     let rule0_body_id = rule_body_id(&ir, 0);
@@ -263,15 +244,8 @@ fn closure_free_false_demotes_transparent_elide() {
 /// `all_descendants_elidable == false` also demotes.
 #[test]
 fn all_descendants_elidable_false_demotes_transparent_elide() {
-    let strings = vec![
-        "test".to_string(),
-        "entry".to_string(),
-        "x".to_string(),
-    ];
-    let rules = vec![
-        rule(0, 0, IrNode::Epsilon),
-        rule(1, 1, IrNode::Literal(2)),
-    ];
+    let strings = vec!["test".to_string(), "entry".to_string(), "x".to_string()];
+    let rules = vec![rule(0, 0, IrNode::Epsilon), rule(1, 1, IrNode::Literal(2))];
     let mut ir = make_ir_with_entry(rules, strings, 1);
 
     let rule0_body_id = rule_body_id(&ir, 0);
@@ -294,15 +268,8 @@ fn all_descendants_elidable_false_demotes_transparent_elide() {
 /// classifier must still produce a usable classification.
 #[test]
 fn empty_facts_map_falls_back_to_structural_transparent_elide() {
-    let strings = vec![
-        "test".to_string(),
-        "entry".to_string(),
-        "x".to_string(),
-    ];
-    let rules = vec![
-        rule(0, 0, IrNode::Epsilon),
-        rule(1, 1, IrNode::Literal(2)),
-    ];
+    let strings = vec!["test".to_string(), "entry".to_string(), "x".to_string()];
+    let rules = vec![rule(0, 0, IrNode::Epsilon), rule(1, 1, IrNode::Literal(2))];
     let mut ir = make_ir_with_entry(rules, strings, 1);
 
     // Empty facts map → fallback. The structural Epsilon path still
@@ -319,15 +286,8 @@ fn empty_facts_map_falls_back_to_structural_transparent_elide() {
 /// are independent.
 #[test]
 fn partial_facts_map_falls_back_per_node() {
-    let strings = vec![
-        "test".to_string(),
-        "entry".to_string(),
-        "x".to_string(),
-    ];
-    let rules = vec![
-        rule(0, 0, IrNode::Epsilon),
-        rule(1, 1, IrNode::Literal(2)),
-    ];
+    let strings = vec!["test".to_string(), "entry".to_string(), "x".to_string()];
+    let rules = vec![rule(0, 0, IrNode::Epsilon), rule(1, 1, IrNode::Literal(2))];
     let mut ir = make_ir_with_entry(rules, strings, 1);
 
     // Populate facts for a DIFFERENT node (rule 1's body), leaving
@@ -387,18 +347,20 @@ fn compute_eclass_facts_literal_all_bits_permissive() {
 /// correctly.
 #[test]
 fn compute_eclass_facts_alt_is_not_fixed_shape() {
-    let strings = vec![
-        "entry".to_string(),
-        "a".to_string(),
-        "b".to_string(),
-    ];
+    let strings = vec!["entry".to_string(), "a".to_string(), "b".to_string()];
     let rules = vec![rule(
         0,
         0,
         IrNode::Alt(
             vec![
-                AltBranch { node: IrNode::Literal(1), first_set: None },
-                AltBranch { node: IrNode::Literal(2), first_set: None },
+                AltBranch {
+                    node: IrNode::Literal(1),
+                    first_set: None,
+                },
+                AltBranch {
+                    node: IrNode::Literal(2),
+                    first_set: None,
+                },
             ],
             None,
         ),

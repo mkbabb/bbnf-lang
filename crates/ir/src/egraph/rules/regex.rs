@@ -91,12 +91,7 @@ impl<A: Analysis<GrammarENode>> Rewrite<GrammarENode, A> for DeduplicateAltBranc
         matches
     }
 
-    fn apply(
-        &self,
-        egraph: &mut EGraph<GrammarENode, A>,
-        class_id: Id,
-        m: Self::Match,
-    ) {
+    fn apply(&self, egraph: &mut EGraph<GrammarENode, A>, class_id: Id, m: Self::Match) {
         let new_id = if m.deduped.len() == 1 {
             m.deduped[0]
         } else {
@@ -182,12 +177,7 @@ impl<A: Analysis<GrammarENode>> Rewrite<GrammarENode, A> for SupersetAbsorbAlt {
         matches
     }
 
-    fn apply(
-        &self,
-        egraph: &mut EGraph<GrammarENode, A>,
-        class_id: Id,
-        m: Self::Match,
-    ) {
+    fn apply(&self, egraph: &mut EGraph<GrammarENode, A>, class_id: Id, m: Self::Match) {
         let new_id = if m.survivors.len() == 1 {
             m.survivors[0]
         } else {
@@ -316,12 +306,7 @@ impl<A: Analysis<GrammarENode>> Rewrite<GrammarENode, A> for FuseAltRegexBranche
         matches
     }
 
-    fn apply(
-        &self,
-        egraph: &mut EGraph<GrammarENode, A>,
-        class_id: Id,
-        m: Self::Match,
-    ) {
+    fn apply(&self, egraph: &mut EGraph<GrammarENode, A>, class_id: Id, m: Self::Match) {
         let new_regex_id = egraph.add(GrammarENode::Regex(m.fused_sid));
         egraph.union(class_id, new_regex_id);
     }
@@ -427,12 +412,7 @@ impl<A: Analysis<GrammarENode>> Rewrite<GrammarENode, A> for UnionMergeAlt {
         matches
     }
 
-    fn apply(
-        &self,
-        egraph: &mut EGraph<GrammarENode, A>,
-        class_id: Id,
-        m: Self::Match,
-    ) {
+    fn apply(&self, egraph: &mut EGraph<GrammarENode, A>, class_id: Id, m: Self::Match) {
         let new_regex_id = egraph.add(GrammarENode::Regex(m.merged_sid));
         let mut new_children: Vec<Id> = Vec::with_capacity(m.original_children.len() - 1);
         for (k, &id) in m.original_children.iter().enumerate() {
@@ -444,7 +424,10 @@ impl<A: Analysis<GrammarENode>> Rewrite<GrammarENode, A> for UnionMergeAlt {
         let new_id = if new_children.len() == 1 {
             new_children[0]
         } else {
-            egraph.add(GrammarENode::Alt(new_children.into_boxed_slice(), m.dispatch))
+            egraph.add(GrammarENode::Alt(
+                new_children.into_boxed_slice(),
+                m.dispatch,
+            ))
         };
         egraph.union(class_id, new_id);
     }

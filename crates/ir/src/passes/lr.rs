@@ -306,7 +306,11 @@ pub fn substitute_leading_ref(
 }
 
 /// Intern a string, reusing an existing entry if present.
-pub fn intern_string(s: String, strings: &mut Vec<String>, dedup: &mut FxHashMap<String, u32>) -> u32 {
+pub fn intern_string(
+    s: String,
+    strings: &mut Vec<String>,
+    dedup: &mut FxHashMap<String, u32>,
+) -> u32 {
     if let Some(&existing) = dedup.get(&s) {
         return existing;
     }
@@ -315,4 +319,3 @@ pub fn intern_string(s: String, strings: &mut Vec<String>, dedup: &mut FxHashMap
     strings.push(s);
     sid
 }
-

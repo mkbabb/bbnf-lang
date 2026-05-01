@@ -25,9 +25,7 @@
 //! every parse starts with arenas pre-sized for the grammar's typical
 //! aggregate width.
 
-use crate::runtime::css_l4::value::{
-    CssColor, CssRule, Declaration, KeyframeBlock, Selector,
-};
+use crate::runtime::css_l4::value::{CssColor, CssRule, Declaration, KeyframeBlock, Selector};
 
 // ---------------------------------------------------------------------
 // Compound handles

@@ -84,7 +84,10 @@ impl<'p> BbnfDocument<'p> {
     /// Yield a [`BbnfView`] focused on the document root.
     #[inline]
     pub fn view<'a>(&'a self) -> BbnfView<'a, 'p> {
-        BbnfView { doc: self, focus: self.root }
+        BbnfView {
+            doc: self,
+            focus: self.root,
+        }
     }
 
     /// Borrow the root value.

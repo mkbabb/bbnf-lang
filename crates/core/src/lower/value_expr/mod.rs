@@ -49,7 +49,9 @@ mod unwrap;
 mod view_walk;
 
 pub(crate) use literals::split_numeric_suffix;
-pub(crate) use unwrap::{deep_unwrap_value, extract_value_func_name, is_type_name, unwrap_value_ident_str};
+pub(crate) use unwrap::{
+    deep_unwrap_value, extract_value_func_name, is_type_name, unwrap_value_ident_str,
+};
 
 // ─── Public entry: lower a value expression ─────────────────────────────────
 
@@ -97,9 +99,7 @@ pub(super) fn dispatch_value_expr<'a, 'p: 'a>(
         // or the optimizer may inline the wrapper down to the chosen
         // branch directly. Inspect the leading byte to discriminate
         // closure from or-chain even when the wrapper is preserved.
-        Some(BbnfCompoundKind::ValueExpr) => {
-            simple_kinds::lower_value_expr_or_closure(node, ctx)
-        }
+        Some(BbnfCompoundKind::ValueExpr) => simple_kinds::lower_value_expr_or_closure(node, ctx),
 
         // value_or chain — body is `value_and , ( "||" ?w , value_and ) *`.
         // When `value_or` surfaces directly (the optimizer collapsed

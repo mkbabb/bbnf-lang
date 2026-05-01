@@ -26,7 +26,7 @@ pub mod tiering;
 
 pub use base::{Alphabet, Atom, Pattern, PatternRef, Witness};
 pub use rank::{RankConfig, rank, select_top_k};
-pub use schema::{RuleFile, RuleSerialized, SchemaError, SCHEMA_VERSION};
+pub use schema::{RuleFile, RuleSerialized, SCHEMA_VERSION, SchemaError};
 pub use tiering::{RuleClass, classify};
 
 use std::path::Path;
@@ -87,7 +87,15 @@ impl Rule {
         cost_delta: i64,
     ) -> Self {
         let class = classify(&lhs, &rhs);
-        Self { id, class, lhs, rhs, witness, cost_delta, frequency: 0 }
+        Self {
+            id,
+            class,
+            lhs,
+            rhs,
+            witness,
+            cost_delta,
+            frequency: 0,
+        }
     }
 }
 

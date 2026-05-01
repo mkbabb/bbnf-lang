@@ -155,8 +155,7 @@ fn find_pivot_in_seq(
             let mut common_pivot: Option<u8> = None;
             let mut common_trail: Option<u8> = None;
             for branch in branches {
-                let (piv, trail) =
-                    find_pivot_in_seq(unwrap_map_ow(&branch.node), ir, visited)?;
+                let (piv, trail) = find_pivot_in_seq(unwrap_map_ow(&branch.node), ir, visited)?;
                 if let Some(cp) = common_pivot {
                     if cp != piv {
                         return None;
@@ -214,7 +213,9 @@ fn find_pivot_in_children(children: &[IrNode], ir: &GrammarIR) -> Option<(u8, Op
 fn find_block_ref(node: &IrNode) -> Option<RuleId> {
     match node {
         IrNode::Ref(rule_id) => Some(*rule_id),
-        IrNode::Seq(children) => children.iter().find_map(|c| find_block_ref(unwrap_map_ow(c))),
+        IrNode::Seq(children) => children
+            .iter()
+            .find_map(|c| find_block_ref(unwrap_map_ow(c))),
         IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => find_block_ref(inner),
         _ => None,
     }

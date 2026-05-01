@@ -6,7 +6,7 @@
 //! The follow-up tranche replaces the existing strategy solvers'
 //! priority cascades with reads from `recognizer_decisions`.
 
-use bbnf::pipeline::{compile_grammar, PipelineOptions};
+use bbnf::pipeline::{PipelineOptions, compile_grammar};
 use bbnf_ir::passes::csp_strategy::AltMode;
 
 const JSON_GRAMMAR: &str = r#"

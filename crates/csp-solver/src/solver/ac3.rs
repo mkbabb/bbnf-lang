@@ -2,11 +2,11 @@
 //!
 //! Uses a bitset worklist for lower overhead than VecDeque + Vec<bool>.
 
+use crate::SolveStats;
 use crate::adjacency::Adjacency;
 use crate::constraint::{ConstraintEnum, Revision, VarId};
 use crate::domain::Domain;
 use crate::variable::Variable;
-use crate::SolveStats;
 
 /// A simple bitset worklist — O(1) insert/membership, O(words) scan for next.
 struct BitsetWorklist {
@@ -100,7 +100,10 @@ where
     for &ci in adjacency.constraints_for(var) {
         let ci = ci as usize;
         let scope = constraints[ci].scope();
-        if scope.iter().any(|&v| v != var && assignment[v as usize].is_none()) {
+        if scope
+            .iter()
+            .any(|&v| v != var && assignment[v as usize].is_none())
+        {
             worklist.insert(ci);
         }
     }

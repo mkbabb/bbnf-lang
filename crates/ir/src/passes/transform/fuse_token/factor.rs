@@ -34,13 +34,9 @@ pub(super) fn try_factor_alt(node: IrNode, ctx: &mut FactorCtx<'_>) -> IrNode {
 
             // Try to factor using each @token rule.
             for (token_rule_id, token_first, token_name_sid) in ctx.token_rules {
-                if let Some(factored) = factor_with_token(
-                    &branches,
-                    *token_rule_id,
-                    token_first,
-                    *token_name_sid,
-                    ctx,
-                ) {
+                if let Some(factored) =
+                    factor_with_token(&branches, *token_rule_id, token_first, *token_name_sid, ctx)
+                {
                     return factored;
                 }
             }

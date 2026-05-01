@@ -116,12 +116,7 @@ impl<N: LangNode> std::fmt::Debug for Pattern<N> {
 impl<N: LangNode> Pattern<N> {
     /// AST depth: 1 for a leaf, 1 + max child depth for an internal node.
     pub fn depth(&self) -> usize {
-        1 + self
-            .children
-            .iter()
-            .map(|c| c.depth())
-            .max()
-            .unwrap_or(0)
+        1 + self.children.iter().map(|c| c.depth()).max().unwrap_or(0)
     }
 
     /// AST size: total number of nodes in the pattern.
@@ -208,9 +203,7 @@ where
         // The pool of children allowed at depth d: anything with
         // depth < d. We snapshot it before generating to avoid a
         // borrow conflict.
-        let allowed_pool: Vec<&Pattern<N>> = (0..d - 1)
-            .flat_map(|i| by_depth[i].iter())
-            .collect();
+        let allowed_pool: Vec<&Pattern<N>> = (0..d - 1).flat_map(|i| by_depth[i].iter()).collect();
         // To force exact-depth d, at least one chosen child must be
         // from depth d-1. We track that bucket separately.
         let must_include_depth = d - 1;
@@ -306,4 +299,3 @@ fn seeded_shuffle<T>(slice: &mut [T], seed: u64) {
         slice.swap(i, j);
     }
 }
-

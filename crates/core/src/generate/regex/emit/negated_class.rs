@@ -108,7 +108,10 @@ fn is_star_whitespace(hir: &parse_that::regex::hir::Hir) -> bool {
     use parse_that::regex::hir::{ByteRange, CharClass, Hir, Repetition};
 
     if let Hir::Repetition(Repetition {
-        sub, min: 0, max: None, ..
+        sub,
+        min: 0,
+        max: None,
+        ..
     }) = hir
     {
         // The sub must be a whitespace class: [\t\n\x0B\x0C\r ] (non-negated)

@@ -1,7 +1,9 @@
 //! AZ-II.cutover.E (Phase 2) — `CssPrettyDocument` + view / value /
 //! path accessor surface. Mirror of `CsvDocument`.
 
-use crate::runtime::css_pretty::arena::{CssPrettyArena, CssPrettyCompound, CssPrettyCompoundId, CssPrettyCompoundKind};
+use crate::runtime::css_pretty::arena::{
+    CssPrettyArena, CssPrettyCompound, CssPrettyCompoundId, CssPrettyCompoundKind,
+};
 use crate::runtime::css_pretty::value::CssPrettyValue;
 use crate::runtime::path::{Path, PathSegment};
 
@@ -25,9 +27,18 @@ impl<'p> CssPrettyDocument<'p> {
         Self { arena, root, input }
     }
 
-    #[inline] pub fn root(&self) -> &CssPrettyValue<'p> { &self.root }
-    #[inline] pub fn arena(&self) -> &CssPrettyArena<'p> { &self.arena }
-    #[inline] pub fn input(&self) -> &'p str { self.input }
+    #[inline]
+    pub fn root(&self) -> &CssPrettyValue<'p> {
+        &self.root
+    }
+    #[inline]
+    pub fn arena(&self) -> &CssPrettyArena<'p> {
+        &self.arena
+    }
+    #[inline]
+    pub fn input(&self) -> &'p str {
+        self.input
+    }
 
     #[inline]
     pub fn compound(&self, id: CssPrettyCompoundId) -> &CssPrettyCompound<'p> {
@@ -36,10 +47,16 @@ impl<'p> CssPrettyDocument<'p> {
 
     #[inline]
     pub fn view<'a>(&'a self) -> CssPrettyView<'a, 'p> {
-        CssPrettyView { doc: self, focus: self.root }
+        CssPrettyView {
+            doc: self,
+            focus: self.root,
+        }
     }
 
-    #[inline] pub fn to_value(&self) -> &CssPrettyValue<'p> { &self.root }
+    #[inline]
+    pub fn to_value(&self) -> &CssPrettyValue<'p> {
+        &self.root
+    }
 
     #[inline]
     pub fn get<T: CssPrettyPathQuery>(&self, path: Path<'_>) -> Option<T> {
@@ -59,10 +76,22 @@ impl<'a, 'p: 'a> CssPrettyView<'a, 'p> {
         Self { doc, focus }
     }
 
-    #[inline] pub fn document(&self) -> &'a CssPrettyDocument<'p> { self.doc }
-    #[inline] pub fn focus(&self) -> CssPrettyValue<'p> { self.focus }
-    #[inline] pub fn root(&self) -> &'a CssPrettyValue<'p> { &self.doc.root }
-    #[inline] pub fn arena(&self) -> &'a CssPrettyArena<'p> { &self.doc.arena }
+    #[inline]
+    pub fn document(&self) -> &'a CssPrettyDocument<'p> {
+        self.doc
+    }
+    #[inline]
+    pub fn focus(&self) -> CssPrettyValue<'p> {
+        self.focus
+    }
+    #[inline]
+    pub fn root(&self) -> &'a CssPrettyValue<'p> {
+        &self.doc.root
+    }
+    #[inline]
+    pub fn arena(&self) -> &'a CssPrettyArena<'p> {
+        &self.doc.arena
+    }
 
     #[inline]
     pub fn compound(&self, id: CssPrettyCompoundId) -> &'a CssPrettyCompound<'p> {
@@ -78,9 +107,18 @@ impl<'a, 'p: 'a> CssPrettyView<'a, 'p> {
         }
     }
 
-    #[inline] pub fn is_compound(&self) -> bool { matches!(self.focus, CssPrettyValue::Compound(_)) }
-    #[inline] pub fn is_span(&self) -> bool { matches!(self.focus, CssPrettyValue::Span(_)) }
-    #[inline] pub fn input(&self) -> &'p str { self.doc.input }
+    #[inline]
+    pub fn is_compound(&self) -> bool {
+        matches!(self.focus, CssPrettyValue::Compound(_))
+    }
+    #[inline]
+    pub fn is_span(&self) -> bool {
+        matches!(self.focus, CssPrettyValue::Span(_))
+    }
+    #[inline]
+    pub fn input(&self) -> &'p str {
+        self.doc.input
+    }
 
     #[inline]
     pub fn compound_kind(&self) -> Option<CssPrettyCompoundKind> {
@@ -96,7 +134,10 @@ pub trait CssPrettyPathQuery: Sized {
 }
 
 #[inline]
-fn walk_path<'a, 'p>(doc: &'a CssPrettyDocument<'p>, path: Path<'_>) -> Option<&'a CssPrettyValue<'p>> {
+fn walk_path<'a, 'p>(
+    doc: &'a CssPrettyDocument<'p>,
+    path: Path<'_>,
+) -> Option<&'a CssPrettyValue<'p>> {
     let mut current: &'a CssPrettyValue<'p> = &doc.root;
     for segment in path.iter() {
         current = match (current, segment) {

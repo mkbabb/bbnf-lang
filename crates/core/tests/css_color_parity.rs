@@ -10,7 +10,7 @@
 //! file focuses on the resolver contract.
 
 use bbnf::backend::rust::view::named_types::RustNamedTypes;
-use bbnf_ir::passes::{plan_layout_with_cap, NamedTypeResolver};
+use bbnf_ir::passes::{NamedTypeResolver, plan_layout_with_cap};
 use bbnf_ir::{GrammarIR, IrNode, IrRule, RuleId, RuleMeta, StringId, TypeDesc};
 
 // ─── Helpers ──────────────────────────────────────────────────────────
@@ -102,8 +102,9 @@ fn regex_body_infers_arena_handle_shape() {
     };
     let resolver = RustNamedTypes::from_ir(&ir);
     let type_sid = ir.strings.len() as StringId - 1;
-    let resolved =
-        resolver.resolve_named(type_sid).expect("String must resolve");
+    let resolved = resolver
+        .resolve_named(type_sid)
+        .expect("String must resolve");
     assert_eq!(
         resolved,
         TypeDesc::Tuple(vec![TypeDesc::Span]),

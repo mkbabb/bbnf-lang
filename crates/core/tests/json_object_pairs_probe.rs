@@ -36,13 +36,7 @@ fn five_pair_object_resolves_in_order() {
     let pairs = doc.object(id);
     assert_eq!(pairs.len(), 5, "5-pair object must resolve to five pairs");
 
-    let expected: [(&str, f64); 5] = [
-        ("a", 1.0),
-        ("b", 2.0),
-        ("c", 3.0),
-        ("d", 4.0),
-        ("e", 5.0),
-    ];
+    let expected: [(&str, f64); 5] = [("a", 1.0), ("b", 2.0), ("c", 3.0), ("d", 4.0), ("e", 5.0)];
     for (i, (key, num)) in expected.iter().enumerate() {
         let pair = &pairs[i];
         assert_eq!(pair.key, *key, "pair #{i} key");

@@ -1,8 +1,6 @@
 //! RecognizerInfo unification tests.
 
-use bbnf_ir::recognizer::{
-    LiteralRecognizer, RecognizerInfo, RecognizerKind, RegexRecognizer,
-};
+use bbnf_ir::recognizer::{LiteralRecognizer, RecognizerInfo, RecognizerKind, RegexRecognizer};
 use bbnf_regex::RegexInfo;
 
 #[test]

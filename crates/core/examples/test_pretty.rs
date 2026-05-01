@@ -1,6 +1,5 @@
-use bbnf::runtime::ParseErr;
 use ::bbnf::grammar::generated::css_pretty::*;
-
+use bbnf::runtime::ParseErr;
 
 /// Probe the CSS prettify grammar against a few representative
 /// inputs. Tranche AC.2 collapsed the per-rule entry points into

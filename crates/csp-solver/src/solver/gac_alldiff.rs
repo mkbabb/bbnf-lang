@@ -24,11 +24,7 @@ const NONE: u32 = u32::MAX;
 ///
 /// Returns `(match_u, match_v)` where `match_u[u]` is the matched v-node
 /// (or `NONE`) and `match_v[v]` is the matched u-node (or `NONE`).
-fn hopcroft_karp(
-    n_u: usize,
-    n_v: usize,
-    adj: &[Vec<u32>],
-) -> (Vec<u32>, Vec<u32>) {
+fn hopcroft_karp(n_u: usize, n_v: usize, adj: &[Vec<u32>]) -> (Vec<u32>, Vec<u32>) {
     let mut match_u = vec![NONE; n_u];
     let mut match_v = vec![NONE; n_v];
     let mut dist = vec![0u32; n_u];
@@ -89,8 +85,9 @@ fn dfs_augment(
 ) -> bool {
     for &v in &adj[u] {
         let mu = match_v[v as usize];
-        if mu == NONE || (dist[mu as usize] == dist[u] + 1
-            && dfs_augment(mu as usize, adj, match_u, match_v, dist, inf))
+        if mu == NONE
+            || (dist[mu as usize] == dist[u] + 1
+                && dfs_augment(mu as usize, adj, match_u, match_v, dist, inf))
         {
             match_u[u] = v;
             match_v[v as usize] = u as u32;
@@ -264,9 +261,7 @@ pub fn propagate_gac_alldiff<D: Domain>(
 
     // Build value -> contiguous index mapping via linear scan.
     // For Sudoku-sized domains (9 values), this is faster than a HashMap.
-    let val_to_idx = |v: &D::Value| -> u32 {
-        all_vals.iter().position(|x| x == v).unwrap() as u32
-    };
+    let val_to_idx = |v: &D::Value| -> u32 { all_vals.iter().position(|x| x == v).unwrap() as u32 };
 
     // Build bipartite adjacency: u-node (var idx) -> list of v-node (val idx).
     let adj: Vec<Vec<u32>> = var_avail_raw
@@ -362,6 +357,9 @@ pub fn propagate_gac_alldiff<D: Domain>(
         }
     }
 
-    if changed { Revision::Changed } else { Revision::Unchanged }
+    if changed {
+        Revision::Changed
+    } else {
+        Revision::Unchanged
+    }
 }
-

@@ -36,10 +36,7 @@ impl From<CallStrategy> for RefStrategy {
 }
 
 /// Look up a Ref's strategy from the pre-computed call strategies.
-pub fn resolve_ref_strategy(
-    rule_id: RuleId,
-    call_strategies: &[CallStrategy],
-) -> RefStrategy {
+pub fn resolve_ref_strategy(rule_id: RuleId, call_strategies: &[CallStrategy]) -> RefStrategy {
     call_strategies
         .get(rule_id as usize)
         .copied()

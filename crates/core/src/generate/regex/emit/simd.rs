@@ -232,10 +232,7 @@ pub fn emit_structural_bitmap_kernel(targets: &[u8]) -> Option<TokenStream> {
 /// `targets` is the excluded-byte set (i.e., the bytes whose
 /// occurrence terminates the scan). Produces a self-contained
 /// `TokenStream` that evaluates to `Option<Span>`.
-pub fn emit_negated_scan(
-    targets: &[u8],
-    quantifier: ScanQuantifier,
-) -> Option<TokenStream> {
+pub fn emit_negated_scan(targets: &[u8], quantifier: ScanQuantifier) -> Option<TokenStream> {
     let kernel = emit_structural_bitmap_kernel(targets)?;
     let body = match quantifier {
         ScanQuantifier::Plus => quote! {

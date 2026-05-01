@@ -227,20 +227,18 @@ pub(super) fn emit_parse_keyword_struct_direct(
                 by_first.entry(entry.0[0]).or_default().push(entry);
             }
 
-            let arms: Vec<TokenStream> =
-                by_first
-                    .iter()
-                    .map(|(first, group)| {
-                        // Descending prefix length — longer literals try first.
-                        let mut group_sorted: Vec<&(
-                            Vec<u8>,
-                            BranchKind<'_>,
-                            usize,
-                            &bbnf_ir::AltBranch,
-                        )> = group.iter().copied().collect();
-                        group_sorted
-                            .sort_by_key(|entry| (std::cmp::Reverse(entry.0.len()), entry.2));
-                        let tries: Vec<TokenStream> = group_sorted
+            let arms: Vec<TokenStream> = by_first
+                .iter()
+                .map(|(first, group)| {
+                    // Descending prefix length — longer literals try first.
+                    let mut group_sorted: Vec<&(
+                        Vec<u8>,
+                        BranchKind<'_>,
+                        usize,
+                        &bbnf_ir::AltBranch,
+                    )> = group.iter().copied().collect();
+                    group_sorted.sort_by_key(|entry| (std::cmp::Reverse(entry.0.len()), entry.2));
+                    let tries: Vec<TokenStream> = group_sorted
                         .iter()
                         .map(|(bytes, kind, _branch_idx, branch)| {
                             let len = bytes.len();
@@ -253,8 +251,7 @@ pub(super) fn emit_parse_keyword_struct_direct(
                                 .collect();
                             match kind {
                                 BranchKind::Literal => {
-                                    let bool_payload =
-                                        alt_branch_bool_payload(branch, ir);
+                                    let bool_payload = alt_branch_bool_payload(branch, ir);
                                     let payload = alt_branch_payload_value(branch, ir);
                                     let leaf_emit = struct_direct_leaf_emit_for(
                                         rule_ty.as_ref(),
@@ -293,15 +290,17 @@ pub(super) fn emit_parse_keyword_struct_direct(
                                     // the codegen level is the concrete
                                     // `builder` type, threaded through
                                     // by the caller's signature.
-                                    let ref_call = emit_ref_call_shape(
-                                        grammar_suffix, *target_rid, ir,
-                                    ).unwrap_or_else(|| quote! {
-                                        ::core::result::Result::Err(
-                                            crate::runtime::DtaError::Syntax {
-                                                offset: *p as u32,
-                                            },
-                                        )
-                                    });
+                                    let ref_call =
+                                        emit_ref_call_shape(grammar_suffix, *target_rid, ir)
+                                            .unwrap_or_else(|| {
+                                                quote! {
+                                                    ::core::result::Result::Err(
+                                                        crate::runtime::DtaError::Syntax {
+                                                            offset: *p as u32,
+                                                        },
+                                                    )
+                                                }
+                                            });
                                     quote! {
                                         if input.len() >= *p + #len
                                             && input[*p..*p + #len] == [#(#byte_lits),*]
@@ -366,18 +365,18 @@ pub(super) fn emit_parse_keyword_struct_direct(
                             }
                         })
                         .collect();
-                        quote! {
-                            #first => {
-                                #(#tries)*
-                                return ::core::result::Result::Err(
-                                    crate::runtime::DtaError::Syntax {
-                                        offset: *p as u32,
-                                    },
-                                );
-                            }
+                    quote! {
+                        #first => {
+                            #(#tries)*
+                            return ::core::result::Result::Err(
+                                crate::runtime::DtaError::Syntax {
+                                    offset: *p as u32,
+                                },
+                            );
                         }
-                    })
-                    .collect();
+                    }
+                })
+                .collect();
             quote! {
                 /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
                 /// (Alt of literal-led, Ref-led, or Seq-led branches).

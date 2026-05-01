@@ -39,10 +39,10 @@
 //! children the collapsed compound would have emitted).
 
 use super::ConstraintCtx;
+use crate::GrammarIR;
 use crate::passes::csp_strategy::StrategyDomain;
 use crate::passes::recognizers::shape_dict::{ShapeTemplate, TemplatePiece};
 use crate::types::TypeDesc;
-use crate::GrammarIR;
 
 use csp_solver::Csp;
 
@@ -95,11 +95,7 @@ pub fn solve_shape_dict_selection(ir: &GrammarIR) -> ShapeDictSelection {
             let savings = savings_bytes(template) as f64;
             let freq = freq_estimate(template);
             let net = freq * savings - STATIC_ENTRY_COST_BYTES as f64;
-            if net > 0.0 {
-                Some((idx, net))
-            } else {
-                None
-            }
+            if net > 0.0 { Some((idx, net)) } else { None }
         })
         .collect();
 

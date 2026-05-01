@@ -162,11 +162,7 @@ fn try_kernel_class_loop(class: &CharClass, min: u32, max: Option<u32>) -> Optio
 ///
 /// Uses checkpoint save/restore per iteration. More overhead than the
 /// class-specific loop, but handles any HIR sub-expression.
-fn emit_general_loop(
-    sub: &Hir,
-    min: u32,
-    max: Option<u32>,
-) -> Option<TokenStream> {
+fn emit_general_loop(sub: &Hir, min: u32, max: Option<u32>) -> Option<TokenStream> {
     let body = emit_hir(sub)?;
 
     match max {

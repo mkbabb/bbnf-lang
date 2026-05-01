@@ -35,10 +35,7 @@
 //! produce.
 
 use ::bbnf::grammar::generated::google_sheets::*;
-use bbnf::runtime::{
-    SheetsCompoundKind, SheetsDocument, SheetsValue,
-};
-
+use bbnf::runtime::{SheetsCompoundKind, SheetsDocument, SheetsValue};
 
 // ─── Walker helpers ──────────────────────────────────────────────────
 
@@ -60,8 +57,7 @@ fn walk_value_tree<'p, F: FnMut(&SheetsValue<'p>, SheetsCompoundKind)>(
     doc: &SheetsDocument<'p>,
     visit: &mut F,
 ) {
-    let mut stack: Vec<(SheetsValue<'p>, SheetsCompoundKind)> =
-        Vec::with_capacity(32);
+    let mut stack: Vec<(SheetsValue<'p>, SheetsCompoundKind)> = Vec::with_capacity(32);
     stack.push((*doc.root(), SheetsCompoundKind::Wrap));
     while let Some((value, parent)) = stack.pop() {
         visit(&value, parent);
@@ -503,12 +499,7 @@ fn range_ref_parses_with_and_without_sheet_prefix() {
     // disambiguated (e.g. inside a function call's arg position
     // where the parser routes through cell_or_range first). This is a
     // grammar shape, not a codegen gap; documented in the audit doc.
-    for input in [
-        "=A1:B2",
-        "=A:A",
-        "=Sheet1!A1:B2",
-        "='Sheet 1'!A1:B2",
-    ] {
+    for input in ["=A1:B2", "=A:A", "=Sheet1!A1:B2", "='Sheet 1'!A1:B2"] {
         assert!(
             GoogleSheetsParser::parse(input).is_ok(),
             "range_ref must parse: {:?}",
@@ -533,11 +524,9 @@ fn range_ref_parses_with_and_without_sheet_prefix() {
 //    contract has no real source text, so the slice is empty.
 
 mod wire_contract {
-    use bbnf::runtime::{
-        SheetsCompoundKind, SheetsStructBuilder, SheetsValue, StructBuilder,
-    };
-    use bbnf_ir::registry::{LayoutKind, StructLayout};
+    use bbnf::runtime::{SheetsCompoundKind, SheetsStructBuilder, SheetsValue, StructBuilder};
     use bbnf_ir::TypeDesc;
+    use bbnf_ir::registry::{LayoutKind, StructLayout};
 
     fn synth_layout(rule_id: u32, rule_name: &str, kind: LayoutKind) -> StructLayout {
         StructLayout {
@@ -705,7 +694,10 @@ mod wire_contract {
                 assert_eq!(view.kind, SheetsCompoundKind::Cell);
                 assert_eq!(view.children.len(), 2);
                 match view.children[0] {
-                    SheetsValue::SheetPrefix { tag: 1, text: "Sheet1!" } => {}
+                    SheetsValue::SheetPrefix {
+                        tag: 1,
+                        text: "Sheet1!",
+                    } => {}
                     ref other => panic!("expected SheetPrefix, got {:?}", other),
                 }
                 match view.children[1] {

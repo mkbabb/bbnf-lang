@@ -1,4 +1,3 @@
-
 //! BBNF CSS bytecode VM benchmark — cold per-parse.
 
 #[global_allocator]

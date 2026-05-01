@@ -166,11 +166,7 @@ fn oracle_grammar(source: &str) -> RefGrammar {
                     i += 1;
                 }
             } else {
-                while i < bytes.len()
-                    && bytes[i] != b';'
-                    && bytes[i] != b'.'
-                    && bytes[i] != b'\n'
-                {
+                while i < bytes.len() && bytes[i] != b';' && bytes[i] != b'.' && bytes[i] != b'\n' {
                     i += 1;
                 }
             }
@@ -204,11 +200,7 @@ fn is_ident_cont(b: u8) -> bool {
 fn extract_grammar_via_ast(input: &str) -> RefGrammar {
     let extract = grammar::parse(input).expect("BBNF parse must succeed");
 
-    let rule_names: Vec<String> = extract
-        .rules
-        .keys()
-        .map(|name| name.to_string())
-        .collect();
+    let rule_names: Vec<String> = extract.rules.keys().map(|name| name.to_string()).collect();
 
     // Directive kinds in source order: collect from each directive
     // vector, then sort by span start to recover the source-order
@@ -417,11 +409,7 @@ baz = foo , bar ;
     assert_eq!(extract.rules.len(), oracle.rule_names.len());
     // Iterate the AST in source order — IndexMap preserves insertion
     // order; every entry must have a populated name_span.
-    let names: Vec<String> = extract
-        .rules
-        .keys()
-        .map(|n| n.to_string())
-        .collect();
+    let names: Vec<String> = extract.rules.keys().map(|n| n.to_string()).collect();
     assert_eq!(names, oracle.rule_names);
     for (name, entry) in extract.rules.iter() {
         assert!(

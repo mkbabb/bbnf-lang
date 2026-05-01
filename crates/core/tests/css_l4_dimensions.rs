@@ -65,7 +65,6 @@ mod css_types {
 
 use ::bbnf::grammar::generated::css_l4::*;
 
-
 fn parses(input: &str) -> bool {
     CssL4Parser::parse(input).is_ok()
 }
@@ -84,47 +83,74 @@ fn length_em_parses() {
 
 #[test]
 fn length_rem_parses() {
-    assert!(parses("a { x: 0.25rem; }"), "0.25rem should parse via length");
+    assert!(
+        parses("a { x: 0.25rem; }"),
+        "0.25rem should parse via length"
+    );
 }
 
 #[test]
 fn angle_deg_parses() {
-    assert!(parses("a { transform: rotate(45deg); }"), "45deg should parse via angle");
+    assert!(
+        parses("a { transform: rotate(45deg); }"),
+        "45deg should parse via angle"
+    );
 }
 
 #[test]
 fn angle_turn_parses() {
-    assert!(parses("a { transform: rotate(0.25turn); }"), "0.25turn should parse via angle");
+    assert!(
+        parses("a { transform: rotate(0.25turn); }"),
+        "0.25turn should parse via angle"
+    );
 }
 
 #[test]
 fn time_ms_parses() {
-    assert!(parses("a { transition-duration: 250ms; }"), "250ms should parse via time");
+    assert!(
+        parses("a { transition-duration: 250ms; }"),
+        "250ms should parse via time"
+    );
 }
 
 #[test]
 fn time_s_parses() {
-    assert!(parses("a { transition-duration: 1.5s; }"), "1.5s should parse via time");
+    assert!(
+        parses("a { transition-duration: 1.5s; }"),
+        "1.5s should parse via time"
+    );
 }
 
 #[test]
 fn frequency_hz_parses() {
-    assert!(parses("a { x: 440Hz; }"), "440Hz should parse via frequency");
+    assert!(
+        parses("a { x: 440Hz; }"),
+        "440Hz should parse via frequency"
+    );
 }
 
 #[test]
 fn frequency_khz_parses() {
-    assert!(parses("a { x: 1.5kHz; }"), "1.5kHz should parse via frequency");
+    assert!(
+        parses("a { x: 1.5kHz; }"),
+        "1.5kHz should parse via frequency"
+    );
 }
 
 #[test]
 fn resolution_dpi_parses() {
-    assert!(parses("a { x: 96dpi; }"), "96dpi should parse via resolution");
+    assert!(
+        parses("a { x: 96dpi; }"),
+        "96dpi should parse via resolution"
+    );
 }
 
 #[test]
 fn resolution_dppx_parses() {
-    assert!(parses("a { x: 2dppx; }"), "2dppx should parse via resolution");
+    assert!(
+        parses("a { x: 2dppx; }"),
+        "2dppx should parse via resolution"
+    );
 }
 
 #[test]
@@ -134,17 +160,26 @@ fn flex_fr_parses() {
 
 #[test]
 fn percentage_parses() {
-    assert!(parses("a { width: 50%; }"), "50% should parse via percentage");
+    assert!(
+        parses("a { width: 50%; }"),
+        "50% should parse via percentage"
+    );
 }
 
 #[test]
 fn unitless_int_parses() {
-    assert!(parses("a { z-index: 100; }"), "100 should parse via unitless number");
+    assert!(
+        parses("a { z-index: 100; }"),
+        "100 should parse via unitless number"
+    );
 }
 
 #[test]
 fn unitless_decimal_parses() {
-    assert!(parses("a { line-height: 1.5; }"), "1.5 should parse via unitless number");
+    assert!(
+        parses("a { line-height: 1.5; }"),
+        "1.5 should parse via unitless number"
+    );
 }
 
 // ── Tailwind-style leading-dot regression bed ────────────────────────────
@@ -161,7 +196,10 @@ fn opacity_leading_dot_parses() {
 #[test]
 fn keyframes_with_leading_dot_value() {
     let input = "@keyframes pulse { 50% { opacity: .5; } }";
-    assert!(parses(input), "tailwind-style @keyframes with `.5` should parse");
+    assert!(
+        parses(input),
+        "tailwind-style @keyframes with `.5` should parse"
+    );
 }
 
 #[test]
@@ -170,19 +208,28 @@ fn consecutive_keyframes_after_leading_dot() {
     // two `@keyframes` rules separated by blank line, second carries
     // a leading-dot value.
     let input = "@keyframes ping {\n  75%, 100% {\n    transform: scale(2);\n    opacity: 0;\n  }\n}\n\n@keyframes pulse {\n  50% {\n    opacity: .5;\n  }\n}\n";
-    assert!(parses(input), "tailwind keyframes regression at offset 111798");
+    assert!(
+        parses(input),
+        "tailwind keyframes regression at offset 111798"
+    );
 }
 
 // ── Negative numbers ─────────────────────────────────────────────────────
 
 #[test]
 fn length_negative_parses() {
-    assert!(parses("a { margin-left: -10px; }"), "negative length should parse");
+    assert!(
+        parses("a { margin-left: -10px; }"),
+        "negative length should parse"
+    );
 }
 
 #[test]
 fn unitless_negative_parses() {
-    assert!(parses("a { z-index: -1; }"), "negative integer should parse");
+    assert!(
+        parses("a { z-index: -1; }"),
+        "negative integer should parse"
+    );
 }
 
 // ── Decimal edge cases ───────────────────────────────────────────────────
@@ -199,5 +246,8 @@ fn length_leading_dot_parses() {
 
 #[test]
 fn percentage_leading_dot_parses() {
-    assert!(parses("a { width: .5%; }"), ".5% should parse via percentage");
+    assert!(
+        parses("a { width: .5%; }"),
+        ".5% should parse via percentage"
+    );
 }

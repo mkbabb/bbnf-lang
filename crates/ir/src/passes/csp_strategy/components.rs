@@ -205,9 +205,9 @@ impl GrammarComponents {
     pub fn iter_components(&self) -> impl Iterator<Item = (u32, &Vec<RuleId>)> {
         let mut roots: Vec<u32> = self.components.keys().copied().collect();
         roots.sort_unstable();
-        roots.into_iter().map(move |root| {
-            (root, self.components.get(&root).expect("root is a key"))
-        })
+        roots
+            .into_iter()
+            .map(move |root| (root, self.components.get(&root).expect("root is a key")))
     }
 
     /// The representative component ID for a given rule, or `None`

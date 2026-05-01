@@ -9,7 +9,7 @@
 use std::collections::HashMap;
 
 use bbnf_ir::passes::materialization::MaterializationClass;
-use bbnf_ir::passes::{compute_push_fingerprint, PushFingerprint};
+use bbnf_ir::passes::{PushFingerprint, compute_push_fingerprint};
 use bbnf_ir::{GrammarIR, IrNode, IrRule, RuleMeta, TypeDesc};
 
 fn rule_with_body(id: u32, name: u32, body: IrNode) -> IrRule {
@@ -52,9 +52,10 @@ fn empty_ir(rules: Vec<IrRule>, strings: Vec<String>) -> GrammarIR {
         payload_layouts: HashMap::new(),
         structural_alphabet: None,
         push_fingerprint: None,
-            dedup_eligible_rules: Vec::new(),
+        dedup_eligible_rules: Vec::new(),
 
-            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
+        shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
+        ),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),

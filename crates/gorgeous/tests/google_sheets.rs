@@ -103,6 +103,9 @@ fn test_trailing_space_formatting() {
     let fmt_with = prettify_formula(with_space, &config).unwrap();
     // The trailing space between `) )` is preserved in formatting (faithful span
     // reproduction). Both produce valid output; they differ only in the final space.
-    assert!(fmt_without.ends_with("))"), "without-space should end with ))");
+    assert!(
+        fmt_without.ends_with("))"),
+        "without-space should end with ))"
+    );
     assert!(fmt_with.ends_with(") )"), "with-space should end with ) )");
 }

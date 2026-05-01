@@ -33,9 +33,7 @@ pub(super) fn compile_map<E: Emitter>(
     {
         let inner_fd = &ir.fns[*fn_id2 as usize];
         let inner_out = compile_node(inner2, ValuePlacement::Inline, ir, dstate, emitter, ctx);
-        if let Some(fused) =
-            emitter.emit_fused_map(inner_out, inner_fd, fn_desc, alloc, ir, ctx)
-        {
+        if let Some(fused) = emitter.emit_fused_map(inner_out, inner_fd, fn_desc, alloc, ir, ctx) {
             return fused;
         }
         // Fusion not handled — fall through to single-map path with

@@ -59,12 +59,7 @@ pub(crate) fn lower_factor<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx<'a>) -
     let term = term_node
         .or_else(|| find_sibling_by_kind(node, BbnfCompoundKind::Term))
         .or_else(|| find_term_child_by_elimination(node))
-        .unwrap_or_else(|| {
-            panic!(
-                "factor: missing term child in span {:?}",
-                node.span_text(),
-            )
-        });
+        .unwrap_or_else(|| panic!("factor: missing term child in span {:?}", node.span_text(),));
     let base = lower_term(term, ctx);
 
     if let Some(text) = modifier_text {
@@ -86,9 +81,7 @@ fn is_comment_span(trimmed: &str) -> bool {
 /// The factor body is `big_comment? term ?w modifier? big_comment?`,
 /// so any child whose compound kind is not a comment/modifier slot
 /// and whose span is non-empty carries the term.
-fn find_term_child_by_elimination<'a>(
-    node: BbnfView<'a, 'a>,
-) -> Option<BbnfView<'a, 'a>> {
+fn find_term_child_by_elimination<'a>(node: BbnfView<'a, 'a>) -> Option<BbnfView<'a, 'a>> {
     for child in node.children() {
         let span = child.span_text();
         let trimmed = span.trim();

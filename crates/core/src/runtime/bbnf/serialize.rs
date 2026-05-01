@@ -28,7 +28,7 @@
 
 use std::fmt::Write;
 
-use crate::runtime::bbnf::arena::{BbnfCompoundKind, BbnfCompoundId};
+use crate::runtime::bbnf::arena::{BbnfCompoundId, BbnfCompoundKind};
 use crate::runtime::bbnf::document::BbnfDocument;
 use crate::runtime::bbnf::value::BbnfValue;
 
@@ -203,8 +203,10 @@ fn emit_compound<'p>(doc: &BbnfDocument<'p>, id: BbnfCompoundId, out: &mut Strin
                     // forms have an identifier as `first`.
                     let starts_bracket = match first {
                         BbnfValue::Span(s) => {
-                            s.starts_with('(') || s.starts_with('[')
-                                || s.starts_with('{') || s.starts_with("@{")
+                            s.starts_with('(')
+                                || s.starts_with('[')
+                                || s.starts_with('{')
+                                || s.starts_with("@{")
                         }
                         _ => false,
                     };

@@ -126,9 +126,7 @@ pub fn plan_for_id(ir: &GrammarIR, node_id: NodeId) -> ScannerPlanRecord {
         }
     } else if let Some(mode) = decision.and_then(|d| d.wrap_mode.as_ref()) {
         match mode {
-            WrapMode::BalancedScan => {
-                (RecognizerFamily::DelimiterBalanced, EmitHint::DelimScan)
-            }
+            WrapMode::BalancedScan => (RecognizerFamily::DelimiterBalanced, EmitHint::DelimScan),
             WrapMode::SepBy => (RecognizerFamily::SeparatorList, EmitHint::Generic),
             WrapMode::Generic => (RecognizerFamily::Generic, EmitHint::Generic),
         }

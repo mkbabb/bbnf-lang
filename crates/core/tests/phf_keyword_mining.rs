@@ -18,7 +18,7 @@
 //! parity suites downstream.
 
 use bbnf::pipeline::{
-    compile_paths_request, CompileOutput, CompileRequest, CompileTarget, PipelineOptions,
+    CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_paths_request,
 };
 use bbnf_ir::GrammarIR;
 use std::path::PathBuf;
@@ -85,7 +85,7 @@ fn bbnf_directive_generates_emitter_phf_table() {
     // (downstream of the miner). The Alt's 7 branches cross the
     // threshold of 3 so we expect table + dispatch fn emitted.
     use bbnf::backend::rust::emitter::keyword_dispatch::{
-        emit_keyword_phf, LiteralBranch, PHF_MIN_BRANCHES,
+        LiteralBranch, PHF_MIN_BRANCHES, emit_keyword_phf,
     };
     let ir = compile("bbnf/bbnf.bbnf");
     let dag = ir.dag.as_ref().expect("bbnf grammar must have dag");

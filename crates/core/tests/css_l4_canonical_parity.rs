@@ -43,10 +43,7 @@ mod css_types {
                 let g = hex_digit(hex[1]);
                 let b = hex_digit(hex[2]);
                 let a = hex_digit(hex[3]);
-                ((r << 4 | r) << 24)
-                    | ((g << 4 | g) << 16)
-                    | ((b << 4 | b) << 8)
-                    | (a << 4 | a)
+                ((r << 4 | r) << 24) | ((g << 4 | g) << 16) | ((b << 4 | b) << 8) | (a << 4 | a)
             }
             6 => {
                 let r = hex_byte(hex[0], hex[1]);
@@ -83,7 +80,6 @@ mod css_types {
 
 use ::bbnf::grammar::generated::css_l4::*;
 
-
 /// Shared printer config: 80-col width, 2-space indent, spaces not
 /// tabs. Must match the configuration the wave spec references as
 /// `shared_printer()`.
@@ -96,8 +92,7 @@ fn shared_printer() -> pprint::Printer {
 /// diff-ready preview if normalization-equivalent output diverges.
 fn assert_canonical_parity(fixture: &str) {
     let path = format!("../../data/css/{}", fixture);
-    let src = std::fs::read_to_string(&path)
-        .unwrap_or_else(|e| panic!("{path}: read failed: {e}"));
+    let src = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path}: read failed: {e}"));
 
     let bbnf_canonical = CssL4Parser::stylesheet_prettify()
         .parse(&src)
@@ -186,8 +181,7 @@ fn first_diff(a: &str, b: &str) -> Mismatch {
 /// without claiming byte-parity the oracle cannot provide.
 fn assert_scale_interop(fixture: &str) {
     let path = format!("../../data/css/{}", fixture);
-    let src = std::fs::read_to_string(&path)
-        .unwrap_or_else(|e| panic!("{path}: read failed: {e}"));
+    let src = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path}: read failed: {e}"));
 
     let bbnf_pretty = CssL4Parser::stylesheet_prettify()
         .parse(&src)
@@ -206,9 +200,7 @@ fn assert_scale_interop(fixture: &str) {
         .unwrap_or_else(|| panic!("{fixture}: bbnf re-parse of prettify output failed"));
 
     StyleSheet::parse(&bbnf_pretty, ParserOptions::default()).unwrap_or_else(|e| {
-        panic!(
-            "{fixture}: lightningcss re-parse of bbnf prettify output failed: {e:?}"
-        )
+        panic!("{fixture}: lightningcss re-parse of bbnf prettify output failed: {e:?}")
     });
 }
 

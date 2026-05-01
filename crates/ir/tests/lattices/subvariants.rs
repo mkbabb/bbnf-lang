@@ -17,7 +17,9 @@
 use std::collections::HashMap;
 
 use bbnf_ir::passes::types::project_types;
-use bbnf_ir::{AltBranch, FnDescriptor, GrammarIR, IrNode, IrRule, MapExpr, RuleId, RuleMeta, TypeDesc};
+use bbnf_ir::{
+    AltBranch, FnDescriptor, GrammarIR, IrNode, IrRule, MapExpr, RuleId, RuleMeta, TypeDesc,
+};
 
 fn make_ir(rules: Vec<IrRule>, fns: Vec<FnDescriptor>, strings: Vec<String>) -> GrammarIR {
     GrammarIR {
@@ -50,7 +52,8 @@ fn make_ir(rules: Vec<IrRule>, fns: Vec<FnDescriptor>, strings: Vec<String>) -> 
         structural_alphabet: None,
         push_fingerprint: None,
         dedup_eligible_rules: Vec::new(),
-        shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
+        shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
+        ),
         eclass_facts: HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),

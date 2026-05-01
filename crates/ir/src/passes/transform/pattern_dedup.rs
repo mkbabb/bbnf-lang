@@ -109,17 +109,14 @@ pub fn hoist_recurring_patterns(ir: &mut GrammarIR) -> usize {
     // occurrence's subtree). All occurrences share the same structure
     // by construction of the hash; deep-equal means the snapshot can
     // stand in for any of them.
-    let mut representative_bodies: Vec<(u64, IrNode)> =
-        Vec::with_capacity(hoist_candidates.len());
+    let mut representative_bodies: Vec<(u64, IrNode)> = Vec::with_capacity(hoist_candidates.len());
     for (hash, sigs) in &hoist_candidates {
         if let Some(first_sig) = sigs.first() {
             let body = clone_pattern_at(ir, first_sig);
             // Structural deep-equal check across all occurrences in
             // the bucket. Hashing by signature catches most cases;
             // the deep-equal filter is belt-and-suspenders.
-            let all_match = sigs
-                .iter()
-                .all(|s| clone_pattern_at(ir, s) == body);
+            let all_match = sigs.iter().all(|s| clone_pattern_at(ir, s) == body);
             if all_match && matches!(body, IrNode::Seq(_) | IrNode::Alt(_, _)) {
                 representative_bodies.push((*hash, body));
             }
@@ -282,8 +279,7 @@ fn hash_node<H: std::hash::Hasher>(node: &IrNode, h: &mut H) {
             hash_node(a, h);
             hash_node(b, h);
         }
-        IrNode::Negate(inner)
-        | IrNode::OptionalWhitespace(inner) => hash_node(inner, h),
+        IrNode::Negate(inner) | IrNode::OptionalWhitespace(inner) => hash_node(inner, h),
         IrNode::Map { inner, fn_id } => {
             fn_id.hash(h);
             hash_node(inner, h);
@@ -350,7 +346,11 @@ fn count_rec(node: &IrNode, count: &mut usize, limit: usize) {
             }
             count_rec(b, count, limit);
         }
-        IrNode::TokenDispatch { token, arms, fallback } => {
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
             count_rec(token, count, limit);
             for arm in arms {
                 count_rec(&arm.continuation, count, limit);
@@ -393,11 +393,7 @@ fn clone_pattern_at(ir: &GrammarIR, sig: &Signature) -> IrNode {
 /// Walks top-down, consulting the hash-to-rule-id map at every Seq /
 /// Alt node. A match on the current node replaces the node in place;
 /// if no match, recurse into children.
-fn rewrite_patterns(
-    node: &mut IrNode,
-    map: &HashMap<u64, RuleId>,
-    is_root: bool,
-) {
+fn rewrite_patterns(node: &mut IrNode, map: &HashMap<u64, RuleId>, is_root: bool) {
     if !is_root && matches!(node, IrNode::Seq(_) | IrNode::Alt(_, _)) {
         let hash = signature_hash(node);
         if let Some(&rule_id) = map.get(&hash) {

@@ -233,11 +233,7 @@ pub trait Emitter {
         Self::Output::default()
     }
 
-    fn emit_negate(
-        &mut self,
-        _inner: Self::Output,
-        _ctx: &mut Self::Ctx,
-    ) -> Self::Output {
+    fn emit_negate(&mut self, _inner: Self::Output, _ctx: &mut Self::Ctx) -> Self::Output {
         Self::Output::default()
     }
 
@@ -253,7 +249,11 @@ pub trait Emitter {
         Self::Output::default()
     }
 
-    fn emit_number_convert(&mut self, _allow_leading_dot: bool, _ctx: &mut Self::Ctx) -> Self::Output {
+    fn emit_number_convert(
+        &mut self,
+        _allow_leading_dot: bool,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
         Self::Output::default()
     }
 
@@ -281,11 +281,7 @@ pub trait Emitter {
     }
 
     /// Emit a span capture: parse inner for validation, return Span.
-    fn emit_span_capture(
-        &mut self,
-        _inner: Self::Output,
-        _ctx: &mut Self::Ctx,
-    ) -> Self::Output {
+    fn emit_span_capture(&mut self, _inner: Self::Output, _ctx: &mut Self::Ctx) -> Self::Output {
         Self::Output::default()
     }
 
@@ -314,11 +310,7 @@ pub trait Emitter {
         None
     }
 
-    fn emit_ws_trim(
-        &mut self,
-        _ws_pattern: Option<&str>,
-        _ctx: &mut Self::Ctx,
-    ) -> Self::Output {
+    fn emit_ws_trim(&mut self, _ws_pattern: Option<&str>, _ctx: &mut Self::Ctx) -> Self::Output {
         Self::Output::default()
     }
 
@@ -401,30 +393,19 @@ pub trait Emitter {
     /// use this to set up per-rule context (e.g., the Rust backend
     /// sets `branch_idx_ident` for Alt-bodied rules so the Alt
     /// emitter threads a branch discriminator through each arm).
-    fn pre_compile_rule_body(
-        &mut self,
-        _rule: &IrRule,
-        _ir: &GrammarIR,
-        _ctx: &mut Self::Ctx,
-    ) {}
+    fn pre_compile_rule_body(&mut self, _rule: &IrRule, _ir: &GrammarIR, _ctx: &mut Self::Ctx) {}
 
     /// Called before the driver compiles Alt branch bodies. Backends
     /// can use this to save per-Alt context that inner (nested) Alts
     /// might otherwise consume. The Rust backend saves
     /// `branch_idx_ident` so nested Alts don't clobber the outer Alt's
     /// state.
-    fn pre_compile_alt_branches(
-        &mut self,
-        _ctx: &mut Self::Ctx,
-    ) {}
+    fn pre_compile_alt_branches(&mut self, _ctx: &mut Self::Ctx) {}
 
     /// Called after the driver compiles Alt branch bodies (before the
     /// `emit_alt_*` call). Backends restore context saved by
     /// `pre_compile_alt_branches`.
-    fn post_compile_alt_branches(
-        &mut self,
-        _ctx: &mut Self::Ctx,
-    ) {}
+    fn post_compile_alt_branches(&mut self, _ctx: &mut Self::Ctx) {}
 
     fn emit_rule_function(
         &mut self,
@@ -455,34 +436,90 @@ pub trait Emitter {
     fn emit_prettify_literal(&mut self, _value: &str, _ctx: &mut Self::Ctx) -> Self::Output {
         unimplemented!("prettify not supported")
     }
-    fn emit_prettify_regex(&mut self, _pattern: &str, _regex_id: usize, _ir: &GrammarIR, _ctx: &mut Self::Ctx) -> Self::Output {
+    fn emit_prettify_regex(
+        &mut self,
+        _pattern: &str,
+        _regex_id: usize,
+        _ir: &GrammarIR,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
         unimplemented!("prettify not supported")
     }
-    fn emit_prettify_ref(&mut self, _rule_id: RuleId, _rule_name: &str, _plan: &PrettyRulePlan, _ir: &GrammarIR, _ctx: &mut Self::Ctx) -> Self::Output {
+    fn emit_prettify_ref(
+        &mut self,
+        _rule_id: RuleId,
+        _rule_name: &str,
+        _plan: &PrettyRulePlan,
+        _ir: &GrammarIR,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
         unimplemented!("prettify not supported")
     }
-    fn emit_prettify_seq(&mut self, _children: Vec<Self::Output>, _ctx: &mut Self::Ctx) -> Self::Output {
+    fn emit_prettify_seq(
+        &mut self,
+        _children: Vec<Self::Output>,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
         unimplemented!("prettify not supported")
     }
-    fn emit_prettify_alt_dispatch(&mut self, _table: &AltDispatch, _branches: Vec<Self::Output>, _fallback: Option<Self::Output>, _ctx: &mut Self::Ctx) -> Self::Output {
+    fn emit_prettify_alt_dispatch(
+        &mut self,
+        _table: &AltDispatch,
+        _branches: Vec<Self::Output>,
+        _fallback: Option<Self::Output>,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
         unimplemented!("prettify not supported")
     }
-    fn emit_prettify_alt_sequential(&mut self, _branches: Vec<(Self::Output, bool)>, _ctx: &mut Self::Ctx) -> Self::Output {
+    fn emit_prettify_alt_sequential(
+        &mut self,
+        _branches: Vec<(Self::Output, bool)>,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
         unimplemented!("prettify not supported")
     }
-    fn emit_prettify_repeat(&mut self, _body: Self::Output, _lo: u32, _hi: u32, _policy: &PrettyPolicy, _ctx: &mut Self::Ctx) -> Self::Output {
+    fn emit_prettify_repeat(
+        &mut self,
+        _body: Self::Output,
+        _lo: u32,
+        _hi: u32,
+        _policy: &PrettyPolicy,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
         unimplemented!("prettify not supported")
     }
-    fn emit_prettify_skip(&mut self, _left: Self::Output, _right: Self::Output, _ctx: &mut Self::Ctx) -> Self::Output {
+    fn emit_prettify_skip(
+        &mut self,
+        _left: Self::Output,
+        _right: Self::Output,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
         unimplemented!("prettify not supported")
     }
-    fn emit_prettify_next(&mut self, _left: Self::Output, _right: Self::Output, _ctx: &mut Self::Ctx) -> Self::Output {
+    fn emit_prettify_next(
+        &mut self,
+        _left: Self::Output,
+        _right: Self::Output,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
         unimplemented!("prettify not supported")
     }
-    fn emit_prettify_optional_ws(&mut self, _inner: Self::Output, _is_atomic: bool, _ir: &GrammarIR, _ctx: &mut Self::Ctx) -> Self::Output {
+    fn emit_prettify_optional_ws(
+        &mut self,
+        _inner: Self::Output,
+        _is_atomic: bool,
+        _ir: &GrammarIR,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
         unimplemented!("prettify not supported")
     }
-    fn emit_prettify_attempt(&mut self, _expr: Self::Output, _rollback_builder: bool, _use_light: bool, _ctx: &mut Self::Ctx) -> Self::Output {
+    fn emit_prettify_attempt(
+        &mut self,
+        _expr: Self::Output,
+        _rollback_builder: bool,
+        _use_light: bool,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
         unimplemented!("prettify not supported")
     }
     /// Wrap an expression so it parses (advances state) but emits no
@@ -508,10 +545,22 @@ pub trait Emitter {
     fn emit_prettify_sep_inline(&mut self, _sep: &str, _ctx: &mut Self::Ctx) -> Self::Output {
         unimplemented!("prettify not supported")
     }
-    fn emit_prettify_rule_function(&mut self, _rule: &IrRule, _body: Self::Output, _policy: &PrettyPolicy, _ir: &GrammarIR, _ctx: &mut Self::Ctx) -> Self::Output {
+    fn emit_prettify_rule_function(
+        &mut self,
+        _rule: &IrRule,
+        _body: Self::Output,
+        _policy: &PrettyPolicy,
+        _ir: &GrammarIR,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
         unimplemented!("prettify not supported")
     }
-    fn emit_prettify_grammar(&mut self, _rule_functions: Vec<Self::Output>, _ir: &GrammarIR, _ctx: &mut Self::Ctx) -> Self::Output {
+    fn emit_prettify_grammar(
+        &mut self,
+        _rule_functions: Vec<Self::Output>,
+        _ir: &GrammarIR,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
         unimplemented!("prettify not supported")
     }
 }

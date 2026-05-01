@@ -12,13 +12,13 @@ pub(crate) mod scanner_plan;
 pub mod simd;
 
 // Re-export the negated class detection (used by fast_paths below)
-pub use negated_class::{is_negated_char_class_regex, NegCharClassQuantifier};
+pub use negated_class::{NegCharClassQuantifier, is_negated_char_class_regex};
 
 // Phase 6: DFA canonical hashing for cross-rule deduplication.
 pub use dfa::canonical_dfa_hash;
 
-use parse_that::regex::classify::{ClassRangeInfo, RegexClass};
 use crate::generate::regex::cost_model::{CostModel, EmitOpts};
+use parse_that::regex::classify::{ClassRangeInfo, RegexClass};
 
 use proc_macro2::TokenStream;
 use quote::quote;

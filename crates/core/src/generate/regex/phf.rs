@@ -104,9 +104,7 @@ pub fn try_build_shared_table(rules: &[RuleKeywordSet]) -> Option<SharedKeywordT
             let pairs: Vec<(u16, u8)> = r
                 .entries
                 .iter()
-                .filter_map(|(kw, idx)| {
-                    kw_to_idx.get(kw.as_slice()).map(|v| (*v, *idx))
-                })
+                .filter_map(|(kw, idx)| kw_to_idx.get(kw.as_slice()).map(|v| (*v, *idx)))
                 .collect();
             (r.rule_id, pairs)
         })
@@ -138,8 +136,12 @@ pub fn emit_shared_table(grammar: &str, table: &SharedKeywordTable<'_>) -> Token
         let n_pairs_lit = Literal::usize_unsuffixed(n_pairs);
         let mut sorted_pairs = pairs.clone();
         sorted_pairs.sort_by_key(|(vidx, _)| *vidx);
-        let idx_lits = sorted_pairs.iter().map(|(vidx, _)| Literal::u16_unsuffixed(*vidx));
-        let disc_lits = sorted_pairs.iter().map(|(_, disc)| Literal::u8_unsuffixed(*disc));
+        let idx_lits = sorted_pairs
+            .iter()
+            .map(|(vidx, _)| Literal::u16_unsuffixed(*vidx));
+        let disc_lits = sorted_pairs
+            .iter()
+            .map(|(_, disc)| Literal::u8_unsuffixed(*disc));
 
         quote! {
             /// Vocab indices admissible to this rule (sorted).

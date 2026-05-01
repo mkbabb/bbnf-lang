@@ -3,7 +3,6 @@
 
 use ::bbnf::grammar::generated::css_pretty::*;
 
-
 fn load_css(name: &str) -> String {
     let candidates = [
         format!("../../data/css/{}", name),

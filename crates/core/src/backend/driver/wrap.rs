@@ -55,10 +55,8 @@ pub(super) fn compile_wrap<E: Emitter>(
                 } else {
                     ValuePlacement::Inline
                 };
-                let open_out =
-                    compile_node(open, ValuePlacement::Inline, ir, dstate, emitter, ctx);
-                let element_out =
-                    compile_node(element, elem_alloc, ir, dstate, emitter, ctx);
+                let open_out = compile_node(open, ValuePlacement::Inline, ir, dstate, emitter, ctx);
+                let element_out = compile_node(element, elem_alloc, ir, dstate, emitter, ctx);
                 let sep_out =
                     compile_node(separator, ValuePlacement::Inline, ir, dstate, emitter, ctx);
                 let close_out =

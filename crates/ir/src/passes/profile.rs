@@ -23,9 +23,7 @@
 //! [`EClassFacts`]: crate::egraph::analysis::EClassFacts
 
 use crate::GrammarIR;
-use crate::passes::recognizers::shape_dict_bbnf::{
-    mine_bbnf_shape_templates, BbnfShapeTemplate,
-};
+use crate::passes::recognizers::shape_dict_bbnf::{BbnfShapeTemplate, mine_bbnf_shape_templates};
 
 /// Consolidated per-grammar fingerprint owned by the IR.
 ///
@@ -51,7 +49,6 @@ use crate::passes::recognizers::shape_dict_bbnf::{
 #[derive(Clone, Debug, Default)]
 pub struct GrammarProfile {
     // ── Per-byte density estimates (V1) ──────────────────────────────
-
     /// Estimated compound records produced per input byte.
     pub compounds_per_input_byte: f32,
 
@@ -59,13 +56,11 @@ pub struct GrammarProfile {
     pub leaves_per_input_byte: f32,
 
     // ── Parallel parse cost model (V6) ───────────────────────────────
-
     /// Minimum input size (bytes) at which parallel parse beats
     /// sequential. V6 populates; V1 defaults to 0 (no parallel path).
     pub parallel_break_even_bytes: u32,
 
     // ── Byte-class dispatch (V1, from StructuralAlphabet; AW-III.W5.a extends) ─
-
     /// Sorted single-byte structural alphabet. Empty when the
     /// grammar has no structural-alphabet fingerprint or the
     /// alphabet lies outside the nibble-LUT window (2..=8 bytes).
@@ -93,7 +88,6 @@ pub struct GrammarProfile {
     pub structural_quote_classes: Vec<u8>,
 
     // ── Reorder-unroll visitors (V2, AV.2.5) ─────────────────────────
-
     /// Visitor-like reductions admitted by this grammar over its typed
     /// payload columns. Each descriptor lowers to a 4-lane reordered-
     /// unrolling kernel function in `generated.rs`; the kernel pattern
@@ -137,9 +131,7 @@ impl GrammarIR {
         // the in-grammar compound/leaf/leaf_with share. The tape-side
         // reader recombines them into the same capacity estimate
         // (see `GrammarProfile::capacity_for`).
-        let (numer, denom) = push
-            .map(|fp| fp.capacity_ratio())
-            .unwrap_or((1, 2));
+        let (numer, denom) = push.map(|fp| fp.capacity_ratio()).unwrap_or((1, 2));
         let records_per_byte = (numer as f32) / (denom as f32);
         let total_pushes =
             (push_compound_count as u32 + push_leaf_count as u32 + push_leaf_with_count as u32)

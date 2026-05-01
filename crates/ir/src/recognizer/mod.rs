@@ -227,10 +227,7 @@ impl<'a> RecognizerInfo for DispatchGroupRecognizer<'a> {
     }
 
     fn width(&self) -> Width {
-        Width {
-            min: 1,
-            max: None,
-        }
+        Width { min: 1, max: None }
     }
 
     fn accel_candidate(&self) -> Option<u8> {

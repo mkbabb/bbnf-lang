@@ -4,11 +4,7 @@ use super::code::{WasmEmitCtx, WasmEmitter};
 
 impl WasmEmitter {
     /// Emit standalone whitespace trim (returns new offset).
-    pub(super) fn ws_trim(
-        &mut self,
-        ws_pattern: Option<&str>,
-        ctx: &mut WasmEmitCtx,
-    ) -> String {
+    pub(super) fn ws_trim(&mut self, ws_pattern: Option<&str>, ctx: &mut WasmEmitCtx) -> String {
         if let Some(pattern) = ws_pattern {
             if pattern.contains("/*") || pattern.contains(r"\/\*") {
                 let ws_done = ctx.fresh_label("ws_done");
@@ -47,7 +43,9 @@ impl WasmEmitter {
                      (local.get $off)"
                 )
             } else if let Some(ws_id) = self.ws_regex_id {
-                format!("(call $__match_regex (i32.const {ws_id}) (local.get $off) (local.get $len))")
+                format!(
+                    "(call $__match_regex (i32.const {ws_id}) (local.get $off) (local.get $len))"
+                )
             } else {
                 self.ws_trim(None, ctx)
             }

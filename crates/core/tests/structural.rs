@@ -21,7 +21,7 @@
 //! array element count, etc.).
 
 use ::bbnf::grammar::generated::json::*;
-use bbnf::runtime::{JsonValue, JsonNumber, JsonView};
+use bbnf::runtime::{JsonNumber, JsonValue, JsonView};
 
 // ── Helpers ────────────────────────────────────────────────────────────
 
@@ -30,10 +30,7 @@ use bbnf::runtime::{JsonValue, JsonNumber, JsonView};
 /// off the struct tree.
 fn count_reachable<'p>(view: &JsonView<'_, 'p>, value: &JsonValue<'p>) -> usize {
     match value {
-        JsonValue::Null
-        | JsonValue::Bool(_)
-        | JsonValue::Number(_)
-        | JsonValue::String(_) => 1,
+        JsonValue::Null | JsonValue::Bool(_) | JsonValue::Number(_) | JsonValue::String(_) => 1,
         JsonValue::Array(id) => {
             1 + view
                 .array(*id)
@@ -55,11 +52,7 @@ fn count_reachable<'p>(view: &JsonView<'_, 'p>, value: &JsonValue<'p>) -> usize 
 /// Replaces the pre-flip substring walker that searched span-text on
 /// every record; the struct tree's strings are the
 /// scalar-projection equivalent.
-fn tree_contains_string<'p>(
-    view: &JsonView<'_, 'p>,
-    value: &JsonValue<'p>,
-    needle: &str,
-) -> bool {
+fn tree_contains_string<'p>(view: &JsonView<'_, 'p>, value: &JsonValue<'p>, needle: &str) -> bool {
     match value {
         JsonValue::String(s) => s.contains(needle),
         JsonValue::Array(id) => view
@@ -74,11 +67,7 @@ fn tree_contains_string<'p>(
 }
 
 /// `true` if any reachable number scalar matches `target` exactly.
-fn tree_contains_number<'p>(
-    view: &JsonView<'_, 'p>,
-    value: &JsonValue<'p>,
-    target: f64,
-) -> bool {
+fn tree_contains_number<'p>(view: &JsonView<'_, 'p>, value: &JsonValue<'p>, target: f64) -> bool {
     match value {
         JsonValue::Number(n) => match n {
             JsonNumber::Float(f) => *f == target,
@@ -114,8 +103,7 @@ fn load_data(name: &str) -> Option<String> {
 #[test]
 fn structural_object_with_array() {
     let input = r#"{"key": [1, true, null]}"#;
-    let doc = JsonParser::parse(input)
-        .unwrap_or_else(|e| panic!("parse failed: {:?}", e));
+    let doc = JsonParser::parse(input).unwrap_or_else(|e| panic!("parse failed: {:?}", e));
     let view = doc.view();
 
     // Root must be an object compound, not a leaf.
@@ -157,11 +145,14 @@ fn structural_object_with_array() {
 #[test]
 fn structural_array_three_numbers() {
     let input = "[1, 2, 3]";
-    let doc = JsonParser::parse(input)
-        .unwrap_or_else(|e| panic!("parse failed: {:?}", e));
+    let doc = JsonParser::parse(input).unwrap_or_else(|e| panic!("parse failed: {:?}", e));
     let view = doc.view();
 
-    assert!(view.is_array(), "root should be an array, got {:?}", view.kind());
+    assert!(
+        view.is_array(),
+        "root should be an array, got {:?}",
+        view.kind()
+    );
 
     let elements = match doc.root {
         JsonValue::Array(id) => view.array(id),
@@ -184,8 +175,7 @@ fn structural_array_three_numbers() {
 #[test]
 fn structural_object_two_pairs() {
     let input = r#"{"a": 1, "b": "hello"}"#;
-    let doc = JsonParser::parse(input)
-        .unwrap_or_else(|e| panic!("parse failed: {:?}", e));
+    let doc = JsonParser::parse(input).unwrap_or_else(|e| panic!("parse failed: {:?}", e));
     let view = doc.view();
 
     assert!(view.is_object(), "root should be an object");
@@ -227,8 +217,7 @@ fn structural_object_two_pairs() {
 #[test]
 fn structural_nested_objects() {
     let input = r#"{"outer": {"inner": 42}}"#;
-    let doc = JsonParser::parse(input)
-        .unwrap_or_else(|e| panic!("parse failed: {:?}", e));
+    let doc = JsonParser::parse(input).unwrap_or_else(|e| panic!("parse failed: {:?}", e));
     let view = doc.view();
 
     assert!(view.is_object(), "root should be an object");
@@ -270,8 +259,7 @@ fn structural_nested_objects() {
 #[test]
 fn structural_empty_array() {
     let input = "[]";
-    let doc = JsonParser::parse(input)
-        .unwrap_or_else(|e| panic!("parse failed: {:?}", e));
+    let doc = JsonParser::parse(input).unwrap_or_else(|e| panic!("parse failed: {:?}", e));
     let view = doc.view();
 
     assert!(view.is_array(), "root should be an empty array");
@@ -286,8 +274,7 @@ fn structural_empty_array() {
 #[test]
 fn structural_empty_object() {
     let input = "{}";
-    let doc = JsonParser::parse(input)
-        .unwrap_or_else(|e| panic!("parse failed: {:?}", e));
+    let doc = JsonParser::parse(input).unwrap_or_else(|e| panic!("parse failed: {:?}", e));
     let view = doc.view();
 
     assert!(view.is_object(), "root should be an empty object");
@@ -304,32 +291,28 @@ fn structural_empty_object() {
 #[test]
 fn structural_scalar_null() {
     let input = "null";
-    let doc = JsonParser::parse(input)
-        .unwrap_or_else(|e| panic!("parse failed: {:?}", e));
+    let doc = JsonParser::parse(input).unwrap_or_else(|e| panic!("parse failed: {:?}", e));
     assert!(doc.view().is_null(), "expected null");
 }
 
 #[test]
 fn structural_scalar_bool_true() {
     let input = "true";
-    let doc = JsonParser::parse(input)
-        .unwrap_or_else(|e| panic!("parse failed: {:?}", e));
+    let doc = JsonParser::parse(input).unwrap_or_else(|e| panic!("parse failed: {:?}", e));
     assert_eq!(doc.root, JsonValue::Bool(true));
 }
 
 #[test]
 fn structural_scalar_bool_false() {
     let input = "false";
-    let doc = JsonParser::parse(input)
-        .unwrap_or_else(|e| panic!("parse failed: {:?}", e));
+    let doc = JsonParser::parse(input).unwrap_or_else(|e| panic!("parse failed: {:?}", e));
     assert_eq!(doc.root, JsonValue::Bool(false));
 }
 
 #[test]
 fn structural_scalar_number_integer() {
     let input = "42";
-    let doc = JsonParser::parse(input)
-        .unwrap_or_else(|e| panic!("parse failed: {:?}", e));
+    let doc = JsonParser::parse(input).unwrap_or_else(|e| panic!("parse failed: {:?}", e));
     match doc.root {
         JsonValue::Number(n) => assert_eq!(n.as_f64(), 42.0),
         ref other => panic!("expected number, got {:?}", other),
@@ -339,8 +322,7 @@ fn structural_scalar_number_integer() {
 #[test]
 fn structural_scalar_number_negative_float() {
     let input = "-3.14";
-    let doc = JsonParser::parse(input)
-        .unwrap_or_else(|e| panic!("parse failed: {:?}", e));
+    let doc = JsonParser::parse(input).unwrap_or_else(|e| panic!("parse failed: {:?}", e));
     match doc.root {
         JsonValue::Number(n) => assert!((n.as_f64() - (-3.14)).abs() < 1e-9),
         ref other => panic!("expected number, got {:?}", other),
@@ -350,8 +332,7 @@ fn structural_scalar_number_negative_float() {
 #[test]
 fn structural_scalar_number_exponent() {
     let input = "1e10";
-    let doc = JsonParser::parse(input)
-        .unwrap_or_else(|e| panic!("parse failed: {:?}", e));
+    let doc = JsonParser::parse(input).unwrap_or_else(|e| panic!("parse failed: {:?}", e));
     match doc.root {
         JsonValue::Number(n) => assert_eq!(n.as_f64(), 1e10),
         ref other => panic!("expected number, got {:?}", other),
@@ -361,8 +342,7 @@ fn structural_scalar_number_exponent() {
 #[test]
 fn structural_scalar_string() {
     let input = r#""hello world""#;
-    let doc = JsonParser::parse(input)
-        .unwrap_or_else(|e| panic!("parse failed: {:?}", e));
+    let doc = JsonParser::parse(input).unwrap_or_else(|e| panic!("parse failed: {:?}", e));
     match doc.root {
         JsonValue::String(s) => assert_eq!(s, "hello world"),
         ref other => panic!("expected string, got {:?}", other),
@@ -372,8 +352,7 @@ fn structural_scalar_string() {
 #[test]
 fn structural_scalar_string_with_escapes() {
     let input = r#""line\nbreak""#;
-    let doc = JsonParser::parse(input)
-        .unwrap_or_else(|e| panic!("parse failed: {:?}", e));
+    let doc = JsonParser::parse(input).unwrap_or_else(|e| panic!("parse failed: {:?}", e));
     // The arena-decoded string should resolve the `\n` escape to a
     // literal newline byte. The struct-direct decoder runs the same
     // `decode_json_string_to_arena` kernel the pre-flip path used.
@@ -395,8 +374,8 @@ fn structural_data_json_sanity() {
         }
     };
 
-    let doc = JsonParser::parse(&input)
-        .unwrap_or_else(|e| panic!("data.json parse failed: {:?}", e));
+    let doc =
+        JsonParser::parse(&input).unwrap_or_else(|e| panic!("data.json parse failed: {:?}", e));
     let view = doc.view();
 
     // Total reachable nodes — data.json should produce a substantial
@@ -404,11 +383,7 @@ fn structural_data_json_sanity() {
     // tree projection retains every typed leaf + compound, so the
     // floor still holds).
     let total = count_reachable(&view, view.root());
-    assert!(
-        total >= 10,
-        "data.json tree too small: {} nodes",
-        total
-    );
+    assert!(total >= 10, "data.json tree too small: {} nodes", total);
 
     // Root should be a compound (object or array), not a scalar leaf.
     assert!(
@@ -435,9 +410,9 @@ fn structural_data_json_sanity() {
 #[test]
 fn structural_reject_malformed() {
     let malformed = [
-        r#"{"key": [1, 2,"#,     // truncated array
-        r#"{"key":"#,             // truncated object
-        "",                       // empty input
+        r#"{"key": [1, 2,"#, // truncated array
+        r#"{"key":"#,        // truncated object
+        "",                  // empty input
     ];
     for input in malformed {
         let result = JsonParser::parse(input);

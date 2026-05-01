@@ -31,9 +31,9 @@
 //! the consumer; per `feedback_pluggable-components`, layout-kind
 //! discrimination is queried, never duplicated at the consumer.
 
+pub mod strategy;
 #[allow(clippy::module_inception)]
 mod r#struct;
-pub mod strategy;
 
-pub use r#struct::{FieldSource, LayoutKind, StructField, StructLayout, StructRegistry};
 pub use strategy::{EmitStrategy, SubstrateBinding};
+pub use r#struct::{FieldSource, LayoutKind, StructField, StructLayout, StructRegistry};

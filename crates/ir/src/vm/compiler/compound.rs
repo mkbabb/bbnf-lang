@@ -1,9 +1,7 @@
 //! Compound-node compilers — sequence, alternation (linear + dispatch),
 //! token dispatch, repetition, Skip/Next, Minus, Negate.
 
-use crate::vm::bytecode::{
-    DispatchData, Op, TokenDispatchArmData, TokenDispatchData,
-};
+use crate::vm::bytecode::{DispatchData, Op, TokenDispatchArmData, TokenDispatchData};
 use crate::{AltBranch, AltDispatch, GrammarIR, IrNode, TokenDispatchArm};
 
 use super::Compiler;
@@ -164,12 +162,7 @@ impl Compiler {
     /// Wraps the entire dispatch in SaveState/RestoreState so that when a
     /// dispatch-selected branch partially matches then fails, the offset is
     /// correctly restored (mirroring the linear Alt pattern).
-    fn compile_dispatch(
-        &mut self,
-        branches: &[AltBranch],
-        dispatch: &AltDispatch,
-        ir: &GrammarIR,
-    ) {
+    fn compile_dispatch(&mut self, branches: &[AltBranch], dispatch: &AltDispatch, ir: &GrammarIR) {
         // Save state before dispatch so we can restore on branch failure.
         self.emit(Op::SaveState);
 

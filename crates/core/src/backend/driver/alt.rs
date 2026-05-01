@@ -49,10 +49,8 @@ pub fn branch_pushes_children(ir: &GrammarIR, node: &IrNode, dstate: &DriverStat
 
         IrNode::Ref(target) => {
             if let Some(rule) = ir.rules.iter().find(|r| r.id == *target) {
-                let inlined = matches!(
-                    dstate.call_strategy(*target),
-                    CallStrategy::InlineBody
-                ) || rule.meta.is_transparent;
+                let inlined = matches!(dstate.call_strategy(*target), CallStrategy::InlineBody)
+                    || rule.meta.is_transparent;
                 if inlined {
                     return branch_pushes_children(ir, &rule.body, dstate);
                 }

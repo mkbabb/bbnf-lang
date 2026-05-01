@@ -172,15 +172,11 @@ fn audit_all_grammar_regex_patterns() {
             }
             RegexStrategy::DfaTierA { states, classes } => {
                 tier_counts[2] += 1;
-                eprintln!(
-                    "  DFA-A: /{pattern}/ ({states} states, {classes} classes) [{file}]"
-                );
+                eprintln!("  DFA-A: /{pattern}/ ({states} states, {classes} classes) [{file}]");
             }
             RegexStrategy::DfaTierB { states, classes } => {
                 tier_counts[3] += 1;
-                eprintln!(
-                    "  DFA-B: /{pattern}/ ({states} states, {classes} classes) [{file}]"
-                );
+                eprintln!("  DFA-B: /{pattern}/ ({states} states, {classes} classes) [{file}]");
             }
             RegexStrategy::Unsupported => {
                 tier_counts[4] += 1;

@@ -114,17 +114,14 @@ fn every_named_json_rule_has_a_struct_layout() {
     //    coverage is the registry-closure regression signal.
     for rule in &ir.rules {
         let rule_name = ir.get_string(rule.name).to_string();
-        let layout = ir
-            .struct_registry
-            .layout(rule.id)
-            .unwrap_or_else(|| {
-                panic!(
-                    "AZ-I.W1.B1: rule `{rule_name}` (id={}) has no registered \
+        let layout = ir.struct_registry.layout(rule.id).unwrap_or_else(|| {
+            panic!(
+                "AZ-I.W1.B1: rule `{rule_name}` (id={}) has no registered \
                      StructLayout. `project_types` did not close on this \
                      rule.",
-                    rule.id
-                )
-            });
+                rule.id
+            )
+        });
         assert!(
             layout.field_count() > 0,
             "AZ-I.W1.B1: rule `{rule_name}` has empty StructLayout (kind: \
@@ -237,20 +234,13 @@ fn array_rule_layout_carries_repeat_element_field() {
          (the Repeat element)"
     );
 
-    let has_repeat_element = layout
-        .fields
-        .iter()
-        .any(|f| f.is_repeat_element());
+    let has_repeat_element = layout.fields.iter().any(|f| f.is_repeat_element());
     assert!(
         has_repeat_element,
         "AZ-I.W1.B1: `array` has no `RepeatElement` field; expected \
          the `(value << comma ?) *` Repeat to project at least one. \
          Field provenances: {:?}",
-        layout
-            .fields
-            .iter()
-            .map(|f| f.source)
-            .collect::<Vec<_>>()
+        layout.fields.iter().map(|f| f.source).collect::<Vec<_>>()
     );
 }
 
@@ -267,20 +257,13 @@ fn object_rule_layout_carries_repeat_element_field() {
          (the Repeat element)"
     );
 
-    let has_repeat_element = layout
-        .fields
-        .iter()
-        .any(|f| f.is_repeat_element());
+    let has_repeat_element = layout.fields.iter().any(|f| f.is_repeat_element());
     assert!(
         has_repeat_element,
         "AZ-I.W1.B1: `object` has no `RepeatElement` field; expected \
          the `(pair << comma ?) *` Repeat to project at least one. \
          Field provenances: {:?}",
-        layout
-            .fields
-            .iter()
-            .map(|f| f.source)
-            .collect::<Vec<_>>()
+        layout.fields.iter().map(|f| f.source).collect::<Vec<_>>()
     );
 }
 
@@ -407,8 +390,7 @@ fn audit_pass_reports_one_hundred_percent_mapped_on_json() {
         coverage.mapped_markers, coverage.total_markers,
         "AZ-I.W1.B1: mapped {} of {} markers; gate requires 100% \
          coverage. Pending: {:#?} Missing: {:#?}",
-        coverage.mapped_markers, coverage.total_markers,
-        coverage.pending, coverage.missing,
+        coverage.mapped_markers, coverage.total_markers, coverage.pending, coverage.missing,
     );
     assert!(coverage.is_clean());
     assert_eq!(coverage.ratio(), 1.0);

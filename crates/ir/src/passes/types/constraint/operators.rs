@@ -51,9 +51,7 @@ impl Constraint<TypeDomain> for OptionalConstraint {
             match inner_slot {
                 None => return Revision::Unchanged,
                 Some(ty) if *ty == TypeDesc::Span => TypeDesc::Span,
-                Some(_) if self.transparent_ref => {
-                    TypeDesc::Option(Box::new(TypeDesc::Enum))
-                }
+                Some(_) if self.transparent_ref => TypeDesc::Option(Box::new(TypeDesc::Enum)),
                 Some(ty) => TypeDesc::Option(Box::new(ty.clone())),
             }
         };

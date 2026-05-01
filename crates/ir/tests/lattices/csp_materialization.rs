@@ -18,7 +18,7 @@
 
 use std::collections::HashMap;
 
-use bbnf_ir::passes::materialization::{classify_materialization, MaterializationClass};
+use bbnf_ir::passes::materialization::{MaterializationClass, classify_materialization};
 use bbnf_ir::passes::solve_grammar_components;
 use bbnf_ir::{
     AltBranch, CostConfig, GrammarIR, IrNode, IrRule, PrettyHints, RuleDirectives, RuleMeta,
@@ -59,9 +59,10 @@ fn make_ir(rules: Vec<IrRule>, strings: Vec<String>) -> GrammarIR {
         payload_layouts: HashMap::new(),
         structural_alphabet: None,
         push_fingerprint: None,
-            dedup_eligible_rules: Vec::new(),
+        dedup_eligible_rules: Vec::new(),
 
-            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
+        shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
+        ),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -162,8 +163,14 @@ fn pretty_pinned_rule_stays_must_tape_after_csp() {
     };
     let body = IrNode::Alt(
         vec![
-            AltBranch { node: IrNode::Literal(1), first_set: None },
-            AltBranch { node: IrNode::Literal(2), first_set: None },
+            AltBranch {
+                node: IrNode::Literal(1),
+                first_set: None,
+            },
+            AltBranch {
+                node: IrNode::Literal(2),
+                first_set: None,
+            },
         ],
         None,
     );
@@ -235,9 +242,18 @@ fn alt_rule_stays_must_tape_after_csp() {
         0,
         IrNode::Alt(
             vec![
-                AltBranch { node: IrNode::Literal(1), first_set: None },
-                AltBranch { node: IrNode::Literal(2), first_set: None },
-                AltBranch { node: IrNode::Literal(3), first_set: None },
+                AltBranch {
+                    node: IrNode::Literal(1),
+                    first_set: None,
+                },
+                AltBranch {
+                    node: IrNode::Literal(2),
+                    first_set: None,
+                },
+                AltBranch {
+                    node: IrNode::Literal(3),
+                    first_set: None,
+                },
             ],
             None,
         ),

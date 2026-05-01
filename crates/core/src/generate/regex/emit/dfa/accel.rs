@@ -213,13 +213,15 @@ pub(super) fn try_emit_accel_expr(accel: &StateAccel) -> Option<TokenStream> {
                 )
             })
         }
-        AccelStrategy::NibbleLut {
-            lo_lut, hi_lut, ..
-        } => {
-            let lo_elems: Vec<proc_macro2::Literal> =
-                lo_lut.iter().map(|&b| proc_macro2::Literal::u8_unsuffixed(b)).collect();
-            let hi_elems: Vec<proc_macro2::Literal> =
-                hi_lut.iter().map(|&b| proc_macro2::Literal::u8_unsuffixed(b)).collect();
+        AccelStrategy::NibbleLut { lo_lut, hi_lut, .. } => {
+            let lo_elems: Vec<proc_macro2::Literal> = lo_lut
+                .iter()
+                .map(|&b| proc_macro2::Literal::u8_unsuffixed(b))
+                .collect();
+            let hi_elems: Vec<proc_macro2::Literal> = hi_lut
+                .iter()
+                .map(|&b| proc_macro2::Literal::u8_unsuffixed(b))
+                .collect();
             Some(quote! {
                 {
                     static __LO_LUT: [u8; 16] = [#(#lo_elems),*];

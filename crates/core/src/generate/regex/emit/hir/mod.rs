@@ -13,10 +13,10 @@ mod alternation;
 mod leaf;
 mod repetition;
 
-use proc_macro2::TokenStream;
-use quote::quote;
 use parse_that::regex::hir::{CharClass, Hir};
 use parse_that::regex::info::is_nullable;
+use proc_macro2::TokenStream;
+use quote::quote;
 
 use alternation::emit_alternation;
 use leaf::{emit_class_single, emit_literal, emit_look};
@@ -31,9 +31,7 @@ use repetition::emit_repetition;
 pub(crate) fn contains_lazy_quantifier(hir: &Hir) -> bool {
     match hir {
         Hir::Repetition(rep) => !rep.greedy || contains_lazy_quantifier(&rep.sub),
-        Hir::Concat(subs) | Hir::Alternation(subs) => {
-            subs.iter().any(contains_lazy_quantifier)
-        }
+        Hir::Concat(subs) | Hir::Alternation(subs) => subs.iter().any(contains_lazy_quantifier),
         Hir::Group(sub) => contains_lazy_quantifier(sub),
         _ => false,
     }
@@ -49,11 +47,8 @@ pub(crate) fn contains_lazy_quantifier(hir: &Hir) -> bool {
 /// - Unicode properties beyond ASCII
 /// - Patterns that the parser cannot parse
 pub fn try_emit_regex_inline(pattern: &str) -> Option<TokenStream> {
-    let hir = parse_that::regex::parse_with(
-        pattern,
-        &parse_that::regex::ParseOptions::byte_mode(),
-    )
-    .ok()?;
+    let hir = parse_that::regex::parse_with(pattern, &parse_that::regex::ParseOptions::byte_mode())
+        .ok()?;
 
     let body = emit_hir(&hir)?;
 

@@ -47,7 +47,11 @@ impl NotEqual {
             return Revision::Unsatisfiable;
         }
 
-        if changed { Revision::Changed } else { Revision::Unchanged }
+        if changed {
+            Revision::Changed
+        } else {
+            Revision::Unchanged
+        }
     }
 }
 
@@ -55,7 +59,13 @@ impl<D: Domain> Constraint<D> for NotEqual
 where
     D::Value: PartialEq,
 {
-    fn scope(&self) -> &[VarId] { &self.scope }
-    fn check(&self, assignment: &[Option<D::Value>]) -> bool { self.check_impl(assignment) }
-    fn revise(&self, vars: &mut [Variable<D>], depth: usize) -> Revision { self.revise_impl(vars, depth) }
+    fn scope(&self) -> &[VarId] {
+        &self.scope
+    }
+    fn check(&self, assignment: &[Option<D::Value>]) -> bool {
+        self.check_impl(assignment)
+    }
+    fn revise(&self, vars: &mut [Variable<D>], depth: usize) -> Revision {
+        self.revise_impl(vars, depth)
+    }
 }

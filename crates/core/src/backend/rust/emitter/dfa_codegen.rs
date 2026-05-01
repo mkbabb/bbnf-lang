@@ -85,9 +85,7 @@ use quote::{format_ident, quote};
 
 use parse_that::regex::dfa::Dfa;
 
-use crate::generate::regex::byte_class::{
-    emit_byte_class_lut, is_dispatchable, PatternFirstBytes,
-};
+use crate::generate::regex::byte_class::{PatternFirstBytes, emit_byte_class_lut, is_dispatchable};
 use crate::generate::regex::last_byte_set::emit_last_byte_set_table;
 
 /// Sanitise a grammar name for use in a Rust identifier — same rule the
@@ -133,11 +131,7 @@ fn ir_regex_static_ident(idx: usize) -> proc_macro2::Ident {
 /// `table.states`. Returns `None` if the state at that index is not a
 /// `Regex` variant or a `WsTrim` with a pattern — the caller should
 /// already know it is requesting a pattern-bearing state.
-fn pattern_for_state<'a>(
-    ir: &'a GrammarIR,
-    table: &'a DtaTable,
-    idx: usize,
-) -> Option<&'a str> {
+fn pattern_for_state<'a>(ir: &'a GrammarIR, table: &'a DtaTable, idx: usize) -> Option<&'a str> {
     let state = table.states.get(idx)?;
     match state {
         DtaState::Regex { pattern, .. } => Some(ir.get_string(*pattern)),
@@ -176,8 +170,7 @@ fn collect_regex_bearing_states<'a>(
     table: &'a DtaTable,
 ) -> Vec<(usize, &'a str, proc_macro2::Ident)> {
     let mut out = Vec::new();
-    let mut seen: std::collections::HashSet<&'a str> =
-        std::collections::HashSet::new();
+    let mut seen: std::collections::HashSet<&'a str> = std::collections::HashSet::new();
 
     for (idx, state) in table.states.iter().enumerate() {
         match state {
@@ -601,11 +594,7 @@ pub fn emit_dfa_inline_body(
 /// inline body per regex pattern), but it is a COLD path — the hot
 /// path's walker arms splice the DFA body directly and never reach the
 /// adapter.
-pub fn emit_regex_scan_adapter(
-    grammar: &str,
-    ir: &GrammarIR,
-    table: &DtaTable,
-) -> TokenStream {
+pub fn emit_regex_scan_adapter(grammar: &str, ir: &GrammarIR, table: &DtaTable) -> TokenStream {
     let adapter_ident = regex_scan_adapter_ident(grammar);
     let states = collect_regex_bearing_states(ir, table);
 
@@ -647,8 +636,7 @@ pub fn emit_regex_scan_adapter(
     // AY.W4.3 — only emit the first-byte LUT when at least 4
     // patterns share the admission path; smaller grammars don't
     // benefit from the LUT and pay rodata + i-cache costs.
-    let dispatchable =
-        is_dispatchable(&pattern_first_bytes) && pattern_first_bytes.len() >= 4;
+    let dispatchable = is_dispatchable(&pattern_first_bytes) && pattern_first_bytes.len() >= 4;
     let first_byte_lut_decl = if dispatchable {
         emit_byte_class_lut(&first_byte_lut_ident, &pattern_first_bytes)
     } else {
@@ -661,7 +649,10 @@ pub fn emit_regex_scan_adapter(
     // Small grammars (JSON with 2 patterns) skip the table to avoid
     // rodata pollution that hurts icache locality on the hot path.
     let last_byte_table_decl = if pattern_strings.len() >= 4 {
-        Some(emit_last_byte_set_table(&last_byte_table_ident, &pattern_strings))
+        Some(emit_last_byte_set_table(
+            &last_byte_table_ident,
+            &pattern_strings,
+        ))
     } else {
         None
     };
@@ -680,18 +671,12 @@ pub fn emit_regex_scan_adapter(
         let dfa = Dfa::compile(pattern);
         let body = match dfa.as_ref() {
             Some(d) if d.state_count() >= DFA_HOIST_MIN_STATES => {
-                let classes_ident =
-                    format_ident!("__DFA_CLASSES_{}_{}", grammar_tag, i);
-                let trans_ident =
-                    format_ident!("__DFA_TRANS_{}_{}", grammar_tag, i);
-                let accept_ident =
-                    format_ident!("__DFA_ACCEPT_{}_{}", grammar_tag, i);
-                if let Some((decls, num_cls)) = emit_hoisted_dfa_tables(
-                    pattern,
-                    &classes_ident,
-                    &trans_ident,
-                    &accept_ident,
-                ) {
+                let classes_ident = format_ident!("__DFA_CLASSES_{}_{}", grammar_tag, i);
+                let trans_ident = format_ident!("__DFA_TRANS_{}_{}", grammar_tag, i);
+                let accept_ident = format_ident!("__DFA_ACCEPT_{}_{}", grammar_tag, i);
+                if let Some((decls, num_cls)) =
+                    emit_hoisted_dfa_tables(pattern, &classes_ident, &trans_ident, &accept_ident)
+                {
                     hoisted_table_decls.extend(decls);
                     emit_dfa_body_table_driven(
                         pattern,

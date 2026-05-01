@@ -16,11 +16,17 @@
 //! [`crate::pipeline::directives::parse_to_pipeline_inputs`], which
 //! walks the tape straight into `DirectiveMaps` + `AST`.
 
-#[allow(unused, non_snake_case, non_camel_case_types, non_upper_case_globals, clippy::all)]
+pub mod bootstrap_parser;
+#[allow(
+    unused,
+    non_snake_case,
+    non_camel_case_types,
+    non_upper_case_globals,
+    clippy::all
+)]
 pub mod generated;
 pub mod host;
 pub mod schema;
-pub mod bootstrap_parser;
 
 use crate::types::GrammarExtract;
 

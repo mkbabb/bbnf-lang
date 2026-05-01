@@ -153,7 +153,10 @@ impl Constraint<BoolDomain> for BoolEqualConstraint {
     }
 
     fn check(&self, assignment: &[Option<Option<bool>>]) -> bool {
-        match (&assignment[self.target as usize], &assignment[self.source as usize]) {
+        match (
+            &assignment[self.target as usize],
+            &assignment[self.source as usize],
+        ) {
             (Some(a), Some(b)) => a == b,
             _ => true,
         }
@@ -194,7 +197,11 @@ impl BoolAndConstraint {
         scope.extend_from_slice(&sources);
         scope.sort_unstable();
         scope.dedup();
-        Self { scope, var, sources }
+        Self {
+            scope,
+            var,
+            sources,
+        }
     }
 }
 

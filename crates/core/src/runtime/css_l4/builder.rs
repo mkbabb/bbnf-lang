@@ -41,9 +41,9 @@ use crate::runtime::css_l4::value::{
     CssAngle, CssAngleUnit, CssColor, CssColorFunction, CssColorMix, CssColorPredefined,
     CssColorSpace, CssColorType, CssDimension, CssFlex, CssFrequency, CssFrequencyUnit,
     CssFunction, CssGlobalKeyword, CssHueMethod, CssLength, CssLengthUnit, CssMathOperator,
-    CssPercentage, CssResolution, CssResolutionUnit, CssRule, CssTime, CssTimeUnit,
-    CssTypedValue, Declaration, GenericAtRule, KeyframeBlock, KeyframesRule, MediaRule,
-    Selector, StyleRule, StyleSheet,
+    CssPercentage, CssResolution, CssResolutionUnit, CssRule, CssTime, CssTimeUnit, CssTypedValue,
+    Declaration, GenericAtRule, KeyframeBlock, KeyframesRule, MediaRule, Selector, StyleRule,
+    StyleSheet,
 };
 use crate::runtime::handle::CompoundHandle;
 
@@ -262,9 +262,7 @@ impl<'p> CssStructBuilder<'p> {
         }) {
             match frame {
                 OpenFrame::StyleRule { declarations, .. } => declarations.push(decl),
-                OpenFrame::KeyframeBlock { declarations, .. } => {
-                    declarations.push(decl)
-                }
+                OpenFrame::KeyframeBlock { declarations, .. } => declarations.push(decl),
                 _ => {}
             }
         }
@@ -326,9 +324,7 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
         let frame = match (layout.kind, layout.rule_name.as_str()) {
             // Aggregate top-level rules.
-            (_, "stylesheet") | (_, "ruleList") => OpenFrame::StyleSheet {
-                rules: Vec::new(),
-            },
+            (_, "stylesheet") | (_, "ruleList") => OpenFrame::StyleSheet { rules: Vec::new() },
             (_, "qualifiedRule") | (_, "ruleBlock") => OpenFrame::StyleRule {
                 selectors: Vec::new(),
                 declarations: Vec::new(),
@@ -353,7 +349,9 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
             },
             // Declaration family — every typed `*Decl` rule.
             (_, name)
-                if name.ends_with("Decl") || name == "declaration" || name == "customPropertyDecl"
+                if name.ends_with("Decl")
+                    || name == "declaration"
+                    || name == "customPropertyDecl"
                     || name == "genericDecl" =>
             {
                 OpenFrame::Declaration {
@@ -463,9 +461,7 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                     declarations: id,
                 };
                 // Land on the enclosing KeyframesRule's blocks Vec.
-                if let Some(OpenFrame::KeyframesRule { blocks, .. }) =
-                    self.stack.last_mut()
-                {
+                if let Some(OpenFrame::KeyframesRule { blocks, .. }) = self.stack.last_mut() {
                     blocks.push(block);
                 }
             }
@@ -507,9 +503,7 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                 self.deposit_declaration(decl);
             }
             OpenFrame::SelectorList { selectors } => {
-                if let Some(OpenFrame::StyleRule { selectors: dst, .. }) =
-                    self.stack.last_mut()
-                {
+                if let Some(OpenFrame::StyleRule { selectors: dst, .. }) = self.stack.last_mut() {
                     dst.extend(selectors);
                 }
             }
@@ -573,8 +567,8 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                         alpha,
                     })
                 } else if let Some(space) = space_tag {
-                    let space = CssColorSpace::from_discriminant(space)
-                        .unwrap_or(CssColorSpace::Srgb);
+                    let space =
+                        CssColorSpace::from_discriminant(space).unwrap_or(CssColorSpace::Srgb);
                     CssColor::Predefined(CssColorPredefined {
                         space,
                         c1,
@@ -609,9 +603,7 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                 // Defensive: if a nested colour reference is missing,
                 // synthesise a transparent black for round-trip
                 // continuity.
-                let fallback = self
-                    .arena
-                    .push_color(CssColor::Hex(0x00000000));
+                let fallback = self.arena.push_color(CssColor::Hex(0x00000000));
                 let left = left.unwrap_or(fallback);
                 let right = right.unwrap_or(fallback);
                 let mix = CssColorMix {

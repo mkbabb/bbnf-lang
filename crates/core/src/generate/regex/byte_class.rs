@@ -67,9 +67,7 @@ impl PatternFirstBytes {
 /// FIRST set, or when any pattern is wildcard-led (since the
 /// pre-filter would have to admit every pattern for those bytes,
 /// negating the benefit).
-fn build_byte_to_patterns(
-    patterns: &[PatternFirstBytes],
-) -> Option<[Vec<u8>; 256]> {
+fn build_byte_to_patterns(patterns: &[PatternFirstBytes]) -> Option<[Vec<u8>; 256]> {
     if patterns.len() < 2 || patterns.len() > MAX_DISPATCHED {
         return None;
     }
@@ -80,8 +78,7 @@ fn build_byte_to_patterns(
         return None;
     }
 
-    let mut byte_to_pats: [Vec<u8>; 256] =
-        std::array::from_fn(|_| Vec::new());
+    let mut byte_to_pats: [Vec<u8>; 256] = std::array::from_fn(|_| Vec::new());
 
     for p in patterns {
         let bytes = p.first_bytes.as_ref().unwrap();
@@ -120,8 +117,7 @@ pub fn emit_byte_class_lut(
         }
     }
 
-    let bit_lits: Vec<Literal> =
-        bits.iter().map(|w| Literal::u32_unsuffixed(*w)).collect();
+    let bit_lits: Vec<Literal> = bits.iter().map(|w| Literal::u32_unsuffixed(*w)).collect();
 
     Some(quote! {
         /// AY.W4.3 — first-byte → admissible-pattern bitmap LUT.

@@ -159,9 +159,7 @@ fn no_hand_written_subvariant_references() {
 
         let contents = match fs::read_to_string(path) {
             Ok(c) => c,
-            Err(err) => panic!(
-                "no_subvariant_refs: failed to read scan target {path:?}: {err}"
-            ),
+            Err(err) => panic!("no_subvariant_refs: failed to read scan target {path:?}: {err}"),
         };
 
         for (idx, line) in contents.lines().enumerate() {
@@ -262,23 +260,17 @@ fn collect_rs_files(root: &Path, out: &mut Vec<PathBuf>) {
     }
     let entries = match fs::read_dir(root) {
         Ok(e) => e,
-        Err(err) => panic!(
-            "no_subvariant_refs: failed to read_dir {root:?}: {err}"
-        ),
+        Err(err) => panic!("no_subvariant_refs: failed to read_dir {root:?}: {err}"),
     };
     for entry in entries {
         let entry = match entry {
             Ok(e) => e,
-            Err(err) => panic!(
-                "no_subvariant_refs: directory entry error under {root:?}: {err}"
-            ),
+            Err(err) => panic!("no_subvariant_refs: directory entry error under {root:?}: {err}"),
         };
         let path = entry.path();
         let ft = match entry.file_type() {
             Ok(t) => t,
-            Err(err) => panic!(
-                "no_subvariant_refs: file_type() error for {path:?}: {err}"
-            ),
+            Err(err) => panic!("no_subvariant_refs: file_type() error for {path:?}: {err}"),
         };
         if ft.is_dir() {
             collect_rs_files(&path, out);

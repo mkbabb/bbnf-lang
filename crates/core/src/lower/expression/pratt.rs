@@ -34,10 +34,7 @@ use super::dispatch_expression;
 ///
 /// Single-operand chains (no operators) collapse to the bare
 /// operand without wrapping.
-pub(crate) fn lower_binary_factor<'a>(
-    node: BbnfView<'a, 'a>,
-    ctx: &mut LowerCtx<'a>,
-) -> IrNode {
+pub(crate) fn lower_binary_factor<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx<'a>) -> IrNode {
     let all_children: Vec<BbnfView<'a, 'a>> = collect_binary_operands(node);
     debug_assert!(
         !all_children.is_empty(),
@@ -75,17 +72,18 @@ pub(crate) fn lower_binary_factor<'a>(
 
     for operand in iter {
         let lo = operand.byte_span().map(|(lo, _)| lo).unwrap_or(prev_end);
-        let op_text = op_iter.next().or_else(|| {
-            recover_binary_op(input, prev_end, lo)
-        }).unwrap_or_else(|| {
-            panic!(
-                "lower/expression: binary_factor could not resolve \
+        let op_text = op_iter
+            .next()
+            .or_else(|| recover_binary_op(input, prev_end, lo))
+            .unwrap_or_else(|| {
+                panic!(
+                    "lower/expression: binary_factor could not resolve \
                  operator — no binary_operators child and source gap \
                  {:?} contains no recognized token (chain = {:?})",
-                &input[prev_end as usize..lo as usize],
-                node.span_text(),
-            )
-        });
+                    &input[prev_end as usize..lo as usize],
+                    node.span_text(),
+                )
+            });
         prev_end = operand.byte_span().map(|(_, hi)| hi).unwrap_or(lo);
         result = apply_binary_op(result, op_text, operand, ctx);
     }
@@ -95,9 +93,7 @@ pub(crate) fn lower_binary_factor<'a>(
 /// Recognise a `binary_factor` operator child. Returns the operator
 /// token (`"<<"` / `">>"` / `"-"`) if the child represents an
 /// operator compound, `None` if it is an operand.
-fn recognize_binary_operator<'a>(
-    child: BbnfView<'a, 'a>,
-) -> Option<&'a str> {
+fn recognize_binary_operator<'a>(child: BbnfView<'a, 'a>) -> Option<&'a str> {
     let trimmed = child.span_text().trim();
     if matches!(trimmed, "<<" | ">>" | "-") {
         return Some(trimmed);
@@ -107,9 +103,7 @@ fn recognize_binary_operator<'a>(
 
 /// Collect the flattened child sequence of a `binary_factor`
 /// compound as `[first_operand, op, operand, op, operand, ...]`.
-fn collect_binary_operands<'a>(
-    node: BbnfView<'a, 'a>,
-) -> Vec<BbnfView<'a, 'a>> {
+fn collect_binary_operands<'a>(node: BbnfView<'a, 'a>) -> Vec<BbnfView<'a, 'a>> {
     // Pratt-shape branch: detect a reducer-chain outer and walk it
     // into the flat `[operand, op_leaf, operand, op_leaf, …]`
     // sequence.
@@ -152,9 +146,7 @@ fn collect_binary_operands<'a>(
 /// Detect a Pratt reducer-chain outer and walk it into the flat
 /// `[initial_operand, op_leaf, operand, op_leaf, operand, …]`
 /// sequence expected by [`lower_binary_factor`]'s partition loop.
-fn collect_pratt_reducer_chain<'a>(
-    outer: BbnfView<'a, 'a>,
-) -> Option<Vec<BbnfView<'a, 'a>>> {
+fn collect_pratt_reducer_chain<'a>(outer: BbnfView<'a, 'a>) -> Option<Vec<BbnfView<'a, 'a>>> {
     // Three entry shapes reach this detector:
     //
     //  (a) `outer` is the proper `binary_factor` Rule compound. Its
@@ -264,9 +256,7 @@ pub(super) fn is_pratt_reducer<'a>(view: BbnfView<'a, 'a>) -> bool {
 /// `[operand, op_leaf, operand, op_leaf, …]` Pratt sequence.
 pub(super) fn looks_like_pratt_flat<'a>(view: BbnfView<'a, 'a>) -> bool {
     for child in view.children() {
-        if child.kind() == BbnfKind::Span
-            && matches!(child.span_text().trim(), "<<" | ">>" | "-")
-        {
+        if child.kind() == BbnfKind::Span && matches!(child.span_text().trim(), "<<" | ">>" | "-") {
             return true;
         }
     }

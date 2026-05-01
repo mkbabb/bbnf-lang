@@ -102,8 +102,7 @@ pub(super) fn compile_repeat<E: Emitter>(
                 ValuePlacement::Inline
             };
             let element_out = compile_node(element, elem_alloc, ir, dstate, emitter, ctx);
-            let sep_out =
-                compile_node(separator, ValuePlacement::Inline, ir, dstate, emitter, ctx);
+            let sep_out = compile_node(separator, ValuePlacement::Inline, ir, dstate, emitter, ctx);
 
             let config = SepByConfig {
                 ws: false,

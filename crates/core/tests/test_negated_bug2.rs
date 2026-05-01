@@ -6,14 +6,15 @@ fn test_negated_class_from_regex_classify() {
     use parse_that::regex::hir::{CharClass, Hir};
 
     let pattern = "[^{};]";
-    let hir = parse_that::regex::parse_with(
-        pattern,
-        &parse_that::regex::ParseOptions::byte_mode(),
-    )
-    .unwrap();
+    let hir = parse_that::regex::parse_with(pattern, &parse_that::regex::ParseOptions::byte_mode())
+        .unwrap();
 
     println!("\nDetailed analysis of {}", pattern);
-    if let Hir::Class(CharClass::Bytes { ref ranges, negated }) = hir {
+    if let Hir::Class(CharClass::Bytes {
+        ref ranges,
+        negated,
+    }) = hir
+    {
         println!("Total ranges: {}, negated: {}", ranges.len(), negated);
 
         for (i, r) in ranges.iter().enumerate() {
@@ -24,10 +25,7 @@ fn test_negated_class_from_regex_classify() {
             }
         }
 
-        let total_bytes: usize = ranges
-            .iter()
-            .map(|r| (r.end - r.start + 1) as usize)
-            .sum();
+        let total_bytes: usize = ranges.iter().map(|r| (r.end - r.start + 1) as usize).sum();
         println!("Total bytes covered: {}", total_bytes);
     }
 

@@ -1,4 +1,3 @@
-
 //! Pathological input stress benchmarks — cold per-parse (tape-first).
 //!
 //! Exercises generated worst-case inputs: deep nesting, wide collections,
@@ -15,7 +14,6 @@ mod generators;
 use divan::black_box;
 
 use ::bbnf::grammar::generated::json::*;
-
 
 // ── JSON depth: deeply nested objects ───────────────────────────────────
 
@@ -121,8 +119,9 @@ macro_rules! bench_strings {
         fn $name(b: divan::Bencher) {
             let input = generators::json_gen::long_strings($count, $len);
             {
-                let parsed = JsonParser::parse(&input)
-                    .unwrap_or_else(|e| panic!("strings_{}x{}: parse failed: {:?}", $count, $len, e));
+                let parsed = JsonParser::parse(&input).unwrap_or_else(|e| {
+                    panic!("strings_{}x{}: parse failed: {:?}", $count, $len, e)
+                });
                 black_box(&parsed);
             }
             b.with_inputs(|| input.clone()).bench_values(|input| {

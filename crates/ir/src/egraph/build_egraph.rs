@@ -28,8 +28,7 @@ pub fn insert_node<A: Analysis<GrammarENode>>(
         IrNode::Epsilon => GrammarENode::Epsilon,
         IrNode::Ref(rule_id) => GrammarENode::Ref(*rule_id),
         IrNode::Seq(children) => {
-            let ids: Box<[Id]> =
-                children.iter().map(|c| insert_node(egraph, c)).collect();
+            let ids: Box<[Id]> = children.iter().map(|c| insert_node(egraph, c)).collect();
             GrammarENode::Seq(ids)
         }
         IrNode::Alt(branches, dispatch) => {

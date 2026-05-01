@@ -108,11 +108,7 @@ impl SheetsCompoundKind {
     pub fn is_transparent_wrap(self) -> bool {
         matches!(
             self,
-            Self::Wrap
-                | Self::Primary
-                | Self::Expression
-                | Self::RangeEnd
-                | Self::CellOrRange
+            Self::Wrap | Self::Primary | Self::Expression | Self::RangeEnd | Self::CellOrRange
         )
     }
 

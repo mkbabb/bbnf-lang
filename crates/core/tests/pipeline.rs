@@ -1,8 +1,8 @@
-use bbnf::graph::{tarjan_scc, topological_sort_scc};
+use bbnf::calculate_ast_deps;
 use bbnf::grammar;
+use bbnf::graph::{tarjan_scc, topological_sort_scc};
 use bbnf::lower::{DirectiveSet, lower_to_ir};
 use bbnf::pipeline::{PipelineOptions, compile_grammar};
-use bbnf::calculate_ast_deps;
 use bbnf_ir::GrammarIR;
 use bbnf_ir::bytecode::BytecodeProgram;
 use bbnf_ir::compiler::compile as compile_bytecode;
@@ -225,9 +225,7 @@ fn pipeline_type_inference_json() {
     // composes types but never loses them (typed-materialisation
     // invariant). Rules that fuse away correctly contribute their
     // Span projection to the caller's composite type.
-    for name in [
-        "null", "bool", "number", "string", "comma", "colon",
-    ] {
+    for name in ["null", "bool", "number", "string", "comma", "colon"] {
         if let Some(ty) = type_of(name) {
             assert_eq!(
                 *ty,
@@ -375,7 +373,6 @@ fn pipeline_google_sheets_formula() {
         "func_call should parse 'IF(1,2)' at offset {}",
         fc_off
     );
-
 }
 
 #[test]
@@ -694,7 +691,11 @@ fn compile_and_parse(grammar_src: &str, input: &str) -> ParseResult {
         .unwrap_or_else(|| panic!("grammar failed to parse:\n{}", grammar_src));
     eprintln!("Parsed {} rules", parsed.rules.len());
     let ir = compile_grammar(grammar_src, &options).expect("grammar compilation failed");
-    assert!(!ir.rules.is_empty(), "IR must have at least one rule (got 0 from {} parsed)", parsed.rules.len());
+    assert!(
+        !ir.rules.is_empty(),
+        "IR must have at least one rule (got 0 from {} parsed)",
+        parsed.rules.len()
+    );
     let program = compile_bytecode(&ir);
     run_program(&program, input)
 }

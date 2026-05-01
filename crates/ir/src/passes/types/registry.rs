@@ -89,8 +89,7 @@ pub fn populate_struct_registry(
     let fns = ir.fns.as_slice();
 
     for rule in &ir.rules {
-        let layout =
-            build_layout_for_rule(rule, rule_types, type_map, &rule_names, dag, fns);
+        let layout = build_layout_for_rule(rule, rule_types, type_map, &rule_names, dag, fns);
         registry.insert(layout);
     }
 
@@ -112,10 +111,7 @@ fn build_layout_for_rule(
         .get(&rule.id)
         .cloned()
         .expect("rule.id present in rule_names map");
-    let rule_type = rule_types
-        .get(&rule.id)
-        .cloned()
-        .unwrap_or(TypeDesc::Span);
+    let rule_type = rule_types.get(&rule.id).cloned().unwrap_or(TypeDesc::Span);
 
     let (kind, fields) = classify_body(
         &rule.body,
@@ -157,14 +153,9 @@ fn classify_body(
             let mut fields = Vec::with_capacity(branches.len());
             for (idx, branch) in branches.iter().enumerate() {
                 let branch_idx = idx as u32;
-                let branch_type = branch_projected_type(
-                    &branch.node,
-                    type_map,
-                    dag,
-                    fns,
-                    rule_types,
-                )
-                .unwrap_or_else(|| rule_type.clone());
+                let branch_type =
+                    branch_projected_type(&branch.node, type_map, dag, fns, rule_types)
+                        .unwrap_or_else(|| rule_type.clone());
                 let name = sub_variant_name_for_branch(sub_variants, branch_idx)
                     .unwrap_or_else(|| format!("branch_{}", branch_idx));
                 fields.push(StructField {
@@ -346,9 +337,8 @@ fn classify_body(
             });
             for (idx, arm) in arms.iter().enumerate() {
                 let position = (idx + 1) as u32;
-                let ty =
-                    branch_projected_type(&arm.continuation, type_map, dag, fns, rule_types)
-                        .unwrap_or(TypeDesc::Span);
+                let ty = branch_projected_type(&arm.continuation, type_map, dag, fns, rule_types)
+                    .unwrap_or(TypeDesc::Span);
                 fields.push(StructField {
                     name: format!("arm_{}", idx),
                     type_desc: ty,
@@ -356,9 +346,8 @@ fn classify_body(
                 });
             }
             let fallback_position = (arms.len() + 1) as u32;
-            let fallback_ty =
-                branch_projected_type(fallback, type_map, dag, fns, rule_types)
-                    .unwrap_or(TypeDesc::Span);
+            let fallback_ty = branch_projected_type(fallback, type_map, dag, fns, rule_types)
+                .unwrap_or(TypeDesc::Span);
             fields.push(StructField {
                 name: "fallback".to_string(),
                 type_desc: fallback_ty,
@@ -441,9 +430,7 @@ fn branch_projected_type(
         IrNode::Skip(kept, _) | IrNode::Minus(kept, _) => {
             branch_projected_type(kept, type_map, dag, fns, rule_types)
         }
-        IrNode::Next(_, kept) => {
-            branch_projected_type(kept, type_map, dag, fns, rule_types)
-        }
+        IrNode::Next(_, kept) => branch_projected_type(kept, type_map, dag, fns, rule_types),
         IrNode::Negate(inner) | IrNode::OptionalWhitespace(inner) => {
             branch_projected_type(inner, type_map, dag, fns, rule_types)
         }

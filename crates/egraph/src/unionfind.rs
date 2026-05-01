@@ -103,4 +103,3 @@ impl UnionFind {
         self.find(a) == self.find(b)
     }
 }
-

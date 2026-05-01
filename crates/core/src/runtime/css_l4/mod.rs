@@ -63,8 +63,7 @@ pub mod value;
 pub mod view;
 
 pub use arena::{
-    CssArena, CssDeclListId, CssKeyframeListId, CssRuleListId, CssSelectorListId,
-    CssValueListId,
+    CssArena, CssDeclListId, CssKeyframeListId, CssRuleListId, CssSelectorListId, CssValueListId,
 };
 pub use builder::CssStructBuilder;
 pub use document::{CssDeclWalk, CssDocument, CssDocumentKind, CssFocus, CssPathQuery, CssView};
@@ -73,6 +72,6 @@ pub use value::{
     CssColorSpace, CssColorType, CssDimension, CssFlex, CssFrequency, CssFrequencyUnit,
     CssFunction, CssGlobalKeyword, CssHueMethod, CssLength, CssLengthUnit, CssMathOperator,
     CssPercentage, CssResolution, CssResolutionUnit, CssTime, CssTimeUnit, CssTypedValue,
-    Declaration, GenericAtRule, KeyframeBlock, KeyframesRule, MediaRule, Selector,
-    StyleRule, StyleSheet,
+    Declaration, GenericAtRule, KeyframeBlock, KeyframesRule, MediaRule, Selector, StyleRule,
+    StyleSheet,
 };

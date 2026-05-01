@@ -1,4 +1,3 @@
-
 //! BBNF JSON TypeScript backend benchmark — codegen throughput.
 //!
 //! Measures grammar → TS source compilation speed. For native TS parse throughput,
@@ -13,8 +12,7 @@ use bbnf::pipeline::{
 use divan::black_box;
 
 fn load_grammar() -> String {
-    std::fs::read_to_string("../../grammar/json/json.bbnf")
-        .expect("failed to read json.bbnf")
+    std::fs::read_to_string("../../grammar/json/json.bbnf").expect("failed to read json.bbnf")
 }
 
 fn ts_request() -> CompileRequest {

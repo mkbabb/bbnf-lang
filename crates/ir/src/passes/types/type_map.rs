@@ -12,8 +12,8 @@
 
 use std::collections::HashMap;
 
-use crate::dag::NodeId;
 use crate::TypeDesc;
+use crate::dag::NodeId;
 
 // ── TypeMap: precomputed sub-expression types ────────────────────────────────
 

@@ -4,10 +4,8 @@ use ls_types::*;
 
 use crate::analysis::LineIndex;
 
-use super::super::types::{
-    DebugInfo, ImportInfo, RecoverInfo, RuleInfo, TokenInfo,
-};
 use super::super::pretty::PrettyInfo;
+use super::super::types::{DebugInfo, ImportInfo, RecoverInfo, RuleInfo, TokenInfo};
 
 /// Detect undefined nonterminals in rule references and populate the initial
 /// `referenced_names` set. Mirrors the original loop verbatim.

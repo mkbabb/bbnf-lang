@@ -42,7 +42,7 @@
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::{format_ident, quote};
-use syn::{parse_macro_input, Data, DeriveInput, Fields, Ident, Type};
+use syn::{Data, DeriveInput, Fields, Ident, Type, parse_macro_input};
 
 /// The `#[derive(Language)]` proc macro.
 #[proc_macro_derive(Language, attributes(language))]
@@ -186,14 +186,8 @@ fn variant_arms(
                 quote! { ::std::slice::from_ref(#binding) },
                 quote! { ::std::slice::from_mut(#binding) },
             ),
-            FieldKind::SliceId => (
-                quote! { &#binding[..] },
-                quote! { &mut #binding[..] },
-            ),
-            FieldKind::ArrayId => (
-                quote! { &#binding[..] },
-                quote! { &mut #binding[..] },
-            ),
+            FieldKind::SliceId => (quote! { &#binding[..] }, quote! { &mut #binding[..] }),
+            FieldKind::ArrayId => (quote! { &#binding[..] }, quote! { &mut #binding[..] }),
         };
         return Ok(VariantArms {
             children: quote! { #pattern => #child_expr },

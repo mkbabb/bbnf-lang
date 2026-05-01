@@ -472,8 +472,9 @@ fn emit_general_state_machine(
 /// (same transitions, same accept states) will hash to the same value.
 /// Used for cross-rule deduplication in MonoCtx.
 pub fn canonical_dfa_hash(pattern: &str) -> Option<u64> {
-    let _hir = parse_that::regex::parse_with(pattern, &parse_that::regex::ParseOptions::byte_mode())
-        .ok()?;
+    let _hir =
+        parse_that::regex::parse_with(pattern, &parse_that::regex::ParseOptions::byte_mode())
+            .ok()?;
     let dfa = Dfa::compile(pattern)?;
     Some(accel::hash_dfa_structure(&dfa))
 }

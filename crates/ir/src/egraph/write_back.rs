@@ -89,12 +89,7 @@ pub fn write_back_optimized(
 /// IR.
 fn materialize_best_at_root(
     egraph: &EGraph<GrammarENode, GrammarAnalysis>,
-    extractor: &Extractor<
-        '_,
-        GrammarENode,
-        GrammarAnalysis,
-        GrammarCostModel,
-    >,
+    extractor: &Extractor<'_, GrammarENode, GrammarAnalysis, GrammarCostModel>,
     canonical: Id,
     rule_id: RuleId,
     root_to_rule: &FxHashMap<Id, RuleId>,
@@ -105,9 +100,7 @@ fn materialize_best_at_root(
     // scan the class for the first suitable node. (The class is
     // guaranteed non-empty by construction.)
     let best_filtered: Option<GrammarENode> = match extractor.best_node(canonical) {
-        Some(node) if !matches!(node, GrammarENode::Ref(r) if *r == rule_id) => {
-            Some(node.clone())
-        }
+        Some(node) if !matches!(node, GrammarENode::Ref(r) if *r == rule_id) => Some(node.clone()),
         _ => egraph
             .class(canonical)
             .iter()
@@ -115,7 +108,13 @@ fn materialize_best_at_root(
             .cloned(),
     };
     let best = best_filtered?;
-    Some(materialize_node(egraph, extractor, best, root_to_rule, visiting))
+    Some(materialize_node(
+        egraph,
+        extractor,
+        best,
+        root_to_rule,
+        visiting,
+    ))
 }
 
 /// Rebuild a single `IrNode` by recursively extracting the best form
@@ -142,12 +141,7 @@ pub fn extract_ir_node(
 /// their best node via [`materialize_best`].
 fn rebuild(
     egraph: &EGraph<GrammarENode, GrammarAnalysis>,
-    extractor: &Extractor<
-        '_,
-        GrammarENode,
-        GrammarAnalysis,
-        GrammarCostModel,
-    >,
+    extractor: &Extractor<'_, GrammarENode, GrammarAnalysis, GrammarCostModel>,
     id: Id,
     root_to_rule: &FxHashMap<Id, RuleId>,
     current_rule: Option<RuleId>,
@@ -182,18 +176,19 @@ fn rebuild(
 /// descending into children via [`rebuild`].
 fn materialize_best(
     egraph: &EGraph<GrammarENode, GrammarAnalysis>,
-    extractor: &Extractor<
-        '_,
-        GrammarENode,
-        GrammarAnalysis,
-        GrammarCostModel,
-    >,
+    extractor: &Extractor<'_, GrammarENode, GrammarAnalysis, GrammarCostModel>,
     canonical: Id,
     root_to_rule: &FxHashMap<Id, RuleId>,
     visiting: &mut FxHashMap<Id, ()>,
 ) -> Option<IrNode> {
     let best = extractor.best_node(canonical)?.clone();
-    Some(materialize_node(egraph, extractor, best, root_to_rule, visiting))
+    Some(materialize_node(
+        egraph,
+        extractor,
+        best,
+        root_to_rule,
+        visiting,
+    ))
 }
 
 /// Convert a single `GrammarENode` (already selected via the
@@ -202,12 +197,7 @@ fn materialize_best(
 /// class-lookup or visiting bookkeeping (the caller owns those).
 fn materialize_node(
     egraph: &EGraph<GrammarENode, GrammarAnalysis>,
-    extractor: &Extractor<
-        '_,
-        GrammarENode,
-        GrammarAnalysis,
-        GrammarCostModel,
-    >,
+    extractor: &Extractor<'_, GrammarENode, GrammarAnalysis, GrammarCostModel>,
     best: GrammarENode,
     root_to_rule: &FxHashMap<Id, RuleId>,
     visiting: &mut FxHashMap<Id, ()>,
@@ -222,7 +212,9 @@ fn materialize_node(
         GrammarENode::Seq(children) => {
             let rebuilt: Vec<IrNode> = children
                 .iter()
-                .filter_map(|&cid| rebuild(egraph, extractor, cid, root_to_rule, current_rule, visiting))
+                .filter_map(|&cid| {
+                    rebuild(egraph, extractor, cid, root_to_rule, current_rule, visiting)
+                })
                 .collect();
             if rebuilt.is_empty() {
                 IrNode::Epsilon
@@ -236,13 +228,15 @@ fn materialize_node(
             let branches: Vec<AltBranch> = children
                 .iter()
                 .filter_map(|&cid| {
-                    rebuild(egraph, extractor, cid, root_to_rule, current_rule, visiting).map(|node| AltBranch {
-                        node,
-                        // `first_set` is re-computed by the post-switch
-                        // `compute_follow_sets` pass; leaving None
-                        // here matches the build-time default.
-                        first_set: None,
-                    })
+                    rebuild(egraph, extractor, cid, root_to_rule, current_rule, visiting).map(
+                        |node| AltBranch {
+                            node,
+                            // `first_set` is re-computed by the post-switch
+                            // `compute_follow_sets` pass; leaving None
+                            // here matches the build-time default.
+                            first_set: None,
+                        },
+                    )
                 })
                 .collect();
             if branches.is_empty() {
@@ -254,8 +248,15 @@ fn materialize_node(
             }
         }
         GrammarENode::Repeat { inner, lo, hi } => {
-            let inner = rebuild(egraph, extractor, inner, root_to_rule, current_rule, visiting)
-                .unwrap_or(IrNode::Epsilon);
+            let inner = rebuild(
+                egraph,
+                extractor,
+                inner,
+                root_to_rule,
+                current_rule,
+                visiting,
+            )
+            .unwrap_or(IrNode::Epsilon);
             IrNode::Repeat {
                 inner: Box::new(inner),
                 lo,
@@ -263,33 +264,60 @@ fn materialize_node(
             }
         }
         GrammarENode::Skip([a, b]) => {
-            let a = rebuild(egraph, extractor, a, root_to_rule, current_rule, visiting).unwrap_or(IrNode::Epsilon);
-            let b = rebuild(egraph, extractor, b, root_to_rule, current_rule, visiting).unwrap_or(IrNode::Epsilon);
+            let a = rebuild(egraph, extractor, a, root_to_rule, current_rule, visiting)
+                .unwrap_or(IrNode::Epsilon);
+            let b = rebuild(egraph, extractor, b, root_to_rule, current_rule, visiting)
+                .unwrap_or(IrNode::Epsilon);
             IrNode::Skip(Box::new(a), Box::new(b))
         }
         GrammarENode::Next([a, b]) => {
-            let a = rebuild(egraph, extractor, a, root_to_rule, current_rule, visiting).unwrap_or(IrNode::Epsilon);
-            let b = rebuild(egraph, extractor, b, root_to_rule, current_rule, visiting).unwrap_or(IrNode::Epsilon);
+            let a = rebuild(egraph, extractor, a, root_to_rule, current_rule, visiting)
+                .unwrap_or(IrNode::Epsilon);
+            let b = rebuild(egraph, extractor, b, root_to_rule, current_rule, visiting)
+                .unwrap_or(IrNode::Epsilon);
             IrNode::Next(Box::new(a), Box::new(b))
         }
         GrammarENode::Minus([a, b]) => {
-            let a = rebuild(egraph, extractor, a, root_to_rule, current_rule, visiting).unwrap_or(IrNode::Epsilon);
-            let b = rebuild(egraph, extractor, b, root_to_rule, current_rule, visiting).unwrap_or(IrNode::Epsilon);
+            let a = rebuild(egraph, extractor, a, root_to_rule, current_rule, visiting)
+                .unwrap_or(IrNode::Epsilon);
+            let b = rebuild(egraph, extractor, b, root_to_rule, current_rule, visiting)
+                .unwrap_or(IrNode::Epsilon);
             IrNode::Minus(Box::new(a), Box::new(b))
         }
         GrammarENode::Negate(inner) => {
-            let inner = rebuild(egraph, extractor, inner, root_to_rule, current_rule, visiting)
-                .unwrap_or(IrNode::Epsilon);
+            let inner = rebuild(
+                egraph,
+                extractor,
+                inner,
+                root_to_rule,
+                current_rule,
+                visiting,
+            )
+            .unwrap_or(IrNode::Epsilon);
             IrNode::Negate(Box::new(inner))
         }
         GrammarENode::OptionalWhitespace(inner) => {
-            let inner = rebuild(egraph, extractor, inner, root_to_rule, current_rule, visiting)
-                .unwrap_or(IrNode::Epsilon);
+            let inner = rebuild(
+                egraph,
+                extractor,
+                inner,
+                root_to_rule,
+                current_rule,
+                visiting,
+            )
+            .unwrap_or(IrNode::Epsilon);
             IrNode::OptionalWhitespace(Box::new(inner))
         }
         GrammarENode::Map { inner, fn_id } => {
-            let inner = rebuild(egraph, extractor, inner, root_to_rule, current_rule, visiting)
-                .unwrap_or(IrNode::Epsilon);
+            let inner = rebuild(
+                egraph,
+                extractor,
+                inner,
+                root_to_rule,
+                current_rule,
+                visiting,
+            )
+            .unwrap_or(IrNode::Epsilon);
             IrNode::Map {
                 inner: Box::new(inner),
                 fn_id: fn_id as FnId,
@@ -300,10 +328,24 @@ fn materialize_node(
             arms,
             fallback,
         } => {
-            let token = rebuild(egraph, extractor, token, root_to_rule, current_rule, visiting)
-                .unwrap_or(IrNode::Epsilon);
-            let fallback = rebuild(egraph, extractor, fallback, root_to_rule, current_rule, visiting)
-                .unwrap_or(IrNode::Epsilon);
+            let token = rebuild(
+                egraph,
+                extractor,
+                token,
+                root_to_rule,
+                current_rule,
+                visiting,
+            )
+            .unwrap_or(IrNode::Epsilon);
+            let fallback = rebuild(
+                egraph,
+                extractor,
+                fallback,
+                root_to_rule,
+                current_rule,
+                visiting,
+            )
+            .unwrap_or(IrNode::Epsilon);
             // TokenDispatch arms carry Id continuations via the opaque
             // `arms` metadata — unchanged across the e-graph walk.
             // Rebuild each arm's continuation from its stored Id.

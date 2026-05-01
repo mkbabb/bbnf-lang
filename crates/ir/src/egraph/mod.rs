@@ -64,8 +64,8 @@ pub fn build_and_saturate(
     SharedStrings,
     rustc_hash::FxHashMap<crate::RuleId, egraph::Id>,
 ) {
-    use rustc_hash::FxHashMap;
     use crate::RuleId;
+    use rustc_hash::FxHashMap;
 
     let pool = SharedStrings::from_ir(ir);
 
@@ -79,8 +79,7 @@ pub fn build_and_saturate(
         .iter()
         .map(|r| crate::types::count_nodes(&r.body))
         .sum();
-    let mut egraph: EGraph<GrammarENode, GrammarAnalysis> =
-        EGraph::with_capacity(expected_nodes);
+    let mut egraph: EGraph<GrammarENode, GrammarAnalysis> = EGraph::with_capacity(expected_nodes);
 
     let rule_root_ids = build_egraph::insert_ir(&mut egraph, ir);
     egraph.rebuild();

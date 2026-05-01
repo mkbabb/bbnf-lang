@@ -4,10 +4,10 @@
 use bbnf_ir::registry::StructLayout;
 
 use crate::runtime::builder::StructBuilder;
-use crate::runtime::handle::CompoundHandle;
 use crate::runtime::css_pretty::arena::{CssPrettyArena, CssPrettyCompound, CssPrettyCompoundKind};
 use crate::runtime::css_pretty::document::CssPrettyDocument;
 use crate::runtime::css_pretty::value::CssPrettyValue;
+use crate::runtime::handle::CompoundHandle;
 
 #[derive(Debug, Clone)]
 struct OpenFrame<'p> {
@@ -34,7 +34,9 @@ pub struct CssPrettyStructCheckpoint<'p> {
 }
 
 impl<'p> Default for CssPrettyStructBuilder<'p> {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<'p> CssPrettyStructBuilder<'p> {
@@ -104,13 +106,20 @@ impl<'p> StructBuilder for CssPrettyStructBuilder<'p> {
 
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
         let kind = CssPrettyCompoundKind::from_rule_name(layout.rule_name.as_str());
-        self.stack.push(OpenFrame { kind, branch_tag: None, children: Vec::new() });
+        self.stack.push(OpenFrame {
+            kind,
+            branch_tag: None,
+            children: Vec::new(),
+        });
         self.next_handle = self.next_handle.wrapping_add(1);
         CompoundHandle::new(self.next_handle, 0)
     }
 
     fn end_compound(&mut self, _handle: CompoundHandle) {
-        let frame = self.stack.pop().expect("CssPrettyStructBuilder::end_compound on empty stack");
+        let frame = self
+            .stack
+            .pop()
+            .expect("CssPrettyStructBuilder::end_compound on empty stack");
         let id = self.arena.push_compound(CssPrettyCompound {
             kind: frame.kind,
             branch_tag: frame.branch_tag,
@@ -119,10 +128,22 @@ impl<'p> StructBuilder for CssPrettyStructBuilder<'p> {
         self.deposit(CssPrettyValue::Compound(id));
     }
 
-    #[inline] fn push_leaf_with_f64(&mut self, _v: f64)  { self.deposit(CssPrettyValue::Unit); }
-    #[inline] fn push_leaf_with_i64(&mut self, _v: i64)  { self.deposit(CssPrettyValue::Unit); }
-    #[inline] fn push_leaf_with_u64(&mut self, _v: u64)  { self.deposit(CssPrettyValue::Unit); }
-    #[inline] fn push_leaf_with_bool(&mut self, _v: bool) { self.deposit(CssPrettyValue::Unit); }
+    #[inline]
+    fn push_leaf_with_f64(&mut self, _v: f64) {
+        self.deposit(CssPrettyValue::Unit);
+    }
+    #[inline]
+    fn push_leaf_with_i64(&mut self, _v: i64) {
+        self.deposit(CssPrettyValue::Unit);
+    }
+    #[inline]
+    fn push_leaf_with_u64(&mut self, _v: u64) {
+        self.deposit(CssPrettyValue::Unit);
+    }
+    #[inline]
+    fn push_leaf_with_bool(&mut self, _v: bool) {
+        self.deposit(CssPrettyValue::Unit);
+    }
 
     #[inline]
     fn push_leaf_with_str(&mut self, value: &str) {

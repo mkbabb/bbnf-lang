@@ -51,11 +51,10 @@ impl RustEmitter {
         _ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         let ws_pat = ir.ws_pattern.map(|sid| ir.get_string(sid));
-        let opts = crate::generate::regex::EmitOpts::new(
-            &crate::generate::regex::CostModel::DEFAULT,
-        )
-            .with_ir(ir)
-            .with_ws_pattern(ws_pat);
+        let opts =
+            crate::generate::regex::EmitOpts::new(&crate::generate::regex::CostModel::DEFAULT)
+                .with_ir(ir)
+                .with_ws_pattern(ws_pat);
         let code = crate::generate::regex::emit_regex(pattern, &opts);
         quote! { {
             let __start = state.offset;

@@ -103,15 +103,15 @@ pub use key_dispatch::KeyDispatchMiner;
 pub use keyword_stats::{KeywordBranch, KeywordBranchMap, KeywordStatsMiner};
 pub use list_rules::mine_list_rules;
 pub use operator_chain::{
-    collect_operator_chains, OperatorArity, OperatorChainEntry, OperatorChainFacts,
-    OperatorChainRule,
+    OperatorArity, OperatorChainEntry, OperatorChainFacts, OperatorChainRule,
+    collect_operator_chains,
 };
 pub use pattern_alphabet::{PatternAlphabet, PatternAlphabetMap, PatternAlphabetMiner};
 pub use punct_ws_region::PunctWsRegionMiner;
 pub use quoted_string::QuotedStringMiner;
 pub use separator_list::SeparatorListMiner;
 pub use shape_dict::{ShapeDictMap, ShapeDictMiner, ShapeTemplate, TemplatePiece};
-pub use shape_dispatch::{shape_dispatch, ShapeAssignments, ShapeTag};
+pub use shape_dispatch::{ShapeAssignments, ShapeTag, shape_dispatch};
 pub use token_led_branches::TokenLedBranchesMiner;
 
 // ── Recognizer miner substrate (Tranche Z.0 + AF.1) ────────────────────
@@ -376,4 +376,3 @@ pub(crate) fn install_recognizer(
         })
         .recognizer = Some(recognizer);
 }
-

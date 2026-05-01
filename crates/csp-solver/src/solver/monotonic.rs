@@ -4,10 +4,10 @@
 //! and undo-log overhead. Domains only grow (join/union), so no backtracking
 //! is needed — simple iteration until convergence.
 
+use crate::SolveStats;
 use crate::constraint::{ConstraintEnum, Revision};
 use crate::domain::Domain;
 use crate::variable::Variable;
-use crate::SolveStats;
 
 /// Propagate constraints over lattice domains to a fixed point.
 ///

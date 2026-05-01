@@ -5,9 +5,9 @@
 //! 2. First-byte dispatch via `match` when branches have disjoint leading bytes.
 //! 3. Cascading if/else with checkpoint/restore per branch.
 
+use parse_that::regex::hir::{CharClass, Hir};
 use proc_macro2::TokenStream;
 use quote::quote;
-use parse_that::regex::hir::{CharClass, Hir};
 
 use super::emit_hir;
 

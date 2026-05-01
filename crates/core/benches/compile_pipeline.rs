@@ -9,8 +9,7 @@
 //! `benches/common/timeout.rs` for the guard and its per-bench limits.
 
 use bbnf::pipeline::{
-    CompileRequest, CompileTarget, PipelineOptions, compile_grammar_request,
-    compile_paths_request,
+    CompileRequest, CompileTarget, PipelineOptions, compile_grammar_request, compile_paths_request,
 };
 
 #[path = "common/timeout.rs"]
@@ -28,12 +27,13 @@ fn grammar_path(name: &str) -> std::path::PathBuf {
     // Resolve relative to the workspace root so profilers (samply) work
     // regardless of cwd.
     let manifest = std::env!("CARGO_MANIFEST_DIR");
-    std::path::PathBuf::from(manifest).join("../../grammar").join(name)
+    std::path::PathBuf::from(manifest)
+        .join("../../grammar")
+        .join(name)
 }
 
 fn load_grammar(name: &str) -> String {
-    std::fs::read_to_string(grammar_path(name))
-        .unwrap_or_else(|e| panic!("{name}: {e}"))
+    std::fs::read_to_string(grammar_path(name)).unwrap_or_else(|e| panic!("{name}: {e}"))
 }
 
 // ── Simple grammars (no @import) ────────────────────────────────────────────

@@ -34,10 +34,10 @@
 
 #![cfg(target_arch = "aarch64")]
 
+use crate::StructuralIndex;
 use crate::alphabet::{KernelShape, NibbleLut, StructuralAlphabet, WideLut};
 use crate::compaction;
 use crate::parity;
-use crate::StructuralIndex;
 
 use core::arch::aarch64::*;
 
@@ -79,7 +79,8 @@ fn scan_nibble(input: &[u8], alphabet: &StructuralAlphabet) -> StructuralIndex {
 
         let mut i = 0usize;
         while i + STRIPE <= input.len() {
-            let mut struct_mask = classify_stripe_nibble(input.as_ptr().add(i), lo_v, hi_v, lo_mask);
+            let mut struct_mask =
+                classify_stripe_nibble(input.as_ptr().add(i), lo_v, hi_v, lo_mask);
 
             if has_digraphs {
                 let dmask = digraph_stripe(input.as_ptr().add(i), &alphabet.digraph_pairs);
@@ -154,7 +155,10 @@ fn scan_nibble(input: &[u8], alphabet: &StructuralAlphabet) -> StructuralIndex {
             let is_singleton = byte_lut[b as usize];
             let is_digraph_first = if i + 1 < input.len() {
                 let next = *input.get_unchecked(i + 1);
-                alphabet.digraph_pairs.iter().any(|&(f, s)| f == b && s == next)
+                alphabet
+                    .digraph_pairs
+                    .iter()
+                    .any(|&(f, s)| f == b && s == next)
             } else {
                 false
             };
@@ -174,7 +178,10 @@ fn scan_nibble(input: &[u8], alphabet: &StructuralAlphabet) -> StructuralIndex {
             prev_was_bs = b == b'\\' && !prev_was_bs;
             i += 1;
         }
-        for (k, c) in quote_carries[..alphabet.quote_classes.len()].iter_mut().enumerate() {
+        for (k, c) in quote_carries[..alphabet.quote_classes.len()]
+            .iter_mut()
+            .enumerate()
+        {
             *c = active == Some(k);
         }
     }
@@ -281,13 +288,23 @@ fn scan_wide(input: &[u8], alphabet: &StructuralAlphabet) -> StructuralIndex {
 
         while i < input.len() {
             let b = *input.get_unchecked(i);
-            let inside = if has_quotes { quote_carries[..alphabet.quote_classes.len()].iter().any(|&b| b) } else { false };
+            let inside = if has_quotes {
+                quote_carries[..alphabet.quote_classes.len()]
+                    .iter()
+                    .any(|&b| b)
+            } else {
+                false
+            };
             if !inside && byte_lut[b as usize] {
                 idx.push(i as u32, b);
             }
             if has_quotes && quote_lut[b as usize] {
-
-                for c in quote_carries[..alphabet.quote_classes.len()].iter_mut() { if quote_lut[b as usize] { *c = !*c; break; } }
+                for c in quote_carries[..alphabet.quote_classes.len()].iter_mut() {
+                    if quote_lut[b as usize] {
+                        *c = !*c;
+                        break;
+                    }
+                }
             }
             i += 1;
         }
@@ -307,9 +324,8 @@ unsafe fn classify_stripe_wide(
 ) -> u64 {
     let mut mask = 0u64;
     for k in 0..4 {
-        let m = unsafe {
-            classify_chunk_wide(ptr.add(k * 16), lo_lo, hi_lo, lo_hi, hi_hi, lo_mask)
-        } as u64;
+        let m = unsafe { classify_chunk_wide(ptr.add(k * 16), lo_lo, hi_lo, lo_hi, hi_hi, lo_mask) }
+            as u64;
         mask |= m << (k * 16);
     }
     mask
@@ -360,8 +376,7 @@ fn scan_multi(input: &[u8], alphabet: &StructuralAlphabet) -> StructuralIndex {
     unsafe {
         let mut i = 0usize;
         while i + STRIPE <= input.len() {
-            let mut struct_mask =
-                classify_stripe_multi(input.as_ptr().add(i), alphabet.singletons);
+            let mut struct_mask = classify_stripe_multi(input.as_ptr().add(i), alphabet.singletons);
 
             if has_digraphs {
                 struct_mask |= digraph_stripe(input.as_ptr().add(i), &alphabet.digraph_pairs);
@@ -391,13 +406,23 @@ fn scan_multi(input: &[u8], alphabet: &StructuralAlphabet) -> StructuralIndex {
 
         while i < input.len() {
             let b = *input.get_unchecked(i);
-            let inside = if has_quotes { quote_carries[..alphabet.quote_classes.len()].iter().any(|&b| b) } else { false };
+            let inside = if has_quotes {
+                quote_carries[..alphabet.quote_classes.len()]
+                    .iter()
+                    .any(|&b| b)
+            } else {
+                false
+            };
             if !inside && byte_lut[b as usize] {
                 idx.push(i as u32, b);
             }
             if has_quotes && quote_lut[b as usize] {
-
-                for c in quote_carries[..alphabet.quote_classes.len()].iter_mut() { if quote_lut[b as usize] { *c = !*c; break; } }
+                for c in quote_carries[..alphabet.quote_classes.len()].iter_mut() {
+                    if quote_lut[b as usize] {
+                        *c = !*c;
+                        break;
+                    }
+                }
             }
             i += 1;
         }
@@ -474,11 +499,7 @@ unsafe fn digraph_chunk(ptr: *const u8, pairs: &[(u8, u8)]) -> u16 {
 /// Build per-class quote masks + the backslash mask for a stripe.
 /// Output is written into `out_qmasks` (length must equal `quotes.len()`).
 #[inline(always)]
-unsafe fn raw_quotes_and_bs_stripe(
-    ptr: *const u8,
-    quotes: &[u8],
-    out_qmasks: &mut [u64],
-) -> u64 {
+unsafe fn raw_quotes_and_bs_stripe(ptr: *const u8, quotes: &[u8], out_qmasks: &mut [u64]) -> u64 {
     debug_assert_eq!(out_qmasks.len(), quotes.len());
     for slot in out_qmasks.iter_mut() {
         *slot = 0;
@@ -523,9 +544,7 @@ unsafe fn quote_stripe_masked(
 ) -> u64 {
     debug_assert_eq!(quote_carries.len(), quotes.len());
     let mut qmasks = [0u64; 4];
-    let bsmask = unsafe {
-        raw_quotes_and_bs_stripe(ptr, quotes, &mut qmasks[..quotes.len()])
-    };
+    let bsmask = unsafe { raw_quotes_and_bs_stripe(ptr, quotes, &mut qmasks[..quotes.len()]) };
     let (escape, new_bs_carry) = parity::escape_mask_64(bsmask, *bs_carry);
     *bs_carry = new_bs_carry;
 
@@ -579,7 +598,7 @@ unsafe fn quote_chunk_masked(
                 bit -= 1;
             }
             *bs_carry = if count == 16 {
-                *bs_carry  // even-length contribution; carry passes through
+                *bs_carry // even-length contribution; carry passes through
             } else {
                 (count % 2) == 1
             };
@@ -677,9 +696,7 @@ unsafe fn movemask_u8x16(v: uint8x16_t) -> u16 {
         // Actually, vshrn_n_u16 #4 on a vec of [0xFFFF, 0x0000, ...]
         // yields per-byte [0xFF, 0x00, ...] where each byte represents
         // a pair of input bytes. We re-pack via a per-bit pattern.
-        let pat: [u8; 16] = [
-            1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128,
-        ];
+        let pat: [u8; 16] = [1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128];
         let bits = vandq_u8(v, vld1q_u8(pat.as_ptr()));
         // Sum the 8 low-half bytes into one u8 (they're disjoint bits),
         // similarly for the 8 high-half bytes. addv reduces a 16-byte

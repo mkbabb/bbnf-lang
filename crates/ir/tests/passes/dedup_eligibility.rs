@@ -7,7 +7,7 @@
 use std::collections::HashMap;
 
 use bbnf_ir::passes::recognizers::dedup_eligibility::{
-    is_dedup_eligible_body, mine_dedup_eligible_rules, MAX_DEDUP_ROWS,
+    MAX_DEDUP_ROWS, is_dedup_eligible_body, mine_dedup_eligible_rules,
 };
 use bbnf_ir::{AltBranch, GrammarIR, IrNode, IrRule, RuleMeta};
 
@@ -53,7 +53,8 @@ fn empty_ir(rules: Vec<IrRule>, strings: Vec<String>) -> GrammarIR {
         push_fingerprint: None,
         dedup_eligible_rules: Vec::new(),
 
-        shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
+        shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
+        ),
         eclass_facts: HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -74,9 +75,18 @@ fn literal_only_alt_is_admitted() {
             0,
             IrNode::Alt(
                 vec![
-                    AltBranch { node: IrNode::Literal(0), first_set: None },
-                    AltBranch { node: IrNode::Literal(1), first_set: None },
-                    AltBranch { node: IrNode::Literal(2), first_set: None },
+                    AltBranch {
+                        node: IrNode::Literal(0),
+                        first_set: None,
+                    },
+                    AltBranch {
+                        node: IrNode::Literal(1),
+                        first_set: None,
+                    },
+                    AltBranch {
+                        node: IrNode::Literal(2),
+                        first_set: None,
+                    },
                 ],
                 None,
             ),
@@ -104,8 +114,14 @@ fn mixed_alt_with_non_literal_branch_is_rejected() {
             0,
             IrNode::Alt(
                 vec![
-                    AltBranch { node: IrNode::Literal(0), first_set: None },
-                    AltBranch { node: IrNode::Regex(1), first_set: None },
+                    AltBranch {
+                        node: IrNode::Literal(0),
+                        first_set: None,
+                    },
+                    AltBranch {
+                        node: IrNode::Regex(1),
+                        first_set: None,
+                    },
                 ],
                 None,
             ),
@@ -143,10 +159,7 @@ fn oversized_rule_is_rejected() {
     for _ in 0..(MAX_DEDUP_ROWS + 1) {
         children.push(IrNode::Literal(0));
     }
-    let ir = empty_ir(
-        vec![rule(0, 0, IrNode::Seq(children))],
-        vec!["x".into()],
-    );
+    let ir = empty_ir(vec![rule(0, 0, IrNode::Seq(children))], vec!["x".into()]);
     assert!(!is_dedup_eligible_body(&ir.rules[0].body, &ir));
 }
 

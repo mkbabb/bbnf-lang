@@ -59,8 +59,7 @@ fn bbnf_parses_expressions_grammar() {
         .iter()
         .find_map(|p| std::fs::read_to_string(p).ok())
         .expect("expressions.bbnf fixture must be loadable");
-    let extract =
-        grammar::parse(&input).expect("BBNF must parse the expressions sub-grammar");
+    let extract = grammar::parse(&input).expect("BBNF must parse the expressions sub-grammar");
     assert!(
         !extract.rules.is_empty(),
         "expressions.bbnf AST must contain ≥ 1 rule entry",

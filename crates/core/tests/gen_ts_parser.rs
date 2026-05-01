@@ -8,8 +8,7 @@ use bbnf::pipeline::{
 };
 
 fn json_grammar() -> String {
-    std::fs::read_to_string("../../grammar/json/json.bbnf")
-        .expect("failed to read json.bbnf")
+    std::fs::read_to_string("../../grammar/json/json.bbnf").expect("failed to read json.bbnf")
 }
 
 #[test]
@@ -49,9 +48,7 @@ fn strip_ts_types(ts: &str) -> String {
         let trimmed = line.trim();
 
         // Start skipping interface/type blocks.
-        if !skipping
-            && (trimmed.starts_with("interface ") || trimmed.starts_with("type "))
-        {
+        if !skipping && (trimmed.starts_with("interface ") || trimmed.starts_with("type ")) {
             // Single-line type: `type Foo = bar;`
             if trimmed.ends_with(';') && !trimmed.contains('{') {
                 continue;

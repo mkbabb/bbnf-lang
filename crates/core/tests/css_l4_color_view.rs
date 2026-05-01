@@ -24,7 +24,7 @@
 //!    They are kept live (not `#[ignore]`d) so the post-regen green
 //!    transition is observable without un-ignoring.
 
-use bbnf::runtime::view::{Color, ColorSpace, COLOR_PAYLOAD_BYTES};
+use bbnf::runtime::view::{COLOR_PAYLOAD_BYTES, Color, ColorSpace};
 // The CSS L4 grammar references `crate::css_types::parse_hex_color`;
 // reproduce the minimal shim here so the grammar compiles cleanly
 // inside this test crate. Shared with `css_l4.rs`; kept verbatim
@@ -82,7 +82,6 @@ mod css_types {
 
 use ::bbnf::grammar::generated::css_l4::*;
 
-
 // ---------------------------------------------------------------------------
 // Layer 1 — standalone decoder tests
 //
@@ -106,7 +105,10 @@ fn compose_color_bytes(space: u8, c1: f64, c2: f64, c3: f64, alpha: f64) -> [u8;
 
 #[test]
 fn color_payload_bytes_matches_40() {
-    assert_eq!(COLOR_PAYLOAD_BYTES, 40, "wire contract: 40 B LargeAggregate slot");
+    assert_eq!(
+        COLOR_PAYLOAD_BYTES, 40,
+        "wire contract: 40 B LargeAggregate slot"
+    );
 }
 
 #[test]
@@ -338,10 +340,10 @@ fn parser_accepts_hsl_value() {
 #[ignore = "AY.W2.2 deferred — named_types resolver layout for heterogeneous Alt bodies; W3 Value API territory"]
 fn color_named_type_admission_or_no_color_rules() {
     use bbnf::pipeline::{
-        compile_paths_request, CompileOutput, CompileRequest, CompileTarget, PipelineOptions,
+        CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_paths_request,
     };
-    use bbnf_ir::passes::compute_payload_layouts_with_resolver;
     use bbnf_ir::TypeDesc;
+    use bbnf_ir::passes::compute_payload_layouts_with_resolver;
 
     let manifest = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let stylesheet = manifest.join("../../grammar/css/l4/stylesheet.bbnf");
@@ -350,8 +352,8 @@ fn color_named_type_admission_or_no_color_rules() {
         target: CompileTarget::Vm,
         options: PipelineOptions::default(),
     };
-    let out = compile_paths_request(&[stylesheet], &request)
-        .expect("CSS L4 compile for admission gate");
+    let out =
+        compile_paths_request(&[stylesheet], &request).expect("CSS L4 compile for admission gate");
     let ir = match out {
         CompileOutput::Vm(ir) => ir,
         _ => panic!("expected Vm output"),
@@ -367,9 +369,8 @@ fn color_named_type_admission_or_no_color_rules() {
         .filter_map(|(rid, td)| match td {
             TypeDesc::Named(sid) => {
                 let s = ir.get_string(*sid);
-                (s == "Color" || s == "ColorMix").then(|| {
-                    (ir.get_string(ir.get_rule(*rid).name).to_string(), *rid)
-                })
+                (s == "Color" || s == "ColorMix")
+                    .then(|| (ir.get_string(ir.get_rule(*rid).name).to_string(), *rid))
             }
             _ => None,
         })
@@ -384,8 +385,7 @@ fn color_named_type_admission_or_no_color_rules() {
     }
 
     // Post-regen path: every Named("Color") rule MUST get a layout.
-    let resolver =
-        bbnf::backend::rust::view::named_types::RustNamedTypes::from_ir(&ir);
+    let resolver = bbnf::backend::rust::view::named_types::RustNamedTypes::from_ir(&ir);
     let layouts = compute_payload_layouts_with_resolver(&ir, &resolver);
 
     for (name, rule_id) in &color_rules {
@@ -420,8 +420,8 @@ fn large_payload_max_admits_color_shape_at_64b_cap() {
     // layout, and that the default `MAX_PAYLOAD_BYTES = 16` cap
     // does not. This test does not depend on bootstrap state —
     // `plan_layout_with_cap` is a pure IR function.
-    use bbnf_ir::passes::plan_layout_with_cap;
     use bbnf_ir::TypeDesc;
+    use bbnf_ir::passes::plan_layout_with_cap;
 
     let color_fields = vec![
         TypeDesc::U8,

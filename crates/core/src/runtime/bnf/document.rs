@@ -25,9 +25,18 @@ impl<'p> BnfDocument<'p> {
         Self { arena, root, input }
     }
 
-    #[inline] pub fn root(&self) -> &BnfValue<'p> { &self.root }
-    #[inline] pub fn arena(&self) -> &BnfArena<'p> { &self.arena }
-    #[inline] pub fn input(&self) -> &'p str { self.input }
+    #[inline]
+    pub fn root(&self) -> &BnfValue<'p> {
+        &self.root
+    }
+    #[inline]
+    pub fn arena(&self) -> &BnfArena<'p> {
+        &self.arena
+    }
+    #[inline]
+    pub fn input(&self) -> &'p str {
+        self.input
+    }
 
     #[inline]
     pub fn compound(&self, id: BnfCompoundId) -> &BnfCompound<'p> {
@@ -36,10 +45,16 @@ impl<'p> BnfDocument<'p> {
 
     #[inline]
     pub fn view<'a>(&'a self) -> BnfView<'a, 'p> {
-        BnfView { doc: self, focus: self.root }
+        BnfView {
+            doc: self,
+            focus: self.root,
+        }
     }
 
-    #[inline] pub fn to_value(&self) -> &BnfValue<'p> { &self.root }
+    #[inline]
+    pub fn to_value(&self) -> &BnfValue<'p> {
+        &self.root
+    }
 
     #[inline]
     pub fn get<T: BnfPathQuery>(&self, path: Path<'_>) -> Option<T> {
@@ -59,10 +74,22 @@ impl<'a, 'p: 'a> BnfView<'a, 'p> {
         Self { doc, focus }
     }
 
-    #[inline] pub fn document(&self) -> &'a BnfDocument<'p> { self.doc }
-    #[inline] pub fn focus(&self) -> BnfValue<'p> { self.focus }
-    #[inline] pub fn root(&self) -> &'a BnfValue<'p> { &self.doc.root }
-    #[inline] pub fn arena(&self) -> &'a BnfArena<'p> { &self.doc.arena }
+    #[inline]
+    pub fn document(&self) -> &'a BnfDocument<'p> {
+        self.doc
+    }
+    #[inline]
+    pub fn focus(&self) -> BnfValue<'p> {
+        self.focus
+    }
+    #[inline]
+    pub fn root(&self) -> &'a BnfValue<'p> {
+        &self.doc.root
+    }
+    #[inline]
+    pub fn arena(&self) -> &'a BnfArena<'p> {
+        &self.doc.arena
+    }
 
     #[inline]
     pub fn compound(&self, id: BnfCompoundId) -> &'a BnfCompound<'p> {
@@ -78,9 +105,18 @@ impl<'a, 'p: 'a> BnfView<'a, 'p> {
         }
     }
 
-    #[inline] pub fn is_compound(&self) -> bool { matches!(self.focus, BnfValue::Compound(_)) }
-    #[inline] pub fn is_span(&self) -> bool { matches!(self.focus, BnfValue::Span(_)) }
-    #[inline] pub fn input(&self) -> &'p str { self.doc.input }
+    #[inline]
+    pub fn is_compound(&self) -> bool {
+        matches!(self.focus, BnfValue::Compound(_))
+    }
+    #[inline]
+    pub fn is_span(&self) -> bool {
+        matches!(self.focus, BnfValue::Span(_))
+    }
+    #[inline]
+    pub fn input(&self) -> &'p str {
+        self.doc.input
+    }
 
     #[inline]
     pub fn compound_kind(&self) -> Option<BnfCompoundKind> {

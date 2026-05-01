@@ -142,7 +142,9 @@ impl RecognizerMiner for ShapeDictMiner {
         // own DAG id so the projection filter keeps every emission.
         // That closes the wire contract from mining through selection
         // to the per-grammar `GRAMMAR_PROFILE.shape_dict` literal.
-        let Some(dag) = ctx.ir.dag.as_ref() else { return };
+        let Some(dag) = ctx.ir.dag.as_ref() else {
+            return;
+        };
         let rule_body_for_node = ctx.ir.rules.iter().find_map(|rule| {
             if dag.node_for(&rule.body) == Some(node_id) {
                 Some(&rule.body)
@@ -150,7 +152,9 @@ impl RecognizerMiner for ShapeDictMiner {
                 None
             }
         });
-        let Some(rule_body) = rule_body_for_node else { return };
+        let Some(rule_body) = rule_body_for_node else {
+            return;
+        };
 
         // Peel transparent wrappers — `Map { inner, .. }` and
         // `OptionalWhitespace(inner)` preserve semantic shape but
@@ -454,7 +458,9 @@ fn skeleton_is_trivial(skeleton: &[TemplatePiece]) -> bool {
     if skeleton.len() < 2 {
         return true;
     }
-    !skeleton.iter().any(|p| matches!(p, TemplatePiece::LeafHole))
+    !skeleton
+        .iter()
+        .any(|p| matches!(p, TemplatePiece::LeafHole))
 }
 
 // ── Canonical hashing ─────────────────────────────────────────────

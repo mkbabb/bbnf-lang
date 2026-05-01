@@ -46,8 +46,7 @@ fn workspace_root() -> std::path::PathBuf {
     loop {
         let candidate = p.join("Cargo.toml");
         if candidate.exists() {
-            let bytes = std::fs::read_to_string(&candidate)
-                .expect("workspace Cargo.toml read");
+            let bytes = std::fs::read_to_string(&candidate).expect("workspace Cargo.toml read");
             if bytes.contains("[workspace]") {
                 return p;
             }
@@ -67,13 +66,7 @@ fn workspace_root() -> std::path::PathBuf {
 fn run_xtask_regen(workspace_root: &Path, dest_dir: &Path, grammar: &str) {
     let status = Command::new(env!("CARGO"))
         .current_dir(workspace_root)
-        .args([
-            "xtask",
-            "regen",
-            "--grammar",
-            grammar,
-            "--output",
-        ])
+        .args(["xtask", "regen", "--grammar", grammar, "--output"])
         .arg(dest_dir)
         .output()
         .expect("spawn cargo xtask regen");

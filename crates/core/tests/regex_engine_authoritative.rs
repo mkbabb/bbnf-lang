@@ -18,8 +18,7 @@
 //! allowed to have no decision.
 
 use bbnf::pipeline::{
-    CompileRequest, CompileTarget, PipelineOptions, compile_grammar_request,
-    compile_paths_request,
+    CompileRequest, CompileTarget, PipelineOptions, compile_grammar_request, compile_paths_request,
 };
 
 fn vm_request() -> CompileRequest {

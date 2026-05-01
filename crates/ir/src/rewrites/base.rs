@@ -67,7 +67,10 @@ impl PatternRef {
     /// Construct a ref by name only (tag is filled in by the
     /// re-resolution pass at load time).
     pub fn by_name(name: impl Into<String>) -> Self {
-        Self { name: name.into(), tag: None }
+        Self {
+            name: name.into(),
+            tag: None,
+        }
     }
 }
 
@@ -142,9 +145,9 @@ impl Pattern {
             Pattern::Seq(xs) | Pattern::Alt(xs) => {
                 1 + xs.iter().map(Pattern::ast_size).sum::<usize>()
             }
-            Pattern::Repeat { inner, .. }
-            | Pattern::Negate(inner)
-            | Pattern::Map { inner, .. } => 1 + inner.ast_size(),
+            Pattern::Repeat { inner, .. } | Pattern::Negate(inner) | Pattern::Map { inner, .. } => {
+                1 + inner.ast_size()
+            }
             Pattern::Skip(a, b) | Pattern::Next(a, b) | Pattern::Minus(a, b) => {
                 1 + a.ast_size() + b.ast_size()
             }
@@ -168,9 +171,9 @@ impl Pattern {
                     x.atoms_into(out);
                 }
             }
-            Pattern::Repeat { inner, .. }
-            | Pattern::Negate(inner)
-            | Pattern::Map { inner, .. } => inner.atoms_into(out),
+            Pattern::Repeat { inner, .. } | Pattern::Negate(inner) | Pattern::Map { inner, .. } => {
+                inner.atoms_into(out)
+            }
             Pattern::Skip(a, b) | Pattern::Next(a, b) | Pattern::Minus(a, b) => {
                 a.atoms_into(out);
                 b.atoms_into(out);
@@ -214,10 +217,10 @@ impl Witness {
         match self {
             Witness::Authored { .. } => true,
             Witness::EgraphEquiv { seed_count } => *seed_count > 0,
-            Witness::VmOracle { sample_count, counterexamples } => {
-                *sample_count > 0 && *counterexamples == 0
-            }
+            Witness::VmOracle {
+                sample_count,
+                counterexamples,
+            } => *sample_count > 0 && *counterexamples == 0,
         }
     }
 }
-

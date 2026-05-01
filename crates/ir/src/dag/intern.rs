@@ -4,8 +4,8 @@
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 
-use super::node::{DagNode, NodeId};
 use super::GrammarDag;
+use super::node::{DagNode, NodeId};
 
 impl GrammarDag {
     /// Intern `node`, returning the `NodeId` of its (possibly existing) entry.

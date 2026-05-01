@@ -49,17 +49,9 @@ impl RecognizerMiner for ContextFactsMiner {
                 // refine further, but at this node the branch *shape*
                 // is sufficient to distinguish).
                 if dispatch.is_some() {
-                    set_discrimination(
-                        outputs,
-                        node_id,
-                        DiscriminationStrength::Strong,
-                    );
+                    set_discrimination(outputs, node_id, DiscriminationStrength::Strong);
                 } else if branches.iter().all(|b| is_leading_literal(&b.node)) {
-                    set_discrimination(
-                        outputs,
-                        node_id,
-                        DiscriminationStrength::Medium,
-                    );
+                    set_discrimination(outputs, node_id, DiscriminationStrength::Medium);
                 }
             }
 
@@ -135,8 +127,5 @@ fn set_in_token_dispatch(outputs: &mut MineOutputs, node_id: NodeId) {
 /// further downstream but at the Alt level the branches are distinct
 /// enough to dispatch by first byte.
 fn is_leading_literal(node: &IrNode) -> bool {
-    matches!(
-        node,
-        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Seq(_)
-    )
+    matches!(node, IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Seq(_))
 }

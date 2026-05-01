@@ -226,9 +226,7 @@ fn compile_chain_child<E: Emitter>(
 /// Extract operator chain components from a Seq already known to be
 /// an operator chain. Returns `(head, link_node, op, rhs)`. `link_node`
 /// is the `Seq(op, rhs)` inside `Repeat`.
-fn extract_operator_chain(
-    children: &[IrNode],
-) -> Option<(&IrNode, &IrNode, &IrNode, &IrNode)> {
+fn extract_operator_chain(children: &[IrNode]) -> Option<(&IrNode, &IrNode, &IrNode, &IrNode)> {
     if children.len() != 2 {
         return None;
     }

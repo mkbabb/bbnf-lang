@@ -37,9 +37,7 @@ pub(crate) struct DirectiveMaps<'a> {
 impl<'a> DirectiveMaps<'a> {
     // ---- mutators used by the host-side walker sink in `grammar::host` ----
 
-    pub(crate) fn recover_map_mut(
-        &mut self,
-    ) -> &mut HashMap<String, BbnfView<'a, 'a>> {
+    pub(crate) fn recover_map_mut(&mut self) -> &mut HashMap<String, BbnfView<'a, 'a>> {
         &mut self.recover_map
     }
     pub(crate) fn pretty_map_mut(&mut self) -> &mut HashMap<String, Vec<String>> {
@@ -196,9 +194,12 @@ fn merge_module(
     }
 
     for (&name, entry) in &data.ast {
-        ast.insert(name, RuleEntry {
-            name_span: entry.name_span,
-            rhs: entry.rhs,
-        });
+        ast.insert(
+            name,
+            RuleEntry {
+                name_span: entry.name_span,
+                rhs: entry.rhs,
+            },
+        );
     }
 }

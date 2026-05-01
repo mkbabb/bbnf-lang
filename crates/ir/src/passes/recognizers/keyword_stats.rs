@@ -87,8 +87,7 @@ impl RecognizerMiner for KeywordStatsMiner {
 /// to a literal-led sub-rule (`"@import" ?w ...`). Without it the
 /// miner sees 0 literal-led branches and no PHF fires.
 fn leading_literal(node: &IrNode, ctx: &RecognizerMineCtx) -> Option<Vec<u8>> {
-    let mut visited: std::collections::HashSet<crate::RuleId> =
-        std::collections::HashSet::new();
+    let mut visited: std::collections::HashSet<crate::RuleId> = std::collections::HashSet::new();
     leading_literal_rec(node, ctx, &mut visited)
 }
 
@@ -105,9 +104,7 @@ fn leading_literal_rec(
         IrNode::Seq(children) if !children.is_empty() => {
             leading_literal_rec(&children[0], ctx, visited)
         }
-        IrNode::Skip(a, _) | IrNode::Next(a, _) => {
-            leading_literal_rec(a, ctx, visited)
-        }
+        IrNode::Skip(a, _) | IrNode::Next(a, _) => leading_literal_rec(a, ctx, visited),
         IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
             leading_literal_rec(inner, ctx, visited)
         }

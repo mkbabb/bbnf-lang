@@ -206,9 +206,7 @@ pub enum RecognizerShape {
     /// semantics were structurally incompatible with CSS functions
     /// that have bodies. `PunctWsRegion` is the only family in the
     /// X.10/X.11b slate that earned its keep.
-    PunctWsRegion {
-        puncts: smallvec::SmallVec<[u8; 8]>,
-    },
+    PunctWsRegion { puncts: smallvec::SmallVec<[u8; 8]> },
 }
 
 /// Canonical hash key for kernel dedup/hoisting.

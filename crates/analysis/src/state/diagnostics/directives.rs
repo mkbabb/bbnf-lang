@@ -5,10 +5,10 @@ use ls_types::*;
 use crate::analysis::LineIndex;
 
 use super::super::pretty;
+use super::super::pretty::PrettyInfo;
 use super::super::types::{
     DebugInfo, ImportInfo, RecoverInfo, SemanticTokenInfo, TokenInfo, WsPatternInfo,
 };
-use super::super::pretty::PrettyInfo;
 
 /// Run all directive validation + semantic-token emission in the same order as
 /// the original monolithic `analyze_from_cache` block. Mirrors the block

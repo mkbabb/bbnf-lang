@@ -9,11 +9,17 @@ pub struct TsCode {
 
 impl TsCode {
     pub fn expr(e: impl Into<String>) -> Self {
-        Self { stmts: String::new(), expr: e.into() }
+        Self {
+            stmts: String::new(),
+            expr: e.into(),
+        }
     }
 
     pub fn new(stmts: String, expr: impl Into<String>) -> Self {
-        Self { stmts, expr: expr.into() }
+        Self {
+            stmts,
+            expr: expr.into(),
+        }
     }
 
     pub fn dissolve(self, parent: &mut String) -> String {
@@ -56,7 +62,10 @@ pub struct TsEmitCtx {
 
 impl Default for TsEmitCtx {
     fn default() -> Self {
-        Self { counter: 0, hoisted_regexes: Vec::new() }
+        Self {
+            counter: 0,
+            hoisted_regexes: Vec::new(),
+        }
     }
 }
 

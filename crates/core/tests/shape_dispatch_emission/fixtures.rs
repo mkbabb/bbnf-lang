@@ -18,8 +18,8 @@ use bbnf_ir::dag::GrammarDag;
 use bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments;
 use bbnf_ir::passes::{compute_regex_info, mine_recognizers};
 use bbnf_ir::{
-    AltBranch, CostConfig, FnDescriptor, GrammarIR, IrNode, IrRule, MapExpr,
-    RuleId, RuleMeta, TypeDescInterner,
+    AltBranch, CostConfig, FnDescriptor, GrammarIR, IrNode, IrRule, MapExpr, RuleId, RuleMeta,
+    TypeDescInterner,
 };
 
 /// A fully-classified JSON-shaped fixture plus the rule ids for each
@@ -211,10 +211,7 @@ pub fn build_json_ir() -> (GrammarIR, JsonRules) {
     // pair = string, colon >> value  —  Seq(string, Next(colon, value))
     let pair_body = IrNode::Seq(vec![
         IrNode::Ref(string),
-        IrNode::Next(
-            Box::new(IrNode::Ref(colon)),
-            Box::new(IrNode::Ref(value)),
-        ),
+        IrNode::Next(Box::new(IrNode::Ref(colon)), Box::new(IrNode::Ref(value))),
     ]);
     let pair = push_rule(&mut ir, "pair", pair_body);
 

@@ -159,9 +159,7 @@ fn type_join(a: &SimpleType, b: &SimpleType) -> SimpleType {
             SimpleType::Tuple(joined)
         }
         // Structural join for Vec: join inner type
-        (SimpleType::Vec(a), SimpleType::Vec(b)) => {
-            SimpleType::Vec(Box::new(type_join(a, b)))
-        }
+        (SimpleType::Vec(a), SimpleType::Vec(b)) => SimpleType::Vec(Box::new(type_join(a, b))),
         // Different types: collapse to BoxedEnum
         _ => SimpleType::BoxedEnum,
     }
@@ -183,7 +181,10 @@ fn standard_type_candidates() -> Vec<SimpleType> {
         SimpleType::Vec(Box::new(SimpleType::Named("Expr".to_string()))),
         SimpleType::Tuple(vec![SimpleType::Span, SimpleType::Span]),
         SimpleType::Tuple(vec![SimpleType::Span, SimpleType::Span, SimpleType::Span]),
-        SimpleType::Tuple(vec![SimpleType::Span, SimpleType::Named("Expr".to_string())]),
+        SimpleType::Tuple(vec![
+            SimpleType::Span,
+            SimpleType::Named("Expr".to_string()),
+        ]),
         SimpleType::Tuple(vec![
             SimpleType::Span,
             SimpleType::Named("Expr".to_string()),
@@ -359,7 +360,10 @@ fn test_type_inference_seq_mixed_no_compression() {
     assert!(!solutions.is_empty());
     assert_eq!(
         solutions[0][result as usize],
-        SimpleType::Tuple(vec![SimpleType::Span, SimpleType::Named("Expr".to_string())]),
+        SimpleType::Tuple(vec![
+            SimpleType::Span,
+            SimpleType::Named("Expr".to_string())
+        ]),
         "Mixed Seq should produce Tuple"
     );
 }
@@ -553,11 +557,12 @@ fn test_type_inference_recursive_cycle() {
     // C must equal B
     csp.add_constraint(LambdaConstraint::new(
         vec![b, c],
-        move |assignment: &[Option<SimpleType>]| {
-            match (&assignment[b as usize], &assignment[c as usize]) {
-                (Some(tb), Some(tc)) => type_join(tb, tc) == *tc,
-                _ => true,
-            }
+        move |assignment: &[Option<SimpleType>]| match (
+            &assignment[b as usize],
+            &assignment[c as usize],
+        ) {
+            (Some(tb), Some(tc)) => type_join(tb, tc) == *tc,
+            _ => true,
         },
         "C >= B",
     ));
@@ -565,11 +570,12 @@ fn test_type_inference_recursive_cycle() {
     // A must be >= C (closing the cycle)
     csp.add_constraint(LambdaConstraint::new(
         vec![c, a],
-        move |assignment: &[Option<SimpleType>]| {
-            match (&assignment[c as usize], &assignment[a as usize]) {
-                (Some(tc), Some(ta)) => type_join(tc, ta) == *ta,
-                _ => true,
-            }
+        move |assignment: &[Option<SimpleType>]| match (
+            &assignment[c as usize],
+            &assignment[a as usize],
+        ) {
+            (Some(tc), Some(ta)) => type_join(tc, ta) == *ta,
+            _ => true,
         },
         "A >= C",
     ));
@@ -585,10 +591,22 @@ fn test_type_inference_recursive_cycle() {
     };
 
     let solutions = csp.solve(&config);
-    assert!(!solutions.is_empty(), "Cyclic type inference should converge");
-    assert_eq!(solutions[0][a as usize], SimpleType::Named("Expr".to_string()));
-    assert_eq!(solutions[0][b as usize], SimpleType::Named("Expr".to_string()));
-    assert_eq!(solutions[0][c as usize], SimpleType::Named("Expr".to_string()));
+    assert!(
+        !solutions.is_empty(),
+        "Cyclic type inference should converge"
+    );
+    assert_eq!(
+        solutions[0][a as usize],
+        SimpleType::Named("Expr".to_string())
+    );
+    assert_eq!(
+        solutions[0][b as usize],
+        SimpleType::Named("Expr".to_string())
+    );
+    assert_eq!(
+        solutions[0][c as usize],
+        SimpleType::Named("Expr".to_string())
+    );
 }
 
 // -----------------------------------------------------------------------
@@ -598,7 +616,7 @@ fn test_type_inference_recursive_cycle() {
 fn test_first_set_propagation() {
     let mut first_a = BitsetLatticeDomain::new(BitsetDomain::new([0])); // {a}
     let mut first_b = BitsetLatticeDomain::new(BitsetDomain::new([1])); // {b}
-    let first_c = BitsetLatticeDomain::new(BitsetDomain::new([2]));     // {c}
+    let first_c = BitsetLatticeDomain::new(BitsetDomain::new([2])); // {c}
 
     // Fixed-point propagation:
     // Constraint graph: A >= B, B >= C
@@ -661,10 +679,16 @@ fn test_first_set_propagation_cyclic() {
     let b_val = first_b.inner();
 
     // Both should contain {a, b}
-    assert!(a_val.contains(&0) && a_val.contains(&1),
-        "FIRST(A) should be {{a, b}}, got {:?}", a_val.values());
-    assert!(b_val.contains(&0) && b_val.contains(&1),
-        "FIRST(B) should be {{a, b}}, got {:?}", b_val.values());
+    assert!(
+        a_val.contains(&0) && a_val.contains(&1),
+        "FIRST(A) should be {{a, b}}, got {:?}",
+        a_val.values()
+    );
+    assert!(
+        b_val.contains(&0) && b_val.contains(&1),
+        "FIRST(B) should be {{a, b}}, got {:?}",
+        b_val.values()
+    );
 
     // Convergence: 2 iterations
     assert_eq!(iterations, 2);
@@ -676,19 +700,34 @@ fn test_first_set_propagation_cyclic() {
 #[test]
 fn test_type_join_properties() {
     // Identity: Bottom join X = X
-    assert_eq!(type_join(&SimpleType::Bottom, &SimpleType::Span), SimpleType::Span);
+    assert_eq!(
+        type_join(&SimpleType::Bottom, &SimpleType::Span),
+        SimpleType::Span
+    );
     assert_eq!(
         type_join(&SimpleType::Bottom, &SimpleType::Named("X".into())),
         SimpleType::Named("X".into())
     );
-    assert_eq!(type_join(&SimpleType::Bottom, &SimpleType::Bottom), SimpleType::Bottom);
+    assert_eq!(
+        type_join(&SimpleType::Bottom, &SimpleType::Bottom),
+        SimpleType::Bottom
+    );
 
     // Absorption: BoxedEnum join X = BoxedEnum
-    assert_eq!(type_join(&SimpleType::BoxedEnum, &SimpleType::Span), SimpleType::BoxedEnum);
-    assert_eq!(type_join(&SimpleType::Span, &SimpleType::BoxedEnum), SimpleType::BoxedEnum);
+    assert_eq!(
+        type_join(&SimpleType::BoxedEnum, &SimpleType::Span),
+        SimpleType::BoxedEnum
+    );
+    assert_eq!(
+        type_join(&SimpleType::Span, &SimpleType::BoxedEnum),
+        SimpleType::BoxedEnum
+    );
 
     // Idempotence: X join X = X
-    assert_eq!(type_join(&SimpleType::Span, &SimpleType::Span), SimpleType::Span);
+    assert_eq!(
+        type_join(&SimpleType::Span, &SimpleType::Span),
+        SimpleType::Span
+    );
     let named = SimpleType::Named("Foo".into());
     assert_eq!(type_join(&named, &named), named);
 
@@ -778,14 +817,15 @@ fn test_type_inference_vec_wrapping() {
 
     csp.add_constraint(LambdaConstraint::new(
         vec![inner, result],
-        move |assignment: &[Option<SimpleType>]| {
-            match (&assignment[inner as usize], &assignment[result as usize]) {
-                (Some(inner_t), Some(res_t)) => {
-                    let expected = SimpleType::Vec(Box::new(inner_t.clone()));
-                    *res_t == expected
-                }
-                _ => true,
+        move |assignment: &[Option<SimpleType>]| match (
+            &assignment[inner as usize],
+            &assignment[result as usize],
+        ) {
+            (Some(inner_t), Some(res_t)) => {
+                let expected = SimpleType::Vec(Box::new(inner_t.clone()));
+                *res_t == expected
             }
+            _ => true,
         },
         "many_wraps_vec",
     ));
@@ -829,18 +869,16 @@ fn test_type_inference_complex_pipeline() {
     // Alt constraint on terminator
     csp.add_constraint(LambdaConstraint::new(
         vec![alt_branch_a, alt_branch_b, child_terminator],
-        move |assignment: &[Option<SimpleType>]| {
-            match (
-                &assignment[alt_branch_a as usize],
-                &assignment[alt_branch_b as usize],
-                &assignment[child_terminator as usize],
-            ) {
-                (Some(a), Some(b), Some(r)) => {
-                    let joined = type_join(a, b);
-                    *r == joined
-                }
-                _ => true,
+        move |assignment: &[Option<SimpleType>]| match (
+            &assignment[alt_branch_a as usize],
+            &assignment[alt_branch_b as usize],
+            &assignment[child_terminator as usize],
+        ) {
+            (Some(a), Some(b), Some(r)) => {
+                let joined = type_join(a, b);
+                *r == joined
             }
+            _ => true,
         },
         "alt_terminator",
     ));
@@ -940,5 +978,8 @@ fn test_first_set_nullable_prefix() {
     assert_eq!(s_val.size(), 3);
 
     // All three are absorbed in one pass
-    assert_eq!(iterations, 2, "One pass absorbs all, second confirms fixed point");
+    assert_eq!(
+        iterations, 2,
+        "One pass absorbs all, second confirms fixed point"
+    );
 }

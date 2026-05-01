@@ -39,9 +39,7 @@ pub fn detect_array(rule_id: RuleId, ir: &GrammarIR) -> bool {
 
     // Shape 1 — wrapped homogeneous repeat.
     if let Some((open, middle, close)) = unwrap_wrap(body) {
-        if single_byte_literal(open, ir).is_some()
-            && single_byte_literal(close, ir).is_some()
-        {
+        if single_byte_literal(open, ir).is_some() && single_byte_literal(close, ir).is_some() {
             let mut visited = HashSet::new();
             if inner_is_homogeneous_repeat(middle, ir, &mut visited) {
                 return true;
@@ -87,11 +85,7 @@ fn inner_is_homogeneous_repeat(
 /// homogeneous value — a Ref, a single-child Seq, or a simple value
 /// class with at most a trailing separator. Follows Refs through the
 /// visited cycle guard.
-fn is_homogeneous_element(
-    node: &IrNode,
-    ir: &GrammarIR,
-    visited: &mut HashSet<RuleId>,
-) -> bool {
+fn is_homogeneous_element(node: &IrNode, ir: &GrammarIR, visited: &mut HashSet<RuleId>) -> bool {
     match unwrap_map_ow(node) {
         // The canonical `value << comma?` — the trailing optional
         // separator keeps the element homogeneous.

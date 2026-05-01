@@ -39,7 +39,10 @@ fn assert_struct_eq_sonic(
         }
         JsonValue::Bool(b) => {
             let o = oracle.as_bool().unwrap_or_else(|| {
-                panic!("{path}: bbnf=Bool({b}) but sonic-rs={:?}", oracle.get_type())
+                panic!(
+                    "{path}: bbnf=Bool({b}) but sonic-rs={:?}",
+                    oracle.get_type()
+                )
             });
             assert_eq!(*b, o, "{path}: bool divergence");
         }
@@ -128,8 +131,7 @@ fn assert_struct_eq_sonic(
 
 fn parity_against_sonic(fixture: &str) {
     let path = format!("../../data/json/{}", fixture);
-    let src = std::fs::read_to_string(&path)
-        .unwrap_or_else(|e| panic!("{path}: read failed: {e}"));
+    let src = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path}: read failed: {e}"));
 
     let doc = JsonParser::parse(&src)
         .unwrap_or_else(|e| panic!("{fixture}: bbnf JSON parse failed: {e:?}"));
@@ -256,7 +258,8 @@ fn object_keys_and_values_decode() {
 fn nested_object_preserves_typed_payloads() {
     // A realistic nested JSON object exercises every typed annotation
     // in one input: null, booleans, numbers, strings.
-    let input = r#"{"nulls":[null,null],"bools":[false,true],"nums":[0,1,-2.5],"strs":["a","b\t"]}"#;
+    let input =
+        r#"{"nulls":[null,null],"bools":[false,true],"nums":[0,1,-2.5],"strs":["a","b\t"]}"#;
     let doc = JsonParser::parse(input).expect("parse");
 
     // Walk the document recursively and collect every leaf's value.

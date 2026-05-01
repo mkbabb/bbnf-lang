@@ -80,7 +80,10 @@ impl Analysis<GrammarENode> for GrammarAnalysis {
                 EClassFacts {
                     first_set: first,
                     nullable,
-                    width: WidthBound { min: min_width, max: max_width },
+                    width: WidthBound {
+                        min: min_width,
+                        max: max_width,
+                    },
                     literal_sid: None,
                     regex_sid: None,
                     elision_safe: false,
@@ -148,7 +151,10 @@ impl Analysis<GrammarENode> for GrammarAnalysis {
                 EClassFacts {
                     first_set: child.first_set.clone(),
                     nullable,
-                    width: WidthBound { min: min_width, max: max_width },
+                    width: WidthBound {
+                        min: min_width,
+                        max: max_width,
+                    },
                     literal_sid: None,
                     regex_sid: None,
                     elision_safe: false,
@@ -178,7 +184,10 @@ impl Analysis<GrammarENode> for GrammarAnalysis {
                 EClassFacts {
                     first_set,
                     nullable,
-                    width: WidthBound { min: min_width, max: max_width },
+                    width: WidthBound {
+                        min: min_width,
+                        max: max_width,
+                    },
                     literal_sid: None,
                     regex_sid: None,
                     elision_safe: false,
@@ -203,7 +212,10 @@ impl Analysis<GrammarENode> for GrammarAnalysis {
                 EClassFacts {
                     first_set: CharSet128::new(),
                     nullable: true,
-                    width: WidthBound { min: 0, max: Some(0) },
+                    width: WidthBound {
+                        min: 0,
+                        max: Some(0),
+                    },
                     literal_sid: None,
                     regex_sid: None,
                     elision_safe: true,
@@ -220,7 +232,10 @@ impl Analysis<GrammarENode> for GrammarAnalysis {
                 EClassFacts {
                     first_set: inner_facts.first_set,
                     nullable: true,
-                    width: WidthBound { min: 0, max: inner_facts.width.max },
+                    width: WidthBound {
+                        min: 0,
+                        max: inner_facts.width.max,
+                    },
                     literal_sid: None,
                     regex_sid: None,
                     elision_safe: true,

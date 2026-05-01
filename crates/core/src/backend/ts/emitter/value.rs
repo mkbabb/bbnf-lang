@@ -9,9 +9,7 @@ use bbnf_ir::{FnDescriptor, GrammarIR, MapExpr, TypeDesc};
 
 use crate::backend::ValuePlacement;
 
-use super::{
-    TsCode, TsEmitCtx, TsEmitter, compile_map_expr_to_js, translate_rust_constant_to_js,
-};
+use super::{TsCode, TsEmitCtx, TsEmitter, compile_map_expr_to_js, translate_rust_constant_to_js};
 
 impl TsEmitter {
     pub(super) fn emit_enum_wrap_impl(
@@ -87,11 +85,7 @@ impl TsEmitter {
         TsCode::new(stmts, v)
     }
 
-    pub(super) fn emit_span_capture_impl(
-        &mut self,
-        inner: TsCode,
-        ctx: &mut TsEmitCtx,
-    ) -> TsCode {
+    pub(super) fn emit_span_capture_impl(&mut self, inner: TsCode, ctx: &mut TsEmitCtx) -> TsCode {
         let v = ctx.fresh("span");
         let mut stmts = String::new();
         let inner_expr = inner.dissolve(&mut stmts);

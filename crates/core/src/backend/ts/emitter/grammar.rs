@@ -109,9 +109,7 @@ impl TsEmitter {
             output.push('\n');
         }
 
-        output.push_str(
-            "// ── Parser functions ─────────────────────────────────────────────\n\n",
-        );
+        output.push_str("// ── Parser functions ─────────────────────────────────────────────\n\n");
         for func in &rule_functions {
             output.push_str(&func.expr);
             output.push('\n');

@@ -123,9 +123,7 @@ pub fn try_detect(branches: &[AltBranch], ir: &GrammarIR) -> Option<KeyDispatchM
                 .into_iter()
                 .map(|lit| {
                     if let Some(ref sep) = separator {
-                        lit.strip_suffix(sep.as_str())
-                            .unwrap_or(&lit)
-                            .to_string()
+                        lit.strip_suffix(sep.as_str()).unwrap_or(&lit).to_string()
                     } else {
                         lit
                     }
@@ -157,9 +155,7 @@ fn classify_fallback_key(fallback: &IrNode, ir: &GrammarIR) -> Option<KeyClass> 
     let pattern = extract_leading_regex_pattern(fallback, ir, &mut visited)?;
     match classify_regex(pattern) {
         RegexClass::Identifier { .. } => Some(KeyClass::Identifier),
-        RegexClass::QuotedString { quote_char, .. } => {
-            Some(KeyClass::QuotedString { quote_char })
-        }
+        RegexClass::QuotedString { quote_char, .. } => Some(KeyClass::QuotedString { quote_char }),
         _ => None,
     }
 }

@@ -19,9 +19,9 @@
 
 #![cfg(all(target_arch = "x86_64", target_feature = "avx512vbmi2"))]
 
+use crate::StructuralIndex;
 use crate::alphabet::{KernelShape, NibbleLut, StructuralAlphabet};
 use crate::parity;
-use crate::StructuralIndex;
 
 use core::arch::x86_64::*;
 

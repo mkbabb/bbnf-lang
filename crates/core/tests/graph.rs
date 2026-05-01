@@ -179,4 +179,3 @@ fn tarjan_mutual_cycle() {
     assert!(result.cyclic_rules.contains("A"));
     assert!(result.cyclic_rules.contains("B"));
 }
-

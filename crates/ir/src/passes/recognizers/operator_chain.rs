@@ -48,7 +48,7 @@
 //!    with precedence = 1 (single-rung).
 
 use crate::passes::recognizers::dta::{
-    match_operator_chain_rule, Associativity, DtaState, DtaTable, PrecedenceEntry,
+    Associativity, DtaState, DtaTable, PrecedenceEntry, match_operator_chain_rule,
 };
 use crate::passes::recognizers::shape_dispatch::ShapeTag;
 use crate::{GrammarIR, RuleId};
@@ -209,10 +209,7 @@ impl OperatorChainFacts {
 /// this miner projects their operator sets uniformly into one
 /// `OperatorChainFacts` per grammar without any per-grammar
 /// branching.
-pub fn collect_operator_chains(
-    ir: &GrammarIR,
-    table: &DtaTable,
-) -> OperatorChainFacts {
+pub fn collect_operator_chains(ir: &GrammarIR, table: &DtaTable) -> OperatorChainFacts {
     let mut rules_out: Vec<OperatorChainRule> = Vec::new();
     let mut chain_heads: Vec<RuleId> = Vec::new();
 
@@ -303,78 +300,72 @@ pub fn collect_operator_chains(
         // `PRECEDENCE_LUT_<rule>` (walker-path parity — the rule
         // still emits a `parse_pratt_<rule>` function, the loop just
         // exits immediately because every LUT byte reads 0).
-        let rule_entries: Vec<OperatorChainEntry> =
-            match_operator_chain_rule(ir, rule)
-                .and_then(|(_, operators, _)| {
-                    // Within-rule first-byte + (first_byte, second_byte)
-                    // admission. The runtime dispatch (see
-                    // `shapes/pratt.rs::emit_parse_pratt`) packs one
-                    // `(precedence, associativity, two_byte_flag)` LUT
-                    // byte per first byte. Multiple entries sharing a
-                    // first byte ARE admissible when:
-                    //
-                    //   1. They carry matching (precedence,
-                    //      associativity) — the LUT byte encodes one
-                    //      triplet. The first-byte entries' triplets
-                    //      must agree so the LUT byte faithfully
-                    //      reflects any one of them.
-                    //   2. Their `(first_byte, second_byte)` tuples are
-                    //      distinct — the runtime `PRECEDENCE_ENTRIES_
-                    //      <rule>` scan uses the tuple as the
-                    //      discriminator on two-byte dispatch.
-                    //
-                    // AX.W0a.2.o: Sheets `compare_op = "<>" | "<=" |
-                    // ">=" | "=" | "<" | ">"` shares first byte 60
-                    // (`<`) across `"<>" / "<=" / "<"` and first byte
-                    // 62 (`>`) across `">=" / ">"`. Each sharing-
-                    // first-byte set has distinct `(first, second)`
-                    // tuples, and the runtime's two-byte-then-fallback
-                    // dispatch correctly selects the matching entry.
-                    // Pre-AX.W0a.2.o the admission rejected such rules
-                    // outright, emitting an empty `PRECEDENCE_ENTRIES_
-                    // comparison_expr` that the Pratt loop's LUT byte
-                    // read as zero — binary_factor parsed only the
-                    // first operand and stopped.
-                    let mut rule_tuple_seen: std::collections::HashSet<
-                        (u8, Option<u8>),
-                    > = std::collections::HashSet::new();
-                    let mut first_byte_triplet: std::collections::HashMap<
-                        u8,
-                        (u8, Associativity),
-                    > = std::collections::HashMap::new();
-                    for pe in &operators {
-                        let tup = (pe.byte, pe.second_byte);
-                        if !rule_tuple_seen.insert(tup) {
-                            // Exact `(first, second)` duplicate —
-                            // truly ambiguous; reject defensively.
+        let rule_entries: Vec<OperatorChainEntry> = match_operator_chain_rule(ir, rule)
+            .and_then(|(_, operators, _)| {
+                // Within-rule first-byte + (first_byte, second_byte)
+                // admission. The runtime dispatch (see
+                // `shapes/pratt.rs::emit_parse_pratt`) packs one
+                // `(precedence, associativity, two_byte_flag)` LUT
+                // byte per first byte. Multiple entries sharing a
+                // first byte ARE admissible when:
+                //
+                //   1. They carry matching (precedence,
+                //      associativity) — the LUT byte encodes one
+                //      triplet. The first-byte entries' triplets
+                //      must agree so the LUT byte faithfully
+                //      reflects any one of them.
+                //   2. Their `(first_byte, second_byte)` tuples are
+                //      distinct — the runtime `PRECEDENCE_ENTRIES_
+                //      <rule>` scan uses the tuple as the
+                //      discriminator on two-byte dispatch.
+                //
+                // AX.W0a.2.o: Sheets `compare_op = "<>" | "<=" |
+                // ">=" | "=" | "<" | ">"` shares first byte 60
+                // (`<`) across `"<>" / "<=" / "<"` and first byte
+                // 62 (`>`) across `">=" / ">"`. Each sharing-
+                // first-byte set has distinct `(first, second)`
+                // tuples, and the runtime's two-byte-then-fallback
+                // dispatch correctly selects the matching entry.
+                // Pre-AX.W0a.2.o the admission rejected such rules
+                // outright, emitting an empty `PRECEDENCE_ENTRIES_
+                // comparison_expr` that the Pratt loop's LUT byte
+                // read as zero — binary_factor parsed only the
+                // first operand and stopped.
+                let mut rule_tuple_seen: std::collections::HashSet<(u8, Option<u8>)> =
+                    std::collections::HashSet::new();
+                let mut first_byte_triplet: std::collections::HashMap<u8, (u8, Associativity)> =
+                    std::collections::HashMap::new();
+                for pe in &operators {
+                    let tup = (pe.byte, pe.second_byte);
+                    if !rule_tuple_seen.insert(tup) {
+                        // Exact `(first, second)` duplicate —
+                        // truly ambiguous; reject defensively.
+                        return None;
+                    }
+                    let triplet = (pe.precedence, pe.associativity);
+                    if let Some(existing) = first_byte_triplet.insert(pe.byte, triplet) {
+                        if existing != triplet {
+                            // First-byte entries disagree on
+                            // (precedence, associativity) — the
+                            // single LUT byte cannot encode both;
+                            // reject.
                             return None;
                         }
-                        let triplet = (pe.precedence, pe.associativity);
-                        if let Some(existing) = first_byte_triplet
-                            .insert(pe.byte, triplet)
-                        {
-                            if existing != triplet {
-                                // First-byte entries disagree on
-                                // (precedence, associativity) — the
-                                // single LUT byte cannot encode both;
-                                // reject.
-                                return None;
-                            }
-                        }
                     }
-                    Some(
-                        operators
-                            .into_iter()
-                            .map(|mut pe| {
-                                // Single-rung chain: precedence is 1
-                                // (the innermost / only rung).
-                                pe.precedence = 1;
-                                to_chain_entry(&pe)
-                            })
-                            .collect::<Vec<_>>(),
-                    )
-                })
-                .unwrap_or_default();
+                }
+                Some(
+                    operators
+                        .into_iter()
+                        .map(|mut pe| {
+                            // Single-rung chain: precedence is 1
+                            // (the innermost / only rung).
+                            pe.precedence = 1;
+                            to_chain_entry(&pe)
+                        })
+                        .collect::<Vec<_>>(),
+                )
+            })
+            .unwrap_or_default();
         if !rule_entries.is_empty() {
             chain_heads.push(rule.id);
         }

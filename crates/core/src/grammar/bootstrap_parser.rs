@@ -19,8 +19,8 @@
 //! uses. Keep-or-retire policy after cutover.G is deferred to
 //! cutover.H or BA.W0.
 
-use bbnf_ir::registry::{LayoutKind, StructLayout};
 use bbnf_ir::TypeDesc;
+use bbnf_ir::registry::{LayoutKind, StructLayout};
 
 use crate::runtime::ParseErr;
 use crate::runtime::bbnf::{BbnfDocument, BbnfStructBuilder};
@@ -1114,8 +1114,10 @@ impl<'p> Parser<'p> {
         loop {
             let save = self.pos;
             self.skip_ws();
-            let op_ok = if self.peek_str("==") || self.peek_str("!=")
-                || self.peek_str("<=") || self.peek_str(">=")
+            let op_ok = if self.peek_str("==")
+                || self.peek_str("!=")
+                || self.peek_str("<=")
+                || self.peek_str(">=")
             {
                 self.pos += 2;
                 true
@@ -1220,7 +1222,11 @@ impl<'p> Parser<'p> {
             Some(b'"') => {
                 self.parse_string_lit()?;
             }
-            Some(b) if b.is_ascii_digit() || (b == b'.' && matches!(self.at_offset(1), Some(d) if d.is_ascii_digit())) => {
+            Some(b)
+                if b.is_ascii_digit()
+                    || (b == b'.'
+                        && matches!(self.at_offset(1), Some(d) if d.is_ascii_digit())) =>
+            {
                 self.parse_numeric_lit()?;
             }
             Some(b) if b == b'_' || b.is_ascii_alphabetic() => {
@@ -1342,14 +1348,27 @@ impl<'p> Parser<'p> {
         if is_float {
             let h = self.begin("float_lit");
             // Strip trailing word chars for parse.
-            let parse_part: String = text.chars().take_while(|c| c.is_ascii_digit() || *c == '.' || *c == 'e' || *c == 'E' || *c == '+' || *c == '-').collect();
+            let parse_part: String = text
+                .chars()
+                .take_while(|c| {
+                    c.is_ascii_digit()
+                        || *c == '.'
+                        || *c == 'e'
+                        || *c == 'E'
+                        || *c == '+'
+                        || *c == '-'
+                })
+                .collect();
             let v: f64 = parse_part.parse().unwrap_or(0.0);
             self.builder.push_leaf_with_f64(v);
             self.end(h);
         } else {
             let h = self.begin("int_lit");
             let v: i64 = if text.starts_with("0x") || text.starts_with("0X") {
-                let stripped: String = text[2..].chars().take_while(|c| c.is_ascii_hexdigit()).collect();
+                let stripped: String = text[2..]
+                    .chars()
+                    .take_while(|c| c.is_ascii_hexdigit())
+                    .collect();
                 i64::from_str_radix(&stripped, 16).unwrap_or(0)
             } else {
                 let parse_part: String = text.chars().take_while(|c| c.is_ascii_digit()).collect();

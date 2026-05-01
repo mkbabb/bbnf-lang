@@ -79,7 +79,10 @@ impl<'p> CsvDocument<'p> {
     /// Yield a [`CsvView`] focused on the document root.
     #[inline]
     pub fn view<'a>(&'a self) -> CsvView<'a, 'p> {
-        CsvView { doc: self, focus: self.root }
+        CsvView {
+            doc: self,
+            focus: self.root,
+        }
     }
 
     /// Borrow the root value.

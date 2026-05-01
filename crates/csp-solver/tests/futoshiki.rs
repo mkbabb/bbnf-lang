@@ -15,7 +15,10 @@ fn solve_4x4_futoshiki() {
     assert_eq!(puzzle.inequalities, vec![(1, 2)]);
 
     let solutions = solve_futoshiki(&puzzle);
-    assert!(!solutions.is_empty(), "puzzle should have at least one solution");
+    assert!(
+        !solutions.is_empty(),
+        "puzzle should have at least one solution"
+    );
 
     // Verify each solution
     for sol in &solutions {
@@ -24,7 +27,12 @@ fn solve_4x4_futoshiki() {
         assert_eq!(sol[0], 1);
         assert_eq!(sol[5], 3);
         // Check inequality: cell 1 > cell 2
-        assert!(sol[1] > sol[2], "cell 1 ({}) must be > cell 2 ({})", sol[1], sol[2]);
+        assert!(
+            sol[1] > sol[2],
+            "cell 1 ({}) must be > cell 2 ({})",
+            sol[1],
+            sol[2]
+        );
         // Check rows are all-different
         for r in 0..4 {
             let row: Vec<u32> = (0..4).map(|c| sol[r * 4 + c]).collect();
@@ -51,5 +59,9 @@ fn solve_3x3_trivial() {
     let puzzle = FutoshikiPuzzle::parse(input);
     let solutions = solve_futoshiki(&puzzle);
     // 3×3 Latin squares = 12
-    assert_eq!(solutions.len(), 12, "3×3 unconstrained has 12 Latin squares");
+    assert_eq!(
+        solutions.len(),
+        12,
+        "3×3 unconstrained has 12 Latin squares"
+    );
 }

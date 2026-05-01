@@ -61,7 +61,7 @@ use std::collections::BTreeSet;
 use std::path::PathBuf;
 
 use bbnf::pipeline::{
-    compile_paths_request, CompileOutput, CompileRequest, CompileTarget, PipelineOptions,
+    CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_paths_request,
 };
 use bbnf::runtime::{CssTypedValue, JsonValue};
 use bbnf_ir::{GrammarIR, TypeDesc};

@@ -133,10 +133,7 @@ pub fn detect_sep_by(inner: &IrNode) -> Option<(&IrNode, &IrNode)> {
 }
 
 /// Detect `(T, Vec<T>)` or `(Vec<T>, T)` flattening.
-pub fn detect_flatten(
-    result_type: &TypeDesc,
-    child_types: &[TypeDesc],
-) -> Option<FlattenStrategy> {
+pub fn detect_flatten(result_type: &TypeDesc, child_types: &[TypeDesc]) -> Option<FlattenStrategy> {
     let TypeDesc::Vec(_) = result_type else {
         return None;
     };
@@ -149,4 +146,3 @@ pub fn detect_flatten(
         _ => None,
     }
 }
-

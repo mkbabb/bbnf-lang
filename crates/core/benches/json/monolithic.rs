@@ -1,4 +1,3 @@
-
 //! BBNF JSON monolithic benchmark — cold per-parse (tape-first).
 
 #[global_allocator]
@@ -8,7 +7,6 @@ use divan::black_box;
 
 use ::bbnf::grammar::generated::json::*;
 use ::bbnf::runtime::{JsonKind, RuntimeView};
-
 
 #[path = "../common/timeout.rs"]
 mod timeout;

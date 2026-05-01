@@ -46,7 +46,9 @@ pub mod document;
 pub mod value;
 pub mod view;
 
-pub use arena::{SheetsArena, SheetsCompound, SheetsCompoundId, SheetsCompoundKind, SheetsCompoundView};
+pub use arena::{
+    SheetsArena, SheetsCompound, SheetsCompoundId, SheetsCompoundKind, SheetsCompoundView,
+};
 pub use builder::SheetsStructBuilder;
 pub use document::{SheetsDocument, SheetsKind, SheetsPathQuery, SheetsView};
 pub use value::SheetsValue;

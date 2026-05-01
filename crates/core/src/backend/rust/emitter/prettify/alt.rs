@@ -99,12 +99,8 @@ impl RustEmitter {
         // General case: try each branch in order, restore builder on failure.
         let mut result = quote! { return false; };
         for (branch_body, is_atomic) in branches.iter().rev() {
-            let branch_try = self.emit_prettify_attempt_impl(
-                branch_body.clone(),
-                !is_atomic,
-                false,
-                ctx,
-            );
+            let branch_try =
+                self.emit_prettify_attempt_impl(branch_body.clone(), !is_atomic, false, ctx);
             result = quote! {
                 {
                     if !#branch_try {

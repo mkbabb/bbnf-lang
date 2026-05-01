@@ -13,8 +13,8 @@ mod expression;
 mod fn_table;
 mod metadata;
 mod string_interner;
-pub(crate) mod view_walk;
 pub(crate) mod value_expr;
+pub(crate) mod view_walk;
 
 use std::collections::{HashMap, HashSet};
 
@@ -240,7 +240,8 @@ pub fn lower_to_ir<'a>(
         structural_alphabet: None,
         push_fingerprint: None,
         dedup_eligible_rules: Vec::new(),
-        shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
+        shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
+        ),
         struct_registry: bbnf_ir::StructRegistry::default(),
     }
 }

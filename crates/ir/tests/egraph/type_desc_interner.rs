@@ -102,7 +102,11 @@ fn serde_round_trip_rebuilds_lookup() {
     // Re-interning the same shape must return the original id.
     let id_span_again = reloaded.intern(TypeDesc::Span);
     assert_eq!(id_span, id_span_again);
-    assert_eq!(reloaded.len(), 2, "no new entry from re-intern after reload");
+    assert_eq!(
+        reloaded.len(),
+        2,
+        "no new entry from re-intern after reload"
+    );
 }
 
 #[test]

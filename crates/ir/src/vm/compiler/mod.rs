@@ -24,9 +24,7 @@ mod emit;
 mod node;
 mod rule;
 
-use super::bytecode::{
-    BytecodeProgram, DispatchData, Op, SourceMapEntry, TokenDispatchData,
-};
+use super::bytecode::{BytecodeProgram, DispatchData, Op, SourceMapEntry, TokenDispatchData};
 use crate::{GrammarIR, IrNode, MemoStrategy};
 
 /// Compile a GrammarIR to bytecode.

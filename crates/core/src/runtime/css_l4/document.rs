@@ -17,8 +17,7 @@
 //! lifetime `'a` (typically shorter than `'p`).
 
 use crate::runtime::css_l4::arena::{
-    CssArena, CssDeclListId, CssKeyframeListId, CssRuleListId, CssSelectorListId,
-    CssValueListId,
+    CssArena, CssDeclListId, CssKeyframeListId, CssRuleListId, CssSelectorListId, CssValueListId,
 };
 use crate::runtime::css_l4::value::{
     CssRule, CssTypedValue, Declaration, KeyframeBlock, Selector, StyleSheet,
@@ -112,7 +111,10 @@ impl<'p> CssDocument<'p> {
     /// AZ-I.W2-act.B3 — root view over the document graph.
     #[inline]
     pub fn view<'a>(&'a self) -> CssView<'a, 'p> {
-        CssView { doc: self, focus: CssFocus::Stylesheet(&self.root) }
+        CssView {
+            doc: self,
+            focus: CssFocus::Stylesheet(&self.root),
+        }
     }
 
     /// AZ-I.W2-act.B3 — borrowed root stylesheet.
@@ -165,20 +167,21 @@ impl<'p> CssDocument<'p> {
     /// typed leaves (`CssDimension::Percentage`, `CssColor::Hex(...)`,
     /// etc.) reach the document graph — the post-tape equivalent of the
     /// pre-W2-act tape-walk parity surface.
-    pub fn walk_values<'a>(&'a self) -> impl Iterator<Item = (&'p str, &'a CssTypedValue<'p>)> + 'a {
-        self.walk_declarations()
-            .flat_map(|decl| {
-                let property = decl.property;
-                let primary = std::iter::once((property, &decl.value));
-                let list_extra: Box<dyn Iterator<Item = (&'p str, &'a CssTypedValue<'p>)> + 'a> =
-                    match &decl.value {
-                        CssTypedValue::List(id) => {
-                            Box::new(self.values(*id).iter().map(move |v| (property, v)))
-                        }
-                        _ => Box::new(std::iter::empty()),
-                    };
-                primary.chain(list_extra)
-            })
+    pub fn walk_values<'a>(
+        &'a self,
+    ) -> impl Iterator<Item = (&'p str, &'a CssTypedValue<'p>)> + 'a {
+        self.walk_declarations().flat_map(|decl| {
+            let property = decl.property;
+            let primary = std::iter::once((property, &decl.value));
+            let list_extra: Box<dyn Iterator<Item = (&'p str, &'a CssTypedValue<'p>)> + 'a> =
+                match &decl.value {
+                    CssTypedValue::List(id) => {
+                        Box::new(self.values(*id).iter().map(move |v| (property, v)))
+                    }
+                    _ => Box::new(std::iter::empty()),
+                };
+            primary.chain(list_extra)
+        })
     }
 }
 
@@ -228,7 +231,8 @@ impl<'a, 'p: 'a> Iterator for CssDeclWalk<'a, 'p> {
                         *idx += 1;
                         match rule {
                             CssRule::Style(style) => {
-                                self.stack.push(CssWalkItem::DeclList(style.declarations, 0));
+                                self.stack
+                                    .push(CssWalkItem::DeclList(style.declarations, 0));
                             }
                             CssRule::Media(media) => {
                                 self.stack.push(CssWalkItem::RuleList(media.rules, 0));
@@ -258,7 +262,8 @@ impl<'a, 'p: 'a> Iterator for CssDeclWalk<'a, 'p> {
                     let blocks = self.doc.keyframes(id);
                     if let Some(block) = blocks.get(*idx) {
                         *idx += 1;
-                        self.stack.push(CssWalkItem::DeclList(block.declarations, 0));
+                        self.stack
+                            .push(CssWalkItem::DeclList(block.declarations, 0));
                     } else {
                         self.stack.pop();
                     }
@@ -447,10 +452,7 @@ enum CssWalkCursor<'a, 'p> {
 }
 
 #[inline]
-fn walk_path<'a, 'p>(
-    doc: &'a CssDocument<'p>,
-    path: Path<'_>,
-) -> Option<CssWalkCursor<'a, 'p>> {
+fn walk_path<'a, 'p>(doc: &'a CssDocument<'p>, path: Path<'_>) -> Option<CssWalkCursor<'a, 'p>> {
     let mut current = CssWalkCursor::Sheet(&doc.root, &doc.arena);
     for segment in path.iter() {
         current = match (current, segment) {
@@ -503,8 +505,7 @@ impl CssPathQuery for &str {
                 Some(unsafe { core::mem::transmute::<&'p str, &str>(extended) })
             }
             CssWalkCursor::Value(value, _) => match value {
-                CssTypedValue::String(s) | CssTypedValue::Ident(s)
-                | CssTypedValue::Span(s) => {
+                CssTypedValue::String(s) | CssTypedValue::Ident(s) | CssTypedValue::Span(s) => {
                     let extended: &'p str = *s;
                     Some(unsafe { core::mem::transmute::<&'p str, &str>(extended) })
                 }

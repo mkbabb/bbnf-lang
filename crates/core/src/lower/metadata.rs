@@ -15,10 +15,7 @@ use super::expression::lower_rhs;
 /// expression, and token flag. Alias detection (`is_alias`), transparent
 /// alternation (`is_transparent`), and span eligibility (`span_eligible`) are
 /// left at their defaults -- they are computed by IR passes post-lowering.
-pub(crate) fn build_rule_meta(
-    name: &str,
-    ctx: &mut LowerCtx<'_>,
-) -> RuleMeta {
+pub(crate) fn build_rule_meta(name: &str, ctx: &mut LowerCtx<'_>) -> RuleMeta {
     // FIRST set and nullability are populated by the IR CSP pass post-lowering.
     let first_set = bbnf_ir::CharSet128::new();
     let nullable = false;
@@ -61,10 +58,10 @@ pub(crate) fn build_rule_meta(
         scc_id,
         is_cyclic,
         memo,
-        dispatch: None,        // Populated by generate_dispatch_tables IR pass.
-        span_eligible: false,  // Populated by refine_span_eligibility IR pass.
-        is_alias: None,        // Populated by compute_aliases IR pass.
-        is_transparent: false, // Populated by compute_transparent IR pass.
+        dispatch: None,           // Populated by generate_dispatch_tables IR pass.
+        span_eligible: false,     // Populated by refine_span_eligibility IR pass.
+        is_alias: None,           // Populated by compute_aliases IR pass.
+        is_transparent: false,    // Populated by compute_transparent IR pass.
         preserve_identity: false, // Set by pipeline for structural mode.
         directives: RuleDirectives {
             pretty,

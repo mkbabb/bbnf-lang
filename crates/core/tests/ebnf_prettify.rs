@@ -3,7 +3,6 @@
 
 use ::bbnf::grammar::generated::ebnf::*;
 
-
 /// Parse an EBNF grammar and assert the parse succeeds. The
 /// tape-first parser rejects trailing garbage automatically.
 fn parse_grammar(input: &str) {
@@ -41,7 +40,10 @@ fn parse_multi_rule() {
 fn prettify_multi_rule() {
     let input = "digit = \"0\" | \"1\" | \"2\" ;\nnumber = digit , { digit } ;";
     let result = prettify(input);
-    assert!(result.is_some(), "prettify should succeed for multi-rule input");
+    assert!(
+        result.is_some(),
+        "prettify should succeed for multi-rule input"
+    );
     let output = result.unwrap();
     assert!(
         output.contains("digit"),

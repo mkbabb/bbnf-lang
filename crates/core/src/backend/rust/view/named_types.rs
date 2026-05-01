@@ -91,7 +91,10 @@ impl<'ir> RustNamedTypes<'ir> {
                 bindings.insert(*sid, shape);
             }
         }
-        Self { strings: &ir.strings, bindings }
+        Self {
+            strings: &ir.strings,
+            bindings,
+        }
     }
 
     /// Borrow the underlying string table.
@@ -169,9 +172,7 @@ fn infer_named_shape(ir: &GrammarIR, rule_id: RuleId) -> Option<Vec<TypeDesc>> {
         // (BBNF identifier / literal / comment, Sheets
         // identifiers, …). The frame layout is the runtime fact;
         // the resolver projection now matches it.
-        IrNode::Regex(_) | IrNode::Literal(_) => {
-            Some(vec![TypeDesc::Span])
-        }
+        IrNode::Regex(_) | IrNode::Literal(_) => Some(vec![TypeDesc::Span]),
         // Alt / Repeat / Ref / Epsilon / TokenDispatch / unwrapped
         // Map / OptionalWhitespace / Skip / Next kernels are not
         // structurally scalar — decline. The layout pass's
@@ -194,7 +195,11 @@ fn child_scalar_type(ir: &GrammarIR, child: &IrNode) -> Option<TypeDesc> {
             .iter()
             .find(|(id, _)| *id == *target)
             .map(|(_, t)| t.clone())?,
-        IrNode::Repeat { inner, lo: 0, hi: 1 } => {
+        IrNode::Repeat {
+            inner,
+            lo: 0,
+            hi: 1,
+        } => {
             // Collapsed `(scalar)?` — recurse into the inner and
             // keep the scalar. The layout pass's NaN-absent / tag=
             // sentinel convention covers the absence.

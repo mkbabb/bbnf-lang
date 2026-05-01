@@ -118,11 +118,7 @@ impl WasmEmitter {
         )
     }
 
-    pub(super) fn emit_negate_impl(
-        &mut self,
-        inner: String,
-        ctx: &mut WasmEmitCtx,
-    ) -> String {
+    pub(super) fn emit_negate_impl(&mut self, inner: String, ctx: &mut WasmEmitCtx) -> String {
         let save = ctx.fresh("neg_save");
         let result = ctx.fresh("neg_result");
         format!(

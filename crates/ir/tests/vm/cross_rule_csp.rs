@@ -10,9 +10,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use bbnf_ir::passes::materialization::{
-    MaterializationClass, classify_materialization,
-};
+use bbnf_ir::passes::materialization::{MaterializationClass, classify_materialization};
 use bbnf_ir::passes::solve_grammar_components;
 use bbnf_ir::{
     AltBranch, CostConfig, GrammarIR, IrNode, IrRule, PrettyHints, RuleDirectives, RuleMeta,
@@ -55,9 +53,10 @@ fn make_ir(rules: Vec<IrRule>, strings: Vec<String>) -> GrammarIR {
         payload_layouts: HashMap::new(),
         structural_alphabet: None,
         push_fingerprint: None,
-            dedup_eligible_rules: Vec::new(),
+        dedup_eligible_rules: Vec::new(),
 
-            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
+        shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
+        ),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -96,7 +95,10 @@ fn alt(branches: Vec<IrNode>) -> IrNode {
     IrNode::Alt(
         branches
             .into_iter()
-            .map(|node| AltBranch { node, first_set: None })
+            .map(|node| AltBranch {
+                node,
+                first_set: None,
+            })
             .collect(),
         None,
     )
@@ -197,10 +199,25 @@ fn bbnf_grammar_forms_expected_components() {
     // 9: import_directive  = "@import" literal
     // 10: pretty_directive = "@pretty" identifier
     let strings: Vec<String> = vec![
-        "rhs", "alternation", "concatenation", "term", "factor", "binary_factor",
-        "identifier", "literal", "regex", "import_directive", "pretty_directive",
-        "|", "?", "*", "@import", "@pretty",
-        "[a-zA-Z_][\\w]*", "\"[^\"]*\"", "/[^/]*/",
+        "rhs",
+        "alternation",
+        "concatenation",
+        "term",
+        "factor",
+        "binary_factor",
+        "identifier",
+        "literal",
+        "regex",
+        "import_directive",
+        "pretty_directive",
+        "|",
+        "?",
+        "*",
+        "@import",
+        "@pretty",
+        "[a-zA-Z_][\\w]*",
+        "\"[^\"]*\"",
+        "/[^/]*/",
     ]
     .into_iter()
     .map(String::from)
@@ -235,7 +252,11 @@ fn bbnf_grammar_forms_expected_components() {
         // 3: term = factor | binary_factor
         rule(3, 3, alt(vec![IrNode::Ref(4), IrNode::Ref(5)])),
         // 4: factor = identifier | literal | regex
-        rule(4, 4, alt(vec![IrNode::Ref(6), IrNode::Ref(7), IrNode::Ref(8)])),
+        rule(
+            4,
+            4,
+            alt(vec![IrNode::Ref(6), IrNode::Ref(7), IrNode::Ref(8)]),
+        ),
         // 5: binary_factor = factor "?" | factor "*"
         rule(
             5,
@@ -398,11 +419,7 @@ fn engine_propagation_unifies_component_regex_engines() {
         .collect();
     let rules = vec![
         // caller = number ident
-        rule(
-            0,
-            0,
-            IrNode::Seq(vec![IrNode::Ref(1), IrNode::Ref(2)]),
-        ),
+        rule(0, 0, IrNode::Seq(vec![IrNode::Ref(1), IrNode::Ref(2)])),
         // number = /[0-9]+/
         rule(1, 1, IrNode::Regex(3)),
         // ident  = /[a-z]+/
@@ -424,8 +441,7 @@ fn engine_propagation_unifies_component_regex_engines() {
     // the per-StringId engine decisions must match.
     let (decisions, _mat) = solve_grammar_components(&ir);
     let dag = ir.dag.as_ref().unwrap();
-    let engine_decisions =
-        bbnf_ir::passes::extract_regex_engine_decisions(&ir, &decisions);
+    let engine_decisions = bbnf_ir::passes::extract_regex_engine_decisions(&ir, &decisions);
     // Both regex rules carry distinct StringIds (3 and 4); the
     // component-wide propagation should give them the same engine.
     if let (Some(e1), Some(e2)) = (engine_decisions.get(&3), engine_decisions.get(&4)) {

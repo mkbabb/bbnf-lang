@@ -46,9 +46,7 @@ pub(super) const VALUE_HEAD_KINDS: &[BbnfCompoundKind] = &[
 /// First hit wins; returns `None` only if none of the value-layer
 /// compound kinds surface as descendants (pathological input —
 /// every `value_expr` body must resolve to at least a `value_atom`).
-pub(super) fn value_expr_head<'a, 'p: 'a>(
-    node: BbnfView<'a, 'p>,
-) -> Option<BbnfView<'a, 'p>> {
+pub(super) fn value_expr_head<'a, 'p: 'a>(node: BbnfView<'a, 'p>) -> Option<BbnfView<'a, 'p>> {
     for &kind in VALUE_HEAD_KINDS {
         if let Some(v) = find_descendant_by_compound_kind(node, kind) {
             // Skip `node` itself — only return distinct views.
@@ -85,8 +83,7 @@ pub(super) fn lower_value_expr_or_closure<'a, 'p: 'a>(
         let closure = if node.compound_kind() == Some(BbnfCompoundKind::ValueClosure) {
             node
         } else {
-            find_descendant_by_compound_kind(node, BbnfCompoundKind::ValueClosure)
-                .unwrap_or(node)
+            find_descendant_by_compound_kind(node, BbnfCompoundKind::ValueClosure).unwrap_or(node)
         };
         lower_value_closure(closure, ctx)
     } else {
@@ -95,8 +92,7 @@ pub(super) fn lower_value_expr_or_closure<'a, 'p: 'a>(
         let or_chain = if node.compound_kind() == Some(BbnfCompoundKind::ValueOr) {
             node
         } else {
-            find_descendant_by_compound_kind(node, BbnfCompoundKind::ValueOr)
-                .unwrap_or(node)
+            find_descendant_by_compound_kind(node, BbnfCompoundKind::ValueOr).unwrap_or(node)
         };
         fold_value_chain(or_chain, &LAYER_OR, ctx)
     }

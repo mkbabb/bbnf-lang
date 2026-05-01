@@ -63,10 +63,7 @@ mod css_types {
                 let g = hex_digit(hex[1]);
                 let b = hex_digit(hex[2]);
                 let a = hex_digit(hex[3]);
-                ((r << 4 | r) << 24)
-                    | ((g << 4 | g) << 16)
-                    | ((b << 4 | b) << 8)
-                    | (a << 4 | a)
+                ((r << 4 | r) << 24) | ((g << 4 | g) << 16) | ((b << 4 | b) << 8) | (a << 4 | a)
             }
             6 => {
                 let r = hex_byte(hex[0], hex[1]);
@@ -103,7 +100,6 @@ mod css_types {
 
 use ::bbnf::grammar::generated::css_l4::*;
 
-
 // ─── Corpus admission parity ─────────────────────────────────────────
 //
 // `assert_corpus_parity` is the uniform per-fixture contract: both
@@ -114,8 +110,8 @@ use ::bbnf::grammar::generated::css_l4::*;
 
 fn assert_corpus_parity(fixture: &str) -> (usize, usize) {
     let path = format!("../../data/css/{}", fixture);
-    let input = std::fs::read_to_string(&path)
-        .unwrap_or_else(|e| panic!("{path}: read failed: {e}"));
+    let input =
+        std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path}: read failed: {e}"));
 
     let bbnf_doc = CssL4Parser::parse(&input)
         .unwrap_or_else(|e| panic!("{fixture}: bbnf parse failed: {e:?}"));
@@ -158,8 +154,14 @@ fn lightningcss_parity_normalize() {
     // normalize.css: the canonical reset stylesheet — every rule is
     // standard CSS. Both parsers admit it to EOF.
     let (bbnf, lc) = assert_corpus_parity("normalize.css");
-    assert!(bbnf > 50, "normalize.css: bbnf record count unexpectedly low: {bbnf}");
-    assert!(lc >= 30, "normalize.css: lightningcss rule count unexpectedly low: {lc}");
+    assert!(
+        bbnf > 50,
+        "normalize.css: bbnf record count unexpectedly low: {bbnf}"
+    );
+    assert!(
+        lc >= 30,
+        "normalize.css: lightningcss rule count unexpectedly low: {lc}"
+    );
 }
 
 #[test]
@@ -215,8 +217,7 @@ fn lightningcss_parity_tailwind() {
 /// expects (5-component vector + colour-space tag).
 fn bbnf_find_colors(input: &str) -> Vec<Color> {
     use ::bbnf::runtime::css_l4::{
-        CssColor, CssColorPredefined, CssColorSpace, CssColorType, CssColorFunction,
-        CssTypedValue,
+        CssColor, CssColorFunction, CssColorPredefined, CssColorSpace, CssColorType, CssTypedValue,
     };
     use ::bbnf::runtime::view::ColorSpace;
 
@@ -306,10 +307,7 @@ fn lc_find_colors(input: &str) -> Vec<lightningcss::values::color::CssColor> {
     out
 }
 
-fn visit_color_in_prop(
-    prop: &Property,
-    out: &mut Vec<lightningcss::values::color::CssColor>,
-) {
+fn visit_color_in_prop(prop: &Property, out: &mut Vec<lightningcss::values::color::CssColor>) {
     use lightningcss::properties::Property as P;
     match prop {
         P::Color(c) => out.push(c.clone()),
@@ -324,17 +322,10 @@ fn visit_color_in_prop(
 
 /// Project lightningcss's `CssColor::RGBA(RGBA)` into a 0..=255 f64
 /// tuple compatible with bbnf's `Color` channel space.
-fn lc_color_rgba(
-    c: &lightningcss::values::color::CssColor,
-) -> Option<(f64, f64, f64, f64)> {
+fn lc_color_rgba(c: &lightningcss::values::color::CssColor) -> Option<(f64, f64, f64, f64)> {
     use lightningcss::values::color::CssColor;
     match c {
-        CssColor::RGBA(r) => Some((
-            r.red as f64,
-            r.green as f64,
-            r.blue as f64,
-            r.alpha as f64,
-        )),
+        CssColor::RGBA(r) => Some((r.red as f64, r.green as f64, r.blue as f64, r.alpha as f64)),
         _ => None,
     }
 }
@@ -352,8 +343,7 @@ c { background-color: rgb(100, 200, 50); }
 
     let bbnf_colors = bbnf_find_colors(fixture);
     let lc_colors = lc_find_colors(fixture);
-    let lc_rgba: Vec<(f64, f64, f64, f64)> =
-        lc_colors.iter().filter_map(lc_color_rgba).collect();
+    let lc_rgba: Vec<(f64, f64, f64, f64)> = lc_colors.iter().filter_map(lc_color_rgba).collect();
 
     // lightningcss admits every rgb() call as `CssColor::RGBA(RGBA)` —
     // the three-colour fixture yields three entries.

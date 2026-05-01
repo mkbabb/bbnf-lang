@@ -81,7 +81,11 @@ pub fn rank(rules: &mut [Rule], cfg: &RankConfig) {
         .fold(1.0_f64, f64::max);
 
     for r in rules.iter() {
-        let freq = if max_freq > 0.0 { (r.frequency as f64) / max_freq } else { 0.0 };
+        let freq = if max_freq > 0.0 {
+            (r.frequency as f64) / max_freq
+        } else {
+            0.0
+        };
         let cost = if max_cost_neg > 0.0 {
             ((-r.cost_delta) as f64).max(0.0) / max_cost_neg
         } else {
@@ -176,7 +180,11 @@ pub fn select_top_k<'a>(rules: &'a [Rule], k: usize) -> Vec<&'a Rule> {
 
     let static_score = |i: usize| -> f64 {
         let r = &rules[i];
-        let freq = if max_freq > 0.0 { (r.frequency as f64) / max_freq } else { 0.0 };
+        let freq = if max_freq > 0.0 {
+            (r.frequency as f64) / max_freq
+        } else {
+            0.0
+        };
         let cost = if max_cost_neg > 0.0 {
             ((-r.cost_delta) as f64).max(0.0) / max_cost_neg
         } else {
@@ -243,4 +251,3 @@ fn jaccard_similarity(a: &Rule, b: &Rule) -> f64 {
     let union = a_set.union(&b_set).count() as f64;
     if union == 0.0 { 0.0 } else { inter / union }
 }
-

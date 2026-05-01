@@ -14,8 +14,8 @@
 //! `egraph.class(id).data` accessor, and (c) rules run against the
 //! analysis-enabled e-graph still produce correct post-saturation IR.
 
-use bbnf_ir::egraph::{build_and_saturate, GrammarAnalysis};
 use bbnf_ir::GrammarIR;
+use bbnf_ir::egraph::{GrammarAnalysis, build_and_saturate};
 
 /// Helper: compile a tiny fixture grammar all the way through the
 /// bbnf-ir public surface (without the full pipeline, which lives in
@@ -85,9 +85,10 @@ fn fixture_ir() -> GrammarIR {
         payload_layouts: std::collections::HashMap::new(),
         structural_alphabet: None,
         push_fingerprint: None,
-            dedup_eligible_rules: Vec::new(),
+        dedup_eligible_rules: Vec::new(),
 
-            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
+        shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
+        ),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),

@@ -70,12 +70,10 @@ fn contains_subpattern(haystack: &Pattern, needle: &Pattern) -> bool {
     }
     match haystack {
         Pattern::Atom(_) => false,
-        Pattern::Seq(xs) | Pattern::Alt(xs) => {
-            xs.iter().any(|x| contains_subpattern(x, needle))
+        Pattern::Seq(xs) | Pattern::Alt(xs) => xs.iter().any(|x| contains_subpattern(x, needle)),
+        Pattern::Repeat { inner, .. } | Pattern::Negate(inner) | Pattern::Map { inner, .. } => {
+            contains_subpattern(inner, needle)
         }
-        Pattern::Repeat { inner, .. }
-        | Pattern::Negate(inner)
-        | Pattern::Map { inner, .. } => contains_subpattern(inner, needle),
         Pattern::Skip(a, b) | Pattern::Next(a, b) | Pattern::Minus(a, b) => {
             contains_subpattern(a, needle) || contains_subpattern(b, needle)
         }
@@ -102,13 +100,12 @@ fn is_class2(lhs: &Pattern) -> bool {
         Pattern::Seq(xs) if xs.len() == 1 => true,
         Pattern::Alt(xs) if xs.len() == 1 => true,
         Pattern::Seq(xs) | Pattern::Alt(xs) => xs.iter().any(is_class2),
-        Pattern::Repeat { inner, .. }
-        | Pattern::Negate(inner)
-        | Pattern::Map { inner, .. } => is_class2(inner),
+        Pattern::Repeat { inner, .. } | Pattern::Negate(inner) | Pattern::Map { inner, .. } => {
+            is_class2(inner)
+        }
         Pattern::Skip(a, b) | Pattern::Next(a, b) | Pattern::Minus(a, b) => {
             is_class2(a) || is_class2(b)
         }
         _ => false,
     }
 }
-

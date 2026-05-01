@@ -384,9 +384,7 @@ fn registry_layout_covers(
 ) -> bool {
     match typed {
         None => layout.field_count() > 0,
-        Some(t) if t.is_scalar_payload() => {
-            layout.admits_type(t) || layout.admits_scalar_payload()
-        }
+        Some(t) if t.is_scalar_payload() => layout.admits_type(t) || layout.admits_scalar_payload(),
         Some(t) => layout.admits_type(t) || layout.field_count() > 0,
     }
 }
@@ -575,10 +573,7 @@ fn walk_typed_arrows(node: &IrNode, f: &mut dyn FnMut(FnId)) {
 
 /// Serialise the report as pretty JSON to `path`. Creates parent
 /// directories on demand. Returns the byte length written.
-pub fn write_coverage_report(
-    report: &AuditCoverageReport,
-    path: &Path,
-) -> std::io::Result<usize> {
+pub fn write_coverage_report(report: &AuditCoverageReport, path: &Path) -> std::io::Result<usize> {
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
     }

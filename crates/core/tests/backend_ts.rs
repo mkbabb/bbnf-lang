@@ -9,8 +9,7 @@ use bbnf::pipeline::{
 
 /// Load the cross-backend JSON grammar from `grammar/json/json.bbnf`.
 fn json_grammar() -> String {
-    std::fs::read_to_string("../../grammar/json/json.bbnf")
-        .expect("failed to read json.bbnf")
+    std::fs::read_to_string("../../grammar/json/json.bbnf").expect("failed to read json.bbnf")
 }
 
 fn ts_request() -> CompileRequest {
@@ -67,12 +66,20 @@ fn ts_emits_discriminated_union() {
     // annotation on each branch — this attaches an `IrNode::Map` per
     // branch and the `body_has_map` guard in fuse / inline preserves
     // the rule's identity.
-    let source = compile_ts(r#"
+    let source = compile_ts(
+        r#"
         item = "x" -> 0u8 | "y" -> 1u8 ;
         list = item, { item } ;
-    "#);
-    assert!(source.contains("tag: \"item\""), "missing item variant: {source}");
-    assert!(source.contains("tag: \"list\""), "missing list variant: {source}");
+    "#,
+    );
+    assert!(
+        source.contains("tag: \"item\""),
+        "missing item variant: {source}"
+    );
+    assert!(
+        source.contains("tag: \"list\""),
+        "missing list variant: {source}"
+    );
 }
 
 #[test]
@@ -80,10 +87,15 @@ fn ts_json_grammar_has_key_variants() {
     let source = compile_ts(&json_grammar());
     // After IR passes, some rules get inlined/fused. Check that the major
     // structural rules survive as union variants.
-    assert!(source.contains("tag: \"value\"") || source.contains("function __value"),
-        "missing value: {source}");
+    assert!(
+        source.contains("tag: \"value\"") || source.contains("function __value"),
+        "missing value: {source}"
+    );
     // The entry rule must always exist.
-    assert!(source.contains("function __value"), "missing __value function: {source}");
+    assert!(
+        source.contains("function __value"),
+        "missing __value function: {source}"
+    );
 }
 
 // ── Parser functions ────────────────────────────────────────────────────────
@@ -93,18 +105,31 @@ fn ts_emits_functions_for_non_inlined_rules() {
     let source = compile_ts(&json_grammar());
     // Entry + recursive rules always get functions. Small rules (comma, colon,
     // bool, null) may be inlined by the shared inline analysis.
-    assert!(source.contains("function __value"), "missing __value function");
-    assert!(source.contains("function __object") || source.contains("__object(s)"),
-        "missing object rule");
-    assert!(source.contains("function __array") || source.contains("__array(s)"),
-        "missing array rule");
+    assert!(
+        source.contains("function __value"),
+        "missing __value function"
+    );
+    assert!(
+        source.contains("function __object") || source.contains("__object(s)"),
+        "missing object rule"
+    );
+    assert!(
+        source.contains("function __array") || source.contains("__array(s)"),
+        "missing array rule"
+    );
 }
 
 #[test]
 fn ts_emits_public_parse_entry() {
     let source = compile_ts(&json_grammar());
-    assert!(source.contains("export function parse"), "missing export: {source}");
-    assert!(source.contains("__value(s)"), "entry should call __value: {source}");
+    assert!(
+        source.contains("export function parse"),
+        "missing export: {source}"
+    );
+    assert!(
+        source.contains("__value(s)"),
+        "entry should call __value: {source}"
+    );
 }
 
 // ── Literal matching ────────────────────────────────────────────────────────
@@ -121,8 +146,14 @@ fn ts_single_byte_literal_uses_char_code() {
 #[test]
 fn ts_multi_byte_literal_uses_starts_with() {
     let source = compile_ts(r#"x = "hello" ;"#);
-    assert!(source.contains("startsWith"), "multi-byte should use startsWith: {source}");
-    assert!(source.contains("\"hello\""), "literal value missing: {source}");
+    assert!(
+        source.contains("startsWith"),
+        "multi-byte should use startsWith: {source}"
+    );
+    assert!(
+        source.contains("\"hello\""),
+        "literal value missing: {source}"
+    );
 }
 
 // ── Regex matching ──────────────────────────────────────────────────────────
@@ -131,19 +162,30 @@ fn ts_multi_byte_literal_uses_starts_with() {
 fn ts_regex_hoisted_with_sticky_flag() {
     let source = compile_ts(r#"x = /[a-z]+/ ;"#);
     // Regex should be hoisted to module scope with sticky flag.
-    assert!(source.contains("new RegExp("), "regex should use RegExp constructor: {source}");
-    assert!(source.contains("\"y\""), "regex should use sticky flag: {source}");
+    assert!(
+        source.contains("new RegExp("),
+        "regex should use RegExp constructor: {source}"
+    );
+    assert!(
+        source.contains("\"y\""),
+        "regex should use sticky flag: {source}"
+    );
     assert!(source.contains("__RE"), "regex should be hoisted: {source}");
-    assert!(source.contains(".exec("), "regex should use .exec(): {source}");
+    assert!(
+        source.contains(".exec("),
+        "regex should use .exec(): {source}"
+    );
 }
 
 // ── Alternation ─────────────────────────────────────────────────────────────
 
 #[test]
 fn ts_alternation_emits_dispatch_or_checkpoint() {
-    let source = compile_ts(r#"
+    let source = compile_ts(
+        r#"
         digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
-    "#);
+    "#,
+    );
     let has_switch = source.contains("switch (s.input.charCodeAt");
     let has_checkpoint = source.contains("s.offset =");
     let has_literal_chain = source.contains("=== null");
@@ -198,14 +240,20 @@ fn ts_sequence_chains_parse_calls() {
 #[test]
 fn ts_skip_keeps_left() {
     let source = compile_ts(r#"x = "a" << "b" ;"#);
-    assert!(source.contains("__kept"), "skip should keep left value: {source}");
+    assert!(
+        source.contains("__kept"),
+        "skip should keep left value: {source}"
+    );
 }
 
 #[test]
 fn ts_next_keeps_right() {
     let source = compile_ts(r#"x = "a" >> "b" ;"#);
     // Next: discard left, return right.
-    assert!(source.contains("null"), "next should check for failure: {source}");
+    assert!(
+        source.contains("null"),
+        "next should check for failure: {source}"
+    );
 }
 
 // ── Whitespace ──────────────────────────────────────────────────────────────
@@ -227,10 +275,19 @@ fn ts_json_grammar_compiles_complete() {
     let source = compile_ts(&json_grammar());
 
     // Minimum structure checks.
-    assert!(source.starts_with("// Generated by BBNF"), "missing header: {source}");
-    assert!(source.contains("interface ParserState"), "missing ParserState");
+    assert!(
+        source.starts_with("// Generated by BBNF"),
+        "missing header: {source}"
+    );
+    assert!(
+        source.contains("interface ParserState"),
+        "missing ParserState"
+    );
     assert!(source.contains("interface Span"), "missing Span");
-    assert!(source.contains("export function parse"), "missing parse export");
+    assert!(
+        source.contains("export function parse"),
+        "missing parse export"
+    );
 
     // Should be non-trivial (JSON grammar produces substantial output).
     assert!(

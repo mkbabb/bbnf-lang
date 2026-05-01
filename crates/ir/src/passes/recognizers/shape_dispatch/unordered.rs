@@ -158,11 +158,7 @@ fn is_nullable(node: &IrNode, ir: &GrammarIR, visited: &mut HashSet<RuleId>) -> 
 ///
 /// Returns [`None`] for node shapes where FIRST is structurally
 /// undecidable — Negate / TokenDispatch — or for a Ref cycle.
-fn node_first(
-    node: &IrNode,
-    ir: &GrammarIR,
-    visited: &mut HashSet<RuleId>,
-) -> Option<CharSet128> {
+fn node_first(node: &IrNode, ir: &GrammarIR, visited: &mut HashSet<RuleId>) -> Option<CharSet128> {
     match node {
         IrNode::Literal(sid) => {
             let bytes = ir.get_string(*sid).as_bytes();

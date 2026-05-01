@@ -20,6 +20,6 @@ pub mod payload_coverage;
 
 pub use payload_coverage::{
     AbsentRegistryProbe, AuditCoverageReport, GrammarAuditTag, GrammarCoverage, MarkerStatus,
-    MissingMarker, PayloadLayoutsProbe, PendingMarker, StructRegistryProbe,
-    audit_payload_coverage, is_typed_arrow_fn, write_coverage_report,
+    MissingMarker, PayloadLayoutsProbe, PendingMarker, StructRegistryProbe, audit_payload_coverage,
+    is_typed_arrow_fn, write_coverage_report,
 };

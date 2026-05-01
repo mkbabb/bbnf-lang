@@ -68,11 +68,13 @@ fn regex_cyclic_rules_survive_optimizer() {
     assert!(
         cyclic_count >= 5,
         "expected ≥5 cyclic rules (alternation→concat→quantified→atom→group), got {}: {:?}",
-        cyclic_count, rule_names
+        cyclic_count,
+        rule_names
     );
     assert!(
         ir.rules.len() >= 6,
         "expected ≥6 surviving rules, got {}: {:?}",
-        ir.rules.len(), rule_names
+        ir.rules.len(),
+        rule_names
     );
 }

@@ -108,11 +108,7 @@ fn branch_first_bytes(node: &IrNode, ir: &GrammarIR) -> Option<HashSet<u8>> {
             // level chase; mutually-recursive refs are rare in the
             // disjoint-first admission corpus and the conservative
             // `None` return falls through to AltLinear.
-            let target_body = ir
-                .rules
-                .iter()
-                .find(|r| r.id == *rule)
-                .map(|r| &r.body);
+            let target_body = ir.rules.iter().find(|r| r.id == *rule).map(|r| &r.body);
             match target_body {
                 Some(body) => branch_first_bytes(body, ir),
                 None => None,

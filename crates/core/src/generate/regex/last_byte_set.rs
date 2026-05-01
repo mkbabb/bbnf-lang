@@ -25,8 +25,8 @@
 //! computable LAST sets via the existing
 //! [`bbnf_regex::RegexInfo::literal_suffix`] field.
 
-use parse_that::regex::sets::charset::CharSet128;
 use parse_that::regex::RegexInfo;
+use parse_that::regex::sets::charset::CharSet128;
 use proc_macro2::{Literal, TokenStream};
 use quote::quote;
 

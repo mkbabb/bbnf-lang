@@ -28,14 +28,13 @@ use std::collections::HashMap;
 
 use rustc_hash::FxHashMap;
 
+use bbnf_ir::passes::types::TypeMap;
 use bbnf_ir::passes::{
     AuditCoverageReport, GrammarAuditTag, audit_payload_coverage, populate_struct_registry,
 };
-use bbnf_ir::passes::types::TypeMap;
 use bbnf_ir::{
-    AltBranch, CharSet128, CostConfig, FieldSource, FnDescriptor, FnId, GrammarIR, IrNode,
-    IrRule, LayoutKind, MapExpr, RuleId, RuleMeta, StringId, StructRegistry, TypeDesc,
-    TypeDescInterner,
+    AltBranch, CharSet128, CostConfig, FieldSource, FnDescriptor, FnId, GrammarIR, IrNode, IrRule,
+    LayoutKind, MapExpr, RuleId, RuleMeta, StringId, StructRegistry, TypeDesc, TypeDescInterner,
 };
 
 // ── Fixture infrastructure (mirrors payload_coverage_audit.rs) ───────────
@@ -73,8 +72,8 @@ fn empty_ir() -> GrammarIR {
         structural_alphabet: None,
         push_fingerprint: None,
         dedup_eligible_rules: Vec::new(),
-        shape_assignments:
-            bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
+        shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
+        ),
         eclass_facts: HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -157,10 +156,7 @@ fn expr_typed(return_type: TypeDesc) -> FnDescriptor {
 /// Build the per-rule type map and an empty TypeMap, then invoke the
 /// registry-population helper directly. Mirrors the pipeline shape
 /// `project_types` runs after the upstream solver finishes.
-fn populate_with_rule_types(
-    ir: &mut GrammarIR,
-    rule_types: &[(RuleId, TypeDesc)],
-) {
+fn populate_with_rule_types(ir: &mut GrammarIR, rule_types: &[(RuleId, TypeDesc)]) {
     let mut map: FxHashMap<RuleId, TypeDesc> = FxHashMap::default();
     for (id, ty) in rule_types {
         map.insert(*id, ty.clone());

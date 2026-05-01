@@ -8,7 +8,6 @@ mod css_types {
 
 use ::bbnf::grammar::generated::css_l4::*;
 
-
 /// Probe the CSS L4 grammar against representative inputs. Under
 /// tape-first (Tranche AC.2) the parser exposes a single
 /// `CssL4Parser::parse` entry point; the old probe that reached in

@@ -33,9 +33,9 @@ fn assert_doc_eq_serde(
         }
         (JsonValue::Number(n), serde_json::Value::Number(o)) => {
             let bbnf_f64 = n.as_f64();
-            let oracle_f64 = o.as_f64().unwrap_or_else(|| {
-                panic!("{path}: serde number {o:?} not f64-coercible")
-            });
+            let oracle_f64 = o
+                .as_f64()
+                .unwrap_or_else(|| panic!("{path}: serde number {o:?} not f64-coercible"));
             if bbnf_f64.is_nan() {
                 assert!(oracle_f64.is_nan(), "{path}: bbnf NaN, serde={oracle_f64}");
             } else {
@@ -55,11 +55,7 @@ fn assert_doc_eq_serde(
         }
         (JsonValue::Object(id), serde_json::Value::Object(o)) => {
             let pairs = doc.object(*id);
-            assert_eq!(
-                pairs.len(),
-                o.len(),
-                "{path}: object pair-count divergence",
-            );
+            assert_eq!(pairs.len(), o.len(), "{path}: object pair-count divergence",);
             // serde_json's Map (with default features) preserves
             // insertion order; both sides walk source order, so the
             // pairwise comparison is total. If serde is built without
@@ -76,16 +72,13 @@ fn assert_doc_eq_serde(
                 assert_doc_eq_serde(doc, &bbnf_pair.value, oracle_value, &child_path);
             }
         }
-        (bbnf, oracle) => panic!(
-            "{path}: shape divergence — bbnf={bbnf:?}, serde={oracle:?}",
-        ),
+        (bbnf, oracle) => panic!("{path}: shape divergence — bbnf={bbnf:?}, serde={oracle:?}",),
     }
 }
 
 fn parity_against_serde(input: &str) {
     let doc = JsonParser::parse(input).expect("bbnf JSON parse");
-    let oracle: serde_json::Value =
-        serde_json::from_str(input).expect("serde_json parse");
+    let oracle: serde_json::Value = serde_json::from_str(input).expect("serde_json parse");
     assert_doc_eq_serde(&doc, doc.to_value(), &oracle, "$");
 }
 
@@ -210,10 +203,7 @@ fn assert_doc_eq_simd(
         JsonValue::Array(id) => {
             let items = doc.array(*id);
             let oracle_arr = oracle.as_array().unwrap_or_else(|| {
-                panic!(
-                    "{path}: bbnf=Array but simd-json={:?}",
-                    oracle.value_type(),
-                )
+                panic!("{path}: bbnf=Array but simd-json={:?}", oracle.value_type(),)
             });
             assert_eq!(
                 items.len(),

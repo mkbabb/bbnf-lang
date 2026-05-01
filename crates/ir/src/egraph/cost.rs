@@ -86,7 +86,6 @@ impl GrammarCostModel {
         self.fns_len = fns.len();
         self
     }
-
 }
 
 impl CostModel<GrammarENode> for GrammarCostModel {
@@ -128,9 +127,7 @@ impl CostModel<GrammarENode> for GrammarCostModel {
                 structural + child_cost(*inner)
             }
 
-            GrammarENode::Map { inner, fn_id: _ } => {
-                structural + child_cost(*inner)
-            }
+            GrammarENode::Map { inner, fn_id: _ } => structural + child_cost(*inner),
 
             GrammarENode::TokenDispatch {
                 token,

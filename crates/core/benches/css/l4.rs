@@ -1,4 +1,3 @@
-
 //! BBNF CSS L4 typed slab benchmark — cold per-parse (l4/stylesheet.bbnf).
 
 #[global_allocator]
@@ -132,7 +131,6 @@ mod css_types {
 }
 
 use ::bbnf::grammar::generated::css_l4::*;
-
 
 #[path = "../common/timeout.rs"]
 mod timeout;

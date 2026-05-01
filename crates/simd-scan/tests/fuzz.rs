@@ -4,17 +4,11 @@
 //!
 //! Per AW-III.W5.b plan: minimum 1000 iterations.
 
-use simd_scan::{
-    alphabet::StructuralAlphabet,
-    scalar, scan_structural,
-};
 use proptest::prelude::*;
+use simd_scan::{alphabet::StructuralAlphabet, scalar, scan_structural};
 
-const JSON_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_parts(
-    &[b'{', b'}', b'[', b']', b':', b','],
-    &[],
-    &[b'"'],
-);
+const JSON_ALPHABET: StructuralAlphabet =
+    StructuralAlphabet::from_parts(&[b'{', b'}', b'[', b']', b':', b','], &[], &[b'"']);
 
 const CSS_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_parts(
     &[b'{', b'}', b'(', b')', b';', b':', b','],
@@ -28,11 +22,8 @@ const BBNF_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_parts(
     &[b'"'],
 );
 
-const NO_QUOTE_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_parts(
-    &[b'a', b'b', b'c'],
-    &[],
-    &[],
-);
+const NO_QUOTE_ALPHABET: StructuralAlphabet =
+    StructuralAlphabet::from_parts(&[b'a', b'b', b'c'], &[], &[]);
 
 fn assert_parity(input: &[u8], alphabet: &StructuralAlphabet) {
     let scalar_idx = scalar::scan(input, alphabet);
@@ -65,8 +56,10 @@ fn assert_parity(input: &[u8], alphabet: &StructuralAlphabet) {
             simd_idx.positions.len(),
             first_div,
             off,
-            &scalar_idx.positions[first_div.saturating_sub(2)..(first_div + 4).min(scalar_idx.positions.len())],
-            &simd_idx.positions[first_div.saturating_sub(2)..(first_div + 4).min(simd_idx.positions.len())],
+            &scalar_idx.positions
+                [first_div.saturating_sub(2)..(first_div + 4).min(scalar_idx.positions.len())],
+            &simd_idx.positions
+                [first_div.saturating_sub(2)..(first_div + 4).min(simd_idx.positions.len())],
             lo,
             hi,
             &input[lo..hi],

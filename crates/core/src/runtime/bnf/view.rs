@@ -26,12 +26,18 @@ impl<'a, 'p: 'a> RuntimeView<'p> for BnfView<'a, 'p> {
     }
 
     #[inline]
-    fn input(&self) -> &'p str { self.doc.input }
+    fn input(&self) -> &'p str {
+        self.doc.input
+    }
 
     fn children(&self) -> impl Iterator<Item = Self> + '_ {
         let doc = self.doc;
         let focus = self.focus;
-        BnfChildrenIter { doc, focus, index: 0 }
+        BnfChildrenIter {
+            doc,
+            focus,
+            index: 0,
+        }
     }
 }
 

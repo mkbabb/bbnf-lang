@@ -15,8 +15,10 @@
 
 use std::path::PathBuf;
 
-use bbnf::pipeline::{CompileRequest, CompileTarget, PipelineOptions, compile_paths_request, compile_grammar};
 use bbnf::pipeline::CompileOutput;
+use bbnf::pipeline::{
+    CompileRequest, CompileTarget, PipelineOptions, compile_grammar, compile_paths_request,
+};
 use bbnf_ir::bytecode::BytecodeProgram;
 use bbnf_ir::compiler::compile as compile_bytecode;
 use bbnf_ir::interpreter::Interpreter;
@@ -39,8 +41,8 @@ fn compile_vm_from_paths(paths: &[&str]) -> BytecodeProgram {
         target: CompileTarget::Vm,
     };
     let path_bufs: Vec<PathBuf> = paths.iter().map(PathBuf::from).collect();
-    let out = compile_paths_request(&path_bufs, &request)
-        .expect("compile_paths_request should succeed");
+    let out =
+        compile_paths_request(&path_bufs, &request).expect("compile_paths_request should succeed");
     match out {
         CompileOutput::Vm(ir) => compile_bytecode(&ir),
         _ => unreachable!(),
@@ -74,7 +76,12 @@ fn egraph_semantic_json_object_parses() {
     let program = compile_vm_from_source(JSON_GRAMMAR);
     let input = r#"{"a": 1, "b": [true, null, "s"]}"#;
     let (success, offset) = run_vm(&program, input);
-    assert!(success, "json parse failed: offset={}/{}", offset, input.len());
+    assert!(
+        success,
+        "json parse failed: offset={}/{}",
+        offset,
+        input.len()
+    );
     assert_eq!(offset as usize, input.len(), "full input must be consumed");
 }
 
@@ -127,12 +134,11 @@ fn egraph_semantic_left_recursion_expr_chain() {
 
 #[test]
 fn egraph_semantic_css_l4_stylesheet() {
-    let program = compile_vm_from_paths(&[
-        "../../grammar/css/l4/stylesheet.bbnf",
-    ]);
+    let program = compile_vm_from_paths(&["../../grammar/css/l4/stylesheet.bbnf"]);
     // A representative CSS fragment covering selectors, properties,
     // units, and values.
-    let input = ".btn-primary { color: #3b82f6; padding: 0.5em 1rem; border: 1px solid rgba(0,0,0,0.1); }";
+    let input =
+        ".btn-primary { color: #3b82f6; padding: 0.5em 1rem; border: 1px solid rgba(0,0,0,0.1); }";
     let (success, offset) = run_vm(&program, input);
     assert!(
         success && offset as usize == input.len(),

@@ -7,12 +7,12 @@
 //! cutover.B's regen will produce the actual generated parser that
 //! exercises this surface end-to-end.
 
+use bbnf::runtime::RuntimeView;
 use bbnf::runtime::bbnf::{
     BbnfArena, BbnfCompound, BbnfCompoundKind, BbnfDocument, BbnfKind, BbnfStructBuilder, BbnfValue,
 };
 use bbnf::runtime::builder::StructBuilder;
 use bbnf::runtime::handle::CompoundHandle;
-use bbnf::runtime::RuntimeView;
 use bbnf_ir::registry::{LayoutKind, StructLayout};
 
 /// Construct a synthetic `StructLayout` for a named rule. Used by
@@ -114,7 +114,10 @@ fn bbnf_view_kind_classifies_leaves_and_compounds() {
     assert!(view.is_compound());
 
     let children: Vec<_> = view.children().map(|v| v.kind()).collect();
-    assert_eq!(children, vec![BbnfKind::Span, BbnfKind::Int, BbnfKind::Bool]);
+    assert_eq!(
+        children,
+        vec![BbnfKind::Span, BbnfKind::Int, BbnfKind::Bool]
+    );
 }
 
 #[test]

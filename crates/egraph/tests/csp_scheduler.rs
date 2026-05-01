@@ -15,8 +15,8 @@ use std::collections::HashSet;
 
 use csp_solver::{Csp, constraint::VarId, domain::LatticeDomain};
 use egraph::{
-    BackoffScheduler, CspScheduler, DirtyDomain, EGraph, Id, Language, NoAnalysis,
-    ParentDirtyProp, Rewrite, RewriteFn, Scheduler,
+    BackoffScheduler, CspScheduler, DirtyDomain, EGraph, Id, Language, NoAnalysis, ParentDirtyProp,
+    Rewrite, RewriteFn, Scheduler,
 };
 
 // ── Toy language (mirrors saturation.rs) ───────────────────────────────────

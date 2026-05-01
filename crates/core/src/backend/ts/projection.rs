@@ -28,7 +28,10 @@ pub fn type_desc_to_ts(td: &TypeDesc, enum_name: &str, ir: &GrammarIR) -> String
         TypeDesc::Option(inner) => format!("{} | null", type_desc_to_ts(inner, enum_name, ir)),
         TypeDesc::Vec(inner) => format!("{}[]", type_desc_to_ts(inner, enum_name, ir)),
         TypeDesc::Tuple(elems) => {
-            let parts: Vec<_> = elems.iter().map(|e| type_desc_to_ts(e, enum_name, ir)).collect();
+            let parts: Vec<_> = elems
+                .iter()
+                .map(|e| type_desc_to_ts(e, enum_name, ir))
+                .collect();
             format!("[{}]", parts.join(", "))
         }
         TypeDesc::Enum | TypeDesc::BoxedEnum => enum_name.to_string(),
@@ -81,7 +84,13 @@ pub fn compile_map_expr_to_js(expr: &MapExpr, ir: &GrammarIR) -> String {
     match expr {
         MapExpr::IntLit(n) => format!("{n}"),
         MapExpr::FloatLit(f) => format!("{f}"),
-        MapExpr::BoolLit(b) => if *b { "true".to_string() } else { "false".to_string() },
+        MapExpr::BoolLit(b) => {
+            if *b {
+                "true".to_string()
+            } else {
+                "false".to_string()
+            }
+        }
         MapExpr::StringLit(sid) => {
             let s = ir.get_string(*sid);
             format!("\"{}\"", ts_escape(s))
@@ -93,7 +102,8 @@ pub fn compile_map_expr_to_js(expr: &MapExpr, ir: &GrammarIR) -> String {
         }
         MapExpr::FnCall { name, args } => {
             let fn_name = ir.get_string(*name);
-            let compiled_args: Vec<String> = args.iter().map(|a| compile_map_expr_to_js(a, ir)).collect();
+            let compiled_args: Vec<String> =
+                args.iter().map(|a| compile_map_expr_to_js(a, ir)).collect();
             if compiled_args.is_empty() {
                 format!("{fn_name}(__input)")
             } else {

@@ -14,7 +14,9 @@ use csp_solver::constraint::VarId;
 
 use crate::{FnDescriptor, GrammarIR, IrNode, RuleId, TypeDesc};
 
-use super::csp_domains::{BoolAndConstraint, BoolDomain, BoolEqualConstraint, BoolGroundConstraint};
+use super::csp_domains::{
+    BoolAndConstraint, BoolDomain, BoolEqualConstraint, BoolGroundConstraint,
+};
 
 /// Refine span eligibility by analyzing the IR structure.
 ///

@@ -132,11 +132,10 @@ fn emit_ws_trim_tokens(ir: &GrammarIR) -> TokenStream {
         Some(sid) => {
             let pattern = ir.get_string(sid);
             let ws_pat = Some(pattern);
-            let opts = crate::generate::regex::EmitOpts::new(
-                &crate::generate::regex::CostModel::DEFAULT,
-            )
-            .with_ir(ir)
-            .with_ws_pattern(ws_pat);
+            let opts =
+                crate::generate::regex::EmitOpts::new(&crate::generate::regex::CostModel::DEFAULT)
+                    .with_ir(ir)
+                    .with_ws_pattern(ws_pat);
             // `@ws /...*/` matches zero-or-more ws/comment — the regex
             // scan always succeeds. Bind its Option return but discard
             // the value; the side effect of advancing `state.offset`

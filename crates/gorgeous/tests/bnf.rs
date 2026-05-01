@@ -8,9 +8,21 @@ fn test_prettify_simple_bnf() {
     let result = prettify_bnf(input, &config);
     assert!(result.is_some(), "should parse simple BNF rule");
     let output = result.unwrap();
-    assert!(output.contains("expr"), "should contain rule name: got '{}'", output);
-    assert!(output.contains("::="), "should contain definition: got '{}'", output);
-    assert!(output.contains("term"), "should contain rhs: got '{}'", output);
+    assert!(
+        output.contains("expr"),
+        "should contain rule name: got '{}'",
+        output
+    );
+    assert!(
+        output.contains("::="),
+        "should contain definition: got '{}'",
+        output
+    );
+    assert!(
+        output.contains("term"),
+        "should contain rhs: got '{}'",
+        output
+    );
 }
 
 #[test]

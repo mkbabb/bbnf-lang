@@ -115,8 +115,7 @@ impl ColorSpace {
     /// messages.
     #[inline]
     pub fn from_u8_unchecked(b: u8) -> ColorSpace {
-        ColorSpace::from_u8(b)
-            .unwrap_or_else(|| panic!("invalid color space discriminant {b}"))
+        ColorSpace::from_u8(b).unwrap_or_else(|| panic!("invalid color space discriminant {b}"))
     }
 }
 

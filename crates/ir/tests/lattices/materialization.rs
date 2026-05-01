@@ -18,9 +18,7 @@
 
 use std::collections::HashMap;
 
-use bbnf_ir::passes::materialization::{
-    classify_materialization, mat_join, MaterializationClass,
-};
+use bbnf_ir::passes::materialization::{MaterializationClass, classify_materialization, mat_join};
 use bbnf_ir::{
     AltBranch, CostConfig, GrammarIR, IrNode, IrRule, PrettyHints, RuleDirectives, RuleMeta,
     StringId, TypeDescInterner,
@@ -144,9 +142,10 @@ fn make_ir(rules: Vec<IrRule>, strings: Vec<String>) -> GrammarIR {
         payload_layouts: HashMap::new(),
         structural_alphabet: None,
         push_fingerprint: None,
-            dedup_eligible_rules: Vec::new(),
+        dedup_eligible_rules: Vec::new(),
 
-            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
+        shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
+        ),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -185,9 +184,7 @@ fn rule_class(ir: &GrammarIR, rule_id: u32) -> MaterializationClass {
     let dag = ir.dag.as_ref().expect("dag present");
     let body = &ir.rules[rule_id as usize].body;
     let id = dag.node_for(body).expect("body interned in dag");
-    *ir.materialization
-        .get(&id)
-        .expect("rule body classified")
+    *ir.materialization.get(&id).expect("rule body classified")
 }
 
 // ── Classification tests ──────────────────────────────────────────────
@@ -233,9 +230,18 @@ fn alt_is_must_tape() {
         0,
         IrNode::Alt(
             vec![
-                AltBranch { node: IrNode::Literal(1), first_set: None },
-                AltBranch { node: IrNode::Literal(2), first_set: None },
-                AltBranch { node: IrNode::Literal(3), first_set: None },
+                AltBranch {
+                    node: IrNode::Literal(1),
+                    first_set: None,
+                },
+                AltBranch {
+                    node: IrNode::Literal(2),
+                    first_set: None,
+                },
+                AltBranch {
+                    node: IrNode::Literal(3),
+                    first_set: None,
+                },
             ],
             None,
         ),
@@ -283,8 +289,14 @@ fn pretty_pinned_rule_must_tape() {
     };
     let body = IrNode::Alt(
         vec![
-            AltBranch { node: IrNode::Literal(1), first_set: None },
-            AltBranch { node: IrNode::Literal(2), first_set: None },
+            AltBranch {
+                node: IrNode::Literal(1),
+                first_set: None,
+            },
+            AltBranch {
+                node: IrNode::Literal(2),
+                first_set: None,
+            },
         ],
         None,
     );
@@ -361,11 +373,7 @@ fn preserve_identity_forces_must_tape() {
 #[test]
 fn negate_is_transparent_elide() {
     let strings = vec!["entry".to_string(), "x".to_string()];
-    let rules = vec![rule(
-        0,
-        0,
-        IrNode::Negate(Box::new(IrNode::Literal(1))),
-    )];
+    let rules = vec![rule(0, 0, IrNode::Negate(Box::new(IrNode::Literal(1))))];
     let mut ir = make_ir(rules, strings);
     classify_materialization(&mut ir);
     assert_eq!(rule_class(&ir, 0), MaterializationClass::TransparentElide);

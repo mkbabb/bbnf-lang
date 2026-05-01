@@ -101,8 +101,7 @@ pub fn strip_insignificant_ws(src: &str) -> String {
                     i += 1;
                 }
             }
-            let text = std::str::from_utf8(&bytes[start..i])
-                .expect("number token ASCII");
+            let text = std::str::from_utf8(&bytes[start..i]).expect("number token ASCII");
             let parsed: f64 = text.parse().expect("valid JSON number");
             // `{}` formatter for f64 emits shortest-roundtrip form
             // (Rust stdlib uses Grisu/Dragon); applied identically

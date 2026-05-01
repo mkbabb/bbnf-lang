@@ -43,9 +43,9 @@ impl<'a, 'p: 'a> RuntimeView<'p> for CssView<'a, 'p> {
             },
             CssFocus::Decl(_) => None,
             CssFocus::Value(value) => match value {
-                CssTypedValue::String(s)
-                | CssTypedValue::Ident(s)
-                | CssTypedValue::Span(s) => Some(*s),
+                CssTypedValue::String(s) | CssTypedValue::Ident(s) | CssTypedValue::Span(s) => {
+                    Some(*s)
+                }
                 _ => None,
             },
             CssFocus::KeyframeBlock(block) => Some(block.selector),
@@ -113,10 +113,7 @@ impl<'a, 'p: 'a> Iterator for CssChildrenIter<'a, 'p> {
                     let blocks: &'a [KeyframeBlock<'p>] = self.doc.keyframes(kf.blocks);
                     let block = blocks.get(self.index)?;
                     self.index += 1;
-                    Some(CssView::focused(
-                        self.doc,
-                        CssFocus::KeyframeBlock(block),
-                    ))
+                    Some(CssView::focused(self.doc, CssFocus::KeyframeBlock(block)))
                 }
                 CssRule::GenericAt(_) => None,
             },

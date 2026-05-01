@@ -49,7 +49,10 @@ impl<'p> MathDocument<'p> {
 
     #[inline]
     pub fn view<'a>(&'a self) -> MathView<'a, 'p> {
-        MathView { doc: self, focus: self.root }
+        MathView {
+            doc: self,
+            focus: self.root,
+        }
     }
 
     #[inline]

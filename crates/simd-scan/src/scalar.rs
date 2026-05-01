@@ -8,8 +8,8 @@
 //! - Implements the full alphabet contract: singletons, digraphs, and
 //!   quote parity.
 
-use crate::alphabet::StructuralAlphabet;
 use crate::StructuralIndex;
+use crate::alphabet::StructuralAlphabet;
 
 /// Walk `input` byte-by-byte, classify against `alphabet`, and write
 /// the resulting `StructuralIndex`. Used by `simd_scan::scan_structural`

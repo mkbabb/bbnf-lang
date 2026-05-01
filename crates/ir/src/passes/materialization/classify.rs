@@ -113,10 +113,7 @@ pub fn classify_materialization(ir: &mut GrammarIR) {
 /// structural behavior) or inject hand-crafted facts that disagree
 /// with the structural shape, letting the AF.1 gate demote an
 /// otherwise `TransparentElide` candidate.
-pub fn classify_materialization_with_facts(
-    ir: &mut GrammarIR,
-    facts: &EClassFactsMap,
-) {
+pub fn classify_materialization_with_facts(ir: &mut GrammarIR, facts: &EClassFactsMap) {
     assert!(
         ir.dag.is_some(),
         "classify_materialization_with_facts requires ir.dag to be built",
@@ -189,11 +186,7 @@ fn classify_node(
             // Epsilon carries no information — the view layer can
             // reconstruct it from the parent's span. Eligible for
             // elision when nothing else pins the subtree.
-            gate_transparent_elide(
-                MaterializationClass::TransparentElide,
-                node_id,
-                facts,
-            )
+            gate_transparent_elide(MaterializationClass::TransparentElide, node_id, facts)
         }
 
         IrNode::Ref(target) => {
@@ -266,19 +259,11 @@ fn classify_node(
             // Repeat emits a compound over its iterations so the
             // view layer can expose an iterator.
             if *lo == 0 && *hi == 0 {
-                gate_transparent_elide(
-                    MaterializationClass::TransparentElide,
-                    node_id,
-                    facts,
-                )
+                gate_transparent_elide(MaterializationClass::TransparentElide, node_id, facts)
             } else if inner_class == MaterializationClass::TransparentElide && *lo == *hi {
                 // Fixed count of an elidable inner — same as N
                 // copies of the inner, still elidable.
-                gate_transparent_elide(
-                    MaterializationClass::TransparentElide,
-                    node_id,
-                    facts,
-                )
+                gate_transparent_elide(MaterializationClass::TransparentElide, node_id, facts)
             } else {
                 MaterializationClass::MustTape
             }
@@ -307,11 +292,7 @@ fn classify_node(
             // downstream passes) but the Negate itself produces no
             // record.
             classify_node(ir, inner, facts, map);
-            gate_transparent_elide(
-                MaterializationClass::TransparentElide,
-                node_id,
-                facts,
-            )
+            gate_transparent_elide(MaterializationClass::TransparentElide, node_id, facts)
         }
 
         // ── Whitespace wrapper ──────────────────────────────────────
@@ -549,8 +530,7 @@ pub fn compute_eclass_facts(ir: &GrammarIR) -> EClassFactsMap {
     // iteration. `Ref(target)` consults this map during the body
     // walk so its facts resolve to the target rule's head facts.
     let rule_count = ir.rules.len();
-    let mut rule_head_facts: Vec<EClassFacts> =
-        vec![EClassFacts::unknown_ref(); rule_count];
+    let mut rule_head_facts: Vec<EClassFacts> = vec![EClassFacts::unknown_ref(); rule_count];
 
     // Fixed-point loop. An iteration either widens at least one
     // rule's head facts (in which case another iteration is
@@ -562,12 +542,8 @@ pub fn compute_eclass_facts(ir: &GrammarIR) -> EClassFactsMap {
     for _ in 0..max_iter {
         let mut changed = false;
         for rule in &ir.rules {
-            let body_facts = compute_facts_for_node(
-                ir,
-                &rule.body,
-                &rule_head_facts,
-                &mut node_facts,
-            );
+            let body_facts =
+                compute_facts_for_node(ir, &rule.body, &rule_head_facts, &mut node_facts);
             let idx = rule.id as usize;
             if idx < rule_head_facts.len() {
                 // Monotone join. A rule's head facts only grow,
@@ -656,7 +632,10 @@ fn compute_facts_for_node(
             EClassFacts {
                 first_set: first,
                 nullable,
-                width: WidthBound { min: min_width, max: max_width },
+                width: WidthBound {
+                    min: min_width,
+                    max: max_width,
+                },
                 literal_sid: None,
                 regex_sid: None,
                 elision_safe: false,
@@ -719,7 +698,10 @@ fn compute_facts_for_node(
             EClassFacts {
                 first_set: c.first_set,
                 nullable,
-                width: WidthBound { min: min_width, max: max_width },
+                width: WidthBound {
+                    min: min_width,
+                    max: max_width,
+                },
                 literal_sid: None,
                 regex_sid: None,
                 elision_safe: false,
@@ -745,7 +727,10 @@ fn compute_facts_for_node(
             EClassFacts {
                 first_set,
                 nullable,
-                width: WidthBound { min: min_width, max: max_width },
+                width: WidthBound {
+                    min: min_width,
+                    max: max_width,
+                },
                 literal_sid: None,
                 regex_sid: None,
                 elision_safe: false,
@@ -773,7 +758,10 @@ fn compute_facts_for_node(
             EClassFacts {
                 first_set: CharSet128::new(),
                 nullable: true,
-                width: WidthBound { min: 0, max: Some(0) },
+                width: WidthBound {
+                    min: 0,
+                    max: Some(0),
+                },
                 literal_sid: None,
                 regex_sid: None,
                 elision_safe: true,
@@ -788,7 +776,10 @@ fn compute_facts_for_node(
             EClassFacts {
                 first_set: c.first_set,
                 nullable: true,
-                width: WidthBound { min: 0, max: c.width.max },
+                width: WidthBound {
+                    min: 0,
+                    max: c.width.max,
+                },
                 literal_sid: None,
                 regex_sid: None,
                 elision_safe: true,
@@ -826,15 +817,9 @@ fn compute_facts_for_node(
             // the outer shape (not fixed, not elision-safe, not
             // all-descendants-elidable). Walk arms + fallback so
             // their NodeIds populate `node_facts`.
-            let token_facts =
-                compute_facts_for_node(ir, token, rule_head_facts, node_facts);
+            let token_facts = compute_facts_for_node(ir, token, rule_head_facts, node_facts);
             for arm in arms {
-                compute_facts_for_node(
-                    ir,
-                    &arm.continuation,
-                    rule_head_facts,
-                    node_facts,
-                );
+                compute_facts_for_node(ir, &arm.continuation, rule_head_facts, node_facts);
             }
             let _ = compute_facts_for_node(ir, fallback, rule_head_facts, node_facts);
             EClassFacts {

@@ -89,7 +89,10 @@ fn emit_ws_skip(comment_aware: bool) -> TokenStream {
 /// Multi-byte clusters fall back to a sequential byte-by-byte match
 /// that checks each expected punctuation in order.
 pub fn emit_call(puncts: &[u8], ws_pattern: Option<&str>) -> TokenStream {
-    assert!(!puncts.is_empty(), "punct_ws_region requires at least one byte");
+    assert!(
+        !puncts.is_empty(),
+        "punct_ws_region requires at least one byte"
+    );
 
     let comment_aware = is_comment_aware_ws(ws_pattern);
     let ws_leading = emit_ws_skip(comment_aware);

@@ -170,12 +170,14 @@ impl<D: Domain> Csp<D> {
 
     /// Add a not-equal constraint (devirtualized fast path).
     pub fn add_not_equal(&mut self, x: VarId, y: VarId) {
-        self.constraints.push(ConstraintEnum::NotEqual(NotEqual::new(x, y)));
+        self.constraints
+            .push(ConstraintEnum::NotEqual(NotEqual::new(x, y)));
     }
 
     /// Add an all-different constraint (devirtualized fast path).
     pub fn add_all_different(&mut self, vars: Vec<VarId>) {
-        self.constraints.push(ConstraintEnum::AllDifferent(AllDifferent::new(vars)));
+        self.constraints
+            .push(ConstraintEnum::AllDifferent(AllDifferent::new(vars)));
     }
 
     /// Fix a variable to a specific value.
@@ -196,7 +198,8 @@ impl<D: Domain> Csp<D> {
     /// Constrain x < y (for Ord-comparable values).
     pub fn add_less_than(&mut self, x: VarId, y: VarId)
     where
-        D: 'static, D::Value: PartialOrd,
+        D: 'static,
+        D::Value: PartialOrd,
     {
         self.add_constraint(constraint::LambdaConstraint::new(
             vec![x, y],
@@ -211,7 +214,8 @@ impl<D: Domain> Csp<D> {
     /// Constrain x > y (for Ord-comparable values).
     pub fn add_greater_than(&mut self, x: VarId, y: VarId)
     where
-        D: 'static, D::Value: PartialOrd,
+        D: 'static,
+        D::Value: PartialOrd,
     {
         self.add_constraint(constraint::LambdaConstraint::new(
             vec![x, y],
@@ -273,14 +277,12 @@ impl<D: Domain> Csp<D> {
                 )
                 .map_err(|()| Unsatisfiable)
             }
-            PropagationStrategy::Sweep => {
-                solver::monotonic::propagate_monotonic(
-                    &mut self.variables,
-                    &self.constraints,
-                    &mut self.stats,
-                )
-                .map_err(|()| Unsatisfiable)
-            }
+            PropagationStrategy::Sweep => solver::monotonic::propagate_monotonic(
+                &mut self.variables,
+                &self.constraints,
+                &mut self.stats,
+            )
+            .map_err(|()| Unsatisfiable),
         }
     }
 

@@ -94,10 +94,7 @@ impl ShapeAssignments {
     /// when the rule was not classified.
     #[inline]
     pub fn get(&self, rule: RuleId) -> ShapeTag {
-        self.per_rule
-            .get(&rule)
-            .copied()
-            .unwrap_or(ShapeTag::None)
+        self.per_rule.get(&rule).copied().unwrap_or(ShapeTag::None)
     }
 
     /// Record `tag` for `rule`. Overwrites any previous assignment.

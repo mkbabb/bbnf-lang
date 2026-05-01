@@ -83,11 +83,7 @@ fn compute_selection_range(
 }
 
 /// Recursively collect all expression spans that contain the given offset.
-fn collect_spans(
-    node: BbnfView<'_, '_>,
-    offset: usize,
-    spans: &mut Vec<(usize, usize)>,
-) {
+fn collect_spans(node: BbnfView<'_, '_>, offset: usize, spans: &mut Vec<(usize, usize)>) {
     let span = node.span_range();
     let contains = span.is_some_and(|(lo, hi)| offset >= lo && offset <= hi);
 

@@ -172,9 +172,7 @@ impl<N: Language, A: Analysis<N>> EGraph<N, A> {
 
         // Pre-clone the node for each child's parent edge + the memo key.
         // The original is moved into the class's node list (zero-clone path).
-        let mut clones: Vec<N> = (0..child_ids.len() + 1)
-            .map(|_| node.clone())
-            .collect();
+        let mut clones: Vec<N> = (0..child_ids.len() + 1).map(|_| node.clone()).collect();
         let memo_key = clones.pop().unwrap();
 
         // Create the class with the original node moved in.
@@ -209,13 +207,12 @@ impl<N: Language, A: Analysis<N>> EGraph<N, A> {
         }
         self.union_count += 1;
         // Pick the bigger class as the merge target.
-        let (dst, src) = if self.classes[ra.as_usize()].nodes.len()
-            >= self.classes[rb.as_usize()].nodes.len()
-        {
-            (ra, rb)
-        } else {
-            (rb, ra)
-        };
+        let (dst, src) =
+            if self.classes[ra.as_usize()].nodes.len() >= self.classes[rb.as_usize()].nodes.len() {
+                (ra, rb)
+            } else {
+                (rb, ra)
+            };
         // Union-find bookkeeping: point src at dst.
         self.unionfind.union(dst, src);
         // Replace src with an empty placeholder, carrying over dst's current
@@ -256,8 +253,7 @@ impl<N: Language, A: Analysis<N>> EGraph<N, A> {
             while let Some(class_id) = self.pending.pop() {
                 let canonical = self.unionfind.find(class_id);
                 // Re-canonicalize every node in this class and re-memoize.
-                let parents =
-                    std::mem::take(&mut self.classes[canonical.as_usize()].parents);
+                let parents = std::mem::take(&mut self.classes[canonical.as_usize()].parents);
                 for (mut parent_node, parent_class) in parents {
                     // Remove the old, pre-canonicalization memo entry.
                     self.memo.remove(&parent_node);

@@ -153,7 +153,8 @@ pub fn token_normalize(s: &str) -> String {
     // keyword is exactly equivalent to `2n`, and `odd` to `2n+1`. bbnf
     // preserves source form; lightningcss collapses `even` to `2n`.
     // Rewriting on BOTH sides picks the canonical numeric form.
-    let s = s.replace(":nth-child(even)", ":nth-child(2n)")
+    let s = s
+        .replace(":nth-child(even)", ":nth-child(2n)")
         .replace(":nth-of-type(even)", ":nth-of-type(2n)")
         .replace(":nth-last-child(even)", ":nth-last-child(2n)")
         .replace(":nth-last-of-type(even)", ":nth-last-of-type(2n)")
@@ -298,22 +299,62 @@ pub fn token_normalize(s: &str) -> String {
     // bbnf preserves source form (`left center`); lightningcss collapses
     // to `0`. Apply the same collapse on BOTH sides to cancel the
     // disagreement.
-    let s = s.replace("background-position:left center", "background-position:0")
-        .replace("background-position:center center", "background-position:center")
+    let s = s
+        .replace("background-position:left center", "background-position:0")
+        .replace(
+            "background-position:center center",
+            "background-position:center",
+        )
         .replace("background-position:top left", "background-position:0")
         .replace("background-position:left top", "background-position:0")
-        .replace("background-position:right center", "background-position:100%")
-        .replace("background-position:center right", "background-position:100%")
-        .replace("background-position:right bottom", "background-position:100% 100%")
-        .replace("background-position:bottom right", "background-position:100% 100%")
-        .replace("background-position:left bottom", "background-position:0 100%")
-        .replace("background-position:bottom left", "background-position:0 100%")
-        .replace("background-position:top right", "background-position:100% 0")
-        .replace("background-position:right top", "background-position:100% 0")
-        .replace("background-position:top center", "background-position:50% 0")
-        .replace("background-position:center top", "background-position:50% 0")
-        .replace("background-position:bottom center", "background-position:50% 100%")
-        .replace("background-position:center bottom", "background-position:50% 100%");
+        .replace(
+            "background-position:right center",
+            "background-position:100%",
+        )
+        .replace(
+            "background-position:center right",
+            "background-position:100%",
+        )
+        .replace(
+            "background-position:right bottom",
+            "background-position:100% 100%",
+        )
+        .replace(
+            "background-position:bottom right",
+            "background-position:100% 100%",
+        )
+        .replace(
+            "background-position:left bottom",
+            "background-position:0 100%",
+        )
+        .replace(
+            "background-position:bottom left",
+            "background-position:0 100%",
+        )
+        .replace(
+            "background-position:top right",
+            "background-position:100% 0",
+        )
+        .replace(
+            "background-position:right top",
+            "background-position:100% 0",
+        )
+        .replace(
+            "background-position:top center",
+            "background-position:50% 0",
+        )
+        .replace(
+            "background-position:center top",
+            "background-position:50% 0",
+        )
+        .replace(
+            "background-position:bottom center",
+            "background-position:50% 100%",
+        )
+        .replace(
+            "background-position:center bottom",
+            "background-position:50% 100%",
+        );
 
     // Transform 9: collapse box-like shorthand values where all
     // components are equal. Runs last so the whitespace between
@@ -405,9 +446,7 @@ fn strip_block_comments(s: &str) -> String {
         if i + 1 < bytes.len() && bytes[i] == b'/' && bytes[i + 1] == b'*' {
             // Advance past "*/".
             i += 2;
-            while i + 1 < bytes.len()
-                && !(bytes[i] == b'*' && bytes[i + 1] == b'/')
-            {
+            while i + 1 < bytes.len() && !(bytes[i] == b'*' && bytes[i + 1] == b'/') {
                 i += 1;
             }
             i = (i + 2).min(bytes.len());
@@ -593,7 +632,11 @@ fn canonicalize_colors_to_hex8(s: &str) -> String {
         if (bytes_ci_match(bytes, i, b"rgba(") || bytes_ci_match(bytes, i, b"rgb("))
             && prev_not_wordlike(bytes, i)
         {
-            let open = if bytes_ci_match(bytes, i, b"rgba(") { i + 5 } else { i + 4 };
+            let open = if bytes_ci_match(bytes, i, b"rgba(") {
+                i + 5
+            } else {
+                i + 4
+            };
             // Find matching `)`.
             let mut depth = 1i32;
             let mut j = open;
@@ -632,7 +675,11 @@ fn bytes_ci_match(haystack: &[u8], start: usize, needle: &[u8]) -> bool {
     }
     for k in 0..needle.len() {
         let h = haystack[start + k];
-        let h_lc = if h.is_ascii_uppercase() { h.to_ascii_lowercase() } else { h };
+        let h_lc = if h.is_ascii_uppercase() {
+            h.to_ascii_lowercase()
+        } else {
+            h
+        };
         if h_lc != needle[k] {
             return false;
         }
@@ -679,10 +726,13 @@ fn parse_rgb_inner_to_hex8(inner: &str) -> Option<String> {
     // Returns None on any other form.
     let trimmed = inner.trim();
     // Normalise "/" (modern slash-alpha) to "," so tokenising is uniform.
-    let normalised: String = trimmed.chars().map(|c| match c {
-        '/' | ',' => ',',
-        _ => c,
-    }).collect();
+    let normalised: String = trimmed
+        .chars()
+        .map(|c| match c {
+            '/' | ',' => ',',
+            _ => c,
+        })
+        .collect();
     let parts: Vec<&str> = normalised
         .split(|c: char| c == ',' || c.is_whitespace())
         .filter(|s| !s.is_empty())
@@ -790,8 +840,8 @@ fn sort_block_content(content: &str) -> String {
     // order relative to each other. Recurse into nested blocks.
     #[derive(Debug)]
     enum Item<'a> {
-        Decl(&'a str),    // `property:value`
-        Nested(String),    // `prelude{sorted-body}`
+        Decl(&'a str),  // `property:value`
+        Nested(String), // `prelude{sorted-body}`
     }
 
     let bytes = content.as_bytes();
@@ -846,7 +896,11 @@ fn sort_block_content(content: &str) -> String {
                         let prelude = &content[block_start..i];
                         let body = &content[i + 1..j];
                         let sorted_body = sort_block_content(body);
-                        items.push(Item::Nested(format!("{}{{{}}}", prelude.trim(), sorted_body)));
+                        items.push(Item::Nested(format!(
+                            "{}{{{}}}",
+                            prelude.trim(),
+                            sorted_body
+                        )));
                         i = j + 1;
                         consumed = true;
                         break;
@@ -950,7 +1004,10 @@ fn is_font_family_ident_sequence(s: &str) -> bool {
     }
     // Split on ASCII whitespace; each part must be a valid CSS
     // identifier (letter / digit / _ / - / start-letter).
-    for part in s.split(|c: char| c.is_ascii_whitespace()).filter(|p| !p.is_empty()) {
+    for part in s
+        .split(|c: char| c.is_ascii_whitespace())
+        .filter(|p| !p.is_empty())
+    {
         if !is_valid_css_ident(part) {
             return false;
         }
@@ -970,8 +1027,14 @@ fn collapse_box_shorthand(s: &str) -> String {
     // <v3> <v4>` where v1 == v2 [== v3 [== v4]] within a single
     // declaration (up to `;` or `}`). Collapses to `<prop>:<v1>`.
     const BOX_PROPS: &[&str] = &[
-        "padding", "margin", "border-width", "border-style",
-        "border-color", "border-radius", "scroll-padding", "scroll-margin",
+        "padding",
+        "margin",
+        "border-width",
+        "border-style",
+        "border-color",
+        "border-radius",
+        "scroll-padding",
+        "scroll-margin",
         "inset",
     ];
     let mut out = s.to_string();
@@ -991,8 +1054,8 @@ fn collapse_prop_repeats(s: &str, prop: &str) -> String {
     while i < bytes.len() {
         // Try to match `<prop>:` at token boundary.
         let prev = if i == 0 { 0u8 } else { bytes[i - 1] };
-        let at_boundary = i == 0
-            || !matches!(prev, b'a'..=b'z' | b'A'..=b'Z' | b'0'..=b'9' | b'_' | b'-');
+        let at_boundary =
+            i == 0 || !matches!(prev, b'a'..=b'z' | b'A'..=b'Z' | b'0'..=b'9' | b'_' | b'-');
         if at_boundary
             && i + prop_b.len() < bytes.len()
             && &bytes[i..i + prop_b.len()] == prop_b
@@ -1108,8 +1171,15 @@ fn legacy_media_range(s: &str) -> String {
 
 fn try_rewrite_range(inner: &str) -> Option<String> {
     const FEATURES: &[&str] = &[
-        "width", "height", "resolution", "aspect-ratio", "monochrome",
-        "color", "color-index", "device-width", "device-height",
+        "width",
+        "height",
+        "resolution",
+        "aspect-ratio",
+        "monochrome",
+        "color",
+        "color-index",
+        "device-width",
+        "device-height",
         "device-aspect-ratio",
     ];
     let t = inner.trim();
@@ -1199,11 +1269,7 @@ fn canonicalize_pseudo_elements(s: &str) -> String {
     let mut out = String::with_capacity(lifted.len());
     let mut i = 0usize;
     while i < bytes.len() {
-        if bytes[i] == b'*'
-            && i + 2 < bytes.len()
-            && bytes[i + 1] == b':'
-            && bytes[i + 2] == b':'
-        {
+        if bytes[i] == b'*' && i + 2 < bytes.len() && bytes[i + 1] == b':' && bytes[i + 2] == b':' {
             // Strip `*` only when it stands alone (not part of a
             // compound selector like `.foo*::before`). Check the byte
             // before: it must be a delimiter (`,`, `{`, `}`, ASCII
@@ -1211,8 +1277,7 @@ fn canonicalize_pseudo_elements(s: &str) -> String {
             // ASCII whitespace covers SP, TAB, LF, CR — whichever form
             // the producer emits between selectors.
             let prev = if i == 0 { b' ' } else { bytes[i - 1] };
-            if matches!(prev,
-                b',' | b'{' | b'}' | b'>' | b'+' | b'~' | b'(')
+            if matches!(prev, b',' | b'{' | b'}' | b'>' | b'+' | b'~' | b'(')
                 || prev.is_ascii_whitespace()
             {
                 i += 1;
@@ -1307,7 +1372,8 @@ fn is_valid_css_ident(s: &str) -> bool {
     i += 1;
     while i < bytes.len() {
         if !matches!(bytes[i],
-            b'a'..=b'z' | b'A'..=b'Z' | b'0'..=b'9' | b'_' | b'-') {
+            b'a'..=b'z' | b'A'..=b'Z' | b'0'..=b'9' | b'_' | b'-')
+        {
             return false;
         }
         i += 1;

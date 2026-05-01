@@ -131,8 +131,7 @@ where
         let before_unions = egraph.union_count();
         let matches = self.search(egraph);
         for (class_id, m) in matches {
-            if dirty.contains(&egraph.find_ref(class_id))
-                && self.should_apply(egraph, class_id, &m)
+            if dirty.contains(&egraph.find_ref(class_id)) && self.should_apply(egraph, class_id, &m)
             {
                 self.apply(egraph, class_id, m);
             }

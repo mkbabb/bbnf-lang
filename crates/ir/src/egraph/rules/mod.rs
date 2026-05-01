@@ -29,9 +29,7 @@ mod regex;
 mod suffix;
 mod universal;
 
-pub use regex::{
-    DeduplicateAltBranches, FuseAltRegexBranches, SupersetAbsorbAlt, UnionMergeAlt,
-};
+pub use regex::{DeduplicateAltBranches, FuseAltRegexBranches, SupersetAbsorbAlt, UnionMergeAlt};
 pub use suffix::CommonSuffixFactor;
 pub use universal::{AltOfSingle, ConcatLiterals, RepeatOfSingle, WrapOfEpsilonScalar};
 

@@ -55,14 +55,7 @@ impl CstSchema {
 
             let fields = type_desc
                 .as_ref()
-                .map(|td| {
-                    derive_fields_from_type(
-                        td,
-                        Some(&rule.body),
-                        identifier_rule_id,
-                        ir,
-                    )
-                })
+                .map(|td| derive_fields_from_type(td, Some(&rule.body), identifier_rule_id, ir))
                 .unwrap_or_default();
 
             variants.push(VariantDescriptor {
@@ -293,7 +286,6 @@ fn derive_field_role(
     identifier_rule_id: Option<RuleId>,
     ir: &GrammarIR,
 ) -> FieldRole {
-
     match td {
         TypeDesc::Span => {
             if let Some(body) = body_node.map(unwrap_body_node) {
@@ -348,14 +340,15 @@ fn is_keyword_literal(s: &str) -> bool {
     }
     let bytes = s.as_bytes();
     // `@directive` style.
-    if bytes[0] == b'@' && bytes[1..].iter().all(|b| b.is_ascii_alphanumeric() || *b == b'_') {
+    if bytes[0] == b'@'
+        && bytes[1..]
+            .iter()
+            .all(|b| b.is_ascii_alphanumeric() || *b == b'_')
+    {
         return true;
     }
     // Bare alphabetic keyword.
-    bytes
-        .iter()
-        .all(|b| b.is_ascii_alphabetic() || *b == b'_')
-        && bytes.len() > 1
+    bytes.iter().all(|b| b.is_ascii_alphabetic() || *b == b'_') && bytes.len() > 1
 }
 
 fn is_punctuation_literal(s: &str) -> bool {

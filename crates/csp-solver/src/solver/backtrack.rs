@@ -29,8 +29,15 @@ where
     let mut solutions = Vec::new();
 
     backtrack_recurse(
-        variables, constraints, adjacency, config, stats,
-        &mut assignment, &mut stack, &mut solutions, 0,
+        variables,
+        constraints,
+        adjacency,
+        config,
+        stats,
+        &mut assignment,
+        &mut stack,
+        &mut solutions,
+        0,
     );
 
     solutions
@@ -62,8 +69,15 @@ where
     let mut solutions = Vec::new();
 
     backtrack_recurse(
-        variables, constraints, adjacency, config, stats,
-        &mut assignment, &mut stack, &mut solutions, 0,
+        variables,
+        constraints,
+        adjacency,
+        config,
+        stats,
+        &mut assignment,
+        &mut stack,
+        &mut solutions,
+        0,
     );
 
     solutions
@@ -119,8 +133,11 @@ where
     stats.nodes_explored += 1;
 
     let idx = ordering::select_variable(
-        stack, variables, config.ordering,
-        &config.constraint_weights, &config.var_constraint_ids,
+        stack,
+        variables,
+        config.ordering,
+        &config.constraint_weights,
+        &config.var_constraint_ids,
     )
     .unwrap();
 
@@ -149,23 +166,45 @@ where
             let dwo = match config.pruning {
                 Pruning::None => false,
                 Pruning::ForwardChecking => propagate::forward_check(
-                    var, variables, constraints, adjacency,
-                    assignment.as_mut_slice(), stats, depth,
+                    var,
+                    variables,
+                    constraints,
+                    adjacency,
+                    assignment.as_mut_slice(),
+                    stats,
+                    depth,
                 ),
                 Pruning::Ac3 => ac3::ac3_from_variable(
-                    var, variables, constraints, adjacency,
-                    assignment, stats, depth,
+                    var,
+                    variables,
+                    constraints,
+                    adjacency,
+                    assignment,
+                    stats,
+                    depth,
                 ),
                 Pruning::AcFc => propagate::ac_fc(
-                    var, variables, constraints, adjacency,
-                    assignment.as_mut_slice(), stats, depth,
+                    var,
+                    variables,
+                    constraints,
+                    adjacency,
+                    assignment.as_mut_slice(),
+                    stats,
+                    depth,
                 ),
             };
 
             if !dwo {
                 if backtrack_recurse(
-                    variables, constraints, adjacency, config, stats,
-                    assignment, stack, solutions, depth + 1,
+                    variables,
+                    constraints,
+                    adjacency,
+                    config,
+                    stats,
+                    assignment,
+                    stack,
+                    solutions,
+                    depth + 1,
                 ) {
                     return true;
                 }

@@ -501,13 +501,7 @@ fn test_node_budget_aborts_long_search() {
     let mut csp = Csp::new();
     // 30 variables × 5 values — the search tree is 5^30 ≈ 9.3e20.
     // We set a 100-node budget so the abort fires within milliseconds.
-    let domain = CostFiniteDomain::new(vec![
-        (1, 10.0),
-        (2, 5.0),
-        (3, 20.0),
-        (4, 1.0),
-        (5, 15.0),
-    ]);
+    let domain = CostFiniteDomain::new(vec![(1, 10.0), (2, 5.0), (3, 20.0), (4, 1.0), (5, 15.0)]);
     let vars: Vec<_> = (0..30).map(|_| csp.add_variable(domain.clone())).collect();
     // A soft constraint per pair to force the search to enumerate
     // (the branch-and-bound would otherwise pick the lowest-cost

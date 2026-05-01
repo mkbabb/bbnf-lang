@@ -7,9 +7,9 @@
 //! Single implementation shared by the HIR walker, DFA emitter, and
 //! generalized fast-path emitter.
 
+use parse_that::regex::hir::ByteRange;
 use proc_macro2::TokenStream;
 use quote::quote;
-use parse_that::regex::hir::ByteRange;
 
 /// Recognized shorthand character classes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -33,14 +33,10 @@ pub enum ShorthandClass {
 pub fn detect_from_ranges(ranges: &[ByteRange]) -> Option<ShorthandClass> {
     match ranges.len() {
         1 if ranges[0].start == b'0' && ranges[0].end == b'9' => Some(ShorthandClass::Digit),
-        2 if ranges[0] == ByteRange::new(0x09, 0x0D)
-            && ranges[1] == ByteRange::new(0x20, 0x20) =>
-        {
+        2 if ranges[0] == ByteRange::new(0x09, 0x0D) && ranges[1] == ByteRange::new(0x20, 0x20) => {
             Some(ShorthandClass::Whitespace)
         }
-        2 if ranges[0] == ByteRange::new(b'A', b'Z')
-            && ranges[1] == ByteRange::new(b'a', b'z') =>
-        {
+        2 if ranges[0] == ByteRange::new(b'A', b'Z') && ranges[1] == ByteRange::new(b'a', b'z') => {
             Some(ShorthandClass::Alpha)
         }
         3 if ranges[0] == ByteRange::new(b'0', b'9')

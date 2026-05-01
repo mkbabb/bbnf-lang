@@ -155,8 +155,7 @@ impl<'a> ConstraintGenerator<'a> {
             // branches of a repeat.
             IrNode::Ref(rule_id) => {
                 let rule_var = self.rule_vars[rule_id];
-                self.csp
-                    .add_constraint(RefConstraint::new(var, rule_var));
+                self.csp.add_constraint(RefConstraint::new(var, rule_var));
                 self.csp
                     .add_constraint(GroundConstraint::new(vec_var, TypeDesc::Enum));
             }
@@ -224,8 +223,7 @@ impl<'a> ConstraintGenerator<'a> {
                 ));
 
                 // Vec context for a Seq: delegate to normal projection.
-                self.csp
-                    .add_constraint(EqualConstraint::new(vec_var, var));
+                self.csp.add_constraint(EqualConstraint::new(vec_var, var));
             }
 
             // Alternation constraint -- join of branches
@@ -269,16 +267,14 @@ impl<'a> ConstraintGenerator<'a> {
                         transparent_ref,
                     ));
 
-                    self.csp
-                        .add_constraint(EqualConstraint::new(vec_var, var));
+                    self.csp.add_constraint(EqualConstraint::new(vec_var, var));
                 } else {
                     // Many / Many1: use the vec-context variable for inner elements.
                     let inner_vec_var = self.vec_context_vars[&inner_nid];
                     self.csp
                         .add_constraint(RepeatConstraint::new(var, inner_vec_var));
 
-                    self.csp
-                        .add_constraint(EqualConstraint::new(vec_var, var));
+                    self.csp.add_constraint(EqualConstraint::new(vec_var, var));
                 }
             }
 
@@ -286,8 +282,7 @@ impl<'a> ConstraintGenerator<'a> {
             IrNode::Skip(a, b) => {
                 let a_var = self.generate_node(a, false);
                 let _b_var = self.generate_node(b, false);
-                self.csp
-                    .add_constraint(ProjectConstraint::new(var, a_var));
+                self.csp.add_constraint(ProjectConstraint::new(var, a_var));
 
                 let a_nid = self.node_id(a.as_ref());
                 let a_vec_var = self.vec_context_vars[&a_nid];
@@ -297,8 +292,7 @@ impl<'a> ConstraintGenerator<'a> {
             IrNode::Next(a, b) => {
                 let _a_var = self.generate_node(a, false);
                 let b_var = self.generate_node(b, false);
-                self.csp
-                    .add_constraint(ProjectConstraint::new(var, b_var));
+                self.csp.add_constraint(ProjectConstraint::new(var, b_var));
 
                 let b_nid = self.node_id(b.as_ref());
                 let b_vec_var = self.vec_context_vars[&b_nid];
@@ -308,8 +302,7 @@ impl<'a> ConstraintGenerator<'a> {
             IrNode::Minus(a, b) => {
                 let a_var = self.generate_node(a, false);
                 let _b_var = self.generate_node(b, false);
-                self.csp
-                    .add_constraint(ProjectConstraint::new(var, a_var));
+                self.csp.add_constraint(ProjectConstraint::new(var, a_var));
 
                 let a_nid = self.node_id(a.as_ref());
                 let a_vec_var = self.vec_context_vars[&a_nid];
@@ -393,8 +386,7 @@ impl<'a> ConstraintGenerator<'a> {
                 self.csp
                     .add_constraint(AltConstraint::new(var, branch_vars));
 
-                self.csp
-                    .add_constraint(EqualConstraint::new(vec_var, var));
+                self.csp.add_constraint(EqualConstraint::new(vec_var, var));
             }
         }
 

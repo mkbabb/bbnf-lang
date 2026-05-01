@@ -32,13 +32,11 @@ use std::collections::HashMap;
 
 use bbnf_ir::dag::GrammarDag;
 use bbnf_ir::passes::{
-    compute_regex_info,
-    recognizers::shape_dispatch::{shape_dispatch, ShapeTag},
-    mine_recognizers,
+    compute_regex_info, mine_recognizers,
+    recognizers::shape_dispatch::{ShapeTag, shape_dispatch},
 };
 use bbnf_ir::{
-    AltBranch, CostConfig, GrammarIR, IrNode, IrRule, RuleId, RuleMeta,
-    TypeDescInterner,
+    AltBranch, CostConfig, GrammarIR, IrNode, IrRule, RuleId, RuleMeta, TypeDescInterner,
 };
 
 // ─── Fixture builders ────────────────────────────────────────────────
@@ -82,8 +80,8 @@ fn base_ir() -> GrammarIR {
         pattern_alphabets: HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
-        shape_assignments:
-            bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
+        shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
+        ),
     }
 }
 
@@ -183,10 +181,7 @@ fn build_json_ir() -> (GrammarIR, JsonRules) {
     let bool_rule = push_rule(&mut ir, "bool", bool_body);
 
     // number = /-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/ -> f64
-    let num_body = mapped(regex(
-        &mut ir,
-        r"-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?",
-    ));
+    let num_body = mapped(regex(&mut ir, r"-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?"));
     let number = push_rule(&mut ir, "number", num_body);
 
     // comma = "," ?w
@@ -211,10 +206,7 @@ fn build_json_ir() -> (GrammarIR, JsonRules) {
     // pair = string, colon >> value  —  Seq(string, Next(colon, value))
     let pair_body = IrNode::Seq(vec![
         IrNode::Ref(string),
-        IrNode::Next(
-            Box::new(IrNode::Ref(colon)),
-            Box::new(IrNode::Ref(value)),
-        ),
+        IrNode::Next(Box::new(IrNode::Ref(colon)), Box::new(IrNode::Ref(value))),
     ]);
     let pair = push_rule(&mut ir, "pair", pair_body);
 
@@ -385,23 +377,11 @@ fn json_six_primary_rules_cover_hard_gate() {
     // `colon` / `pair` rules stay on the walker fallback (W4 admits
     // them via Wrap / Flat).
     let (ir, rules) = build_json_ir();
-    assert_eq!(
-        ir.shape_assignments.get(rules.object),
-        ShapeTag::Object
-    );
+    assert_eq!(ir.shape_assignments.get(rules.object), ShapeTag::Object);
     assert_eq!(ir.shape_assignments.get(rules.array), ShapeTag::Array);
-    assert_eq!(
-        ir.shape_assignments.get(rules.string),
-        ShapeTag::String
-    );
-    assert_eq!(
-        ir.shape_assignments.get(rules.number),
-        ShapeTag::Number
-    );
-    assert_eq!(
-        ir.shape_assignments.get(rules.bool_rule),
-        ShapeTag::Keyword
-    );
+    assert_eq!(ir.shape_assignments.get(rules.string), ShapeTag::String);
+    assert_eq!(ir.shape_assignments.get(rules.number), ShapeTag::Number);
+    assert_eq!(ir.shape_assignments.get(rules.bool_rule), ShapeTag::Keyword);
     assert_eq!(ir.shape_assignments.get(rules.null), ShapeTag::Keyword);
     assert!(
         ir.shape_assignments.classified_count() >= 6,
@@ -560,8 +540,14 @@ fn build_pratt_fixture() -> (GrammarIR, RuleId) {
     let mut ir = base_ir();
     let op_body = IrNode::Alt(
         vec![
-            AltBranch { node: lit(&mut ir, "+"), first_set: None },
-            AltBranch { node: lit(&mut ir, "-"), first_set: None },
+            AltBranch {
+                node: lit(&mut ir, "+"),
+                first_set: None,
+            },
+            AltBranch {
+                node: lit(&mut ir, "-"),
+                first_set: None,
+            },
         ],
         None,
     );
@@ -569,10 +555,7 @@ fn build_pratt_fixture() -> (GrammarIR, RuleId) {
     let operand_body = mapped(regex(&mut ir, r"[0-9]+"));
     let operand_rule = push_rule(&mut ir, "operand", operand_body);
     // expr = operand, (op, operand)*
-    let repeat_inner = IrNode::Seq(vec![
-        IrNode::Ref(op_rule),
-        IrNode::Ref(operand_rule),
-    ]);
+    let repeat_inner = IrNode::Seq(vec![IrNode::Ref(op_rule), IrNode::Ref(operand_rule)]);
     let expr_body = IrNode::Seq(vec![
         IrNode::Ref(operand_rule),
         IrNode::Repeat {
@@ -610,15 +593,18 @@ fn build_pratt_next_fixture() -> (GrammarIR, RuleId) {
     // expr = operand, (("*" | "/") >> operand)*
     let op_alt = IrNode::Alt(
         vec![
-            AltBranch { node: lit(&mut ir, "*"), first_set: None },
-            AltBranch { node: lit(&mut ir, "/"), first_set: None },
+            AltBranch {
+                node: lit(&mut ir, "*"),
+                first_set: None,
+            },
+            AltBranch {
+                node: lit(&mut ir, "/"),
+                first_set: None,
+            },
         ],
         None,
     );
-    let repeat_inner = IrNode::Next(
-        Box::new(op_alt),
-        Box::new(IrNode::Ref(operand_rule)),
-    );
+    let repeat_inner = IrNode::Next(Box::new(op_alt), Box::new(IrNode::Ref(operand_rule)));
     let expr_body = IrNode::Seq(vec![
         IrNode::Ref(operand_rule),
         IrNode::Repeat {
@@ -759,8 +745,14 @@ fn build_unordered_alt_branch_fixture() -> (GrammarIR, RuleId) {
     let a_up = lit(&mut ir, "A");
     let a_chain_body = IrNode::Alt(
         vec![
-            AltBranch { node: a_lo, first_set: None },
-            AltBranch { node: a_up, first_set: None },
+            AltBranch {
+                node: a_lo,
+                first_set: None,
+            },
+            AltBranch {
+                node: a_up,
+                first_set: None,
+            },
         ],
         None,
     );
@@ -770,8 +762,14 @@ fn build_unordered_alt_branch_fixture() -> (GrammarIR, RuleId) {
     let b_up = lit(&mut ir, "B");
     let b_chain_body = IrNode::Alt(
         vec![
-            AltBranch { node: b_lo, first_set: None },
-            AltBranch { node: b_up, first_set: None },
+            AltBranch {
+                node: b_lo,
+                first_set: None,
+            },
+            AltBranch {
+                node: b_up,
+                first_set: None,
+            },
         ],
         None,
     );
@@ -785,10 +783,22 @@ fn build_unordered_alt_branch_fixture() -> (GrammarIR, RuleId) {
     // compound = (a_chain | b_chain | c_lit | d_lit)+
     let alt = IrNode::Alt(
         vec![
-            AltBranch { node: IrNode::Ref(a_chain), first_set: None },
-            AltBranch { node: IrNode::Ref(b_chain), first_set: None },
-            AltBranch { node: IrNode::Ref(c_lit), first_set: None },
-            AltBranch { node: IrNode::Ref(d_lit), first_set: None },
+            AltBranch {
+                node: IrNode::Ref(a_chain),
+                first_set: None,
+            },
+            AltBranch {
+                node: IrNode::Ref(b_chain),
+                first_set: None,
+            },
+            AltBranch {
+                node: IrNode::Ref(c_lit),
+                first_set: None,
+            },
+            AltBranch {
+                node: IrNode::Ref(d_lit),
+                first_set: None,
+            },
         ],
         None,
     );
@@ -835,8 +845,14 @@ fn w4_unordered_rejects_overlapping_first_alt() {
     let aa_rule = push_rule(&mut ir, "aa_rule", aa_body);
     let alt = IrNode::Alt(
         vec![
-            AltBranch { node: IrNode::Ref(a_rule), first_set: None },
-            AltBranch { node: IrNode::Ref(aa_rule), first_set: None },
+            AltBranch {
+                node: IrNode::Ref(a_rule),
+                first_set: None,
+            },
+            AltBranch {
+                node: IrNode::Ref(aa_rule),
+                first_set: None,
+            },
         ],
         None,
     );
@@ -872,8 +888,14 @@ fn w4_unordered_rejects_optional_repeat() {
     let b_rule = push_rule(&mut ir, "b_rule", b_body);
     let alt = IrNode::Alt(
         vec![
-            AltBranch { node: IrNode::Ref(a_rule), first_set: None },
-            AltBranch { node: IrNode::Ref(b_rule), first_set: None },
+            AltBranch {
+                node: IrNode::Ref(a_rule),
+                first_set: None,
+            },
+            AltBranch {
+                node: IrNode::Ref(b_rule),
+                first_set: None,
+            },
         ],
         None,
     );
@@ -908,7 +930,10 @@ fn w4_unordered_rejects_single_branch_alt() {
     let a_body = lit(&mut ir, "a");
     let a_rule = push_rule(&mut ir, "a_rule", a_body);
     let alt = IrNode::Alt(
-        vec![AltBranch { node: IrNode::Ref(a_rule), first_set: None }],
+        vec![AltBranch {
+            node: IrNode::Ref(a_rule),
+            first_set: None,
+        }],
         None,
     );
     let compound_body = IrNode::Repeat {
@@ -1016,9 +1041,18 @@ fn build_wrap_fixture() -> (GrammarIR, RuleId) {
     // dispatcher = num | str | arr
     let disp_body = IrNode::Alt(
         vec![
-            AltBranch { node: IrNode::Ref(num_rule), first_set: None },
-            AltBranch { node: IrNode::Ref(str_rule), first_set: None },
-            AltBranch { node: IrNode::Ref(arr_rule), first_set: None },
+            AltBranch {
+                node: IrNode::Ref(num_rule),
+                first_set: None,
+            },
+            AltBranch {
+                node: IrNode::Ref(str_rule),
+                first_set: None,
+            },
+            AltBranch {
+                node: IrNode::Ref(arr_rule),
+                first_set: None,
+            },
         ],
         None,
     );
@@ -1096,7 +1130,10 @@ fn build_ref_headed_flat_fixture() -> (GrammarIR, RuleId, RuleId) {
     // classifies as Keyword.
     let kw_alt = IrNode::Alt(
         vec![
-            AltBranch { node: lit(&mut ir, "color"), first_set: None },
+            AltBranch {
+                node: lit(&mut ir, "color"),
+                first_set: None,
+            },
             AltBranch {
                 node: lit(&mut ir, "background-color"),
                 first_set: None,
@@ -1145,16 +1182,19 @@ fn build_typed_dimension_fixture() -> (GrammarIR, RuleId) {
     let num = push_rule(&mut ir, "num", num_body);
     let unit_alt = IrNode::Alt(
         vec![
-            AltBranch { node: lit(&mut ir, "px"), first_set: None },
-            AltBranch { node: lit(&mut ir, "em"), first_set: None },
+            AltBranch {
+                node: lit(&mut ir, "px"),
+                first_set: None,
+            },
+            AltBranch {
+                node: lit(&mut ir, "em"),
+                first_set: None,
+            },
         ],
         None,
     );
     let unit = push_rule(&mut ir, "unit", unit_alt);
-    let length_body = IrNode::Seq(vec![
-        IrNode::Ref(num),
-        IrNode::Ref(unit),
-    ]);
+    let length_body = IrNode::Seq(vec![IrNode::Ref(num), IrNode::Ref(unit)]);
     let length = push_rule(&mut ir, "length", length_body);
     ir.entry = length;
     finalise_and_classify(&mut ir);
@@ -1175,10 +1215,7 @@ fn w4fix_flat_admits_typed_dimension() {
 /// "important") ?`. Mirrors CSS `importantSuffix`.
 fn build_optional_seq_fixture() -> (GrammarIR, RuleId) {
     let mut ir = base_ir();
-    let inner = IrNode::Seq(vec![
-        lit(&mut ir, "!"),
-        lit(&mut ir, "important"),
-    ]);
+    let inner = IrNode::Seq(vec![lit(&mut ir, "!"), lit(&mut ir, "important")]);
     let body = IrNode::Repeat {
         inner: Box::new(inner),
         lo: 0,
@@ -1315,10 +1352,7 @@ fn build_repeat_rooted_flat_fixture() -> (GrammarIR, RuleId) {
     let item_body = mapped(lit(&mut ir, "a"));
     let item = push_rule(&mut ir, "item", item_body);
     let list_body = IrNode::Repeat {
-        inner: Box::new(IrNode::Seq(vec![
-            IrNode::Ref(item),
-            lit(&mut ir, "|"),
-        ])),
+        inner: Box::new(IrNode::Seq(vec![IrNode::Ref(item), lit(&mut ir, "|")])),
         lo: 1,
         hi: u32::MAX,
     };

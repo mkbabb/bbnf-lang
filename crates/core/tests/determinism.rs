@@ -16,7 +16,7 @@
 //! catches future regressions at `cargo test` time without needing
 //! to invoke the bootstrap script.
 
-use bbnf::pipeline::{compile_grammar, PipelineOptions};
+use bbnf::pipeline::{PipelineOptions, compile_grammar};
 
 const FIXTURE: &str = include_str!("fixtures/deterministic.bbnf");
 

@@ -7,16 +7,10 @@
 //! a structural byte at offset `i` is real iff the prefix-XOR of
 //! quote positions at offset `i` is `0` (outside string).
 
-use simd_scan::{
-    alphabet::StructuralAlphabet,
-    parity, scalar, scan_structural,
-};
+use simd_scan::{alphabet::StructuralAlphabet, parity, scalar, scan_structural};
 
-const JSON_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_parts(
-    &[b'{', b'}', b'[', b']', b':', b','],
-    &[],
-    &[b'"'],
-);
+const JSON_ALPHABET: StructuralAlphabet =
+    StructuralAlphabet::from_parts(&[b'{', b'}', b'[', b']', b':', b','], &[], &[b'"']);
 
 #[test]
 fn quote_filters_braces_inside_string() {
@@ -50,9 +44,15 @@ fn escaped_quote_does_not_close_string() {
     // emitted as structural; it's inside the string due to escape.
     let scalar_idx = scalar::scan(input, &JSON_ALPHABET);
     let simd_idx = scan_structural(input, &JSON_ALPHABET);
-    assert_eq!(scalar_idx.positions, simd_idx.positions, "scalar/simd mismatch");
+    assert_eq!(
+        scalar_idx.positions, simd_idx.positions,
+        "scalar/simd mismatch"
+    );
     // The comma at position 9 (inside string) must NOT appear.
-    assert!(!simd_idx.positions.contains(&9), "escaped-quote section leaked structural comma");
+    assert!(
+        !simd_idx.positions.contains(&9),
+        "escaped-quote section leaked structural comma"
+    );
 }
 
 #[test]
@@ -62,8 +62,14 @@ fn double_backslash_quote_closes_string() {
     // so the string ends. Then `,` at offset 10 IS structural.
     let scalar_idx = scalar::scan(input, &JSON_ALPHABET);
     let simd_idx = scan_structural(input, &JSON_ALPHABET);
-    assert_eq!(scalar_idx.positions, simd_idx.positions, "scalar/simd mismatch");
-    assert!(simd_idx.positions.contains(&10), "comma after `\\\\` should be structural");
+    assert_eq!(
+        scalar_idx.positions, simd_idx.positions,
+        "scalar/simd mismatch"
+    );
+    assert!(
+        simd_idx.positions.contains(&10),
+        "comma after `\\\\` should be structural"
+    );
 }
 
 #[test]
@@ -71,11 +77,18 @@ fn many_strings_in_array() {
     let input = br#"["a","b","c","d","e","f","g","h"]"#;
     let scalar_idx = scalar::scan(input, &JSON_ALPHABET);
     let simd_idx = scan_structural(input, &JSON_ALPHABET);
-    assert_eq!(scalar_idx.positions, simd_idx.positions, "scalar/simd mismatch");
+    assert_eq!(
+        scalar_idx.positions, simd_idx.positions,
+        "scalar/simd mismatch"
+    );
     // We expect: `[` 0, then `,` between every pair (positions 4, 8, 12, 16, 20, 24, 28),
     // then `]` 32. Plus the `"` quotes which are also structural.
-    let outside_quotes: Vec<u32> = simd_idx.positions.iter().copied()
-        .filter(|&p| input[p as usize] != b'"').collect();
+    let outside_quotes: Vec<u32> = simd_idx
+        .positions
+        .iter()
+        .copied()
+        .filter(|&p| input[p as usize] != b'"')
+        .collect();
     assert_eq!(outside_quotes, vec![0, 4, 8, 12, 16, 20, 24, 28, 32]);
 }
 
@@ -89,7 +102,10 @@ fn long_string_spanning_multiple_stripes() {
     input.extend(b"\",\"end\":1}");
     let scalar_idx = scalar::scan(&input, &JSON_ALPHABET);
     let simd_idx = scan_structural(&input, &JSON_ALPHABET);
-    assert_eq!(scalar_idx.positions, simd_idx.positions, "long-string scan diverged");
+    assert_eq!(
+        scalar_idx.positions, simd_idx.positions,
+        "long-string scan diverged"
+    );
     // None of the `,` `}` `]` bytes inside the long string (offset 6..156)
     // should appear as non-quote structural.
     let inside_string_range = 6u32..156;
@@ -124,8 +140,11 @@ fn shift_xor_matches_clmul() {
         for &carry in &[false, true] {
             let shifted = parity::shift_xor_prefix(mask);
             let with_carry = if carry { !shifted } else { shifted };
-            assert_eq!(parity::prefix_xor_64(mask, carry), with_carry,
-                "prefix-XOR mismatch mask=0x{mask:016x} carry={carry}");
+            assert_eq!(
+                parity::prefix_xor_64(mask, carry),
+                with_carry,
+                "prefix-XOR mismatch mask=0x{mask:016x} carry={carry}"
+            );
         }
     }
 }
@@ -156,10 +175,15 @@ fn quote_carry_across_64_byte_stripes() {
     input.push(b'1');
     let scalar_idx = scalar::scan(&input, &JSON_ALPHABET);
     let simd_idx = scan_structural(&input, &JSON_ALPHABET);
-    assert_eq!(scalar_idx.positions, simd_idx.positions, "carry-across-stripes parity diverged");
+    assert_eq!(
+        scalar_idx.positions, simd_idx.positions,
+        "carry-across-stripes parity diverged"
+    );
     // The 50 commas at offsets 31..81 are inside the string — none structural.
     for p in 31u32..81 {
-        assert!(!simd_idx.positions.contains(&p) || input[p as usize] == b'"',
-            "comma at {p} inside string emitted");
+        assert!(
+            !simd_idx.positions.contains(&p) || input[p as usize] == b'"',
+            "comma at {p} inside string emitted"
+        );
     }
 }

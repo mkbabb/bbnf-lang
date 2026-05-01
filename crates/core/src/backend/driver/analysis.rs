@@ -146,11 +146,8 @@ pub fn analyze_grammar(ir: &mut GrammarIR, config: &EffectiveBackendConfig) -> B
     // the resolver lives in the backend crate; IR owns only the
     // `NamedTypeResolver` trait.
     {
-        let resolver =
-            crate::backend::rust::view::named_types::RustNamedTypes::from_ir(ir);
-        ir.payload_layouts = bbnf_ir::passes::compute_payload_layouts_with_resolver(
-            ir, &resolver,
-        );
+        let resolver = crate::backend::rust::view::named_types::RustNamedTypes::from_ir(ir);
+        ir.payload_layouts = bbnf_ir::passes::compute_payload_layouts_with_resolver(ir, &resolver);
     }
     // Tranche AU.6.2 — count (push_compound, push_leaf,
     // push_leaf_with_*) sites across every emitted rule function so
@@ -214,4 +211,3 @@ pub fn analyze_grammar(ir: &mut GrammarIR, config: &EffectiveBackendConfig) -> B
         operator_chain_rules,
     }
 }
-

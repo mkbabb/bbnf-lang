@@ -8,8 +8,8 @@
 //! literals from the IR and delegate compound branches to their
 //! child's `serialize_*` function via `child(0)`.
 
-use bbnf_ir::{GrammarIR, IrRule};
 use bbnf_ir::passes::MaterializationClass;
+use bbnf_ir::{GrammarIR, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 

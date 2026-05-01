@@ -5,7 +5,7 @@
 //! literal-led Alt with branch count >= threshold.
 
 use bbnf::backend::rust::emitter::keyword_dispatch::{
-    emit_keyword_phf, emit_keyword_tables, LiteralBranch, PHF_MIN_BRANCHES,
+    LiteralBranch, PHF_MIN_BRANCHES, emit_keyword_phf, emit_keyword_tables,
 };
 
 /// Below-threshold: the emitter returns `None` so the caller falls
@@ -13,8 +13,14 @@ use bbnf::backend::rust::emitter::keyword_dispatch::{
 #[test]
 fn below_threshold_returns_none() {
     let branches = vec![
-        LiteralBranch { bytes: b"true".to_vec(), branch_idx: 0 },
-        LiteralBranch { bytes: b"false".to_vec(), branch_idx: 1 },
+        LiteralBranch {
+            bytes: b"true".to_vec(),
+            branch_idx: 0,
+        },
+        LiteralBranch {
+            bytes: b"false".to_vec(),
+            branch_idx: 1,
+        },
     ];
     assert!(branches.len() < PHF_MIN_BRANCHES);
     let out = emit_keyword_phf("test_grammar", 0, &branches);
@@ -43,15 +49,27 @@ fn threshold_met_emits_phf_table() {
 
     // The emission declares two statics + one fn; assert all three
     // are present and carry the rule_id suffix.
-    assert!(tokens.contains("__PHF_test_grammar_42_KW"),
-        "Emitted stream missing keyword table static: {}", tokens);
-    assert!(tokens.contains("__PHF_test_grammar_42_IDX"),
-        "Emitted stream missing branch-idx table: {}", tokens);
-    assert!(tokens.contains("__phf_test_grammar_dispatch_42"),
-        "Emitted stream missing dispatch fn: {}", tokens);
+    assert!(
+        tokens.contains("__PHF_test_grammar_42_KW"),
+        "Emitted stream missing keyword table static: {}",
+        tokens
+    );
+    assert!(
+        tokens.contains("__PHF_test_grammar_42_IDX"),
+        "Emitted stream missing branch-idx table: {}",
+        tokens
+    );
+    assert!(
+        tokens.contains("__phf_test_grammar_dispatch_42"),
+        "Emitted stream missing dispatch fn: {}",
+        tokens
+    );
     // The dispatch lookup is binary_search-based.
-    assert!(tokens.contains("binary_search"),
-        "Emitted stream missing binary_search call: {}", tokens);
+    assert!(
+        tokens.contains("binary_search"),
+        "Emitted stream missing binary_search call: {}",
+        tokens
+    );
 }
 
 /// `emit_keyword_tables` is the grammar-level wrapper — accumulate
@@ -75,15 +93,18 @@ fn grammar_level_accumulation() {
             branch_idx: i as u8,
         })
         .collect();
-    let tables: Vec<(u32, &[LiteralBranch])> = vec![
-        (1, rule_a.as_slice()),
-        (2, rule_b.as_slice()),
-    ];
+    let tables: Vec<(u32, &[LiteralBranch])> = vec![(1, rule_a.as_slice()), (2, rule_b.as_slice())];
     let out = emit_keyword_tables("demo", tables).to_string();
 
     // rule_a crosses the threshold; rule_b does not.
-    assert!(out.contains("__PHF_demo_1_KW"),
-        "rule_a PHF table missing: {}", out);
-    assert!(!out.contains("__PHF_demo_2_KW"),
-        "rule_b below threshold must not emit: {}", out);
+    assert!(
+        out.contains("__PHF_demo_1_KW"),
+        "rule_a PHF table missing: {}",
+        out
+    );
+    assert!(
+        !out.contains("__PHF_demo_2_KW"),
+        "rule_b below threshold must not emit: {}",
+        out
+    );
 }

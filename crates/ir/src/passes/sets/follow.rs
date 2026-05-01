@@ -21,10 +21,8 @@ use rustc_hash::FxHashMap as HashMap;
 
 use crate::{CharSet128, GrammarIR, IrNode, RuleId};
 
+use super::super::csp_domains::{CharSetDomain, CharSetGroundConstraint, CharSetUnionConstraint};
 use super::first_sets::{compute_node_first, compute_node_nullable};
-use super::super::csp_domains::{
-    CharSetDomain, CharSetGroundConstraint, CharSetUnionConstraint,
-};
 
 /// FOLLOW sets for all rules in the grammar.
 pub type FollowSets = StdHashMap<RuleId, CharSet128>;
@@ -53,11 +51,8 @@ pub fn compute_follow_sets(ir: &GrammarIR) -> FollowSets {
         .iter()
         .map(|r| (r.id, r.meta.first_set.clone()))
         .collect();
-    let nullable: HashMap<RuleId, bool> = ir
-        .rules
-        .iter()
-        .map(|r| (r.id, r.meta.nullable))
-        .collect();
+    let nullable: HashMap<RuleId, bool> =
+        ir.rules.iter().map(|r| (r.id, r.meta.nullable)).collect();
 
     // Walk each rule's body and emit FOLLOW constraints.
     for rule in &ir.rules {

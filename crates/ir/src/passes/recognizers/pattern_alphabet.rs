@@ -46,9 +46,9 @@
 //! pattern's alphabet is unknown (pattern compilation failed / the
 //! heuristic conservatively surrenders).
 
-use crate::dag::NodeId;
-use crate::passes::sets::structural_alphabet::{build_byte_bitmap, StructuralBitmap};
 use crate::IrNode;
+use crate::dag::NodeId;
+use crate::passes::sets::structural_alphabet::{StructuralBitmap, build_byte_bitmap};
 
 use super::{MineOutputs, RecognizerMineCtx, RecognizerMiner};
 

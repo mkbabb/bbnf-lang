@@ -1,4 +1,3 @@
-
 //! Google Sheets formula benchmark — monolithic codegen (tape-first).
 //!
 //! Stratified from simple cell references (simple.txt, 505B) through
@@ -11,7 +10,6 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 use divan::counter::BytesCount;
 
 use ::bbnf::grammar::generated::google_sheets::*;
-
 
 #[path = "../common/timeout.rs"]
 mod timeout;
@@ -29,8 +27,9 @@ fn parse_all_formulas(input: &str) {
         if line.is_empty() {
             continue;
         }
-        GoogleSheetsParser::parse(line)
-            .unwrap_or_else(|e| panic!("parse failed on {:?}: {:?}", &line[..line.len().min(40)], e));
+        GoogleSheetsParser::parse(line).unwrap_or_else(|e| {
+            panic!("parse failed on {:?}: {:?}", &line[..line.len().min(40)], e)
+        });
     }
 }
 
@@ -45,7 +44,9 @@ fn parse_simple(b: divan::Bencher) {
         |input: String| {
             for line in input.lines() {
                 let line = line.trim();
-                if line.is_empty() { continue; }
+                if line.is_empty() {
+                    continue;
+                }
                 let parsed = GoogleSheetsParser::parse(divan::black_box(line)).unwrap();
                 divan::black_box_drop(parsed);
             }
@@ -65,7 +66,9 @@ fn parse_nested(b: divan::Bencher) {
         |input: String| {
             for line in input.lines() {
                 let line = line.trim();
-                if line.is_empty() { continue; }
+                if line.is_empty() {
+                    continue;
+                }
                 let parsed = GoogleSheetsParser::parse(divan::black_box(line)).unwrap();
                 divan::black_box_drop(parsed);
             }
@@ -85,7 +88,9 @@ fn parse_stress(b: divan::Bencher) {
         |input: String| {
             for line in input.lines() {
                 let line = line.trim();
-                if line.is_empty() { continue; }
+                if line.is_empty() {
+                    continue;
+                }
                 let parsed = GoogleSheetsParser::parse(divan::black_box(line)).unwrap();
                 divan::black_box_drop(parsed);
             }
@@ -99,7 +104,12 @@ fn parse_stress(b: divan::Bencher) {
 #[divan::bench]
 fn format_simple(b: divan::Bencher) {
     let input = load("simple.txt");
-    let first_formula = input.lines().find(|l| !l.trim().is_empty()).unwrap().trim().to_string();
+    let first_formula = input
+        .lines()
+        .find(|l| !l.trim().is_empty())
+        .unwrap()
+        .trim()
+        .to_string();
     let config = pprint::Printer::new(80, 2, false);
     {
         let parser = GoogleSheetsParser::formula_prettify();
@@ -120,7 +130,12 @@ fn format_simple(b: divan::Bencher) {
 #[divan::bench]
 fn format_stress(b: divan::Bencher) {
     let input = load("stress.txt");
-    let first_formula = input.lines().find(|l| !l.trim().is_empty()).unwrap().trim().to_string();
+    let first_formula = input
+        .lines()
+        .find(|l| !l.trim().is_empty())
+        .unwrap()
+        .trim()
+        .to_string();
     let config = pprint::Printer::new(80, 2, false);
     {
         let parser = GoogleSheetsParser::formula_prettify();

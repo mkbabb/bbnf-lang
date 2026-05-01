@@ -11,7 +11,12 @@ use crate::{Csp, SolveConfig};
 pub fn create_sudoku_csp(board: &[u32], n: u32) -> (Csp<BitsetDomain>, Vec<(VarId, u32)>) {
     let m = n * n;
     let total = (m * m) as usize;
-    assert_eq!(board.len(), total, "board must have M*M = {} elements", total);
+    assert_eq!(
+        board.len(),
+        total,
+        "board must have M*M = {} elements",
+        total
+    );
 
     let mut csp = Csp::new();
     let domain = BitsetDomain::new(1..=m);

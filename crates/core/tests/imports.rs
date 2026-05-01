@@ -239,7 +239,10 @@ c = /z/;"#,
 fn test_css_l4_media_module_keeps_recursive_local_rules() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let stylesheet = root.join("../../grammar/css/l4/stylesheet.bbnf");
-    let media = root.join("../../grammar/css/l4/media.bbnf").canonicalize().unwrap();
+    let media = root
+        .join("../../grammar/css/l4/media.bbnf")
+        .canonicalize()
+        .unwrap();
 
     let registry = load_module_graph(&stylesheet).unwrap();
     assert!(registry.errors.is_empty(), "Errors: {:?}", registry.errors);
@@ -247,7 +250,12 @@ fn test_css_l4_media_module_keeps_recursive_local_rules() {
     let module = registry
         .get_module(&media)
         .expect("media.bbnf should be loaded");
-    assert!(module.local_rule_names().iter().any(|name| name == "mediaNot"));
+    assert!(
+        module
+            .local_rule_names()
+            .iter()
+            .any(|name| name == "mediaNot")
+    );
     assert!(
         module
             .local_rule_names()
@@ -262,8 +270,7 @@ fn test_css_l4_media_module_keeps_recursive_local_rules() {
 fn test_css_l4_media_file_parses_to_end() {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../grammar/css/l4/media.bbnf");
     let source = fs::read_to_string(&path).unwrap();
-    let parsed = bbnf::grammar::parse(&source)
-        .expect("media.bbnf should parse");
+    let parsed = bbnf::grammar::parse(&source).expect("media.bbnf should parse");
 
     // The tape-first parser enforces full input consumption inside
     // `parse`, so a successful parse already implies the

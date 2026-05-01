@@ -36,8 +36,8 @@ fn parse_and_assert(name: &str) {
     // Post-W2-act.B1 the struct-direct path returns `JsonDocument`
     // directly — the document carries every typed compound + leaf
     // produced by the parse, no tape walk required.
-    let doc = JsonParser::parse(&input)
-        .unwrap_or_else(|e| panic!("{}: parse failed with {:?}", name, e));
+    let doc =
+        JsonParser::parse(&input).unwrap_or_else(|e| panic!("{}: parse failed with {:?}", name, e));
 
     // Sanity: the root resolves to a recognised JSON kind. The test
     // corpus consists of object / array fixtures, so the root must
@@ -72,9 +72,9 @@ fn parse_and_assert(name: &str) {
                 panic!("{name}: kind() reported Array but root is not Array");
             }
         }
-        other => panic!(
-            "{name}: unexpected root kind {other:?} — fixture corpus is object/array only",
-        ),
+        other => {
+            panic!("{name}: unexpected root kind {other:?} — fixture corpus is object/array only",)
+        }
     }
 }
 

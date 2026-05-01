@@ -166,9 +166,7 @@ pub fn compute_payload_layouts_with_resolver<R: NamedTypeResolver>(
             // route through the dedicated `TapeSpanOnly` scalar
             // path (`PayloadData::InlineScalar` / `WideScalar`)
             // rather than the aggregate buffer.
-            td if scalar_layout_eligible(ir, *rule_id, td) => {
-                plan_layout(std::slice::from_ref(td))
-            }
+            td if scalar_layout_eligible(ir, *rule_id, td) => plan_layout(std::slice::from_ref(td)),
             // AW.0.5: backend-resolved `TypeDesc::Named(sid)` —
             // consult the resolver for a concrete scalar-tuple
             // shape. When the backend maps the name (e.g.
@@ -347,9 +345,11 @@ fn ref_breaks_parent_layout(ir: &GrammarIR, rule_id: RuleId) -> bool {
         if parent.id == rule_id {
             continue;
         }
-        let Some(parent_ty) = ir.types.iter().find_map(|(rid, td)| {
-            (*rid == parent.id).then_some(td)
-        }) else {
+        let Some(parent_ty) = ir
+            .types
+            .iter()
+            .find_map(|(rid, td)| (*rid == parent.id).then_some(td))
+        else {
             continue;
         };
         let parent_has_layout = match parent_ty {
@@ -451,9 +451,7 @@ fn rule_head_materialization(ir: &GrammarIR, rule_id: RuleId) -> Option<Material
 /// `(span_lo, span_hi)` slots.
 fn universal_named_shape(name: &str) -> Option<TypeDesc> {
     match name {
-        "String" | "str" | "Bytes" => {
-            Some(TypeDesc::Tuple(vec![TypeDesc::Span]))
-        }
+        "String" | "str" | "Bytes" => Some(TypeDesc::Tuple(vec![TypeDesc::Span])),
         _ => None,
     }
 }

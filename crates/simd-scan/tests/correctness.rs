@@ -2,12 +2,7 @@
 //! `StructuralIndex` on the canonical corpus. Scalar path is the
 //! reference; per-arch paths must match byte-for-byte.
 
-use simd_scan::{
-    StructuralIndex,
-    alphabet::StructuralAlphabet,
-    scalar,
-    scan_structural,
-};
+use simd_scan::{StructuralIndex, alphabet::StructuralAlphabet, scalar, scan_structural};
 
 const JSON_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_parts(
     &[b'{', b'}', b'[', b']', b':', b',', b'"', b'\\'],
@@ -15,11 +10,8 @@ const JSON_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_parts(
     &[b'"'],
 );
 
-const JSON_NO_QUOTES: StructuralAlphabet = StructuralAlphabet::from_parts(
-    &[b'{', b'}', b'[', b']', b':', b','],
-    &[],
-    &[],
-);
+const JSON_NO_QUOTES: StructuralAlphabet =
+    StructuralAlphabet::from_parts(&[b'{', b'}', b'[', b']', b':', b','], &[], &[]);
 
 const CSS_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_parts(
     &[b'{', b'}', b'(', b')', b';', b':', b','],

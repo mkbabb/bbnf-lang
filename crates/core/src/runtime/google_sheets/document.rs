@@ -77,7 +77,10 @@ impl<'p> SheetsDocument<'p> {
     /// `JsonDocument::view()` surface.
     #[inline]
     pub fn view<'a>(&'a self) -> SheetsView<'a, 'p> {
-        SheetsView { doc: self, focus: self.root }
+        SheetsView {
+            doc: self,
+            focus: self.root,
+        }
     }
 
     /// Borrowed root value, mirroring `JsonDocument::to_value()`
@@ -182,11 +185,7 @@ fn write_value<'p>(
 /// [`SheetsCompoundKind`] selects the structural separators between
 /// children — comma in arg-lists, `:` in range-refs, parentheses /
 /// braces around bracketed compounds, etc.
-fn write_compound<'p>(
-    doc: &SheetsDocument<'p>,
-    id: SheetsCompoundId,
-    out: &mut String,
-) {
+fn write_compound<'p>(doc: &SheetsDocument<'p>, id: SheetsCompoundId, out: &mut String) {
     let entry = doc.compound(id);
     let kind = entry.kind;
     match kind {
@@ -565,10 +564,7 @@ pub trait SheetsPathQuery: Sized {
 /// returning the resolved [`SheetsValue`] reference (or `None` on
 /// out-of-range index / type mismatch).
 #[inline]
-fn walk_path<'a, 'p>(
-    doc: &'a SheetsDocument<'p>,
-    path: Path<'_>,
-) -> Option<&'a SheetsValue<'p>> {
+fn walk_path<'a, 'p>(doc: &'a SheetsDocument<'p>, path: Path<'_>) -> Option<&'a SheetsValue<'p>> {
     let mut current: &'a SheetsValue<'p> = &doc.root;
     for segment in path.iter() {
         current = match (current, segment) {

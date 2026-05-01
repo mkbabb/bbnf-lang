@@ -54,8 +54,7 @@ struct FactorCtx<'a> {
 
 impl<'a> FactorCtx<'a> {
     fn new(strings: &'a mut Vec<String>) -> Self {
-        let mut dedup =
-            FxHashMap::with_capacity_and_hasher(strings.len(), Default::default());
+        let mut dedup = FxHashMap::with_capacity_and_hasher(strings.len(), Default::default());
         for (i, s) in strings.iter().enumerate() {
             dedup.entry(s.clone()).or_insert(i as u32);
         }
@@ -184,8 +183,7 @@ impl<'a> FactorCtx<'a> {
         // Classify each branch and pre-extract first bytes. We hold an
         // immutable borrow on `self.strings` for both walks; both release
         // before any mutation below.
-        let mut literal_infos: Vec<Option<LiteralBranchInfo>> =
-            Vec::with_capacity(branches.len());
+        let mut literal_infos: Vec<Option<LiteralBranchInfo>> = Vec::with_capacity(branches.len());
         for branch in branches.iter() {
             literal_infos.push(classify_literal_branch(&branch.node, self.strings));
         }
@@ -233,8 +231,7 @@ impl<'a> FactorCtx<'a> {
                     // Now `self.strings` is no longer borrowed; we can intern.
                     let prefix_sid = self.intern_byte(first_byte);
 
-                    let mut continuation_branches: Vec<AltBranch> =
-                        Vec::with_capacity(group.len());
+                    let mut continuation_branches: Vec<AltBranch> = Vec::with_capacity(group.len());
                     for (rem, map_fn) in group {
                         let continuation_node = if rem.is_empty() {
                             IrNode::Epsilon
@@ -261,8 +258,7 @@ impl<'a> FactorCtx<'a> {
                     // Recursively factor continuation branches (deep trie).
                     // After splitting on first byte, the remainders may still
                     // share a common second byte → recurse to build a full trie.
-                    let continuation_branches =
-                        self.factor_literal_prefixes(continuation_branches);
+                    let continuation_branches = self.factor_literal_prefixes(continuation_branches);
 
                     let continuation = if continuation_branches.len() == 1 {
                         continuation_branches
@@ -400,8 +396,7 @@ fn factor_branches(mut branches: Vec<AltBranch>) -> Vec<AltBranch> {
 
                 let mut remainder_branches: Vec<AltBranch> = Vec::with_capacity(j - i);
                 for k in i..j {
-                    let original_node =
-                        std::mem::replace(&mut branches[k].node, IrNode::Epsilon);
+                    let original_node = std::mem::replace(&mut branches[k].node, IrNode::Epsilon);
                     let stripped = strip_leading(original_node);
                     remainder_branches.push(AltBranch {
                         node: stripped,

@@ -71,10 +71,7 @@ pub(crate) fn lower_rhs<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx<'a>) -> I
 /// `Epsilon` fallbacks would corrupt every rule body downstream
 /// without any error. The bbnf.bbnf grammar is a closed schema —
 /// every reachable compound kind has an explicit handler.
-pub(crate) fn dispatch_expression<'a>(
-    node: BbnfView<'a, 'a>,
-    ctx: &mut LowerCtx<'a>,
-) -> IrNode {
+pub(crate) fn dispatch_expression<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx<'a>) -> IrNode {
     // Peel named transparent wrappers (`grammar_item`, `directive`,
     // `lhs`) at the dispatch entry so layer functions can assume
     // their input is the semantic head.
@@ -150,9 +147,7 @@ pub(crate) fn dispatch_expression<'a>(
             // Grammar closure at rule level — lower the body directly.
             // (Closures are expanded at call sites via beta-reduction.)
             // closure = "|", first_param, rest_params, "|", body
-            let body = node
-                .child(4)
-                .expect("closure: missing body child");
+            let body = node.child(4).expect("closure: missing body child");
             lower_rhs(body, ctx)
         }
         Some(BbnfCompoundKind::Alternation) | Some(BbnfCompoundKind::CallArg) => {
@@ -288,10 +283,7 @@ pub(crate) fn lower_leaf_by_span_text_str<'a>(
     if trimmed.is_empty() {
         return None;
     }
-    if trimmed.len() >= 2
-        && trimmed.starts_with('/')
-        && trimmed.ends_with('/')
-    {
+    if trimmed.len() >= 2 && trimmed.starts_with('/') && trimmed.ends_with('/') {
         let inner = &trimmed[1..trimmed.len() - 1];
         let id = ctx.strings.intern(inner);
         return Some(IrNode::Regex(id));
@@ -375,10 +367,7 @@ pub(crate) fn find_unquoted(haystack: &str, needle: &str) -> Option<usize> {
 ///
 /// Returns `None` when the span text doesn't look like a leaf —
 /// the caller falls through to its compound-kind-based dispatch.
-fn lower_leaf_by_span_text<'a>(
-    node: BbnfView<'a, 'a>,
-    ctx: &mut LowerCtx<'a>,
-) -> Option<IrNode> {
+fn lower_leaf_by_span_text<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx<'a>) -> Option<IrNode> {
     // Only Span / Compound focuses carry a recoverable span-text;
     // numeric / boolean / unit leaves don't represent a source token.
     match node.kind() {
@@ -392,10 +381,7 @@ fn lower_leaf_by_span_text<'a>(
     }
 
     // Regex literal: starts and ends with `/`, length ≥ 2.
-    if trimmed.len() >= 2
-        && trimmed.starts_with('/')
-        && trimmed.ends_with('/')
-    {
+    if trimmed.len() >= 2 && trimmed.starts_with('/') && trimmed.ends_with('/') {
         let inner = &trimmed[1..trimmed.len() - 1];
         let id = ctx.strings.intern(inner);
         return Some(IrNode::Regex(id));
@@ -487,9 +473,7 @@ pub(crate) fn lower_term<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx<'a>) -> 
         // parentheses. The leaf classifier already handled the
         // bare-identifier case; reaching here means the span carries
         // trailing `(...)` call args.
-        b if b.is_ascii_alphabetic() || b == b'_' => {
-            lower_identifier_with_optional_call(node, ctx)
-        }
+        b if b.is_ascii_alphabetic() || b == b'_' => lower_identifier_with_optional_call(node, ctx),
         other => panic!(
             "lower_term: unknown leading byte {:?} for compound_kind {:?} (span = {:?})",
             other as char,

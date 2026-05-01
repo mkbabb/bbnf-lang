@@ -75,7 +75,9 @@ impl WasmEmitter {
                      )) "
                 )
             } else if let Some(ws_id) = self.ws_regex_id {
-                format!("(local.set $off (call $__match_regex (i32.const {ws_id}) (local.get $off) (local.get $len))) ")
+                format!(
+                    "(local.set $off (call $__match_regex (i32.const {ws_id}) (local.get $off) (local.get $len))) "
+                )
             } else {
                 Self::ascii_ws_side_effect(ctx)
             }

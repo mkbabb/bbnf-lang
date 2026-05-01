@@ -112,8 +112,10 @@ pub(super) fn emit_dispatch_arms_struct_direct(
                 if seq_is_pure_literal_chain(inner) {
                     let mut positions: Vec<&IrNode> = Vec::new();
                     flatten(inner, &mut positions);
-                    let lit_checks: Vec<TokenStream> =
-                        positions.iter().map(|pos| emit_seq_position(pos, ir)).collect();
+                    let lit_checks: Vec<TokenStream> = positions
+                        .iter()
+                        .map(|pos| emit_seq_position(pos, ir))
+                        .collect();
                     quote! {
                         {
                             let save_p = *p;

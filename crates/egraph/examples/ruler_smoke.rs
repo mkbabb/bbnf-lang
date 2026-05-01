@@ -16,11 +16,11 @@
 //! cargo run -p egraph --example ruler_smoke
 //! ```
 
-use egraph::{Id, Language};
 use egraph::ruler::{
-    Alphabet, EnumerateConfig, EquivalenceResult, Interpreter, LangNode, OracleConfig,
-    Pattern, ResidueFilter, check_equivalence, enumerate,
+    Alphabet, EnumerateConfig, EquivalenceResult, Interpreter, LangNode, OracleConfig, Pattern,
+    ResidueFilter, check_equivalence, enumerate,
 };
+use egraph::{Id, Language};
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 enum Tag {
@@ -128,7 +128,12 @@ fn main() {
     if verbose {
         eprintln!("enumerate: {} patterns", patterns.len());
         for p in &patterns {
-            eprintln!("  pattern depth={} size={} tag={:?}", p.depth(), p.size(), p.tag);
+            eprintln!(
+                "  pattern depth={} size={} tag={:?}",
+                p.depth(),
+                p.size(),
+                p.tag
+            );
         }
     }
 

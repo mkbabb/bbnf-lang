@@ -71,11 +71,7 @@ impl Emitter for TsEmitter {
 
     // ── Sequences ───────────────────────────────────────────────────────
 
-    fn emit_seq_all_span(
-        &mut self,
-        child_outputs: Vec<TsCode>,
-        ctx: &mut TsEmitCtx,
-    ) -> TsCode {
+    fn emit_seq_all_span(&mut self, child_outputs: Vec<TsCode>, ctx: &mut TsEmitCtx) -> TsCode {
         self.emit_seq_all_span_impl(child_outputs, ctx)
     }
 
@@ -204,38 +200,19 @@ impl Emitter for TsEmitter {
 
     // ── Binary operators ────────────────────────────────────────────────
 
-    fn emit_skip(
-        &mut self,
-        kept: TsCode,
-        discarded: TsCode,
-        ctx: &mut TsEmitCtx,
-    ) -> TsCode {
+    fn emit_skip(&mut self, kept: TsCode, discarded: TsCode, ctx: &mut TsEmitCtx) -> TsCode {
         self.emit_skip_impl(kept, discarded, ctx)
     }
 
-    fn emit_next(
-        &mut self,
-        discarded: TsCode,
-        kept: TsCode,
-        ctx: &mut TsEmitCtx,
-    ) -> TsCode {
+    fn emit_next(&mut self, discarded: TsCode, kept: TsCode, ctx: &mut TsEmitCtx) -> TsCode {
         self.emit_next_impl(discarded, kept, ctx)
     }
 
-    fn emit_minus(
-        &mut self,
-        lhs: TsCode,
-        rhs: TsCode,
-        ctx: &mut TsEmitCtx,
-    ) -> TsCode {
+    fn emit_minus(&mut self, lhs: TsCode, rhs: TsCode, ctx: &mut TsEmitCtx) -> TsCode {
         self.emit_minus_impl(lhs, rhs, ctx)
     }
 
-    fn emit_negate(
-        &mut self,
-        inner: TsCode,
-        ctx: &mut TsEmitCtx,
-    ) -> TsCode {
+    fn emit_negate(&mut self, inner: TsCode, ctx: &mut TsEmitCtx) -> TsCode {
         self.emit_negate_impl(inner, ctx)
     }
 
@@ -258,12 +235,7 @@ impl Emitter for TsEmitter {
         self.emit_number_convert_impl(ctx)
     }
 
-    fn emit_constant(
-        &mut self,
-        discard_inner: TsCode,
-        value: &str,
-        ctx: &mut TsEmitCtx,
-    ) -> TsCode {
+    fn emit_constant(&mut self, discard_inner: TsCode, value: &str, ctx: &mut TsEmitCtx) -> TsCode {
         self.emit_constant_impl(discard_inner, value, ctx)
     }
 
@@ -279,20 +251,11 @@ impl Emitter for TsEmitter {
         self.emit_map_expr_impl(inner, expr, return_type, alloc, ir, ctx)
     }
 
-    fn emit_span_capture(
-        &mut self,
-        inner: TsCode,
-        ctx: &mut TsEmitCtx,
-    ) -> TsCode {
+    fn emit_span_capture(&mut self, inner: TsCode, ctx: &mut TsEmitCtx) -> TsCode {
         self.emit_span_capture_impl(inner, ctx)
     }
 
-    fn emit_hex_convert(
-        &mut self,
-        inner: TsCode,
-        fn_path: &str,
-        ctx: &mut TsEmitCtx,
-    ) -> TsCode {
+    fn emit_hex_convert(&mut self, inner: TsCode, fn_path: &str, ctx: &mut TsEmitCtx) -> TsCode {
         self.emit_hex_convert_impl(inner, fn_path, ctx)
     }
 
@@ -310,11 +273,7 @@ impl Emitter for TsEmitter {
 
     // ── Whitespace (delegated to super::ws) ─────────────────────────────
 
-    fn emit_ws_trim(
-        &mut self,
-        ws_pattern: Option<&str>,
-        ctx: &mut TsEmitCtx,
-    ) -> TsCode {
+    fn emit_ws_trim(&mut self, ws_pattern: Option<&str>, ctx: &mut TsEmitCtx) -> TsCode {
         self.ws_trim(ws_pattern, ctx)
     }
 
@@ -341,11 +300,7 @@ impl Emitter for TsEmitter {
 
     // ── Delimiter scan (delegated to super::dispatch) ───────────────────
 
-    fn emit_delim_scan(
-        &mut self,
-        config: &DelimScanConfig,
-        ctx: &mut TsEmitCtx,
-    ) -> Option<TsCode> {
+    fn emit_delim_scan(&mut self, config: &DelimScanConfig, ctx: &mut TsEmitCtx) -> Option<TsCode> {
         self.delim_scan(config, ctx)
     }
 

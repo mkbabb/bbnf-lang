@@ -2,7 +2,7 @@
 
 use bbnf_ir::TypeDesc;
 
-use crate::backend::{ValuePlacement, SepByConfig};
+use crate::backend::{SepByConfig, ValuePlacement};
 
 use super::code::{TsCode, TsEmitCtx, TsEmitter};
 

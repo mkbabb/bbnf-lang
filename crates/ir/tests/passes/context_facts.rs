@@ -10,9 +10,7 @@ use std::collections::HashMap;
 use bbnf_ir::dag::GrammarDag;
 use bbnf_ir::passes::context::{DiscriminationStrength, ScanSafety};
 use bbnf_ir::passes::mine_recognizers;
-use bbnf_ir::{
-    AltBranch, AltDispatch, GrammarIR, IrNode, IrRule, RuleId, RuleMeta,
-};
+use bbnf_ir::{AltBranch, AltDispatch, GrammarIR, IrNode, IrRule, RuleId, RuleMeta};
 
 fn base_ir() -> GrammarIR {
     GrammarIR {
@@ -44,9 +42,10 @@ fn base_ir() -> GrammarIR {
         payload_layouts: std::collections::HashMap::new(),
         structural_alphabet: None,
         push_fingerprint: None,
-            dedup_eligible_rules: Vec::new(),
+        dedup_eligible_rules: Vec::new(),
 
-            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
+        shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
+        ),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -95,18 +94,21 @@ fn alt_with_dispatch_is_strong() {
     };
     let alt = IrNode::Alt(
         vec![
-            AltBranch { node: a, first_set: None },
-            AltBranch { node: b, first_set: None },
+            AltBranch {
+                node: a,
+                first_set: None,
+            },
+            AltBranch {
+                node: b,
+                first_set: None,
+            },
         ],
         Some(dispatch),
     );
     push_rule(&mut ir, alt);
 
     let root = mine(&mut ir);
-    let f = ir
-        .context_facts
-        .get(&root)
-        .expect("root should have facts");
+    let f = ir.context_facts.get(&root).expect("root should have facts");
     assert_eq!(f.discrimination, DiscriminationStrength::Strong);
 }
 
@@ -124,10 +126,7 @@ fn wrap_pattern_is_scan_safe() {
     push_rule(&mut ir, wrap);
 
     let root = mine(&mut ir);
-    let f = ir
-        .context_facts
-        .get(&root)
-        .expect("root should have facts");
+    let f = ir.context_facts.get(&root).expect("root should have facts");
     assert_eq!(f.scan_safety, ScanSafety::Safe);
 }
 

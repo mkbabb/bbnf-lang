@@ -50,7 +50,11 @@ pub struct Scalar<T: Clone + PartialOrd>(pub T);
 
 impl<T: Clone + PartialOrd> Lattice for Scalar<T> {
     fn join(&self, other: &Self) -> Self {
-        if self.0 > other.0 { Clone::clone(self) } else { Clone::clone(other) }
+        if self.0 > other.0 {
+            Clone::clone(self)
+        } else {
+            Clone::clone(other)
+        }
     }
     fn dominated_by(&self, other: &Self) -> bool {
         other.0 <= self.0
@@ -60,12 +64,20 @@ impl<T: Clone + PartialOrd> Lattice for Scalar<T> {
 // Blanket impl for common scalar cost types so existing CostModel
 // impls don't need to wrap manually.
 impl Lattice for f64 {
-    fn join(&self, other: &Self) -> Self { if self > other { *self } else { *other } }
-    fn dominated_by(&self, other: &Self) -> bool { other <= self }
+    fn join(&self, other: &Self) -> Self {
+        if self > other { *self } else { *other }
+    }
+    fn dominated_by(&self, other: &Self) -> bool {
+        other <= self
+    }
 }
 impl Lattice for usize {
-    fn join(&self, other: &Self) -> Self { (*self).max(*other) }
-    fn dominated_by(&self, other: &Self) -> bool { other <= self }
+    fn join(&self, other: &Self) -> Self {
+        (*self).max(*other)
+    }
+    fn dominated_by(&self, other: &Self) -> bool {
+        other <= self
+    }
 }
 
 /// A cost model assigns a lattice-valued cost to each e-node, given the costs
@@ -169,9 +181,7 @@ impl<'a, N: Language, A: Analysis<N>, C: CostModel<N>> Extractor<'a, N, A, C> {
 
     /// Find the best e-node in class `id`, cloning it with canonical child IDs.
     pub fn best_node(&self, id: Id) -> Option<&N> {
-        self.best
-            .get(&self.egraph.find_ref(id))
-            .map(|(_, n)| n)
+        self.best.get(&self.egraph.find_ref(id)).map(|(_, n)| n)
     }
 
     /// Extract a full tree rooted at `id` by recursively descending into

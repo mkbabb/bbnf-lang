@@ -413,7 +413,11 @@ fn leading_single_byte_literal(node: &IrNode, ir: &GrammarIR) -> Option<u8> {
     match node {
         IrNode::Literal(sid) => {
             let bytes = ir.strings[*sid as usize].as_bytes();
-            if bytes.len() == 1 { Some(bytes[0]) } else { None }
+            if bytes.len() == 1 {
+                Some(bytes[0])
+            } else {
+                None
+            }
         }
         IrNode::Seq(children) => children
             .iter()

@@ -64,7 +64,7 @@ fn equivalent_under_demorgan() {
     let cfg = OracleConfig::default();
     let interp = BoolInterpreter;
     let lhs = and(t(), t()); // true
-    let rhs = not(f());      // not(false) = true
+    let rhs = not(f()); // not(false) = true
     assert!(matches!(
         check_equivalence(&cfg, &interp, &lhs, &rhs),
         EquivalenceResult::Equivalent

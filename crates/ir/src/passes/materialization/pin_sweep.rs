@@ -38,10 +38,7 @@ use super::lattice::MaterializationClass;
 /// A pinned rule transitively pins every descendant in its body,
 /// AND every rule it references. The walk is a BFS from the pinned
 /// rule roots with cycle-safe rule visitation.
-pub fn apply_consumer_pins(
-    ir: &GrammarIR,
-    map: &mut HashMap<NodeId, MaterializationClass>,
-) {
+pub fn apply_consumer_pins(ir: &GrammarIR, map: &mut HashMap<NodeId, MaterializationClass>) {
     // Identify the initial pinned rule set. The entry rule is
     // always pinned so that the emitter produces a `__<entry>`
     // function the generated `parse()` helper can dispatch into.
@@ -58,8 +55,7 @@ pub fn apply_consumer_pins(
     }
 
     // BFS closure over rule references, expanding the pinned set.
-    let mut pinned_set: std::collections::HashSet<RuleId> =
-        pinned_rules.iter().copied().collect();
+    let mut pinned_set: std::collections::HashSet<RuleId> = pinned_rules.iter().copied().collect();
     while let Some(rule_id) = pinned_rules.pop() {
         let Some(rule) = ir.rules.get(rule_id as usize) else {
             continue;

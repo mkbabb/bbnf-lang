@@ -78,8 +78,7 @@ fn generate_board_slow(n: u32, difficulty: Difficulty) -> Vec<u32> {
         ..Default::default()
     };
 
-    let solution = solve_sudoku(&seed_board, n, &config)
-        .expect("seeded board must be solvable");
+    let solution = solve_sudoku(&seed_board, n, &config).expect("seeded board must be solvable");
 
     // Step 2: Remove cells by random hole-digging with uniqueness check.
     let target_holes = match difficulty {

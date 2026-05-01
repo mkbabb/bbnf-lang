@@ -151,10 +151,7 @@ impl<'a> EmitOpts<'a> {
 
     /// Classify a regex pattern via the `ir.regex_info` cache when
     /// available, else fall back to a fresh HIR parse.
-    pub fn classify_regex(
-        &self,
-        pattern: &str,
-    ) -> ::parse_that::regex::classify::RegexClass {
+    pub fn classify_regex(&self, pattern: &str) -> ::parse_that::regex::classify::RegexClass {
         if let Some(ir) = self.ir {
             if let Some(info) = find_regex_info(ir, pattern) {
                 return info.classification.clone();

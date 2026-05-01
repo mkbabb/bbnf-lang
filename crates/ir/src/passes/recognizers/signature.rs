@@ -112,4 +112,3 @@ pub fn compute_shape_hash(
         grade,
     }
 }
-

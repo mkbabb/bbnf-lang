@@ -25,9 +25,18 @@ impl<'p> EbnfDocument<'p> {
         Self { arena, root, input }
     }
 
-    #[inline] pub fn root(&self) -> &EbnfValue<'p> { &self.root }
-    #[inline] pub fn arena(&self) -> &EbnfArena<'p> { &self.arena }
-    #[inline] pub fn input(&self) -> &'p str { self.input }
+    #[inline]
+    pub fn root(&self) -> &EbnfValue<'p> {
+        &self.root
+    }
+    #[inline]
+    pub fn arena(&self) -> &EbnfArena<'p> {
+        &self.arena
+    }
+    #[inline]
+    pub fn input(&self) -> &'p str {
+        self.input
+    }
 
     #[inline]
     pub fn compound(&self, id: EbnfCompoundId) -> &EbnfCompound<'p> {
@@ -36,10 +45,16 @@ impl<'p> EbnfDocument<'p> {
 
     #[inline]
     pub fn view<'a>(&'a self) -> EbnfView<'a, 'p> {
-        EbnfView { doc: self, focus: self.root }
+        EbnfView {
+            doc: self,
+            focus: self.root,
+        }
     }
 
-    #[inline] pub fn to_value(&self) -> &EbnfValue<'p> { &self.root }
+    #[inline]
+    pub fn to_value(&self) -> &EbnfValue<'p> {
+        &self.root
+    }
 
     #[inline]
     pub fn get<T: EbnfPathQuery>(&self, path: Path<'_>) -> Option<T> {
@@ -59,10 +74,22 @@ impl<'a, 'p: 'a> EbnfView<'a, 'p> {
         Self { doc, focus }
     }
 
-    #[inline] pub fn document(&self) -> &'a EbnfDocument<'p> { self.doc }
-    #[inline] pub fn focus(&self) -> EbnfValue<'p> { self.focus }
-    #[inline] pub fn root(&self) -> &'a EbnfValue<'p> { &self.doc.root }
-    #[inline] pub fn arena(&self) -> &'a EbnfArena<'p> { &self.doc.arena }
+    #[inline]
+    pub fn document(&self) -> &'a EbnfDocument<'p> {
+        self.doc
+    }
+    #[inline]
+    pub fn focus(&self) -> EbnfValue<'p> {
+        self.focus
+    }
+    #[inline]
+    pub fn root(&self) -> &'a EbnfValue<'p> {
+        &self.doc.root
+    }
+    #[inline]
+    pub fn arena(&self) -> &'a EbnfArena<'p> {
+        &self.doc.arena
+    }
 
     #[inline]
     pub fn compound(&self, id: EbnfCompoundId) -> &'a EbnfCompound<'p> {
@@ -78,9 +105,18 @@ impl<'a, 'p: 'a> EbnfView<'a, 'p> {
         }
     }
 
-    #[inline] pub fn is_compound(&self) -> bool { matches!(self.focus, EbnfValue::Compound(_)) }
-    #[inline] pub fn is_span(&self) -> bool { matches!(self.focus, EbnfValue::Span(_)) }
-    #[inline] pub fn input(&self) -> &'p str { self.doc.input }
+    #[inline]
+    pub fn is_compound(&self) -> bool {
+        matches!(self.focus, EbnfValue::Compound(_))
+    }
+    #[inline]
+    pub fn is_span(&self) -> bool {
+        matches!(self.focus, EbnfValue::Span(_))
+    }
+    #[inline]
+    pub fn input(&self) -> &'p str {
+        self.doc.input
+    }
 
     #[inline]
     pub fn compound_kind(&self) -> Option<EbnfCompoundKind> {

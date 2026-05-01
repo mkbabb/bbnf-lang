@@ -25,10 +25,7 @@ use super::pratt::looks_like_pratt_flat;
 /// compound under structural mode. The `iter_rep_children` helper
 /// unwraps that wrapper transparently. The optional pipe wrapper
 /// is ignored — only the content child of each pair is lowered.
-pub(crate) fn lower_alternation<'a>(
-    node: BbnfView<'a, 'a>,
-    ctx: &mut LowerCtx<'a>,
-) -> IrNode {
+pub(crate) fn lower_alternation<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx<'a>) -> IrNode {
     let branches: Vec<BbnfView<'a, 'a>> = iter_iteration_pairs(node).collect();
     if branches.len() == 1 {
         return dispatch_expression(branches[0], ctx);
@@ -49,10 +46,7 @@ pub(crate) fn lower_alternation<'a>(
 /// optional_comma)` under a possibly-wrapped Repeat. Single-part
 /// concatenations collapse to the bare expression (no `Seq`
 /// wrapper).
-pub(crate) fn lower_concatenation<'a>(
-    node: BbnfView<'a, 'a>,
-    ctx: &mut LowerCtx<'a>,
-) -> IrNode {
+pub(crate) fn lower_concatenation<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx<'a>) -> IrNode {
     let parts: Vec<BbnfView<'a, 'a>> = iter_iteration_pairs(node).collect();
     if parts.len() == 1 {
         return dispatch_expression(parts[0], ctx);
@@ -78,9 +72,7 @@ pub(crate) fn lower_concatenation<'a>(
 /// itself (legacy shape pre-inline). For the latter case we
 /// descend to `child(0)` (the content slot) so callers receive the
 /// operand head without the optional-separator placeholder.
-fn iter_iteration_pairs<'a>(
-    node: BbnfView<'a, 'a>,
-) -> impl Iterator<Item = BbnfView<'a, 'a>> + 'a {
+fn iter_iteration_pairs<'a>(node: BbnfView<'a, 'a>) -> impl Iterator<Item = BbnfView<'a, 'a>> + 'a {
     iter_rep_children(node).filter_map(|pair| {
         // Peel an explicit Seq wrapper around `(content, optional_sep)` —
         // legacy iteration shape. Detected via the wrapper being an
@@ -136,9 +128,7 @@ pub(super) fn is_iteration_pair_wrapper<'a>(view: BbnfView<'a, 'a>) -> bool {
 /// skip empty-span placeholders and whitespace-only artefacts, and
 /// peel any intermediate anonymous wrapper around the operator Alt
 /// so the operator compound surfaces at the top level.
-pub(super) fn iter_pair_children<'a>(
-    view: BbnfView<'a, 'a>,
-) -> Vec<BbnfView<'a, 'a>> {
+pub(super) fn iter_pair_children<'a>(view: BbnfView<'a, 'a>) -> Vec<BbnfView<'a, 'a>> {
     let mut out: Vec<BbnfView<'a, 'a>> = Vec::new();
     for child in view.children() {
         let span = child.span_text();

@@ -127,12 +127,7 @@ impl Rewrite<Calc, NoAnalysis> for AddZero {
         matches
     }
 
-    fn apply(
-        &self,
-        egraph: &mut EGraph<Calc, NoAnalysis>,
-        class_id: Id,
-        matched: Self::Match,
-    ) {
+    fn apply(&self, egraph: &mut EGraph<Calc, NoAnalysis>, class_id: Id, matched: Self::Match) {
         egraph.union(class_id, matched.non_zero_child);
     }
 }

@@ -125,8 +125,14 @@ fn test_analyze_undefined_rule() {
     let grammar = "value = number | missing_rule;\nnumber = /[0-9]+/;";
     let line_index = LineIndex::new(grammar);
     let info = analyze(grammar, &line_index);
-    let undefined = info.diagnostics.iter().any(|d| d.message.contains("Undefined rule"));
-    assert!(undefined, "Expected undefined rule diagnostic for missing_rule");
+    let undefined = info
+        .diagnostics
+        .iter()
+        .any(|d| d.message.contains("Undefined rule"));
+    assert!(
+        undefined,
+        "Expected undefined rule diagnostic for missing_rule"
+    );
 }
 
 #[test]
@@ -135,17 +141,30 @@ fn test_rules_populated() {
     let line_index = LineIndex::new(grammar);
     let info = analyze(grammar, &line_index);
     assert_eq!(info.rules.len(), 3, "Expected 3 rules");
-    assert!(info.rules.iter().any(|r| r.name == "number"), "Expected 'number' rule");
-    assert!(info.rules.iter().any(|r| r.name == "string"), "Expected 'string' rule");
-    assert!(info.rules.iter().any(|r| r.name == "value"), "Expected 'value' rule");
+    assert!(
+        info.rules.iter().any(|r| r.name == "number"),
+        "Expected 'number' rule"
+    );
+    assert!(
+        info.rules.iter().any(|r| r.name == "string"),
+        "Expected 'string' rule"
+    );
+    assert!(
+        info.rules.iter().any(|r| r.name == "value"),
+        "Expected 'value' rule"
+    );
 }
 
 #[test]
 fn test_first_set_conflict_detection() {
-    let grammar = "value = integer | decimal;\ninteger = /[0-9]+/;\ndecimal = /[0-9]+/, \".\", /[0-9]+/;";
+    let grammar =
+        "value = integer | decimal;\ninteger = /[0-9]+/;\ndecimal = /[0-9]+/, \".\", /[0-9]+/;";
     let line_index = LineIndex::new(grammar);
     let info = analyze(grammar, &line_index);
-    let has_conflict = info.diagnostics.iter().any(|d| d.message.contains("overlap"));
+    let has_conflict = info
+        .diagnostics
+        .iter()
+        .any(|d| d.message.contains("overlap"));
     assert!(has_conflict, "Expected FIRST set conflict diagnostic");
 }
 
@@ -161,7 +180,10 @@ fn test_cycle_detection() {
     let grammar = "expr = expr, \"+\", term | term;\nterm = /[0-9]+/;";
     let line_index = LineIndex::new(grammar);
     let info = analyze(grammar, &line_index);
-    assert!(info.cyclic_rule_paths.contains_key("expr"), "Expected cycle for expr");
+    assert!(
+        info.cyclic_rule_paths.contains_key("expr"),
+        "Expected cycle for expr"
+    );
 }
 
 // AV.0.11 Category A — alias-hint diagnostics depend on analysis
@@ -185,5 +207,8 @@ fn test_nullable_detection() {
     let grammar = "value = [\"hello\"];";
     let line_index = LineIndex::new(grammar);
     let info = analyze(grammar, &line_index);
-    assert!(info.nullable_rules.contains("value"), "Expected value to be nullable");
+    assert!(
+        info.nullable_rules.contains("value"),
+        "Expected value to be nullable"
+    );
 }

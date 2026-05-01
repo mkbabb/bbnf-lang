@@ -7,7 +7,11 @@ use super::types::{PrettyRulePlan, WrapperPolicy};
 /// Returns true if the node only emits builder ops on success paths.
 /// Atomic nodes (Literal, Regex, Epsilon) never leave partial state.
 /// Used to decide whether checkpoint/restore is needed around the node.
-pub fn emits_only_on_success(node: &IrNode, plans: &[PrettyRulePlan], ir: &bbnf_ir::GrammarIR) -> bool {
+pub fn emits_only_on_success(
+    node: &IrNode,
+    plans: &[PrettyRulePlan],
+    ir: &bbnf_ir::GrammarIR,
+) -> bool {
     match node {
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => true,
         IrNode::Ref(rule_id) => {
@@ -38,7 +42,10 @@ pub fn may_open_groups(node: &IrNode, plans: &[PrettyRulePlan], ir: &bbnf_ir::Gr
             if plan.inline {
                 may_open_groups(&ir.rules[*rule_id as usize].body, plans, ir)
             } else {
-                matches!(plan.policy.wrapper, WrapperPolicy::Group | WrapperPolicy::GroupIndent)
+                matches!(
+                    plan.policy.wrapper,
+                    WrapperPolicy::Group | WrapperPolicy::GroupIndent
+                )
             }
         }
         IrNode::Seq(children) => children.iter().any(|c| may_open_groups(c, plans, ir)),
@@ -56,7 +63,9 @@ pub fn may_open_groups(node: &IrNode, plans: &[PrettyRulePlan], ir: &bbnf_ir::Gr
             fallback,
         } => {
             may_open_groups(token, plans, ir)
-                || arms.iter().any(|a| may_open_groups(&a.continuation, plans, ir))
+                || arms
+                    .iter()
+                    .any(|a| may_open_groups(&a.continuation, plans, ir))
                 || may_open_groups(fallback, plans, ir)
         }
     }

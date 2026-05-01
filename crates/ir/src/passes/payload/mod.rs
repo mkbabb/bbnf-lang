@@ -18,8 +18,8 @@ pub mod named_types;
 mod scalar_routing;
 
 pub use layout::{
-    compute_payload_layouts, compute_payload_layouts_with_resolver, is_kv_pair_shape, plan_layout,
-    plan_layout_with_cap, PayloadField, PayloadLayout, LARGE_PAYLOAD_MAX, MAX_PAYLOAD_BYTES,
+    LARGE_PAYLOAD_MAX, MAX_PAYLOAD_BYTES, PayloadField, PayloadLayout, compute_payload_layouts,
+    compute_payload_layouts_with_resolver, is_kv_pair_shape, plan_layout, plan_layout_with_cap,
 };
 pub use named_types::{NamedTypeResolver, NullResolver};
 pub use scalar_routing::scalar_range_includes_sentinel;

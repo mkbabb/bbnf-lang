@@ -10,9 +10,7 @@
 fn main() {}
 
 #[cfg(all(feature = "callgrind", target_os = "linux"))]
-use bbnf::pipeline::{
-    CompileRequest, CompileTarget, PipelineOptions, compile_grammar_request,
-};
+use bbnf::pipeline::{CompileRequest, CompileTarget, PipelineOptions, compile_grammar_request};
 #[cfg(all(feature = "callgrind", target_os = "linux"))]
 use iai_callgrind::{library_benchmark, library_benchmark_group, main};
 
@@ -27,9 +25,10 @@ fn vm_request() -> CompileRequest {
 #[cfg(all(feature = "callgrind", target_os = "linux"))]
 #[library_benchmark]
 fn compile_json_iai() -> bbnf::pipeline::CompiledProgram {
-    let source = std::fs::read_to_string(
-        concat!(env!("CARGO_MANIFEST_DIR"), "/../../grammar/json/json.bbnf"),
-    )
+    let source = std::fs::read_to_string(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../grammar/json/json.bbnf"
+    ))
     .expect("grammar/json/json.bbnf read");
     compile_grammar_request(&source, &vm_request()).expect("compile_grammar_request")
 }

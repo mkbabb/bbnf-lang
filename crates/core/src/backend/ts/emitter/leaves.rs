@@ -22,9 +22,7 @@ impl TsEmitter {
 
         if guaranteed_byte.is_some() {
             let v = ctx.fresh("lit");
-            let stmts = format!(
-                "const {v} = span(s.offset, s.offset + 1);\ns.offset += 1;\n"
-            );
+            let stmts = format!("const {v} = span(s.offset, s.offset + 1);\ns.offset += 1;\n");
             return TsCode::new(stmts, v);
         }
 
@@ -63,8 +61,9 @@ impl TsEmitter {
         let re_var = format!("__RE{regex_id}");
         if !ctx.hoisted_regexes.iter().any(|s| s.contains(&re_var)) {
             let escaped = ts_escape(pattern);
-            ctx.hoisted_regexes
-                .push(format!("const {re_var} = new RegExp(\"{escaped}\", \"y\");"));
+            ctx.hoisted_regexes.push(format!(
+                "const {re_var} = new RegExp(\"{escaped}\", \"y\");"
+            ));
         }
         let v = ctx.fresh("re");
         let stmts = format!(

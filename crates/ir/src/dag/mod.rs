@@ -158,12 +158,12 @@ fn count_tree_nodes(ir: &GrammarIR) -> usize {
 fn count_ir_node(node: &crate::IrNode) -> usize {
     use crate::IrNode;
     1 + match node {
-        IrNode::Literal(_)
-        | IrNode::Regex(_)
-        | IrNode::Epsilon
-        | IrNode::Ref(_) => 0,
+        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon | IrNode::Ref(_) => 0,
         IrNode::Seq(children) => children.iter().map(count_ir_node).sum::<usize>(),
-        IrNode::Alt(branches, _) => branches.iter().map(|b| count_ir_node(&b.node)).sum::<usize>(),
+        IrNode::Alt(branches, _) => branches
+            .iter()
+            .map(|b| count_ir_node(&b.node))
+            .sum::<usize>(),
         IrNode::Repeat { inner, .. } => count_ir_node(inner),
         IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
             count_ir_node(a) + count_ir_node(b)
@@ -177,7 +177,10 @@ fn count_ir_node(node: &crate::IrNode) -> usize {
         } => {
             count_ir_node(token)
                 + count_ir_node(fallback)
-                + arms.iter().map(|a| count_ir_node(&a.continuation)).sum::<usize>()
+                + arms
+                    .iter()
+                    .map(|a| count_ir_node(&a.continuation))
+                    .sum::<usize>()
         }
     }
 }

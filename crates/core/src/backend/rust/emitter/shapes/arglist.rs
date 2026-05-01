@@ -50,9 +50,7 @@ use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::dispatcher::{
-    dispatcher_fn_ident, emit_ref_call_shape, shape_fn_ident,
-};
+use super::dispatcher::{dispatcher_fn_ident, emit_ref_call_shape, shape_fn_ident};
 use super::root_rule_name;
 use super::substrate::builder_ty_with_lifetime;
 use bbnf_ir::registry::EmitStrategy;

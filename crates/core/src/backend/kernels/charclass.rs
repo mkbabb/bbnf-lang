@@ -39,7 +39,7 @@ use bbnf_ir::CharSet128;
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use super::charset_shapes::{matches_set, ALNUM, DIGITS, HEX};
+use super::charset_shapes::{ALNUM, DIGITS, HEX, matches_set};
 
 /// Try to map `(chars, negated, lo, hi)` onto a hoisted scanner.
 /// Returns `Some(call)` if a hoisted helper applies; `None` otherwise.
@@ -251,13 +251,10 @@ pub fn charset_from_shorthand(shorthand: &str) -> Option<CharSet128> {
 /// repetition routing path in `generate/regex/emit/hir/repetition.rs`.
 ///
 /// `negated` is the flag from `CharClass::Bytes { negated, .. }`.
-pub fn charset_from_byte_ranges(
-    ranges: &[parse_that::regex::hir::ByteRange],
-) -> CharSet128 {
+pub fn charset_from_byte_ranges(ranges: &[parse_that::regex::hir::ByteRange]) -> CharSet128 {
     let mut cs = CharSet128::new();
     for r in ranges {
         cs.add_range(r.start, r.end);
     }
     cs
 }
-

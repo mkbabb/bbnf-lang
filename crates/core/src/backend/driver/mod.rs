@@ -144,11 +144,7 @@ impl DriverState {
     /// DAG is absent, the node wasn't present at DAG-build time, or
     /// no classification is recorded — all three are equivalent to
     /// "fall back to the full-record path, it's always legal".
-    pub fn materialization_class(
-        &self,
-        ir: &GrammarIR,
-        node: &IrNode,
-    ) -> MaterializationClass {
+    pub fn materialization_class(&self, ir: &GrammarIR, node: &IrNode) -> MaterializationClass {
         ir.dag
             .as_ref()
             .and_then(|dag| dag.node_for(node))

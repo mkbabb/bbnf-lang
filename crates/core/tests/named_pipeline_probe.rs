@@ -140,7 +140,11 @@ fn body_carries_named_map(node: &IrNode, ir: &GrammarIR, expected_named: &str) -
         IrNode::Negate(inner) | IrNode::OptionalWhitespace(inner) => {
             body_carries_named_map(inner, ir, expected_named)
         }
-        IrNode::TokenDispatch { token, arms, fallback } => {
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
             body_carries_named_map(token, ir, expected_named)
                 || arms.iter().any(|a| {
                     body_carries_named_map(&a.continuation, ir, expected_named)
@@ -214,7 +218,11 @@ fn walk_collect_named(node: &IrNode, ir: &GrammarIR, found: &mut Option<String>)
         IrNode::Negate(inner) | IrNode::OptionalWhitespace(inner) => {
             walk_collect_named(inner, ir, found)
         }
-        IrNode::TokenDispatch { token, arms, fallback } => {
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
             walk_collect_named(token, ir, found);
             if found.is_some() {
                 return;
@@ -460,14 +468,7 @@ fn print_probe_report(grammar_label: &str, probes: &[NamedRuleProbe], ir: &Gramm
     eprintln!("\n--- per-rule probe ---");
     eprintln!(
         "{:<16}  {:<10}  {:<8}  {:<8}  {:<10}  {:<10}  {:<8}  {}",
-        "rule",
-        "expected",
-        "survive",
-        "alias",
-        "transparent",
-        "body_root",
-        "any_map",
-        "ir.types"
+        "rule", "expected", "survive", "alias", "transparent", "body_root", "any_map", "ir.types"
     );
     for p in probes {
         eprintln!(
@@ -540,7 +541,10 @@ fn print_probe_report(grammar_label: &str, probes: &[NamedRuleProbe], ir: &Gramm
         } else {
             "PASS — Named survives end-to-end (no fix needed for this rule)"
         };
-        eprintln!("  {:<16}  expected={:<10}  → {}", p.rule_name, p.expected_named, verdict);
+        eprintln!(
+            "  {:<16}  expected={:<10}  → {}",
+            p.rule_name, p.expected_named, verdict
+        );
     }
 }
 
@@ -557,7 +561,10 @@ fn css_l4_named_pipeline_probe() {
     // pass(es) that drop the Named-bearing rules.
     let structural_ir = run_pipeline_structural(&[stylesheet.clone()]);
     eprintln!("\n========== AY.W2.1 PRE-OPT (structural) snapshot — CSS L4 ==========");
-    eprintln!("ir.rules.len() (structural)    = {}", structural_ir.rules.len());
+    eprintln!(
+        "ir.rules.len() (structural)    = {}",
+        structural_ir.rules.len()
+    );
     eprintln!(
         "ir.types Named(*) (structural) = {}",
         structural_ir
@@ -582,7 +589,8 @@ fn css_l4_named_pipeline_probe() {
                 projected
                     .as_ref()
                     .map(|t| match t {
-                        TypeDesc::Named(sid) => format!("Named(\"{}\")", structural_ir.get_string(*sid)),
+                        TypeDesc::Named(sid) =>
+                            format!("Named(\"{}\")", structural_ir.get_string(*sid)),
                         other => format!("{other:?}"),
                     })
                     .unwrap_or_else(|| "<none>".to_string()),
@@ -654,10 +662,7 @@ fn css_l4_named_pipeline_probe() {
         let post_present = post_names.contains(name);
         eprintln!("    {name:<16}  pre-opt: {pre_present:<5}  post-opt: {post_present}");
     }
-    let added_synth: Vec<&&String> = added
-        .iter()
-        .filter(|n| n.starts_with("__"))
-        .collect();
+    let added_synth: Vec<&&String> = added.iter().filter(|n| n.starts_with("__")).collect();
     eprintln!(
         "  added (post-only): {} rules ({} are synth `__*`)",
         added.len(),
@@ -669,8 +674,9 @@ fn css_l4_named_pipeline_probe() {
     // W2.2 fix author) can read the report without parsing pipeline-
     // internal traces. The post-fix wire-contract test
     // `named_type_preservation.rs` (W2.7) asserts the actual gate.
-    let _any_named =
-        probes.iter().any(|p| matches!(&p.projected_type, Some(TypeDesc::Named(_))));
+    let _any_named = probes
+        .iter()
+        .any(|p| matches!(&p.projected_type, Some(TypeDesc::Named(_))));
 }
 
 // ───────────────────────── JSON probe ─────────────────────────
@@ -683,8 +689,10 @@ fn json_named_pipeline_probe() {
     let ir = run_pipeline_to_vm_ir(&[json_grammar]);
 
     // JSON's `string` rule declares `-> decode_json_string_to_arena(input) : String`.
-    let probes: Vec<NamedRuleProbe> =
-        [("string", "String")].iter().map(|(n, e)| probe_named_rule(&ir, n, e)).collect();
+    let probes: Vec<NamedRuleProbe> = [("string", "String")]
+        .iter()
+        .map(|(n, e)| probe_named_rule(&ir, n, e))
+        .collect();
 
     print_probe_report("JSON", &probes, &ir);
 }

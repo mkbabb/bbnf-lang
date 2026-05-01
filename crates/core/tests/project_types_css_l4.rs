@@ -57,8 +57,8 @@ fn vm_request() -> CompileRequest {
 /// (which runs `project_types → populate_struct_registry`).
 fn compile_css_l4_ir() -> GrammarIR {
     let entry = grammar_path("css/l4/stylesheet.bbnf");
-    let out = compile_paths_request(std::slice::from_ref(&entry), &vm_request())
-        .unwrap_or_else(|err| {
+    let out =
+        compile_paths_request(std::slice::from_ref(&entry), &vm_request()).unwrap_or_else(|err| {
             panic!(
                 "project_types_css_l4: compile_paths_request failed for stylesheet.bbnf: {}",
                 err
@@ -66,10 +66,7 @@ fn compile_css_l4_ir() -> GrammarIR {
         });
     match out {
         CompileOutput::Vm(ir) => ir,
-        other => panic!(
-            "project_types_css_l4: expected Vm output, got {:?}",
-            other
-        ),
+        other => panic!("project_types_css_l4: expected Vm output, got {:?}", other),
     }
 }
 
@@ -200,14 +197,12 @@ fn typed_value_rules_project_to_aggregate_layouts() {
     ];
 
     for rule_name in &typed_value_rules {
-        let layout = registry
-            .layout_by_name(rule_name)
-            .unwrap_or_else(|| {
-                panic!(
-                    "project_types_css_l4: typed-value rule '{}' has no StructRegistry entry",
-                    rule_name
-                )
-            });
+        let layout = registry.layout_by_name(rule_name).unwrap_or_else(|| {
+            panic!(
+                "project_types_css_l4: typed-value rule '{}' has no StructRegistry entry",
+                rule_name
+            )
+        });
         assert!(
             layout.field_count() > 0,
             "project_types_css_l4: typed-value rule '{}' projects to empty StructLayout (kind: {:?})",
@@ -276,12 +271,18 @@ fn audit_pass_reports_mapped_for_every_css_l4_marker() {
     );
 
     assert_eq!(
-        coverage.pending_markers, 0,
+        coverage.pending_markers,
+        0,
         "project_types_css_l4: {} markers project as Pending — \
          their enclosing rules have no StructRegistry entry. \
          Pending list (truncated): {:?}",
         coverage.pending_markers,
-        coverage.pending.iter().take(10).map(|p| &p.rule_name).collect::<Vec<_>>()
+        coverage
+            .pending
+            .iter()
+            .take(10)
+            .map(|p| &p.rule_name)
+            .collect::<Vec<_>>()
     );
 
     if coverage.missing_markers > 0 {
@@ -308,20 +309,25 @@ fn audit_pass_reports_mapped_for_every_css_l4_marker() {
         }
     }
     assert_eq!(
-        coverage.missing_markers, 0,
+        coverage.missing_markers,
+        0,
         "project_types_css_l4: {} markers project as Missing — \
          their enclosing rules have a StructLayout that fails to admit \
          the marker's type. Missing list (truncated): {:?}",
         coverage.missing_markers,
-        coverage.missing.iter().take(10).map(|m| &m.rule_name).collect::<Vec<_>>()
+        coverage
+            .missing
+            .iter()
+            .take(10)
+            .map(|m| &m.rule_name)
+            .collect::<Vec<_>>()
     );
 
     assert_eq!(
         coverage.mapped_markers, coverage.total_markers,
         "project_types_css_l4: mapped count {} != total count {}; \
          the AZ-I.md §Hard gate requires 100% mapped on CSS L4",
-        coverage.mapped_markers,
-        coverage.total_markers,
+        coverage.mapped_markers, coverage.total_markers,
     );
 
     assert!(

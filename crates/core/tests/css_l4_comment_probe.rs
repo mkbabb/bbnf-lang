@@ -67,7 +67,6 @@ mod css_types {
 
 use ::bbnf::grammar::generated::css_l4::*;
 
-
 fn prettify(src: &str) -> String {
     let cfg = pprint::Printer::new(80, 2, false);
     CssL4Parser::stylesheet_prettify()

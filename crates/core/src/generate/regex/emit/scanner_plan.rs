@@ -41,7 +41,9 @@ pub(crate) enum SharedScanner {
     /// matches and advances `state.offset`, but the decoded bytes
     /// never reach the tape (callers fall through to `.map(|_| ())`).
     JsonString,
-    JsonNumber { fuse_numbers: bool },
+    JsonNumber {
+        fuse_numbers: bool,
+    },
     WsBlockComment,
     Ident,
     QuotedString,
@@ -61,9 +63,7 @@ impl SharedScanner {
         use crate::backend::kernels;
         match self {
             SharedScanner::JsonString => kernels::quoted_string::emit_call_strict(),
-            SharedScanner::JsonNumber { fuse_numbers: true } => {
-                kernels::number::emit_call_fused()
-            }
+            SharedScanner::JsonNumber { fuse_numbers: true } => kernels::number::emit_call_fused(),
             SharedScanner::JsonNumber {
                 fuse_numbers: false,
             } => kernels::number::emit_call_span(),
@@ -149,9 +149,7 @@ pub(crate) fn plan_regex_scanner(pattern: &str, opts: &EmitOpts) -> Option<Scann
             reject_leading_zero: true,
             ..
         } => Some(shared_json_number_scanner(opts.fuse_numbers)),
-        RegexClass::WhitespaceWithBlockComment => {
-            Some(shared_ws_block_comment_scanner())
-        }
+        RegexClass::WhitespaceWithBlockComment => Some(shared_ws_block_comment_scanner()),
         // Plain identifier: no leading dash.
         RegexClass::Identifier {
             allows_leading_dash: false,
@@ -168,13 +166,11 @@ pub(crate) fn plan_regex_scanner(pattern: &str, opts: &EmitOpts) -> Option<Scann
         RegexClass::Numeric {
             reject_leading_zero: false,
             ..
-        } => Some(ScannerPlan::Kernel(
-            if opts.fuse_numbers {
-                crate::backend::kernels::number::emit_call_generic_f64()
-            } else {
-                crate::backend::kernels::number::emit_call_generic_span()
-            },
-        )),
+        } => Some(ScannerPlan::Kernel(if opts.fuse_numbers {
+            crate::backend::kernels::number::emit_call_generic_f64()
+        } else {
+            crate::backend::kernels::number::emit_call_generic_span()
+        })),
         // Tranche W phase 5d: route CharClassQuantified through the
         // hoisted scanner kernels for the digit / alnum / hex shapes.
         // Patterns the kernel can't handle (negated, bounded, mixed)
@@ -184,10 +180,8 @@ pub(crate) fn plan_regex_scanner(pattern: &str, opts: &EmitOpts) -> Option<Scann
             negated,
             min,
             max,
-        }) => crate::backend::kernels::charclass::emit_call_opt(
-            &chars, negated, min, max,
-        )
-        .map(ScannerPlan::Kernel),
+        }) => crate::backend::kernels::charclass::emit_call_opt(&chars, negated, min, max)
+            .map(ScannerPlan::Kernel),
         // Tranche X.9a: route `PrefixThenClass` through the hoisted
         // prefix+class kernel for the recognized tail shapes
         // (alnum / digits / hex). Bounded or unrecognized tail shapes

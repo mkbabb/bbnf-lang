@@ -33,9 +33,7 @@ pub fn has_named_return_type(body: &IrNode, ir: &GrammarIR) -> bool {
             has_named_return_type(inner, ir)
         }
         IrNode::Seq(children) => children.iter().any(|c| has_named_return_type(c, ir)),
-        IrNode::Alt(branches, _) => branches
-            .iter()
-            .any(|b| has_named_return_type(&b.node, ir)),
+        IrNode::Alt(branches, _) => branches.iter().any(|b| has_named_return_type(&b.node, ir)),
         IrNode::Repeat { inner, .. }
         | IrNode::Negate(inner)
         | IrNode::OptionalWhitespace(inner) => has_named_return_type(inner, ir),
@@ -84,9 +82,7 @@ pub fn compute_aliases(ir: &mut GrammarIR) {
     let named_ids: Vec<RuleId> = ir
         .rules
         .iter()
-        .filter_map(|r| {
-            (!r.meta.is_cyclic && has_named_return_type(&r.body, ir)).then_some(r.id)
-        })
+        .filter_map(|r| (!r.meta.is_cyclic && has_named_return_type(&r.body, ir)).then_some(r.id))
         .collect();
 
     for rule in &mut ir.rules {
@@ -132,9 +128,7 @@ pub fn compute_transparent(ir: &mut GrammarIR) {
     let named_ids: Vec<RuleId> = ir
         .rules
         .iter()
-        .filter_map(|r| {
-            (r.meta.is_cyclic && has_named_return_type(&r.body, ir)).then_some(r.id)
-        })
+        .filter_map(|r| (r.meta.is_cyclic && has_named_return_type(&r.body, ir)).then_some(r.id))
         .collect();
 
     for rule in &mut ir.rules {

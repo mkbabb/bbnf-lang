@@ -142,13 +142,8 @@ impl Iterator for ChildIter<'_> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let result = match self.node {
-            DagNode::Literal(_)
-            | DagNode::Regex(_)
-            | DagNode::Epsilon
-            | DagNode::Ref(_) => None,
-            DagNode::Seq(children) | DagNode::Alt(children, _) => {
-                children.get(self.pos).copied()
-            }
+            DagNode::Literal(_) | DagNode::Regex(_) | DagNode::Epsilon | DagNode::Ref(_) => None,
+            DagNode::Seq(children) | DagNode::Alt(children, _) => children.get(self.pos).copied(),
             DagNode::Repeat { inner, .. }
             | DagNode::Negate(inner)
             | DagNode::OptionalWhitespace(inner)

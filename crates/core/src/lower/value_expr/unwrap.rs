@@ -26,9 +26,7 @@ use super::view_walk::find_descendant_by_compound_kind;
 /// `value_unary` / `value_atom`) when each wrapper has only one
 /// child compound (i.e. no operators in the chain). Returns the
 /// raw identifier byte slice without copying.
-pub(crate) fn unwrap_value_ident_str<'a, 'p: 'a>(
-    node: BbnfView<'a, 'p>,
-) -> Option<&'p str> {
+pub(crate) fn unwrap_value_ident_str<'a, 'p: 'a>(node: BbnfView<'a, 'p>) -> Option<&'p str> {
     let mut cur = node;
     loop {
         // Leaf payload — a `Span` carries the identifier slice
@@ -38,8 +36,11 @@ pub(crate) fn unwrap_value_ident_str<'a, 'p: 'a>(
             BbnfValue::Span(s) => {
                 return Some(s);
             }
-            BbnfValue::Int(_) | BbnfValue::Float(_) | BbnfValue::Bool(_)
-            | BbnfValue::Tag(_) | BbnfValue::Unit => {
+            BbnfValue::Int(_)
+            | BbnfValue::Float(_)
+            | BbnfValue::Bool(_)
+            | BbnfValue::Tag(_)
+            | BbnfValue::Unit => {
                 return None;
             }
             BbnfValue::Compound(_) => {}
@@ -50,7 +51,11 @@ pub(crate) fn unwrap_value_ident_str<'a, 'p: 'a>(
             // segment (no `::`).
             Some(BbnfCompoundKind::ValuePath) => {
                 let text = cur.span_text_opt()?.trim();
-                return if text.contains("::") { None } else { Some(text) };
+                return if text.contains("::") {
+                    None
+                } else {
+                    Some(text)
+                };
             }
             // Top-level value_expr wrapper — peel into the inner
             // head.
@@ -138,9 +143,7 @@ pub(crate) fn unwrap_value_ident_str<'a, 'p: 'a>(
 /// Recursively unwrap value-expression wrappers down to the
 /// innermost atom view. Used by `lower_map_arrow` to extract the
 /// leaf node for type-suffix and bool-literal detection.
-pub(crate) fn deep_unwrap_value<'a, 'p: 'a>(
-    node: BbnfView<'a, 'p>,
-) -> BbnfView<'a, 'p> {
+pub(crate) fn deep_unwrap_value<'a, 'p: 'a>(node: BbnfView<'a, 'p>) -> BbnfView<'a, 'p> {
     let mut cur = node;
     loop {
         match cur.compound_kind() {
@@ -170,9 +173,10 @@ pub(crate) fn deep_unwrap_value<'a, 'p: 'a>(
                 if first == Some(b'!') || first == Some(b'-') {
                     return cur;
                 }
-                if let Some(atom) = find_descendant_by_compound_kind(cur, BbnfCompoundKind::ValueAtom)
-                    .filter(|v| !same_focus(*v, cur))
-                    .or_else(|| RuntimeView::children(&cur).next())
+                if let Some(atom) =
+                    find_descendant_by_compound_kind(cur, BbnfCompoundKind::ValueAtom)
+                        .filter(|v| !same_focus(*v, cur))
+                        .or_else(|| RuntimeView::children(&cur).next())
                 {
                     cur = atom;
                 } else {
@@ -202,9 +206,7 @@ pub(crate) fn deep_unwrap_value<'a, 'p: 'a>(
 /// segments included). The downstream lookup tolerates misses, so
 /// returning a name eagerly is correct — non-host names simply
 /// fail the host-table check.
-pub(crate) fn extract_value_func_name<'a, 'p: 'a>(
-    node: BbnfView<'a, 'p>,
-) -> Option<String> {
+pub(crate) fn extract_value_func_name<'a, 'p: 'a>(node: BbnfView<'a, 'p>) -> Option<String> {
     // Leaf-payload Span identifiers map to themselves.
     if let BbnfValue::Span(s) = node.focus() {
         return Some(s.to_string());

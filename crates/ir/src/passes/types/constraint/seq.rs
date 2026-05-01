@@ -97,15 +97,13 @@ impl Constraint<TypeDomain> for SeqConstraint {
             let all_simple_span = all_span
                 && self.collapse_simple_spans
                 && !self.preserve_spans
-                && self
-                    .child_node_kinds
-                    .iter()
-                    .zip(child_types.iter())
-                    .all(|(kind, ty)| match kind {
+                && self.child_node_kinds.iter().zip(child_types.iter()).all(
+                    |(kind, ty)| match kind {
                         SeqChildKind::Optional => false,
                         SeqChildKind::SpOverrideRef => true,
                         SeqChildKind::Other => **ty == TypeDesc::Span,
-                    });
+                    },
+                );
 
             // If the all-Span override revert applies, we have to read
             // the `sp_override_originals` variables — still as borrows.
@@ -128,13 +126,13 @@ impl Constraint<TypeDomain> for SeqConstraint {
                     })
                     .collect();
 
-                let preserve = self.preserve_spans
-                    && effective_refs.iter().all(|t| **t == TypeDesc::Span);
+                let preserve =
+                    self.preserve_spans && effective_refs.iter().all(|t| **t == TypeDesc::Span);
 
                 project_seq_type(&effective_refs, preserve)
             } else {
-                let preserve = self.preserve_spans
-                    && child_types.iter().all(|t| **t == TypeDesc::Span);
+                let preserve =
+                    self.preserve_spans && child_types.iter().all(|t| **t == TypeDesc::Span);
 
                 project_seq_type(&child_types, preserve)
             }

@@ -26,8 +26,8 @@ use std::path::PathBuf;
 use bbnf::pipeline::{
     CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_paths_request,
 };
-use bbnf_ir::passes::{GrammarAuditTag, audit_payload_coverage};
 use bbnf_ir::GrammarIR;
+use bbnf_ir::passes::{GrammarAuditTag, audit_payload_coverage};
 
 /// Resolve the BBNF grammar path from `CARGO_MANIFEST_DIR`.
 fn bbnf_grammar_path() -> PathBuf {
@@ -69,17 +69,14 @@ fn every_named_bbnf_rule_has_a_struct_layout() {
 
     for rule in &ir.rules {
         let rule_name = ir.get_string(rule.name).to_string();
-        let layout = ir
-            .struct_registry
-            .layout(rule.id)
-            .unwrap_or_else(|| {
-                panic!(
-                    "AZ-II.cutover.A: BBNF rule `{rule_name}` (id={}) has no \
+        let layout = ir.struct_registry.layout(rule.id).unwrap_or_else(|| {
+            panic!(
+                "AZ-II.cutover.A: BBNF rule `{rule_name}` (id={}) has no \
                      registered StructLayout. `project_types` did not close \
                      on this rule.",
-                    rule.id
-                )
-            });
+                rule.id
+            )
+        });
         assert!(
             layout.field_count() > 0,
             "AZ-II.cutover.A: BBNF rule `{rule_name}` has empty StructLayout \

@@ -197,8 +197,7 @@ pub fn project_types(ir: &mut GrammarIR) {
             }
         }
 
-        let preserve = *preserve_spans
-            && effective_types.iter().all(|t| *t == TypeDesc::Span);
+        let preserve = *preserve_spans && effective_types.iter().all(|t| *t == TypeDesc::Span);
 
         // Seq-keyed entries go under the Seq node's `NodeId`.
         let seq_nid = *seq_node_id;
@@ -623,12 +622,14 @@ fn compute_structural_types_for_node(
             compute_structural_types_for_node(l, type_map, dag);
             compute_structural_types_for_node(r, type_map, dag);
         }
-        IrNode::Map { inner, .. }
-        | IrNode::OptionalWhitespace(inner)
-        | IrNode::Negate(inner) => {
+        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) | IrNode::Negate(inner) => {
             compute_structural_types_for_node(inner, type_map, dag);
         }
-        IrNode::TokenDispatch { token, arms, fallback } => {
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
             compute_structural_types_for_node(token, type_map, dag);
             for arm in arms {
                 compute_structural_types_for_node(&arm.continuation, type_map, dag);

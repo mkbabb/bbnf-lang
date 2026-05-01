@@ -10,7 +10,9 @@ struct ArenaIndex {
 
 impl ArenaIndex {
     fn new(count: usize) -> Self {
-        Self { entries: vec![(0, 0); count] }
+        Self {
+            entries: vec![(0, 0); count],
+        }
     }
 
     fn get<'a>(&self, idx: usize, pool: &'a [u32]) -> &'a [u32] {
@@ -45,22 +47,32 @@ impl Adjacency {
         for vc in &vc_lists {
             for &ci in vc {
                 for &cj in vc {
-                    if ci != cj { cn_lists[ci as usize].push(cj); }
+                    if ci != cj {
+                        cn_lists[ci as usize].push(cj);
+                    }
                 }
             }
         }
-        for neighbors in &mut cn_lists { neighbors.sort_unstable(); neighbors.dedup(); }
+        for neighbors in &mut cn_lists {
+            neighbors.sort_unstable();
+            neighbors.dedup();
+        }
 
         let mut vn_lists: Vec<Vec<u32>> = vec![Vec::new(); num_vars];
         for c in constraints {
             let scope = c.scope();
             for &vi in scope {
                 for &vj in scope {
-                    if vi != vj { vn_lists[vi as usize].push(vj); }
+                    if vi != vj {
+                        vn_lists[vi as usize].push(vj);
+                    }
                 }
             }
         }
-        for neighbors in &mut vn_lists { neighbors.sort_unstable(); neighbors.dedup(); }
+        for neighbors in &mut vn_lists {
+            neighbors.sort_unstable();
+            neighbors.dedup();
+        }
 
         let total_len: usize = vc_lists.iter().map(|v| v.len()).sum::<usize>()
             + cn_lists.iter().map(|v| v.len()).sum::<usize>()
@@ -88,7 +100,12 @@ impl Adjacency {
             var_neighbors.entries[i] = (offset, list.len() as u32);
         }
 
-        Self { pool, var_constraints, constraint_neighbors, var_neighbors }
+        Self {
+            pool,
+            var_constraints,
+            constraint_neighbors,
+            var_neighbors,
+        }
     }
 
     pub fn constraints_for(&self, var: VarId) -> &[u32] {

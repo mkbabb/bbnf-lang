@@ -73,10 +73,7 @@ fn classify_arglist(node: &IrNode, ir: &GrammarIR) -> bool {
 
     // First position: name head — Literal, Regex, or Ref.
     let head = unwrap_map_ow(positions[0]);
-    let head_admitted = matches!(
-        head,
-        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Ref(_),
-    );
+    let head_admitted = matches!(head, IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Ref(_),);
     if !head_admitted {
         return false;
     }

@@ -287,9 +287,7 @@ pub enum DtaState {
     /// atoms parsed incorrectly — `"=" ?w` returned at "=" without
     /// consuming trailing whitespace, causing the walker to observe
     /// an unexpected byte at the next rule's entry.
-    WsTrim {
-        pattern: Option<StringId>,
-    },
+    WsTrim { pattern: Option<StringId> },
     /// AW-II.W5b — Set-difference (`IrNode::Minus` lowering).
     ///
     /// Matches `primary` only if `excluded` does NOT match at the
@@ -302,10 +300,7 @@ pub enum DtaState {
     /// left operand through unchanged. Every EBNF terminal
     /// (`character - "'"`, `character - '"'`) therefore accepted the
     /// quote byte it was meant to exclude, breaking the grammar.
-    Minus {
-        primary: StateId,
-        excluded: StateId,
-    },
+    Minus { primary: StateId, excluded: StateId },
 }
 
 /// Counter-optional marker for AV.3.2.
@@ -640,13 +635,7 @@ impl<'ir> DtaBuilder<'ir> {
                 // because their own FnDescriptor specifies the value.
                 let branch_states: Vec<StateId> = branches
                     .iter()
-                    .map(|b| {
-                        self.lift_node_with_payload(
-                            &b.node,
-                            literal_payload,
-                            regex_payload,
-                        )
-                    })
+                    .map(|b| self.lift_node_with_payload(&b.node, literal_payload, regex_payload))
                     .collect();
                 // AW-IV.W3.3 — reverse the dispatch gate.
                 //
@@ -703,10 +692,7 @@ impl<'ir> DtaBuilder<'ir> {
                             table[byte] = state;
                         }
                     }
-                    self.alloc_state(DtaState::ByteDispatch {
-                        table,
-                        fallback,
-                    })
+                    self.alloc_state(DtaState::ByteDispatch { table, fallback })
                 } else {
                     self.alloc_state(DtaState::AltLinear {
                         branches: branch_states,
@@ -727,10 +713,7 @@ impl<'ir> DtaBuilder<'ir> {
                 // Forward reference — lift on demand if the target
                 // hasn't been seen yet, then stamp the edge.
                 let target = self.rule_entries.get(rid).copied().unwrap_or(StateId::NONE);
-                self.alloc_state(DtaState::Ref {
-                    rule: *rid,
-                    target,
-                })
+                self.alloc_state(DtaState::Ref { rule: *rid, target })
             }
             IrNode::Skip(a, b) => {
                 // `a << b` — run both, keep left. Lowered to a Seq of
@@ -802,15 +785,16 @@ impl<'ir> DtaBuilder<'ir> {
                 //   - `EnumWrap` / `BoxWrap` — no payload classification;
                 //     they project compound type shape, not leaf data.
                 let fn_desc = self.ir.fns.get(*fn_id as usize);
-                let (lit_payload, mut rx_payload) =
-                    resolve_map_payload(fn_desc, inner);
+                let (lit_payload, mut rx_payload) = resolve_map_payload(fn_desc, inner);
                 // AW-III.W1 universal-named arm: when the resolver
                 // declined and the FnDescriptor is `Expr` with a
                 // `Named` return type, project well-known names
                 // ("String", "Bytes") to their decoder selectors.
                 if rx_payload.is_none() && matches!(strip_to_leaf(inner), IrNode::Regex(_)) {
-                    if let Some(FnDescriptor::Expr { return_type: Some(TypeDesc::Named(sid)), .. }) =
-                        fn_desc
+                    if let Some(FnDescriptor::Expr {
+                        return_type: Some(TypeDesc::Named(sid)),
+                        ..
+                    }) = fn_desc
                     {
                         let name = self.ir.get_string(*sid);
                         if let Some(kind) = regex_payload_from_named(name) {
@@ -849,7 +833,11 @@ impl<'ir> DtaBuilder<'ir> {
                     promote: SeqPromote::Default,
                 })
             }
-            IrNode::TokenDispatch { token, arms: _, fallback } => {
+            IrNode::TokenDispatch {
+                token,
+                arms: _,
+                fallback,
+            } => {
                 // TokenDispatch is an existing dispatch lowering — the
                 // DTA inherits it by lifting the token + fallback;
                 // arms are lifted via the parent's Alt shape.
@@ -912,7 +900,11 @@ fn detect_counter_optional(inner: &IrNode) -> Option<CounterOptional> {
 
 fn has_nested_optional_with_empty_body(node: &IrNode) -> bool {
     match node {
-        IrNode::Repeat { lo: 0, hi: 1, inner } => {
+        IrNode::Repeat {
+            lo: 0,
+            hi: 1,
+            inner,
+        } => {
             // The inner Repeat is an optional; count the sub-optionals
             // inside its body.
             inner_contains_optional(inner)
@@ -921,9 +913,9 @@ fn has_nested_optional_with_empty_body(node: &IrNode) -> bool {
         IrNode::Alt(branches, _) => branches
             .iter()
             .any(|b| has_nested_optional_with_empty_body(&b.node)),
-        IrNode::Map { inner, .. }
-        | IrNode::OptionalWhitespace(inner)
-        | IrNode::Negate(inner) => has_nested_optional_with_empty_body(inner),
+        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) | IrNode::Negate(inner) => {
+            has_nested_optional_with_empty_body(inner)
+        }
         IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
             has_nested_optional_with_empty_body(a) || has_nested_optional_with_empty_body(b)
         }
@@ -935,9 +927,7 @@ fn inner_contains_optional(node: &IrNode) -> bool {
     match node {
         IrNode::Repeat { lo: 0, hi: 1, .. } => true,
         IrNode::Seq(children) => children.iter().any(inner_contains_optional),
-        IrNode::Alt(branches, _) => {
-            branches.iter().any(|b| inner_contains_optional(&b.node))
-        }
+        IrNode::Alt(branches, _) => branches.iter().any(|b| inner_contains_optional(&b.node)),
         IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
             inner_contains_optional(inner)
         }
@@ -986,8 +976,7 @@ fn collect_precedence_chain(ir: &GrammarIR, rule: &IrRule) -> Option<PrecedenceC
             break;
         }
         seen.push(cursor.id);
-        let Some((operand_rule, operators, operand_node)) =
-            match_operator_chain_rule(ir, cursor)
+        let Some((operand_rule, operators, operand_node)) = match_operator_chain_rule(ir, cursor)
         else {
             break;
         };
@@ -1267,9 +1256,7 @@ fn resolve_map_payload(
         FnDescriptor::SpanCapture => (LiteralPayload::None, None),
         // EnumWrap / BoxWrap project compound type shape only — the
         // typed leaves are the inner node's own payloads.
-        FnDescriptor::EnumWrap { .. } | FnDescriptor::BoxWrap => {
-            (LiteralPayload::None, None)
-        }
+        FnDescriptor::EnumWrap { .. } | FnDescriptor::BoxWrap => (LiteralPayload::None, None),
     }
 }
 
@@ -1278,8 +1265,7 @@ fn resolve_map_payload(
 /// scanner the Map encloses.
 fn strip_to_leaf(node: &IrNode) -> &IrNode {
     match node {
-        IrNode::Map { inner, .. }
-        | IrNode::OptionalWhitespace(inner) => strip_to_leaf(inner),
+        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => strip_to_leaf(inner),
         _ => node,
     }
 }
@@ -1397,14 +1383,12 @@ fn strip_transparent_owned(node: &IrNode) -> IrNode {
     match node {
         IrNode::OptionalWhitespace(inner) => strip_transparent_owned(inner),
         IrNode::Map { inner, .. } => strip_transparent_owned(inner),
-        IrNode::Next(a, b) => IrNode::Seq(vec![
-            strip_transparent_owned(a),
-            strip_transparent_owned(b),
-        ]),
-        IrNode::Skip(a, b) => IrNode::Seq(vec![
-            strip_transparent_owned(a),
-            strip_transparent_owned(b),
-        ]),
+        IrNode::Next(a, b) => {
+            IrNode::Seq(vec![strip_transparent_owned(a), strip_transparent_owned(b)])
+        }
+        IrNode::Skip(a, b) => {
+            IrNode::Seq(vec![strip_transparent_owned(a), strip_transparent_owned(b)])
+        }
         _ => node.clone(),
     }
 }
@@ -1561,4 +1545,3 @@ fn infer_associativity(literal: &str) -> Associativity {
 // `recognizers::operator_chain`, and `core::backend::rust::emitter::grammar`
 // — those entries stay live until cutover.C retires the tape-direct
 // path entirely.
-

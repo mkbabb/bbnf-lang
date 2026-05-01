@@ -130,7 +130,9 @@ impl CstSchema {
         &'a self,
         category: &'a VariantCategory,
     ) -> impl Iterator<Item = &'a VariantDescriptor> + 'a {
-        self.variants.iter().filter(move |v| &v.category == category)
+        self.variants
+            .iter()
+            .filter(move |v| &v.category == category)
     }
 
     /// Look up a variant by name. O(n); intended for one-off queries.

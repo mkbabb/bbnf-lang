@@ -67,4 +67,3 @@ fn gather(node: &IrNode, stats: &mut InlineShapeStats) {
         }
     }
 }
-

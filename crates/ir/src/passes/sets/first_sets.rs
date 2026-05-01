@@ -17,8 +17,8 @@ use csp_solver::constraint::VarId;
 use crate::{CharSet128, GrammarIR, IrNode, RuleId, regex_first};
 
 use super::super::csp_domains::{
-    CharSetDomain, CharSetGroundConstraint, CharSetMultiUnionConstraint,
-    CharSetSeqFirstConstraint, CharSetUnionConstraint,
+    CharSetDomain, CharSetGroundConstraint, CharSetMultiUnionConstraint, CharSetSeqFirstConstraint,
+    CharSetUnionConstraint,
 };
 
 /// Compute FIRST sets and nullable flags for all rules, and populate
@@ -30,11 +30,8 @@ pub fn compute_first_sets(ir: &mut GrammarIR) {
     // (No CSP needed — boolean convergence is trivial.)
     loop {
         let mut changed = false;
-        let nullable_of: HashMap<RuleId, bool> = ir
-            .rules
-            .iter()
-            .map(|r| (r.id, r.meta.nullable))
-            .collect();
+        let nullable_of: HashMap<RuleId, bool> =
+            ir.rules.iter().map(|r| (r.id, r.meta.nullable)).collect();
 
         for i in 0..n {
             let new_nullable = compute_node_nullable(&ir.rules[i].body, &nullable_of);
@@ -60,16 +57,14 @@ pub fn compute_first_sets(ir: &mut GrammarIR) {
         .collect();
 
     // Build nullable snapshot for SeqFirst constraints.
-    let nullable_of: HashMap<RuleId, bool> = ir
-        .rules
-        .iter()
-        .map(|r| (r.id, r.meta.nullable))
-        .collect();
+    let nullable_of: HashMap<RuleId, bool> =
+        ir.rules.iter().map(|r| (r.id, r.meta.nullable)).collect();
 
     // Generate constraints from each rule's body.
     for rule in &ir.rules {
         let rule_var = rule_vars[&rule.id];
-        let body_var = generate_first_constraints(&rule.body, &rule_vars, &nullable_of, ir, &mut csp);
+        let body_var =
+            generate_first_constraints(&rule.body, &rule_vars, &nullable_of, ir, &mut csp);
         csp.add_constraint(CharSetUnionConstraint::new(rule_var, body_var));
     }
 
@@ -139,7 +134,11 @@ fn generate_first_constraints(
                 .iter()
                 .map(|c| is_node_nullable_with_map(c, nullable_of))
                 .collect();
-            csp.add_constraint(CharSetSeqFirstConstraint::new(var, child_vars, nullable_flags));
+            csp.add_constraint(CharSetSeqFirstConstraint::new(
+                var,
+                child_vars,
+                nullable_flags,
+            ));
             var
         }
 
@@ -197,8 +196,12 @@ fn is_node_nullable_with_map(node: &IrNode, nullable_of: &HashMap<RuleId, bool>)
         IrNode::Literal(_) | IrNode::Regex(_) => false,
         IrNode::Negate(_) => false,
         IrNode::Ref(id) => nullable_of.get(id).copied().unwrap_or(false),
-        IrNode::Seq(children) => children.iter().all(|c| is_node_nullable_with_map(c, nullable_of)),
-        IrNode::Alt(branches, _) => branches.iter().any(|b| is_node_nullable_with_map(&b.node, nullable_of)),
+        IrNode::Seq(children) => children
+            .iter()
+            .all(|c| is_node_nullable_with_map(c, nullable_of)),
+        IrNode::Alt(branches, _) => branches
+            .iter()
+            .any(|b| is_node_nullable_with_map(&b.node, nullable_of)),
         IrNode::Repeat { inner, .. } => is_node_nullable_with_map(inner, nullable_of),
         IrNode::Skip(a, b) | IrNode::Next(a, b) => {
             is_node_nullable_with_map(a, nullable_of) && is_node_nullable_with_map(b, nullable_of)
@@ -275,10 +278,12 @@ pub fn compute_node_nullable(node: &IrNode, nullable_of: &HashMap<RuleId, bool>)
         IrNode::Ref(id) => nullable_of.get(id).copied().unwrap_or(false),
         IrNode::Repeat { lo: 0, .. } => true,
         IrNode::Repeat { inner, .. } => compute_node_nullable(inner, nullable_of),
-        IrNode::Seq(children) => children.iter().all(|c| compute_node_nullable(c, nullable_of)),
-        IrNode::Alt(branches, _) => {
-            branches.iter().any(|b| compute_node_nullable(&b.node, nullable_of))
-        }
+        IrNode::Seq(children) => children
+            .iter()
+            .all(|c| compute_node_nullable(c, nullable_of)),
+        IrNode::Alt(branches, _) => branches
+            .iter()
+            .any(|b| compute_node_nullable(&b.node, nullable_of)),
         IrNode::Skip(a, b) | IrNode::Next(a, b) => {
             compute_node_nullable(a, nullable_of) && compute_node_nullable(b, nullable_of)
         }
@@ -323,8 +328,11 @@ fn populate_branch_first_in_node(
         IrNode::Alt(branches, _) => {
             for branch in branches.iter_mut() {
                 if branch.first_set.is_none() {
-                    branch.first_set =
-                        Some(compute_node_first_with_strings(&branch.node, first_of, strings));
+                    branch.first_set = Some(compute_node_first_with_strings(
+                        &branch.node,
+                        first_of,
+                        strings,
+                    ));
                 }
                 populate_branch_first_in_node(&mut branch.node, first_of, strings);
             }
@@ -400,15 +408,15 @@ fn compute_node_first_with_strings(
                     cs.union(fs);
                 } else {
                     cs.union(&compute_node_first_with_strings(
-                        &branch.node, first_of, strings,
+                        &branch.node,
+                        first_of,
+                        strings,
                     ));
                 }
             }
             cs
         }
-        IrNode::Repeat { inner, .. } => {
-            compute_node_first_with_strings(inner, first_of, strings)
-        }
+        IrNode::Repeat { inner, .. } => compute_node_first_with_strings(inner, first_of, strings),
         IrNode::Skip(a, _) | IrNode::Next(a, _) | IrNode::Minus(a, _) => {
             compute_node_first_with_strings(a, first_of, strings)
         }

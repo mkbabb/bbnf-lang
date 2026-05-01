@@ -5,8 +5,8 @@
 //! alignment, and rejects layouts that exceed
 //! [`MAX_PAYLOAD_BYTES`].
 
-use bbnf_ir::passes::{plan_layout, MAX_PAYLOAD_BYTES};
 use bbnf_ir::TypeDesc;
+use bbnf_ir::passes::{MAX_PAYLOAD_BYTES, plan_layout};
 
 #[test]
 fn single_f64_field_packs_8_bytes() {

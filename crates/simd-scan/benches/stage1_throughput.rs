@@ -16,11 +16,8 @@ use divan::counter::BytesCount;
 use simd_scan::{alphabet::StructuralAlphabet, scan_structural};
 use std::hint::black_box;
 
-const JSON_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_parts(
-    &[b'{', b'}', b'[', b']', b':', b','],
-    &[],
-    &[b'"'],
-);
+const JSON_ALPHABET: StructuralAlphabet =
+    StructuralAlphabet::from_parts(&[b'{', b'}', b'[', b']', b':', b','], &[], &[b'"']);
 
 const CSS_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_parts(
     &[b'{', b'}', b'(', b')', b';', b':', b','],
@@ -62,11 +59,31 @@ impl std::fmt::Display for Fixture {
 }
 
 const FIXTURES: &[Fixture] = &[
-    Fixture { name: "twitter.json",      path: "data/json/twitter.json",      kind: Kind::Json },
-    Fixture { name: "citm_catalog.json", path: "data/json/citm_catalog.json", kind: Kind::Json },
-    Fixture { name: "canada.json",       path: "data/json/canada.json",       kind: Kind::Json },
-    Fixture { name: "bootstrap.css",     path: "data/css/bootstrap.css",      kind: Kind::Css },
-    Fixture { name: "tailwind.css",      path: "data/css/tailwind.css",       kind: Kind::Css },
+    Fixture {
+        name: "twitter.json",
+        path: "data/json/twitter.json",
+        kind: Kind::Json,
+    },
+    Fixture {
+        name: "citm_catalog.json",
+        path: "data/json/citm_catalog.json",
+        kind: Kind::Json,
+    },
+    Fixture {
+        name: "canada.json",
+        path: "data/json/canada.json",
+        kind: Kind::Json,
+    },
+    Fixture {
+        name: "bootstrap.css",
+        path: "data/css/bootstrap.css",
+        kind: Kind::Css,
+    },
+    Fixture {
+        name: "tailwind.css",
+        path: "data/css/tailwind.css",
+        kind: Kind::Css,
+    },
 ];
 
 fn repo_root() -> std::path::PathBuf {
@@ -83,11 +100,10 @@ fn read_corpus(rel: &str) -> Vec<u8> {
 fn stage1(b: Bencher, fixture: &Fixture) {
     let input = read_corpus(fixture.path);
     let alphabet = fixture.kind.alphabet();
-    b.counter(BytesCount::new(input.len()))
-        .bench_local(|| {
-            let idx = scan_structural(black_box(input.as_slice()), black_box(alphabet));
-            black_box(idx);
-        });
+    b.counter(BytesCount::new(input.len())).bench_local(|| {
+        let idx = scan_structural(black_box(input.as_slice()), black_box(alphabet));
+        black_box(idx);
+    });
 }
 
 fn main() {

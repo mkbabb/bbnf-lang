@@ -61,8 +61,8 @@ use bbnf_ir::passes::sets::{
     compute_structural_alphabet,
 };
 use bbnf_ir::{
-    AltBranch, AltDispatch, CharSet128, CostConfig, GrammarIR, IrNode, IrRule, RuleMeta,
-    StringId, TypeDescInterner,
+    AltBranch, AltDispatch, CharSet128, CostConfig, GrammarIR, IrNode, IrRule, RuleMeta, StringId,
+    TypeDescInterner,
 };
 use bbnf_regex::RegexInfo;
 
@@ -100,9 +100,10 @@ fn empty_ir() -> GrammarIR {
         payload_layouts: HashMap::new(),
         structural_alphabet: None,
         push_fingerprint: None,
-            dedup_eligible_rules: Vec::new(),
+        dedup_eligible_rules: Vec::new(),
 
-            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
+        shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
+        ),
         eclass_facts: HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -180,10 +181,7 @@ fn seq(children: Vec<IrNode>) -> IrNode {
 /// pass ignores the table and inspects branch shape directly, so
 /// only single-byte-literal-led branches contribute their discriminator
 /// byte.
-fn alt_dispatched(
-    branches: Vec<(IrNode, CharSet128)>,
-    fallback_idx: Option<u8>,
-) -> IrNode {
+fn alt_dispatched(branches: Vec<(IrNode, CharSet128)>, fallback_idx: Option<u8>) -> IrNode {
     let mut table = vec![255u8; 128];
     let branch_list: Vec<AltBranch> = branches
         .into_iter()
@@ -341,7 +339,11 @@ fn bbnf_fixture() -> GrammarIR {
     add_rule(&mut ir, "alt", seq(vec![pipe, comma]));
     add_rule(&mut ir, "type_arrow", arrow);
     add_rule(&mut ir, "comment", seq(vec![comment_open, comment_close]));
-    add_rule(&mut ir, "literal", alt(vec![string_dq, string_sq, regex_lit]));
+    add_rule(
+        &mut ir,
+        "literal",
+        alt(vec![string_dq, string_sq, regex_lit]),
+    );
     ir
 }
 
@@ -364,7 +366,11 @@ fn sheets_fixture() -> GrammarIR {
     let ident = add_regex(&mut ir, r"[A-Z][A-Z0-9_]*");
 
     add_rule(&mut ir, "formula", seq(vec![eq.clone(), ident.clone()]));
-    add_rule(&mut ir, "func_call", seq(vec![lparen, rparen, comma, colon]));
+    add_rule(
+        &mut ir,
+        "func_call",
+        seq(vec![lparen, rparen, comma, colon]),
+    );
     add_rule(&mut ir, "binop", alt(vec![plus, minus, star, slash]));
     add_rule(&mut ir, "atom", alt(vec![string, number]));
     ir
@@ -625,7 +631,10 @@ fn css_l4_stress_fixture() -> GrammarIR {
     add_rule(
         &mut ir,
         "media_list",
-        seq(vec![ident, many(seq(vec![comma, IrNode::Ref(3)]), 0, u32::MAX)]),
+        seq(vec![
+            ident,
+            many(seq(vec![comma, IrNode::Ref(3)]), 0, u32::MAX),
+        ]),
     );
     add_rule(&mut ir, "optional_marker", question);
     add_rule(&mut ir, "star_selector", star);
@@ -697,7 +706,11 @@ fn bbnf_stress_fixture() -> GrammarIR {
     );
 
     // Type annotation: `<Ident> -> <Ident>` — the `->` digraph.
-    add_rule(&mut ir, "type_arrow", seq(vec![ident.clone(), arrow, ident.clone()]));
+    add_rule(
+        &mut ir,
+        "type_arrow",
+        seq(vec![ident.clone(), arrow, ident.clone()]),
+    );
 
     // Directive: `@recover | @pretty | @debug | @host` — the `@`
     // single-byte literal leads; keywords come after.
@@ -720,7 +733,11 @@ fn bbnf_stress_fixture() -> GrammarIR {
 
     // Groups, options, many — `( ... )`, `[ ... ]`, `{ ... }`.
     add_rule(&mut ir, "group", seq(vec![lparen, ident.clone(), rparen]));
-    add_rule(&mut ir, "optional", seq(vec![lbrack, ident.clone(), rbrack]));
+    add_rule(
+        &mut ir,
+        "optional",
+        seq(vec![lbrack, ident.clone(), rbrack]),
+    );
     add_rule(&mut ir, "repeat", seq(vec![lbrace, ident.clone(), rbrace]));
 
     // Sequencing: `a, b`.
@@ -734,17 +751,28 @@ fn bbnf_stress_fixture() -> GrammarIR {
     add_rule(
         &mut ir,
         "path",
-        seq(vec![ident.clone(), many(seq(vec![dot, ident.clone()]), 0, u32::MAX)]),
+        seq(vec![
+            ident.clone(),
+            many(seq(vec![dot, ident.clone()]), 0, u32::MAX),
+        ]),
     );
 
     // Map type: `key: value`.
-    add_rule(&mut ir, "entry", seq(vec![ident.clone(), colon, ident.clone()]));
+    add_rule(
+        &mut ir,
+        "entry",
+        seq(vec![ident.clone(), colon, ident.clone()]),
+    );
 
     // Comments: `(* ... *)`.
     add_rule(&mut ir, "comment", seq(vec![comment_open, comment_close]));
 
     // Literals: strings, regexes.
-    add_rule(&mut ir, "literal", alt(vec![string_dq, string_sq, regex_lit]));
+    add_rule(
+        &mut ir,
+        "literal",
+        alt(vec![string_dq, string_sq, regex_lit]),
+    );
 
     ir
 }
@@ -815,7 +843,11 @@ fn sheets_stress_fixture() -> GrammarIR {
     );
 
     // Range: `A1:B2`.
-    add_rule(&mut ir, "range", seq(vec![cell_ref.clone(), colon, cell_ref]));
+    add_rule(
+        &mut ir,
+        "range",
+        seq(vec![cell_ref.clone(), colon, cell_ref]),
+    );
 
     // Binary operators: `+`, `-`, `*`, `/`, `<`, `>`, `&`, `%`.
     add_rule(
@@ -1009,10 +1041,10 @@ fn digraph_mask_matches_first_bytes() {
         sheets_fixture,
     ] {
         let alphabet = alphabet_for(fixture);
-        let expected =
-            build_byte_bitmap(alphabet.digraphs.iter().map(|(a, _)| *a));
+        let expected = build_byte_bitmap(alphabet.digraphs.iter().map(|(a, _)| *a));
         assert_eq!(
-            alphabet.digraph_mask, expected,
+            alphabet.digraph_mask,
+            expected,
             "digraph_mask must match first-bytes for fixture; \
              singletons={:?}, digraphs={:?}",
             alphabet.single_bytes_vec(),

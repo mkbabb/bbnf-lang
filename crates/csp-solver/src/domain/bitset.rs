@@ -38,7 +38,11 @@ impl BitsetDomain {
     /// Create a domain containing `0..n`.
     pub fn range(n: u32) -> Self {
         debug_assert!(n <= 128);
-        let bits = if n == 128 { u128::MAX } else { (1u128 << n) - 1 };
+        let bits = if n == 128 {
+            u128::MAX
+        } else {
+            (1u128 << n) - 1
+        };
         Self { bits }
     }
 

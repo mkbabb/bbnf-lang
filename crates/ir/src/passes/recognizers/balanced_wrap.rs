@@ -25,9 +25,10 @@ impl RecognizerMiner for BalancedWrapMiner {
         let Some((open, _middle, close)) = unwrap_wrap(node) else {
             return;
         };
-        let (Some(open_byte), Some(close_byte)) =
-            (single_byte_literal(open, ctx.ir), single_byte_literal(close, ctx.ir))
-        else {
+        let (Some(open_byte), Some(close_byte)) = (
+            single_byte_literal(open, ctx.ir),
+            single_byte_literal(close, ctx.ir),
+        ) else {
             return;
         };
         if open_byte == close_byte {

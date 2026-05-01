@@ -3,9 +3,9 @@
 //! Self-contained emitters for terminal HIR nodes that match a single
 //! character, fixed byte sequence, or position assertion.
 
+use parse_that::regex::hir::{ByteRange, CharClass, CodepointRange, Look};
 use proc_macro2::TokenStream;
 use quote::quote;
-use parse_that::regex::hir::{ByteRange, CharClass, CodepointRange, Look};
 
 // ── Literal ──────────────────────────────────────────────────────────────────
 

@@ -1,4 +1,3 @@
-
 //! BBNF CSS L4 WASM backend benchmark — native WASM execution via wasmtime.
 //!
 //! Uses our DFA regex engine for host functions (same as VM/Rust paths).
@@ -56,7 +55,9 @@ fn compiled_wasm() -> WasmBundle {
     let call_strategies = vec![bbnf::backend::CallStrategy::DirectCall; ir.rules.len()];
     let mut dstate = bbnf::backend::driver::DriverState::new(call_strategies);
     // Pre-register ws pattern so the emitter knows its ID.
-    let ws_regex_id = ir.ws_pattern.map(|ws_sid| dstate.register_regex(ir.get_string(ws_sid)));
+    let ws_regex_id = ir
+        .ws_pattern
+        .map(|ws_sid| dstate.register_regex(ir.get_string(ws_sid)));
     let mut emitter = bbnf::backend::wasm::WasmEmitter {
         module_name: "css_parser".into(),
         ws_regex_id,
@@ -179,8 +180,7 @@ macro_rules! bench {
             let bundle = compiled_wasm();
             let bytes = BytesCount::new(input.len());
 
-            let (mut store, instance, input_len) =
-                instantiate_with_input(&bundle, &input).unwrap();
+            let (mut store, instance, input_len) = instantiate_with_input(&bundle, &input).unwrap();
             let parse = instance
                 .get_typed_func::<(i32, i32), i32>(&mut store, "parse")
                 .unwrap();
@@ -199,8 +199,7 @@ macro_rules! bench {
             }
             b.counter(bytes).bench_local(|| {
                 let input_bytes = divan::black_box(&input).as_bytes();
-                memory.data_mut(&mut store)[..input_bytes.len()]
-                    .copy_from_slice(input_bytes);
+                memory.data_mut(&mut store)[..input_bytes.len()].copy_from_slice(input_bytes);
                 let result = parse.call(&mut store, (0, input_len as i32)).unwrap();
                 divan::black_box(result);
             });

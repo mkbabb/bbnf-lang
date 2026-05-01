@@ -3,8 +3,8 @@
 
 use bbnf_ir::{MapExpr, MapUnaryOp};
 
-use crate::runtime::bbnf::{BbnfCompoundKind, BbnfKind, BbnfValue, BbnfView};
 use crate::runtime::RuntimeView;
+use crate::runtime::bbnf::{BbnfCompoundKind, BbnfKind, BbnfValue, BbnfView};
 
 use super::super::LowerCtx;
 use super::dispatch_value_expr;
@@ -56,9 +56,7 @@ pub(super) fn lower_value_unary<'a, 'p: 'a>(
 /// Find the first child compound of a unary view that looks like an
 /// atom (or a transparent wrapper around one). The grammar
 /// guarantees `value_atom` is the sole child compound.
-fn first_atom_child<'a, 'p: 'a>(
-    node: BbnfView<'a, 'p>,
-) -> Option<BbnfView<'a, 'p>> {
+fn first_atom_child<'a, 'p: 'a>(node: BbnfView<'a, 'p>) -> Option<BbnfView<'a, 'p>> {
     find_descendant_by_compound_kind(node, BbnfCompoundKind::ValueAtom)
         .filter(|v| !same_focus(*v, node))
         .or_else(|| RuntimeView::children(&node).next())
@@ -68,15 +66,10 @@ fn first_atom_child<'a, 'p: 'a>(
 /// pre-cutover cursor-offset equality test: struct-direct focuses
 /// are compared by underlying `BbnfValue` payload (compound IDs are
 /// unique per parse, leaf payloads identify themselves).
-pub(super) fn same_focus<'a, 'p: 'a>(
-    a: BbnfView<'a, 'p>,
-    b: BbnfView<'a, 'p>,
-) -> bool {
+pub(super) fn same_focus<'a, 'p: 'a>(a: BbnfView<'a, 'p>, b: BbnfView<'a, 'p>) -> bool {
     match (a.focus(), b.focus()) {
         (BbnfValue::Compound(x), BbnfValue::Compound(y)) => x == y,
-        (BbnfValue::Span(x), BbnfValue::Span(y)) => {
-            x.as_ptr() == y.as_ptr() && x.len() == y.len()
-        }
+        (BbnfValue::Span(x), BbnfValue::Span(y)) => x.as_ptr() == y.as_ptr() && x.len() == y.len(),
         (BbnfValue::Int(x), BbnfValue::Int(y)) => x == y,
         (BbnfValue::Float(x), BbnfValue::Float(y)) => x.to_bits() == y.to_bits(),
         (BbnfValue::Bool(x), BbnfValue::Bool(y)) => x == y,
@@ -191,11 +184,7 @@ fn fold_typed_leaf_descendant<'a, 'p: 'a>(
     // expression nesting depth (the BBNF grammar's value-expression
     // sub-grammar has 12 precedence layers max) and prevents
     // pathological self-recursion in the worst case.
-    fn descend<'a, 'p: 'a>(
-        view: BbnfView<'a, 'p>,
-        out: &mut Option<MapExpr>,
-        depth: u32,
-    ) {
+    fn descend<'a, 'p: 'a>(view: BbnfView<'a, 'p>, out: &mut Option<MapExpr>, depth: u32) {
         if out.is_some() || depth == 0 {
             return;
         }
@@ -226,9 +215,7 @@ fn classify_span_atom<'p>(text: &'p str, ctx: &mut LowerCtx<'p>) -> MapExpr {
     let trimmed = text.trim_start();
     let first = trimmed.as_bytes().first().copied();
     match first {
-        Some(b'"') | Some(b'\'') => {
-            MapExpr::StringLit(intern_string_lit_inner(trimmed, ctx))
-        }
+        Some(b'"') | Some(b'\'') => MapExpr::StringLit(intern_string_lit_inner(trimmed, ctx)),
         _ => lower_bare_ident(trimmed, ctx),
     }
 }
@@ -238,10 +225,7 @@ fn classify_span_atom<'p>(text: &'p str, ctx: &mut LowerCtx<'p>) -> MapExpr {
 /// projection delivered as `BbnfValue::Span`). Routes through
 /// [`classify_span_atom`] — surfaced for use by the top-level
 /// dispatcher's leaf fast-path in `mod.rs`.
-pub(super) fn lower_bare_ident_or_string<'p>(
-    text: &'p str,
-    ctx: &mut LowerCtx<'p>,
-) -> MapExpr {
+pub(super) fn lower_bare_ident_or_string<'p>(text: &'p str, ctx: &mut LowerCtx<'p>) -> MapExpr {
     classify_span_atom(text, ctx)
 }
 
@@ -249,10 +233,7 @@ pub(super) fn lower_bare_ident_or_string<'p>(
 /// shape pushes only the inner `value_expr` compound (the parens
 /// consume bytes without pushing). The grammar guarantees exactly
 /// one semantic child compound here.
-fn lower_paren_atom<'a, 'p: 'a>(
-    node: BbnfView<'a, 'p>,
-    ctx: &mut LowerCtx<'p>,
-) -> MapExpr {
+fn lower_paren_atom<'a, 'p: 'a>(node: BbnfView<'a, 'p>, ctx: &mut LowerCtx<'p>) -> MapExpr {
     let inner = find_descendant_by_compound_kind(node, BbnfCompoundKind::ValueExpr)
         .or_else(|| RuntimeView::children(&node).next())
         .expect("lower_paren_atom: parenthesised atom is missing its value_expr child");
@@ -306,9 +287,9 @@ fn lower_atom_named<'a, 'p: 'a>(
 /// identifier. Used to ensure `true` / `input` keywords aren't
 /// misidentified as the prefix of a longer identifier.
 fn next_ident_byte(text: &str, idx: usize) -> bool {
-    text.as_bytes().get(idx).is_some_and(|b| {
-        b.is_ascii_alphanumeric() || *b == b'_'
-    })
+    text.as_bytes()
+        .get(idx)
+        .is_some_and(|b| b.is_ascii_alphanumeric() || *b == b'_')
 }
 
 /// Scan the leading identifier run length: `[_a-zA-Z][_a-zA-Z0-9]*`.

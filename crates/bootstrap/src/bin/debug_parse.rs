@@ -40,8 +40,8 @@ fn main() {
     // directive wrappers to show what each top-level item's concrete
     // `compound_kind` resolves to.
     {
-        let document = bbnf::grammar::generated::BbnfBootstrap::parse(&source)
-            .expect("second parse");
+        let document =
+            bbnf::grammar::generated::BbnfBootstrap::parse(&source).expect("second parse");
         let root = document.view();
         println!("--- root children dump ---");
         for (i, item) in root.children().enumerate() {
@@ -75,12 +75,24 @@ fn main() {
                 println!("  rule: {}", name);
             }
             for imp in &parsed_grammar.imports {
-                println!("  import: path={:?}, items={:?}", imp.path.as_ref(),
-                    imp.items.as_ref().map(|v| v.iter().map(|n| n.name.as_ref().to_string()).collect::<Vec<_>>()));
+                println!(
+                    "  import: path={:?}, items={:?}",
+                    imp.path.as_ref(),
+                    imp.items.as_ref().map(|v| v
+                        .iter()
+                        .map(|n| n.name.as_ref().to_string())
+                        .collect::<Vec<_>>())
+                );
             }
             for p in &parsed_grammar.pretties {
-                println!("  pretty: rule={:?}, hints={:?}", p.rule_name.as_ref(),
-                    p.hints.iter().map(|h| h.as_ref().to_string()).collect::<Vec<_>>());
+                println!(
+                    "  pretty: rule={:?}, hints={:?}",
+                    p.rule_name.as_ref(),
+                    p.hints
+                        .iter()
+                        .map(|h| h.as_ref().to_string())
+                        .collect::<Vec<_>>()
+                );
             }
             for d in &parsed_grammar.debug_rules {
                 println!("  debug: {}", d);

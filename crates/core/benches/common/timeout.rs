@@ -103,18 +103,17 @@ pub fn bench_with_timeout<I, R>(
 ) where
     I: Clone + Sync,
 {
-    b.with_inputs(|| setup_input.clone())
-        .bench_values(|input| {
-            let start = Instant::now();
-            let result = body(input);
-            let elapsed = start.elapsed();
-            if elapsed > limit {
-                panic!(
-                    "bench iteration exceeded wall-clock limit — \
+    b.with_inputs(|| setup_input.clone()).bench_values(|input| {
+        let start = Instant::now();
+        let result = body(input);
+        let elapsed = start.elapsed();
+        if elapsed > limit {
+            panic!(
+                "bench iteration exceeded wall-clock limit — \
                      performance regression? (iteration took {elapsed:?}, \
                      limit {limit:?})"
-                );
-            }
-            result
-        });
+            );
+        }
+        result
+    });
 }

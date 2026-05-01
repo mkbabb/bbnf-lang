@@ -28,7 +28,9 @@ fn rule(id: u32, freq: u32, cost: i64, lhs: Pattern, rhs: Pattern) -> Rule {
         class,
         lhs,
         rhs,
-        witness: Witness::Authored { note: "fixture".into() },
+        witness: Witness::Authored {
+            note: "fixture".into(),
+        },
         cost_delta: cost,
         frequency: freq,
     }
@@ -242,10 +244,28 @@ fn witness_soundness_egraph_requires_seed() {
 
 #[test]
 fn witness_soundness_oracle_requires_zero_counterexamples() {
-    assert!(!Witness::VmOracle { sample_count: 100, counterexamples: 1 }.is_sound());
-    assert!(Witness::VmOracle { sample_count: 100, counterexamples: 0 }.is_sound());
+    assert!(
+        !Witness::VmOracle {
+            sample_count: 100,
+            counterexamples: 1
+        }
+        .is_sound()
+    );
+    assert!(
+        Witness::VmOracle {
+            sample_count: 100,
+            counterexamples: 0
+        }
+        .is_sound()
+    );
     // sample_count == 0 is also unsound (no evidence at all).
-    assert!(!Witness::VmOracle { sample_count: 0, counterexamples: 0 }.is_sound());
+    assert!(
+        !Witness::VmOracle {
+            sample_count: 0,
+            counterexamples: 0
+        }
+        .is_sound()
+    );
 }
 
 // ── Tier classifier — extended cases ────────────────────────────────
@@ -306,7 +326,9 @@ fn rule_serialized_class_recomputed_from_lhs_rhs() {
         class: RuleClass::Class3, // intentionally wrong; classifier overrides
         lhs: Pattern::Seq(vec![lit(b'a')]),
         rhs: lit(b'a'),
-        witness: Witness::Authored { note: "shrink".into() },
+        witness: Witness::Authored {
+            note: "shrink".into(),
+        },
         cost_delta: -1,
         frequency: 42,
     };
@@ -339,7 +361,9 @@ fn ruleset_push_assigns_sequential_ids() {
         RewriteRuleId(999),
         lit(b'a'),
         lit(b'a'),
-        Witness::Authored { note: "id-test".into() },
+        Witness::Authored {
+            note: "id-test".into(),
+        },
         0,
     );
     let id = rs.push(r1);
@@ -349,7 +373,9 @@ fn ruleset_push_assigns_sequential_ids() {
         RewriteRuleId(999),
         lit(b'b'),
         lit(b'b'),
-        Witness::Authored { note: "id-test-2".into() },
+        Witness::Authored {
+            note: "id-test-2".into(),
+        },
         0,
     );
     let id2 = rs.push(r2);

@@ -15,18 +15,18 @@ fn test_negated_patterns_that_trigger_bug() {
 
         // Demonstrate the negation detection using the bespoke HIR.
         use parse_that::regex::hir::{CharClass, Hir};
-        let hir = parse_that::regex::parse_with(
-            pattern,
-            &parse_that::regex::ParseOptions::byte_mode(),
-        )
-        .unwrap();
+        let hir =
+            parse_that::regex::parse_with(pattern, &parse_that::regex::ParseOptions::byte_mode())
+                .unwrap();
 
         if let Hir::Repetition(ref rep) = hir {
-            if let Hir::Class(CharClass::Bytes { ref ranges, negated }) = *rep.sub {
-                let total_bytes: usize = ranges
-                    .iter()
-                    .map(|r| (r.end - r.start + 1) as usize)
-                    .sum();
+            if let Hir::Class(CharClass::Bytes {
+                ref ranges,
+                negated,
+            }) = *rep.sub
+            {
+                let total_bytes: usize =
+                    ranges.iter().map(|r| (r.end - r.start + 1) as usize).sum();
                 println!(
                     "  -> {} ranges, {} bytes covered, negated={}",
                     ranges.len(),
@@ -52,18 +52,18 @@ fn test_positive_patterns() {
         println!("{}: {} -> {:?}", pattern, desc, result);
 
         use parse_that::regex::hir::{CharClass, Hir};
-        let hir = parse_that::regex::parse_with(
-            pattern,
-            &parse_that::regex::ParseOptions::byte_mode(),
-        )
-        .unwrap();
+        let hir =
+            parse_that::regex::parse_with(pattern, &parse_that::regex::ParseOptions::byte_mode())
+                .unwrap();
 
         if let Hir::Repetition(ref rep) = hir {
-            if let Hir::Class(CharClass::Bytes { ref ranges, negated }) = *rep.sub {
-                let total_bytes: usize = ranges
-                    .iter()
-                    .map(|r| (r.end - r.start + 1) as usize)
-                    .sum();
+            if let Hir::Class(CharClass::Bytes {
+                ref ranges,
+                negated,
+            }) = *rep.sub
+            {
+                let total_bytes: usize =
+                    ranges.iter().map(|r| (r.end - r.start + 1) as usize).sum();
                 println!(
                     "  -> {} ranges, {} bytes covered, negated={}",
                     ranges.len(),

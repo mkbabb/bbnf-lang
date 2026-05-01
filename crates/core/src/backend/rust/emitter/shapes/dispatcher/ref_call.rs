@@ -21,8 +21,8 @@
 //! [`super::super::has_shape_dispatcher_entrypoint`] gates
 //! accordingly.
 
-use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
 use bbnf_ir::GrammarIR;
+use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
 use proc_macro2::TokenStream;
 use quote::quote;
 

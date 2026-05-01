@@ -68,7 +68,10 @@ fn test_minified_roundtrip() {
     assert!(result.contains(r#""d""#));
     // Should be idempotent.
     let second = prettify_json(&result, &config).unwrap();
-    assert_eq!(result, second, "minified JSON prettify should be idempotent");
+    assert_eq!(
+        result, second,
+        "minified JSON prettify should be idempotent"
+    );
 }
 
 #[test]

@@ -13,8 +13,7 @@ pub fn compute_scc(ir: &mut GrammarIR) {
     let sccs = tarjan(&deps);
 
     for (scc_idx, scc) in sccs.iter().enumerate() {
-        let is_cyclic =
-            scc.len() > 1 || deps[scc[0] as usize].contains(&scc[0]);
+        let is_cyclic = scc.len() > 1 || deps[scc[0] as usize].contains(&scc[0]);
         for &rule_id in scc {
             let meta = &mut ir.rules[rule_id as usize].meta;
             meta.is_cyclic = is_cyclic;
@@ -85,7 +84,16 @@ fn strongconnect(
             continue; // dangling reference — skip
         }
         if index[wi] == u32::MAX {
-            strongconnect(w, deps, index_counter, stack, on_stack, index, lowlink, sccs);
+            strongconnect(
+                w,
+                deps,
+                index_counter,
+                stack,
+                on_stack,
+                index,
+                lowlink,
+                sccs,
+            );
             lowlink[vi] = lowlink[vi].min(lowlink[wi]);
         } else if on_stack[wi] {
             lowlink[vi] = lowlink[vi].min(index[wi]);

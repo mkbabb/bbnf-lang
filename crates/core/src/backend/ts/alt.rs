@@ -2,7 +2,9 @@
 
 use bbnf_ir::AltDispatch;
 
-use crate::backend::{AltBranchInfo, KeyClass, KeyDispatchBranch, KeyDispatchConfig, ValuePlacement};
+use crate::backend::{
+    AltBranchInfo, KeyClass, KeyDispatchBranch, KeyDispatchConfig, ValuePlacement,
+};
 
 use super::code::{TsCode, TsEmitCtx, TsEmitter};
 use super::projection::ts_escape;
@@ -136,9 +138,7 @@ impl TsEmitter {
             stmts.push_str(&format!("    {result} = {expr};\n  }}\n"));
         }
         stmts.push_str("}}\n");
-        stmts.push_str(&format!(
-            "if ({result} === null) {{\n  s.offset = {cp};\n"
-        ));
+        stmts.push_str(&format!("if ({result} === null) {{\n  s.offset = {cp};\n"));
         if let Some((_info, fb)) = fallback {
             let expr = fb.dissolve(&mut stmts);
             stmts.push_str(&format!("  {result} = {expr};\n}}\n"));

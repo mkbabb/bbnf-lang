@@ -124,4 +124,3 @@ where
         self.egraph.add(node)
     }
 }
-

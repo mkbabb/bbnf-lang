@@ -150,9 +150,17 @@ where
 
     // Sort by cost: best first (lowest for minimize, highest for maximize).
     if config.maximize {
-        scored.sort_by(|a, b| b.cost.partial_cmp(&a.cost).unwrap_or(std::cmp::Ordering::Equal));
+        scored.sort_by(|a, b| {
+            b.cost
+                .partial_cmp(&a.cost)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
     } else {
-        scored.sort_by(|a, b| a.cost.partial_cmp(&b.cost).unwrap_or(std::cmp::Ordering::Equal));
+        scored.sort_by(|a, b| {
+            a.cost
+                .partial_cmp(&b.cost)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
     }
 
     // Keep only the best `max_solutions`.
@@ -222,7 +230,10 @@ where
             .iter()
             .map(|v| v.as_ref().unwrap().clone())
             .collect();
-        scored.push(ScoredSolution { solution: sol, cost });
+        scored.push(ScoredSolution {
+            solution: sol,
+            cost,
+        });
 
         // For optimization, keep searching for better solutions.
         return false;
@@ -337,7 +348,13 @@ where
                     depth,
                 ),
                 Pruning::Ac3 => ac3::ac3_from_variable(
-                    var, variables, constraints, adjacency, assignment, stats, depth,
+                    var,
+                    variables,
+                    constraints,
+                    adjacency,
+                    assignment,
+                    stats,
+                    depth,
                 ),
                 Pruning::AcFc => propagate::ac_fc(
                     var,

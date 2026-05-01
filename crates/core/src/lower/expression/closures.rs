@@ -66,8 +66,7 @@ pub(super) fn lower_grammar_call<'a>(
         args.len(),
     );
 
-    let mut frame: HashMap<&'a str, BbnfView<'a, 'a>> =
-        HashMap::with_capacity(args.len());
+    let mut frame: HashMap<&'a str, BbnfView<'a, 'a>> = HashMap::with_capacity(args.len());
     for (param, arg) in params.iter().zip(args.iter()) {
         frame.insert(*param, *arg);
     }

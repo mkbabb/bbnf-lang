@@ -53,16 +53,10 @@ pub fn detect_object(rule_id: RuleId, ir: &GrammarIR) -> bool {
 /// Walk the wrap's middle — stripping OptionalWhitespace / Map
 /// wrappers and Next/Skip chains — looking for a `Repeat(lo: 0, ..)`
 /// whose inner is a pair-shaped Seq.
-fn inner_is_pair_shaped(
-    node: &IrNode,
-    ir: &GrammarIR,
-    visited: &mut HashSet<RuleId>,
-) -> bool {
+fn inner_is_pair_shaped(node: &IrNode, ir: &GrammarIR, visited: &mut HashSet<RuleId>) -> bool {
     match unwrap_map_ow(node) {
         IrNode::Repeat { inner, .. } => is_pair_seq(inner, ir, visited),
-        IrNode::Skip(lhs, _) | IrNode::Next(_, lhs) => {
-            inner_is_pair_shaped(lhs, ir, visited)
-        }
+        IrNode::Skip(lhs, _) | IrNode::Next(_, lhs) => inner_is_pair_shaped(lhs, ir, visited),
         _ => false,
     }
 }
@@ -71,11 +65,7 @@ fn inner_is_pair_shaped(
 /// three structural positions — [key, pivot, value] in the canonical
 /// JSON case. Follows Refs (with cycle protection) and strips
 /// trailing `<< comma?` wrappers.
-pub(super) fn is_pair_seq(
-    node: &IrNode,
-    ir: &GrammarIR,
-    visited: &mut HashSet<RuleId>,
-) -> bool {
+pub(super) fn is_pair_seq(node: &IrNode, ir: &GrammarIR, visited: &mut HashSet<RuleId>) -> bool {
     match unwrap_map_ow(node) {
         // `pair << comma?` — strip the trailing separator.
         IrNode::Skip(lhs, _) => is_pair_seq(lhs, ir, visited),
@@ -93,9 +83,7 @@ pub(super) fn is_pair_seq(
         IrNode::Seq(children) => seq_has_key_pivot_value(children, ir),
         // An Alt of pair-shaped branches (e.g. CSS ruleBlock where
         // every branch is a declaration Seq) counts.
-        IrNode::Alt(branches, _) => branches
-            .iter()
-            .all(|b| is_pair_seq(&b.node, ir, visited)),
+        IrNode::Alt(branches, _) => branches.iter().all(|b| is_pair_seq(&b.node, ir, visited)),
         _ => false,
     }
 }
@@ -115,12 +103,7 @@ fn seq_has_key_pivot_value(children: &[IrNode], ir: &GrammarIR) -> bool {
     let positions: Vec<&IrNode> = children
         .iter()
         .map(unwrap_map_ow)
-        .filter(|c| {
-            !matches!(
-                c,
-                IrNode::Epsilon | IrNode::OptionalWhitespace(_)
-            )
-        })
+        .filter(|c| !matches!(c, IrNode::Epsilon | IrNode::OptionalWhitespace(_)))
         .collect();
     if positions.len() < 2 {
         return false;
@@ -152,19 +135,11 @@ fn seq_has_key_pivot_value(children: &[IrNode], ir: &GrammarIR) -> bool {
 /// literals (either direct or resolved through a single Ref hop).
 /// Values are Refs to non-single-byte rules, Regexes, Alts, or
 /// Seqs.
-fn scan_tree(
-    node: &IrNode,
-    ir: &GrammarIR,
-    visited: &mut HashSet<RuleId>,
-) -> (usize, usize) {
+fn scan_tree(node: &IrNode, ir: &GrammarIR, visited: &mut HashSet<RuleId>) -> (usize, usize) {
     match unwrap_map_ow(node) {
         IrNode::Literal(sid) => {
             let bytes = ir.get_string(*sid).as_bytes();
-            if bytes.len() == 1 {
-                (1, 0)
-            } else {
-                (0, 0)
-            }
+            if bytes.len() == 1 { (1, 0) } else { (0, 0) }
         }
         IrNode::Regex(_) => (0, 1),
         IrNode::Ref(rid) => {
@@ -202,12 +177,8 @@ fn scan_tree(
 /// Next trivia or bridged through a single Ref.
 fn is_single_byte_literal_rule(body: &IrNode, ir: &GrammarIR) -> bool {
     match unwrap_map_ow(body) {
-        IrNode::Literal(sid) => {
-            ir.get_string(*sid).as_bytes().len() == 1
-        }
-        IrNode::Skip(lhs, _) | IrNode::Next(lhs, _) => {
-            is_single_byte_literal_rule(lhs, ir)
-        }
+        IrNode::Literal(sid) => ir.get_string(*sid).as_bytes().len() == 1,
+        IrNode::Skip(lhs, _) | IrNode::Next(lhs, _) => is_single_byte_literal_rule(lhs, ir),
         _ => false,
     }
 }

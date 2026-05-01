@@ -4,8 +4,8 @@ use std::collections::HashMap;
 
 use bbnf_ir::interpreter::Value;
 use bbnf_ir::{GrammarIR, IrNode, IrRule, PrettyHints, RuleDirectives, RuleMeta};
-use gorgeous::vm::{format_ir, format_value};
 use gorgeous::PrinterConfig;
+use gorgeous::vm::{format_ir, format_value};
 
 /// Build a minimal IR with one rule that has the given pretty hints.
 fn make_ir(hints: PrettyHints) -> GrammarIR {
@@ -59,7 +59,8 @@ fn make_ir(hints: PrettyHints) -> GrammarIR {
         struct_registry: bbnf_ir::StructRegistry::default(),
         dedup_eligible_rules: Vec::new(),
 
-        shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
+        shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
+        ),
         string_index: std::collections::HashMap::new(),
     }
 }
@@ -91,7 +92,10 @@ fn default_hints() -> PrettyHints {
 
 #[test]
 fn hint_blankline() {
-    let hints = PrettyHints { blankline: true, ..default_hints() };
+    let hints = PrettyHints {
+        blankline: true,
+        ..default_hints()
+    };
     let output = fmt(hints, "aaabbbccc", 3, 80);
     assert!(
         output.contains("\n\n"),
@@ -102,7 +106,10 @@ fn hint_blankline() {
 
 #[test]
 fn hint_block() {
-    let hints = PrettyHints { block: true, ..default_hints() };
+    let hints = PrettyHints {
+        block: true,
+        ..default_hints()
+    };
     let output = fmt(hints, "aaabbb", 2, 80);
     assert!(
         output.contains('\n'),
@@ -149,9 +156,15 @@ fn hint_group_sep() {
 
 #[test]
 fn hint_compact() {
-    let hints = PrettyHints { compact: true, ..default_hints() };
+    let hints = PrettyHints {
+        compact: true,
+        ..default_hints()
+    };
     let output = fmt(hints, "aaabbb", 2, 80);
-    assert_eq!(output, "aaabbb", "compact should concatenate without separator");
+    assert_eq!(
+        output, "aaabbb",
+        "compact should concatenate without separator"
+    );
 }
 
 // AV.0.11 Category A — pprint vm rendering-semantics drift. The test
@@ -227,7 +240,10 @@ fn hint_split() {
 #[test]
 fn hint_softbreak() {
     // Softline in flat mode renders as nothing -- items are concatenated.
-    let hints = PrettyHints { softbreak: true, ..default_hints() };
+    let hints = PrettyHints {
+        softbreak: true,
+        ..default_hints()
+    };
     let output = fmt(hints, "aaabbb", 2, 80);
     // In flat mode (no group), softline is empty -- same as compact.
     assert_eq!(output, "aaabbb", "softbreak flat should concatenate");
@@ -235,7 +251,10 @@ fn hint_softbreak() {
 
 #[test]
 fn hint_nobreak() {
-    let hints = PrettyHints { nobreak: true, ..default_hints() };
+    let hints = PrettyHints {
+        nobreak: true,
+        ..default_hints()
+    };
     let output = fmt(hints, "aaabbb", 2, 80);
     assert!(
         output.contains(' '),
@@ -251,7 +270,10 @@ fn hint_nobreak() {
 
 #[test]
 fn hint_fast() {
-    let hints = PrettyHints { fast: true, ..default_hints() };
+    let hints = PrettyHints {
+        fast: true,
+        ..default_hints()
+    };
     let output = fmt(hints, "aaabbb", 2, 80);
     assert!(
         output.contains('\n'),
@@ -262,10 +284,16 @@ fn hint_fast() {
 
 #[test]
 fn format_ir_convenience() {
-    let hints = PrettyHints { block: true, ..default_hints() };
+    let hints = PrettyHints {
+        block: true,
+        ..default_hints()
+    };
     let ir = make_ir(hints);
     let value = tagged_spans("aaabbb", 2);
     let config = PrinterConfig::new(80, 2);
     let output = format_ir(&ir, &value, "aaabbb", &config).unwrap();
-    assert!(output.contains('\n'), "format_ir should work like format_value");
+    assert!(
+        output.contains('\n'),
+        "format_ir should work like format_value"
+    );
 }

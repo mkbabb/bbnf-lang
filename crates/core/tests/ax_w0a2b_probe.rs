@@ -12,7 +12,7 @@
 
 use bbnf::backend::rust::emitter::shapes::dispatcher::collect_value_refs;
 use bbnf::pipeline::{
-    compile_paths_request, CompileOutput, CompileRequest, CompileTarget, PipelineOptions,
+    CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_paths_request,
 };
 use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
 use bbnf_ir::{GrammarIR, IrNode};
@@ -52,8 +52,7 @@ fn entry_unclassified_refs(ir: &GrammarIR) -> Vec<(String, String, ShapeTag)> {
         };
         let parent_name = ir.get_string(rule.name).to_string();
         let parent_tag = ir.shape_assignments.get(rid);
-        let is_alt_root = rid == ir.entry
-            && matches!(&rule.body, IrNode::Alt(_, _));
+        let is_alt_root = rid == ir.entry && matches!(&rule.body, IrNode::Alt(_, _));
         if !parent_tag.is_classified() && !is_alt_root && rid != ir.entry {
             continue;
         }
@@ -108,7 +107,11 @@ fn probe_all_grammars() {
     println!();
     dump("JSON", "../../grammar/json/json.bbnf", false);
     dump("CSS L4", "../../grammar/css/l4/stylesheet.bbnf", false);
-    dump("Sheets", "../../grammar/google-sheets/google-sheets.bbnf", false);
+    dump(
+        "Sheets",
+        "../../grammar/google-sheets/google-sheets.bbnf",
+        false,
+    );
     dump("BBNF", "../../grammar/bbnf/bbnf.bbnf", false);
     dump("EBNF", "../../grammar/ebnf/ebnf.bbnf", false);
     dump("BNF", "../../grammar/bnf/bnf.bbnf", false);
@@ -120,7 +123,11 @@ fn all_grammars_have_zero_entry_reachable_unclassified_refs() {
     for (label, rel, structural) in [
         ("JSON", "../../grammar/json/json.bbnf", false),
         ("CSS L4", "../../grammar/css/l4/stylesheet.bbnf", false),
-        ("Sheets", "../../grammar/google-sheets/google-sheets.bbnf", false),
+        (
+            "Sheets",
+            "../../grammar/google-sheets/google-sheets.bbnf",
+            false,
+        ),
         ("BBNF", "../../grammar/bbnf/bbnf.bbnf", false),
         ("EBNF", "../../grammar/ebnf/ebnf.bbnf", false),
         ("BNF", "../../grammar/bnf/bnf.bbnf", false),

@@ -67,13 +67,12 @@ pub fn split_inner_for_sep(
 
         IrNode::Seq(children) if !children.is_empty() => {
             if is_sep_token(&children[0], sep, ir) {
-                let sep_len = if children.len() > 1
-                    && matches!(children[1], IrNode::OptionalWhitespace(_))
-                {
-                    2
-                } else {
-                    1
-                };
+                let sep_len =
+                    if children.len() > 1 && matches!(children[1], IrNode::OptionalWhitespace(_)) {
+                        2
+                    } else {
+                        1
+                    };
                 let silent: Vec<IrNode> = children.iter().take(sep_len).cloned().collect();
                 let rest: Vec<IrNode> = children.iter().skip(sep_len).cloned().collect();
                 let main_node = match rest.len() {

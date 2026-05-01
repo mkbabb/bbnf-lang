@@ -7,9 +7,7 @@
 use std::collections::HashMap;
 
 use crate::dag::{GrammarDag, NodeId};
-use crate::passes::patterns::{
-    AltPattern, NodeFacts, NodeKind, PatternAnnotations, SeqPattern,
-};
+use crate::passes::patterns::{AltPattern, NodeFacts, NodeKind, PatternAnnotations, SeqPattern};
 use crate::{AltBranch, GrammarIR, IrNode};
 
 // ── Recursive tree walk (per-node facts, NodeId-keyed) ──────────────────
@@ -158,14 +156,7 @@ fn is_operator_chain_repeat_body(inner: &IrNode) -> bool {
 
 /// Check sep_by: `Repeat(separator, 0, 1)`.
 fn check_sep_by(opt_sep: &IrNode) -> bool {
-    matches!(
-        opt_sep,
-        IrNode::Repeat {
-            lo: 0,
-            hi: 1,
-            ..
-        }
-    )
+    matches!(opt_sep, IrNode::Repeat { lo: 0, hi: 1, .. })
 }
 
 /// Check if a node is a simple span leaf.
@@ -181,9 +172,7 @@ fn is_span_leaf(node: &IrNode) -> bool {
 pub(super) fn recognize_body(node: &IrNode, ann: &mut PatternAnnotations, ir: &GrammarIR) {
     match node {
         IrNode::Seq(children) => recognize_seq_legacy(children, ann, ir),
-        IrNode::Alt(branches, dispatch) => {
-            recognize_alt_legacy(branches, dispatch.is_some(), ann)
-        }
+        IrNode::Alt(branches, dispatch) => recognize_alt_legacy(branches, dispatch.is_some(), ann),
         _ => {}
     }
 }

@@ -197,9 +197,9 @@ fn head_is_admissible(node: &IrNode, ir: &GrammarIR) -> bool {
             // Alt(Literal(suffix_a), Literal(suffix_b), …))` chains.
             // The emitter's Seq position emission handles the nested
             // structure correctly.
-            branches.iter().all(|b| {
-                head_branch_is_leaf_like(&b.node, ir)
-            })
+            branches
+                .iter()
+                .all(|b| head_branch_is_leaf_like(&b.node, ir))
         }
         // AX.W0a.2.b: admit any `Repeat` head whose inner is
         // leaf-like (Literal / Ref / Regex / leaf-only Seq / Alt of
@@ -228,12 +228,9 @@ fn head_branch_is_leaf_like(node: &IrNode, ir: &GrammarIR) -> bool {
         IrNode::Alt(branches, _) => branches
             .iter()
             .all(|b| head_branch_is_leaf_like(&b.node, ir)),
-        IrNode::Seq(children) => children
-            .iter()
-            .all(|c| head_branch_is_leaf_like(c, ir)),
+        IrNode::Seq(children) => children.iter().all(|c| head_branch_is_leaf_like(c, ir)),
         IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
-            head_branch_is_leaf_like(lhs, ir)
-                && head_branch_is_leaf_like(rhs, ir)
+            head_branch_is_leaf_like(lhs, ir) && head_branch_is_leaf_like(rhs, ir)
         }
         _ => false,
     }

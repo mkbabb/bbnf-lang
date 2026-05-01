@@ -6,5 +6,8 @@ pub(crate) mod rng;
 pub mod transform;
 
 pub use csp::{create_sudoku_csp, solve_sudoku};
-pub use generate::{generate_board, generate_board_with_templates, generate_from_template, measure_difficulty, Difficulty};
-pub use transform::{apply_random_transform, SudokuTransform};
+pub use generate::{
+    Difficulty, generate_board, generate_board_with_templates, generate_from_template,
+    measure_difficulty,
+};
+pub use transform::{SudokuTransform, apply_random_transform};

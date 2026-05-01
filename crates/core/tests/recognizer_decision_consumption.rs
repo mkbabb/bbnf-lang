@@ -91,9 +91,7 @@ fn regex_engine_consumer(engine: RegexEngine) -> &'static str {
         RegexEngine::OnePass => "generate::regex::emit::scanner_plan (primary path)",
         RegexEngine::SmallDfa => "generate::regex::emit::scanner_plan (primary path)",
         RegexEngine::Dfa => "generate::regex::emit::scanner_plan (primary path)",
-        RegexEngine::FamilyHelper => {
-            "generate::regex::emit::scanner_plan (classify fall-through)"
-        }
+        RegexEngine::FamilyHelper => "generate::regex::emit::scanner_plan (classify fall-through)",
     }
 }
 
@@ -113,7 +111,11 @@ fn every_call_strategy_has_a_consumer() {
 fn every_alt_mode_has_a_consumer() {
     // Exhaustive list — adding a new AltMode variant forces an
     // update here and a compile error until the consumer is wired.
-    let all = [AltMode::Checkpoint, AltMode::ByteDispatch, AltMode::KeyDispatch];
+    let all = [
+        AltMode::Checkpoint,
+        AltMode::ByteDispatch,
+        AltMode::KeyDispatch,
+    ];
     for mode in all {
         let consumer = alt_mode_consumer(mode.clone());
         assert!(
@@ -125,11 +127,7 @@ fn every_alt_mode_has_a_consumer() {
 
 #[test]
 fn every_wrap_mode_has_a_consumer() {
-    let all = [
-        WrapMode::Generic,
-        WrapMode::SepBy,
-        WrapMode::BalancedScan,
-    ];
+    let all = [WrapMode::Generic, WrapMode::SepBy, WrapMode::BalancedScan];
     for mode in all {
         let consumer = wrap_mode_consumer(mode.clone());
         assert!(

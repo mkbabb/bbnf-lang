@@ -1,4 +1,3 @@
-
 //! BBNF JSON WASM backend benchmark — native WASM execution throughput.
 //!
 //! Compiles grammar → WAT, instantiates via wasmtime with real DFA regex
@@ -60,10 +59,11 @@ fn compiled_wasm() -> WasmBundle {
 
     // Run driver + WASM emitter manually to access regex_patterns.
     let analysis = bbnf::backend::driver::analysis::BackendAnalysis::default();
-    let call_strategies =
-        vec![bbnf::backend::CallStrategy::DirectCall; ir.rules.len()];
+    let call_strategies = vec![bbnf::backend::CallStrategy::DirectCall; ir.rules.len()];
     let mut dstate = bbnf::backend::driver::DriverState::new(call_strategies);
-    let ws_regex_id = ir.ws_pattern.map(|ws_sid| dstate.register_regex(ir.get_string(ws_sid)));
+    let ws_regex_id = ir
+        .ws_pattern
+        .map(|ws_sid| dstate.register_regex(ir.get_string(ws_sid)));
     let mut emitter = bbnf::backend::wasm::WasmEmitter {
         module_name: "json_parser".into(),
         ws_regex_id,
@@ -164,8 +164,7 @@ fn instantiate_with_input(
             // Optional exponent.
             if pos < input_bytes.len() && (input_bytes[pos] == b'e' || input_bytes[pos] == b'E') {
                 pos += 1;
-                if pos < input_bytes.len()
-                    && (input_bytes[pos] == b'+' || input_bytes[pos] == b'-')
+                if pos < input_bytes.len() && (input_bytes[pos] == b'+' || input_bytes[pos] == b'-')
                 {
                     pos += 1;
                 }
@@ -210,8 +209,7 @@ macro_rules! bench {
             let bundle = compiled_wasm();
 
             // Instantiate ONCE outside the loop (same as VM pre-compiles once).
-            let (mut store, instance, input_len) =
-                instantiate_with_input(&bundle, &input).unwrap();
+            let (mut store, instance, input_len) = instantiate_with_input(&bundle, &input).unwrap();
             let parse = instance
                 .get_typed_func::<(i32, i32), i32>(&mut store, "parse")
                 .unwrap();
@@ -232,8 +230,7 @@ macro_rules! bench {
             b.bench_local(|| {
                 // Re-copy input bytes (parser may have mutated linear memory state).
                 let input_bytes = black_box(&input).as_bytes();
-                memory.data_mut(&mut store)[..input_bytes.len()]
-                    .copy_from_slice(input_bytes);
+                memory.data_mut(&mut store)[..input_bytes.len()].copy_from_slice(input_bytes);
                 let result = parse.call(&mut store, (0, input_len as i32)).unwrap();
                 black_box(result);
             });

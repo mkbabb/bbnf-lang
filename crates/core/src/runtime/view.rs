@@ -32,7 +32,7 @@
 //! preserved so generated `the proc-macro derive (retired B2)` output continues to reach
 //! the colour types via the stable `crate::runtime::view::*` path.
 
-pub use crate::backend::rust::view::color::{Color, ColorSpace, COLOR_PAYLOAD_BYTES};
+pub use crate::backend::rust::view::color::{COLOR_PAYLOAD_BYTES, Color, ColorSpace};
 
 /// AZ-I.W2-act.close A.fix — grammar-agnostic typed-view trait.
 ///

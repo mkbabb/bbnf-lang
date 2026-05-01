@@ -12,16 +12,15 @@
 //! after the orchestrator re-runs `cargo xtask regen --grammar
 //! css_l4`.
 
-use bbnf::runtime::css_l4::{
-    CssAngleUnit, CssArena, CssColor, CssColorSpace, CssColorType, CssDimension,
-    CssDocument, CssLength, CssLengthUnit, CssStructBuilder, CssTimeUnit,
-    CssTypedValue, StyleSheet,
-};
 use bbnf::runtime::CssRule;
-use bbnf::runtime::path::{Path, PathSegment};
 use bbnf::runtime::StructBuilder;
-use bbnf_ir::registry::{LayoutKind, StructLayout};
+use bbnf::runtime::css_l4::{
+    CssAngleUnit, CssArena, CssColor, CssColorSpace, CssColorType, CssDimension, CssDocument,
+    CssLength, CssLengthUnit, CssStructBuilder, CssTimeUnit, CssTypedValue, StyleSheet,
+};
+use bbnf::runtime::path::{Path, PathSegment};
 use bbnf_ir::TypeDesc;
+use bbnf_ir::registry::{LayoutKind, StructLayout};
 
 /// Helper — construct a default StructLayout for the named rule. Used
 /// by builder smoke tests below; production use threads layouts off
@@ -77,14 +76,8 @@ fn css_length_unit_discriminants_round_trip() {
 
 #[test]
 fn css_angle_time_units_admit_grammar_discriminants() {
-    assert_eq!(
-        CssAngleUnit::from_discriminant(0),
-        Some(CssAngleUnit::Deg)
-    );
-    assert_eq!(
-        CssAngleUnit::from_discriminant(3),
-        Some(CssAngleUnit::Turn)
-    );
+    assert_eq!(CssAngleUnit::from_discriminant(0), Some(CssAngleUnit::Deg));
+    assert_eq!(CssAngleUnit::from_discriminant(3), Some(CssAngleUnit::Turn));
     assert_eq!(CssAngleUnit::from_discriminant(99), None);
     assert_eq!(CssTimeUnit::from_discriminant(0), Some(CssTimeUnit::Ms));
     assert_eq!(CssTimeUnit::from_discriminant(1), Some(CssTimeUnit::S));
@@ -217,10 +210,7 @@ fn document_view_kind_distinguishes_empty() {
     };
     let doc = CssDocument::new(arena, root, "");
     let view = doc.view();
-    assert_eq!(
-        view.kind(),
-        bbnf::runtime::css_l4::CssDocumentKind::Empty
-    );
+    assert_eq!(view.kind(), bbnf::runtime::css_l4::CssDocumentKind::Empty);
     assert_eq!(view.root().rules, doc.root().rules);
 }
 
@@ -280,9 +270,7 @@ fn typed_value_alternation_admits_every_branch() {
     let int = CssTypedValue::Integer(42);
     let s = CssTypedValue::String("hello");
     let id = CssTypedValue::Ident("foo");
-    let kw = CssTypedValue::GlobalKeyword(
-        bbnf::runtime::css_l4::CssGlobalKeyword::Inherit,
-    );
+    let kw = CssTypedValue::GlobalKeyword(bbnf::runtime::css_l4::CssGlobalKeyword::Inherit);
     let color = CssTypedValue::Color(CssColor::Hex(0xFF00FFFF));
     let span = CssTypedValue::Span("any");
     // Smoke-check Debug + PartialEq surface — every variant participates.

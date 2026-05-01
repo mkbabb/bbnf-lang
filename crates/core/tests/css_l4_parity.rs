@@ -89,7 +89,6 @@ mod css_types {
 
 use ::bbnf::grammar::generated::css_l4::*;
 
-
 // ─── Walker helpers ──────────────────────────────────────────────────
 //
 // AZ-I.W2-act.close B3 — the struct-direct CSS L4 path returns a
@@ -141,10 +140,7 @@ fn percentage_parses_through_width_and_height() {
     // `%` via the `width` / `height` property dispatch — both route
     // through the typed percentageUnit rule and must materialise as
     // `CssDimension::Percentage` in the struct-direct typed graph.
-    for input in [
-        "a { width: 50%; }",
-        "a { height: 100%; }",
-    ] {
+    for input in ["a { width: 50%; }", "a { height: 100%; }"] {
         let doc = CssL4Parser::parse(input).expect("parse");
         let has_pct = doc.walk_values().any(|(_property, value)| {
             matches!(value, CssTypedValue::Dimension(CssDimension::Percentage(_)))
@@ -244,10 +240,13 @@ fn global_keyword_parses_branches() {
 fn assert_dir_pseudo_in_selector(input: &str, kind: &str) {
     let doc = CssL4Parser::parse(input).expect("parse");
     let rules = doc.rules(doc.root().rules);
-    let style = rules.iter().find_map(|r| match r {
-        CssRule::Style(style) => Some(style),
-        _ => None,
-    }).expect("input must contain a style rule");
+    let style = rules
+        .iter()
+        .find_map(|r| match r {
+            CssRule::Style(style) => Some(style),
+            _ => None,
+        })
+        .expect("input must contain a style rule");
     let selectors = doc.selectors(style.selectors);
     let needle = format!(":dir({kind})");
     let has_dir = selectors.iter().any(|s| {
@@ -382,7 +381,11 @@ fn selector_parses_without_payload_loss() {
 fn media_query_parses() {
     let input = "@media (min-width: 768px) { body { margin: 0; } }";
     let parsed = CssL4Parser::parse(input);
-    assert!(parsed.is_ok(), "@media query must parse: {:?}", parsed.err());
+    assert!(
+        parsed.is_ok(),
+        "@media query must parse: {:?}",
+        parsed.err()
+    );
 }
 
 #[test]

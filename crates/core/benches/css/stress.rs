@@ -1,4 +1,3 @@
-
 //! CSS pathological input stress benchmarks — cold per-parse (tape-first).
 //!
 //! Exercises generated worst-case inputs: many rules, wide selectors,
@@ -20,7 +19,6 @@ mod generators;
 use divan::counter::BytesCount;
 
 use ::bbnf::grammar::generated::css_pretty::*;
-
 
 // ── CSS rules: many separate rules ─────────────────────────────────────
 

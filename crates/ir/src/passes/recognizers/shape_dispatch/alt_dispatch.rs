@@ -71,9 +71,7 @@ pub fn detect_alt_dispatch(rule_id: RuleId, ir: &GrammarIR) -> bool {
     if branches.is_empty() {
         return false;
     }
-    branches
-        .iter()
-        .all(|b| branch_is_admissible(&b.node, ir))
+    branches.iter().all(|b| branch_is_admissible(&b.node, ir))
 }
 
 /// Whether a single Alt branch's body is an admissible AltDispatch
@@ -93,12 +91,9 @@ pub(super) fn branch_is_admissible(node: &IrNode, ir: &GrammarIR) -> bool {
         // resolves to a Literal / Regex — this is the prefix-tree
         // factoring case (BBNF `type_name`'s `Seq(Literal("u"),
         // Alt(Literal("8"), …))` after optimization).
-        IrNode::Seq(children) => children
-            .iter()
-            .all(|c| seq_position_is_leafy(c, ir)),
+        IrNode::Seq(children) => children.iter().all(|c| seq_position_is_leafy(c, ir)),
         IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
-            seq_position_is_leafy(lhs, ir)
-                && seq_position_is_leafy(rhs, ir)
+            seq_position_is_leafy(lhs, ir) && seq_position_is_leafy(rhs, ir)
         }
         // Any other structure (nested Alt, Repeat, etc.) — reject.
         _ => false,
@@ -112,15 +107,10 @@ fn seq_position_is_leafy(node: &IrNode, ir: &GrammarIR) -> bool {
     match unwrap_map_ow(node) {
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => true,
         IrNode::Ref(rid) => ir.shape_assignments.get(*rid).is_classified(),
-        IrNode::Alt(branches, _) => branches
-            .iter()
-            .all(|b| seq_position_is_leafy(&b.node, ir)),
-        IrNode::Seq(children) => children
-            .iter()
-            .all(|c| seq_position_is_leafy(c, ir)),
+        IrNode::Alt(branches, _) => branches.iter().all(|b| seq_position_is_leafy(&b.node, ir)),
+        IrNode::Seq(children) => children.iter().all(|c| seq_position_is_leafy(c, ir)),
         IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
-            seq_position_is_leafy(lhs, ir)
-                && seq_position_is_leafy(rhs, ir)
+            seq_position_is_leafy(lhs, ir) && seq_position_is_leafy(rhs, ir)
         }
         // AX.W0a.2.b — `Repeat(lo, hi, inner)` is leafy when its
         // inner is itself leafy. Covers CSS `typeSelector = wqName |

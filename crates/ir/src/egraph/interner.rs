@@ -115,13 +115,8 @@ impl SharedStrings {
     pub fn into_vec(self) -> Vec<String> {
         let Self { strings, dedup: _ } = self;
         match Arc::try_unwrap(strings) {
-            Ok(mutex) => mutex
-                .into_inner()
-                .expect("SharedStrings strings poisoned"),
-            Err(arc) => arc
-                .lock()
-                .expect("SharedStrings strings poisoned")
-                .clone(),
+            Ok(mutex) => mutex.into_inner().expect("SharedStrings strings poisoned"),
+            Err(arc) => arc.lock().expect("SharedStrings strings poisoned").clone(),
         }
     }
 
@@ -133,4 +128,3 @@ impl SharedStrings {
         ir.strings = self.into_vec();
     }
 }
-

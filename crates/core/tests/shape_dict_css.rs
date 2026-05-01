@@ -22,8 +22,8 @@ use std::path::PathBuf;
 use bbnf::pipeline::{
     CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_paths_request,
 };
-use bbnf_ir::passes::recognizers::shape_dict::TemplatePiece;
 use bbnf_ir::GrammarIR;
+use bbnf_ir::passes::recognizers::shape_dict::TemplatePiece;
 
 /// Resolve a grammar path relative to the repo root.
 fn grammar_path(rel: &str) -> PathBuf {
@@ -42,8 +42,8 @@ fn vm_request() -> CompileRequest {
 /// Compile a grammar entry file through the full pipeline.
 fn compile_grammar_ir(rel_entry: &str) -> GrammarIR {
     let entry = grammar_path(rel_entry);
-    let out = compile_paths_request(std::slice::from_ref(&entry), &vm_request())
-        .unwrap_or_else(|err| {
+    let out =
+        compile_paths_request(std::slice::from_ref(&entry), &vm_request()).unwrap_or_else(|err| {
             panic!("CSS L4 compile failed: {err:?}");
         });
     match out {

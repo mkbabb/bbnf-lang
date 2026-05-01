@@ -41,11 +41,7 @@ pub fn scalar_range_includes_sentinel(rule: &IrRule, ir: &GrammarIR) -> bool {
     body_can_reach_u32_max(&rule.body, ir, &mut visited)
 }
 
-fn body_can_reach_u32_max(
-    node: &IrNode,
-    ir: &GrammarIR,
-    visited: &mut HashSet<RuleId>,
-) -> bool {
+fn body_can_reach_u32_max(node: &IrNode, ir: &GrammarIR, visited: &mut HashSet<RuleId>) -> bool {
     match node {
         IrNode::Map { fn_id, .. } => {
             let fn_desc = &ir.fns[*fn_id as usize];
@@ -70,8 +66,7 @@ fn body_can_reach_u32_max(
         | IrNode::Negate(inner)
         | IrNode::OptionalWhitespace(inner) => body_can_reach_u32_max(inner, ir, visited),
         IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
-            body_can_reach_u32_max(a, ir, visited)
-                || body_can_reach_u32_max(b, ir, visited)
+            body_can_reach_u32_max(a, ir, visited) || body_can_reach_u32_max(b, ir, visited)
         }
         IrNode::TokenDispatch {
             token,

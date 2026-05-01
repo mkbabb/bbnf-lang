@@ -94,10 +94,7 @@ fn dump_node(ir: &GrammarIR, node: &IrNode, depth: usize) {
 fn dump_rule(ir: &GrammarIR, rid: RuleId) {
     let rule = ir.get_rule(rid);
     let name = ir.get_string(rule.name);
-    println!(
-        "=== rule #{rid} {name} (entry={}) ===",
-        ir.entry == rid,
-    );
+    println!("=== rule #{rid} {name} (entry={}) ===", ir.entry == rid,);
     dump_node(ir, &rule.body, 0);
     println!();
 }
@@ -138,8 +135,15 @@ fn main() {
         }
     };
 
-    println!("--- IR dump for {} ({}) ---", path.display(),
-             if structural { "structural mode" } else { "standard mode" });
+    println!(
+        "--- IR dump for {} ({}) ---",
+        path.display(),
+        if structural {
+            "structural mode"
+        } else {
+            "standard mode"
+        }
+    );
     println!("entry rule id = {}", ir.entry);
     println!("total rules = {}", ir.rules.len());
     println!();

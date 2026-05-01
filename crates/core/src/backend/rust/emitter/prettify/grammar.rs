@@ -4,9 +4,7 @@ use bbnf_ir::{GrammarIR, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::{
-    emit_rule_wrapper, emit_whitespace_segment, prettify_fn_ident, split_compile_error,
-};
+use super::{emit_rule_wrapper, emit_whitespace_segment, prettify_fn_ident, split_compile_error};
 use crate::backend::prettify::PrettyPolicy;
 use crate::backend::rust::emitter::{RustEmitCtx, RustEmitter};
 

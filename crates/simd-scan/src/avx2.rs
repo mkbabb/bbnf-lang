@@ -24,10 +24,10 @@
 
 #![cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
 
+use crate::StructuralIndex;
 use crate::alphabet::{KernelShape, NibbleLut, StructuralAlphabet};
 use crate::compaction;
 use crate::parity;
-use crate::StructuralIndex;
 
 use core::arch::x86_64::*;
 

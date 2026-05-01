@@ -56,10 +56,7 @@ pub fn collect_nonterminal_refs<'a>(view: BbnfView<'a, 'a>, refs: &mut IndexSet<
             if view.kind() == BbnfKind::Span {
                 let raw = view.span_text();
                 let text = raw.trim();
-                if !text.is_empty()
-                    && is_ident(text.as_bytes())
-                    && !is_value_keyword(text)
-                {
+                if !text.is_empty() && is_ident(text.as_bytes()) && !is_value_keyword(text) {
                     refs.insert(slice_lifetime_extend(view.input(), text));
                 }
             }
@@ -137,10 +134,7 @@ pub fn collect_nonterminal_refs<'a>(view: BbnfView<'a, 'a>, refs: &mut IndexSet<
             }
             if refs.len() == initial {
                 let text = view.span_text().trim();
-                if !text.is_empty()
-                    && is_ident(text.as_bytes())
-                    && !is_value_keyword(text)
-                {
+                if !text.is_empty() && is_ident(text.as_bytes()) && !is_value_keyword(text) {
                     refs.insert(slice_lifetime_extend(view.input(), text));
                 }
             }
@@ -299,5 +293,7 @@ pub(crate) fn is_ident(s: &[u8]) -> bool {
         Some(&b) if b == b'_' || b.is_ascii_alphabetic() => {}
         _ => return false,
     }
-    s[1..].iter().all(|&b| b == b'_' || b == b'-' || b.is_ascii_alphanumeric())
+    s[1..]
+        .iter()
+        .all(|&b| b == b'_' || b == b'-' || b.is_ascii_alphanumeric())
 }

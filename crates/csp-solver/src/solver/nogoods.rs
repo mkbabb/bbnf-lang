@@ -164,4 +164,3 @@ impl<V: Clone + PartialEq> NogoodStore<V> {
         }
     }
 }
-

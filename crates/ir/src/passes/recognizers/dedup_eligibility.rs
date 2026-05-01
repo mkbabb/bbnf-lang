@@ -222,9 +222,7 @@ fn is_literal_leading(node: &IrNode, ir: &GrammarIR) -> bool {
         IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
             is_literal_leading(inner, ir)
         }
-        IrNode::Seq(children) => children
-            .first()
-            .is_some_and(|c| is_literal_leading(c, ir)),
+        IrNode::Seq(children) => children.first().is_some_and(|c| is_literal_leading(c, ir)),
         IrNode::Skip(a, _) | IrNode::Next(a, _) => is_literal_leading(a, ir),
         IrNode::Ref(rule_id) => ir
             .rules

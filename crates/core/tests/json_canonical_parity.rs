@@ -104,8 +104,7 @@ fn serialize_string(s: &str, out: &mut String) {
 
 fn canonical_parity(fixture: &str) {
     let path = format!("../../data/json/{}", fixture);
-    let src = std::fs::read_to_string(&path)
-        .unwrap_or_else(|e| panic!("{path}: read failed: {e}"));
+    let src = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path}: read failed: {e}"));
 
     // bbnf side: parse through the struct-direct JsonDocument, render
     // compact, normalize.

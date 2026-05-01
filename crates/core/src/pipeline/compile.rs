@@ -3,8 +3,8 @@ use std::time::{Duration, Instant};
 
 use bbnf_ir::GrammarIR;
 
-use crate::graph::{tarjan_scc, topological_sort_scc};
 use crate::backend::prepare_grammar;
+use crate::graph::{tarjan_scc, topological_sort_scc};
 use crate::lower::{DirectiveSet, lower_to_ir};
 use crate::pipeline::directives::{load_merged_paths, parse_to_pipeline_inputs};
 use crate::pipeline::validate::{validate_ast, validate_pretty_directives};
@@ -199,7 +199,7 @@ pub fn resolve_emit_strategy(
 /// not break compile. The artefact's absence simply blocks the
 /// downstream coverage gate; it does not block codegen.
 fn write_audit_coverage_artefact(ir: &GrammarIR) {
-    use bbnf_ir::passes::{audit_payload_coverage, write_coverage_report, GrammarAuditTag};
+    use bbnf_ir::passes::{GrammarAuditTag, audit_payload_coverage, write_coverage_report};
     // Empty grammar — bootstrap path or fixture; no artefact to write.
     if ir.rules.is_empty() {
         return;
@@ -310,9 +310,18 @@ fn finalize_compile(
             let mut emitter = crate::backend::ts::TsEmitter { enum_name };
             let mut ctx = crate::backend::ts::emitter::TsEmitCtx::default();
 
-            let code =
-                crate::backend::driver::compile_grammar(&ir, &analysis, &mut dstate, &mut emitter, &mut ctx);
-            let output = if code.stmts.is_empty() { code.expr } else { format!("{}\n{}", code.stmts, code.expr) };
+            let code = crate::backend::driver::compile_grammar(
+                &ir,
+                &analysis,
+                &mut dstate,
+                &mut emitter,
+                &mut ctx,
+            );
+            let output = if code.stmts.is_empty() {
+                code.expr
+            } else {
+                format!("{}\n{}", code.stmts, code.expr)
+            };
             Ok(CompileOutput::Ts(output))
         }
         CompileTarget::Wasm => {
@@ -329,17 +338,22 @@ fn finalize_compile(
             let mut dstate = crate::backend::driver::DriverState::new(call_strategies);
             install_pattern_caches(&mut dstate, &ir);
             // Pre-register ws pattern so the emitter knows its ID.
-            let ws_regex_id = ir.ws_pattern.map(|ws_sid| {
-                dstate.register_regex(ir.get_string(ws_sid))
-            });
+            let ws_regex_id = ir
+                .ws_pattern
+                .map(|ws_sid| dstate.register_regex(ir.get_string(ws_sid)));
             let mut emitter = crate::backend::wasm::WasmEmitter {
                 module_name,
                 ws_regex_id,
             };
             let mut ctx = crate::backend::wasm::emitter::WasmEmitCtx::default();
 
-            let wat_source =
-                crate::backend::driver::compile_grammar(&ir, &analysis, &mut dstate, &mut emitter, &mut ctx);
+            let wat_source = crate::backend::driver::compile_grammar(
+                &ir,
+                &analysis,
+                &mut dstate,
+                &mut emitter,
+                &mut ctx,
+            );
             Ok(CompileOutput::Wasm(wat_source.into_bytes()))
         }
     }
@@ -353,8 +367,7 @@ fn finalize_compile(
 /// `bbnf_ir::passes::recognizers::{delim_scan,key_dispatch}`). The
 /// driver state just clones them.
 fn install_pattern_caches(dstate: &mut crate::backend::driver::DriverState, ir: &GrammarIR) {
-    dstate.alt_strategies =
-        crate::backend::strategy::alt_strategy::solve_alt_strategies(ir);
+    dstate.alt_strategies = crate::backend::strategy::alt_strategy::solve_alt_strategies(ir);
     dstate.delim_scan_configs = ir.delim_scan_configs.clone();
     dstate.key_dispatch_configs = ir.key_dispatch_configs.clone();
     // Tranche AB.2 — clone the AB.0/AB.1 per-NodeId materialization
@@ -388,10 +401,13 @@ pub fn compute_call_strategies(ir: &GrammarIR) -> Vec<crate::backend::CallStrate
         .map(|r| r.id)
         .collect();
 
-    let plan =
-        crate::backend::rust::analysis::inline::analyze_parse_inline_plan(ir, &operator_chain_rules);
+    let plan = crate::backend::rust::analysis::inline::analyze_parse_inline_plan(
+        ir,
+        &operator_chain_rules,
+    );
 
-    let mut strategies: Vec<CallStrategy> = plan.parse_call_modes
+    let mut strategies: Vec<CallStrategy> = plan
+        .parse_call_modes
         .iter()
         .map(|mode| match mode {
             crate::backend::rust::analysis::inline::CallMode::DirectCall => {
@@ -443,9 +459,7 @@ pub fn compute_call_strategies(ir: &GrammarIR) -> Vec<crate::backend::CallStrate
 }
 
 /// Separate closure rules from the AST. Returns (closures, non-closure rules).
-fn partition_closures<'a>(
-    ast: AST<'a>,
-) -> (Vec<(&'a str, BbnfView<'a, 'a>)>, AST<'a>) {
+fn partition_closures<'a>(ast: AST<'a>) -> (Vec<(&'a str, BbnfView<'a, 'a>)>, AST<'a>) {
     let mut closures: Vec<(&'a str, BbnfView<'a, 'a>)> = Vec::new();
     let mut rules: AST<'a> = indexmap::IndexMap::new();
 
@@ -581,9 +595,7 @@ fn compile_ast_common<'a>(
     }
 
     // Validate after partitioning — closure params are now known.
-    timer.span("validate_ast", || {
-        validate_ast(&ast, true, &closure_params)
-    })?;
+    timer.span("validate_ast", || validate_ast(&ast, true, &closure_params))?;
 
     // Dependency analysis.
     let deps = timer.span("calculate_ast_deps", || crate::calculate_ast_deps(&ast));
@@ -726,15 +738,9 @@ fn compile_ast_common<'a>(
         // `GrammarCostModel` (shared with bbnf-regex HIR e-graph in
         // Tranche H).
         timer.span("egraph_build_saturate_writeback", || {
-            let (egraph, pool, rule_body_ids) =
-                bbnf_ir::egraph::build_and_saturate(&ir);
+            let (egraph, pool, rule_body_ids) = bbnf_ir::egraph::build_and_saturate(&ir);
             let cost = bbnf_ir::egraph::GrammarCostModel::from_config(&ir.cost_config);
-            bbnf_ir::egraph::write_back_optimized(
-                &egraph,
-                &mut ir,
-                &rule_body_ids,
-                &cost,
-            );
+            bbnf_ir::egraph::write_back_optimized(&egraph, &mut ir, &rule_body_ids, &cost);
             pool.write_back(&mut ir);
             drop(egraph);
         });
@@ -852,9 +858,7 @@ fn compile_ast_common<'a>(
     // the selection to bake `GrammarProfile::shape_dict`.
     timer.span("solve_shape_dict_selection", || {
         ir.shape_dict_selection =
-            bbnf_ir::passes::csp_strategy::constraints::shape_dict::solve_shape_dict_selection(
-                &ir,
-            );
+            bbnf_ir::passes::csp_strategy::constraints::shape_dict::solve_shape_dict_selection(&ir);
     });
 
     if !options.structural {
@@ -888,8 +892,7 @@ fn compile_ast_common<'a>(
         // with the cost-optimal per-rule-root class where the CSP
         // can prove it legal under pin constraints.
         timer.span("solve_grammar_components", || {
-            let (decisions, mat_refined) =
-                bbnf_ir::passes::solve_grammar_components(&ir);
+            let (decisions, mat_refined) = bbnf_ir::passes::solve_grammar_components(&ir);
             ir.recognizer_decisions = decisions;
             for (node_id, class) in mat_refined {
                 ir.materialization.insert(node_id, class);

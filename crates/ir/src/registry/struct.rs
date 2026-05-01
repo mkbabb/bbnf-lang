@@ -277,9 +277,9 @@ impl StructLayout {
     /// [`FieldSource::BranchTag`] field. Empty for non-Alt-derived
     /// layouts.
     pub fn branches(&self) -> impl Iterator<Item = (u32, &StructField)> {
-        self.fields.iter().filter_map(|f| {
-            f.branch_index().map(|idx| (idx, f))
-        })
+        self.fields
+            .iter()
+            .filter_map(|f| f.branch_index().map(|idx| (idx, f)))
     }
 
     /// True if any field on this layout admits the given type

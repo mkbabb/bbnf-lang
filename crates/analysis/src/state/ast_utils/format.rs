@@ -85,9 +85,7 @@ pub fn format_expression_short(node: BbnfView<'_, '_>) -> String {
             // Heuristic for mapping-presence: the source slice the
             // compound covers contains "->" between the inner factor's
             // end and the compound's end.
-            let has_arrow = node
-                .span_text_opt()
-                .is_some_and(|s| s.contains("->"));
+            let has_arrow = node.span_text_opt().is_some_and(|s| s.contains("->"));
             if has_arrow {
                 return node
                     .span_text_opt()

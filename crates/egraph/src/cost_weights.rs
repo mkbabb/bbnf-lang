@@ -64,7 +64,6 @@ pub struct CostWeights {
     // call / inline / dispatch / tape-push / prettify / cross-module
     // dimensions so every cost computation in the compiler reads
     // from a single source of truth.
-
     /// Fixed cost of a rule-function call. Applied to every
     /// `CallStrategy::DirectCall` site; does not scale with body
     /// size. Higher values push more call sites toward inlining.
@@ -108,7 +107,6 @@ pub struct CostWeights {
     /// operation); AG consumes this dimension without adding a new
     /// one.
     pub cross_module_coercion: f64,
-
 }
 
 impl Default for CostWeights {

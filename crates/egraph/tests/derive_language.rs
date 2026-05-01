@@ -25,12 +25,12 @@ enum Expr {
 /// field types — no `#[language(...)]` annotations. Exercises B-0.
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Language)]
 enum AutoExpr {
-    Num(i64),                    // non-Id scalar → Leaf
-    Neg(Id),                     // Id → SingleId
-    Sum(Box<[Id]>),              // Box<[Id]> → SliceId
-    Pair([Id; 2]),               // [Id; N] → ArrayId (multi-child via array)
-    Pow { base: Id, exp: u32 },  // mixed struct fields
-    VecSum(Vec<Id>),             // Vec<Id> → SliceId
+    Num(i64),                   // non-Id scalar → Leaf
+    Neg(Id),                    // Id → SingleId
+    Sum(Box<[Id]>),             // Box<[Id]> → SliceId
+    Pair([Id; 2]),              // [Id; N] → ArrayId (multi-child via array)
+    Pow { base: Id, exp: u32 }, // mixed struct fields
+    VecSum(Vec<Id>),            // Vec<Id> → SliceId
     Empty,
 }
 
@@ -116,7 +116,10 @@ fn auto_fixed_array_pair() {
 
 #[test]
 fn auto_named_struct_variant() {
-    let p = AutoExpr::Pow { base: Id(5), exp: 2 };
+    let p = AutoExpr::Pow {
+        base: Id(5),
+        exp: 2,
+    };
     assert_eq!(p.children(), &[Id(5)]);
 }
 

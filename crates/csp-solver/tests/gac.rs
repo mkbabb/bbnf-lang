@@ -2,15 +2,13 @@
 //! Extracted from solver/gac_alldiff.rs inline tests.
 
 use csp_solver::constraint::{Revision, VarId};
-use csp_solver::domain::bitset::BitsetDomain;
 use csp_solver::domain::Domain;
+use csp_solver::domain::bitset::BitsetDomain;
 use csp_solver::solver::gac_alldiff::propagate_gac_alldiff;
 use csp_solver::variable::Variable;
 
 /// Helper: build a GAC test scenario and return the revision result + pruned domains.
-fn run_gac(
-    domains: &[Vec<u32>],
-) -> (Revision, Vec<Vec<u32>>) {
+fn run_gac(domains: &[Vec<u32>]) -> (Revision, Vec<Vec<u32>>) {
     let scope: Vec<VarId> = (0..domains.len() as u32).collect();
     let mut variables: Vec<Variable<BitsetDomain>> = domains
         .iter()
@@ -18,10 +16,7 @@ fn run_gac(
         .collect();
 
     let rev = propagate_gac_alldiff(&scope, &mut variables, 0);
-    let result_domains: Vec<Vec<u32>> = variables
-        .iter()
-        .map(|v| v.domain.values())
-        .collect();
+    let result_domains: Vec<Vec<u32>> = variables.iter().map(|v| v.domain.values()).collect();
 
     (rev, result_domains)
 }
@@ -71,12 +66,7 @@ fn test_hall_set_four_vars() {
     // Classic Hall set: x0={1,2}, x1={1,2}, x2={1,2,3,4}, x3={1,2,3,4}
     // {x0, x1} form a Hall set over {1,2}.
     // GAC should prune 1 and 2 from x2 and x3.
-    let (rev, doms) = run_gac(&[
-        vec![1, 2],
-        vec![1, 2],
-        vec![1, 2, 3, 4],
-        vec![1, 2, 3, 4],
-    ]);
+    let (rev, doms) = run_gac(&[vec![1, 2], vec![1, 2], vec![1, 2, 3, 4], vec![1, 2, 3, 4]]);
     assert_eq!(rev, Revision::Changed);
     assert_eq!(doms[0], vec![1, 2]);
     assert_eq!(doms[1], vec![1, 2]);

@@ -121,9 +121,7 @@ impl<'a> GrammarSink<'a> for PipelineSink<'a> {
 
 /// Observational extraction: build a full [`GrammarExtract`] from a
 /// finished struct-direct parse.
-pub fn extract_observational<'a>(
-    doc: &'a BbnfDocument<'a>,
-) -> GrammarExtract<'a> {
+pub fn extract_observational<'a>(doc: &'a BbnfDocument<'a>) -> GrammarExtract<'a> {
     let mut sink = ExtractSink {
         grammar: GrammarExtract::empty(),
     };
@@ -201,10 +199,7 @@ fn peel_wrappers<'a>(node: BbnfView<'a, 'a>) -> BbnfView<'a, 'a> {
 }
 
 /// Route a single peeled grammar item — rule or directive — into the sink.
-fn absorb_item<'a, S: GrammarSink<'a>>(
-    item: BbnfView<'a, 'a>,
-    sink: &mut S,
-) {
+fn absorb_item<'a, S: GrammarSink<'a>>(item: BbnfView<'a, 'a>, sink: &mut S) {
     // Rules: `rule = identifier "=" rhs ";"`. The rule compound
     // carries the identifier as a Span leaf and the rhs as a
     // compound subtree.
@@ -219,20 +214,10 @@ fn absorb_item<'a, S: GrammarSink<'a>>(
             .count();
         let name: &str = &rule_text[..name_len];
         let input = item.input();
-        let name_span = ::parse_that::Span::new(
-            lo as usize,
-            lo as usize + name_len,
-            input,
-        );
-        let rhs = find_rhs_expression_descendant(item)
-            .expect("rule: missing rhs expression descendant");
-        sink.insert_rule(
-            name,
-            RuleEntry {
-                name_span,
-                rhs,
-            },
-        );
+        let name_span = ::parse_that::Span::new(lo as usize, lo as usize + name_len, input);
+        let rhs =
+            find_rhs_expression_descendant(item).expect("rule: missing rhs expression descendant");
+        sink.insert_rule(name, RuleEntry { name_span, rhs });
         return;
     }
 
@@ -360,10 +345,7 @@ fn decode_pretty<'a>(item: BbnfView<'a, 'a>) -> Option<PrettyDirective<'a>> {
 }
 
 /// Collect every `pretty_hint` compound descendant's text into `out`.
-fn collect_pretty_hint_descendants<'a>(
-    view: BbnfView<'a, 'a>,
-    out: &mut Vec<Cow<'a, str>>,
-) {
+fn collect_pretty_hint_descendants<'a>(view: BbnfView<'a, 'a>, out: &mut Vec<Cow<'a, str>>) {
     if matches!(view.compound_kind(), Some(BbnfCompoundKind::PrettyHint)) {
         out.push(pretty_hint_text(view));
         return;
@@ -378,10 +360,7 @@ fn collect_pretty_hint_descendants<'a>(
 ///
 /// The `*` wildcard branch projects no identifier child; we scan
 /// the directive's span text after stripping the leading keyword.
-fn decode_single_name<'a>(
-    item: BbnfView<'a, 'a>,
-    keyword: &str,
-) -> Option<Cow<'a, str>> {
+fn decode_single_name<'a>(item: BbnfView<'a, 'a>, keyword: &str) -> Option<Cow<'a, str>> {
     if let Some(name) = find_first_identifier(item) {
         if !name.is_empty() {
             return Some(Cow::Owned(name.to_string()));
@@ -479,16 +458,14 @@ fn decode_import<'a>(item: BbnfView<'a, 'a>) -> ImportDirective<'a> {
     let (lo, hi) = item.byte_span().unwrap_or((0, 0));
     let directive_span = Span::new(lo as usize, hi as usize, item.input());
 
-    let path_view =
-        find_descendant_by_kind(item, BbnfCompoundKind::ImportPath)
-            .expect("import_directive: missing import_path descendant");
+    let path_view = find_descendant_by_kind(item, BbnfCompoundKind::ImportPath)
+        .expect("import_directive: missing import_path descendant");
 
     let (path_lo, path_hi) = path_view.byte_span().unwrap_or((0, 0));
     let path_raw = &path_view.input()[path_lo as usize..path_hi as usize];
     let path_str = strip_quotes(path_raw);
 
-    let items_view =
-        find_descendant_by_kind(item, BbnfCompoundKind::ImportItems);
+    let items_view = find_descendant_by_kind(item, BbnfCompoundKind::ImportItems);
 
     let names: Option<Vec<ImportedName<'a>>> = items_view.map(|items| {
         let mut out = Vec::new();
@@ -506,10 +483,7 @@ fn decode_import<'a>(item: BbnfView<'a, 'a>) -> ImportDirective<'a> {
 /// Collect every Span-leaf descendant matching the bbnf `identifier`
 /// regex into `out` as `ImportedName`. Used to extract names from an
 /// `import_items` compound.
-fn collect_identifier_spans<'a>(
-    view: BbnfView<'a, 'a>,
-    out: &mut Vec<ImportedName<'a>>,
-) {
+fn collect_identifier_spans<'a>(view: BbnfView<'a, 'a>, out: &mut Vec<ImportedName<'a>>) {
     if view.kind() == BbnfKind::Span {
         let text = view.span_text();
         let trimmed = text.trim();

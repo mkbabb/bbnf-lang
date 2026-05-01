@@ -669,16 +669,10 @@ pub enum CssFunction<'p> {
     Url { raw: &'p str },
     /// `gradient(...)` — every gradient family folds here; the name
     /// span discriminates `linear-gradient` / `radial-gradient` etc.
-    Gradient {
-        name: &'p str,
-        args: CssValueListId,
-    },
+    Gradient { name: &'p str, args: CssValueListId },
     /// Transform / filter / easing / generic — the arena-borrowed
     /// argument list carries the typed payload.
-    Generic {
-        name: &'p str,
-        args: CssValueListId,
-    },
+    Generic { name: &'p str, args: CssValueListId },
 }
 
 // ---------------------------------------------------------------------

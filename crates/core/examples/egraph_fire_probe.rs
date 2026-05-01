@@ -11,13 +11,14 @@
 //! `docs/tranches/AY/audit/AYW-egraph-cost-firing.md`.
 
 use bbnf::pipeline::{
-    CompileRequest, CompileTarget, PipelineOptions, compile_grammar_request,
-    compile_paths_request,
+    CompileRequest, CompileTarget, PipelineOptions, compile_grammar_request, compile_paths_request,
 };
 
 fn grammar_path(name: &str) -> std::path::PathBuf {
     let manifest = std::env!("CARGO_MANIFEST_DIR");
-    std::path::PathBuf::from(manifest).join("../../grammar").join(name)
+    std::path::PathBuf::from(manifest)
+        .join("../../grammar")
+        .join(name)
 }
 
 fn vm_request() -> CompileRequest {

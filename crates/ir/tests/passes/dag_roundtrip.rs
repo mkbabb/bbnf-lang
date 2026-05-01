@@ -6,9 +6,7 @@
 use std::collections::HashMap;
 
 use bbnf_ir::dag::{DagNode, GrammarDag, NodeId};
-use bbnf_ir::{
-    AltBranch, GrammarIR, IrNode, IrRule, RuleId, RuleMeta,
-};
+use bbnf_ir::{AltBranch, GrammarIR, IrNode, IrRule, RuleId, RuleMeta};
 
 fn make_ir(rules: Vec<(&str, IrNode)>) -> GrammarIR {
     let mut ir_rules = Vec::new();
@@ -46,15 +44,18 @@ fn make_ir(rules: Vec<(&str, IrNode)>) -> GrammarIR {
         context_facts: std::collections::HashMap::new(),
         has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
-        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
+        dag: None,
+        cost_config: bbnf_ir::CostConfig::default(),
+        type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
         structural_alphabet: None,
         push_fingerprint: None,
-            dedup_eligible_rules: Vec::new(),
+        dedup_eligible_rules: Vec::new(),
 
-            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
+        shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
+        ),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -117,8 +118,14 @@ fn roundtrip_alt() {
     let b = lit(&mut ir, "b");
     let body = IrNode::Alt(
         vec![
-            AltBranch { node: a, first_set: None },
-            AltBranch { node: b, first_set: None },
+            AltBranch {
+                node: a,
+                first_set: None,
+            },
+            AltBranch {
+                node: b,
+                first_set: None,
+            },
         ],
         None,
     );

@@ -72,13 +72,10 @@ impl<A: Analysis<GrammarENode>> Rewrite<GrammarENode, A> for CommonSuffixFactor 
                 let mut head_lists: Vec<Vec<Id>> = Vec::with_capacity(children.len());
                 let mut aborted = false;
                 for &branch_id in children.iter() {
-                    let seq_children = egraph
-                        .class(branch_id)
-                        .iter()
-                        .find_map(|n| match n {
-                            GrammarENode::Seq(c) if c.len() >= 2 => Some(c.clone()),
-                            _ => None,
-                        });
+                    let seq_children = egraph.class(branch_id).iter().find_map(|n| match n {
+                        GrammarENode::Seq(c) if c.len() >= 2 => Some(c.clone()),
+                        _ => None,
+                    });
                     let Some(seq) = seq_children else {
                         aborted = true;
                         break;
@@ -115,12 +112,7 @@ impl<A: Analysis<GrammarENode>> Rewrite<GrammarENode, A> for CommonSuffixFactor 
         matches
     }
 
-    fn apply(
-        &self,
-        egraph: &mut EGraph<GrammarENode, A>,
-        class_id: Id,
-        m: Self::Match,
-    ) {
+    fn apply(&self, egraph: &mut EGraph<GrammarENode, A>, class_id: Id, m: Self::Match) {
         // Build each head branch as a Seq node (or a single child if
         // only one element remains).
         let mut new_alt_branches: Vec<Id> = Vec::with_capacity(m.head_branches.len());
@@ -137,10 +129,7 @@ impl<A: Analysis<GrammarENode>> Rewrite<GrammarENode, A> for CommonSuffixFactor 
         // the suffix may invalidate the precomputed AltDispatch if one
         // existed). The cost model decides post-saturation whether
         // this form is preferred.
-        let new_alt_id = egraph.add(GrammarENode::Alt(
-            new_alt_branches.into_boxed_slice(),
-            None,
-        ));
+        let new_alt_id = egraph.add(GrammarENode::Alt(new_alt_branches.into_boxed_slice(), None));
 
         // Wrap the new Alt + the shared suffix in a Seq.
         let new_seq_id = egraph.add(GrammarENode::Seq(

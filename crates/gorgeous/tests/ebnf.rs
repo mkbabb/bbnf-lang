@@ -8,8 +8,16 @@ fn test_prettify_simple_ebnf() {
     let result = prettify_ebnf(input, &config);
     assert!(result.is_some(), "should parse simple EBNF rule");
     let output = result.unwrap();
-    assert!(output.contains("letter"), "should contain rule name: got '{}'", output);
-    assert!(output.contains("="), "should contain assignment: got '{}'", output);
+    assert!(
+        output.contains("letter"),
+        "should contain rule name: got '{}'",
+        output
+    );
+    assert!(
+        output.contains("="),
+        "should contain assignment: got '{}'",
+        output
+    );
 }
 
 #[test]

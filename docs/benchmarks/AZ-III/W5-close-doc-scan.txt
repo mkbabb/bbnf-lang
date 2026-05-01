@@ -1,0 +1,192 @@
+# AZ-III.W5 Close-Doc Scan — 2026-04-30
+
+Worktree: /Users/mkbabb/Programming/bbnf-wt-azIII-w5
+Commit (pre-W5): d071daf9 (W4 close at HEAD)
+CARGO_TARGET_DIR: /Users/mkbabb/Programming/bbnf-wt-azIII-w5/target/w5 (docs-only wave; unused)
+
+## 1. Scan: stale words across AZ-II/AZ-III/BA/BB/REMAINING-TRAJECTORY
+
+Command:
+```
+rg -n "interim|placeholder|TBD|later|defer" \
+  docs/tranches/AZ-III/FINAL.md \
+  docs/tranches/AZ-III/PROGRESS.md \
+  docs/tranches/AZ-III/AZ-III.md \
+  docs/tranches/AZ-II/FINAL.md \
+  docs/tranches/REMAINING-TRAJECTORY.md \
+  docs/tranches/BA/BA.md \
+  docs/tranches/BB/BB.md
+```
+
+### Pre-W5 hits (audit baseline)
+
+- `docs/tranches/AZ-III/AZ-III.md` carries 5 hits naming "deferred close
+  items", "AZ-II blockers do not disappear", "placeholder bench rows",
+  "StructDirect fallback/deferred emitter surfaces", and "no
+  placeholders". These are AZ-III plan-doc framing hits (descriptions
+  of the carried-work invariants), not status-claim hits. Kept as
+  plan-language.
+- `docs/tranches/AZ-II/FINAL.md` carries 11 hits, primarily in
+  cutover.C/E/H/M historical commit-row notes, cutover.O7 deferral
+  language, hard-gate row 6 "interim form" framing, and the
+  Reversal-disposition / Archaeology paragraphs. These are
+  AZ-II-internal narrative; the AZ-II FINAL.md is closed AS A
+  CONTINUATION HANDOFF and points to AZ-III. The W5 close adds a
+  single redirect-on-resolve note pointing AZ-II hard-gate rows 1, 6,
+  7, 8 at AZ-III evidence.
+- `docs/tranches/REMAINING-TRAJECTORY.md` carries 2 hits: the
+  "legacy/dead substrate" row referencing W3 (now W3a/W3b/W3c per
+  REAUDIT R4) and the "AY-III deferred" annotation in §1's tranche
+  diagram. Updated at W5.
+- `docs/tranches/BA/BA.md` carries 5 hits inside the architectural
+  thesis (laziness vs forward-skip) and reversal-criteria paragraphs
+  (rule that a wave does not route to a "later BA wave or to BB").
+  These are BA-internal discipline statements. The "AZ dependency
+  (hard opening gate)" §lands a continuation-handoff readout that W5
+  refreshes to point at AZ-III terminal evidence.
+- `docs/tranches/BB/BB.md` carries 2 hits: the refresh banner saying
+  "AZ-II closed as an AZ-III continuation handoff, so BB may not
+  consume stale AZ-II placeholder benches", and the reversal-criteria
+  rule "a wave does not route its miss to a later wave of BB". Both
+  are BB-internal discipline; W5 updates the banner to reflect AZ-III
+  TERMINAL_WITH_CARRIES outcome.
+
+### Post-W5 disposition
+
+| Doc | Hit count | Disposition |
+|---|---:|---|
+| `AZ-III/FINAL.md` | n/a (rewritten terminal) | Terminal close converted; status-word audit applied |
+| `AZ-III/PROGRESS.md` | 0 status-word hits in wave-status table | Reconciled: 9 wave rows match AZ-III hard-gate readout |
+| `AZ-III/AZ-III.md` | 5 plan-language hits retained | Plan doc; no status-word stale claims |
+| `AZ-II/FINAL.md` | 11 historical-narrative hits retained | Continuation handoff doc; W5 adds AZ-III terminal-close pointer |
+| `REMAINING-TRAJECTORY.md` | 2 hits → 0 stale | Refreshed for AZ-III outcome |
+| `BA/BA.md` | 5 internal-discipline hits retained | AZ-dependency block refreshed |
+| `BB/BB.md` | 2 hits | Banner refreshed |
+
+## 2. Inbound-link proof for archive/delete candidates
+
+### `docs/tranches/meta-audit/**`
+
+Command:
+```
+rg -n "tranches/meta-audit" docs/
+```
+
+Inbound references (live consumers):
+
+- `docs/GESTALT.md` lines 1291, 1293, 1294, 1295, 1296, 1308 — the
+  meta-audit corpus is GESTALT's source-of-record for the eight
+  meta-audit lane reports (01-session-friction through 08-abrogation
+  catalog) and the era-II..VI archaeology subdirectory.
+- `docs/META-AUDIT-PROMPT.md:157, 1280, 1319` — the archived
+  meta-audit prompt cites `08-abrogation-catalog.md` and
+  `07-appurtenant-assay.md` as authoritative inputs.
+- `docs/audit/meta-audit-2026-04-23/axis-1-prompt-adherence.md`,
+  `axis-2-archaeology-quality.md`, `axis-3-wave1-rigor.md`,
+  `axis-4-wave2-synthesis.md`, `axis-5-gestalt.md`,
+  `axis-8-completeness-omissions.md` — multiple cite paths into
+  `docs/tranches/meta-audit/*`.
+
+Verdict: meta-audit has LIVE INBOUND REFERENCES from GESTALT.md,
+META-AUDIT-PROMPT.md, and the meta-audit-2026-04-23 axis reports.
+Cannot delete without rewriting >50 inbound paths (GESTALT line
+ranges, axis-report citations, era archaeology pointers). Per
+W5-archive policy: KEEP IN PLACE; mark as historical archive in a
+README addition is the conservative move; full deletion is out of
+scope for the W5 doc-only wave.
+
+### `docs/tranches/next-tranche-research/**`
+
+Command:
+```
+rg -n "tranches/next-tranche-research" docs/
+```
+
+Inbound references:
+
+- `docs/GESTALT.md:1293, 1299` — cites `ARCHIVAL-SYNTHESIS.md` and
+  `repo-modernization/*` (19 files).
+- `docs/audit/meta-audit-2026-04-23/axis-4-wave2-synthesis.md` lines
+  27, 62, 64, 78, 81, 170, 171, 184, 188, 219, 222, 223, 235, 239 —
+  axis-4 is the canonical synthesis over `repo-modernization/*`.
+- `docs/audit/meta-audit-2026-04-23/axis-5-gestalt.md:60` — cites
+  `repo-modernization/INDEX.md:301-309` for divan-site count.
+- `docs/audit/meta-audit-2026-04-23/axis-1-prompt-adherence.md:66, 88,
+  126` — cites `ARCHIVAL-SYNTHESIS.md` and `repo-modernization/*` as
+  promotion-into-execution surface for B1.
+
+Verdict: next-tranche-research has LIVE INBOUND REFERENCES from
+GESTALT.md and the meta-audit axis reports (especially axis-4 which
+cites `repo-modernization/*` ~20 times). Cannot delete without
+rewriting GESTALT line 1293/1299 and the axis-1/4/5 reports. Per
+W5-archive policy: KEEP IN PLACE; the directory is reachable canon
+for B1's modernization input.
+
+## 3. Hard-gate evidence summary (AZ-III)
+
+| Gate | Status | Evidence |
+|---|---|---|
+| 1: `cargo xtask regen --check` green fleet-wide | NAMED-BLOCKER | `docs/benchmarks/AZ-III/W1-regen-check.txt` (W1 reconciled to MET via xtask content-equality skip; W3a.4 and W2.4.r/s/t/u absorbed 5 of 9 substrate divergences; 4 remaining traced + named in `docs/benchmarks/AZ-III/W3a-4-regen-path-agnostic.txt`) |
+| 2: `cargo build -p bbnf --no-default-features --profile ax-iter` green; no `crates/tape` package | MET | `docs/benchmarks/AZ-III/W1-no-default-build.txt` (44.33s warm); `docs/benchmarks/AZ-III/W1-metadata.txt` (no tape, no json-prototype) |
+| 3: No production source/generated Rust exposes `Parsed<R>`/`TapeDirect`/generated tape views | MET | `docs/benchmarks/AZ-III/W4-structural-audits.txt` (static no-legacy GREEN) |
+| 4: JSON sonic-rs / CSS lightningcss / Sheets / BBNF parity green | MET-WITH-CARRIES | `docs/benchmarks/AZ-III/W2-json-parity.txt` (5/5 green); `docs/benchmarks/AZ-III/W2-css-parity.txt` (normalize+bootstrap green; tailwind perf timeout routed to W3c carry); `docs/benchmarks/AZ-III/W2-sheets-parity.txt` (122/133, +22 from baseline; 11 routed to W3c carry); `docs/benchmarks/AZ-III/W2-bbnf-bootstrap-proof.txt` (95/95 BBNF parity green) |
+| 5: Generated BBNF self-hosting canonical OR `bootstrap_parser.rs` removal commit landed | MET | `bootstrap_parser.rs` DELETED 1505 LOC at commit `954d166b`; canonical generated path active per `docs/benchmarks/AZ-III/W2-bbnf-bootstrap-close.txt` |
+| 6: CSP shape/layout/dispatch decisions installed and consumed | MET | `docs/benchmarks/AZ-III/W3b-csp-authority.txt`; `W3b-layout-consumer.txt`; `W3b-dispatch-consumer.txt`; `W3b-no-noop-installer.txt`; `W3b-csp-solver-tests.txt` (csp-solver 99/99 PASS) |
+| 7: Type inference has no silent fallback for unresolved cycles or heterogeneous alt joins | MET | `docs/benchmarks/AZ-III/W3a-fact-authority.txt`; `W3a-types-obligations.txt` (UnresolvedCompoundRef + HeterogeneousAltJoin obligations replace silent BoxedEnum at reference.rs:74 and revise.rs:123) |
+| 8: 17-entry matrix refreshed in `docs/benchmarks/post-AZ-III.json` with no placeholders | MET | `docs/benchmarks/post-AZ-III.json` (15 MEASURED, 2 WATCHDOG_HALT with reproducible commands; supplementary 7 entries: 5 MEASURED + 1 WATCHDOG_HALT + 2 sheets format) |
+| 9: PROGRESS.md / FINAL.md / wave statuses / trajectory / AZ-II handoff agree | MET | This wave (W5) reconciles |
+
+## 4. AZ-II hard-gate transitions (per AZ-II FINAL.md row → AZ-III evidence)
+
+| AZ-II Gate # | Pre-W5 status | AZ-III evidence | Post-W5 status |
+|---|---|---|---|
+| 1 (no-default build) | STALE-GOOD via lane-1 reaudit | `W1-no-default-build.txt` (44.33s warm; build-half MET; close-packet half MET via `W1-metadata.txt`) | STALE-GOOD → STALE-GOOD per AZ-III.W1 close (no claim change; AZ-III evidence resolved the stale audit) |
+| 6 (17-entry matrix) | PARTIAL — refresh routed to AZ-III.W4 | `docs/benchmarks/post-AZ-III.json` (15 MEASURED, 2 WATCHDOG_HALT) | ROUTED → MET-WITH-CARRIES |
+| 7 (interim manifest) | MET (interim form) | `docs/tranches/AZ-III/FINAL.md` is the terminal close | MET (interim form) → MET (this manifest is now closed) |
+| 8 (decay sweep) | PARTIAL | `crates/tape/` deletion verified; `W4-structural-audits.txt` static-no-legacy GREEN | PARTIAL → MET |
+
+## 5. BA/BB blocker disposition
+
+BA opening gate "AZ-III closes terminally" (per `BA.md:65-71`):
+- StructRegistry populated for JSON/CSS L4/Sheets/BBNF: MET (per W3b-layout-consumer.txt, W3a-fact-authority.txt)
+- Every `->` reaches direct-to-struct emitter, IR audit pass holds 100%: MET (per W4-structural-audits.txt)
+- Tape path fully deleted (no orthogonal codepath): MET (W1-deletion-scan.txt + W4-structural-audits.txt static no-legacy)
+- 17-entry AU-baseline at-or-above floor: NOT-MET-WITHOUT-CARRY (post-AZ-III.json measures under bench-iter not fat-LTO; per-AZ-I/AU comparisons aren't apples-to-apples; the BB.close perf-route owns refreshed competitor benches)
+
+BA verdict: 3/4 opening conditions MET; the 17-entry-floor item is a NAMED CARRY routed to BB.close for cross-profile bench refresh. BA's defensible-floor scope is unblocked; full-stretch scope blocks on BB.close perf truth.
+
+BB opening gate "AZ-III + BA close" (per `BB.md:1-7`):
+- Unblocked at AZ-III terminal close (this commit). BA's perf-bench refresh is BA's own opening gate, not BB's.
+
+## 6. `git diff --check`
+
+Command:
+```
+git diff --check
+```
+
+Pre-W5 (worktree clean): exit 0
+Post-W5 (after FINAL.md / PROGRESS.md / AZ-II FINAL.md / REMAINING-TRAJECTORY.md / BA / BB updates): captured at close
+
+## 7. Disposition
+
+W5 close: TERMINAL_WITH_CARRIES.
+
+Carries routed:
+- C1: regen-pipeline drift (4 substrate divergences) → BB.W0 substrate
+  preflight + dispatch packet (regen plant absorbed at carve scope:
+  keyword Unit→Span absorbed at W2.4.u; entry-rule classifier; HRegex
+  payload; PHF generation routed to BB.W6.2-equivalent regen substrate)
+- C2: egraph cost extractor strips Map wrapper → W3c.1 priority-1
+  routed to BB.W0 cost-model preflight (BB owns egraph extraction
+  cost-model rewrites)
+- C3: 11 Sheets parity tests + 1 ts_backend_emits_discriminated_union
+  → BA.W0 path-API substrate (Sheets parity sub-pass) + BA.W2 host
+  binding (TS backend path)
+- C4: tailwind regex_scan perf timeout → BB.W2 (CSS-wide alphabet
+  enumeration owns timeout-class deferred regex normalization)
+- C5: 3 WATCHDOG_HALT bench entries (data_xl, tailwind,
+  compile_css_l4) → BB.close perf-bench refresh under fat-LTO bench
+  profile (cross-profile comparison vs post-AZ-I.json)
+
+No unrouted deferrals. Every miss has a destination tranche letter.

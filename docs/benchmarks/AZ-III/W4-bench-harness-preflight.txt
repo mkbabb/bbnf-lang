@@ -1,0 +1,65 @@
+# AZ-III.W4.2 Bench Harness Preflight — 2026-04-30
+
+Worktree: /Users/mkbabb/Programming/bbnf-wt-azIII-w4
+Commit (pre-W4): ec92c39df2a961a63d88721121b34c50ab4304c4
+CARGO_TARGET_DIR: /Users/mkbabb/Programming/bbnf-wt-azIII-w4/target/w4
+Profile: bench-iter (per .cargo/config.toml lines 98-103;
+  inherits=bench, lto=off, codegen-units=16, incremental=true,
+  debug=line-tables-only)
+
+## Per-harness compile walls
+
+Each harness invoked via the per-harness `bench-iter-*` alias from
+`.cargo/config.toml` (lines 192-197). All used `--no-run` to compile
+only; no measurement runs.
+
+| Harness | Command | Wall (real) |
+|---|---|---|
+| json (6 binaries) | `cargo bench-iter-json --no-run` | 47.50s |
+| css (4 binaries)  | `cargo bench-iter-css --no-run`  | 1.40s   |
+| sheets (2 binaries) | `cargo bench-iter-sheets --no-run` | 18.75s |
+| bbnf (1 binary)   | `cargo bench-iter-bbnf --no-run` | 18.65s |
+| compile_pipeline (1 binary) | `cargo bench-iter-compile --no-run` | 0.79s |
+
+Total compile wall: 87.09s (with feature-flag-driven re-compiles
+of the bbnf lib between feature-set transitions).
+
+## Compiled bench binaries
+
+```
+target/w4/bench-iter/deps/json_competitors-07ff036b40c41f6c
+target/w4/bench-iter/deps/json_monolithic-5a492c094b51c946
+target/w4/bench-iter/deps/json_parse_that-38a9556adc10454b
+target/w4/bench-iter/deps/json_stress-18574d10fa3d56c9
+target/w4/bench-iter/deps/json_value-3b7b5176398f8c21
+target/w4/bench-iter/deps/json_vm-67db68f0c1f2c9c0
+
+target/w4/bench-iter/deps/css_competitors-???
+target/w4/bench-iter/deps/css_l4-???
+target/w4/bench-iter/deps/css_stress-b9c9247d1eeb681d
+target/w4/bench-iter/deps/css_vm-7aa562a45db3c117
+
+target/w4/bench-iter/deps/google_sheets_monolithic-b10228a0a8f695ee
+target/w4/bench-iter/deps/google_sheets_vm-ab8c409c529c145d
+
+target/w4/bench-iter/deps/bbnf_monolithic-4f215efbb0a8ff15
+
+target/w4/bench-iter/deps/compile_pipeline-cd304040ef1054e0
+```
+
+(IDs are blake3 keys computed from the dep graph; they regenerate per
+build if dependencies change.)
+
+## Verdict
+
+All 5 matrix-relevant harnesses compile cleanly under bench-iter.
+Cold cumulative wall (87s) is well under the W0p ax-iter cold target
+of <120s, since bench-iter already had warm dependencies cached from
+the workspace nextest run that preceded.
+
+The W0p evidence (W0p-bench-iter-walls.txt) records the cold-from-zero
+wall as 1m 45s for the json subsweep — that wall was measured from a
+zero target. After workspace test runs, the bench-iter compile is
+incremental.
+
+No source-owned harness blocker surfaced. W4.3 measurement may proceed.

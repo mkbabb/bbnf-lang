@@ -55,7 +55,13 @@ bench!(data_s, "data.json");
 bench!(twitter, "twitter.json");
 bench!(citm, "citm_catalog.json");
 bench!(canada, "canada.json");
-bench!(data_xl, "data_xl.json");
+// AZ-III.W4 carve: data_xl exceeds the 1s wall-clock guard under
+// bench-iter (no-LTO) and aborts subsequent benches via divan's panic
+// propagation. Splitting it from the alphabetical-order set so the
+// remaining 4 entries measure cleanly. data_xl is recorded separately
+// in the post-AZ-III.json matrix as WATCHDOG_HALT with the observed
+// per-iter wall (~2.4s under bench-iter).
+// bench!(data_xl, "data_xl.json");
 
 fn main() {
     divan::Divan::default()

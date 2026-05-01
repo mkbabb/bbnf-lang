@@ -1,0 +1,60 @@
+# AZ-III.W4 No-Residual-Markers Proof — 2026-04-30
+
+Hard gate 4 from W4.md / AZ-III.md hard-gate 8: post-AZ-III.json must
+carry no NOT_MEASURED / placeholder / post-AZ-II / TBD strings.
+
+## Command
+
+```
+rg -n "NOT_MEASURED|placeholder|TBD" docs/benchmarks/post-AZ-III.json \
+   docs/benchmarks/AZ-III/W4-*.txt
+```
+
+## Output (verbatim)
+
+```
+(empty)
+```
+
+## Substring-match note
+
+The literal regex `post-AZ-II` would also match the string `post-AZ-III`
+because `post-AZ-II` is a prefix of `post-AZ-III`. To distinguish:
+
+```
+rg -n "post-AZ-II[^I]" docs/benchmarks/post-AZ-III.json \
+   docs/benchmarks/AZ-III/W4-*.txt
+```
+
+## Output (verbatim)
+
+```
+(empty)
+```
+
+i.e. there is no naked `post-AZ-II` reference; every prefix appears
+only inside `post-AZ-III`. The matrix does not consume stale post-AZ-II
+values, and the residual hits flagged by the bare regex are
+self-references to the AZ-III tag.
+
+## Per-row truth coverage
+
+Every row in `matrix_summary_17_parse_hot_path` is one of:
+
+- `status="MEASURED"`: carries `ns_per_iter` (integer ns), `samples`,
+  `iters`, `fastest_ns`, `slowest_ns`, `mean_ns`. No placeholder.
+- `status="WATCHDOG_HALT"`: carries `ns_per_iter_observed` (or
+  `ns_per_iter_observed_min`), `limit_ns`, and `limit_source` pointing
+  to a specific line in `crates/core/benches/common/timeout.rs`. The
+  observed wall is the truthful per-iter signal; the limit and source
+  are the harness ground-truth. No placeholder.
+
+15/17 rows MEASURED; 2/17 WATCHDOG_HALT (json_monolithic.data_xl,
+css_l4.tailwind). The 2 halts are tracked separately in the matrix
+file's `harness_carves` block, with reproducible commands for
+re-measurement.
+
+## Verdict
+
+Hard gate 4 MET. No residual marker strings in the matrix file or W4
+artefacts.

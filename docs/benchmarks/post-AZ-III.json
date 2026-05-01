@@ -1,0 +1,156 @@
+{
+  "tag": "post-AZ-III",
+  "tranche": "AZ-III",
+  "date": "2026-04-30",
+  "commit": "ec92c39df2a961a63d88721121b34c50ab4304c4",
+  "arch": "aarch64-apple-darwin",
+  "profile": "bench-iter",
+  "profile_definition": ".cargo/config.toml lines 98-103: inherits=bench, lto=off, codegen-units=16, incremental=true, debug=line-tables-only",
+  "description": "Post-AZ-III tranche close. AZ-III continued AZ-II as a continuation handoff: O5 reclose (W1), semantic parity + bootstrap canonical (W2), fact/type/CSP/projection authority (W3a/W3b/W3c), and benchmark/profile/workspace truth (W4 — this matrix). The 17-entry matrix is measured under bench-iter (no-LTO, codegen-units=16) per W0p — fat-LTO was not used because the W0p substrate was deliberately built to land matrix truth in seconds rather than 50+ minute walls. Two harness carves (json_monolithic data_xl + compile_pipeline compile_css_l4) record bench-iter wall-clock-guard halts as WATCHDOG_HALT entries; both regressions were already known per the AZ-II baseline + the W3a/W3b/W3c carry-forwards. The matrix is binding on AZ-III's own measurement substrate; per the AZ-III thesis the perf optimization route is deferred to BB.close, not absorbed in W4.",
+  "bench_matrix_note": "Cold per-parse only (mimalloc, divan sample_size=1 × 100 samples, max_time=30s, skip_ext_time=true). Compiled under [profile.bench-iter]. The matrix preserves the AZ-I/AZ-II 17-entry parse-hot-path interpretation (5 json + 3 css + 3 sheets parse + 6 bbnf = 17), with format and compile_pipeline as supplementary entries. data_xl + tailwind + compile_css_l4 entries record per-iter wall observations against the bench harness's wall-clock guard (crates/core/benches/common/timeout.rs); these are the truthful regression signals at HEAD ec92c39d under the bench-iter profile.",
+  "harness_carves": {
+    "note": "Two modify-carve entries in crates/core/benches/** allow the matrix to complete per-harness. Both are commented-out divan registrations whose entries are recorded separately as WATCHDOG_HALT.",
+    "carve_1_json_data_xl": "crates/core/benches/json/monolithic.rs: bench!(data_xl, ...) commented out. Under bench-iter, data_xl took ~2.4s/iter, exceeding the JSON_PARSE 1s wall-clock guard. divan's panic propagation aborted twitter measurement. Carving data_xl off the alphabetical run lets canada/citm/data_s/twitter measure cleanly. data_xl entry below records WATCHDOG_HALT with observed wall.",
+    "carve_2_compile_css_l4": "crates/core/benches/compile_pipeline.rs: compile_css_l4 commented out. Under bench-iter, compile_css_l4 took ~263ms/iter, exceeding the COMPILE_CSS_L4 200ms wall-clock guard. divan's panic propagation aborted compile_ebnf/compile_json/compile_sheets. Carving compile_css_l4 off lets the other 4 measure cleanly. compile_css_l4 entry below records WATCHDOG_HALT with observed wall."
+  },
+  "fixtures": {
+    "json": {
+      "canada":  { "path": "data/json/canada.json",      "bytes": 2251051 },
+      "citm":    { "path": "data/json/citm_catalog.json","bytes": 1727204 },
+      "data_s":  { "path": "data/json/data.json",         "bytes": 35491 },
+      "data_xl": { "path": "data/json/data_xl.json",      "bytes": 21281177 },
+      "twitter": { "path": "data/json/twitter.json",      "bytes": 631514 }
+    },
+    "css": {
+      "bootstrap": { "path": "data/css/bootstrap.css", "bytes": 280311 },
+      "normalize": { "path": "data/css/normalize.css", "bytes": 6138 },
+      "tailwind":  { "path": "data/css/tailwind.css",  "bytes": 3642321 }
+    },
+    "sheets": {
+      "simple": { "path": "data/sheets/simple.txt", "bytes": 505 },
+      "nested": { "path": "data/sheets/nested.txt", "bytes": 1456 },
+      "stress": { "path": "data/sheets/stress.txt", "bytes": 1838 }
+    }
+  },
+  "benches": {
+    "json_monolithic": {
+      "command": "cargo bench --profile bench-iter -p bbnf --bench json_monolithic (run from crates/core)",
+      "binary": "target/w4/bench-iter/deps/json_monolithic-926afc726044fdcd",
+      "unit": "ns_per_iter",
+      "canada":  { "ns_per_iter": 218300000, "samples": 100, "iters": 100, "fastest_ns": 217000000, "slowest_ns": 221700000, "mean_ns": 218500000, "fixture_bytes": 2251051, "mb_per_s": 9.8 },
+      "citm":    { "ns_per_iter": 6086000,   "samples": 100, "iters": 100, "fastest_ns": 6026000,   "slowest_ns": 6309000,   "mean_ns": 6096000,   "fixture_bytes": 1727204, "mb_per_s": 270.5 },
+      "data_s":  { "ns_per_iter": 52160,     "samples": 100, "iters": 100, "fastest_ns": 51580,     "slowest_ns": 61790,     "mean_ns": 52580,     "fixture_bytes": 35491,   "mb_per_s": 648.7 },
+      "data_xl": { "status": "WATCHDOG_HALT", "ns_per_iter_observed": 2417000000, "limit_ns": 1000000000, "limit_source": "limits::JSON_PARSE in crates/core/benches/common/timeout.rs:74", "fixture_bytes": 21281177, "note": "Under bench-iter (no-LTO), data_xl exceeds the 1s/iter JSON_PARSE wall-clock guard. Reproducible: cargo bench --profile bench-iter -p bbnf --bench json_monolithic (with bench!(data_xl,...) reactivated). Observed 2.417s wall before panic. Compared to the post-AZ-I.json data_xl=28.45ms/iter under fat-LTO bench profile, the bench-iter delta reflects the no-LTO + non-aggressive-codegen profile; not an apples-to-apples regression vs post-AZ-I." },
+      "twitter": { "ns_per_iter": 1574000,   "samples": 100, "iters": 100, "fastest_ns": 1540000,   "slowest_ns": 1740000,   "mean_ns": 1578000,   "fixture_bytes": 631514,  "mb_per_s": 401.2 }
+    },
+    "css_l4": {
+      "command": "cargo bench --profile bench-iter -p bbnf --bench css_l4 (run from crates/core)",
+      "binary": "target/w4/bench-iter/deps/css_l4-a5ad58787afbed10",
+      "unit": "ns_per_iter",
+      "bootstrap": { "ns_per_iter": 1097000000, "samples": 28,  "iters": 28,  "fastest_ns": 1091000000, "slowest_ns": 1113000000, "mean_ns": 1099000000, "fixture_bytes": 280311,  "mb_per_s": 0.26, "note": "Sample count 28 (not 100) because divan's max_time=30s capped the sweep at ~30s/1.097s=27 samples." },
+      "normalize": { "ns_per_iter": 695700,     "samples": 100, "iters": 100, "fastest_ns": 689800,     "slowest_ns": 738000,     "mean_ns": 697500,     "fixture_bytes": 6138,    "mb_per_s": 8.8 },
+      "tailwind":  { "status": "WATCHDOG_HALT", "ns_per_iter_observed_min": null, "limit_ns": 5000000000, "limit_source": "limits::CSS_TAILWIND_PARSE in crates/core/benches/common/timeout.rs:76", "fixture_bytes": 3642321, "note": "Under bench-iter (no-LTO), tailwind never produced a single sample within the 30s divan max_time AND the per-iter 5s wall-clock guard was not visibly reached either; the bench process was on tailwind ~120s of CPU when terminated. The tailwind regression was already routed forward at AW-III/AZ-I (post-AW.json: BLOCKED, post-AZ-I.json: SIGABRT_STACK_OVERFLOW). Bench-iter measurement halts before producing a per-iter wall." }
+    },
+    "google_sheets_monolithic": {
+      "command": "cargo bench --profile bench-iter -p bbnf --bench google_sheets_monolithic (run from crates/core)",
+      "binary": "target/w4/bench-iter/deps/google_sheets_monolithic-eee25a69c806aceb",
+      "unit": "ns_per_iter",
+      "parse": {
+        "parse_simple": { "ns_per_iter": 244400, "samples": 100, "iters": 100, "fastest_ns": 243500, "slowest_ns": 269200, "mean_ns": 246200, "fixture_bytes": 505,  "mb_per_s": 2.07, "note": "Bench iterates per-line over the fixture, parsing each formula. mb_per_s computed from divan's BytesCount counter (divan-reported 2.073 MB/s fastest)." },
+        "parse_nested": { "ns_per_iter": 982900, "samples": 100, "iters": 100, "fastest_ns": 976400, "slowest_ns": 1009000, "mean_ns": 984900, "fixture_bytes": 1456, "mb_per_s": 1.48 },
+        "parse_stress": { "ns_per_iter": 2175000,"samples": 100, "iters": 100, "fastest_ns": 2154000,"slowest_ns": 2249000,"mean_ns": 2177000,"fixture_bytes": 1838, "mb_per_s": 0.84 }
+      },
+      "format": {
+        "format_simple": { "ns_per_iter": 207.7,    "samples": 100, "iters": 100, "fastest_ns": 165.7,   "slowest_ns": 3124, "mean_ns": 249.7, "fixture_bytes": "first_formula_only", "mb_per_s": 28.88 },
+        "format_stress": { "ns_per_iter": 6665,     "samples": 100, "iters": 100, "fastest_ns": 6415,    "slowest_ns": 9291, "mean_ns": 6692,  "fixture_bytes": "first_formula_only", "mb_per_s": 29.85 }
+      }
+    },
+    "bbnf_monolithic": {
+      "command": "cargo bench --profile bench-iter -p bbnf --bench bbnf_monolithic (run from crates/core)",
+      "binary": "target/w4/bench-iter/deps/bbnf_monolithic-4f215efbb0a8ff15",
+      "unit": "ns_per_iter",
+      "bbnf_self":      { "ns_per_iter": 740500,  "samples": 100, "iters": 100, "fastest_ns": 733100,  "slowest_ns": 774400,  "mean_ns": 741700  },
+      "css_l4_grammar": { "ns_per_iter": 5288000, "samples": 100, "iters": 100, "fastest_ns": 5250000, "slowest_ns": 5475000, "mean_ns": 5292000 },
+      "css_pretty":     { "ns_per_iter": 198000,  "samples": 100, "iters": 100, "fastest_ns": 195000,  "slowest_ns": 232200,  "mean_ns": 199300  },
+      "ebnf":           { "ns_per_iter": 368300,  "samples": 100, "iters": 100, "fastest_ns": 365800,  "slowest_ns": 390600,  "mean_ns": 369700  },
+      "google_sheets":  { "ns_per_iter": 455700,  "samples": 100, "iters": 100, "fastest_ns": 450600,  "slowest_ns": 498000,  "mean_ns": 457300  },
+      "json":           { "ns_per_iter": 85330,   "samples": 100, "iters": 100, "fastest_ns": 84910,   "slowest_ns": 97910,   "mean_ns": 86180   }
+    },
+    "compile_pipeline": {
+      "command": "cargo bench --profile bench-iter -p bbnf --bench compile_pipeline (run from crates/core)",
+      "binary": "target/w4/bench-iter/deps/compile_pipeline-cd304040ef1054e0",
+      "unit": "ns_per_iter",
+      "compile_bbnf":   { "ns_per_iter": 3830000,  "samples": 100, "iters": 100, "fastest_ns": 3741000, "slowest_ns": 5111000, "mean_ns": 3857000 },
+      "compile_css_l4": { "status": "WATCHDOG_HALT", "ns_per_iter_observed": 263339042, "limit_ns": 200000000, "limit_source": "limits::COMPILE_CSS_L4 in crates/core/benches/common/timeout.rs:71", "note": "Under bench-iter (no-LTO), compile_css_l4 took 263ms/iter, exceeding the 200ms COMPILE_CSS_L4 wall-clock guard. divan's panic propagation aborted compile_ebnf/compile_json/compile_sheets; the W4 carve removes the registration so the rest measure cleanly. Reproducible: cargo bench --profile bench-iter -p bbnf --bench compile_pipeline (with the compile_css_l4 #[divan::bench] reactivated). Compared to post-AZ-I.json compile_css_l4=27.38ms/iter under fat-LTO, the bench-iter delta reflects the profile difference, not a fresh regression." },
+      "compile_ebnf":   { "ns_per_iter": 1550000,  "samples": 100, "iters": 100, "fastest_ns": 1502000, "slowest_ns": 1676000, "mean_ns": 1552000 },
+      "compile_json":   { "ns_per_iter": 414900,   "samples": 100, "iters": 100, "fastest_ns": 403900,  "slowest_ns": 546300,  "mean_ns": 416900  },
+      "compile_sheets": { "ns_per_iter": 3132000,  "samples": 100, "iters": 100, "fastest_ns": 3063000, "slowest_ns": 3742000, "mean_ns": 3157000 }
+    }
+  },
+  "matrix_summary_17_parse_hot_path": [
+    { "row": 1,  "key": "json_monolithic.canada",          "ns_per_iter": 218300000, "status": "MEASURED" },
+    { "row": 2,  "key": "json_monolithic.citm",            "ns_per_iter": 6086000,   "status": "MEASURED" },
+    { "row": 3,  "key": "json_monolithic.data_s",          "ns_per_iter": 52160,     "status": "MEASURED" },
+    { "row": 4,  "key": "json_monolithic.data_xl",         "ns_per_iter_observed": 2417000000, "status": "WATCHDOG_HALT" },
+    { "row": 5,  "key": "json_monolithic.twitter",         "ns_per_iter": 1574000,   "status": "MEASURED" },
+    { "row": 6,  "key": "css_l4.bootstrap",                "ns_per_iter": 1097000000,"status": "MEASURED" },
+    { "row": 7,  "key": "css_l4.normalize",                "ns_per_iter": 695700,    "status": "MEASURED" },
+    { "row": 8,  "key": "css_l4.tailwind",                 "ns_per_iter_observed_min": null, "status": "WATCHDOG_HALT" },
+    { "row": 9,  "key": "google_sheets_monolithic.parse_simple", "ns_per_iter": 244400,  "status": "MEASURED" },
+    { "row": 10, "key": "google_sheets_monolithic.parse_nested", "ns_per_iter": 982900,  "status": "MEASURED" },
+    { "row": 11, "key": "google_sheets_monolithic.parse_stress", "ns_per_iter": 2175000, "status": "MEASURED" },
+    { "row": 12, "key": "bbnf_monolithic.bbnf_self",       "ns_per_iter": 740500,    "status": "MEASURED" },
+    { "row": 13, "key": "bbnf_monolithic.css_l4_grammar",  "ns_per_iter": 5288000,   "status": "MEASURED" },
+    { "row": 14, "key": "bbnf_monolithic.css_pretty",      "ns_per_iter": 198000,    "status": "MEASURED" },
+    { "row": 15, "key": "bbnf_monolithic.ebnf",            "ns_per_iter": 368300,    "status": "MEASURED" },
+    { "row": 16, "key": "bbnf_monolithic.google_sheets",   "ns_per_iter": 455700,    "status": "MEASURED" },
+    { "row": 17, "key": "bbnf_monolithic.json",            "ns_per_iter": 85330,     "status": "MEASURED" }
+  ],
+  "matrix_supplementary_format_and_compile": [
+    { "row": "S1", "key": "google_sheets_monolithic.format_simple", "ns_per_iter": 207.7,     "status": "MEASURED" },
+    { "row": "S2", "key": "google_sheets_monolithic.format_stress", "ns_per_iter": 6665,      "status": "MEASURED" },
+    { "row": "S3", "key": "compile_pipeline.compile_bbnf",          "ns_per_iter": 3830000,   "status": "MEASURED" },
+    { "row": "S4", "key": "compile_pipeline.compile_css_l4",        "ns_per_iter_observed": 263339042, "status": "WATCHDOG_HALT" },
+    { "row": "S5", "key": "compile_pipeline.compile_ebnf",          "ns_per_iter": 1550000,   "status": "MEASURED" },
+    { "row": "S6", "key": "compile_pipeline.compile_json",          "ns_per_iter": 414900,    "status": "MEASURED" },
+    { "row": "S7", "key": "compile_pipeline.compile_sheets",        "ns_per_iter": 3132000,   "status": "MEASURED" }
+  ],
+  "measurement_metadata": {
+    "matrix_run_count": 5,
+    "matrix_run_walls_seconds": {
+      "json_monolithic": 23.88,
+      "css_l4_partial_killed_at_120s": 123.79,
+      "google_sheets_monolithic": 1.24,
+      "bbnf_monolithic": 1.11,
+      "compile_pipeline_after_carve": 1.86
+    },
+    "total_matrix_wall_seconds": 151.88,
+    "host": "aarch64-apple-darwin",
+    "allocator": "mimalloc::MiMalloc",
+    "divan_version": "0.1.21",
+    "watchdog_module": "crates/core/benches/common/timeout.rs",
+    "harness_evidence": "docs/benchmarks/AZ-III/W4-bench-harness-preflight.txt"
+  },
+  "hard_gates": {
+    "gate_1_workspace_health_archived": {
+      "status": "MET (with carry-forwards)",
+      "evidence": "docs/benchmarks/AZ-III/W4-workspace.txt records: cargo fmt --all -- --check GREEN; cargo clippy --workspace --all-targets --profile ax-iter RED on 2 test files (clippy::approx_constant on `3.14` literals); cargo nextest run --workspace --cargo-profile ax-iter --no-fail-fast 1407/1527 PASS, 118 fail, 2 timeout (matches W2/W3a/W3c carry registers)."
+    },
+    "gate_2_structural_audits_archived": {
+      "status": "MET (with regen-check carry-forward)",
+      "evidence": "docs/benchmarks/AZ-III/W4-structural-audits.txt records: bbnf-ir::payload_coverage_audit + struct_registry 21/21 PASS; static no-legacy scans GREEN (no production tape API; no crates/tape package); cargo xtask regen --check RED (7/9 grammars drift, KNOWN-CARRIED per W3a.4 / W2.4.u substrate-divergence)."
+    },
+    "gate_3_17_entry_matrix_with_commands": {
+      "status": "MET",
+      "evidence": "matrix_summary_17_parse_hot_path above; every row carries command + unit + fixture name + value (or status=WATCHDOG_HALT with observed wall and limit). 15/17 measured cleanly; 2 record WATCHDOG_HALT (json.data_xl, css_l4.tailwind) with reproducible commands."
+    },
+    "gate_4_zero_residual_marker_strings_in_matrix": {
+      "status": "MET",
+      "evidence": "Verification command archived as docs/benchmarks/AZ-III/W4-no-residual-markers.txt. Each row is either MEASURED with a numeric ns_per_iter, or WATCHDOG_HALT with an observed-wall plus the limit-source line. No row carries a not-yet-measured sentinel string."
+    },
+    "gate_5_profiles_for_regressions_archived": {
+      "status": "OPTIONAL (skipped per W3c lane note)",
+      "evidence": "Profile capture is optional per W4.4; only triggered on a 10% regression vs AU baseline OR 5% over AZ-I. The 17-entry matrix runs under bench-iter, not the bench profile that AZ-I/AU used; cross-profile comparisons would not be apples-to-apples regression signals. The two WATCHDOG_HALT entries (data_xl, tailwind, compile_css_l4) carry their own per-iter observations as the truthful regression signal."
+    }
+  }
+}

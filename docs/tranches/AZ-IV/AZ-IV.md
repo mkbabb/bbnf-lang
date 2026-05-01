@@ -147,6 +147,7 @@ The 30 items below cannot route to a successor letter. AZ-IV closes inside these
 11. **HARD CAP expansion on overrun.** If a wave's HARD CAP is exceeded by an in-flight write-authorized agent without commit, the orchestrator extends the cap (not split the work) and records the extension reason in `PROGRESS.md`. Triumvirates are not pre-allocated per wave; they fire on the auto-triggers in §11.
 12. Triumvirate auto-triggers (no user prompt required): JSONL transcript quiet >15 minutes, first-pass return with no commit and no evidence, three diagnostic-loop iterations without isolating root cause, or scope reveal that invalidates file bounds / hard gates / substrate-with-consumer wiring.
 13. Sub-agent prompts must remain self-contained and stay within ~700 words of instructions; if a prompt grows larger, the task is mis-scoped and decomposes into sequential mini-units before dispatch.
+14. The W0.3 lowering triad (`crates/core/src/lower/expression/{wrap,repeat,alt}.rs`) is one unit of repair landed in one commit. Predicate-driven structural detection in lowering is the underlying defect class; redress agents replace silent-skip predicates with structural detection plus loud panic on unmatched annotations (per `feedback_typed-materialization-invariant` and §13 No silent fallback). Mechanical regen output lands as a follow-on commit so the `regen --check` invariant holds across the wave.
 
 ## Hard Gates
 

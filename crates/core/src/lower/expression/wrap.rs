@@ -40,31 +40,46 @@ pub(crate) enum GroupKind {
     SpanCapture,
 }
 
-/// Lower a `mapped_factor = factor ( "->" value_expr type? )?` view.
+/// Lower a `mapped_factor = factor , ( "->" ?w , ( value_expr , type_annotation ? ) ) ?` view.
 ///
-/// The first child is the underlying factor. The optional `->`
-/// mapping is detected via span content: when the trimmed span
-/// starts with `->` / `=>`, the mapping group carries the value
-/// expression and optional type annotation as children of the
-/// mapping subtree.
+/// **Structural detection** (AZ-IV.W0.3): the canonical generated
+/// `mapped_factor` parser does not wrap the optional mapping group
+/// in an anonymous compound — the `->` punctuator is consumed via a
+/// direct byte check (no Span pushed), and `value_expr` /
+/// `type_annotation` surface as direct children of `mapped_factor`.
+/// Predicate-driven detection (matching a child whose trimmed span
+/// starts with `->`) silently misses this shape and drops the
+/// `IrNode::Map { fn_id }` wrapper.
+///
+/// We classify children by structural role (compound kind +
+/// positional order) rather than by source-prefix substring:
+///   1. The first substantive non-Unit child is the `factor`
+///      (compound_kind = Factor, or any compound carrying the
+///      grouped/leaf term in inlined shape).
+///   2. Subsequent substantive children are the mapping payload —
+///      `value_expr` head followed by an optional `type_annotation`.
+///   3. A `:`-prefixed span identifies the `type_annotation` even
+///      when its compound_kind is `Other` (the `type_annotation`
+///      sub-rule is not in `BbnfCompoundKind::from_rule_name`'s
+///      alphabet).
+///
+/// Per `feedback_typed-materialization-invariant`, every `->` in the
+/// grammar source must reach the tape emitter; if structural
+/// detection finds a `value_expr` head past the factor but the
+/// `Map { fn_id }` wrapper cannot be built, the function panics
+/// rather than silently returning the bare factor.
 pub(crate) fn lower_mapped_factor<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx<'a>) -> IrNode {
-    // Under struct-direct, `factor` is inlined into `mapped_factor`,
-    // so this compound's children are
-    //   `[big_comment?, term, modifier?, big_comment?, mapping?]`
-    // with each optional slot represented by an empty-span leaf.
-    // Classify children by span content rather than by positional
-    // index.
     let body = peel_mapped_factor_body(node);
     let mut term_node: Option<BbnfView<'a, 'a>> = None;
     let mut modifier_text: Option<String> = None;
-    let mut mapping_node: Option<BbnfView<'a, 'a>> = None;
+    let mut value_expr_head: Option<BbnfView<'a, 'a>> = None;
+    let mut type_annotation: Option<BbnfView<'a, 'a>> = None;
     let mut has_unit_marker = false;
     for c in body.children() {
-        // Detect the Unit leaf the codegen modifier emitter pushes
-        // (`push_leaf_with_unit`). It carries no source span, so
-        // span_text().trim() is empty; recording its presence flags
-        // that the modifier rule fired and the source-gap recovery
-        // below should resolve the punctuator.
+        // The codegen modifier emitter pushes a `Unit` leaf via
+        // `push_leaf_with_unit` — it carries no source span. Record
+        // its presence so the source-gap recovery below can resolve
+        // the punctuator.
         if matches!(c.kind(), BbnfKind::Unit) {
             has_unit_marker = true;
             continue;
@@ -79,21 +94,43 @@ pub(crate) fn lower_mapped_factor<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx
             continue;
         }
         if trimmed.starts_with("->") || trimmed.starts_with("=>") {
-            mapping_node = Some(c);
+            // Legacy bootstrap_parser shape (pre-AZ-II.cutover.D)
+            // wrapped the mapping group in an anonymous compound
+            // whose first byte was the arrow. The modern canonical
+            // parser elides that wrapper, but we honour the legacy
+            // shape via fallthrough so any orphan path that still
+            // produces it routes through `find_value_expr_child` /
+            // `find_type_annotation_child` below.
+            value_expr_head = find_value_expr_child(c).or(value_expr_head);
+            if type_annotation.is_none() {
+                type_annotation = find_type_annotation_child(c);
+            }
+            continue;
+        }
+        // Type-annotation compound — `Other`-kinded sub-grammar
+        // wrapper whose source span starts with `:`.
+        if trimmed.starts_with(':') {
+            type_annotation = Some(c);
             continue;
         }
         if term_node.is_none() {
+            // First substantive non-arrow child is the factor.
             term_node = Some(c);
+            continue;
+        }
+        // Subsequent substantive child past the factor is the
+        // value_expr head. Type-annotations were filtered by the
+        // `:`-prefix branch above.
+        if value_expr_head.is_none() {
+            value_expr_head = Some(c);
         }
     }
-    // Source-gap modifier recovery (mirror of repeat::recover_modifier
-    // and pratt::recover_binary_op): under the codegen alt_dispatch
-    // shape the modifier slot pushes a `Unit` leaf with no span, so
-    // the children-text classification above never sees the punctuator.
-    // When the Unit marker is present and no span-text classification
-    // resolved a modifier, scan forward from the term's source end
-    // (skipping whitespace and group-closing delimiters) for the
-    // punctuator.
+    // Source-gap modifier recovery: under the codegen alt_dispatch
+    // shape the `modifier?` slot pushes a `Unit` leaf with no span,
+    // so the children-text classification above never sees the
+    // punctuator. When the Unit marker is present and no span-text
+    // classification resolved a modifier, scan forward from the
+    // term's source end for the punctuator.
     if modifier_text.is_none() && has_unit_marker {
         if let Some(term) = term_node {
             if let Some(text) = recover_modifier(term) {
@@ -134,15 +171,25 @@ pub(crate) fn lower_mapped_factor<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx
     if let Some(modifier) = &modifier_text {
         base = apply_modifier(base, modifier);
     }
-    let Some(mapping_node) = mapping_node else {
+    // Typed-materialization invariant: if the source contains a
+    // `->` arrow (detectable from the compound's own span_text) but
+    // structural detection failed to find a value_expr head, panic
+    // loudly rather than silently dropping the Map wrapper.
+    if value_expr_head.is_none() {
+        let raw = node.span_text();
+        if find_unquoted(raw, "->").is_some() || find_unquoted(raw, "=>").is_some() {
+            panic!(
+                "mapped_factor: source span {:?} contains a `->`/`=>` arrow \
+                 but structural detection found no value_expr head among the \
+                 compound's {} children — typed-materialization invariant violated",
+                raw,
+                node.num_children(),
+            );
+        }
         return base;
-    };
-    // Extract the value_expr + optional type_annotation from the
-    // mapping subtree.
-    let value_expr = find_value_expr_child(mapping_node)
-        .expect("mapped_factor mapping: missing value expression");
-    let type_ann = find_type_annotation_child(mapping_node);
-    let fn_id = lower_map_arrow(value_expr, type_ann, ctx);
+    }
+    let value_expr = value_expr_head.unwrap();
+    let fn_id = lower_map_arrow(value_expr, type_annotation, ctx);
     let fn_id = try_specialize_map_fn(&base, fn_id, ctx);
     IrNode::Map {
         inner: Box::new(base),

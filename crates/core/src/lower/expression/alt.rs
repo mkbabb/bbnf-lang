@@ -25,8 +25,29 @@ use super::pratt::looks_like_pratt_flat;
 /// compound under structural mode. The `iter_rep_children` helper
 /// unwraps that wrapper transparently. The optional pipe wrapper
 /// is ignored — only the content child of each pair is lowered.
+///
+/// **AZ-IV.W0.3 typed-materialization invariant**: if iteration
+/// produces zero substantive branches but the source span is
+/// non-empty, the predicate-based filter in `iter_iteration_pairs`
+/// dropped every operand — that's a structural-detection failure,
+/// not a graceful empty-Alt fallback. Panic with the offending
+/// span so the shape is fixed at the source rather than silently
+/// collapsing every alternation branch into `Epsilon`.
 pub(crate) fn lower_alternation<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx<'a>) -> IrNode {
     let branches: Vec<BbnfView<'a, 'a>> = iter_iteration_pairs(node).collect();
+    if branches.is_empty() {
+        let raw = node.span_text();
+        if !raw.trim().is_empty() {
+            panic!(
+                "alternation: iter_iteration_pairs yielded zero branches for non-empty \
+                 source span {:?} ({} children) — predicate-based pair filter dropped \
+                 every operand; typed-materialization invariant violated.",
+                raw,
+                node.num_children(),
+            );
+        }
+        return IrNode::Epsilon;
+    }
     if branches.len() == 1 {
         return dispatch_expression(branches[0], ctx);
     }
@@ -46,8 +67,25 @@ pub(crate) fn lower_alternation<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx<'
 /// optional_comma)` under a possibly-wrapped Repeat. Single-part
 /// concatenations collapse to the bare expression (no `Seq`
 /// wrapper).
+///
+/// **AZ-IV.W0.3 typed-materialization invariant**: same
+/// panic-on-loss discipline as [`lower_alternation`] — zero parts
+/// from non-empty source signals a predicate-detection failure.
 pub(crate) fn lower_concatenation<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx<'a>) -> IrNode {
     let parts: Vec<BbnfView<'a, 'a>> = iter_iteration_pairs(node).collect();
+    if parts.is_empty() {
+        let raw = node.span_text();
+        if !raw.trim().is_empty() {
+            panic!(
+                "concatenation: iter_iteration_pairs yielded zero parts for non-empty \
+                 source span {:?} ({} children) — predicate-based pair filter dropped \
+                 every operand; typed-materialization invariant violated.",
+                raw,
+                node.num_children(),
+            );
+        }
+        return IrNode::Epsilon;
+    }
     if parts.len() == 1 {
         return dispatch_expression(parts[0], ctx);
     }

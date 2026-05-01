@@ -231,26 +231,36 @@ and `GrammarIR::type_obligations` field already handle it.
 
 
 ================================================================
-AZ-III.W3a.3 — Heterogeneous Alt Join Evidence (appended segment)
+AZ-III.W3a.3 — Heterogeneous Alt Join Evidence (post-merge)
 ================================================================
 
-Worktree:  /Users/mkbabb/Programming/bbnf-wt-azIII-w3a-types-alt
-Base:      248d3ac6ec2b468720346a0db8dfc95cbc118250 (master)
+Worktree:  /Users/mkbabb/Programming/bbnf-wt-azIII-w3a-merge
+Base:      f2890869 (W3a.2 docs commit, on master)
+W3a.3 source: 1a2dab68 (sibling worktree
+              /Users/mkbabb/Programming/bbnf-wt-azIII-w3a-types-alt)
 Date:      2026-04-30
-Owner:     AZ-III.W3a.3
-CARGO_TARGET_DIR: ./target/w3a-alt
+Owner:     AZ-III.W3a (merged W3a.2 + W3a.3)
+CARGO_TARGET_DIR: ./target/w3a-merge
 
-NOTE ON COEXISTENCE
--------------------
-W3a.2 (above) and W3a.3 (this segment) authored their type-obligation
-substrates in independent sibling worktrees per the dispatch
-contract. Both extended `GrammarIR::type_obligations` and both
-authored `crates/ir/src/passes/types/obligation.rs`. The two
-`TypeObligation` shapes are distinct (`UnresolvedCompoundRef` vs
+UNIFIED OBLIGATION SURFACE
+--------------------------
+W3a.2 (compound Ref) and W3a.3 (heterogeneous Alt) authored their
+type-obligation substrates in independent sibling worktrees per the
+dispatch contract. Both extended `GrammarIR::type_obligations` and
+both authored `crates/ir/src/passes/types/obligation.rs`. The two
+`TypeObligation` shapes are disjoint (`UnresolvedCompoundRef` vs
 `HeterogeneousAltJoin`) and sit on disjoint constraint sites
-(`reference.rs:74` vs `revise.rs:123`). Final integration merges the
-two obligation enums into a unified variant family; this segment
-documents the W3a.3 lane verbatim.
+(`reference.rs:74` vs `revise.rs:123`).
+
+This worktree (`bbnf-wt-azIII-w3a-merge`) integrates both lanes
+into a single unified `TypeObligation` enum. Both variants share
+the same `Vec<TypeObligation>` surface on
+`GrammarIR::type_obligations`; the projection-pass driver drains
+W3a.2 from the sink, then walks the IR for W3a.3 lift sites, and
+publishes a single deduplicated list. Both classes pass through
+the same backend match arms (`HeterogeneousAltJoin(_)` lowers
+identically to `BoxedEnum` for codegen continuity; the typed
+surface change is the only difference from pre-merge).
 
 MECHANISM
 ---------
@@ -352,13 +362,45 @@ json_value_rule_projects_heterogeneous_alt_join
   `TypeDesc::HeterogeneousAltJoin(_)` — not the historical silent
   `BoxedEnum` fallback.
 
-LINT CADENCE
-------------
+LINT CADENCE (post-merge, in `bbnf-wt-azIII-w3a-merge`)
+-------------------------------------------------------
 
   cargo fmt --all -- --check    : clean (exit 0)
-  cargo iter-check              : clean (Finished `ax-iter` 21.21s)
+  cargo iter-check              : clean (Finished `ax-iter` 8.94s)
   cargo xtask regen --check     : clean (9 of 9 grammars matched)
   git diff --check              : clean (no whitespace errors)
+
+POST-MERGE TEST EVIDENCE
+------------------------
+
+  cargo nextest run -p bbnf-ir --tests --cargo-profile ax-iter
+    Summary [0.250s] 406 tests run: 406 passed, 0 skipped
+
+  cargo nextest run -p bbnf --test types_heterogeneous_alt --cargo-profile ax-iter
+    Summary [0.010s] 2 tests run: 2 passed, 0 skipped
+      PASS json_value_rule_projects_heterogeneous_alt_join
+      PASS json_value_alt_lifts_named_obligation
+
+POST-MERGE HARD GATE CHECK
+--------------------------
+
+  $ rg -n "TypeDesc::BoxedEnum" crates/ir/src/passes/types/constraint/revise.rs
+  (no output — zero hits)
+
+  $ rg -n "TypeDesc::BoxedEnum" crates/ir/src/passes/types/constraint/reference.rs
+  3:  //! `IrNode::Ref(rid)` historically ground-assigned `TypeDesc::BoxedEnum`
+  117:                    (TypeDesc::BoxedEnum, Some(obligation))
+
+  Verdict: 0 silent-fallback hits. Line 3 is docstring; line 117 is
+  structurally paired with `Some(obligation)` — the W3a.2 named
+  collapse, not silent.
+
+POST-MERGE COMMIT HASHES
+------------------------
+
+  fa49bbbd  fix(types/obligations): unify HeterogeneousAltJoin obligation surface (W3a.3 merge)
+  35dc929e  test(types/obligations): cover heterogeneous Alt obligation surfacing
+  (this commit) docs(az-iii.W3a.3): record heterogeneous Alt obligation evidence (post-merge)
 
 FILES TOUCHED
 -------------

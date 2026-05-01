@@ -16,7 +16,7 @@ use crate::types::{GrammarIR, IrNode, RuleId, TypeDesc};
 /// admission arms (bare `Span`, scalar-Alt, KV-pair, plain scalar
 /// tuples).
 ///
-/// 16 bytes matches the size of a single [`tape::TapeRec`] and
+/// 16 bytes matches the size of a single runtime tape record and
 /// gives every aggregate at most two 8-byte arena slots. Rules whose
 /// scalar tuple exceeds this fall back to the regular compound
 /// representation rather than promoting to a heap allocation.
@@ -43,8 +43,8 @@ pub const LARGE_PAYLOAD_MAX: u8 = 64;
 /// `fields` lists the projected scalar fields with their byte
 /// offsets into a 16-byte aggregate buffer. `total_bytes` is the
 /// number of bytes the buffer actually occupies — the codegen reads
-/// only this many bytes back through
-/// [`tape::Tape::payload_bytes`].
+/// only this many bytes back through the runtime payload-bytes
+/// accessor.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PayloadLayout {
     pub fields: Vec<PayloadField>,

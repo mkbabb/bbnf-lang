@@ -123,11 +123,12 @@ pub enum SeqPromote {
     KvPair,
 }
 
-/// AW-III.W1 — IR-side mirror of `tape::LiteralPayload`.
+/// AW-III.W1 — typed-leaf payload classification for `Map { Literal,
+/// MapExpr::IntLit/BoolLit/FloatLit }` projections.
 ///
 /// The lifter resolves the enclosing `Map { Literal,
 /// MapExpr::IntLit/BoolLit/FloatLit }` into one of these variants;
-/// the emitter lowers each variant 1:1 to its tape-side counterpart.
+/// the emitter lowers each variant 1:1 to the runtime payload kind.
 /// `None` is the structural-only sentinel.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum LiteralPayload {
@@ -145,8 +146,8 @@ pub enum LiteralPayload {
     F64(f64),
 }
 
-/// AW-III.W1 — IR-side mirror of `tape::PayloadKind` for the
-/// regex-decoder selector.
+/// AW-III.W1 — regex-decoder selector classifying which Stage-B
+/// payload-decoding routine the runtime invokes for a Regex match.
 ///
 /// The lifter resolves an enclosing `Map { Regex, FnDescriptor }` into
 /// the matching decoder variant. `None` skips the Stage-B job.
@@ -169,7 +170,8 @@ pub enum DtaState {
         text: StringId,
         /// AW-III.W1 — typed-leaf payload threaded from the enclosing
         /// `Map { Literal, MapExpr::IntLit/BoolLit/FloatLit }`. The
-        /// emitter lowers this 1:1 into `tape::LiteralPayload`.
+        /// emitter lowers this 1:1 into the runtime literal-payload
+        /// constant emitted at the leaf site.
         payload: LiteralPayload,
     },
     /// Match a regex pattern at the current offset (runs through the
@@ -177,8 +179,8 @@ pub enum DtaState {
     Regex {
         pattern: StringId,
         /// AW-III.W1 — decoder selector for the matched bytes; the
-        /// emitter lowers `Some(_)` to `tape::PayloadKind::*` and
-        /// the walker enqueues a `PayloadJob`. `None` keeps the
+        /// emitter lowers `Some(_)` to the runtime payload-kind tag
+        /// and the walker enqueues a `PayloadJob`. `None` keeps the
         /// payload-less Span emission.
         payload: Option<RegexPayloadKind>,
     },
@@ -788,7 +790,7 @@ impl<'ir> DtaBuilder<'ir> {
                 // recursive lift. The pre-W1 lifter dropped the Map
                 // wrapper wholesale (`self.lift_node(inner)`), losing
                 // every typed-leaf annotation. The arms below mirror
-                // the codegen routing in `tape::psi`:
+                // the codegen routing for the Stage-B payload jobs:
                 //
                 //   - `IntLit` / `FloatLit` / `BoolLit` over a literal
                 //     scanner → `LiteralPayload::*`. Walker writes the

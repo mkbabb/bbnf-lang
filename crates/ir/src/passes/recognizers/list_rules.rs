@@ -9,8 +9,8 @@
 //! structural positions partition into contiguous item extents whose
 //! parses carry no cross-item state. Handing each contiguous region to
 //! a separate worker lets the walker run in parallel; the join phase
-//! memcpy-concatenates the per-worker [`Columns`] and rewrites cross-
-//! worker [`child_off`] offsets by the cumulative pre-worker record
+//! memcpy-concatenates the per-worker `Columns` and rewrites cross-
+//! worker `child_off` offsets by the cumulative pre-worker record
 //! count.
 //!
 //! # Admission
@@ -54,8 +54,8 @@
 //! routes through `dta_run_parallel` when the slot is non-empty and
 //! `input.len() > parallel_break_even_bytes`.
 //!
-//! [`Columns`]: tape::Columns
-//! [`child_off`]: tape::TapeRec::child_off
+//! `Columns` and the runtime `child_off` field referenced above live
+//! in the generated runtime; this pass produces the IR-side plan only.
 
 use crate::types::{GrammarIR, IrNode};
 

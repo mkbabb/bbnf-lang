@@ -5,7 +5,7 @@
 //! Walks every IR node in the unified `mine_recognizers` walk and
 //! emits a [`ShapeTemplate`] for each compound subtree whose
 //! per-child-discriminant signature recurs enough across the grammar
-//! to earn a [`tape::TapeKind::ShapeRef`] dictionary slot.
+//! to earn a runtime `ShapeRef` dictionary slot.
 //!
 //! # AW-IV.W3.1 — recalibration (pre-walker IR, discriminant-only)
 //!
@@ -17,9 +17,9 @@
 //! was demoted, even when the Seq's direct children were structural
 //! (Literal + Ref + OptionalWhitespace). Net yield: CSS L4 ≤ 28
 //! candidates (only the rare all-structural Seq bodies), JSON 0, Sheets
-//! 0. The runtime [`tape::GrammarProfile::shape_dict`] slot
-//! emitted as `&[]` for every non-BBNF grammar despite the mining
-//! substrate existing.
+//! 0. The runtime `GrammarProfile::shape_dict` slot emitted as
+//! `&[]` for every non-BBNF grammar despite the mining substrate
+//! existing.
 //!
 //! W3.1 recalibrates to the **recurring-shape signature** model: a
 //! shape is a hashable canonicalisation of a compound's child
@@ -67,7 +67,7 @@ use super::{MineOutputs, RecognizerMineCtx, RecognizerMiner};
 /// Emitted by [`ShapeDictMiner`] for every fixed-shape compound
 /// subtree the e-graph facts admit. The CSP shape-dict constraint
 /// later selects a budget-bounded subset; the emitter bakes the
-/// chosen templates as [`tape::ShapeEntry`] entries in
+/// chosen templates as `ShapeEntry` entries in
 /// `GrammarProfile::shape_dict`.
 #[derive(Clone, Debug)]
 pub struct ShapeTemplate {

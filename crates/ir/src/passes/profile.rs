@@ -27,8 +27,7 @@ use crate::passes::recognizers::shape_dict_bbnf::{
     mine_bbnf_shape_templates, BbnfShapeTemplate,
 };
 
-/// Consolidated per-grammar fingerprint — the owned IR-side
-/// counterpart of [`tape::GrammarProfile`].
+/// Consolidated per-grammar fingerprint owned by the IR.
 ///
 /// Every field is produced by reading already-computed IR facts:
 /// [`PushFingerprint`](crate::passes::sets::PushFingerprint),
@@ -36,8 +35,8 @@ use crate::passes::recognizers::shape_dict_bbnf::{
 /// [`KeywordBranchMap`](crate::passes::recognizers::keyword_stats::KeywordBranchMap),
 /// [`ShapeDictMap`](crate::passes::recognizers::shape_dict::ShapeDictMap).
 /// The emitter lowers this struct to a single `const GRAMMAR_PROFILE:
-/// tape::GrammarProfile = GrammarProfile { ... };` literal —
-/// the `&'static` slices in the tape-side struct become `&'static`
+/// GrammarProfile = GrammarProfile { ... };` literal in the
+/// generated runtime; the `&'static` slices become `&'static`
 /// references to `static` arrays emitted alongside the literal.
 ///
 /// AW-IV.W1.δ fills every previously-`&[]` slot (`active_columns`,
@@ -75,8 +74,8 @@ pub struct GrammarProfile {
     /// Two-byte digraphs observed at scanner boundaries.
     ///
     /// Stored as `(first, second)` tuples — the emitter lowers this
-    /// directly to a `&'static [(u8, u8)]` that feeds the tape-side
-    /// [`tape::GrammarProfile::structural_digraphs`] and the SIMD
+    /// directly to a `&'static [(u8, u8)]` that feeds the runtime
+    /// `GrammarProfile::structural_digraphs` slot and the SIMD
     /// scanner's [`simd_scan::StructuralAlphabet::digraph_pairs`]
     /// with no shim layer (AW-III.W5.d).
     pub structural_digraphs: Vec<(u8, u8)>,

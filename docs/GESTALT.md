@@ -109,8 +109,8 @@ BC, BC is retired.
 | Workspace `.cargo/config.toml` aliases | 7 current → collapsed in B1.W0 | `08-abrogation-catalog.md` |
 | `scripts/` entries | 19 | `08-abrogation-catalog.md` Part 1 |
 | Abrogation catalog total items | 63 | `08-abrogation-catalog.md` |
-| Divan sites post-B7 migration | 61 (bbnf-lang) + 18 (parse-that) + 38 (pprint) | `docs/instructions/PROFILING.md` §142 |
-| Cross-repo bench harness at B7 close | divan exclusive (legacy bencher / libtest / unstable-test retired) | `docs/instructions/PROFILING.md` §139 |
+| Divan sites post-migration | 61 | `repo-modernization/INDEX.md` |
+| Current divan adoption | 0 | `07-appurtenant-assay.md` |
 | Appurtenant repos | 16 (4 sibling, 12 workspace) | `07-appurtenant-assay.md` |
 
 The numbers are measured, not estimated. Every row cites its
@@ -199,14 +199,12 @@ them at substrate level. Era VI's pauses are the mechanism for
 verifying all four hold before substrate lands.
 
 The ecosystem spans four repos. **bbnf-lang** owns the IR, the
-eleven workspace-internal crates (`crates/core`, `crates/ir`,
+workspace-internal crates (`crates/core`, `crates/ir`,
 `crates/analysis`, `crates/lsp`, `crates/ser`, `crates/gorgeous`,
 `crates/bootstrap`, `crates/egraph`, `crates/egraph-derive`,
-`crates/csp-solver`, `crates/simd-scan`) plus `xtask`, the grammars,
-the benchmark surface, and the CLI. Three crates retired earlier in
-the runway (`crates/tape` at AZ-II.cutover.O5 + AZ-III.W1,
-`crates/derive` at B2.W2, `crates/json-prototype` at B7) no longer
-live in the workspace. **parse-that** owns the combinator
+`crates/csp-solver`, `crates/tape`, `crates/simd-scan`,
+`crates/derive`, `crates/json-prototype`), the grammars, the
+benchmark surface, and the CLI. **parse-that** owns the combinator
 substrate (`parse_that`), the bespoke regex engine (`bbnf-regex`),
 and `regex-bootstrap`; path-patched into the bbnf-lang workspace
 through `.cargo/config.toml`. **pprint** owns the auto-formatter
@@ -261,9 +259,9 @@ the rate differential that flags plan-drift earlier in future eras.
          │ 0/17 bench entries strict-better at AW-V close
          │ AX.W0b deletion: ~78,000 LOC reclaimed
          │
- Era VI ── Infra-truth restart ─────────────────────── 2026-04-20 →        (AY-I, AY-II, B0–B7, AZ-I, AZ-II, AZ-III closed; AZ-IV planning, BA + BB ahead)
-           Column revert / B0–B7 substrate restoration / AZ-I direct-to-struct
-           AZ-II continuation handoff to AZ-III / AZ-III TERMINAL_WITH_CARRIES at d071daf9
+ Era VI ── Infra-truth restart ─────────────────────── 2026-04-20 →        (~130c so far; AY-I, AY-II, B0, B1 + AZ-I / AZ-II / BA / BB planned)
+           Column revert / AY-II path-forward / B1 dev-loop truth
+           (AZ-I / AZ-II / BA / BB scaffold — not started)
 ```
 
 **Era I** (March 2023) is the first commit of the original VSCode-
@@ -1235,17 +1233,16 @@ three repos. Landing wave: B1.W2.c. — `docs/tranches/B1/B1.md`.
 `cargo iter-test` completes in < 30 s wall-clock on the 8-core
 reference box. — `docs/tranches/B1/B1.md`.
 
-**Regen-content invalidation uses a composite key and a CI gate.**
-Key: `(grammar-sha256, rustc-version-sha, xtask-version)`. The B2.W2
-retirement of the `bbnf_derive` proc-macro relocated codegen to
-`cargo xtask regen` against on-disk source under
-`crates/core/src/grammar/generated/`; consumers `include!` the
-emitted file. CI gates content drift with `cargo xtask regen --check`
-(per-grammar idempotency: regen → `git diff --quiet`). Every miss
-logs its reason — no silent misses. The pre-B2 derive-cache at
-`target/.bbnf-cache/` and the planned `$XDG_CACHE_HOME/bbnf-derive/`
-migration retired with the proc-macro. —
-`docs/codegen-paths.md` §1, `docs/tranches/AZ-I/AZ-I.md`.
+**Derive-cache invalidation uses a composite key and a
+chronic-pain test suite.** Key: `(grammar-sha256,
+bbnf-derive-crate-version, rustc-version-sha)`. Test suite at
+`crates/derive/tests/cache_invalidation/` exercises each factor
+independently plus all combinations. Cache hit budget < 50 ms
+with key derivation memoised per process. Size cap 2 GB with
+atime LRU eviction. Every miss logs its reason — no silent
+misses. One-time migration from `target/.bbnf-cache/` to
+`$XDG_CACHE_HOME/bbnf-derive/`. Lives in AZ-I.W0. —
+`docs/tranches/AZ-I/AZ-I.md`.
 
 **The gorgeous sibling is retired.** Executed during the audit:
 `/Users/mkbabb/Programming/gorgeous` moved to

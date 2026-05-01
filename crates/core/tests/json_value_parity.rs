@@ -180,7 +180,15 @@ fn assert_doc_eq_simd(
             assert_eq!(*b, o, "{path}: bool divergence");
         }
         JsonValue::Number(n) => {
-            let oracle_f64 = oracle.as_f64().unwrap_or_else(|| {
+            // `cast_f64()` widens every numeric value-trait variant
+            // (F64 / I64 / U64 / I128 / U128) to `f64`, mirroring
+            // bbnf's `JsonNumber::as_f64` coercion across the
+            // `Float / Int / UInt` arms. simd-json's `as_f64()` is
+            // strict — it returns `None` for `U64` / `I64` — so the
+            // canonical f64 comparison routes through `cast_f64()`,
+            // matching the coercive `as_f64()` behaviour of
+            // `serde_json::Number` and `sonic_rs::Number`.
+            let oracle_f64 = oracle.cast_f64().unwrap_or_else(|| {
                 panic!(
                     "{path}: bbnf=Number but simd-json={:?}",
                     oracle.value_type(),

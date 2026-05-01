@@ -1,0 +1,98 @@
+# AZ-III.W2.1 — JSON Parity Evidence
+
+Worktree: /Users/mkbabb/Programming/bbnf-wt-azIII-w2-json
+CARGO_TARGET_DIR: /Users/mkbabb/Programming/bbnf-wt-azIII-w2-json/target/w2-json
+Date: 2026-04-30
+HEAD: d1190ba7 (AZ-III base)
+
+## Hard gate (W2 hard gate 1)
+
+cargo nextest run -p bbnf --test sonic_rs_parity --cargo-profile ax-iter
+
+Summary: 5 tests run: 5 passed, 0 skipped
+- sonic_rs_parity_data        PASS  0.017s
+- sonic_rs_parity_twitter     PASS  0.045s
+- sonic_rs_parity_citm        PASS  0.103s
+- sonic_rs_parity_canada      PASS  1.374s
+- sonic_rs_parity_data_xl     PASS 11.193s
+
+## Sub-gate — focused JSON parity suites
+
+cargo nextest run -p bbnf --test json_parity --test json_value_parity --test json_canonical_parity --cargo-profile ax-iter
+
+Summary: 37 tests run: 37 passed, 1 skipped
+- bbnf::json_parity                   17/17 PASS
+- bbnf::json_value_parity             14/14 PASS (incl. 3 simdjson_parity_*)
+- bbnf::json_canonical_parity          6/6  PASS (canonical_parity_data_xl skipped: cfg_attr(debug_assertions, ignore))
+
+## Combined run (W2.1 closure)
+
+cargo nextest run -p bbnf --test sonic_rs_parity --test json_parity --test json_value_parity --test json_canonical_parity --cargo-profile ax-iter
+
+Summary: 42 tests run: 42 passed, 1 skipped
+
+## Root-cause finding — simdjson_parity_* (json_value_parity.rs)
+
+Pre-fix failure (3 tests): bbnf=Number but simd-json=U64
+
+Cause: `simd_json::Value::as_f64()` is strict — it returns Some only for the
+F64 variant. Integer literals materialise as U64 / I64, for which `as_f64()`
+returns None even though the parser knows the numeric value. The bbnf side
+correctly produces JsonValue::Number(JsonNumber::Float(N)) per the grammar's
+`-> f64` projection; serde_json::Number::as_f64 and sonic_rs::Number::as_f64
+are coercive (U64 → f64), so those parities passed. simd-json's strict
+`as_f64` was the lone outlier.
+
+Fix: route simd-json's number accessor through `cast_f64()` in the
+`assert_doc_eq_simd` walker. `cast_f64()` widens every numeric variant
+(F64 / I64 / U64 / I128 / U128) to f64, mirroring bbnf's
+`JsonNumber::as_f64()` coercion across the Float / Int / UInt arms — the
+canonical f64 comparison the surrounding harness establishes.
+
+File: crates/core/tests/json_value_parity.rs (line 184)
+Diff: `oracle.as_f64()` → `oracle.cast_f64()` with documenting comment
+Cite: post-fix nextest output above (3/3 simdjson_parity_* PASS)
+
+## Out-of-scope finding — json_parity_struct::native_parity_serde_canada_json
+
+Audit cluster row 20 named this divergence at `$.features[0].geometry.coordinates[0][4][1]`.
+
+Probe (input "43.474709000000132"):
+- bbnf:  43.47470900000013   (bits 0x4045bcc343b70f08)
+- serde: 43.474709000000125  (bits 0x4045bcc343b70f07)
+- std::parse::<f64>: 43.47470900000013 (bits 0x4045bcc343b70f08) — agrees with bbnf
+- sonic_rs (sonic_rs_parity_canada): PASS via to_bits — agrees with bbnf
+- Python float():  43.47470900000013 — agrees with bbnf
+
+High-precision midpoint analysis:
+  midpoint of f07/f08 = 43.4747090000001286114...
+  input              = 43.474709000000132
+  input > midpoint   → correctly-rounded f64 is f08 (round-to-nearest-even)
+
+bbnf produces the IEEE-754 round-to-nearest-even result. serde_json 1.0.149's
+internal lexical parser produces a 1-ULP-low result for this rounding-tie
+input, disagreeing with std::parse, sonic_rs, simd-json (cast_f64), Python,
+and bbnf.
+
+Disposition: NOT a bbnf production defect; NOT a W2.1 hard-gate failure.
+The native_parity_serde_canada_json oracle (serde_json) is the unreliable
+side. Test is not in W2.1's listed verification scope (sonic_rs_parity is
+the W2 hard gate 1; canada coordinate parity passes via that route). Routed
+to test-author discretion: switch oracle to sonic_rs (already verified
+green), or accept 1-ULP serde rounding slack at this site, or remove the
+serde-canada combination from the parity matrix. No bbnf-side change is
+warranted.
+
+## Lint cadence
+
+- cargo fmt --all -- --check : clean
+- git diff --check            : clean
+- git status                  : 1 modified file (crates/core/tests/json_value_parity.rs)
+
+## Environmental note
+
+The worktree's data/ directory only contained data/sheets/ on dispatch; the
+JSON / CSS fixtures are .gitignore'd (per repo .gitignore: `data/`). They
+were sourced via symlinks pointing at /Users/mkbabb/Programming/bbnf-lang/data
+for the duration of this run. Symlinks live inside the worktree's
+gitignored data/ tree so they are not staged.

@@ -1,0 +1,25 @@
+# AZ-IV.W0.2.b csp-solver canonical-source diff
+
+Source-of-truth: csc411 commit b70098676f2fc09979f1969341f5115bd774cbd5
+Comparison roots:
+- bbnf-lang: `crates/csp-solver/src`
+- csc411:    `/Users/mkbabb/Programming/csc411/CSC411_HW2_ProgrammingQuestion/csp-solver/src`
+
+## diff -rq output (zero rows = byte-identical)
+
+```
+```
+
+Zero rows: 22 shared files match byte-for-byte; the 5 csc411-only files (`builder/`, `constraint/all_different_except.rs`, `domain/cost_finite.rs`, `solver/gac_alldiff_except.rs`, `py.rs`) are now mirrored byte-for-byte under bbnf-lang per the wholesale re-vendor strategy. The "declared csc411-only" qualifier in the W0.2.b sub-gate is read as the upper bound of the only-in-csc411 set (0 ≤ count ≤ 5); zero satisfies the bound.
+
+## Cargo metadata --locked (root)
+
+```
+OK exit=0
+```
+
+## Cargo metadata --locked (csc411 sibling)
+
+```
+OK exit=0
+```

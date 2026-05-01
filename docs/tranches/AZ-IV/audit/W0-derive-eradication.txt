@@ -1,0 +1,50 @@
+# AZ-IV.W0.2.c bbnf_derive Eradication Evidence
+
+## rg over bbnf-lang crates/, xtask/, wasm/
+
+```
+xtask/src/main.rs:4://! build time, replacing the pre-B2 `bbnf_derive` proc-macro contract
+xtask/src/regen.rs:3://! Replaces the pre-B2 `bbnf_derive` proc-macro contract that ran the
+xtask/src/regen.rs:16://! bbnf_derive deps (B2.W2)`. That commit deleted `crates/derive/src/
+```
+
+All 3 hits are doc-comments naming the post-B2 retirement; zero source/manifest/lock matches.
+
+## rg over parse-that/rust/, parse-that/typescript/
+
+```
+/Users/mkbabb/Programming/parse-that/rust/bootstrap/src/lib.rs:4://! Pre-B2: this crate carried `#[derive(bbnf_derive::Parser)]` on a
+/Users/mkbabb/Programming/parse-that/rust/bootstrap/src/lib.rs:10://! proc-macro crate; purge bbnf_derive deps`): the proc-macro crate is
+/Users/mkbabb/Programming/parse-that/rust/bootstrap/Cargo.toml:14:# `6142387f`), so the historical `bbnf_derive = "0.2"` registry edge that
+```
+
+All 3 hits are doc-comments citing commit `6142387f`; the published `bbnf_derive 0.2` registry edge is severed.
+
+## wasm/ and root cargo metadata --locked
+
+```
+ROOT: OK exit=0
+WASM: OK exit=0
+PARSE-THAT-RUST: OK exit=0
+```
+
+## wasm/Cargo.lock bbnf_derive edge audit
+
+```
+0
+```
+Zero matches in wasm/Cargo.lock.
+
+## parse-that/rust/Cargo.lock bbnf_derive edge audit
+
+```
+0
+```
+Zero matches in parse-that/rust/Cargo.lock.
+
+## parse-that/typescript/package-lock.json refresh
+
+```
+1773643075 /Users/mkbabb/Programming/parse-that/typescript/package.json
+1777668864 /Users/mkbabb/Programming/parse-that/typescript/package-lock.json
+```

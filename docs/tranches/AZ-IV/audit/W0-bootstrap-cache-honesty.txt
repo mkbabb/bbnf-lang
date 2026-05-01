@@ -1,0 +1,65 @@
+# AZ-IV.W0 bootstrap-bbnf cache honesty (cycle-1 vs cycle-2 walls)
+
+Per HARDENING-2026-05-01-boole.md §Part-a: cycle-2 wall must be ≤ 10 % of cycle-1 wall.
+
+Mechanism status: `scripts/bootstrap-bbnf.sh` was retired in B2.W3 (commit `f375cd38`); the cache-nuke surface no longer exists. `crates/derive` (the proc-macro source the cache served) was deleted in B2.W2 (commit `6142387f`). Cycle-1/cycle-2 measurement therefore certifies the standing condition rather than gating a new fix.
+
+## Measurement
+
+Command: `cargo iter-check-full` (workspace check under `[profile.ax-iter]`)
+Worktree: `/Users/mkbabb/Programming/bbnf-wt-aziv-w0-topology`
+CARGO_TARGET_DIR: `/Users/mkbabb/Programming/bbnf-wt-aziv-w0-topology/target/w0-topology` (cleaned before cycle-1)
+
+| Cycle | Real (s) | User (s) | Sys (s) |
+|---|---:|---:|---:|
+| 1 (cold) | 45.28 | 24.01 | 6.89 |
+| 2 (warm) | 0.85 | 0.16 | 0.19 |
+
+Cycle-2/cycle-1 ratio = 0.85 / 45.28 = **1.88 %** ≤ 10 %.
+
+## Raw log
+
+```
+=== CYCLE 1 (cold) ===
+warning: function `is_term_kind` is never used
+   --> crates/analysis/src/state/ast_utils/mod.rs:156:15
+    |
+156 | pub(crate) fn is_term_kind(node: BbnfView<'_, '_>) -> bool {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `is_grouped_term` is never used
+   --> crates/analysis/src/state/ast_utils/mod.rs:176:15
+    |
+176 | pub(crate) fn is_grouped_term(node: BbnfView<'_, '_>) -> bool {
+    |               ^^^^^^^^^^^^^^^
+
+warning: `bbnf-analysis` (lib) generated 2 warnings
+    Checking bbnf-lsp v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-aziv-w0-topology/crates/lsp)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 45.14s
+real 45.28
+user 24.01
+sys 6.89
+=== CYCLE 2 (warm) ===
+warning: `bbnf` (lib) generated 185 warnings (run `cargo fix --lib -p bbnf` to apply 8 suggestions)
+warning: function `is_term_kind` is never used
+   --> crates/analysis/src/state/ast_utils/mod.rs:156:15
+    |
+156 | pub(crate) fn is_term_kind(node: BbnfView<'_, '_>) -> bool {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `is_grouped_term` is never used
+   --> crates/analysis/src/state/ast_utils/mod.rs:176:15
+    |
+176 | pub(crate) fn is_grouped_term(node: BbnfView<'_, '_>) -> bool {
+    |               ^^^^^^^^^^^^^^^
+
+warning: `bbnf-analysis` (lib) generated 2 warnings
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 0.62s
+real 0.85
+user 0.16
+sys 0.19
+```

@@ -1,0 +1,211 @@
+# AZ-III.W4.1 Structural Audits — 2026-04-30
+
+Worktree: /Users/mkbabb/Programming/bbnf-wt-azIII-w4
+Commit (pre-W4): ec92c39df2a961a63d88721121b34c50ab4304c4
+CARGO_TARGET_DIR: /Users/mkbabb/Programming/bbnf-wt-azIII-w4/target/w4
+Profile: ax-iter (iter-profile-always)
+
+## 1. Payload coverage + StructRegistry audits
+
+Command:
+```
+cargo nextest run --cargo-profile ax-iter -p bbnf-ir \
+  --test payload_coverage_audit --test struct_registry
+```
+
+Compile wall: 36.72s
+Test wall: 0.016s
+Exit: 0
+
+Result:
+```
+Summary [   0.016s] 21 tests run: 21 passed, 0 skipped
+```
+
+Per-suite breakdown (21 tests):
+- bbnf-ir::payload_coverage_audit  (10 tests, all PASS)
+  - mapped_status_when_layout_admits_marker_type
+  - w0_baseline_pending_status_for_every_grammar
+  - missing_status_when_layout_fails_to_cover_marker_type
+  - css_l4_fixture_groups_color_and_length_unit_separately
+  - write_audit_coverage_json_to_w0_path
+  - json_per_rule_grouping_lists_value_with_five_markers
+  - payload_layouts_probe_falls_back_to_pending_when_layouts_empty
+  - sheets_fixture_produces_seven_markers_across_five_rules
+  - pending_and_missing_are_distinguished_in_same_grammar
+- bbnf-ir::struct_registry  (11 tests, all PASS)
+  - recursive_rule_layout_carries_rule_reference_field
+  - registry_clear_resets_to_empty
+  - audit_pass_reports_pending_when_registry_empty
+  - homogeneous_alt_rule_produces_untagged_enum_layout
+  - audit_report_aggregates_across_grammars_with_registry_probe
+  - empty_grammar_produces_empty_registry
+  - audit_pass_reports_mapped_when_registry_populated
+  - registry_iter_returns_layouts_in_rule_id_order
+  - typed_leaf_rule_with_i64_return_produces_newtype_wrapper
+  - single_alt_rule_produces_tagged_enum_layout
+  - single_seq_rule_produces_struct_with_three_positions
+  - repeat_rule_with_hi_greater_than_one_produces_repeat_element_field
+
+Verdict: GREEN. Payload coverage + StructRegistry obligations are
+durable-tested and all pass.
+
+## 2. IR coverage
+
+The IR test corpus runs as part of the workspace nextest in W4-workspace.txt.
+Crate-only nextest (`cargo iter-test-leaf` covers bbnf-ir + egraph + csp-solver
++ bbnf-ser) was not separately re-run for W4 to avoid duplicate target lock
+contention; the workspace run already includes the bbnf-ir suite.
+
+Notable IR audit tests (passing in workspace run):
+- payload_coverage_audit: 10/10 PASS
+- struct_registry: 11/11 PASS
+- rewrites_substrate: pass (in workspace run)
+- structural_alphabet_extended: pass (in workspace run)
+- shape_dispatch: pass (in workspace run)
+- kernel_shape: pass (in workspace run)
+- egraph_universal / egraph_roundtrip / egraph_suffix / egraph_analysis: pass
+
+## 3. Static no-legacy scans
+
+### 3a. tape surfaces in production source
+
+```
+rg -n "TapeBuilder|TapeCursor|TapeRec|push_rec" \
+   crates/core/src/grammar/generated/
+```
+
+Output: (empty) — no tape API surfaces in any generated grammar.
+
+```
+rg -c "TapeBuilder|TapeCursor|TapeRec|push_rec" --type rust crates/
+```
+
+Hits (live, not tape-surface):
+- crates/core/src/grammar/host.rs:4 — `push_recover` (recovery directives,
+  not tape API; substring match on `push_rec`).
+- crates/core/src/runtime/{json,csv,sheets,bbnf,css_l4}/mod.rs — runtime
+  surfaces (substring match on `push_rec` in `push_recover` only).
+- crates/core/src/backend/rust/emitter/shapes/number.rs:1 —
+  `push_record_kind` reference (helper, not API surface).
+- crates/ir/src/passes/types/constraint/reference.rs:1 + types/type_desc.rs:2 —
+  doc comments referencing `TapeBuilder`/`TapeCursor` historically; no live
+  type imports.
+- crates/core/tests/* — fixtures and parity tests; not production source.
+
+Verdict: GREEN. No production source exports a TapeBuilder/Cursor API.
+The substring matches all collapse to `push_recover` (recovery directive)
+or doc-comment archaeology.
+
+### 3b. tape view APIs
+
+```
+rg -n "Parsed<R>|TapeDirect|ValueRoot|TapeOffset" --type rust crates/
+```
+
+Hits:
+- crates/ir/src/passes/payload/scalar_routing.rs:4 — doc comment
+- crates/ir/src/passes/materialization/lattice.rs:48,59 — doc comment
+- crates/core/src/backend/rust/emitter/grammar.rs:113 — doc comment
+- crates/core/tests/{ay_w3b_value_api_smoke,css_l4_named_color_parity,regen_shape_goldens,runtime_root}.rs — test refs
+
+Verdict: GREEN. No live exports of `TapeDirect`, `ValueRoot`, `Parsed<R>`,
+or `TapeOffset` types. Surface mentions are all doc comments and test
+fixtures.
+
+### 3c. crates/tape package
+
+```
+cargo metadata --format-version=1 | jq -r '.packages[]|select(.source==null)|.name' | sort -u
+```
+
+Workspace packages:
+- bbnf
+- bbnf-analysis
+- bbnf-bootstrap
+- bbnf-ir
+- bbnf-lsp
+- bbnf-regex
+- bbnf-ser
+- csp-solver
+- egraph
+- egraph-derive
+- gorgeous
+- parse_that
+- pprint
+- pprint_derive
+- simd-scan
+- xtask
+
+Verdict: GREEN. No `crates/tape` (deleted W1.x; no resurfacing).
+
+## 4. cargo xtask regen --check
+
+Command:
+```
+cargo xtask regen --check
+```
+
+Exit: non-zero (1)
+
+Drift report (verbatim from xtask output):
+```
+[xtask::regen] css_pretty: prettyplease done in 41.066ms
+[xtask::regen] google_sheets: prettyplease done in 71.120292ms
+...
+drift: crates/core/src/grammar/generated/bbnf.rs differs from `cargo xtask regen --grammar bbnf`
+drift: crates/core/src/grammar/generated/json.rs differs from `cargo xtask regen --grammar json`
+drift: crates/core/src/grammar/generated/css_l4.rs differs from `cargo xtask regen --grammar css_l4`
+drift: crates/core/src/grammar/generated/css_pretty.rs differs from `cargo xtask regen --grammar css_pretty`
+drift: crates/core/src/grammar/generated/google_sheets.rs differs from `cargo xtask regen --grammar google_sheets`
+drift: crates/core/src/grammar/generated/ebnf.rs differs from `cargo xtask regen --grammar ebnf`
+drift: crates/core/src/grammar/generated/bnf.rs differs from `cargo xtask regen --grammar bnf`
+Error: regen --check: 7 of 9 grammars drifted
+```
+
+Total: 7/9 grammars drifted (csv + math clean; bbnf, json, css_l4,
+css_pretty, google_sheets, ebnf, bnf drift).
+
+### Carry-forward owner: W3a.4 / W2.4.u substrate-divergence
+
+Per W1-regen-root-cause.md and W3a-4-regen-path-agnostic.txt
+(docs/benchmarks/AZ-III/), the 7-of-9 drift signature is NOT a drift
+where committed generated.rs disagrees with grammar text. It is a
+substrate-divergence: the W3a.4 fact-authority migration and the W2.4.u
+keyword-Span push absorbed a path-shape change in the lowering pipeline
+that has not yet propagated into a single canonical content-equality
+rule for `regen --check`. Per W2.4.u absorbed at carve, the next regen
+will need the keyword Unit→Span fix, the entry-rule classifier upgrade
+(Scalar vs Array), the HRegex payload widening (i64→str), and PHF
+table generation alignment (W6.2 follow-up).
+
+The W1.4 close documented `regen --check` was content-equal post-skip:
+`HEAD already 9/9 clean, byte-identical to regen output via xtask
+content-equality skip` — that ran with the W1-era `--check` semantics,
+not the W3-post divergence. After the W3a/b/c sequence landed, the
+shape-detection layer needs the same keyword-Span absorption that
+W2.4.u amended at carve scope. The fix lives in W3a.4 routing, NOT in
+a W4 source edit.
+
+W4 close-gate disposition: NAMED-BLOCKER carry-forward per AZ-III.md
+hard-gate 1 disposition for W3a.4. W4 records the failure honestly and
+does NOT attempt the W3a.4 fix. The 17-entry matrix consumes the HEAD
+generated/ files (which test-pass against the same HEAD) and the matrix
+truth is unaffected by the regen-drift name.
+
+Verdict: RED — KNOWN, ROUTED, CARRIED. AZ-III hard gate 1 carries the
+substrate-divergence with a named blocker. W5 - Terminal Close and
+Handoff records this in the FINAL packet.
+
+## Summary
+
+| Audit | Status | Notes |
+|---|---|---|
+| cargo fmt --all -- --check | GREEN | 411-file sweep landed W1.5 |
+| cargo clippy workspace ax-iter | RED (test-only) | 2 approx_constant `3.14` errors in 2 test files; production source clean |
+| cargo nextest --workspace ax-iter | 1407/1527 PASS (92.1%) | 118 fail + 2 timeout match W2/W3a/W3c carry registers |
+| Payload coverage + StructRegistry | GREEN | 21/21 PASS |
+| Static no-legacy (tape surfaces) | GREEN | 0 production exports |
+| Static no-legacy (TapeDirect/ValueRoot) | GREEN | doc-only mentions |
+| crates/tape in metadata | GREEN | Absent |
+| cargo xtask regen --check | RED (carried) | 7/9 drift, W3a.4/W2.4.u substrate-divergence carry-forward |

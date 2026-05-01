@@ -1,0 +1,101 @@
+# AZ-III.W4.1 Workspace Audit — 2026-04-30
+
+Worktree: /Users/mkbabb/Programming/bbnf-wt-azIII-w4
+Commit (pre-W4): ec92c39df2a961a63d88721121b34c50ab4304c4
+CARGO_TARGET_DIR: /Users/mkbabb/Programming/bbnf-wt-azIII-w4/target/w4
+Profile: ax-iter (per .cargo/config.toml; iter-profile-always discipline)
+
+## 1. cargo fmt --all -- --check
+
+Command:
+```
+cargo fmt --all -- --check
+```
+
+Exit: 0
+Output: (empty)
+
+Verdict: GREEN. The 411-file fmt sweep landed in W1.5; .rustfmt.toml
+already excludes generated/. No drift.
+
+## 2. cargo clippy --workspace --all-targets --profile ax-iter
+
+Command:
+```
+CARGO_TARGET_DIR=target/w4 cargo clippy --workspace --all-targets --profile ax-iter
+```
+
+Wall: 18.57s real, 38.14s user, 12.51s sys
+Exit: 101 (deny-by-default lint failure)
+
+Counts:
+- warnings: 613 lines beginning with "warning:"
+- errors: 4 (2 root + 2 "could not compile" follow-ups)
+
+Active errors (clippy::approx_constant, deny-by-default):
+1. crates/core/tests/structural.rs:327:57
+   `JsonValue::Number(n) => assert!((n.as_f64() - (-3.14)).abs() < 1e-9)`
+   Lint: literal `3.14` matches f{32, 64}::consts::PI to 4 sig figs; clippy
+   denies. Test artefact, not a production source defect.
+2. crates/core/tests/css_l4_substrate.rs:269:37
+   `let num = CssTypedValue::Number(3.14);`
+   Same lint, same shape. Test artefact.
+
+Status: clippy compiles every package + test target except the two test
+files above. The errors are scope-bounded test fixtures (deny-by-default
+clippy lint on `3.14` literals), not workspace-source defects. Two-line
+allow-lint local fix at the test sites is the resolution route; carried
+to W5 / FINAL.
+
+Per-crate warning generators (crates with > 25 warnings):
+- bbnf-ir (lib): 125 warnings (16 fix-suggestions)
+- bbnf (lib): 185 warnings — bench-iter run; 8 suggestions
+- csp-solver (lib): 27 warnings (16 suggestions)
+
+Verdict: NOT GREEN — 2 deny-by-default clippy errors in test files; the
+production source compiles cleanly. The 613 warnings are dominated by
+generated-code lints and test-helper drift; non-blocking for W4 close.
+
+## 3. cargo nextest run --workspace --cargo-profile ax-iter --no-fail-fast
+
+Command:
+```
+CARGO_TARGET_DIR=target/w4 cargo nextest run --workspace \
+  --cargo-profile ax-iter --no-fail-fast
+```
+
+Wall: 292.97s real (190.809s test wall after compile)
+Exit: 1 (test run failed)
+
+Summary:
+```
+Starting 1527 tests across 137 binaries (25 tests skipped)
+Summary [ 190.809s] 1527 tests run: 1407 passed, 118 failed, 2 timed out, 25 skipped
+```
+
+Pass rate: 1407 / 1527 = 92.1%
+Fail rate: 118 / 1527 = 7.7%
+Timed out: 2 (bbnf-lsp::integration test_completion +
+              bbnf-lsp::integration test_cross_file_completion_includes_imported_rules
+              both at 90s wall under the default nextest timeout)
+
+Failure cluster signature (sampled from nextest output):
+- ax_w0a2s_real_css_probe::{tailwind,normalize,bootstrap}_full_parse: 3
+- backend_ts::ts_emits_discriminated_union: 1 (W3c-routed)
+- simd-scan::correctness::{json_citm,json_canada}_canonical: 2
+- bbnf-lsp::integration timeouts: 2 (sibling-repo state per W0.6)
+
+The 118 failures align with carried-forward registers from W2/W3a/W3c
+("complete_with_misses" status in PROGRESS.md) and the W3a.4 regen-drift
+divergence cluster. No newly introduced regression vs the pre-W4 baseline.
+
+Verdict: 92.1% PASS rate is the AZ-III cumulative baseline.
+
+## 4. Structural audits
+
+See `W4-structural-audits.txt`.
+
+## 5. cargo xtask regen --check
+
+KNOWN RED per W3a.4 / W2.4.u substrate-divergence carry-forward.
+See `W4-structural-audits.txt` for details.

@@ -23956,6 +23956,963 @@ mod __cssl4parser_emit_impl {
                 })?;
             'try_branches: loop {
                 match first {
+                    9u8 => {
+                        {
+                            let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
+                            match (|| -> ::core::result::Result<
+                                (),
+                                crate::runtime::DtaError,
+                            > {
+                                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                                    "\\s*>\\s*",
+                                    input,
+                                    *p,
+                                ) {
+                                    *p += match_len as usize;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        1u64,
+                                    );
+                                    ::core::result::Result::Ok(())
+                                } else {
+                                    ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: *p as u32,
+                                    })
+                                }
+                            })() {
+                                ::core::result::Result::Ok(_) => {
+                                    __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
+                                    break 'try_branches;
+                                }
+                                ::core::result::Result::Err(_) => {
+                                    *p = attempt_p;
+                                    builder.rollback(attempt_builder);
+                                }
+                            }
+                        }
+                        {
+                            let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
+                            match (|| -> ::core::result::Result<
+                                (),
+                                crate::runtime::DtaError,
+                            > {
+                                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                                    "\\s*\\+\\s*",
+                                    input,
+                                    *p,
+                                ) {
+                                    *p += match_len as usize;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        2u64,
+                                    );
+                                    ::core::result::Result::Ok(())
+                                } else {
+                                    ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: *p as u32,
+                                    })
+                                }
+                            })() {
+                                ::core::result::Result::Ok(_) => {
+                                    __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
+                                    break 'try_branches;
+                                }
+                                ::core::result::Result::Err(_) => {
+                                    *p = attempt_p;
+                                    builder.rollback(attempt_builder);
+                                }
+                            }
+                        }
+                        {
+                            let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
+                            match (|| -> ::core::result::Result<
+                                (),
+                                crate::runtime::DtaError,
+                            > {
+                                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                                    "\\s*~\\s*",
+                                    input,
+                                    *p,
+                                ) {
+                                    *p += match_len as usize;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        3u64,
+                                    );
+                                    ::core::result::Result::Ok(())
+                                } else {
+                                    ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: *p as u32,
+                                    })
+                                }
+                            })() {
+                                ::core::result::Result::Ok(_) => {
+                                    __wrap_branch_idx = 2u32;
+                                    builder.commit(attempt_builder);
+                                    break 'try_branches;
+                                }
+                                ::core::result::Result::Err(_) => {
+                                    *p = attempt_p;
+                                    builder.rollback(attempt_builder);
+                                }
+                            }
+                        }
+                        {
+                            let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
+                            match (|| -> ::core::result::Result<
+                                (),
+                                crate::runtime::DtaError,
+                            > {
+                                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                                    "\\s+",
+                                    input,
+                                    *p,
+                                ) {
+                                    *p += match_len as usize;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        0u64,
+                                    );
+                                    ::core::result::Result::Ok(())
+                                } else {
+                                    ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: *p as u32,
+                                    })
+                                }
+                            })() {
+                                ::core::result::Result::Ok(_) => {
+                                    __wrap_branch_idx = 3u32;
+                                    builder.commit(attempt_builder);
+                                    break 'try_branches;
+                                }
+                                ::core::result::Result::Err(_) => {
+                                    *p = attempt_p;
+                                    builder.rollback(attempt_builder);
+                                }
+                            }
+                        }
+                    }
+                    10u8 => {
+                        {
+                            let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
+                            match (|| -> ::core::result::Result<
+                                (),
+                                crate::runtime::DtaError,
+                            > {
+                                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                                    "\\s*>\\s*",
+                                    input,
+                                    *p,
+                                ) {
+                                    *p += match_len as usize;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        1u64,
+                                    );
+                                    ::core::result::Result::Ok(())
+                                } else {
+                                    ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: *p as u32,
+                                    })
+                                }
+                            })() {
+                                ::core::result::Result::Ok(_) => {
+                                    __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
+                                    break 'try_branches;
+                                }
+                                ::core::result::Result::Err(_) => {
+                                    *p = attempt_p;
+                                    builder.rollback(attempt_builder);
+                                }
+                            }
+                        }
+                        {
+                            let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
+                            match (|| -> ::core::result::Result<
+                                (),
+                                crate::runtime::DtaError,
+                            > {
+                                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                                    "\\s*\\+\\s*",
+                                    input,
+                                    *p,
+                                ) {
+                                    *p += match_len as usize;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        2u64,
+                                    );
+                                    ::core::result::Result::Ok(())
+                                } else {
+                                    ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: *p as u32,
+                                    })
+                                }
+                            })() {
+                                ::core::result::Result::Ok(_) => {
+                                    __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
+                                    break 'try_branches;
+                                }
+                                ::core::result::Result::Err(_) => {
+                                    *p = attempt_p;
+                                    builder.rollback(attempt_builder);
+                                }
+                            }
+                        }
+                        {
+                            let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
+                            match (|| -> ::core::result::Result<
+                                (),
+                                crate::runtime::DtaError,
+                            > {
+                                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                                    "\\s*~\\s*",
+                                    input,
+                                    *p,
+                                ) {
+                                    *p += match_len as usize;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        3u64,
+                                    );
+                                    ::core::result::Result::Ok(())
+                                } else {
+                                    ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: *p as u32,
+                                    })
+                                }
+                            })() {
+                                ::core::result::Result::Ok(_) => {
+                                    __wrap_branch_idx = 2u32;
+                                    builder.commit(attempt_builder);
+                                    break 'try_branches;
+                                }
+                                ::core::result::Result::Err(_) => {
+                                    *p = attempt_p;
+                                    builder.rollback(attempt_builder);
+                                }
+                            }
+                        }
+                        {
+                            let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
+                            match (|| -> ::core::result::Result<
+                                (),
+                                crate::runtime::DtaError,
+                            > {
+                                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                                    "\\s+",
+                                    input,
+                                    *p,
+                                ) {
+                                    *p += match_len as usize;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        0u64,
+                                    );
+                                    ::core::result::Result::Ok(())
+                                } else {
+                                    ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: *p as u32,
+                                    })
+                                }
+                            })() {
+                                ::core::result::Result::Ok(_) => {
+                                    __wrap_branch_idx = 3u32;
+                                    builder.commit(attempt_builder);
+                                    break 'try_branches;
+                                }
+                                ::core::result::Result::Err(_) => {
+                                    *p = attempt_p;
+                                    builder.rollback(attempt_builder);
+                                }
+                            }
+                        }
+                    }
+                    11u8 => {
+                        {
+                            let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
+                            match (|| -> ::core::result::Result<
+                                (),
+                                crate::runtime::DtaError,
+                            > {
+                                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                                    "\\s*>\\s*",
+                                    input,
+                                    *p,
+                                ) {
+                                    *p += match_len as usize;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        1u64,
+                                    );
+                                    ::core::result::Result::Ok(())
+                                } else {
+                                    ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: *p as u32,
+                                    })
+                                }
+                            })() {
+                                ::core::result::Result::Ok(_) => {
+                                    __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
+                                    break 'try_branches;
+                                }
+                                ::core::result::Result::Err(_) => {
+                                    *p = attempt_p;
+                                    builder.rollback(attempt_builder);
+                                }
+                            }
+                        }
+                        {
+                            let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
+                            match (|| -> ::core::result::Result<
+                                (),
+                                crate::runtime::DtaError,
+                            > {
+                                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                                    "\\s*\\+\\s*",
+                                    input,
+                                    *p,
+                                ) {
+                                    *p += match_len as usize;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        2u64,
+                                    );
+                                    ::core::result::Result::Ok(())
+                                } else {
+                                    ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: *p as u32,
+                                    })
+                                }
+                            })() {
+                                ::core::result::Result::Ok(_) => {
+                                    __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
+                                    break 'try_branches;
+                                }
+                                ::core::result::Result::Err(_) => {
+                                    *p = attempt_p;
+                                    builder.rollback(attempt_builder);
+                                }
+                            }
+                        }
+                        {
+                            let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
+                            match (|| -> ::core::result::Result<
+                                (),
+                                crate::runtime::DtaError,
+                            > {
+                                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                                    "\\s*~\\s*",
+                                    input,
+                                    *p,
+                                ) {
+                                    *p += match_len as usize;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        3u64,
+                                    );
+                                    ::core::result::Result::Ok(())
+                                } else {
+                                    ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: *p as u32,
+                                    })
+                                }
+                            })() {
+                                ::core::result::Result::Ok(_) => {
+                                    __wrap_branch_idx = 2u32;
+                                    builder.commit(attempt_builder);
+                                    break 'try_branches;
+                                }
+                                ::core::result::Result::Err(_) => {
+                                    *p = attempt_p;
+                                    builder.rollback(attempt_builder);
+                                }
+                            }
+                        }
+                        {
+                            let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
+                            match (|| -> ::core::result::Result<
+                                (),
+                                crate::runtime::DtaError,
+                            > {
+                                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                                    "\\s+",
+                                    input,
+                                    *p,
+                                ) {
+                                    *p += match_len as usize;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        0u64,
+                                    );
+                                    ::core::result::Result::Ok(())
+                                } else {
+                                    ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: *p as u32,
+                                    })
+                                }
+                            })() {
+                                ::core::result::Result::Ok(_) => {
+                                    __wrap_branch_idx = 3u32;
+                                    builder.commit(attempt_builder);
+                                    break 'try_branches;
+                                }
+                                ::core::result::Result::Err(_) => {
+                                    *p = attempt_p;
+                                    builder.rollback(attempt_builder);
+                                }
+                            }
+                        }
+                    }
+                    12u8 => {
+                        {
+                            let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
+                            match (|| -> ::core::result::Result<
+                                (),
+                                crate::runtime::DtaError,
+                            > {
+                                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                                    "\\s*>\\s*",
+                                    input,
+                                    *p,
+                                ) {
+                                    *p += match_len as usize;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        1u64,
+                                    );
+                                    ::core::result::Result::Ok(())
+                                } else {
+                                    ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: *p as u32,
+                                    })
+                                }
+                            })() {
+                                ::core::result::Result::Ok(_) => {
+                                    __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
+                                    break 'try_branches;
+                                }
+                                ::core::result::Result::Err(_) => {
+                                    *p = attempt_p;
+                                    builder.rollback(attempt_builder);
+                                }
+                            }
+                        }
+                        {
+                            let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
+                            match (|| -> ::core::result::Result<
+                                (),
+                                crate::runtime::DtaError,
+                            > {
+                                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                                    "\\s*\\+\\s*",
+                                    input,
+                                    *p,
+                                ) {
+                                    *p += match_len as usize;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        2u64,
+                                    );
+                                    ::core::result::Result::Ok(())
+                                } else {
+                                    ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: *p as u32,
+                                    })
+                                }
+                            })() {
+                                ::core::result::Result::Ok(_) => {
+                                    __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
+                                    break 'try_branches;
+                                }
+                                ::core::result::Result::Err(_) => {
+                                    *p = attempt_p;
+                                    builder.rollback(attempt_builder);
+                                }
+                            }
+                        }
+                        {
+                            let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
+                            match (|| -> ::core::result::Result<
+                                (),
+                                crate::runtime::DtaError,
+                            > {
+                                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                                    "\\s*~\\s*",
+                                    input,
+                                    *p,
+                                ) {
+                                    *p += match_len as usize;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        3u64,
+                                    );
+                                    ::core::result::Result::Ok(())
+                                } else {
+                                    ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: *p as u32,
+                                    })
+                                }
+                            })() {
+                                ::core::result::Result::Ok(_) => {
+                                    __wrap_branch_idx = 2u32;
+                                    builder.commit(attempt_builder);
+                                    break 'try_branches;
+                                }
+                                ::core::result::Result::Err(_) => {
+                                    *p = attempt_p;
+                                    builder.rollback(attempt_builder);
+                                }
+                            }
+                        }
+                        {
+                            let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
+                            match (|| -> ::core::result::Result<
+                                (),
+                                crate::runtime::DtaError,
+                            > {
+                                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                                    "\\s+",
+                                    input,
+                                    *p,
+                                ) {
+                                    *p += match_len as usize;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        0u64,
+                                    );
+                                    ::core::result::Result::Ok(())
+                                } else {
+                                    ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: *p as u32,
+                                    })
+                                }
+                            })() {
+                                ::core::result::Result::Ok(_) => {
+                                    __wrap_branch_idx = 3u32;
+                                    builder.commit(attempt_builder);
+                                    break 'try_branches;
+                                }
+                                ::core::result::Result::Err(_) => {
+                                    *p = attempt_p;
+                                    builder.rollback(attempt_builder);
+                                }
+                            }
+                        }
+                    }
+                    13u8 => {
+                        {
+                            let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
+                            match (|| -> ::core::result::Result<
+                                (),
+                                crate::runtime::DtaError,
+                            > {
+                                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                                    "\\s*>\\s*",
+                                    input,
+                                    *p,
+                                ) {
+                                    *p += match_len as usize;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        1u64,
+                                    );
+                                    ::core::result::Result::Ok(())
+                                } else {
+                                    ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: *p as u32,
+                                    })
+                                }
+                            })() {
+                                ::core::result::Result::Ok(_) => {
+                                    __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
+                                    break 'try_branches;
+                                }
+                                ::core::result::Result::Err(_) => {
+                                    *p = attempt_p;
+                                    builder.rollback(attempt_builder);
+                                }
+                            }
+                        }
+                        {
+                            let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
+                            match (|| -> ::core::result::Result<
+                                (),
+                                crate::runtime::DtaError,
+                            > {
+                                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                                    "\\s*\\+\\s*",
+                                    input,
+                                    *p,
+                                ) {
+                                    *p += match_len as usize;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        2u64,
+                                    );
+                                    ::core::result::Result::Ok(())
+                                } else {
+                                    ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: *p as u32,
+                                    })
+                                }
+                            })() {
+                                ::core::result::Result::Ok(_) => {
+                                    __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
+                                    break 'try_branches;
+                                }
+                                ::core::result::Result::Err(_) => {
+                                    *p = attempt_p;
+                                    builder.rollback(attempt_builder);
+                                }
+                            }
+                        }
+                        {
+                            let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
+                            match (|| -> ::core::result::Result<
+                                (),
+                                crate::runtime::DtaError,
+                            > {
+                                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                                    "\\s*~\\s*",
+                                    input,
+                                    *p,
+                                ) {
+                                    *p += match_len as usize;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        3u64,
+                                    );
+                                    ::core::result::Result::Ok(())
+                                } else {
+                                    ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: *p as u32,
+                                    })
+                                }
+                            })() {
+                                ::core::result::Result::Ok(_) => {
+                                    __wrap_branch_idx = 2u32;
+                                    builder.commit(attempt_builder);
+                                    break 'try_branches;
+                                }
+                                ::core::result::Result::Err(_) => {
+                                    *p = attempt_p;
+                                    builder.rollback(attempt_builder);
+                                }
+                            }
+                        }
+                        {
+                            let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
+                            match (|| -> ::core::result::Result<
+                                (),
+                                crate::runtime::DtaError,
+                            > {
+                                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                                    "\\s+",
+                                    input,
+                                    *p,
+                                ) {
+                                    *p += match_len as usize;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        0u64,
+                                    );
+                                    ::core::result::Result::Ok(())
+                                } else {
+                                    ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: *p as u32,
+                                    })
+                                }
+                            })() {
+                                ::core::result::Result::Ok(_) => {
+                                    __wrap_branch_idx = 3u32;
+                                    builder.commit(attempt_builder);
+                                    break 'try_branches;
+                                }
+                                ::core::result::Result::Err(_) => {
+                                    *p = attempt_p;
+                                    builder.rollback(attempt_builder);
+                                }
+                            }
+                        }
+                    }
+                    32u8 => {
+                        {
+                            let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
+                            match (|| -> ::core::result::Result<
+                                (),
+                                crate::runtime::DtaError,
+                            > {
+                                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                                    "\\s*>\\s*",
+                                    input,
+                                    *p,
+                                ) {
+                                    *p += match_len as usize;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        1u64,
+                                    );
+                                    ::core::result::Result::Ok(())
+                                } else {
+                                    ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: *p as u32,
+                                    })
+                                }
+                            })() {
+                                ::core::result::Result::Ok(_) => {
+                                    __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
+                                    break 'try_branches;
+                                }
+                                ::core::result::Result::Err(_) => {
+                                    *p = attempt_p;
+                                    builder.rollback(attempt_builder);
+                                }
+                            }
+                        }
+                        {
+                            let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
+                            match (|| -> ::core::result::Result<
+                                (),
+                                crate::runtime::DtaError,
+                            > {
+                                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                                    "\\s*\\+\\s*",
+                                    input,
+                                    *p,
+                                ) {
+                                    *p += match_len as usize;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        2u64,
+                                    );
+                                    ::core::result::Result::Ok(())
+                                } else {
+                                    ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: *p as u32,
+                                    })
+                                }
+                            })() {
+                                ::core::result::Result::Ok(_) => {
+                                    __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
+                                    break 'try_branches;
+                                }
+                                ::core::result::Result::Err(_) => {
+                                    *p = attempt_p;
+                                    builder.rollback(attempt_builder);
+                                }
+                            }
+                        }
+                        {
+                            let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
+                            match (|| -> ::core::result::Result<
+                                (),
+                                crate::runtime::DtaError,
+                            > {
+                                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                                    "\\s*~\\s*",
+                                    input,
+                                    *p,
+                                ) {
+                                    *p += match_len as usize;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        3u64,
+                                    );
+                                    ::core::result::Result::Ok(())
+                                } else {
+                                    ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: *p as u32,
+                                    })
+                                }
+                            })() {
+                                ::core::result::Result::Ok(_) => {
+                                    __wrap_branch_idx = 2u32;
+                                    builder.commit(attempt_builder);
+                                    break 'try_branches;
+                                }
+                                ::core::result::Result::Err(_) => {
+                                    *p = attempt_p;
+                                    builder.rollback(attempt_builder);
+                                }
+                            }
+                        }
+                        {
+                            let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
+                            match (|| -> ::core::result::Result<
+                                (),
+                                crate::runtime::DtaError,
+                            > {
+                                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                                    "\\s+",
+                                    input,
+                                    *p,
+                                ) {
+                                    *p += match_len as usize;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        0u64,
+                                    );
+                                    ::core::result::Result::Ok(())
+                                } else {
+                                    ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: *p as u32,
+                                    })
+                                }
+                            })() {
+                                ::core::result::Result::Ok(_) => {
+                                    __wrap_branch_idx = 3u32;
+                                    builder.commit(attempt_builder);
+                                    break 'try_branches;
+                                }
+                                ::core::result::Result::Err(_) => {
+                                    *p = attempt_p;
+                                    builder.rollback(attempt_builder);
+                                }
+                            }
+                        }
+                    }
+                    43u8 => {
+                        let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
+                        match (|| -> ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > {
+                            if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                                "\\s*\\+\\s*",
+                                input,
+                                *p,
+                            ) {
+                                *p += match_len as usize;
+                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                    builder,
+                                    2u64,
+                                );
+                                ::core::result::Result::Ok(())
+                            } else {
+                                ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                    offset: *p as u32,
+                                })
+                            }
+                        })() {
+                            ::core::result::Result::Ok(_) => {
+                                __wrap_branch_idx = 1u32;
+                                builder.commit(attempt_builder);
+                                break 'try_branches;
+                            }
+                            ::core::result::Result::Err(_) => {
+                                *p = attempt_p;
+                                builder.rollback(attempt_builder);
+                            }
+                        }
+                    }
+                    62u8 => {
+                        let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
+                        match (|| -> ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > {
+                            if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                                "\\s*>\\s*",
+                                input,
+                                *p,
+                            ) {
+                                *p += match_len as usize;
+                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                    builder,
+                                    1u64,
+                                );
+                                ::core::result::Result::Ok(())
+                            } else {
+                                ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                    offset: *p as u32,
+                                })
+                            }
+                        })() {
+                            ::core::result::Result::Ok(_) => {
+                                __wrap_branch_idx = 0u32;
+                                builder.commit(attempt_builder);
+                                break 'try_branches;
+                            }
+                            ::core::result::Result::Err(_) => {
+                                *p = attempt_p;
+                                builder.rollback(attempt_builder);
+                            }
+                        }
+                    }
+                    126u8 => {
+                        let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
+                        match (|| -> ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > {
+                            if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                                "\\s*~\\s*",
+                                input,
+                                *p,
+                            ) {
+                                *p += match_len as usize;
+                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                    builder,
+                                    3u64,
+                                );
+                                ::core::result::Result::Ok(())
+                            } else {
+                                ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                    offset: *p as u32,
+                                })
+                            }
+                        })() {
+                            ::core::result::Result::Ok(_) => {
+                                __wrap_branch_idx = 2u32;
+                                builder.commit(attempt_builder);
+                                break 'try_branches;
+                            }
+                            ::core::result::Result::Err(_) => {
+                                *p = attempt_p;
+                                builder.rollback(attempt_builder);
+                            }
+                        }
+                    }
                     _ => {}
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {

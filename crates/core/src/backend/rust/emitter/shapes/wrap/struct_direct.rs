@@ -31,7 +31,7 @@
 //! suffice.
 
 use bbnf_ir::registry::{EmitStrategy, LayoutKind};
-use bbnf_ir::{GrammarIR, IrNode, IrRule};
+use bbnf_ir::{AltBranch, FnDescriptor, GrammarIR, IrNode, IrRule, MapExpr};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
@@ -98,12 +98,21 @@ fn quote_layout_literal(rule: &IrRule, ir: &GrammarIR) -> TokenStream {
 /// struct-direct path. Returns `(call_tokens, first_byte_set)`;
 /// an empty first-byte set routes the branch as the linear-try
 /// fallback.
+///
+/// Beyond the JSON `value = object | array | …` Ref-only canonical
+/// case, this admits the CSS L4 `combinator = /\s*>\s*/ -> 1u8 | … |
+/// /\s+/ -> 0u8` Wrap-of-Map(Regex) shape (and the symmetric Literal
+/// analogue) by emitting an inline regex/literal scan + typed leaf
+/// push wrapped in an IIFE that returns `Result<(), DtaError>`. The
+/// caller's existing `__wrap_branch_idx` recording + `end_compound`
+/// closure are reused unchanged; only the call-shape diversifies.
 fn emit_wrap_branch_call_struct_direct(
-    inner: &IrNode,
+    branch: &AltBranch,
     grammar_suffix: &str,
     ir: &GrammarIR,
 ) -> Option<(TokenStream, Vec<u8>)> {
     use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
+    let inner = unwrap_outer(&branch.node);
     match inner {
         IrNode::Ref(rid) => {
             let target = ir.rules.iter().find(|r| r.id == *rid)?;
@@ -128,11 +137,139 @@ fn emit_wrap_branch_call_struct_direct(
                 Some((call, first_bytes))
             }
         }
-        // Regex / Seq / other Alt-branch shapes are not admitted on
-        // JSON's Wrap rule (`value = object | array | string | number
-        // | bool | null` — every branch is a Ref). Future grammars
-        // (Sheets / CSS L4 in W2.B / W3) extend this match.
+        IrNode::Regex(sid) => {
+            let pattern = ir.get_string(*sid).to_string();
+            let regex_scan_ident = super::super::super::dfa_codegen::regex_scan_adapter_ident(
+                &super::super::sanitise_grammar(grammar_suffix),
+            );
+            let payload_push = wrap_branch_payload_push(&branch.node, ir);
+            let call = quote! {
+                (|| -> ::core::result::Result<(), crate::runtime::DtaError> {
+                    if let ::core::option::Option::Some(match_len) =
+                        #regex_scan_ident(#pattern, input, *p)
+                    {
+                        *p += match_len as usize;
+                        #payload_push
+                        ::core::result::Result::Ok(())
+                    } else {
+                        ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                            offset: *p as u32,
+                        })
+                    }
+                })()
+            };
+            let first_bytes = branch_first_bytes(branch);
+            Some((call, first_bytes))
+        }
+        IrNode::Literal(sid) => {
+            let bytes = ir.get_string(*sid).as_bytes();
+            let len = bytes.len();
+            let byte_lits: Vec<TokenStream> = bytes.iter().map(|b| quote! { #b }).collect();
+            let payload_push = wrap_branch_payload_push(&branch.node, ir);
+            let call = quote! {
+                (|| -> ::core::result::Result<(), crate::runtime::DtaError> {
+                    let at = *p;
+                    let end = at + #len;
+                    if input.len() >= end && input[at..end] == [#(#byte_lits),*] {
+                        *p = end;
+                        #payload_push
+                        ::core::result::Result::Ok(())
+                    } else {
+                        ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                            offset: at as u32,
+                        })
+                    }
+                })()
+            };
+            let first_bytes = branch_first_bytes(branch);
+            Some((call, first_bytes))
+        }
+        // Seq / Alt / Repeat / Skip / Next / TokenDispatch — Wrap-shape
+        // grammars currently route those through Ref subrules; if a
+        // future grammar inlines them, extend this match.
         _ => None,
+    }
+}
+
+/// Compute the FIRST byte set for a Wrap-Alt branch. Prefers the
+/// pre-computed `branch.first_set` from the analysis pass; on miss
+/// returns an empty Vec (linear-try fallback).
+///
+/// 16-byte cap mirrors the Ref-arm cap in [`emit_wrap_branch_call_struct_direct`]:
+/// once the FIRST set spans more than ~12% of ASCII the byte-dispatch's
+/// per-arm body explosion outweighs the saved match arms.
+fn branch_first_bytes(branch: &AltBranch) -> Vec<u8> {
+    let Some(set) = branch.first_set.as_ref() else {
+        return Vec::new();
+    };
+    let collected: Vec<u8> = set.iter().collect();
+    if collected.is_empty() || collected.len() > 16 {
+        Vec::new()
+    } else {
+        collected
+    }
+}
+
+/// Emit the `builder.push_leaf_with_*` call materialising a Wrap-Alt
+/// branch's typed `->` projection.
+///
+/// Walks the branch's outermost `Map { fn_id }` chain (skipping
+/// `OptionalWhitespace` trivia) and inspects the bound `FnDescriptor`.
+/// `FnDescriptor::Expr { expr, .. }` admits the constant-folded leaf
+/// projections the CSS L4 `combinator` rule's `-> Nu8` annotations
+/// produce; non-constant maps fall back to `push_leaf_with_unit()` so
+/// the branch still records the discriminator via `__wrap_branch_idx`
+/// without faking a typed value the grammar didn't declare.
+fn wrap_branch_payload_push(branch_root: &IrNode, ir: &GrammarIR) -> TokenStream {
+    fn find_map_fn(node: &IrNode) -> Option<u32> {
+        match node {
+            IrNode::Map { fn_id, .. } => Some(*fn_id),
+            IrNode::OptionalWhitespace(inner) => find_map_fn(inner),
+            _ => None,
+        }
+    }
+    let Some(fn_id) = find_map_fn(branch_root) else {
+        return quote! {
+            <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(builder);
+        };
+    };
+    let Some(fn_desc) = ir.fns.get(fn_id as usize) else {
+        return quote! {
+            <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(builder);
+        };
+    };
+    let FnDescriptor::Expr { expr, .. } = fn_desc else {
+        return quote! {
+            <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(builder);
+        };
+    };
+    match expr {
+        MapExpr::IntLit(n) => {
+            let v: u64 = *n as u64;
+            quote! {
+                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(builder, #v);
+            }
+        }
+        MapExpr::FloatLit(f) => {
+            let v: f64 = *f;
+            quote! {
+                <_ as crate::runtime::StructBuilder>::push_leaf_with_f64(builder, #v);
+            }
+        }
+        MapExpr::BoolLit(b) => {
+            let v: bool = *b;
+            quote! {
+                <_ as crate::runtime::StructBuilder>::push_leaf_with_bool(builder, #v);
+            }
+        }
+        // String literals / `Input` / `FnCall` / `BinOp` / `UnaryOp` —
+        // non-constant or non-scalar projections that the Wrap-Alt
+        // path's inline scan cannot constant-fold here. Fall back to
+        // a unit leaf so the branch still records the discriminator
+        // via `__wrap_branch_idx` without fabricating a typed payload.
+        _ => quote! {
+            <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(builder);
+        },
     }
 }
 
@@ -277,9 +414,8 @@ fn emit_alt_struct_dispatch(
     let mut linear_arms: Vec<TokenStream> = Vec::new();
 
     for (ord, branch) in branches.iter().enumerate() {
-        let inner = unwrap_outer(&branch.node);
         let Some((call, first_bytes)) =
-            emit_wrap_branch_call_struct_direct(inner, grammar_suffix, ir)
+            emit_wrap_branch_call_struct_direct(branch, grammar_suffix, ir)
         else {
             continue;
         };
@@ -387,9 +523,8 @@ fn emit_alt_struct_dispatch_transparent(
     let mut linear_arms: Vec<TokenStream> = Vec::new();
 
     for branch in branches.iter() {
-        let inner = unwrap_outer(&branch.node);
         let Some((call, first_bytes)) =
-            emit_wrap_branch_call_struct_direct(inner, grammar_suffix, ir)
+            emit_wrap_branch_call_struct_direct(branch, grammar_suffix, ir)
         else {
             continue;
         };

@@ -1,0 +1,143 @@
+AZ-III.W2.3 Sheets Parity — Verification Run
+=============================================
+
+Date: 2026-04-30
+Worktree: /Users/mkbabb/Programming/bbnf-wt-azIII-w2-sheets
+HEAD: 37880832 fix(parity/sheets/regen): css_l4.rs regen ripple from keyword shape emitter fix
+Cargo profile: ax-iter
+Command:
+  cargo nextest run -p bbnf --test sheets_parity --test sheets_self_parity \
+    --test sheets_expr_parity --cargo-profile ax-iter --no-fail-fast
+
+Headline
+--------
+Pre-fix baseline (commit d1190ba7):
+  Summary [3.145s] 133 tests run: 100 passed, 33 failed, 0 skipped
+
+Post-fix (this run):
+  Summary [1.098s] 133 tests run: 122 passed, 11 failed, 0 skipped
+
+Net delta: +22 passing, -22 failing.
+Audit's "40 retries" cluster (`push_leaf_with_unit invoked` panic surface,
+13 sheets_parity payload tests + 18 sheets_self_parity serialize_roundtrip
+tests + 3 corpus_* tests = 34 retry events / 17 unique tests at TRY-2
+multiplier) reduced to zero.
+
+Root causes (resolved)
+----------------------
+1. Keyword shape struct-direct emitter
+   crates/core/src/backend/rust/emitter/shapes/keyword/struct_direct.rs
+
+   Per-branch typed payload (`-> Nu8`, `-> bool`) was routed through
+   `push_leaf_with_unit()` for any rule with `TypeDesc::U8`. Sheets's
+   `SheetsStructBuilder::push_leaf_with_unit` panics with debug_assert
+   ("Sheets grammar has no unit-typed projection"). Rules affected:
+   `add_op`, `mul_op`, `compare_op`, `unary_prefix`.
+
+   Fix: per-branch typed payload wins over rule-level `TypeDesc`.
+   `IntLit` payloads route through `push_branch_tag(value)`. JSON's
+   `JsonStructBuilder::push_branch_tag` is a no-op audit hook so the
+   call is signature-compatible across grammars; CSS L4's keyword
+   payloads benefit from the same routing (regen ripple covered in
+   commit 37880832).
+
+2. Flat shape inline Map descent
+   crates/core/src/backend/rust/emitter/shapes/flat/struct_direct.rs
+
+   Inline `Map { inner, fn_id }` positions descended into the inner
+   without emitting the typed payload. Sheets's `error_literal`
+   (Flat-shape, 9 branches `-> 0u8..=8u8`) and `sheet_prefix` (2
+   branches) deposited empty Compound entries.
+
+   Fix: Map descent now emits the matching `StructBuilder` payload
+   push after the inner structural match. `IntLit` → `push_branch_tag`;
+   `BoolLit` → `push_leaf_with_bool`; other payload shapes stay owned
+   by the per-rule shape emitter.
+
+3. Sheets runtime co-updates
+   crates/core/src/runtime/google_sheets/arena.rs
+   crates/core/src/runtime/google_sheets/document.rs
+
+   Added `SheetsCompoundKind::ErrorLiteral`, `SheetPrefix`, `CompareOp`,
+   `AddOp`, `MulOp`, `UnaryPrefix` so per-rule compounds preserve their
+   structural-kind tag through serialization. `serialize_compact` now
+   walks the new compound kinds — `ErrorLiteral` routes child `Tag(n)` /
+   `Error(n)` through `error_lexeme(n)`; the operator-tag kinds route
+   through `tag_lexeme(kind, n)` with their grammar-declaration-order
+   discriminator alphabet. `tag_lexeme` separates Pratt-tower
+   discriminants (`PRECEDENCE_ENTRIES_<rule>` order) from own-rule
+   keyword discriminants.
+
+Remaining failures (11 — pre-existing surface, not introduced by this fix)
+-------------------------------------------------------------------------
+Categorised root cause and named owner:
+
+A. boolean Wrap-shape regex dispatch gap (1 test)
+   - bbnf::sheets_parity::boolean_first_branch_fires_true_payload
+   The Wrap-shape struct-direct emitter classifies `boolean = /TRUE/i ->
+   true | /FALSE/i -> false` as Wrap-of-Refs, but its
+   `emit_wrap_branch_call_struct_direct` only admits Ref branches. The
+   regex-rooted Alt branches fall through to `match first { _ => {} }`
+   (empty) so no payload deposits. Owner: W3c — Projection Consumption
+   and Registry Authority (Wrap-shape regex-branch admission is a
+   shape-classifier substrate gap, not a shape-specific projection
+   in the W2 carve).
+
+B. Sheets parser corpus pre-treatment gaps (6 tests)
+   - bbnf::sheets_self_parity::corpus_simple
+   - bbnf::sheets_self_parity::corpus_nested
+   - bbnf::sheets_self_parity::corpus_stress
+   - bbnf::sheets_self_parity::serialize_roundtrip_string_empty
+   - bbnf::sheets_self_parity::serialize_roundtrip_array_literal_single_row
+   - bbnf::sheets_self_parity::serialize_roundtrip_array_literal_multi_row
+   Two sub-causes:
+   (i) Empty quoted strings (`=""`) parse OK but serialize loses the
+       quotes (`SheetsValue::String("")` round-trips to `=` then re-parse
+       fails). Owner: W3c — Sheets `string` rule needs to deposit the
+       full quoted span or the serializer needs to wrap the body.
+   (ii) Array literal serialize emits double commas (`={1,2,3}` →
+       `={1,,2,,3}`). Owner: W3c — `write_compound`'s ArrayRow /
+       ArrayRows separator logic is misaligned with the parsed
+       child structure.
+   (iii) String corpus values (e.g. `"N/A"`, `" "`) serialize without
+       their delimiting `"`s, breaking re-parse. Same root cause as
+       (i).
+
+C. Sheets parser sheet-prefix dispatch gaps (4 tests)
+   - bbnf::sheets_parity::range_ref_parses_with_and_without_sheet_prefix
+   - bbnf::sheets_self_parity::serialize_roundtrip_range_ref_sheet_prefixed
+   - bbnf::sheets_self_parity::serialize_roundtrip_range_ref_quoted_sheet
+   - bbnf::sheets_self_parity::serialize_roundtrip_range_ref_column
+   Inputs `=Sheet1!A1:B2`, `='Sheet 1'!A1:B2`, `=A:A` either fail to
+   parse (offset 1 / 7) or parse OK but serialize loses the prefix.
+   Sheets `range_ref = sheet_prefix?, range_end, ":", range_end` parser
+   dispatch on the regex-rooted `sheet_prefix` is the same Wrap-shape
+   regex admission gap as (A). Owner: W3c.
+
+W2.3 sub-gate status
+--------------------
+Sub-gate (per `docs/tranches/AZ-III/waves/W2.md` §AZ-III.W2.3):
+  "Sheets parity suites pass."
+
+Status: PARTIAL.
+- The audit-cited 40-retries cluster is fully resolved (100 → 122
+  passing).
+- Remaining 11 failures (A/B/C above) are routed to W3c — Projection
+  Consumption and Registry Authority. The grammar-general fixes (Wrap
+  regex-branch admission, string-span quoting, array-row separator
+  logic, sheet_prefix dispatch) sit outside the W2 shape-specific
+  carve.
+
+Commits in this run
+-------------------
+- 89234f34 fix(parity/sheets/keyword+flat): emit per-branch typed
+  payload via push_branch_tag
+- 37880832 fix(parity/sheets/regen): css_l4.rs regen ripple from
+  keyword shape emitter fix
+
+Lint cadence
+------------
+- cargo fmt --all -- --check: clean.
+- cargo iter-check: clean.
+- cargo xtask regen --check: clean (post-css_l4 regen ripple commit).
+- git diff --check: clean.

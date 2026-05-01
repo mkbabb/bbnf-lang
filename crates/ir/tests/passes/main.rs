@@ -10,6 +10,7 @@ mod context_facts;
 mod dag_invariant;
 mod dag_roundtrip;
 mod dedup_eligibility;
+mod fact_authority;
 mod passes_alias;
 mod passes_dispatch;
 mod passes_follow;

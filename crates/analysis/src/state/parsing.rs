@@ -38,7 +38,7 @@ pub struct CachedParseResult<'a> {
 /// Parse the source text once, returning the cached AST data and diagnostic info.
 /// Both are extracted from a single parse call.
 ///
-/// Post-Tranche AC.2, `grammar::parse_with_state` returns an owning
+/// Post-Tranche AC.2, `grammar::parse` returns an owning
 /// `Option<ParsedGrammar<'_>>` — the tape-first bootstrap parser
 /// manages its own `ParserState` internally and no longer surfaces
 /// `furthest_offset` to callers. Offsets default to `0` in the
@@ -48,7 +48,7 @@ pub struct CachedParseResult<'a> {
 /// will be threaded back through diagnostics in a follow-up tranche.
 pub fn parse_once(src: &str) -> (Option<CachedParseResult<'_>>, ParseDiagnostics) {
     let parse_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        grammar::parse_with_state(src)
+        grammar::parse(src)
     }));
 
     match parse_result {

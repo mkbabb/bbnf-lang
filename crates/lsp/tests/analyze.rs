@@ -4,7 +4,7 @@ use bbnf_analysis::state::diagnostics::analyze;
 #[test]
 fn test_analyze_parse_error() {
     let text = "value = number";
-    let result = bbnf::grammar::parse_with_state(text);
+    let result = bbnf::grammar::parse(text);
     eprintln!("Result is_some: {}", result.is_some());
     if let Some(ref pg) = result {
         eprintln!("AST len: {}", pg.rules.len());

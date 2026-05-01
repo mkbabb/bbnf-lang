@@ -61,15 +61,3 @@ pub fn parse(source: &str) -> Option<GrammarExtract<'_>> {
         Box::leak(Box::new(document));
     Some(host::extract_observational(document))
 }
-
-/// Parse a BBNF grammar file.
-///
-/// Tranche AC.2: the tape-first `BbnfBootstrap::parse` entry point
-/// internally manages its own parser state, so we no longer surface a
-/// `ParserState<'_>` to callers. The function is retained for API
-/// compatibility with pre-AC call sites as a thin alias over [`parse`];
-/// it will be audited and likely removed during AC.3 once the
-/// analysis crate migrates off `parser_state.furthest_offset`.
-pub fn parse_with_state(source: &str) -> Option<GrammarExtract<'_>> {
-    parse(source)
-}

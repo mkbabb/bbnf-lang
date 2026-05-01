@@ -16,14 +16,14 @@ use bbnf_ir::{FnDescriptor, FnId, IrNode, MapExpr, TypeDesc};
 use parse_that::regex::classify::{RegexClass, classify_regex};
 
 use crate::runtime::RuntimeView;
-use crate::runtime::bbnf::{BbnfCompoundKind, BbnfView};
+use crate::runtime::bbnf::{BbnfCompoundKind, BbnfKind, BbnfView};
 
 use super::super::LowerCtx;
 use super::super::value_expr::{
     deep_unwrap_value, extract_value_func_name, is_type_name, lower_value_expr,
     split_numeric_suffix, unwrap_value_ident_str,
 };
-use super::repeat::apply_modifier;
+use super::repeat::{apply_modifier, recover_modifier};
 use super::{dispatch_expression, find_unquoted, lower_leaf_by_span_text_str, lower_rhs};
 
 /// The four grouped-term flavors, discriminated by the opening delimiter
@@ -58,7 +58,17 @@ pub(crate) fn lower_mapped_factor<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx
     let mut term_node: Option<BbnfView<'a, 'a>> = None;
     let mut modifier_text: Option<String> = None;
     let mut mapping_node: Option<BbnfView<'a, 'a>> = None;
+    let mut has_unit_marker = false;
     for c in body.children() {
+        // Detect the Unit leaf the codegen modifier emitter pushes
+        // (`push_leaf_with_unit`). It carries no source span, so
+        // span_text().trim() is empty; recording its presence flags
+        // that the modifier rule fired and the source-gap recovery
+        // below should resolve the punctuator.
+        if matches!(c.kind(), BbnfKind::Unit) {
+            has_unit_marker = true;
+            continue;
+        }
         let span_text = c.span_text();
         let trimmed = span_text.trim();
         if trimmed.is_empty() {
@@ -74,6 +84,21 @@ pub(crate) fn lower_mapped_factor<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx
         }
         if term_node.is_none() {
             term_node = Some(c);
+        }
+    }
+    // Source-gap modifier recovery (mirror of repeat::recover_modifier
+    // and pratt::recover_binary_op): under the codegen alt_dispatch
+    // shape the modifier slot pushes a `Unit` leaf with no span, so
+    // the children-text classification above never sees the punctuator.
+    // When the Unit marker is present and no span-text classification
+    // resolved a modifier, scan forward from the term's source end
+    // (skipping whitespace and group-closing delimiters) for the
+    // punctuator.
+    if modifier_text.is_none() && has_unit_marker {
+        if let Some(term) = term_node {
+            if let Some(text) = recover_modifier(term) {
+                modifier_text = Some(text.to_string());
+            }
         }
     }
     // AW-II.W5b.2 — group wrapping (`{ ... }` / `[ ... ]` / `@{...}`)

@@ -24,9 +24,9 @@ grammar-general fact/type/CSP/projection authority substrate.
 
 | Wave | Status | Notes |
 |---|---|---|
-| W0 - Quarantine and Dispatch Repair | in_progress | state ledger, commit history repair, and lint/format baseline recorded; W0.5 commit-body sample and W0.6 sibling triage now in scope |
-| W0p - Throughput Substrate | planned | bench-iter profile, regen `--staged`, `make doctor`, profile redundancy, nextest partition |
-| W1 - O5 Reclose | planned | AZ-II.O5 reclose |
+| W0 - Quarantine and Dispatch Repair | complete | state ledger, commit-body sample, sibling triage, instruction-migration scan, dispatch packets all archived; dirty fmt slice preserved as `stash@{0}` and routed to W1 (pre-commit `regen --check` blocks landing in W0); 7/7 hard gates met |
+| W0p - Throughput Substrate | complete | bench-iter profile (cold 1m 45s, warm 0.468s); ax-iter consolidated; xtask `--staged` (binary 0.098s, hook 1.5s); make doctor probe; nextest 3-shard CI matrix; 5 evidence files archived; 5/6 hard gates met (cold-wall spec was 60s; actual 105s recorded for W0p close gate amendment) |
+| W1 - O5 Reclose | in_progress | AZ-II.O5 reclose |
 | W2 - Semantic Parity and Bootstrap Canonicalization | planned | semantic parity and canonical generated BBNF self-host (or same-tranche removal of `bootstrap_parser.rs`) |
 | W3a - Fact and Type Authority | planned | durable fact authority + type obligation solver; W3a.0 pipeline registry research |
 | W3b - CSP Strategy Globalization | planned | shape/layout/dispatch constraints installed and consumed |

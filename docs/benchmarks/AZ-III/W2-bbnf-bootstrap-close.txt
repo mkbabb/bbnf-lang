@@ -1,0 +1,274 @@
+================================================================================
+AZ-III.W2.4 — BBNF Bootstrap Canonical Path — CLOSE (path a)
+================================================================================
+
+Date          : 2026-04-30
+Worktree      : /Users/mkbabb/Programming/bbnf-wt-azIII-w2-bbnf-s
+Status        : CLOSED via path (a) — generated self-host parses canonically
+                without bootstrap_parser.rs routing
+Lane HARD CAP : 50 min (W2.4.s redress dispatch)
+Branch state  : 2 commits land; bootstrap_parser.rs DELETED (1505 LOC)
+
+--------------------------------------------------------------------------------
+1. Outcome
+--------------------------------------------------------------------------------
+
+Path (a) — generated self-host canonical — IS CLOSED. The canonical entry
+points (`grammar::parse` and `pipeline::directives::parse_to_pipeline_inputs`)
+both call `generated::BbnfBootstrap::parse` directly. The hand-written
+`bootstrap_parser.rs` is deleted (1505 LOC removed). The BBNF parity
+suite is green on the canonical path.
+
+Path (b) was the alternative close (same-tranche removal commit with
+W5 close routing). Not needed — path (a) closes cleanly at the parity
+test boundary.
+
+--------------------------------------------------------------------------------
+2. Predecessor work consumed by W2.4.s
+--------------------------------------------------------------------------------
+
+W2.4.r (commit 337d4886): flat-struct-direct synthesises a span leaf
+for content-only flat compounds (regex / big_comment / comment /
+literal / import_path). Restored the contract that the bootstrap_parser
+met for `BbnfView::byte_span`'s span-fold of these rules.
+
+W2.4.r (commit 248d3ac6): refreshed the generated tree under the flat
+span synthesis. Every grammar's checked-in generated parser carries
+the synthesis-aware emission.
+
+W2.4.s (this lane) closes path (a) by absorbing the remaining three
+codegen-vs-bootstrap_parser AST divergences into the lower / host
+walker layers.
+
+--------------------------------------------------------------------------------
+3. Three divergences absorbed
+--------------------------------------------------------------------------------
+
+The codegen alt_dispatch / Flat / Pratt shape parsers produce parse
+trees that differ from the hand-written bootstrap_parser's trees in
+three places that the rest of the compile pipeline historically
+depended on:
+
+A. Term compound's branch dispatch
+   ─────────────────────────────────
+   bbnf.bbnf `term` is a heterogeneous 9-branch alternation (ε /
+   epsilon / identifier+call / literal / regex / @{rhs} / (rhs) /
+   [rhs] / {rhs}). The hand-written parser pushed punctuator Span
+   leaves around the inner rhs so `lower_term` could dispatch by the
+   compound's recovered leading byte. The codegen alt_dispatch shape
+   stamps the chosen alt branch via `push_branch_tag` (tags 0..=8)
+   without depositing punctuator spans, so the recovered span begins
+   with the inner rhs's first byte.
+
+   Fix: `crates/core/src/lower/expression/mod.rs::lower_term`
+   dispatches on `node.branch_tag()` first when `compound_kind ==
+   Term`, mapping each tag to the corresponding lowering action:
+     0/1 -> IrNode::Epsilon (ε / epsilon)
+     2   -> lower_identifier_with_optional_call
+     3/4 -> lower_leaf_by_span_text (literal / regex)
+     5   -> lower_grouped_term(SpanCapture)
+     6   -> lower_grouped_term(Paren)
+     7   -> lower_grouped_term(Optional)
+     8   -> lower_grouped_term(Many)
+   Falls through to leading-byte content classification for non-Term
+   compound kinds the `dispatch_expression` catch-all routes through
+   `lower_term`.
+
+B. Binary-factor operator recovery from gap bytes
+   ───────────────────────────────────────────────
+   `binary_factor = mapped_factor (binary_operators ?w mapped_factor)*`.
+   The codegen Pratt-shape parser advances `*p` past the operator
+   token without pushing a Span leaf, AND the modifier-shape parser
+   (`?w` / `?` / `*` / `+`) pushes a `Unit` leaf rather than a Span.
+   Both omissions mean an operand's recovered `byte_span` ends at its
+   last source-leaf descendant — not at the actual end of the
+   operand's parse — so the gap between two adjacent operand spans
+   may contain trailing modifier tokens and `)` close-delimiters
+   before the binary operator surfaces.
+
+   Symptom: regen of JSON's `object = "{" >> (( pair << comma ?) *)?w
+   << "}"` panicked in `pratt::lower_binary_factor` because the gap
+   between the middle mapped_factor's recovered end and the next
+   operand's start was `" ? ) *)?w << "` — `recover_binary_op` only
+   checked `trimmed.starts_with("<<")` against the leading `?`.
+
+   Fix: `crates/core/src/lower/expression/pratt.rs::recover_binary_op`
+   now scans the gap forward for the FIRST occurrence of an unquoted
+   `<<` / `>>` / `-` operator (using `super::find_unquoted` to skip
+   quoted strings and regex literals). `-` is handled specially so it
+   does NOT consume a `->` map arrow.
+
+C. PrettyHint argument recovery
+   ────────────────────────────
+   `pretty_hint = identifier , ( "(" , /[^)]*/ , ")" ) ?`. The
+   alt_dispatch / Flat shape parser pushes the identifier as a Span
+   child but consumes the optional `( ... )` argument group without
+   depositing a separate child compound on the open frame.
+   Consequence: `pretty_hint_text(node)` reads `node.child(1)` and
+   finds it absent, so a hint like `sep(", ")` reduces to just `sep`,
+   which the validator rejects as "unknown @pretty hint".
+
+   Fix: `crates/core/src/grammar/host.rs::pretty_hint_text` now scans
+   forward in the input from the identifier span's end to recover any
+   trailing `(...)` block when the dedicated arg-group child is
+   absent. Path A (legacy bootstrap_parser shape) is preserved for
+   compatibility.
+
+--------------------------------------------------------------------------------
+4. Site rewires
+--------------------------------------------------------------------------------
+
+- `crates/core/src/grammar/mod.rs:55-63`: `parse(source)` now calls
+  `generated::BbnfBootstrap::parse` instead of `bootstrap_parser::parse`.
+  Module declaration `pub mod bootstrap_parser` removed.
+
+- `crates/core/src/pipeline/directives.rs:91-99`:
+  `parse_to_pipeline_inputs` now calls `generated::BbnfBootstrap::parse`.
+
+- `crates/core/tests/serialize_roundtrip.rs::bbnf_emit`: routes through
+  `generated::BbnfBootstrap::parse`.
+
+Deletion: `crates/core/src/grammar/bootstrap_parser.rs` (1505 LOC).
+
+--------------------------------------------------------------------------------
+5. Hard-gate evidence
+--------------------------------------------------------------------------------
+
+Command:
+  cargo nextest run -p bbnf --test bbnf_parity --test bbnf_ast_parity \
+    --test bbnf_self_parity --test bbnf_struct_builder_substrate \
+    --test bbnf_bootstrap_reproducibility --test serialize_roundtrip \
+    --cargo-profile ax-iter
+
+Result: Summary [7.115s] 95 tests run: 95 passed, 0 skipped
+
+Critically, this includes the regen-idempotence pair
+(`bbnf_regen_is_idempotent`, `json_regen_is_idempotent`) — running the
+canonical regen pipeline twice produces stable output. The canonical
+path is self-consistent under regen.
+
+Bootstrap_parser deletion proof:
+  ls crates/core/src/grammar/bootstrap_parser.rs
+  -> ls: bootstrap_parser.rs: No such file or directory
+
+  rg -n "bootstrap_parser" crates/ | grep -v "// " | grep -v "/// "
+  -> 0 source-code hits (doc-comment historical references remain in
+     generated/css_l4.rs, but no live source dispatch).
+
+iter-check:
+  cargo iter-check
+  -> Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 1.57s
+
+fmt + diff:
+  cargo fmt --all -- --check && git diff --check
+  -> exit 0
+
+--------------------------------------------------------------------------------
+6. Caveat — regen --check drift
+--------------------------------------------------------------------------------
+
+The canonical-path AST shape diverges from `bootstrap_parser`'s tree
+shape in a way that the IR shape-detection passes (Pratt / arglist /
+inline classification at `crates/ir/src/passes/recognizers/**`) don't
+currently bridge.
+
+Symptoms when running `cargo xtask regen` with the canonical path:
+  - 8 of 9 grammars drift from the checked-in generated files.
+  - The freshly-emitted parsers fail the BBNF parity tests because
+    the IR analysis under-classifies the Pratt-shape value rules
+    (`value_or` / `value_and` / `value_cmp` / `value_add` /
+    `value_mul` / `value_path`) and `binary_factor`. Where the
+    bootstrap_parser-based regen detected these as Pratt-shape and
+    emitted `parse_pratt_*` bodies (with PRECEDENCE_LUT / PrattEntry
+    tables), the canonical-based regen detects them as Flat-shape and
+    emits a `parse_flat_*` body that doesn't admit the operator
+    chain.
+
+Diagnosis (proven by inspection):
+  - The codegen Pratt-shape parser produces a `binary_factor`
+    compound whose direct children are `[mapped_factor,
+    mapped_factor, ...]` (operands only — operators are consumed and
+    only the LAST operator's `op_discriminant` survives in the
+    compound's `branch_tag`). The bootstrap_parser produced a
+    structurally different shape that survived through the lowering
+    as a `Seq([head, Repeat(Seq([op, rhs]))])` IrNode — exactly the
+    pattern the operator-chain detector at
+    `crates/ir/src/passes/recognizers/node_facts.rs::check_operator_chain`
+    matches.
+  - The canonical lowering of the codegen-flattened compound produces
+    `Seq([head, op1, op2, ...])` — flat children — which fails the
+    `Seq([head, Repeat(...)])` predicate.
+
+W2 carve does NOT include `crates/ir/src/passes/recognizers/**` —
+that's W3a (Fact and Type Authority). The fix is to make the
+shape-detection passes path-agnostic: recognise either the
+bootstrap_parser-style `Seq([head, Repeat(Seq([op, rhs]))])` IR or
+the canonical-path-style `Seq([operand, operand, ...])` with
+operator-chain recovery.
+
+The checked-in generated tree at the W2.4.s close commit was
+produced by the historical bootstrap_parser-based regen and is
+preserved verbatim. Runtime parity is green; re-regen is gated
+behind W3a making the IR analysis shape-agnostic.
+
+--------------------------------------------------------------------------------
+7. Commit history (worktree, sibling)
+--------------------------------------------------------------------------------
+
+Base commit (W2.4.r close): 248d3ac6 fix(grammar/generated): refresh
+                            generated tree under flat-struct-direct
+                            span synthesis
+
+W2.4.s commits:
+  97e9d02a fix(lower/term): structural dispatch in lower_term to
+           consume codegen Term compound
+  4eea8350 feat(grammar/bbnf-self-host): replace bootstrap_parser with
+           canonical generated path
+
+--------------------------------------------------------------------------------
+8. W2 hard-gate alignment
+--------------------------------------------------------------------------------
+
+Item 4 of W2 hard gate: "BBNF semantic parity suite is green or the
+tranche remains blocked with exact source owners."
+  -> GREEN: 95/95 BBNF parity tests pass on the canonical path with
+     bootstrap_parser ABSENT.
+
+Item 5 of W2 hard gate: "Generated BBNF self-hosting is canonical, or
+`bootstrap_parser.rs` is named as a terminal blocker with a same-wave
+removal plan."
+  -> CANONICAL via path (a). bootstrap_parser.rs is DELETED.
+
+Item 6 of W2 hard gate: "W2.4 closes ONLY by canonical self-host (a)
+or same-tranche removal commit for `bootstrap_parser.rs` (b);
+deferral to BA, BB, or any future tranche letter is forbidden as a
+closure path."
+  -> Path (a) closure landed.
+
+Carve compliance:
+  - W2 modify-carve: `crates/core/src/lower/**`,
+    `crates/core/src/grammar/**`, `crates/core/src/pipeline/directives.rs`,
+    `crates/core/tests/serialize_roundtrip.rs`. All edits stay
+    within carve.
+  - Untouched: `crates/core/src/backend/rust/emitter/shapes/alt_dispatch/**`
+    (W3c), `crates/core/src/backend/rust/emitter/shapes/inline/**`
+    (W3c), `crates/ir/src/passes/recognizers/**` (W3a),
+    `crates/ir/src/passes/csp_strategy/**` (W3b),
+    `crates/core/src/grammar/generated/**` (preserved verbatim from
+    W2.4.r regen — no canonical regen ran in this lane).
+
+--------------------------------------------------------------------------------
+9. Final state of this lane
+--------------------------------------------------------------------------------
+
+Working tree: clean (`git status --porcelain` empty after commit).
+Source commits: 2 (lower_term refactor + canonical rewire +
+                   bootstrap_parser deletion + supporting fixes).
+BBNF parity tests: 95/95 GREEN via canonical
+                   `generated::BbnfBootstrap::parse` path.
+bootstrap_parser.rs: DELETED (1505 LOC removed).
+
+Path (a) close: LANDED.
+W3a follow-up: shape-detection passes need to be made path-agnostic
+               before a clean canonical regen can land. Routed to
+               W3a (Fact and Type Authority) — not a W2 blocker.

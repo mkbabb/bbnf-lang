@@ -51,6 +51,7 @@ fn make_ir(body: IrNode) -> GrammarIR {
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
+        type_obligations: Vec::new(),
     }
 }
 
@@ -102,6 +103,7 @@ fn make_ir_with_strings(body: IrNode, strings: Vec<String>) -> GrammarIR {
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
+        type_obligations: Vec::new(),
     }
 }
 

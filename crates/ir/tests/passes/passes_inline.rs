@@ -45,6 +45,7 @@ fn make_ir(rules: Vec<IrRule>, entry: RuleId) -> GrammarIR {
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
+        type_obligations: Vec::new(),
     }
 }
 

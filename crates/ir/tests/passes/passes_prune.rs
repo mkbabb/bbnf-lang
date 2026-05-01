@@ -66,6 +66,7 @@ fn prune_removes_unreachable() {
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
+        type_obligations: Vec::new(),
     };
 
     prune_unreachable(&mut ir);
@@ -124,6 +125,7 @@ fn prune_keeps_all_when_all_reachable() {
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
+        type_obligations: Vec::new(),
     };
 
     prune_unreachable(&mut ir);
@@ -202,6 +204,7 @@ fn prune_follows_alt_branches() {
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
+        type_obligations: Vec::new(),
     };
 
     prune_unreachable(&mut ir);

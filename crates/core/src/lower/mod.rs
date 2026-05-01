@@ -243,6 +243,7 @@ pub fn lower_to_ir<'a>(
         shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
         ),
         struct_registry: bbnf_ir::StructRegistry::default(),
+        type_obligations: Vec::new(),
     }
 }
 

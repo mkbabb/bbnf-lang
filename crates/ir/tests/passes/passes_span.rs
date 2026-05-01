@@ -56,6 +56,7 @@ fn literal_is_span_eligible() {
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
+        type_obligations: Vec::new(),
     };
 
     refine_span_eligibility(&mut ir);
@@ -111,6 +112,7 @@ fn map_not_span_eligible() {
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
+        type_obligations: Vec::new(),
     };
 
     refine_span_eligibility(&mut ir);
@@ -165,6 +167,7 @@ fn transitive_span_eligibility() {
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
+        type_obligations: Vec::new(),
     };
 
     refine_span_eligibility(&mut ir);
@@ -224,6 +227,7 @@ fn cyclic_not_span_eligible() {
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
+        type_obligations: Vec::new(),
     };
 
     refine_span_eligibility(&mut ir);
@@ -276,6 +280,7 @@ fn seq_of_literals_span_eligible() {
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
+        type_obligations: Vec::new(),
     };
 
     refine_span_eligibility(&mut ir);

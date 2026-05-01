@@ -390,6 +390,27 @@ pub struct GrammarIR {
     /// rebuilds it from scratch.
     #[serde(skip, default)]
     pub struct_registry: crate::registry::StructRegistry,
+
+    /// AZ-III.W3a.2 — named obligations surfaced by the projection
+    /// CSP whenever a silent fallback would otherwise have collapsed
+    /// under-determined Ref or Alt resolution into
+    /// `TypeDesc::BoxedEnum`.
+    ///
+    /// Populated by [`passes::project_types`] from its internal
+    /// obligation sink after propagation converges. Each obligation
+    /// names the Ref site, the target rule, and the structural type
+    /// that the Ref *would* have inherited if it had not been wrapped
+    /// in an enum variant (`BoxedEnum` is still the projected
+    /// `TypeDesc` because that is the grammar-general layout for
+    /// tagged-union codegen). Per AZ-III invariant 7 ("no silent
+    /// fallback") this list is the surface that downstream consumers
+    /// (audit, registry, debug renderers, diagnostic streams) read to
+    /// see which compound Refs were wrapped and why.
+    ///
+    /// Empty until `project_types` runs. Not serialized: every
+    /// compile rebuilds it from scratch.
+    #[serde(skip, default)]
+    pub type_obligations: Vec<passes::types::TypeObligation>,
 }
 
 impl GrammarIR {

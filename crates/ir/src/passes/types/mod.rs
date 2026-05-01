@@ -11,9 +11,12 @@
 
 pub mod constraint;
 pub mod generate;
+pub mod obligation;
 pub mod registry;
 mod subvariants;
 mod type_map;
+
+pub use obligation::{ObligationSink, TypeObligation};
 
 use std::collections::HashMap;
 
@@ -71,16 +74,55 @@ pub fn project_types(ir: &mut GrammarIR) {
     // waiting for either endpoint. Ground any surviving unsolved rule
     // variables to `BoxedEnum` and re-run propagation so every
     // reference inside the cycle inherits the fallback.
+    //
+    // Per AZ-III invariant 7 (no silent fallback), each cycle-broken
+    // rule emits a NAMED `UnresolvedCompoundRef { cyclic: true }`
+    // obligation per Ref into the rule, so downstream consumers (audit,
+    // registry, codegen) see exactly which Ref positions are
+    // wrapping a cyclic compound rather than a resolved scalar.
     {
-        let unsolved_rule_vars: Vec<csp_solver::constraint::VarId> = system
+        let unsolved_rule_ids: Vec<RuleId> = system
             .rule_vars
-            .values()
-            .copied()
-            .filter(|&var| system.csp.variables[var as usize].domain.solved.is_none())
+            .iter()
+            .filter_map(|(&rule_id, &var)| {
+                if system.csp.variables[var as usize].domain.solved.is_none() {
+                    Some(rule_id)
+                } else {
+                    None
+                }
+            })
             .collect();
-        if !unsolved_rule_vars.is_empty() {
-            for var in unsolved_rule_vars {
+        if !unsolved_rule_ids.is_empty() {
+            for &rule_id in &unsolved_rule_ids {
+                let var = system.rule_vars[&rule_id];
                 system.csp.variables[var as usize].domain.solved = Some(TypeDesc::BoxedEnum);
+
+                // Emit one obligation per Ref into this cyclic rule so
+                // the cycle-break path is named, not silent.
+                if let Some(ref_nodes) = system.refs_per_rule.get(&rule_id) {
+                    for &ref_node in ref_nodes {
+                        system.obligation_sink.record(
+                            obligation::TypeObligation::UnresolvedCompoundRef {
+                                ref_node: Some(ref_node),
+                                target_rule: rule_id,
+                                structural_type: TypeDesc::BoxedEnum,
+                                cyclic: true,
+                            },
+                        );
+                    }
+                } else {
+                    // No Refs into the rule — record the cycle-break
+                    // ground itself so the obligation list stays
+                    // exhaustive.
+                    system.obligation_sink.record(
+                        obligation::TypeObligation::UnresolvedCompoundRef {
+                            ref_node: None,
+                            target_rule: rule_id,
+                            structural_type: TypeDesc::BoxedEnum,
+                            cyclic: true,
+                        },
+                    );
+                }
             }
             let _ = system.csp.propagate();
         }
@@ -411,6 +453,25 @@ pub fn project_types(ir: &mut GrammarIR) {
     ir.type_map = Some(type_map);
     ir.types = types_map.into_iter().collect();
     ir.types.sort_by_key(|(id, _)| *id);
+
+    // AZ-III.W3a.2 — drain the obligation sink and publish to the IR.
+    // Per AZ-III invariant 7, the projection CSP must not collapse
+    // under-determined Ref resolution into `BoxedEnum` silently. Every
+    // compound-Ref collapse and every cycle-break ground recorded an
+    // `UnresolvedCompoundRef` obligation; drain them here so the
+    // downstream audit/registry/diagnostic consumers see the named
+    // shape under each tagged-union wrapper. Stable order: the sink
+    // preserves insertion order, so dedup-while-preserving-order
+    // produces a deterministic obligation list across runs.
+    let mut seen = std::collections::HashSet::new();
+    let drained = system.obligation_sink.drain();
+    let mut obligations: Vec<obligation::TypeObligation> = Vec::with_capacity(drained.len());
+    for o in drained {
+        if seen.insert(o.clone()) {
+            obligations.push(o);
+        }
+    }
+    ir.type_obligations = obligations;
 }
 
 /// Intern every `TypeDesc` that appears anywhere in the projected type

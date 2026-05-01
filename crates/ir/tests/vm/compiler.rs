@@ -52,6 +52,7 @@ fn make_simple_ir(body: IrNode) -> GrammarIR {
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
+        type_obligations: Vec::new(),
     }
 }
 
@@ -196,6 +197,7 @@ fn compile_memo_rule() {
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
+        type_obligations: Vec::new(),
     };
     let program = compile(&ir);
 
@@ -273,6 +275,7 @@ fn compile_direct_left_recursive_rule_keeps_memo() {
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
+        type_obligations: Vec::new(),
     };
     let program = compile(&ir);
 
@@ -444,6 +447,7 @@ fn compile_token_dispatch_emits_dispatch_token() {
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
+        type_obligations: Vec::new(),
     };
     let program = compile(&ir);
 
@@ -540,6 +544,7 @@ fn compile_call() {
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
+        type_obligations: Vec::new(),
     };
     let program = compile(&ir);
 

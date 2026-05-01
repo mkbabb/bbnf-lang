@@ -63,6 +63,7 @@ fn resolve_direct_alias() {
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
+        type_obligations: Vec::new(),
     };
 
     canonicalize_aliases(&mut ir);
@@ -128,6 +129,7 @@ fn resolve_chain_alias() {
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
+        type_obligations: Vec::new(),
     };
 
     canonicalize_aliases(&mut ir);

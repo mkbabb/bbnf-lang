@@ -60,6 +60,7 @@ fn empty_ir(rules: Vec<IrRule>, strings: Vec<String>) -> GrammarIR {
         pattern_alphabets: HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
+        type_obligations: Vec::new(),
     }
 }
 

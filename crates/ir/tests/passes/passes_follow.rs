@@ -76,6 +76,7 @@ fn follow_set_basic_seq() {
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
+        type_obligations: Vec::new(),
     };
 
     let follow = compute_follow_sets(&ir);
@@ -178,6 +179,7 @@ fn follow_set_propagates_through_nullable() {
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
+        type_obligations: Vec::new(),
     };
 
     let follow = compute_follow_sets(&ir);

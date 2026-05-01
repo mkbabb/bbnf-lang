@@ -19,6 +19,7 @@ use csp_solver::Csp;
 use crate::dag::{GrammarDag, NodeId};
 use crate::{FnDescriptor, GrammarIR, IrNode, RuleId, TypeDesc};
 
+use super::ObligationSink;
 use super::constraint::*;
 
 /// Result of constraint generation: CSP + rule-to-var mapping + metadata.
@@ -34,6 +35,18 @@ pub struct ConstraintSystem {
     pub vec_context_vars: HashMap<NodeId, TypeVarId>,
     /// Seq constraints tracked for TypeMap export.
     pub seq_constraints: Vec<SeqConstraintMeta>,
+    /// Shared obligation sink — every compound-Ref collapse and every
+    /// cycle-break ground records a
+    /// [`TypeObligation`](crate::passes::types::TypeObligation) here.
+    /// Drained by `project_types` once propagation converges; the
+    /// drained list lands on `GrammarIR::type_obligations` for
+    /// downstream consumers (registry, audit, diagnostics).
+    pub obligation_sink: ObligationSink,
+    /// Reverse map from `RuleId` to every Ref `NodeId` that references
+    /// it. Used by the cycle-break path in `project_types::mod` to
+    /// surface a named obligation per Ref into a still-unsolved cyclic
+    /// rule, rather than the previous silent ground-out.
+    pub refs_per_rule: HashMap<RuleId, Vec<NodeId>>,
 }
 
 /// Metadata for Seq constraints, used during TypeMap export.
@@ -64,6 +77,8 @@ pub fn generate_constraints(ir: &GrammarIR) -> ConstraintSystem {
         node_vars: HashMap::new(),
         vec_context_vars: HashMap::new(),
         seq_constraints: Vec::new(),
+        obligation_sink: ObligationSink::new(),
+        refs_per_rule: HashMap::new(),
         ir,
         dag,
     };
@@ -91,6 +106,8 @@ pub fn generate_constraints(ir: &GrammarIR) -> ConstraintSystem {
         node_vars: cg.node_vars,
         vec_context_vars: cg.vec_context_vars,
         seq_constraints: cg.seq_constraints,
+        obligation_sink: cg.obligation_sink,
+        refs_per_rule: cg.refs_per_rule,
     }
 }
 
@@ -100,6 +117,8 @@ struct ConstraintGenerator<'a> {
     node_vars: HashMap<NodeId, TypeVarId>,
     vec_context_vars: HashMap<NodeId, TypeVarId>,
     seq_constraints: Vec<SeqConstraintMeta>,
+    obligation_sink: ObligationSink,
+    refs_per_rule: HashMap<RuleId, Vec<NodeId>>,
     ir: &'a GrammarIR,
     dag: &'a GrammarDag,
 }
@@ -155,7 +174,14 @@ impl<'a> ConstraintGenerator<'a> {
             // branches of a repeat.
             IrNode::Ref(rule_id) => {
                 let rule_var = self.rule_vars[rule_id];
-                self.csp.add_constraint(RefConstraint::new(var, rule_var));
+                self.csp.add_constraint(RefConstraint::new(
+                    var,
+                    rule_var,
+                    nid,
+                    *rule_id,
+                    self.obligation_sink.clone(),
+                ));
+                self.refs_per_rule.entry(*rule_id).or_default().push(nid);
                 self.csp
                     .add_constraint(GroundConstraint::new(vec_var, TypeDesc::Enum));
             }

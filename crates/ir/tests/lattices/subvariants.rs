@@ -62,6 +62,7 @@ fn make_ir(rules: Vec<IrRule>, fns: Vec<FnDescriptor>, strings: Vec<String>) -> 
         pattern_alphabets: HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
+        type_obligations: Vec::new(),
     }
 }
 

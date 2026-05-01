@@ -435,14 +435,71 @@ fn lower_leaf_by_span_text<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx<'a>) -
 /// ```
 ///
 /// Every branch dedupes into the same `BbnfCompoundKind::Term` shape,
-/// so the compound kind alone cannot express which branch hit —
-/// dispatch by **content**, not by an enum sub-variant. The single
-/// source of truth is the leading byte of the compound's source span:
-/// `(` / `[` / `{` / `@` discriminate the grouped forms, `"` / `'` /
-/// `` ` `` a literal, `/` a regex, `ε` / `e` epsilon, anything else
-/// an identifier (possibly followed by grammar-call argument
-/// parentheses).
+/// so the compound kind alone cannot express which branch hit.
+/// Dispatch precedence:
+///
+/// 1. **Structural `branch_tag`** — the codegen alt_dispatch emitter
+///    records the chosen alt branch on the Term compound via
+///    [`crate::runtime::builder::StructBuilder::push_branch_tag`].
+///    Tags 0..=8 map directly to the eight alt branches above (with
+///    branch 2 collapsing the optional grammar-call into the
+///    identifier head). This is the path the generated parse takes.
+/// 2. **Content fallback** — when `branch_tag` is `None` (the
+///    hand-written bootstrap_parser path, which doesn't push branch
+///    tags), classify by the leading byte of the trimmed source span:
+///    `(` / `[` / `{` / `@` discriminate the grouped forms, `"` / `'`
+///    / `` ` `` a literal, `/` a regex, `ε` / `e` epsilon, anything
+///    else an identifier (possibly followed by grammar-call argument
+///    parentheses).
+///
+/// The structural path runs first because it is unambiguous: the
+/// codegen-emitted Term carries no punctuator Span leaves around the
+/// inner rhs, so the recovered `span_text()` begins with the inner
+/// rhs's first byte rather than the grouping delimiter — content-
+/// dispatch on that span produces the wrong branch.
 pub(crate) fn lower_term<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx<'a>) -> IrNode {
+    // Structural dispatch path (codegen alt_dispatch): the emitter
+    // records the chosen alt branch via `push_branch_tag`. When the
+    // tag is set, route directly without inspecting source bytes —
+    // the codegen path doesn't synthesise punctuator spans for the
+    // grouped branches, so leading-byte content classification would
+    // misclassify `( rhs )` / `[ rhs ]` / `{ rhs }` / `@{ rhs }`.
+    match node.branch_tag() {
+        Some(0) | Some(1) => return IrNode::Epsilon,
+        Some(2) => return lower_identifier_with_optional_call(node, ctx),
+        Some(3) => {
+            // Literal: the literal's Span leaf surfaces as the only
+            // substantive child; the existing leaf classifier picks
+            // it up via span_text.
+            if let Some(leaf) = lower_leaf_by_span_text(node, ctx) {
+                return leaf;
+            }
+        }
+        Some(4) => {
+            // Regex: same shape as Literal — Span leaf child carries
+            // the `/.../ ` text.
+            if let Some(leaf) = lower_leaf_by_span_text(node, ctx) {
+                return leaf;
+            }
+        }
+        Some(5) => return wrap::lower_grouped_term(node, GroupKind::SpanCapture, ctx),
+        Some(6) => return wrap::lower_grouped_term(node, GroupKind::Paren, ctx),
+        Some(7) => return wrap::lower_grouped_term(node, GroupKind::Optional, ctx),
+        Some(8) => return wrap::lower_grouped_term(node, GroupKind::Many, ctx),
+        Some(other) => panic!(
+            "lower_term: unknown branch_tag {} for compound_kind {:?} (span = {:?})",
+            other,
+            node.compound_kind(),
+            node.span_text(),
+        ),
+        None => {
+            // Bootstrap_parser path: no branch tag was pushed.
+            // Fall through to content-dispatch on the recovered
+            // source span (which DOES include synthetic punctuator
+            // Spans the bootstrap_parser emits around the inner rhs).
+        }
+    }
+
     // Plain leaf — literal, regex, identifier, epsilon — classified
     // directly from the span text. Covers every term branch whose
     // source span IS the leaf token.

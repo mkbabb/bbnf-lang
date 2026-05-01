@@ -12,6 +12,18 @@ publish = false
 # compile_paths_request` + `bbnf::generate::generate_all`, so it carries
 # path-deps on `bbnf-ir` and `bbnf` (lib-only).
 
+# AZ-IV.W0.5 — lib + bin layout. The bin entrypoint stays at
+# `src/main.rs`; the regen + manifest logic lives in `src/lib.rs` so
+# integration tests under `xtask/tests/` can exercise the metadata
+# fail-closed surface directly without spawning a cargo subprocess.
+[lib]
+name = "xtask"
+path = "src/lib.rs"
+
+[[bin]]
+name = "xtask"
+path = "src/main.rs"
+
 [dependencies]
 # Workspace path-deps. Versions match the workspace's existing pins
 # verified against Cargo.lock at B2.W0.a authorship.

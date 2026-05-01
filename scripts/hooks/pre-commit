@@ -4,12 +4,19 @@
 # Routes through `cargo xtask regen --check --staged`: xtask reads
 # `git diff --cached --name-only` itself, returns 0 immediately when
 # no staged file touches a grammar source, the per-grammar generated
-# tree, or the regen entrypoint, and otherwise restricts the regen
-# loop to grammars whose source or generated output is in the staged
-# set. Centralising the staged-filter inside xtask keeps a single
-# source of truth for what "grammar-relevant" means and avoids the
-# duplicated grep pattern this hook used to carry. Skips during
-# rebase/merge so half-applied trees do not block conflict
+# tree, the regen entrypoint, or the `[workspace.metadata.bbnf]`
+# subtree of `Cargo.toml`, and otherwise runs the check loop against
+# every affected grammar. Centralising the staged-filter inside xtask
+# keeps a single source of truth for what "grammar-relevant" means
+# and avoids the duplicated grep pattern this hook used to carry.
+#
+# AZ-IV.W0.5 added the `Cargo.toml` metadata-subtree trigger so
+# manifest edits (feature toggles, ident renames, path retargets) can
+# no longer bypass the local fail-fast: when the subtree differs from
+# HEAD, the unfiltered check loop runs against the full grammar fleet
+# because metadata changes can affect any ident.
+#
+# Skips during rebase/merge so half-applied trees do not block conflict
 # resolution. CI carries the canonical enforcement
 # (`cargo xtask regen --check`, full surface); this hook is the
 # local fast-fail.

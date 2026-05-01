@@ -1,0 +1,109 @@
+AZ-IV.W0.5 — Metadata Gate evidence
+====================================
+
+Scope
+-----
+
+1. Manifest metadata fail-closed: an unknown `features = [..]` entry on
+   `[workspace.metadata.bbnf.grammars.<ident>]` aborts the manifest read
+   with a structured error.
+2. Staged regen trigger covers `Cargo.toml` metadata edits: the
+   pre-commit hook (`cargo xtask regen --check --staged`) runs the
+   unfiltered check loop when the `[workspace.metadata.bbnf]` subtree
+   differs between staged and HEAD.
+3. Full regen remains a CI blocker.
+4. Focused test for the unknown-feature failure path.
+
+Files changed
+-------------
+
+- `xtask/Cargo.toml` — declared `[lib]` + `[[bin]]` so integration
+  tests can exercise `xtask::regen` directly.
+- `xtask/src/lib.rs` — new; re-exports `regen`.
+- `xtask/src/main.rs` — switched `mod regen;` to `use xtask::regen;`.
+- `xtask/src/regen.rs`:
+    - `KNOWN_FEATURES: &[&str]` const + `validate_grammar_features()`
+      pub helper, invoked eagerly from `load_manifest()`.
+    - `GrammarEntry` and its fields are `pub` so the integration test
+      can construct a synthetic list.
+    - `parser_attributes()` now returns `Result<ParserAttributes>`;
+      the unknown-feature branch `bail!`s instead of `eprintln!`-and-
+      continue.
+    - `regen_check_staged()` consults
+      `cargo_toml_diff_touches_grammar_metadata()` and falls through
+      to the unfiltered check loop when the bbnf metadata subtree
+      differs between staged Cargo.toml and HEAD:Cargo.toml. The
+      diff is a parsed-TOML subtree comparison so unrelated Cargo.toml
+      edits do not over-trigger.
+- `scripts/hooks/pre-commit` — comment refresh; no script changes
+  needed because the hook delegates the trigger logic to xtask.
+- `xtask/tests/metadata_fail_closed.rs` — new; three focused tests.
+
+Focused test output
+-------------------
+
+Command:
+  cargo test -p xtask --profile ax-iter --test metadata_fail_closed
+
+Result:
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 0.61s
+     Running tests/metadata_fail_closed.rs (target/w0-metadata/ax-iter/deps/metadata_fail_closed-3bc5c6df450b4f21)
+
+running 3 tests
+test empty_features_passes_validation ... ok
+test every_known_feature_passes_validation ... ok
+test unknown_feature_is_rejected_with_structured_error ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+Failure-path assertion (`unknown_feature_is_rejected_with_structured_error`):
+  - synthetic manifest names `features = ["pretify"]` on grammar `json`;
+  - `validate_grammar_features` returns Err;
+  - error message contains `pretify`, `grammar `json``, the table
+    `[workspace.metadata.bbnf.grammars]`, and every entry in
+    `KNOWN_FEATURES` (structural, prettify, skip_recover, serialize,
+    remove_left_recursion, debug).
+
+Staged-trigger mechanism
+------------------------
+
+`xtask::regen::cargo_toml_diff_touches_grammar_metadata`:
+  1. `git show :Cargo.toml`     — staged blob.
+  2. `git show HEAD:Cargo.toml` — committed blob (empty on initial
+     commit / orphan worktree).
+  3. parse both as TOML, project the `workspace.metadata.bbnf` subtree.
+  4. re-serialise each subtree; compare. Diverging subtree returns
+     true and forces the unfiltered `regen_check_filtered` loop;
+     equal subtrees fall through to the existing per-grammar staged
+     filter so unrelated Cargo.toml edits (profile tweaks, dep bumps,
+     workspace member churn) keep the cheap fast-path.
+
+Pre-commit hook reads:
+  `cargo xtask regen --check --staged`
+which routes through this helper for every commit that stages
+Cargo.toml.
+
+CI blocker confirmation
+-----------------------
+
+`grep -n "regen" .github/workflows/ci.yml`:
+  48:      # Fast checks on the ax-iter profile: regen drift gate (xtask
+  49:      # regenerates per-grammar `crates/core/src/grammar/generated/` to
+  55:      - name: preflight — regen check (xtask)
+  58:        run: cargo xtask regen --check
+
+CI runs `cargo xtask regen --check` (no `--staged`), so:
+  - `load_manifest()` runs the eager `validate_grammar_features` over
+    the entire workspace manifest;
+  - any unknown feature anywhere in the manifest fails CI;
+  - the regen drift loop runs against every grammar regardless of
+    staged-file overlap.
+
+Lint/format
+-----------
+
+  cargo fmt --all -- --check     — clean (re-ran after edits).
+  cargo clippy -p xtask --profile ax-iter --all-targets
+                                  — clean for xtask sources/tests
+                                    (csp-solver pre-existing warnings
+                                    are out of W0.5 scope).

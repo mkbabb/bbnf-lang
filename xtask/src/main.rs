@@ -11,8 +11,7 @@
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
-
-mod regen;
+use xtask::regen;
 
 #[derive(Parser)]
 #[command(name = "xtask", about = "bbnf-lang workspace build-time codegen")]

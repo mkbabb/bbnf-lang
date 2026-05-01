@@ -30,14 +30,31 @@ use bbnf_ir::rewrites::RuleSet;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
+/// Known feature flags accepted on a `[workspace.metadata.bbnf.grammars]`
+/// entry. Single source of truth consumed by both feature-validation
+/// (AZ-IV.W0.5 fail-closed gate) and the per-entry attribute reducer.
+///
+/// Any feature outside this set fails the manifest read, citing the
+/// offending key, the offending grammar, and the accepted set — the
+/// pre-AZ-IV behaviour silently `eprintln`d a warning and continued,
+/// letting typos like `serializ` ship to CI undetected.
+pub const KNOWN_FEATURES: &[&str] = &[
+    "structural",
+    "prettify",
+    "skip_recover",
+    "serialize",
+    "remove_left_recursion",
+    "debug",
+];
+
 /// One row of the workspace grammar manifest at
 /// `[workspace.metadata.bbnf.grammars]`.
 #[derive(serde::Deserialize, Clone, Debug)]
-struct GrammarEntry {
-    ident: String,
-    path: String,
+pub struct GrammarEntry {
+    pub ident: String,
+    pub path: String,
     #[serde(default)]
-    features: Vec<String>,
+    pub features: Vec<String>,
 }
 
 impl GrammarEntry {
@@ -101,7 +118,15 @@ impl GrammarEntry {
     /// (workspace-root-relative POSIX, for the emitter to embed in
     /// `include_str!()` so the generated file is portable across
     /// worktrees + checkouts). Both are pushed in lock-step.
-    fn parser_attributes(&self, grammar_path: PathBuf) -> ParserAttributes {
+    ///
+    /// Pre-AZ-IV.W0.5 this method silently warned on unknown features
+    /// and continued. Now it returns an error citing the offending
+    /// key — the manifest validation step runs in [`load_manifest`]
+    /// against [`KNOWN_FEATURES`], so reaching this method with an
+    /// unknown feature implies the validation gate was bypassed.
+    /// The per-feature `match` keeps a final defensive `bail!` to
+    /// uphold the fail-closed invariant even under direct reuse.
+    fn parser_attributes(&self, grammar_path: PathBuf) -> Result<ParserAttributes> {
         let mut attrs = ParserAttributes::default();
         attrs.paths.push(grammar_path);
         // The manifest's raw `path` is already workspace-relative
@@ -117,19 +142,41 @@ impl GrammarEntry {
                 "remove_left_recursion" => attrs.remove_left_recursion = true,
                 "debug" => attrs.debug = true,
                 other => {
-                    // Unknown feature: warn but don't fail; the
-                    // manifest is the source of truth and unknown
-                    // entries indicate a forthcoming feature this
-                    // xtask doesn't yet recognise.
-                    eprintln!(
-                        "xtask::regen: warning — unknown feature `{other}` on grammar `{}`",
-                        self.ident
+                    bail!(
+                        "[workspace.metadata.bbnf.grammars] grammar `{}`: unknown feature `{}` (accepted: {})",
+                        self.ident,
+                        other,
+                        KNOWN_FEATURES.join(", "),
                     );
                 }
             }
         }
-        attrs
+        Ok(attrs)
     }
+}
+
+/// Reject every grammar entry that names a feature outside
+/// [`KNOWN_FEATURES`]. The error cites the offending grammar ident,
+/// the offending feature key, and the accepted feature set, so a typo
+/// surfaces with enough context to fix without reading source.
+///
+/// Runs eagerly against the manifest in [`load_manifest`]; the
+/// per-grammar [`GrammarEntry::parser_attributes`] reducer keeps a
+/// defensive `bail!` for safety under direct reuse.
+pub fn validate_grammar_features(entries: &[GrammarEntry]) -> Result<()> {
+    for entry in entries {
+        for feat in &entry.features {
+            if !KNOWN_FEATURES.contains(&feat.as_str()) {
+                bail!(
+                    "[workspace.metadata.bbnf.grammars] grammar `{}`: unknown feature `{}` (accepted: {})",
+                    entry.ident,
+                    feat,
+                    KNOWN_FEATURES.join(", "),
+                );
+            }
+        }
+    }
+    Ok(())
 }
 
 fn pascal_case(input: &str) -> String {
@@ -220,6 +267,13 @@ fn load_manifest() -> Result<(PathBuf, Vec<GrammarEntry>)> {
     let grammars: Vec<GrammarEntry> = serde_json::from_value(grammars_value)
         .context("failed to deserialize [workspace.metadata.bbnf.grammars]")?;
 
+    // AZ-IV.W0.5 — fail-closed metadata gate. A typo such as
+    // `serializ` or `pretify` previously slipped through with an
+    // `eprintln` warning; now the manifest read aborts with a
+    // structured error citing the offending key.
+    validate_grammar_features(&grammars)
+        .context("[workspace.metadata.bbnf.grammars]: feature validation failed")?;
+
     Ok((workspace_root, grammars))
 }
 
@@ -247,7 +301,7 @@ fn regen_grammar(workspace_root: &Path, entry: &GrammarEntry, target_path: &Path
         );
     }
 
-    let parser_attrs = entry.parser_attributes(grammar_path.clone());
+    let parser_attrs = entry.parser_attributes(grammar_path.clone())?;
     let marker_ident = entry.marker_ident();
 
     // Tranche BB.scaffold.C — load the per-grammar rewrite-rule
@@ -539,9 +593,23 @@ fn regen_check_filtered(
 fn regen_check_staged(workspace_root: &Path, grammars: &[GrammarEntry]) -> Result<()> {
     let staged = staged_paths(workspace_root)?;
 
-    if !staged_has_grammar_relevant(&staged) {
+    let manifest_metadata_staged =
+        staged.contains("Cargo.toml") && cargo_toml_diff_touches_grammar_metadata(workspace_root)?;
+
+    if !staged_has_grammar_relevant(&staged) && !manifest_metadata_staged {
         println!("regen --check --staged: nothing staged for grammar-relevant files");
         return Ok(());
+    }
+
+    // AZ-IV.W0.5 — when the `[workspace.metadata.bbnf.grammars*]`
+    // block itself is edited, an entry could have been added,
+    // removed, or had its `path`/`features` altered. Staged-filter
+    // by ident is unsafe in that regime (a renamed ident never
+    // matches against the prior generated file path); fall through
+    // to the unfiltered check loop so every grammar in the new
+    // manifest re-runs against its on-disk emission.
+    if manifest_metadata_staged {
+        return regen_check_filtered(workspace_root, grammars, grammars.len());
     }
 
     let filtered: Vec<GrammarEntry> = grammars
@@ -621,4 +689,75 @@ fn grammar_overlaps_staged(entry: &GrammarEntry, staged: &BTreeSet<String>) -> b
     let source = entry.path.replace('\\', "/");
     let generated = format!("crates/core/src/grammar/generated/{}.rs", entry.ident);
     staged.contains(&source) || staged.contains(&generated)
+}
+
+/// True when the staged `Cargo.toml` differs from `HEAD:Cargo.toml`
+/// inside the `[workspace.metadata.bbnf]` subtree.
+///
+/// AZ-IV.W0.5 — without this check a metadata edit that flips a
+/// feature, retargets a grammar's `path`, or adds/removes an ident
+/// would slip past the pre-commit hook because `Cargo.toml` does not
+/// match the prior `grammar/` / `crates/core/src/grammar/generated/`
+/// / `xtask/src/regen` trigger pattern. We compare the parsed TOML
+/// `workspace.metadata.bbnf` subtree across HEAD and the staged
+/// blob: any structural divergence flips the trigger, while
+/// unrelated edits to `Cargo.toml` (profile tweaks, dep version
+/// bumps, member list changes outside the metadata block) leave the
+/// subtree byte-equal and fall through to the normal staged-filter
+/// path.
+///
+/// HEAD missing (initial commit / orphan worktree) is treated as
+/// "no prior subtree" — any staged `[workspace.metadata.bbnf]`
+/// flips the trigger.
+fn cargo_toml_diff_touches_grammar_metadata(workspace_root: &Path) -> Result<bool> {
+    let staged = git_show_blob(workspace_root, ":Cargo.toml")?;
+    let head = git_show_blob(workspace_root, "HEAD:Cargo.toml").unwrap_or_default();
+
+    let staged_subtree = extract_bbnf_metadata_subtree(&staged)?;
+    let head_subtree = extract_bbnf_metadata_subtree(&head)?;
+
+    Ok(staged_subtree != head_subtree)
+}
+
+/// `git show <revspec>` returning UTF-8 contents, or `Err` when the
+/// revspec is missing (HEAD doesn't exist, blob absent, etc.).
+fn git_show_blob(workspace_root: &Path, revspec: &str) -> Result<String> {
+    let output = Command::new("git")
+        .arg("-C")
+        .arg(workspace_root)
+        .args(["show", revspec])
+        .output()
+        .with_context(|| format!("invoke `git show {revspec}`"))?;
+
+    if !output.status.success() {
+        bail!(
+            "`git show {}` exited non-zero: {}",
+            revspec,
+            String::from_utf8_lossy(&output.stderr).trim()
+        );
+    }
+
+    String::from_utf8(output.stdout)
+        .with_context(|| format!("`git show {revspec}` produced non-UTF8 output"))
+}
+
+/// Pull the `workspace.metadata.bbnf` subtree out of a parsed
+/// `Cargo.toml`. Returns the canonical TOML re-serialisation so two
+/// semantically-equal subtrees compare byte-equal regardless of
+/// whitespace or comment wandering. `None`-equivalent (subtree
+/// absent) is encoded as the empty string.
+fn extract_bbnf_metadata_subtree(cargo_toml: &str) -> Result<String> {
+    if cargo_toml.is_empty() {
+        return Ok(String::new());
+    }
+    let parsed: toml::Value =
+        toml::from_str(cargo_toml).context("parse Cargo.toml as TOML for metadata-gate diff")?;
+    let subtree = parsed
+        .get("workspace")
+        .and_then(|w| w.get("metadata"))
+        .and_then(|m| m.get("bbnf"));
+    match subtree {
+        Some(value) => toml::to_string(value).context("re-serialise bbnf metadata subtree"),
+        None => Ok(String::new()),
+    }
 }

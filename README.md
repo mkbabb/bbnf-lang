@@ -1,45 +1,70 @@
 # <img src="extension/icons/bbnf-small.png" height="32" align="top" /> bbnf-lang
 
-**Better Backus-Naur Form**—a monorepo for the BBNF grammar ecosystem.
+**Better Backus-Naur Form**, the grammar-derived compiler fleet.
 
-BBNF extends EBNF for defining context-free grammars, used by the
-[`parse-that`](https://github.com/mkbabb/parse-that) parser combinator library.
+A `.bbnf` grammar lowers through a shared IR substrate (`crates/ir`) into
+checked-in Rust source under `crates/core/src/grammar/generated/<ident>.rs`,
+plus a bytecode VM for the playground. The same IR feeds both backends; AOT
+codegen runs at build time via `cargo xtask regen`. Sibling crates
+[`parse-that`](https://github.com/mkbabb/parse-that) and
+[`pprint`](https://github.com/mkbabb/pprint) carry the parser-combinator
+substrate and the gorgeous auto-formatter.
 
 ---
 
-## Structure
+## Quick start
 
+```sh
+cargo xtask regen          # regenerate every grammar in [workspace.metadata.bbnf.grammars]
+cargo xtask regen --check  # CI / pre-commit drift gate
+cargo iter-check           # workspace check on ax-iter (excludes heavy-link crates)
+cargo iter-test            # workspace nextest on ax-iter
+make build                 # release LSP + VS Code extension bundle
+make build-wasm            # WASM module into playground/src/wasm/
 ```
-rust/                   Rust workspace
-  core/                 BBNF grammar framework, IR lowering, codegen (lib)
-  ir/                Canonical grammar IR, bytecode compiler, interpreter
-  derive/          Proc-macro derive for BBNF
-  analysis/        LSP analysis engine (DocumentState, feature providers)
-  lsp/                  Language Server Protocol server
-wasm/                   bbnf-wasm crate (wasm-pack → playground, bytecode VM)
-typescript/             TS library (@mkbabb/bbnf-lang)
-prettier-plugin-bbnf/   Prettier plugin for .bbnf files
-playground/             Vue 3 + Monaco playground (uses bbnf-wasm)
-extension/              VS Code extension (LSP client)
-grammar/                Example grammars + language specification
-  css/                  CSS grammar family (value-unit, color, values, selectors, keyframes, stylesheet, css-tokens, css-stylesheet-pretty)
-  lang/                 Language/format grammars (JSON, CSV, math, regex, EBNF, Google Sheets, etc.)
-docs/                   Documentation (markdown, rendered by playground)
-scripts/                Build automation scripts
-data/                   Benchmark datasets
-server/                 Compiled LSP binary (copied by Makefile)
-.github/workflows/      CI + release pipeline
-.vscode/                Launch configs, tasks, settings
-```
+
+Bench surface: `cargo bench-json`, `bench-css`, `bench-bbnf`, `bench-sheets`,
+`bench-compile`, or `cargo bench-all` (all divan, ay-final profile). Iteration
+analogues live under `bench-iter-*`.
+
+## Architecture
+
+`docs/GESTALT.md` is the senior-engineer onboarding read.
+`docs/codegen-paths.md` walks the seventeen-pass IR pipeline and the AOT vs VM
+divergence. `docs/instructions/PROFILING.md` covers samply discipline and the
+bench tier matrix.
+
+## Workspace
+
+Twelve members live under `Cargo.toml:[workspace]`:
+
+| Crate | Role |
+|---|---|
+| `crates/core` | Grammar framework, lowering façade, generated grammar source |
+| `crates/ir` | Canonical `GrammarIR`, seventeen IR operations, bytecode compiler + VM |
+| `crates/analysis` | LSP analysis engine (DocumentState, feature providers) |
+| `crates/lsp` | Language Server Protocol server (`bbnf-lsp` binary) |
+| `crates/ser` | Tape-aware serialization helpers |
+| `crates/gorgeous` | Auto-formatter front-end (consumes `pprint`) |
+| `crates/bootstrap` | BBNF self-host scaffolding |
+| `crates/egraph` | Generalized e-graph substrate |
+| `crates/egraph-derive` | `derive(Language)` for e-graph IRs |
+| `crates/csp-solver` | Generalized CSP solver |
+| `crates/simd-scan` | Hand-rolled SIMD scanners (delim + whitespace) |
+| `xtask` | Build-time codegen entrypoint (`cargo xtask regen`) |
+
+`wasm/` builds a WASM module for the playground (excluded from the workspace
+per `Cargo.toml:exclude`). Top-level `extension/`, `playground/`, `grammar/`,
+`docs/`, `scripts/`, `data/`, and `server/` carry the editor extension, web
+playground, grammar sources, documentation, dev scripts, benchmark corpora,
+and the compiled LSP artefact.
 
 ## Language
 
 BBNF extends [EBNF](https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form)
-with features for practical parser generation: regex terminals, skip/next operators,
-mapping functions, and an import system. See
-[grammar/BBNF.md](grammar/BBNF.md) for the full specification.
-
-Quick orientation:
+for practical parser generation: regex terminals, skip/next operators, typed
+rules via `->`, `@import` modules, recovery directives, and pretty-printing
+hooks.
 
 ```bbnf
 (* Rules: name = expression ; *)
@@ -51,126 +76,94 @@ number = /\-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?/ ;
 (* EBNF operators: [] optional, {} repetition, () grouping *)
 array = "[", [ value, { ",", value } ], "]" ;
 
-(* Imports—selective imports auto-unfurl transitive dependencies *)
+(* Selective imports auto-unfurl transitive dependencies *)
 @import { number, integer } from "css-value-unit.bbnf" ;
 
-(* Recovery—per-rule sync expression for multi-error parsing *)
+(* Per-rule sync expression for multi-error parsing *)
 @recover declaration /[;}]/ ;
 
-(* Custom whitespace—overrides ?w to use comment-aware scanning *)
+(* Override ?w (optional whitespace) for comment-aware scanning *)
 @ws /(?s)(?:\s|\/\*.*?\*\/)*/ ;
-declaration = propertyName ?w ":" ?w valueSpan ;
 
-(* Force-inline—splice rule body at every call site, no enum variant *)
+(* Splice rule body at every call site; no enum variant *)
 @inline optSemicolon ;
 
-(* Lexical token—fusion-inlined + span eligible, enum variant preserved *)
+(* Lexical token: fusion-inlined + span eligible; variant preserved *)
 @token selectorSpan ;
 ```
 
-### Recovery
+Grammar sources live under `grammar/`: `bbnf/` (self-host), `json/`, `css/l4/`,
+`css/pretty.bbnf`, `google-sheets/`, `ebnf/`, `bnf/`, and `misc/` (csv, math,
+regex, emoji, g4). Production grammars enumerated in
+`Cargo.toml:[workspace.metadata.bbnf.grammars]`.
 
-`@recover rule syncExpr ;` annotates a rule with a synchronization expression used
-for multi-error parsing. When the rule fails, the parser advances past input until
-`syncExpr` matches, records a diagnostic, and continues. Any valid BBNF expression
-(regex, alternation, concatenation, etc.) is valid as the sync expression.
+### Directives
 
-The LSP provides semantic tokens, hover, completion, and diagnostics (undefined target
-rule) for `@recover` directives.
+`@recover rule syncExpr ;` records a diagnostic and advances past `syncExpr`
+when the rule fails; any BBNF expression is valid as the sync.
 
-### Imports
+`@import "other.bbnf" ;` or `@import { rule } from "lib.bbnf" ;` compose
+grammars. Selective imports drag transitive dependencies; circular imports
+resolve via Python-style partial initialization.
 
-BBNF supports `@import` directives for composing grammars:
+`@ws /regex/ ;` overrides the `?w` operator grammar-wide. CSS grammars route
+`?w` through the SIMD comment scanner under `crates/simd-scan/`.
 
-```bbnf
-@import "other.bbnf" ;                        (* import all rules *)
-@import { number, integer } from "lib.bbnf" ; (* selective import *)
-```
+`@inline ruleName ;` substitutes the body at every call site, eliding the
+enum variant. `@token ruleName ;` fusion-inlines but preserves the variant
+for `@pretty` reference. `@no_collapse ruleName ;` preserves structural
+identity in the generated AST.
 
-Import directives may appear at any position in a file (before, between, or after rules).
-Selective imports automatically bring transitive dependencies—importing `percentage`
-also brings `number` and `percentageUnit` if `percentage` references them.
-Circular imports are handled via Python-style partial initialization (a module's rules
-are registered before recursing into its own imports).
+`@debug ruleName ;` emits trace output across codegen paths; the bytecode VM
+uses `Op::DebugBreak` with stepping and breakpoint support. The VS Code
+extension wires this to the Debug Adapter Protocol.
 
-Cmd+Click on import paths opens the referenced file. Diagnostics are
-import-aware—imported rule names suppress "undefined rule" warnings.
+`@pretty` directives drive pretty-printing in the playground and Prettier
+integration through gorgeous.
 
-### Whitespace
+### Codegen entry
 
-`@ws /regex/ ;` overrides the `?w` (optional whitespace) operator grammar-wide. By default, `?w` trims ASCII whitespace (`\s`). With `@ws`, it compiles to the given regex instead, enabling comment-aware whitespace without allocating a named rule's enum variant at each call site. CSS grammars use this to route `?w` through a SIMD-accelerated comment scanner.
-
-### Inlining
-
-`@inline ruleName ;` force-inlines a rule at every call site during IR compilation. The rule's body is substituted directly—no enum variant generated, no function emitted. Useful for small helper rules (optional semicolons, opaque spans) where the abstraction aids readability but the codegen overhead doesn't.
-
-### Debugging
-
-`@debug ruleName ;` instruments a rule for trace output across all codegen paths. `@debug * ;` instruments every rule. Compiled paths gate behind `#[cfg(feature = "parser-trace")]`; the bytecode VM uses `Op::DebugBreak` opcodes with stepping and breakpoint support. The VS Code extension supports grammar-level debugging via DAP (`bbnf-lsp --dap`)—breakpoints on rules, step through parse execution, inspect call stack and parse state.
-
-### Token
-
-`@token ruleName ;` marks a rule as a lexical token. Token rules are forced span-eligible and use fusion-style inlining (body inlined at call sites, but the enum variant is preserved). Unlike `@inline`, which eliminates the variant entirely, `@token` is compatible with `@pretty` directives that need to reference the variant for formatting.
-
-### No-Collapse
-
-`@no_collapse ruleName ;` preserves a rule's structural identity in the generated AST, preventing Span compression from collapsing it.
-
-### Formatting
-
-BBNF's `@pretty` directives drive pretty-printing in the playground and Prettier plugin.
-
-### Slab Parsing
-
-`#[parser(slab)]` on the derive macro generates a second set of parser methods that use `BumpSlab` for allocation instead of `Box<T>`. The slab path emits monolithic recursive functions—direct `match` dispatch on the first byte, inlined rule bodies, zero combinator construction overhead. Fresh slab and parser per parse; bulk deallocation on drop.
+Generated parsers live at `crates/core/src/grammar/generated/<ident>.rs`,
+written by `cargo xtask regen` and consumed via `include!`. The runtime
+entrypoint per grammar is:
 
 ```rust
-#[derive(Parser)]
-#[parser(path = "json.bbnf", slab)]
-struct JsonParser;
-
-let slab = BumpSlab::with_capacity(input.len() / 32 * 32);
-let ast = JsonParser::value_slab()
-    .parse_with_context(&input, &slab)
-    .unwrap();
+let doc = JsonParser::parse(&input)?;  // -> JsonDocument<'_>
 ```
 
-### Span-Only Parsing
-
-`#[parser(span)]` generates zero-allocation `__rule_span` functions returning `Option<Span<'a>>`. No enum variants, no slab, no Vec. Validation-only parsing at maximum throughput.
+`<Grammar>Document<'_>` projects directly into the typed value API; no proc-
+macro expansion at consumer sites. The historical `#[derive(Parser)]` /
+`bbnf_derive` proc-macro path was retired at B2.W2 in favour of checked-in
+generation. See `docs/codegen-paths.md` §1 for the full nine-grammar matrix.
 
 ## Playground
 
 Live at **[grammar.babb.dev](https://grammar.babb.dev)**.
 
-### Editor
+Monaco with BBNF language support via WASM: hover, completion, go-to-
+definition, semantic tokens, inlay hints (FIRST sets, nullable), code lens,
+code actions, document symbols, folding, selection ranges. Diagnostics update
+on every keystroke.
 
-Monaco with full BBNF language support via WASM: hover, completion, go-to-definition,
-semantic tokens, inlay hints (FIRST sets + nullable), code lens, code actions,
-document symbols, folding, and selection ranges. Diagnostics update on every keystroke.
+| Pane | Content |
+|---|---|
+| Grammar | BBNF editor with live diagnostics |
+| Input | Source text parsed against the grammar |
+| Parsed AST | JSON projection of the parsed value |
+| Formatted | `@pretty`-driven output via gorgeous (WASM) |
+| Debug | Step through parse execution with breakpoints + call stack |
 
-Four panes show different views of the grammar and input:
-
-| Pane | What it shows |
-|------|---------------|
-| **Grammar** | BBNF grammar editor with live diagnostics |
-| **Input** | Source text parsed against the grammar |
-| **Parsed AST** | JSON AST produced by the parser |
-| **Formatted** | Pretty-printed output via `@pretty` directives |
-| **Debug** | Step through parse execution—breakpoints, call stack, parse state |
-
-Formatting uses [gorgeous](https://github.com/mkbabb/gorgeous) (WASM)—AOT-generated formatters for built-in languages, a bytecode VM for custom grammars.
-
-### Docs
-
-Built-in documentation covering [`parse-that`](https://github.com/mkbabb/parse-that), BBNF, [`pprint`](https://github.com/mkbabb/pprint), [`gorgeous`](https://github.com/mkbabb/gorgeous), and
-performance—rendered from Markdown with a sidebar nav grouped by section and syntax-highlighted code blocks.
+Documentation rendered alongside covers
+[`parse-that`](https://github.com/mkbabb/parse-that), BBNF,
+[`pprint`](https://github.com/mkbabb/pprint),
+[`gorgeous`](https://github.com/mkbabb/gorgeous), and performance.
 
 ## Sources, acknowledgements, &c.
 
-- [Extended Backus-Naur form](https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form) — ISO 14977. BBNF's ancestor.
-- Wheeler, D. A. [Don't Use ISO 14977 EBNF](https://dwheeler.com/essays/dont-use-iso-14977-ebnf.html). — Motivation for BBNF's syntactic deviations.
-- Aho, A. V., Lam, M. S., Sethi, R., & Ullman, J. D. (2006). *Compilers: Principles, Techniques, and Tools* (2nd ed.). Addison-Wesley. — Left recursion, left factoring, FIRST/FOLLOW sets.
-- Tarjan, R. E. (1972). Depth-first search and linear graph algorithms. *SIAM Journal on Computing*. — SCC detection used for cycle analysis, FIRST-set propagation, and build ordering.
-- [Language Server Protocol](https://microsoft.github.io/language-server-protocol/). Microsoft. — The protocol implemented by `bbnf-lsp`.
-- [`parse-that`](https://github.com/mkbabb/parse-that) — The parser combinator library that consumes BBNF grammars.
+- [Extended Backus-Naur form](https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form). ISO 14977. BBNF's ancestor.
+- Wheeler, D. A. [Don't Use ISO 14977 EBNF](https://dwheeler.com/essays/dont-use-iso-14977-ebnf.html). Motivation for BBNF's syntactic deviations.
+- Aho, A. V., Lam, M. S., Sethi, R., & Ullman, J. D. (2006). *Compilers: Principles, Techniques, and Tools* (2nd ed.). Addison-Wesley. Left recursion, left factoring, FIRST/FOLLOW sets.
+- Tarjan, R. E. (1972). Depth-first search and linear graph algorithms. *SIAM Journal on Computing*. SCC detection for cycle analysis, FIRST-set propagation, and build ordering.
+- [Language Server Protocol](https://microsoft.github.io/language-server-protocol/). Microsoft. The protocol implemented by `bbnf-lsp`.
+- [`parse-that`](https://github.com/mkbabb/parse-that). Parser-combinator substrate consuming BBNF grammars.
+- [`pprint`](https://github.com/mkbabb/pprint). Auto-formatter substrate underlying gorgeous.

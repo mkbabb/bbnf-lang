@@ -209,13 +209,32 @@ fn fold_typed_leaf_descendant<'a, 'p: 'a>(
 }
 
 /// Classify a `Span`-shaped atom by its leading byte. The atom may
-/// be a quoted string literal, an `input` chain head, a bare ident,
+/// be a quoted string literal, a numeric literal (with optional
+/// type suffix like `0u8`), an `input` chain head, a bare ident,
 /// or a path / fn-call surface (recovered via slice walk).
+///
+/// **AZ-IV.W1.5 (REGEN-redress carry)** — pre-W1.5 the numeric
+/// branch (`b'0'..=b'9'` / `b'.'`) was missing here, so a value-
+/// expression Span like `"0u8"` (from `null = "null" -> 0u8`)
+/// routed into `lower_bare_ident`, dropping both the integer
+/// payload and the `Map { fn_id, U8 }` wrapper its enclosing
+/// mapped_factor would have built. The numeric arms route through
+/// `parse_numeric_literal_text` to honour the typed-suffix
+/// projection (`split_numeric_suffix("0u8") → ("0", "u8")`).
 fn classify_span_atom<'p>(text: &'p str, ctx: &mut LowerCtx<'p>) -> MapExpr {
     let trimmed = text.trim_start();
     let first = trimmed.as_bytes().first().copied();
     match first {
         Some(b'"') | Some(b'\'') => MapExpr::StringLit(intern_string_lit_inner(trimmed, ctx)),
+        Some(b'0'..=b'9') => parse_numeric_literal_text(trimmed),
+        Some(b'.') if trimmed
+            .as_bytes()
+            .get(1)
+            .copied()
+            .is_some_and(|b| b.is_ascii_digit()) =>
+        {
+            parse_float_literal(trimmed)
+        }
         _ => lower_bare_ident(trimmed, ctx),
     }
 }

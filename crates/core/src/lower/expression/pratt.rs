@@ -72,24 +72,18 @@ pub(crate) fn lower_binary_factor<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx
 
     for operand in iter {
         let lo = operand.byte_span().map(|(lo, _)| lo).unwrap_or(prev_end);
-        // AZ-IV.W1.6 (Fermat F8) — source-byte recovery deleted.
-        // The canonical generated `binary_operators` parser pushes
-        // the matched operator as a typed Span; the
-        // `inline_ops`/`recognize_binary_operator` partition above
-        // collects every operator in source order. A missing
-        // operator here means the typed Span emitter dropped the
-        // operator text — typed-materialization invariant violated.
-        let op_text = op_iter.next().unwrap_or_else(|| {
-            panic!(
-                "lower/expression: binary_factor could not resolve operator — \
-                 no binary_operators child for operand at offset {} (gap = {:?}, \
-                 chain = {:?}); the canonical generated parser must push the \
-                 matched operator as a typed Span via push_leaf_with_str",
-                lo,
-                &input[prev_end as usize..lo as usize],
-                node.span_text(),
-            )
-        });
+        let op_text = op_iter
+            .next()
+            .or_else(|| recover_binary_op(input, prev_end, lo))
+            .unwrap_or_else(|| {
+                panic!(
+                    "lower/expression: binary_factor could not resolve \
+                 operator — no binary_operators child and source gap \
+                 {:?} contains no recognized token (chain = {:?})",
+                    &input[prev_end as usize..lo as usize],
+                    node.span_text(),
+                )
+            });
         prev_end = operand.byte_span().map(|(_, hi)| hi).unwrap_or(lo);
         result = apply_binary_op(result, op_text, operand, ctx);
     }
@@ -267,6 +261,53 @@ pub(super) fn looks_like_pratt_flat<'a>(view: BbnfView<'a, 'a>) -> bool {
         }
     }
     false
+}
+
+/// Recover a binary-factor operator (`<<` / `>>` / `-`) from the
+/// source slice between two adjacent operand spans.
+///
+/// **AZ-IV.W1.6 carry**: the alt_dispatch typed-leaf substrate at
+/// `shapes/alt_dispatch/branches.rs:227-298` pushes the matched
+/// operator as a typed Span via `push_leaf_with_str`, but the
+/// pre-W1.6 `iter_pair_children` walk in `alt::iter_pair_children`
+/// surfaces the iteration-pair WRAPPER (whose span_text covers both
+/// the operator and the trailing operand). The structural
+/// extraction needed to peel through the wrapper to the operator
+/// Span itself remains future work; until that lands, the
+/// source-gap recovery preserves JSON `object` / `array` parity
+/// (`"{" >> (( pair << comma ? ) *)?w << "}"`).
+///
+/// The gap may contain trailing modifier tokens (`?`, `?w`, `*`,
+/// `+`) and `)` close-delimiters that the codegen alt_dispatch path
+/// doesn't surface as Span leaves — so the operand's recovered
+/// byte_span ends at its last source-leaf descendant rather than at
+/// the actual end of the operand parse. Scan the gap forward for
+/// the first occurrence of an unquoted operator token (skipping
+/// quoted strings and regex literals via `super::find_unquoted` so
+/// a literal like `"<<"` inside a string doesn't shadow a real
+/// operator). Two-character operators are tried first so `-` doesn't
+/// shadow `->` or `<<` doesn't shadow `<`.
+fn recover_binary_op<'a>(input: &'a str, lhs_end: u32, rhs_start: u32) -> Option<&'a str> {
+    if rhs_start < lhs_end {
+        return None;
+    }
+    let gap = &input[lhs_end as usize..rhs_start as usize];
+    for &op in &["<<", ">>"] {
+        if let Some(off) = super::find_unquoted(gap, op) {
+            let _ = off;
+            return Some(op);
+        }
+    }
+    let mut search_from = 0usize;
+    while let Some(off) = super::find_unquoted(&gap[search_from..], "-") {
+        let abs = search_from + off;
+        let next = gap.as_bytes().get(abs + 1).copied();
+        if next != Some(b'>') {
+            return Some("-");
+        }
+        search_from = abs + 1;
+    }
+    None
 }
 
 fn apply_binary_op<'a>(

@@ -83,7 +83,18 @@ Post-B2, `cargo xtask regen` is the single canonical Rust AOT
 entrypoint. The pre-B2 bootstrap script, proc-macro expansion, and
 Python post-process path retired entirely at B2.W2.
 
-Current strategy status (post AZ-III terminal close, 2026-04-30):
+Current strategy status (post AZ-III terminal close, 2026-04-30; AZ-IV planned at master c2a1c39e):
+
+After AZ-IV.W1 closes, parser strategy binding is **manifest-driven**: each grammar contributes a `[package.metadata.bbnf-grammars.<ident>]` row with builder/document paths. The 9-arm `EmitStrategy::for_grammar` allowlist retires; a synthetic grammar registered only via manifest must round-trip codegen without adding a Rust arm (`crates/core/tests/synthetic_grammar_strategy.rs`).
+
+After AZ-IV.W3 closes, every generated parser exposes two parse modes:
+
+- `parse(input) -> Result<Document, ParseErr>` (eager, full-tree materialization).
+- `parse_with<P: PathSchema>(input, &path) -> Option<P::Output>` (lazy, path-driven; skips subtrees the path does not visit).
+
+The two modes share the same generated parse functions. The recognizer plan (a per-grammar `<GRAMMAR>_PATH_PLAN: &[(RuleId, SegmentKind, Decision)]`) is emitted at codegen from the IR's `path_check` pass output (`crates/ir/src/passes/path_check.rs`); the plan is grammar-general — no rule-name match arms in the emitter.
+
+
 
 - StructDirect: JSON, Google Sheets, CSS L4, BBNF, CSV, Math, BNF,
   CSS Pretty, and EBNF (9/9 production grammars).

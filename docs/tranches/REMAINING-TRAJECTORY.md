@@ -1,3 +1,9 @@
+> **STATUS: SUPERSEDED at master c2a1c39e (2026-05-01).** AZ-IV is the canonical execution plan; GESTALT.md is the synthesis. This file is preserved for archaeology — the optimisation ledger, code-shape sketches, probability table, and competitor-delta trajectory it carries are historical references against which AZ-IV measures (`docs/benchmarks/post-AU.json` is still the authoritative AU floor; the numbers cited here from AY-I onwards are pre-AZ-III). For the active plan: read `docs/tranches/AZ-IV/AZ-IV.md` (in flight); for the synthesis: read `docs/GESTALT.md` (refreshed); for the post-AZ-IV residual (rule discovery): read `docs/tranches/BA/BA.md` (recycled letter).
+>
+> Do NOT cite this file as authoritative for execution.
+
+---
+
 # Remaining Trajectory — Architecture, Optimisation, and Competitor Plan
 
 Status: planning canon. This file explains the remaining path after

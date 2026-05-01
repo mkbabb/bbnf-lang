@@ -16,7 +16,6 @@ use std::collections::{HashMap, HashSet};
 
 use bbnf_ir::{GrammarIR, RuleId, TypeDesc};
 
-use proc_macro2::TokenStream;
 use quote::format_ident;
 use syn::{Type, parse_quote};
 
@@ -273,50 +272,6 @@ impl<'a> IrCodegenCtx<'a> {
             .types
             .iter()
             .find_map(|(id, ty)| (*id == rule_id).then_some(ty))
-    }
-
-    // ─── Prettify compatibility stubs ─────────────────────────────
-    //
-    // The prettify emitter still calls `emit_scratch_*`,
-    // `emit_alloc*`, `recovered_static_ident`, and
-    // `generate_alloc_ctx`. The production StructDirect path no
-    // longer uses any of these; they remain as thin stubs so
-    // `backend/rust/emitter/prettify/` continues to compile until the
-    // prettify rewrite absorbs the remaining allocation model.
-
-    pub fn scratch_index_for_elem(&self, elem_desc: &TypeDesc) -> usize {
-        self.scratch_types
-            .iter()
-            .position(|t| t == elem_desc)
-            .unwrap_or(0)
-    }
-
-    pub fn scratch_accessor(&self, idx: usize) -> syn::Ident {
-        format_ident!("__s{}", idx)
-    }
-
-    pub fn collect_accessor(&self, idx: usize) -> syn::Ident {
-        format_ident!("__c{}", idx)
-    }
-
-    pub fn alloc_ctx_ident(&self) -> syn::Ident {
-        format_ident!("__{}Ctx", self.enum_ident)
-    }
-
-    pub fn alloc_helper_ident(&self) -> syn::Ident {
-        format_ident!("__{}_alloc", self.enum_ident)
-    }
-
-    pub fn recovered_static_ident(&self) -> syn::Ident {
-        format_ident!("__{}_RECOVERED", self.enum_ident)
-    }
-
-    pub fn recover_sentinel(&self, _rule_id: RuleId) -> TokenStream {
-        // StructDirect recovery has no static enum sentinel. Returning
-        // unit-typed `None` keeps any residual call-site that weaves
-        // this in compile-safe without reintroducing a tape return
-        // payload.
-        quote::quote! { None::<()> }
     }
 
     pub fn collection_builder_type_from_elem_desc(&self, elem_desc: &TypeDesc) -> Type {

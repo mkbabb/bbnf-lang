@@ -19,7 +19,7 @@
 .PHONY: all build build-lsp build-lsp-debug build-ext build-wasm dev \
         test test-ci test-close \
         bench bench-json bench-css bench-bbnf bench-sheets bench-compile \
-        profile \
+        profile doctor \
         expand expand-bootstrap expand-derive asm \
         regen regen-check iter-grammar \
         ay-expand-json ay-expand-named-type ay-asm-close-compound \
@@ -113,6 +113,17 @@ bench-compile:
 
 profile:
 	./scripts/prepare-profile-wave.sh
+
+# ─── Doctor ──────────────────────────────────────────────────────────────────
+#
+# Host-readiness probe for the dev loop. Delegates to scripts/doctor.sh so the
+# probe logic has a single source of truth (Makefile invokes the script;
+# `scripts/doctor.sh` may also be run directly). Probes sccache, cargo-nextest,
+# samply, lld, and cargo-expand; exits 0 on a green host, exits 1 with a named
+# missing component otherwise. AZ-III.W0p.4 hard sub-gate.
+
+doctor:
+	@./scripts/doctor.sh
 
 # ─── Expand / inspect ────────────────────────────────────────────────────────
 #

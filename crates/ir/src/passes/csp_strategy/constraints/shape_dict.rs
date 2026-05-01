@@ -38,13 +38,9 @@
 //! Records elided = `1 (parent) + skeleton.len()` (the per-position
 //! children the collapsed compound would have emitted).
 
-use super::ConstraintCtx;
 use crate::GrammarIR;
-use crate::passes::csp_strategy::StrategyDomain;
 use crate::passes::recognizers::shape_dict::{ShapeTemplate, TemplatePiece};
 use crate::types::TypeDesc;
-
-use csp_solver::Csp;
 
 /// Maximum shape-dictionary entries per grammar.
 ///
@@ -121,19 +117,14 @@ pub fn solve_shape_dict_selection(ir: &GrammarIR) -> ShapeDictSelection {
     selection
 }
 
-/// Per-component CSP install hook — no-op today.
-///
-/// Shape-dict selection is grammar-wide and runs separately via
-/// [`solve_shape_dict_selection`]. The hook exists alongside
-/// [`super::engine::install`] so the constraint pipeline has a
-/// uniform shape; future tranches that grow cross-rule shape-dict
-/// interactions wire them through this function without disturbing
-/// the per-component CSP scaffold.
-///
-/// Returns the number of constraints installed (always zero today).
-pub fn install(_ctx: &ConstraintCtx<'_>, _csp: &mut Csp<StrategyDomain>, _ir: &GrammarIR) -> usize {
-    0
-}
+// The grammar-wide shape-dict selection runs once per compile via
+// [`solve_shape_dict_selection`] and writes to `ir.shape_dict_selection`
+// for codegen consumption. The per-component constraint installer for
+// shape-template authority lives at [`super::shape::install`] — it
+// pins per-site Alt/Wrap decisions to the strategy implied by the
+// admitted shape templates. There is no separate per-component
+// `shape_dict::install` because the admission decision is
+// grammar-scoped, not component-scoped.
 
 // ── Cost model ────────────────────────────────────────────────────
 

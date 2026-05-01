@@ -468,6 +468,14 @@ fn solve_component(
     // returns and re-keying the engine slot by `(rule_id, node_id)`.
     let mut engine_vars: HashMap<(RuleId, NodeId), VarId> = HashMap::new();
 
+    // AZ-III.W3b — per-NodeId Alt and Wrap variable maps, consumed by
+    // the `shape`, `layout`, and `dispatch` constraint installers to
+    // pin decision variables to the strategy implied by upstream
+    // facts (`key_dispatch_configs`, `delim_scan_configs`,
+    // `recognizer.shape`).
+    let mut alt_vars: HashMap<NodeId, VarId> = HashMap::new();
+    let mut wrap_vars: HashMap<NodeId, VarId> = HashMap::new();
+
     for &rid in member_rules {
         let Some(rule) = rule_by_id.get(&rid).copied() else {
             continue;
@@ -485,9 +493,21 @@ fn solve_component(
         // (NodeIds are unique across rules through the DAG), so we
         // only need to look at entries added since the prior rule.
         if by_node.len() > by_node_before {
-            for (&node_id, &(_, _, engine_var)) in by_node.iter() {
+            for (&node_id, &(alt_var, wrap_var, engine_var)) in by_node.iter() {
                 if let Some(var) = engine_var {
                     engine_vars.insert((rid, node_id), var);
+                }
+                // AZ-III.W3b — `alt_vars` / `wrap_vars` are keyed by
+                // `NodeId` directly because shape/layout/dispatch
+                // constraints are per-site (not per-rule-pair). The
+                // DAG guarantees `NodeId` uniqueness across rules in
+                // the same component, so a single entry per node is
+                // correct.
+                if let Some(var) = alt_var {
+                    alt_vars.insert(node_id, var);
+                }
+                if let Some(var) = wrap_var {
+                    wrap_vars.insert(node_id, var);
                 }
             }
         }
@@ -540,8 +560,14 @@ fn solve_component(
     // entirely degenerate (single rule, no Refs, no regex
     // variables) the solve is skipped.
     let _ = components; // partition consumed below for component slicing
-    let component_constraints_added =
-        install_cross_rule_constraints(&mut csp, member_rules, &engine_vars, ir);
+    let component_constraints_added = install_cross_rule_constraints(
+        &mut csp,
+        member_rules,
+        &engine_vars,
+        &alt_vars,
+        &wrap_vars,
+        ir,
+    );
     constraints_added += component_constraints_added;
 
     // Fast path: when no cross-variable constraint applies to this
@@ -650,32 +676,44 @@ fn solve_component(
     }
 }
 
-/// AF.3 — install cross-rule constraints from the
+/// Install cross-rule and per-site structural constraints from the
 /// `constraints` sub-modules. Called once per component solve,
 /// after variable building but before finalize.
 ///
 /// Returns the total count of constraints installed (used by the
 /// fast-path short-circuit to decide whether to skip the
-/// optimization solve entirely). The three sub-modules each take
-/// the shared `ConstraintCtx` and the in-progress `Csp`:
+/// optimization solve entirely). The four installers each take the
+/// shared `ConstraintCtx` and the in-progress `Csp`:
 ///
-/// - `tier::install` — unary `TierFollowsMaterialization` clamp
-/// - `engine::install` — pairwise `EnginePropagation` equality
-/// - `parent::install` — `ParentCompatibility` ordering + cost
+/// - `engine::install` — cross-rule pairwise `EnginePropagation`
+///   equality across compiled regex engines (AF.3).
+/// - `shape::install` — per-site Alt/Wrap pin from
+///   `RecognizerShape` (AZ-III.W3b.1).
+/// - `layout::install` — per-site Wrap pin from
+///   `delim_scan_configs` and `SeparatorList` shape (AZ-III.W3b.2).
+/// - `dispatch::install` — per-site Alt pin from
+///   `key_dispatch_configs` / `keyword_branches` (AZ-III.W3b.3).
 fn install_cross_rule_constraints(
     csp: &mut Csp<StrategyDomain>,
     component: &[RuleId],
     engine_vars: &std::collections::HashMap<(RuleId, NodeId), VarId>,
+    alt_vars: &std::collections::HashMap<NodeId, VarId>,
+    wrap_vars: &std::collections::HashMap<NodeId, VarId>,
     ir: &GrammarIR,
 ) -> usize {
     let ctx = self::constraints::ConstraintCtx {
         component,
         mat_classes: &ir.materialization,
         engine_vars,
+        alt_vars,
+        wrap_vars,
     };
 
     let mut count = 0usize;
     count += self::constraints::engine::install(&ctx, csp, ir);
+    count += self::constraints::shape::install(&ctx, csp, ir);
+    count += self::constraints::layout::install(&ctx, csp, ir);
+    count += self::constraints::dispatch::install(&ctx, csp, ir);
     count
 }
 

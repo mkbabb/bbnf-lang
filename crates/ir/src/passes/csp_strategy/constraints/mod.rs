@@ -1,47 +1,45 @@
-//! Tranche AF.3 — cross-rule CSP constraints.
+//! Cross-rule and structural CSP constraint installers.
 //!
-//! Constraints layer on top of the existing per-rule CSP solve to
-//! make it component-scoped:
+//! Each sub-module owns one constraint family with a named
+//! production consumer. Installers register hard pins or
+//! couplings against the shared component `Csp<StrategyDomain>`
+//! built by [`crate::passes::csp_strategy::solve_grammar_components`].
 //!
-//! - [`engine`] — `EnginePropagation` pins **compiled** regex
-//!   engine choice per-component. When one rule in a component
-//!   commits to a compiled engine (`Memchr*`, `NibbleLut`,
-//!   `OnePass`, `SmallDfa`, `Dfa`), every other rule that
-//!   carries a regex variable is pinned to the same compiled
-//!   engine so the startup cost (DFA table construction,
-//!   aho-corasick builder, nibble LUT) amortizes over every
-//!   site. `FamilyHelper` is exempt: it is a named SIMD
-//!   function call with zero startup cost and no shared
-//!   infrastructure with compiled engines.
-//! - [`shape_dict`] — Tranche AV.5.3 grammar-wide shape-template
-//!   admission. Selects up to
-//!   [`shape_dict::MAX_SHAPE_DICT_ENTRIES`] candidates from the
-//!   `ShapeDictMiner` pool by greedy maximisation of `freq ×
-//!   savings - static_entry_cost`. Runs as a separate pass via
-//!   [`shape_dict::solve_shape_dict_selection`]; the per-component
-//!   [`shape_dict::install`] hook is reserved for future
-//!   cross-rule shape-dict interactions.
+//! - [`engine`] — `EnginePropagation` pairwise equality across
+//!   compiled regex engines within a component. Consumer:
+//!   [`crate::passes::extract_regex_engine_decisions`] (pulled
+//!   from `ir.regex_engine_decisions` by
+//!   `crates/core/src/generate/regex/cost_model.rs`).
+//! - [`shape`] — pins Alt and Wrap decision variables to the
+//!   strategy implied by an admitted shape-dictionary template.
+//!   Consumer: backend driver Alt/Wrap dispatch reading
+//!   `ir.recognizer_decisions`.
+//! - [`layout`] — pins Wrap decision variables to the
+//!   `BalancedScan`/`SepBy` choice implied by the upstream
+//!   `delim_scan_configs` / recognizer shape facts. Consumer:
+//!   `backend::driver::wrap::compile_wrap`.
+//! - [`dispatch`] — pins Alt decision variables to the
+//!   `KeyDispatch` / `ByteDispatch` choice implied by the
+//!   upstream `key_dispatch_configs` / `keyword_branches` /
+//!   precomputed dispatch table. Consumer:
+//!   `backend::strategy::alt_strategy::decide_alt_strategy`.
+//! - [`shape_dict`] — grammar-wide shape-template admission
+//!   selection (`solve_shape_dict_selection`). Consumer:
+//!   `ir.shape_dict_selection` read by codegen at
+//!   `crates/core/src/pipeline/compile.rs:861`.
 //!
-//! # Integration
-//!
-//! Each sub-module exposes an `install(ctx, csp, ir)` free
-//! function that registers its constraint with the shared
-//! component CSP. The parent dispatcher in
-//! `csp_strategy::mod::solve_grammar_components` builds the
-//! [`ConstraintCtx`] once per component and calls the installer
-//! after the per-rule variables have been constructed.
-//!
-//! # Layering
-//!
-//! These constraints are strictly cross-rule — they add edges
-//! between variables owned by *different* rules within the same
-//! component. The pre-existing intra-rule constraints
-//! (`ImplicationConstraint` wiring an Alt parent to its child
-//! regex engines, for instance) remain in
-//! `csp_strategy::mod::add_token_dispatch_constraints` and are
-//! unaffected.
+//! Each per-site installer adds at most one constraint per
+//! eligible NodeId, deriving the pin value from facts that the
+//! upstream miner already populated. Tests under
+//! `crates/ir/tests/lattices/csp_authority.rs` cover the
+//! "constraint installed → consumer reads CSP fact; constraint
+//! absent → CSP returns its untargeted cost-min and the consumer
+//! sees a different decision" disconnect-pairing.
 
+pub mod dispatch;
 pub mod engine;
+pub mod layout;
+pub mod shape;
 pub mod shape_dict;
 
 use std::collections::HashMap;
@@ -52,12 +50,13 @@ use crate::dag::NodeId;
 use crate::passes::materialization::MaterializationClass;
 use crate::{GrammarIR, RuleId};
 
-/// Per-component bookkeeping passed to every cross-rule
-/// constraint installer.
+/// Per-component bookkeeping passed to every constraint installer.
 ///
 /// Built by the parent dispatcher
-/// (`csp_strategy::mod::solve_grammar_components`) before it
-/// runs the installers.
+/// (`csp_strategy::solve_grammar_components`) before it runs the
+/// installers. Carries the per-site variable maps so each installer
+/// can resolve a `NodeId` back to the CSP `VarId` for the relevant
+/// decision family without re-walking the IR.
 pub struct ConstraintCtx<'a> {
     /// The component currently being wired, as a sorted list of
     /// `RuleId`s.
@@ -73,6 +72,19 @@ pub struct ConstraintCtx<'a> {
     /// `IrNode::Regex` site in its body). The [`engine`]
     /// installer walks cross-rule pairs of these.
     pub engine_vars: &'a HashMap<(RuleId, NodeId), VarId>,
+
+    /// Per-NodeId Alt decision variable id. Populated by the
+    /// site-collection walk in
+    /// `crate::passes::csp_strategy::solve_component`. Consumed by
+    /// the [`shape`] and [`dispatch`] installers to pin Alt mode
+    /// when upstream facts authoritatively determine it.
+    pub alt_vars: &'a HashMap<NodeId, VarId>,
+
+    /// Per-NodeId Wrap decision variable id. Populated by the
+    /// site-collection walk. Consumed by the [`shape`] and
+    /// [`layout`] installers to pin Wrap mode when upstream
+    /// `delim_scan_configs` / recognizer shape facts determine it.
+    pub wrap_vars: &'a HashMap<NodeId, VarId>,
 }
 
 impl<'a> ConstraintCtx<'a> {

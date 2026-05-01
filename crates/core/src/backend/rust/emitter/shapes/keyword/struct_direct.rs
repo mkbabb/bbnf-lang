@@ -43,8 +43,9 @@ fn rule_type_desc(rule: &IrRule, ir: &GrammarIR) -> Option<TypeDesc> {
 }
 
 /// Per-branch StructDirect emission: pick `push_leaf_with_bool` /
-/// `push_branch_tag` / `push_leaf_with_unit` based on the rule's
-/// projected `TypeDesc` plus the branch payload.
+/// `push_branch_tag` / `push_leaf_with_str` (Span synthesis) /
+/// `push_leaf_with_unit` based on the rule's projected `TypeDesc`
+/// plus the branch payload and a literal-span capture.
 ///
 /// `TypeDesc::U8` Alt-of-literals (Sheets `add_op`, `mul_op`,
 /// `unary_prefix`, `compare_op`; CSS `dirKeyword`-style discriminators)
@@ -59,13 +60,33 @@ fn rule_type_desc(rule: &IrRule, ir: &GrammarIR) -> Option<TypeDesc> {
 /// distinguish.
 ///
 /// The discriminator between "tag emission" and "unit emission" for
-/// `TypeDesc::U8` is whether the rule has an `branch_payload` (a
-/// per-branch typed value): an Alt-of-literals carries one;
-/// JSON's single-literal `null` does not.
+/// `TypeDesc::U8` is whether the rule has a `branch_payload` (a
+/// per-branch typed value): an Alt-of-literals carries one; JSON's
+/// single-literal `null` does not.
+///
+/// AZ-III.W2.4.u — content-only literal-led keyword branches (no
+/// `bool_payload`, no `branch_payload`, no rule-level `TypeDesc`
+/// override) capture the matched literal slice into a synthetic
+/// `BbnfValue::Span` via `push_leaf_with_str` instead of pushing
+/// `Unit`. This restores the source contract `bootstrap_parser`
+/// met for BBNF rules like `modifier = "?w" | "?" | "*" | "+"` and
+/// `binary_operators = "<<" | ">>" | "-"`, where the trimmed span
+/// of the modifier child is exactly the punctuator text — the
+/// signal `lower_factor`'s span-text classification consumes
+/// directly without needing the source-gap recovery.
+///
+/// `span_capture` is a TokenStream that, when spliced into the
+/// emitted body, evaluates to a `&str` carrying the matched literal
+/// bytes (typically `unsafe { ::core::str::from_utf8_unchecked(
+/// &input[at..end]) }`). When `None`, the catch-all falls back to
+/// the legacy `push_leaf_with_unit()` for callers that have not
+/// yet plumbed the capture (e.g. a future StructDirect path where
+/// the literal bytes are not yet known to the emitter site).
 fn struct_direct_leaf_emit_for(
     rule_ty: Option<&TypeDesc>,
     branch_bool_payload: Option<bool>,
     branch_payload: Option<&TokenStream>,
+    span_capture: Option<&TokenStream>,
 ) -> TokenStream {
     if let Some(value) = branch_bool_payload {
         return quote! {
@@ -108,9 +129,20 @@ fn struct_direct_leaf_emit_for(
         (_, Some(payload)) => quote! {
             builder.push_branch_tag(#payload);
         },
-        // No payload — fall back to the unit-marker convention.
-        (_, None) => quote! {
-            builder.push_leaf_with_unit();
+        // No payload, no rule-level type override — synthesise a
+        // `BbnfValue::Span` carrying the matched literal slice when
+        // the caller plumbed `span_capture`. The lower-side
+        // classification path (`lower_factor` /
+        // `lower_mapped_factor`) reads the span text directly,
+        // eliminating the W2.4.t source-gap recovery for keyword
+        // branches whose grammar projection is content-only.
+        (_, None) => match span_capture {
+            Some(capture) => quote! {
+                builder.push_leaf_with_str(#capture);
+            },
+            None => quote! {
+                builder.push_leaf_with_unit();
+            },
         },
     }
 }
@@ -149,7 +181,19 @@ pub(super) fn emit_parse_keyword_struct_direct(
                     quote! { #lit }
                 })
                 .collect();
-            let leaf_emit = struct_direct_leaf_emit_for(rule_ty.as_ref(), None, None);
+            // AZ-III.W2.4.u — splice the matched literal bytes into a
+            // `&str` slice that `struct_direct_leaf_emit_for` routes
+            // into `push_leaf_with_str` when no typed payload is set.
+            // The slice comes from the input under SAFETY guarded by
+            // the immediately-preceding equality check against the
+            // literal byte sequence (which was UTF-8 by construction
+            // — every byte in `bytes` came from `ir.get_string(*sid)`,
+            // a `&str`).
+            let span_capture: TokenStream = quote! {
+                unsafe { ::core::str::from_utf8_unchecked(&input[at..end]) }
+            };
+            let leaf_emit =
+                struct_direct_leaf_emit_for(rule_ty.as_ref(), None, None, Some(&span_capture));
             quote! {
                 /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
                 /// (single-literal body).
@@ -277,10 +321,27 @@ pub(super) fn emit_parse_keyword_struct_direct(
                                 BranchKind::Literal => {
                                     let bool_payload = alt_branch_bool_payload(branch, ir);
                                     let payload = alt_branch_payload_value(branch, ir);
+                                    // AZ-III.W2.4.u — splice the matched
+                                    // literal bytes for Span synthesis
+                                    // when this branch carries no typed
+                                    // payload. Mirrors the single-literal
+                                    // case above; routes the branch's
+                                    // matched bytes (`input[at..end]`)
+                                    // through `push_leaf_with_str` so
+                                    // `lower_factor`'s span-text path
+                                    // reads the modifier punctuator
+                                    // directly without source-gap
+                                    // recovery.
+                                    let span_capture: TokenStream = quote! {
+                                        unsafe {
+                                            ::core::str::from_utf8_unchecked(&input[at..end])
+                                        }
+                                    };
                                     let leaf_emit = struct_direct_leaf_emit_for(
                                         rule_ty.as_ref(),
                                         bool_payload,
                                         payload.as_ref(),
+                                        Some(&span_capture),
                                     );
                                     quote! {
                                         if input.len() >= *p + #len

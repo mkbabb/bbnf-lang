@@ -268,4 +268,110 @@ impl EmitStrategy {
     pub fn is_struct_direct(&self) -> bool {
         matches!(self, EmitStrategy::StructDirect { .. })
     }
+
+    /// AZ-IV.W0.3 — manifest-driven strategy resolver scaffold.
+    ///
+    /// Looks up `grammar_ident` in `manifest_table` (per-row entries
+    /// constructed from `[workspace.metadata.bbnf-strategy]` parsed by
+    /// the consumer). When a row matches, the strategy is constructed
+    /// directly from the row's Rust binding paths — no literal arm in
+    /// this source file is consulted. When no row matches, the call
+    /// falls through to [`EmitStrategy::for_grammar`] so an existing
+    /// production arm still resolves.
+    ///
+    /// `registry` is the rule-id → layout map populated by
+    /// `bbnf_ir::passes::project_types`. The struct-direct path
+    /// requires a populated registry; an empty registry is a hard
+    /// generation error rather than a tape fallback (parity with
+    /// [`EmitStrategy::for_grammar`]).
+    ///
+    /// W0.3 scope: substrate scaffold only. The full lift —
+    /// replacing the literal arm-list at L143-262 with a manifest
+    /// reader the emitter consumes — is owned by W1.5/W1.8. This
+    /// method exists so a synthetic grammar test
+    /// (`crates/core/tests/synthetic_grammar_strategy.rs`) can
+    /// register a row and resolve it without needing a new literal
+    /// arm to land.
+    pub fn for_grammar_with_manifest(
+        grammar_ident: &str,
+        registry: &StructRegistry,
+        manifest_table: &[ManifestStrategyEntry],
+    ) -> Self {
+        if registry.is_empty() {
+            panic!(
+                "EmitStrategy::for_grammar_with_manifest: `{grammar_ident}` has an empty StructRegistry; \
+                 StructDirect generation requires project_types registry closure"
+            );
+        }
+
+        if let Some(row) = manifest_table
+            .iter()
+            .find(|entry| entry.matches_ident(grammar_ident))
+        {
+            return EmitStrategy::StructDirect {
+                rust: SubstrateBinding {
+                    builder_path: row.rust_builder_path,
+                    document_path: row.rust_document_path,
+                },
+                ts: None,
+                wasm: None,
+            };
+        }
+
+        // Manifest miss — fall through to the literal arm-list. W1
+        // collapses the arm-list once every production grammar
+        // contributes a manifest row.
+        EmitStrategy::for_grammar(grammar_ident, registry)
+    }
+}
+
+/// AZ-IV.W0.3 — one row of the manifest-driven strategy table.
+///
+/// Per Fermat hardening pass (`docs/tranches/AZ-IV/audit/HARDENING-2026-05-01-fermat.md`
+/// §F5), the literal parser-name arm-list at
+/// [`EmitStrategy::for_grammar`] must be replaced with manifest-driven
+/// data. This row carries the same payload an arm carries today,
+/// keyed by every parser-ident alias the grammar advertises (so
+/// `"JsonParser"` and `"JsonGrammar"` continue to resolve to the same
+/// binding without a literal arm in source).
+///
+/// Rows are constructed by the manifest reader (consumer side, not
+/// this crate). The reader normalises rows from
+/// `[workspace.metadata.bbnf-strategy]` or an in-memory test fixture;
+/// either source produces the same row shape, so the resolver is
+/// identical regardless of provenance.
+///
+/// # Field semantics
+///
+/// - `idents` — every parser-struct ident the grammar registers. The
+///   resolver matches if `grammar_ident` is in this slice; the slice
+///   is `&'static [&'static str]` so rows live in the consumer's
+///   static memory without per-call allocation.
+/// - `rust_builder_path` / `rust_document_path` — same shape as
+///   [`SubstrateBinding`]'s fields; spliced verbatim into the
+///   generated `parse()` body when this row matches.
+///
+/// W1.5/W1.8 extends the row with `ts` / `wasm` substrate bindings
+/// once the host-binding template lands.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ManifestStrategyEntry {
+    /// Parser-struct idents the grammar registers (e.g. `&["JsonParser",
+    /// "JsonGrammar"]`). The resolver matches when `grammar_ident` is
+    /// in the slice.
+    pub idents: &'static [&'static str],
+    /// Rust-backend `StructBuilder` path — same shape as
+    /// [`SubstrateBinding::builder_path`].
+    pub rust_builder_path: &'static str,
+    /// Rust-backend `Document` path — same shape as
+    /// [`SubstrateBinding::document_path`].
+    pub rust_document_path: &'static str,
+}
+
+impl ManifestStrategyEntry {
+    /// True when `ident` is one of the parser-struct names this row
+    /// covers.
+    #[inline]
+    pub fn matches_ident(&self, ident: &str) -> bool {
+        self.idents.iter().any(|alias| *alias == ident)
+    }
 }

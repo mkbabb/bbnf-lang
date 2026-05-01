@@ -117,7 +117,7 @@ fn emit_parse_object_struct_direct(
         /// AZ-I.W2.RB — per-grammar Object-shape parse function,
         /// **struct-direct body**. Targets [`JsonStructBuilder`].
         ///
-        /// Walker-tape compound emission is replaced by typed
+        /// Compound emission lands as typed
         /// `begin_compound` / `end_compound` calls against the in-flight
         /// frame stack. Per-element pushes (string keys + value
         /// dispatch) land directly on the topmost open frame.

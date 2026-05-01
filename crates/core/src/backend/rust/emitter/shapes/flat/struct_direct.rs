@@ -67,6 +67,52 @@ use super::PositionedNode;
 use super::collect_positions;
 use bbnf_ir::registry::EmitStrategy;
 
+/// Codegen-time predicate: does this IR node contain any sub-rule
+/// reference (`Ref` or `TokenDispatch`) that would deposit a typed
+/// child onto the surrounding compound's open frame?
+///
+/// Returns `true` if the body's emission flow reaches at least one
+/// `Ref` / `TokenDispatch` site; returns `false` for content-only
+/// flat bodies (Literal / Regex / Epsilon plus their structural
+/// wrappers) that consume bytes without pushing typed values.
+///
+/// AZ-III.W2.4.r — the synthesis condition for content-only flat
+/// compounds. When this predicate returns `false`, the emitted body
+/// captures `*p` before and after the per-position emission and
+/// pushes a synthetic `BbnfValue::Span` leaf carrying the consumed
+/// source slice. This mirrors `bootstrap_parser::parse_literal` /
+/// `parse_regex` (lines 174-224 in the pre-redress
+/// `bootstrap_parser.rs`), which capture `lo = self.pos` before the
+/// scan body and call `push_span(lo, hi)` after — producing one
+/// span child whose range is the rule's full consumed slice.
+///
+/// Without the synthesis, `BbnfView::byte_span` (`compute_byte_span`
+/// in `crates/core/src/runtime/bbnf/view.rs:206`) returns `None`
+/// for the child-less compound and `BbnfView::span_text` returns
+/// `""` — the W2.4 first-pass research bug surfaced as
+/// `bbnf_parses_directive` / `bbnf_parses_multiple_directives`
+/// failures and `import_path` projecting empty.
+///
+/// `Negate` is treated as inert because it rolls back any builder
+/// state on success or failure (the inner is purely a guard); a
+/// rule body whose only "emission" is a Negate guard contributes
+/// no children to the open frame.
+fn body_emits_to_builder(node: &IrNode) -> bool {
+    match node {
+        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => false,
+        IrNode::Ref(_) | IrNode::TokenDispatch { .. } => true,
+        IrNode::Map { inner, .. } => body_emits_to_builder(inner),
+        IrNode::Seq(children) => children.iter().any(body_emits_to_builder),
+        IrNode::Alt(branches, _) => branches.iter().any(|b| body_emits_to_builder(&b.node)),
+        IrNode::Repeat { inner, .. } => body_emits_to_builder(inner),
+        IrNode::Skip(l, r) | IrNode::Next(l, r) | IrNode::Minus(l, r) => {
+            body_emits_to_builder(l) || body_emits_to_builder(r)
+        }
+        IrNode::Negate(_) => false,
+        IrNode::OptionalWhitespace(inner) => body_emits_to_builder(inner),
+    }
+}
+
 /// Codegen-time inspection of the rule's registered layout. Returns the
 /// registry entry's `(kind, rule_name)` when present; otherwise the
 /// structural fallback `(LayoutKind::Struct, rule_name)` keyed by the
@@ -219,6 +265,47 @@ pub(super) fn emit_parse_flat_struct_direct(
         ));
     }
 
+    // AZ-III.W2.4.r — content-only flat compound synthesis.
+    //
+    // When the rule body's emission flow reaches no `Ref` /
+    // `TokenDispatch` site, the per-position emission consumes bytes
+    // (literal-eats, regex-scans) without depositing any typed child
+    // onto the open frame. `BbnfView::byte_span` then returns `None`
+    // and `BbnfView::span_text` returns `""` for the child-less
+    // compound — the W2.4 first-pass research bug.
+    //
+    // The bootstrap_parser (pre-redress `bootstrap_parser.rs::
+    // parse_literal` / `parse_regex` lines 174-224) compensated by
+    // capturing `lo = self.pos` before the body and pushing
+    // `push_leaf_with_str(&self.src[lo..hi])` after. The codegen
+    // path now does the same: when `body_emits_to_builder` returns
+    // `false`, the emitted body wraps the per-position emission with
+    // span-bracket capture and pushes one synthetic `Span` leaf
+    // carrying the rule's consumed source slice before
+    // `end_compound`. Affected BBNF rules are `regex`,
+    // `big_comment`, `comment`, `literal` (all `-> Span`), and
+    // `import_path` (whose host walker also reads via `byte_span()`).
+    let needs_span_synthesis = !body_emits_to_builder(&rule.body);
+    let span_capture_pre = if needs_span_synthesis {
+        quote! { let __span_lo: usize = *p; }
+    } else {
+        quote! {}
+    };
+    let span_synthesis_post = if needs_span_synthesis {
+        quote! {
+            let __span_hi: usize = *p;
+            let __span_slice: &str = ::core::str::from_utf8(
+                &input[__span_lo..__span_hi],
+            )
+            .unwrap_or("");
+            <
+                #builder_ty_elided as crate::runtime::StructBuilder
+            >::push_leaf_with_str(builder, __span_slice);
+        }
+    } else {
+        quote! {}
+    };
+
     quote! {
         /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
         /// **struct-direct body**. Targets the grammar's concrete
@@ -240,6 +327,15 @@ pub(super) fn emit_parse_flat_struct_direct(
         /// the grammar's `__value` discriminant). LLVM's inliner
         /// collapses plain `#[inline]` candidates only when
         /// profitable and bails cleanly on detected recursion.
+        ///
+        /// AZ-III.W2.4.r — content-only bodies (no Ref /
+        /// TokenDispatch in the IR) capture `*p` before and after
+        /// the per-position emission and push one synthetic Span
+        /// leaf carrying the consumed source slice; this restores
+        /// the contract `bootstrap_parser` met for `regex` /
+        /// `literal` / `comment` / `big_comment` / `import_path`
+        /// (all flat-shape rules whose grammar projection is
+        /// `-> Span` or whose host walker reads via `byte_span()`).
         #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
         pub fn #fn_ident<'p>(
@@ -255,6 +351,7 @@ pub(super) fn emit_parse_flat_struct_direct(
             // grammar's StructBuilder routes (kind, rule_name) to its
             // own concrete OpenFrame variant.
             let __flat_checkpoint = builder.checkpoint();
+            #span_capture_pre
             let #layout_var: ::bbnf_ir::registry::StructLayout = #layout_literal;
             let #handle_var = <
                 #builder_ty_elided as crate::runtime::StructBuilder
@@ -282,6 +379,7 @@ pub(super) fn emit_parse_flat_struct_direct(
 
             match __body_result {
                 ::core::result::Result::Ok(()) => {
+                    #span_synthesis_post
                     <
                         #builder_ty_elided as crate::runtime::StructBuilder
                     >::end_compound(builder, #handle_var);

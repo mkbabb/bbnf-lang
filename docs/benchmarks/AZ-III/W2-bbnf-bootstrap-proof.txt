@@ -1,0 +1,226 @@
+================================================================================
+AZ-III.W2.4 — BBNF Bootstrap Canonical Path
+================================================================================
+
+Date          : 2026-04-30
+Worktree      : /Users/mkbabb/Programming/bbnf-wt-azIII-w2-bbnf
+Status        : BLOCKED (named root cause + redress route)
+Lane HARD CAP : 50 min (research + redress in single dispatch)
+Branch state  : clean — no source commits; routing remains on bootstrap_parser
+
+--------------------------------------------------------------------------------
+1. Outcome
+--------------------------------------------------------------------------------
+
+Path (a) — generated self-host canonical — IS NOT closable in the W2.4 cap.
+Path (b) — bootstrap_parser removal in a same-tranche commit — IS NOT closable
+in the W2.4 cap because the codegen-emitted `BbnfBootstrap::parse` cannot yet
+substitute as a drop-in replacement: it parses every fixture syntactically but
+silently strips the source text from `flat`-shape rules whose grammar
+projection is `-> Span`. The hand-written bootstrap parser is masking that
+gap; deletion would crash three BBNF parity tests and break grammar-graph
+import resolution (import_path text comes through empty).
+
+W2.4 therefore HALTS with a named blocker. The blocker is in the codegen
+emitter, not in bootstrap_parser itself. Redress must be dispatched against
+the emitter (route below). This honors the W2 hard gate by naming the source
+owner; it does not retain bootstrap_parser as a closure path.
+
+--------------------------------------------------------------------------------
+2. Baseline evidence (pre-investigation, on master HEAD d1190ba7)
+--------------------------------------------------------------------------------
+
+Command:
+  cargo nextest run -p bbnf --test bbnf_parity --test bbnf_ast_parity \
+    --test bbnf_self_parity --test bbnf_struct_builder_substrate \
+    --cargo-profile ax-iter
+
+Result: 74 tests run, 74 passed, 0 skipped.
+
+Routing (master): grammar/mod.rs::parse and pipeline/directives.rs::
+parse_to_pipeline_inputs both call bootstrap_parser::parse.
+
+--------------------------------------------------------------------------------
+3. Codegen-path probe
+--------------------------------------------------------------------------------
+
+A diagnostic example was added (and reverted) that calls
+`BbnfBootstrap::parse` directly on every .bbnf fixture in the workspace
+(28 files: bbnf, expressions, types, bnf, ebnf, json, google-sheets,
+css/pretty, the 16 css/l4 modules, csv, math, math-ambiguous, g4, regex).
+
+Result: 28/28 PASS — every fixture's syntactic parse succeeds via the
+codegen path. The chicken-and-egg gap from cutover.G's PARTIAL doc
+("the codegen-emitted parser doesn't yet reproduce compound shape coercion")
+is GONE at the syntactic-acceptance level.
+
+--------------------------------------------------------------------------------
+4. Routing the codegen path — failure surface
+--------------------------------------------------------------------------------
+
+Tested rewiring grammar/mod.rs and pipeline/directives.rs to call
+`generated::BbnfBootstrap::parse`, deleting bootstrap_parser.rs (1505 LOC),
+and updating the one production-side test consumer
+(tests/serialize_roundtrip.rs::bbnf_emit) to the codegen path.
+
+Re-run: cargo nextest run -p bbnf --test bbnf_parity --test bbnf_ast_parity
+        --test bbnf_self_parity --test bbnf_struct_builder_substrate
+        --test bbnf_bootstrap_reproducibility --test serialize_roundtrip
+        --cargo-profile ax-iter
+
+Result: 92/95 tests run, 89 passed, 3 failed (same root cause), 2 not run
+        (regen-idempotence pair gated by the same root cause).
+
+Failures:
+  bbnf::bbnf_ast_parity::bbnf_parses_directive
+    expected: ["ws"]
+    actual:   []
+    site: tests/bbnf_ast_parity.rs:331
+
+  bbnf::bbnf_ast_parity::bbnf_parses_multiple_directives
+    expected: ["ws", "pretty"]
+    actual:   ["pretty"]
+    site: tests/bbnf_ast_parity.rs:344
+
+  bbnf::bbnf_ast_parity::bbnf_ast_directive_kinds_match_oracle
+    directive count parity (3 vs 4)
+    site: tests/bbnf_ast_parity.rs:447
+
+  bbnf::bbnf_bootstrap_reproducibility::bbnf_regen_is_idempotent (BLOCKED)
+    "File not found: `grammar/bbnf.bbnf` (imported from `grammar/bbnf/bbnf.bbnf`)"
+    Reason: import_path projects empty-string under the codegen path; the
+    import resolver concatenates "" against base dir → wrong target file.
+
+--------------------------------------------------------------------------------
+5. Root cause (proven, single site)
+--------------------------------------------------------------------------------
+
+Site: crates/core/src/backend/rust/emitter/shapes/flat/struct_direct.rs
+
+The Flat-shape struct-direct emitter never captures the rule's source
+slice as a span leaf, even when the rule's grammar projection is
+`-> Span`. Generated body for e.g. `regex` (BBNF rule
+`regex = ( "/" , /(\\.|[^\/])+/ , "/" ) -> Span ;`):
+
+  __regex_layout = StructLayout {
+      rule_id: 11,
+      rule_name: "regex",
+      kind: LayoutKind::Struct,
+      rule_type: TypeDesc::Span,           // type IS Span
+      fields: vec![],
+  };
+  __regex_handle = builder.begin_compound(&__regex_layout);
+  // Position 1: literal "/" — byte-eat, NO push
+  // Position 2: regex scan body — *p advances, NO push
+  // Position 3: literal "/" — byte-eat, NO push
+  builder.end_compound(__regex_handle);
+
+The compound is opened, three byte spans are consumed, and the compound
+is closed with ZERO Span children. `BbnfView::byte_span` (runtime view
+in crates/core/src/runtime/bbnf/view.rs:206
+`compute_byte_span`) computes a compound's range as the min/max of its
+children's BbnfValue::Span ranges; with zero such children it returns
+`None`, and `BbnfView::span_text` returns "".
+
+Affected rules in the BBNF self-host (all `flat` shape with `-> Span`
+or content-bearing flat rules whose host walker reads via span_text):
+
+  regex          — `( "/" , /…/ , "/" ) -> Span`
+  big_comment    — `( "/*" , /[^\*]*/ , "*/" ) ?w -> Span`
+  comment        — `( "//" , /.*/ ) ?w -> Span`
+  literal        — `( "\"" , /…/ , "\"" | … ) -> Span`
+  import_path    — `"\"" , /(\\.|[^"\\])*/ , "\""`  (no `-> Span` but
+                   host walker calls byte_span on the compound to recover
+                   the path text)
+
+The hand-written bootstrap_parser (cutover.G) compensates by capturing
+`lo = self.pos` before the body, then pushing
+`builder.push_leaf_with_str(&self.src[lo..hi])` after — see
+crates/core/src/grammar/bootstrap_parser.rs::parse_regex (lines 199-224)
+and ::parse_literal (lines 174-197). That makes the compound carry one
+Span child covering the whole consumed slice, which is exactly the host
+walker's contract (`decode_ws` strip-quotes the leading/trailing `/`,
+`decode_import` reads `path_view.byte_span()` directly).
+
+The codegen emitter must do the same for `flat`-shape rules whose
+`StructLayout.rule_type` is `TypeDesc::Span`. Sketch (against the
+existing `emit_parse_flat_struct_direct` body in
+shapes/flat/struct_direct.rs lines 184-258):
+
+  let #handle_var = ... begin_compound(...) ;
+  let __span_lo = *p as u32;                               // NEW
+  let __body_result = (|| { ... per-position emission ... })();
+  match __body_result {
+      Ok(()) => {
+          let __span_hi = *p as u32;                        // NEW
+          // NEW — emit only when rule_type is Span:
+          builder.push_leaf_with_str(
+              ::core::str::from_utf8(
+                  &input[__span_lo as usize..__span_hi as usize]
+              ).unwrap_or("")
+          );
+          end_compound(handle);
+          Ok(())
+      }
+      Err(e) => { rollback; Err(e) }
+  }
+
+The conditional ("emit only when rule_type is Span") is essential:
+flat rules whose rule_type is Tuple / Struct / etc. must keep their
+typed-children projection. For BBNF the relevant rule_types are
+already TypeDesc::Span on `regex` / `big_comment` / `comment` /
+`literal`; `import_path` has TypeDesc::Tuple in the registry but
+the host walker depends on the compound's recovered span text, so
+it ALSO needs the same emission path — which means the trigger may
+need to be "rule has no compound/scalar children that emit to the
+arena" rather than the rule_type discriminant. The redress agent
+must verify the precise gating against the IR registry's per-rule
+metadata.
+
+--------------------------------------------------------------------------------
+6. Routed redress
+--------------------------------------------------------------------------------
+
+This is NOT a "deferred to BA" close path. The blocker is in W2's own
+emitter carve and W1's regen lock is the constraint, not a missing wave.
+
+Redress dispatch (within AZ-III, after this lane returns):
+
+  Wave        : same-tranche redress under W2 - Semantic Parity and
+                Bootstrap Canonicalization, sub-unit AZ-III.W2.4.r
+  Cap         : 30 min (per W2.md triumvirate clause)
+  File bounds :
+    crates/core/src/backend/rust/emitter/shapes/flat/struct_direct.rs (modify)
+    crates/core/src/grammar/generated/bbnf.rs                          (regen)
+    crates/core/src/grammar/generated/{bnf,ebnf,json,csv,math,
+        google_sheets,css_l4,css_pretty}.rs                            (regen)
+    crates/core/src/grammar/mod.rs                                     (re-route)
+    crates/core/src/pipeline/directives.rs                             (re-route)
+    crates/core/src/grammar/bootstrap_parser.rs                        (delete)
+    crates/core/tests/serialize_roundtrip.rs                           (re-route)
+
+  Hard gate  :
+    1. cargo nextest run -p bbnf --test bbnf_parity --test bbnf_ast_parity
+       --test bbnf_self_parity --test bbnf_struct_builder_substrate
+       --test bbnf_bootstrap_reproducibility --test serialize_roundtrip
+       --cargo-profile ax-iter      (ALL GREEN, no failures)
+    2. bootstrap_parser.rs is deleted at the redress commit.
+    3. cargo xtask regen --check is green across the grammar fleet
+       (the flat-emitter change touches every grammar's regen output).
+
+  Substrate check:
+    No grammar's behavior should regress — regen idempotence (bbnf +
+    json) catches any silent emission divergence at the test boundary.
+
+--------------------------------------------------------------------------------
+7. Final state of this lane
+--------------------------------------------------------------------------------
+
+Working tree: clean (`git status --short` empty).
+Source commits: 0 (the routing change was reverted after demonstrating the
+gap; bootstrap_parser.rs remains in place on disk).
+BBNF parity tests: 74/74 still green via the bootstrap_parser route
+(unchanged from baseline).
+
+Lane returns BLOCKED with the named blocker above. The orchestrator must
+dispatch the redress described in §6 before W2 closes.

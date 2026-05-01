@@ -101,7 +101,7 @@ Every dispatched sub-agent receives:
   `crates/core/src/grammar/generated/mod.rs`, `crates/core/src/
   grammar/mod.rs` (modify), `crates/bootstrap/src/lib.rs` +
   `crates/bootstrap/Cargo.toml`, `docs/tranches/B2/audit/W0-byte-
-  equivalent-diff.txt`, `docs/benchmarks/post-B2-W0-walls.txt`.
+  equivalent-diff.txt`, `docs/benchmarks/archive/post-B2-W0-walls.txt`.
   Sub-gate: `cargo xtask regen --grammar bbnf` succeeds; byte-
   equivalent gate green; bbnf-bootstrap migrated to `include!`;
   iter-check-full ≤ 30 min cold.

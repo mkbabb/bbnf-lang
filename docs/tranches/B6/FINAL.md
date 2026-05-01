@@ -106,7 +106,7 @@ miscalibration.
 
 35 LOC change in `xtask/src/regen.rs` (+33 / -2); 9 LOC in
 `crates/bootstrap/src/lib.rs` (W0 split point doc); 156 LOC in
-`docs/benchmarks/post-B6-W0-walls.txt`. No flags, no parallel
+`docs/benchmarks/archive/post-B6-W0-walls.txt`. No flags, no parallel
 path, no shadow surface — single-line write-skip.
 
 ### W1 — plan-time miscalibration close (1 commit, vacuous)
@@ -115,7 +115,7 @@ path, no shadow surface — single-line write-skip.
 |--------|----------|
 | `f685a9a6` | docs(b6): W1 plan-time miscalibration close + Phase-0 measurements (B6.W1) |
 
-210 LOC in `docs/benchmarks/post-B6-W1-walls.txt`; PROGRESS.md
+210 LOC in `docs/benchmarks/archive/post-B6-W1-walls.txt`; PROGRESS.md
 W1 close section appended. No source files modified.
 
 ### W2 — plan-time miscalibration close (1 commit, vacuous)
@@ -124,7 +124,7 @@ W1 close section appended. No source files modified.
 |--------|----------|
 | `f13f0bc8` | docs(b6): W2 plan-time miscalibration close + Phase-0 measurements (B6.W2) |
 
-233 LOC in `docs/benchmarks/post-B6-W2-walls.txt`; PROGRESS.md
+233 LOC in `docs/benchmarks/archive/post-B6-W2-walls.txt`; PROGRESS.md
 W2 close section appended. No source files modified. (FINAL.md
 lands as a follow-on commit; W2.md status-stamp commits last per
 the wave-status convention.)

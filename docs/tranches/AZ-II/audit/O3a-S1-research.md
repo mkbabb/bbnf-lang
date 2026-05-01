@@ -23,7 +23,7 @@ deletion. The failure split is:
 ## Evidence
 
 Baseline assignment is from
-`docs/benchmarks/AZ-II/cutover/O3a-test-failures.txt:33-66`, which lists
+`docs/benchmarks/archive/AZ-II/cutover/O3a-test-failures.txt:33-66`, which lists
 the 33 Sheets failures, and the duplicate retry list at lines 118-151.
 
 Focused command evidence:

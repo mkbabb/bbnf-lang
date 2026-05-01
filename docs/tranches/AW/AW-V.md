@@ -813,7 +813,7 @@ parity against the then-active walker scaffold. That framing was a
 category error the plan inherited from the AW-II / AW-III
 retrospectives — neither priced in the scaffold distinction between
 substrate-as-oracle and substrate-as-consumer-target. Per
-`docs/benchmarks/post-AX-W0a2g-progress.md` §Remaining-blockers, four
+`docs/benchmarks/archive/post-AX-W0a2g-progress.md` §Remaining-blockers, four
 deferred walker-parity deltas (Flat Next/Skip flatten, Ref→HRegex
 Rule wrap, Repeat `iter_count < lo` leak, zero-length Seq elision)
 surfaced as irreducible shape-emitter vs walker divergences that no

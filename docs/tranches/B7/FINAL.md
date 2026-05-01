@@ -189,7 +189,7 @@ expected −1 was an undercount; both LSP-matrix tests in that file
 are bench-class (each spins the LSP server through size×generator
 matrices with timed actions), so the architectural intent —
 re-routing the file's content as a unit — moves both. Test
-artefact: `docs/benchmarks/post-B7-W0-walls.txt`.
+artefact: `docs/benchmarks/archive/post-B7-W0-walls.txt`.
 
 pprint `cargo nextest run --workspace --no-fail-fast --cargo-profile
 ax-iter`: 70 passed / 0 failed / 0 skipped / 1.629 s.

@@ -20,18 +20,18 @@ loop."* Architectural fixes; no bandaids.
 
 | # | Surface | Wall (cold) | Wall (warm) | Source |
 |---|---|---:|---:|---|
-| 1 | `cargo bench-iter-json --no-run` (6 harness build) | 105 s | 0.468 s | `docs/benchmarks/AZ-III/W0p-bench-iter-walls.txt` |
+| 1 | `cargo bench-iter-json --no-run` (6 harness build) | 105 s | 0.468 s | `docs/benchmarks/archive/AZ-III/W0p-bench-iter-walls.txt` |
 | 2 | `cargo iter-check` (workspace narrow) | 0.41 s (semi-cold) | 0.13 s | `docs/tranches/meta-audit/04-toolchain-pain.md` row 1a/1b |
 | 3 | `cargo iter-check` after touch `runtime/parsed.rs` | 4.12 s | -- | `docs/tranches/meta-audit/04-toolchain-pain.md` row 1c |
 | 4 | `cargo iter-test-leaf` cold | 41.67 s | 1.10 s | `docs/tranches/meta-audit/04-toolchain-pain.md` row 2a/2b |
 | 5 | `cargo check -p bbnf-bootstrap --lib` cold | >130 s (killed @ 23 min cap) | -- | `docs/tranches/meta-audit/04-toolchain-pain.md` row 3b |
 | 6 | `cargo check -p gorgeous --lib` cold (parallel) | 42 s wall (0 % CPU; lock-blocked) | -- | `docs/tranches/meta-audit/04-toolchain-pain.md` row 3a |
 | 7 | `cargo iter-check-full` (workspace) cold | >12 min floor | -- | `docs/tranches/meta-audit/04-toolchain-pain.md` Pain 2 |
-| 8 | `cargo xtask regen --check --staged` | 0.098 s binary / 1.5 s hook wrapper | -- | `docs/benchmarks/AZ-III/W0p-regen-staged-wall.txt` |
-| 9 | `cargo xtask regen --check` strict (full fleet) | RED on 7/9 grammars | -- | `docs/benchmarks/AZ-III/W4-structural-audits.txt` |
-| 10 | `cargo nextest run --workspace --cargo-profile ax-iter --no-fail-fast` | 292.97 s (190.8 s test wall after compile) | -- | `docs/benchmarks/AZ-III/W4-workspace.txt` |
-| 11 | `make doctor` | 0.01 s real | -- | `docs/benchmarks/AZ-III/W0p-doctor.txt` |
-| 12 | `cargo bench` json fat-LTO (per harness) | ~10 min cold | -- | `docs/benchmarks/AZ-III/W0p-bench-iter-walls.txt` Verdict |
+| 8 | `cargo xtask regen --check --staged` | 0.098 s binary / 1.5 s hook wrapper | -- | `docs/benchmarks/archive/AZ-III/W0p-regen-staged-wall.txt` |
+| 9 | `cargo xtask regen --check` strict (full fleet) | RED on 7/9 grammars | -- | `docs/benchmarks/archive/AZ-III/W4-structural-audits.txt` |
+| 10 | `cargo nextest run --workspace --cargo-profile ax-iter --no-fail-fast` | 292.97 s (190.8 s test wall after compile) | -- | `docs/benchmarks/archive/AZ-III/W4-workspace.txt` |
+| 11 | `make doctor` | 0.01 s real | -- | `docs/benchmarks/archive/AZ-III/W0p-doctor.txt` |
+| 12 | `cargo bench` json fat-LTO (per harness) | ~10 min cold | -- | `docs/benchmarks/archive/AZ-III/W0p-bench-iter-walls.txt` Verdict |
 | 13 | `cargo bench` css.tailwind | WATCHDOG_HALT (>120 s CPU) | -- | `docs/benchmarks/post-AZ-III.json` |
 | 14 | `cargo bench` json.data_xl | WATCHDOG_HALT (2.417 s observed vs 1 s limit) | -- | `docs/benchmarks/post-AZ-III.json` |
 | 15 | `cargo bench` compile_pipeline.compile_css_l4 | WATCHDOG_HALT (263 ms vs 200 ms limit) | -- | `docs/benchmarks/post-AZ-III.json` |
@@ -112,7 +112,7 @@ gate exceeds 15 minutes of cold compute.
 - **Surface**: every close ceremony, every successor-letter open
   preflight, every "did I break something" check; CI on every push.
 - **Root cause**: 1527 tests across 137 binaries (per
-  `docs/benchmarks/AZ-III/W4-workspace.txt`) all compile through one
+  `docs/benchmarks/archive/AZ-III/W4-workspace.txt`) all compile through one
   cargo invocation per shard. CI ships a 3-shard partition per
   `W0p-ci-partition.txt`, but local dev has no equivalent until the
   developer manually invokes shard count. 92.1 % pass rate at AZ-III
@@ -590,7 +590,7 @@ item 6:
    `cargo bench-iter-json --no-run`, `cargo nextest run --workspace
    --cargo-profile ax-iter`, and `cargo xtask regen --check`. Each row
    carries (a) the wall, (b) the AZ-III baseline from
-   `docs/benchmarks/AZ-III/W0p-bench-iter-walls.txt` and
+   `docs/benchmarks/archive/AZ-III/W0p-bench-iter-walls.txt` and
    `docs/tranches/meta-audit/04-toolchain-pain.md`, (c) delta vs
    baseline, (d) status MET / REGRESSED / IMPROVED. Regressions block
    W0 close until root-caused.

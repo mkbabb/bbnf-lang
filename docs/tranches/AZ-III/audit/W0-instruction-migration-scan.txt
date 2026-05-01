@@ -90,7 +90,7 @@ docs/tranches/AY-I/audit/AUDIT-C-forward.md:360:(`docs/instructions/tranche/SPEC
 docs/tranches/AY-I/audit/AUDIT-C-forward.md:431:Per `docs/instructions/tranche/SPEC.md:§Scope-reveal protocol`
 docs/tranches/AY-I/audit/AUDIT-C-forward.md:470:six-agent-per-wave cap. `W7.md` + `W8.md` retire; PROGRESS.md
 docs/tranches/B1/PROGRESS.md:186:- W1: 6 agents (1 exemplar, 4 parallel bench ports by grammar family,
-docs/benchmarks/post-AX-W0a2-diag.md:106:Per `docs/instructions/tranche/SPEC.md` §Scope-reveal — halt with diagnosis
+docs/benchmarks/archive/post-AX-W0a2-diag.md:106:Per `docs/instructions/tranche/SPEC.md` §Scope-reveal — halt with diagnosis
 docs/tranches/AZ-I/AZ-I.md:161:**Wave plan refined 2026-04-28** per six-agent audit synthesis at
 docs/tranches/AZ-II/AZ-II.md:40:the six-agent audit. AZ-II docs remain historical and point forward;
 docs/tranches/AZ-II/PROGRESS.md:558:`docs/tranches/AZ-II/audit/O3a-six-agent-audit-synthesis-2026-04-29.md`.

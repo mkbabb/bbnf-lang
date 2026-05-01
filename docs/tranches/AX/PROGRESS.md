@@ -35,14 +35,14 @@ notices if any. Hard-gate closures cite the artefact, not the claim.
 visitor emitter now dispatches Flat / Wrap / ArgList / HRegex to the
 pre-existing emitters (each bound by a subset of the dispatcher's W3
 trait union). Bootstrap regen commit `af8f6840`. `cargo expand`
-evidence at `docs/benchmarks/post-AX-W0a1-expand-json.txt` shows
+evidence at `docs/benchmarks/archive/post-AX-W0a1-expand-json.txt` shows
 `parse_with_visitor` re-emitted for `json_monolithic_value`.
 
 ## 2026-04-18 — W0a.2 scope reveal (absorb)
 
 Agent probed four bench binaries' `parse()` bodies and reported
 three-layer scope reveal. Diag doc at
-`docs/benchmarks/post-AX-W0a2-diag.md`.
+`docs/benchmarks/archive/post-AX-W0a2-diag.md`.
 
 - **L1** — `has_shape_dispatcher_entrypoint` narrowed to
   entry-reachable BFS (commit `9b1b54e2`). Matches docstring intent;
@@ -164,7 +164,7 @@ probe (`7464df6b`) + halt diag (`3328ff6c`):
 Admission-widening commit `29bfd055` intentionally NOT cherry-picked.
 Master keeps the narrow predicate; the four emitter fixes activate
 once admission widens. Cross-scope blocker documented at
-`docs/benchmarks/post-AX-W0a2h-progress.md §Halt rationale`:
+`docs/benchmarks/archive/post-AX-W0a2h-progress.md §Halt rationale`:
 
 - `grammar/host.rs::walk_tape` depends on walker-shaped Rule compound
   with variant_idx stamping.
@@ -212,7 +212,7 @@ Fresh-context orchestrator reads:
 1. `docs/tranches/AX/audit/SYNTHESIS.md` first.
 2. `docs/tranches/AX/AX.md` (invariants 1–20, wave summary).
 3. This PROGRESS.md for state.
-4. `docs/benchmarks/post-AX-W0a2h-progress.md` §Halt rationale for
+4. `docs/benchmarks/archive/post-AX-W0a2h-progress.md` §Halt rationale for
    cross-scope blocker concretes.
 
 Then dispatches W0a.2.i per SYNTHESIS §"The next wave".
@@ -585,7 +585,7 @@ place; no letter pivot.
 
 - W0a through W0a.2.s (77/77 parity harnesses, real-CSS 3/3).
   Master HEAD `5dab5175` at cascade close.
-- W0a.close bench baseline — `docs/benchmarks/post-AX-W0a-close.json`
+- W0a.close bench baseline — `docs/benchmarks/archive/post-AX-W0a-close.json`
   with 18/18 numeric entries after CSS real-corpus fix. Commit
   `1241e7ac`.
 - W0b (DTA interpreter deletion ~85K LOC, crates renamed,

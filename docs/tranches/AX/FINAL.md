@@ -78,12 +78,12 @@ Scope-reveals absorbed (per SPEC §Absorb): W0a.2.k revert
 reducer-compound emission against plan invariant 20; revert-to-
 green + W0a.2.l re-dispatch preserved reducer-compound while
 landing per-rule LUT + 1-byte arena-frame correctly. Diag at
-`docs/benchmarks/post-AX-W0a2h-progress.md` §Halt rationale and
+`docs/benchmarks/archive/post-AX-W0a2h-progress.md` §Halt rationale and
 SYNTHESIS at `docs/tranches/AX/audit/SYNTHESIS.md`.
 
 ### W0a.close — Pre-W0b 18-entry bench baseline
 
-Single-agent bench wave. `docs/benchmarks/post-AX-W0a-close.json`
+Single-agent bench wave. `docs/benchmarks/archive/post-AX-W0a-close.json`
 captured at HEAD `5dab5175` (commit `1241e7ac`, re-run after the
 W0a.2.s CSS real-corpus fix; supersedes the `7c2a7c70` baseline
 where css_l4 entries panicked). Eighteen numeric entries, mimalloc,
@@ -473,7 +473,7 @@ as the precondition for AY's substrate restoration in W1.
   identical (W0a.close)
 
 ### Bench artefacts
-- `docs/benchmarks/post-AX-W0a-close.json` — intra-AX baseline
+- `docs/benchmarks/archive/post-AX-W0a-close.json` — intra-AX baseline
   (commit `1241e7ac`, HEAD `5dab5175`)
 - `docs/benchmarks/post-AX-W1-close.json` — AX-close 18-entry
   matrix at HEAD `411eabfd` (this document's commit window)

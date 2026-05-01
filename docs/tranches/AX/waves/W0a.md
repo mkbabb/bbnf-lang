@@ -48,7 +48,7 @@ For each gate predicate (`has_w4_classified`, `has_full_shape_coverage`, `has_sh
 - `nm` output proving walker not reached from any `parse()` entry.
 - `cargo expand` diff showing `parse_with_visitor` re-emitted for JSON.
 - Wire-contract test passes asserting per-grammar gate outcomes.
-- Bench bench artefact `docs/benchmarks/post-AX-W0a-close.json` showing JSON entries recovered to prototype range and non-JSON grammars unchanged (walker still routed but via shape-dispatcher entry, not `parse()` → `dta_run`).
+- Bench bench artefact `docs/benchmarks/archive/post-AX-W0a-close.json` showing JSON entries recovered to prototype range and non-JSON grammars unchanged (walker still routed but via shape-dispatcher entry, not `parse()` → `dta_run`).
 
 ## Dependencies
 

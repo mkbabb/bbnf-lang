@@ -14,7 +14,7 @@ Gorgeous JIT, and names the close disposition required for
 
 Primary baseline evidence:
 
-- `docs/benchmarks/AZ-II/cutover/O3a-test-failures.txt:160-168`
+- `docs/benchmarks/archive/AZ-II/cutover/O3a-test-failures.txt:160-168`
   assigns the A1 failures: one `bbnf-analysis` test, one `bbnf-lsp`
   test, and seven `json-prototype::corpus` tests.
 - `docs/tranches/AZ-II/waves/cutover/O3a-A1.md:54-63` requires this

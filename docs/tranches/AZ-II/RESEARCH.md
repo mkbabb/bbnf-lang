@@ -119,7 +119,7 @@ Concretely:
 3. The resulting `bbnf-derive` binary emits struct-writing parsers.
 4. Run `bbnf-derive` on every `.bbnf` fixture (`grammar/*/*.bbnf`
    + `tests/fixtures/*.bbnf`) and capture the parsed output to
-   `docs/benchmarks/AZ-II/W1/stage-a-output/<fixture>/`.
+   `docs/benchmarks/archive/AZ-II/W1/stage-a-output/<fixture>/`.
 
 ### Stage B (candidate → final)
 
@@ -135,12 +135,12 @@ Concretely:
 2. The resulting `bbnf-derive` binary emits struct-writing parsers
    (same as Stage A).
 3. Run `bbnf-derive` on the same fixture corpus; capture to
-   `docs/benchmarks/AZ-II/W2/stage-b-output/<fixture>/`.
+   `docs/benchmarks/archive/AZ-II/W2/stage-b-output/<fixture>/`.
 
 ### Byte-equal reproducibility check
 
-`diff -r docs/benchmarks/AZ-II/W1/stage-a-output/
- docs/benchmarks/AZ-II/W2/stage-b-output/` on W2 close. Zero byte
+`diff -r docs/benchmarks/archive/AZ-II/W1/stage-a-output/
+ docs/benchmarks/archive/AZ-II/W2/stage-b-output/` on W2 close. Zero byte
 differences is the W2 hard gate. Any divergence on any fixture
 triggers the reversal path.
 

@@ -61,7 +61,7 @@ Non-negotiables inherited by all successor waves:
 |---|---|
 | `docs/tranches/AZ-II/audit/cutover.C-SCOPE-REVEAL.md` | create |
 | `docs/benchmarks/post-AZ-II.json` | create |
-| `docs/benchmarks/post-AY-AZ-II-close-*.txt` | create |
+| `docs/benchmarks/archive/post-AY-AZ-II-close-*.txt` | create |
 | `docs/tranches/AZ-II/PROGRESS.md` | modify |
 | `docs/tranches/AZ-II/waves/cutover/README.md` | modify |
 | `docs/tranches/AZ-II/waves/cutover/D.md` | create or modify if replaying C before D exists |
@@ -117,7 +117,7 @@ Mechanism: record current close-matrix placeholder state without
 claiming terminal values.
 
 Files touched: `docs/benchmarks/post-AZ-II.json`,
-`docs/benchmarks/post-AY-AZ-II-close-*.txt`.
+`docs/benchmarks/archive/post-AY-AZ-II-close-*.txt`.
 
 Sub-gate: benchmark docs are marked partial/historical.
 

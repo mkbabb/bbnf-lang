@@ -7,7 +7,7 @@ integration.
 
 ## Evidence Read
 
-- `docs/benchmarks/AZ-II/cutover/O3a-test-failures.txt` records the
+- `docs/benchmarks/archive/AZ-II/cutover/O3a-test-failures.txt` records the
   O3a baseline: 1645 tests run, 1561 passed, 84 failed, 25 skipped.
 - A1 owns two live product tests:
   `bbnf-analysis::directives import_directive_has_semantic_tokens` and
@@ -110,7 +110,7 @@ Proof owners:
 - `crates/core/src/pipeline/directives.rs`
 - `crates/core/src/grammar/bootstrap_parser.rs`
 - `crates/core/tests/bbnf_bootstrap_reproducibility.rs`
-- `docs/benchmarks/AZ-II/cutover/O6-bootstrap-parser-proof.txt`
+- `docs/benchmarks/archive/AZ-II/cutover/O6-bootstrap-parser-proof.txt`
 
 Patch intent: prove generated `BbnfBootstrap::parse` can parse the BBNF
 fixture corpus and drive the pipeline without the hand-written bridge.
@@ -249,8 +249,8 @@ O6 does not add a fallback parser and does not reopen source substrate;
 if generated self-host is not ready, O6 records the exact failing proof
 and blocks O7 until a source owner retires the bridge.
 
-Files touched: `docs/benchmarks/AZ-II/cutover/O6-bootstrap-parser-proof.txt`,
-`docs/benchmarks/AZ-II/cutover/O6-workspace-nextest.txt`, and progress
+Files touched: `docs/benchmarks/archive/AZ-II/cutover/O6-bootstrap-parser-proof.txt`,
+`docs/benchmarks/archive/AZ-II/cutover/O6-workspace-nextest.txt`, and progress
 docs. Source files are read for proof only unless the orchestrator has
 already integrated an A1 source-retirement commit before O6 starts.
 
@@ -271,7 +271,7 @@ Add these hard-gate bullets:
     and `bbnf-lsp::integration test_hover_recover_keyword` pass on the
     post-O5 tree.
 13. `bootstrap_parser.rs` has a close disposition backed by
-    `docs/benchmarks/AZ-II/cutover/O6-bootstrap-parser-proof.txt`.
+    `docs/benchmarks/archive/AZ-II/cutover/O6-bootstrap-parser-proof.txt`.
     Terminal close is blocked unless generated `BbnfBootstrap::parse`
     is canonical and no fallback/adapter to the hand-written bridge
     remains.
@@ -280,7 +280,7 @@ Add these hard-gate bullets:
 Add this verification artifact:
 
 ```markdown
-- `docs/benchmarks/AZ-II/cutover/O6-bootstrap-parser-proof.txt`
+- `docs/benchmarks/archive/AZ-II/cutover/O6-bootstrap-parser-proof.txt`
 - `/tmp/az-ii-o3a-a1-analysis.txt`
 - `/tmp/az-ii-o3a-a1-lsp.txt`
 - `/tmp/az-ii-o6-a1-bbnf-bootstrap-repro.txt`
@@ -308,7 +308,7 @@ Files touched: `docs/tranches/AZ-II/FINAL.md`,
 `docs/tranches/AZ-II/PROGRESS.md`,
 `docs/tranches/AZ-II/waves/cutover/O3a-A1.md`,
 `docs/tranches/AZ-II/audit/O3a-A1-plan.md`, and
-`docs/benchmarks/AZ-II/cutover/O7-close-doc-scan.txt`.
+`docs/benchmarks/archive/AZ-II/cutover/O7-close-doc-scan.txt`.
 
 Sub-gate: O7 close scan records zero live hits for
 `json-prototype`, `json_prototype`, `TapeVisitor`, `bbnf_derive`,
@@ -331,7 +331,7 @@ Add this verification artifact:
 
 ```markdown
 - `docs/tranches/AZ-II/audit/O3a-A1-plan.md`
-- `docs/benchmarks/AZ-II/cutover/O6-bootstrap-parser-proof.txt`
+- `docs/benchmarks/archive/AZ-II/cutover/O6-bootstrap-parser-proof.txt`
 - `/tmp/az-ii-o7-a1-close-scan.txt`
 ```
 

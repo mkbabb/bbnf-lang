@@ -14,11 +14,11 @@
 - `docs/tranches/AZ-II/waves/cutover/O3a-S1.md`
 - `docs/tranches/AZ-II/waves/cutover/O4.md`
 - `docs/tranches/AZ-II/waves/cutover/O6.md`
-- `docs/benchmarks/AZ-II/cutover/O3a-test-failures.txt`
+- `docs/benchmarks/archive/AZ-II/cutover/O3a-test-failures.txt`
 
 ## Evidence
 
-`docs/benchmarks/AZ-II/cutover/O3a-test-failures.txt` assigns 33
+`docs/benchmarks/archive/AZ-II/cutover/O3a-test-failures.txt` assigns 33
 post-O2 failures to S1: 13 `sheets_parity` failures, 3
 `sheets_self_parity` corpus failures, and 17
 `sheets_self_parity::serialize_roundtrip_*` failures.
@@ -247,8 +247,8 @@ and corpus self-parity.
 Files touched: `crates/core/tests/sheets_{parity,self_parity,expr_parity}.rs`,
 `crates/core/benches/google_sheets/monolithic.rs`,
 `docs/benchmarks/post-AZ-II-O6-sheets.txt`,
-`docs/benchmarks/AZ-II/cutover/O6-workspace-nextest.txt`,
-`docs/benchmarks/AZ-II/cutover/O6-structural-audit.txt`.
+`docs/benchmarks/archive/AZ-II/cutover/O6-workspace-nextest.txt`,
+`docs/benchmarks/archive/AZ-II/cutover/O6-structural-audit.txt`.
 
 Sub-gate: the focused commands
 `cargo nextest run -p bbnf --test sheets_parity --cargo-profile ax-iter --no-fail-fast -- --nocapture`,

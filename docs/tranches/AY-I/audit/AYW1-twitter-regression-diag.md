@@ -2,7 +2,7 @@
 
 ## Symptom
 
-Per `docs/benchmarks/post-AY-W1-bytes-cyc.txt` pre-fix close:
+Per `docs/benchmarks/archive/post-AY-W1-bytes-cyc.txt` pre-fix close:
 
 - twitter MB/s 699 (W1 Phase 1 sanity bench, AoS substrate alone)
   → 420.2 (W1 close after Phase 2 cherry-picks: W1.3 structural-scan
@@ -248,7 +248,7 @@ preserved `scan_structural` substrate forward).
 ## Verification artefacts
 
 - `docs/benchmarks/post-AY-W1-close.json` — 19-entry post-fix matrix.
-- `docs/benchmarks/post-AY-W1-bytes-cyc.txt` — post-fix attribution + trajectory.
+- `docs/benchmarks/archive/post-AY-W1-bytes-cyc.txt` — post-fix attribution + trajectory.
 - `.profiles/samply/post-AY-W1-fix/json_monolithic/twitter/profile.json.gz` —
   post-fix samply showing scan_structural absent from top-25 (4055 samples
   vs pre-fix 6714 in same wall time, redistributed to per-rule parse_ frames).

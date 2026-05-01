@@ -221,9 +221,9 @@ After:
    back to AY-II immediately.
 10. Every `--exclude`d crate on the routine-surface `iter-check` alias
     has a named fast-path alias that validates it alone, recorded in
-    `docs/benchmarks/post-B1-W0-routine.txt`.
+    `docs/benchmarks/archive/post-B1-W0-routine.txt`.
 11. `cargo iter-check-full` (the workspace close-gate) records a
-    measured wall-clock ceiling in `docs/benchmarks/post-B1-W0-proof.txt`;
+    measured wall-clock ceiling in `docs/benchmarks/archive/post-B1-W0-proof.txt`;
     the ceiling is an explicit number, not "exit 0".
 12. `target/.bbnf-cache/` is neither created nor destroyed as a
     side-effect of any B1 command — scripts that previously relied on
@@ -245,14 +245,14 @@ commands.
 
 Hard gate:
 1. `bash scripts/bootstrap-bbnf.sh` cycle-2 wall ≤ 10 % of cycle-1
-   wall, recorded in `docs/benchmarks/post-B1-W0-proof.txt`.
+   wall, recorded in `docs/benchmarks/archive/post-B1-W0-proof.txt`.
 2. `make ay-prime` on a `rm -rf target/.bbnf-cache target/ax-iter/incremental`
    fresh state populates `target/.bbnf-cache/` with at least one
    `.rs` entry and exits 0.
 3. `cargo iter-check-full` cold wall recorded explicitly; ceiling
    declared by W0.d in its PR body.
 
-Evidence: `docs/benchmarks/post-B1-W0-proof.txt` rows
+Evidence: `docs/benchmarks/archive/post-B1-W0-proof.txt` rows
 `bootstrap-cycle-1`, `bootstrap-cycle-2`, `ay-prime-fresh`,
 `iter-check-full-cold`.
 
@@ -264,7 +264,7 @@ Scope: own `scripts/bootstrap-bbnf.sh` + `Makefile` (new
 close-ceremony wording, and add an `iter-check-lsp` alias for the
 excluded crates).
 
-Deliverable: three artefact rows in `docs/benchmarks/post-B1-W0-proof.txt`
+Deliverable: three artefact rows in `docs/benchmarks/archive/post-B1-W0-proof.txt`
 (`bootstrap-cycle-2`, `ay-prime-fresh`, `iter-check-full-cold`);
 comment-block in `.cargo/config.toml` that cites the three-alias
 cost model (routine / lsp-validate / close-gate).

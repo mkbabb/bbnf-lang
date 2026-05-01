@@ -47,7 +47,7 @@ master:
 | `e94f23c2` | W0.1 | `CLASSIFIER-UNIFICATION.md` (locked-split disposition; 318 lines) |
 | `b25e0750` | W0.1 | Path fixup — regex-HIR classifier paths corrected to `../parse-that/rust/regex/` (path-dep crate location) |
 | `aaddf633` | W0.2 | `passes/audit/{mod,payload_coverage}.rs` + re-exports — pluggable `StructRegistryProbe` trait, three-way `MarkerStatus` |
-| `07496541` | W0.2 | Leaf test `crates/ir/tests/payload_coverage_audit.rs` (9 tests) + `docs/benchmarks/AZ-I/W0/audit-coverage.json` capture |
+| `07496541` | W0.2 | Leaf test `crates/ir/tests/payload_coverage_audit.rs` (9 tests) + `docs/benchmarks/archive/AZ-I/W0/audit-coverage.json` capture |
 | `830b9852` | W0.2 | JSON key-order stabilisation via `BTreeMap` for byte-stable output |
 
 **Disposition (W0.1):** locked-split. Each classifier's input

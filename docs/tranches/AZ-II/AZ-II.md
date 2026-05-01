@@ -312,7 +312,7 @@ Landed artefacts:
   classifier plug-in (if locked split).
 - Baseline bench capture on AZ-II branch: full 17-entry matrix
   against AZ-I close. Emits
-  `docs/benchmarks/AZ-II/W0/baseline.json`.
+  `docs/benchmarks/archive/AZ-II/W0/baseline.json`.
 - IR audit pass extended to cover `grammar/bbnf/bbnf.bbnf`.
   Initially red (BBNF not yet migrated); W1 drives it to 100%.
 
@@ -337,7 +337,7 @@ present in this stage — Stage A is the bridge state where both
 emission targets are wired. The resulting per-grammar output
 under `crates/core/src/grammar/generated/<ident>.rs` holds
 struct-writing parsers for BBNF grammars. Corpus output is
-captured to `docs/benchmarks/AZ-II/W1/stage-a-output/` for every
+captured to `docs/benchmarks/archive/AZ-II/W1/stage-a-output/` for every
 `.bbnf` fixture in the tree (`grammar/*/*.bbnf`,
 `tests/fixtures/*.bbnf`, `grammar/bbnf/bbnf.bbnf` itself).
 
@@ -348,11 +348,11 @@ itself built from a struct-writing parser and produces
 struct-writing parsers. Tape is unwired in both directions for
 BBNF's bootstrap. The same `cargo xtask regen --emit-mode struct`
 invocations on the same fixture corpus are captured to
-`docs/benchmarks/AZ-II/W1/stage-b-output/`.
+`docs/benchmarks/archive/AZ-II/W1/stage-b-output/`.
 
 **Byte-equal close gate.** `diff -r
-docs/benchmarks/AZ-II/W1/stage-a-output/
-docs/benchmarks/AZ-II/W1/stage-b-output/` returns zero byte
+docs/benchmarks/archive/AZ-II/W1/stage-a-output/
+docs/benchmarks/archive/AZ-II/W1/stage-b-output/` returns zero byte
 differences across the entire BBNF fixture corpus. Any divergence
 at wave close triggers the reversal path; the W1 substrate
 reverts and AZ-II re-plans against the observed drift.
@@ -489,7 +489,7 @@ authoritative list.
 | `crates/tape/` | Deleted at W3 | W3 |
 | `grammar/bbnf/bbnf.bbnf` | Source for BBNF's derived struct; may gain typed-leaf annotations | W1 |
 | `tests/bbnf_*_parity.rs` | Struct-vs-hand-maintained-IR-surface parity harness | W1, W2 |
-| `docs/benchmarks/AZ-II/W<n>/` | Stage A/B output archives + bench + samply | W0–W3 |
+| `docs/benchmarks/archive/AZ-II/W<n>/` | Stage A/B output archives + bench + samply | W0–W3 |
 
 The `crates/tape/` deletion (W3) is the single largest LOC delta
 in AZ-II. The current tape crate contains `lib.rs`, `builder/`,

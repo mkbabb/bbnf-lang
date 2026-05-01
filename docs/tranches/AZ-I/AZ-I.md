@@ -196,7 +196,7 @@ Landed artefacts:
   summary.
 
 Runtime call site: the audit pass runs on every `cargo check` via
-build.rs and emits `docs/benchmarks/AZ-I/W0/audit-coverage.json`.
+build.rs and emits `docs/benchmarks/archive/AZ-I/W0/audit-coverage.json`.
 
 No payload path change yet; W0 proves the measurement surface and
 lifts the infrastructure ceiling so W1–W3 iterate quickly.

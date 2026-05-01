@@ -7,9 +7,9 @@ updated in one coordinated pass.
 
 ## Evidence Read
 
-- `docs/benchmarks/AZ-II/cutover/O3a-test-failures.txt` records the
+- `docs/benchmarks/archive/AZ-II/cutover/O3a-test-failures.txt` records the
   O3a baseline: 1645 tests run, 1561 passed, 84 failed, 25 skipped.
-- `docs/benchmarks/post-AY-az-ii-doc-baseline-json.txt` records
+- `docs/benchmarks/archive/post-AY-az-ii-doc-baseline-json.txt` records
   `json_monolithic::data_xl` exceeding the bench cap at
   `2.478697958s` against a `1s` limit.
 - Focused confirmation command:
@@ -235,7 +235,7 @@ serde corpus parity, sonic-rs corpus parity, and the JSON bench lane
 after O3/O4/O5. Numeric oracle comparisons must accept equivalent
 integer/f64 witnesses without masking parse-tree drift. The JSON
 `data_xl` bench must produce a real post-O5 measurement and cite the
-delta from `docs/benchmarks/post-AY-az-ii-doc-baseline-json.txt`.
+delta from `docs/benchmarks/archive/post-AY-az-ii-doc-baseline-json.txt`.
 
 Files touched: `crates/core/tests/json_value_parity.rs`,
 `crates/core/tests/json_canonical_parity.rs`,

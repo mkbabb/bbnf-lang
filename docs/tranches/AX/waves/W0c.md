@@ -13,7 +13,7 @@
 5. Rewrite §Delete-manifest to point to `docs/tranches/AW/audit/{dead-code-manifest,psi-and-dead-substrate,full-codebase-prune}.md`.
 6. Rewrite §Successor-chain: `AW-V → AX (RD reckoning) → AY (replay + JIT)`. No AW-VI.
 7. Retire "compile DTA into hot-path code" branding throughout. The thesis becomes *"fn-per-rule over shape templates; DTA-era IR facts feed the shape emitter; the scaffold came down as the consumer emerged."*
-8. Add a §Pivot subsection documenting the W0a.2.h shape-emission-authoritative pivot. Cite `docs/benchmarks/post-AX-W0a2g-progress.md` §Remaining-blockers (four deferred walker-parity deltas that motivated the pivot) + `docs/tranches/AX/audit/R4-plan-redress.md` (retrospective + invariant 20). The subsection is ≤ 30 lines; positions walker-parity chasing as a category-error the AW-V arc inherited, not a failure of the shape emitter itself.
+8. Add a §Pivot subsection documenting the W0a.2.h shape-emission-authoritative pivot. Cite `docs/benchmarks/archive/post-AX-W0a2g-progress.md` §Remaining-blockers (four deferred walker-parity deltas that motivated the pivot) + `docs/tranches/AX/audit/R4-plan-redress.md` (retrospective + invariant 20). The subsection is ≤ 30 lines; positions walker-parity chasing as a category-error the AW-V arc inherited, not a failure of the shape emitter itself.
 
 ## File bounds
 

@@ -85,7 +85,7 @@ W0b becomes **simpler, not harder.** Three axes:
 
 Scope:
 - Single agent, serial.
-- Deliverable: `docs/benchmarks/post-AX-W0a-close.json` — 17-entry matrix on master immediately post-W0a.2.h close, pre-W0b.
+- Deliverable: `docs/benchmarks/archive/post-AX-W0a-close.json` — 17-entry matrix on master immediately post-W0a.2.h close, pre-W0b.
 - Hard gate: matrix coverage ≥ 17 entries (JSON × 5, CSS × 3, Sheets × 3, BBNF × 6).
 - Mid-wave bench diffs (invariant 10) reference THIS baseline, not post-AW-V.
 

@@ -80,7 +80,7 @@ On session resume use:
 4. Verify post-regen `crates/core/src/grammar/generated/bbnf.rs`
    is byte- or `prettyplease::unparse`-format-equivalent to its
    pre-W0 state.
-5. Capture cold-wall artefact at `docs/benchmarks/post-B6-W0-
+5. Capture cold-wall artefact at `docs/benchmarks/archive/post-B6-W0-
    walls.txt` (3 runs, median; cold per `make clean-incr` plus
    `find . -name .bbnf-cache -exec rm -rf {} +`).
 
@@ -103,7 +103,7 @@ Allow-list:
 - `crates/core/src/grammar/generated/bbnf.rs` — regen via
   `cargo xtask regen --grammar bbnf` only; commit the post-W0
   output as part of the gate.
-- `docs/benchmarks/post-B6-W0-walls.txt` — create; cold-wall
+- `docs/benchmarks/archive/post-B6-W0-walls.txt` — create; cold-wall
   artefact.
 
 Forbidden:
@@ -121,13 +121,13 @@ Forbidden:
 
 1. **Cold wall**: `time -p cargo xtask regen --grammar bbnf`
    3-run median ≤ 3 min, with `make clean-incr` + cache clear
-   between runs. Artefact: `docs/benchmarks/post-B6-W0-walls.txt`.
+   between runs. Artefact: `docs/benchmarks/archive/post-B6-W0-walls.txt`.
 2. **Output equivalence**: `crates/core/src/grammar/generated/
    bbnf.rs` byte- or `prettyplease`-format-equivalent to the
    pre-W0 file at master HEAD `f34f2e80`. Diff via `git diff
    --stat` plus a structural `cargo iter-check-full` exit-0
    verification. Artefact: diff captured to
-   `docs/benchmarks/post-B6-W0-walls.txt`.
+   `docs/benchmarks/archive/post-B6-W0-walls.txt`.
 3. **Workspace nextest 1477/1477** post-W0; the fast-path's
    correctness verifies via the existing test surface
    (`make iter-test`).
@@ -143,7 +143,7 @@ Forbidden:
 
 ## Verification artefacts
 
-- `docs/benchmarks/post-B6-W0-walls.txt` — cold wall medians,
+- `docs/benchmarks/archive/post-B6-W0-walls.txt` — cold wall medians,
   output equivalence diff, idempotent regen verification.
 - Commit hashes for: csp_descent.rs creation, regen.rs two-
   stage edit, main.rs flag plumbing, generated/bbnf.rs regen
@@ -268,7 +268,7 @@ Forbidden:
 
 1. **Cold `iter-check-full` wall ≥ 30 % reduction**: pre-W1
    > 660 s, post-W1 ≤ 460 s; 3-run median per the cold-wall
-   methodology. Artefact: `docs/benchmarks/post-B6-W1-walls.txt`.
+   methodology. Artefact: `docs/benchmarks/archive/post-B6-W1-walls.txt`.
 2. **Workspace nextest 1477/1477 non-regressing** post-W1.
 3. **`cargo xtask regen --check` exit 0** across all 9 grammars
    — the deferred passes still fire under `--check`, verifying
@@ -397,7 +397,7 @@ Same as W0.a. Read:
 2. Add `iter-test-json-partitioned` alias to `.cargo/config.toml`
    for the partitioned surface (per-fixture filter by
    substring).
-3. Capture warm-wall artefact at `docs/benchmarks/post-B6-W2-
+3. Capture warm-wall artefact at `docs/benchmarks/archive/post-B6-W2-
    walls.txt`.
 
 ## File bounds

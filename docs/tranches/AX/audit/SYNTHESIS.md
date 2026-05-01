@@ -269,7 +269,7 @@ Before the fresh-context orchestrator dispatches W0a.2.i:
 
 - [ ] Read this synthesis + AX.md invariants 1–20.
 - [ ] Read `docs/tranches/AX/PROGRESS.md` (state).
-- [ ] Read `docs/benchmarks/post-AX-W0a2h-progress.md` §Halt
+- [ ] Read `docs/benchmarks/archive/post-AX-W0a2h-progress.md` §Halt
       rationale for the cross-scope blocker concretes.
 - [ ] Verify R3 scripts executable:
       `scripts/worktree-status.sh` shows current state,

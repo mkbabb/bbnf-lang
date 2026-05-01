@@ -17,7 +17,7 @@ Date: 2026-04-29.
 - `cargo nextest run -p bbnf --profile ax-iter --test json_canonical_parity canonical_parity_twitter --test json_parity parity_twitter_json --test json_parity_struct native_parity_serde_twitter_json native_parity_serde_canada_json --test sonic_rs_parity sonic_rs_parity_twitter sonic_rs_parity_data_xl --no-fail-fast -- --nocapture`
   - Result: 6/6 failed.
   - Key outputs: twitter parity first diverged at `$.statuses[0].truncated` as `bbnf=Null` vs external `Bool(false)`; `sonic_rs_parity_data_xl` first diverged at `data_xl.json[0].active`; `native_parity_serde_canada_json` failed on numeric precision, `43.47470900000013` vs `43.474709000000125`.
-- `rg -n "data_xl|timeout|timed|2\\.478|json_monolithic|FAIL|error" docs/benchmarks/post-AY-az-ii-doc-baseline-json.txt`
+- `rg -n "data_xl|timeout|timed|2\\.478|json_monolithic|FAIL|error" docs/benchmarks/archive/post-AY-az-ii-doc-baseline-json.txt`
   - Result: `json_monolithic::data_xl` exceeded the 1s timeout at `2.478697958s`.
 
 ## Root-Cause Classes
@@ -95,7 +95,7 @@ Exact next probe: decide whether the struct-tree invariant should count keys/pai
 
 The bench artifact records the timeout:
 
-- `docs/benchmarks/post-AY-az-ii-doc-baseline-json.txt:1457-1470` runs `json_monolithic`; `data_xl` panics because one iteration took `2.478697958s` against a 1s limit.
+- `docs/benchmarks/archive/post-AY-az-ii-doc-baseline-json.txt:1457-1470` runs `json_monolithic`; `data_xl` panics because one iteration took `2.478697958s` against a 1s limit.
 
 The bench calls the materializing parse path:
 

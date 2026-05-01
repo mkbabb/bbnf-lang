@@ -38,7 +38,7 @@
 | `crates/ir/tests/**` | modify/create |
 | `crates/core/tests/types_*.rs` | modify/create |
 | `crates/core/tests/projection_*.rs` | modify/create |
-| `docs/benchmarks/AZ-III/W3a-*.txt` | create |
+| `docs/benchmarks/archive/AZ-III/W3a-*.txt` | create |
 | `docs/tranches/AZ-III/audit/W3a-0-pipeline-registry-research.md` | create |
 | `docs/tranches/AZ-III/**` | modify |
 
@@ -115,7 +115,7 @@ for any redress dispatch under W3a: 30 min.
    exit green.
 3. Each new fact, recognizer, node, or projection authority surface has
    a production consumer named in
-   `docs/benchmarks/AZ-III/W3a-fact-authority.txt`; disconnecting the
+   `docs/benchmarks/archive/AZ-III/W3a-fact-authority.txt`; disconnecting the
    consumer fails a test.
 4. `rg -n "BoxedEnum" crates/ir/src/passes/types/constraint/` over the
    constraint solver returns no live silent fallback hit; archived in
@@ -134,9 +134,9 @@ generated outputs. Before W3a closes, rerun `cargo fmt --all -- --check`,
 
 ## Verification Artefacts
 
-- `docs/benchmarks/AZ-III/W3a-fact-authority.txt`
-- `docs/benchmarks/AZ-III/W3a-types-obligations.txt`
-- `docs/benchmarks/AZ-III/W3a-no-silent-fallback.txt`
+- `docs/benchmarks/archive/AZ-III/W3a-fact-authority.txt`
+- `docs/benchmarks/archive/AZ-III/W3a-types-obligations.txt`
+- `docs/benchmarks/archive/AZ-III/W3a-no-silent-fallback.txt`
 - `docs/tranches/AZ-III/audit/W3a-0-pipeline-registry-research.md`
 
 ## Commit Plan

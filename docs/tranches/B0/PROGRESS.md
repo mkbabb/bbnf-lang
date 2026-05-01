@@ -46,7 +46,7 @@ file-bound truth.
   public routine, codegen inspection, bench, and profile-wave
   targets; `.PHONY` list updated; `test:` target carries a comment
   pointing routine callers to the iter-* surface.
-- `f4c84d01` `docs/benchmarks/post-B0-W0-commands.txt` catalogs every
+- `f4c84d01` `docs/benchmarks/archive/post-B0-W0-commands.txt` catalogs every
   alias + target with the AY W5/W6/W7 hard-gate cross-references.
 
 Deviations recorded:
@@ -61,7 +61,7 @@ Deviations recorded:
 
 - `b8dac71e` PROFILING.md gains `## Public fast-path commands` section
   (59 lines inserted at line 36, bit-identical to existing sections);
-  `docs/benchmarks/post-B0-W0-baseline.txt` captures pre-W0 wall-clock
+  `docs/benchmarks/archive/post-B0-W0-baseline.txt` captures pre-W0 wall-clock
   for the four representative commands at HEAD `9bff7e7d`.
 
 Baseline evidence (incremental / warm numbers are the routine metric):
@@ -124,7 +124,7 @@ leaf` failed on stale crate names.
 
 | # | Gate | Evidence | Status |
 |---|------|----------|--------|
-| 1 | Public command surface exposes fast routine path | `docs/benchmarks/post-B0-W0-commands.txt` | PASS |
+| 1 | Public command surface exposes fast routine path | `docs/benchmarks/archive/post-B0-W0-commands.txt` | PASS |
 | 2 | Representative AY routine timings improve | `docs/benchmarks/post-B0-W0-mid.json` (iter-check warm 45× faster) | PASS |
 | 3 | Docs and defaults agree on public routine path | PROFILING.md §Public fast-path commands + `post-B0-W0-commands.txt` | PASS |
 

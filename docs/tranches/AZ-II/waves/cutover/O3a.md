@@ -40,8 +40,8 @@ JIT deletion, and bootstrap-parser proof into O5/O6/O7.
 
 | File | Access |
 |---|---|
-| `docs/benchmarks/AZ-II/cutover/O3a-test-failures.txt` | create |
-| `docs/benchmarks/post-AY-az-ii-doc-baseline-json.txt` | create |
+| `docs/benchmarks/archive/AZ-II/cutover/O3a-test-failures.txt` | create |
+| `docs/benchmarks/archive/post-AY-az-ii-doc-baseline-json.txt` | create |
 | `docs/tranches/AZ-II/waves/cutover/O3.md` | modify |
 | `docs/tranches/AZ-II/waves/cutover/O4.md` | modify |
 | `docs/tranches/AZ-II/waves/cutover/O5.md` | modify |
@@ -68,8 +68,8 @@ Mechanism: preserve the full nextest failed-test list and the failed
 JSON bench transcript as committed evidence.
 
 Files touched:
-`docs/benchmarks/AZ-II/cutover/O3a-test-failures.txt`,
-`docs/benchmarks/post-AY-az-ii-doc-baseline-json.txt`.
+`docs/benchmarks/archive/AZ-II/cutover/O3a-test-failures.txt`,
+`docs/benchmarks/archive/post-AY-az-ii-doc-baseline-json.txt`.
 
 Sub-gate: artifacts record the exact test count and the bench timeout.
 
@@ -241,10 +241,10 @@ cohort wave owners.
 
 ## Hard gate
 
-1. `docs/benchmarks/AZ-II/cutover/O3a-test-failures.txt` contains the
+1. `docs/benchmarks/archive/AZ-II/cutover/O3a-test-failures.txt` contains the
    post-O2 full nextest failure list and the summary `1561 passed, 84
    failed, 25 skipped`.
-2. `docs/benchmarks/post-AY-az-ii-doc-baseline-json.txt` records the
+2. `docs/benchmarks/archive/post-AY-az-ii-doc-baseline-json.txt` records the
    JSON bench baseline failure and `data_xl` timeout.
 3. Every failed test is assigned to J1, C1, S1, P1, or A1.
 4. J1/C1/S1 triads are dispatched with research, plan, and redress
@@ -261,8 +261,8 @@ cohort wave owners.
 
 ## Verification artefacts
 
-- `docs/benchmarks/AZ-II/cutover/O3a-test-failures.txt`.
-- `docs/benchmarks/post-AY-az-ii-doc-baseline-json.txt`.
+- `docs/benchmarks/archive/AZ-II/cutover/O3a-test-failures.txt`.
+- `docs/benchmarks/archive/post-AY-az-ii-doc-baseline-json.txt`.
 - `docs/tranches/AZ-II/audit/O3a-J1-*.md` after triad close.
 - `docs/tranches/AZ-II/audit/O3a-C1-*.md` after triad close.
 - `docs/tranches/AZ-II/audit/O3a-S1-*.md` after triad close.

@@ -19,8 +19,8 @@
 |---|---|
 | `crates/core/src/grammar/generated/bbnf.rs` | modify |
 | `crates/core/tests/bbnf_bootstrap_reproducibility.rs` | create |
-| `docs/benchmarks/AZ-II/cutover/stage-a-bbnf.rs` | create |
-| `docs/benchmarks/AZ-II/cutover/stage-b-bbnf.rs` | create |
+| `docs/benchmarks/archive/AZ-II/cutover/stage-a-bbnf.rs` | create |
+| `docs/benchmarks/archive/AZ-II/cutover/stage-b-bbnf.rs` | create |
 | `docs/tranches/AZ-II/PROGRESS.md` | modify |
 | `docs/tranches/AZ-II/waves/cutover/README.md` | modify |
 
@@ -37,7 +37,7 @@ Mechanism: run `cargo xtask regen --grammar bbnf` and capture the
 generated BBNF source as Stage A evidence.
 
 Files touched: `crates/core/src/grammar/generated/bbnf.rs`,
-`docs/benchmarks/AZ-II/cutover/stage-a-bbnf.rs`.
+`docs/benchmarks/archive/AZ-II/cutover/stage-a-bbnf.rs`.
 
 Sub-gate: Stage A generated source exists and is deterministic on
 rerun.
@@ -57,7 +57,7 @@ Mechanism: rerun BBNF regen using the rebuilt candidate and capture the
 Stage B generated source.
 
 Files touched: `crates/core/src/grammar/generated/bbnf.rs`,
-`docs/benchmarks/AZ-II/cutover/stage-b-bbnf.rs`.
+`docs/benchmarks/archive/AZ-II/cutover/stage-b-bbnf.rs`.
 
 Sub-gate: Stage B generated source exists.
 
@@ -100,7 +100,7 @@ Sub-gate: cutover.C opens only after the reproducibility gate is green.
 
 - Commit `d6b0377a`.
 - `crates/core/tests/bbnf_bootstrap_reproducibility.rs`.
-- Stage A/B captures under `docs/benchmarks/AZ-II/cutover/`.
+- Stage A/B captures under `docs/benchmarks/archive/AZ-II/cutover/`.
 
 ## Dependencies
 

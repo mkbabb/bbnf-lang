@@ -96,7 +96,7 @@ the AZ-II close ceremony.
 - **After**: W2-activate's own close ceremony runs the matrix three
   times (cold, per `feedback_no-warm-benches`) + parity rerun +
   grep. AZ-II.W0's baseline-capture sub-item ingests the same
-  matrix into `docs/benchmarks/AZ-II/W0/baseline.json`. AZ-I
+  matrix into `docs/benchmarks/archive/AZ-II/W0/baseline.json`. AZ-I
   FINAL.md authored as a parallel sub-agent within the W2-activate
   close.
 - **Drag eliminated**: one wave dispatch + one redundant matrix

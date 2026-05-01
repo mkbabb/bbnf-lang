@@ -25,7 +25,7 @@ attributable to W0 sub-items + 2 orchestrator housekeeping.
 |---|---|---|
 | 1 | `4869e715` | `.cargo/config.toml` gains `[alias]` block with `iter-*`, `expand-*`, `asm-parse`. |
 | 2 | `0c2a5d4c` | `Makefile` "AY Iteration Surface" section; `.PHONY` extended; `test:` carries guidance comment. |
-| 3 | `f4c84d01` | `docs/benchmarks/post-B0-W0-commands.txt` catalogs every alias + target vs AY.W5-W7 gates. |
+| 3 | `f4c84d01` | `docs/benchmarks/archive/post-B0-W0-commands.txt` catalogs every alias + target vs AY.W5-W7 gates. |
 | 4 | `b8dac71e` | `docs/instructions/PROFILING.md` `## Public fast-path commands` section; `post-B0-W0-baseline.txt` captures pre-W0 wall-clocks at HEAD `9bff7e7d`. |
 | 5 | `23b1a805` | `docs/benchmarks/post-B0-W0-mid.json` + PROFILING.md `### W0 timing proof`; headline 45× iter-check warm speedup. |
 | H1 | `9bff7e7d` / `aaed3f08` | Cargo.lock smallbox drift (orchestrator housekeeping; see §Environmental interventions). |
@@ -98,7 +98,7 @@ W2 close evidence:
 
 | # | Gate | Artefact | Status |
 |---|---|---|---|
-| 1 | Public command surface exposes fast routine path directly | `docs/benchmarks/post-B0-W0-commands.txt` | PASS |
+| 1 | Public command surface exposes fast routine path directly | `docs/benchmarks/archive/post-B0-W0-commands.txt` | PASS |
 | 2 | AY routine timings improve vs baseline | `docs/benchmarks/post-B0-W0-mid.json` (iter-check warm 45× faster) | PASS |
 | 3 | Docs + defaults agree on routine path | PROFILING.md §Public fast-path commands + post-B0-W0-commands.txt | PASS |
 

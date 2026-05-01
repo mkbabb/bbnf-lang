@@ -234,7 +234,7 @@ exit 0.
 
 | Gate | Result | Artefact |
 |------|--------|----------|
-| Cold wall ≤ 3 min | 0.46 s 3-run median | `docs/benchmarks/post-B6-W0-walls.txt` |
+| Cold wall ≤ 3 min | 0.46 s 3-run median | `docs/benchmarks/archive/post-B6-W0-walls.txt` |
 | Output byte-equivalent to pre-W0 | zero diff vs `master` | `git diff master crates/core/src/grammar/generated/bbnf.rs` |
 | `cargo xtask regen --check` exit 0 | 9/9 grammars clean | `walls.txt` §Idempotent regen |
 | `cargo bench-bbnf` within 5 % | unaffected by xtask-side change | `git diff master crates/core/` empty (no runtime changes) |
@@ -297,7 +297,7 @@ The orchestrator triumvirate may consider:
 
 Branch `b6-w0` against master `306cdb7d`; both commits
 cherry-pick cleanly (xtask/src/regen.rs +35 / -2;
-crates/bootstrap/src/lib.rs +9; docs/benchmarks/post-B6-W0-
+crates/bootstrap/src/lib.rs +9; docs/benchmarks/archive/post-B6-W0-
 walls.txt +156).
 
 Status: W0 closed on alternative mechanism; W1 / W2 dispatch
@@ -384,7 +384,7 @@ to back it.
 `crates/gorgeous/Cargo.toml:63` already carries `default = []`.
 No drift; no edit needed. The dispatch scoped W1.c as no-op
 verification — that scope is satisfied by the artefact at
-`docs/benchmarks/post-B6-W1-walls.txt` §Plan reconciliation —
+`docs/benchmarks/archive/post-B6-W1-walls.txt` §Plan reconciliation —
 gorgeous.
 
 ### Hard-gate verification
@@ -453,7 +453,7 @@ The orchestrator may consider:
 | TBD    | docs(b6): W1 plan-time miscalibration close + measurements |
 
 Branch `b6-w1` against master `1c96a4d5`. The single commit
-adds `docs/benchmarks/post-B6-W1-walls.txt` and appends to this
+adds `docs/benchmarks/archive/post-B6-W1-walls.txt` and appends to this
 PROGRESS.md. No source files modified; no aliases changed; no
 new audit docs authored (the rationale-satisfied close obviates
 their need per SPEC §Plan-time miscalibration).

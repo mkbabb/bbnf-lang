@@ -72,16 +72,16 @@ not blocked on it.
 AZ-III's handoff contract that BA consumes (with AZ-III evidence):
 
 1. `StructRegistry` populated for JSON, CSS L4, Sheets, BBNF — **MET**
-   per `docs/benchmarks/AZ-III/W3b-layout-consumer.txt` and
+   per `docs/benchmarks/archive/AZ-III/W3b-layout-consumer.txt` and
    `W3a-fact-authority.txt`. A partial registry at AZ-III close would
    have **blocked** BA open; the registry is closed.
 2. Every `->` in every production grammar reaches the direct-to-
    struct emitter (`push_*` on the struct builder, not on a tape) —
-   **MET** per `docs/benchmarks/AZ-III/W4-structural-audits.txt`
+   **MET** per `docs/benchmarks/archive/AZ-III/W4-structural-audits.txt`
    (payload_coverage_audit + struct_registry 21/21 PASS). An IR
    audit pass holds 100% coverage.
 3. The tape path is fully deleted — **MET** per
-   `docs/benchmarks/AZ-III/W1-deletion-scan.txt` and
+   `docs/benchmarks/archive/AZ-III/W1-deletion-scan.txt` and
    `W4-structural-audits.txt` static no-legacy GREEN. No orthogonal
    codepath remains (`feedback_no-orthogonal-codepaths`).
 4. 17-entry AU-baseline matrix at or above AU floor — **NOT-MET-WITHOUT-CARRY**.

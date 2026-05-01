@@ -119,7 +119,7 @@ Master at `d44585bb`. W0 landed as four commits + the triumvirate redress:
   (`${ARR[@]+"${ARR[@]}"}` guard); final invariant 11 wording; leaf test tier 582/582
   pass in 45.89 s; `ay-prime` cold + nextest dry-runs routed to AZ-I.W0 with rationale.
 
-Routine surface measured walls (`docs/benchmarks/post-B1-W0-routine.txt`):
+Routine surface measured walls (`docs/benchmarks/archive/post-B1-W0-routine.txt`):
 
 | alias | wall | status |
 |---|---|---|

@@ -2,7 +2,7 @@
 
 **Opens after**: W0a.2.i close (`FINAL.md` written for the W0a window)
 **Agents**: 1 serial
-**Hard gate**: `docs/benchmarks/post-AX-W0a-close.json` covers the 17-entry bench matrix on master at the immediate pre-W0b state.
+**Hard gate**: `docs/benchmarks/archive/post-AX-W0a-close.json` covers the 17-entry bench matrix on master at the immediate pre-W0b state.
 
 ## Scope
 
@@ -11,7 +11,7 @@
    for every grammar). Sequential cold runs per
    `docs/instructions/README.md §Benchmarking`.
 2. Aggregate the per-bench throughput into a single JSON artefact at
-   `docs/benchmarks/post-AX-W0a-close.json`. Every downstream wave
+   `docs/benchmarks/archive/post-AX-W0a-close.json`. Every downstream wave
    (W0b onward) attributes its bench delta against this baseline, not
    against `post-AW-V.json` or `post-AU.json`.
 3. Bench discipline per invariant 10 (mid-wave checkpoint): from
@@ -22,12 +22,12 @@
 
 | File | Access |
 |---|---|
-| `docs/benchmarks/post-AX-W0a-close.json` | create |
-| `docs/benchmarks/post-AX-W0a-close-compile.txt` | create |
-| `docs/benchmarks/post-AX-W0a-close-json.txt` | create |
-| `docs/benchmarks/post-AX-W0a-close-css.txt` | create |
-| `docs/benchmarks/post-AX-W0a-close-sheets.txt` | create |
-| `docs/benchmarks/post-AX-W0a-close-bbnf.txt` | create |
+| `docs/benchmarks/archive/post-AX-W0a-close.json` | create |
+| `docs/benchmarks/archive/post-AX-W0a-close-compile.txt` | create |
+| `docs/benchmarks/archive/post-AX-W0a-close-json.txt` | create |
+| `docs/benchmarks/archive/post-AX-W0a-close-css.txt` | create |
+| `docs/benchmarks/archive/post-AX-W0a-close-sheets.txt` | create |
+| `docs/benchmarks/archive/post-AX-W0a-close-bbnf.txt` | create |
 
 Do NOT touch: any `crates/` file (the wave captures a snapshot;
 emitter + runtime invariant from W0a.2.i close). Any
@@ -43,15 +43,15 @@ Mechanism — five bench binaries, sequential, cold per-parse:
 find . -name .bbnf-cache -exec rm -rf {} + 2>/dev/null
 
 cargo bench -p bbnf --bench compile_pipeline > \
-  docs/benchmarks/post-AX-W0a-close-compile.txt 2>&1
+  docs/benchmarks/archive/post-AX-W0a-close-compile.txt 2>&1
 cargo bench -p bbnf --bench json_monolithic > \
-  docs/benchmarks/post-AX-W0a-close-json.txt 2>&1
+  docs/benchmarks/archive/post-AX-W0a-close-json.txt 2>&1
 cargo bench -p bbnf --bench css_l4 > \
-  docs/benchmarks/post-AX-W0a-close-css.txt 2>&1
+  docs/benchmarks/archive/post-AX-W0a-close-css.txt 2>&1
 cargo bench -p bbnf --bench google_sheets_monolithic > \
-  docs/benchmarks/post-AX-W0a-close-sheets.txt 2>&1
+  docs/benchmarks/archive/post-AX-W0a-close-sheets.txt 2>&1
 cargo bench -p bbnf --bench bbnf_monolithic > \
-  docs/benchmarks/post-AX-W0a-close-bbnf.txt 2>&1
+  docs/benchmarks/archive/post-AX-W0a-close-bbnf.txt 2>&1
 ```
 
 Files touched: all five `post-AX-W0a-close-<bench>.txt` outputs.
@@ -103,7 +103,7 @@ document keyed by `(bench, entry) → throughput`:
 }
 ```
 
-Files touched: `docs/benchmarks/post-AX-W0a-close.json` — create.
+Files touched: `docs/benchmarks/archive/post-AX-W0a-close.json` — create.
 
 Sub-gate: JSON is well-formed (`python -c 'import json;
 json.load(open(...))'` returns 0); `entries` covers the 17-entry
@@ -111,7 +111,7 @@ matrix; every entry carries a numeric throughput.
 
 ## Hard gate
 
-1. `docs/benchmarks/post-AX-W0a-close.json` exists at the master
+1. `docs/benchmarks/archive/post-AX-W0a-close.json` exists at the master
    commit that is W0a.2.i's `FINAL.md` HEAD.
 2. The JSON `entries` object contains exactly these keys and every
    nested entry carries numeric throughput fields:
@@ -124,16 +124,16 @@ matrix; every entry carries a numeric throughput.
      `google_sheets`, `bbnf_self`, `css_l4_grammar`}
    - `compile_pipeline` → {`compile`}
 3. Five per-bench `.txt` outputs exist under
-   `docs/benchmarks/post-AX-W0a-close-{compile,json,css,sheets,bbnf}.txt`.
+   `docs/benchmarks/archive/post-AX-W0a-close-{compile,json,css,sheets,bbnf}.txt`.
 4. `parse()` routing verified once per grammar via `cargo expand`
    snapshot (tolerated to re-use `post-AX-W0a2{g,h}-expand-*.txt`
    evidence from prior sub-waves if still accurate post-W0a.2.i).
 
 ## Verification artefacts
 
-- `docs/benchmarks/post-AX-W0a-close.json` — 17-entry matrix,
+- `docs/benchmarks/archive/post-AX-W0a-close.json` — 17-entry matrix,
   keyed per §Hard gate #2.
-- `docs/benchmarks/post-AX-W0a-close-{compile,json,css,sheets,bbnf}.txt`
+- `docs/benchmarks/archive/post-AX-W0a-close-{compile,json,css,sheets,bbnf}.txt`
   — raw `cargo bench` output preserved for reproducibility +
   `criterion`-report re-derivation.
 - Orchestrator commit hash recorded in the JSON's `commit` field

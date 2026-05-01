@@ -80,7 +80,7 @@ A non-routable item that cannot land inside AZ-IV does not get a new successor l
 | Runtime path, view, projection | W1 | `crates/core/src/runtime/path.rs`, `crates/core/src/runtime/view.rs`, `crates/core/src/runtime/*/document.rs`, `crates/core/src/runtime/css_l4/**`, `crates/core/src/backend/rust/view/**`, `crates/core/benches/json/value.rs` |
 | Grammar parity | W1 | `grammar/**`, `crates/core/tests/*parity*.rs`, `crates/core/tests/backend_ts.rs`, `crates/core/tests/pipeline_compile_request.rs` |
 | CSP/regex/shape/Pratt/SIMD | W2 | `crates/ir/src/passes/csp_strategy/**`, `crates/core/src/generate/regex/**`, `crates/core/src/backend/rust/emitter/shapes/**`, `crates/simd-scan/**` |
-| Benchmark and profiling | W3 | `crates/core/benches/**`, `scripts/*bench*`, `scripts/profile-bench-headless.sh`, `docs/benchmarks/AZ-IV/**`, `docs/benchmarks/post-AU.json`, `docs/benchmarks/post-AZ-*.json` |
+| Benchmark and profiling | W3 | `crates/core/benches/**`, `scripts/*bench*`, `scripts/profile-bench-headless.sh`, `docs/benchmarks/post-AZ-IV.json` (canonical close matrix per `docs/benchmarks/SPEC.md`), `docs/benchmarks/profiles/post-AZ-IV/**`, `docs/benchmarks/post-AU.json` and `docs/benchmarks/post-AZ-*.json` (read-only floor refs); wave evidence at `docs/tranches/AZ-IV/audit/W3-*.{txt,md,json}` |
 | Sibling topology | W0 | `wasm/**`, `/Users/mkbabb/Programming/parse-that/**`, `/Users/mkbabb/Programming/pprint/**`, `.cargo/config.toml`, package locks |
 
 ## Orchestration Rules
@@ -100,7 +100,7 @@ A non-routable item that cannot land inside AZ-IV does not get a new successor l
 
 ## Hard Gates
 
-1. `cargo xtask regen --check` passes live for all manifest grammars and is archived under `docs/benchmarks/AZ-IV/`.
+1. `cargo xtask regen --check` passes live for all manifest grammars and is archived at `docs/tranches/AZ-IV/audit/W0-regen.txt` (wave evidence; per `docs/benchmarks/SPEC.md` archive policy).
 2. Parser strategy binding is manifest/registry driven; a synthetic grammar rename/addition test fails if a new literal parser-name arm is required.
 3. Regenerated tempdir outputs run the parity matrix; checked-in freshness and runtime parity cannot be proven by separate stale artefacts.
 4. JSON, CSS, Sheets, BBNF, and TS parity gates are current, green, regenerated-output based, and type-inference driven. CSS/Sheets parity cannot close on early-return payload gaps, hand normalizer equivalence, rule-name projection, or synthetic default payloads.

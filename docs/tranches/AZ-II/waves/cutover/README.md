@@ -50,12 +50,12 @@ Production Rust has no `Parsed<R>`, `Parsed::new`, `TapeDirect`, or
 `EmitStrategy::TapeDirect` hits; generated grammars have no
 `TapeOffset` return payloads; StructDirect shape success returns unit.
 The close scan is archived at
-[`docs/benchmarks/AZ-II/cutover/O4-parsed-tapedirect-scan.txt`](../../../../benchmarks/AZ-II/cutover/O4-parsed-tapedirect-scan.txt).
+[`docs/benchmarks/archive/AZ-II/cutover/O4-parsed-tapedirect-scan.txt`](../../../../benchmarks/AZ-II/cutover/O4-parsed-tapedirect-scan.txt).
 Remaining `runtime::tape` references are O5-owned substrate deletion,
 not O4 return-model residue.
 
 **2026-04-30 continuation addendum**: the O5 scan is archived at
-[`docs/benchmarks/AZ-II/cutover/O5-tape-delete-scan.txt`](../../../../benchmarks/AZ-II/cutover/O5-tape-delete-scan.txt).
+[`docs/benchmarks/archive/AZ-II/cutover/O5-tape-delete-scan.txt`](../../../../benchmarks/AZ-II/cutover/O5-tape-delete-scan.txt).
 `crates/tape`, `json-prototype`, and the Gorgeous JIT source are absent,
 metadata has no `tape` or `json-prototype` package, and later audit
 found the old no-default build blocker stale-repaired. O5 remains
@@ -128,7 +128,7 @@ scope.
    --grammar bbnf` against the post-W2-act compiler. Stage A produces
    a struct-writing BBNF parser; capture
    `crates/core/src/grammar/generated/bbnf.rs` to
-   `docs/benchmarks/AZ-II/cutover/stage-a-bbnf.rs`.
+   `docs/benchmarks/archive/AZ-II/cutover/stage-a-bbnf.rs`.
 8. Stage B: rebuild from candidate source. Run `cargo clean -p bbnf
    && cargo build -p bbnf --profile ax-iter` against the candidate;
    re-run `cargo xtask regen --grammar bbnf` from the candidate
@@ -185,7 +185,7 @@ scope.
 | `crates/ir/src/passes/recognizers/dta.rs` | modify-carve | cutover.A |
 | `crates/ir/src/passes/recognizers/pattern_alphabet.rs` | modify-carve | cutover.A |
 | `crates/core/src/grammar/generated/bbnf.rs` | regen (Stage A → Stage B) | cutover.B |
-| `docs/benchmarks/AZ-II/cutover/stage-{a,b}-bbnf.rs` | create | cutover.B |
+| `docs/benchmarks/archive/AZ-II/cutover/stage-{a,b}-bbnf.rs` | create | cutover.B |
 | `crates/core/tests/bbnf_bootstrap_reproducibility.rs` | create | cutover.B |
 | `crates/tape/` | delete | cutover.C |
 | `crates/core/Cargo.toml` | modify | cutover.C |
@@ -351,7 +351,7 @@ Mechanism:
   ```bash
   cargo xtask regen --grammar bbnf
   cp crates/core/src/grammar/generated/bbnf.rs \
-     docs/benchmarks/AZ-II/cutover/stage-a-bbnf.rs
+     docs/benchmarks/archive/AZ-II/cutover/stage-a-bbnf.rs
   ```
   The xtask runs against the post-W2-act compiler, which carries the
   resolver-arm extension landed in cutover.A. The candidate
@@ -363,14 +363,14 @@ Mechanism:
   cargo build -p bbnf --profile ax-iter
   cargo xtask regen --grammar bbnf
   cp crates/core/src/grammar/generated/bbnf.rs \
-     docs/benchmarks/AZ-II/cutover/stage-b-bbnf.rs
+     docs/benchmarks/archive/AZ-II/cutover/stage-b-bbnf.rs
   ```
   The compiler now bootstraps from a struct-writing BBNF parser;
   re-running regen produces stage-b output. The two outputs MUST
   byte-match.
 - Byte-equal verification:
   ```bash
-  diff -u docs/benchmarks/AZ-II/cutover/stage-{a,b}-bbnf.rs
+  diff -u docs/benchmarks/archive/AZ-II/cutover/stage-{a,b}-bbnf.rs
   ```
   Returns zero diff.
 - Permanent CI gate at `crates/core/tests/bbnf_bootstrap_reproducibility.rs`
@@ -378,7 +378,7 @@ Mechanism:
   on every commit post-cutover.B.
 
 Sub-gate (cutover.B close):
-1. `docs/benchmarks/AZ-II/cutover/stage-a-bbnf.rs` and `stage-b-bbnf.rs`
+1. `docs/benchmarks/archive/AZ-II/cutover/stage-a-bbnf.rs` and `stage-b-bbnf.rs`
    exist; `diff -u` returns empty.
 2. `cargo nextest run -p bbnf --test bbnf_bootstrap_reproducibility
    --profile ax-iter` 1/1 green.
@@ -480,7 +480,7 @@ Sub-gate (cutover.C close, AZ-II-final):
 - `docs/benchmarks/post-AZ-II.json` — 17-entry close matrix.
 - `docs/benchmarks/profiles/AZ-II/cutover/{json,css_l4,google_sheets,bbnf,compile_pipeline}/`
   — samply captures.
-- `docs/benchmarks/AZ-II/cutover/stage-{a,b}-bbnf.rs` — byte-equal
+- `docs/benchmarks/archive/AZ-II/cutover/stage-{a,b}-bbnf.rs` — byte-equal
   proof artefacts.
 - `crates/core/tests/bbnf_bootstrap_reproducibility.rs` — permanent
   CI gate.

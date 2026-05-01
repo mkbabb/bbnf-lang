@@ -99,7 +99,7 @@ emitter pass that re-introduces CTNS or its successor.
 
 ## Verification
 
-`docs/benchmarks/post-AY-W1-phase2c-nm.txt` — symbol presence
+`docs/benchmarks/archive/post-AY-W1-phase2c-nm.txt` — symbol presence
 table per bench binary. `StructuralIndex` drop_in_place is in 4/4
 binaries (proves runtime instantiation). `next_structural_at_or_after`
 is in 3/4 (json, sheets, bbnf — comment-aware grammars excluded as

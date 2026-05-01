@@ -1,7 +1,7 @@
 # AX Next-Tranche Audit — Sheets + BBNF Bench + Profile (W1a.A5)
 
 Scope: Google Sheets and BBNF self-hosting parse paths at master HEAD
-`ededfc7c`. Self-baseline vs `docs/benchmarks/post-AX-W0a-close.json`
+`ededfc7c`. Self-baseline vs `docs/benchmarks/archive/post-AX-W0a-close.json`
 (`5dab5175`, 2026-04-19). Cold per-parse only. Read-only bench +
 samply; no source edits.
 

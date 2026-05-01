@@ -4,7 +4,7 @@
 **Date**: 2026-04-29
 **Scope**: plan only; no source edits and no direct `O6.md` edit
 **Input evidence**:
-`docs/benchmarks/AZ-II/cutover/O3a-test-failures.txt`,
+`docs/benchmarks/archive/AZ-II/cutover/O3a-test-failures.txt`,
 `docs/tranches/AZ-II/waves/cutover/O3a-C1.md`, and focused C1 rerun
 below.
 

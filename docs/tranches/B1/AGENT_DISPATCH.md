@@ -78,7 +78,7 @@ Every dispatched sub-agent receives:
 - **W0.a — Substrate pin (Step 1)**
   Files (owner-only): `rust-toolchain.toml`.
   Shared append-only rows: `rustc-version`, `toolchain-smoke` in
-  `docs/benchmarks/post-B1-W0-proof.txt`.
+  `docs/benchmarks/archive/post-B1-W0-proof.txt`.
   Job: copy `patches/rust-toolchain.toml.draft` to repo root; verify
   the pin matches the orchestrator-approved date; smoke-test
   `cargo check -p bbnf --profile ax-iter`. Hard cap 20 min.
@@ -101,7 +101,7 @@ Every dispatched sub-agent receives:
 
 - **W0.d — `Makefile` rewrite + ICE-clean close gate (Step 4, closer)**
   Files (owner-only): `Makefile`, `scripts/test-tier.sh`,
-  `docs/benchmarks/post-B1-W0-routine.txt`.
+  `docs/benchmarks/archive/post-B1-W0-routine.txt`.
   Shared append-only rows: `iter-check-full-cold-pinned`,
   `ay-prime-fresh` in `post-B1-W0-proof.txt`.
   Job: copy `patches/Makefile.draft`; delete GNU-timeout cascade;
@@ -136,7 +136,7 @@ Every dispatched sub-agent receives:
   feature + `[[bench]]` entry for json_callgrind),
   `crates/core/benches/json_callgrind.rs`,
   `docs/tranches/B1/patches/bench-iai.yml.draft`,
-  `docs/benchmarks/post-B1-W1-parity.txt`.
+  `docs/benchmarks/archive/post-B1-W1-parity.txt`.
   Job: strip the bencher dep in the same commit that lands the final
   port; add iai-callgrind feature-gated bench; draft workflow yml
   under `patches/`; author parity table with `pass` per bench.
@@ -148,7 +148,7 @@ Every dispatched sub-agent receives:
   Files (owner-only): `.github/workflows/ci.yml`,
   `.github/workflows/bench-iai.yml`,
   `docs/benchmarks/iai-baselines/*.json`,
-  `docs/benchmarks/post-B1-W2-ci.txt`.
+  `docs/benchmarks/archive/post-B1-W2-ci.txt`.
   Job: rewrite ci.yml to install nextest + run under `ci` profile;
   promote bench-iai.yml from `patches/`; seed iai baseline.
   Hard cap 40 min.
@@ -156,7 +156,7 @@ Every dispatched sub-agent receives:
 - **W2.b — Script abrogation (Step 10)**
   Files (owner-only): every script in
   `docs/tranches/meta-audit/08-abrogation-catalog.md §Part 1`;
-  `docs/benchmarks/post-B1-W2-abrogation-ledger.txt`.
+  `docs/benchmarks/archive/post-B1-W2-abrogation-ledger.txt`.
   Job: single owner for the scripts/ directory to avoid racing;
   execute each catalog action verbatim (DELETE / REWRITE / KEEP);
   high-impact targets — `bootstrap-bbnf.sh` content-hash guard,
@@ -169,7 +169,7 @@ Every dispatched sub-agent receives:
   `../parse-that/.cargo/config.toml` (if absent),
   `../pprint/rust-toolchain.toml`,
   `../pprint/.cargo/config.toml` (if absent),
-  `docs/benchmarks/post-B1-W2-cross-repo.txt`.
+  `docs/benchmarks/archive/post-B1-W2-cross-repo.txt`.
   Job: mirror bbnf-lang's pin to parse-that + pprint ONLY; verify
   each sibling `cargo check` exits 0 under the pin; verify
   bbnf-lang's `cargo iter-check` exits 0 with the triad synced.

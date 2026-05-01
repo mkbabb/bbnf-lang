@@ -26,7 +26,7 @@ admission.
 
 ## Evidence Base
 
-- C1 failure list: `docs/benchmarks/AZ-II/cutover/O3a-test-failures.txt:1`
+- C1 failure list: `docs/benchmarks/archive/AZ-II/cutover/O3a-test-failures.txt:1`
   through `:15`, plus `:29` and `:42`, records the 17 CSS failures assigned to
   C1; `:170` records the run failure summary.
 - C1 scope: `docs/tranches/AZ-II/waves/cutover/O3a-C1.md:14` through `:20`

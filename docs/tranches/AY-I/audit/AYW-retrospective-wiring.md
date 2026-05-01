@@ -139,11 +139,11 @@ which ultimately reach `push_structural`.
 **Bench delta**: +60% twitter MB/s on Phase 1 sanity (437 → 699).
 Post-W1-fix close: 688 MB/s (+54% vs `post-AX-W1-close.json`'s 448).
 Citm +62% (450 → 729), canada +65% (196 → 324) per
-`docs/benchmarks/post-AY-W1-bytes-cyc.txt`.
+`docs/benchmarks/archive/post-AY-W1-bytes-cyc.txt`.
 
 **Samply attribution**: `push_structural` symbol ABSENT in all 4
 bench binaries per
-`docs/benchmarks/post-AY-W1-phase1-nm.txt` (verified empty grep
+`docs/benchmarks/archive/post-AY-W1-phase1-nm.txt` (verified empty grep
 across the 4 deps). LLVM-LTO inlined the function at every emit
 site — samply self-time now dominates per-rule `parse_*` frames
 (e.g. `parse_object_JsonParser_object` 24.12% per
@@ -410,7 +410,7 @@ Firing evidence:
 - **Saturation report**: `BBNF_EGRAPH_REPORT=1` env var fires
   `crates/ir/src/egraph/mod.rs:106` which logs per-rule work counts.
   Substrate-level logging hook exists.
-- **Production firing**: `docs/benchmarks/post-AY-W2-egraph-spot.txt`
+- **Production firing**: `docs/benchmarks/archive/post-AY-W2-egraph-spot.txt`
   twitter record count: pre-elision 158,638 → post-elision 144,725
   (−8.77%). The wrap-elision consumer (W2.6) reads G3's canonical
   output; firing is inferred from the record count delta.

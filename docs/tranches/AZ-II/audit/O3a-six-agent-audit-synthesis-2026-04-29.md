@@ -51,8 +51,8 @@ The six audits agree on these blockers:
 | A1 | 9 | none | `../waves/cutover/O3a-A1.md` | O5 and O7 |
 
 The failure artifact is
-`docs/benchmarks/AZ-II/cutover/O3a-test-failures.txt`. The bench
-artifact is `docs/benchmarks/post-AY-az-ii-doc-baseline-json.txt`.
+`docs/benchmarks/archive/AZ-II/cutover/O3a-test-failures.txt`. The bench
+artifact is `docs/benchmarks/archive/post-AY-az-ii-doc-baseline-json.txt`.
 
 ## Substrate Findings
 

@@ -51,13 +51,13 @@ folds W4 into AZ-II.W0 to retire the ceremonial wave overhead.
 | `Parsed<R>` | RESOLVED | cutover.O4 (AZ-II) — production runtime surface and generated return path deleted |
 | `TapeDirect` | RESOLVED | cutover.O4 (AZ-II) — fallback strategy removed; AZ-III.W4 static no-legacy scan GREEN |
 | generated tape views | RESOLVED | cutover.O3 (AZ-II) — StructDirect generated files emit no `TapeCursor` / `ValueRoot` / node-view residue |
-| `crates/tape` | RESOLVED | AZ-III.W1 - O5 Reclose: no-default build green (`docs/benchmarks/AZ-III/W1-no-default-build.txt`); cargo metadata clean; deletion scan archived |
+| `crates/tape` | RESOLVED | AZ-III.W1 - O5 Reclose: no-default build green (`docs/benchmarks/archive/AZ-III/W1-no-default-build.txt`); cargo metadata clean; deletion scan archived |
 | BBNF bootstrap bridge | RESOLVED | AZ-III.W2.4 — `bootstrap_parser.rs` DELETED 1505 LOC at commit `954d166b`; canonical generated path active; 95/95 BBNF parity green |
 | sonic-rs parity | RESOLVED | AZ-III.W2.1 — JSON 5/5 sonic-rs parity green via cast_f64 oracle route at `e1a795b7`; throughput refresh at `docs/benchmarks/post-AZ-III.json` |
 | lightningcss parity | RESOLVED-WITH-CARRY | AZ-III.W2.2 — CSS normalize+bootstrap green; named_color + tailwind perf timeout NAMED-CARRIED to BB.W2 (CSS-wide alphabet enumeration owns timeout-class regex normalization) |
 | perf truth | NAMED-CARRY | AZ-III.W4 - 17-entry matrix refreshed at `docs/benchmarks/post-AZ-III.json` under bench-iter (15 MEASURED + 2 WATCHDOG_HALT); cross-profile fat-LTO refresh routed to **BB.close** |
 | legacy/dead substrate | RESOLVED | AZ-III.W1 + W3c — 5 dead-code deletions (301 LOC: prettify stubs, trace.rs corpse, recognizer_plan.rs, regex shims); `crates/runtime/dta.rs` + `analysis/back_compat_reexport.rs` deleted at W1 |
-| **NEW**: regen-pipeline strict-mode drift (4 substrate divergences) | NAMED-CARRY | AZ-III.W3a.4 — entry-rule classifier; HRegex payload (i64→str); PHF table generation; one residual keyword Span absorption beyond W2.4.u. Routed to **BB.W0** substrate preflight. Evidence: `docs/benchmarks/AZ-III/W3a-4-regen-path-agnostic.txt` |
+| **NEW**: regen-pipeline strict-mode drift (4 substrate divergences) | NAMED-CARRY | AZ-III.W3a.4 — entry-rule classifier; HRegex payload (i64→str); PHF table generation; one residual keyword Span absorption beyond W2.4.u. Routed to **BB.W0** substrate preflight. Evidence: `docs/benchmarks/archive/AZ-III/W3a-4-regen-path-agnostic.txt` |
 | **NEW**: egraph cost extractor strips `Map` wrapper | NAMED-CARRY | AZ-III.W3c.1 priority 1 — alt_dispatch named_color emitter substrate exists; runtime activation blocked. Routed to **BB.W0** cost-model preflight |
 | **NEW**: 11 Sheets parity tests + 1 ts_backend_emits_discriminated_union | NAMED-CARRY | AZ-III.W2.3 + W3c.2 — 11 Sheets parity routed to **BA.W0** path-API substrate; TS backend test routed to **BA.W2** host-binding isomorphism |
 

@@ -74,10 +74,10 @@ crates/gorgeous/src/main.rs:160:    match builtin::format_builtin(lang, &input, 
 **Target**: `/Users/mkbabb/Programming/bbnf-wt-b1-trium-plan/docs/tranches/B1/B1.md` lines 103-105.
 
 **Current wording**:
-> 11. `cargo iter-check-full` (the workspace close-gate) records a measured wall-clock ceiling in `docs/benchmarks/post-B1-W0-proof.txt`; the ceiling is an explicit number, not "exit 0".
+> 11. `cargo iter-check-full` (the workspace close-gate) records a measured wall-clock ceiling in `docs/benchmarks/archive/post-B1-W0-proof.txt`; the ceiling is an explicit number, not "exit 0".
 
 **Proposed wording**:
-> 11. `cargo iter-check-full` is the workspace **close-ceremony** gate, not a routine surface. Post-pin + d4 + d5 + d6 + d7 + the B1.W0.d `gorgeous` `default = []` flip, its measured cold-wall ceiling is **≤ 5 min** recorded as row `iter-check-full-cold-pinned` in `docs/benchmarks/post-B1-W0-proof.txt`; the number is explicit and any later run exceeding it re-opens W0.d. Routine iteration uses `cargo iter-check` (≤ 15 s cold on the excluded-crate surface per B0 measurement); `iter-check-full` is invoked at wave close, pre-dispatch proof, and CI, not in the dev loop.
+> 11. `cargo iter-check-full` is the workspace **close-ceremony** gate, not a routine surface. Post-pin + d4 + d5 + d6 + d7 + the B1.W0.d `gorgeous` `default = []` flip, its measured cold-wall ceiling is **≤ 5 min** recorded as row `iter-check-full-cold-pinned` in `docs/benchmarks/archive/post-B1-W0-proof.txt`; the number is explicit and any later run exceeding it re-opens W0.d. Routine iteration uses `cargo iter-check` (≤ 15 s cold on the excluded-crate surface per B0 measurement); `iter-check-full` is invoked at wave close, pre-dispatch proof, and CI, not in the dev loop.
 
 **Invariant impact**: no cross-wave breakage; strengthens the contract from "explicit number" to "explicit number ≤ 5 min" with a named row.
 
@@ -90,10 +90,10 @@ The redress agent executes, on branch `b1-trium-redress` rooted at master:
 1. Land Change 1 (flip `default` + add `required-features`). Change 2 is a verified no-op — do NOT edit `builtin.rs`. Run light preflight: `cargo check --profile ax-iter -p gorgeous --lib` ≤ ~5 s (zero derive sites active under the new `default = []`).
 2. Verify single-grammar gate still holds: `cargo check --profile ax-iter -p gorgeous --lib --no-default-features --features json-grammar` ≤ 150 s (AY-II W0p gate 7).
 3. Verify binary still builds: `cargo check --profile ax-iter -p gorgeous --bin gorg --features bin-full`. Must compile all 6 derive sites; wall comparable to current gorgeous cold (~500 s) but OFF the workspace check path.
-4. Run `rm -rf target/ax-iter/incremental && time cargo iter-check-full` cold. Expected ≤ 5 min. Append row `iter-check-full-cold-pinned` in `docs/benchmarks/post-B1-W0-proof.txt`. **Do not** `rm -rf target/.bbnf-cache/` (B1 invariant 12).
+4. Run `rm -rf target/ax-iter/incremental && time cargo iter-check-full` cold. Expected ≤ 5 min. Append row `iter-check-full-cold-pinned` in `docs/benchmarks/archive/post-B1-W0-proof.txt`. **Do not** `rm -rf target/.bbnf-cache/` (B1 invariant 12).
 5. `ls target/rustc-ice-*.txt 2>/dev/null | wc -l` → 0 (the ICE-clean gate W1.a opens on).
 6. `make ay-prime` on fresh cache → row `ay-prime-fresh` (cache count + wall).
-7. Routine alias walls (`cargo iter-check`, `cargo iter-test-leaf`, `cargo iter-check-lsp`, `cargo iter-check-prettify`, `cargo iter-check-bootstrap`) → table in `docs/benchmarks/post-B1-W0-routine.txt`.
+7. Routine alias walls (`cargo iter-check`, `cargo iter-test-leaf`, `cargo iter-check-lsp`, `cargo iter-check-prettify`, `cargo iter-check-bootstrap`) → table in `docs/benchmarks/archive/post-B1-W0-routine.txt`.
 8. `cargo nextest run --workspace --cargo-profile ax-iter --no-run` + close profile dry-runs → rows `nextest-ax-iter-retry`, `nextest-close-retry`.
 9. `scripts/test-tier.sh leaf --profile ax-iter` → row `scripts-test-tier-leaf`.
 10. Land Change 4 (B1.md invariant 11 rewording) in the same commit or the next commit on `b1-trium-redress`.
@@ -131,8 +131,8 @@ The **≤ 5 min cold** target for `iter-check-full` (invariant 11 Change 4) is a
 - `crates/gorgeous/Cargo.toml` — Change 1.
 - ~~`crates/gorgeous/src/builtin.rs`~~ — verified no-op; **do not touch**.
 - `docs/tranches/B1/B1.md` — Change 4 (invariant 11 rewording).
-- `docs/benchmarks/post-B1-W0-proof.txt` — append rows `iter-check-full-cold-pinned`, `ay-prime-fresh`, `nextest-ax-iter-retry`, `nextest-close-retry`, `scripts-test-tier-leaf`.
-- `docs/benchmarks/post-B1-W0-routine.txt` — create/append routine alias table.
+- `docs/benchmarks/archive/post-B1-W0-proof.txt` — append rows `iter-check-full-cold-pinned`, `ay-prime-fresh`, `nextest-ax-iter-retry`, `nextest-close-retry`, `scripts-test-tier-leaf`.
+- `docs/benchmarks/archive/post-B1-W0-routine.txt` — create/append routine alias table.
 
 **Read-only** (analysis only):
 - `crates/gorgeous/src/lib.rs`, `crates/gorgeous/src/main.rs`, `crates/gorgeous/tests/*`.

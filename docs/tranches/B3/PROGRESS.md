@@ -702,8 +702,8 @@ release profile, runtime separated from compile):
 | `time -p <binary> --exact bbnf_parses_its_own_grammar` | `real 0.20` (test result: ok. 1 passed) |
 
 Pre-fix substrate hung indefinitely; post-fix substrate completes in
-0.20 s wall. Evidence: `docs/benchmarks/post-B3-W1-bbnf-parse.txt`,
-`docs/benchmarks/post-B3-W1-bbnf-build.txt`.
+0.20 s wall. Evidence: `docs/benchmarks/archive/post-B3-W1-bbnf-parse.txt`,
+`docs/benchmarks/archive/post-B3-W1-bbnf-build.txt`.
 
 **Phase 2 — `compile_pipeline` divan bench** (release profile,
 DIVAN_BENCH_FORMAT=json, divan emits human-readable text in this
@@ -738,7 +738,7 @@ EXIT: 0
 
 Wall is dominated by xtask binary incremental compile (~1 m); regen
 pipeline runs in ~16 ms total (parse + lowering + IR + codegen +
-format). Evidence: `docs/benchmarks/post-B3-W1-xtask-regen.txt`.
+format). Evidence: `docs/benchmarks/archive/post-B3-W1-xtask-regen.txt`.
 
 **bbnf self-host regen blocker**: parser, lowering, and IR run to
 completion (compile_paths_request 2.91 ms, generate_all 9.50 ms);

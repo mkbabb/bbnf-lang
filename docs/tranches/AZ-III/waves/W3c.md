@@ -44,7 +44,7 @@
 | `crates/core/tests/projection_*.rs` | modify/create |
 | `crates/core/tests/pipeline_compile_request_*.rs` | modify/create |
 | `crates/ir/tests/registry_*.rs` | modify/create |
-| `docs/benchmarks/AZ-III/W3c-*.txt` | create |
+| `docs/benchmarks/archive/AZ-III/W3c-*.txt` | create |
 | `docs/tranches/AZ-III/**` | modify |
 
 Emitter carve: W2 owns ONLY shape-specific
@@ -140,10 +140,10 @@ packets.
 
 ## Verification Artefacts
 
-- `docs/benchmarks/AZ-III/W3c-projection-authority.txt`
-- `docs/benchmarks/AZ-III/W3c-registry-authority.txt`
-- `docs/benchmarks/AZ-III/W3c-shim-deletion.txt`
-- `docs/benchmarks/AZ-III/W3c-no-emitter-fallback.txt`
+- `docs/benchmarks/archive/AZ-III/W3c-projection-authority.txt`
+- `docs/benchmarks/archive/AZ-III/W3c-registry-authority.txt`
+- `docs/benchmarks/archive/AZ-III/W3c-shim-deletion.txt`
+- `docs/benchmarks/archive/AZ-III/W3c-no-emitter-fallback.txt`
 
 ## Commit Plan
 

@@ -22,7 +22,7 @@ Root worktree:
 - staged: none;
 - dirty: restored AZ-II implementation/source slice, now formatted by
   `cargo fmt --all`;
-- untracked: `docs/benchmarks/AZ-II/cutover/O5-tape-delete-scan.txt`,
+- untracked: `docs/benchmarks/archive/AZ-II/cutover/O5-tape-delete-scan.txt`,
   `docs/precepts-plan.md`;
 - stale `.git/sequencer` state was saved under `/tmp/bbnf-reword` and
   cleared with `git cherry-pick --quit`; no tree changes were made by
@@ -122,7 +122,7 @@ Updated after orchestrator inspection of the restored slice:
   under `crates/core/src/grammar/generated/**` are not part of this
   slice; rustfmt vs prettyplease drift on those files is a W1
   responsibility.
-- The two untracked docs (`docs/benchmarks/AZ-II/cutover/O5-tape-delete-scan.txt`
+- The two untracked docs (`docs/benchmarks/archive/AZ-II/cutover/O5-tape-delete-scan.txt`
   and `docs/precepts-plan.md`) were authored alongside the AZ-II.O5
   scan and the BC precepts close; they are evidence artefacts that
   belong with W1 - O5 Reclose and the BC submodule pin respectively.

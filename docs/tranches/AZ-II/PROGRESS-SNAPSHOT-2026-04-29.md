@@ -154,7 +154,7 @@ trustworthy.
 - `crates/core/tests/project_types_bbnf.rs` — BBNF struct registry closure regression test (cutover.A)
 - `crates/core/tests/bbnf_struct_builder_substrate.rs` — BbnfStructBuilder wire-contract tests (cutover.A)
 - `crates/core/tests/json_object_pairs_probe.rs` — Object deposit fix regression probe (W2-act.close A.fix; pre-AZ-II)
-- `docs/benchmarks/AZ-II/cutover/stage-{a,b}-bbnf.rs` — byte-equal proof artefacts (cutover.B)
+- `docs/benchmarks/archive/AZ-II/cutover/stage-{a,b}-bbnf.rs` — byte-equal proof artefacts (cutover.B)
 - `docs/benchmarks/post-AZ-II.json` — close matrix archive (PARTIAL form, cutover.E + H + M updates)
 - `docs/tranches/AZ-II/FINAL.md` — close ceremony manifest (PARTIAL CLOSE form, cutover.H Phase 7 + M update)
 - `docs/tranches/AZ-II/audit/cutover.{C,E,F,G,I}-PARTIAL.md` — per-substage scope-reveal reports

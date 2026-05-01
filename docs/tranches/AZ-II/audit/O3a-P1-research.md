@@ -218,5 +218,5 @@ This matches the source diagnosis: CSS `parse()` returns
 `StyleSheet`, and the old generated projection debug marker is no
 longer valid runtime evidence. The committed failure baseline records
 the same test as failed in the post-O2 run at
-`docs/benchmarks/AZ-II/cutover/O3a-test-failures.txt:3395` and
-`docs/benchmarks/AZ-II/cutover/O3a-test-failures.txt:6799`.
+`docs/benchmarks/archive/AZ-II/cutover/O3a-test-failures.txt:3395` and
+`docs/benchmarks/archive/AZ-II/cutover/O3a-test-failures.txt:6799`.

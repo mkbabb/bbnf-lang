@@ -193,7 +193,7 @@ pprint master (3 commits over `518ec9f`):
 
 | Gate | Result | Artefact |
 |------|--------|----------|
-| bbnf-lang nextest 1477+/1477+ | 1475/1475 (−2 architectural intent: A9 deleted both `bench_lsp_actions` AND `bench_incremental_edits`, both bench-class) | `docs/benchmarks/post-B7-W0-walls.txt` |
+| bbnf-lang nextest 1477+/1477+ | 1475/1475 (−2 architectural intent: A9 deleted both `bench_lsp_actions` AND `bench_incremental_edits`, both bench-class) | `docs/benchmarks/archive/post-B7-W0-walls.txt` |
 | Warm nextest wall ≤ 14 s | 10.832 s (3-run median; from 22.353 s pre-B7) | walls.txt |
 | `cargo bench-bbnf` median within 5 % of B5 baseline 2.806 ms | unchanged (no source-side change) | walls.txt |
 | `cargo xtask regen --check` exit 0 | 9/9 grammars clean; 1.10 s | walls.txt |

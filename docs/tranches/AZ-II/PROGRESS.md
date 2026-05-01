@@ -532,12 +532,12 @@ Post-documentation baseline:
 
 - `scripts/test-tier.sh workspace --profile ax-iter --no-fail-fast`
   ran 1645 tests: 1561 passed, 84 failed, 25 skipped. Failure list:
-  `docs/benchmarks/AZ-II/cutover/O3a-test-failures.txt`.
+  `docs/benchmarks/archive/AZ-II/cutover/O3a-test-failures.txt`.
 - `make ay-bench-close WAVE=az-ii-doc-baseline` failed in the JSON
   lane. `json_monolithic` measured canada/citm/data_s, then
   `data_xl` exceeded the bench timeout: 2.478697958s against a 1s
   cap. Transcript:
-  `docs/benchmarks/post-AY-az-ii-doc-baseline-json.txt`.
+  `docs/benchmarks/archive/post-AY-az-ii-doc-baseline-json.txt`.
 
 O3a routes every failure through five cohorts before source redress
 continues:
@@ -631,7 +631,7 @@ Implementation:
 
 Evidence:
 
-- `docs/benchmarks/AZ-II/cutover/O3-generated-view-scan.txt` records
+- `docs/benchmarks/archive/AZ-II/cutover/O3-generated-view-scan.txt` records
   zero O3 residue hits and zero node-view serializer hits across the
   nine generated grammars.
 - The same artifact records 9511 generated `crate::runtime::tape`
@@ -669,7 +669,7 @@ Implementation commits:
 
 Evidence:
 
-- `docs/benchmarks/AZ-II/cutover/O4-parsed-tapedirect-scan.txt`
+- `docs/benchmarks/archive/AZ-II/cutover/O4-parsed-tapedirect-scan.txt`
   records zero production hits for `Parsed`, `Parsed::new`,
   `TapeDirect`, `EmitStrategy::TapeDirect`, generated `TapeOffset`,
   `emit_ref_call_tape`, `TapeOffset::NONE`, and `Option<TapeOffset>`
@@ -701,7 +701,7 @@ must not claim semantic close or terminal close until O5 is green.
 
 O5 cannot close from the current evidence. The scan artifact is archived
 at
-`docs/benchmarks/AZ-II/cutover/O5-tape-delete-scan.txt`.
+`docs/benchmarks/archive/AZ-II/cutover/O5-tape-delete-scan.txt`.
 
 Passed evidence:
 

@@ -24,7 +24,7 @@
 6. Measure cold and warm wall for `iter-check-full`,
    `bench-iter-{json,css,sheets,bbnf,compile}` compile, regen `--staged`
    wall, and the 5-harness sweep under the new profile; archive under
-   `docs/benchmarks/AZ-III/W0p-*.txt`.
+   `docs/benchmarks/archive/AZ-III/W0p-*.txt`.
 
 ## File Bounds
 
@@ -38,7 +38,7 @@
 | `scripts/**` | modify-carve (host probe, partition helper) |
 | `.config/nextest.toml` (per-profile only) | modify-carve |
 | `.github/workflows/ci.yml` (sharding only) | modify-carve |
-| `docs/benchmarks/AZ-III/W0p-*.txt` | create |
+| `docs/benchmarks/archive/AZ-III/W0p-*.txt` | create |
 | `docs/tranches/AZ-III/**` | modify |
 
 Do NOT touch: source code, generated grammar, parity tests, bench harness
@@ -106,7 +106,7 @@ dispatch under W0p: 30 min.
 ## Hard Gate
 
 1. `cargo bench-iter-json --no-run` cold wall <60 s and warm wall <5 s
-   archived in `docs/benchmarks/AZ-III/W0p-bench-iter-walls.txt`.
+   archived in `docs/benchmarks/archive/AZ-III/W0p-bench-iter-walls.txt`.
 2. `[profile.ax-iter]` is defined exactly once across `Cargo.toml` and
    `.cargo/config.toml`; archived `cargo build --profile ax-iter -v`
    capture confirms.
@@ -129,12 +129,12 @@ rerun `cargo fmt --all -- --check`, `cargo iter-check`, and
 
 ## Verification Artefacts
 
-- `docs/benchmarks/AZ-III/W0p-bench-iter-walls.txt`
-- `docs/benchmarks/AZ-III/W0p-profile-source-of-truth.txt`
-- `docs/benchmarks/AZ-III/W0p-regen-staged-wall.txt`
-- `docs/benchmarks/AZ-III/W0p-doctor.txt`
-- `docs/benchmarks/AZ-III/W0p-ci-partition.txt`
-- `docs/benchmarks/AZ-III/W0p-bench-iter-sweep.txt`
+- `docs/benchmarks/archive/AZ-III/W0p-bench-iter-walls.txt`
+- `docs/benchmarks/archive/AZ-III/W0p-profile-source-of-truth.txt`
+- `docs/benchmarks/archive/AZ-III/W0p-regen-staged-wall.txt`
+- `docs/benchmarks/archive/AZ-III/W0p-doctor.txt`
+- `docs/benchmarks/archive/AZ-III/W0p-ci-partition.txt`
+- `docs/benchmarks/archive/AZ-III/W0p-bench-iter-sweep.txt`
 
 ## Commit Plan
 

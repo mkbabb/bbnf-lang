@@ -32,7 +32,7 @@
 | `crates/ir/src/passes/recognizers/strategy/**` | modify-carve |
 | `crates/ir/tests/**` | modify/create |
 | `crates/core/tests/csp_*.rs` | modify/create |
-| `docs/benchmarks/AZ-III/W3b-*.txt` | create |
+| `docs/benchmarks/archive/AZ-III/W3b-*.txt` | create |
 | `docs/tranches/AZ-III/**` | modify |
 
 Do NOT touch: `crates/ir/src/passes/types/**` (W3a owns; consume only),
@@ -116,11 +116,11 @@ full W3b CSP test packet.
 
 ## Verification Artefacts
 
-- `docs/benchmarks/AZ-III/W3b-csp-authority.txt`
-- `docs/benchmarks/AZ-III/W3b-layout-consumer.txt`
-- `docs/benchmarks/AZ-III/W3b-dispatch-consumer.txt`
-- `docs/benchmarks/AZ-III/W3b-csp-solver-tests.txt`
-- `docs/benchmarks/AZ-III/W3b-no-noop-installer.txt`
+- `docs/benchmarks/archive/AZ-III/W3b-csp-authority.txt`
+- `docs/benchmarks/archive/AZ-III/W3b-layout-consumer.txt`
+- `docs/benchmarks/archive/AZ-III/W3b-dispatch-consumer.txt`
+- `docs/benchmarks/archive/AZ-III/W3b-csp-solver-tests.txt`
+- `docs/benchmarks/archive/AZ-III/W3b-no-noop-installer.txt`
 
 ## Commit Plan
 

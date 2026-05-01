@@ -16,12 +16,12 @@ TERMINAL_WITH_CARRIES at HEAD `d071daf9`. The four AZ-II hard-gate
 rows that routed to AZ-III evidence (rows 1, 6, 7, 8 below) all
 resolve under the AZ-III terminal close. Row 1 (no-default build):
 STALE-GOOD → STALE-GOOD per AZ-III.W1 close evidence at
-`docs/benchmarks/AZ-III/W1-no-default-build.txt`. Row 6 (17-entry
+`docs/benchmarks/archive/AZ-III/W1-no-default-build.txt`. Row 6 (17-entry
 matrix): PARTIAL → MET-WITH-CARRIES per `docs/benchmarks/post-AZ-III.json`
 (15 MEASURED + 2 WATCHDOG_HALT under bench-iter). Row 7 (interim
 manifest): MET (interim form) → MET (this manifest superseded by
 AZ-III/FINAL.md). Row 8 (decay sweep): PARTIAL → MET per
-`docs/benchmarks/AZ-III/W4-structural-audits.txt` static no-legacy
+`docs/benchmarks/archive/AZ-III/W4-structural-audits.txt` static no-legacy
 GREEN. Six NAMED CARRIES route from AZ-III to BA (Sheets path-API,
 TS backend) and BB (regen drift, egraph cost extractor, tailwind
 perf, cross-profile bench refresh). BA opens next; BB.scaffold may
@@ -78,21 +78,21 @@ commit-by-commit record is
 | cutover.M Phase 3b/c/d | `a29a1265` | Resolver arms for CSV / Math / BNF / CSS Pretty flip to StructDirect; all 9 grammars regen onto matching substrate. AltDispatch struct_direct emitter (`shapes/alt_dispatch/branches.rs::emit_dispatch_arms_struct_direct`) now emits Alt-of-Literal / Alt-of-Regex / Alt-of-Seq branches as byte-comparison + `push_leaf_with_unit()` + `push_branch_tag(idx)` triples — pre-cutover.M these arms emitted empty placeholders that collapsed BBNF `type_name` and CSS L4 pseudo-class arms into no-op loops. EBNF activation was deferred at M and superseded by O2, which flips EBNF to `EbnfDocument`. |
 | cutover.O2 | `60561ba3` | EBNF resolver arm flips to StructDirect; shared StructDirect structural-Seq branch emission preserves nested children for grouped terms and commits branch tags transactionally. `EbnfParser::parse` now returns `EbnfDocument`; focused EBNF parse/serialize/accessor tests pass and full regen is idempotent. |
 | cutover.O3 | `6a7e0f06` | StructDirect generated files no longer emit tape-backed generated views, `ValueRoot`, projection materializer/consumer tables, `TapeCursor` scan-policy doc residue, or node-view serializer APIs. The O3 scan artifact records zero O3 residue hits; remaining generated `crate::runtime::tape` references route to O4/O5. |
-| cutover.O4 | `c51f9742` `815fbcea` `3165e52f` `58ea61a6` `97061c41` `8040bd69` | Production `Parsed<R>` and `TapeDirect` are deleted; generated grammars have no `TapeOffset` return payloads. Close scan: `docs/benchmarks/AZ-II/cutover/O4-parsed-tapedirect-scan.txt`. |
+| cutover.O4 | `c51f9742` `815fbcea` `3165e52f` `58ea61a6` `97061c41` `8040bd69` | Production `Parsed<R>` and `TapeDirect` are deleted; generated grammars have no `TapeOffset` return payloads. Close scan: `docs/benchmarks/archive/AZ-II/cutover/O4-parsed-tapedirect-scan.txt`. |
 | cutover.O5 evidence | superseded by AZ-III.W1 - O5 Reclose | `crates/tape`, `json-prototype`, and Gorgeous JIT paths are absent in the inspected implementation state, but O5 remains unclosed because the recorded evidence is stale and `cargo xtask regen --check` drift remains active. AZ-III.W1 - O5 Reclose owns the refreshed close packet. |
 
 ## Hard-gate readout per `waves/cutover/README.md` §Hard gate
 
 | # | Gate | Status | Evidence |
 |---|---|---|---|
-| 1 | `crates/tape/` deleted; `cargo build -p bbnf --no-default-features` green without it | MET via AZ-III.W1 - O5 Reclose | `crates/tape` is absent. AZ-III.W1 reconfirmed `cargo build -p bbnf --no-default-features --profile ax-iter` PASS in 44.33 s warm at `docs/benchmarks/AZ-III/W1-no-default-build.txt`; cargo metadata clean (no tape, no json-prototype) at `docs/benchmarks/AZ-III/W1-metadata.txt`. The build-half AND the close-packet half of the gate are now MET. AZ-III.W1 closed 5/5 hard gates per `docs/tranches/AZ-III/FINAL.md`. |
+| 1 | `crates/tape/` deleted; `cargo build -p bbnf --no-default-features` green without it | MET via AZ-III.W1 - O5 Reclose | `crates/tape` is absent. AZ-III.W1 reconfirmed `cargo build -p bbnf --no-default-features --profile ax-iter` PASS in 44.33 s warm at `docs/benchmarks/archive/AZ-III/W1-no-default-build.txt`; cargo metadata clean (no tape, no json-prototype) at `docs/benchmarks/archive/AZ-III/W1-metadata.txt`. The build-half AND the close-packet half of the gate are now MET. AZ-III.W1 closed 5/5 hard gates per `docs/tranches/AZ-III/FINAL.md`. |
 | 2 | Stage A / Stage B byte-equal across BBNF fixture corpus | MET (cutover.B) | Permanent CI gate at `crates/core/tests/bbnf_bootstrap_reproducibility.rs` PASSES under cutover.H regen output; idempotent. |
 | 3 | IR audit pass reports 100% `->` coverage fleet-wide | NOT VERIFIED | Audit pass exists; full-fleet verification is part of cutover.O semantic/perf close after EBNF activation. |
 | 4 | `StructRegistry` non-empty for every Named rule | MET (cutover.A) | `populate_struct_registry` returns layouts for all 9 grammars; regression test in place. |
 | 5 | Parity harnesses recoded to struct-vs-external on all four grammars | MET (cutover.D) | `685bad2f` / `825e8a06`. |
 | 6 | 17-entry matrix at AU floor; BBNF self-parse within ±10% of AU baseline | MET-WITH-CARRIES via AZ-III.W4 - Benchmark, Profile, and Workspace Truth | Refreshed at `docs/benchmarks/post-AZ-III.json` under [profile.bench-iter]: 15 MEASURED + 2 WATCHDOG_HALT (json.data_xl, css.tailwind) entries; supplementary 7 entries (sheets format + compile_pipeline) include 1 more WATCHDOG_HALT (compile_css_l4). 3 WATCHDOG_HALT NAMED-CARRIED to BB.close cross-profile bench refresh under fat-LTO. BBNF self-parse: 740,500 ns_per_iter measured (canonical generated path; `bootstrap_parser.rs` DELETED 1505 LOC at AZ-III.W2.4 commit `954d166b`). |
 | 7 | AZ-II interim manifest + `docs/benchmarks/post-AZ-II.json` exist on master | MET (superseded) | This interim manifest is closed AS A CONTINUATION HANDOFF; AZ-III's terminal close at `docs/tranches/AZ-III/FINAL.md` is the terminal AZ close (TERMINAL_WITH_CARRIES). |
-| 8 | Decay sweep | MET via AZ-III | cutover.A landed (`tape::dta` hoist + `tape::visitor` deletion + driver helper deletion); `crates/tape/` deletion verified at AZ-III via `docs/benchmarks/AZ-III/W1-deletion-scan.txt` and `docs/benchmarks/AZ-III/W4-structural-audits.txt` static no-legacy GREEN. AZ-III added 5 dead-code deletions (301 LOC: prettify stubs, trace.rs corpse, recognizer_plan.rs, regex shims). |
+| 8 | Decay sweep | MET via AZ-III | cutover.A landed (`tape::dta` hoist + `tape::visitor` deletion + driver helper deletion); `crates/tape/` deletion verified at AZ-III via `docs/benchmarks/archive/AZ-III/W1-deletion-scan.txt` and `docs/benchmarks/archive/AZ-III/W4-structural-audits.txt` static no-legacy GREEN. AZ-III added 5 dead-code deletions (301 LOC: prettify stubs, trace.rs corpse, recognizer_plan.rs, regex shims). |
 
 ## BA handoff verification per AZ-II.md §Handoff contract — 7 points
 
@@ -108,7 +108,7 @@ commit-by-commit record is
 
 ## Throughput delta vs AU + vs AZ-I
 
-`docs/benchmarks/post-AZ-II.json` retains the cutover.E placeholder values plus later explanatory notes; re-bench is gated on cutover.O terminal hardening. The cutover.E values reflect BBNF on the old baseline and do not capture the terminal StructDirect/tape-deleted state. Per-bench logs at `docs/benchmarks/post-AY-AZ-II-close-*.txt` remain historical until O6 refreshes JSON sonic-rs parity, CSS lightningcss typed parity, and the 17-entry close matrix.
+`docs/benchmarks/post-AZ-II.json` retains the cutover.E placeholder values plus later explanatory notes; re-bench is gated on cutover.O terminal hardening. The cutover.E values reflect BBNF on the old baseline and do not capture the terminal StructDirect/tape-deleted state. Per-bench logs at `docs/benchmarks/archive/post-AY-AZ-II-close-*.txt` remain historical until O6 refreshes JSON sonic-rs parity, CSS lightningcss typed parity, and the 17-entry close matrix.
 
 | Grammar / fixture | AU baseline | AZ-I close | AZ-II close (cutover.E placeholder) | Delta vs AU | Delta vs AZ-I |
 |---|---:|---:|---:|---:|---:|

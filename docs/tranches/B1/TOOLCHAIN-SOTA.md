@@ -488,7 +488,7 @@ nothing changed.
 **P.4. Direct measurement of each derive-Parser site.** Add a
 `make ay-derive-cost` target that compiles each `#[derive(Parser)]`
 site in isolation and emits per-site wall-clock into
-`docs/benchmarks/post-B1-W0-proof.txt`. Current meta-audit 04 measures
+`docs/benchmarks/archive/post-B1-W0-proof.txt`. Current meta-audit 04 measures
 gorgeous+bootstrap as aggregate; the workspace needs per-site
 decomposition before P.1 can be evaluated. Cost: 20 LOC Makefile.
 Risk: zero. Reward: evidence for further optimisation choices.
@@ -614,7 +614,7 @@ section naming the exact remedy: `rm -rf target/*/incremental`. A
 min per ICE (debugging) × 13/day = estimate 2-3 agent-hours/day
 recovered across the team.
 **Artefact**: row `ay-clean-incr-drycheck` in
-`docs/benchmarks/post-B1-W0-proof.txt`.
+`docs/benchmarks/archive/post-B1-W0-proof.txt`.
 
 ### Rank 2 — Pin nightly in `rust-toolchain.toml` (ADD)
 
@@ -692,7 +692,7 @@ Add to PROFILING.md §Dev-host setup.
 
 **Scope**: REPLACES current B1.W0.c hard-gate item 1 ("exits 0").
 New wording: "`cargo iter-check-full` exits 0 with cold wall
-recorded in `docs/benchmarks/post-B1-W0-proof.txt` row
+recorded in `docs/benchmarks/archive/post-B1-W0-proof.txt` row
 `iter-check-full-cold`; that number IS the ceiling; any exceeding
 measurement re-opens B1.W0.c." This is **already** in the current
 B1.md (invariant 11) but is not a hard gate — promote it.

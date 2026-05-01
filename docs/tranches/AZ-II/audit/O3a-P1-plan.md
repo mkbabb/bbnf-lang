@@ -13,11 +13,11 @@
 - `docs/tranches/AZ-II/waves/cutover/O3a.md`
 - `docs/tranches/AZ-II/waves/cutover/O3a-P1.md`
 - `docs/tranches/AZ-II/waves/cutover/O3.md`
-- `docs/benchmarks/AZ-II/cutover/O3a-test-failures.txt`
+- `docs/benchmarks/archive/AZ-II/cutover/O3a-test-failures.txt`
 
 ## Evidence
 
-`docs/benchmarks/AZ-II/cutover/O3a-test-failures.txt` records one P1
+`docs/benchmarks/archive/AZ-II/cutover/O3a-test-failures.txt` records one P1
 failure in the post-O2 baseline:
 
 ```text
@@ -189,7 +189,7 @@ O3.P1-R1:
 - `crates/core/src/grammar/generated/google_sheets.rs`
 - `crates/core/src/grammar/generated/json.rs`
 - `crates/core/src/grammar/generated/math.rs`
-- `docs/benchmarks/AZ-II/cutover/O3-generated-view-scan.txt`
+- `docs/benchmarks/archive/AZ-II/cutover/O3-generated-view-scan.txt`
 
 ## Failure Assignment
 
@@ -277,7 +277,7 @@ O3.P1-R1:
 
    After source commits are accepted, the orchestrator runs one
    canonical regen and records the residue scan in
-   `docs/benchmarks/AZ-II/cutover/O3-generated-view-scan.txt`. Generated
+   `docs/benchmarks/archive/AZ-II/cutover/O3-generated-view-scan.txt`. Generated
    files are never hand-patched.
 
 ## Verification Commands
@@ -319,7 +319,7 @@ StructDirect generated residue scan:
 {
   rg -n 'TapeCursor|[A-Za-z0-9_]+NodeView|ValueRoot|materialize_projection_|PROJECTION_MATERIALIZERS|PROJECTION_CONSUMERS' \
     crates/core/src/grammar/generated/{json,css_l4,google_sheets,bbnf,csv,math,bnf,css_pretty,ebnf}.rs || true
-} > docs/benchmarks/AZ-II/cutover/O3-generated-view-scan.txt
+} > docs/benchmarks/archive/AZ-II/cutover/O3-generated-view-scan.txt
 ```
 
 Close condition: the scan artifact records zero hits for StructDirect
@@ -360,7 +360,7 @@ O3.P1-M1, O3.P1-D1, O3.P1-T1, and O3.P1-R1 files listed in
 File-Owner Ledger". No generated tape-view shim, empty node-view type,
 empty `ValueRoot`, or forwarding projection adapter may be introduced.
 
-Sub-gate: `cargo nextest run -p bbnf --test projection_totality --cargo-profile ax-iter projection_totality_runtime_call_count -- --nocapture` passes, and `docs/benchmarks/AZ-II/cutover/O3-generated-view-scan.txt` records zero production hits for `TapeCursor`, generated `NodeView` serializer/view surfaces, `ValueRoot`, `materialize_projection_`, `PROJECTION_MATERIALIZERS`, and `PROJECTION_CONSUMERS` in StructDirect generated files. General `crate::runtime::tape` and `Parsed<` residue remains O4/O5-owned unless it preserves generated view compatibility.
+Sub-gate: `cargo nextest run -p bbnf --test projection_totality --cargo-profile ax-iter projection_totality_runtime_call_count -- --nocapture` passes, and `docs/benchmarks/archive/AZ-II/cutover/O3-generated-view-scan.txt` records zero production hits for `TapeCursor`, generated `NodeView` serializer/view surfaces, `ValueRoot`, `materialize_projection_`, `PROJECTION_MATERIALIZERS`, and `PROJECTION_CONSUMERS` in StructDirect generated files. General `crate::runtime::tape` and `Parsed<` residue remains O4/O5-owned unless it preserves generated view compatibility.
 ```
 
 Append to O3 hard gate:

@@ -32,7 +32,7 @@ byte-identical at 98,270 lines.
 | W0a §Hard gate #2 (no walker from `parse()`) | ✔ | All 7 grammars route through shape dispatcher; 6 parity harnesses green. |
 | W0a §Hard gate #3 (wire-contract) | ✔ | `gate_predicate_wire_contract.rs` landed `69d28f56`; `expected` map flipped at W0a.2.j. |
 | W0a §Hard gate #4 (regen idempotent) | ✔ | Cycle-1 = cycle-2 byte-identical at 98,270 lines (`6b03dd53`). |
-| W0a.close §Hard gate #1 (`.txt` outputs) | ✔ | All 5 present under `docs/benchmarks/post-AX-W0a-close-*.txt`. |
+| W0a.close §Hard gate #1 (`.txt` outputs) | ✔ | All 5 present under `docs/benchmarks/archive/post-AX-W0a-close-*.txt`. |
 | W0a.close §Hard gate #2 (JSON well-formed) | ✔ | `post-AX-W0a-close.json` validates; 5 bench groups × specified sub-keys. |
 | W0a.close §Hard gate #3 (17+1 matrix covered) | ✔ | 18 entries; css_l4 trio carries panic-status placeholders per §Known tolerances. |
 | W0a.close §Hard gate #4 (`parse()` routing) | ✔ | Routing verified at W0a.2.j admission widening; no further emitter change since. |
@@ -47,8 +47,8 @@ byte-identical at 98,270 lines.
 
 | Artefact | Path |
 |---|---|
-| Bench baseline JSON | `docs/benchmarks/post-AX-W0a-close.json` |
-| Per-bench raw output | `docs/benchmarks/post-AX-W0a-close-{bbnf,compile,css,json,sheets}.txt` |
+| Bench baseline JSON | `docs/benchmarks/archive/post-AX-W0a-close.json` |
+| Per-bench raw output | `docs/benchmarks/archive/post-AX-W0a-close-{bbnf,compile,css,json,sheets}.txt` |
 | Cycle-1=cycle-2 idempotency | `PROGRESS.md` §2026-04-19 W0a.2.r — regen 98,270 lines |
 | Parity-harness green (6/6) | `PROGRESS.md` §2026-04-19 W0a parity-harness closure at HEAD `6b03dd53` |
 | Wire-contract (gate freeze) | `crates/core/tests/gate_predicate_wire_contract.rs` |

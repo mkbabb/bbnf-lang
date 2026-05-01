@@ -182,7 +182,7 @@ per SPEC §Wave stipulation §Disjoint file bounds.
 - `cc9bc86e` AY.W1.2 finaliser: heap fallback for depth >
   `STACK_DEPTH_HINT` (twitter depth = 66 forced).
 - `1b101207` AY.W1.5 nm hard-gate: `inline(always)` finaliser +
-  builder finish; `docs/benchmarks/post-AY-W1-phase1-nm.txt`.
+  builder finish; `docs/benchmarks/archive/post-AY-W1-phase1-nm.txt`.
 
 Phase 1 sanity bench: twitter 437 → 699 MB/s (+60%); 1.6× of
 pre-AY baseline.
@@ -216,7 +216,7 @@ pre-AY baseline.
 ### W1 close bench (W1-bench, 1 commit)
 
 - `e12fac25` `docs/benchmarks/post-AY-W1-close.json` 19-entry
-  matrix + `docs/benchmarks/post-AY-W1-bytes-cyc.txt` trajectory.
+  matrix + `docs/benchmarks/archive/post-AY-W1-bytes-cyc.txt` trajectory.
 
 **Bench surfaced regression**: twitter Phase 1 699 → Phase 2 close
 420 MB/s. JSON twitter -6% vs `post-AX-W1-close`. Per AY operational
@@ -288,7 +288,7 @@ record-count magnitude gates.
 
 ### W2 evidence and deltas
 
-- `docs/benchmarks/post-AY-W2-egraph-spot.txt` is the surviving W2
+- `docs/benchmarks/archive/post-AY-W2-egraph-spot.txt` is the surviving W2
   bench artefact.
 - JSON twitter parse throughput improved from 688 MB/s at W1-fix to
   743 MB/s at the W2 egraph spot (+8.0%).
@@ -314,7 +314,7 @@ record-count magnitude gates.
 | Gate area | Evidence | Status |
 |---|---|---|
 | Named-preservation and EBNF reactivation | `9384b2b9`, `fcb9606c`, `c04fd913` | PASS |
-| Wrap-compound consumer activation | `docs/benchmarks/post-AY-W2-egraph-spot.txt` | PASS |
+| Wrap-compound consumer activation | `docs/benchmarks/archive/post-AY-W2-egraph-spot.txt` | PASS |
 | Direct-to-struct admission magnitude | same | MISS |
 | Record-count reduction magnitude | same | MISS |
 
@@ -413,14 +413,14 @@ gain did not materialize.
 
 - `docs/benchmarks/post-AY-W4-close.json` is the canonical W4 close
   matrix.
-- `docs/benchmarks/post-AY-W4-simd-spot.txt` records twitter improving
+- `docs/benchmarks/archive/post-AY-W4-simd-spot.txt` records twitter improving
   from 638 MB/s to 676 MB/s on same-machine cold-cache comparison
   (+5.95%) for the SIMD string fast path.
 - `docs/benchmarks/post-AY-W4-close.json` records twitter at 746 MB/s
   overall, up from 688 MB/s at W1-fix and 743 MB/s at the W2 spot.
-- `docs/benchmarks/post-AY-W4-eisel-spot.txt` records the `pay_f64`
+- `docs/benchmarks/archive/post-AY-W4-eisel-spot.txt` records the `pay_f64`
   substrate as bench-neutral rather than the hoped-for +15% canada win.
-- `docs/benchmarks/post-AY-W4-bytes-cyc.txt` records twitter at
+- `docs/benchmarks/archive/post-AY-W4-bytes-cyc.txt` records twitter at
   0.233 bytes/cycle, still only ~29% of the sonic-rs twitter
   reference.
 
@@ -441,10 +441,10 @@ gain did not materialize.
 
 | Gate area | Evidence | Status |
 |---|---|---|
-| SIMD unescape win | `docs/benchmarks/post-AY-W4-simd-spot.txt` | PASS |
-| `pay_f64` substrate landing | `docs/benchmarks/post-AY-W4-eisel-spot.txt` | PASS |
-| canada gain magnitude | `docs/benchmarks/post-AY-W4-eisel-spot.txt` | MISS |
-| regex self-time gates | `docs/benchmarks/post-AY-W4-close.json`, `docs/benchmarks/post-AY-W4-regex-spot.txt`, `docs/benchmarks/post-AY-W4-bytes-cyc.txt` | MISS |
+| SIMD unescape win | `docs/benchmarks/archive/post-AY-W4-simd-spot.txt` | PASS |
+| `pay_f64` substrate landing | `docs/benchmarks/archive/post-AY-W4-eisel-spot.txt` | PASS |
+| canada gain magnitude | `docs/benchmarks/archive/post-AY-W4-eisel-spot.txt` | MISS |
+| regex self-time gates | `docs/benchmarks/post-AY-W4-close.json`, `docs/benchmarks/archive/post-AY-W4-regex-spot.txt`, `docs/benchmarks/archive/post-AY-W4-bytes-cyc.txt` | MISS |
 | 19-entry close matrix saved | `docs/benchmarks/post-AY-W4-close.json` | PASS |
 
 ### W4 → W5 handoff
@@ -609,7 +609,7 @@ Fat-LTO `bench` profile on `cargo bench -p bbnf --bench json_monolithic`:
 | canada | 7,659,603 | 293 | n/a |
 | data_xl | 54,426,324 | 391 | n/a |
 
-Artefact: `docs/benchmarks/post-AY-W5-bench.txt`.
+Artefact: `docs/benchmarks/archive/post-AY-W5-bench.txt`.
 
 twitter regressed from post-W4's 746 MB/s to 616 MB/s under the
 same fat-LTO profile. Candidate causes (not yet diagnosed with
@@ -751,7 +751,7 @@ Fat-LTO `bench` profile `cargo bench -p bbnf --bench json_monolithic`:
 | canada | 8,723,674 | 258 | — | -12% |
 | data_xl | 61,803,853 | 344 | — | -12% |
 
-Artefact: `docs/benchmarks/post-AY-W6-bench.txt`.
+Artefact: `docs/benchmarks/archive/post-AY-W6-bench.txt`.
 
 Cumulative W4→W6 regression on twitter is 746 → 548 MB/s = -26.6%.
 Causes: W5's `note_push` hook fires on every structural push (not

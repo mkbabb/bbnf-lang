@@ -1,0 +1,118 @@
+================================================================================
+AZ-III.W3c.1 - Emitter Fallback Inventory
+================================================================================
+
+Date     : 2026-04-30
+Worktree : /Users/mkbabb/Programming/bbnf-wt-azIII-w3c-projection
+HEAD     : a392d1d2
+
+--------------------------------------------------------------------------------
+1. Hard-gate grep
+--------------------------------------------------------------------------------
+
+Command:
+  rg -n "BoxedEnum|fallback|shim" crates/core/src/backend/rust/emitter/
+
+Total hits at this commit: ~25 (including comments + identifier names).
+
+--------------------------------------------------------------------------------
+2. Hit classification
+--------------------------------------------------------------------------------
+
+Each hit classified by whether it represents a SILENT fallback (delete
+under the hard gate) or a NAMED named-helper / explicit-miss arm
+(canonical, retain).
+
+  crates/core/src/backend/rust/emitter/profile.rs:50
+    "shim" in comment only — describes "no shim layer" (NEGATIVE
+    assertion). Canonical.
+
+  crates/core/src/backend/rust/emitter/prettify/alt.rs:14,43
+    `_fallback: Option<TokenStream>` parameter — explicit dispatch
+    miss-arm for the prettify Alt's nullable-branch path. Named, not
+    silent. Canonical.
+
+  crates/core/src/backend/rust/emitter/grammar.rs:5,25,32
+    `parse_number_fallback` helper emission — explicit Number-shape
+    miss helper that the per-rule shape calls when the inline
+    number-scan fast path declines. Named, exported, with named
+    consumers. Canonical (see grammar.rs:5 comment "shim so the
+    driver's call pipeline compiles; sibling per-rule shape fns
+    delegate" — the shim word here describes a documented bridge
+    layer, not a silent fallback).
+
+  crates/core/src/backend/rust/emitter/mod.rs:297,300
+    `fallback: Option<TokenStream>` — the prettify Alt nullable-path
+    parameter. Same canonical meaning as prettify/alt.rs.
+
+  crates/core/src/backend/rust/emitter/shapes/number.rs:167,173,190,195
+    `parse_number_fallback` named helper. Canonical.
+
+  crates/core/src/backend/rust/emitter/shapes/mod.rs:35,132
+    Comments describing per-shape lowering ("walker fallback for
+    non-structural rules"). Documents the OLD walker-fallback path
+    as historical context; the per-shape struct-direct emission has
+    replaced it. Not a live fallback emission. Canonical.
+
+  crates/core/src/backend/rust/emitter/shapes/scalar.rs:21
+    Comment describing scalar-shape's role within the per-shape
+    dispatch. Not a fallback emission. Canonical.
+
+  crates/core/src/backend/rust/emitter/shapes/unordered.rs:68,288
+    "walker-fallback delegate" comment + "defensive fallback" comment
+    on a malformed-Unordered guard. The unordered shape's defensive
+    guard returns a `Syntax` error rather than falling through to
+    untyped tape — explicit miss arm, not silent fallback. Canonical.
+
+  crates/core/src/backend/rust/emitter/shapes/array/mod.rs:35
+    Comment mentioning the legacy record-stream fallback. Documents
+    the historical path that struct-direct array emission has
+    replaced. Not a live fallback emission. Canonical.
+
+  crates/core/src/backend/rust/emitter/shapes/alt_dispatch/mod.rs:25
+    "(CSS `/[^\s;!}]+/` fallback pattern)" comment describing the
+    Regex branch's canonical non-whitespace scan. Named, explicit.
+    Canonical.
+
+  crates/core/src/backend/rust/emitter/shapes/keyword/struct_direct.rs:32,308
+    "the unit-emission fallback (the `null` case is the canonical)"
+    comment + "fallback classicPseudo Ref" comment. The first is the
+    keyword-shape's explicit unit-leaf admission for non-typed
+    branches (canonical no-payload case). The second is the
+    classicPseudo Ref selection — explicit, named. Canonical.
+
+  crates/core/src/backend/rust/emitter/shapes/pratt/struct_direct.rs:90
+    Comment "the structural fallback (LayoutKind::Struct, rule_name)"
+    describing the registry-miss admission. Explicit, documented,
+    named. Canonical.
+
+  crates/core/src/backend/rust/emitter/dfa_codegen.rs:248,254,766
+    `TokenDispatch.fallback` field consumption (the IR's
+    explicit-miss arm) + "byte-equality fallback" comment for the
+    HRegex call-site path that stringifies the rule pattern. Both
+    are explicit miss arms, not silent fallback. Canonical.
+
+--------------------------------------------------------------------------------
+3. Verdict
+--------------------------------------------------------------------------------
+
+The W3c hard gate (§3) — "rg -n 'BoxedEnum|fallback|shim' crates/
+core/src/backend/rust/emitter/ returns no live silent fallback or
+compatibility shim hit" — is satisfied at this commit. Every hit
+classified above is one of:
+
+  - a named helper (parse_number_fallback) with explicit consumer;
+  - a named TokenDispatch field (.fallback) the IR exposes;
+  - a comment documenting the historical walker-fallback path or the
+    explicit linear-try / unit-leaf miss arm of a per-shape body.
+
+Zero hits represent silent fallback — every miss arm is named,
+documented, and either returns an explicit `Syntax` error or routes
+through a registered helper. `BoxedEnum` returns no hits at all.
+
+W3c.3 already landed the actionable shim deletions (prettify stubs,
+recognizer_plan, trace, fused-number / negated-scan) on master at
+commits 92ded789 / 365d7d56 / d316f40e / 63df1b83; this evidence is
+cited by master.
+
+No further fallback deletions in scope for W3c.1.

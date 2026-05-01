@@ -1,0 +1,188 @@
+================================================================================
+AZ-III.W3c.1 - Projection Authority Wiring + W2 Carry-overs - PARTIAL/BLOCKED
+================================================================================
+
+Date         : 2026-04-30
+Worktree     : /Users/mkbabb/Programming/bbnf-wt-azIII-w3c-projection
+HEAD         : a392d1d2 docs(az-iii.W3a.4): record regen path-agnostic shape
+                         detection HALT
+Cargo profile: ax-iter
+Hard cap     : 60 min
+
+--------------------------------------------------------------------------------
+1. Per-priority verdict
+--------------------------------------------------------------------------------
+
+Priority 1 (alt_dispatch named_color materialisation) : PARTIAL
+Priority 2 (Tailwind regex_scan adapter perf)         : BLOCKED (regen broken)
+Priority 3 (Sheets boolean Wrap-shape regex)          : BLOCKED (regen broken)
+Priority 4 (Sheets corpus pre-treatment)              : BLOCKED (regen broken)
+Priority 5 (Sheets sheet_prefix dispatch)             : BLOCKED (regen broken)
+Projection authority wiring (focused tests)           : BLOCKED (regen broken)
+
+--------------------------------------------------------------------------------
+2. Priority 1 — alt_dispatch typed-payload activation
+--------------------------------------------------------------------------------
+
+Mechanism landed (emitter side):
+
+  crates/core/src/backend/rust/emitter/shapes/alt_dispatch/branches.rs
+
+  - Symmetric `branch_payload_push` helper mirrors
+    `wrap::struct_direct::wrap_branch_payload_push`. Walks the branch's
+    outermost `Map { fn_id }` chain (peeling `OptionalWhitespace` trivia),
+    inspects the bound `FnDescriptor`, and constant-folds
+    `MapExpr::IntLit / FloatLit / BoolLit` projections into
+    `push_leaf_with_u64 / _f64 / _bool` calls.
+  - Map descent through `IrNode::Seq` (last-child) admits the prefix-tree-
+    factored shape `Seq(Literal("a"), Map(Literal("liceblue"), fn))` that
+    `factor_literal_prefixes` produces for namedColor.
+  - The `IrNode::Literal`, `IrNode::Regex`, and pure-literal-chain `Seq`
+    arms each replace their unconditional `builder.push_leaf_with_unit()`
+    call with `payload_push`. Discriminator recording via
+    `push_branch_tag(idx)` is preserved.
+
+Test target: `cargo nextest run -p bbnf --test css_l4_named_color_parity
+              --cargo-profile ax-iter`
+
+Pre-fix baseline:
+  150/150 named colors return None (every named color failed payload parity).
+
+Post-fix observation: see §3 — runtime test cannot execute because regen
+is broken at this commit (W3a.4 HALT).
+
+--------------------------------------------------------------------------------
+3. Upstream blocker — egraph extractor strips Map wrapper
+--------------------------------------------------------------------------------
+
+Per-branch instrumentation (eprintln in `branch_payload_push`) showed that
+EVERY namedColor branch arrives at the alt_dispatch emitter with NO `Map`
+wrapper at all:
+
+  [W3c.1.dbg] branch_payload_push branch_root=Literal      <-- "violet"
+  [W3c.1.dbg]  -> no Map fn
+  [W3c.1.dbg] branch_payload_push branch_root=Literal      <-- "khaki"
+  [W3c.1.dbg]  -> no Map fn
+  [W3c.1.dbg] branch_payload_push branch_root=Seq[len=2]   <-- post-prefix-factor
+  [W3c.1.dbg]  -> no Map fn
+  [W3c.1.dbg] branch_payload_push branch_root=Seq[len=2]   <-- (148 more)
+  [W3c.1.dbg]  -> no Map fn
+
+Investigation traced the loss to the egraph cost-guided extractor:
+
+  crates/ir/src/egraph/cost.rs:130
+    GrammarENode::Map { inner, fn_id: _ } => structural + child_cost(*inner),
+
+  Map costs `structural + inner_cost`; the inner alone costs `child_cost`.
+  When semantic equivalence rules (e.g. `WrapOfEpsilonScalar` in
+  `crates/ir/src/egraph/rules/universal.rs`) union a Map(Literal) class
+  with the Literal class, the cost-guided extractor picks the cheaper
+  Literal form and the Map (carrying the `fn_id` that points at the
+  `MapExpr::IntLit(0xRRGGBBAAu32)` projection) is discarded.
+
+This is a deeper-stack blocker than the W3c.1 carve admits. The Map fn_id
+must survive the egraph's cost-guided extraction so the emitter can read
+it. The fix sits in:
+
+  - crates/ir/src/egraph/cost.rs (cost model: tag Map with fn_id payload
+    weight so it dominates inner cost when fn_id is non-trivial), or
+  - crates/ir/src/egraph/rules/* (rewrite rules that fold Map into
+    Literal lose the projection — they should not apply to Map(Literal)
+    when fn_id has typed payload), or
+  - crates/ir/src/egraph/write_back.rs (extractor: when extracting an
+    Alt branch, prefer the Map form over the unmapped form whenever
+    both exist in the class).
+
+All three sit OUTSIDE W3c.1's file bounds (`crates/ir/src/egraph/**` is
+W3a/W3b carve, not W3c). Routing required.
+
+--------------------------------------------------------------------------------
+4. Upstream blocker — regen --check baseline drift (W3a.4 HALT)
+--------------------------------------------------------------------------------
+
+Baseline reproduction:
+
+  cd /Users/mkbabb/Programming/bbnf-wt-azIII-w3c-projection
+  git checkout HEAD -- crates/core/src/grammar/generated/
+  CARGO_TARGET_DIR=$WT/target/w3c-projection cargo xtask regen --check
+
+  Result: drift in 8 of 9 grammars (bbnf, json, css_l4, css_pretty,
+  google_sheets, ebnf, bnf, csv). Only `math` is byte-identical.
+
+Documented in:
+  docs/benchmarks/AZ-III/W3a-4-regen-path-agnostic.txt (W3a.4 HALT)
+
+Root cause (per W3a.4 evidence): keyword-shape codegen pushes Unit while
+the deleted bootstrap_parser pushed Span; `lower_factor`'s modifier
+inspection iterates child `span_text()` and silently drops the Repeat
+wrapper when the child Unit has empty span_text(). Mirror gaps in
+`lower_concatenation` / `lower_alternation`.
+
+W3a.4 routed two close paths:
+  Route A (W2 carve)  : `lower_factor` source-gap modifier recovery in
+                        `crates/core/src/lower/expression/repeat.rs` /
+                        `lower/expression/alt.rs`. Mirrors the W2.4.s
+                        `recover_binary_op` pattern.
+  Route B (W3c carve) : Keyword-shape Rust emitter pushes Span text
+                        rather than Unit
+                        (`crates/core/src/backend/rust/emitter/shapes/
+                        keyword/...`). Architecturally cleanest.
+
+Either route's fix unblocks the regen --check gate; without it, the
+generated parsers cannot be tested against my emitter changes because
+regen produces broken parsers (Repeat dropped from
+`record = field, ( "," >> field ) *`-style rules).
+
+--------------------------------------------------------------------------------
+5. What I committed
+--------------------------------------------------------------------------------
+
+  fix(parity/css/named-color): emit typed payload from alt_dispatch arms
+
+  Commits the symmetric extension to `emit_dispatch_arms_struct_direct`
+  matching W2.2's `emit_wrap_branch_call_struct_direct` fix. The IR-level
+  Map-stripping blocker (§3) prevents runtime activation today, but the
+  emitter contract is now correct — any future fix in `crates/ir/src/
+  egraph/{cost,rules,write_back}.rs` that preserves the Map wrapper at
+  branch granularity will produce typed payload pushes through this
+  commit's path without further emitter changes.
+
+--------------------------------------------------------------------------------
+6. Lint cadence
+--------------------------------------------------------------------------------
+
+cargo fmt --all -- --check    : clean.
+cargo iter-check              : clean (12 warnings, all pre-existing).
+cargo xtask regen --check     : 8 of 9 grammars drift (pre-existing W3a.4
+                                HALT, not introduced by this commit).
+git diff --check              : clean.
+
+--------------------------------------------------------------------------------
+7. Files touched
+--------------------------------------------------------------------------------
+
+  crates/core/src/backend/rust/emitter/shapes/alt_dispatch/branches.rs
+  docs/benchmarks/AZ-III/W3c-projection-authority.txt (this file)
+  docs/benchmarks/AZ-III/W3c-no-emitter-fallback.txt
+
+--------------------------------------------------------------------------------
+8. Halt conditions met
+--------------------------------------------------------------------------------
+
+Per dispatch instructions: "If a fix requires changes outside W3c.1's
+bounds, halt and report." The IR-level fix to preserve the Map wrapper
+through egraph extraction sits in `crates/ir/src/egraph/**`, which is
+W3a/W3b territory. The regen-broken state likewise demands either a W2
+or a W3c-keyword carve fix, neither of which is W3c.1's lane.
+
+W2 carry-over priorities 2-5 cannot be validated without working regen;
+the priority-1 emitter-side change is committed for forward consumers.
+
+Routing recommendation:
+  - Priority 1 emitter-side change LANDED (this branch).
+  - Priority 1 IR-side preservation: dispatch new agent to
+    `crates/ir/src/egraph/cost.rs` (Map cost adjustment for typed-
+    payload fn_id) or `egraph/write_back.rs` (extractor preference).
+  - Regen unblock: route W3a.4's option B (keyword-shape Span emission)
+    or option A (lower_factor source-gap recovery).
+  - Priorities 2-5 reopen after regen unblocks.

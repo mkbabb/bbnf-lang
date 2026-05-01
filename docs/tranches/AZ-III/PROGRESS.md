@@ -26,7 +26,7 @@ grammar-general fact/type/CSP/projection authority substrate.
 |---|---|---|
 | W0 - Quarantine and Dispatch Repair | complete | state ledger, commit-body sample, sibling triage, instruction-migration scan, dispatch packets all archived; dirty fmt slice preserved as `stash@{0}` and routed to W1 (pre-commit `regen --check` blocks landing in W0); 7/7 hard gates met |
 | W0p - Throughput Substrate | complete | bench-iter profile (cold 1m 45s, warm 0.468s); ax-iter consolidated; xtask `--staged` (binary 0.098s, hook 1.5s); make doctor probe; nextest 3-shard CI matrix; 5 evidence files archived; 5/6 hard gates met (cold-wall spec was 60s; actual 105s recorded for W0p close gate amendment) |
-| W1 - O5 Reclose | in_progress | AZ-II.O5 reclose |
+| W1 - O5 Reclose | complete | regen drift confirmed STALE-BAD audit (HEAD already 9/9 clean, byte-identical to regen output via xtask content-equality skip); no-default build green (44.33s warm); cargo metadata clean (no tape, no json-prototype); 4 deletions landed (dta orphan, analysis/pretty re-export, parse_with_state alias, IR tape:: doc-comment scrubs); rustfmt now excludes generated/ via `.rustfmt.toml`; 411-file workspace fmt sweep landed; 5/5 hard gates met; W1.4 row 8 absorbed into W1.5 per SPEC.md scope-reveal rule |
 | W2 - Semantic Parity and Bootstrap Canonicalization | planned | semantic parity and canonical generated BBNF self-host (or same-tranche removal of `bootstrap_parser.rs`) |
 | W3a - Fact and Type Authority | planned | durable fact authority + type obligation solver; W3a.0 pipeline registry research |
 | W3b - CSP Strategy Globalization | planned | shape/layout/dispatch constraints installed and consumed |

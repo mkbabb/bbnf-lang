@@ -2567,6 +2567,146 @@ mod __googlesheetsparser_emit_impl {
                 })?;
             'try_branches: loop {
                 match first {
+                    70u8 => {
+                        let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
+                        match (|| -> ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > {
+                            if let ::core::option::Option::Some(match_len) = __regex_scan_GoogleSheetsParser(
+                                "[fF][aA][lL][sS][eE]",
+                                input,
+                                *p,
+                            ) {
+                                *p += match_len as usize;
+                                <_ as crate::runtime::StructBuilder>::push_leaf_with_bool(
+                                    builder,
+                                    false,
+                                );
+                                ::core::result::Result::Ok(())
+                            } else {
+                                ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                    offset: *p as u32,
+                                })
+                            }
+                        })() {
+                            ::core::result::Result::Ok(_) => {
+                                __wrap_branch_idx = 1u32;
+                                builder.commit(attempt_builder);
+                                break 'try_branches;
+                            }
+                            ::core::result::Result::Err(_) => {
+                                *p = attempt_p;
+                                builder.rollback(attempt_builder);
+                            }
+                        }
+                    }
+                    84u8 => {
+                        let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
+                        match (|| -> ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > {
+                            if let ::core::option::Option::Some(match_len) = __regex_scan_GoogleSheetsParser(
+                                "[tT][rR][uU][eE]",
+                                input,
+                                *p,
+                            ) {
+                                *p += match_len as usize;
+                                <_ as crate::runtime::StructBuilder>::push_leaf_with_bool(
+                                    builder,
+                                    true,
+                                );
+                                ::core::result::Result::Ok(())
+                            } else {
+                                ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                    offset: *p as u32,
+                                })
+                            }
+                        })() {
+                            ::core::result::Result::Ok(_) => {
+                                __wrap_branch_idx = 0u32;
+                                builder.commit(attempt_builder);
+                                break 'try_branches;
+                            }
+                            ::core::result::Result::Err(_) => {
+                                *p = attempt_p;
+                                builder.rollback(attempt_builder);
+                            }
+                        }
+                    }
+                    102u8 => {
+                        let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
+                        match (|| -> ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > {
+                            if let ::core::option::Option::Some(match_len) = __regex_scan_GoogleSheetsParser(
+                                "[fF][aA][lL][sS][eE]",
+                                input,
+                                *p,
+                            ) {
+                                *p += match_len as usize;
+                                <_ as crate::runtime::StructBuilder>::push_leaf_with_bool(
+                                    builder,
+                                    false,
+                                );
+                                ::core::result::Result::Ok(())
+                            } else {
+                                ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                    offset: *p as u32,
+                                })
+                            }
+                        })() {
+                            ::core::result::Result::Ok(_) => {
+                                __wrap_branch_idx = 1u32;
+                                builder.commit(attempt_builder);
+                                break 'try_branches;
+                            }
+                            ::core::result::Result::Err(_) => {
+                                *p = attempt_p;
+                                builder.rollback(attempt_builder);
+                            }
+                        }
+                    }
+                    116u8 => {
+                        let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
+                        match (|| -> ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > {
+                            if let ::core::option::Option::Some(match_len) = __regex_scan_GoogleSheetsParser(
+                                "[tT][rR][uU][eE]",
+                                input,
+                                *p,
+                            ) {
+                                *p += match_len as usize;
+                                <_ as crate::runtime::StructBuilder>::push_leaf_with_bool(
+                                    builder,
+                                    true,
+                                );
+                                ::core::result::Result::Ok(())
+                            } else {
+                                ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                    offset: *p as u32,
+                                })
+                            }
+                        })() {
+                            ::core::result::Result::Ok(_) => {
+                                __wrap_branch_idx = 0u32;
+                                builder.commit(attempt_builder);
+                                break 'try_branches;
+                            }
+                            ::core::result::Result::Err(_) => {
+                                *p = attempt_p;
+                                builder.rollback(attempt_builder);
+                            }
+                        }
+                    }
                     _ => {}
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -3032,7 +3172,74 @@ mod __googlesheetsparser_emit_impl {
                 })?;
             'try_branches: loop {
                 match first {
+                    39u8 => {
+                        let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
+                        match (|| -> ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > {
+                            if let ::core::option::Option::Some(match_len) = __regex_scan_GoogleSheetsParser(
+                                "'(?:[^']|'')*'!",
+                                input,
+                                *p,
+                            ) {
+                                *p += match_len as usize;
+                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                    builder,
+                                    0u64,
+                                );
+                                ::core::result::Result::Ok(())
+                            } else {
+                                ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                    offset: *p as u32,
+                                })
+                            }
+                        })() {
+                            ::core::result::Result::Ok(_) => {
+                                __wrap_branch_idx = 0u32;
+                                builder.commit(attempt_builder);
+                                break 'try_branches;
+                            }
+                            ::core::result::Result::Err(_) => {
+                                *p = attempt_p;
+                                builder.rollback(attempt_builder);
+                            }
+                        }
+                    }
                     _ => {}
+                }
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match (|| -> ::core::result::Result<(), crate::runtime::DtaError> {
+                        if let ::core::option::Option::Some(match_len) = __regex_scan_GoogleSheetsParser(
+                            "[A-Za-z_]\\w*!",
+                            input,
+                            *p,
+                        ) {
+                            *p += match_len as usize;
+                            <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                builder,
+                                1u64,
+                            );
+                            ::core::result::Result::Ok(())
+                        } else {
+                            ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                offset: *p as u32,
+                            })
+                        }
+                    })() {
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 1u32;
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,

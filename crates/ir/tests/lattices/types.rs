@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use bbnf_ir::passes::types::project_types;
+use bbnf_ir::passes::types::{TypeObligation, project_types};
 use bbnf_ir::{AltBranch, FnDescriptor, GrammarIR, IrNode, IrRule, RuleId, RuleMeta, TypeDesc};
 
 fn make_ir(rules: Vec<IrRule>) -> GrammarIR {
@@ -567,4 +567,183 @@ fn factored_prefix_alt_projects_scalar() {
     bbnf_ir::dag::ensure_dag(&mut ir);
     project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::U8);
+}
+
+// ─── AZ-III.W3a.2 obligation-surface tests ──────────────────────
+//
+// Per AZ-III invariant 7 (no silent fallback), every compound `Ref`
+// collapse to `BoxedEnum` MUST surface a named
+// `TypeObligation::UnresolvedCompoundRef` in `ir.type_obligations`.
+// Cyclic rule grounds MUST surface the same obligation with `cyclic
+// == true`. These assertions fail without the obligation substrate
+// (the field would not exist) and pass with the W3a.2 wiring.
+//
+// The shapes are the canonical reproducers from the AZ-III audit
+// archaeology:
+//
+//   * `compound_ref_obligation_surfaces` — heterogeneous EBNF-style
+//     alternation: a `Ref` whose target rule resolves to `Vec<Span>`
+//     (a compound shape) is wrapped in `BoxedEnum`, but the
+//     obligation records the structural `Vec(Span)` so audit /
+//     registry / debug consumers can see the underlying shape.
+//
+//   * `cyclic_ref_obligation_surfaces` — recursive grammar: rule 0
+//     references rule 1 references rule 0. Both rules ground out via
+//     the cycle-break path. The obligation records the cycle with
+//     `cyclic == true` for each Ref into the cycle.
+
+#[test]
+fn compound_ref_obligation_surfaces() {
+    // EBNF-style heterogeneous alternation. Rule 1 is a Many of an
+    // Alt with two non-Span branches (Map { -> u8 }), which resolves
+    // to `Vec(U8)` — a compound type. Rule 0 references rule 1.
+    // Without the obligation substrate, the Ref silently falls back
+    // to BoxedEnum. With the substrate, the projection still
+    // produces BoxedEnum (the grammar-general layout for a tagged
+    // union wrapping a compound) but emits a named obligation
+    // recording the underlying `Vec(U8)` shape.
+    let mut ir = make_ir_with_fns(
+        vec![
+            // rule 0 = Ref(1)
+            rule(0, IrNode::Ref(1)),
+            // rule 1 = Many(Map(Lit, U8)) → Vec(U8)
+            rule(
+                1,
+                IrNode::Repeat {
+                    inner: Box::new(IrNode::Map {
+                        inner: Box::new(IrNode::Literal(3)),
+                        fn_id: 0,
+                    }),
+                    lo: 0,
+                    hi: u32::MAX,
+                },
+            ),
+        ],
+        vec![expr_fn(TypeDesc::U8)],
+        vec!["r0".into(), "r1".into(), "_".into(), "lit".into()],
+    );
+    bbnf_ir::dag::ensure_dag(&mut ir);
+    project_types(&mut ir);
+
+    // Rule 1 must remain Vec(U8); rule 0's Ref position must
+    // collapse to BoxedEnum because the target is compound.
+    assert_eq!(
+        *get_type(&ir, 1),
+        TypeDesc::Vec(Box::new(TypeDesc::U8)),
+        "rule 1 must resolve to Vec(U8)",
+    );
+    assert_eq!(
+        *get_type(&ir, 0),
+        TypeDesc::BoxedEnum,
+        "rule 0's Ref must collapse to BoxedEnum (tagged-union wrapper)",
+    );
+
+    // Per W3a.2: the collapse must surface a NAMED obligation.
+    let compound_obligation = ir.type_obligations.iter().find(|o| match o {
+        TypeObligation::UnresolvedCompoundRef {
+            target_rule,
+            structural_type,
+            cyclic,
+            ..
+        } => {
+            *target_rule == 1
+                && !*cyclic
+                && *structural_type == TypeDesc::Vec(Box::new(TypeDesc::U8))
+        }
+    });
+    assert!(
+        compound_obligation.is_some(),
+        "expected a non-cyclic UnresolvedCompoundRef obligation for rule 1 → Vec(U8); \
+         got obligations: {:?}",
+        ir.type_obligations
+    );
+}
+
+#[test]
+fn cyclic_ref_obligation_surfaces() {
+    // Rule 0 references rule 1, rule 1 references rule 0. The
+    // cycle never resolves in the propagator; the cycle-break
+    // grounds both rule vars to BoxedEnum. Per W3a.2 each Ref into
+    // a cyclic rule must surface a `cyclic: true` obligation.
+    let mut ir = make_ir(vec![rule(0, IrNode::Ref(1)), rule(1, IrNode::Ref(0))]);
+    bbnf_ir::dag::ensure_dag(&mut ir);
+    project_types(&mut ir);
+
+    assert_eq!(*get_type(&ir, 0), TypeDesc::BoxedEnum);
+    assert_eq!(*get_type(&ir, 1), TypeDesc::BoxedEnum);
+
+    // At least one obligation per cyclic rule, all marked `cyclic`.
+    let cyclic_for_rule_0 = ir.type_obligations.iter().any(|o| match o {
+        TypeObligation::UnresolvedCompoundRef {
+            target_rule,
+            cyclic,
+            ..
+        } => *target_rule == 0 && *cyclic,
+    });
+    let cyclic_for_rule_1 = ir.type_obligations.iter().any(|o| match o {
+        TypeObligation::UnresolvedCompoundRef {
+            target_rule,
+            cyclic,
+            ..
+        } => *target_rule == 1 && *cyclic,
+    });
+
+    assert!(
+        cyclic_for_rule_0,
+        "expected a cyclic obligation for rule 0; got: {:?}",
+        ir.type_obligations
+    );
+    assert!(
+        cyclic_for_rule_1,
+        "expected a cyclic obligation for rule 1; got: {:?}",
+        ir.type_obligations
+    );
+
+    // Diagnostic rendering must clearly say "cyclic compound Ref".
+    let any_diag = ir
+        .type_obligations
+        .iter()
+        .map(|o| o.diagnostic())
+        .find(|d| d.contains("cyclic compound Ref"));
+    assert!(
+        any_diag.is_some(),
+        "expected at least one obligation diagnostic to include 'cyclic compound Ref'; \
+         got: {:?}",
+        ir.type_obligations
+            .iter()
+            .map(|o| o.diagnostic())
+            .collect::<Vec<_>>(),
+    );
+}
+
+#[test]
+fn scalar_ref_emits_no_obligation() {
+    // Sanity check: a Ref into a scalar rule (here, a `-> f64` Map)
+    // must NOT emit an obligation. This guards against the
+    // obligation surface accidentally firing on the well-formed
+    // scalar-projection path.
+    let mut ir = make_ir_with_fns(
+        vec![
+            rule(0, IrNode::Ref(1)),
+            rule(
+                1,
+                IrNode::Map {
+                    inner: Box::new(IrNode::Literal(3)),
+                    fn_id: 0,
+                },
+            ),
+        ],
+        vec![expr_fn(TypeDesc::F64)],
+        vec!["r0".into(), "r1".into(), "_".into(), "lit".into()],
+    );
+    bbnf_ir::dag::ensure_dag(&mut ir);
+    project_types(&mut ir);
+
+    assert_eq!(*get_type(&ir, 0), TypeDesc::F64);
+    assert_eq!(*get_type(&ir, 1), TypeDesc::F64);
+    assert!(
+        ir.type_obligations.is_empty(),
+        "scalar Ref must not emit an obligation; got: {:?}",
+        ir.type_obligations
+    );
 }

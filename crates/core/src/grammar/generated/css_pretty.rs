@@ -1335,7 +1335,7 @@ mod __cssprettyparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -1456,7 +1456,7 @@ mod __cssprettyparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -1651,7 +1651,7 @@ mod __cssprettyparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -2022,7 +2022,7 @@ mod __cssprettyparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -2142,7 +2142,7 @@ mod __cssprettyparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -2249,7 +2249,7 @@ mod __cssprettyparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -2353,7 +2353,7 @@ mod __cssprettyparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -2458,7 +2458,7 @@ mod __cssprettyparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -2587,7 +2587,10 @@ mod __cssprettyparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -2632,7 +2635,7 @@ mod __cssprettyparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -2759,7 +2762,7 @@ mod __cssprettyparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -3152,7 +3155,7 @@ mod __cssprettyparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -3282,7 +3285,7 @@ mod __cssprettyparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost

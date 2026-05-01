@@ -2366,7 +2366,10 @@ mod __bbnfbootstrap_emit_impl {
                     let at = *p;
                     let end = at + 5usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -2380,7 +2383,10 @@ mod __bbnfbootstrap_emit_impl {
                     let at = *p;
                     let end = at + 4usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -2399,7 +2405,7 @@ mod __bbnfbootstrap_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -2576,7 +2582,10 @@ mod __bbnfbootstrap_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -2588,7 +2597,10 @@ mod __bbnfbootstrap_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -2600,7 +2612,10 @@ mod __bbnfbootstrap_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -2640,7 +2655,10 @@ mod __bbnfbootstrap_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -2652,7 +2670,10 @@ mod __bbnfbootstrap_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -2692,7 +2713,10 @@ mod __bbnfbootstrap_emit_impl {
                     let at = *p;
                     let end = at + 2usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -2704,14 +2728,20 @@ mod __bbnfbootstrap_emit_impl {
                     let at = *p;
                     let end = at + 2usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [60u8] {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -2723,7 +2753,10 @@ mod __bbnfbootstrap_emit_impl {
                     let at = *p;
                     let end = at + 2usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -2735,14 +2768,20 @@ mod __bbnfbootstrap_emit_impl {
                     let at = *p;
                     let end = at + 2usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [62u8] {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -2797,7 +2836,9 @@ mod __bbnfbootstrap_emit_impl {
                     let end = at + 2usize;
                     if input.len() >= end && input[at..end] == [117u8, 56u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(0u32);
                         break 'try_branches;
                     }
@@ -2807,7 +2848,9 @@ mod __bbnfbootstrap_emit_impl {
                     let end = at + 3usize;
                     if input.len() >= end && input[at..end] == [117u8, 49u8, 54u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(1u32);
                         break 'try_branches;
                     }
@@ -2817,7 +2860,9 @@ mod __bbnfbootstrap_emit_impl {
                     let end = at + 3usize;
                     if input.len() >= end && input[at..end] == [117u8, 51u8, 50u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(2u32);
                         break 'try_branches;
                     }
@@ -2827,7 +2872,9 @@ mod __bbnfbootstrap_emit_impl {
                     let end = at + 3usize;
                     if input.len() >= end && input[at..end] == [117u8, 54u8, 52u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(3u32);
                         break 'try_branches;
                     }
@@ -2837,7 +2884,9 @@ mod __bbnfbootstrap_emit_impl {
                     let end = at + 3usize;
                     if input.len() >= end && input[at..end] == [105u8, 51u8, 50u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(4u32);
                         break 'try_branches;
                     }
@@ -2847,7 +2896,9 @@ mod __bbnfbootstrap_emit_impl {
                     let end = at + 3usize;
                     if input.len() >= end && input[at..end] == [105u8, 54u8, 52u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(5u32);
                         break 'try_branches;
                     }
@@ -2857,7 +2908,9 @@ mod __bbnfbootstrap_emit_impl {
                     let end = at + 3usize;
                     if input.len() >= end && input[at..end] == [102u8, 51u8, 50u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(6u32);
                         break 'try_branches;
                     }
@@ -2867,7 +2920,9 @@ mod __bbnfbootstrap_emit_impl {
                     let end = at + 3usize;
                     if input.len() >= end && input[at..end] == [102u8, 54u8, 52u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(7u32);
                         break 'try_branches;
                     }
@@ -2879,7 +2934,9 @@ mod __bbnfbootstrap_emit_impl {
                         && input[at..end] == [98u8, 111u8, 111u8, 108u8]
                     {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(8u32);
                         break 'try_branches;
                     }
@@ -2891,7 +2948,9 @@ mod __bbnfbootstrap_emit_impl {
                         && input[at..end] == [117u8, 115u8, 105u8, 122u8, 101u8]
                     {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(9u32);
                         break 'try_branches;
                     }
@@ -2903,7 +2962,9 @@ mod __bbnfbootstrap_emit_impl {
                         *p,
                     ) {
                         *p += match_len as usize;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(10u32);
                         break 'try_branches;
                     }
@@ -3194,7 +3255,7 @@ mod __bbnfbootstrap_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -3309,7 +3370,7 @@ mod __bbnfbootstrap_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -3433,7 +3494,7 @@ mod __bbnfbootstrap_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -3560,7 +3621,10 @@ mod __bbnfbootstrap_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -3572,7 +3636,10 @@ mod __bbnfbootstrap_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -3585,14 +3652,20 @@ mod __bbnfbootstrap_emit_impl {
                     let at = *p;
                     let end = at + 2usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [63u8] {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -3632,7 +3705,10 @@ mod __bbnfbootstrap_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -3644,7 +3720,10 @@ mod __bbnfbootstrap_emit_impl {
                     let at = *p;
                     let end = at + 2usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -3656,7 +3735,10 @@ mod __bbnfbootstrap_emit_impl {
                     let at = *p;
                     let end = at + 2usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -3675,7 +3757,7 @@ mod __bbnfbootstrap_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -3917,7 +3999,7 @@ mod __bbnfbootstrap_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -4062,7 +4144,7 @@ mod __bbnfbootstrap_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -4170,7 +4252,7 @@ mod __bbnfbootstrap_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -4345,7 +4427,7 @@ mod __bbnfbootstrap_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -4492,7 +4574,7 @@ mod __bbnfbootstrap_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -4687,7 +4769,7 @@ mod __bbnfbootstrap_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -4944,7 +5026,7 @@ mod __bbnfbootstrap_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -5221,7 +5303,7 @@ mod __bbnfbootstrap_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -6031,7 +6113,7 @@ mod __bbnfbootstrap_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -6863,7 +6945,7 @@ mod __bbnfbootstrap_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -7168,7 +7250,7 @@ mod __bbnfbootstrap_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -7489,7 +7571,7 @@ mod __bbnfbootstrap_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -7671,7 +7753,7 @@ mod __bbnfbootstrap_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -7850,7 +7932,7 @@ mod __bbnfbootstrap_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -8032,7 +8114,7 @@ mod __bbnfbootstrap_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -8242,7 +8324,9 @@ mod __bbnfbootstrap_emit_impl {
                     let end = at + 2usize;
                     if input.len() >= end && input[at..end] == [206u8, 181u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(0u32);
                         break 'try_branches;
                     }
@@ -8255,7 +8339,9 @@ mod __bbnfbootstrap_emit_impl {
                             == [101u8, 112u8, 115u8, 105u8, 108u8, 111u8, 110u8]
                     {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(1u32);
                         break 'try_branches;
                     }
@@ -8937,7 +9023,7 @@ mod __bbnfbootstrap_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -9179,7 +9265,7 @@ mod __bbnfbootstrap_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -9380,7 +9466,7 @@ mod __bbnfbootstrap_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -9537,7 +9623,7 @@ mod __bbnfbootstrap_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost

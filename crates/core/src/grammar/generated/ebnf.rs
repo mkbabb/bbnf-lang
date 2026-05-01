@@ -731,7 +731,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [65u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(0u32);
                         break 'try_branches;
                     }
@@ -741,7 +743,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [66u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(1u32);
                         break 'try_branches;
                     }
@@ -751,7 +755,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [67u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(2u32);
                         break 'try_branches;
                     }
@@ -761,7 +767,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [68u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(3u32);
                         break 'try_branches;
                     }
@@ -771,7 +779,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [69u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(4u32);
                         break 'try_branches;
                     }
@@ -781,7 +791,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [70u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(5u32);
                         break 'try_branches;
                     }
@@ -791,7 +803,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [71u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(6u32);
                         break 'try_branches;
                     }
@@ -801,7 +815,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [72u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(7u32);
                         break 'try_branches;
                     }
@@ -811,7 +827,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [73u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(8u32);
                         break 'try_branches;
                     }
@@ -821,7 +839,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [74u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(9u32);
                         break 'try_branches;
                     }
@@ -831,7 +851,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [75u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(10u32);
                         break 'try_branches;
                     }
@@ -841,7 +863,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [76u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(11u32);
                         break 'try_branches;
                     }
@@ -851,7 +875,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [77u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(12u32);
                         break 'try_branches;
                     }
@@ -861,7 +887,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [78u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(13u32);
                         break 'try_branches;
                     }
@@ -871,7 +899,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [79u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(14u32);
                         break 'try_branches;
                     }
@@ -881,7 +911,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [80u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(15u32);
                         break 'try_branches;
                     }
@@ -891,7 +923,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [81u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(16u32);
                         break 'try_branches;
                     }
@@ -901,7 +935,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [82u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(17u32);
                         break 'try_branches;
                     }
@@ -911,7 +947,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [83u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(18u32);
                         break 'try_branches;
                     }
@@ -921,7 +959,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [84u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(19u32);
                         break 'try_branches;
                     }
@@ -931,7 +971,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [85u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(20u32);
                         break 'try_branches;
                     }
@@ -941,7 +983,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [86u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(21u32);
                         break 'try_branches;
                     }
@@ -951,7 +995,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [87u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(22u32);
                         break 'try_branches;
                     }
@@ -961,7 +1007,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [88u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(23u32);
                         break 'try_branches;
                     }
@@ -971,7 +1019,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [89u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(24u32);
                         break 'try_branches;
                     }
@@ -981,7 +1031,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [90u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(25u32);
                         break 'try_branches;
                     }
@@ -991,7 +1043,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [97u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(26u32);
                         break 'try_branches;
                     }
@@ -1001,7 +1055,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [98u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(27u32);
                         break 'try_branches;
                     }
@@ -1011,7 +1067,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [99u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(28u32);
                         break 'try_branches;
                     }
@@ -1021,7 +1079,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [100u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(29u32);
                         break 'try_branches;
                     }
@@ -1031,7 +1091,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [101u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(30u32);
                         break 'try_branches;
                     }
@@ -1041,7 +1103,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [102u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(31u32);
                         break 'try_branches;
                     }
@@ -1051,7 +1115,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [103u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(32u32);
                         break 'try_branches;
                     }
@@ -1061,7 +1127,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [104u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(33u32);
                         break 'try_branches;
                     }
@@ -1071,7 +1139,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [105u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(34u32);
                         break 'try_branches;
                     }
@@ -1081,7 +1151,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [106u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(35u32);
                         break 'try_branches;
                     }
@@ -1091,7 +1163,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [107u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(36u32);
                         break 'try_branches;
                     }
@@ -1101,7 +1175,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [108u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(37u32);
                         break 'try_branches;
                     }
@@ -1111,7 +1187,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [109u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(38u32);
                         break 'try_branches;
                     }
@@ -1121,7 +1199,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [110u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(39u32);
                         break 'try_branches;
                     }
@@ -1131,7 +1211,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [111u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(40u32);
                         break 'try_branches;
                     }
@@ -1141,7 +1223,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [112u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(41u32);
                         break 'try_branches;
                     }
@@ -1151,7 +1235,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [113u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(42u32);
                         break 'try_branches;
                     }
@@ -1161,7 +1247,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [114u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(43u32);
                         break 'try_branches;
                     }
@@ -1171,7 +1259,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [115u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(44u32);
                         break 'try_branches;
                     }
@@ -1181,7 +1271,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [116u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(45u32);
                         break 'try_branches;
                     }
@@ -1191,7 +1283,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [117u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(46u32);
                         break 'try_branches;
                     }
@@ -1201,7 +1295,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [118u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(47u32);
                         break 'try_branches;
                     }
@@ -1211,7 +1307,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [119u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(48u32);
                         break 'try_branches;
                     }
@@ -1221,7 +1319,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [120u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(49u32);
                         break 'try_branches;
                     }
@@ -1231,7 +1331,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [121u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(50u32);
                         break 'try_branches;
                     }
@@ -1241,7 +1343,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [122u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(51u32);
                         break 'try_branches;
                     }
@@ -1289,7 +1393,10 @@ mod __ebnfparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -1301,7 +1408,10 @@ mod __ebnfparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -1313,7 +1423,10 @@ mod __ebnfparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -1325,7 +1438,10 @@ mod __ebnfparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -1337,7 +1453,10 @@ mod __ebnfparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -1349,7 +1468,10 @@ mod __ebnfparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -1361,7 +1483,10 @@ mod __ebnfparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -1373,7 +1498,10 @@ mod __ebnfparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -1385,7 +1513,10 @@ mod __ebnfparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -1397,7 +1528,10 @@ mod __ebnfparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder
+                        .push_leaf_with_str(unsafe {
+                            ::core::str::from_utf8_unchecked(&input[at..end])
+                        });
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -1452,7 +1586,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [91u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(0u32);
                         break 'try_branches;
                     }
@@ -1462,7 +1598,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [93u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(1u32);
                         break 'try_branches;
                     }
@@ -1472,7 +1610,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [123u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(2u32);
                         break 'try_branches;
                     }
@@ -1482,7 +1622,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [125u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(3u32);
                         break 'try_branches;
                     }
@@ -1492,7 +1634,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [40u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(4u32);
                         break 'try_branches;
                     }
@@ -1502,7 +1646,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [41u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(5u32);
                         break 'try_branches;
                     }
@@ -1512,7 +1658,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [60u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(6u32);
                         break 'try_branches;
                     }
@@ -1522,7 +1670,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [62u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(7u32);
                         break 'try_branches;
                     }
@@ -1532,7 +1682,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [39u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(8u32);
                         break 'try_branches;
                     }
@@ -1542,7 +1694,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [34u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(9u32);
                         break 'try_branches;
                     }
@@ -1552,7 +1706,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [61u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(10u32);
                         break 'try_branches;
                     }
@@ -1562,7 +1718,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [124u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(11u32);
                         break 'try_branches;
                     }
@@ -1572,7 +1730,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [46u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(12u32);
                         break 'try_branches;
                     }
@@ -1582,7 +1742,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [44u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(13u32);
                         break 'try_branches;
                     }
@@ -1592,7 +1754,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [59u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(14u32);
                         break 'try_branches;
                     }
@@ -1602,7 +1766,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [45u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(15u32);
                         break 'try_branches;
                     }
@@ -1612,7 +1778,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [43u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(16u32);
                         break 'try_branches;
                     }
@@ -1622,7 +1790,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [42u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(17u32);
                         break 'try_branches;
                     }
@@ -1632,7 +1802,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [63u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(18u32);
                         break 'try_branches;
                     }
@@ -1642,7 +1814,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [10u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(19u32);
                         break 'try_branches;
                     }
@@ -1652,7 +1826,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [9u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(20u32);
                         break 'try_branches;
                     }
@@ -1662,7 +1838,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [13u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(21u32);
                         break 'try_branches;
                     }
@@ -1672,7 +1850,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [12u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(22u32);
                         break 'try_branches;
                     }
@@ -1682,7 +1862,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [8u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(23u32);
                         break 'try_branches;
                     }
@@ -1692,7 +1874,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [92u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(24u32);
                         break 'try_branches;
                     }
@@ -1719,7 +1903,7 @@ mod __ebnfparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -1976,7 +2160,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [95u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(0u32);
                         break 'try_branches;
                     }
@@ -1986,7 +2172,9 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [32u8] {
                         *p = end;
-                        builder.push_leaf_with_unit();
+                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                            builder,
+                        );
                         builder.push_branch_tag(1u32);
                         break 'try_branches;
                     }
@@ -2419,7 +2607,7 @@ mod __ebnfparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -2612,7 +2800,7 @@ mod __ebnfparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -3127,7 +3315,7 @@ mod __ebnfparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -3374,7 +3562,7 @@ mod __ebnfparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost

@@ -45,33 +45,6 @@ mod __googlesheetsparser_emit_impl {
     pub const GRAMMAR_STRUCTURAL_DIGRAPHS: &[(u8, u8)] = &__GRAMMAR_STRUCTURAL_DIGRAPHS;
     pub const GRAMMAR_STRUCTURAL_DIGRAPH_MASK: [u64; 4] = [4611686018427387904, 0, 0, 0];
     pub const GRAMMAR_STRUCTURAL_QUOTE_CLASSES: &[u8] = &__GRAMMAR_STRUCTURAL_QUOTE_CLASSES;
-    /// AW-III.W6.2 — PHF keyword table.
-    ///
-    /// Mined literal-led Alt branches, sorted lexicographically.
-    /// Binary search dispatches in O(log N) compares; LLVM lowers
-    /// the fixed-size table to a balanced compare tree.
-    static __PHF_GoogleSheetsParser_7_KW: [&[u8]; 4usize] = [b"<", b"=", b">", b">="];
-    /// Per-entry branch discriminant — parallel to [`#kw_ident`].
-    /// Entry `i`'s keyword bytes at `#kw_ident[i]` route to the
-    /// branch with discriminant `#idx_ident[i]`.
-    static __PHF_GoogleSheetsParser_7_IDX: [u8; 4usize] = [0, 4, 3, 1];
-    /// AW-III.W6.2 — dispatch the mined keyword table for rule
-    /// `#rule_id`.
-    ///
-    /// Returns `Some(branch_idx)` when `bytes` matches a mined
-    /// keyword, `None` otherwise. Called from the walker's
-    /// AltLinear / ClassifyByte arm to short-circuit the branch
-    /// scan to a single binary search.
-    #[allow(dead_code)]
-    #[inline]
-    fn __phf_GoogleSheetsParser_dispatch_7(bytes: &[u8]) -> ::core::option::Option<u8> {
-        match __PHF_GoogleSheetsParser_7_KW.binary_search(&bytes) {
-            ::core::result::Result::Ok(idx) => {
-                ::core::option::Option::Some(__PHF_GoogleSheetsParser_7_IDX[idx])
-            }
-            ::core::result::Result::Err(_) => ::core::option::Option::None,
-        }
-    }
     /// Grammar-local Pratt operator metadata.
     ///
     /// The dense LUT carries precedence, associativity, arity, and
@@ -686,15 +659,14 @@ mod __googlesheetsparser_emit_impl {
     static __DTA_REGEX_1: &str = "\"([^\"]|\"\")*\"";
     static __DTA_REGEX_2: &str = "[tT][rR][uU][eE]";
     static __DTA_REGEX_3: &str = "[fF][aA][lL][sS][eE]";
-    static __DTA_REGEX_20: &str = "'(?:[^']|'')*'!";
-    static __DTA_REGEX_21: &str = "[A-Za-z_]\\w*!";
-    static __DTA_REGEX_23: &str = "\\$?[A-Za-z]{1,3}\\$?\\d+";
-    static __DTA_REGEX_24: &str = "[A-Za-z_][A-Za-z0-9_.]*";
-    static __DTA_REGEX_54: &str = "\\$?[A-Za-z]{1,3}";
-    static __DTA_REGEX_55: &str = "\\$?\\d+";
-    static __DTA_REGEX_146: &str = "[lL][aA][mM][bB][dD][aA]\\(";
-    static __DTA_REGEX_171: &str = "[lL][eE][tT]\\(";
-    static __DTA_REGEX_182: &str = "=?";
+    static __DTA_REGEX_20: &str = "\\$?[A-Za-z]{1,3}\\$?\\d+";
+    static __DTA_REGEX_21: &str = "[A-Za-z_][A-Za-z0-9_.]*";
+    static __DTA_REGEX_22: &str = "'(?:[^']|'')*'!|[A-Za-z_]\\w*!";
+    static __DTA_REGEX_32: &str = "\\$?[A-Za-z]{1,3}";
+    static __DTA_REGEX_33: &str = "\\$?\\d+";
+    static __DTA_REGEX_135: &str = "[lL][aA][mM][bB][dD][aA]\\(";
+    static __DTA_REGEX_160: &str = "[lL][eE][tT]\\(";
+    static __DTA_REGEX_171: &str = "=?";
     /// AY.W4.3 — first-byte → admissible-pattern bitmap LUT.
     ///
     /// Each entry holds a u32 bitmap; bit `i` set means pattern
@@ -704,12 +676,12 @@ mod __googlesheetsparser_emit_impl {
     #[allow(dead_code)]
     pub(crate) const __REGEX_FIRST_BYTE_LUT_GoogleSheetsParser: [u32; 256] = [
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 2, 0, 832, 0, 0, 16, 0, 0, 0, 0, 0, 0, 1, 0, 513, 513, 513,
-        513, 513, 513, 513, 513, 513, 513, 0, 0, 0, 4096, 0, 0, 0, 480, 480, 480, 480,
-        480, 488, 480, 480, 480, 480, 480, 3552, 480, 480, 480, 480, 480, 480, 480, 484,
-        480, 480, 480, 480, 480, 480, 0, 0, 0, 0, 160, 0, 480, 480, 480, 480, 480, 488,
-        480, 480, 480, 480, 480, 3552, 480, 480, 480, 480, 480, 480, 480, 484, 480, 480,
-        480, 480, 480, 480, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 2, 0, 400, 0, 0, 64, 0, 0, 0, 0, 0, 0, 1, 0, 257, 257, 257,
+        257, 257, 257, 257, 257, 257, 257, 0, 0, 0, 2048, 0, 0, 0, 240, 240, 240, 240,
+        240, 248, 240, 240, 240, 240, 240, 1776, 240, 240, 240, 240, 240, 240, 240, 244,
+        240, 240, 240, 240, 240, 240, 0, 0, 0, 0, 96, 0, 240, 240, 240, 240, 240, 248,
+        240, 240, 240, 240, 240, 1776, 240, 240, 240, 240, 240, 240, 240, 244, 240, 240,
+        240, 240, 240, 240, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -725,13 +697,12 @@ mod __googlesheetsparser_emit_impl {
     /// contain any byte in the LAST set, the regex cannot
     /// complete a match — skip the DFA walk entirely.
     #[allow(dead_code)]
-    pub(crate) const __REGEX_LAST_BYTE_SET_GoogleSheetsParser: [(u64, u64); 13] = [
+    pub(crate) const __REGEX_LAST_BYTE_SET_GoogleSheetsParser: [(u64, u64); 12] = [
         (0, 0),
         (17179869184, 0),
         (0, 0),
         (0, 0),
-        (8589934592, 0),
-        (8589934592, 0),
+        (0, 0),
         (0, 0),
         (0, 0),
         (0, 0),
@@ -1196,201 +1167,6 @@ mod __googlesheetsparser_emit_impl {
                     match __dfa_state {
                         0 => {
                             match b {
-                                39 => __dfa_state = 2,
-                                _ => break,
-                            }
-                        }
-                        1 => {
-                            match b {
-                                _ => break,
-                            }
-                        }
-                        2 => {
-                            match b {
-                                0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13
-                                | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25
-                                | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37
-                                | 38 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50
-                                | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62
-                                | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74
-                                | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86
-                                | 87 | 88 | 89 | 90 | 91 | 92 | 93 | 94 | 95 | 96 | 97 | 98
-                                | 99 | 100 | 101 | 102 | 103 | 104 | 105 | 106 | 107 | 108
-                                | 109 | 110 | 111 | 112 | 113 | 114 | 115 | 116 | 117 | 118
-                                | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 126 | 127 | 128
-                                | 129 | 130 | 131 | 132 | 133 | 134 | 135 | 136 | 137 | 138
-                                | 139 | 140 | 141 | 142 | 143 | 144 | 145 | 146 | 147 | 148
-                                | 149 | 150 | 151 | 152 | 153 | 154 | 155 | 156 | 157 | 158
-                                | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168
-                                | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178
-                                | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188
-                                | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198
-                                | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208
-                                | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218
-                                | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228
-                                | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238
-                                | 239 | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248
-                                | 249 | 250 | 251 | 252 | 253 | 254 | 255 => __dfa_state = 2,
-                                39 => __dfa_state = 3,
-                                _ => break,
-                            }
-                        }
-                        3 => {
-                            match b {
-                                33 => __dfa_state = 1,
-                                39 => __dfa_state = 2,
-                                _ => break,
-                            }
-                        }
-                        _ => unsafe { ::core::hint::unreachable_unchecked() }
-                    }
-                    __dfa_p += 1;
-                    match __dfa_state {
-                        1 => {
-                            __dfa_last_match = ::core::option::Option::Some(
-                                __dfa_p as u32,
-                            );
-                        }
-                        _ => {}
-                    }
-                }
-                break '__dfa __dfa_last_match.map(|end| end - pos as u32);
-            };
-        }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_21.as_ptr())
-            || pattern == __DTA_REGEX_21
-        {
-            if let Some(&__byte) = input.get(pos) {
-                if (__REGEX_FIRST_BYTE_LUT_GoogleSheetsParser[__byte as usize] >> 5) & 1
-                    == 0
-                {
-                    return ::core::option::Option::None;
-                }
-            }
-            if input.len() >= 64 * 1024 {
-                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_GoogleSheetsParser[5];
-                if (__lb_lo | __lb_hi) != 0 {
-                    let __scan_end = (pos + 256).min(input.len());
-                    let __slice = &input[pos..__scan_end];
-                    let mut __found = false;
-                    for &__b in __slice {
-                        let __test = if __b < 64 {
-                            (__lb_lo >> __b) & 1
-                        } else if __b < 128 {
-                            (__lb_hi >> (__b - 64)) & 1
-                        } else {
-                            0
-                        };
-                        if __test != 0 {
-                            __found = true;
-                            break;
-                        }
-                    }
-                    if !__found && __scan_end == input.len() {
-                        return ::core::option::Option::None;
-                    }
-                }
-            }
-            return '__dfa: {
-                let mut __dfa_state: u32 = 0;
-                let mut __dfa_p: usize = pos;
-                let mut __dfa_last_match: ::core::option::Option<u32> = ::core::option::Option::None;
-                loop {
-                    let b = match input.get(__dfa_p) {
-                        ::core::option::Option::Some(&b) => b,
-                        ::core::option::Option::None => break,
-                    };
-                    match __dfa_state {
-                        0 => {
-                            match b {
-                                65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76
-                                | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88
-                                | 89 | 90 | 95 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104
-                                | 105 | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114
-                                | 115 | 116 | 117 | 118 | 119 | 120 | 121 | 122 => {
-                                    __dfa_state = 2;
-                                }
-                                _ => break,
-                            }
-                        }
-                        1 => {
-                            match b {
-                                _ => break,
-                            }
-                        }
-                        2 => {
-                            match b {
-                                33 => __dfa_state = 1,
-                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 65 | 66
-                                | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78
-                                | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90
-                                | 95 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
-                                | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115
-                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 2,
-                                _ => break,
-                            }
-                        }
-                        _ => unsafe { ::core::hint::unreachable_unchecked() }
-                    }
-                    __dfa_p += 1;
-                    match __dfa_state {
-                        1 => {
-                            __dfa_last_match = ::core::option::Option::Some(
-                                __dfa_p as u32,
-                            );
-                        }
-                        _ => {}
-                    }
-                }
-                break '__dfa __dfa_last_match.map(|end| end - pos as u32);
-            };
-        }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_23.as_ptr())
-            || pattern == __DTA_REGEX_23
-        {
-            if let Some(&__byte) = input.get(pos) {
-                if (__REGEX_FIRST_BYTE_LUT_GoogleSheetsParser[__byte as usize] >> 6) & 1
-                    == 0
-                {
-                    return ::core::option::Option::None;
-                }
-            }
-            if input.len() >= 64 * 1024 {
-                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_GoogleSheetsParser[6];
-                if (__lb_lo | __lb_hi) != 0 {
-                    let __scan_end = (pos + 256).min(input.len());
-                    let __slice = &input[pos..__scan_end];
-                    let mut __found = false;
-                    for &__b in __slice {
-                        let __test = if __b < 64 {
-                            (__lb_lo >> __b) & 1
-                        } else if __b < 128 {
-                            (__lb_hi >> (__b - 64)) & 1
-                        } else {
-                            0
-                        };
-                        if __test != 0 {
-                            __found = true;
-                            break;
-                        }
-                    }
-                    if !__found && __scan_end == input.len() {
-                        return ::core::option::Option::None;
-                    }
-                }
-            }
-            return '__dfa: {
-                let mut __dfa_state: u32 = 0;
-                let mut __dfa_p: usize = pos;
-                let mut __dfa_last_match: ::core::option::Option<u32> = ::core::option::Option::None;
-                loop {
-                    let b = match input.get(__dfa_p) {
-                        ::core::option::Option::Some(&b) => b,
-                        ::core::option::Option::None => break,
-                    };
-                    match __dfa_state {
-                        0 => {
-                            match b {
                                 36 => __dfa_state = 2,
                                 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76
                                 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88
@@ -1478,18 +1254,18 @@ mod __googlesheetsparser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_24.as_ptr())
-            || pattern == __DTA_REGEX_24
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_21.as_ptr())
+            || pattern == __DTA_REGEX_21
         {
             if let Some(&__byte) = input.get(pos) {
-                if (__REGEX_FIRST_BYTE_LUT_GoogleSheetsParser[__byte as usize] >> 7) & 1
+                if (__REGEX_FIRST_BYTE_LUT_GoogleSheetsParser[__byte as usize] >> 5) & 1
                     == 0
                 {
                     return ::core::option::Option::None;
                 }
             }
             if input.len() >= 64 * 1024 {
-                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_GoogleSheetsParser[7];
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_GoogleSheetsParser[5];
                 if (__lb_lo | __lb_hi) != 0 {
                     let __scan_end = (pos + 256).min(input.len());
                     let __slice = &input[pos..__scan_end];
@@ -1560,18 +1336,144 @@ mod __googlesheetsparser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_54.as_ptr())
-            || pattern == __DTA_REGEX_54
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_22.as_ptr())
+            || pattern == __DTA_REGEX_22
         {
             if let Some(&__byte) = input.get(pos) {
-                if (__REGEX_FIRST_BYTE_LUT_GoogleSheetsParser[__byte as usize] >> 8) & 1
+                if (__REGEX_FIRST_BYTE_LUT_GoogleSheetsParser[__byte as usize] >> 6) & 1
                     == 0
                 {
                     return ::core::option::Option::None;
                 }
             }
             if input.len() >= 64 * 1024 {
-                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_GoogleSheetsParser[8];
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_GoogleSheetsParser[6];
+                if (__lb_lo | __lb_hi) != 0 {
+                    let __scan_end = (pos + 256).min(input.len());
+                    let __slice = &input[pos..__scan_end];
+                    let mut __found = false;
+                    for &__b in __slice {
+                        let __test = if __b < 64 {
+                            (__lb_lo >> __b) & 1
+                        } else if __b < 128 {
+                            (__lb_hi >> (__b - 64)) & 1
+                        } else {
+                            0
+                        };
+                        if __test != 0 {
+                            __found = true;
+                            break;
+                        }
+                    }
+                    if !__found && __scan_end == input.len() {
+                        return ::core::option::Option::None;
+                    }
+                }
+            }
+            return '__dfa: {
+                let mut __dfa_state: u32 = 0;
+                let mut __dfa_p: usize = pos;
+                let mut __dfa_last_match: ::core::option::Option<u32> = ::core::option::Option::None;
+                loop {
+                    let b = match input.get(__dfa_p) {
+                        ::core::option::Option::Some(&b) => b,
+                        ::core::option::Option::None => break,
+                    };
+                    match __dfa_state {
+                        0 => {
+                            match b {
+                                39 => __dfa_state = 2,
+                                65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76
+                                | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88
+                                | 89 | 90 | 95 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104
+                                | 105 | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114
+                                | 115 | 116 | 117 | 118 | 119 | 120 | 121 | 122 => {
+                                    __dfa_state = 3;
+                                }
+                                _ => break,
+                            }
+                        }
+                        1 => {
+                            match b {
+                                _ => break,
+                            }
+                        }
+                        2 => {
+                            match b {
+                                0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13
+                                | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25
+                                | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37
+                                | 38 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50
+                                | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62
+                                | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74
+                                | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86
+                                | 87 | 88 | 89 | 90 | 91 | 92 | 93 | 94 | 95 | 96 | 97 | 98
+                                | 99 | 100 | 101 | 102 | 103 | 104 | 105 | 106 | 107 | 108
+                                | 109 | 110 | 111 | 112 | 113 | 114 | 115 | 116 | 117 | 118
+                                | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 126 | 127 | 128
+                                | 129 | 130 | 131 | 132 | 133 | 134 | 135 | 136 | 137 | 138
+                                | 139 | 140 | 141 | 142 | 143 | 144 | 145 | 146 | 147 | 148
+                                | 149 | 150 | 151 | 152 | 153 | 154 | 155 | 156 | 157 | 158
+                                | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168
+                                | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178
+                                | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188
+                                | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198
+                                | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208
+                                | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218
+                                | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228
+                                | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238
+                                | 239 | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248
+                                | 249 | 250 | 251 | 252 | 253 | 254 | 255 => __dfa_state = 2,
+                                39 => __dfa_state = 4,
+                                _ => break,
+                            }
+                        }
+                        3 => {
+                            match b {
+                                33 => __dfa_state = 1,
+                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 65 | 66
+                                | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78
+                                | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90
+                                | 95 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
+                                | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115
+                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 3,
+                                _ => break,
+                            }
+                        }
+                        4 => {
+                            match b {
+                                33 => __dfa_state = 1,
+                                39 => __dfa_state = 2,
+                                _ => break,
+                            }
+                        }
+                        _ => unsafe { ::core::hint::unreachable_unchecked() }
+                    }
+                    __dfa_p += 1;
+                    match __dfa_state {
+                        1 => {
+                            __dfa_last_match = ::core::option::Option::Some(
+                                __dfa_p as u32,
+                            );
+                        }
+                        _ => {}
+                    }
+                }
+                break '__dfa __dfa_last_match.map(|end| end - pos as u32);
+            };
+        }
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_32.as_ptr())
+            || pattern == __DTA_REGEX_32
+        {
+            if let Some(&__byte) = input.get(pos) {
+                if (__REGEX_FIRST_BYTE_LUT_GoogleSheetsParser[__byte as usize] >> 7) & 1
+                    == 0
+                {
+                    return ::core::option::Option::None;
+                }
+            }
+            if input.len() >= 64 * 1024 {
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_GoogleSheetsParser[7];
                 if (__lb_lo | __lb_hi) != 0 {
                     let __scan_end = (pos + 256).min(input.len());
                     let __slice = &input[pos..__scan_end];
@@ -1665,18 +1567,18 @@ mod __googlesheetsparser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_55.as_ptr())
-            || pattern == __DTA_REGEX_55
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_33.as_ptr())
+            || pattern == __DTA_REGEX_33
         {
             if let Some(&__byte) = input.get(pos) {
-                if (__REGEX_FIRST_BYTE_LUT_GoogleSheetsParser[__byte as usize] >> 9) & 1
+                if (__REGEX_FIRST_BYTE_LUT_GoogleSheetsParser[__byte as usize] >> 8) & 1
                     == 0
                 {
                     return ::core::option::Option::None;
                 }
             }
             if input.len() >= 64 * 1024 {
-                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_GoogleSheetsParser[9];
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_GoogleSheetsParser[8];
                 if (__lb_lo | __lb_hi) != 0 {
                     let __scan_end = (pos + 256).min(input.len());
                     let __slice = &input[pos..__scan_end];
@@ -1749,18 +1651,18 @@ mod __googlesheetsparser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_146.as_ptr())
-            || pattern == __DTA_REGEX_146
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_135.as_ptr())
+            || pattern == __DTA_REGEX_135
         {
             if let Some(&__byte) = input.get(pos) {
-                if (__REGEX_FIRST_BYTE_LUT_GoogleSheetsParser[__byte as usize] >> 10) & 1
+                if (__REGEX_FIRST_BYTE_LUT_GoogleSheetsParser[__byte as usize] >> 9) & 1
                     == 0
                 {
                     return ::core::option::Option::None;
                 }
             }
             if input.len() >= 64 * 1024 {
-                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_GoogleSheetsParser[10];
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_GoogleSheetsParser[9];
                 if (__lb_lo | __lb_hi) != 0 {
                     let __scan_end = (pos + 256).min(input.len());
                     let __slice = &input[pos..__scan_end];
@@ -1855,18 +1757,18 @@ mod __googlesheetsparser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_171.as_ptr())
-            || pattern == __DTA_REGEX_171
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_160.as_ptr())
+            || pattern == __DTA_REGEX_160
         {
             if let Some(&__byte) = input.get(pos) {
-                if (__REGEX_FIRST_BYTE_LUT_GoogleSheetsParser[__byte as usize] >> 11) & 1
+                if (__REGEX_FIRST_BYTE_LUT_GoogleSheetsParser[__byte as usize] >> 10) & 1
                     == 0
                 {
                     return ::core::option::Option::None;
                 }
             }
             if input.len() >= 64 * 1024 {
-                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_GoogleSheetsParser[11];
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_GoogleSheetsParser[10];
                 if (__lb_lo | __lb_hi) != 0 {
                     let __scan_end = (pos + 256).min(input.len());
                     let __slice = &input[pos..__scan_end];
@@ -1943,18 +1845,18 @@ mod __googlesheetsparser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_182.as_ptr())
-            || pattern == __DTA_REGEX_182
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_171.as_ptr())
+            || pattern == __DTA_REGEX_171
         {
             if let Some(&__byte) = input.get(pos) {
-                if (__REGEX_FIRST_BYTE_LUT_GoogleSheetsParser[__byte as usize] >> 12) & 1
+                if (__REGEX_FIRST_BYTE_LUT_GoogleSheetsParser[__byte as usize] >> 11) & 1
                     == 0
                 {
                     return ::core::option::Option::None;
                 }
             }
             if input.len() >= 64 * 1024 {
-                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_GoogleSheetsParser[12];
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_GoogleSheetsParser[11];
                 if (__lb_lo | __lb_hi) != 0 {
                     let __scan_end = (pos + 256).min(input.len());
                     let __slice = &input[pos..__scan_end];
@@ -2747,7 +2649,7 @@ mod __googlesheetsparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -2824,7 +2726,6 @@ mod __googlesheetsparser_emit_impl {
                                 });
                             }
                             *p = end;
-                            builder.push_branch_tag(0u32);
                             Ok(())
                         })();
                         match __alt_result {
@@ -2871,7 +2772,6 @@ mod __googlesheetsparser_emit_impl {
                                             });
                                         }
                                         *p = end;
-                                        builder.push_branch_tag(4u32);
                                         Ok(())
                                     })();
                                     match __alt_result {
@@ -2901,7 +2801,6 @@ mod __googlesheetsparser_emit_impl {
                                             });
                                         }
                                         *p = end;
-                                        builder.push_branch_tag(6u32);
                                         Ok(())
                                     })();
                                     match __alt_result {
@@ -2932,7 +2831,6 @@ mod __googlesheetsparser_emit_impl {
                                             });
                                         }
                                         *p = end;
-                                        builder.push_branch_tag(5u32);
                                         Ok(())
                                     })();
                                     match __alt_result {
@@ -2980,7 +2878,6 @@ mod __googlesheetsparser_emit_impl {
                                 });
                             }
                             *p = end;
-                            builder.push_branch_tag(1u32);
                             Ok(())
                         })();
                         match __alt_result {
@@ -3011,7 +2908,6 @@ mod __googlesheetsparser_emit_impl {
                                 });
                             }
                             *p = end;
-                            builder.push_branch_tag(3u32);
                             Ok(())
                         })();
                         match __alt_result {
@@ -3042,7 +2938,6 @@ mod __googlesheetsparser_emit_impl {
                                 });
                             }
                             *p = end;
-                            builder.push_branch_tag(7u32);
                             Ok(())
                         })();
                         match __alt_result {
@@ -3073,7 +2968,6 @@ mod __googlesheetsparser_emit_impl {
                                 });
                             }
                             *p = end;
-                            builder.push_branch_tag(8u32);
                             Ok(())
                         })();
                         match __alt_result {
@@ -3104,7 +2998,6 @@ mod __googlesheetsparser_emit_impl {
                                 });
                             }
                             *p = end;
-                            builder.push_branch_tag(2u32);
                             Ok(())
                         })();
                         match __alt_result {
@@ -3149,149 +3042,6 @@ mod __googlesheetsparser_emit_impl {
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
                 ::core::result::Result::Err(__err)
-            }
-        }
-    }
-    /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
-    ///
-    /// Opens a Wrap frame on the builder, dispatches to the matched
-    /// branch's shape fn (which carries its own
-    /// begin_compound/end_compound for compound branches and the
-    /// matching push_leaf_with_* for scalar branches), stamps the
-    /// chosen branch index via push_branch_tag, then closes the
-    /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
-    /// forward-the-single-child semantics.
-    ///
-    /// Returns unit for StructDirect composition
-    /// with sibling shape fns under struct-direct mode; the
-    /// offset is unused by struct-direct callers.
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_wrap_GoogleSheetsParser_sheet_prefix<'p>(
-        input: &'p [u8],
-        p: &mut usize,
-        state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
-        use crate::runtime::builder::StructBuilder as _;
-        let __wrap_checkpoint = builder.checkpoint();
-        let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 4u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("sheet_prefix"),
-            kind: ::bbnf_ir::registry::LayoutKind::UntaggedEnum,
-            rule_type: ::bbnf_ir::TypeDesc::Span,
-            fields: ::std::vec::Vec::new(),
-        };
-        let __wrap_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__wrap_layout);
-        let mut __wrap_branch_idx: u32 = 0;
-        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
-            let first = __shape_support_GoogleSheetsParser::skip_space(input, p, state)
-                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                    offset: *p as u32,
-                })?;
-            'try_branches: loop {
-                match first {
-                    39u8 => {
-                        let attempt_p = *p;
-                        let attempt_builder = builder.checkpoint();
-                        match (|| -> ::core::result::Result<
-                            (),
-                            crate::runtime::DtaError,
-                        > {
-                            if let ::core::option::Option::Some(match_len) = __regex_scan_GoogleSheetsParser(
-                                "'(?:[^']|'')*'!",
-                                input,
-                                *p,
-                            ) {
-                                *p += match_len as usize;
-                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
-                                    builder,
-                                    0u64,
-                                );
-                                ::core::result::Result::Ok(())
-                            } else {
-                                ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                    offset: *p as u32,
-                                })
-                            }
-                        })() {
-                            ::core::result::Result::Ok(_) => {
-                                __wrap_branch_idx = 0u32;
-                                builder.commit(attempt_builder);
-                                break 'try_branches;
-                            }
-                            ::core::result::Result::Err(_) => {
-                                *p = attempt_p;
-                                builder.rollback(attempt_builder);
-                            }
-                        }
-                    }
-                    _ => {}
-                }
-                {
-                    let attempt_p = *p;
-                    let attempt_builder = builder.checkpoint();
-                    match (|| -> ::core::result::Result<(), crate::runtime::DtaError> {
-                        if let ::core::option::Option::Some(match_len) = __regex_scan_GoogleSheetsParser(
-                            "[A-Za-z_]\\w*!",
-                            input,
-                            *p,
-                        ) {
-                            *p += match_len as usize;
-                            <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
-                                builder,
-                                1u64,
-                            );
-                            ::core::result::Result::Ok(())
-                        } else {
-                            ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                offset: *p as u32,
-                            })
-                        }
-                    })() {
-                        ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 1u32;
-                            builder.commit(attempt_builder);
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback(attempt_builder);
-                        }
-                    }
-                }
-                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                    offset: *p as u32,
-                });
-            }
-            ::core::result::Result::Ok(())
-        })();
-        match __body_result {
-            ::core::result::Result::Ok(()) => {
-                <crate::runtime::google_sheets::SheetsStructBuilder<
-                    '_,
-                > as crate::runtime::StructBuilder>::push_branch_tag(
-                    builder,
-                    __wrap_branch_idx,
-                );
-                <crate::runtime::google_sheets::SheetsStructBuilder<
-                    '_,
-                > as crate::runtime::StructBuilder>::end_compound(
-                    builder,
-                    __wrap_handle,
-                );
-                ::core::result::Result::Ok(())
-            }
-            ::core::result::Result::Err(e) => {
-                <crate::runtime::google_sheets::SheetsStructBuilder<
-                    '_,
-                > as crate::runtime::StructBuilder>::rollback(
-                    builder,
-                    __wrap_checkpoint,
-                );
-                ::core::result::Result::Err(e)
             }
         }
     }
@@ -3371,342 +3121,12 @@ mod __googlesheetsparser_emit_impl {
         );
         Ok(())
     }
-    /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
-    /// (Alt of literal-led, Ref-led, or Seq-led branches).
-    ///
-    /// Literal branches push leaves through
-    /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
-    /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
-    /// untyped). Ref branches delegate to the target shape
-    /// fn so the target writes directly into the same
-    /// builder. Returns unit for StructDirect composition.
-    #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_GoogleSheetsParser_compare_op<'p>(
-        input: &'p [u8],
-        p: &mut usize,
-        first_byte: u8,
-        state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
-        use crate::runtime::builder::StructBuilder as _;
-        let _ = state;
-        match first_byte {
-            60u8 => {
-                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [60u8] {
-                    let __seq_span_lo = *p;
-                    let __seq_builder_checkpoint = builder.checkpoint();
-                    let __seq_result: ::core::result::Result<
-                        (),
-                        crate::runtime::DtaError,
-                    > = (|| {
-                        {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [60u8] {
-                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                    offset: at as u32,
-                                });
-                            }
-                            *p = end;
-                        }
-                        'try_branches: loop {
-                            {
-                                let __alt_save_p = *p;
-                                let __alt_builder_checkpoint = builder.checkpoint();
-                                let __alt_result: ::core::result::Result<
-                                    (),
-                                    crate::runtime::DtaError,
-                                > = (|| {
-                                    {
-                                        let at = *p;
-                                        let end = at + 1usize;
-                                        if input.len() < end || input[at..end] != [62u8] {
-                                            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                                offset: at as u32,
-                                            });
-                                        }
-                                        *p = end;
-                                    }
-                                    ::core::result::Result::Ok(())
-                                })();
-                                match __alt_result {
-                                    ::core::result::Result::Ok(()) => {
-                                        builder.commit(__alt_builder_checkpoint);
-                                        break 'try_branches;
-                                    }
-                                    ::core::result::Result::Err(_) => {
-                                        *p = __alt_save_p;
-                                        builder.rollback(__alt_builder_checkpoint);
-                                    }
-                                }
-                            }
-                            {
-                                let __alt_save_p = *p;
-                                let __alt_builder_checkpoint = builder.checkpoint();
-                                let __alt_result: ::core::result::Result<
-                                    (),
-                                    crate::runtime::DtaError,
-                                > = (|| {
-                                    {
-                                        let at = *p;
-                                        let end = at + 1usize;
-                                        if input.len() < end || input[at..end] != [61u8] {
-                                            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                                offset: at as u32,
-                                            });
-                                        }
-                                        *p = end;
-                                    }
-                                    ::core::result::Result::Ok(())
-                                })();
-                                match __alt_result {
-                                    ::core::result::Result::Ok(()) => {
-                                        builder.commit(__alt_builder_checkpoint);
-                                        break 'try_branches;
-                                    }
-                                    ::core::result::Result::Err(_) => {
-                                        *p = __alt_save_p;
-                                        builder.rollback(__alt_builder_checkpoint);
-                                    }
-                                }
-                            }
-                            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                offset: *p as u32,
-                            });
-                        }
-                        ::core::result::Result::Ok(())
-                    })();
-                    match __seq_result {
-                        ::core::result::Result::Ok(()) => {
-                            let __seq_span_hi = *p;
-                            builder.rollback(__seq_builder_checkpoint);
-                            let __seq_text = unsafe {
-                                ::core::str::from_utf8_unchecked(
-                                    &input[__seq_span_lo..__seq_span_hi],
-                                )
-                            };
-                            builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(());
-                        }
-                        ::core::result::Result::Err(__err) => {
-                            *p = __seq_span_lo;
-                            builder.rollback(__seq_builder_checkpoint);
-                            return ::core::result::Result::Err(__err);
-                        }
-                    }
-                }
-                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [60u8] {
-                    let at = *p;
-                    let end = at + 1usize;
-                    *p = end;
-                    builder.push_branch_tag(4u32);
-                    return ::core::result::Result::Ok(());
-                }
-                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                    offset: *p as u32,
-                });
-            }
-            61u8 => {
-                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [61u8] {
-                    let at = *p;
-                    let end = at + 1usize;
-                    *p = end;
-                    builder.push_branch_tag(3u32);
-                    return ::core::result::Result::Ok(());
-                }
-                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                    offset: *p as u32,
-                });
-            }
-            62u8 => {
-                if input.len() >= *p + 2usize && input[*p..*p + 2usize] == [62u8, 61u8] {
-                    let at = *p;
-                    let end = at + 2usize;
-                    *p = end;
-                    builder.push_branch_tag(2u32);
-                    return ::core::result::Result::Ok(());
-                }
-                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [62u8] {
-                    let at = *p;
-                    let end = at + 1usize;
-                    *p = end;
-                    builder.push_branch_tag(5u32);
-                    return ::core::result::Result::Ok(());
-                }
-                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                    offset: *p as u32,
-                });
-            }
-            _ => {
-                ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                    offset: *p as u32,
-                })
-            }
-        }
-    }
-    /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
-    /// (Alt of literal-led, Ref-led, or Seq-led branches).
-    ///
-    /// Literal branches push leaves through
-    /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
-    /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
-    /// untyped). Ref branches delegate to the target shape
-    /// fn so the target writes directly into the same
-    /// builder. Returns unit for StructDirect composition.
-    #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_GoogleSheetsParser_unary_prefix<'p>(
-        input: &'p [u8],
-        p: &mut usize,
-        first_byte: u8,
-        state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
-        use crate::runtime::builder::StructBuilder as _;
-        let _ = state;
-        match first_byte {
-            43u8 => {
-                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [43u8] {
-                    let at = *p;
-                    let end = at + 1usize;
-                    *p = end;
-                    builder.push_branch_tag(0u32);
-                    return ::core::result::Result::Ok(());
-                }
-                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                    offset: *p as u32,
-                });
-            }
-            45u8 => {
-                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [45u8] {
-                    let at = *p;
-                    let end = at + 1usize;
-                    *p = end;
-                    builder.push_branch_tag(1u32);
-                    return ::core::result::Result::Ok(());
-                }
-                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                    offset: *p as u32,
-                });
-            }
-            _ => {
-                ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                    offset: *p as u32,
-                })
-            }
-        }
-    }
-    /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
-    /// (Alt of literal-led, Ref-led, or Seq-led branches).
-    ///
-    /// Literal branches push leaves through
-    /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
-    /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
-    /// untyped). Ref branches delegate to the target shape
-    /// fn so the target writes directly into the same
-    /// builder. Returns unit for StructDirect composition.
-    #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_GoogleSheetsParser_mul_op<'p>(
-        input: &'p [u8],
-        p: &mut usize,
-        first_byte: u8,
-        state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
-        use crate::runtime::builder::StructBuilder as _;
-        let _ = state;
-        match first_byte {
-            42u8 => {
-                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [42u8] {
-                    let at = *p;
-                    let end = at + 1usize;
-                    *p = end;
-                    builder.push_branch_tag(0u32);
-                    return ::core::result::Result::Ok(());
-                }
-                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                    offset: *p as u32,
-                });
-            }
-            47u8 => {
-                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [47u8] {
-                    let at = *p;
-                    let end = at + 1usize;
-                    *p = end;
-                    builder.push_branch_tag(1u32);
-                    return ::core::result::Result::Ok(());
-                }
-                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                    offset: *p as u32,
-                });
-            }
-            _ => {
-                ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                    offset: *p as u32,
-                })
-            }
-        }
-    }
-    /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
-    /// (Alt of literal-led, Ref-led, or Seq-led branches).
-    ///
-    /// Literal branches push leaves through
-    /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
-    /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
-    /// untyped). Ref branches delegate to the target shape
-    /// fn so the target writes directly into the same
-    /// builder. Returns unit for StructDirect composition.
-    #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_GoogleSheetsParser_add_op<'p>(
-        input: &'p [u8],
-        p: &mut usize,
-        first_byte: u8,
-        state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
-        use crate::runtime::builder::StructBuilder as _;
-        let _ = state;
-        match first_byte {
-            43u8 => {
-                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [43u8] {
-                    let at = *p;
-                    let end = at + 1usize;
-                    *p = end;
-                    builder.push_branch_tag(0u32);
-                    return ::core::result::Result::Ok(());
-                }
-                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                    offset: *p as u32,
-                });
-            }
-            45u8 => {
-                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [45u8] {
-                    let at = *p;
-                    let end = at + 1usize;
-                    *p = end;
-                    builder.push_branch_tag(1u32);
-                    return ::core::result::Result::Ok(());
-                }
-                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                    offset: *p as u32,
-                });
-            }
-            _ => {
-                ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                    offset: *p as u32,
-                })
-            }
-        }
-    }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -3741,7 +3161,7 @@ mod __googlesheetsparser_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __cell_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 11u32 as ::bbnf_ir::RuleId,
+            rule_id: 6u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("cell"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -3767,19 +3187,19 @@ mod __googlesheetsparser_emit_impl {
                             (),
                             crate::runtime::DtaError,
                         > = (|| {
-                            let _ = ({
-                                let _ = __shape_support_GoogleSheetsParser::skip_space(
+                            {
+                                let __scan_start = *p;
+                                let Some(match_len) = __regex_scan_GoogleSheetsParser(
+                                    "'(?:[^']|'')*'!|[A-Za-z_]\\w*!",
                                     input,
-                                    p,
-                                    state,
-                                );
-                                parse_wrap_GoogleSheetsParser_sheet_prefix(
-                                    input,
-                                    p,
-                                    state,
-                                    builder,
-                                )
-                            })?;
+                                    *p,
+                                ) else {
+                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: __scan_start as u32,
+                                    });
+                                };
+                                *p += match_len as usize;
+                            }
                             Ok(())
                         })();
                         match __iter_result {
@@ -3838,7 +3258,7 @@ mod __googlesheetsparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -3873,7 +3293,7 @@ mod __googlesheetsparser_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __func_open_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 12u32 as ::bbnf_ir::RuleId,
+            rule_id: 7u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("func_open"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -3929,7 +3349,7 @@ mod __googlesheetsparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -3964,7 +3384,7 @@ mod __googlesheetsparser_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __range_ref_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 13u32 as ::bbnf_ir::RuleId,
+            rule_id: 8u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("range_ref"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -3993,19 +3413,19 @@ mod __googlesheetsparser_emit_impl {
                             (),
                             crate::runtime::DtaError,
                         > = (|| {
-                            let _ = ({
-                                let _ = __shape_support_GoogleSheetsParser::skip_space(
+                            {
+                                let __scan_start = *p;
+                                let Some(match_len) = __regex_scan_GoogleSheetsParser(
+                                    "'(?:[^']|'')*'!|[A-Za-z_]\\w*!",
                                     input,
-                                    p,
-                                    state,
-                                );
-                                parse_wrap_GoogleSheetsParser_sheet_prefix(
-                                    input,
-                                    p,
-                                    state,
-                                    builder,
-                                )
-                            })?;
+                                    *p,
+                                ) else {
+                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: __scan_start as u32,
+                                    });
+                                };
+                                *p += match_len as usize;
+                            }
                             Ok(())
                         })();
                         match __iter_result {
@@ -4295,7 +3715,7 @@ mod __googlesheetsparser_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 14u32 as ::bbnf_ir::RuleId,
+            rule_id: 9u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("cell_or_range"),
             kind: ::bbnf_ir::registry::LayoutKind::UntaggedEnum,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -4418,7 +3838,7 @@ mod __googlesheetsparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __comparison_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 15u32 as ::bbnf_ir::RuleId,
+            rule_id: 10u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("comparison_expr"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -4553,7 +3973,7 @@ mod __googlesheetsparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __mul_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 16u32 as ::bbnf_ir::RuleId,
+            rule_id: 11u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("mul_expr"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -4651,7 +4071,7 @@ mod __googlesheetsparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -4686,7 +4106,7 @@ mod __googlesheetsparser_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __unary_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 17u32 as ::bbnf_ir::RuleId,
+            rule_id: 12u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("unary_expr"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -4715,23 +4135,67 @@ mod __googlesheetsparser_emit_impl {
                             (),
                             crate::runtime::DtaError,
                         > = (|| {
-                            let _ = ({
-                                let __first = __shape_support_GoogleSheetsParser::skip_space(
-                                        input,
-                                        p,
-                                        state,
-                                    )
-                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                        offset: *p as u32,
-                                    })?;
-                                parse_keyword_GoogleSheetsParser_unary_prefix(
-                                    input,
-                                    p,
-                                    __first,
-                                    state,
-                                    builder,
-                                )
-                            })?;
+                            'try_branches: loop {
+                                {
+                                    let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
+                                    let __alt_result: ::core::result::Result<
+                                        (),
+                                        crate::runtime::DtaError,
+                                    > = (|| {
+                                        let at = *p;
+                                        let end = at + 1usize;
+                                        if input.len() < end || input[at..end] != [43u8] {
+                                            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                                offset: at as u32,
+                                            });
+                                        }
+                                        *p = end;
+                                        Ok(())
+                                    })();
+                                    match __alt_result {
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
+                                        Err(_) => {
+                                            *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
+                                        }
+                                    }
+                                }
+                                {
+                                    let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
+                                    let __alt_result: ::core::result::Result<
+                                        (),
+                                        crate::runtime::DtaError,
+                                    > = (|| {
+                                        let at = *p;
+                                        let end = at + 1usize;
+                                        if input.len() < end || input[at..end] != [45u8] {
+                                            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                                offset: at as u32,
+                                            });
+                                        }
+                                        *p = end;
+                                        Ok(())
+                                    })();
+                                    match __alt_result {
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
+                                        Err(_) => {
+                                            *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
+                                        }
+                                    }
+                                }
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                    offset: *p as u32,
+                                });
+                            }
                             Ok(())
                         })();
                         match __iter_result {
@@ -4790,7 +4254,7 @@ mod __googlesheetsparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -4825,7 +4289,7 @@ mod __googlesheetsparser_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __paren_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 18u32 as ::bbnf_ir::RuleId,
+            rule_id: 13u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("paren_expr"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -4893,7 +4357,7 @@ mod __googlesheetsparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -4928,7 +4392,7 @@ mod __googlesheetsparser_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __arg_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 19u32 as ::bbnf_ir::RuleId,
+            rule_id: 14u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("arg"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -5012,7 +4476,7 @@ mod __googlesheetsparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -5047,7 +4511,7 @@ mod __googlesheetsparser_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __func_args_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 20u32 as ::bbnf_ir::RuleId,
+            rule_id: 15u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("func_args"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -5189,7 +4653,7 @@ mod __googlesheetsparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -5224,7 +4688,7 @@ mod __googlesheetsparser_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __let_binding_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 21u32 as ::bbnf_ir::RuleId,
+            rule_id: 16u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("let_binding"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -5292,7 +4756,7 @@ mod __googlesheetsparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -5327,7 +4791,7 @@ mod __googlesheetsparser_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __lambda_params_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 22u32 as ::bbnf_ir::RuleId,
+            rule_id: 17u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("lambda_params"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -5505,7 +4969,7 @@ mod __googlesheetsparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __array_row_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 23u32 as ::bbnf_ir::RuleId,
+            rule_id: 18u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("array_row"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -5637,7 +5101,7 @@ mod __googlesheetsparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __array_rows_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 24u32 as ::bbnf_ir::RuleId,
+            rule_id: 19u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("array_rows"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -5738,7 +5202,7 @@ mod __googlesheetsparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -5773,7 +5237,7 @@ mod __googlesheetsparser_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __array_literal_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 25u32 as ::bbnf_ir::RuleId,
+            rule_id: 20u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("array_literal"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -5872,7 +5336,7 @@ mod __googlesheetsparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __concat_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 26u32 as ::bbnf_ir::RuleId,
+            rule_id: 21u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("concat_expr"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -6004,7 +5468,7 @@ mod __googlesheetsparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __add_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 27u32 as ::bbnf_ir::RuleId,
+            rule_id: 22u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("add_expr"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -6133,7 +5597,7 @@ mod __googlesheetsparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __exp_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 28u32 as ::bbnf_ir::RuleId,
+            rule_id: 23u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("exp_expr"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -6244,7 +5708,7 @@ mod __googlesheetsparser_emit_impl {
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 29u32 as ::bbnf_ir::RuleId,
+            rule_id: 24u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("lambda_call"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -6329,7 +5793,7 @@ mod __googlesheetsparser_emit_impl {
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 31u32 as ::bbnf_ir::RuleId,
+            rule_id: 26u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("func_call"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -6399,7 +5863,7 @@ mod __googlesheetsparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -6434,7 +5898,7 @@ mod __googlesheetsparser_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __let_args_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 32u32 as ::bbnf_ir::RuleId,
+            rule_id: 27u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("let_args"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -6562,7 +6026,7 @@ mod __googlesheetsparser_emit_impl {
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 33u32 as ::bbnf_ir::RuleId,
+            rule_id: 28u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("let_call"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -7149,7 +6613,7 @@ mod __googlesheetsparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -7184,7 +6648,7 @@ mod __googlesheetsparser_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __postfix_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 35u32 as ::bbnf_ir::RuleId,
+            rule_id: 30u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("postfix_expr"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -7279,7 +6743,7 @@ mod __googlesheetsparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
@@ -7314,7 +6778,7 @@ mod __googlesheetsparser_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __formula_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 36u32 as ::bbnf_ir::RuleId,
+            rule_id: 31u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("formula"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -8020,188 +7484,6 @@ mod __googlesheetsparser_emit_impl {
                 Some(__builder.finish())
             })
         }
-        fn __sheet_prefix_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            {
-                {
-                    let __byte = match state.src_bytes.get(state.offset) {
-                        Some(&b) => b,
-                        None => return false,
-                    };
-                    match __byte {
-                        b'\'' => {
-                            {
-                                let __start = state.offset;
-                                if {
-                                    let __start = state.offset;
-                                    let __result: Option<()> = (|| {
-                                        if state.src_bytes.get(state.offset).copied() != Some(b'\'')
-                                        {
-                                            return None;
-                                        }
-                                        state.offset += 1;
-                                        {
-                                            let mut __rep_count: u32 = 0;
-                                            loop {
-                                                let __save = state.offset;
-                                                let __ok = (|| -> Option<()> {
-                                                    {
-                                                        let __save_alt = state.offset;
-                                                        let __alt_ok = (|| -> Option<()> {
-                                                            {
-                                                                let __b = *state.src_bytes.get(state.offset)?;
-                                                                if !(!(__b == b'\'')) {
-                                                                    return None;
-                                                                }
-                                                                state.offset += 1;
-                                                            }
-                                                            Some(())
-                                                        })();
-                                                        let __alt_ok = if __alt_ok.is_none() {
-                                                            state.offset = __save_alt;
-                                                            (|| -> Option<()> {
-                                                                if state.src_bytes.get(state.offset).copied() != Some(b'\'')
-                                                                {
-                                                                    return None;
-                                                                }
-                                                                state.offset += 1;
-                                                                if state.src_bytes.get(state.offset).copied() != Some(b'\'')
-                                                                {
-                                                                    return None;
-                                                                }
-                                                                state.offset += 1;
-                                                                Some(())
-                                                            })()
-                                                        } else {
-                                                            __alt_ok
-                                                        };
-                                                        if __alt_ok.is_none() {
-                                                            return None;
-                                                        }
-                                                    }
-                                                    Some(())
-                                                })();
-                                                if __ok.is_none() {
-                                                    state.offset = __save;
-                                                    break;
-                                                }
-                                                if state.offset == __save {
-                                                    break;
-                                                }
-                                                __rep_count += 1;
-                                            }
-                                        }
-                                        if state.src_bytes.get(state.offset).copied() != Some(b'\'')
-                                        {
-                                            return None;
-                                        }
-                                        state.offset += 1;
-                                        if state.src_bytes.get(state.offset).copied() != Some(b'!')
-                                        {
-                                            return None;
-                                        }
-                                        state.offset += 1;
-                                        Some(())
-                                    })();
-                                    if __result.is_some() && state.offset > __start {
-                                        Some(
-                                            ::parse_that::Span::new(__start, state.offset, state.src),
-                                        )
-                                    } else {
-                                        state.offset = __start;
-                                        None
-                                    }
-                                }
-                                    .is_none()
-                                {
-                                    return false;
-                                }
-                                let __matched = &state.src[__start..state.offset];
-                                if !__matched.is_empty() {
-                                    __builder.text(__matched);
-                                }
-                            };
-                        }
-                        b'A' | b'B' | b'C' | b'D' | b'E' | b'F' | b'G' | b'H' | b'I'
-                        | b'J' | b'K' | b'L' | b'M' | b'N' | b'O' | b'P' | b'Q' | b'R'
-                        | b'S' | b'T' | b'U' | b'V' | b'W' | b'X' | b'Y' | b'Z' | b'_'
-                        | b'a' | b'b' | b'c' | b'd' | b'e' | b'f' | b'g' | b'h' | b'i'
-                        | b'j' | b'k' | b'l' | b'm' | b'n' | b'o' | b'p' | b'q' | b'r'
-                        | b's' | b't' | b'u' | b'v' | b'w' | b'x' | b'y' | b'z' => {
-                            {
-                                let __start = state.offset;
-                                if {
-                                    let __start = state.offset;
-                                    let __result: Option<()> = (|| {
-                                        {
-                                            let __b = *state.src_bytes.get(state.offset)?;
-                                            if !(((__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                                || (__b >= b'a' && __b <= b'z')))
-                                            {
-                                                return None;
-                                            }
-                                            state.offset += 1;
-                                        }
-                                        {
-                                            let __end = state.src_bytes.len();
-                                            let mut __pos = state.offset;
-                                            while __pos < __end {
-                                                let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                                if (__b.is_ascii_alphanumeric() || __b == b'_') {
-                                                    __pos += 1;
-                                                } else {
-                                                    break;
-                                                }
-                                            }
-                                            state.offset = __pos;
-                                        }
-                                        if state.src_bytes.get(state.offset).copied() != Some(b'!')
-                                        {
-                                            return None;
-                                        }
-                                        state.offset += 1;
-                                        Some(())
-                                    })();
-                                    if __result.is_some() && state.offset > __start {
-                                        Some(
-                                            ::parse_that::Span::new(__start, state.offset, state.src),
-                                        )
-                                    } else {
-                                        state.offset = __start;
-                                        None
-                                    }
-                                }
-                                    .is_none()
-                                {
-                                    return false;
-                                }
-                                let __matched = &state.src[__start..state.offset];
-                                if !__matched.is_empty() {
-                                    __builder.text(__matched);
-                                }
-                            };
-                        }
-                        _ => {
-                            return false;
-                        }
-                    }
-                };
-                true
-            }
-        }
-        pub fn sheet_prefix_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__sheet_prefix_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
         fn __cell_ref_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -8331,322 +7613,6 @@ mod __googlesheetsparser_emit_impl {
                 Some(__builder.finish())
             })
         }
-        fn __compare_op_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            {
-                {
-                    if !{
-                        let __pretty_cp15 = state.offset;
-                        let __pretty_bcp16 = __builder.checkpoint();
-                        let __ok = (|| -> bool {
-                            {
-                                {
-                                    if state.src_bytes.get(state.offset).copied() != Some(b'<')
-                                    {
-                                        return false;
-                                    }
-                                    state.offset += 1;
-                                    __builder.char(b'<');
-                                };
-                                {
-                                    let __byte = match state.src_bytes.get(state.offset) {
-                                        Some(&b) => b,
-                                        None => return false,
-                                    };
-                                    match __byte {
-                                        b'>' => {
-                                            {
-                                                if state.src_bytes.get(state.offset).copied() != Some(b'>')
-                                                {
-                                                    return false;
-                                                }
-                                                state.offset += 1;
-                                                __builder.char(b'>');
-                                            };
-                                        }
-                                        b'=' => {
-                                            {
-                                                if state.src_bytes.get(state.offset).copied() != Some(b'=')
-                                                {
-                                                    return false;
-                                                }
-                                                state.offset += 1;
-                                                __builder.char(b'=');
-                                            };
-                                        }
-                                        _ => {
-                                            return false;
-                                        }
-                                    }
-                                };
-                            };
-                            true
-                        })();
-                        if !__ok {
-                            state.offset = __pretty_cp15;
-                            __builder.restore(__pretty_bcp16);
-                        }
-                        __ok
-                    } {
-                        {
-                            if !{
-                                let __pretty_cp14 = state.offset;
-                                let __ok = (|| -> bool {
-                                    {
-                                        let __s = ">=";
-                                        let __bytes = __s.as_bytes();
-                                        let __slc = match state.src_bytes.get(state.offset..) {
-                                            Some(s) if s.len() >= 2usize => s,
-                                            _ => return false,
-                                        };
-                                        if &__slc[..2usize] != __bytes {
-                                            return false;
-                                        }
-                                        __builder
-                                            .text(&state.src[state.offset..state.offset + 2usize]);
-                                        state.offset += 2usize;
-                                    };
-                                    true
-                                })();
-                                if !__ok {
-                                    state.offset = __pretty_cp14;
-                                }
-                                __ok
-                            } {
-                                {
-                                    if !{
-                                        let __pretty_cp13 = state.offset;
-                                        let __ok = (|| -> bool {
-                                            {
-                                                if state.src_bytes.get(state.offset).copied() != Some(b'<')
-                                                {
-                                                    return false;
-                                                }
-                                                state.offset += 1;
-                                                __builder.char(b'<');
-                                            };
-                                            true
-                                        })();
-                                        if !__ok {
-                                            state.offset = __pretty_cp13;
-                                        }
-                                        __ok
-                                    } {
-                                        {
-                                            if !{
-                                                let __pretty_cp12 = state.offset;
-                                                let __ok = (|| -> bool {
-                                                    {
-                                                        if state.src_bytes.get(state.offset).copied() != Some(b'>')
-                                                        {
-                                                            return false;
-                                                        }
-                                                        state.offset += 1;
-                                                        __builder.char(b'>');
-                                                    };
-                                                    true
-                                                })();
-                                                if !__ok {
-                                                    state.offset = __pretty_cp12;
-                                                }
-                                                __ok
-                                            } {
-                                                {
-                                                    if !{
-                                                        let __pretty_cp11 = state.offset;
-                                                        let __ok = (|| -> bool {
-                                                            {
-                                                                if state.src_bytes.get(state.offset).copied() != Some(b'=')
-                                                                {
-                                                                    return false;
-                                                                }
-                                                                state.offset += 1;
-                                                                __builder.char(b'=');
-                                                            };
-                                                            true
-                                                        })();
-                                                        if !__ok {
-                                                            state.offset = __pretty_cp11;
-                                                        }
-                                                        __ok
-                                                    } {
-                                                        return false;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                };
-                true
-            }
-        }
-        pub fn compare_op_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__compare_op_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __unary_prefix_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            {
-                {
-                    let __byte = match state.src_bytes.get(state.offset) {
-                        Some(&b) => b,
-                        None => return false,
-                    };
-                    match __byte {
-                        b'+' => {
-                            {
-                                if state.src_bytes.get(state.offset).copied() != Some(b'+')
-                                {
-                                    return false;
-                                }
-                                state.offset += 1;
-                                __builder.char(b'+');
-                            };
-                        }
-                        b'-' => {
-                            {
-                                if state.src_bytes.get(state.offset).copied() != Some(b'-')
-                                {
-                                    return false;
-                                }
-                                state.offset += 1;
-                                __builder.char(b'-');
-                            };
-                        }
-                        _ => {
-                            return false;
-                        }
-                    }
-                };
-                true
-            }
-        }
-        pub fn unary_prefix_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__unary_prefix_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __mul_op_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            {
-                {
-                    let __byte = match state.src_bytes.get(state.offset) {
-                        Some(&b) => b,
-                        None => return false,
-                    };
-                    match __byte {
-                        b'*' => {
-                            {
-                                if state.src_bytes.get(state.offset).copied() != Some(b'*')
-                                {
-                                    return false;
-                                }
-                                state.offset += 1;
-                                __builder.char(b'*');
-                            };
-                        }
-                        b'/' => {
-                            {
-                                if state.src_bytes.get(state.offset).copied() != Some(b'/')
-                                {
-                                    return false;
-                                }
-                                state.offset += 1;
-                                __builder.char(b'/');
-                            };
-                        }
-                        _ => {
-                            return false;
-                        }
-                    }
-                };
-                true
-            }
-        }
-        pub fn mul_op_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__mul_op_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __add_op_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            {
-                {
-                    let __byte = match state.src_bytes.get(state.offset) {
-                        Some(&b) => b,
-                        None => return false,
-                    };
-                    match __byte {
-                        b'+' => {
-                            {
-                                if state.src_bytes.get(state.offset).copied() != Some(b'+')
-                                {
-                                    return false;
-                                }
-                                state.offset += 1;
-                                __builder.char(b'+');
-                            };
-                        }
-                        b'-' => {
-                            {
-                                if state.src_bytes.get(state.offset).copied() != Some(b'-')
-                                {
-                                    return false;
-                                }
-                                state.offset += 1;
-                                __builder.char(b'-');
-                            };
-                        }
-                        _ => {
-                            return false;
-                        }
-                    }
-                };
-                true
-            }
-        }
-        pub fn add_op_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__add_op_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
         fn __cell_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -8655,17 +7621,165 @@ mod __googlesheetsparser_emit_impl {
                 {
                     {
                         let _ = {
-                            let __pretty_cp17 = state.offset;
-                            let __pretty_bcp18 = __builder.checkpoint();
+                            let __pretty_cp11 = state.offset;
+                            let __pretty_bcp12 = __builder.checkpoint();
                             let __ok = (|| -> bool {
-                                if !Self::__sheet_prefix_prettify(state, __builder) {
-                                    return false;
-                                }
+                                {
+                                    let __start = state.offset;
+                                    if {
+                                        let __start = state.offset;
+                                        let __result: Option<()> = (|| {
+                                            {
+                                                let __save_dispatch = state.offset;
+                                                let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                                match __dispatch_b {
+                                                    b'\'' => {
+                                                        let __ok = (|| -> Option<()> {
+                                                            if state.src_bytes.get(state.offset).copied() != Some(b'\'')
+                                                            {
+                                                                return None;
+                                                            }
+                                                            state.offset += 1;
+                                                            {
+                                                                let mut __rep_count: u32 = 0;
+                                                                loop {
+                                                                    let __save = state.offset;
+                                                                    let __ok = (|| -> Option<()> {
+                                                                        {
+                                                                            let __save_alt = state.offset;
+                                                                            let __alt_ok = (|| -> Option<()> {
+                                                                                {
+                                                                                    let __b = *state.src_bytes.get(state.offset)?;
+                                                                                    if !(!(__b == b'\'')) {
+                                                                                        return None;
+                                                                                    }
+                                                                                    state.offset += 1;
+                                                                                }
+                                                                                Some(())
+                                                                            })();
+                                                                            let __alt_ok = if __alt_ok.is_none() {
+                                                                                state.offset = __save_alt;
+                                                                                (|| -> Option<()> {
+                                                                                    if state.src_bytes.get(state.offset).copied() != Some(b'\'')
+                                                                                    {
+                                                                                        return None;
+                                                                                    }
+                                                                                    state.offset += 1;
+                                                                                    if state.src_bytes.get(state.offset).copied() != Some(b'\'')
+                                                                                    {
+                                                                                        return None;
+                                                                                    }
+                                                                                    state.offset += 1;
+                                                                                    Some(())
+                                                                                })()
+                                                                            } else {
+                                                                                __alt_ok
+                                                                            };
+                                                                            if __alt_ok.is_none() {
+                                                                                return None;
+                                                                            }
+                                                                        }
+                                                                        Some(())
+                                                                    })();
+                                                                    if __ok.is_none() {
+                                                                        state.offset = __save;
+                                                                        break;
+                                                                    }
+                                                                    if state.offset == __save {
+                                                                        break;
+                                                                    }
+                                                                    __rep_count += 1;
+                                                                }
+                                                            }
+                                                            if state.src_bytes.get(state.offset).copied() != Some(b'\'')
+                                                            {
+                                                                return None;
+                                                            }
+                                                            state.offset += 1;
+                                                            if state.src_bytes.get(state.offset).copied() != Some(b'!')
+                                                            {
+                                                                return None;
+                                                            }
+                                                            state.offset += 1;
+                                                            Some(())
+                                                        })();
+                                                        if __ok.is_none() {
+                                                            state.offset = __save_dispatch;
+                                                            return None;
+                                                        }
+                                                    }
+                                                    b'A' | b'B' | b'C' | b'D' | b'E' | b'F' | b'G' | b'H' | b'I'
+                                                    | b'J' | b'K' | b'L' | b'M' | b'N' | b'O' | b'P' | b'Q'
+                                                    | b'R' | b'S' | b'T' | b'U' | b'V' | b'W' | b'X' | b'Y'
+                                                    | b'Z' | b'_' | b'a' | b'b' | b'c' | b'd' | b'e' | b'f'
+                                                    | b'g' | b'h' | b'i' | b'j' | b'k' | b'l' | b'm' | b'n'
+                                                    | b'o' | b'p' | b'q' | b'r' | b's' | b't' | b'u' | b'v'
+                                                    | b'w' | b'x' | b'y' | b'z' => {
+                                                        let __ok = (|| -> Option<()> {
+                                                            {
+                                                                let __b = *state.src_bytes.get(state.offset)?;
+                                                                if !(((__b >= b'A' && __b <= b'Z') || __b == b'_'
+                                                                    || (__b >= b'a' && __b <= b'z')))
+                                                                {
+                                                                    return None;
+                                                                }
+                                                                state.offset += 1;
+                                                            }
+                                                            {
+                                                                let __end = state.src_bytes.len();
+                                                                let mut __pos = state.offset;
+                                                                while __pos < __end {
+                                                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                    if (__b.is_ascii_alphanumeric() || __b == b'_') {
+                                                                        __pos += 1;
+                                                                    } else {
+                                                                        break;
+                                                                    }
+                                                                }
+                                                                state.offset = __pos;
+                                                            }
+                                                            if state.src_bytes.get(state.offset).copied() != Some(b'!')
+                                                            {
+                                                                return None;
+                                                            }
+                                                            state.offset += 1;
+                                                            Some(())
+                                                        })();
+                                                        if __ok.is_none() {
+                                                            state.offset = __save_dispatch;
+                                                            return None;
+                                                        }
+                                                    }
+                                                    _ => {
+                                                        return None;
+                                                    }
+                                                }
+                                            }
+                                            Some(())
+                                        })();
+                                        if __result.is_some() && state.offset > __start {
+                                            Some(
+                                                ::parse_that::Span::new(__start, state.offset, state.src),
+                                            )
+                                        } else {
+                                            state.offset = __start;
+                                            None
+                                        }
+                                    }
+                                        .is_none()
+                                    {
+                                        return false;
+                                    }
+                                    let __matched = &state.src[__start..state.offset];
+                                    if !__matched.is_empty() {
+                                        __builder.text(__matched);
+                                    }
+                                };
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp17;
-                                __builder.restore(__pretty_bcp18);
+                                state.offset = __pretty_cp11;
+                                __builder.restore(__pretty_bcp12);
                             }
                             __ok
                         };
@@ -8813,17 +7927,165 @@ mod __googlesheetsparser_emit_impl {
                 {
                     {
                         let _ = {
-                            let __pretty_cp19 = state.offset;
-                            let __pretty_bcp20 = __builder.checkpoint();
+                            let __pretty_cp13 = state.offset;
+                            let __pretty_bcp14 = __builder.checkpoint();
                             let __ok = (|| -> bool {
-                                if !Self::__sheet_prefix_prettify(state, __builder) {
-                                    return false;
-                                }
+                                {
+                                    let __start = state.offset;
+                                    if {
+                                        let __start = state.offset;
+                                        let __result: Option<()> = (|| {
+                                            {
+                                                let __save_dispatch = state.offset;
+                                                let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                                match __dispatch_b {
+                                                    b'\'' => {
+                                                        let __ok = (|| -> Option<()> {
+                                                            if state.src_bytes.get(state.offset).copied() != Some(b'\'')
+                                                            {
+                                                                return None;
+                                                            }
+                                                            state.offset += 1;
+                                                            {
+                                                                let mut __rep_count: u32 = 0;
+                                                                loop {
+                                                                    let __save = state.offset;
+                                                                    let __ok = (|| -> Option<()> {
+                                                                        {
+                                                                            let __save_alt = state.offset;
+                                                                            let __alt_ok = (|| -> Option<()> {
+                                                                                {
+                                                                                    let __b = *state.src_bytes.get(state.offset)?;
+                                                                                    if !(!(__b == b'\'')) {
+                                                                                        return None;
+                                                                                    }
+                                                                                    state.offset += 1;
+                                                                                }
+                                                                                Some(())
+                                                                            })();
+                                                                            let __alt_ok = if __alt_ok.is_none() {
+                                                                                state.offset = __save_alt;
+                                                                                (|| -> Option<()> {
+                                                                                    if state.src_bytes.get(state.offset).copied() != Some(b'\'')
+                                                                                    {
+                                                                                        return None;
+                                                                                    }
+                                                                                    state.offset += 1;
+                                                                                    if state.src_bytes.get(state.offset).copied() != Some(b'\'')
+                                                                                    {
+                                                                                        return None;
+                                                                                    }
+                                                                                    state.offset += 1;
+                                                                                    Some(())
+                                                                                })()
+                                                                            } else {
+                                                                                __alt_ok
+                                                                            };
+                                                                            if __alt_ok.is_none() {
+                                                                                return None;
+                                                                            }
+                                                                        }
+                                                                        Some(())
+                                                                    })();
+                                                                    if __ok.is_none() {
+                                                                        state.offset = __save;
+                                                                        break;
+                                                                    }
+                                                                    if state.offset == __save {
+                                                                        break;
+                                                                    }
+                                                                    __rep_count += 1;
+                                                                }
+                                                            }
+                                                            if state.src_bytes.get(state.offset).copied() != Some(b'\'')
+                                                            {
+                                                                return None;
+                                                            }
+                                                            state.offset += 1;
+                                                            if state.src_bytes.get(state.offset).copied() != Some(b'!')
+                                                            {
+                                                                return None;
+                                                            }
+                                                            state.offset += 1;
+                                                            Some(())
+                                                        })();
+                                                        if __ok.is_none() {
+                                                            state.offset = __save_dispatch;
+                                                            return None;
+                                                        }
+                                                    }
+                                                    b'A' | b'B' | b'C' | b'D' | b'E' | b'F' | b'G' | b'H' | b'I'
+                                                    | b'J' | b'K' | b'L' | b'M' | b'N' | b'O' | b'P' | b'Q'
+                                                    | b'R' | b'S' | b'T' | b'U' | b'V' | b'W' | b'X' | b'Y'
+                                                    | b'Z' | b'_' | b'a' | b'b' | b'c' | b'd' | b'e' | b'f'
+                                                    | b'g' | b'h' | b'i' | b'j' | b'k' | b'l' | b'm' | b'n'
+                                                    | b'o' | b'p' | b'q' | b'r' | b's' | b't' | b'u' | b'v'
+                                                    | b'w' | b'x' | b'y' | b'z' => {
+                                                        let __ok = (|| -> Option<()> {
+                                                            {
+                                                                let __b = *state.src_bytes.get(state.offset)?;
+                                                                if !(((__b >= b'A' && __b <= b'Z') || __b == b'_'
+                                                                    || (__b >= b'a' && __b <= b'z')))
+                                                                {
+                                                                    return None;
+                                                                }
+                                                                state.offset += 1;
+                                                            }
+                                                            {
+                                                                let __end = state.src_bytes.len();
+                                                                let mut __pos = state.offset;
+                                                                while __pos < __end {
+                                                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                    if (__b.is_ascii_alphanumeric() || __b == b'_') {
+                                                                        __pos += 1;
+                                                                    } else {
+                                                                        break;
+                                                                    }
+                                                                }
+                                                                state.offset = __pos;
+                                                            }
+                                                            if state.src_bytes.get(state.offset).copied() != Some(b'!')
+                                                            {
+                                                                return None;
+                                                            }
+                                                            state.offset += 1;
+                                                            Some(())
+                                                        })();
+                                                        if __ok.is_none() {
+                                                            state.offset = __save_dispatch;
+                                                            return None;
+                                                        }
+                                                    }
+                                                    _ => {
+                                                        return None;
+                                                    }
+                                                }
+                                            }
+                                            Some(())
+                                        })();
+                                        if __result.is_some() && state.offset > __start {
+                                            Some(
+                                                ::parse_that::Span::new(__start, state.offset, state.src),
+                                            )
+                                        } else {
+                                            state.offset = __start;
+                                            None
+                                        }
+                                    }
+                                        .is_none()
+                                    {
+                                        return false;
+                                    }
+                                    let __matched = &state.src[__start..state.offset];
+                                    if !__matched.is_empty() {
+                                        __builder.text(__matched);
+                                    }
+                                };
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp19;
-                                __builder.restore(__pretty_bcp20);
+                                state.offset = __pretty_cp13;
+                                __builder.restore(__pretty_bcp14);
                             }
                             __ok
                         };
@@ -8831,7 +8093,7 @@ mod __googlesheetsparser_emit_impl {
                     };
                     {
                         if !{
-                            let __pretty_cp23 = state.offset;
+                            let __pretty_cp17 = state.offset;
                             let __ok = (|| -> bool {
                                 {
                                     let __start = state.offset;
@@ -8912,13 +8174,13 @@ mod __googlesheetsparser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp23;
+                                state.offset = __pretty_cp17;
                             }
                             __ok
                         } {
                             {
                                 if !{
-                                    let __pretty_cp22 = state.offset;
+                                    let __pretty_cp16 = state.offset;
                                     let __ok = (|| -> bool {
                                         {
                                             let __start = state.offset;
@@ -8980,13 +8242,13 @@ mod __googlesheetsparser_emit_impl {
                                         true
                                     })();
                                     if !__ok {
-                                        state.offset = __pretty_cp22;
+                                        state.offset = __pretty_cp16;
                                     }
                                     __ok
                                 } {
                                     {
                                         if !{
-                                            let __pretty_cp21 = state.offset;
+                                            let __pretty_cp15 = state.offset;
                                             let __ok = (|| -> bool {
                                                 {
                                                     let __start = state.offset;
@@ -9035,7 +8297,7 @@ mod __googlesheetsparser_emit_impl {
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp21;
+                                                state.offset = __pretty_cp15;
                                             }
                                             __ok
                                         } {
@@ -9055,7 +8317,7 @@ mod __googlesheetsparser_emit_impl {
                     };
                     {
                         if !{
-                            let __pretty_cp26 = state.offset;
+                            let __pretty_cp20 = state.offset;
                             let __ok = (|| -> bool {
                                 {
                                     let __start = state.offset;
@@ -9136,13 +8398,13 @@ mod __googlesheetsparser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp26;
+                                state.offset = __pretty_cp20;
                             }
                             __ok
                         } {
                             {
                                 if !{
-                                    let __pretty_cp25 = state.offset;
+                                    let __pretty_cp19 = state.offset;
                                     let __ok = (|| -> bool {
                                         {
                                             let __start = state.offset;
@@ -9204,13 +8466,13 @@ mod __googlesheetsparser_emit_impl {
                                         true
                                     })();
                                     if !__ok {
-                                        state.offset = __pretty_cp25;
+                                        state.offset = __pretty_cp19;
                                     }
                                     __ok
                                 } {
                                     {
                                         if !{
-                                            let __pretty_cp24 = state.offset;
+                                            let __pretty_cp18 = state.offset;
                                             let __ok = (|| -> bool {
                                                 {
                                                     let __start = state.offset;
@@ -9259,7 +8521,7 @@ mod __googlesheetsparser_emit_impl {
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp24;
+                                                state.offset = __pretty_cp18;
                                             }
                                             __ok
                                         } {
@@ -9292,8 +8554,8 @@ mod __googlesheetsparser_emit_impl {
             {
                 {
                     if !{
-                        let __pretty_cp27 = state.offset;
-                        let __pretty_bcp28 = __builder.checkpoint();
+                        let __pretty_cp21 = state.offset;
+                        let __pretty_bcp22 = __builder.checkpoint();
                         let __ok = (|| -> bool {
                             if !Self::__range_ref_prettify(state, __builder) {
                                 return false;
@@ -9301,8 +8563,8 @@ mod __googlesheetsparser_emit_impl {
                             true
                         })();
                         if !__ok {
-                            state.offset = __pretty_cp27;
-                            __builder.restore(__pretty_bcp28);
+                            state.offset = __pretty_cp21;
+                            __builder.restore(__pretty_bcp22);
                         }
                         __ok
                     } {
@@ -9333,25 +8595,25 @@ mod __googlesheetsparser_emit_impl {
                 {
                     {
                         if !{
-                            let __pretty_cp31 = state.offset;
-                            let __pretty_bcp32 = __builder.checkpoint();
+                            let __pretty_cp25 = state.offset;
+                            let __pretty_bcp26 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
-                                    let __ows29 = state.offset;
+                                    let __ows23 = state.offset;
                                     ::parse_that::trim_leading_whitespace_mut(state);
-                                    __builder.text_inline_ws(&state.src[__ows29..state.offset]);
+                                    __builder.text_inline_ws(&state.src[__ows23..state.offset]);
                                     if !Self::__concat_expr_prettify(state, __builder) {
                                         return false;
                                     }
-                                    let __ows30 = state.offset;
+                                    let __ows24 = state.offset;
                                     ::parse_that::trim_leading_whitespace_mut(state);
-                                    __builder.text_inline_ws(&state.src[__ows30..state.offset]);
+                                    __builder.text_inline_ws(&state.src[__ows24..state.offset]);
                                 };
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp31;
-                                __builder.restore(__pretty_bcp32);
+                                state.offset = __pretty_cp25;
+                                __builder.restore(__pretty_bcp26);
                             }
                             __ok
                         } {
@@ -9376,9 +8638,153 @@ mod __googlesheetsparser_emit_impl {
                                                         let __ows33 = state.offset;
                                                         ::parse_that::trim_leading_whitespace_mut(state);
                                                         __builder.text_inline_ws(&state.src[__ows33..state.offset]);
-                                                        if !Self::__compare_op_prettify(state, __builder) {
-                                                            return false;
-                                                        }
+                                                        {
+                                                            if !{
+                                                                let __pretty_cp31 = state.offset;
+                                                                let __pretty_bcp32 = __builder.checkpoint();
+                                                                let __ok = (|| -> bool {
+                                                                    {
+                                                                        {
+                                                                            if state.src_bytes.get(state.offset).copied() != Some(b'<')
+                                                                            {
+                                                                                return false;
+                                                                            }
+                                                                            state.offset += 1;
+                                                                            __builder.char(b'<');
+                                                                        };
+                                                                        {
+                                                                            let __byte = match state.src_bytes.get(state.offset) {
+                                                                                Some(&b) => b,
+                                                                                None => return false,
+                                                                            };
+                                                                            match __byte {
+                                                                                b'>' => {
+                                                                                    {
+                                                                                        if state.src_bytes.get(state.offset).copied() != Some(b'>')
+                                                                                        {
+                                                                                            return false;
+                                                                                        }
+                                                                                        state.offset += 1;
+                                                                                        __builder.char(b'>');
+                                                                                    };
+                                                                                }
+                                                                                b'=' => {
+                                                                                    {
+                                                                                        if state.src_bytes.get(state.offset).copied() != Some(b'=')
+                                                                                        {
+                                                                                            return false;
+                                                                                        }
+                                                                                        state.offset += 1;
+                                                                                        __builder.char(b'=');
+                                                                                    };
+                                                                                }
+                                                                                _ => {
+                                                                                    return false;
+                                                                                }
+                                                                            }
+                                                                        };
+                                                                    };
+                                                                    true
+                                                                })();
+                                                                if !__ok {
+                                                                    state.offset = __pretty_cp31;
+                                                                    __builder.restore(__pretty_bcp32);
+                                                                }
+                                                                __ok
+                                                            } {
+                                                                {
+                                                                    if !{
+                                                                        let __pretty_cp30 = state.offset;
+                                                                        let __ok = (|| -> bool {
+                                                                            {
+                                                                                let __s = ">=";
+                                                                                let __bytes = __s.as_bytes();
+                                                                                let __slc = match state.src_bytes.get(state.offset..) {
+                                                                                    Some(s) if s.len() >= 2usize => s,
+                                                                                    _ => return false,
+                                                                                };
+                                                                                if &__slc[..2usize] != __bytes {
+                                                                                    return false;
+                                                                                }
+                                                                                __builder
+                                                                                    .text(&state.src[state.offset..state.offset + 2usize]);
+                                                                                state.offset += 2usize;
+                                                                            };
+                                                                            true
+                                                                        })();
+                                                                        if !__ok {
+                                                                            state.offset = __pretty_cp30;
+                                                                        }
+                                                                        __ok
+                                                                    } {
+                                                                        {
+                                                                            if !{
+                                                                                let __pretty_cp29 = state.offset;
+                                                                                let __ok = (|| -> bool {
+                                                                                    {
+                                                                                        if state.src_bytes.get(state.offset).copied() != Some(b'<')
+                                                                                        {
+                                                                                            return false;
+                                                                                        }
+                                                                                        state.offset += 1;
+                                                                                        __builder.char(b'<');
+                                                                                    };
+                                                                                    true
+                                                                                })();
+                                                                                if !__ok {
+                                                                                    state.offset = __pretty_cp29;
+                                                                                }
+                                                                                __ok
+                                                                            } {
+                                                                                {
+                                                                                    if !{
+                                                                                        let __pretty_cp28 = state.offset;
+                                                                                        let __ok = (|| -> bool {
+                                                                                            {
+                                                                                                if state.src_bytes.get(state.offset).copied() != Some(b'>')
+                                                                                                {
+                                                                                                    return false;
+                                                                                                }
+                                                                                                state.offset += 1;
+                                                                                                __builder.char(b'>');
+                                                                                            };
+                                                                                            true
+                                                                                        })();
+                                                                                        if !__ok {
+                                                                                            state.offset = __pretty_cp28;
+                                                                                        }
+                                                                                        __ok
+                                                                                    } {
+                                                                                        {
+                                                                                            if !{
+                                                                                                let __pretty_cp27 = state.offset;
+                                                                                                let __ok = (|| -> bool {
+                                                                                                    {
+                                                                                                        if state.src_bytes.get(state.offset).copied() != Some(b'=')
+                                                                                                        {
+                                                                                                            return false;
+                                                                                                        }
+                                                                                                        state.offset += 1;
+                                                                                                        __builder.char(b'=');
+                                                                                                    };
+                                                                                                    true
+                                                                                                })();
+                                                                                                if !__ok {
+                                                                                                    state.offset = __pretty_cp27;
+                                                                                                }
+                                                                                                __ok
+                                                                                            } {
+                                                                                                return false;
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        };
                                                         let __ows34 = state.offset;
                                                         ::parse_that::trim_leading_whitespace_mut(state);
                                                         __builder.text_inline_ws(&state.src[__ows34..state.offset]);
@@ -9505,9 +8911,37 @@ mod __googlesheetsparser_emit_impl {
                                                         let __ows49 = state.offset;
                                                         ::parse_that::trim_leading_whitespace_mut(state);
                                                         __builder.text_inline_ws(&state.src[__ows49..state.offset]);
-                                                        if !Self::__mul_op_prettify(state, __builder) {
-                                                            return false;
-                                                        }
+                                                        {
+                                                            let __byte = match state.src_bytes.get(state.offset) {
+                                                                Some(&b) => b,
+                                                                None => return false,
+                                                            };
+                                                            match __byte {
+                                                                b'*' => {
+                                                                    {
+                                                                        if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                        {
+                                                                            return false;
+                                                                        }
+                                                                        state.offset += 1;
+                                                                        __builder.char(b'*');
+                                                                    };
+                                                                }
+                                                                b'/' => {
+                                                                    {
+                                                                        if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                                        {
+                                                                            return false;
+                                                                        }
+                                                                        state.offset += 1;
+                                                                        __builder.char(b'/');
+                                                                    };
+                                                                }
+                                                                _ => {
+                                                                    return false;
+                                                                }
+                                                            }
+                                                        };
                                                         let __ows50 = state.offset;
                                                         ::parse_that::trim_leading_whitespace_mut(state);
                                                         __builder.text_inline_ws(&state.src[__ows50..state.offset]);
@@ -9597,9 +9031,37 @@ mod __googlesheetsparser_emit_impl {
                                 let __pretty_cp61 = state.offset;
                                 let __pretty_bcp62 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
-                                    if !Self::__unary_prefix_prettify(state, __builder) {
-                                        return false;
-                                    }
+                                    {
+                                        let __byte = match state.src_bytes.get(state.offset) {
+                                            Some(&b) => b,
+                                            None => return false,
+                                        };
+                                        match __byte {
+                                            b'+' => {
+                                                {
+                                                    if state.src_bytes.get(state.offset).copied() != Some(b'+')
+                                                    {
+                                                        return false;
+                                                    }
+                                                    state.offset += 1;
+                                                    __builder.char(b'+');
+                                                };
+                                            }
+                                            b'-' => {
+                                                {
+                                                    if state.src_bytes.get(state.offset).copied() != Some(b'-')
+                                                    {
+                                                        return false;
+                                                    }
+                                                    state.offset += 1;
+                                                    __builder.char(b'-');
+                                                };
+                                            }
+                                            _ => {
+                                                return false;
+                                            }
+                                        }
+                                    };
                                     true
                                 })();
                                 if !__ok {
@@ -10451,9 +9913,37 @@ mod __googlesheetsparser_emit_impl {
                                                         ::parse_that::trim_leading_whitespace_mut(state);
                                                         __builder
                                                             .text_inline_ws(&state.src[__ows139..state.offset]);
-                                                        if !Self::__add_op_prettify(state, __builder) {
-                                                            return false;
-                                                        }
+                                                        {
+                                                            let __byte = match state.src_bytes.get(state.offset) {
+                                                                Some(&b) => b,
+                                                                None => return false,
+                                                            };
+                                                            match __byte {
+                                                                b'+' => {
+                                                                    {
+                                                                        if state.src_bytes.get(state.offset).copied() != Some(b'+')
+                                                                        {
+                                                                            return false;
+                                                                        }
+                                                                        state.offset += 1;
+                                                                        __builder.char(b'+');
+                                                                    };
+                                                                }
+                                                                b'-' => {
+                                                                    {
+                                                                        if state.src_bytes.get(state.offset).copied() != Some(b'-')
+                                                                        {
+                                                                            return false;
+                                                                        }
+                                                                        state.offset += 1;
+                                                                        __builder.char(b'-');
+                                                                    };
+                                                                }
+                                                                _ => {
+                                                                    return false;
+                                                                }
+                                                            }
+                                                        };
                                                         let __ows140 = state.offset;
                                                         ::parse_that::trim_leading_whitespace_mut(state);
                                                         __builder

@@ -698,7 +698,10 @@ mod __jsonparser_emit_impl {
             });
         }
         *p = end;
-        builder.push_leaf_with_unit();
+        builder
+            .push_leaf_with_str(unsafe {
+                ::core::str::from_utf8_unchecked(&input[at..end])
+            });
         ::core::result::Result::Ok(())
     }
     /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
@@ -988,7 +991,7 @@ mod __jsonparser_emit_impl {
     /// AZ-I.W2.RB — per-grammar Object-shape parse function,
     /// **struct-direct body**. Targets [`JsonStructBuilder`].
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-element pushes (string keys + value
     /// dispatch) land directly on the topmost open frame.
@@ -1130,7 +1133,7 @@ mod __jsonparser_emit_impl {
     /// `StructBuilder` (JSON / CSS L4 / Sheets per the
     /// resolver's `SubstrateBinding`).
     ///
-    /// Walker-tape compound emission is replaced by typed
+    /// Compound emission lands as typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost

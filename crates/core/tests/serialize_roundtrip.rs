@@ -263,9 +263,9 @@ fn math_num() {
 // `input` over the document's covering range and asserts idempotence
 // under reparse.
 //
-// AZ-II.cutover.I Phase 5 — LANDED. The bootstrap_parser admits real
-// BBNF source via `bbnf::grammar::bootstrap_parser::parse`; the
-// `serialize_compact_doc` walker at
+// AZ-III.W2.4 — canonical self-host: BBNF source flows through the
+// codegen-emitted `BbnfBootstrap::parse` (no hand-written bootstrap
+// parser). The `serialize_compact_doc` walker at
 // `bbnf::runtime::bbnf::serialize_compact_doc` is a typed projection
 // over [`BbnfCompoundKind`] that materialises every non-Span literal
 // (`=`, `;`, `,`, `|`, `->`, `from`, `@import`, …) and re-emits the
@@ -275,7 +275,8 @@ fn math_num() {
 use bbnf::runtime::bbnf::serialize_compact_doc;
 
 fn bbnf_emit(input: &str) -> String {
-    let doc = bbnf::grammar::bootstrap_parser::parse(input).expect("BBNF grammar parse failed");
+    let doc =
+        bbnf::grammar::generated::BbnfBootstrap::parse(input).expect("BBNF grammar parse failed");
     serialize_compact_doc(&doc)
 }
 

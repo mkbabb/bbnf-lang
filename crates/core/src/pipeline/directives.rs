@@ -86,15 +86,15 @@ pub(crate) fn parse_to_pipeline_inputs(
     DirectiveMaps<'static>,
     Vec<ImportDirective<'static>>,
 )> {
-    use crate::grammar::{self, bootstrap_parser, host};
-    let _ = grammar::generated::BbnfBootstrap; // referenced for compile-time visibility
+    use crate::grammar::{generated, host};
 
     let input: &'static str = Box::leak(source.to_owned().into_boxed_str());
-    // AZ-II.cutover.H Phase 1 — route through the hand-written
-    // bootstrap parser per the rationale documented at
-    // `grammar::parse`. The codegen-emitted `BbnfBootstrap::parse`
-    // does not yet self-parse the BBNF fixture corpus.
-    let document = bootstrap_parser::parse(input).ok()?;
+    // AZ-III.W2.4: canonical self-host — generated::BbnfBootstrap::parse
+    // is the bootstrap entry point. The codegen alt_dispatch path
+    // emits the chosen branch_tag for the `term` compound; lower_term
+    // dispatches on that tag instead of relying on synthetic punctuator
+    // spans the hand-written bootstrap_parser used to push.
+    let document = generated::BbnfBootstrap::parse(input).ok()?;
     let document: &'static BbnfDocument<'static> = Box::leak(Box::new(document));
     Some(host::extract_for_pipeline(document))
 }

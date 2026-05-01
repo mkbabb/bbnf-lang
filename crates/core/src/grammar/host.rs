@@ -521,14 +521,38 @@ fn strip_quotes(raw: &str) -> &str {
 }
 
 /// Format a single `pretty_hint` node as `name` or `name(arg)`.
+///
+/// `pretty_hint = identifier , ( "(" , /[^)]*/ , ")" ) ?`. The codegen
+/// alt_dispatch / flat-shape parser pushes the identifier as a Span
+/// child but doesn't surface the optional `( ... )` argument group as
+/// a separate child compound — the `(`, regex content, and `)` are
+/// consumed without being deposited on the open frame. Recover the
+/// argument text by scanning forward in the input from the identifier
+/// span's end when the dedicated arg-group child is absent.
 fn pretty_hint_text<'a>(node: BbnfView<'a, 'a>) -> Cow<'a, str> {
     if matches!(node.compound_kind(), Some(BbnfCompoundKind::PrettyHint)) {
         let ident = node.child(0).expect("pretty_hint: missing identifier");
         let name = ident.span_text().trim();
+        // Path A: the parser surfaced the optional arg group as a
+        // dedicated child compound (legacy bootstrap_parser shape).
         if let Some(arg_group) = node.child(1) {
             if let Some((lo, hi)) = arg_group.byte_span() {
                 if hi > lo {
                     let arg = &arg_group.input()[lo as usize..hi as usize];
+                    return Cow::Owned(format!("{}{}", name, arg.trim()));
+                }
+            }
+        }
+        // Path B: the alt_dispatch codegen path consumed `( ... )`
+        // without pushing a separate compound. Scan forward from the
+        // identifier span's end to recover any trailing `(...)`.
+        if let Some((_, ident_hi)) = ident.byte_span() {
+            let input = ident.input();
+            let after = &input[ident_hi as usize..];
+            let trimmed = after.trim_start();
+            if trimmed.starts_with('(') {
+                if let Some(close) = trimmed.find(')') {
+                    let arg = &trimmed[..=close];
                     return Cow::Owned(format!("{}{}", name, arg.trim()));
                 }
             }

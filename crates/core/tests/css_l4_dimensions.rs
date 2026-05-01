@@ -11,57 +11,11 @@
 //! dimension types must all parse via the typed Alt) and serve as the
 //! W3-E regression bed for tailwind's leading-dot literals.
 
-/// Host functions referenced by the CSS L4 grammar's typed leaves.
-#[allow(dead_code)]
-mod css_types {
-    pub fn parse_hex_color(s: &str) -> u32 {
-        let hex = s.as_bytes();
-        match hex.len() {
-            3 => {
-                let r = hex_digit(hex[0]);
-                let g = hex_digit(hex[1]);
-                let b = hex_digit(hex[2]);
-                ((r << 4 | r) << 24) | ((g << 4 | g) << 16) | ((b << 4 | b) << 8) | 0xFF
-            }
-            4 => {
-                let r = hex_digit(hex[0]);
-                let g = hex_digit(hex[1]);
-                let b = hex_digit(hex[2]);
-                let a = hex_digit(hex[3]);
-                ((r << 4 | r) << 24) | ((g << 4 | g) << 16) | ((b << 4 | b) << 8) | (a << 4 | a)
-            }
-            6 => {
-                let r = hex_byte(hex[0], hex[1]);
-                let g = hex_byte(hex[2], hex[3]);
-                let b = hex_byte(hex[4], hex[5]);
-                (r << 24) | (g << 16) | (b << 8) | 0xFF
-            }
-            8 => {
-                let r = hex_byte(hex[0], hex[1]);
-                let g = hex_byte(hex[2], hex[3]);
-                let b = hex_byte(hex[4], hex[5]);
-                let a = hex_byte(hex[6], hex[7]);
-                (r << 24) | (g << 16) | (b << 8) | a
-            }
-            _ => 0,
-        }
-    }
-
-    #[inline(always)]
-    fn hex_digit(b: u8) -> u32 {
-        match b {
-            b'0'..=b'9' => (b - b'0') as u32,
-            b'a'..=b'f' => (b - b'a' + 10) as u32,
-            b'A'..=b'F' => (b - b'A' + 10) as u32,
-            _ => 0,
-        }
-    }
-
-    #[inline(always)]
-    fn hex_byte(hi: u8, lo: u8) -> u32 {
-        (hex_digit(hi) << 4) | hex_digit(lo)
-    }
-}
+// Host function `parse_hex_color` referenced by
+// `grammar/css/l4/color.bbnf` lives in `bbnf::css_types` (canonical
+// shim per REAUDIT-2026-04-30 lane 3 §5.1).
+#[allow(unused_imports)]
+use bbnf::css_types as _css_types_link;
 
 use ::bbnf::grammar::generated::css_l4::*;
 

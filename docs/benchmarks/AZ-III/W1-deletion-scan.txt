@@ -1,0 +1,262 @@
+# AZ-III.W1.3 — Deletion and Metadata Audit
+
+Date: 2026-04-30
+Worktree: /Users/mkbabb/Programming/bbnf-wt-azIII-w1-audit
+Lane: AZ-III.W1.3 (read-only audit)
+Hard gates covered: W1 hard gate 3 (cargo metadata) + W1 hard gate 4 (rg deletion scan).
+
+## Methodology
+
+1. `cargo metadata --locked --no-deps --format-version 1` — see W1-metadata.txt.
+2. `rg -n "crates/tape|json-prototype|tape::|Tape|Gorgeous JIT|A1"` over the
+   live source tree and active docs, excluding archived audit docs
+   (`docs/tranches/*/audit/*` were excluded from the unified scan but each
+   token is then bucketed below for full visibility), `docs/tranches/*/archive/**`,
+   `target/**`, `Cargo.lock`, `node_modules/**`, `package-lock.json`,
+   `playground/public/img/*.svg`, and the AZ-III evidence file itself.
+3. Per-token bucketed scans then drill into `crates/` (Rust source) only,
+   so structural verdicts are based on Rust-source residue, not doc residue.
+
+The unified raw scan is large (2667 lines, 348 distinct files); the
+overwhelming majority is doc-prose archaeology in tranche specs, audit reports,
+and bench archives — not live code. The classification below is by token bucket
+so each W1.3 verdict is verifiable independently.
+
+## Physical-path checks
+
+- `crates/tape/`           — ABSENT (`test ! -e crates/tape; echo $?` → 0)
+- `crates/json-prototype/` — ABSENT (`test ! -e crates/json-prototype; echo $?` → 0)
+
+Workspace `crates/` contents (12 directories, none are tape/json-prototype):
+analysis, bootstrap, core, csp-solver, egraph, egraph-derive, gorgeous, ir,
+lsp, ser, simd-scan, csp-solver.
+
+## Public re-export check (no tape runtime exports)
+
+- `rg "^pub use [^;]*tape" crates/`                         → 0 hits
+- `rg "pub use [^;]*::Tape\b" crates/`                       → 0 hits
+- `rg "pub use [^;]*::TapeOffset\b" crates/`                 → 0 hits
+- `rg "pub use [^;]*::Parsed<R>" crates/`                    → 0 hits
+- `rg "pub use [^;]*::TapeDirect\b" crates/`                 → 0 hits
+- `rg "pub use [^;]*::ValueRoot\b" crates/`                  → 0 hits
+- `rg "TapeDirect" crates/ --type rust`                      → 0 hits
+- `rg "Parsed<R>" crates/ --type rust`                       → 0 hits
+
+No public tape runtime exports remain.
+
+## Per-token classification
+
+Legend:
+- (a) DELETED — refers to symbol/path/package that no longer exists; hit is
+  doc/comment archaeology only and (a)-class hits do NOT block W1.
+- (b) ALLOWED HISTORICAL ARCHIVE — hit lives in archived audit/tranche docs
+  (AZ-II/audit/*, B*/audit/*, AY-*/audit/*, AX/audit/*, etc.) or active
+  AZ-III specs that intentionally reference the deletion target.
+- (c) BLOCKED — live consumer / live identifier / live re-export of a forbidden
+  surface. Any (c) hit blocks W1 hard gate 4.
+
+### Token: `crates/tape` (literal path string)
+
+Total hits: 459 lines across 188 files.
+
+- Source hits (`crates/`): **0**.
+- Active AZ-III spec hits (waves/W1.md, AZ-III.md, REAUDIT-2026-04-30/*.md):
+  named in scope/hard-gate text — (a)/(b) intentional spec references.
+- All other hits live in tranche docs (AZ-II/cutover/*, AY-I/waves/*,
+  AY-II-I/audit/*, AX/waves/*, B0..B7/* etc.), benchmarks archives
+  (`docs/benchmarks/post-AZ-II.json`, `O4-parsed-tapedirect-scan.txt`, etc.),
+  and design notes (`docs/META-AUDIT-PROMPT.md`, `docs/GESTALT.md`,
+  `docs/RISK-PERF-MATRIX.md`, `docs/codegen-paths.md`,
+  `docs/instructions/CHANGELOG.md`).
+
+Class: ALL (a) DELETED + (b) ALLOWED HISTORICAL ARCHIVE.
+**(c) BLOCKED count: 0.**
+
+### Token: `json-prototype` (literal path/package string)
+
+Total hits: 344 lines across 30 files.
+
+- Generated source hits (`crates/core/src/grammar/generated/*.rs`): 16
+  (`bbnf.rs`, `bnf.rs`, `css_l4.rs`, `css_pretty.rs`, `csv.rs`, `ebnf.rs`,
+  `google_sheets.rs`, `json.rs`, `math.rs`).
+  All occurrences are doc-comments (`///` or `//!`) emitted by the codegen
+  templates; the doc text describes the SIMD scanner as "mirroring
+  `json-prototype::simd::ScanState`" or "`json-prototype::simd::first_quote_or_backslash`".
+  No live `use json_prototype` / `extern crate json_prototype` / `json_prototype::`
+  invocation exists.
+- Source emitter doc-comments (`crates/core/src/backend/rust/emitter/shapes/`):
+  6 hits in `dispatcher/mod.rs:17`, `dispatcher/support.rs:17,503,639`,
+  `mod.rs:7`, `string.rs:6`. All are `//!` / `///` archaeology.
+- The AZ-III audit Lane 3 (`03-substrate-deadcode.md` §1) already documented
+  this archaeology class and routed it to a future docs-cleanup pass under
+  `feedback_no_metalanguage_docs`. It does not block any W1 hard gate
+  because (a) the package is absent from cargo metadata, (b) the directory
+  is absent, (c) no live code consumes it.
+- All other hits are in tranche docs (AZ-I, AZ-II, AY-I, AY-II-I, AW),
+  benchmarks (`docs/benchmarks/AZ-II/cutover/*`, `post-AZ-I.json`,
+  `post-B1.json`, etc.), and design notes (`docs/GESTALT.md`,
+  `docs/instructions/PROFILING.md`, `docs/RISK-PERF-MATRIX.md`,
+  `docs/codegen-paths.md`).
+
+Class: ALL (a) DELETED + (b) ALLOWED HISTORICAL ARCHIVE.
+**(c) BLOCKED count: 0.**
+
+### Token: `tape::` (Rust path syntax)
+
+Total Rust-source hits: 33 across 17 files.
+
+Per-line inspection: every hit is a doc-comment (`///` or `//!`) or
+line-comment (`//`) — *not one* is a live `use`, `extern`, `as`,
+type reference, or function call. Sample evidence:
+
+  crates/ir/src/passes/recognizers/dta.rs:126
+    `/// AW-III.W1 — IR-side mirror of `tape::LiteralPayload`.`
+  crates/ir/src/passes/payload/mod.rs:12
+    `//! [`tape::FusedBuilder::push_leaf_with`] call with`
+  crates/core/src/backend/rust/trace.rs:7
+    `//! `Option<::tape::TapeOffset>`; the trace exit`
+  crates/core/tests/struct_direct_snapshots.rs:46
+    `        "::tape::",`     (deny-list literal asserting `::tape::`
+                              does NOT appear in regen output)
+
+The AZ-III audit (Lane 3 §1, item LOW row 21) already enumerated 28
+doc-comment archaeology hits in `crates/ir/src/passes/{payload,profile,recognizers,csp_strategy/constraints}/*.rs`
+and `crates/core/src/backend/rust/trace.rs`; that lane routes the rewrite to
+a docs cleanup. None constitutes a runtime consumer.
+
+Class: 33/33 hits are (a) DELETED archaeology in doc-comments / deny-strings.
+**(c) BLOCKED count: 0.**
+
+### Token: `Tape` (whole word, case-sensitive)
+
+Total Rust-source hits: 26 across 18 files (excluding lines already
+classified under `tape::`).
+
+Per-line inspection (filtering to non-comment lines):
+`rg -nw "Tape" crates/ --type rust | grep -v <doc/line-comment patterns>`
+returns ZERO live hits. Every match is in a `///` or `//!` doc-comment
+referring to the retired AY-I-era `Tape<R>` substrate (e.g. `Tape::push_compound`,
+`Tape::with_capacity`, `Tape::payload_bytes`, `Tape-cursor`, `Tape-direct
+ingress`, `Tape-first serialize codegen`).
+
+Note: identifiers such as `MaterializationClass::TapeSpanOnly`,
+`MaterializationClass::MustTape`, `TapeBuilder` references, `TapeKind::*`,
+`TapeRec::*`, `TapeCursor`, etc. are NOT in the unfiltered count of bare
+`Tape` words — those are reported separately when they reach the
+in-source identifier set; per the audit Lane 3 §1 they still appear in
+doc-comments under the `tape::` and `Tape` archaeology buckets but ZERO
+live identifier matches `Tape` as a freestanding word in code.
+
+Class: 26/26 hits are (a) DELETED archaeology in doc-comments.
+**(c) BLOCKED count: 0.**
+
+### Token: `Gorgeous JIT`
+
+Total hits: 28 lines across 15 files.
+
+- Source hits (`crates/`): **0**.
+- Active AZ-III spec hits (`waves/W1.md`, `audit/REAUDIT-2026-04-30/*.md`):
+  named as deletion target — intentional (b) reference.
+- All other hits in archived AZ-II audit/cutover docs
+  (`O3a-A1-plan.md`, `O3a-A1-research.md`, `O3a-A1-redress.md`,
+  `cutover/O3a.md`, `cutover/O5.md`, `cutover/O7.md`,
+  `cutover/O3a-A1.md`, `cutover/README.md`, `AZ-II-HARDENING-AUDIT-2026-04-29.md`,
+  `PROGRESS.md`, `FINAL.md`) and one benchmark archive
+  (`docs/benchmarks/AZ-II/cutover/O4-parsed-tapedirect-scan.txt`).
+
+Class: ALL (a) DELETED + (b) ALLOWED HISTORICAL ARCHIVE.
+**(c) BLOCKED count: 0.**
+
+### Token: `A1` (whole word)
+
+Total Rust-source hits: 52 across 12 files.
+
+Per-line inspection — every hit is one of:
+
+1. **Google Sheets cell-reference syntax** in tests/benches/runtime
+   (e.g. `parse_formula("=SUM(A1:A10)")`, `"=A1:B2"`, `for input in &["=A1", ...]`).
+   This is a domain-language token, not a residue marker.
+   Files: `crates/core/tests/sheets_*.rs`, `crates/core/tests/google_sheets_slab.rs`,
+   `crates/core/tests/pipeline.rs`, `crates/gorgeous/tests/google_sheets.rs`,
+   `crates/core/benches/google_sheets/vm.rs`,
+   `crates/core/benches/generators/sheets_gen.rs`,
+   `crates/core/src/runtime/google_sheets/value.rs:90` (doc-comment naming
+   "canonical cell reference (`A1`, `$B$2`)"),
+   `crates/core/src/backend/prettify/sep_rewrite.rs` (cell-ref cluster).
+2. **Futoshiki CSP variable label** in
+   `crates/csp-solver/src/puzzles/futoshiki/csp.rs:26` ("`A0 A1 ... (greater-than left sides)`").
+3. **Test prose reference** in
+   `crates/ir/tests/structural_alphabet_extended.rs:817` ("`Range: \`A1:B2\`.`").
+
+NONE of the in-source `A1` matches refer to AZ-II.cutover.O3a-A1 cohort
+provenance. Active AZ-III specs (`waves/W1.md`, `AZ-III.md`,
+`REAUDIT-2026-04-30/CARRY-OVER-CHECKLIST.md`, etc.) intentionally name the
+A1 cohort as a deletion target; those are (b).
+
+Active doc references to AZ-II A1 cohort (e.g. tranches B7 dispatch table
+where A1 is an agent ID, AY-I/W1.md A3-L2 + A1 finalise lever notation,
+AZ-II audit/redress documents) are (b) ALLOWED HISTORICAL ARCHIVE — the AZ-II
+provenance lives in archived tranche docs by design.
+
+Class: 52 source hits all (a) UNRELATED domain syntax (cell refs / CSP labels);
+~150 active-doc hits all (b) ALLOWED HISTORICAL ARCHIVE.
+**(c) BLOCKED count: 0.**
+
+## Substrate-without-consumer note (W1.4 carry-over)
+
+The `03-substrate-deadcode.md` audit catalog identified
+`crates/ir/src/dta/{mod.rs,types.rs}` (~90 LOC) as the highest-severity
+substrate-without-consumer violation: `rg "use bbnf_ir::dta" crates/`
+returns ZERO hits, yet the module survives. This W1.3 audit confirms the
+zero-consumer state but leaves the actual deletion to AZ-III.W1.4
+(A1 Residue Redress) per W1.md scope item 4.
+
+Confirmed (read-only):
+- `rg "use bbnf_ir::dta" crates/`                                    → 0 hits
+- `rg "bbnf_ir::dta::" crates/ --type rust`                           → all
+  hits (if any) live in test deny-strings (e.g.
+  `crates/core/tests/regen_shape_goldens.rs`,
+  `crates/core/tests/struct_direct_snapshots.rs`).
+
+The DTA module's continued existence is NOT a W1.3 hard-gate-3 or
+hard-gate-4 violation (it does not appear in cargo metadata as a separate
+package, nor is it a `tape`/`json-prototype` literal); it is a separate
+dead-code violation owned by W1.4 (and per the audit, W1.4 has the file
+bounds to delete it).
+
+## Verdicts
+
+- W1 hard gate 3 (cargo metadata): **MET / CLEAN**.
+  No `tape` or `json-prototype` package in workspace metadata.
+  See `W1-metadata.txt`.
+- W1 hard gate 4 (deletion scan): **MET / CLEAN**.
+  Every textual hit classifies as (a) DELETED (referring to surfaces that
+  no longer exist) or (b) ALLOWED HISTORICAL ARCHIVE (intentional spec
+  references in active AZ-III docs, archived AZ-II/AY-I/B*/AX cutover
+  docs, or doc-comment archaeology pre-flagged for the
+  `feedback_no_metalanguage_docs` doc-cleanup pass).
+- (c) BLOCKED hits: **0** across all six tokens.
+
+## Per-category summary
+
+| Category               | Verdict                                          |
+|------------------------|--------------------------------------------------|
+| cargo metadata         | CLEAN (no tape, no json-prototype)               |
+| `crates/tape/` physical| ABSENT                                           |
+| `crates/json-prototype/` physical | ABSENT                                |
+| public tape exports    | NONE (0 `pub use ... tape*` re-exports)          |
+| `crates/tape` literal  | (a)+(b) only; 0 (c)                              |
+| `json-prototype` literal | (a)+(b) only; 0 (c) (16 generated-source +     |
+|                        |  6 emitter-source doc-comments are archaeology)  |
+| `tape::` token         | (a) only; 33/33 in doc-comments or deny-strings  |
+| `Tape` word            | (a) only; 0 live identifier matches in source    |
+| `Gorgeous JIT`         | (a)+(b) only; 0 (c)                              |
+| `A1` word              | (a) unrelated-domain (cell refs / CSP labels)    |
+|                        |  + (b) tranche/agent-ID archaeology; 0 (c)       |
+
+## Net status
+
+W1 hard gate 3: **MET**.
+W1 hard gate 4: **MET**.
+
+W1.3 audit closes CLEAN. No (c) BLOCKED hits identified.

@@ -1,0 +1,30 @@
+# AZ-III.W1.3 — cargo metadata audit
+
+Date: 2026-04-30
+Worktree: /Users/mkbabb/Programming/bbnf-wt-azIII-w1-audit
+Command: cargo metadata --locked --no-deps --format-version 1
+
+## Workspace packages (--no-deps)
+
+- bbnf v0.2.11 (/Users/mkbabb/Programming/bbnf-wt-azIII-w1-audit/crates/core/Cargo.toml)
+- bbnf-analysis v0.1.1 (/Users/mkbabb/Programming/bbnf-wt-azIII-w1-audit/crates/analysis/Cargo.toml)
+- bbnf-bootstrap v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-azIII-w1-audit/crates/bootstrap/Cargo.toml)
+- bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-wt-azIII-w1-audit/crates/ir/Cargo.toml)
+- bbnf-lsp v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-azIII-w1-audit/crates/lsp/Cargo.toml)
+- bbnf-ser v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-azIII-w1-audit/crates/ser/Cargo.toml)
+- csp-solver v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-azIII-w1-audit/crates/csp-solver/Cargo.toml)
+- egraph v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-azIII-w1-audit/crates/egraph/Cargo.toml)
+- egraph-derive v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-azIII-w1-audit/crates/egraph-derive/Cargo.toml)
+- gorgeous v0.1.10 (/Users/mkbabb/Programming/bbnf-wt-azIII-w1-audit/crates/gorgeous/Cargo.toml)
+- simd-scan v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-azIII-w1-audit/crates/simd-scan/Cargo.toml)
+- xtask v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-azIII-w1-audit/xtask/Cargo.toml)
+
+## Forbidden-package check (W1 hard gate 3)
+
+- tape package present: False
+- json-prototype package present: False
+
+## Verdict
+
+CLEAN — neither tape nor json-prototype appears in workspace metadata.
+W1 hard gate 3: MET.

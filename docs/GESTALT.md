@@ -7,27 +7,29 @@ through 2026-04-29, the implemented AZ-II progress snapshot at
 `docs/tranches/AZ-II/PROGRESS-SNAPSHOT-2026-04-29.md`, and the
 live hardening audit under `docs/tranches/AZ-II/audit/`.
 
-**Current era (2026-04-29).** B0-B7 are closed as tooling/runway
-work: nightly pinning, nextest, divan, xtask regeneration, derive
-retirement, substrate restoration, regen-content skipping, and
-cross-repo bench/test modernization. AZ-I closed structurally but
-recorded unresolved performance and parser-stack risks. AZ-II is an
-interim manifest, not terminally closed: direct-to-struct is live for
-9/9 grammars after cutover.O2, O3 has purged generated tape-view
-residue, and `Parsed<R>`, `TapeDirect`, remaining tape-substrate
-references, and `crates/tape` still block the gestalt architecture.
-The implemented-state read-of-record is the AZ-II
-progress snapshot; the immediate path is AZ-II `cutover.O`, aligned by
-`docs/tranches/AZ-II/waves/cutover/README.md` and
-`docs/tranches/AZ-II/audit/AZ-II-HARDENING-AUDIT-2026-04-29.md`.
-As of the post-snapshot hardening work, O0 tooling preflight, O1
-StructDirect builder transactions, O2 EBNF direct projection, O3a
-failure-baseline child-wave routing, and O3 generated view purge are
-landed; O4 `Parsed<R>` / `TapeDirect` deletion is the next active gate.
-AZ-III opens only if `cutover.O` proves a new grammar-general
-inference/layout substrate is required; it must not carry forward tape
-deletion, `Parsed<R>` deletion, stale benches, or parity gaps as
-deferred work.
+**Current era (2026-04-30, post AZ-III terminal close).** B0-B7 are
+closed as tooling/runway work: nightly pinning, nextest, divan,
+xtask regeneration, derive retirement, substrate restoration,
+regen-content skipping, and cross-repo bench/test modernization.
+AZ-I closed structurally but recorded unresolved performance and
+parser-stack risks. AZ-II closed as a continuation handoff to AZ-III
+on 2026-04-30 (cutover.A through cutover.M Phase 3 LANDED;
+cutover.O.0 through O4 LANDED; O5 routed; O6/O7 routed). AZ-III
+closed TERMINAL_WITH_CARRIES on 2026-04-30 at HEAD `d071daf9` per
+`docs/tranches/AZ-III/FINAL.md`: `bootstrap_parser.rs` DELETED 1505
+LOC; 95/95 BBNF parity green via canonical generated path; durable
+FactAuthority surface; 2 silent BoxedEnum fallbacks replaced by
+named obligations; CSP shape/layout/dispatch globalized (no-op
+deleted); 5 dead-code deletions (301 LOC); 17-entry post-AZ-III
+matrix refreshed under bench-iter (15 MEASURED + 2 WATCHDOG_HALT).
+Six NAMED CARRIES route to BA (Sheets path-API, TS backend) and BB
+(regen-pipeline drift on 4 substrate divergences, egraph cost
+extractor, tailwind perf, cross-profile bench refresh). The
+implemented-state read-of-record is now `docs/tranches/AZ-III/FINAL.md`
+plus `docs/tranches/AZ-II/PROGRESS-SNAPSHOT-2026-04-29.md` as
+historical AZ-II provenance. BA opens at AZ-III close for
+defensible-floor scope; BB.scaffold may open in parallel; BB.close
+blocks on BA close + the named carries.
 
 ## 1. Abstract
 
@@ -38,10 +40,10 @@ grammar-derived structs and typed value APIs. The IR is optimised by a
 pluggable CSP solver (`crates/csp-solver`) and a pluggable e-graph
 (`crates/egraph`), both grammar-agnostic; grammar semantics flow in
 through `IrNode` plus persisted projection facts. The historical tape
-runtime is no longer the architecture's target. It remains only as
-unfinished substrate around `Parsed<R>`, `TapeDirect` fallback
-semantics, generated view helpers, and `crates/tape`; AZ-II
-`cutover.O` must delete it or expose a new grammar-general blocker. A
+runtime is gone: `crates/tape/` deleted at AZ-II.cutover.O5 +
+AZ-III.W1; `Parsed<R>` and `TapeDirect` deleted at AZ-II.cutover.O4;
+generated view helpers deleted at AZ-II.cutover.O3. AZ-III.W4
+structural audits confirm static no-legacy GREEN. A
 parse-that substrate (`../parse-that`)
 carries the parser-combinator surface and bespoke regex HIR/NFA/DFA
 engine. A pprint substrate (`../pprint`) carries the gorgeous

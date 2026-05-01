@@ -83,21 +83,25 @@ Post-B2, `cargo xtask regen` is the single canonical Rust AOT
 entrypoint. The pre-B2 bootstrap script, proc-macro expansion, and
 Python post-process path retired entirely at B2.W2.
 
-Current strategy status:
+Current strategy status (post AZ-III terminal close, 2026-04-30):
 
 - StructDirect: JSON, Google Sheets, CSS L4, BBNF, CSV, Math, BNF,
-  CSS Pretty, and EBNF.
-- TapeDirect: no production grammar should select it after AZ-II
-  `cutover.O2`; the enum/fallback residue is an O4 deletion target.
-- Fallback TapeDirect: must be deleted in AZ-II `cutover.O`; unknown
-  grammars should fail generation loudly rather than silently selecting
-  tape.
+  CSS Pretty, and EBNF (9/9 production grammars).
+- TapeDirect: deleted at AZ-II.cutover.O4; production return-model
+  scan is zero for `Parsed<R>` / `TapeDirect` per AZ-III.W4
+  structural audits.
+- Fallback TapeDirect: deleted at AZ-II.cutover.O4 + AZ-III.W1.
+  Unknown grammars fail generation loudly; no silent fallback.
+- BBNF self-host: `bootstrap_parser.rs` DELETED 1505 LOC at
+  AZ-III.W2.4 (`954d166b`); canonical generated path active with
+  95/95 BBNF parity green.
 
 **Generated code per grammar:**
 - `parse(...) -> <Grammar>Document<'_>` for every production grammar.
-- `parse(...) -> Parsed<'_, Self>` is production-dead after O2 and
-  remains only as deletion residue until O4 removes `Parsed<R>` and
-  `TapeDirect`.
+- `parse(...) -> Parsed<'_, Self>` deleted at AZ-II.cutover.O4; no
+  production source or generated Rust exposes `Parsed<R>` /
+  `TapeDirect` / generated tape views per AZ-III.W4 structural
+  audits.
 - Per-rule monolithic parse functions selected by shape and
   `EmitStrategy`.
 - Grammar-specific runtime builder/document accessors for StructDirect.
@@ -211,7 +215,7 @@ crates/ir/
 crates/egraph/          General egraph implementation
 crates/csp-solver/      General CSP solver implementation
 crates/simd-scan/       Scanner primitives and throughput benches
-crates/tape/            Historical tape runtime, pending AZ-II deletion
+crates/tape/            DELETED at AZ-II.cutover.O5 / AZ-III.W1 (no longer in workspace)
 crates/gorgeous/        Formatter surface and built-in grammar formatters
 crates/analysis/        Shared analysis for LSP
 crates/lsp/             Language server binary and benches

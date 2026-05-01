@@ -1,9 +1,18 @@
 # Tranche BB — E-graph Rewrite Rule Inference
 
-> **Refined 2026-04-30** — BB.scaffold may remain planning-only, but
-> BB.close follows AZ-III + BA. AZ-II closed as an AZ-III continuation
-> handoff, so BB may not consume stale AZ-II placeholder benches or
-> partial tape-delete evidence.
+> **Refined 2026-04-30 (post AZ-III terminal close)** — BB.scaffold
+> may open at AZ-III close (this commit); BB.close follows BA. AZ-III
+> closed TERMINAL_WITH_CARRIES per
+> [`../AZ-III/FINAL.md`](../AZ-III/FINAL.md), routing 4 named carries
+> to BB: regen-pipeline strict-mode drift on 4 substrate divergences
+> (BB.W0 substrate preflight); egraph cost extractor stripping `Map`
+> wrapper during extraction (BB.W0 cost-model preflight); tailwind
+> regex perf timeout (BB.W2 CSS-wide alphabet enumeration); 3
+> WATCHDOG_HALT bench entries (BB.close cross-profile bench refresh
+> under fat-LTO). BB consumes `docs/benchmarks/post-AZ-III.json` as
+> the canonical AZ-III bench substrate (15 MEASURED + 2 WATCHDOG_HALT
+> under bench-iter); BB.close refreshes under fat-LTO for
+> apples-to-apples competitor comparison.
 
 BB closes the loop on `feedback_pluggable-components`,
 `feedback_csp-always-optimize`, and `feedback_general-infra-crates`

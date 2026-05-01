@@ -1,18 +1,33 @@
 # Remaining Trajectory — Architecture, Optimisation, and Competitor Plan
 
 Status: planning canon. This file explains the remaining path after
-B0-B7, AZ-I, and the AZ-II partial close. It does not authorize
-execution.
+B0-B7, AZ-I, AZ-II partial close, and the AZ-III terminal close. It
+does not authorize execution.
 
-**2026-04-30 continuation update.** AZ-II is closed as a continuation
-handoff to AZ-III, not as terminal success. The current state is 9/9
-StructDirect grammars after O2; O3 removed generated tape-view residue
-and O4 removed `Parsed<R>` / `TapeDirect`. O5 did not close green, O6
-did not run, and O7 did not run. AZ-III owns O5 reclose, semantic
+**2026-04-30 AZ-III terminal close.** AZ-III closed
+TERMINAL_WITH_CARRIES at HEAD `d071daf9` per
+[`AZ-III/FINAL.md`](AZ-III/FINAL.md). The substantial wins:
+`bootstrap_parser.rs` DELETED 1505 LOC; 95/95 BBNF parity green via
+canonical generated path; durable FactAuthority surface; 2 silent
+BoxedEnum fallbacks replaced by named obligations; CSP
+shape/layout/dispatch installers globalized (no-op deleted); 5
+dead-code deletions for 301 LOC; 17-entry post-AZ-III matrix
+refreshed (15 MEASURED + 2 WATCHDOG_HALT under bench-iter). Six
+NAMED CARRIES route to BA (Sheets path-API, TS backend) and BB
+(regen-pipeline drift on 4 substrate divergences, egraph cost
+extractor strips Map wrapper, tailwind regex perf timeout, 3
+WATCHDOG_HALT cross-profile bench refresh). BA opens at this commit
+for defensible-floor scope; BB.scaffold may open in parallel;
+BB.close blocks on BA close + the named carries.
+
+Prior context (preserved): AZ-II is closed as a continuation handoff
+to AZ-III, not as terminal success. The state was 9/9 StructDirect
+grammars after O2; O3 removed generated tape-view residue and O4
+removed `Parsed<R>` / `TapeDirect`. O5 did not close green, O6 did
+not run, and O7 did not run. AZ-III owned O5 reclose, semantic
 parity, generated BBNF self-host canonicalization, benchmark/profile
 truth, terminal close conversion, and the grammar-general
-fact/type/CSP/projection authority substrate surfaced by the audit. BA
-and BB remain blocked on AZ-III terminal close.
+fact/type/CSP/projection authority substrate surfaced by the audit.
 
 **2026-04-28 status update.** AZ-I.W0 + W1 + W2-substrate closed.
 W2 substrate landed nine per-shape struct-direct emitters with the
@@ -27,21 +42,24 @@ substrate work. The 2026-04-28 audit synthesis (see
 collapses W2-act + W2.B + W3 into one gestalt activation pass and
 folds W4 into AZ-II.W0 to retire the ceremonial wave overhead.
 
-## Live Blockers After AZ-II Partial Close
+## Live Blockers After AZ-III Terminal Close
 
-| Blocker | Required close |
-|---|---|
-| StructDirect speculative parsing | LANDED in cutover.O1: grammar-general builder checkpoint/rollback/commit wired through speculative alternate/repeat/minus/negate emitter paths |
-| EBNF direct projection | LANDED in cutover.O2: high-branch and structural `Seq` alternates project through StructDirect; `EbnfParser::parse -> EbnfDocument` |
-| `Parsed<R>` | Delete production runtime surface and generated return path |
-| `TapeDirect` | Remove fallback strategy; generation must fail loudly instead |
-| generated tape views | Stop emitting `TapeCursor` / `ValueRoot` / node-view residues for StructDirect grammars unless consumed through a document API |
-| `crates/tape` | AZ-III.W1 - O5 Reclose closes refreshed O5 deletion evidence after regen/no-default/metadata proof |
-| BBNF bootstrap bridge | AZ-III.W2 - Semantic Parity and Bootstrap Canonicalization retires `bootstrap_parser.rs` as canonical entry or blocks terminal close |
-| sonic-rs parity | AZ-III.W2 - Semantic Parity and Bootstrap Canonicalization closes JSON semantic parity; AZ-III.W4 - Benchmark, Profile, and Workspace Truth refreshes throughput |
-| lightningcss parity | AZ-III.W2 - Semantic Parity and Bootstrap Canonicalization closes CSS typed semantic parity, including known color/value divergences |
-| perf truth | AZ-III.W4 - Benchmark, Profile, and Workspace Truth refreshes post-AZ-III numbers before BB optimization |
-| legacy/dead substrate | AZ-III.W1 - O5 Reclose and AZ-III.W3 - Fact, Type, CSP, and Projection Authority audit tape cursor helpers, visitor placeholders, legacy recognizers, schema emit stubs, stale derive/JIT paths |
+| Blocker | Status | Resolution |
+|---|---|---|
+| StructDirect speculative parsing | RESOLVED | cutover.O1 (AZ-II) — grammar-general builder checkpoint/rollback/commit wired through speculative alternate/repeat/minus/negate emitter paths |
+| EBNF direct projection | RESOLVED | cutover.O2 (AZ-II) — high-branch and structural `Seq` alternates project through StructDirect; `EbnfParser::parse -> EbnfDocument` |
+| `Parsed<R>` | RESOLVED | cutover.O4 (AZ-II) — production runtime surface and generated return path deleted |
+| `TapeDirect` | RESOLVED | cutover.O4 (AZ-II) — fallback strategy removed; AZ-III.W4 static no-legacy scan GREEN |
+| generated tape views | RESOLVED | cutover.O3 (AZ-II) — StructDirect generated files emit no `TapeCursor` / `ValueRoot` / node-view residue |
+| `crates/tape` | RESOLVED | AZ-III.W1 - O5 Reclose: no-default build green (`docs/benchmarks/AZ-III/W1-no-default-build.txt`); cargo metadata clean; deletion scan archived |
+| BBNF bootstrap bridge | RESOLVED | AZ-III.W2.4 — `bootstrap_parser.rs` DELETED 1505 LOC at commit `954d166b`; canonical generated path active; 95/95 BBNF parity green |
+| sonic-rs parity | RESOLVED | AZ-III.W2.1 — JSON 5/5 sonic-rs parity green via cast_f64 oracle route at `e1a795b7`; throughput refresh at `docs/benchmarks/post-AZ-III.json` |
+| lightningcss parity | RESOLVED-WITH-CARRY | AZ-III.W2.2 — CSS normalize+bootstrap green; named_color + tailwind perf timeout NAMED-CARRIED to BB.W2 (CSS-wide alphabet enumeration owns timeout-class regex normalization) |
+| perf truth | NAMED-CARRY | AZ-III.W4 - 17-entry matrix refreshed at `docs/benchmarks/post-AZ-III.json` under bench-iter (15 MEASURED + 2 WATCHDOG_HALT); cross-profile fat-LTO refresh routed to **BB.close** |
+| legacy/dead substrate | RESOLVED | AZ-III.W1 + W3c — 5 dead-code deletions (301 LOC: prettify stubs, trace.rs corpse, recognizer_plan.rs, regex shims); `crates/runtime/dta.rs` + `analysis/back_compat_reexport.rs` deleted at W1 |
+| **NEW**: regen-pipeline strict-mode drift (4 substrate divergences) | NAMED-CARRY | AZ-III.W3a.4 — entry-rule classifier; HRegex payload (i64→str); PHF table generation; one residual keyword Span absorption beyond W2.4.u. Routed to **BB.W0** substrate preflight. Evidence: `docs/benchmarks/AZ-III/W3a-4-regen-path-agnostic.txt` |
+| **NEW**: egraph cost extractor strips `Map` wrapper | NAMED-CARRY | AZ-III.W3c.1 priority 1 — alt_dispatch named_color emitter substrate exists; runtime activation blocked. Routed to **BB.W0** cost-model preflight |
+| **NEW**: 11 Sheets parity tests + 1 ts_backend_emits_discriminated_union | NAMED-CARRY | AZ-III.W2.3 + W3c.2 — 11 Sheets parity routed to **BA.W0** path-API substrate; TS backend test routed to **BA.W2** host-binding isomorphism |
 
 ## 1. Path Change From The Redress
 

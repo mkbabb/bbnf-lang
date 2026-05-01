@@ -62,31 +62,40 @@ TypeScript, and Python bindings.
 
 ## AZ dependency (hard opening gate)
 
-BA does NOT open until AZ-III closes terminally. AZ-II closed as a
-continuation handoff after O0-O4 and partial O5 implementation; AZ-III
-owns the remaining tape-delete evidence, semantic parity, benchmark
-truth, generated BBNF self-host proof, and fact/type/CSP/projection
-authority substrate. BA inherits the terminal AZ substrate and adds
-navigation ergonomics atop it.
+**Status (2026-04-30)**: AZ-III closed TERMINAL_WITH_CARRIES at HEAD
+`d071daf9` per [`../AZ-III/FINAL.md`](../AZ-III/FINAL.md). BA is
+UNBLOCKED for defensible-floor scope. The full-stretch scope's
+17-entry-floor item (#4 below) is a NAMED CARRY routed to **BB.close**
+for cross-profile bench refresh under fat-LTO; BA's opening gate is
+not blocked on it.
 
-AZ-III's handoff contract that BA consumes:
+AZ-III's handoff contract that BA consumes (with AZ-III evidence):
 
-1. `StructRegistry` populated for JSON, CSS L4, Sheets, BBNF. A
-   partial registry at AZ-III close **blocks** BA open; the remaining
-   coverage lands under an AZ continuation wave, not a BA hedge.
+1. `StructRegistry` populated for JSON, CSS L4, Sheets, BBNF — **MET**
+   per `docs/benchmarks/AZ-III/W3b-layout-consumer.txt` and
+   `W3a-fact-authority.txt`. A partial registry at AZ-III close would
+   have **blocked** BA open; the registry is closed.
 2. Every `->` in every production grammar reaches the direct-to-
-   struct emitter (`push_*` on the struct builder, not on a tape).
-   An IR audit pass holds 100% coverage.
-3. The tape path is fully deleted — not feature-gated, not
-   conditional. No orthogonal codepath remains
-   (`feedback_no-orthogonal-codepaths`).
-4. 17-entry AU-baseline matrix at or above AU floor on the
-   direct-to-struct substrate; lightningcss / sonic-rs / simdjson /
-   serde_json / cssparser parity harnesses green.
+   struct emitter (`push_*` on the struct builder, not on a tape) —
+   **MET** per `docs/benchmarks/AZ-III/W4-structural-audits.txt`
+   (payload_coverage_audit + struct_registry 21/21 PASS). An IR
+   audit pass holds 100% coverage.
+3. The tape path is fully deleted — **MET** per
+   `docs/benchmarks/AZ-III/W1-deletion-scan.txt` and
+   `W4-structural-audits.txt` static no-legacy GREEN. No orthogonal
+   codepath remains (`feedback_no-orthogonal-codepaths`).
+4. 17-entry AU-baseline matrix at or above AU floor — **NOT-MET-WITHOUT-CARRY**.
+   `docs/benchmarks/post-AZ-III.json` measures under bench-iter
+   (no-LTO); the AZ-I/AU baselines used fat-LTO. Cross-profile
+   comparison is not apples-to-apples. Routed: **BB.close** owns the
+   cross-profile refresh.
 
-If any of the above is missing at AZ-III close, BA remains closed and
-re-plans against the residual gap. BA does not open on a partial
-substrate.
+BA may open BA.W0 on the AZ-III substrate. The bench-floor item is
+a NAMED CARRY routed to BB.close; BA's opening gate is not blocked
+on it for defensible-floor scope. AZ-III also routes 11 Sheets
+parity tests to BA.W0 (path-API substrate) and 1
+`ts_backend_emits_discriminated_union` test to BA.W2 (host-binding
+isomorphism).
 
 ## BA.W-1 — opening verification
 

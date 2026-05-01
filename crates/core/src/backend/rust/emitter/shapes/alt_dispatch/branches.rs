@@ -2,7 +2,7 @@
 //! emitters per IR shape (Ref / Literal / Regex / Seq), Seq position
 //! flattening, and trivia stripping.
 
-use bbnf_ir::{AltBranch, GrammarIR, IrNode, IrRule};
+use bbnf_ir::{AltBranch, FnDescriptor, GrammarIR, IrNode, IrRule, MapExpr};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
@@ -31,6 +31,16 @@ pub(super) fn emit_dispatch_arms_struct_direct(
     for (branch_idx, branch) in branches.iter().enumerate() {
         let idx_u32 = branch_idx as u32;
         let inner = unwrap_trivia(&branch.node);
+        // AZ-III.W3c.1 — typed-payload constant-fold pulled from the
+        // branch's outermost `Map { fn_id }` chain. Mirrors Wrap's
+        // `wrap_branch_payload_push`: `FnDescriptor::Expr { expr, .. }`
+        // with `MapExpr::IntLit(n)` produces a `push_leaf_with_u64(n)`
+        // call so CSS L4's `namedColor` / hex-color branches deposit
+        // the declared `0xRRGGBBAAu32` instead of unit. Non-constant
+        // maps (or no Map wrapper) fall back to `push_leaf_with_unit`
+        // — the branch still records the discriminator without
+        // fabricating typed payload the grammar didn't declare.
+        let payload_push = branch_payload_push(&branch.node, ir);
         let body = match inner {
             IrNode::Ref(rid) => match emit_ref_call_shape(grammar_suffix, *rid, ir) {
                 Some(call) => quote! {
@@ -62,6 +72,14 @@ pub(super) fn emit_dispatch_arms_struct_direct(
             // Alt-of-literal AltDispatch rules; pre-cutover.M these
             // emitted empty placeholders, dropping every literal
             // candidate on the floor.
+            //
+            // AZ-III.W3c.1 — typed-payload activation: the previous
+            // unconditional `push_leaf_with_unit()` call is replaced
+            // by `payload_push`, which constant-folds `Map(Literal)`
+            // branches' `-> NN` projections (CSS L4 `namedColor`'s
+            // 150 `"name" -> 0xRRGGBBAAu32` mappings) into the typed
+            // `push_leaf_with_u64(value)` call the
+            // `CssStructBuilder::Color::Hex` reader consumes.
             IrNode::Literal(sid) => {
                 let bytes = ir.get_string(*sid).as_bytes();
                 let len = bytes.len();
@@ -72,7 +90,7 @@ pub(super) fn emit_dispatch_arms_struct_direct(
                         let end = at + #len;
                         if input.len() >= end && input[at..end] == [#(#byte_lits),*] {
                             *p = end;
-                            builder.push_leaf_with_unit();
+                            #payload_push
                             builder.push_branch_tag(#idx_u32);
                             break 'try_branches;
                         }
@@ -80,8 +98,13 @@ pub(super) fn emit_dispatch_arms_struct_direct(
                 }
             }
             // Regex-led branches dispatch through the per-grammar
-            // regex-scan adapter and push a unit leaf on match. Same
-            // discriminator-recording shape as the Literal arm.
+            // regex-scan adapter and push the typed leaf on match.
+            // Same discriminator-recording shape as the Literal arm.
+            //
+            // AZ-III.W3c.1 — typed-payload activation: a `Map(Regex)`
+            // wrapper's constant-fold (e.g. `/\s*>\s*/ -> 1u8`) flows
+            // through `payload_push` so the branch deposits its
+            // declared u8 / u32 / bool instead of unit.
             IrNode::Regex(sid) => {
                 let pattern = ir.get_string(*sid).to_string();
                 let regex_scan_ident = super::super::super::dfa_codegen::regex_scan_adapter_ident(
@@ -93,7 +116,7 @@ pub(super) fn emit_dispatch_arms_struct_direct(
                             #regex_scan_ident(#pattern, input, *p)
                         {
                             *p += match_len as usize;
-                            builder.push_leaf_with_unit();
+                            #payload_push
                             builder.push_branch_tag(#idx_u32);
                             break 'try_branches;
                         }
@@ -116,6 +139,12 @@ pub(super) fn emit_dispatch_arms_struct_direct(
                         .iter()
                         .map(|pos| emit_seq_position(pos, ir))
                         .collect();
+                    // AZ-III.W3c.1 — pure-literal-chain Seq branches
+                    // also honour the typed payload constant-fold. CSS
+                    // L4's `namedColor` after prefix-tree factoring
+                    // produces Seq("a", Alt(...)) -> 0xRRGGBBAAu32
+                    // shapes that pre-W3c.1 emitted unit instead of
+                    // the declared u32 hex.
                     quote! {
                         {
                             let save_p = *p;
@@ -125,7 +154,7 @@ pub(super) fn emit_dispatch_arms_struct_direct(
                             })();
                             match attempt {
                                 Ok(()) => {
-                                    builder.push_leaf_with_unit();
+                                    #payload_push
                                     builder.push_branch_tag(#idx_u32);
                                     break 'try_branches;
                                 }
@@ -177,6 +206,78 @@ pub(super) fn emit_dispatch_arms_struct_direct(
                 offset: *p as u32,
             });
         }
+    }
+}
+
+/// AZ-III.W3c.1 — emit the `builder.push_leaf_with_*` call materialising
+/// an AltDispatch-Alt branch's typed `->` projection.
+///
+/// Symmetric to `wrap::struct_direct::wrap_branch_payload_push`: the
+/// alt_dispatch shape is Wrap's strict superset (per
+/// `shapes/alt_dispatch/mod.rs` doc), so the same payload-fold rule
+/// applies. Walks the branch's outermost `Map { fn_id }` chain
+/// (skipping `OptionalWhitespace` trivia), inspects the bound
+/// `FnDescriptor`, and constant-folds the leaf projections that CSS
+/// L4's `namedColor`'s 150 `"name" -> 0xRRGGBBAAu32` and `combinator`'s
+/// `-> Nu8` annotations produce. Non-constant maps (`Input`,
+/// `FnCall`, `BinOp`, `UnaryOp`) and unmapped branches fall back to
+/// `push_leaf_with_unit()` so the branch still records its
+/// discriminator without fabricating typed payload the grammar
+/// didn't declare.
+pub(super) fn branch_payload_push(branch_root: &IrNode, ir: &GrammarIR) -> TokenStream {
+    fn find_map_fn(node: &IrNode) -> Option<u32> {
+        match node {
+            IrNode::Map { fn_id, .. } => Some(*fn_id),
+            IrNode::OptionalWhitespace(inner) => find_map_fn(inner),
+            // Post-prefix-tree-factor branches look like
+            // `Seq(Literal("a"), Map(Literal("liceblue"), fn))`. The
+            // typed payload lives on the continuation (the LAST
+            // structurally meaningful child); the leading literal
+            // bytes are the factored prefix that the Seq's body
+            // checks already enforce. Walk the LAST child so we
+            // capture the typed projection without picking up an
+            // earlier Map that may live on a side rule.
+            IrNode::Seq(children) => children.last().and_then(find_map_fn),
+            _ => None,
+        }
+    }
+    let unit_push = quote! {
+        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(builder);
+    };
+    let Some(fn_id) = find_map_fn(branch_root) else {
+        return unit_push;
+    };
+    let Some(fn_desc) = ir.fns.get(fn_id as usize) else {
+        return unit_push;
+    };
+    let FnDescriptor::Expr { expr, .. } = fn_desc else {
+        return unit_push;
+    };
+    match expr {
+        MapExpr::IntLit(n) => {
+            let v: u64 = *n as u64;
+            quote! {
+                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(builder, #v);
+            }
+        }
+        MapExpr::FloatLit(f) => {
+            let v: f64 = *f;
+            quote! {
+                <_ as crate::runtime::StructBuilder>::push_leaf_with_f64(builder, #v);
+            }
+        }
+        MapExpr::BoolLit(b) => {
+            let v: bool = *b;
+            quote! {
+                <_ as crate::runtime::StructBuilder>::push_leaf_with_bool(builder, #v);
+            }
+        }
+        // Non-constant or non-scalar projections (`Input`, `FnCall`,
+        // `BinOp`, `UnaryOp`, string literal, etc.) cannot be
+        // constant-folded at the dispatch arm. Drop to a unit leaf so
+        // the branch still records the discriminator without faking a
+        // typed payload.
+        _ => unit_push,
     }
 }
 

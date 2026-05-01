@@ -1734,6 +1734,15 @@ mod __ebnfparser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_EbnfParser_identifier<'p>(
@@ -2425,6 +2434,15 @@ mod __ebnfparser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_EbnfParser_concatenation<'p>(
@@ -2609,6 +2627,15 @@ mod __ebnfparser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_EbnfParser_alternation<'p>(
@@ -3115,6 +3142,15 @@ mod __ebnfparser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_EbnfParser_factor<'p>(
@@ -3353,6 +3389,15 @@ mod __ebnfparser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_EbnfParser_rule<'p>(

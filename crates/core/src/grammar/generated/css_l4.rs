@@ -12139,6 +12139,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_hex<'p>(
@@ -12149,6 +12158,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __span_lo: usize = *p;
         let __hex_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 3u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("hex"),
@@ -12189,6 +12199,17 @@ mod __cssl4parser_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                let __span_hi: usize = *p;
+                let __span_slice: &str = ::core::str::from_utf8(
+                        &input[__span_lo..__span_hi],
+                    )
+                    .unwrap_or("");
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __span_slice,
+                );
                 <crate::runtime::css_l4::CssStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(builder, __hex_handle);
@@ -14467,6 +14488,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_containerLengthUnit<'p>(
@@ -14477,6 +14507,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __span_lo: usize = *p;
         let __containerLengthUnit_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 11u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("containerLengthUnit"),
@@ -14729,6 +14760,17 @@ mod __cssl4parser_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                let __span_hi: usize = *p;
+                let __span_slice: &str = ::core::str::from_utf8(
+                        &input[__span_lo..__span_hi],
+                    )
+                    .unwrap_or("");
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __span_slice,
+                );
                 <crate::runtime::css_l4::CssStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
@@ -18399,6 +18441,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_importantSuffix<'p>(
@@ -18409,6 +18460,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __span_lo: usize = *p;
         let __importantSuffix_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 34u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("importantSuffix"),
@@ -18499,6 +18551,17 @@ mod __cssl4parser_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                let __span_hi: usize = *p;
+                let __span_slice: &str = ::core::str::from_utf8(
+                        &input[__span_lo..__span_hi],
+                    )
+                    .unwrap_or("");
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __span_slice,
+                );
                 <crate::runtime::css_l4::CssStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
@@ -21248,6 +21311,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_bgProps<'p>(
@@ -21258,6 +21330,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __span_lo: usize = *p;
         let __bgProps_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 41u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("bgProps"),
@@ -21699,6 +21772,17 @@ mod __cssl4parser_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                let __span_hi: usize = *p;
+                let __span_slice: &str = ::core::str::from_utf8(
+                        &input[__span_lo..__span_hi],
+                    )
+                    .unwrap_or("");
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __span_slice,
+                );
                 <crate::runtime::css_l4::CssStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
@@ -24968,6 +25052,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_nthFunctionName<'p>(
@@ -24978,6 +25071,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __span_lo: usize = *p;
         let __nthFunctionName_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 50u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("nthFunctionName"),
@@ -25234,6 +25328,17 @@ mod __cssl4parser_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                let __span_hi: usize = *p;
+                let __span_slice: &str = ::core::str::from_utf8(
+                        &input[__span_lo..__span_hi],
+                    )
+                    .unwrap_or("");
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __span_slice,
+                );
                 <crate::runtime::css_l4::CssStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
@@ -25411,6 +25516,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_percentage<'p>(
@@ -25505,6 +25619,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_funcBody<'p>(
@@ -26080,6 +26203,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_angle<'p>(
@@ -26171,6 +26303,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_time<'p>(
@@ -26256,6 +26397,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_frequency<'p>(
@@ -26350,6 +26500,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_resolution<'p>(
@@ -26444,6 +26603,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_flex<'p>(
@@ -26529,6 +26697,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_customPropertyDecl<'p>(
@@ -26688,6 +26865,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_genericDecl<'p>(
@@ -26852,6 +27038,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_nsPrefix<'p>(
@@ -26989,6 +27184,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_classSelector<'p>(
@@ -27255,6 +27459,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_simplePseudoElement<'p>(
@@ -27434,6 +27647,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_simplePseudoClass<'p>(
@@ -27594,6 +27816,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_keyframeSel<'p>(
@@ -27801,6 +28032,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_mediaFeature<'p>(
@@ -27975,6 +28215,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_wqName<'p>(
@@ -28089,6 +28338,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_attrSelector<'p>(
@@ -28743,6 +29001,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_length<'p>(
@@ -28892,6 +29159,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_mediaNot<'p>(
@@ -28982,6 +29258,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_mediaAnd<'p>(
@@ -29138,6 +29423,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_mediaOr<'p>(
@@ -31841,6 +32135,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_mediaQuery<'p>(
@@ -32415,6 +32718,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_nthPseudo<'p>(
@@ -32581,6 +32893,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_relativeSelector<'p>(
@@ -32693,6 +33014,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_relativeSelectorList<'p>(
@@ -32828,6 +33158,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_selectorList<'p>(
@@ -33167,6 +33506,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_complexSelector<'p>(
@@ -35048,6 +35396,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_colorDecl<'p>(
@@ -35260,6 +35617,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_sizeDecl<'p>(
@@ -35469,6 +35835,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_spacingDecl<'p>(
@@ -35681,6 +36056,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_fontDecl<'p>(
@@ -35952,6 +36336,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_bgDecl<'p>(
@@ -36148,6 +36541,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_transformDecl<'p>(
@@ -36360,6 +36762,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_transitionDecl<'p>(
@@ -36572,6 +36983,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_listTableDecl<'p>(
@@ -36784,6 +37204,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_displayDecl<'p>(
@@ -37051,6 +37480,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_positionDecl<'p>(
@@ -37319,6 +37757,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_overflowDecl<'p>(
@@ -37768,6 +38215,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_visibilityDecl<'p>(
@@ -38039,6 +38495,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_flexDirDecl<'p>(
@@ -38310,6 +38775,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_flexWrapDecl<'p>(
@@ -38578,6 +39052,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_alignDecl<'p>(
@@ -39187,6 +39670,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_flexNumDecl<'p>(
@@ -39574,6 +40066,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_fontSizeDecl<'p>(
@@ -39780,6 +40281,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_fontWeightDecl<'p>(
@@ -40051,6 +40561,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_lineHeightDecl<'p>(
@@ -40260,6 +40779,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_borderWidthDecl<'p>(
@@ -40757,6 +41285,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_borderStyleDecl<'p>(
@@ -41254,6 +41791,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_borderRadiusDecl<'p>(
@@ -41829,6 +42375,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_opacityDecl<'p>(
@@ -42034,6 +42589,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_textAlignDecl<'p>(
@@ -42305,6 +42869,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_boxSizingDecl<'p>(
@@ -42576,6 +43149,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_cursorDecl<'p>(
@@ -44160,6 +44742,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_keyframesRule<'p>(
@@ -44484,6 +45075,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_genericAtRule<'p>(
@@ -44592,6 +45192,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_ruleBlock<'p>(
@@ -44682,6 +45291,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_qualifiedRule<'p>(
@@ -44760,6 +45378,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_mediaRule<'p>(
@@ -45102,6 +45729,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_blockContent<'p>(
@@ -45276,6 +45912,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser_ruleList<'p>(
@@ -46035,6 +46680,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___calcFunction_cont_151<'p>(
@@ -46123,6 +46777,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___minFunction_cont_152<'p>(
@@ -46268,6 +46931,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___maxFunction_cont_153<'p>(
@@ -46413,6 +47085,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___clampFunction_cont_154<'p>(
@@ -46533,6 +47214,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___varFunction_cont_155<'p>(
@@ -46687,6 +47377,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___envFunction_cont_156<'p>(
@@ -46841,6 +47540,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___varFunction_cont_157<'p>(
@@ -46995,6 +47703,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___calcFunction_cont_158<'p>(
@@ -47083,6 +47800,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___urlFunction_cont_159<'p>(
@@ -47233,6 +47959,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___genericFunction_cont_160<'p>(
@@ -47321,6 +48056,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___colorDecl_cont_161<'p>(
@@ -47514,6 +48258,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___sizeDecl_cont_162<'p>(
@@ -47707,6 +48460,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___spacingDecl_cont_163<'p>(
@@ -47900,6 +48662,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___fontDecl_cont_164<'p>(
@@ -48155,6 +48926,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___bgDecl_cont_165<'p>(
@@ -48348,6 +49128,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___transformDecl_cont_166<'p>(
@@ -48541,6 +49330,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___transitionDecl_cont_167<'p>(
@@ -48734,6 +49532,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___listTableDecl_cont_168<'p>(
@@ -48927,6 +49734,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___displayDecl_cont_169<'p>(
@@ -49182,6 +49998,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___positionDecl_cont_170<'p>(
@@ -49437,6 +50262,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___overflowDecl_cont_171<'p>(
@@ -49692,6 +50526,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___visibilityDecl_cont_172<'p>(
@@ -49947,6 +50790,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___flexDirDecl_cont_173<'p>(
@@ -50202,6 +51054,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___flexWrapDecl_cont_174<'p>(
@@ -50457,6 +51318,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___alignDecl_cont_175<'p>(
@@ -50712,6 +51582,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___flexNumDecl_cont_176<'p>(
@@ -50905,6 +51784,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___fontSizeDecl_cont_177<'p>(
@@ -51098,6 +51986,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___fontWeightDecl_cont_178<'p>(
@@ -51353,6 +52250,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___lineHeightDecl_cont_179<'p>(
@@ -51546,6 +52452,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___borderWidthDecl_cont_180<'p>(
@@ -51801,6 +52716,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___borderStyleDecl_cont_181<'p>(
@@ -52056,6 +52980,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___borderRadiusDecl_cont_182<'p>(
@@ -52249,6 +53182,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___opacityDecl_cont_183<'p>(
@@ -52442,6 +53384,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___textAlignDecl_cont_184<'p>(
@@ -52697,6 +53648,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___boxSizingDecl_cont_185<'p>(
@@ -52952,6 +53912,15 @@ mod __cssl4parser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CssL4Parser___cursorDecl_cont_186<'p>(

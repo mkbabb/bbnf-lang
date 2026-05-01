@@ -688,6 +688,15 @@ mod __csvparser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CsvParser_escaped<'p>(
@@ -698,6 +707,7 @@ mod __csvparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __span_lo: usize = *p;
         let __escaped_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 1u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("escaped"),
@@ -745,6 +755,17 @@ mod __csvparser_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                let __span_hi: usize = *p;
+                let __span_slice: &str = ::core::str::from_utf8(
+                        &input[__span_lo..__span_hi],
+                    )
+                    .unwrap_or("");
+                <crate::runtime::csv::CsvStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __span_slice,
+                );
                 <crate::runtime::csv::CsvStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
@@ -779,6 +800,15 @@ mod __csvparser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CsvParser_record<'p>(
@@ -1001,6 +1031,15 @@ mod __csvparser_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_CsvParser_csv<'p>(

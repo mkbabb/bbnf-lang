@@ -2414,6 +2414,15 @@ mod __bbnfbootstrap_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_BbnfBootstrap_string_lit<'p>(
@@ -2424,6 +2433,7 @@ mod __bbnfbootstrap_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __span_lo: usize = *p;
         let __string_lit_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 3u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("string_lit"),
@@ -2477,6 +2487,17 @@ mod __bbnfbootstrap_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                let __span_hi: usize = *p;
+                let __span_slice: &str = ::core::str::from_utf8(
+                        &input[__span_lo..__span_hi],
+                    )
+                    .unwrap_or("");
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __span_slice,
+                );
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
@@ -3188,6 +3209,15 @@ mod __bbnfbootstrap_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_BbnfBootstrap_regex<'p>(
@@ -3198,6 +3228,7 @@ mod __bbnfbootstrap_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __span_lo: usize = *p;
         let __regex_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 11u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("regex"),
@@ -3248,6 +3279,17 @@ mod __bbnfbootstrap_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                let __span_hi: usize = *p;
+                let __span_slice: &str = ::core::str::from_utf8(
+                        &input[__span_lo..__span_hi],
+                    )
+                    .unwrap_or("");
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __span_slice,
+                );
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
@@ -3282,6 +3324,15 @@ mod __bbnfbootstrap_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_BbnfBootstrap_big_comment<'p>(
@@ -3292,6 +3343,7 @@ mod __bbnfbootstrap_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __span_lo: usize = *p;
         let __big_comment_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 12u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("big_comment"),
@@ -3351,6 +3403,17 @@ mod __bbnfbootstrap_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                let __span_hi: usize = *p;
+                let __span_slice: &str = ::core::str::from_utf8(
+                        &input[__span_lo..__span_hi],
+                    )
+                    .unwrap_or("");
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __span_slice,
+                );
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
@@ -3385,6 +3448,15 @@ mod __bbnfbootstrap_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_BbnfBootstrap_comment<'p>(
@@ -3395,6 +3467,7 @@ mod __bbnfbootstrap_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __span_lo: usize = *p;
         let __comment_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 13u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("comment"),
@@ -3436,6 +3509,17 @@ mod __bbnfbootstrap_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                let __span_hi: usize = *p;
+                let __span_slice: &str = ::core::str::from_utf8(
+                        &input[__span_lo..__span_hi],
+                    )
+                    .unwrap_or("");
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __span_slice,
+                );
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
@@ -3606,6 +3690,15 @@ mod __bbnfbootstrap_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_BbnfBootstrap_import_path<'p>(
@@ -3616,6 +3709,7 @@ mod __bbnfbootstrap_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __span_lo: usize = *p;
         let __import_path_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 16u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("import_path"),
@@ -3669,6 +3763,17 @@ mod __bbnfbootstrap_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                let __span_hi: usize = *p;
+                let __span_slice: &str = ::core::str::from_utf8(
+                        &input[__span_lo..__span_hi],
+                    )
+                    .unwrap_or("");
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __span_slice,
+                );
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
@@ -3827,6 +3932,15 @@ mod __bbnfbootstrap_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_BbnfBootstrap_value_input<'p>(
@@ -3963,6 +4077,15 @@ mod __bbnfbootstrap_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_BbnfBootstrap_type_annotation<'p>(
@@ -4062,6 +4185,15 @@ mod __bbnfbootstrap_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_BbnfBootstrap_import_items<'p>(
@@ -4228,6 +4360,15 @@ mod __bbnfbootstrap_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_BbnfBootstrap_pretty_hint<'p>(
@@ -4366,6 +4507,15 @@ mod __bbnfbootstrap_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_BbnfBootstrap_token_directive<'p>(
@@ -4552,6 +4702,15 @@ mod __bbnfbootstrap_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_BbnfBootstrap_debug_directive<'p>(
@@ -4800,6 +4959,15 @@ mod __bbnfbootstrap_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_BbnfBootstrap_host_directive<'p>(
@@ -5068,6 +5236,15 @@ mod __bbnfbootstrap_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_BbnfBootstrap_ws_directive<'p>(
@@ -5869,6 +6046,15 @@ mod __bbnfbootstrap_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_BbnfBootstrap_value_closure<'p>(
@@ -6692,6 +6878,15 @@ mod __bbnfbootstrap_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_BbnfBootstrap_import_directive<'p>(
@@ -6988,6 +7183,15 @@ mod __bbnfbootstrap_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_BbnfBootstrap_pretty_directive<'p>(
@@ -7300,6 +7504,15 @@ mod __bbnfbootstrap_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_BbnfBootstrap_alternation<'p>(
@@ -7473,6 +7686,15 @@ mod __bbnfbootstrap_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_BbnfBootstrap_call_arg<'p>(
@@ -7643,6 +7865,15 @@ mod __bbnfbootstrap_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_BbnfBootstrap_concatenation<'p>(
@@ -7816,6 +8047,15 @@ mod __bbnfbootstrap_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_BbnfBootstrap_closure<'p>(
@@ -8712,6 +8952,15 @@ mod __bbnfbootstrap_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_BbnfBootstrap_factor<'p>(
@@ -8945,6 +9194,15 @@ mod __bbnfbootstrap_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_BbnfBootstrap_mapped_factor<'p>(
@@ -9137,6 +9395,15 @@ mod __bbnfbootstrap_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_BbnfBootstrap_rule<'p>(
@@ -9285,6 +9552,15 @@ mod __bbnfbootstrap_emit_impl {
     /// the grammar's `__value` discriminant). LLVM's inliner
     /// collapses plain `#[inline]` candidates only when
     /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_BbnfBootstrap_recover_directive<'p>(

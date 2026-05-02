@@ -698,10 +698,7 @@ mod __jsonparser_emit_impl {
             });
         }
         *p = end;
-        builder
-            .push_leaf_with_str(unsafe {
-                ::core::str::from_utf8_unchecked(&input[at..end])
-            });
+        builder.push_leaf_with_unit();
         ::core::result::Result::Ok(())
     }
     /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
@@ -1167,6 +1164,7 @@ mod __jsonparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __pair_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 6u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("pair"),
@@ -1177,6 +1175,12 @@ mod __jsonparser_emit_impl {
         let __pair_handle = <crate::runtime::json::JsonStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__pair_layout);
+        <crate::runtime::json::JsonStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
@@ -1206,6 +1210,12 @@ mod __jsonparser_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                <crate::runtime::json::JsonStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
                 <crate::runtime::json::JsonStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(

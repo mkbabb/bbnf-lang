@@ -2710,6 +2710,7 @@ mod __googlesheetsparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __error_literal_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 3u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("error_literal"),
@@ -2722,6 +2723,12 @@ mod __googlesheetsparser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__error_literal_layout,
+        );
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -3055,6 +3062,12 @@ mod __googlesheetsparser_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
                 <crate::runtime::google_sheets::SheetsStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
@@ -3552,6 +3565,7 @@ mod __googlesheetsparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __cell_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 11u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("cell"),
@@ -3562,6 +3576,12 @@ mod __googlesheetsparser_emit_impl {
         let __cell_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__cell_layout);
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 {
@@ -3633,6 +3653,12 @@ mod __googlesheetsparser_emit_impl {
             ::core::result::Result::Ok(()) => {
                 <crate::runtime::google_sheets::SheetsStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __cell_handle,
@@ -3684,6 +3710,7 @@ mod __googlesheetsparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __func_open_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 12u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("func_open"),
@@ -3696,6 +3723,12 @@ mod __googlesheetsparser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__func_open_layout,
+        );
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -3722,6 +3755,12 @@ mod __googlesheetsparser_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
                 <crate::runtime::google_sheets::SheetsStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
@@ -3775,6 +3814,7 @@ mod __googlesheetsparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __range_ref_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 13u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("range_ref"),
@@ -3787,6 +3827,12 @@ mod __googlesheetsparser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__range_ref_layout,
+        );
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -4069,6 +4115,12 @@ mod __googlesheetsparser_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
                 <crate::runtime::google_sheets::SheetsStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
@@ -4497,6 +4549,7 @@ mod __googlesheetsparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __unary_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 17u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("unary_expr"),
@@ -4509,6 +4562,12 @@ mod __googlesheetsparser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__unary_expr_layout,
+        );
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -4585,6 +4644,12 @@ mod __googlesheetsparser_emit_impl {
             ::core::result::Result::Ok(()) => {
                 <crate::runtime::google_sheets::SheetsStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __unary_expr_handle,
@@ -4636,6 +4701,7 @@ mod __googlesheetsparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __paren_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 18u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("paren_expr"),
@@ -4648,6 +4714,12 @@ mod __googlesheetsparser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__paren_expr_layout,
+        );
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -4686,6 +4758,12 @@ mod __googlesheetsparser_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
                 <crate::runtime::google_sheets::SheetsStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
@@ -4739,6 +4817,7 @@ mod __googlesheetsparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __arg_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 19u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("arg"),
@@ -4749,6 +4828,12 @@ mod __googlesheetsparser_emit_impl {
         let __arg_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__arg_layout);
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 {
@@ -4810,6 +4895,12 @@ mod __googlesheetsparser_emit_impl {
             ::core::result::Result::Ok(()) => {
                 <crate::runtime::google_sheets::SheetsStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(builder, __arg_handle);
                 ::core::result::Result::Ok(())
             }
@@ -4858,6 +4949,7 @@ mod __googlesheetsparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __func_args_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 20u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("func_args"),
@@ -4870,6 +4962,12 @@ mod __googlesheetsparser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__func_args_layout,
+        );
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -4984,6 +5082,12 @@ mod __googlesheetsparser_emit_impl {
             ::core::result::Result::Ok(()) => {
                 <crate::runtime::google_sheets::SheetsStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __func_args_handle,
@@ -5035,6 +5139,7 @@ mod __googlesheetsparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __let_binding_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 21u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("let_binding"),
@@ -5047,6 +5152,12 @@ mod __googlesheetsparser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__let_binding_layout,
+        );
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -5085,6 +5196,12 @@ mod __googlesheetsparser_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
                 <crate::runtime::google_sheets::SheetsStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
@@ -5138,6 +5255,7 @@ mod __googlesheetsparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __lambda_params_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 22u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("lambda_params"),
@@ -5150,6 +5268,12 @@ mod __googlesheetsparser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__lambda_params_layout,
+        );
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -5267,6 +5391,12 @@ mod __googlesheetsparser_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
                 <crate::runtime::google_sheets::SheetsStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
@@ -5584,6 +5714,7 @@ mod __googlesheetsparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __array_literal_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 25u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("array_literal"),
@@ -5596,6 +5727,12 @@ mod __googlesheetsparser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__array_literal_layout,
+        );
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -5634,6 +5771,12 @@ mod __googlesheetsparser_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
                 <crate::runtime::google_sheets::SheetsStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
@@ -6245,6 +6388,7 @@ mod __googlesheetsparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __let_args_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 32u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("let_args"),
@@ -6255,6 +6399,12 @@ mod __googlesheetsparser_emit_impl {
         let __let_args_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__let_args_layout);
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 {
@@ -6342,6 +6492,12 @@ mod __googlesheetsparser_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
                 <crate::runtime::google_sheets::SheetsStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
@@ -6995,6 +7151,7 @@ mod __googlesheetsparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __postfix_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 35u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("postfix_expr"),
@@ -7007,6 +7164,12 @@ mod __googlesheetsparser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__postfix_expr_layout,
+        );
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -7074,6 +7237,12 @@ mod __googlesheetsparser_emit_impl {
             ::core::result::Result::Ok(()) => {
                 <crate::runtime::google_sheets::SheetsStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __postfix_expr_handle,
@@ -7125,6 +7294,7 @@ mod __googlesheetsparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __formula_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 36u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("formula"),
@@ -7135,6 +7305,12 @@ mod __googlesheetsparser_emit_impl {
         let __formula_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__formula_layout);
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 {
@@ -7165,6 +7341,12 @@ mod __googlesheetsparser_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
                 <crate::runtime::google_sheets::SheetsStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(

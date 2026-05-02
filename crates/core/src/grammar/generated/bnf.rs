@@ -810,6 +810,7 @@ mod __bnfparser_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
+        let __compound_start: u32 = *p as u32;
         let __terminal_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 0u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("terminal"),
@@ -820,6 +821,12 @@ mod __bnfparser_emit_impl {
         let __terminal_handle = <crate::runtime::bnf::BnfStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__terminal_layout);
+        <crate::runtime::bnf::BnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let at = *p;
@@ -870,6 +877,12 @@ mod __bnfparser_emit_impl {
                 > as crate::runtime::StructBuilder>::push_leaf_with_str(
                     builder,
                     __span_slice,
+                );
+                <crate::runtime::bnf::BnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
                 );
                 <crate::runtime::bnf::BnfStructBuilder<
                     '_,
@@ -925,6 +938,7 @@ mod __bnfparser_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
+        let __compound_start: u32 = *p as u32;
         let __nonterminal_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 1u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("nonterminal"),
@@ -937,6 +951,12 @@ mod __bnfparser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__nonterminal_layout,
+        );
+        <crate::runtime::bnf::BnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -991,6 +1011,12 @@ mod __bnfparser_emit_impl {
                 );
                 <crate::runtime::bnf::BnfStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::bnf::BnfStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __nonterminal_handle,
@@ -1042,6 +1068,7 @@ mod __bnfparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __alternation_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 2u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("alternation"),
@@ -1054,6 +1081,12 @@ mod __bnfparser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__alternation_layout,
+        );
+        <crate::runtime::bnf::BnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -1365,6 +1398,12 @@ mod __bnfparser_emit_impl {
             ::core::result::Result::Ok(()) => {
                 <crate::runtime::bnf::BnfStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::bnf::BnfStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __alternation_handle,
@@ -1416,6 +1455,7 @@ mod __bnfparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __rule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 3u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("rule"),
@@ -1426,6 +1466,12 @@ mod __bnfparser_emit_impl {
         let __rule_handle = <crate::runtime::bnf::BnfStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__rule_layout);
+        <crate::runtime::bnf::BnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
@@ -1543,6 +1589,12 @@ mod __bnfparser_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                <crate::runtime::bnf::BnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
                 <crate::runtime::bnf::BnfStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(

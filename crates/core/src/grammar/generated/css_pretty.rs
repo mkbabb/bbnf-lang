@@ -1370,6 +1370,7 @@ mod __cssprettyparser_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
+        let __compound_start: u32 = *p as u32;
         let __important_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 0u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("important"),
@@ -1382,6 +1383,12 @@ mod __cssprettyparser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__important_layout,
+        );
+        <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -1439,6 +1446,12 @@ mod __cssprettyparser_emit_impl {
                 );
                 <crate::runtime::css_pretty::CssPrettyStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::css_pretty::CssPrettyStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __important_handle,
@@ -1491,6 +1504,7 @@ mod __cssprettyparser_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
+        let __compound_start: u32 = *p as u32;
         let __importRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 1u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("importRule"),
@@ -1503,6 +1517,12 @@ mod __cssprettyparser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__importRule_layout,
+        );
+        <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -1634,6 +1654,12 @@ mod __cssprettyparser_emit_impl {
                 );
                 <crate::runtime::css_pretty::CssPrettyStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::css_pretty::CssPrettyStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __importRule_handle,
@@ -1685,6 +1711,7 @@ mod __cssprettyparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __declaration_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 2u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("declaration"),
@@ -1697,6 +1724,12 @@ mod __cssprettyparser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__declaration_layout,
+        );
+        <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -2005,6 +2038,12 @@ mod __cssprettyparser_emit_impl {
             ::core::result::Result::Ok(()) => {
                 <crate::runtime::css_pretty::CssPrettyStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::css_pretty::CssPrettyStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __declaration_handle,
@@ -2056,6 +2095,7 @@ mod __cssprettyparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __genericAtRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 3u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("genericAtRule"),
@@ -2068,6 +2108,12 @@ mod __cssprettyparser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__genericAtRule_layout,
+        );
+        <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -2125,6 +2171,12 @@ mod __cssprettyparser_emit_impl {
             ::core::result::Result::Ok(()) => {
                 <crate::runtime::css_pretty::CssPrettyStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::css_pretty::CssPrettyStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __genericAtRule_handle,
@@ -2176,6 +2228,7 @@ mod __cssprettyparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __qualifiedRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 4u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("qualifiedRule"),
@@ -2188,6 +2241,12 @@ mod __cssprettyparser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__qualifiedRule_layout,
+        );
+        <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -2230,6 +2289,12 @@ mod __cssprettyparser_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_pretty::CssPrettyStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
                 <crate::runtime::css_pretty::CssPrettyStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
@@ -2283,6 +2348,7 @@ mod __cssprettyparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __mediaRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 5u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("mediaRule"),
@@ -2295,6 +2361,12 @@ mod __cssprettyparser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__mediaRule_layout,
+        );
+        <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -2334,6 +2406,12 @@ mod __cssprettyparser_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_pretty::CssPrettyStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
                 <crate::runtime::css_pretty::CssPrettyStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
@@ -2387,6 +2465,7 @@ mod __cssprettyparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __supportsRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 6u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("supportsRule"),
@@ -2399,6 +2478,12 @@ mod __cssprettyparser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__supportsRule_layout,
+        );
+        <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -2439,6 +2524,12 @@ mod __cssprettyparser_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_pretty::CssPrettyStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
                 <crate::runtime::css_pretty::CssPrettyStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
@@ -2492,6 +2583,7 @@ mod __cssprettyparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __fontFaceRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 7u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("fontFaceRule"),
@@ -2504,6 +2596,12 @@ mod __cssprettyparser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__fontFaceRule_layout,
+        );
+        <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -2547,6 +2645,12 @@ mod __cssprettyparser_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_pretty::CssPrettyStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
                 <crate::runtime::css_pretty::CssPrettyStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
@@ -2669,6 +2773,7 @@ mod __cssprettyparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __ruleBlock_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 9u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("ruleBlock"),
@@ -2681,6 +2786,12 @@ mod __cssprettyparser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__ruleBlock_layout,
+        );
+        <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -2745,6 +2856,12 @@ mod __cssprettyparser_emit_impl {
             ::core::result::Result::Ok(()) => {
                 <crate::runtime::css_pretty::CssPrettyStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::css_pretty::CssPrettyStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __ruleBlock_handle,
@@ -2796,6 +2913,7 @@ mod __cssprettyparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __blockContent_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 10u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("blockContent"),
@@ -2808,6 +2926,12 @@ mod __cssprettyparser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__blockContent_layout,
+        );
+        <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -2934,6 +3058,12 @@ mod __cssprettyparser_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_pretty::CssPrettyStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
                 <crate::runtime::css_pretty::CssPrettyStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
@@ -3189,6 +3319,7 @@ mod __cssprettyparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __ruleList_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 13u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("ruleList"),
@@ -3199,6 +3330,12 @@ mod __cssprettyparser_emit_impl {
         let __ruleList_handle = <crate::runtime::css_pretty::CssPrettyStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__ruleList_layout);
+        <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 {
@@ -3268,6 +3405,12 @@ mod __cssprettyparser_emit_impl {
             ::core::result::Result::Ok(()) => {
                 <crate::runtime::css_pretty::CssPrettyStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::css_pretty::CssPrettyStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __ruleList_handle,
@@ -3319,6 +3462,7 @@ mod __cssprettyparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __stylesheet_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 14u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("stylesheet"),
@@ -3331,6 +3475,12 @@ mod __cssprettyparser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__stylesheet_layout,
+        );
+        <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -3373,6 +3523,12 @@ mod __cssprettyparser_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_pretty::CssPrettyStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
                 <crate::runtime::css_pretty::CssPrettyStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(

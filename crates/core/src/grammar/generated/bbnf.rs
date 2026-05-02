@@ -2463,6 +2463,7 @@ mod __bbnfbootstrap_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
+        let __compound_start: u32 = *p as u32;
         let __string_lit_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 3u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("string_lit"),
@@ -2475,6 +2476,12 @@ mod __bbnfbootstrap_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__string_lit_layout,
+        );
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -2526,6 +2533,12 @@ mod __bbnfbootstrap_emit_impl {
                 > as crate::runtime::StructBuilder>::push_leaf_with_str(
                     builder,
                     __span_slice,
+                );
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
                 );
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
@@ -3313,6 +3326,7 @@ mod __bbnfbootstrap_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
+        let __compound_start: u32 = *p as u32;
         let __regex_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 11u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("regex"),
@@ -3323,6 +3337,12 @@ mod __bbnfbootstrap_emit_impl {
         let __regex_handle = <crate::runtime::bbnf::BbnfStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__regex_layout);
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let at = *p;
@@ -3373,6 +3393,12 @@ mod __bbnfbootstrap_emit_impl {
                 > as crate::runtime::StructBuilder>::push_leaf_with_str(
                     builder,
                     __span_slice,
+                );
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
                 );
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
@@ -3428,6 +3454,7 @@ mod __bbnfbootstrap_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
+        let __compound_start: u32 = *p as u32;
         let __big_comment_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 12u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("big_comment"),
@@ -3440,6 +3467,12 @@ mod __bbnfbootstrap_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__big_comment_layout,
+        );
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -3500,6 +3533,12 @@ mod __bbnfbootstrap_emit_impl {
                 );
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __big_comment_handle,
@@ -3552,6 +3591,7 @@ mod __bbnfbootstrap_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
+        let __compound_start: u32 = *p as u32;
         let __comment_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 13u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("comment"),
@@ -3562,6 +3602,12 @@ mod __bbnfbootstrap_emit_impl {
         let __comment_handle = <crate::runtime::bbnf::BbnfStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__comment_layout);
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
@@ -3603,6 +3649,12 @@ mod __bbnfbootstrap_emit_impl {
                 > as crate::runtime::StructBuilder>::push_leaf_with_str(
                     builder,
                     __span_slice,
+                );
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
                 );
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
@@ -3815,6 +3867,7 @@ mod __bbnfbootstrap_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
+        let __compound_start: u32 = *p as u32;
         let __import_path_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 16u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("import_path"),
@@ -3827,6 +3880,12 @@ mod __bbnfbootstrap_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__import_path_layout,
+        );
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -3878,6 +3937,12 @@ mod __bbnfbootstrap_emit_impl {
                 > as crate::runtime::StructBuilder>::push_leaf_with_str(
                     builder,
                     __span_slice,
+                );
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
                 );
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
@@ -4056,6 +4121,7 @@ mod __bbnfbootstrap_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __value_input_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 18u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("value_input"),
@@ -4068,6 +4134,12 @@ mod __bbnfbootstrap_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__value_input_layout,
+        );
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -4150,6 +4222,12 @@ mod __bbnfbootstrap_emit_impl {
             ::core::result::Result::Ok(()) => {
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __value_input_handle,
@@ -4201,6 +4279,7 @@ mod __bbnfbootstrap_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __type_annotation_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 19u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("type_annotation"),
@@ -4213,6 +4292,12 @@ mod __bbnfbootstrap_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__type_annotation_layout,
+        );
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -4237,6 +4322,12 @@ mod __bbnfbootstrap_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
@@ -4309,6 +4400,7 @@ mod __bbnfbootstrap_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __import_items_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 21u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("import_items"),
@@ -4321,6 +4413,12 @@ mod __bbnfbootstrap_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__import_items_layout,
+        );
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -4433,6 +4531,12 @@ mod __bbnfbootstrap_emit_impl {
             ::core::result::Result::Ok(()) => {
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __import_items_handle,
@@ -4484,6 +4588,7 @@ mod __bbnfbootstrap_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __pretty_hint_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 22u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("pretty_hint"),
@@ -4496,6 +4601,12 @@ mod __bbnfbootstrap_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__pretty_hint_layout,
+        );
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -4580,6 +4691,12 @@ mod __bbnfbootstrap_emit_impl {
             ::core::result::Result::Ok(()) => {
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __pretty_hint_handle,
@@ -4631,6 +4748,7 @@ mod __bbnfbootstrap_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __token_directive_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 23u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("token_directive"),
@@ -4643,6 +4761,12 @@ mod __bbnfbootstrap_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__token_directive_layout,
+        );
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -4775,6 +4899,12 @@ mod __bbnfbootstrap_emit_impl {
             ::core::result::Result::Ok(()) => {
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __token_directive_handle,
@@ -4826,6 +4956,7 @@ mod __bbnfbootstrap_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __debug_directive_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 24u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("debug_directive"),
@@ -4838,6 +4969,12 @@ mod __bbnfbootstrap_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__debug_directive_layout,
+        );
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -5032,6 +5169,12 @@ mod __bbnfbootstrap_emit_impl {
             ::core::result::Result::Ok(()) => {
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __debug_directive_handle,
@@ -5083,6 +5226,7 @@ mod __bbnfbootstrap_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __host_directive_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 25u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("host_directive"),
@@ -5095,6 +5239,12 @@ mod __bbnfbootstrap_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__host_directive_layout,
+        );
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -5309,6 +5459,12 @@ mod __bbnfbootstrap_emit_impl {
             ::core::result::Result::Ok(()) => {
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __host_directive_handle,
@@ -5360,6 +5516,7 @@ mod __bbnfbootstrap_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __ws_directive_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 26u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("ws_directive"),
@@ -5372,6 +5529,12 @@ mod __bbnfbootstrap_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__ws_directive_layout,
+        );
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -5500,6 +5663,12 @@ mod __bbnfbootstrap_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
@@ -6170,6 +6339,7 @@ mod __bbnfbootstrap_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __value_closure_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 32u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("value_closure"),
@@ -6182,6 +6352,12 @@ mod __bbnfbootstrap_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__value_closure_layout,
+        );
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -6292,6 +6468,12 @@ mod __bbnfbootstrap_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
@@ -7002,6 +7184,7 @@ mod __bbnfbootstrap_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __import_directive_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 37u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("import_directive"),
@@ -7014,6 +7197,12 @@ mod __bbnfbootstrap_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__import_directive_layout,
+        );
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -7256,6 +7445,12 @@ mod __bbnfbootstrap_emit_impl {
             ::core::result::Result::Ok(()) => {
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __import_directive_handle,
@@ -7307,6 +7502,7 @@ mod __bbnfbootstrap_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __pretty_directive_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 38u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("pretty_directive"),
@@ -7319,6 +7515,12 @@ mod __bbnfbootstrap_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__pretty_directive_layout,
+        );
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -7577,6 +7779,12 @@ mod __bbnfbootstrap_emit_impl {
             ::core::result::Result::Ok(()) => {
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __pretty_directive_handle,
@@ -7628,6 +7836,7 @@ mod __bbnfbootstrap_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __alternation_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 39u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("alternation"),
@@ -7640,6 +7849,12 @@ mod __bbnfbootstrap_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__alternation_layout,
+        );
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -7759,6 +7974,12 @@ mod __bbnfbootstrap_emit_impl {
             ::core::result::Result::Ok(()) => {
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __alternation_handle,
@@ -7810,6 +8031,7 @@ mod __bbnfbootstrap_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __call_arg_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 40u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("call_arg"),
@@ -7820,6 +8042,12 @@ mod __bbnfbootstrap_emit_impl {
         let __call_arg_handle = <crate::runtime::bbnf::BbnfStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__call_arg_layout);
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 {
@@ -7938,6 +8166,12 @@ mod __bbnfbootstrap_emit_impl {
             ::core::result::Result::Ok(()) => {
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __call_arg_handle,
@@ -7989,6 +8223,7 @@ mod __bbnfbootstrap_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __concatenation_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 41u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("concatenation"),
@@ -8001,6 +8236,12 @@ mod __bbnfbootstrap_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__concatenation_layout,
+        );
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -8120,6 +8361,12 @@ mod __bbnfbootstrap_emit_impl {
             ::core::result::Result::Ok(()) => {
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __concatenation_handle,
@@ -8171,6 +8418,7 @@ mod __bbnfbootstrap_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __closure_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 42u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("closure"),
@@ -8181,6 +8429,12 @@ mod __bbnfbootstrap_emit_impl {
         let __closure_handle = <crate::runtime::bbnf::BbnfStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__closure_layout);
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let at = *p;
@@ -8292,6 +8546,12 @@ mod __bbnfbootstrap_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
@@ -9080,6 +9340,7 @@ mod __bbnfbootstrap_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __factor_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 46u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("factor"),
@@ -9090,6 +9351,12 @@ mod __bbnfbootstrap_emit_impl {
         let __factor_handle = <crate::runtime::bbnf::BbnfStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__factor_layout);
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 {
@@ -9271,6 +9538,12 @@ mod __bbnfbootstrap_emit_impl {
             ::core::result::Result::Ok(()) => {
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __factor_handle,
@@ -9322,6 +9595,7 @@ mod __bbnfbootstrap_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __mapped_factor_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 47u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("mapped_factor"),
@@ -9334,6 +9608,12 @@ mod __bbnfbootstrap_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__mapped_factor_layout,
+        );
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -9472,6 +9752,12 @@ mod __bbnfbootstrap_emit_impl {
             ::core::result::Result::Ok(()) => {
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __mapped_factor_handle,
@@ -9523,6 +9809,7 @@ mod __bbnfbootstrap_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __rule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 48u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("rule"),
@@ -9533,6 +9820,12 @@ mod __bbnfbootstrap_emit_impl {
         let __rule_handle = <crate::runtime::bbnf::BbnfStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__rule_layout);
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
@@ -9629,6 +9922,12 @@ mod __bbnfbootstrap_emit_impl {
             ::core::result::Result::Ok(()) => {
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __rule_handle,
@@ -9680,6 +9979,7 @@ mod __bbnfbootstrap_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __recover_directive_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 49u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("recover_directive"),
@@ -9692,6 +9992,12 @@ mod __bbnfbootstrap_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__recover_directive_layout,
+        );
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -9831,6 +10137,12 @@ mod __bbnfbootstrap_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(

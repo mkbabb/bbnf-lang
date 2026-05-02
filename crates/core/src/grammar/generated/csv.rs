@@ -708,6 +708,7 @@ mod __csvparser_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
+        let __compound_start: u32 = *p as u32;
         let __escaped_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 1u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("escaped"),
@@ -718,6 +719,12 @@ mod __csvparser_emit_impl {
         let __escaped_handle = <crate::runtime::csv::CsvStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__escaped_layout);
+        <crate::runtime::csv::CsvStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let at = *p;
@@ -765,6 +772,12 @@ mod __csvparser_emit_impl {
                 > as crate::runtime::StructBuilder>::push_leaf_with_str(
                     builder,
                     __span_slice,
+                );
+                <crate::runtime::csv::CsvStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
                 );
                 <crate::runtime::csv::CsvStructBuilder<
                     '_,
@@ -819,6 +832,7 @@ mod __csvparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __record_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 2u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("record"),
@@ -829,6 +843,12 @@ mod __csvparser_emit_impl {
         let __record_handle = <crate::runtime::csv::CsvStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__record_layout);
+        <crate::runtime::csv::CsvStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 'try_branches: loop {
@@ -999,6 +1019,12 @@ mod __csvparser_emit_impl {
             ::core::result::Result::Ok(()) => {
                 <crate::runtime::csv::CsvStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::csv::CsvStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __record_handle,
@@ -1050,6 +1076,7 @@ mod __csvparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __csv_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 3u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("csv"),
@@ -1060,6 +1087,12 @@ mod __csvparser_emit_impl {
         let __csv_handle = <crate::runtime::csv::CsvStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__csv_layout);
+        <crate::runtime::csv::CsvStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({ parse_flat_CsvParser_record(input, p, state, builder) })?;
@@ -1125,6 +1158,12 @@ mod __csvparser_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                <crate::runtime::csv::CsvStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
                 <crate::runtime::csv::CsvStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(builder, __csv_handle);

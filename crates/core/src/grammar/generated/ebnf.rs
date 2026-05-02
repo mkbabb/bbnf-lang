@@ -1937,6 +1937,7 @@ mod __ebnfparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __identifier_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 3u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("identifier"),
@@ -1949,6 +1950,12 @@ mod __ebnfparser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__identifier_layout,
+        );
+        <crate::runtime::ebnf::EbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -2105,6 +2112,12 @@ mod __ebnfparser_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                <crate::runtime::ebnf::EbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
                 <crate::runtime::ebnf::EbnfStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
@@ -2641,6 +2654,7 @@ mod __ebnfparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __concatenation_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 6u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("concatenation"),
@@ -2653,6 +2667,12 @@ mod __ebnfparser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__concatenation_layout,
+        );
+        <crate::runtime::ebnf::EbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -2783,6 +2803,12 @@ mod __ebnfparser_emit_impl {
             ::core::result::Result::Ok(()) => {
                 <crate::runtime::ebnf::EbnfStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::ebnf::EbnfStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __concatenation_handle,
@@ -2834,6 +2860,7 @@ mod __ebnfparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __alternation_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 7u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("alternation"),
@@ -2846,6 +2873,12 @@ mod __ebnfparser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__alternation_layout,
+        );
+        <crate::runtime::ebnf::EbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
@@ -2974,6 +3007,12 @@ mod __ebnfparser_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                <crate::runtime::ebnf::EbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
                 <crate::runtime::ebnf::EbnfStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
@@ -3349,6 +3388,7 @@ mod __ebnfparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __factor_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 10u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("factor"),
@@ -3359,6 +3399,12 @@ mod __ebnfparser_emit_impl {
         let __factor_handle = <crate::runtime::ebnf::EbnfStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__factor_layout);
+        <crate::runtime::ebnf::EbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
@@ -3545,6 +3591,12 @@ mod __ebnfparser_emit_impl {
             ::core::result::Result::Ok(()) => {
                 <crate::runtime::ebnf::EbnfStructBuilder<
                     '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::ebnf::EbnfStructBuilder<
+                    '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
                     __factor_handle,
@@ -3596,6 +3648,7 @@ mod __ebnfparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
         let __rule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 11u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("rule"),
@@ -3606,6 +3659,12 @@ mod __ebnfparser_emit_impl {
         let __rule_handle = <crate::runtime::ebnf::EbnfStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__rule_layout);
+        <crate::runtime::ebnf::EbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
@@ -3738,6 +3797,12 @@ mod __ebnfparser_emit_impl {
         })();
         match __body_result {
             ::core::result::Result::Ok(()) => {
+                <crate::runtime::ebnf::EbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
                 <crate::runtime::ebnf::EbnfStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(

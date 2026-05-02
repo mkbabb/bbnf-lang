@@ -3257,6 +3257,10 @@ mod __googlesheetsparser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            0u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -3287,6 +3291,10 @@ mod __googlesheetsparser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            1u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }

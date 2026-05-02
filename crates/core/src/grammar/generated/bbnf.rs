@@ -7031,6 +7031,9 @@ mod __bbnfbootstrap_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -7061,6 +7064,9 @@ mod __bbnfbootstrap_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }

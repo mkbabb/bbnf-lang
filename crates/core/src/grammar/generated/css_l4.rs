@@ -4760,6 +4760,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            4209760255u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -4793,6 +4797,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            4042850303u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -4825,6 +4833,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            4043309055u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -4886,6 +4898,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        2147472639u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -4916,6 +4932,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        16777215u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -4933,6 +4953,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -5000,6 +5023,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            3736635391u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -5032,6 +5059,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            4293182719u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -5064,6 +5095,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            4126530815u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -5096,6 +5131,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            2771004159u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -5168,6 +5207,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    4293643775u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -5198,6 +5241,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    255u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -5215,6 +5262,9 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                                        builder,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -5266,6 +5316,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    2318131967u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -5296,6 +5350,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    65535u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -5313,6 +5371,9 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                                        builder,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -5330,6 +5391,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -5400,6 +5464,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            255u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -5433,6 +5501,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            1604231423u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -5466,6 +5538,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            3692313855u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -5498,6 +5574,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            16777215u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -5549,6 +5629,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        2147418367u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -5582,6 +5666,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        3530104575u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -5599,6 +5687,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -5657,6 +5748,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        4286533887u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -5711,6 +5806,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    1687547391u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -5743,6 +5842,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    4294499583u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -5760,6 +5863,9 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                                        builder,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -5777,6 +5883,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -5846,6 +5955,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            512819199u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -5920,6 +6033,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        13554175u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -5953,6 +6070,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        2332068863u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -5986,6 +6107,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        2483082239u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -6018,6 +6143,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        3182914559u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -6050,6 +6179,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        35839u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -6082,6 +6215,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        9145343u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -6114,6 +6251,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        2332033279u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -6165,6 +6306,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    3095792639u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -6213,6 +6358,10 @@ mod __cssl4parser_emit_impl {
                                                                     })();
                                                                     match __alt_result {
                                                                         ::core::result::Result::Ok(()) => {
+                                                                            <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                                builder,
+                                                                                2846468607u64,
+                                                                            );
                                                                             builder.commit(__alt_builder_checkpoint);
                                                                             break 'try_branches;
                                                                         }
@@ -6261,6 +6410,10 @@ mod __cssl4parser_emit_impl {
                                                                                 })();
                                                                                 match __alt_result {
                                                                                     ::core::result::Result::Ok(()) => {
+                                                                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                                            builder,
+                                                                                            6553855u64,
+                                                                                        );
                                                                                         builder.commit(__alt_builder_checkpoint);
                                                                                         break 'try_branches;
                                                                                     }
@@ -6291,6 +6444,10 @@ mod __cssl4parser_emit_impl {
                                                                                 })();
                                                                                 match __alt_result {
                                                                                     ::core::result::Result::Ok(()) => {
+                                                                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                                            builder,
+                                                                                            2846468607u64,
+                                                                                        );
                                                                                         builder.commit(__alt_builder_checkpoint);
                                                                                         break 'try_branches;
                                                                                     }
@@ -6308,6 +6465,9 @@ mod __cssl4parser_emit_impl {
                                                                     })();
                                                                     match __alt_result {
                                                                         ::core::result::Result::Ok(()) => {
+                                                                            <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                                                                builder,
+                                                                            );
                                                                             builder.commit(__alt_builder_checkpoint);
                                                                             break 'try_branches;
                                                                         }
@@ -6325,6 +6485,9 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                                                    builder,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -6342,6 +6505,9 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                                        builder,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -6396,6 +6562,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    1433087999u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -6446,6 +6616,10 @@ mod __cssl4parser_emit_impl {
                                                                     })();
                                                                     match __alt_result {
                                                                         ::core::result::Result::Ok(()) => {
+                                                                            <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                                builder,
+                                                                                4287365375u64,
+                                                                            );
                                                                             builder.commit(__alt_builder_checkpoint);
                                                                             break 'try_branches;
                                                                         }
@@ -6478,6 +6652,10 @@ mod __cssl4parser_emit_impl {
                                                                     })();
                                                                     match __alt_result {
                                                                         ::core::result::Result::Ok(()) => {
+                                                                            <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                                builder,
+                                                                                2570243327u64,
+                                                                            );
                                                                             builder.commit(__alt_builder_checkpoint);
                                                                             break 'try_branches;
                                                                         }
@@ -6495,6 +6673,9 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                                                    builder,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -6512,6 +6693,9 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                                        builder,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -6563,6 +6747,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    2411499519u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -6595,6 +6783,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    3918953215u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -6675,6 +6867,10 @@ mod __cssl4parser_emit_impl {
                                                                     })();
                                                                     match __alt_result {
                                                                         ::core::result::Result::Ok(()) => {
+                                                                            <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                                builder,
+                                                                                1211993087u64,
+                                                                            );
                                                                             builder.commit(__alt_builder_checkpoint);
                                                                             break 'try_branches;
                                                                         }
@@ -6733,6 +6929,10 @@ mod __cssl4parser_emit_impl {
                                                                                 })();
                                                                                 match __alt_result {
                                                                                     ::core::result::Result::Ok(()) => {
+                                                                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                                            builder,
+                                                                                            793726975u64,
+                                                                                        );
                                                                                         builder.commit(__alt_builder_checkpoint);
                                                                                         break 'try_branches;
                                                                                     }
@@ -6763,6 +6963,10 @@ mod __cssl4parser_emit_impl {
                                                                                 })();
                                                                                 match __alt_result {
                                                                                     ::core::result::Result::Ok(()) => {
+                                                                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                                            builder,
+                                                                                            793726975u64,
+                                                                                        );
                                                                                         builder.commit(__alt_builder_checkpoint);
                                                                                         break 'try_branches;
                                                                                     }
@@ -6780,6 +6984,9 @@ mod __cssl4parser_emit_impl {
                                                                     })();
                                                                     match __alt_result {
                                                                         ::core::result::Result::Ok(()) => {
+                                                                            <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                                                                builder,
+                                                                            );
                                                                             builder.commit(__alt_builder_checkpoint);
                                                                             break 'try_branches;
                                                                         }
@@ -6797,6 +7004,9 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                                                    builder,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -6814,6 +7024,9 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                                        builder,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -6831,6 +7044,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -6902,6 +7118,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        12582911u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -6934,6 +7154,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        4279538687u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -6951,6 +7175,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -7029,6 +7256,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        1768516095u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -7059,6 +7290,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        1768516095u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -7076,6 +7311,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -7125,6 +7363,10 @@ mod __cssl4parser_emit_impl {
                                         ]
                                 {
                                     *p = end;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        4294635775u64,
+                                    );
                                     alt_hit = true;
                                 }
                             }
@@ -7139,6 +7381,10 @@ mod __cssl4parser_emit_impl {
                                         ]
                                 {
                                     *p = end;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        579543807u64,
+                                    );
                                     alt_hit = true;
                                 }
                             }
@@ -7150,6 +7396,10 @@ mod __cssl4parser_emit_impl {
                                         == [105u8, 114u8, 101u8, 98u8, 114u8, 105u8, 99u8, 107u8]
                                 {
                                     *p = end;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        2988581631u64,
+                                    );
                                     alt_hit = true;
                                 }
                             }
@@ -7161,6 +7411,10 @@ mod __cssl4parser_emit_impl {
                                         == [117u8, 99u8, 104u8, 115u8, 105u8, 97u8]
                                 {
                                     *p = end;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        4278255615u64,
+                                    );
                                     alt_hit = true;
                                 }
                             }
@@ -7226,6 +7480,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            4177068031u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -7259,6 +7517,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            3705462015u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -7320,6 +7582,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        3668254975u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -7350,6 +7616,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        4292280575u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -7367,6 +7637,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -7415,6 +7688,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        2155905279u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -7484,6 +7761,10 @@ mod __cssl4parser_emit_impl {
                                                                     })();
                                                                     match __alt_result {
                                                                         ::core::result::Result::Ok(()) => {
+                                                                            <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                                builder,
+                                                                                2919182335u64,
+                                                                            );
                                                                             builder.commit(__alt_builder_checkpoint);
                                                                             break 'try_branches;
                                                                         }
@@ -7514,6 +7795,10 @@ mod __cssl4parser_emit_impl {
                                                                     })();
                                                                     match __alt_result {
                                                                         ::core::result::Result::Ok(()) => {
+                                                                            <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                                builder,
+                                                                                8388863u64,
+                                                                            );
                                                                             builder.commit(__alt_builder_checkpoint);
                                                                             break 'try_branches;
                                                                         }
@@ -7531,6 +7816,9 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                                                    builder,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -7561,6 +7849,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    2155905279u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -7578,6 +7870,9 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                                        builder,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -7595,6 +7890,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -7647,6 +7945,10 @@ mod __cssl4parser_emit_impl {
                                         == [110u8, 101u8, 121u8, 100u8, 101u8, 119u8]
                                 {
                                     *p = end;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        4043305215u64,
+                                    );
                                     alt_hit = true;
                                 }
                             }
@@ -7657,6 +7959,10 @@ mod __cssl4parser_emit_impl {
                                     && input[at..end] == [116u8, 112u8, 105u8, 110u8, 107u8]
                                 {
                                     *p = end;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        4285117695u64,
+                                    );
                                     alt_hit = true;
                                 }
                             }
@@ -7718,6 +8024,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            4294963455u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -7788,6 +8098,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        3445382399u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -7818,6 +8132,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        1258324735u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -7835,6 +8153,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -7905,6 +8226,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            4294626815u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -7956,6 +8281,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        2096890111u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -8047,6 +8376,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    4293981695u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -8077,6 +8410,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    3873897215u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -8094,6 +8431,9 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                                        builder,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -8111,6 +8451,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -8161,6 +8504,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        4210091775u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -8232,6 +8579,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    4294959359u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -8264,6 +8615,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    2916673279u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -8296,6 +8651,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    4290167295u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -8346,6 +8705,10 @@ mod __cssl4parser_emit_impl {
                                                                     })();
                                                                     match __alt_result {
                                                                         ::core::result::Result::Ok(()) => {
+                                                                            <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                                builder,
+                                                                                4034953471u64,
+                                                                            );
                                                                             builder.commit(__alt_builder_checkpoint);
                                                                             break 'try_branches;
                                                                         }
@@ -8378,6 +8741,10 @@ mod __cssl4parser_emit_impl {
                                                                     })();
                                                                     match __alt_result {
                                                                         ::core::result::Result::Ok(()) => {
+                                                                            <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                                builder,
+                                                                                3774873599u64,
+                                                                            );
                                                                             builder.commit(__alt_builder_checkpoint);
                                                                             break 'try_branches;
                                                                         }
@@ -8395,6 +8762,9 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                                                    builder,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -8449,6 +8819,10 @@ mod __cssl4parser_emit_impl {
                                                                     })();
                                                                     match __alt_result {
                                                                         ::core::result::Result::Ok(()) => {
+                                                                            <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                                builder,
+                                                                                4210742015u64,
+                                                                            );
                                                                             builder.commit(__alt_builder_checkpoint);
                                                                             break 'try_branches;
                                                                         }
@@ -8497,6 +8871,10 @@ mod __cssl4parser_emit_impl {
                                                                                 })();
                                                                                 match __alt_result {
                                                                                     ::core::result::Result::Ok(()) => {
+                                                                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                                            builder,
+                                                                                            3553874943u64,
+                                                                                        );
                                                                                         builder.commit(__alt_builder_checkpoint);
                                                                                         break 'try_branches;
                                                                                     }
@@ -8545,6 +8923,10 @@ mod __cssl4parser_emit_impl {
                                                                                             })();
                                                                                             match __alt_result {
                                                                                                 ::core::result::Result::Ok(()) => {
+                                                                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                                                        builder,
+                                                                                                        2431553791u64,
+                                                                                                    );
                                                                                                     builder.commit(__alt_builder_checkpoint);
                                                                                                     break 'try_branches;
                                                                                                 }
@@ -8575,6 +8957,10 @@ mod __cssl4parser_emit_impl {
                                                                                             })();
                                                                                             match __alt_result {
                                                                                                 ::core::result::Result::Ok(()) => {
+                                                                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                                                        builder,
+                                                                                                        3553874943u64,
+                                                                                                    );
                                                                                                     builder.commit(__alt_builder_checkpoint);
                                                                                                     break 'try_branches;
                                                                                                 }
@@ -8592,6 +8978,9 @@ mod __cssl4parser_emit_impl {
                                                                                 })();
                                                                                 match __alt_result {
                                                                                     ::core::result::Result::Ok(()) => {
+                                                                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                                                                            builder,
+                                                                                        );
                                                                                         builder.commit(__alt_builder_checkpoint);
                                                                                         break 'try_branches;
                                                                                     }
@@ -8609,6 +8998,9 @@ mod __cssl4parser_emit_impl {
                                                                     })();
                                                                     match __alt_result {
                                                                         ::core::result::Result::Ok(()) => {
+                                                                            <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                                                                builder,
+                                                                            );
                                                                             builder.commit(__alt_builder_checkpoint);
                                                                             break 'try_branches;
                                                                         }
@@ -8626,6 +9018,9 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                                                    builder,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -8677,6 +9072,10 @@ mod __cssl4parser_emit_impl {
                                                                     })();
                                                                     match __alt_result {
                                                                         ::core::result::Result::Ok(()) => {
+                                                                            <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                                builder,
+                                                                                2965692159u64,
+                                                                            );
                                                                             builder.commit(__alt_builder_checkpoint);
                                                                             break 'try_branches;
                                                                         }
@@ -8710,6 +9109,10 @@ mod __cssl4parser_emit_impl {
                                                                     })();
                                                                     match __alt_result {
                                                                         ::core::result::Result::Ok(()) => {
+                                                                            <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                                builder,
+                                                                                548580095u64,
+                                                                            );
                                                                             builder.commit(__alt_builder_checkpoint);
                                                                             break 'try_branches;
                                                                         }
@@ -8743,6 +9146,10 @@ mod __cssl4parser_emit_impl {
                                                                     })();
                                                                     match __alt_result {
                                                                         ::core::result::Result::Ok(()) => {
+                                                                            <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                                builder,
+                                                                                2278488831u64,
+                                                                            );
                                                                             builder.commit(__alt_builder_checkpoint);
                                                                             break 'try_branches;
                                                                         }
@@ -8775,6 +9182,10 @@ mod __cssl4parser_emit_impl {
                                                                     })();
                                                                     match __alt_result {
                                                                         ::core::result::Result::Ok(()) => {
+                                                                            <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                                builder,
+                                                                                4288707327u64,
+                                                                            );
                                                                             builder.commit(__alt_builder_checkpoint);
                                                                             break 'try_branches;
                                                                         }
@@ -8873,6 +9284,10 @@ mod __cssl4parser_emit_impl {
                                                                                 })();
                                                                                 match __alt_result {
                                                                                     ::core::result::Result::Ok(()) => {
+                                                                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                                            builder,
+                                                                                            2005441023u64,
+                                                                                        );
                                                                                         builder.commit(__alt_builder_checkpoint);
                                                                                         break 'try_branches;
                                                                                     }
@@ -8903,6 +9318,10 @@ mod __cssl4parser_emit_impl {
                                                                                 })();
                                                                                 match __alt_result {
                                                                                     ::core::result::Result::Ok(()) => {
+                                                                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                                            builder,
+                                                                                            2005441023u64,
+                                                                                        );
                                                                                         builder.commit(__alt_builder_checkpoint);
                                                                                         break 'try_branches;
                                                                                     }
@@ -8920,6 +9339,9 @@ mod __cssl4parser_emit_impl {
                                                                     })();
                                                                     match __alt_result {
                                                                         ::core::result::Result::Ok(()) => {
+                                                                            <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                                                                builder,
+                                                                            );
                                                                             builder.commit(__alt_builder_checkpoint);
                                                                             break 'try_branches;
                                                                         }
@@ -8937,6 +9359,9 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                                                    builder,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -8954,6 +9379,9 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                                        builder,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -9005,6 +9433,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    852308735u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -9035,6 +9467,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    16711935u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -9052,6 +9488,9 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                                        builder,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -9069,6 +9508,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -9136,6 +9578,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            4293178879u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -9186,6 +9632,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        4278255615u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -9218,6 +9668,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        2147483903u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -9235,6 +9689,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -9329,6 +9786,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        1724754687u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -9365,6 +9826,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        1221709055u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -9401,6 +9866,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        3340076543u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -9434,6 +9903,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        3126187007u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -9467,6 +9940,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        2473647103u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -9499,6 +9976,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        52735u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -9553,6 +10034,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    16423679u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -9586,6 +10071,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    2070474495u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -9619,6 +10108,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    1018393087u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -9636,6 +10129,9 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                                        builder,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -9653,6 +10149,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -9707,6 +10206,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        421097727u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -9740,6 +10243,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        4127193855u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -9773,6 +10280,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        4293190143u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -9790,6 +10301,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -9848,6 +10362,10 @@ mod __cssl4parser_emit_impl {
                                         == [97u8, 106u8, 111u8, 119u8, 104u8, 105u8, 116u8, 101u8]
                                 {
                                     *p = end;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        4292783615u64,
+                                    );
                                     alt_hit = true;
                                 }
                             }
@@ -9856,6 +10374,10 @@ mod __cssl4parser_emit_impl {
                                 let end = at + 1usize;
                                 if input.len() >= end && input[at..end] == [121u8] {
                                     *p = end;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        33023u64,
+                                    );
                                     alt_hit = true;
                                 }
                             }
@@ -9935,6 +10457,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        4260751103u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -9995,6 +10521,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    1804477439u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -10025,6 +10555,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    2155872511u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -10042,6 +10576,9 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                                        builder,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -10059,6 +10596,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -10109,6 +10649,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        3664828159u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -10179,6 +10723,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    4282712319u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -10209,6 +10757,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    4289003775u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -10226,6 +10778,9 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                                        builder,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -10243,6 +10798,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -10312,6 +10870,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            2967529215u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -10344,6 +10906,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            2147516671u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -10376,6 +10942,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            4290825215u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -10408,6 +10978,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            3718307327u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -10459,6 +11033,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        4293907967u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -10523,6 +11101,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    2951671551u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -10559,6 +11141,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    3681588223u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -10610,6 +11196,10 @@ mod __cssl4parser_emit_impl {
                                                                     })();
                                                                     match __alt_result {
                                                                         ::core::result::Result::Ok(()) => {
+                                                                            <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                                builder,
+                                                                                4008225535u64,
+                                                                            );
                                                                             builder.commit(__alt_builder_checkpoint);
                                                                             break 'try_branches;
                                                                         }
@@ -10642,6 +11232,10 @@ mod __cssl4parser_emit_impl {
                                                                     })();
                                                                     match __alt_result {
                                                                         ::core::result::Result::Ok(()) => {
+                                                                            <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                                builder,
+                                                                                2566625535u64,
+                                                                            );
                                                                             builder.commit(__alt_builder_checkpoint);
                                                                             break 'try_branches;
                                                                         }
@@ -10659,6 +11253,9 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                                                    builder,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -10676,6 +11273,9 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                                        builder,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -10693,6 +11293,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -10744,6 +11347,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        4292524543u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -10774,6 +11381,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        3448061951u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -10791,6 +11402,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -10879,6 +11493,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        1714657791u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -10909,6 +11527,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        4278190335u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -10926,6 +11548,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -10977,6 +11602,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        3163525119u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -11010,6 +11639,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        1097458175u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -11027,6 +11660,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -11097,6 +11733,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            16744447u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -11130,6 +11770,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            1182971135u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -11163,6 +11807,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            2278484991u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -11195,6 +11843,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            4294638335u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -11248,6 +11900,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        2336560127u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -11281,6 +11937,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        4104413439u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -11313,6 +11973,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        4202722047u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -11330,6 +11994,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -11390,6 +12057,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        780883967u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -11422,6 +12093,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        4294307583u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -11439,6 +12114,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -11489,6 +12167,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        2689740287u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -11521,6 +12203,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        3233857791u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -11538,6 +12224,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -11618,6 +12307,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        1784335871u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -11676,6 +12369,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    1887473919u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -11706,6 +12403,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    1887473919u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -11723,6 +12424,9 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                                        builder,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -11740,6 +12444,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -11789,6 +12496,10 @@ mod __cssl4parser_emit_impl {
                                         ]
                                 {
                                     *p = end;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        0u64,
+                                    );
                                     alt_hit = true;
                                 }
                             }
@@ -11800,6 +12511,10 @@ mod __cssl4parser_emit_impl {
                                         == [117u8, 114u8, 113u8, 117u8, 111u8, 105u8, 115u8, 101u8]
                                 {
                                     *p = end;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        1088475391u64,
+                                    );
                                     alt_hit = true;
                                 }
                             }
@@ -11811,6 +12526,10 @@ mod __cssl4parser_emit_impl {
                                         == [104u8, 105u8, 115u8, 116u8, 108u8, 101u8]
                                 {
                                     *p = end;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        3636451583u64,
+                                    );
                                     alt_hit = true;
                                 }
                             }
@@ -11821,6 +12540,10 @@ mod __cssl4parser_emit_impl {
                                     && input[at..end] == [111u8, 109u8, 97u8, 116u8, 111u8]
                                 {
                                     *p = end;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        4284696575u64,
+                                    );
                                     alt_hit = true;
                                 }
                             }
@@ -11831,6 +12554,10 @@ mod __cssl4parser_emit_impl {
                                     && input[at..end] == [101u8, 97u8, 108u8]
                                 {
                                     *p = end;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        8421631u64,
+                                    );
                                     alt_hit = true;
                                 }
                             }
@@ -11839,6 +12566,10 @@ mod __cssl4parser_emit_impl {
                                 let end = at + 2usize;
                                 if input.len() >= end && input[at..end] == [97u8, 110u8] {
                                     *p = end;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        3535047935u64,
+                                    );
                                     alt_hit = true;
                                 }
                             }
@@ -11910,6 +12641,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            4125012991u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -11971,6 +12706,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        4126537215u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -12001,6 +12740,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        4294967295u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -12018,6 +12761,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -12088,6 +12834,10 @@ mod __cssl4parser_emit_impl {
                                         == [119u8, 103u8, 114u8, 101u8, 101u8, 110u8]
                                 {
                                     *p = end;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        2597139199u64,
+                                    );
                                     alt_hit = true;
                                 }
                             }
@@ -12096,6 +12846,10 @@ mod __cssl4parser_emit_impl {
                                 let end = at + 1usize;
                                 if input.len() >= end && input[at..end] == [119u8] {
                                     *p = end;
+                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                        builder,
+                                        4294902015u64,
+                                    );
                                     alt_hit = true;
                                 }
                             }
@@ -12400,6 +13154,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            1u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -12430,6 +13188,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            0u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -12556,6 +13318,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        7u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -12586,6 +13352,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        6u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -12603,6 +13373,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -12633,6 +13406,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            8u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -12940,6 +13717,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            13u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -12970,6 +13751,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            12u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -13098,6 +13883,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            1u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -13128,6 +13917,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            8u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -13252,6 +14045,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            45u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -13282,6 +14079,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            47u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -13312,6 +14113,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            46u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -13342,6 +14147,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            48u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -13476,6 +14285,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        37u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -13506,6 +14319,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        38u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -13523,6 +14340,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -13553,6 +14373,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            18u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -13583,6 +14407,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            19u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -13613,6 +14441,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            39u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -13643,6 +14475,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            40u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -13749,6 +14585,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        33u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -13779,6 +14619,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        34u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -13796,6 +14640,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -13826,6 +14673,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            20u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -13856,6 +14707,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            21u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -13886,6 +14741,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            35u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -13916,6 +14775,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            36u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -14022,6 +14885,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        29u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -14052,6 +14919,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        30u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -14069,6 +14940,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -14099,6 +14973,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            16u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -14129,6 +15007,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            17u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -14159,6 +15041,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            31u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -14189,6 +15075,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            32u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -14285,6 +15175,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        5u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -14315,6 +15209,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        6u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -14332,6 +15230,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -14362,6 +15263,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            3u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -14392,6 +15297,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            4u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -14422,6 +15331,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            27u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -14452,6 +15365,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            28u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -15078,6 +15995,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            1u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -15108,6 +16029,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            2u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -15138,6 +16063,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            0u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -15423,6 +16352,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        2u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -15455,6 +16388,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        6u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -15487,6 +16424,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        7u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -15504,6 +16445,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -15534,6 +16478,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            1u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -15671,6 +16619,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            9u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -15731,6 +16683,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        11u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -15763,6 +16719,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        10u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -15780,6 +16740,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -16201,6 +17164,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            3u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -16231,6 +17198,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            2u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -16324,6 +17295,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            1u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -16354,6 +17329,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            0u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -16500,6 +17479,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            2u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -16530,6 +17513,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            1u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -16722,6 +17709,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            0u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -16754,6 +17745,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            1u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -16844,6 +17839,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            8u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -16935,6 +17934,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        5u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -16968,6 +17971,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        6u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -17001,6 +18008,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        7u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -17018,6 +18029,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -17126,6 +18140,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            2u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -17176,6 +18194,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        3u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -17208,6 +18230,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        4u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -17225,6 +18251,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -17824,6 +18853,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            8u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -17854,6 +18887,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            7u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -18070,6 +19107,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            1u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -18102,6 +19143,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            2u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -18280,6 +19325,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            2u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -18312,6 +19361,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            3u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -18777,6 +19830,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            1u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -18881,6 +19938,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        5u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -18917,6 +19978,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        4u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -18953,6 +20018,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        6u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -18988,6 +20057,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        3u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -19020,6 +20093,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        2u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -19037,6 +20114,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -19279,6 +20359,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            2u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -19312,6 +20396,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            3u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -19347,6 +20435,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            4u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -19382,6 +20474,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            5u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -19418,6 +20514,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            9u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -19454,6 +20554,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            10u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -19490,6 +20594,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            11u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -19526,6 +20634,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            12u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -19792,6 +20904,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        3u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -19824,6 +20940,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        2u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -19856,6 +20976,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        4u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -19888,6 +21012,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        1u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -19905,6 +21033,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -19935,6 +21066,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            0u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -20094,6 +21229,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        8u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -20126,6 +21265,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        7u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -20158,6 +21301,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        9u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -20190,6 +21337,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        6u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -20207,6 +21358,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -20237,6 +21391,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            5u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -20432,6 +21590,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        2u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -20465,6 +21627,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        0u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -20497,6 +21663,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        1u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -20514,6 +21684,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -20544,6 +21717,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            3u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -20718,6 +21895,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            4u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -20879,6 +22060,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    8u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -20911,6 +22096,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    7u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -20943,6 +22132,10 @@ mod __cssl4parser_emit_impl {
                                                         })();
                                                         match __alt_result {
                                                             ::core::result::Result::Ok(()) => {
+                                                                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                                    builder,
+                                                                    6u64,
+                                                                );
                                                                 builder.commit(__alt_builder_checkpoint);
                                                                 break 'try_branches;
                                                             }
@@ -20960,6 +22153,9 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                                        builder,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -20990,6 +22186,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        5u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -21007,6 +22207,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -21123,6 +22326,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            13u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -21156,6 +22363,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            12u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -21253,6 +22464,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            10u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -21289,6 +22504,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            11u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -22014,6 +23233,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            4u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -22044,6 +23267,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            3u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -22223,6 +23450,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        1u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -22255,6 +23486,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        2u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -22272,6 +23507,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -22302,6 +23540,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            0u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -22509,6 +23751,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        7u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -22541,6 +23787,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        9u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -22576,6 +23826,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        11u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -22612,6 +23866,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        8u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -22648,6 +23906,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        10u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -22684,6 +23946,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        13u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -22719,6 +23985,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        12u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -22751,6 +24021,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        6u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -22768,6 +24042,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -22798,6 +24075,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            5u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -22987,6 +24268,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        2u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -23019,6 +24304,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        4u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -23055,6 +24344,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        3u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -23088,6 +24381,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        1u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -23105,6 +24402,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -23135,6 +24435,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            0u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -23304,6 +24608,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            5u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -23337,6 +24645,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            6u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -23562,6 +24874,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        2u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -23594,6 +24910,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        3u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -23626,6 +24946,10 @@ mod __cssl4parser_emit_impl {
                                             })();
                                             match __alt_result {
                                                 ::core::result::Result::Ok(()) => {
+                                                    <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                                        builder,
+                                                        1u64,
+                                                    );
                                                     builder.commit(__alt_builder_checkpoint);
                                                     break 'try_branches;
                                                 }
@@ -23643,6 +24967,9 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(
+                                            builder,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }
@@ -23673,6 +25000,10 @@ mod __cssl4parser_emit_impl {
                                 })();
                                 match __alt_result {
                                     ::core::result::Result::Ok(()) => {
+                                        <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                                            builder,
+                                            0u64,
+                                        );
                                         builder.commit(__alt_builder_checkpoint);
                                         break 'try_branches;
                                     }

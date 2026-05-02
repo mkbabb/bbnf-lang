@@ -107,10 +107,25 @@ pub fn compile_map_expr_to_js(expr: &MapExpr, ir: &GrammarIR) -> String {
             format!("__input.{prop_name}")
         }
         MapExpr::FnCall { name, args } => {
-            let fn_name = ir.get_string(*name);
+            // Strip Rust-style path qualifiers (`crate::module::fn`) — TS
+            // identifiers cannot contain `::`. The TS runtime resolves
+            // host functions via the bare function name from the
+            // `declare function …` shim emitted at the top of the
+            // generated module (see `emitter/grammar.rs`'s host-fn
+            // declaration block).
+            let raw_name = ir.get_string(*name);
+            let fn_name = raw_name.rsplit("::").next().unwrap_or(raw_name);
             let compiled_args: Vec<String> =
                 args.iter().map(|a| compile_map_expr_to_js(a, ir)).collect();
             if compiled_args.is_empty() {
+                // Empty arg list — pass the captured `__re*` Span variable
+                // as the implicit input. This branch fires when the IR
+                // strips the explicit `input` arg during typed-leaf
+                // collapse; the surrounding emitter produces the
+                // `(captured) !== null ? fn(captured) : null` shape, but
+                // the captured variable name is the inner expr, not
+                // `__input` (the closure declares no `__input` in the
+                // constant-branch emission path).
                 format!("{fn_name}(__input)")
             } else {
                 format!("{fn_name}({})", compiled_args.join(", "))

@@ -73,16 +73,27 @@ impl TsEmitter {
         let mut stmts = String::new();
         let inner_expr = inner.dissolve(&mut stmts);
 
-        if expr.is_constant() {
-            let value_js = compile_map_expr_to_js(expr, ir);
-            stmts.push_str(&format!(
-                "const {v} = ({inner_expr}) !== null ? {value_js} : null;\n"
-            ));
-        } else {
-            let body_js = compile_map_expr_to_js(expr, ir);
+        // The "constant" path strictly speaking covers expressions that
+        // do not depend on the captured input — but the TS projection
+        // for an empty-arg FnCall (`fn_name(__input)` per
+        // `compile_map_expr_to_js`) injects an implicit `__input`
+        // reference at the call site. When the lowering peels the
+        // explicit `Input` arg from a host-fn projection (so the
+        // FnCall's `args` collapses to `[]`), `is_constant()` returns
+        // `true` (vacuous `all`) but the compiled body still references
+        // `__input`. Detect that case and emit the `__input`
+        // declaration even though the IR pretends the expression is
+        // constant.
+        let value_js = compile_map_expr_to_js(expr, ir);
+        let needs_input_bind = !expr.is_constant() || value_js.contains("__input");
+        if needs_input_bind {
             stmts.push_str(&format!(
                 "const __input = {inner_expr};\n\
-                 const {v} = __input !== null ? {body_js} : null;\n"
+                 const {v} = __input !== null ? {value_js} : null;\n"
+            ));
+        } else {
+            stmts.push_str(&format!(
+                "const {v} = ({inner_expr}) !== null ? {value_js} : null;\n"
             ));
         }
         TsCode::new(stmts, v)

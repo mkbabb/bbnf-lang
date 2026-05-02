@@ -40,10 +40,9 @@ use crate::runtime::css_l4::document::CssDocument;
 use crate::runtime::css_l4::value::{
     CssAngle, CssAngleUnit, CssColor, CssColorFunction, CssColorMix, CssColorPredefined,
     CssColorSpace, CssColorType, CssDimension, CssFlex, CssFrequency, CssFrequencyUnit,
-    CssFunction, CssGlobalKeyword, CssHueMethod, CssLength, CssLengthUnit, CssMathOperator,
-    CssPercentage, CssResolution, CssResolutionUnit, CssRule, CssTime, CssTimeUnit, CssTypedValue,
-    Declaration, GenericAtRule, KeyframeBlock, KeyframesRule, MediaRule, Selector, StyleRule,
-    StyleSheet,
+    CssFunction, CssHueMethod, CssLength, CssLengthUnit, CssPercentage, CssResolution,
+    CssResolutionUnit, CssRule, CssTime, CssTimeUnit, CssTypedValue, Declaration, GenericAtRule,
+    KeyframeBlock, KeyframesRule, MediaRule, Selector, StyleRule, StyleSheet,
 };
 use crate::runtime::handle::CompoundHandle;
 
@@ -989,16 +988,26 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                 }
             }
             _ => {
-                // Global keyword / math operator branch tags land on
-                // the pending value slot as a typed enum.
-                if let Some(kw) = CssGlobalKeyword::from_discriminant(branch_index as u8) {
-                    self.deposit_value(CssTypedValue::GlobalKeyword(kw));
-                } else if let Some(_op) = CssMathOperator::from_discriminant(branch_index as u8) {
-                    // Math operators land inside the function arg list
-                    // through the value-list path; the discriminant
-                    // itself is structural and doesn't materialise as a
-                    // standalone value.
-                }
+                // AZ-IV.W1-CLOSE.B — `push_branch_tag` from a catch-all
+                // Wrap-frame fall-through is structural: the tag is the
+                // discriminator of the rule whose own `push_leaf_with_*`
+                // call already deposited the typed payload on the
+                // enclosing slot. The previous trial-cast through
+                // `CssGlobalKeyword::from_discriminant` /
+                // `CssMathOperator::from_discriminant` mis-routed every
+                // Wrap-frame branch tag (namedColor's outer prefix-group
+                // index 0..=19, dirPseudo's 0/1) into a fabricated
+                // `GlobalKeyword` value, overwriting the typed payload
+                // that `push_leaf_with_u64` / `push_leaf_with_str` had
+                // already deposited.
+                //
+                // GlobalKeyword and MathOperator must reach the typed
+                // graph from their owning rules' frames (via the
+                // `push_leaf_with_*` path on a dedicated frame), not
+                // from a catch-all trial-cast. Until those frames
+                // exist, the catch-all is a deliberate no-op — the
+                // structural tag is consumed for shape recognition
+                // but the typed payload wins on the value slot.
             }
         }
     }

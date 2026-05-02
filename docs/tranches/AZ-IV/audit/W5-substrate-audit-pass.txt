@@ -1,0 +1,93 @@
+   Compiling bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-wt-aziv-w5-audit/crates/ir)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 0.88s
+     Running tests/substrate_audit.rs (target/w5-audit/ax-iter/deps/substrate_audit-ffe7887455f9ddd1)
+
+running 2 tests
+test substrate_audit_self_test_detects_synthetic_zero_caller ... ok
+substrate_audit: 514 audited files, 594 caller files (workspace_root = /Users/mkbabb/Programming/bbnf-wt-aziv-w5-audit)
+substrate_audit: enumerated 886 pub substrates from audited crates
+substrate_audit: 32 zero-caller substrates (whitelist size = 0); elapsed = 1.210740625s
+
+thread 'substrate_audit_zero_caller_substrates' (45606577) panicked at crates/ir/tests/substrate_audit.rs:551:9:
+
+AZ-IV.W5.4 substrate-audit FAIL — zero-caller `pub` substrates detected.
+Each item below is a `pub` substrate in the audited crate set with NO
+production caller. Either route the substrate to its consumer, delete it,
+or add it to SANCTIONED_SUBSTRATES with a one-line reason.
+
+  fn      calculate_acyclic_deps_scc
+      at crates/core/src/graph/scc.rs:209
+  fn      calculate_non_acyclic_deps_scc
+      at crates/core/src/graph/scc.rs:242
+  fn      charset_from_class_body
+      at crates/core/src/backend/kernels/charclass.rs:164
+  fn      emit_call_with_escapes
+      at crates/core/src/backend/kernels/identifier.rs:23
+  enum    SeqResultStrategy
+      at crates/core/src/backend/types/mod.rs:61
+  fn      phf_dispatch_fn_ident
+      at crates/core/src/backend/rust/emitter/keyword_dispatch.rs:199
+  fn      phf_kw_table_ident
+      at crates/core/src/backend/rust/emitter/keyword_dispatch.rs:209
+  fn      cursor_generic_clause
+      at crates/core/src/backend/rust/emitter/shapes/cursor_param.rs:51
+  fn      cursor_arg
+      at crates/core/src/backend/rust/emitter/shapes/cursor_param.rs:73
+  fn      pack_lut_byte_for_test
+      at crates/core/src/backend/rust/emitter/precedence.rs:272
+  fn      type_desc_to_syn
+      at crates/core/src/backend/rust/ir_types.rs:289
+  fn      type_desc_is_span
+      at crates/core/src/backend/rust/ir_types.rs:358
+  fn      type_is_span
+      at crates/core/src/backend/rust/ir_types.rs:362
+  fn      resolve_ref_strategy
+      at crates/core/src/backend/strategy/ref_strategy.rs:39
+  fn      classify_seq
+      at crates/core/src/backend/strategy/seq_strategy.rs:27
+  enum    NodeStrategy
+      at crates/core/src/backend/strategy/mod.rs:33
+  fn      classify_repeat
+      at crates/core/src/backend/strategy/repeat_strategy.rs:25
+  fn      generate_serialize_methods
+      at crates/core/src/generate/serialize/mod.rs:15
+  fn      classify_rule_alphabet
+      at crates/core/src/generate/regex/byte_class.rs:207
+  fn      compute_excluded_bytes
+      at crates/core/src/generate/regex/emit/simd.rs:333
+  fn      try_build_shared_table
+      at crates/core/src/generate/regex/phf.rs:60
+  fn      emit_shared_table
+      at crates/core/src/generate/regex/phf.rs:120
+  fn      shared_vocab_ident
+      at crates/core/src/generate/regex/phf.rs:168
+  fn      ensure_dag
+      at crates/ir/src/dag/mod.rs:50
+  fn      make_alphabet
+      at crates/ir/src/passes/recognizers/pattern_alphabet.rs:375
+  fn      parse_with_ir
+      at crates/ir/src/vm/interpreter/mod.rs:373
+  fn      compute_inside_string_bytes
+      at crates/simd-scan/src/parity.rs:210
+  fn      compact_stripe_synthetic
+      at crates/simd-scan/src/compaction.rs:53
+  fn      compact_stripe_pext
+      at crates/simd-scan/src/compaction.rs:82
+  fn      min_conflicts
+      at crates/csp-solver/src/solver/local_search.rs:106
+  fn      propagate_stratified
+      at crates/csp-solver/src/solver/monotonic.rs:58
+  fn      propagate_gac_alldiff
+      at crates/csp-solver/src/solver/gac_alldiff.rs:209
+
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test substrate_audit_zero_caller_substrates ... FAILED
+
+failures:
+
+failures:
+    substrate_audit_zero_caller_substrates
+
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.21s
+
+error: test failed, to rerun pass `-p bbnf-ir --test substrate_audit`

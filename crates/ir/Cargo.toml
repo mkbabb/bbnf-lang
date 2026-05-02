@@ -22,3 +22,14 @@ egraph-derive = { path = "../egraph-derive" }
 # (`grammar/<g>/rewrites/*.ron`); consumed by `crate::rewrites::schema`
 # and `crate::rewrites::RuleSet::{load_from_ron, save_to_ron}`.
 ron = "0.12"
+
+# Dev-only deps for the permanent substrate-audit test
+# (`crates/ir/tests/substrate_audit.rs`, AZ-IV.W5.4 / Hard Gate 13).
+# `cargo_metadata` resolves workspace member paths once and feeds the
+# AST-walk; `syn` parses every production .rs file under the audited
+# crates to enumerate `pub` substrates + count callers.
+[dev-dependencies]
+cargo_metadata = "0.18"
+syn = { version = "2", features = ["full", "extra-traits", "visit"] }
+proc-macro2 = { version = "1", features = ["span-locations"] }
+rustc-hash = "2"

@@ -1011,13 +1011,18 @@ mod __ebnfparser_emit_impl {
         unused_assignments,
         unreachable_code
     )]
-    pub fn parse_altdispatch_EbnfParser_letter<'p>(
+    pub fn parse_altdispatch_EbnfParser_letter<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder;
+        let _ = cursor;
         let first = __shape_support_EbnfParser::skip_space(input, p, state)
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -1685,16 +1690,21 @@ mod __ebnfparser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_EbnfParser_digit<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_EbnfParser_digit<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             48u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [48u8] {
@@ -1866,13 +1876,18 @@ mod __ebnfparser_emit_impl {
         unused_assignments,
         unreachable_code
     )]
-    pub fn parse_altdispatch_EbnfParser_symbol<'p>(
+    pub fn parse_altdispatch_EbnfParser_symbol<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder;
+        let _ = cursor;
         let first = __shape_support_EbnfParser::skip_space(input, p, state)
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -2237,13 +2252,19 @@ mod __ebnfparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_EbnfParser_identifier<'p>(
+    pub fn parse_flat_EbnfParser_identifier<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(3u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __identifier_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -2269,7 +2290,7 @@ mod __ebnfparser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_EbnfParser::skip_space(input, p, state);
-                    parse_altdispatch_EbnfParser_letter(input, p, state, builder)
+                    parse_altdispatch_EbnfParser_letter(input, p, state, builder, cursor)
                 })?;
             }
             {
@@ -2351,6 +2372,7 @@ mod __ebnfparser_emit_impl {
                                                 __first,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -2384,6 +2406,7 @@ mod __ebnfparser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -2465,13 +2488,18 @@ mod __ebnfparser_emit_impl {
         unused_assignments,
         unreachable_code
     )]
-    pub fn parse_altdispatch_EbnfParser_character<'p>(
+    pub fn parse_altdispatch_EbnfParser_character<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder;
+        let _ = cursor;
         let first = __shape_support_EbnfParser::skip_space(input, p, state)
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -2524,7 +2552,14 @@ mod __ebnfparser_emit_impl {
                             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                                 offset: *p as u32,
                             })?;
-                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
+                        parse_keyword_EbnfParser_digit(
+                            input,
+                            p,
+                            __first,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(2u32);
@@ -2541,7 +2576,13 @@ mod __ebnfparser_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        parse_altdispatch_EbnfParser_symbol(input, p, state, builder)
+                        parse_altdispatch_EbnfParser_symbol(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(3u32);
@@ -2559,7 +2600,13 @@ mod __ebnfparser_emit_impl {
                     let attempt_builder = builder.checkpoint();
                     match {
                         let _ = __shape_support_EbnfParser::skip_space(input, p, state);
-                        parse_altdispatch_EbnfParser_letter(input, p, state, builder)
+                        parse_altdispatch_EbnfParser_letter(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(4u32);
@@ -2599,16 +2646,21 @@ mod __ebnfparser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_EbnfParser_terminal<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_EbnfParser_terminal<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             34u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [34u8] {
@@ -2660,6 +2712,7 @@ mod __ebnfparser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                         }
@@ -2707,6 +2760,7 @@ mod __ebnfparser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                     }
@@ -2819,6 +2873,7 @@ mod __ebnfparser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                         }
@@ -2866,6 +2921,7 @@ mod __ebnfparser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                     }
@@ -2966,13 +3022,19 @@ mod __ebnfparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_EbnfParser_concatenation<'p>(
+    pub fn parse_flat_EbnfParser_concatenation<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(6u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __concatenation_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -3030,7 +3092,13 @@ mod __ebnfparser_emit_impl {
                                     p,
                                     state,
                                 );
-                                parse_flat_EbnfParser_factor(input, p, state, builder)
+                                parse_flat_EbnfParser_factor(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
                             })?;
                             {
                                 let __scan_start = *p;
@@ -3172,13 +3240,19 @@ mod __ebnfparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_EbnfParser_alternation<'p>(
+    pub fn parse_flat_EbnfParser_alternation<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(7u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __alternation_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -3236,6 +3310,7 @@ mod __ebnfparser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             {
@@ -3355,13 +3430,17 @@ mod __ebnfparser_emit_impl {
     /// struct-builder.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_scalar_EbnfParser_rhs<'p>(
+    pub fn parse_scalar_EbnfParser_rhs<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
-        { parse_flat_EbnfParser_alternation(input, p, state, builder) }
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        { parse_flat_EbnfParser_alternation(input, p, state, builder, cursor) }
     }
     /// AZ-I.W2.RB — per-grammar AltDispatch-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -3376,13 +3455,18 @@ mod __ebnfparser_emit_impl {
         unused_assignments,
         unreachable_code
     )]
-    pub fn parse_altdispatch_EbnfParser_term<'p>(
+    pub fn parse_altdispatch_EbnfParser_term<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder;
+        let _ = cursor;
         let first = __shape_support_EbnfParser::skip_space(input, p, state)
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -3428,7 +3512,7 @@ mod __ebnfparser_emit_impl {
                             *p += match_len as usize;
                         }
                         let _ = ({
-                            parse_scalar_EbnfParser_rhs(input, p, state, builder)
+                            parse_scalar_EbnfParser_rhs(input, p, state, builder, cursor)
                         })?;
                         {
                             let __scan_start = *p;
@@ -3496,7 +3580,7 @@ mod __ebnfparser_emit_impl {
                             *p += match_len as usize;
                         }
                         let _ = ({
-                            parse_scalar_EbnfParser_rhs(input, p, state, builder)
+                            parse_scalar_EbnfParser_rhs(input, p, state, builder, cursor)
                         })?;
                         {
                             let __scan_start = *p;
@@ -3564,7 +3648,7 @@ mod __ebnfparser_emit_impl {
                             *p += match_len as usize;
                         }
                         let _ = ({
-                            parse_scalar_EbnfParser_rhs(input, p, state, builder)
+                            parse_scalar_EbnfParser_rhs(input, p, state, builder, cursor)
                         })?;
                         {
                             let __scan_start = *p;
@@ -3621,6 +3705,7 @@ mod __ebnfparser_emit_impl {
                             __first,
                             state,
                             builder,
+                            cursor,
                         )
                     } {
                         Ok(_) => {
@@ -3639,7 +3724,13 @@ mod __ebnfparser_emit_impl {
                     let attempt_builder = builder.checkpoint();
                     match {
                         let _ = __shape_support_EbnfParser::skip_space(input, p, state);
-                        parse_flat_EbnfParser_identifier(input, p, state, builder)
+                        parse_flat_EbnfParser_identifier(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(4u32);
@@ -3700,13 +3791,19 @@ mod __ebnfparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_EbnfParser_factor<'p>(
+    pub fn parse_flat_EbnfParser_factor<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(10u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __factor_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -3729,7 +3826,7 @@ mod __ebnfparser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_EbnfParser::skip_space(input, p, state);
-                    parse_altdispatch_EbnfParser_term(input, p, state, builder)
+                    parse_altdispatch_EbnfParser_term(input, p, state, builder, cursor)
                 })?;
             }
             {
@@ -3903,7 +4000,13 @@ mod __ebnfparser_emit_impl {
                                     p,
                                     state,
                                 );
-                                parse_altdispatch_EbnfParser_term(input, p, state, builder)
+                                parse_altdispatch_EbnfParser_term(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
                             })?;
                             Ok(())
                         })();
@@ -3996,13 +4099,19 @@ mod __ebnfparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_EbnfParser_rule<'p>(
+    pub fn parse_flat_EbnfParser_rule<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(11u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __rule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -4025,7 +4134,7 @@ mod __ebnfparser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_EbnfParser::skip_space(input, p, state);
-                    parse_flat_EbnfParser_identifier(input, p, state, builder)
+                    parse_flat_EbnfParser_identifier(input, p, state, builder, cursor)
                 })?;
             }
             {
@@ -4069,7 +4178,9 @@ mod __ebnfparser_emit_impl {
                 }
             }
             {
-                let _ = ({ parse_scalar_EbnfParser_rhs(input, p, state, builder) })?;
+                let _ = ({
+                    parse_scalar_EbnfParser_rhs(input, p, state, builder, cursor)
+                })?;
             }
             {
                 {
@@ -4205,15 +4316,24 @@ mod __ebnfparser_emit_impl {
     /// closes the frame on first-byte rejection or EOF. NO
     /// bracket-delimiter literals — termination is driven by
     /// the inner dispatcher's first-set check.
+    ///
+    /// AZ-IV.W3.6 — Cursor-threaded. Each iteration consults
+    /// `cursor.decide(rule_id) -> Decision` to honour the lazy
+    /// bail-out parse's `ParseUntil(idx)` cut.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_array_EbnfParser_grammar<'p>(
+    pub fn parse_array_EbnfParser_grammar<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder;
+        use crate::path::cursor::Decision as __Decision;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 12u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("grammar"),
@@ -4222,9 +4342,16 @@ mod __ebnfparser_emit_impl {
             fields: ::std::vec::Vec::new(),
         };
         let __handle = builder.begin_compound(&__layout);
+        let __decision: __Decision = cursor.decide(12u32 as u32);
+        let mut __elem_idx: u32 = 0;
         loop {
             let __iter_save_p = *p;
             if input.get(*p).is_none() {
+                break;
+            }
+            if let __Decision::ParseUntil(__cut) = __decision
+                && __elem_idx as u32 > __cut as u32
+            {
                 break;
             }
             let __iter_builder_checkpoint = builder.checkpoint();
@@ -4233,7 +4360,7 @@ mod __ebnfparser_emit_impl {
                 let _ = __shape_support_EbnfParser::skip_space(input, p, state);
                 ({
                     let _ = __shape_support_EbnfParser::skip_space(input, p, state);
-                    parse_flat_EbnfParser_rule(input, p, state, builder)
+                    parse_flat_EbnfParser_rule(input, p, state, builder, cursor)
                 })?;
                 let _ = __shape_support_EbnfParser::skip_space(input, p, state);
                 Ok(())
@@ -4245,6 +4372,7 @@ mod __ebnfparser_emit_impl {
                         break;
                     }
                     builder.commit(__iter_builder_checkpoint);
+                    __elem_idx = __elem_idx.saturating_add(1);
                 }
                 Err(_) => {
                     *p = __iter_save_p;
@@ -4270,13 +4398,17 @@ mod __ebnfparser_emit_impl {
     /// recursion rationale.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_EbnfParser_grammar<'p>(
+    pub fn parse_EbnfParser_grammar<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
-        parse_EbnfParser_grammar__value(input, p, state, builder)
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        parse_EbnfParser_grammar__value(input, p, state, builder, cursor)
     }
     /// AW-V.W3.2 — value-position shape dispatcher. Called both at
     /// the grammar root and from Object / Array compound bodies.
@@ -4284,14 +4416,19 @@ mod __ebnfparser_emit_impl {
     /// AX.W0a.2.f — compound; plain `#[inline]`.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_EbnfParser_grammar__value<'p>(
+    pub fn parse_EbnfParser_grammar__value<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         let _ = __shape_support_EbnfParser::skip_space(input, p, state);
-        parse_array_EbnfParser_grammar(input, p, state, builder)
+        let _ = cursor.decide(12u32);
+        parse_array_EbnfParser_grammar(input, p, state, builder, cursor)
     }
     impl EbnfParser {
         fn __letter_prettify<'a>(

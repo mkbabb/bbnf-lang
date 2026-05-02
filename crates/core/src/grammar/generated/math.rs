@@ -557,12 +557,17 @@ mod __mathparser_emit_impl {
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_hregex_MathParser_number<'p>(
+    pub fn parse_hregex_MathParser_number<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_MathParser::ScanState,
         builder: &mut crate::runtime::math::MathStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_MathParser(
             "(\\d+)?(\\.\\d+)?([eE][-+]?\\d+)?",
@@ -598,13 +603,17 @@ mod __mathparser_emit_impl {
     /// recursion rationale.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_MathParser_number<'p>(
+    pub fn parse_MathParser_number<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_MathParser::ScanState,
         builder: &mut crate::runtime::math::MathStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
-        parse_MathParser_number__value(input, p, state, builder)
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        parse_MathParser_number__value(input, p, state, builder, cursor)
     }
     /// AW-V.W3.2 — value-position shape dispatcher. Called both at
     /// the grammar root and from Object / Array compound bodies.
@@ -612,14 +621,19 @@ mod __mathparser_emit_impl {
     /// AX.W0a.2.f — compound; plain `#[inline]`.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_MathParser_number__value<'p>(
+    pub fn parse_MathParser_number__value<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_MathParser::ScanState,
         builder: &mut crate::runtime::math::MathStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         let _ = __shape_support_MathParser::skip_space(input, p, state);
-        parse_hregex_MathParser_number(input, p, state, builder)
+        let _ = cursor.decide(0u32);
+        parse_hregex_MathParser_number(input, p, state, builder, cursor)
     }
     impl MathParser {
         /// Parse an input string and return the grammar-specific

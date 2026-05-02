@@ -3815,12 +3815,17 @@ mod __bbnfbootstrap_emit_impl {
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_hregex_BbnfBootstrap_int_lit<'p>(
+    pub fn parse_hregex_BbnfBootstrap_int_lit<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_BbnfBootstrap(
             "0[xX][0-9a-fA-F]+\\w*|[0-9]+\\w*",
@@ -3876,12 +3881,17 @@ mod __bbnfbootstrap_emit_impl {
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_hregex_BbnfBootstrap_float_lit<'p>(
+    pub fn parse_hregex_BbnfBootstrap_float_lit<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_BbnfBootstrap(
             "[0-9]*\\.[0-9]+([eE][+-]?[0-9]+)?\\w*",
@@ -3913,16 +3923,21 @@ mod __bbnfbootstrap_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_BbnfBootstrap_bool_lit<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_BbnfBootstrap_bool_lit<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             102u8 => {
                 if input.len() >= *p + 5usize
@@ -3996,13 +4011,19 @@ mod __bbnfbootstrap_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_BbnfBootstrap_string_lit<'p>(
+    pub fn parse_flat_BbnfBootstrap_string_lit<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(3u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
         let __compound_start: u32 = *p as u32;
@@ -4107,12 +4128,17 @@ mod __bbnfbootstrap_emit_impl {
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_hregex_BbnfBootstrap_value_ident<'p>(
+    pub fn parse_hregex_BbnfBootstrap_value_ident<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_BbnfBootstrap(
             "[_a-zA-Z][_a-zA-Z0-9]*",
@@ -4144,16 +4170,21 @@ mod __bbnfbootstrap_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_BbnfBootstrap_mul_op<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_BbnfBootstrap_mul_op<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             37u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [37u8] {
@@ -4217,16 +4248,21 @@ mod __bbnfbootstrap_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_BbnfBootstrap_add_op<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_BbnfBootstrap_add_op<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             43u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [43u8] {
@@ -4275,16 +4311,21 @@ mod __bbnfbootstrap_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_BbnfBootstrap_cmp_op<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_BbnfBootstrap_cmp_op<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             33u8 => {
                 if input.len() >= *p + 2usize && input[*p..*p + 2usize] == [33u8, 61u8] {
@@ -4386,13 +4427,18 @@ mod __bbnfbootstrap_emit_impl {
         unused_assignments,
         unreachable_code
     )]
-    pub fn parse_altdispatch_BbnfBootstrap_type_name<'p>(
+    pub fn parse_altdispatch_BbnfBootstrap_type_name<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder;
+        let _ = cursor;
         let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -4575,12 +4621,17 @@ mod __bbnfbootstrap_emit_impl {
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_hregex_BbnfBootstrap_identifier<'p>(
+    pub fn parse_hregex_BbnfBootstrap_identifier<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_BbnfBootstrap(
             "[_a-zA-Z][_a-zA-Z0-9-]*",
@@ -4612,16 +4663,21 @@ mod __bbnfbootstrap_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_BbnfBootstrap_literal<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_BbnfBootstrap_literal<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             34u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [34u8] {
@@ -4859,13 +4915,19 @@ mod __bbnfbootstrap_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_BbnfBootstrap_regex<'p>(
+    pub fn parse_flat_BbnfBootstrap_regex<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(11u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
         let __compound_start: u32 = *p as u32;
@@ -4987,13 +5049,19 @@ mod __bbnfbootstrap_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_BbnfBootstrap_big_comment<'p>(
+    pub fn parse_flat_BbnfBootstrap_big_comment<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(12u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
         let __compound_start: u32 = *p as u32;
@@ -5124,13 +5192,19 @@ mod __bbnfbootstrap_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_BbnfBootstrap_comment<'p>(
+    pub fn parse_flat_BbnfBootstrap_comment<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(13u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
         let __compound_start: u32 = *p as u32;
@@ -5222,16 +5296,21 @@ mod __bbnfbootstrap_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_BbnfBootstrap_modifier<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_BbnfBootstrap_modifier<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             42u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [42u8] {
@@ -5306,16 +5385,21 @@ mod __bbnfbootstrap_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_BbnfBootstrap_binary_operators<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_BbnfBootstrap_binary_operators<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             45u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [45u8] {
@@ -5400,13 +5484,19 @@ mod __bbnfbootstrap_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_BbnfBootstrap_import_path<'p>(
+    pub fn parse_flat_BbnfBootstrap_import_path<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(16u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
         let __compound_start: u32 = *p as u32;
@@ -5528,12 +5618,17 @@ mod __bbnfbootstrap_emit_impl {
         unused_mut,
         unused_assignments
     )]
-    pub fn parse_pratt_BbnfBootstrap_value_path<'p>(
+    pub fn parse_pratt_BbnfBootstrap_value_path<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let __value_path_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 17u32 as ::bbnf_ir::RuleId,
@@ -5551,7 +5646,7 @@ mod __bbnfbootstrap_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                parse_hregex_BbnfBootstrap_value_ident(input, p, state, builder)
+                parse_hregex_BbnfBootstrap_value_ident(input, p, state, builder, cursor)
             })?;
             loop {
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
@@ -5613,7 +5708,13 @@ mod __bbnfbootstrap_emit_impl {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_hregex_BbnfBootstrap_value_ident(input, p, state, builder)
+                    parse_hregex_BbnfBootstrap_value_ident(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -5655,13 +5756,19 @@ mod __bbnfbootstrap_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_BbnfBootstrap_value_input<'p>(
+    pub fn parse_flat_BbnfBootstrap_value_input<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(18u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __value_input_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -5731,6 +5838,7 @@ mod __bbnfbootstrap_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -5813,13 +5921,19 @@ mod __bbnfbootstrap_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_BbnfBootstrap_type_annotation<'p>(
+    pub fn parse_flat_BbnfBootstrap_type_annotation<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(19u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __type_annotation_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -5857,7 +5971,13 @@ mod __bbnfbootstrap_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_altdispatch_BbnfBootstrap_type_name(input, p, state, builder)
+                    parse_altdispatch_BbnfBootstrap_type_name(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -5892,15 +6012,19 @@ mod __bbnfbootstrap_emit_impl {
     /// struct-builder.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_scalar_BbnfBootstrap_lhs<'p>(
+    pub fn parse_scalar_BbnfBootstrap_lhs<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         {
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            parse_hregex_BbnfBootstrap_identifier(input, p, state, builder)
+            parse_hregex_BbnfBootstrap_identifier(input, p, state, builder, cursor)
         }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
@@ -5934,13 +6058,19 @@ mod __bbnfbootstrap_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_BbnfBootstrap_import_items<'p>(
+    pub fn parse_flat_BbnfBootstrap_import_items<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(21u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __import_items_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -5979,7 +6109,13 @@ mod __bbnfbootstrap_emit_impl {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_hregex_BbnfBootstrap_identifier(input, p, state, builder)
+                    parse_hregex_BbnfBootstrap_identifier(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             }
@@ -6029,6 +6165,7 @@ mod __bbnfbootstrap_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -6122,13 +6259,19 @@ mod __bbnfbootstrap_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_BbnfBootstrap_pretty_hint<'p>(
+    pub fn parse_flat_BbnfBootstrap_pretty_hint<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(22u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __pretty_hint_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -6154,7 +6297,13 @@ mod __bbnfbootstrap_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_hregex_BbnfBootstrap_identifier(input, p, state, builder)
+                    parse_hregex_BbnfBootstrap_identifier(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -6282,13 +6431,19 @@ mod __bbnfbootstrap_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_BbnfBootstrap_token_directive<'p>(
+    pub fn parse_flat_BbnfBootstrap_token_directive<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(23u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __token_directive_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -6329,7 +6484,13 @@ mod __bbnfbootstrap_emit_impl {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_hregex_BbnfBootstrap_identifier(input, p, state, builder)
+                    parse_hregex_BbnfBootstrap_identifier(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             }
@@ -6514,13 +6675,19 @@ mod __bbnfbootstrap_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_BbnfBootstrap_debug_directive<'p>(
+    pub fn parse_flat_BbnfBootstrap_debug_directive<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(24u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __debug_directive_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -6618,6 +6785,7 @@ mod __bbnfbootstrap_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -6820,13 +6988,19 @@ mod __bbnfbootstrap_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_BbnfBootstrap_host_directive<'p>(
+    pub fn parse_flat_BbnfBootstrap_host_directive<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(25u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __host_directive_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -6867,7 +7041,13 @@ mod __bbnfbootstrap_emit_impl {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_hregex_BbnfBootstrap_identifier(input, p, state, builder)
+                    parse_hregex_BbnfBootstrap_identifier(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             }
@@ -6921,6 +7101,7 @@ mod __bbnfbootstrap_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_BbnfBootstrap::skip_space(
@@ -7134,13 +7315,19 @@ mod __bbnfbootstrap_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_BbnfBootstrap_ws_directive<'p>(
+    pub fn parse_flat_BbnfBootstrap_ws_directive<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(26u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __ws_directive_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -7179,7 +7366,7 @@ mod __bbnfbootstrap_emit_impl {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_flat_BbnfBootstrap_regex(input, p, state, builder)
+                    parse_flat_BbnfBootstrap_regex(input, p, state, builder, cursor)
                 })?;
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             }
@@ -7361,12 +7548,17 @@ mod __bbnfbootstrap_emit_impl {
         unused_mut,
         unused_assignments
     )]
-    pub fn parse_pratt_BbnfBootstrap_value_mul<'p>(
+    pub fn parse_pratt_BbnfBootstrap_value_mul<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let __value_mul_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 27u32 as ::bbnf_ir::RuleId,
@@ -7384,7 +7576,13 @@ mod __bbnfbootstrap_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                parse_altdispatch_BbnfBootstrap_value_unary(input, p, state, builder)
+                parse_altdispatch_BbnfBootstrap_value_unary(
+                    input,
+                    p,
+                    state,
+                    builder,
+                    cursor,
+                )
             })?;
             loop {
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
@@ -7446,7 +7644,13 @@ mod __bbnfbootstrap_emit_impl {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_altdispatch_BbnfBootstrap_value_unary(input, p, state, builder)
+                    parse_altdispatch_BbnfBootstrap_value_unary(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -7485,12 +7689,17 @@ mod __bbnfbootstrap_emit_impl {
         unused_mut,
         unused_assignments
     )]
-    pub fn parse_pratt_BbnfBootstrap_value_or<'p>(
+    pub fn parse_pratt_BbnfBootstrap_value_or<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let __value_or_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 28u32 as ::bbnf_ir::RuleId,
@@ -7505,7 +7714,7 @@ mod __bbnfbootstrap_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                parse_pratt_BbnfBootstrap_value_and(input, p, state, builder)
+                parse_pratt_BbnfBootstrap_value_and(input, p, state, builder, cursor)
             })?;
             loop {
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
@@ -7567,7 +7776,7 @@ mod __bbnfbootstrap_emit_impl {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_pratt_BbnfBootstrap_value_and(input, p, state, builder)
+                    parse_pratt_BbnfBootstrap_value_and(input, p, state, builder, cursor)
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -7606,12 +7815,17 @@ mod __bbnfbootstrap_emit_impl {
         unused_mut,
         unused_assignments
     )]
-    pub fn parse_pratt_BbnfBootstrap_value_add<'p>(
+    pub fn parse_pratt_BbnfBootstrap_value_add<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let __value_add_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 29u32 as ::bbnf_ir::RuleId,
@@ -7629,7 +7843,7 @@ mod __bbnfbootstrap_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                parse_pratt_BbnfBootstrap_value_mul(input, p, state, builder)
+                parse_pratt_BbnfBootstrap_value_mul(input, p, state, builder, cursor)
             })?;
             loop {
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
@@ -7691,7 +7905,7 @@ mod __bbnfbootstrap_emit_impl {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_pratt_BbnfBootstrap_value_mul(input, p, state, builder)
+                    parse_pratt_BbnfBootstrap_value_mul(input, p, state, builder, cursor)
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -7730,12 +7944,17 @@ mod __bbnfbootstrap_emit_impl {
         unused_mut,
         unused_assignments
     )]
-    pub fn parse_pratt_BbnfBootstrap_value_cmp<'p>(
+    pub fn parse_pratt_BbnfBootstrap_value_cmp<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let __value_cmp_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 30u32 as ::bbnf_ir::RuleId,
@@ -7753,7 +7972,7 @@ mod __bbnfbootstrap_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                parse_pratt_BbnfBootstrap_value_add(input, p, state, builder)
+                parse_pratt_BbnfBootstrap_value_add(input, p, state, builder, cursor)
             })?;
             loop {
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
@@ -7815,7 +8034,7 @@ mod __bbnfbootstrap_emit_impl {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_pratt_BbnfBootstrap_value_add(input, p, state, builder)
+                    parse_pratt_BbnfBootstrap_value_add(input, p, state, builder, cursor)
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -7854,12 +8073,17 @@ mod __bbnfbootstrap_emit_impl {
         unused_mut,
         unused_assignments
     )]
-    pub fn parse_pratt_BbnfBootstrap_value_and<'p>(
+    pub fn parse_pratt_BbnfBootstrap_value_and<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let __value_and_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 31u32 as ::bbnf_ir::RuleId,
@@ -7877,7 +8101,7 @@ mod __bbnfbootstrap_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                parse_pratt_BbnfBootstrap_value_cmp(input, p, state, builder)
+                parse_pratt_BbnfBootstrap_value_cmp(input, p, state, builder, cursor)
             })?;
             loop {
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
@@ -7939,7 +8163,7 @@ mod __bbnfbootstrap_emit_impl {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_pratt_BbnfBootstrap_value_cmp(input, p, state, builder)
+                    parse_pratt_BbnfBootstrap_value_cmp(input, p, state, builder, cursor)
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -7981,13 +8205,19 @@ mod __bbnfbootstrap_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_BbnfBootstrap_value_closure<'p>(
+    pub fn parse_flat_BbnfBootstrap_value_closure<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(32u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __value_closure_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -8023,7 +8253,13 @@ mod __bbnfbootstrap_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_hregex_BbnfBootstrap_value_ident(input, p, state, builder)
+                    parse_hregex_BbnfBootstrap_value_ident(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -8071,6 +8307,7 @@ mod __bbnfbootstrap_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -8111,7 +8348,7 @@ mod __bbnfbootstrap_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_wrap_BbnfBootstrap_value_expr(input, p, state, builder)
+                    parse_wrap_BbnfBootstrap_value_expr(input, p, state, builder, cursor)
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -8149,12 +8386,17 @@ mod __bbnfbootstrap_emit_impl {
     /// / var / env / url / gradient / transform / etc.).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_arglist_BbnfBootstrap_value_fn_call<'p>(
+    pub fn parse_arglist_BbnfBootstrap_value_fn_call<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 33u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("value_fn_call"),
@@ -8171,7 +8413,7 @@ mod __bbnfbootstrap_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                parse_pratt_BbnfBootstrap_value_path(input, p, state, builder)
+                parse_pratt_BbnfBootstrap_value_path(input, p, state, builder, cursor)
             })?;
             let at = *p;
             let end = at + 1usize;
@@ -8190,7 +8432,13 @@ mod __bbnfbootstrap_emit_impl {
                             p,
                             state,
                         );
-                        parse_wrap_BbnfBootstrap_value_expr(input, p, state, builder)
+                        parse_wrap_BbnfBootstrap_value_expr(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     })?;
                     loop {
                         let __save = *p;
@@ -8227,6 +8475,7 @@ mod __bbnfbootstrap_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -8284,15 +8533,29 @@ mod __bbnfbootstrap_emit_impl {
     /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
+    ///
+    /// AZ-IV.W3.6 — Cursor-threaded. The Alt-dispatch branch
+    /// selector consults `cursor.decide(rule_id)` so a
+    /// `Decision::ParseUntil(idx)` returned by the path plan
+    /// means the targeted variant index is preserved by the
+    /// linear-try fallback (the byte-dispatch arms are still
+    /// the prefilter; the cursor's decision is forwarded into
+    /// the inner Refs as the descent proceeds).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_wrap_BbnfBootstrap_value_expr<'p>(
+    pub fn parse_wrap_BbnfBootstrap_value_expr<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let _ = cursor.decide(34u32 as u32);
         let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -8307,6 +8570,7 @@ mod __bbnfbootstrap_emit_impl {
                         p,
                         state,
                         builder,
+                        cursor,
                     ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
@@ -8323,7 +8587,13 @@ mod __bbnfbootstrap_emit_impl {
             {
                 let attempt_p = *p;
                 let attempt_builder = builder.checkpoint();
-                match parse_pratt_BbnfBootstrap_value_or(input, p, state, builder) {
+                match parse_pratt_BbnfBootstrap_value_or(
+                    input,
+                    p,
+                    state,
+                    builder,
+                    cursor,
+                ) {
                     ::core::result::Result::Ok(_) => {
                         builder.commit(attempt_builder);
                         break 'try_branches;
@@ -8353,13 +8623,18 @@ mod __bbnfbootstrap_emit_impl {
         unused_assignments,
         unreachable_code
     )]
-    pub fn parse_altdispatch_BbnfBootstrap_value_atom<'p>(
+    pub fn parse_altdispatch_BbnfBootstrap_value_atom<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder;
+        let _ = cursor;
         let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -8385,7 +8660,13 @@ mod __bbnfbootstrap_emit_impl {
                             p,
                             state,
                         );
-                        parse_hregex_BbnfBootstrap_int_lit(input, p, state, builder)
+                        parse_hregex_BbnfBootstrap_int_lit(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(0u32);
@@ -8407,7 +8688,13 @@ mod __bbnfbootstrap_emit_impl {
                             p,
                             state,
                         );
-                        parse_hregex_BbnfBootstrap_float_lit(input, p, state, builder)
+                        parse_hregex_BbnfBootstrap_float_lit(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(1u32);
@@ -8438,6 +8725,7 @@ mod __bbnfbootstrap_emit_impl {
                             __first,
                             state,
                             builder,
+                            cursor,
                         )
                     } {
                         Ok(_) => {
@@ -8460,7 +8748,13 @@ mod __bbnfbootstrap_emit_impl {
                             p,
                             state,
                         );
-                        parse_flat_BbnfBootstrap_string_lit(input, p, state, builder)
+                        parse_flat_BbnfBootstrap_string_lit(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(3u32);
@@ -8487,6 +8781,7 @@ mod __bbnfbootstrap_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         )
                     } {
                         Ok(_) => {
@@ -8509,7 +8804,13 @@ mod __bbnfbootstrap_emit_impl {
                             p,
                             state,
                         );
-                        parse_flat_BbnfBootstrap_value_input(input, p, state, builder)
+                        parse_flat_BbnfBootstrap_value_input(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(5u32);
@@ -8531,7 +8832,13 @@ mod __bbnfbootstrap_emit_impl {
                             p,
                             state,
                         );
-                        parse_pratt_BbnfBootstrap_value_path(input, p, state, builder)
+                        parse_pratt_BbnfBootstrap_value_path(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(6u32);
@@ -8570,7 +8877,13 @@ mod __bbnfbootstrap_emit_impl {
                                 p,
                                 state,
                             );
-                            parse_wrap_BbnfBootstrap_value_expr(input, p, state, builder)
+                            parse_wrap_BbnfBootstrap_value_expr(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            )
                         })?;
                         let _ = __shape_support_BbnfBootstrap::skip_space(
                             input,
@@ -8631,13 +8944,18 @@ mod __bbnfbootstrap_emit_impl {
         unused_assignments,
         unreachable_code
     )]
-    pub fn parse_altdispatch_BbnfBootstrap_value_unary<'p>(
+    pub fn parse_altdispatch_BbnfBootstrap_value_unary<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder;
+        let _ = cursor;
         let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -8741,6 +9059,7 @@ mod __bbnfbootstrap_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             )
                         })?;
                         ::core::result::Result::Ok(())
@@ -8771,6 +9090,7 @@ mod __bbnfbootstrap_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         )
                     } {
                         Ok(_) => {
@@ -8832,13 +9152,19 @@ mod __bbnfbootstrap_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_BbnfBootstrap_import_directive<'p>(
+    pub fn parse_flat_BbnfBootstrap_import_directive<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(37u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __import_directive_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -8901,6 +9227,7 @@ mod __bbnfbootstrap_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_BbnfBootstrap::skip_space(
@@ -8939,6 +9266,7 @@ mod __bbnfbootstrap_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -8972,6 +9300,7 @@ mod __bbnfbootstrap_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -9174,13 +9503,19 @@ mod __bbnfbootstrap_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_BbnfBootstrap_pretty_directive<'p>(
+    pub fn parse_flat_BbnfBootstrap_pretty_directive<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(38u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __pretty_directive_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -9278,6 +9613,7 @@ mod __bbnfbootstrap_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -9331,6 +9667,7 @@ mod __bbnfbootstrap_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_BbnfBootstrap::skip_space(
@@ -9544,13 +9881,19 @@ mod __bbnfbootstrap_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_BbnfBootstrap_alternation<'p>(
+    pub fn parse_flat_BbnfBootstrap_alternation<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(39u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __alternation_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -9605,6 +9948,7 @@ mod __bbnfbootstrap_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_BbnfBootstrap::skip_space(
@@ -9739,13 +10083,19 @@ mod __bbnfbootstrap_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_BbnfBootstrap_call_arg<'p>(
+    pub fn parse_flat_BbnfBootstrap_call_arg<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(40u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __call_arg_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -9797,6 +10147,7 @@ mod __bbnfbootstrap_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_BbnfBootstrap::skip_space(
@@ -9931,13 +10282,19 @@ mod __bbnfbootstrap_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_BbnfBootstrap_concatenation<'p>(
+    pub fn parse_flat_BbnfBootstrap_concatenation<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(41u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __concatenation_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -9992,6 +10349,7 @@ mod __bbnfbootstrap_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_BbnfBootstrap::skip_space(
@@ -10126,13 +10484,19 @@ mod __bbnfbootstrap_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_BbnfBootstrap_closure<'p>(
+    pub fn parse_flat_BbnfBootstrap_closure<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(42u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __closure_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -10165,7 +10529,13 @@ mod __bbnfbootstrap_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_hregex_BbnfBootstrap_identifier(input, p, state, builder)
+                    parse_hregex_BbnfBootstrap_identifier(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -10213,6 +10583,7 @@ mod __bbnfbootstrap_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -10255,7 +10626,7 @@ mod __bbnfbootstrap_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_wrap_BbnfBootstrap_rhs(input, p, state, builder)
+                    parse_wrap_BbnfBootstrap_rhs(input, p, state, builder, cursor)
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -10295,13 +10666,18 @@ mod __bbnfbootstrap_emit_impl {
         unused_assignments,
         unreachable_code
     )]
-    pub fn parse_altdispatch_BbnfBootstrap_term<'p>(
+    pub fn parse_altdispatch_BbnfBootstrap_term<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder;
+        let _ = cursor;
         let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -10361,6 +10737,7 @@ mod __bbnfbootstrap_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             )
                         })?;
                         {
@@ -10399,7 +10776,13 @@ mod __bbnfbootstrap_emit_impl {
                                             p,
                                             state,
                                         );
-                                        parse_flat_BbnfBootstrap_call_arg(input, p, state, builder)
+                                        parse_flat_BbnfBootstrap_call_arg(
+                                            input,
+                                            p,
+                                            state,
+                                            builder,
+                                            cursor,
+                                        )
                                     })?;
                                     let _ = __shape_support_BbnfBootstrap::skip_space(
                                         input,
@@ -10449,7 +10832,13 @@ mod __bbnfbootstrap_emit_impl {
                                                         p,
                                                         state,
                                                     );
-                                                    parse_flat_BbnfBootstrap_call_arg(input, p, state, builder)
+                                                    parse_flat_BbnfBootstrap_call_arg(
+                                                        input,
+                                                        p,
+                                                        state,
+                                                        builder,
+                                                        cursor,
+                                                    )
                                                 })?;
                                                 let _ = __shape_support_BbnfBootstrap::skip_space(
                                                     input,
@@ -10546,6 +10935,7 @@ mod __bbnfbootstrap_emit_impl {
                             __first,
                             state,
                             builder,
+                            cursor,
                         )
                     } {
                         Ok(_) => {
@@ -10568,7 +10958,7 @@ mod __bbnfbootstrap_emit_impl {
                             p,
                             state,
                         );
-                        parse_flat_BbnfBootstrap_regex(input, p, state, builder)
+                        parse_flat_BbnfBootstrap_regex(input, p, state, builder, cursor)
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(4u32);
@@ -10607,7 +10997,13 @@ mod __bbnfbootstrap_emit_impl {
                                 p,
                                 state,
                             );
-                            parse_wrap_BbnfBootstrap_rhs(input, p, state, builder)
+                            parse_wrap_BbnfBootstrap_rhs(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            )
                         })?;
                         let _ = __shape_support_BbnfBootstrap::skip_space(
                             input,
@@ -10664,7 +11060,13 @@ mod __bbnfbootstrap_emit_impl {
                                 p,
                                 state,
                             );
-                            parse_wrap_BbnfBootstrap_rhs(input, p, state, builder)
+                            parse_wrap_BbnfBootstrap_rhs(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            )
                         })?;
                         let _ = __shape_support_BbnfBootstrap::skip_space(
                             input,
@@ -10721,7 +11123,13 @@ mod __bbnfbootstrap_emit_impl {
                                 p,
                                 state,
                             );
-                            parse_wrap_BbnfBootstrap_rhs(input, p, state, builder)
+                            parse_wrap_BbnfBootstrap_rhs(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            )
                         })?;
                         let _ = __shape_support_BbnfBootstrap::skip_space(
                             input,
@@ -10778,7 +11186,13 @@ mod __bbnfbootstrap_emit_impl {
                                 p,
                                 state,
                             );
-                            parse_wrap_BbnfBootstrap_rhs(input, p, state, builder)
+                            parse_wrap_BbnfBootstrap_rhs(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            )
                         })?;
                         let _ = __shape_support_BbnfBootstrap::skip_space(
                             input,
@@ -10854,12 +11268,17 @@ mod __bbnfbootstrap_emit_impl {
         unused_mut,
         unused_assignments
     )]
-    pub fn parse_pratt_BbnfBootstrap_binary_factor<'p>(
+    pub fn parse_pratt_BbnfBootstrap_binary_factor<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let __binary_factor_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 44u32 as ::bbnf_ir::RuleId,
@@ -10877,7 +11296,7 @@ mod __bbnfbootstrap_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                parse_flat_BbnfBootstrap_mapped_factor(input, p, state, builder)
+                parse_flat_BbnfBootstrap_mapped_factor(input, p, state, builder, cursor)
             })?;
             loop {
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
@@ -10939,7 +11358,13 @@ mod __bbnfbootstrap_emit_impl {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_flat_BbnfBootstrap_mapped_factor(input, p, state, builder)
+                    parse_flat_BbnfBootstrap_mapped_factor(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -10966,15 +11391,29 @@ mod __bbnfbootstrap_emit_impl {
     /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
+    ///
+    /// AZ-IV.W3.6 — Cursor-threaded. The Alt-dispatch branch
+    /// selector consults `cursor.decide(rule_id)` so a
+    /// `Decision::ParseUntil(idx)` returned by the path plan
+    /// means the targeted variant index is preserved by the
+    /// linear-try fallback (the byte-dispatch arms are still
+    /// the prefilter; the cursor's decision is forwarded into
+    /// the inner Refs as the descent proceeds).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_wrap_BbnfBootstrap_rhs<'p>(
+    pub fn parse_wrap_BbnfBootstrap_rhs<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let _ = cursor.decide(45u32 as u32);
         let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -10984,7 +11423,13 @@ mod __bbnfbootstrap_emit_impl {
                 124u8 => {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
-                    match parse_flat_BbnfBootstrap_closure(input, p, state, builder) {
+                    match parse_flat_BbnfBootstrap_closure(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
                             break 'try_branches;
@@ -11000,7 +11445,13 @@ mod __bbnfbootstrap_emit_impl {
             {
                 let attempt_p = *p;
                 let attempt_builder = builder.checkpoint();
-                match parse_flat_BbnfBootstrap_alternation(input, p, state, builder) {
+                match parse_flat_BbnfBootstrap_alternation(
+                    input,
+                    p,
+                    state,
+                    builder,
+                    cursor,
+                ) {
                     ::core::result::Result::Ok(_) => {
                         builder.commit(attempt_builder);
                         break 'try_branches;
@@ -11048,13 +11499,19 @@ mod __bbnfbootstrap_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_BbnfBootstrap_factor<'p>(
+    pub fn parse_flat_BbnfBootstrap_factor<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(46u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __factor_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -11101,6 +11558,7 @@ mod __bbnfbootstrap_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -11132,7 +11590,13 @@ mod __bbnfbootstrap_emit_impl {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_altdispatch_BbnfBootstrap_term(input, p, state, builder)
+                    parse_altdispatch_BbnfBootstrap_term(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             }
@@ -11167,6 +11631,7 @@ mod __bbnfbootstrap_emit_impl {
                                     __first,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -11221,6 +11686,7 @@ mod __bbnfbootstrap_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -11303,13 +11769,19 @@ mod __bbnfbootstrap_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_BbnfBootstrap_mapped_factor<'p>(
+    pub fn parse_flat_BbnfBootstrap_mapped_factor<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(47u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __mapped_factor_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -11335,7 +11807,7 @@ mod __bbnfbootstrap_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_flat_BbnfBootstrap_factor(input, p, state, builder)
+                    parse_flat_BbnfBootstrap_factor(input, p, state, builder, cursor)
                 })?;
             }
             {
@@ -11383,6 +11855,7 @@ mod __bbnfbootstrap_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             {
@@ -11411,6 +11884,7 @@ mod __bbnfbootstrap_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -11517,13 +11991,19 @@ mod __bbnfbootstrap_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_BbnfBootstrap_rule<'p>(
+    pub fn parse_flat_BbnfBootstrap_rule<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(48u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __rule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -11546,7 +12026,7 @@ mod __bbnfbootstrap_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_scalar_BbnfBootstrap_lhs(input, p, state, builder)
+                    parse_scalar_BbnfBootstrap_lhs(input, p, state, builder, cursor)
                 })?;
             }
             {
@@ -11565,7 +12045,7 @@ mod __bbnfbootstrap_emit_impl {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_wrap_BbnfBootstrap_rhs(input, p, state, builder)
+                    parse_wrap_BbnfBootstrap_rhs(input, p, state, builder, cursor)
                 })?;
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             }
@@ -11711,13 +12191,19 @@ mod __bbnfbootstrap_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_BbnfBootstrap_recover_directive<'p>(
+    pub fn parse_flat_BbnfBootstrap_recover_directive<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(49u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __recover_directive_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -11759,7 +12245,13 @@ mod __bbnfbootstrap_emit_impl {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_hregex_BbnfBootstrap_identifier(input, p, state, builder)
+                    parse_hregex_BbnfBootstrap_identifier(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             }
@@ -11767,7 +12259,7 @@ mod __bbnfbootstrap_emit_impl {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_wrap_BbnfBootstrap_rhs(input, p, state, builder)
+                    parse_wrap_BbnfBootstrap_rhs(input, p, state, builder, cursor)
                 })?;
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             }
@@ -11931,16 +12423,21 @@ mod __bbnfbootstrap_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_BbnfBootstrap_directive<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_BbnfBootstrap_directive<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             64u8 => {
                 if input.len() >= *p + 8usize
@@ -11960,6 +12457,7 @@ mod __bbnfbootstrap_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         )
                     }) {
                         ::core::result::Result::Ok(__off) => {
@@ -11989,6 +12487,7 @@ mod __bbnfbootstrap_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         )
                     }) {
                         ::core::result::Result::Ok(__off) => {
@@ -12018,6 +12517,7 @@ mod __bbnfbootstrap_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         )
                     }) {
                         ::core::result::Result::Ok(__off) => {
@@ -12047,6 +12547,7 @@ mod __bbnfbootstrap_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         )
                     }) {
                         ::core::result::Result::Ok(__off) => {
@@ -12075,6 +12576,7 @@ mod __bbnfbootstrap_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         )
                     }) {
                         ::core::result::Result::Ok(__off) => {
@@ -12098,7 +12600,13 @@ mod __bbnfbootstrap_emit_impl {
                             p,
                             state,
                         );
-                        parse_flat_BbnfBootstrap_host_directive(input, p, state, builder)
+                        parse_flat_BbnfBootstrap_host_directive(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     }) {
                         ::core::result::Result::Ok(__off) => {
                             builder.commit(__ref_builder_checkpoint);
@@ -12121,7 +12629,13 @@ mod __bbnfbootstrap_emit_impl {
                             p,
                             state,
                         );
-                        parse_flat_BbnfBootstrap_ws_directive(input, p, state, builder)
+                        parse_flat_BbnfBootstrap_ws_directive(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     }) {
                         ::core::result::Result::Ok(__off) => {
                             builder.commit(__ref_builder_checkpoint);
@@ -12157,15 +12671,29 @@ mod __bbnfbootstrap_emit_impl {
     /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
+    ///
+    /// AZ-IV.W3.6 — Cursor-threaded. The Alt-dispatch branch
+    /// selector consults `cursor.decide(rule_id)` so a
+    /// `Decision::ParseUntil(idx)` returned by the path plan
+    /// means the targeted variant index is preserved by the
+    /// linear-try fallback (the byte-dispatch arms are still
+    /// the prefilter; the cursor's decision is forwarded into
+    /// the inner Refs as the descent proceeds).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_wrap_BbnfBootstrap_grammar_item<'p>(
+    pub fn parse_wrap_BbnfBootstrap_grammar_item<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let _ = cursor.decide(51u32 as u32);
         let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 51u32 as ::bbnf_ir::RuleId,
@@ -12194,6 +12722,7 @@ mod __bbnfbootstrap_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
@@ -12214,6 +12743,7 @@ mod __bbnfbootstrap_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
@@ -12238,6 +12768,7 @@ mod __bbnfbootstrap_emit_impl {
                         first,
                         state,
                         builder,
+                        cursor,
                     ) {
                         ::core::result::Result::Ok(_) => {
                             __wrap_branch_idx = 2u32;
@@ -12253,7 +12784,13 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
-                    match parse_flat_BbnfBootstrap_rule(input, p, state, builder) {
+                    match parse_flat_BbnfBootstrap_rule(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    ) {
                         ::core::result::Result::Ok(_) => {
                             __wrap_branch_idx = 3u32;
                             builder.commit(attempt_builder);
@@ -12306,15 +12843,24 @@ mod __bbnfbootstrap_emit_impl {
     /// closes the frame on first-byte rejection or EOF. NO
     /// bracket-delimiter literals — termination is driven by
     /// the inner dispatcher's first-set check.
+    ///
+    /// AZ-IV.W3.6 — Cursor-threaded. Each iteration consults
+    /// `cursor.decide(rule_id) -> Decision` to honour the lazy
+    /// bail-out parse's `ParseUntil(idx)` cut.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_array_BbnfBootstrap_grammar<'p>(
+    pub fn parse_array_BbnfBootstrap_grammar<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder;
+        use crate::path::cursor::Decision as __Decision;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 52u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("grammar"),
@@ -12323,9 +12869,16 @@ mod __bbnfbootstrap_emit_impl {
             fields: ::std::vec::Vec::new(),
         };
         let __handle = builder.begin_compound(&__layout);
+        let __decision: __Decision = cursor.decide(52u32 as u32);
+        let mut __elem_idx: u32 = 0;
         loop {
             let __iter_save_p = *p;
             if input.get(*p).is_none() {
+                break;
+            }
+            if let __Decision::ParseUntil(__cut) = __decision
+                && __elem_idx as u32 > __cut as u32
+            {
                 break;
             }
             let __iter_builder_checkpoint = builder.checkpoint();
@@ -12334,7 +12887,13 @@ mod __bbnfbootstrap_emit_impl {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 ({
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_wrap_BbnfBootstrap_grammar_item(input, p, state, builder)
+                    parse_wrap_BbnfBootstrap_grammar_item(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 Ok(())
@@ -12346,6 +12905,7 @@ mod __bbnfbootstrap_emit_impl {
                         break;
                     }
                     builder.commit(__iter_builder_checkpoint);
+                    __elem_idx = __elem_idx.saturating_add(1);
                 }
                 Err(_) => {
                     *p = __iter_save_p;
@@ -12371,13 +12931,17 @@ mod __bbnfbootstrap_emit_impl {
     /// recursion rationale.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_BbnfBootstrap_grammar<'p>(
+    pub fn parse_BbnfBootstrap_grammar<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
-        parse_BbnfBootstrap_grammar__value(input, p, state, builder)
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        parse_BbnfBootstrap_grammar__value(input, p, state, builder, cursor)
     }
     /// AW-V.W3.2 — value-position shape dispatcher. Called both at
     /// the grammar root and from Object / Array compound bodies.
@@ -12385,14 +12949,19 @@ mod __bbnfbootstrap_emit_impl {
     /// AX.W0a.2.f — compound; plain `#[inline]`.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_BbnfBootstrap_grammar__value<'p>(
+    pub fn parse_BbnfBootstrap_grammar__value<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-        parse_array_BbnfBootstrap_grammar(input, p, state, builder)
+        let _ = cursor.decide(52u32);
+        parse_array_BbnfBootstrap_grammar(input, p, state, builder, cursor)
     }
     impl BbnfBootstrap {
         fn __int_lit_prettify<'a>(

@@ -110,8 +110,8 @@ mod __jsonparser_emit_impl {
             pub field_index: u32,
             pub decision: Decision,
         }
-        pub const PATH_PLAN_LEN: usize = 20;
-        pub static PATH_PLAN: &[PathPlanEntry; 20] = &[
+        pub const PATH_PLAN_LEN: usize = 21;
+        pub static PATH_PLAN: &[PathPlanEntry; 21] = &[
             PathPlanEntry {
                 rule_id: 0,
                 segment_kind: SegmentKind::Wildcard,
@@ -129,6 +129,12 @@ mod __jsonparser_emit_impl {
                 segment_kind: SegmentKind::Wildcard,
                 field_index: 4294967295,
                 decision: Decision::ParseFully,
+            },
+            PathPlanEntry {
+                rule_id: 3,
+                segment_kind: SegmentKind::Index,
+                field_index: 4294967295,
+                decision: Decision::Skip,
             },
             PathPlanEntry {
                 rule_id: 3,
@@ -851,15 +857,20 @@ mod __jsonparser_emit_impl {
     /// emission; the offset is unused by struct-direct
     /// callers (the dispatcher discards `Ok(_)` payloads).
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_JsonParser_null(
-        input: &[u8],
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_JsonParser_null<'p, __P>(
+        input: &'p [u8],
         p: &mut usize,
         _first_byte: u8,
         _state: &mut __shape_support_JsonParser::ScanState,
         builder: &mut crate::runtime::json::JsonStructBuilder<'_>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        let _ = cursor;
         let at = *p;
         let end = at + 4usize;
         if input.len() < end || input[at..end] != [110u8, 117u8, 108u8, 108u8] {
@@ -881,16 +892,21 @@ mod __jsonparser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_JsonParser_bool<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_JsonParser_bool<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_JsonParser::ScanState,
         builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             102u8 => {
                 if input.len() >= *p + 5usize
@@ -1064,14 +1080,22 @@ mod __jsonparser_emit_impl {
     /// path decodes into the builder's arena and emits
     /// the decoded bytes via the same `push_leaf_with_str`
     /// surface.
+    ///
+    /// AZ-IV.W3.6 — Cursor parameter is threaded for signature
+    /// uniformity; string is a leaf (no recursion), so the
+    /// cursor is not consulted in the body.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_string_JsonParser_string<'p>(
+    pub fn parse_string_JsonParser_string<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         _state: &mut __shape_support_JsonParser::ScanState,
         builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let open = *p;
         if input.get(open).copied() != Some(b'"') {
@@ -1162,15 +1186,26 @@ mod __jsonparser_emit_impl {
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-element pushes (string keys + value
     /// dispatch) land directly on the topmost open frame.
+    ///
+    /// AZ-IV.W3.6 — Cursor-threaded. Each loop iteration consults
+    /// `cursor.decide(rule_id) -> Decision` so the lazy bail-out
+    /// parse can break after `ParseUntil(idx)` reaches the targeted
+    /// child. Eager parses pass an always-`ParseFully` cursor,
+    /// which makes the consult a no-op against the pre-W3.6 body.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_object_JsonParser_object<'p>(
+    pub fn parse_object_JsonParser_object<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_JsonParser::ScanState,
         builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder;
+        use crate::path::cursor::Decision as __Decision;
         if input.get(*p).copied() != Some(b'{') {
             return Err(crate::runtime::DtaError::Syntax {
                 offset: *p as u32,
@@ -1191,13 +1226,15 @@ mod __jsonparser_emit_impl {
             builder.end_compound(__handle);
             return Ok(());
         }
+        let __decision: __Decision = cursor.decide(4u32 as u32);
+        let mut __iter_idx: u32 = 0;
         loop {
             if input.get(*p).copied() != Some(b'"') {
                 return Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
                 });
             }
-            parse_string_JsonParser_string(input, p, state, builder)?;
+            parse_string_JsonParser_string(input, p, state, builder, cursor)?;
             let _ = __shape_support_JsonParser::skip_space(input, p, state);
             if input.get(*p).copied() != Some(b':') {
                 return Err(crate::runtime::DtaError::Syntax {
@@ -1208,7 +1245,7 @@ mod __jsonparser_emit_impl {
             let _ = __shape_support_JsonParser::skip_space(input, p, state);
             ({
                 let _ = __shape_support_JsonParser::skip_space(input, p, state);
-                parse_wrap_JsonParser_value(input, p, state, builder)
+                parse_wrap_JsonParser_value(input, p, state, builder, cursor)
             })?;
             let _ = __shape_support_JsonParser::skip_space(input, p, state);
             match input.get(*p).copied() {
@@ -1227,19 +1264,37 @@ mod __jsonparser_emit_impl {
                     });
                 }
             }
+            __iter_idx = __iter_idx.saturating_add(1);
+            if let __Decision::ParseUntil(__cut) = __decision
+                && __iter_idx as u32 > __cut as u32
+            {
+                builder.end_compound(__handle);
+                return Ok(());
+            }
         }
     }
     /// AZ-I.W2.RB — per-grammar Array-shape parse function,
     /// **struct-direct body** (Shape 1 — wrapped homogeneous repeat).
+    ///
+    /// AZ-IV.W3.6 — Cursor-threaded. The element loop consults
+    /// `cursor.decide(rule_id) -> Decision` so the lazy bail-out
+    /// parse can break after `ParseUntil(idx)` reaches the targeted
+    /// element index. Eager parses pass an always-`ParseFully`
+    /// cursor; the consult is a no-op against the pre-W3.6 body.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_array_JsonParser_array<'p>(
+    pub fn parse_array_JsonParser_array<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_JsonParser::ScanState,
         builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder;
+        use crate::path::cursor::Decision as __Decision;
         if input.get(*p).copied() != Some(b'[') {
             return Err(crate::runtime::DtaError::Syntax {
                 offset: *p as u32,
@@ -1254,6 +1309,8 @@ mod __jsonparser_emit_impl {
         };
         let __array_checkpoint = builder.checkpoint();
         let __handle = builder.begin_compound(&__layout);
+        let __decision: __Decision = cursor.decide(5u32 as u32);
+        let mut __elem_idx: u32 = 0;
         let __array_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             *p += 1;
             let _ = __shape_support_JsonParser::skip_space(input, p, state);
@@ -1264,8 +1321,14 @@ mod __jsonparser_emit_impl {
             loop {
                 ({
                     let _ = __shape_support_JsonParser::skip_space(input, p, state);
-                    parse_wrap_JsonParser_value(input, p, state, builder)
+                    parse_wrap_JsonParser_value(input, p, state, builder, cursor)
                 })?;
+                if let __Decision::ParseUntil(__cut) = __decision
+                    && __elem_idx as u32 >= __cut as u32
+                {
+                    return Ok(());
+                }
+                __elem_idx = __elem_idx.saturating_add(1);
                 let _ = __shape_support_JsonParser::skip_space(input, p, state);
                 match input.get(*p).copied() {
                     Some(b',') => {
@@ -1326,13 +1389,19 @@ mod __jsonparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_JsonParser_pair<'p>(
+    pub fn parse_flat_JsonParser_pair<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_JsonParser::ScanState,
         builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(6u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __pair_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -1355,7 +1424,7 @@ mod __jsonparser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_JsonParser::skip_space(input, p, state);
-                    parse_string_JsonParser_string(input, p, state, builder)
+                    parse_string_JsonParser_string(input, p, state, builder, cursor)
                 })?;
             }
             {
@@ -1373,7 +1442,7 @@ mod __jsonparser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_JsonParser::skip_space(input, p, state);
-                    parse_wrap_JsonParser_value(input, p, state, builder)
+                    parse_wrap_JsonParser_value(input, p, state, builder, cursor)
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -1413,15 +1482,29 @@ mod __jsonparser_emit_impl {
     /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
+    ///
+    /// AZ-IV.W3.6 — Cursor-threaded. The Alt-dispatch branch
+    /// selector consults `cursor.decide(rule_id)` so a
+    /// `Decision::ParseUntil(idx)` returned by the path plan
+    /// means the targeted variant index is preserved by the
+    /// linear-try fallback (the byte-dispatch arms are still
+    /// the prefilter; the cursor's decision is forwarded into
+    /// the inner Refs as the descent proceeds).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_wrap_JsonParser_value<'p>(
+    pub fn parse_wrap_JsonParser_value<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_JsonParser::ScanState,
         builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let _ = cursor.decide(7u32 as u32);
         let first = __shape_support_JsonParser::skip_space(input, p, state)
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -1431,7 +1514,13 @@ mod __jsonparser_emit_impl {
                 34u8 => {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
-                    match parse_string_JsonParser_string(input, p, state, builder) {
+                    match parse_string_JsonParser_string(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
                             break 'try_branches;
@@ -1599,7 +1688,13 @@ mod __jsonparser_emit_impl {
                 91u8 => {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
-                    match parse_array_JsonParser_array(input, p, state, builder) {
+                    match parse_array_JsonParser_array(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
                             break 'try_branches;
@@ -1619,6 +1714,7 @@ mod __jsonparser_emit_impl {
                         first,
                         state,
                         builder,
+                        cursor,
                     ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
@@ -1639,6 +1735,7 @@ mod __jsonparser_emit_impl {
                         first,
                         state,
                         builder,
+                        cursor,
                     ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
@@ -1659,6 +1756,7 @@ mod __jsonparser_emit_impl {
                         first,
                         state,
                         builder,
+                        cursor,
                     ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
@@ -1673,7 +1771,13 @@ mod __jsonparser_emit_impl {
                 123u8 => {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
-                    match parse_object_JsonParser_object(input, p, state, builder) {
+                    match parse_object_JsonParser_object(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
                             break 'try_branches;
@@ -1706,13 +1810,17 @@ mod __jsonparser_emit_impl {
     /// recursion rationale.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_JsonParser_value<'p>(
+    pub fn parse_JsonParser_value<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_JsonParser::ScanState,
         builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
-        parse_JsonParser_value__value(input, p, state, builder)
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        parse_JsonParser_value__value(input, p, state, builder, cursor)
     }
     /// AW-V.W3.2 — value-position shape dispatcher. Called both at
     /// the grammar root and from Object / Array compound bodies.
@@ -1720,25 +1828,33 @@ mod __jsonparser_emit_impl {
     /// AX.W0a.2.f — compound; plain `#[inline]`.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_JsonParser_value__value<'p>(
+    pub fn parse_JsonParser_value__value<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_JsonParser::ScanState,
         builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         let first = __shape_support_JsonParser::skip_space(input, p, state)
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
         let __result = match first {
-            b'{' => parse_object_JsonParser_object(input, p, state, builder),
-            b'[' => parse_array_JsonParser_array(input, p, state, builder),
-            b'"' => parse_string_JsonParser_string(input, p, state, builder),
+            b'{' => parse_object_JsonParser_object(input, p, state, builder, cursor),
+            b'[' => parse_array_JsonParser_array(input, p, state, builder, cursor),
+            b'"' => parse_string_JsonParser_string(input, p, state, builder, cursor),
             b'-' | b'0'..=b'9' => {
                 parse_number_JsonParser_number(input, p, first, builder)
             }
-            b't' | b'f' => parse_keyword_JsonParser_bool(input, p, first, state, builder),
-            b'n' => parse_keyword_JsonParser_null(input, p, first, state, builder),
+            b't' | b'f' => {
+                parse_keyword_JsonParser_bool(input, p, first, state, builder, cursor)
+            }
+            b'n' => {
+                parse_keyword_JsonParser_null(input, p, first, state, builder, cursor)
+            }
             c => {
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,

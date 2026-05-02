@@ -3065,12 +3065,17 @@ mod __googlesheetsparser_emit_impl {
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_hregex_GoogleSheetsParser_number<'p>(
+    pub fn parse_hregex_GoogleSheetsParser_number<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_GoogleSheetsParser(
             "(\\d+\\.?\\d*|\\.\\d+)([eE][+-]?\\d+)?",
@@ -3102,14 +3107,22 @@ mod __googlesheetsparser_emit_impl {
     /// path decodes into the builder's arena and emits
     /// the decoded bytes via the same `push_leaf_with_str`
     /// surface.
+    ///
+    /// AZ-IV.W3.6 — Cursor parameter is threaded for signature
+    /// uniformity; string is a leaf (no recursion), so the
+    /// cursor is not consulted in the body.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_string_GoogleSheetsParser_string<'p>(
+    pub fn parse_string_GoogleSheetsParser_string<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         _state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let open = *p;
         if input.get(open).copied() != Some(b'"') {
@@ -3207,15 +3220,29 @@ mod __googlesheetsparser_emit_impl {
     /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
+    ///
+    /// AZ-IV.W3.6 — Cursor-threaded. The Alt-dispatch branch
+    /// selector consults `cursor.decide(rule_id)` so a
+    /// `Decision::ParseUntil(idx)` returned by the path plan
+    /// means the targeted variant index is preserved by the
+    /// linear-try fallback (the byte-dispatch arms are still
+    /// the prefilter; the cursor's decision is forwarded into
+    /// the inner Refs as the descent proceeds).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_wrap_GoogleSheetsParser_boolean<'p>(
+    pub fn parse_wrap_GoogleSheetsParser_boolean<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let _ = cursor.decide(2u32 as u32);
         let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 2u32 as ::bbnf_ir::RuleId,
@@ -3441,13 +3468,19 @@ mod __googlesheetsparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_error_literal<'p>(
+    pub fn parse_flat_GoogleSheetsParser_error_literal<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(3u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __error_literal_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -3832,12 +3865,17 @@ mod __googlesheetsparser_emit_impl {
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_hregex_GoogleSheetsParser_sheet_prefix<'p>(
+    pub fn parse_hregex_GoogleSheetsParser_sheet_prefix<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_GoogleSheetsParser(
             "'(?:[^']|'')*'!|[A-Za-z_]\\w*!",
@@ -3870,12 +3908,17 @@ mod __googlesheetsparser_emit_impl {
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_hregex_GoogleSheetsParser_cell_ref<'p>(
+    pub fn parse_hregex_GoogleSheetsParser_cell_ref<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_GoogleSheetsParser(
             "\\$?[A-Za-z]{1,3}\\$?\\d+",
@@ -3908,12 +3951,17 @@ mod __googlesheetsparser_emit_impl {
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_hregex_GoogleSheetsParser_identifier<'p>(
+    pub fn parse_hregex_GoogleSheetsParser_identifier<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_GoogleSheetsParser(
             "[A-Za-z_][A-Za-z0-9_.]*",
@@ -3945,16 +3993,21 @@ mod __googlesheetsparser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_GoogleSheetsParser_compare_op<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_GoogleSheetsParser_compare_op<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             60u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [60u8] {
@@ -4127,16 +4180,21 @@ mod __googlesheetsparser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_GoogleSheetsParser_unary_prefix<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_GoogleSheetsParser_unary_prefix<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             43u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [43u8] {
@@ -4179,16 +4237,21 @@ mod __googlesheetsparser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_GoogleSheetsParser_mul_op<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_GoogleSheetsParser_mul_op<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             42u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [42u8] {
@@ -4231,16 +4294,21 @@ mod __googlesheetsparser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_GoogleSheetsParser_add_op<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_GoogleSheetsParser_add_op<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             43u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [43u8] {
@@ -4304,13 +4372,19 @@ mod __googlesheetsparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_cell<'p>(
+    pub fn parse_flat_GoogleSheetsParser_cell<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(11u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __cell_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -4357,6 +4431,7 @@ mod __googlesheetsparser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -4391,7 +4466,13 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                     );
-                    parse_hregex_GoogleSheetsParser_cell_ref(input, p, state, builder)
+                    parse_hregex_GoogleSheetsParser_cell_ref(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -4449,13 +4530,19 @@ mod __googlesheetsparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_func_open<'p>(
+    pub fn parse_flat_GoogleSheetsParser_func_open<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(12u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __func_open_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -4485,7 +4572,13 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                     );
-                    parse_hregex_GoogleSheetsParser_identifier(input, p, state, builder)
+                    parse_hregex_GoogleSheetsParser_identifier(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -4553,13 +4646,19 @@ mod __googlesheetsparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_range_ref<'p>(
+    pub fn parse_flat_GoogleSheetsParser_range_ref<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(13u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __range_ref_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -4609,6 +4708,7 @@ mod __googlesheetsparser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -4656,6 +4756,7 @@ mod __googlesheetsparser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -4796,6 +4897,7 @@ mod __googlesheetsparser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -4943,15 +5045,29 @@ mod __googlesheetsparser_emit_impl {
     /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
+    ///
+    /// AZ-IV.W3.6 — Cursor-threaded. The Alt-dispatch branch
+    /// selector consults `cursor.decide(rule_id)` so a
+    /// `Decision::ParseUntil(idx)` returned by the path plan
+    /// means the targeted variant index is preserved by the
+    /// linear-try fallback (the byte-dispatch arms are still
+    /// the prefilter; the cursor's decision is forwarded into
+    /// the inner Refs as the descent proceeds).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_wrap_GoogleSheetsParser_cell_or_range<'p>(
+    pub fn parse_wrap_GoogleSheetsParser_cell_or_range<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let _ = cursor.decide(14u32 as u32);
         let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 14u32 as ::bbnf_ir::RuleId,
@@ -4981,6 +5097,7 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                         builder,
+                        cursor,
                     ) {
                         ::core::result::Result::Ok(_) => {
                             __wrap_branch_idx = 0u32;
@@ -4996,7 +5113,13 @@ mod __googlesheetsparser_emit_impl {
                 {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
-                    match parse_flat_GoogleSheetsParser_cell(input, p, state, builder) {
+                    match parse_flat_GoogleSheetsParser_cell(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    ) {
                         ::core::result::Result::Ok(_) => {
                             __wrap_branch_idx = 1u32;
                             builder.commit(attempt_builder);
@@ -5069,12 +5192,17 @@ mod __googlesheetsparser_emit_impl {
         unused_mut,
         unused_assignments
     )]
-    pub fn parse_pratt_GoogleSheetsParser_comparison_expr<'p>(
+    pub fn parse_pratt_GoogleSheetsParser_comparison_expr<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __comparison_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 15u32 as ::bbnf_ir::RuleId,
@@ -5092,7 +5220,13 @@ mod __googlesheetsparser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                parse_pratt_GoogleSheetsParser_concat_expr(input, p, state, builder)
+                parse_pratt_GoogleSheetsParser_concat_expr(
+                    input,
+                    p,
+                    state,
+                    builder,
+                    cursor,
+                )
             })?;
             loop {
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
@@ -5162,7 +5296,13 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                     );
-                    parse_pratt_GoogleSheetsParser_concat_expr(input, p, state, builder)
+                    parse_pratt_GoogleSheetsParser_concat_expr(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -5204,12 +5344,17 @@ mod __googlesheetsparser_emit_impl {
         unused_mut,
         unused_assignments
     )]
-    pub fn parse_pratt_GoogleSheetsParser_mul_expr<'p>(
+    pub fn parse_pratt_GoogleSheetsParser_mul_expr<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __mul_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 16u32 as ::bbnf_ir::RuleId,
@@ -5224,7 +5369,7 @@ mod __googlesheetsparser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                parse_pratt_GoogleSheetsParser_exp_expr(input, p, state, builder)
+                parse_pratt_GoogleSheetsParser_exp_expr(input, p, state, builder, cursor)
             })?;
             loop {
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
@@ -5294,7 +5439,13 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                     );
-                    parse_pratt_GoogleSheetsParser_exp_expr(input, p, state, builder)
+                    parse_pratt_GoogleSheetsParser_exp_expr(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -5336,13 +5487,19 @@ mod __googlesheetsparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_unary_expr<'p>(
+    pub fn parse_flat_GoogleSheetsParser_unary_expr<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(17u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __unary_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -5396,6 +5553,7 @@ mod __googlesheetsparser_emit_impl {
                                     __first,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -5430,7 +5588,13 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                     );
-                    parse_flat_GoogleSheetsParser_postfix_expr(input, p, state, builder)
+                    parse_flat_GoogleSheetsParser_postfix_expr(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -5488,13 +5652,19 @@ mod __googlesheetsparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_paren_expr<'p>(
+    pub fn parse_flat_GoogleSheetsParser_paren_expr<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(18u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __paren_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -5535,7 +5705,13 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                     );
-                    parse_scalar_GoogleSheetsParser_expression(input, p, state, builder)
+                    parse_scalar_GoogleSheetsParser_expression(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             }
@@ -5604,13 +5780,19 @@ mod __googlesheetsparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_arg<'p>(
+    pub fn parse_flat_GoogleSheetsParser_arg<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(19u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __arg_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -5657,6 +5839,7 @@ mod __googlesheetsparser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -5736,13 +5919,19 @@ mod __googlesheetsparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_func_args<'p>(
+    pub fn parse_flat_GoogleSheetsParser_func_args<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(20u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __func_args_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -5787,7 +5976,13 @@ mod __googlesheetsparser_emit_impl {
                                     p,
                                     state,
                                 );
-                                parse_flat_GoogleSheetsParser_arg(input, p, state, builder)
+                                parse_flat_GoogleSheetsParser_arg(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
                             })?;
                             {
                                 let mut __iter_count: u32 = 0;
@@ -5926,13 +6121,19 @@ mod __googlesheetsparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_let_binding<'p>(
+    pub fn parse_flat_GoogleSheetsParser_let_binding<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(21u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __let_binding_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -5962,7 +6163,13 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                     );
-                    parse_scalar_GoogleSheetsParser_expression(input, p, state, builder)
+                    parse_scalar_GoogleSheetsParser_expression(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -5984,7 +6191,13 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                     );
-                    parse_scalar_GoogleSheetsParser_expression(input, p, state, builder)
+                    parse_scalar_GoogleSheetsParser_expression(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -6042,13 +6255,19 @@ mod __googlesheetsparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_lambda_params<'p>(
+    pub fn parse_flat_GoogleSheetsParser_lambda_params<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(22u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __lambda_params_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -6098,6 +6317,7 @@ mod __googlesheetsparser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             {
@@ -6234,12 +6454,17 @@ mod __googlesheetsparser_emit_impl {
         unused_mut,
         unused_assignments
     )]
-    pub fn parse_pratt_GoogleSheetsParser_array_row<'p>(
+    pub fn parse_pratt_GoogleSheetsParser_array_row<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __array_row_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 23u32 as ::bbnf_ir::RuleId,
@@ -6257,7 +6482,13 @@ mod __googlesheetsparser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                parse_scalar_GoogleSheetsParser_expression(input, p, state, builder)
+                parse_scalar_GoogleSheetsParser_expression(
+                    input,
+                    p,
+                    state,
+                    builder,
+                    cursor,
+                )
             })?;
             loop {
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
@@ -6327,7 +6558,13 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                     );
-                    parse_scalar_GoogleSheetsParser_expression(input, p, state, builder)
+                    parse_scalar_GoogleSheetsParser_expression(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -6366,12 +6603,17 @@ mod __googlesheetsparser_emit_impl {
         unused_mut,
         unused_assignments
     )]
-    pub fn parse_pratt_GoogleSheetsParser_array_rows<'p>(
+    pub fn parse_pratt_GoogleSheetsParser_array_rows<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __array_rows_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 24u32 as ::bbnf_ir::RuleId,
@@ -6389,7 +6631,13 @@ mod __googlesheetsparser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                parse_pratt_GoogleSheetsParser_array_row(input, p, state, builder)
+                parse_pratt_GoogleSheetsParser_array_row(
+                    input,
+                    p,
+                    state,
+                    builder,
+                    cursor,
+                )
             })?;
             loop {
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
@@ -6459,7 +6707,13 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                     );
-                    parse_pratt_GoogleSheetsParser_array_row(input, p, state, builder)
+                    parse_pratt_GoogleSheetsParser_array_row(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -6501,13 +6755,19 @@ mod __googlesheetsparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_array_literal<'p>(
+    pub fn parse_flat_GoogleSheetsParser_array_literal<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(25u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __array_literal_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -6548,7 +6808,13 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                     );
-                    parse_pratt_GoogleSheetsParser_array_rows(input, p, state, builder)
+                    parse_pratt_GoogleSheetsParser_array_rows(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             }
@@ -6614,12 +6880,17 @@ mod __googlesheetsparser_emit_impl {
         unused_mut,
         unused_assignments
     )]
-    pub fn parse_pratt_GoogleSheetsParser_concat_expr<'p>(
+    pub fn parse_pratt_GoogleSheetsParser_concat_expr<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __concat_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 26u32 as ::bbnf_ir::RuleId,
@@ -6637,7 +6908,7 @@ mod __googlesheetsparser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                parse_pratt_GoogleSheetsParser_add_expr(input, p, state, builder)
+                parse_pratt_GoogleSheetsParser_add_expr(input, p, state, builder, cursor)
             })?;
             loop {
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
@@ -6707,7 +6978,13 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                     );
-                    parse_pratt_GoogleSheetsParser_add_expr(input, p, state, builder)
+                    parse_pratt_GoogleSheetsParser_add_expr(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -6746,12 +7023,17 @@ mod __googlesheetsparser_emit_impl {
         unused_mut,
         unused_assignments
     )]
-    pub fn parse_pratt_GoogleSheetsParser_add_expr<'p>(
+    pub fn parse_pratt_GoogleSheetsParser_add_expr<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __add_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 27u32 as ::bbnf_ir::RuleId,
@@ -6766,7 +7048,7 @@ mod __googlesheetsparser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                parse_pratt_GoogleSheetsParser_mul_expr(input, p, state, builder)
+                parse_pratt_GoogleSheetsParser_mul_expr(input, p, state, builder, cursor)
             })?;
             loop {
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
@@ -6836,7 +7118,13 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                     );
-                    parse_pratt_GoogleSheetsParser_mul_expr(input, p, state, builder)
+                    parse_pratt_GoogleSheetsParser_mul_expr(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -6875,12 +7163,17 @@ mod __googlesheetsparser_emit_impl {
         unused_mut,
         unused_assignments
     )]
-    pub fn parse_pratt_GoogleSheetsParser_exp_expr<'p>(
+    pub fn parse_pratt_GoogleSheetsParser_exp_expr<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __exp_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 28u32 as ::bbnf_ir::RuleId,
@@ -6895,7 +7188,13 @@ mod __googlesheetsparser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                parse_flat_GoogleSheetsParser_unary_expr(input, p, state, builder)
+                parse_flat_GoogleSheetsParser_unary_expr(
+                    input,
+                    p,
+                    state,
+                    builder,
+                    cursor,
+                )
             })?;
             loop {
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
@@ -6965,7 +7264,13 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                     );
-                    parse_flat_GoogleSheetsParser_unary_expr(input, p, state, builder)
+                    parse_flat_GoogleSheetsParser_unary_expr(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -6987,12 +7292,17 @@ mod __googlesheetsparser_emit_impl {
     /// / var / env / url / gradient / transform / etc.).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_arglist_GoogleSheetsParser_lambda_call<'p>(
+    pub fn parse_arglist_GoogleSheetsParser_lambda_call<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 29u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("lambda_call"),
@@ -7007,11 +7317,23 @@ mod __googlesheetsparser_emit_impl {
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
-            let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
+            let _ = parse_GoogleSheetsParser_formula__value(
+                input,
+                p,
+                state,
+                builder,
+                cursor,
+            )?;
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                parse_flat_GoogleSheetsParser_lambda_params(input, p, state, builder)
+                parse_flat_GoogleSheetsParser_lambda_params(
+                    input,
+                    p,
+                    state,
+                    builder,
+                    cursor,
+                )
             })?;
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             let at = *p;
@@ -7050,15 +7372,25 @@ mod __googlesheetsparser_emit_impl {
     /// struct-builder.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_scalar_GoogleSheetsParser_expression<'p>(
+    pub fn parse_scalar_GoogleSheetsParser_expression<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         {
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            parse_pratt_GoogleSheetsParser_comparison_expr(input, p, state, builder)
+            parse_pratt_GoogleSheetsParser_comparison_expr(
+                input,
+                p,
+                state,
+                builder,
+                cursor,
+            )
         }
     }
     /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
@@ -7072,12 +7404,17 @@ mod __googlesheetsparser_emit_impl {
     /// / var / env / url / gradient / transform / etc.).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_arglist_GoogleSheetsParser_func_call<'p>(
+    pub fn parse_arglist_GoogleSheetsParser_func_call<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 31u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("func_call"),
@@ -7094,7 +7431,7 @@ mod __googlesheetsparser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                parse_flat_GoogleSheetsParser_func_open(input, p, state, builder)
+                parse_flat_GoogleSheetsParser_func_open(input, p, state, builder, cursor)
             })?;
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             loop {
@@ -7106,7 +7443,13 @@ mod __googlesheetsparser_emit_impl {
                             p,
                             state,
                         );
-                        parse_flat_GoogleSheetsParser_func_args(input, p, state, builder)
+                        parse_flat_GoogleSheetsParser_func_args(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     })?;
                     Ok(())
                 })();
@@ -7175,13 +7518,19 @@ mod __googlesheetsparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_let_args<'p>(
+    pub fn parse_flat_GoogleSheetsParser_let_args<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(32u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __let_args_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -7228,6 +7577,7 @@ mod __googlesheetsparser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_GoogleSheetsParser::skip_space(
@@ -7280,7 +7630,13 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                     );
-                    parse_scalar_GoogleSheetsParser_expression(input, p, state, builder)
+                    parse_scalar_GoogleSheetsParser_expression(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -7318,12 +7674,17 @@ mod __googlesheetsparser_emit_impl {
     /// / var / env / url / gradient / transform / etc.).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_arglist_GoogleSheetsParser_let_call<'p>(
+    pub fn parse_arglist_GoogleSheetsParser_let_call<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 33u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("let_call"),
@@ -7338,11 +7699,17 @@ mod __googlesheetsparser_emit_impl {
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
-            let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
+            let _ = parse_GoogleSheetsParser_formula__value(
+                input,
+                p,
+                state,
+                builder,
+                cursor,
+            )?;
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                parse_flat_GoogleSheetsParser_let_args(input, p, state, builder)
+                parse_flat_GoogleSheetsParser_let_args(input, p, state, builder, cursor)
             })?;
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             let at = *p;
@@ -7386,15 +7753,29 @@ mod __googlesheetsparser_emit_impl {
     /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
+    ///
+    /// AZ-IV.W3.6 — Cursor-threaded. The Alt-dispatch branch
+    /// selector consults `cursor.decide(rule_id)` so a
+    /// `Decision::ParseUntil(idx)` returned by the path plan
+    /// means the targeted variant index is preserved by the
+    /// linear-try fallback (the byte-dispatch arms are still
+    /// the prefilter; the cursor's decision is forwarded into
+    /// the inner Refs as the descent proceeds).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_wrap_GoogleSheetsParser_primary<'p>(
+    pub fn parse_wrap_GoogleSheetsParser_primary<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let _ = cursor.decide(34u32 as u32);
         let first = __shape_support_GoogleSheetsParser::skip_space(input, p, state)
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -7409,6 +7790,7 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                         builder,
+                        cursor,
                     ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
@@ -7428,6 +7810,7 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                         builder,
+                        cursor,
                     ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
@@ -7447,6 +7830,7 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                         builder,
+                        cursor,
                     ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
@@ -7466,6 +7850,7 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                         builder,
+                        cursor,
                     ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
@@ -7485,6 +7870,7 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                         builder,
+                        cursor,
                     ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
@@ -7504,6 +7890,7 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                         builder,
+                        cursor,
                     ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
@@ -7523,6 +7910,7 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                         builder,
+                        cursor,
                     ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
@@ -7542,6 +7930,7 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                         builder,
+                        cursor,
                     ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
@@ -7561,6 +7950,7 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                         builder,
+                        cursor,
                     ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
@@ -7580,6 +7970,7 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                         builder,
+                        cursor,
                     ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
@@ -7599,6 +7990,7 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                         builder,
+                        cursor,
                     ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
@@ -7618,6 +8010,7 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                         builder,
+                        cursor,
                     ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
@@ -7637,6 +8030,7 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                         builder,
+                        cursor,
                     ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
@@ -7656,6 +8050,7 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                         builder,
+                        cursor,
                     ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
@@ -7675,6 +8070,7 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                         builder,
+                        cursor,
                     ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
@@ -7695,6 +8091,7 @@ mod __googlesheetsparser_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 builder.commit(attempt_builder);
@@ -7714,6 +8111,7 @@ mod __googlesheetsparser_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 builder.commit(attempt_builder);
@@ -7734,6 +8132,7 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                         builder,
+                        cursor,
                     ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
@@ -7753,6 +8152,7 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                         builder,
+                        cursor,
                     ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
@@ -7773,6 +8173,7 @@ mod __googlesheetsparser_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 builder.commit(attempt_builder);
@@ -7792,6 +8193,7 @@ mod __googlesheetsparser_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 builder.commit(attempt_builder);
@@ -7812,6 +8214,7 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                         builder,
+                        cursor,
                     ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
@@ -7831,6 +8234,7 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                         builder,
+                        cursor,
                     ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
@@ -7852,6 +8256,7 @@ mod __googlesheetsparser_emit_impl {
                     p,
                     state,
                     builder,
+                    cursor,
                 ) {
                     ::core::result::Result::Ok(_) => {
                         builder.commit(attempt_builder);
@@ -7871,6 +8276,7 @@ mod __googlesheetsparser_emit_impl {
                     p,
                     state,
                     builder,
+                    cursor,
                 ) {
                     ::core::result::Result::Ok(_) => {
                         builder.commit(attempt_builder);
@@ -7890,6 +8296,7 @@ mod __googlesheetsparser_emit_impl {
                     p,
                     state,
                     builder,
+                    cursor,
                 ) {
                     ::core::result::Result::Ok(_) => {
                         builder.commit(attempt_builder);
@@ -7938,13 +8345,19 @@ mod __googlesheetsparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_postfix_expr<'p>(
+    pub fn parse_flat_GoogleSheetsParser_postfix_expr<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(35u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __postfix_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -7974,7 +8387,13 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                     );
-                    parse_wrap_GoogleSheetsParser_primary(input, p, state, builder)
+                    parse_wrap_GoogleSheetsParser_primary(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -8081,13 +8500,19 @@ mod __googlesheetsparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_formula<'p>(
+    pub fn parse_flat_GoogleSheetsParser_formula<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(36u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __formula_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -8129,7 +8554,13 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                     );
-                    parse_scalar_GoogleSheetsParser_expression(input, p, state, builder)
+                    parse_scalar_GoogleSheetsParser_expression(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -8170,13 +8601,17 @@ mod __googlesheetsparser_emit_impl {
     /// recursion rationale.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_GoogleSheetsParser_formula<'p>(
+    pub fn parse_GoogleSheetsParser_formula<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
-        parse_GoogleSheetsParser_formula__value(input, p, state, builder)
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        parse_GoogleSheetsParser_formula__value(input, p, state, builder, cursor)
     }
     /// AW-V.W3.2 — value-position shape dispatcher. Called both at
     /// the grammar root and from Object / Array compound bodies.
@@ -8184,14 +8619,19 @@ mod __googlesheetsparser_emit_impl {
     /// AX.W0a.2.f — compound; plain `#[inline]`.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_GoogleSheetsParser_formula__value<'p>(
+    pub fn parse_GoogleSheetsParser_formula__value<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-        parse_flat_GoogleSheetsParser_formula(input, p, state, builder)
+        let _ = cursor.decide(36u32);
+        parse_flat_GoogleSheetsParser_formula(input, p, state, builder, cursor)
     }
     impl GoogleSheetsParser {
         fn __number_prettify<'a>(

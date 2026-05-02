@@ -767,12 +767,17 @@ mod __csvparser_emit_impl {
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_hregex_CsvParser_textdata<'p>(
+    pub fn parse_hregex_CsvParser_textdata<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CsvParser::ScanState,
         builder: &mut crate::runtime::csv::CsvStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_CsvParser("[^,\"\\r\\n]+", input, *p) else {
             return Err(crate::runtime::DtaError::Syntax {
@@ -821,13 +826,19 @@ mod __csvparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CsvParser_escaped<'p>(
+    pub fn parse_flat_CsvParser_escaped<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CsvParser::ScanState,
         builder: &mut crate::runtime::csv::CsvStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(1u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
         let __compound_start: u32 = *p as u32;
@@ -946,13 +957,19 @@ mod __csvparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CsvParser_record<'p>(
+    pub fn parse_flat_CsvParser_record<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CsvParser::ScanState,
         builder: &mut crate::runtime::csv::CsvStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(2u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __record_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -987,7 +1004,13 @@ mod __csvparser_emit_impl {
                                     p,
                                     state,
                                 );
-                                parse_flat_CsvParser_escaped(input, p, state, builder)
+                                parse_flat_CsvParser_escaped(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
                             })?;
                             Ok(())
                         })();
@@ -1010,7 +1033,13 @@ mod __csvparser_emit_impl {
                             crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
-                                parse_hregex_CsvParser_textdata(input, p, state, builder)
+                                parse_hregex_CsvParser_textdata(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
                             })?;
                             Ok(())
                         })();
@@ -1068,7 +1097,13 @@ mod __csvparser_emit_impl {
                                                 p,
                                                 state,
                                             );
-                                            parse_flat_CsvParser_escaped(input, p, state, builder)
+                                            parse_flat_CsvParser_escaped(
+                                                input,
+                                                p,
+                                                state,
+                                                builder,
+                                                cursor,
+                                            )
                                         })?;
                                         Ok(())
                                     })();
@@ -1091,7 +1126,13 @@ mod __csvparser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            parse_hregex_CsvParser_textdata(input, p, state, builder)
+                                            parse_hregex_CsvParser_textdata(
+                                                input,
+                                                p,
+                                                state,
+                                                builder,
+                                                cursor,
+                                            )
                                         })?;
                                         Ok(())
                                     })();
@@ -1190,13 +1231,19 @@ mod __csvparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CsvParser_csv<'p>(
+    pub fn parse_flat_CsvParser_csv<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CsvParser::ScanState,
         builder: &mut crate::runtime::csv::CsvStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(3u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __csv_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -1217,7 +1264,9 @@ mod __csvparser_emit_impl {
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
-                let _ = ({ parse_flat_CsvParser_record(input, p, state, builder) })?;
+                let _ = ({
+                    parse_flat_CsvParser_record(input, p, state, builder, cursor)
+                })?;
             }
             {
                 {
@@ -1249,7 +1298,13 @@ mod __csvparser_emit_impl {
                                 *p += match_len as usize;
                             }
                             let _ = ({
-                                parse_flat_CsvParser_record(input, p, state, builder)
+                                parse_flat_CsvParser_record(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
                             })?;
                             Ok(())
                         })();
@@ -1311,13 +1366,17 @@ mod __csvparser_emit_impl {
     /// recursion rationale.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_CsvParser_csv<'p>(
+    pub fn parse_CsvParser_csv<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CsvParser::ScanState,
         builder: &mut crate::runtime::csv::CsvStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
-        parse_CsvParser_csv__value(input, p, state, builder)
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        parse_CsvParser_csv__value(input, p, state, builder, cursor)
     }
     /// AW-V.W3.2 — value-position shape dispatcher. Called both at
     /// the grammar root and from Object / Array compound bodies.
@@ -1325,14 +1384,19 @@ mod __csvparser_emit_impl {
     /// AX.W0a.2.f — compound; plain `#[inline]`.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_CsvParser_csv__value<'p>(
+    pub fn parse_CsvParser_csv__value<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CsvParser::ScanState,
         builder: &mut crate::runtime::csv::CsvStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         let _ = __shape_support_CsvParser::skip_space(input, p, state);
-        parse_flat_CsvParser_csv(input, p, state, builder)
+        let _ = cursor.decide(3u32);
+        parse_flat_CsvParser_csv(input, p, state, builder, cursor)
     }
     impl CsvParser {
         /// Parse an input string and return the grammar-specific

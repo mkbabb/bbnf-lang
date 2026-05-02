@@ -1903,13 +1903,19 @@ mod __cssprettyparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssPrettyParser_important<'p>(
+    pub fn parse_flat_CssPrettyParser_important<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(0u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
         let __compound_start: u32 = *p as u32;
@@ -2037,13 +2043,19 @@ mod __cssprettyparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssPrettyParser_importRule<'p>(
+    pub fn parse_flat_CssPrettyParser_importRule<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(1u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
         let __compound_start: u32 = *p as u32;
@@ -2245,13 +2257,19 @@ mod __cssprettyparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssPrettyParser_declaration<'p>(
+    pub fn parse_flat_CssPrettyParser_declaration<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(2u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __declaration_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -2483,6 +2501,7 @@ mod __cssprettyparser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -2629,13 +2648,19 @@ mod __cssprettyparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssPrettyParser_genericAtRule<'p>(
+    pub fn parse_flat_CssPrettyParser_genericAtRule<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(3u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __genericAtRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -2704,6 +2729,7 @@ mod __cssprettyparser_emit_impl {
                         __first,
                         state,
                         builder,
+                        cursor,
                     )
                 })?;
             }
@@ -2762,13 +2788,19 @@ mod __cssprettyparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssPrettyParser_qualifiedRule<'p>(
+    pub fn parse_flat_CssPrettyParser_qualifiedRule<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(4u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __qualifiedRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -2824,7 +2856,13 @@ mod __cssprettyparser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssPrettyParser::skip_space(input, p, state);
-                    parse_flat_CssPrettyParser_ruleBlock(input, p, state, builder)
+                    parse_flat_CssPrettyParser_ruleBlock(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -2882,13 +2920,19 @@ mod __cssprettyparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssPrettyParser_mediaRule<'p>(
+    pub fn parse_flat_CssPrettyParser_mediaRule<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(5u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __mediaRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -2941,7 +2985,13 @@ mod __cssprettyparser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssPrettyParser::skip_space(input, p, state);
-                    parse_flat_CssPrettyParser_ruleBlock(input, p, state, builder)
+                    parse_flat_CssPrettyParser_ruleBlock(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -2999,13 +3049,19 @@ mod __cssprettyparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssPrettyParser_supportsRule<'p>(
+    pub fn parse_flat_CssPrettyParser_supportsRule<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(6u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __supportsRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -3059,7 +3115,13 @@ mod __cssprettyparser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssPrettyParser::skip_space(input, p, state);
-                    parse_flat_CssPrettyParser_ruleBlock(input, p, state, builder)
+                    parse_flat_CssPrettyParser_ruleBlock(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -3117,13 +3179,19 @@ mod __cssprettyparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssPrettyParser_fontFaceRule<'p>(
+    pub fn parse_flat_CssPrettyParser_fontFaceRule<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(7u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __fontFaceRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -3180,7 +3248,13 @@ mod __cssprettyparser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssPrettyParser::skip_space(input, p, state);
-                    parse_flat_CssPrettyParser_ruleBlock(input, p, state, builder)
+                    parse_flat_CssPrettyParser_ruleBlock(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -3217,16 +3291,21 @@ mod __cssprettyparser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssPrettyParser_atRuleBody<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssPrettyParser_atRuleBody<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             59u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [59u8] {
@@ -3253,7 +3332,13 @@ mod __cssprettyparser_emit_impl {
                             p,
                             state,
                         );
-                        parse_flat_CssPrettyParser_ruleBlock(input, p, state, builder)
+                        parse_flat_CssPrettyParser_ruleBlock(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     }) {
                         ::core::result::Result::Ok(__off) => {
                             builder.commit(__ref_builder_checkpoint);
@@ -3307,13 +3392,19 @@ mod __cssprettyparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssPrettyParser_ruleBlock<'p>(
+    pub fn parse_flat_CssPrettyParser_ruleBlock<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(9u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __ruleBlock_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -3364,7 +3455,13 @@ mod __cssprettyparser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssPrettyParser::skip_space(input, p, state);
-                    parse_flat_CssPrettyParser_blockContent(input, p, state, builder)
+                    parse_flat_CssPrettyParser_blockContent(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -3447,13 +3544,19 @@ mod __cssprettyparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssPrettyParser_blockContent<'p>(
+    pub fn parse_flat_CssPrettyParser_blockContent<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(10u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __blockContent_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -3524,6 +3627,7 @@ mod __cssprettyparser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -3552,6 +3656,7 @@ mod __cssprettyparser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -3633,15 +3738,29 @@ mod __cssprettyparser_emit_impl {
     /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
+    ///
+    /// AZ-IV.W3.6 — Cursor-threaded. The Alt-dispatch branch
+    /// selector consults `cursor.decide(rule_id)` so a
+    /// `Decision::ParseUntil(idx)` returned by the path plan
+    /// means the targeted variant index is preserved by the
+    /// linear-try fallback (the byte-dispatch arms are still
+    /// the prefilter; the cursor's decision is forwarded into
+    /// the inner Refs as the descent proceeds).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_wrap_CssPrettyParser_atRule<'p>(
+    pub fn parse_wrap_CssPrettyParser_atRule<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let _ = cursor.decide(11u32 as u32);
         let first = __shape_support_CssPrettyParser::skip_space(input, p, state)
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -3657,6 +3776,7 @@ mod __cssprettyparser_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 builder.commit(attempt_builder);
@@ -3676,6 +3796,7 @@ mod __cssprettyparser_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 builder.commit(attempt_builder);
@@ -3695,6 +3816,7 @@ mod __cssprettyparser_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 builder.commit(attempt_builder);
@@ -3714,6 +3836,7 @@ mod __cssprettyparser_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 builder.commit(attempt_builder);
@@ -3733,6 +3856,7 @@ mod __cssprettyparser_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 builder.commit(attempt_builder);
@@ -3766,15 +3890,29 @@ mod __cssprettyparser_emit_impl {
     /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
+    ///
+    /// AZ-IV.W3.6 — Cursor-threaded. The Alt-dispatch branch
+    /// selector consults `cursor.decide(rule_id)` so a
+    /// `Decision::ParseUntil(idx)` returned by the path plan
+    /// means the targeted variant index is preserved by the
+    /// linear-try fallback (the byte-dispatch arms are still
+    /// the prefilter; the cursor's decision is forwarded into
+    /// the inner Refs as the descent proceeds).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_wrap_CssPrettyParser_ruleItem<'p>(
+    pub fn parse_wrap_CssPrettyParser_ruleItem<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let _ = cursor.decide(12u32 as u32);
         let first = __shape_support_CssPrettyParser::skip_space(input, p, state)
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -3784,7 +3922,13 @@ mod __cssprettyparser_emit_impl {
                 64u8 => {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
-                    match parse_wrap_CssPrettyParser_atRule(input, p, state, builder) {
+                    match parse_wrap_CssPrettyParser_atRule(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
                             break 'try_branches;
@@ -3805,6 +3949,7 @@ mod __cssprettyparser_emit_impl {
                     p,
                     state,
                     builder,
+                    cursor,
                 ) {
                     ::core::result::Result::Ok(_) => {
                         builder.commit(attempt_builder);
@@ -3853,13 +3998,19 @@ mod __cssprettyparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssPrettyParser_ruleList<'p>(
+    pub fn parse_flat_CssPrettyParser_ruleList<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(13u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __ruleList_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -3914,6 +4065,7 @@ mod __cssprettyparser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -3996,13 +4148,19 @@ mod __cssprettyparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssPrettyParser_stylesheet<'p>(
+    pub fn parse_flat_CssPrettyParser_stylesheet<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(14u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __stylesheet_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -4043,7 +4201,7 @@ mod __cssprettyparser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssPrettyParser::skip_space(input, p, state);
-                    parse_flat_CssPrettyParser_ruleList(input, p, state, builder)
+                    parse_flat_CssPrettyParser_ruleList(input, p, state, builder, cursor)
                 })?;
             }
             {
@@ -4099,13 +4257,17 @@ mod __cssprettyparser_emit_impl {
     /// recursion rationale.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_CssPrettyParser_stylesheet<'p>(
+    pub fn parse_CssPrettyParser_stylesheet<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
-        parse_CssPrettyParser_stylesheet__value(input, p, state, builder)
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        parse_CssPrettyParser_stylesheet__value(input, p, state, builder, cursor)
     }
     /// AW-V.W3.2 — value-position shape dispatcher. Called both at
     /// the grammar root and from Object / Array compound bodies.
@@ -4113,14 +4275,19 @@ mod __cssprettyparser_emit_impl {
     /// AX.W0a.2.f — compound; plain `#[inline]`.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_CssPrettyParser_stylesheet__value<'p>(
+    pub fn parse_CssPrettyParser_stylesheet__value<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         let _ = __shape_support_CssPrettyParser::skip_space(input, p, state);
-        parse_flat_CssPrettyParser_stylesheet(input, p, state, builder)
+        let _ = cursor.decide(14u32);
+        parse_flat_CssPrettyParser_stylesheet(input, p, state, builder, cursor)
     }
     impl CssPrettyParser {
         fn __important_prettify<'a>(

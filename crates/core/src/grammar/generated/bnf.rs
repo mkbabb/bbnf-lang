@@ -1031,13 +1031,19 @@ mod __bnfparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_BnfParser_terminal<'p>(
+    pub fn parse_flat_BnfParser_terminal<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BnfParser::ScanState,
         builder: &mut crate::runtime::bnf::BnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(0u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
         let __compound_start: u32 = *p as u32;
@@ -1159,13 +1165,19 @@ mod __bnfparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_BnfParser_nonterminal<'p>(
+    pub fn parse_flat_BnfParser_nonterminal<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BnfParser::ScanState,
         builder: &mut crate::runtime::bnf::BnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(1u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
         let __compound_start: u32 = *p as u32;
@@ -1290,13 +1302,19 @@ mod __bnfparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_BnfParser_alternation<'p>(
+    pub fn parse_flat_BnfParser_alternation<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BnfParser::ScanState,
         builder: &mut crate::runtime::bnf::BnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(2u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __alternation_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -1349,7 +1367,13 @@ mod __bnfparser_emit_impl {
                                                 p,
                                                 state,
                                             );
-                                            parse_flat_BnfParser_terminal(input, p, state, builder)
+                                            parse_flat_BnfParser_terminal(
+                                                input,
+                                                p,
+                                                state,
+                                                builder,
+                                                cursor,
+                                            )
                                         })?;
                                         Ok(())
                                     })();
@@ -1377,7 +1401,13 @@ mod __bnfparser_emit_impl {
                                                 p,
                                                 state,
                                             );
-                                            parse_flat_BnfParser_nonterminal(input, p, state, builder)
+                                            parse_flat_BnfParser_nonterminal(
+                                                input,
+                                                p,
+                                                state,
+                                                builder,
+                                                cursor,
+                                            )
                                         })?;
                                         Ok(())
                                     })();
@@ -1513,7 +1543,13 @@ mod __bnfparser_emit_impl {
                                                             p,
                                                             state,
                                                         );
-                                                        parse_flat_BnfParser_terminal(input, p, state, builder)
+                                                        parse_flat_BnfParser_terminal(
+                                                            input,
+                                                            p,
+                                                            state,
+                                                            builder,
+                                                            cursor,
+                                                        )
                                                     })?;
                                                     Ok(())
                                                 })();
@@ -1541,7 +1577,13 @@ mod __bnfparser_emit_impl {
                                                             p,
                                                             state,
                                                         );
-                                                        parse_flat_BnfParser_nonterminal(input, p, state, builder)
+                                                        parse_flat_BnfParser_nonterminal(
+                                                            input,
+                                                            p,
+                                                            state,
+                                                            builder,
+                                                            cursor,
+                                                        )
                                                     })?;
                                                     Ok(())
                                                 })();
@@ -1677,13 +1719,19 @@ mod __bnfparser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_BnfParser_rule<'p>(
+    pub fn parse_flat_BnfParser_rule<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BnfParser::ScanState,
         builder: &mut crate::runtime::bnf::BnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(3u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __rule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -1706,7 +1754,7 @@ mod __bnfparser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_BnfParser::skip_space(input, p, state);
-                    parse_flat_BnfParser_nonterminal(input, p, state, builder)
+                    parse_flat_BnfParser_nonterminal(input, p, state, builder, cursor)
                 })?;
             }
             {
@@ -1746,7 +1794,7 @@ mod __bnfparser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_BnfParser::skip_space(input, p, state);
-                    parse_flat_BnfParser_alternation(input, p, state, builder)
+                    parse_flat_BnfParser_alternation(input, p, state, builder, cursor)
                 })?;
             }
             {
@@ -1847,15 +1895,24 @@ mod __bnfparser_emit_impl {
     /// closes the frame on first-byte rejection or EOF. NO
     /// bracket-delimiter literals — termination is driven by
     /// the inner dispatcher's first-set check.
+    ///
+    /// AZ-IV.W3.6 — Cursor-threaded. Each iteration consults
+    /// `cursor.decide(rule_id) -> Decision` to honour the lazy
+    /// bail-out parse's `ParseUntil(idx)` cut.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_array_BnfParser_grammar<'p>(
+    pub fn parse_array_BnfParser_grammar<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BnfParser::ScanState,
         builder: &mut crate::runtime::bnf::BnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder;
+        use crate::path::cursor::Decision as __Decision;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 4u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("grammar"),
@@ -1864,9 +1921,16 @@ mod __bnfparser_emit_impl {
             fields: ::std::vec::Vec::new(),
         };
         let __handle = builder.begin_compound(&__layout);
+        let __decision: __Decision = cursor.decide(4u32 as u32);
+        let mut __elem_idx: u32 = 0;
         loop {
             let __iter_save_p = *p;
             if input.get(*p).is_none() {
+                break;
+            }
+            if let __Decision::ParseUntil(__cut) = __decision
+                && __elem_idx as u32 > __cut as u32
+            {
                 break;
             }
             let __iter_builder_checkpoint = builder.checkpoint();
@@ -1875,7 +1939,7 @@ mod __bnfparser_emit_impl {
                 let _ = __shape_support_BnfParser::skip_space(input, p, state);
                 ({
                     let _ = __shape_support_BnfParser::skip_space(input, p, state);
-                    parse_flat_BnfParser_rule(input, p, state, builder)
+                    parse_flat_BnfParser_rule(input, p, state, builder, cursor)
                 })?;
                 let _ = __shape_support_BnfParser::skip_space(input, p, state);
                 Ok(())
@@ -1887,6 +1951,7 @@ mod __bnfparser_emit_impl {
                         break;
                     }
                     builder.commit(__iter_builder_checkpoint);
+                    __elem_idx = __elem_idx.saturating_add(1);
                 }
                 Err(_) => {
                     *p = __iter_save_p;
@@ -1912,13 +1977,17 @@ mod __bnfparser_emit_impl {
     /// recursion rationale.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_BnfParser_grammar<'p>(
+    pub fn parse_BnfParser_grammar<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BnfParser::ScanState,
         builder: &mut crate::runtime::bnf::BnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
-        parse_BnfParser_grammar__value(input, p, state, builder)
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        parse_BnfParser_grammar__value(input, p, state, builder, cursor)
     }
     /// AW-V.W3.2 — value-position shape dispatcher. Called both at
     /// the grammar root and from Object / Array compound bodies.
@@ -1926,14 +1995,19 @@ mod __bnfparser_emit_impl {
     /// AX.W0a.2.f — compound; plain `#[inline]`.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_BnfParser_grammar__value<'p>(
+    pub fn parse_BnfParser_grammar__value<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_BnfParser::ScanState,
         builder: &mut crate::runtime::bnf::BnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         let _ = __shape_support_BnfParser::skip_space(input, p, state);
-        parse_array_BnfParser_grammar(input, p, state, builder)
+        let _ = cursor.decide(4u32);
+        parse_array_BnfParser_grammar(input, p, state, builder, cursor)
     }
     impl BnfParser {
         fn __terminal_prettify<'a>(

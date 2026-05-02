@@ -10935,15 +10935,20 @@ mod __cssl4parser_emit_impl {
     /// emission; the offset is unused by struct-direct
     /// callers (the dispatcher discards `Ok(_)` payloads).
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_percentageUnit(
-        input: &[u8],
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_percentageUnit<'p, __P>(
+        input: &'p [u8],
         p: &mut usize,
         _first_byte: u8,
         _state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'_>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        let _ = cursor;
         let at = *p;
         let end = at + 1usize;
         if input.len() < end || input[at..end] != [37u8] {
@@ -10968,13 +10973,18 @@ mod __cssl4parser_emit_impl {
         unused_assignments,
         unreachable_code
     )]
-    pub fn parse_altdispatch_CssL4Parser_namedColor<'p>(
+    pub fn parse_altdispatch_CssL4Parser_namedColor<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder;
+        let _ = cursor;
         let first = __shape_support_CssL4Parser::skip_space(input, p, state)
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -19224,13 +19234,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_hex<'p>(
+    pub fn parse_flat_CssL4Parser_hex<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(3u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
         let __compound_start: u32 = *p as u32;
@@ -19318,16 +19334,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_colorSpace<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_colorSpace<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             97u8 => {
                 if input.len() >= *p + 7usize
@@ -19770,12 +19791,17 @@ mod __cssl4parser_emit_impl {
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_hregex_CssL4Parser_string<'p>(
+    pub fn parse_hregex_CssL4Parser_string<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_CssL4Parser(
             "\"(?:[^\"\\\\]|\\\\[\\s\\S])*\"|'(?:[^'\\\\]|\\\\[\\s\\S])*'",
@@ -19807,16 +19833,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_mathProductOp<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_mathProductOp<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             42u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [42u8] {
@@ -19859,16 +19890,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_mathSumOp<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_mathSumOp<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             43u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [43u8] {
@@ -19911,16 +19947,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_absoluteLengthUnit<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_absoluteLengthUnit<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             81u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [81u8] {
@@ -20114,16 +20155,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_fontLengthUnit<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_fontLengthUnit<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             99u8 => {
                 if input.len() >= *p + 3usize
@@ -20510,16 +20556,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_viewportLengthUnit<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_viewportLengthUnit<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             100u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [100u8] {
@@ -21749,13 +21800,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_containerLengthUnit<'p>(
+    pub fn parse_flat_CssL4Parser_containerLengthUnit<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(11u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __containerLengthUnit_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -22046,16 +22103,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_angleUnit<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_angleUnit<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             100u8 => {
                 if input.len() >= *p + 3usize
@@ -22130,16 +22192,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_timeUnit<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_timeUnit<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             109u8 => {
                 if input.len() >= *p + 2usize && input[*p..*p + 2usize] == [109u8, 115u8]
@@ -22183,16 +22250,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_frequencyUnit<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_frequencyUnit<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             72u8 => {
                 if input.len() >= *p + 2usize && input[*p..*p + 2usize] == [72u8, 122u8]
@@ -22238,16 +22310,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_resolutionUnit<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_resolutionUnit<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             100u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [100u8] {
@@ -22438,15 +22515,20 @@ mod __cssl4parser_emit_impl {
     /// emission; the offset is unused by struct-direct
     /// callers (the dispatcher discards `Ok(_)` payloads).
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_flexUnit(
-        input: &[u8],
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_flexUnit<'p, __P>(
+        input: &'p [u8],
         p: &mut usize,
         _first_byte: u8,
         _state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'_>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        let _ = cursor;
         let at = *p;
         let end = at + 2usize;
         if input.len() < end || input[at..end] != [102u8, 114u8] {
@@ -22468,16 +22550,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_displayKeyword<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_displayKeyword<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             98u8 => {
                 if input.len() >= *p + 5usize
@@ -23102,16 +23189,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_positionKeyword<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_positionKeyword<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             97u8 => {
                 if input.len() >= *p + 8usize
@@ -23198,16 +23290,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_overflowKeyword<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_overflowKeyword<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             97u8 => {
                 if input.len() >= *p + 4usize
@@ -23299,16 +23396,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_visibilityKeyword<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_visibilityKeyword<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             99u8 => {
                 if input.len() >= *p + 8usize
@@ -23372,16 +23474,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_flexDirKeyword<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_flexDirKeyword<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             99u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [99u8] {
@@ -23692,16 +23799,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_flexWrapKeyword<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_flexWrapKeyword<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             110u8 => {
                 if input.len() >= *p + 6usize
@@ -23876,16 +23988,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_alignKeyword<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_alignKeyword<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             98u8 => {
                 if input.len() >= *p + 8usize
@@ -24391,16 +24508,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_borderStyleKeyword<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_borderStyleKeyword<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             100u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [100u8] {
@@ -24714,16 +24836,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_borderWidthKeyword<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_borderWidthKeyword<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             109u8 => {
                 if input.len() >= *p + 6usize
@@ -24780,16 +24907,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_fontWeightKeyword<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_fontWeightKeyword<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             98u8 => {
                 if input.len() >= *p + 6usize
@@ -24862,16 +24994,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_textAlignKeyword<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_textAlignKeyword<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             99u8 => {
                 if input.len() >= *p + 6usize
@@ -24976,16 +25113,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_boxSizingKeyword<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_boxSizingKeyword<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             98u8 => {
                 if input.len() >= *p + 10usize
@@ -25040,16 +25182,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_cursorKeyword<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_cursorKeyword<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             97u8 => {
                 if input.len() >= *p + 4usize
@@ -25348,16 +25495,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_globalKeyword<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_globalKeyword<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             105u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [105u8] {
@@ -25548,16 +25700,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_mediaType<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_mediaType<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             97u8 => {
                 if input.len() >= *p + 3usize
@@ -25724,16 +25881,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_mediaQualifier<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_mediaQualifier<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             110u8 => {
                 if input.len() >= *p + 3usize
@@ -25781,12 +25943,17 @@ mod __cssl4parser_emit_impl {
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_hregex_CssL4Parser_ident<'p>(
+    pub fn parse_hregex_CssL4Parser_ident<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_CssL4Parser(
             "[a-zA-Z_\\x80-\\xff][\\w\\x80-\\xff-]*",
@@ -25839,13 +26006,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_importantSuffix<'p>(
+    pub fn parse_flat_CssL4Parser_importantSuffix<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(34u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
         let __compound_start: u32 = *p as u32;
@@ -25987,12 +26160,17 @@ mod __cssl4parser_emit_impl {
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_hregex_CssL4Parser_cssString<'p>(
+    pub fn parse_hregex_CssL4Parser_cssString<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_CssL4Parser(
             "\"(?:[^\"\\\\]|\\\\[\\s\\S])*\"|'(?:[^'\\\\]|\\\\[\\s\\S])*'",
@@ -26025,12 +26203,17 @@ mod __cssl4parser_emit_impl {
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_hregex_CssL4Parser_dashIdent<'p>(
+    pub fn parse_hregex_CssL4Parser_dashIdent<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_CssL4Parser("-[a-zA-Z][\\w-]*", input, *p)
         else {
@@ -26059,16 +26242,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_colorProps<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_colorProps<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             97u8 => {
                 if input.len() >= *p + 12usize
@@ -26540,16 +26728,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_sizeProps<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_sizeProps<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             98u8 => {
                 if input.len() >= *p + 10usize
@@ -27011,16 +27204,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_spacingProps<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_spacingProps<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             98u8 => {
                 if input.len() >= *p + 6usize
@@ -27792,16 +27990,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_fontProps<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_fontProps<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             102u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [102u8] {
@@ -28888,13 +29091,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_bgProps<'p>(
+    pub fn parse_flat_CssL4Parser_bgProps<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(41u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __bgProps_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -29374,16 +29583,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_transformProps<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_transformProps<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             98u8 => {
                 if input.len() >= *p + 19usize
@@ -29903,16 +30117,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_transitionProps<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_transitionProps<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             97u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [97u8] {
@@ -30798,16 +31017,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_listTableProps<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_listTableProps<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             98u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [98u8] {
@@ -31400,12 +31624,17 @@ mod __cssl4parser_emit_impl {
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_hregex_CssL4Parser_hash<'p>(
+    pub fn parse_hregex_CssL4Parser_hash<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_CssL4Parser(
             "#(?:[\\w\\x80-\\xff-]|\\\\[^\\n])+",
@@ -31438,12 +31667,17 @@ mod __cssl4parser_emit_impl {
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_hregex_CssL4Parser_selectorIdent<'p>(
+    pub fn parse_hregex_CssL4Parser_selectorIdent<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_CssL4Parser(
             "(?:-?[a-zA-Z_\\x80-\\xff]|\\\\[^\\n])(?:[\\w\\x80-\\xff-]|\\\\[^\\n])*",
@@ -31475,16 +31709,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_attrMatcher<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_attrMatcher<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             36u8 => {
                 if input.len() >= *p + 2usize && input[*p..*p + 2usize] == [36u8, 61u8] {
@@ -31580,13 +31819,18 @@ mod __cssl4parser_emit_impl {
         unused_assignments,
         unreachable_code
     )]
-    pub fn parse_altdispatch_CssL4Parser_anPlusB<'p>(
+    pub fn parse_altdispatch_CssL4Parser_anPlusB<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder;
+        let _ = cursor;
         let first = __shape_support_CssL4Parser::skip_space(input, p, state)
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -31703,15 +31947,29 @@ mod __cssl4parser_emit_impl {
     /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
+    ///
+    /// AZ-IV.W3.6 — Cursor-threaded. The Alt-dispatch branch
+    /// selector consults `cursor.decide(rule_id)` so a
+    /// `Decision::ParseUntil(idx)` returned by the path plan
+    /// means the targeted variant index is preserved by the
+    /// linear-try fallback (the byte-dispatch arms are still
+    /// the prefilter; the cursor's decision is forwarded into
+    /// the inner Refs as the descent proceeds).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_wrap_CssL4Parser_combinator<'p>(
+    pub fn parse_wrap_CssL4Parser_combinator<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let _ = cursor.decide(49u32 as u32);
         let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 49u32 as ::bbnf_ir::RuleId,
@@ -32754,13 +33012,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_nthFunctionName<'p>(
+    pub fn parse_flat_CssL4Parser_nthFunctionName<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(50u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __nthFunctionName_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -33055,16 +33319,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_dirKeyword<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_dirKeyword<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             108u8 => {
                 if input.len() >= *p + 3usize
@@ -33114,13 +33383,18 @@ mod __cssl4parser_emit_impl {
         unused_assignments,
         unreachable_code
     )]
-    pub fn parse_altdispatch_CssL4Parser_keyframeStop<'p>(
+    pub fn parse_altdispatch_CssL4Parser_keyframeStop<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder;
+        let _ = cursor;
         let first = __shape_support_CssL4Parser::skip_space(input, p, state)
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -33228,13 +33502,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_percentage<'p>(
+    pub fn parse_flat_CssL4Parser_percentage<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(53u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __percentage_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -33286,6 +33566,7 @@ mod __cssl4parser_emit_impl {
                         __first,
                         state,
                         builder,
+                        cursor,
                     )
                 })?;
             }
@@ -33344,13 +33625,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_funcBody<'p>(
+    pub fn parse_flat_CssL4Parser_funcBody<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(54u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __funcBody_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -33408,7 +33695,13 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                             );
-                                            parse_flat_CssL4Parser_funcBody(input, p, state, builder)
+                                            parse_flat_CssL4Parser_funcBody(
+                                                input,
+                                                p,
+                                                state,
+                                                builder,
+                                                cursor,
+                                            )
                                         })?;
                                         let at = *p;
                                         let end = at + 1usize;
@@ -33444,7 +33737,13 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                             );
-                                            parse_hregex_CssL4Parser_string(input, p, state, builder)
+                                            parse_hregex_CssL4Parser_string(
+                                                input,
+                                                p,
+                                                state,
+                                                builder,
+                                                cursor,
+                                            )
                                         })?;
                                         Ok(())
                                     })();
@@ -33568,12 +33867,17 @@ mod __cssl4parser_emit_impl {
     /// / var / env / url / gradient / transform / etc.).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_arglist_CssL4Parser_urlFunction<'p>(
+    pub fn parse_arglist_CssL4Parser_urlFunction<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 55u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("urlFunction"),
@@ -33604,7 +33908,13 @@ mod __cssl4parser_emit_impl {
                 });
             }
             *p = end;
-            let _ = parse_CssL4Parser_stylesheet__value(input, p, state, builder)?;
+            let _ = parse_CssL4Parser_stylesheet__value(
+                input,
+                p,
+                state,
+                builder,
+                cursor,
+            )?;
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [41u8] {
@@ -33646,15 +33956,29 @@ mod __cssl4parser_emit_impl {
     /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
+    ///
+    /// AZ-IV.W3.6 — Cursor-threaded. The Alt-dispatch branch
+    /// selector consults `cursor.decide(rule_id)` so a
+    /// `Decision::ParseUntil(idx)` returned by the path plan
+    /// means the targeted variant index is preserved by the
+    /// linear-try fallback (the byte-dispatch arms are still
+    /// the prefilter; the cursor's decision is forwarded into
+    /// the inner Refs as the descent proceeds).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_wrap_CssL4Parser_relativeLengthUnit<'p>(
+    pub fn parse_wrap_CssL4Parser_relativeLengthUnit<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let _ = cursor.decide(56u32 as u32);
         let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 56u32 as ::bbnf_ir::RuleId,
@@ -33684,6 +34008,7 @@ mod __cssl4parser_emit_impl {
                                 first,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
@@ -33704,6 +34029,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
@@ -33726,6 +34052,7 @@ mod __cssl4parser_emit_impl {
                             first,
                             state,
                             builder,
+                            cursor,
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 __wrap_branch_idx = 1u32;
@@ -33747,6 +34074,7 @@ mod __cssl4parser_emit_impl {
                             first,
                             state,
                             builder,
+                            cursor,
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 __wrap_branch_idx = 0u32;
@@ -33768,6 +34096,7 @@ mod __cssl4parser_emit_impl {
                             first,
                             state,
                             builder,
+                            cursor,
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 __wrap_branch_idx = 0u32;
@@ -33790,6 +34119,7 @@ mod __cssl4parser_emit_impl {
                                 first,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
@@ -33811,6 +34141,7 @@ mod __cssl4parser_emit_impl {
                                 first,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
@@ -33833,6 +34164,7 @@ mod __cssl4parser_emit_impl {
                             first,
                             state,
                             builder,
+                            cursor,
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 __wrap_branch_idx = 0u32;
@@ -33854,6 +34186,7 @@ mod __cssl4parser_emit_impl {
                             first,
                             state,
                             builder,
+                            cursor,
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 __wrap_branch_idx = 1u32;
@@ -33875,6 +34208,7 @@ mod __cssl4parser_emit_impl {
                             first,
                             state,
                             builder,
+                            cursor,
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 __wrap_branch_idx = 1u32;
@@ -33953,13 +34287,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_angle<'p>(
+    pub fn parse_flat_CssL4Parser_angle<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(57u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __angle_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -34008,6 +34348,7 @@ mod __cssl4parser_emit_impl {
                         __first,
                         state,
                         builder,
+                        cursor,
                     )
                 })?;
             }
@@ -34066,13 +34407,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_time<'p>(
+    pub fn parse_flat_CssL4Parser_time<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(58u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __time_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -34115,7 +34462,14 @@ mod __cssl4parser_emit_impl {
                         .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                             offset: *p as u32,
                         })?;
-                    parse_keyword_CssL4Parser_timeUnit(input, p, __first, state, builder)
+                    parse_keyword_CssL4Parser_timeUnit(
+                        input,
+                        p,
+                        __first,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -34173,13 +34527,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_frequency<'p>(
+    pub fn parse_flat_CssL4Parser_frequency<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(59u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __frequency_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -34231,6 +34591,7 @@ mod __cssl4parser_emit_impl {
                         __first,
                         state,
                         builder,
+                        cursor,
                     )
                 })?;
             }
@@ -34289,13 +34650,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_resolution<'p>(
+    pub fn parse_flat_CssL4Parser_resolution<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(60u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __resolution_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -34347,6 +34714,7 @@ mod __cssl4parser_emit_impl {
                         __first,
                         state,
                         builder,
+                        cursor,
                     )
                 })?;
             }
@@ -34405,13 +34773,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_flex<'p>(
+    pub fn parse_flat_CssL4Parser_flex<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(61u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __flex_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -34454,7 +34828,14 @@ mod __cssl4parser_emit_impl {
                         .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                             offset: *p as u32,
                         })?;
-                    parse_keyword_CssL4Parser_flexUnit(input, p, __first, state, builder)
+                    parse_keyword_CssL4Parser_flexUnit(
+                        input,
+                        p,
+                        __first,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -34512,13 +34893,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_customPropertyDecl<'p>(
+    pub fn parse_flat_CssL4Parser_customPropertyDecl<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(62u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __customPropertyDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -34586,7 +34973,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -34693,13 +35086,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_genericDecl<'p>(
+    pub fn parse_flat_CssL4Parser_genericDecl<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(63u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __genericDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -34769,7 +35168,13 @@ mod __cssl4parser_emit_impl {
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             }
@@ -34879,13 +35284,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_nsPrefix<'p>(
+    pub fn parse_flat_CssL4Parser_nsPrefix<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(64u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __nsPrefix_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -34965,6 +35376,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -35050,13 +35462,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_classSelector<'p>(
+    pub fn parse_flat_CssL4Parser_classSelector<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(65u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __classSelector_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -35092,7 +35510,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_hregex_CssL4Parser_selectorIdent(input, p, state, builder)
+                    parse_hregex_CssL4Parser_selectorIdent(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -35130,12 +35554,17 @@ mod __cssl4parser_emit_impl {
     /// / var / env / url / gradient / transform / etc.).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_arglist_CssL4Parser_partPseudo<'p>(
+    pub fn parse_arglist_CssL4Parser_partPseudo<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 66u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("partPseudo"),
@@ -35170,7 +35599,7 @@ mod __cssl4parser_emit_impl {
             *p = end;
             let _ = ({
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                parse_hregex_CssL4Parser_selectorIdent(input, p, state, builder)
+                parse_hregex_CssL4Parser_selectorIdent(input, p, state, builder, cursor)
             })?;
             loop {
                 let __save = *p;
@@ -35185,7 +35614,13 @@ mod __cssl4parser_emit_impl {
                     *p = end;
                     let _ = ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_hregex_CssL4Parser_selectorIdent(input, p, state, builder)
+                        parse_hregex_CssL4Parser_selectorIdent(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     })?;
                     Ok(())
                 })();
@@ -35233,12 +35668,17 @@ mod __cssl4parser_emit_impl {
     /// / var / env / url / gradient / transform / etc.).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_arglist_CssL4Parser_highlightPseudo<'p>(
+    pub fn parse_arglist_CssL4Parser_highlightPseudo<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 67u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("highlightPseudo"),
@@ -35277,7 +35717,7 @@ mod __cssl4parser_emit_impl {
             *p = end;
             let _ = ({
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                parse_hregex_CssL4Parser_selectorIdent(input, p, state, builder)
+                parse_hregex_CssL4Parser_selectorIdent(input, p, state, builder, cursor)
             })?;
             let at = *p;
             let end = at + 1usize;
@@ -35338,13 +35778,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_simplePseudoElement<'p>(
+    pub fn parse_flat_CssL4Parser_simplePseudoElement<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(68u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __simplePseudoElement_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -35380,7 +35826,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_hregex_CssL4Parser_selectorIdent(input, p, state, builder)
+                    parse_hregex_CssL4Parser_selectorIdent(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -35418,12 +35870,17 @@ mod __cssl4parser_emit_impl {
     /// / var / env / url / gradient / transform / etc.).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_arglist_CssL4Parser_langPseudo<'p>(
+    pub fn parse_arglist_CssL4Parser_langPseudo<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 69u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("langPseudo"),
@@ -35456,7 +35913,7 @@ mod __cssl4parser_emit_impl {
             *p = end;
             let _ = ({
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                parse_hregex_CssL4Parser_selectorIdent(input, p, state, builder)
+                parse_hregex_CssL4Parser_selectorIdent(input, p, state, builder, cursor)
             })?;
             loop {
                 let __save = *p;
@@ -35471,7 +35928,13 @@ mod __cssl4parser_emit_impl {
                     *p = end;
                     let _ = ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_hregex_CssL4Parser_selectorIdent(input, p, state, builder)
+                        parse_hregex_CssL4Parser_selectorIdent(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     })?;
                     Ok(())
                 })();
@@ -35539,13 +36002,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_simplePseudoClass<'p>(
+    pub fn parse_flat_CssL4Parser_simplePseudoClass<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(70u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __simplePseudoClass_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -35581,7 +36050,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_hregex_CssL4Parser_selectorIdent(input, p, state, builder)
+                    parse_hregex_CssL4Parser_selectorIdent(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -35619,12 +36094,17 @@ mod __cssl4parser_emit_impl {
     /// / var / env / url / gradient / transform / etc.).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_arglist_CssL4Parser_dirPseudo<'p>(
+    pub fn parse_arglist_CssL4Parser_dirPseudo<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 71u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("dirPseudo"),
@@ -35660,7 +36140,14 @@ mod __cssl4parser_emit_impl {
                     .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                         offset: *p as u32,
                     })?;
-                parse_keyword_CssL4Parser_dirKeyword(input, p, __first, state, builder)
+                parse_keyword_CssL4Parser_dirKeyword(
+                    input,
+                    p,
+                    __first,
+                    state,
+                    builder,
+                    cursor,
+                )
             })?;
             let at = *p;
             let end = at + 1usize;
@@ -35721,13 +36208,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_keyframeSel<'p>(
+    pub fn parse_flat_CssL4Parser_keyframeSel<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(72u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __keyframeSel_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -35753,7 +36246,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_altdispatch_CssL4Parser_keyframeStop(input, p, state, builder)
+                    parse_altdispatch_CssL4Parser_keyframeStop(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -35796,6 +36295,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -35858,12 +36358,17 @@ mod __cssl4parser_emit_impl {
     /// / var / env / url / gradient / transform / etc.).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_arglist_CssL4Parser_genericFunction<'p>(
+    pub fn parse_arglist_CssL4Parser_genericFunction<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 73u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("genericFunction"),
@@ -35878,7 +36383,13 @@ mod __cssl4parser_emit_impl {
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
-            let _ = parse_CssL4Parser_stylesheet__value(input, p, state, builder)?;
+            let _ = parse_CssL4Parser_stylesheet__value(
+                input,
+                p,
+                state,
+                builder,
+                cursor,
+            )?;
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [40u8] {
@@ -35889,7 +36400,7 @@ mod __cssl4parser_emit_impl {
             *p = end;
             let _ = ({
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                parse_flat_CssL4Parser_funcBody(input, p, state, builder)
+                parse_flat_CssL4Parser_funcBody(input, p, state, builder, cursor)
             })?;
             let at = *p;
             let end = at + 1usize;
@@ -35950,13 +36461,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_mediaFeature<'p>(
+    pub fn parse_flat_CssL4Parser_mediaFeature<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(74u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __mediaFeature_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -35995,7 +36512,7 @@ mod __cssl4parser_emit_impl {
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_hregex_CssL4Parser_ident(input, p, state, builder)
+                    parse_hregex_CssL4Parser_ident(input, p, state, builder, cursor)
                 })?;
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             }
@@ -36146,13 +36663,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_wqName<'p>(
+    pub fn parse_flat_CssL4Parser_wqName<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(75u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __wqName_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -36194,7 +36717,13 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                 );
-                                parse_flat_CssL4Parser_nsPrefix(input, p, state, builder)
+                                parse_flat_CssL4Parser_nsPrefix(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
                             })?;
                             Ok(())
                         })();
@@ -36224,7 +36753,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_hregex_CssL4Parser_selectorIdent(input, p, state, builder)
+                    parse_hregex_CssL4Parser_selectorIdent(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -36282,13 +36817,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_attrSelector<'p>(
+    pub fn parse_flat_CssL4Parser_attrSelector<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(76u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __attrSelector_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -36344,6 +36885,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let at = *p;
@@ -36365,6 +36907,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -36398,6 +36941,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -36439,6 +36983,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -36480,6 +37025,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -36537,6 +37083,7 @@ mod __cssl4parser_emit_impl {
                                     __first,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_CssL4Parser::skip_space(
@@ -36563,7 +37110,13 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                             );
-                                            parse_hregex_CssL4Parser_string(input, p, state, builder)
+                                            parse_hregex_CssL4Parser_string(
+                                                input,
+                                                p,
+                                                state,
+                                                builder,
+                                                cursor,
+                                            )
                                         })?;
                                         Ok(())
                                     })();
@@ -36596,6 +37149,7 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -36742,12 +37296,17 @@ mod __cssl4parser_emit_impl {
     /// / var / env / url / gradient / transform / etc.).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_arglist_CssL4Parser_varFunction<'p>(
+    pub fn parse_arglist_CssL4Parser_varFunction<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 77u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("varFunction"),
@@ -36778,7 +37337,13 @@ mod __cssl4parser_emit_impl {
                 });
             }
             *p = end;
-            let _ = parse_CssL4Parser_stylesheet__value(input, p, state, builder)?;
+            let _ = parse_CssL4Parser_stylesheet__value(
+                input,
+                p,
+                state,
+                builder,
+                cursor,
+            )?;
             loop {
                 let __save = *p;
                 let __res: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
@@ -36792,7 +37357,7 @@ mod __cssl4parser_emit_impl {
                     *p = end;
                     let _ = ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_flat_CssL4Parser_funcBody(input, p, state, builder)
+                        parse_flat_CssL4Parser_funcBody(input, p, state, builder, cursor)
                     })?;
                     Ok(())
                 })();
@@ -36840,12 +37405,17 @@ mod __cssl4parser_emit_impl {
     /// / var / env / url / gradient / transform / etc.).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_arglist_CssL4Parser_envFunction<'p>(
+    pub fn parse_arglist_CssL4Parser_envFunction<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 78u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("envFunction"),
@@ -36876,7 +37446,13 @@ mod __cssl4parser_emit_impl {
                 });
             }
             *p = end;
-            let _ = parse_CssL4Parser_stylesheet__value(input, p, state, builder)?;
+            let _ = parse_CssL4Parser_stylesheet__value(
+                input,
+                p,
+                state,
+                builder,
+                cursor,
+            )?;
             loop {
                 let __save = *p;
                 let __res: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
@@ -36890,7 +37466,7 @@ mod __cssl4parser_emit_impl {
                     *p = end;
                     let _ = ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_flat_CssL4Parser_funcBody(input, p, state, builder)
+                        parse_flat_CssL4Parser_funcBody(input, p, state, builder, cursor)
                     })?;
                     Ok(())
                 })();
@@ -36958,13 +37534,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_length<'p>(
+    pub fn parse_flat_CssL4Parser_length<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(79u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __length_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -37021,6 +37603,7 @@ mod __cssl4parser_emit_impl {
                                     __first,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -37054,6 +37637,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -37129,13 +37713,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_mediaNot<'p>(
+    pub fn parse_flat_CssL4Parser_mediaNot<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(80u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __mediaNot_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -37183,6 +37773,7 @@ mod __cssl4parser_emit_impl {
                         __first,
                         state,
                         builder,
+                        cursor,
                     )
                 })?;
             }
@@ -37241,13 +37832,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_mediaAnd<'p>(
+    pub fn parse_flat_CssL4Parser_mediaAnd<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(81u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __mediaAnd_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -37283,6 +37880,7 @@ mod __cssl4parser_emit_impl {
                         __first,
                         state,
                         builder,
+                        cursor,
                     )
                 })?;
             }
@@ -37337,6 +37935,7 @@ mod __cssl4parser_emit_impl {
                                     __first,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -37419,13 +38018,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_mediaOr<'p>(
+    pub fn parse_flat_CssL4Parser_mediaOr<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(82u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __mediaOr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -37461,6 +38066,7 @@ mod __cssl4parser_emit_impl {
                         __first,
                         state,
                         builder,
+                        cursor,
                     )
                 })?;
             }
@@ -37513,6 +38119,7 @@ mod __cssl4parser_emit_impl {
                                     __first,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -37577,15 +38184,29 @@ mod __cssl4parser_emit_impl {
     /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
+    ///
+    /// AZ-IV.W3.6 — Cursor-threaded. The Alt-dispatch branch
+    /// selector consults `cursor.decide(rule_id)` so a
+    /// `Decision::ParseUntil(idx)` returned by the path plan
+    /// means the targeted variant index is preserved by the
+    /// linear-try fallback (the byte-dispatch arms are still
+    /// the prefilter; the cursor's decision is forwarded into
+    /// the inner Refs as the descent proceeds).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_wrap_CssL4Parser_mediaCondition<'p>(
+    pub fn parse_wrap_CssL4Parser_mediaCondition<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let _ = cursor.decide(83u32 as u32);
         let first = __shape_support_CssL4Parser::skip_space(input, p, state)
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -37597,7 +38218,7 @@ mod __cssl4parser_emit_impl {
             {
                 let attempt_p = *p;
                 let attempt_builder = builder.checkpoint();
-                match parse_flat_CssL4Parser_mediaNot(input, p, state, builder) {
+                match parse_flat_CssL4Parser_mediaNot(input, p, state, builder, cursor) {
                     ::core::result::Result::Ok(_) => {
                         builder.commit(attempt_builder);
                         break 'try_branches;
@@ -37611,7 +38232,7 @@ mod __cssl4parser_emit_impl {
             {
                 let attempt_p = *p;
                 let attempt_builder = builder.checkpoint();
-                match parse_flat_CssL4Parser_mediaAnd(input, p, state, builder) {
+                match parse_flat_CssL4Parser_mediaAnd(input, p, state, builder, cursor) {
                     ::core::result::Result::Ok(_) => {
                         builder.commit(attempt_builder);
                         break 'try_branches;
@@ -37625,7 +38246,7 @@ mod __cssl4parser_emit_impl {
             {
                 let attempt_p = *p;
                 let attempt_builder = builder.checkpoint();
-                match parse_flat_CssL4Parser_mediaOr(input, p, state, builder) {
+                match parse_flat_CssL4Parser_mediaOr(input, p, state, builder, cursor) {
                     ::core::result::Result::Ok(_) => {
                         builder.commit(attempt_builder);
                         break 'try_branches;
@@ -37645,6 +38266,7 @@ mod __cssl4parser_emit_impl {
                     first,
                     state,
                     builder,
+                    cursor,
                 ) {
                     ::core::result::Result::Ok(_) => {
                         builder.commit(attempt_builder);
@@ -37672,16 +38294,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_mediaInParens<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_mediaInParens<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             40u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [40u8] {
@@ -37689,7 +38316,13 @@ mod __cssl4parser_emit_impl {
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_flat_CssL4Parser_mediaFeature(input, p, state, builder)
+                        parse_flat_CssL4Parser_mediaFeature(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     }) {
                         ::core::result::Result::Ok(__off) => {
                             builder.commit(__ref_builder_checkpoint);
@@ -37732,6 +38365,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             )
                         })?;
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
@@ -37790,13 +38424,18 @@ mod __cssl4parser_emit_impl {
         unused_assignments,
         unreachable_code
     )]
-    pub fn parse_altdispatch_CssL4Parser_typeSelector<'p>(
+    pub fn parse_altdispatch_CssL4Parser_typeSelector<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder;
+        let _ = cursor;
         let first = __shape_support_CssL4Parser::skip_space(input, p, state)
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -37818,7 +38457,7 @@ mod __cssl4parser_emit_impl {
                     let attempt_builder = builder.checkpoint();
                     match {
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_flat_CssL4Parser_wqName(input, p, state, builder)
+                        parse_flat_CssL4Parser_wqName(input, p, state, builder, cursor)
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(0u32);
@@ -37857,7 +38496,13 @@ mod __cssl4parser_emit_impl {
                                             p,
                                             state,
                                         );
-                                        parse_flat_CssL4Parser_nsPrefix(input, p, state, builder)
+                                        parse_flat_CssL4Parser_nsPrefix(
+                                            input,
+                                            p,
+                                            state,
+                                            builder,
+                                            cursor,
+                                        )
                                     })?;
                                     ::core::result::Result::Ok(())
                                 })();
@@ -37935,12 +38580,17 @@ mod __cssl4parser_emit_impl {
     /// / var / env / url / gradient / transform / etc.).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_arglist_CssL4Parser_colorFn<'p>(
+    pub fn parse_arglist_CssL4Parser_colorFn<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 86u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("colorFn"),
@@ -37977,15 +38627,13 @@ mod __cssl4parser_emit_impl {
                     .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                         offset: *p as u32,
                     })?;
-                parse_keyword_CssL4Parser_colorSpace(input, p, __first, state, builder)
-            })?;
-            let _ = ({
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                parse_wrap_CssL4Parser___pattern_90b9f441ae92fa6c(
+                parse_keyword_CssL4Parser_colorSpace(
                     input,
                     p,
+                    __first,
                     state,
                     builder,
+                    cursor,
                 )
             })?;
             let _ = ({
@@ -37995,6 +38643,7 @@ mod __cssl4parser_emit_impl {
                     p,
                     state,
                     builder,
+                    cursor,
                 )
             })?;
             let _ = ({
@@ -38004,6 +38653,17 @@ mod __cssl4parser_emit_impl {
                     p,
                     state,
                     builder,
+                    cursor,
+                )
+            })?;
+            let _ = ({
+                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                parse_wrap_CssL4Parser___pattern_90b9f441ae92fa6c(
+                    input,
+                    p,
+                    state,
+                    builder,
+                    cursor,
                 )
             })?;
             loop {
@@ -38024,6 +38684,7 @@ mod __cssl4parser_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         )
                     })?;
                     Ok(())
@@ -38074,15 +38735,29 @@ mod __cssl4parser_emit_impl {
     /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
+    ///
+    /// AZ-IV.W3.6 — Cursor-threaded. The Alt-dispatch branch
+    /// selector consults `cursor.decide(rule_id)` so a
+    /// `Decision::ParseUntil(idx)` returned by the path plan
+    /// means the targeted variant index is preserved by the
+    /// linear-try fallback (the byte-dispatch arms are still
+    /// the prefilter; the cursor's decision is forwarded into
+    /// the inner Refs as the descent proceeds).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_wrap_CssL4Parser_valueUnit<'p>(
+    pub fn parse_wrap_CssL4Parser_valueUnit<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let _ = cursor.decide(87u32 as u32);
         let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 87u32 as ::bbnf_ir::RuleId,
@@ -38111,6 +38786,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
@@ -38131,6 +38807,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
@@ -38146,7 +38823,13 @@ mod __cssl4parser_emit_impl {
                         {
                             let attempt_p = *p;
                             let attempt_builder = builder.checkpoint();
-                            match parse_flat_CssL4Parser_time(input, p, state, builder) {
+                            match parse_flat_CssL4Parser_time(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
                                     builder.commit(attempt_builder);
@@ -38166,6 +38849,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
@@ -38186,6 +38870,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
@@ -38201,7 +38886,13 @@ mod __cssl4parser_emit_impl {
                         {
                             let attempt_p = *p;
                             let attempt_builder = builder.checkpoint();
-                            match parse_flat_CssL4Parser_flex(input, p, state, builder) {
+                            match parse_flat_CssL4Parser_flex(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 5u32;
                                     builder.commit(attempt_builder);
@@ -38221,6 +38912,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
@@ -38263,6 +38955,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
@@ -38283,6 +38976,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
@@ -38298,7 +38992,13 @@ mod __cssl4parser_emit_impl {
                         {
                             let attempt_p = *p;
                             let attempt_builder = builder.checkpoint();
-                            match parse_flat_CssL4Parser_time(input, p, state, builder) {
+                            match parse_flat_CssL4Parser_time(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
                                     builder.commit(attempt_builder);
@@ -38318,6 +39018,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
@@ -38338,6 +39039,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
@@ -38353,7 +39055,13 @@ mod __cssl4parser_emit_impl {
                         {
                             let attempt_p = *p;
                             let attempt_builder = builder.checkpoint();
-                            match parse_flat_CssL4Parser_flex(input, p, state, builder) {
+                            match parse_flat_CssL4Parser_flex(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 5u32;
                                     builder.commit(attempt_builder);
@@ -38373,6 +39081,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
@@ -38415,6 +39124,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
@@ -38435,6 +39145,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
@@ -38450,7 +39161,13 @@ mod __cssl4parser_emit_impl {
                         {
                             let attempt_p = *p;
                             let attempt_builder = builder.checkpoint();
-                            match parse_flat_CssL4Parser_time(input, p, state, builder) {
+                            match parse_flat_CssL4Parser_time(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
                                     builder.commit(attempt_builder);
@@ -38470,6 +39187,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
@@ -38490,6 +39208,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
@@ -38505,7 +39224,13 @@ mod __cssl4parser_emit_impl {
                         {
                             let attempt_p = *p;
                             let attempt_builder = builder.checkpoint();
-                            match parse_flat_CssL4Parser_flex(input, p, state, builder) {
+                            match parse_flat_CssL4Parser_flex(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 5u32;
                                     builder.commit(attempt_builder);
@@ -38525,6 +39250,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
@@ -38567,6 +39293,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
@@ -38587,6 +39314,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
@@ -38602,7 +39330,13 @@ mod __cssl4parser_emit_impl {
                         {
                             let attempt_p = *p;
                             let attempt_builder = builder.checkpoint();
-                            match parse_flat_CssL4Parser_time(input, p, state, builder) {
+                            match parse_flat_CssL4Parser_time(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
                                     builder.commit(attempt_builder);
@@ -38622,6 +39356,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
@@ -38642,6 +39377,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
@@ -38657,7 +39393,13 @@ mod __cssl4parser_emit_impl {
                         {
                             let attempt_p = *p;
                             let attempt_builder = builder.checkpoint();
-                            match parse_flat_CssL4Parser_flex(input, p, state, builder) {
+                            match parse_flat_CssL4Parser_flex(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 5u32;
                                     builder.commit(attempt_builder);
@@ -38677,6 +39419,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
@@ -38719,6 +39462,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
@@ -38739,6 +39483,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
@@ -38754,7 +39499,13 @@ mod __cssl4parser_emit_impl {
                         {
                             let attempt_p = *p;
                             let attempt_builder = builder.checkpoint();
-                            match parse_flat_CssL4Parser_time(input, p, state, builder) {
+                            match parse_flat_CssL4Parser_time(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
                                     builder.commit(attempt_builder);
@@ -38774,6 +39525,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
@@ -38794,6 +39546,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
@@ -38809,7 +39562,13 @@ mod __cssl4parser_emit_impl {
                         {
                             let attempt_p = *p;
                             let attempt_builder = builder.checkpoint();
-                            match parse_flat_CssL4Parser_flex(input, p, state, builder) {
+                            match parse_flat_CssL4Parser_flex(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 5u32;
                                     builder.commit(attempt_builder);
@@ -38829,6 +39588,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
@@ -38871,6 +39631,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
@@ -38891,6 +39652,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
@@ -38906,7 +39668,13 @@ mod __cssl4parser_emit_impl {
                         {
                             let attempt_p = *p;
                             let attempt_builder = builder.checkpoint();
-                            match parse_flat_CssL4Parser_time(input, p, state, builder) {
+                            match parse_flat_CssL4Parser_time(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
                                     builder.commit(attempt_builder);
@@ -38926,6 +39694,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
@@ -38946,6 +39715,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
@@ -38961,7 +39731,13 @@ mod __cssl4parser_emit_impl {
                         {
                             let attempt_p = *p;
                             let attempt_builder = builder.checkpoint();
-                            match parse_flat_CssL4Parser_flex(input, p, state, builder) {
+                            match parse_flat_CssL4Parser_flex(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 5u32;
                                     builder.commit(attempt_builder);
@@ -38981,6 +39757,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
@@ -39023,6 +39800,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
@@ -39043,6 +39821,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
@@ -39058,7 +39837,13 @@ mod __cssl4parser_emit_impl {
                         {
                             let attempt_p = *p;
                             let attempt_builder = builder.checkpoint();
-                            match parse_flat_CssL4Parser_time(input, p, state, builder) {
+                            match parse_flat_CssL4Parser_time(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
                                     builder.commit(attempt_builder);
@@ -39078,6 +39863,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
@@ -39098,6 +39884,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
@@ -39113,7 +39900,13 @@ mod __cssl4parser_emit_impl {
                         {
                             let attempt_p = *p;
                             let attempt_builder = builder.checkpoint();
-                            match parse_flat_CssL4Parser_flex(input, p, state, builder) {
+                            match parse_flat_CssL4Parser_flex(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 5u32;
                                     builder.commit(attempt_builder);
@@ -39133,6 +39926,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
@@ -39175,6 +39969,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
@@ -39195,6 +39990,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
@@ -39210,7 +40006,13 @@ mod __cssl4parser_emit_impl {
                         {
                             let attempt_p = *p;
                             let attempt_builder = builder.checkpoint();
-                            match parse_flat_CssL4Parser_time(input, p, state, builder) {
+                            match parse_flat_CssL4Parser_time(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
                                     builder.commit(attempt_builder);
@@ -39230,6 +40032,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
@@ -39250,6 +40053,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
@@ -39265,7 +40069,13 @@ mod __cssl4parser_emit_impl {
                         {
                             let attempt_p = *p;
                             let attempt_builder = builder.checkpoint();
-                            match parse_flat_CssL4Parser_flex(input, p, state, builder) {
+                            match parse_flat_CssL4Parser_flex(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 5u32;
                                     builder.commit(attempt_builder);
@@ -39285,6 +40095,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
@@ -39327,6 +40138,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
@@ -39347,6 +40159,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
@@ -39362,7 +40175,13 @@ mod __cssl4parser_emit_impl {
                         {
                             let attempt_p = *p;
                             let attempt_builder = builder.checkpoint();
-                            match parse_flat_CssL4Parser_time(input, p, state, builder) {
+                            match parse_flat_CssL4Parser_time(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
                                     builder.commit(attempt_builder);
@@ -39382,6 +40201,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
@@ -39402,6 +40222,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
@@ -39417,7 +40238,13 @@ mod __cssl4parser_emit_impl {
                         {
                             let attempt_p = *p;
                             let attempt_builder = builder.checkpoint();
-                            match parse_flat_CssL4Parser_flex(input, p, state, builder) {
+                            match parse_flat_CssL4Parser_flex(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 5u32;
                                     builder.commit(attempt_builder);
@@ -39437,6 +40264,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
@@ -39479,6 +40307,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
@@ -39499,6 +40328,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
@@ -39514,7 +40344,13 @@ mod __cssl4parser_emit_impl {
                         {
                             let attempt_p = *p;
                             let attempt_builder = builder.checkpoint();
-                            match parse_flat_CssL4Parser_time(input, p, state, builder) {
+                            match parse_flat_CssL4Parser_time(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
                                     builder.commit(attempt_builder);
@@ -39534,6 +40370,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
@@ -39554,6 +40391,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
@@ -39569,7 +40407,13 @@ mod __cssl4parser_emit_impl {
                         {
                             let attempt_p = *p;
                             let attempt_builder = builder.checkpoint();
-                            match parse_flat_CssL4Parser_flex(input, p, state, builder) {
+                            match parse_flat_CssL4Parser_flex(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 5u32;
                                     builder.commit(attempt_builder);
@@ -39589,6 +40433,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
@@ -39631,6 +40476,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
@@ -39651,6 +40497,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
@@ -39666,7 +40513,13 @@ mod __cssl4parser_emit_impl {
                         {
                             let attempt_p = *p;
                             let attempt_builder = builder.checkpoint();
-                            match parse_flat_CssL4Parser_time(input, p, state, builder) {
+                            match parse_flat_CssL4Parser_time(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
                                     builder.commit(attempt_builder);
@@ -39686,6 +40539,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
@@ -39706,6 +40560,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
@@ -39721,7 +40576,13 @@ mod __cssl4parser_emit_impl {
                         {
                             let attempt_p = *p;
                             let attempt_builder = builder.checkpoint();
-                            match parse_flat_CssL4Parser_flex(input, p, state, builder) {
+                            match parse_flat_CssL4Parser_flex(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 5u32;
                                     builder.commit(attempt_builder);
@@ -39741,6 +40602,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
@@ -39783,6 +40645,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
@@ -39803,6 +40666,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
@@ -39818,7 +40682,13 @@ mod __cssl4parser_emit_impl {
                         {
                             let attempt_p = *p;
                             let attempt_builder = builder.checkpoint();
-                            match parse_flat_CssL4Parser_time(input, p, state, builder) {
+                            match parse_flat_CssL4Parser_time(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
                                     builder.commit(attempt_builder);
@@ -39838,6 +40708,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
@@ -39858,6 +40729,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
@@ -39873,7 +40745,13 @@ mod __cssl4parser_emit_impl {
                         {
                             let attempt_p = *p;
                             let attempt_builder = builder.checkpoint();
-                            match parse_flat_CssL4Parser_flex(input, p, state, builder) {
+                            match parse_flat_CssL4Parser_flex(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 5u32;
                                     builder.commit(attempt_builder);
@@ -39893,6 +40771,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
@@ -39935,6 +40814,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
@@ -39955,6 +40835,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
@@ -39970,7 +40851,13 @@ mod __cssl4parser_emit_impl {
                         {
                             let attempt_p = *p;
                             let attempt_builder = builder.checkpoint();
-                            match parse_flat_CssL4Parser_time(input, p, state, builder) {
+                            match parse_flat_CssL4Parser_time(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
                                     builder.commit(attempt_builder);
@@ -39990,6 +40877,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
@@ -40010,6 +40898,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
@@ -40025,7 +40914,13 @@ mod __cssl4parser_emit_impl {
                         {
                             let attempt_p = *p;
                             let attempt_builder = builder.checkpoint();
-                            match parse_flat_CssL4Parser_flex(input, p, state, builder) {
+                            match parse_flat_CssL4Parser_flex(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 5u32;
                                     builder.commit(attempt_builder);
@@ -40045,6 +40940,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
@@ -40144,13 +41040,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_mediaQuery<'p>(
+    pub fn parse_flat_CssL4Parser_mediaQuery<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(88u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __mediaQuery_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -40204,6 +41106,7 @@ mod __cssl4parser_emit_impl {
                                     __first,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -40262,6 +41165,7 @@ mod __cssl4parser_emit_impl {
                                     __first,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -40340,6 +41244,7 @@ mod __cssl4parser_emit_impl {
                                     __first,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -40402,12 +41307,17 @@ mod __cssl4parser_emit_impl {
     /// / var / env / url / gradient / transform / etc.).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_arglist_CssL4Parser_isPseudo<'p>(
+    pub fn parse_arglist_CssL4Parser_isPseudo<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 89u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("isPseudo"),
@@ -40440,7 +41350,7 @@ mod __cssl4parser_emit_impl {
             *p = end;
             let _ = ({
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                parse_flat_CssL4Parser_selectorList(input, p, state, builder)
+                parse_flat_CssL4Parser_selectorList(input, p, state, builder, cursor)
             })?;
             let at = *p;
             let end = at + 1usize;
@@ -40481,12 +41391,17 @@ mod __cssl4parser_emit_impl {
     /// / var / env / url / gradient / transform / etc.).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_arglist_CssL4Parser_wherePseudo<'p>(
+    pub fn parse_arglist_CssL4Parser_wherePseudo<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 90u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("wherePseudo"),
@@ -40521,7 +41436,7 @@ mod __cssl4parser_emit_impl {
             *p = end;
             let _ = ({
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                parse_flat_CssL4Parser_selectorList(input, p, state, builder)
+                parse_flat_CssL4Parser_selectorList(input, p, state, builder, cursor)
             })?;
             let at = *p;
             let end = at + 1usize;
@@ -40562,12 +41477,17 @@ mod __cssl4parser_emit_impl {
     /// / var / env / url / gradient / transform / etc.).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_arglist_CssL4Parser_notPseudo<'p>(
+    pub fn parse_arglist_CssL4Parser_notPseudo<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 91u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("notPseudo"),
@@ -40600,7 +41520,7 @@ mod __cssl4parser_emit_impl {
             *p = end;
             let _ = ({
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                parse_flat_CssL4Parser_selectorList(input, p, state, builder)
+                parse_flat_CssL4Parser_selectorList(input, p, state, builder, cursor)
             })?;
             let at = *p;
             let end = at + 1usize;
@@ -40641,12 +41561,17 @@ mod __cssl4parser_emit_impl {
     /// / var / env / url / gradient / transform / etc.).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_arglist_CssL4Parser_hasPseudo<'p>(
+    pub fn parse_arglist_CssL4Parser_hasPseudo<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 92u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("hasPseudo"),
@@ -40679,7 +41604,13 @@ mod __cssl4parser_emit_impl {
             *p = end;
             let _ = ({
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                parse_flat_CssL4Parser_relativeSelectorList(input, p, state, builder)
+                parse_flat_CssL4Parser_relativeSelectorList(
+                    input,
+                    p,
+                    state,
+                    builder,
+                    cursor,
+                )
             })?;
             let at = *p;
             let end = at + 1usize;
@@ -40740,13 +41671,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_nthPseudo<'p>(
+    pub fn parse_flat_CssL4Parser_nthPseudo<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(93u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __nthPseudo_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -40782,7 +41719,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_nthFunctionName(input, p, state, builder)
+                    parse_flat_CssL4Parser_nthFunctionName(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -40798,7 +41741,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_altdispatch_CssL4Parser_anPlusB(input, p, state, builder)
+                    parse_altdispatch_CssL4Parser_anPlusB(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -40836,6 +41785,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -40928,13 +41878,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_relativeSelector<'p>(
+    pub fn parse_flat_CssL4Parser_relativeSelector<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(94u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __relativeSelector_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -40974,7 +41930,13 @@ mod __cssl4parser_emit_impl {
                             crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
-                                parse_wrap_CssL4Parser_combinator(input, p, state, builder)
+                                parse_wrap_CssL4Parser_combinator(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
                             })?;
                             Ok(())
                         })();
@@ -41004,7 +41966,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_complexSelector(input, p, state, builder)
+                    parse_flat_CssL4Parser_complexSelector(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -41062,13 +42030,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_relativeSelectorList<'p>(
+    pub fn parse_flat_CssL4Parser_relativeSelectorList<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(95u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __relativeSelectorList_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -41094,7 +42068,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_relativeSelector(input, p, state, builder)
+                    parse_flat_CssL4Parser_relativeSelector(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -41137,6 +42117,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -41219,13 +42200,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_selectorList<'p>(
+    pub fn parse_flat_CssL4Parser_selectorList<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(96u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __selectorList_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -41251,7 +42238,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_complexSelector(input, p, state, builder)
+                    parse_flat_CssL4Parser_complexSelector(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -41294,6 +42287,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -41355,16 +42349,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_pseudoElement<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_pseudoElement<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             58u8 => {
                 if input.len() >= *p + 11usize
@@ -41383,6 +42382,7 @@ mod __cssl4parser_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         )
                     }) {
                         ::core::result::Result::Ok(__off) => {
@@ -41403,7 +42403,13 @@ mod __cssl4parser_emit_impl {
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_arglist_CssL4Parser_slottedPseudo(input, p, state, builder)
+                        parse_arglist_CssL4Parser_slottedPseudo(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     }) {
                         ::core::result::Result::Ok(__off) => {
                             builder.commit(__ref_builder_checkpoint);
@@ -41422,7 +42428,13 @@ mod __cssl4parser_emit_impl {
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_arglist_CssL4Parser_partPseudo(input, p, state, builder)
+                        parse_arglist_CssL4Parser_partPseudo(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     }) {
                         ::core::result::Result::Ok(__off) => {
                             builder.commit(__ref_builder_checkpoint);
@@ -41444,6 +42456,7 @@ mod __cssl4parser_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         )
                     }) {
                         ::core::result::Result::Ok(__off) => {
@@ -41478,12 +42491,17 @@ mod __cssl4parser_emit_impl {
     /// / var / env / url / gradient / transform / etc.).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_arglist_CssL4Parser_slottedPseudo<'p>(
+    pub fn parse_arglist_CssL4Parser_slottedPseudo<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 98u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("slottedPseudo"),
@@ -41519,7 +42537,13 @@ mod __cssl4parser_emit_impl {
             *p = end;
             let _ = ({
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                parse_unordered_CssL4Parser_compoundSelector(input, p, state, builder)
+                parse_unordered_CssL4Parser_compoundSelector(
+                    input,
+                    p,
+                    state,
+                    builder,
+                    cursor,
+                )
             })?;
             let at = *p;
             let end = at + 1usize;
@@ -41580,13 +42604,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_complexSelector<'p>(
+    pub fn parse_flat_CssL4Parser_complexSelector<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(99u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __complexSelector_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -41617,6 +42647,7 @@ mod __cssl4parser_emit_impl {
                         p,
                         state,
                         builder,
+                        cursor,
                     )
                 })?;
             }
@@ -41637,7 +42668,13 @@ mod __cssl4parser_emit_impl {
                             crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
-                                parse_wrap_CssL4Parser_combinator(input, p, state, builder)
+                                parse_wrap_CssL4Parser_combinator(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
                             })?;
                             let _ = ({
                                 let _ = __shape_support_CssL4Parser::skip_space(
@@ -41650,6 +42687,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             Ok(())
@@ -41711,16 +42749,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_pseudoClass<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_pseudoClass<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             58u8 => {
                 if input.len() >= *p + 6usize
@@ -41731,7 +42774,13 @@ mod __cssl4parser_emit_impl {
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_arglist_CssL4Parser_wherePseudo(input, p, state, builder)
+                        parse_arglist_CssL4Parser_wherePseudo(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     }) {
                         ::core::result::Result::Ok(__off) => {
                             builder.commit(__ref_builder_checkpoint);
@@ -41750,7 +42799,13 @@ mod __cssl4parser_emit_impl {
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_arglist_CssL4Parser_langPseudo(input, p, state, builder)
+                        parse_arglist_CssL4Parser_langPseudo(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     }) {
                         ::core::result::Result::Ok(__off) => {
                             builder.commit(__ref_builder_checkpoint);
@@ -41769,7 +42824,13 @@ mod __cssl4parser_emit_impl {
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_arglist_CssL4Parser_notPseudo(input, p, state, builder)
+                        parse_arglist_CssL4Parser_notPseudo(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     }) {
                         ::core::result::Result::Ok(__off) => {
                             builder.commit(__ref_builder_checkpoint);
@@ -41788,7 +42849,13 @@ mod __cssl4parser_emit_impl {
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_arglist_CssL4Parser_hasPseudo(input, p, state, builder)
+                        parse_arglist_CssL4Parser_hasPseudo(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     }) {
                         ::core::result::Result::Ok(__off) => {
                             builder.commit(__ref_builder_checkpoint);
@@ -41807,7 +42874,13 @@ mod __cssl4parser_emit_impl {
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_arglist_CssL4Parser_dirPseudo(input, p, state, builder)
+                        parse_arglist_CssL4Parser_dirPseudo(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     }) {
                         ::core::result::Result::Ok(__off) => {
                             builder.commit(__ref_builder_checkpoint);
@@ -41826,7 +42899,13 @@ mod __cssl4parser_emit_impl {
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_arglist_CssL4Parser_isPseudo(input, p, state, builder)
+                        parse_arglist_CssL4Parser_isPseudo(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     }) {
                         ::core::result::Result::Ok(__off) => {
                             builder.commit(__ref_builder_checkpoint);
@@ -41843,7 +42922,13 @@ mod __cssl4parser_emit_impl {
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_flat_CssL4Parser_nthPseudo(input, p, state, builder)
+                        parse_flat_CssL4Parser_nthPseudo(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     }) {
                         ::core::result::Result::Ok(__off) => {
                             builder.commit(__ref_builder_checkpoint);
@@ -41865,6 +42950,7 @@ mod __cssl4parser_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         )
                     }) {
                         ::core::result::Result::Ok(__off) => {
@@ -41898,12 +42984,17 @@ mod __cssl4parser_emit_impl {
     /// canonical case.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_unordered_CssL4Parser_compoundSelector<'p>(
+    pub fn parse_unordered_CssL4Parser_compoundSelector<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 101u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("compoundSelector"),
@@ -41934,7 +43025,13 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                             );
-                            parse_flat_CssL4Parser_attrSelector(input, p, state, builder)
+                            parse_flat_CssL4Parser_attrSelector(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            )
                         })?;
                         __iters += 1;
                     }
@@ -41954,6 +43051,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             )
                         })?;
                         __iters += 1;
@@ -41970,6 +43068,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             )
                         })?;
                         __iters += 1;
@@ -41981,7 +43080,13 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                             );
-                            parse_hregex_CssL4Parser_hash(input, p, state, builder)
+                            parse_hregex_CssL4Parser_hash(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            )
                         })?;
                         __iters += 1;
                     }
@@ -41997,6 +43102,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             )
                         })?;
                         __iters += 1;
@@ -42043,15 +43149,29 @@ mod __cssl4parser_emit_impl {
     /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
+    ///
+    /// AZ-IV.W3.6 — Cursor-threaded. The Alt-dispatch branch
+    /// selector consults `cursor.decide(rule_id)` so a
+    /// `Decision::ParseUntil(idx)` returned by the path plan
+    /// means the targeted variant index is preserved by the
+    /// linear-try fallback (the byte-dispatch arms are still
+    /// the prefilter; the cursor's decision is forwarded into
+    /// the inner Refs as the descent proceeds).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_wrap_CssL4Parser_colonSelector<'p>(
+    pub fn parse_wrap_CssL4Parser_colonSelector<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let _ = cursor.decide(102u32 as u32);
         let first = __shape_support_CssL4Parser::skip_space(input, p, state)
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -42068,6 +43188,7 @@ mod __cssl4parser_emit_impl {
                             first,
                             state,
                             builder,
+                            cursor,
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 builder.commit(attempt_builder);
@@ -42088,6 +43209,7 @@ mod __cssl4parser_emit_impl {
                             first,
                             state,
                             builder,
+                            cursor,
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 builder.commit(attempt_builder);
@@ -42136,12 +43258,17 @@ mod __cssl4parser_emit_impl {
         unused_mut,
         unused_assignments
     )]
-    pub fn parse_pratt_CssL4Parser_mediaQueryList<'p>(
+    pub fn parse_pratt_CssL4Parser_mediaQueryList<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
         let __mediaQueryList_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 103u32 as ::bbnf_ir::RuleId,
@@ -42159,7 +43286,7 @@ mod __cssl4parser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                parse_flat_CssL4Parser_mediaQuery(input, p, state, builder)
+                parse_flat_CssL4Parser_mediaQuery(input, p, state, builder, cursor)
             })?;
             loop {
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
@@ -42221,7 +43348,7 @@ mod __cssl4parser_emit_impl {
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_mediaQuery(input, p, state, builder)
+                    parse_flat_CssL4Parser_mediaQuery(input, p, state, builder, cursor)
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -42263,12 +43390,17 @@ mod __cssl4parser_emit_impl {
         unused_mut,
         unused_assignments
     )]
-    pub fn parse_pratt_CssL4Parser_mathExpr<'p>(
+    pub fn parse_pratt_CssL4Parser_mathExpr<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
         let __mathExpr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 104u32 as ::bbnf_ir::RuleId,
@@ -42283,7 +43415,7 @@ mod __cssl4parser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                parse_pratt_CssL4Parser_mathProduct(input, p, state, builder)
+                parse_pratt_CssL4Parser_mathProduct(input, p, state, builder, cursor)
             })?;
             loop {
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
@@ -42345,7 +43477,7 @@ mod __cssl4parser_emit_impl {
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_pratt_CssL4Parser_mathProduct(input, p, state, builder)
+                    parse_pratt_CssL4Parser_mathProduct(input, p, state, builder, cursor)
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -42367,12 +43499,17 @@ mod __cssl4parser_emit_impl {
     /// / var / env / url / gradient / transform / etc.).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_arglist_CssL4Parser_calcFunction<'p>(
+    pub fn parse_arglist_CssL4Parser_calcFunction<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 105u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("calcFunction"),
@@ -42405,7 +43542,7 @@ mod __cssl4parser_emit_impl {
             *p = end;
             let _ = ({
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                parse_pratt_CssL4Parser_mathExpr(input, p, state, builder)
+                parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
             })?;
             let at = *p;
             let end = at + 1usize;
@@ -42446,12 +43583,17 @@ mod __cssl4parser_emit_impl {
     /// / var / env / url / gradient / transform / etc.).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_arglist_CssL4Parser_minFunction<'p>(
+    pub fn parse_arglist_CssL4Parser_minFunction<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 106u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("minFunction"),
@@ -42484,7 +43626,7 @@ mod __cssl4parser_emit_impl {
             *p = end;
             let _ = ({
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                parse_pratt_CssL4Parser_mathExpr(input, p, state, builder)
+                parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
             })?;
             loop {
                 let __save = *p;
@@ -42499,7 +43641,13 @@ mod __cssl4parser_emit_impl {
                     *p = end;
                     let _ = ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_pratt_CssL4Parser_mathExpr(input, p, state, builder)
+                        parse_pratt_CssL4Parser_mathExpr(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     })?;
                     Ok(())
                 })();
@@ -42547,12 +43695,17 @@ mod __cssl4parser_emit_impl {
     /// / var / env / url / gradient / transform / etc.).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_arglist_CssL4Parser_maxFunction<'p>(
+    pub fn parse_arglist_CssL4Parser_maxFunction<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 107u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("maxFunction"),
@@ -42585,7 +43738,7 @@ mod __cssl4parser_emit_impl {
             *p = end;
             let _ = ({
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                parse_pratt_CssL4Parser_mathExpr(input, p, state, builder)
+                parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
             })?;
             loop {
                 let __save = *p;
@@ -42600,7 +43753,13 @@ mod __cssl4parser_emit_impl {
                     *p = end;
                     let _ = ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_pratt_CssL4Parser_mathExpr(input, p, state, builder)
+                        parse_pratt_CssL4Parser_mathExpr(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     })?;
                     Ok(())
                 })();
@@ -42648,12 +43807,17 @@ mod __cssl4parser_emit_impl {
     /// / var / env / url / gradient / transform / etc.).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_arglist_CssL4Parser_clampFunction<'p>(
+    pub fn parse_arglist_CssL4Parser_clampFunction<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 108u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("clampFunction"),
@@ -42686,7 +43850,7 @@ mod __cssl4parser_emit_impl {
             *p = end;
             let _ = ({
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                parse_pratt_CssL4Parser_mathExpr(input, p, state, builder)
+                parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
             })?;
             let at = *p;
             let end = at + 1usize;
@@ -42698,7 +43862,7 @@ mod __cssl4parser_emit_impl {
             *p = end;
             let _ = ({
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                parse_pratt_CssL4Parser_mathExpr(input, p, state, builder)
+                parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
             })?;
             let at = *p;
             let end = at + 1usize;
@@ -42710,7 +43874,7 @@ mod __cssl4parser_emit_impl {
             *p = end;
             let _ = ({
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                parse_pratt_CssL4Parser_mathExpr(input, p, state, builder)
+                parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
             })?;
             let at = *p;
             let end = at + 1usize;
@@ -42768,12 +43932,17 @@ mod __cssl4parser_emit_impl {
         unused_mut,
         unused_assignments
     )]
-    pub fn parse_pratt_CssL4Parser_mathProduct<'p>(
+    pub fn parse_pratt_CssL4Parser_mathProduct<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        let _ = cursor;
         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
         let __mathProduct_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 109u32 as ::bbnf_ir::RuleId,
@@ -42791,7 +43960,7 @@ mod __cssl4parser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                parse_altdispatch_CssL4Parser_mathValue(input, p, state, builder)
+                parse_altdispatch_CssL4Parser_mathValue(input, p, state, builder, cursor)
             })?;
             loop {
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
@@ -42853,7 +44022,13 @@ mod __cssl4parser_emit_impl {
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_altdispatch_CssL4Parser_mathValue(input, p, state, builder)
+                    parse_altdispatch_CssL4Parser_mathValue(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -42877,13 +44052,18 @@ mod __cssl4parser_emit_impl {
         unused_assignments,
         unreachable_code
     )]
-    pub fn parse_altdispatch_CssL4Parser_mathValue<'p>(
+    pub fn parse_altdispatch_CssL4Parser_mathValue<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder;
+        let _ = cursor;
         let first = __shape_support_CssL4Parser::skip_space(input, p, state)
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -42905,7 +44085,13 @@ mod __cssl4parser_emit_impl {
                     let attempt_builder = builder.checkpoint();
                     match {
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_arglist_CssL4Parser_calcFunction(input, p, state, builder)
+                        parse_arglist_CssL4Parser_calcFunction(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(0u32);
@@ -42923,7 +44109,13 @@ mod __cssl4parser_emit_impl {
                     let attempt_builder = builder.checkpoint();
                     match {
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_arglist_CssL4Parser_minFunction(input, p, state, builder)
+                        parse_arglist_CssL4Parser_minFunction(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(1u32);
@@ -42941,7 +44133,13 @@ mod __cssl4parser_emit_impl {
                     let attempt_builder = builder.checkpoint();
                     match {
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_arglist_CssL4Parser_maxFunction(input, p, state, builder)
+                        parse_arglist_CssL4Parser_maxFunction(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(2u32);
@@ -42959,7 +44157,13 @@ mod __cssl4parser_emit_impl {
                     let attempt_builder = builder.checkpoint();
                     match {
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_arglist_CssL4Parser_clampFunction(input, p, state, builder)
+                        parse_arglist_CssL4Parser_clampFunction(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(3u32);
@@ -42977,7 +44181,13 @@ mod __cssl4parser_emit_impl {
                     let attempt_builder = builder.checkpoint();
                     match {
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_wrap_CssL4Parser_valueUnit(input, p, state, builder)
+                        parse_wrap_CssL4Parser_valueUnit(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(4u32);
@@ -43036,7 +44246,13 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                             );
-                            parse_pratt_CssL4Parser_mathExpr(input, p, state, builder)
+                            parse_pratt_CssL4Parser_mathExpr(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            )
                         })?;
                         {
                             let at = *p;
@@ -43067,7 +44283,13 @@ mod __cssl4parser_emit_impl {
                     let attempt_builder = builder.checkpoint();
                     match {
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_arglist_CssL4Parser_varFunction(input, p, state, builder)
+                        parse_arglist_CssL4Parser_varFunction(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(7u32);
@@ -43085,7 +44307,13 @@ mod __cssl4parser_emit_impl {
                     let attempt_builder = builder.checkpoint();
                     match {
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_arglist_CssL4Parser_envFunction(input, p, state, builder)
+                        parse_arglist_CssL4Parser_envFunction(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(8u32);
@@ -43128,13 +44356,18 @@ mod __cssl4parser_emit_impl {
         unused_assignments,
         unreachable_code
     )]
-    pub fn parse_altdispatch_CssL4Parser_value<'p>(
+    pub fn parse_altdispatch_CssL4Parser_value<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder;
+        let _ = cursor;
         let first = __shape_support_CssL4Parser::skip_space(input, p, state)
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -43156,7 +44389,13 @@ mod __cssl4parser_emit_impl {
                     let attempt_builder = builder.checkpoint();
                     match {
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_arglist_CssL4Parser_varFunction(input, p, state, builder)
+                        parse_arglist_CssL4Parser_varFunction(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(0u32);
@@ -43174,7 +44413,13 @@ mod __cssl4parser_emit_impl {
                     let attempt_builder = builder.checkpoint();
                     match {
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_arglist_CssL4Parser_calcFunction(input, p, state, builder)
+                        parse_arglist_CssL4Parser_calcFunction(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(1u32);
@@ -43192,7 +44437,13 @@ mod __cssl4parser_emit_impl {
                     let attempt_builder = builder.checkpoint();
                     match {
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_arglist_CssL4Parser_urlFunction(input, p, state, builder)
+                        parse_arglist_CssL4Parser_urlFunction(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(2u32);
@@ -43210,7 +44461,13 @@ mod __cssl4parser_emit_impl {
                     let attempt_builder = builder.checkpoint();
                     match {
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_arglist_CssL4Parser_colorFn(input, p, state, builder)
+                        parse_arglist_CssL4Parser_colorFn(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(3u32);
@@ -43233,6 +44490,7 @@ mod __cssl4parser_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         )
                     } {
                         Ok(_) => {
@@ -43251,7 +44509,13 @@ mod __cssl4parser_emit_impl {
                     let attempt_builder = builder.checkpoint();
                     match {
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_wrap_CssL4Parser_valueUnit(input, p, state, builder)
+                        parse_wrap_CssL4Parser_valueUnit(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(5u32);
@@ -43299,6 +44563,7 @@ mod __cssl4parser_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         )
                     } {
                         Ok(_) => {
@@ -43330,6 +44595,7 @@ mod __cssl4parser_emit_impl {
                             __first,
                             state,
                             builder,
+                            cursor,
                         )
                     } {
                         Ok(_) => {
@@ -43348,7 +44614,13 @@ mod __cssl4parser_emit_impl {
                     let attempt_builder = builder.checkpoint();
                     match {
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_hregex_CssL4Parser_dashIdent(input, p, state, builder)
+                        parse_hregex_CssL4Parser_dashIdent(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(9u32);
@@ -43366,7 +44638,7 @@ mod __cssl4parser_emit_impl {
                     let attempt_builder = builder.checkpoint();
                     match {
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_hregex_CssL4Parser_ident(input, p, state, builder)
+                        parse_hregex_CssL4Parser_ident(input, p, state, builder, cursor)
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(10u32);
@@ -43408,7 +44680,7 @@ mod __cssl4parser_emit_impl {
                     let attempt_builder = builder.checkpoint();
                     match {
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_flat_CssL4Parser_hex(input, p, state, builder)
+                        parse_flat_CssL4Parser_hex(input, p, state, builder, cursor)
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(13u32);
@@ -43426,7 +44698,13 @@ mod __cssl4parser_emit_impl {
                     let attempt_builder = builder.checkpoint();
                     match {
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_hregex_CssL4Parser_cssString(input, p, state, builder)
+                        parse_hregex_CssL4Parser_cssString(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(14u32);
@@ -43487,13 +44765,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_colorDecl<'p>(
+    pub fn parse_flat_CssL4Parser_colorDecl<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(112u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __colorDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -43532,6 +44816,7 @@ mod __cssl4parser_emit_impl {
                         __first,
                         state,
                         builder,
+                        cursor,
                     )
                 })?;
             }
@@ -43579,6 +44864,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_CssL4Parser::skip_space(
@@ -43614,7 +44900,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -43721,13 +45013,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_sizeDecl<'p>(
+    pub fn parse_flat_CssL4Parser_sizeDecl<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(113u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __sizeDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -43763,6 +45061,7 @@ mod __cssl4parser_emit_impl {
                         __first,
                         state,
                         builder,
+                        cursor,
                     )
                 })?;
             }
@@ -43810,6 +45109,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_CssL4Parser::skip_space(
@@ -43845,7 +45145,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -43952,13 +45258,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_spacingDecl<'p>(
+    pub fn parse_flat_CssL4Parser_spacingDecl<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(114u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __spacingDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -43997,6 +45309,7 @@ mod __cssl4parser_emit_impl {
                         __first,
                         state,
                         builder,
+                        cursor,
                     )
                 })?;
             }
@@ -44044,6 +45357,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_CssL4Parser::skip_space(
@@ -44079,7 +45393,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -44186,13 +45506,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_fontDecl<'p>(
+    pub fn parse_flat_CssL4Parser_fontDecl<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(115u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __fontDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -44228,6 +45554,7 @@ mod __cssl4parser_emit_impl {
                         __first,
                         state,
                         builder,
+                        cursor,
                     )
                 })?;
             }
@@ -44287,6 +45614,7 @@ mod __cssl4parser_emit_impl {
                                                 __first,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -44320,6 +45648,7 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -44372,7 +45701,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -44479,13 +45814,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_bgDecl<'p>(
+    pub fn parse_flat_CssL4Parser_bgDecl<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(116u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __bgDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -44508,7 +45849,7 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_bgProps(input, p, state, builder)
+                    parse_flat_CssL4Parser_bgProps(input, p, state, builder, cursor)
                 })?;
             }
             {
@@ -44555,6 +45896,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_CssL4Parser::skip_space(
@@ -44590,7 +45932,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -44697,13 +46045,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_transformDecl<'p>(
+    pub fn parse_flat_CssL4Parser_transformDecl<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(117u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __transformDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -44742,6 +46096,7 @@ mod __cssl4parser_emit_impl {
                         __first,
                         state,
                         builder,
+                        cursor,
                     )
                 })?;
             }
@@ -44789,6 +46144,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_CssL4Parser::skip_space(
@@ -44824,7 +46180,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -44931,13 +46293,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_transitionDecl<'p>(
+    pub fn parse_flat_CssL4Parser_transitionDecl<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(118u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __transitionDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -44976,6 +46344,7 @@ mod __cssl4parser_emit_impl {
                         __first,
                         state,
                         builder,
+                        cursor,
                     )
                 })?;
             }
@@ -45023,6 +46392,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_CssL4Parser::skip_space(
@@ -45058,7 +46428,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -45165,13 +46541,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_listTableDecl<'p>(
+    pub fn parse_flat_CssL4Parser_listTableDecl<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(119u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __listTableDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -45210,6 +46592,7 @@ mod __cssl4parser_emit_impl {
                         __first,
                         state,
                         builder,
+                        cursor,
                     )
                 })?;
             }
@@ -45257,6 +46640,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_CssL4Parser::skip_space(
@@ -45292,7 +46676,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -45399,13 +46789,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_displayDecl<'p>(
+    pub fn parse_flat_CssL4Parser_displayDecl<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(120u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __displayDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -45496,6 +46892,7 @@ mod __cssl4parser_emit_impl {
                                                 __first,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -45529,6 +46926,7 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -45581,7 +46979,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -45688,13 +47092,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_positionDecl<'p>(
+    pub fn parse_flat_CssL4Parser_positionDecl<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(121u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __positionDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -45786,6 +47196,7 @@ mod __cssl4parser_emit_impl {
                                                 __first,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -45819,6 +47230,7 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -45871,7 +47283,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -45978,13 +47396,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_overflowDecl<'p>(
+    pub fn parse_flat_CssL4Parser_overflowDecl<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(122u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __overflowDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -46281,6 +47705,7 @@ mod __cssl4parser_emit_impl {
                                                 __first,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -46314,6 +47739,7 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -46366,7 +47792,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -46473,13 +47905,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_visibilityDecl<'p>(
+    pub fn parse_flat_CssL4Parser_visibilityDecl<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(123u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __visibilityDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -46574,6 +48012,7 @@ mod __cssl4parser_emit_impl {
                                                 __first,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -46607,6 +48046,7 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -46659,7 +48099,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -46766,13 +48212,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_flexDirDecl<'p>(
+    pub fn parse_flat_CssL4Parser_flexDirDecl<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(124u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __flexDirDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -46867,6 +48319,7 @@ mod __cssl4parser_emit_impl {
                                                 __first,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -46900,6 +48353,7 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -46952,7 +48406,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -47059,13 +48519,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_flexWrapDecl<'p>(
+    pub fn parse_flat_CssL4Parser_flexWrapDecl<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(125u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __flexWrapDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -47157,6 +48623,7 @@ mod __cssl4parser_emit_impl {
                                                 __first,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -47190,6 +48657,7 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -47242,7 +48710,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -47349,13 +48823,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_alignDecl<'p>(
+    pub fn parse_flat_CssL4Parser_alignDecl<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(126u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __alignDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -47860,6 +49340,7 @@ mod __cssl4parser_emit_impl {
                                                 __first,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -47893,6 +49374,7 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -47945,7 +49427,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -48052,13 +49540,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_flexNumDecl<'p>(
+    pub fn parse_flat_CssL4Parser_flexNumDecl<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(127u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __flexNumDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -48367,6 +49861,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_CssL4Parser::skip_space(
@@ -48402,7 +49897,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -48509,13 +50010,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_fontSizeDecl<'p>(
+    pub fn parse_flat_CssL4Parser_fontSizeDecl<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(128u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __fontSizeDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -48595,6 +50102,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_CssL4Parser::skip_space(
@@ -48630,7 +50138,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -48737,13 +50251,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_fontWeightDecl<'p>(
+    pub fn parse_flat_CssL4Parser_fontWeightDecl<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(129u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __fontWeightDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -48838,6 +50358,7 @@ mod __cssl4parser_emit_impl {
                                                 __first,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -48871,6 +50392,7 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -48923,7 +50445,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -49030,13 +50558,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_lineHeightDecl<'p>(
+    pub fn parse_flat_CssL4Parser_lineHeightDecl<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(130u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __lineHeightDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -49119,6 +50653,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_CssL4Parser::skip_space(
@@ -49154,7 +50689,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -49261,13 +50802,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_borderWidthDecl<'p>(
+    pub fn parse_flat_CssL4Parser_borderWidthDecl<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(131u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __borderWidthDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -49648,6 +51195,7 @@ mod __cssl4parser_emit_impl {
                                                 __first,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -49681,6 +51229,7 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -49733,7 +51282,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -49840,13 +51395,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_borderStyleDecl<'p>(
+    pub fn parse_flat_CssL4Parser_borderStyleDecl<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(132u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __borderStyleDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -50227,6 +51788,7 @@ mod __cssl4parser_emit_impl {
                                                 __first,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -50260,6 +51822,7 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -50312,7 +51875,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -50419,13 +51988,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_borderRadiusDecl<'p>(
+    pub fn parse_flat_CssL4Parser_borderRadiusDecl<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(133u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __borderRadiusDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -50934,6 +52509,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_CssL4Parser::skip_space(
@@ -50969,7 +52545,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -51076,13 +52658,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_opacityDecl<'p>(
+    pub fn parse_flat_CssL4Parser_opacityDecl<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(134u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __opacityDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -51161,6 +52749,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_CssL4Parser::skip_space(
@@ -51196,7 +52785,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -51303,13 +52898,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_textAlignDecl<'p>(
+    pub fn parse_flat_CssL4Parser_textAlignDecl<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(135u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __textAlignDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -51404,6 +53005,7 @@ mod __cssl4parser_emit_impl {
                                                 __first,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -51437,6 +53039,7 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -51489,7 +53092,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -51596,13 +53205,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_boxSizingDecl<'p>(
+    pub fn parse_flat_CssL4Parser_boxSizingDecl<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(136u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __boxSizingDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -51697,6 +53312,7 @@ mod __cssl4parser_emit_impl {
                                                 __first,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -51730,6 +53346,7 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -51782,7 +53399,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -51889,13 +53512,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_cursorDecl<'p>(
+    pub fn parse_flat_CssL4Parser_cursorDecl<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(137u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __cursorDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -51986,6 +53615,7 @@ mod __cssl4parser_emit_impl {
                                                 __first,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -52019,6 +53649,7 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -52071,7 +53702,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -52160,15 +53797,29 @@ mod __cssl4parser_emit_impl {
     /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
+    ///
+    /// AZ-IV.W3.6 — Cursor-threaded. The Alt-dispatch branch
+    /// selector consults `cursor.decide(rule_id)` so a
+    /// `Decision::ParseUntil(idx)` returned by the path plan
+    /// means the targeted variant index is preserved by the
+    /// linear-try fallback (the byte-dispatch arms are still
+    /// the prefilter; the cursor's decision is forwarded into
+    /// the inner Refs as the descent proceeds).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_wrap_CssL4Parser_declaration<'p>(
+    pub fn parse_wrap_CssL4Parser_declaration<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let _ = cursor.decide(138u32 as u32);
         let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 138u32 as ::bbnf_ir::RuleId,
@@ -52196,6 +53847,7 @@ mod __cssl4parser_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 __wrap_branch_idx = 0u32;
@@ -52217,6 +53869,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
@@ -52237,6 +53890,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 7u32;
@@ -52257,6 +53911,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 15u32;
@@ -52279,6 +53934,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
@@ -52299,6 +53955,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
@@ -52319,6 +53976,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
@@ -52339,6 +53997,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 5u32;
@@ -52359,6 +54018,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
@@ -52379,6 +54039,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 8u32;
@@ -52399,6 +54060,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 20u32;
@@ -52419,6 +54081,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 21u32;
@@ -52439,6 +54102,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 22u32;
@@ -52459,6 +54123,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 25u32;
@@ -52481,6 +54146,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
@@ -52501,6 +54167,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
@@ -52521,6 +54188,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 8u32;
@@ -52541,6 +54209,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 26u32;
@@ -52562,6 +54231,7 @@ mod __cssl4parser_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 __wrap_branch_idx = 9u32;
@@ -52582,6 +54252,7 @@ mod __cssl4parser_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 __wrap_branch_idx = 8u32;
@@ -52603,6 +54274,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
@@ -52623,6 +54295,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
@@ -52643,6 +54316,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 13u32;
@@ -52663,6 +54337,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 14u32;
@@ -52683,6 +54358,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 16u32;
@@ -52703,6 +54379,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 17u32;
@@ -52723,6 +54400,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 18u32;
@@ -52744,6 +54422,7 @@ mod __cssl4parser_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 __wrap_branch_idx = 3u32;
@@ -52765,6 +54444,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
@@ -52785,6 +54465,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
@@ -52807,6 +54488,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
@@ -52827,6 +54509,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
@@ -52848,6 +54531,7 @@ mod __cssl4parser_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 __wrap_branch_idx = 15u32;
@@ -52869,6 +54553,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
@@ -52889,6 +54574,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
@@ -52909,6 +54595,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 8u32;
@@ -52929,6 +54616,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 19u32;
@@ -52951,6 +54639,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
@@ -52971,6 +54660,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
@@ -52993,6 +54683,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
@@ -53013,6 +54704,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
@@ -53033,6 +54725,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 11u32;
@@ -53053,6 +54746,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 16u32;
@@ -53073,6 +54767,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 23u32;
@@ -53095,6 +54790,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
@@ -53115,6 +54811,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
@@ -53135,6 +54832,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 10u32;
@@ -53156,6 +54854,7 @@ mod __cssl4parser_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 __wrap_branch_idx = 3u32;
@@ -53177,6 +54876,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
@@ -53197,6 +54897,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
@@ -53217,6 +54918,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
@@ -53237,6 +54939,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
@@ -53257,6 +54960,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 7u32;
@@ -53277,6 +54981,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 8u32;
@@ -53297,6 +55002,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 24u32;
@@ -53319,6 +55025,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 8u32;
@@ -53339,6 +55046,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 12u32;
@@ -53361,6 +55069,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
@@ -53381,6 +55090,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
@@ -53402,6 +55112,7 @@ mod __cssl4parser_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 __wrap_branch_idx = 16u32;
@@ -53419,7 +55130,13 @@ mod __cssl4parser_emit_impl {
                 {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
-                    match parse_flat_CssL4Parser_genericDecl(input, p, state, builder) {
+                    match parse_flat_CssL4Parser_genericDecl(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    ) {
                         ::core::result::Result::Ok(_) => {
                             __wrap_branch_idx = 27u32;
                             builder.commit(attempt_builder);
@@ -53495,13 +55212,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_keyframesRule<'p>(
+    pub fn parse_flat_CssL4Parser_keyframesRule<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(139u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __keyframesRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -53546,7 +55269,7 @@ mod __cssl4parser_emit_impl {
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_hregex_CssL4Parser_ident(input, p, state, builder)
+                    parse_hregex_CssL4Parser_ident(input, p, state, builder, cursor)
                 })?;
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             }
@@ -53593,7 +55316,13 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                 );
-                                parse_flat_CssL4Parser_keyframeSel(input, p, state, builder)
+                                parse_flat_CssL4Parser_keyframeSel(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
                             })?;
                             let _ = __shape_support_CssL4Parser::skip_space(
                                 input,
@@ -53639,7 +55368,13 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                             );
-                                            parse_wrap_CssL4Parser_declaration(input, p, state, builder)
+                                            parse_wrap_CssL4Parser_declaration(
+                                                input,
+                                                p,
+                                                state,
+                                                builder,
+                                                cursor,
+                                            )
                                         })?;
                                         let _ = __shape_support_CssL4Parser::skip_space(
                                             input,
@@ -53758,16 +55493,21 @@ mod __cssl4parser_emit_impl {
     /// fn so the target writes directly into the same
     /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssL4Parser_atRuleBody<'p>(
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_atRuleBody<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
+        let _ = cursor;
         match first_byte {
             59u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [59u8] {
@@ -53790,7 +55530,13 @@ mod __cssl4parser_emit_impl {
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_flat_CssL4Parser_ruleBlock(input, p, state, builder)
+                        parse_flat_CssL4Parser_ruleBlock(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
                     }) {
                         ::core::result::Result::Ok(__off) => {
                             builder.commit(__ref_builder_checkpoint);
@@ -53844,13 +55590,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_genericAtRule<'p>(
+    pub fn parse_flat_CssL4Parser_genericAtRule<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(141u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __genericAtRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -53916,6 +55668,7 @@ mod __cssl4parser_emit_impl {
                         __first,
                         state,
                         builder,
+                        cursor,
                     )
                 })?;
             }
@@ -53974,13 +55727,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_ruleBlock<'p>(
+    pub fn parse_flat_CssL4Parser_ruleBlock<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(142u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __ruleBlock_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -54017,7 +55776,7 @@ mod __cssl4parser_emit_impl {
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_blockContent(input, p, state, builder)
+                    parse_flat_CssL4Parser_blockContent(input, p, state, builder, cursor)
                 })?;
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             }
@@ -54086,13 +55845,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_qualifiedRule<'p>(
+    pub fn parse_flat_CssL4Parser_qualifiedRule<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(143u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __qualifiedRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -54119,7 +55884,7 @@ mod __cssl4parser_emit_impl {
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_selectorList(input, p, state, builder)
+                    parse_flat_CssL4Parser_selectorList(input, p, state, builder, cursor)
                 })?;
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             }
@@ -54127,7 +55892,7 @@ mod __cssl4parser_emit_impl {
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_ruleBlock(input, p, state, builder)
+                    parse_flat_CssL4Parser_ruleBlock(input, p, state, builder, cursor)
                 })?;
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             }
@@ -54186,13 +55951,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_mediaRule<'p>(
+    pub fn parse_flat_CssL4Parser_mediaRule<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(144u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __mediaRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -54233,14 +56004,20 @@ mod __cssl4parser_emit_impl {
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_pratt_CssL4Parser_mediaQueryList(input, p, state, builder)
+                    parse_pratt_CssL4Parser_mediaQueryList(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             }
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_ruleBlock(input, p, state, builder)
+                    parse_flat_CssL4Parser_ruleBlock(input, p, state, builder, cursor)
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -54280,15 +56057,29 @@ mod __cssl4parser_emit_impl {
     /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
+    ///
+    /// AZ-IV.W3.6 — Cursor-threaded. The Alt-dispatch branch
+    /// selector consults `cursor.decide(rule_id)` so a
+    /// `Decision::ParseUntil(idx)` returned by the path plan
+    /// means the targeted variant index is preserved by the
+    /// linear-try fallback (the byte-dispatch arms are still
+    /// the prefilter; the cursor's decision is forwarded into
+    /// the inner Refs as the descent proceeds).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_wrap_CssL4Parser_atRule<'p>(
+    pub fn parse_wrap_CssL4Parser_atRule<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let _ = cursor.decide(145u32 as u32);
         let first = __shape_support_CssL4Parser::skip_space(input, p, state)
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -54298,7 +56089,13 @@ mod __cssl4parser_emit_impl {
                 44u8 => {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
-                    match parse_flat_CssL4Parser_mediaRule(input, p, state, builder) {
+                    match parse_flat_CssL4Parser_mediaRule(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
                             break 'try_branches;
@@ -54318,6 +56115,7 @@ mod __cssl4parser_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 builder.commit(attempt_builder);
@@ -54337,6 +56135,7 @@ mod __cssl4parser_emit_impl {
                             p,
                             state,
                             builder,
+                            cursor,
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 builder.commit(attempt_builder);
@@ -54352,7 +56151,13 @@ mod __cssl4parser_emit_impl {
                 97u8 => {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
-                    match parse_flat_CssL4Parser_mediaRule(input, p, state, builder) {
+                    match parse_flat_CssL4Parser_mediaRule(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
                             break 'try_branches;
@@ -54366,7 +56171,13 @@ mod __cssl4parser_emit_impl {
                 110u8 => {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
-                    match parse_flat_CssL4Parser_mediaRule(input, p, state, builder) {
+                    match parse_flat_CssL4Parser_mediaRule(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
                             break 'try_branches;
@@ -54380,7 +56191,13 @@ mod __cssl4parser_emit_impl {
                 111u8 => {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
-                    match parse_flat_CssL4Parser_mediaRule(input, p, state, builder) {
+                    match parse_flat_CssL4Parser_mediaRule(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
                             break 'try_branches;
@@ -54394,7 +56211,13 @@ mod __cssl4parser_emit_impl {
                 112u8 => {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
-                    match parse_flat_CssL4Parser_mediaRule(input, p, state, builder) {
+                    match parse_flat_CssL4Parser_mediaRule(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
                             break 'try_branches;
@@ -54408,7 +56231,13 @@ mod __cssl4parser_emit_impl {
                 115u8 => {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
-                    match parse_flat_CssL4Parser_mediaRule(input, p, state, builder) {
+                    match parse_flat_CssL4Parser_mediaRule(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
                             break 'try_branches;
@@ -54422,7 +56251,13 @@ mod __cssl4parser_emit_impl {
                 123u8 => {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
-                    match parse_flat_CssL4Parser_mediaRule(input, p, state, builder) {
+                    match parse_flat_CssL4Parser_mediaRule(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    ) {
                         ::core::result::Result::Ok(_) => {
                             builder.commit(attempt_builder);
                             break 'try_branches;
@@ -54438,7 +56273,13 @@ mod __cssl4parser_emit_impl {
             {
                 let attempt_p = *p;
                 let attempt_builder = builder.checkpoint();
-                match parse_flat_CssL4Parser_keyframesRule(input, p, state, builder) {
+                match parse_flat_CssL4Parser_keyframesRule(
+                    input,
+                    p,
+                    state,
+                    builder,
+                    cursor,
+                ) {
                     ::core::result::Result::Ok(_) => {
                         builder.commit(attempt_builder);
                         break 'try_branches;
@@ -54468,15 +56309,29 @@ mod __cssl4parser_emit_impl {
     /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
+    ///
+    /// AZ-IV.W3.6 — Cursor-threaded. The Alt-dispatch branch
+    /// selector consults `cursor.decide(rule_id)` so a
+    /// `Decision::ParseUntil(idx)` returned by the path plan
+    /// means the targeted variant index is preserved by the
+    /// linear-try fallback (the byte-dispatch arms are still
+    /// the prefilter; the cursor's decision is forwarded into
+    /// the inner Refs as the descent proceeds).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_wrap_CssL4Parser_ruleItem<'p>(
+    pub fn parse_wrap_CssL4Parser_ruleItem<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let _ = cursor.decide(146u32 as u32);
         let first = __shape_support_CssL4Parser::skip_space(input, p, state)
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -54488,7 +56343,13 @@ mod __cssl4parser_emit_impl {
             {
                 let attempt_p = *p;
                 let attempt_builder = builder.checkpoint();
-                match parse_flat_CssL4Parser_qualifiedRule(input, p, state, builder) {
+                match parse_flat_CssL4Parser_qualifiedRule(
+                    input,
+                    p,
+                    state,
+                    builder,
+                    cursor,
+                ) {
                     ::core::result::Result::Ok(_) => {
                         builder.commit(attempt_builder);
                         break 'try_branches;
@@ -54502,7 +56363,7 @@ mod __cssl4parser_emit_impl {
             {
                 let attempt_p = *p;
                 let attempt_builder = builder.checkpoint();
-                match parse_wrap_CssL4Parser_atRule(input, p, state, builder) {
+                match parse_wrap_CssL4Parser_atRule(input, p, state, builder, cursor) {
                     ::core::result::Result::Ok(_) => {
                         builder.commit(attempt_builder);
                         break 'try_branches;
@@ -54550,13 +56411,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_blockContent<'p>(
+    pub fn parse_flat_CssL4Parser_blockContent<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(147u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __blockContent_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -54614,7 +56481,13 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                             );
-                                            parse_wrap_CssL4Parser_declaration(input, p, state, builder)
+                                            parse_wrap_CssL4Parser_declaration(
+                                                input,
+                                                p,
+                                                state,
+                                                builder,
+                                                cursor,
+                                            )
                                         })?;
                                         Ok(())
                                     })();
@@ -54642,7 +56515,13 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                             );
-                                            parse_wrap_CssL4Parser_ruleItem(input, p, state, builder)
+                                            parse_wrap_CssL4Parser_ruleItem(
+                                                input,
+                                                p,
+                                                state,
+                                                builder,
+                                                cursor,
+                                            )
                                         })?;
                                         Ok(())
                                     })();
@@ -54746,13 +56625,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_ruleList<'p>(
+    pub fn parse_flat_CssL4Parser_ruleList<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(148u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __ruleList_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -54799,7 +56684,13 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                 );
-                                parse_wrap_CssL4Parser_ruleItem(input, p, state, builder)
+                                parse_wrap_CssL4Parser_ruleItem(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
                             })?;
                             let _ = __shape_support_CssL4Parser::skip_space(
                                 input,
@@ -54863,15 +56754,19 @@ mod __cssl4parser_emit_impl {
     /// struct-builder.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_scalar_CssL4Parser_stylesheet<'p>(
+    pub fn parse_scalar_CssL4Parser_stylesheet<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-            parse_flat_CssL4Parser_ruleList(input, p, state, builder)
+            parse_flat_CssL4Parser_ruleList(input, p, state, builder, cursor)
         }
     }
     /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
@@ -54887,15 +56782,29 @@ mod __cssl4parser_emit_impl {
     /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
+    ///
+    /// AZ-IV.W3.6 — Cursor-threaded. The Alt-dispatch branch
+    /// selector consults `cursor.decide(rule_id)` so a
+    /// `Decision::ParseUntil(idx)` returned by the path plan
+    /// means the targeted variant index is preserved by the
+    /// linear-try fallback (the byte-dispatch arms are still
+    /// the prefilter; the cursor's decision is forwarded into
+    /// the inner Refs as the descent proceeds).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_wrap_CssL4Parser___pattern_90b9f441ae92fa6c<'p>(
+    pub fn parse_wrap_CssL4Parser___pattern_90b9f441ae92fa6c<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let _ = cursor.decide(150u32 as u32);
         let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 150u32 as ::bbnf_ir::RuleId,
@@ -54924,6 +56833,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
@@ -54966,6 +56876,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
@@ -55008,6 +56919,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
@@ -55050,6 +56962,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
@@ -55092,6 +57005,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
@@ -55134,6 +57048,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
@@ -55176,6 +57091,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
@@ -55218,6 +57134,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
@@ -55260,6 +57177,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
@@ -55302,6 +57220,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
@@ -55344,6 +57263,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
@@ -55386,6 +57306,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
@@ -55428,6 +57349,7 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                                 builder,
+                                cursor,
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
@@ -55527,13 +57449,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___calcFunction_cont_151<'p>(
+    pub fn parse_flat_CssL4Parser___calcFunction_cont_151<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(151u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____calcFunction_cont_151_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -55569,7 +57497,7 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_pratt_CssL4Parser_mathExpr(input, p, state, builder)
+                    parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
                 })?;
             }
             {
@@ -55637,13 +57565,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___minFunction_cont_152<'p>(
+    pub fn parse_flat_CssL4Parser___minFunction_cont_152<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(152u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____minFunction_cont_152_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -55679,7 +57613,7 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_pratt_CssL4Parser_mathExpr(input, p, state, builder)
+                    parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
                 })?;
             }
             {
@@ -55712,7 +57646,13 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                 );
-                                parse_pratt_CssL4Parser_mathExpr(input, p, state, builder)
+                                parse_pratt_CssL4Parser_mathExpr(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
                             })?;
                             Ok(())
                         })();
@@ -55804,13 +57744,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___maxFunction_cont_153<'p>(
+    pub fn parse_flat_CssL4Parser___maxFunction_cont_153<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(153u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____maxFunction_cont_153_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -55846,7 +57792,7 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_pratt_CssL4Parser_mathExpr(input, p, state, builder)
+                    parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
                 })?;
             }
             {
@@ -55879,7 +57825,13 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                 );
-                                parse_pratt_CssL4Parser_mathExpr(input, p, state, builder)
+                                parse_pratt_CssL4Parser_mathExpr(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
                             })?;
                             Ok(())
                         })();
@@ -55971,13 +57923,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___clampFunction_cont_154<'p>(
+    pub fn parse_flat_CssL4Parser___clampFunction_cont_154<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(154u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____clampFunction_cont_154_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -56013,7 +57971,7 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_pratt_CssL4Parser_mathExpr(input, p, state, builder)
+                    parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
                 })?;
             }
             {
@@ -56029,7 +57987,7 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_pratt_CssL4Parser_mathExpr(input, p, state, builder)
+                    parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
                 })?;
             }
             {
@@ -56045,7 +58003,7 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_pratt_CssL4Parser_mathExpr(input, p, state, builder)
+                    parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
                 })?;
             }
             {
@@ -56113,13 +58071,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___varFunction_cont_155<'p>(
+    pub fn parse_flat_CssL4Parser___varFunction_cont_155<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(155u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____varFunction_cont_155_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -56197,7 +58161,13 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                 );
-                                parse_flat_CssL4Parser_funcBody(input, p, state, builder)
+                                parse_flat_CssL4Parser_funcBody(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
                             })?;
                             Ok(())
                         })();
@@ -56289,13 +58259,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___envFunction_cont_156<'p>(
+    pub fn parse_flat_CssL4Parser___envFunction_cont_156<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(156u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____envFunction_cont_156_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -56373,7 +58349,13 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                 );
-                                parse_flat_CssL4Parser_funcBody(input, p, state, builder)
+                                parse_flat_CssL4Parser_funcBody(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
                             })?;
                             Ok(())
                         })();
@@ -56465,13 +58447,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___varFunction_cont_157<'p>(
+    pub fn parse_flat_CssL4Parser___varFunction_cont_157<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(157u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____varFunction_cont_157_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -56549,7 +58537,13 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                 );
-                                parse_flat_CssL4Parser_funcBody(input, p, state, builder)
+                                parse_flat_CssL4Parser_funcBody(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
                             })?;
                             Ok(())
                         })();
@@ -56641,13 +58635,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___calcFunction_cont_158<'p>(
+    pub fn parse_flat_CssL4Parser___calcFunction_cont_158<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(158u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____calcFunction_cont_158_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -56683,7 +58683,7 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_pratt_CssL4Parser_mathExpr(input, p, state, builder)
+                    parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
                 })?;
             }
             {
@@ -56751,13 +58751,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___urlFunction_cont_159<'p>(
+    pub fn parse_flat_CssL4Parser___urlFunction_cont_159<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(159u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____urlFunction_cont_159_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -56805,7 +58811,13 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                 );
-                                parse_hregex_CssL4Parser_string(input, p, state, builder)
+                                parse_hregex_CssL4Parser_string(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
                             })?;
                             Ok(())
                         })();
@@ -56935,13 +58947,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___genericFunction_cont_160<'p>(
+    pub fn parse_flat_CssL4Parser___genericFunction_cont_160<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(160u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____genericFunction_cont_160_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -56977,7 +58995,7 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_funcBody(input, p, state, builder)
+                    parse_flat_CssL4Parser_funcBody(input, p, state, builder, cursor)
                 })?;
             }
             {
@@ -57045,13 +59063,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___colorDecl_cont_161<'p>(
+    pub fn parse_flat_CssL4Parser___colorDecl_cont_161<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(161u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____colorDecl_cont_161_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -57118,6 +59142,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_CssL4Parser::skip_space(
@@ -57153,7 +59178,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -57260,13 +59291,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___sizeDecl_cont_162<'p>(
+    pub fn parse_flat_CssL4Parser___sizeDecl_cont_162<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(162u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____sizeDecl_cont_162_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -57333,6 +59370,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_CssL4Parser::skip_space(
@@ -57368,7 +59406,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -57475,13 +59519,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___spacingDecl_cont_163<'p>(
+    pub fn parse_flat_CssL4Parser___spacingDecl_cont_163<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(163u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____spacingDecl_cont_163_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -57548,6 +59598,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_CssL4Parser::skip_space(
@@ -57583,7 +59634,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -57690,13 +59747,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___fontDecl_cont_164<'p>(
+    pub fn parse_flat_CssL4Parser___fontDecl_cont_164<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(164u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____fontDecl_cont_164_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -57775,6 +59838,7 @@ mod __cssl4parser_emit_impl {
                                                 __first,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -57808,6 +59872,7 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -57860,7 +59925,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -57967,13 +60038,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___bgDecl_cont_165<'p>(
+    pub fn parse_flat_CssL4Parser___bgDecl_cont_165<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(165u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____bgDecl_cont_165_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -58040,6 +60117,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_CssL4Parser::skip_space(
@@ -58075,7 +60153,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -58182,13 +60266,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___transformDecl_cont_166<'p>(
+    pub fn parse_flat_CssL4Parser___transformDecl_cont_166<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(166u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____transformDecl_cont_166_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -58255,6 +60345,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_CssL4Parser::skip_space(
@@ -58290,7 +60381,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -58397,13 +60494,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___transitionDecl_cont_167<'p>(
+    pub fn parse_flat_CssL4Parser___transitionDecl_cont_167<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(167u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____transitionDecl_cont_167_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -58470,6 +60573,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_CssL4Parser::skip_space(
@@ -58505,7 +60609,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -58612,13 +60722,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___listTableDecl_cont_168<'p>(
+    pub fn parse_flat_CssL4Parser___listTableDecl_cont_168<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(168u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____listTableDecl_cont_168_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -58685,6 +60801,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_CssL4Parser::skip_space(
@@ -58720,7 +60837,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -58827,13 +60950,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___displayDecl_cont_169<'p>(
+    pub fn parse_flat_CssL4Parser___displayDecl_cont_169<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(169u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____displayDecl_cont_169_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -58912,6 +61041,7 @@ mod __cssl4parser_emit_impl {
                                                 __first,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -58945,6 +61075,7 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -58997,7 +61128,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -59104,13 +61241,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___positionDecl_cont_170<'p>(
+    pub fn parse_flat_CssL4Parser___positionDecl_cont_170<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(170u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____positionDecl_cont_170_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -59189,6 +61332,7 @@ mod __cssl4parser_emit_impl {
                                                 __first,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -59222,6 +61366,7 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -59274,7 +61419,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -59381,13 +61532,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___overflowDecl_cont_171<'p>(
+    pub fn parse_flat_CssL4Parser___overflowDecl_cont_171<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(171u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____overflowDecl_cont_171_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -59466,6 +61623,7 @@ mod __cssl4parser_emit_impl {
                                                 __first,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -59499,6 +61657,7 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -59551,7 +61710,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -59658,13 +61823,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___visibilityDecl_cont_172<'p>(
+    pub fn parse_flat_CssL4Parser___visibilityDecl_cont_172<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(172u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____visibilityDecl_cont_172_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -59743,6 +61914,7 @@ mod __cssl4parser_emit_impl {
                                                 __first,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -59776,6 +61948,7 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -59828,7 +62001,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -59935,13 +62114,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___flexDirDecl_cont_173<'p>(
+    pub fn parse_flat_CssL4Parser___flexDirDecl_cont_173<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(173u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____flexDirDecl_cont_173_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -60020,6 +62205,7 @@ mod __cssl4parser_emit_impl {
                                                 __first,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -60053,6 +62239,7 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -60105,7 +62292,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -60212,13 +62405,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___flexWrapDecl_cont_174<'p>(
+    pub fn parse_flat_CssL4Parser___flexWrapDecl_cont_174<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(174u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____flexWrapDecl_cont_174_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -60297,6 +62496,7 @@ mod __cssl4parser_emit_impl {
                                                 __first,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -60330,6 +62530,7 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -60382,7 +62583,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -60489,13 +62696,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___alignDecl_cont_175<'p>(
+    pub fn parse_flat_CssL4Parser___alignDecl_cont_175<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(175u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____alignDecl_cont_175_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -60574,6 +62787,7 @@ mod __cssl4parser_emit_impl {
                                                 __first,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -60607,6 +62821,7 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -60659,7 +62874,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -60766,13 +62987,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___flexNumDecl_cont_176<'p>(
+    pub fn parse_flat_CssL4Parser___flexNumDecl_cont_176<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(176u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____flexNumDecl_cont_176_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -60839,6 +63066,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_CssL4Parser::skip_space(
@@ -60874,7 +63102,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -60981,13 +63215,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___fontSizeDecl_cont_177<'p>(
+    pub fn parse_flat_CssL4Parser___fontSizeDecl_cont_177<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(177u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____fontSizeDecl_cont_177_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -61054,6 +63294,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_CssL4Parser::skip_space(
@@ -61089,7 +63330,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -61196,13 +63443,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___fontWeightDecl_cont_178<'p>(
+    pub fn parse_flat_CssL4Parser___fontWeightDecl_cont_178<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(178u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____fontWeightDecl_cont_178_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -61281,6 +63534,7 @@ mod __cssl4parser_emit_impl {
                                                 __first,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -61314,6 +63568,7 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -61366,7 +63621,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -61473,13 +63734,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___lineHeightDecl_cont_179<'p>(
+    pub fn parse_flat_CssL4Parser___lineHeightDecl_cont_179<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(179u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____lineHeightDecl_cont_179_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -61546,6 +63813,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_CssL4Parser::skip_space(
@@ -61581,7 +63849,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -61688,13 +63962,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___borderWidthDecl_cont_180<'p>(
+    pub fn parse_flat_CssL4Parser___borderWidthDecl_cont_180<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(180u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____borderWidthDecl_cont_180_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -61773,6 +64053,7 @@ mod __cssl4parser_emit_impl {
                                                 __first,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -61806,6 +64087,7 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -61858,7 +64140,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -61965,13 +64253,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___borderStyleDecl_cont_181<'p>(
+    pub fn parse_flat_CssL4Parser___borderStyleDecl_cont_181<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(181u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____borderStyleDecl_cont_181_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -62050,6 +64344,7 @@ mod __cssl4parser_emit_impl {
                                                 __first,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -62083,6 +64378,7 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -62135,7 +64431,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -62242,13 +64544,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___borderRadiusDecl_cont_182<'p>(
+    pub fn parse_flat_CssL4Parser___borderRadiusDecl_cont_182<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(182u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____borderRadiusDecl_cont_182_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -62315,6 +64623,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_CssL4Parser::skip_space(
@@ -62350,7 +64659,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -62457,13 +64772,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___opacityDecl_cont_183<'p>(
+    pub fn parse_flat_CssL4Parser___opacityDecl_cont_183<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(183u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____opacityDecl_cont_183_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -62530,6 +64851,7 @@ mod __cssl4parser_emit_impl {
                                     p,
                                     state,
                                     builder,
+                                    cursor,
                                 )
                             })?;
                             let _ = __shape_support_CssL4Parser::skip_space(
@@ -62565,7 +64887,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -62672,13 +65000,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___textAlignDecl_cont_184<'p>(
+    pub fn parse_flat_CssL4Parser___textAlignDecl_cont_184<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(184u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____textAlignDecl_cont_184_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -62757,6 +65091,7 @@ mod __cssl4parser_emit_impl {
                                                 __first,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -62790,6 +65125,7 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -62842,7 +65178,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -62949,13 +65291,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___boxSizingDecl_cont_185<'p>(
+    pub fn parse_flat_CssL4Parser___boxSizingDecl_cont_185<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(185u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____boxSizingDecl_cont_185_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -63034,6 +65382,7 @@ mod __cssl4parser_emit_impl {
                                                 __first,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -63067,6 +65416,7 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -63119,7 +65469,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -63226,13 +65582,19 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___cursorDecl_cont_186<'p>(
+    pub fn parse_flat_CssL4Parser___cursorDecl_cont_186<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(186u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let ____cursorDecl_cont_186_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -63311,6 +65673,7 @@ mod __cssl4parser_emit_impl {
                                                 __first,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -63344,6 +65707,7 @@ mod __cssl4parser_emit_impl {
                                                 p,
                                                 state,
                                                 builder,
+                                                cursor,
                                             )
                                         })?;
                                         Ok(())
@@ -63396,7 +65760,13 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(input, p, state, builder)
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
             }
             {
@@ -63486,13 +65856,17 @@ mod __cssl4parser_emit_impl {
     /// recursion rationale.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_CssL4Parser_stylesheet<'p>(
+    pub fn parse_CssL4Parser_stylesheet<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
-        parse_CssL4Parser_stylesheet__value(input, p, state, builder)
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
+        parse_CssL4Parser_stylesheet__value(input, p, state, builder, cursor)
     }
     /// AW-V.W3.2 — value-position shape dispatcher. Called both at
     /// the grammar root and from Object / Array compound bodies.
@@ -63500,14 +65874,19 @@ mod __cssl4parser_emit_impl {
     /// AX.W0a.2.f — compound; plain `#[inline]`.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_CssL4Parser_stylesheet__value<'p>(
+    pub fn parse_CssL4Parser_stylesheet__value<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: crate::path::schema::PathSchema<'p>,
+    {
         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-        parse_scalar_CssL4Parser_stylesheet(input, p, state, builder)
+        let _ = cursor.decide(149u32);
+        parse_scalar_CssL4Parser_stylesheet(input, p, state, builder, cursor)
     }
     impl CssL4Parser {
         fn __number_prettify<'a>(

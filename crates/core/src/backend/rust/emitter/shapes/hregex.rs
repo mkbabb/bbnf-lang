@@ -237,7 +237,34 @@ fn emit_parse_hregex_struct_direct(
                         &input[span_lo as usize..span_hi as usize]
                     )
                     .ok()
-                    .and_then(|s| s.parse::<u32>().ok())
+                    .map(|s| {
+                        // The int_lit regex `[0-9]+\w*` captures any
+                        // trailing type suffix (`u8`, `u32`, `i64`, …);
+                        // strip it before `parse::<u32>` so `5u8` lands
+                        // as 5, not 0.
+                        let bytes = s.as_bytes();
+                        let cut = if bytes.len() > 2 && bytes[0] == b'0'
+                            && (bytes[1] == b'x' || bytes[1] == b'X')
+                        {
+                            let mut i = 2;
+                            while i < bytes.len() && bytes[i].is_ascii_hexdigit() {
+                                i += 1;
+                            }
+                            i
+                        } else {
+                            let mut i = 0;
+                            while i < bytes.len() && bytes[i].is_ascii_digit() {
+                                i += 1;
+                            }
+                            i
+                        };
+                        let digits = &s[..cut];
+                        if digits.starts_with("0x") || digits.starts_with("0X") {
+                            u32::from_str_radix(&digits[2..], 16).unwrap_or(0)
+                        } else {
+                            digits.parse::<u32>().unwrap_or(0)
+                        }
+                    })
                     .unwrap_or(0);
                     <#builder_ty as crate::runtime::StructBuilder>::push_leaf_with_u64(
                         builder, __u32 as u64,
@@ -248,7 +275,34 @@ fn emit_parse_hregex_struct_direct(
                         &input[span_lo as usize..span_hi as usize]
                     )
                     .ok()
-                    .and_then(|s| s.parse::<i64>().ok())
+                    .map(|s| {
+                        // The int_lit regex `[0-9]+\w*` captures any
+                        // trailing type suffix (`u8`, `u32`, `i64`, …);
+                        // strip it before `parse::<i64>` so `5u8` lands
+                        // as 5, not 0.
+                        let bytes = s.as_bytes();
+                        let cut = if bytes.len() > 2 && bytes[0] == b'0'
+                            && (bytes[1] == b'x' || bytes[1] == b'X')
+                        {
+                            let mut i = 2;
+                            while i < bytes.len() && bytes[i].is_ascii_hexdigit() {
+                                i += 1;
+                            }
+                            i
+                        } else {
+                            let mut i = 0;
+                            while i < bytes.len() && bytes[i].is_ascii_digit() {
+                                i += 1;
+                            }
+                            i
+                        };
+                        let digits = &s[..cut];
+                        if digits.starts_with("0x") || digits.starts_with("0X") {
+                            i64::from_str_radix(&digits[2..], 16).unwrap_or(0)
+                        } else {
+                            digits.parse::<i64>().unwrap_or(0)
+                        }
+                    })
                     .unwrap_or(0);
                     <#builder_ty as crate::runtime::StructBuilder>::push_leaf_with_i64(
                         builder, __i64,

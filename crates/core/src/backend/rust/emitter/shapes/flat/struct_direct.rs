@@ -98,18 +98,54 @@ use bbnf_ir::registry::EmitStrategy;
 /// rule body whose only "emission" is a Negate guard contributes
 /// no children to the open frame.
 fn body_emits_to_builder(node: &IrNode) -> bool {
+    body_emits_to_builder_with(node, None)
+}
+
+/// Same predicate as [`body_emits_to_builder`], but with access to
+/// the [`GrammarIR`] so `Map { fn_id }` annotations can be inspected
+/// for their payload class. Constant-folded payloads
+/// (`MapExpr::IntLit` / `BoolLit` / `FloatLit` / `StringLit`) DO emit
+/// to the builder via the per-shape emitter's `payload_push`; the
+/// inert `Span` synthesis must not run alongside them or the rule's
+/// compound captures both the typed leaf and a duplicate Span slice
+/// of the consumed source bytes.
+fn body_emits_to_builder_with(node: &IrNode, ir: Option<&GrammarIR>) -> bool {
     match node {
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => false,
         IrNode::Ref(_) | IrNode::TokenDispatch { .. } => true,
-        IrNode::Map { inner, .. } => body_emits_to_builder(inner),
-        IrNode::Seq(children) => children.iter().any(body_emits_to_builder),
-        IrNode::Alt(branches, _) => branches.iter().any(|b| body_emits_to_builder(&b.node)),
-        IrNode::Repeat { inner, .. } => body_emits_to_builder(inner),
+        IrNode::Map { inner, fn_id } => {
+            // A `Map { fn_id }` whose `FnDescriptor` resolves to a
+            // constant payload (`IntLit` / `BoolLit` / `FloatLit` /
+            // `StringLit`) emits the typed leaf via `map_payload_push`
+            // — that counts as a builder emission. Non-constant
+            // descriptors and `MapExpr::Input` fall through to the
+            // inner's emission contribution.
+            if let Some(ir) = ir {
+                use bbnf_ir::{FnDescriptor, MapExpr};
+                if let Some(FnDescriptor::Expr { expr, .. }) = ir.fns.get(*fn_id as usize) {
+                    if matches!(
+                        expr,
+                        MapExpr::IntLit(_)
+                            | MapExpr::BoolLit(_)
+                            | MapExpr::FloatLit(_)
+                            | MapExpr::StringLit(_),
+                    ) {
+                        return true;
+                    }
+                }
+            }
+            body_emits_to_builder_with(inner, ir)
+        }
+        IrNode::Seq(children) => children.iter().any(|c| body_emits_to_builder_with(c, ir)),
+        IrNode::Alt(branches, _) => branches
+            .iter()
+            .any(|b| body_emits_to_builder_with(&b.node, ir)),
+        IrNode::Repeat { inner, .. } => body_emits_to_builder_with(inner, ir),
         IrNode::Skip(l, r) | IrNode::Next(l, r) | IrNode::Minus(l, r) => {
-            body_emits_to_builder(l) || body_emits_to_builder(r)
+            body_emits_to_builder_with(l, ir) || body_emits_to_builder_with(r, ir)
         }
         IrNode::Negate(_) => false,
-        IrNode::OptionalWhitespace(inner) => body_emits_to_builder(inner),
+        IrNode::OptionalWhitespace(inner) => body_emits_to_builder_with(inner, ir),
     }
 }
 
@@ -285,7 +321,7 @@ pub(super) fn emit_parse_flat_struct_direct(
     // `end_compound`. Affected BBNF rules are `regex`,
     // `big_comment`, `comment`, `literal` (all `-> Span`), and
     // `import_path` (whose host walker also reads via `byte_span()`).
-    let needs_span_synthesis = !body_emits_to_builder(&rule.body);
+    let needs_span_synthesis = !body_emits_to_builder_with(&rule.body, Some(ir));
     let span_capture_pre = if needs_span_synthesis {
         quote! { let __span_lo: usize = *p; }
     } else {

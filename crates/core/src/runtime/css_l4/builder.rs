@@ -142,6 +142,14 @@ enum OpenFrame<'p> {
     /// `push_leaf_with_str`; this frame catches the span on
     /// `end_compound` and produces the typed [`CssColor::Hex`] payload.
     HexColor { hex_span: Option<&'p str> },
+    /// `dirPseudo = ":dir" , "(" >> dirKeyword << ")"` — captures the
+    /// inner `dirKeyword`'s u8 discriminant (0 = ltr, 1 = rtl) so
+    /// `end_compound` can deposit the matching
+    /// `Selector::PseudoClass(":dir(<kind>)")` on the enclosing
+    /// SelectorList. Without this dedicated frame the inner
+    /// `push_branch_tag` from `parse_keyword_dirKeyword` would fall
+    /// through the catch-all and never reach the typed selector graph.
+    DirPseudo { kind_tag: Option<u8> },
 }
 
 /// Numeric-rule discriminator projected from `StructLayout::rule_id`.
@@ -390,12 +398,29 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
             // `push_leaf_with_u64(packed)` lands the `CssColor::Hex`
             // payload directly in `push_leaf_with_u64`.
             3 => OpenFrame::HexColor { hex_span: None },
-            // 143 = qualifiedRule, 142 = ruleBlock.
-            143 | 142 => OpenFrame::StyleRule {
+            // 143 = qualifiedRule. The qualifiedRule is the
+            // declaration host; its StyleRule frame collects both
+            // selectors (from the inner selectorList) and declarations
+            // (from the inner ruleBlock).
+            143 => OpenFrame::StyleRule {
                 selectors: Vec::new(),
                 declarations: Vec::new(),
                 span: "",
             },
+            // 142 = ruleBlock — `"{" >> blockContent ?w << "}"`. This
+            // is a structural body container shared by qualifiedRule,
+            // mediaRule, and atRule; it does NOT itself produce a
+            // StyleRule. Declarations parsed inside ruleBlock land on
+            // the enclosing host (StyleRule / KeyframeBlock) via
+            // `deposit_declaration`'s stack walk; selectors reach the
+            // host via the surrounding qualifiedRule's StyleRule
+            // frame. Pre-AZ-IV.W1-CLOSE.B both 142 and 143 opened
+            // StyleRule frames, causing each `qualifiedRule` to
+            // surface as TWO StyleRule entries (one with selectors but
+            // no declarations from qualifiedRule's end_compound, one
+            // with declarations but no selectors from ruleBlock's
+            // end_compound). The Wrap forwarder restores 1:1 parity.
+            142 => OpenFrame::Wrap { value: None },
             // 144 = mediaRule.
             144 => OpenFrame::MediaRule {
                 query: "",
@@ -520,6 +545,12 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                 name: "",
                 args: Vec::new(),
             },
+            // 71 = dirPseudo — `:dir(ltr|rtl)`. The inner dirKeyword's
+            // u8 branch tag (0 = ltr, 1 = rtl) lands here via
+            // `push_branch_tag`; `end_compound` deposits the matching
+            // `Selector::PseudoClass` text on the enclosing
+            // SelectorList (AZ-IV.W1-CLOSE.B).
+            71 => OpenFrame::DirPseudo { kind_tag: None },
             // Catch-all: transparent wrap shape. The `LayoutKind`
             // co-discriminator stays available for future structural
             // dispatch but the Wrap fallback is uniform.
@@ -622,8 +653,23 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                 self.deposit_declaration(decl);
             }
             OpenFrame::SelectorList { selectors } => {
-                if let Some(OpenFrame::StyleRule { selectors: dst, .. }) = self.stack.last_mut() {
-                    dst.extend(selectors);
+                // AZ-IV.W1-CLOSE.B — selectorList / complexSelector /
+                // compoundSelector all open OpenFrame::SelectorList.
+                // The parent of a compoundSelector is a complexSelector
+                // (also SelectorList); the parent of a complexSelector
+                // is the outer selectorList (also SelectorList); only
+                // the OUTERMOST selectorList finds StyleRule directly.
+                // Extend along the chain so deeply nested selectors
+                // (`:dir(ltr)` opened inside a compoundSelector) reach
+                // the StyleRule's selector list.
+                match self.stack.last_mut() {
+                    Some(OpenFrame::StyleRule { selectors: dst, .. }) => {
+                        dst.extend(selectors);
+                    }
+                    Some(OpenFrame::SelectorList { selectors: dst }) => {
+                        dst.extend(selectors);
+                    }
+                    _ => {}
                 }
             }
             OpenFrame::Wrap { value } => {
@@ -761,6 +807,28 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                     FunctionKind::Generic => CssFunction::Generic { name, args: id },
                 };
                 self.deposit_value(CssTypedValue::Function(func));
+            }
+            OpenFrame::DirPseudo { kind_tag } => {
+                // AZ-IV.W1-CLOSE.B — deposit the matching
+                // `:dir(ltr)` / `:dir(rtl)` Selector::PseudoClass on
+                // the enclosing SelectorList. The dirKeyword grammar
+                // declares `"ltr" -> 0u8 | "rtl" -> 1u8`; map back to
+                // the canonical text form for selector-list parity.
+                let text: &'p str = match kind_tag {
+                    Some(1) => ":dir(rtl)",
+                    Some(0) => ":dir(ltr)",
+                    // Defensive: no tag — emit a neutral Span so the
+                    // selector list still records the structural reach
+                    // without fabricating a discriminant.
+                    _ => ":dir()",
+                };
+                if let Some(OpenFrame::SelectorList { selectors }) = self.stack.last_mut() {
+                    selectors.push(Selector::PseudoClass(text));
+                } else if let Some(OpenFrame::StyleRule { selectors, .. }) = self.stack.last_mut() {
+                    selectors.push(Selector::PseudoClass(text));
+                } else {
+                    self.deposit_value(CssTypedValue::Span(text));
+                }
             }
             OpenFrame::HexColor { hex_span } => {
                 // Decode the captured hex digit span via the host
@@ -912,6 +980,12 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                     *mix_space = Some(branch_index as u8);
                 } else if hue_method.is_none() {
                     *hue_method = Some(branch_index as u8);
+                }
+            }
+            // AZ-IV.W1-CLOSE.B — dirPseudo's inner dirKeyword tag.
+            Some(OpenFrame::DirPseudo { kind_tag }) => {
+                if kind_tag.is_none() {
+                    *kind_tag = Some(branch_index as u8);
                 }
             }
             _ => {

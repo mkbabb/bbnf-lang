@@ -135,6 +135,13 @@ enum OpenFrame<'p> {
         name: &'p str,
         args: Vec<CssTypedValue<'p>>,
     },
+    /// `hex = "#" , /[0-9a-fA-F]{3,8}/ -> parse_hex_color(input) : u32`.
+    /// The span between `#` and the closing trivia decodes to a packed
+    /// 0xRRGGBBAA u32 via `crate::css_types::parse_hex_color`. The
+    /// emitter currently lands the matched span via
+    /// `push_leaf_with_str`; this frame catches the span on
+    /// `end_compound` and produces the typed [`CssColor::Hex`] payload.
+    HexColor { hex_span: Option<&'p str> },
 }
 
 /// Numeric-rule discriminator projected from `StructLayout::rule_id`.
@@ -377,6 +384,12 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
             // Aggregate top-level rules.
             // 148 = ruleList (the structural body of `stylesheet`).
             148 => OpenFrame::StyleSheet { rules: Vec::new() },
+            // 3 = hex — colour-specific frame: captures the digit
+            // span; `end_compound` decodes via `parse_hex_color`.
+            // 2 = namedColor stays a Wrap forwarder — the per-branch
+            // `push_leaf_with_u64(packed)` lands the `CssColor::Hex`
+            // payload directly in `push_leaf_with_u64`.
+            3 => OpenFrame::HexColor { hex_span: None },
             // 143 = qualifiedRule, 142 = ruleBlock.
             143 | 142 => OpenFrame::StyleRule {
                 selectors: Vec::new(),
@@ -749,6 +762,24 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                 };
                 self.deposit_value(CssTypedValue::Function(func));
             }
+            OpenFrame::HexColor { hex_span } => {
+                // Decode the captured hex digit span via the host
+                // `parse_hex_color` shim — the codegen's typed `-> u32`
+                // host-fn projection currently lands the raw matched
+                // span at this frame; the runtime materialises the
+                // packed 0xRRGGBBAA u32 here.
+                //
+                // The flat-shape codegen captures the entire compound
+                // body span (`#` + digits), so strip the leading `#`
+                // before passing the digit slice to `parse_hex_color`.
+                let packed = hex_span
+                    .map(|s| {
+                        let digits = s.strip_prefix('#').unwrap_or(s);
+                        crate::css_types::parse_hex_color(digits)
+                    })
+                    .unwrap_or(0);
+                self.deposit_value(CssTypedValue::Color(CssColor::Hex(packed)));
+            }
         }
     }
 
@@ -837,6 +868,11 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
             }
             Some(OpenFrame::SelectorList { selectors }) => {
                 selectors.push(Selector::Span(lifetime_extended));
+            }
+            // hex captures the matched digit span; the host
+            // `parse_hex_color` shim decodes on `end_compound`.
+            Some(OpenFrame::HexColor { hex_span }) if hex_span.is_none() => {
+                *hex_span = Some(lifetime_extended);
             }
             _ => self.deposit_value(CssTypedValue::Span(lifetime_extended)),
         }

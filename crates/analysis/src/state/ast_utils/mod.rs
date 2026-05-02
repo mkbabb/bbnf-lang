@@ -149,37 +149,6 @@ pub fn is_empty_rhs(node: BbnfView<'_, '_>) -> bool {
     }
 }
 
-/// True iff the focused view participates in the `term` family —
-/// either the polymorphic `Term` compound or its leaf payloads
-/// (`identifier`, `literal`, `regex`). Mirrors the pre-cutover.D
-/// `is_term_kind` predicate over `BbnfBootstrapRuleKind`.
-pub(crate) fn is_term_kind(node: BbnfView<'_, '_>) -> bool {
-    match node.compound_kind() {
-        Some(BbnfCompoundKind::Term) => true,
-        // value_atom (grouped value-expr) lowers to its own compound
-        // alphabet entry; analysis treats it as a structural peer of
-        // Term for grouped-expression handling.
-        _ => {
-            // Bare leaf identifiers / literals / regex carry no
-            // compound kind but the analysis layer treats them as
-            // term-family for descent purposes.
-            !node.is_compound() && node.is_span()
-        }
-    }
-}
-
-/// True iff the focused compound is a grouped-expression term
-/// (`(rhs)` / `[rhs]` / `{rhs}` / `@{rhs}`) — encodes the analysis
-/// layer's `term_2 | value_atom_0` discrimination over the
-/// struct-direct alphabet.
-#[inline]
-pub(crate) fn is_grouped_term(node: BbnfView<'_, '_>) -> bool {
-    match node.compound_kind() {
-        Some(BbnfCompoundKind::Term) => matches!(node.branch_tag(), Some(4..=7)),
-        _ => false,
-    }
-}
-
 /// Collect binary-factor operand views.
 ///
 /// `binary_factor = mapped_factor , ( binary_operators ?w ,

@@ -25,7 +25,7 @@ pub(super) fn detect_empty_bodies(
                 diagnostics.push(Diagnostic {
                     range: line_index.span_to_range(rule.name_span.0, rule.name_span.1),
                     severity: Some(DiagnosticSeverity::WARNING),
-                    source: Some("bbnf".into()),
+                    source: Some(crate::DIAGNOSTIC_SOURCE.into()),
                     message: format!("Rule `{}` has an empty body", name),
                     ..Default::default()
                 });
@@ -56,7 +56,7 @@ pub(super) fn detect_aliases(
             diagnostics.push(Diagnostic {
                 range: line_index.span_to_range(rule.name_span.0, rule.name_span.1),
                 severity: Some(DiagnosticSeverity::HINT),
-                source: Some("bbnf".into()),
+                source: Some(crate::DIAGNOSTIC_SOURCE.into()),
                 message: format!(
                     "Rule `{}` is an alias of `{}` -- consider using `{}` directly",
                     alias_name, target_name, target_name
@@ -93,7 +93,7 @@ pub(super) fn detect_unreachable_rules(
             diagnostics.push(Diagnostic {
                 range: line_index.span_to_range(rule.name_span.0, rule.name_span.1),
                 severity: Some(DiagnosticSeverity::HINT),
-                source: Some("bbnf".into()),
+                source: Some(crate::DIAGNOSTIC_SOURCE.into()),
                 message: format!("Rule `{}` is unreachable from the entry rule", rule.name),
                 tags: Some(vec![DiagnosticTag::UNNECESSARY]),
                 ..Default::default()

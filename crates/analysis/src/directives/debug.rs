@@ -63,7 +63,7 @@ pub fn validate_debugs(
                 diagnostics.push(Diagnostic {
                     range: line_index.span_to_range(dbg.rule_name_span.0, dbg.rule_name_span.1),
                     severity: Some(DiagnosticSeverity::WARNING),
-                    source: Some("bbnf".into()),
+                    source: Some(crate::DIAGNOSTIC_SOURCE.into()),
                     message: format!("`@debug` targets undefined rule: `{}`", dbg.rule_name),
                     ..Default::default()
                 });

@@ -58,7 +58,7 @@ pub(super) fn detect_cycles<'a>(
                 diagnostics.push(Diagnostic {
                     range: line_index.span_to_range(rule.name_span.0, rule.name_span.1),
                     severity: Some(DiagnosticSeverity::INFORMATION),
-                    source: Some("bbnf".into()),
+                    source: Some(crate::DIAGNOSTIC_SOURCE.into()),
                     message: format!("Rule `{}` participates in a cycle: {}", member, path),
                     ..Default::default()
                 });

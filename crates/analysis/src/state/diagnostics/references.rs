@@ -27,7 +27,7 @@ pub(super) fn detect_undefined_and_collect_references<'a>(
                 diagnostics.push(Diagnostic {
                     range: line_index.span_to_range(refinfo.span.0, refinfo.span.1),
                     severity: Some(DiagnosticSeverity::WARNING),
-                    source: Some("bbnf".into()),
+                    source: Some(crate::DIAGNOSTIC_SOURCE.into()),
                     message: format!("Undefined rule: `{}`", refinfo.name),
                     ..Default::default()
                 });
@@ -82,7 +82,7 @@ pub(super) fn detect_unused_rules(
                 diagnostics.push(Diagnostic {
                     range: line_index.span_to_range(rule.name_span.0, rule.name_span.1),
                     severity: Some(DiagnosticSeverity::HINT),
-                    source: Some("bbnf".into()),
+                    source: Some(crate::DIAGNOSTIC_SOURCE.into()),
                     message: format!("Unused rule: `{}`", rule.name),
                     tags: Some(vec![DiagnosticTag::UNNECESSARY]),
                     ..Default::default()

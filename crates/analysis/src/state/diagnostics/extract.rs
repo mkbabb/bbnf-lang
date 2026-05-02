@@ -58,7 +58,7 @@ pub(super) fn extract_rules(
             diagnostics.push(Diagnostic {
                 range: line_index.span_to_range(name_byte_span.0, name_byte_span.1),
                 severity: Some(DiagnosticSeverity::ERROR),
-                source: Some("bbnf".into()),
+                source: Some(crate::DIAGNOSTIC_SOURCE.into()),
                 message: format!(
                     "Duplicate rule: `{}` (previous definition at bytes {}..{})",
                     name_str, previous.name_span.0, previous.name_span.1

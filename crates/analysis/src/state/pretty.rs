@@ -126,7 +126,7 @@ pub fn validate_pretties(
                     diagnostics.push(Diagnostic {
                         range: line_index.span_to_range(span.0, span.1),
                         severity: Some(DiagnosticSeverity::WARNING),
-                        source: Some("bbnf".into()),
+                        source: Some(crate::DIAGNOSTIC_SOURCE.into()),
                         message: format!(
                             "Unknown heuristic mode `{}`. Valid modes: auto, minimal, off",
                             hint
@@ -152,7 +152,7 @@ pub fn validate_pretties(
             diagnostics.push(Diagnostic {
                 range: line_index.span_to_range(pretty.rule_name_span.0, pretty.rule_name_span.1),
                 severity: Some(DiagnosticSeverity::WARNING),
-                source: Some("bbnf".into()),
+                source: Some(crate::DIAGNOSTIC_SOURCE.into()),
                 message: format!("`@pretty` targets undefined rule: `{}`", pretty.rule_name),
                 ..Default::default()
             });
@@ -175,7 +175,7 @@ pub fn validate_pretties(
                 diagnostics.push(Diagnostic {
                     range: line_index.span_to_range(span.0, span.1),
                     severity: Some(DiagnosticSeverity::WARNING),
-                    source: Some("bbnf".into()),
+                    source: Some(crate::DIAGNOSTIC_SOURCE.into()),
                     message: msg,
                     ..Default::default()
                 });

@@ -62,7 +62,7 @@ pub fn validate_tokens(
             diagnostics.push(Diagnostic {
                 range: line_index.span_to_range(tok.rule_name_span.0, tok.rule_name_span.1),
                 severity: Some(DiagnosticSeverity::WARNING),
-                source: Some("bbnf".into()),
+                source: Some(crate::DIAGNOSTIC_SOURCE.into()),
                 message: format!("`@token` targets undefined rule: `{}`", tok.rule_name),
                 ..Default::default()
             });

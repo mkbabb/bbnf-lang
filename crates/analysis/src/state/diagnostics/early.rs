@@ -12,7 +12,7 @@ pub(super) fn empty_doc_info_for_panic(msg: &str) -> DocumentInfo {
     let diag = Diagnostic {
         range: Range::new(pos, pos),
         severity: Some(DiagnosticSeverity::ERROR),
-        source: Some("bbnf".into()),
+        source: Some(crate::DIAGNOSTIC_SOURCE.into()),
         message: format!("Parse error: {}", msg),
         ..Default::default()
     };
@@ -44,7 +44,7 @@ pub(super) fn empty_doc_info_for_failure(
     let diag = Diagnostic {
         range: Range::new(pos, pos),
         severity: Some(DiagnosticSeverity::ERROR),
-        source: Some("bbnf".into()),
+        source: Some(crate::DIAGNOSTIC_SOURCE.into()),
         message: format!(
             "Parse error at offset {} (line {}, col {})",
             offset,
@@ -84,7 +84,7 @@ pub(super) fn empty_doc_info_for_empty_ast(
     let diag = Diagnostic {
         range: Range::new(Position::new(0, 0), pos),
         severity: Some(DiagnosticSeverity::ERROR),
-        source: Some("bbnf".into()),
+        source: Some(crate::DIAGNOSTIC_SOURCE.into()),
         message: "Failed to parse any rules. Check syntax (each rule needs: name = expression ;)"
             .into(),
         ..Default::default()

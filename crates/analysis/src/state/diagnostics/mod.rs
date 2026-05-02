@@ -59,7 +59,7 @@ pub fn analyze_from_cache(
             diagnostics.push(Diagnostic {
                 range: Range::new(pos, pos),
                 severity: Some(DiagnosticSeverity::ERROR),
-                source: Some("bbnf".into()),
+                source: Some(crate::DIAGNOSTIC_SOURCE.into()),
                 message: "Unexpected input after last rule".into(),
                 ..Default::default()
             });
@@ -187,7 +187,7 @@ pub fn analyze_from_cache(
                 diagnostics.push(Diagnostic {
                     range: line_index.span_to_range(rule.name_span.0, rule.name_span.1),
                     severity: Some(DiagnosticSeverity::WARNING),
-                    source: Some("bbnf".into()),
+                    source: Some(crate::DIAGNOSTIC_SOURCE.into()),
                     message: format!("Alternation in `{rule_name}`: {msg}"),
                     ..Default::default()
                 });

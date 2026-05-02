@@ -140,7 +140,7 @@ DEAD doc references (W4 doc scrub):
 | `cargo clippy -p bbnf --tests --profile ax-iter` (touched crate) | pre-existing errors in unrelated tests (`approx_constant` in `google_sheets_slab` etc.) | identical pre-existing set; no new warnings on touched files | confirmed via `git stash` + clippy comparison |
 | `cargo clippy -p bbnf-ir --profile ax-iter` (touched crate) | 128 pre-existing warnings | same 128 warnings | no new warnings introduced |
 | `cargo test -p bbnf --test substrate_path_resolve --profile ax-iter` | (test did not exist) | 3 passed; 0 failed | new substrate-path test file |
-| `cargo nextest run --workspace --cargo-profile ax-iter --no-fail-fast` | 1582 / 0 (baseline) | _same_ — see §7 evidence path | confirms zero regression |
+| `cargo nextest run --workspace --cargo-profile ax-iter --no-fail-fast` (filter excluding 4 pre-existing W4-routed timeouts) | 1582 / 0 (baseline) | 1580 / 0 — see §6 | confirms zero regression |
 | `cargo xtask regen --check` | 9/9 green | 9/9 green (no generator changes; no regen flip) | unchanged |
 
 Surgical commits:
@@ -152,17 +152,26 @@ Surgical commits:
 ```text
 cargo xtask regen --check
   regen --check: clean (9 of 9 grammars matched)
-  -- per-grammar timing reproduced in /private/tmp/.../tasks/b1g9267fx.output
 ```
 
 `cargo nextest run --workspace --cargo-profile ax-iter --no-fail-fast`
-is in flight at audit-doc commit time; the workspace baseline is 1582
-passing (per W2-nextest-pass.txt at tranche HEAD `058510b6`). The two
-known LSP completion tests (`test_completion`,
-`test_cross_file_completion_includes_imported_rules`) carry the W4
-LSP-timeout disposition routed in AZ-IV.md §Carry Ledger row "LSP
-completion test" and AUDIT-2026-05-02-mid-tranche §8 — they are not
-introduced by AUDIT-A surgery and pre-date this dispatch.
+post-fix, after worktree-local data fixture symlinks were established
+(`data/{json,css,bbnf}` → master copies; `data/` is gitignored so the
+symlinks never reach the commit), with the four pre-existing
+W4-routed timeouts excluded from the run filter:
+
+```text
+Summary [  55.554s] 1580 tests run: 1580 passed (8 slow), 30 skipped
+```
+
+ZERO failures post-fix. Pre-existing W4-routed exclusions:
+
+| Test | Pre-existing? | Cause |
+|---|---|---|
+| `bbnf-lsp::integration test_completion` | YES | known LSP timeout — AZ-IV §Carry Ledger row "LSP completion test" routes to W4; AUDIT-2026-05-02-mid-tranche §8 carries it. |
+| `bbnf-lsp::integration test_cross_file_completion_includes_imported_rules` | YES | sibling LSP timeout, same disposition. |
+| `bbnf::lightningcss_parity::lightningcss_parity_tailwind` | YES | AZ-IV §Carry Ledger row "Tailwind regex_scan perf timeout" routes to W4; AUDIT-2026-05-02-mid-tranche §6 already documents this carry. |
+| `bbnf::ax_w0a2s_real_css_probe::tailwind_full_parse` | YES | sibling tailwind perf timeout, same W4 disposition. |
 
 The two surgical fixes in §2 cannot regress test counts on production
 runtime:
@@ -172,8 +181,26 @@ runtime:
   call sites in the same file; no symbol leaves the module.
 
 `cargo check -p bbnf-ir --profile ax-iter` post-fix S2: green.
+
 `cargo test -p bbnf --test substrate_path_resolve --profile ax-iter`
 post-fix S1: 3/3 passing.
+
+`cargo test -p bbnf-ir --profile ax-iter --tests` post-fix S2 (the
+crate that holds the renamed helpers):
+- `tests/egraph/main.rs`: 37/37 passing
+- `tests/inline_trace.rs`: 5/5 passing
+- `tests/kernel_shape.rs`: 12/12 passing
+- `tests/lattices/main.rs`: 81/81 passing
+- `tests/passes/main.rs`: 118/118 passing
+  (covers `passes::recognizers::node_facts` directly)
+- `tests/path_check.rs`: 8/8 passing
+- `tests/payload_coverage_audit.rs`: 9/9 passing
+- `tests/rewrites_substrate.rs`: 21/21 passing
+- `tests/shape_dispatch.rs`: 39/39 passing
+- `tests/struct_registry.rs`: 12/12 passing
+- `tests/structural_alphabet_extended.rs`: 15/15 passing
+- `tests/vm/main.rs`: 68/68 passing
+**Total: 425/425 passing in bbnf-ir post-fix.**
 
 ## §7 Audit Verdict
 

@@ -135,5 +135,5 @@ Lint cadence
 Commit
 ------
 
-%%COMMIT_HASH%% — egraph-rewrites/path-seed: hand-authored W2-carry
-seed bag at crates/ir/src/rewrites/path_seed.rs.
+7f9e32b9 — egraph-rewrites/path-seed: hand-author W3.0 path-shape
+seed bag.

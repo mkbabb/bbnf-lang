@@ -1,0 +1,19 @@
+AZ-IV.W5.2 ts_node_execute
+node_version=v22.15.0
+commit=9cef79c563ba47fb418a2028a4e20b1de4dd6748
+unix_ts=1777763368
+status=fail-w1-gap
+path=$.statuses[0].text
+reason=TS-emitted parser cannot navigate object.value
+detail=W1 backend-ts emits count-only repeats; object/array `value` is a span over input range, not an aggregated array of pairs/elements. Path-walk fails at first object descent.
+stderr_first_400=file:///private/var/folders/ld/20j4p2791k5_90_0ccgx2txm0000gr/T/.tmp9ugOkg/runner.mjs:46
+    for (const p of pairs) {
+                    ^
+
+TypeError: pairs is not iterable
+    at getField (file:///private/var/folders/ld/20j4p2791k5_90_0ccgx2txm0000gr/T/.tmp9ugOkg/runner.mjs:46:21)
+    at file:///private/var/folders/ld/20j4p2791k5_90_0ccgx2txm0000gr/T/.tmp9ugOkg/runner.mjs:76:7
+
+Node.js v22.15.0
+
+stdout_first_400=

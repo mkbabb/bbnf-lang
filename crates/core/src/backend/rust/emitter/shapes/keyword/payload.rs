@@ -47,6 +47,58 @@ pub(super) fn leading_literal_bytes(node: &IrNode, ir: &GrammarIR) -> Option<Vec
     rec(node, ir, 0, &mut visited)
 }
 
+/// Rule-root payload for a single-literal Keyword body wrapped in
+/// `Map { fn_id }`. Single-literal bodies (e.g. JSON's
+/// `null = "null" -> 0u8`) carry their typed payload at the rule root
+/// rather than per-branch — there is no Alt to distinguish branches —
+/// so the payload extraction starts from `rule.body` (BEFORE
+/// `unwrap_trivia` strips the Map wrapper) and walks down through
+/// trivia wrappers identical to the per-branch walk.
+///
+/// Returns `Some(payload_tokens)` when the rule's body is
+/// `Map { fn_id }` over a recognisable typed payload (`IntLit` /
+/// `BoolLit` / `StringLit`); returns `None` for un-mapped bodies and
+/// for Map descriptors that do not project to a u32-encodable payload
+/// (`Span`, `FnCall`, etc., where the leaf push must carry the matched
+/// bytes via `push_leaf_with_str`).
+pub(super) fn rule_root_payload_value(
+    rule_body: &IrNode,
+    ir: &GrammarIR,
+) -> Option<TokenStream> {
+    fn find_map_fn(node: &IrNode) -> Option<u32> {
+        match node {
+            IrNode::Map { fn_id, .. } => Some(*fn_id),
+            IrNode::OptionalWhitespace(inner) => find_map_fn(inner),
+            _ => None,
+        }
+    }
+    find_map_fn(rule_body)
+        .and_then(|fid| ir.fns.get(fid as usize))
+        .and_then(|fd| payload_from_fn(fd, ir))
+}
+
+/// Rule-root bool payload for a single-literal Keyword body wrapped in
+/// `Map { fn_id: ... -> true | -> false }`. Mirrors
+/// [`alt_branch_bool_payload`] but starts from `rule.body`.
+pub(super) fn rule_root_bool_payload(rule_body: &IrNode, ir: &GrammarIR) -> Option<bool> {
+    fn find_map_fn(node: &IrNode) -> Option<u32> {
+        match node {
+            IrNode::Map { fn_id, .. } => Some(*fn_id),
+            IrNode::OptionalWhitespace(inner) => find_map_fn(inner),
+            _ => None,
+        }
+    }
+    let fid = find_map_fn(rule_body)?;
+    let fn_desc = ir.fns.get(fid as usize)?;
+    let bbnf_ir::FnDescriptor::Expr { expr, .. } = fn_desc else {
+        return None;
+    };
+    match expr {
+        bbnf_ir::MapExpr::BoolLit(value) => Some(*value),
+        _ => None,
+    }
+}
+
 /// Per-branch payload for an Alt-of-literals. Branch index is passed
 /// so we can discriminate (e.g. `true`→1, `false`→0).
 /// AX.W0a.2.p — extract the branch's typed-byte payload (if any) from

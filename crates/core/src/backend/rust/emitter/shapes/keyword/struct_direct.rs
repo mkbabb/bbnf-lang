@@ -24,7 +24,10 @@ use quote::{format_ident, quote};
 
 use super::super::dispatcher::{emit_ref_call_shape, shape_fn_ident};
 use super::super::substrate::{builder_ty_elided, builder_ty_with_lifetime};
-use super::payload::{alt_branch_bool_payload, alt_branch_payload_value, leading_literal_bytes};
+use super::payload::{
+    alt_branch_bool_payload, alt_branch_payload_value, leading_literal_bytes,
+    rule_root_bool_payload, rule_root_payload_value,
+};
 use super::unwrap_trivia;
 
 /// Resolve the rule's projected `TypeDesc`. Returns `None` when the
@@ -181,6 +184,18 @@ pub(super) fn emit_parse_keyword_struct_direct(
                     quote! { #lit }
                 })
                 .collect();
+            // AZ-IV.W1.9 — for single-literal bodies wrapped in
+            // `Map { fn_id }` (e.g. JSON's `null = "null" -> 0u8`), the
+            // typed payload lives at the rule root. Extract it from
+            // `rule.body` (BEFORE `unwrap_trivia` strips the Map
+            // wrapper) so the leaf-emit dispatch routes to
+            // `push_leaf_with_unit` (the IntLit-as-null-marker pattern).
+            // Without this, single-literal Map'd rules fall through to
+            // `push_leaf_with_str("null")` and the runtime surfaces
+            // `JsonValue::String("null")` instead of `JsonValue::Null`.
+            let rule_bool_payload = rule_root_bool_payload(&rule.body, ir);
+            let single_literal_is_null_marker =
+                rule_bool_payload.is_none() && rule_root_payload_value(&rule.body, ir).is_some();
             // AZ-III.W2.4.u — splice the matched literal bytes into a
             // `&str` slice that `struct_direct_leaf_emit_for` routes
             // into `push_leaf_with_str` when no typed payload is set.
@@ -192,8 +207,18 @@ pub(super) fn emit_parse_keyword_struct_direct(
             let span_capture: TokenStream = quote! {
                 unsafe { ::core::str::from_utf8_unchecked(&input[at..end]) }
             };
-            let leaf_emit =
-                struct_direct_leaf_emit_for(rule_ty.as_ref(), None, None, Some(&span_capture));
+            // For the null-marker pattern, suppress span_capture so
+            // the catch-all routes through `push_leaf_with_unit()`.
+            let leaf_emit = if single_literal_is_null_marker {
+                struct_direct_leaf_emit_for(rule_ty.as_ref(), None, None, None)
+            } else {
+                struct_direct_leaf_emit_for(
+                    rule_ty.as_ref(),
+                    rule_bool_payload,
+                    None,
+                    Some(&span_capture),
+                )
+            };
             quote! {
                 /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
                 /// (single-literal body).

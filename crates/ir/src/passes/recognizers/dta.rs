@@ -344,8 +344,19 @@ pub struct PrecedenceEntry {
     pub associativity: Associativity,
     /// The rule that emits this operator as an Alt branch — used by
     /// the emitter to thread the variant_idx + payload back into the
-    /// pushed compound.
+    /// pushed compound. May refer to a separate alphabet-providing
+    /// rule (e.g. Sheets `add_op`) shared across rungs.
     pub op_rule: RuleId,
+    /// The chain rung whose body literally introduces this
+    /// operator. Distinct from `op_rule` when the rung delegates to
+    /// a shared alphabet rule (e.g. `add_expr` rung, `op_rule =
+    /// add_op`, `rung_rule = add_expr`); equal to `op_rule` for
+    /// inlined Alt / Literal rungs that own their alphabet directly
+    /// (Sheets `array_row` ` , `, `array_rows` ` ; `).
+    /// Per-rule LUT projection in
+    /// [`crate::passes::recognizers::operator_chain`] keys on this
+    /// field so list-shaped rungs do not over-share separators.
+    pub rung_rule: RuleId,
     /// The u8 discriminant the operator's typed materialisation (Bug
     /// 1 territory, resolved V0) puts into the compound's payload
     /// column.
@@ -1112,9 +1123,12 @@ pub(super) fn match_operator_chain_rule(
 ///    `concat_expr = … "&" …` would fit if the op-rule were
 ///    reduced to one literal).
 ///
-/// `owning_rule_id` is the rung's own rule id — used when the
-/// operator is inlined so the emitter can thread variant_idx
-/// through the chain rung without a phantom op-rule reference.
+/// `owning_rule_id` is the rung's own rule id — used as the
+/// entries' `rung_rule` field for per-rung LUT scoping in the
+/// downstream miner. When the operator is inlined (Alt / Literal
+/// arms), `owning_rule_id` also serves as `op_rule`. When the
+/// operator delegates to a shared alphabet rule (Ref arm), `op_rule`
+/// is the referenced rule's id while `rung_rule` stays the rung's id.
 fn extract_operator_set(
     ir: &GrammarIR,
     node: &IrNode,
@@ -1124,7 +1138,7 @@ fn extract_operator_set(
     match stripped {
         IrNode::Ref(rid) => {
             let op_rule = ir.rules.iter().find(|r| r.id == rid)?;
-            collect_operator_alternatives(ir, op_rule, rid)
+            collect_operator_alternatives(ir, op_rule, rid, owning_rule_id)
         }
         IrNode::Alt(_, _) => collect_inlined_alt_operators(ir, &stripped, owning_rule_id),
         IrNode::Literal(sid) => {
@@ -1139,6 +1153,7 @@ fn extract_operator_set(
                 precedence: 0,
                 associativity: infer_associativity(&literal),
                 op_rule: owning_rule_id,
+                rung_rule: owning_rule_id,
                 op_discriminant: 0,
             }])
         }
@@ -1180,6 +1195,7 @@ fn collect_inlined_alt_operators(
                 precedence: 0,
                 associativity: infer_associativity(&literal),
                 op_rule: owning_rule_id,
+                rung_rule: owning_rule_id,
                 op_discriminant: discriminant.min(u8::MAX as usize) as u8,
             });
             discriminant += 1;
@@ -1397,6 +1413,7 @@ fn collect_operator_alternatives(
     ir: &GrammarIR,
     op_rule: &IrRule,
     op_rule_id: RuleId,
+    rung_rule_id: RuleId,
 ) -> Option<Vec<PrecedenceEntry>> {
     let body = strip_transparent_owned(&op_rule.body);
 
@@ -1433,6 +1450,7 @@ fn collect_operator_alternatives(
             precedence: 0, // filled in by caller
             associativity: infer_associativity(&literal),
             op_rule: op_rule_id,
+            rung_rule: rung_rule_id,
             op_discriminant: discriminant.min(u8::MAX as usize) as u8,
         });
         discriminant += 1;

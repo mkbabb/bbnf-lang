@@ -217,10 +217,23 @@ pub fn collect_operator_chains(ir: &GrammarIR, table: &DtaTable) -> OperatorChai
     //
     // `shunting_yard_chains` keys by every chain rung (outermost AND
     // inner rungs all map to the same `ShuntingYard` state). Each
-    // rule gets its OWN [`OperatorChainRule`] carrying the chain's
-    // entries — per-rule LUT emission means each `parse_pratt_<rung>`
-    // function has the full tower's operator alphabet (that's what
-    // the walker's ShuntingYard state gave every chain rung).
+    // rung gets its OWN [`OperatorChainRule`] carrying ONLY the
+    // operators its body literally introduces (filtered by
+    // `pe.rung_rule == rule_id`). Per-rung scoping is required for
+    // list-shaped rungs whose separator alphabet is rung-local
+    // (Sheets `array_row` carries `,` only; `array_rows` carries
+    // `;` only). A LUT fed the union would consume the sibling
+    // rung's separator and fold it into a Pratt operator, producing
+    // a children list with operator Tags interleaved between the
+    // operands — which the runtime list serialiser then reseparates
+    // with its own `,` injection, doubling commas.
+    //
+    // The DTA lift records `pe.rung_rule` on every PrecedenceEntry
+    // as the rung whose body introduced the operator (see
+    // `collect_precedence_chain` per-rung stamp). `op_rule` (the
+    // alphabet-providing rule, e.g. `add_op`) is distinct and is
+    // shared across rungs that delegate to the same op-rule;
+    // filtering on `rung_rule` yields rung-disjoint LUTs.
     let mut chain_rules: Vec<RuleId> = table.shunting_yard_chains.keys().copied().collect();
     chain_rules.sort_unstable();
 
@@ -239,12 +252,16 @@ pub fn collect_operator_chains(ir: &GrammarIR, table: &DtaTable) -> OperatorChai
             // defensively; lift invariant says this cannot happen.
             _ => continue,
         };
-        // Deduplicate within-rule byte collisions. The chain
-        // detector enforces pairwise disjointness across rungs, so
-        // this is defensive.
+        // Per-rung scoping: keep only entries whose `rung_rule`
+        // matches this rung. Deduplicate within-rule byte
+        // collisions (defensive — the chain detector enforces
+        // pairwise rung disjointness).
         let mut rule_entries: Vec<OperatorChainEntry> = Vec::new();
         let mut rule_seen: [bool; 256] = [false; 256];
         for pe in precedence {
+            if pe.rung_rule != *rule_id {
+                continue;
+            }
             if rule_seen[pe.byte as usize] {
                 continue;
             }

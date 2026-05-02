@@ -120,6 +120,16 @@ pub enum BbnfCompoundKind {
     /// `value_fn_call = value_path , "(" , ( value_expr , ( "," ,
     /// value_expr ) * ) ? , ")"` — function-call syntax.
     ValueFnCall,
+    /// `type_annotation = ":" ?w , type_name` — the typed `: <Type>`
+    /// suffix on a `mapped_factor`'s value-expression. AZ-IV.W1.9:
+    /// admitted into the alphabet so [`super::super::lower::expression::wrap::lower_mapped_factor`]
+    /// can identify the compound by structural kind even when its
+    /// span collapses to empty (the `:` literal is consumed without
+    /// a Span push under struct-direct projection, and `type_name`'s
+    /// alt branches push only `push_branch_tag` + `push_leaf_with_unit`,
+    /// leaving the wrapping `type_annotation` compound with no
+    /// recoverable byte-span).
+    TypeAnnotation,
     /// Catch-all for compound rules not recognised by the
     /// [`BbnfCompoundKind`] alphabet — the layout-resolver consults
     /// the rule name when [`BbnfStructBuilder::begin_compound`]
@@ -162,6 +172,7 @@ impl BbnfCompoundKind {
             // Value-expression sub-grammar.
             17 => Self::ValuePath,
             18 => Self::ValueInput,
+            19 => Self::TypeAnnotation,
             27 => Self::ValueMul,
             28 => Self::ValueOr,
             29 => Self::ValueAdd,
@@ -190,6 +201,25 @@ pub struct BbnfCompound<'p> {
     /// otherwise. Recorded via
     /// [`crate::runtime::builder::StructBuilder::push_branch_tag`].
     pub branch_tag: Option<u32>,
+    /// AZ-IV.W1.9 — the source byte-offset bounds the compound
+    /// actually consumed during parsing, recorded at
+    /// `begin_compound` / `end_compound` time via the
+    /// [`super::super::builder::StructBuilder`]'s
+    /// `record_compound_bounds_start` / `record_compound_bounds_end`
+    /// trait extensions.
+    ///
+    /// Distinct from the leftmost/rightmost Span-leaf union the
+    /// `compute_byte_span` walk derives: alt-branch literals
+    /// (`@import`, `:`, `(`, `)`) are consumed by byte advance
+    /// without a Span push, so the descendant union under-reports
+    /// the compound's actual extent. The recorded bounds capture
+    /// the parser's view directly.
+    ///
+    /// `None` when the codegen did not record bounds (legacy
+    /// emission paths or non-BBNF builders that do not surface this
+    /// extension); `byte_span()` falls back to the descendant
+    /// union in that case.
+    pub bounds: Option<(u32, u32)>,
     /// Child values, in source order.
     pub children: Vec<BbnfValue<'p>>,
 }
@@ -199,6 +229,7 @@ impl<'p> Default for BbnfCompound<'p> {
         Self {
             kind: BbnfCompoundKind::Other,
             branch_tag: None,
+            bounds: None,
             children: Vec::new(),
         }
     }
@@ -266,6 +297,7 @@ impl<'p> BbnfArena<'p> {
             empty: BbnfCompound {
                 kind: BbnfCompoundKind::Other,
                 branch_tag: None,
+                bounds: None,
                 children: Vec::new(),
             },
         }

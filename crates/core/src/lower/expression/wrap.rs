@@ -141,8 +141,20 @@ pub(crate) fn lower_mapped_factor<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx
             }
             continue;
         }
-        // Type-annotation compound — `Other`-kinded sub-grammar
-        // wrapper whose source span starts with `:`.
+        // AZ-IV.W1.9 — type_annotation now carries a dedicated
+        // structural kind. Detect by compound_kind first so the
+        // `:` literal's missing Span (the literal is consumed
+        // without a Span push under struct-direct projection)
+        // does NOT silently drop the annotation when the sub-grammar
+        // collapses to a Unit + branch_tag pair.
+        if matches!(c.compound_kind(), Some(BbnfCompoundKind::TypeAnnotation)) {
+            type_annotation = Some(c);
+            continue;
+        }
+        // Legacy span-based detection — surviving for orphan shapes
+        // that produce a `:`-prefixed source span (e.g. host-directive
+        // type annotations, which are not the same compound as
+        // value_expr's `type_annotation`).
         if trimmed.starts_with(':') {
             type_annotation = Some(c);
             continue;
@@ -238,7 +250,15 @@ pub(crate) fn lower_mapped_factor<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx
         return base;
     }
     let value_expr = value_expr_head.unwrap();
-    let fn_id = lower_map_arrow(value_expr, type_annotation, ctx);
+    // AZ-IV.W1.9 — when the type_annotation compound's `byte_span()`
+    // is empty (the `:` literal is consumed without a Span push and
+    // `type_name`'s alt branches push only `push_branch_tag` +
+    // `push_leaf_with_unit`), the annotation text must be recovered
+    // from the enclosing `mapped_factor`'s source. Pass the parent
+    // span as the fallback recovery source so `lower_map_arrow` can
+    // re-extract the `: <Type>` suffix structurally.
+    let parent_span_for_type = node.span_text();
+    let fn_id = lower_map_arrow(value_expr, type_annotation, parent_span_for_type, ctx);
     let fn_id = try_specialize_map_fn(&base, fn_id, ctx);
     IrNode::Map {
         inner: Box::new(base),
@@ -284,6 +304,12 @@ fn find_value_expr_child<'a>(node: BbnfView<'a, 'a>) -> Option<BbnfView<'a, 'a>>
         }
         let kind = view.compound_kind();
         let trimmed = view.span_text().trim();
+        // Type-annotation compounds are never the value-expression
+        // head — short-circuit before any span-text inspection so the
+        // walk does not mis-claim a typed `: <Type>` suffix.
+        if matches!(kind, Some(BbnfCompoundKind::TypeAnnotation)) {
+            return;
+        }
         // Leaves: discriminate by span_text content.
         if kind.is_none() {
             if trimmed.is_empty() {
@@ -465,21 +491,87 @@ fn resolve_type_name(name: &str, ctx: &mut LowerCtx<'_>) -> TypeDesc {
     })
 }
 
+/// AZ-IV.W1.9 — recover the trailing `: <Type>` suffix from a
+/// `mapped_factor`'s source text when the structural type_annotation
+/// compound has collapsed to an empty span.
+///
+/// Walks the parent source from the end, finds the last `:` that's
+/// NOT part of a `::` value-path separator, and returns the trimmed
+/// type-name identifier that follows.
+///
+/// Returns `None` when no `:`-suffix is present (e.g. an arrow
+/// without an annotation), when the suffix is empty, or when the
+/// candidate is not a valid identifier (filtering out malformed
+/// recoveries).
+fn recover_type_name_from_parent(source: &str) -> Option<&str> {
+    let bytes = source.as_bytes();
+    let mut idx = bytes.len();
+    while idx > 0 {
+        idx -= 1;
+        if bytes[idx] != b':' {
+            continue;
+        }
+        // Skip the second `:` of a `::` value-path separator.
+        if idx > 0 && bytes[idx - 1] == b':' {
+            idx -= 1;
+            continue;
+        }
+        if idx + 1 < bytes.len() && bytes[idx + 1] == b':' {
+            // Leading `:` of a `::` separator — keep walking.
+            continue;
+        }
+        let candidate = source[idx + 1..].trim();
+        if candidate.is_empty() {
+            return None;
+        }
+        // Validate identifier shape — type names match
+        // `[_a-zA-Z][_a-zA-Z0-9]*`.
+        let bytes = candidate.as_bytes();
+        if !(bytes[0].is_ascii_alphabetic() || bytes[0] == b'_') {
+            return None;
+        }
+        if !bytes
+            .iter()
+            .all(|b| b.is_ascii_alphanumeric() || *b == b'_')
+        {
+            return None;
+        }
+        return Some(candidate);
+    }
+    None
+}
+
 /// Lower a `->` mapping to a `FnId`.
 fn lower_map_arrow<'a>(
     value_expr: BbnfView<'a, 'a>,
     type_ann: Option<BbnfView<'a, 'a>>,
+    parent_source: &str,
     ctx: &mut LowerCtx<'a>,
 ) -> FnId {
     let return_type = type_ann.and_then(|ann| {
         // type_annotation = (":", type_name) — find the type-name
         // payload inside the annotation subtree.
+        //
+        // AZ-IV.W1.9: under struct-direct projection the `:` literal
+        // is consumed without a Span push and `type_name`'s alt
+        // branches deposit only `push_branch_tag` + `push_leaf_with_unit`,
+        // so the type_annotation compound's `byte_span()` collapses
+        // to empty. The annotation text must then be recovered from
+        // the enclosing `mapped_factor`'s span — find the trailing
+        // ` : <Type>` (avoiding `::` value-path separators) and
+        // resolve the identifier.
         let trimmed = ann.span_text().trim();
-        let stripped = trimmed.strip_prefix(':')?.trim();
-        if stripped.is_empty() {
-            return None;
+        if let Some(stripped) = trimmed.strip_prefix(':') {
+            let inner = stripped.trim();
+            if !inner.is_empty() {
+                return Some(resolve_type_name(inner, ctx));
+            }
         }
-        Some(resolve_type_name(stripped, ctx))
+        // Fallback: parse the parent `mapped_factor`'s source for the
+        // trailing `:`-suffixed type name. Walk from the end so we
+        // find the LAST `:`, ignoring `::` separators in value-path
+        // segments (`std::convert::From`).
+        recover_type_name_from_parent(parent_source).map(|name| resolve_type_name(name, ctx))
     });
 
     // Type-shorthand: bare type name like `-> f64`.

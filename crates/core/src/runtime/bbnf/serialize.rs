@@ -423,6 +423,20 @@ fn emit_compound<'p>(doc: &BbnfDocument<'p>, id: BbnfCompoundId, out: &mut Strin
                 emit_value(doc, child, out);
             }
         }
+        BbnfCompoundKind::TypeAnnotation => {
+            // `type_annotation = ":" ?w , type_name` — emit the
+            // `:` prefix, a single space, then the type_name. The
+            // `:` literal is not surfaced as a child under struct-
+            // direct projection (consumed by byte advance); the
+            // type_name's branch_tag identifies which primitive
+            // matched, so we recover the literal text from the
+            // BBNF allocation.
+            out.push(':');
+            out.push(' ');
+            for child in &compound.children {
+                emit_value(doc, child, out);
+            }
+        }
         BbnfCompoundKind::Other => {
             // Unknown shape — pass through children verbatim.
             for child in &compound.children {

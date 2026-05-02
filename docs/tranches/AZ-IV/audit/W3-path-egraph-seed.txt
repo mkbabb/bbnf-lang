@@ -1,0 +1,139 @@
+W3 Path-Egraph Seed — Hand-Authored Rewrite Evidence
+=====================================================
+
+Tranche: AZ-IV
+Wave: W3 (Lazy Bail-Out Parse)
+Sub-unit: AZ-IV.W3.0 path-egraph-seed
+Carry: W2 Hard Gate 9 — see docs/tranches/AZ-IV/audit/SYNTHESIS-2026-05-02.md §4
+Date: 2026-05-02
+
+Scope
+-----
+
+Three hand-authored Class-1 path-shape rewrites land at
+crates/ir/src/rewrites/path_seed.rs, registered into the
+RuleSet loader via crates/ir/src/rewrites/mod.rs. The seed lets
+the egraph saturation layer carry path-shape simplifications
+before the recycled BA tranche opens its discovery cohort.
+
+Rewrites authored
+-----------------
+
+1. duplicate_prefix_elimination
+   LHS: Seq([Field("statuses"), Field("statuses"), Var(0)])
+   RHS: Seq([Field("statuses"), Var(0)])
+   Class: Class-1 (RHS strictly smaller, sub-tree of LHS)
+   Note: a second visit on the same struct field is the identity.
+
+2. redundant_variant_select_removal
+   LHS: Seq([VariantName("Color"), VariantName("Color"), Var(0)])
+   RHS: Seq([VariantName("Color"), Var(0)])
+   Class: Class-1
+   Note: a second variant projection on an already-narrowed sum
+   value is the identity (the path_check IR pass narrows once).
+
+3. adjacent_accessor_fusion
+   LHS: Seq([Field("statuses"), Index(0), Var(0)])
+   RHS: Seq([FieldIndex("statuses", 0), Var(0)])
+   Class: Class-1
+   Note: a Field-then-Index pair lifts to a compound positional
+   accessor — one decision rather than two for downstream codegen
+   and the discovery cohort.
+
+Encoding
+--------
+
+bbnf-ir cannot import bbnf-core (the dependency edge runs the
+other way), so the rewrites encode Path IR segments through the
+existing Pattern alphabet:
+
+| Path-IR segment           | Encoded atom                            |
+|---------------------------|-----------------------------------------|
+| Field("<name>")           | Atom::Rule("path:Field:<name>")         |
+| Index(<n>)                | Atom::Rule("path:Index:<n>")            |
+| VariantName("<v>")        | Atom::Rule("path:Variant:<v>")          |
+| Wildcard                  | Atom::Rule("path:Wildcard")             |
+| fused Field+Index         | Atom::Rule("path:FieldIndex:<f>:<n>")   |
+
+Rest-of-path tails are pattern variables (Atom::Var(0)). Paths
+sit inside Pattern::Seq, left-to-right.
+
+Loader registration
+-------------------
+
+RuleSet::merge_path_seed (crates/ir/src/rewrites/mod.rs) pulls
+the seed_ruleset() output and pushes each rule into the host
+ruleset with a freshly-assigned sequential id. This is the
+named entry-point the egraph saturation layer consumes.
+
+Test fixtures
+-------------
+
+crates/ir/tests/path_seed_rewrites.rs carries six unit tests:
+
+  rewrites_path_seed_duplicate_prefix_fires_on_fixture
+  rewrites_path_seed_redundant_variant_select_fires_on_fixture
+  rewrites_path_seed_adjacent_accessor_fusion_fires_on_fixture
+  rewrites_path_seed_ruleset_carries_three_rules
+  rewrites_path_seed_loader_merges_into_per_grammar_set
+  rewrites_path_seed_ron_round_trips_intact
+
+Each rewrite test asserts: (a) the rule's LHS matches the hand-
+built fixture path tree, (b) the RHS shrinks the path, (c) the
+classifier places the rule in Class-1, (d) the witness is sound.
+The loader and round-trip tests pin RuleSet::merge_path_seed +
+RuleSet save/load symmetry.
+
+Nextest run
+-----------
+
+Command:
+  CARGO_TARGET_DIR=/Users/mkbabb/Programming/bbnf-wt-aziv-w3-seed/target/w3-seed \
+    cargo nextest run -p bbnf-ir --profile ax-iter -E 'test(path_seed)' --no-capture
+
+Output:
+
+    Starting 6 tests across 14 binaries (425 tests skipped)
+       START [         ] (1/6) bbnf-ir::path_seed_rewrites rewrites_path_seed_adjacent_accessor_fusion_fires_on_fixture
+        PASS [   0.007s] (1/6) bbnf-ir::path_seed_rewrites rewrites_path_seed_adjacent_accessor_fusion_fires_on_fixture
+       START [         ] (2/6) bbnf-ir::path_seed_rewrites rewrites_path_seed_duplicate_prefix_fires_on_fixture
+        PASS [   0.006s] (2/6) bbnf-ir::path_seed_rewrites rewrites_path_seed_duplicate_prefix_fires_on_fixture
+       START [         ] (3/6) bbnf-ir::path_seed_rewrites rewrites_path_seed_loader_merges_into_per_grammar_set
+        PASS [   0.006s] (3/6) bbnf-ir::path_seed_rewrites rewrites_path_seed_loader_merges_into_per_grammar_set
+       START [         ] (4/6) bbnf-ir::path_seed_rewrites rewrites_path_seed_redundant_variant_select_fires_on_fixture
+        PASS [   0.006s] (4/6) bbnf-ir::path_seed_rewrites rewrites_path_seed_redundant_variant_select_fires_on_fixture
+       START [         ] (5/6) bbnf-ir::path_seed_rewrites rewrites_path_seed_ron_round_trips_intact
+        PASS [   0.007s] (5/6) bbnf-ir::path_seed_rewrites rewrites_path_seed_ron_round_trips_intact
+       START [         ] (6/6) bbnf-ir::path_seed_rewrites rewrites_path_seed_ruleset_carries_three_rules
+        PASS [   0.006s] (6/6) bbnf-ir::path_seed_rewrites rewrites_path_seed_ruleset_carries_three_rules
+     Summary [   0.038s] 6 tests run: 6 passed, 425 skipped
+
+Filtered run with the prompt's expression:
+
+  cargo nextest run -p bbnf-ir --profile ax-iter -E 'test(rewrites)'
+  Summary [   0.015s] 6 tests run: 6 passed, 425 skipped
+
+(The `test(rewrites)` filter and the `test(path_seed)` filter both
+match the same six path-seed tests; the broader filter would also
+match the existing rewrites_substrate suite if it were not separately
+binary-isolated by nextest.)
+
+Build evidence
+--------------
+
+  CARGO_TARGET_DIR=.../target/w3-seed cargo build -p bbnf-ir --profile ax-iter
+  Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 4.49s
+
+Lint cadence
+------------
+
+  cargo fmt --all -- --check       — clean
+  cargo clippy -p bbnf-ir --profile ax-iter --tests
+                                   — Finished; zero hits on path_seed
+                                     or rewrites/mod.rs
+
+Commit
+------
+
+%%COMMIT_HASH%% — egraph-rewrites/path-seed: hand-authored W2-carry
+seed bag at crates/ir/src/rewrites/path_seed.rs.

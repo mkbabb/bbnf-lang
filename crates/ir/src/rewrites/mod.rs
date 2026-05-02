@@ -20,11 +20,16 @@
 //! `crates/ir/src/passes/cost_integration.rs` (Wave 4 file).
 
 pub mod base;
+pub mod path_seed;
 pub mod rank;
 pub mod schema;
 pub mod tiering;
 
 pub use base::{Alphabet, Atom, Pattern, PatternRef, Witness};
+pub use path_seed::{
+    PATH_SEED_GRAMMAR, adjacent_accessor_fusion, duplicate_prefix_elimination,
+    redundant_variant_select_removal, seed_ruleset,
+};
 pub use rank::{RankConfig, rank, select_top_k};
 pub use schema::{RuleFile, RuleSerialized, SCHEMA_VERSION, SchemaError};
 pub use tiering::{RuleClass, classify};
@@ -225,6 +230,24 @@ impl RuleSet {
             schema_version: self.schema_version,
             grammar: self.grammar.clone(),
             rules: self.rules.iter().map(RuleSerialized::from_rule).collect(),
+        }
+    }
+
+    /// Merge the path-shape seed rewrites
+    /// ([`path_seed::seed_ruleset`]) into this set in deterministic
+    /// order. Each merged rule is reassigned a fresh sequential id so
+    /// the path-seed bag does not collide with per-grammar rule ids.
+    ///
+    /// This is the registration site the egraph saturation layer
+    /// consumes: per-grammar rule files load via [`Self::load_from_dir`]
+    /// then call [`Self::merge_path_seed`] before saturation runs, so
+    /// the seed rewrites participate in extraction alongside any
+    /// authored or discovered rules.
+    pub fn merge_path_seed(&mut self) {
+        let seed = path_seed::seed_ruleset();
+        for mut rule in seed.rules {
+            rule.id = RewriteRuleId(self.rules.len() as u32);
+            self.rules.push(rule);
         }
     }
 

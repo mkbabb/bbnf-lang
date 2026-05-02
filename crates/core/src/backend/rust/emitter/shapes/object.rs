@@ -175,15 +175,34 @@ fn emit_parse_object_struct_direct(
                 return Ok(());
             }
 
-            // AZ-IV.W3.6 — consult the cursor's decision for this rule's
-            // segment kind. ParseFully or no-match (None) keeps
-            // every iteration; ParseUntil(idx) limits iterations to
-            // 0..=idx; Skip is unreachable here (the executor would have
-            // routed through the skip scanner upstream).
+            // AZ-IV.W3.6 — consult the cursor's pre-loop decision for
+            // shape-level shortcuts (ParseFully default; ParseUntil
+            // honoured below). Per-iteration dynamic decision (see
+            // AZ-IV.W3-DYNAMIC) layers on top: when the cursor's
+            // current segment is `Field`, each iteration's key is
+            // matched against the segment payload and mismatched
+            // values are byte-skipped without pushing into the builder.
             let __decision: __Decision = cursor.decide(#rule_id_lit as u32);
 
             let mut __iter_idx: u32 = 0;
             loop {
+                // AZ-IV.W3-DYNAMIC — pre-key-parse: when the cursor's
+                // current segment is `Field`, the iteration may need to
+                // roll back on mismatch. Take a checkpoint conditionally
+                // so eager-mode parses (where the cursor is always at a
+                // non-Field segment) pay no per-iteration clone cost.
+                let __seg_kind_pre = cursor.current_kind();
+                let __is_field_seg = matches!(
+                    __seg_kind_pre,
+                    crate::path::cursor::SegmentKind::Field,
+                );
+                let __key_save_p = *p;
+                let __key_checkpoint = if __is_field_seg {
+                    Some(builder.checkpoint())
+                } else {
+                    None
+                };
+
                 // Key: string shape fn pushes the decoded slice.
                 if input.get(*p).copied() != Some(b'"') {
                     return Err(crate::runtime::DtaError::Syntax {
@@ -202,8 +221,60 @@ fn emit_parse_object_struct_direct(
                 *p += 1;
                 let _ = #support_mod::skip_space(input, p, state);
 
-                // Value dispatch — same per-Ref routing as the tape body.
-                #value_call
+                // AZ-IV.W3-DYNAMIC — per-iteration field match. The
+                // parsed key bytes live at
+                // `[__key_save_p+1 .. *p-1-after-string]` — actually
+                // `*p` here is past the colon + ws; we recover the
+                // key by re-scanning. Cleanest: pre-scanned the key
+                // boundary by saving `__key_save_p` only; the
+                // parse_string fn left `*p` at the byte after the
+                // closing quote, but skip_space + colon + skip_space
+                // moved it on. We slice `[__key_save_p+1 ..
+                // first_quote_after]` — the closing-quote position is
+                // recovered from the simple scan below.
+                let __matched: bool = if let Some(_cp) = &__key_checkpoint {
+                    // Recover closing-quote position by scanning the
+                    // borrowed slice. The string emitter slices the
+                    // borrow as `[open+1 .. close]` for the body; we
+                    // re-derive `close` here without re-decoding.
+                    let mut __close = __key_save_p + 1;
+                    while __close < input.len() {
+                        let b = input[__close];
+                        if b == b'\\' {
+                            __close += 2;
+                            continue;
+                        }
+                        if b == b'"' {
+                            break;
+                        }
+                        __close += 1;
+                    }
+                    let __key_bytes: &'p [u8] = if __close > __key_save_p + 1 {
+                        &input[__key_save_p + 1..__close]
+                    } else {
+                        &[]
+                    };
+                    let __parsed_key: &'p str = unsafe {
+                        ::core::str::from_utf8_unchecked(__key_bytes)
+                    };
+                    cursor.match_field(__parsed_key)
+                } else {
+                    false
+                };
+
+                if __is_field_seg && !__matched {
+                    // Mismatch: discard the key push and byte-skip
+                    // the value bytes.
+                    if let Some(__cp) = __key_checkpoint {
+                        builder.rollback(__cp);
+                    }
+                    #support_mod::byte_skip_value(input, p)?;
+                } else {
+                    // Match (or non-Field segment kind — fall back to
+                    // the pre-W3-DYNAMIC eager body). Parse the value
+                    // dispatch as the eager path would.
+                    #value_call
+                }
 
                 // Comma / close.
                 let _ = #support_mod::skip_space(input, p, state);
@@ -217,18 +288,38 @@ fn emit_parse_object_struct_direct(
                         builder.end_compound(__handle);
                         return Ok(());
                     }
-                    _ => return Err(crate::runtime::DtaError::Syntax {
-                        offset: *p as u32,
-                    }),
+                    _ => {
+                        if __matched {
+                            // Lazy contract: the path resolved into
+                            // the value's subtree; bytes after this
+                            // iteration are out of reach — close the
+                            // compound and return success even if the
+                            // trailing bytes are malformed.
+                            builder.end_compound(__handle);
+                            return Ok(());
+                        }
+                        return Err(crate::runtime::DtaError::Syntax {
+                            offset: *p as u32,
+                        });
+                    }
+                }
+                if __matched {
+                    // Cursor advanced through the matched field; the
+                    // path's reach lies inside the just-parsed value.
+                    // Subsequent siblings are out of reach — break with
+                    // success without inspecting their bytes.
+                    builder.end_compound(__handle);
+                    return Ok(());
                 }
                 __iter_idx = __iter_idx.saturating_add(1);
                 if let __Decision::ParseUntil(__cut) = __decision
                     && __iter_idx as u32 > __cut as u32
                 {
-                    // Indexed cut reached. The remaining iterations'
-                    // bytes still need to advance `*p` to the closing
-                    // brace, but no further records are pushed; the
-                    // brace-balanced skip scanner is W3.7's job.
+                    // Pre-loop ParseUntil cut: indexed reach
+                    // exhausted. The remaining iterations' bytes are
+                    // not byte-skipped here — the builder.end_compound
+                    // closes the frame, and the lazy contract forgives
+                    // the unscanned tail.
                     builder.end_compound(__handle);
                     return Ok(());
                 }

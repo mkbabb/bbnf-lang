@@ -229,6 +229,42 @@ where
         Some(seg)
     }
 
+    /// AZ-IV.W3-DYNAMIC — per-iteration field match.
+    ///
+    /// Compare the parsed object-key against the cursor's current
+    /// segment. Returns `true` (and advances the cursor one step) when
+    /// the current segment is `Field(key)` and `key == parsed_key`.
+    /// Returns `false` (cursor unchanged) on mismatch or when the
+    /// current segment is not a `Field`. The lazy lane uses the
+    /// `true`/`false` outcome to decide between "parse this value
+    /// fully then break" and "byte-skip this value and continue".
+    #[inline]
+    pub fn match_field(&mut self, parsed_key: &str) -> bool {
+        match self.peek() {
+            Some(PathSegment::Field(name)) if name == parsed_key => {
+                self.advance();
+                true
+            }
+            _ => false,
+        }
+    }
+
+    /// AZ-IV.W3-DYNAMIC — per-iteration index match.
+    ///
+    /// Counterpart of [`match_field`] for positional array steps.
+    /// Returns `true` (and advances) when the current segment is
+    /// `Index(parsed_idx)`; `false` otherwise.
+    #[inline]
+    pub fn match_index(&mut self, parsed_idx: usize) -> bool {
+        match self.peek() {
+            Some(PathSegment::Index(n)) if n == parsed_idx => {
+                self.advance();
+                true
+            }
+            _ => false,
+        }
+    }
+
     /// Decide what to do with the rule keyed by `rule_id` given the
     /// cursor's current segment kind. Reads through the decision
     /// cache; misses recompute through the construction-supplied

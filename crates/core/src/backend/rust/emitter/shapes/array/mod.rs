@@ -191,9 +191,9 @@ fn emit_parse_array_struct_direct_wrapped(
             let __array_checkpoint = builder.checkpoint();
             let __handle = builder.begin_compound(&__layout);
 
-            // AZ-IV.W3.6 — consult the cursor's decision once; the
-            // result is invariant over the loop body for a fixed
-            // (rule_id, segment_kind).
+            // AZ-IV.W3.6 — pre-loop decision. The per-iteration
+            // dynamic match (W3-DYNAMIC) refines this when the
+            // cursor's current segment is `Index`.
             let __decision: __Decision = cursor.decide(#rule_id_lit as u32);
             let mut __elem_idx: u32 = 0;
 
@@ -210,15 +210,38 @@ fn emit_parse_array_struct_direct_wrapped(
                 }
 
                 loop {
-                    // Element dispatch — per-Ref routing matches tape path.
-                    #value_call
+                    // AZ-IV.W3-DYNAMIC — per-iteration index match.
+                    // When the cursor's current segment is `Index(n)`,
+                    // mismatched indices are byte-skipped; the matched
+                    // index parses fully and breaks the loop with
+                    // success.
+                    let __seg_kind = cursor.current_kind();
+                    let __is_index_seg = matches!(
+                        __seg_kind,
+                        crate::path::cursor::SegmentKind::Index,
+                    );
+                    let __matched: bool = if __is_index_seg {
+                        cursor.match_index(__elem_idx as usize)
+                    } else {
+                        false
+                    };
 
-                    // AZ-IV.W3.6 — ParseUntil cut: after the element at
-                    // index `cut` is consumed, break. The remaining
-                    // bytes through `]` need a brace-balanced skip
-                    // scanner (W3.7 wires); the loop break here drops
-                    // out so the bytes-past-cut path never reaches
-                    // record emission.
+                    if __is_index_seg && !__matched {
+                        // Mismatched index: byte-skip this element
+                        // without pushing.
+                        #support_mod::byte_skip_value(input, p)?;
+                    } else {
+                        // Element dispatch — per-Ref routing.
+                        #value_call
+                    }
+
+                    if __matched {
+                        // Cursor advanced; path's reach lies inside
+                        // this element. Close the array and return
+                        // before scanning the rest of the input.
+                        return Ok(());
+                    }
+
                     if let __Decision::ParseUntil(__cut) = __decision
                         && __elem_idx as u32 >= __cut as u32
                     {
@@ -396,7 +419,8 @@ fn emit_parse_array_struct_direct_list(
                 };
             let __handle = builder.begin_compound(&__layout);
 
-            // AZ-IV.W3.6 — consult cursor decision once.
+            // AZ-IV.W3.6 — pre-loop decision; W3-DYNAMIC layers a
+            // per-iteration Index match below.
             let __decision: __Decision = cursor.decide(#rule_id_lit as u32);
             let mut __elem_idx: u32 = 0;
 
@@ -417,6 +441,21 @@ fn emit_parse_array_struct_direct_list(
                     break;
                 }
                 let __iter_builder_checkpoint = builder.checkpoint();
+                // AZ-IV.W3-DYNAMIC — per-iteration Index match. List-
+                // rule arrays (BBNF `grammar`) carry positional
+                // semantics; mismatched indices break the loop with
+                // success so the path's reach lies inside the matched
+                // element.
+                let __seg_kind = cursor.current_kind();
+                let __is_index_seg = matches!(
+                    __seg_kind,
+                    crate::path::cursor::SegmentKind::Index,
+                );
+                let __matched: bool = if __is_index_seg {
+                    cursor.match_index(__elem_idx as usize)
+                } else {
+                    false
+                };
                 // Attempt one iteration via a closure so failures
                 // surface as `Err` and unwind to `*p` rollback.
                 let __iter_result: ::core::result::Result<
@@ -424,7 +463,13 @@ fn emit_parse_array_struct_direct_list(
                     crate::runtime::DtaError,
                 > = (|| {
                     #intra_iter_ws
-                    #value_call
+                    if __is_index_seg && !__matched {
+                        // Mismatched index: byte-skip element bytes
+                        // without builder push.
+                        #support_mod::byte_skip_value(input, p)?;
+                    } else {
+                        #value_call
+                    }
                     #intra_iter_ws
                     Ok(())
                 })();
@@ -436,7 +481,18 @@ fn emit_parse_array_struct_direct_list(
                             builder.rollback(__iter_builder_checkpoint);
                             break;
                         }
-                        builder.commit(__iter_builder_checkpoint);
+                        if __is_index_seg && !__matched {
+                            // Mismatched skip — drop builder
+                            // mutations from this iteration.
+                            builder.rollback(__iter_builder_checkpoint);
+                        } else {
+                            builder.commit(__iter_builder_checkpoint);
+                        }
+                        if __matched {
+                            // Path's reach lies inside the just-
+                            // parsed element; stop iterating.
+                            break;
+                        }
                         __elem_idx = __elem_idx.saturating_add(1);
                     }
                     Err(_) => {

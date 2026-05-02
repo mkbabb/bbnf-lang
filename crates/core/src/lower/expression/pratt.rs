@@ -293,8 +293,7 @@ fn recover_binary_op<'a>(input: &'a str, lhs_end: u32, rhs_start: u32) -> Option
     }
     let gap = &input[lhs_end as usize..rhs_start as usize];
     for &op in &["<<", ">>"] {
-        if let Some(off) = super::find_unquoted(gap, op) {
-            let _ = off;
+        if super::find_unquoted(gap, op).is_some() {
             return Some(op);
         }
     }

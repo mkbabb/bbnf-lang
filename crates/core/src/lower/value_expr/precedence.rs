@@ -314,13 +314,9 @@ fn is_iteration_wrapper(view: BbnfView<'_, '_>) -> bool {
     match view.compound_kind() {
         Some(BbnfCompoundKind::Other) => true,
         // A semantic value-layer compound is always an operand, not
-        // a wrapper.
-        Some(_) => false,
-        None => {
-            // Leaf focus — never an iteration wrapper.
-            let _ = view.focus();
-            false
-        }
+        // a wrapper. A `None` compound kind (leaf focus) is also never
+        // an iteration wrapper — only `Other`-kinded compounds are.
+        _ => false,
     }
 }
 

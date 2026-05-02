@@ -374,8 +374,6 @@ fn emit_parse_number_via_hregex_struct_direct(
 ) -> TokenStream {
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("number", grammar_suffix, rule_name);
-    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
-    let _ = support_mod;
     let p_lt = format_ident!("p");
     let builder_ty = builder_ty_with_lifetime(strategy, &p_lt);
 

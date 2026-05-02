@@ -148,19 +148,14 @@ fn emit_compound<'p>(doc: &BbnfDocument<'p>, id: BbnfCompoundId, out: &mut Strin
             // `mapped_factor = factor , ( "->" ?w , value_expr ,
             // type_annotation ? ) ?`. Children: [factor] or
             // [factor, value_expr, type_annotation?]. The `->` literal
-            // is non-Span; emit between factor and value_expr.
-            let n = compound.children.len();
+            // is non-Span; emit between factor and value_expr;
+            // subsequent children (type_annotation) need no separator.
             for (i, child) in compound.children.iter().enumerate() {
                 if i == 1 {
-                    // Between factor and value_expr.
                     out.push_str(" -> ");
-                } else if i > 1 {
-                    // Between value_expr and type_annotation, or
-                    // intervening compounds — no separator.
                 }
                 emit_value(doc, child, out);
             }
-            let _ = n;
         }
         BbnfCompoundKind::Factor => {
             // `factor = big_comment ? , term ?w , modifier ? ,

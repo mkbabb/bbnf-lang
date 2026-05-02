@@ -229,8 +229,6 @@ pub fn lower_to_ir<'a>(
         type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: HashMap::new(),
         eclass_facts: HashMap::new(),
-        shape_dict_templates: Vec::new(),
-        shape_dict_selection: Vec::new(),
         keyword_branches: HashMap::new(),
         disjoint_first_tables: HashMap::new(),
         pattern_alphabets: HashMap::new(),

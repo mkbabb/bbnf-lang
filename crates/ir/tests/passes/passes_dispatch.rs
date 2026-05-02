@@ -68,8 +68,6 @@ fn dispatch_for_disjoint_branches() {
         shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
         ),
         eclass_facts: std::collections::HashMap::new(),
-        shape_dict_templates: Vec::new(),
-        shape_dict_selection: Vec::new(),
         keyword_branches: std::collections::HashMap::new(),
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
@@ -153,8 +151,6 @@ fn no_dispatch_for_overlapping_branches() {
         shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
         ),
         eclass_facts: std::collections::HashMap::new(),
-        shape_dict_templates: Vec::new(),
-        shape_dict_selection: Vec::new(),
         keyword_branches: std::collections::HashMap::new(),
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
@@ -236,8 +232,6 @@ fn dispatch_for_nested_alt() {
         shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
         ),
         eclass_facts: std::collections::HashMap::new(),
-        shape_dict_templates: Vec::new(),
-        shape_dict_selection: Vec::new(),
         keyword_branches: std::collections::HashMap::new(),
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
@@ -327,8 +321,6 @@ fn dispatch_with_nullable_branch_via_follow() {
         shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
         ),
         eclass_facts: std::collections::HashMap::new(),
-        shape_dict_templates: Vec::new(),
-        shape_dict_selection: Vec::new(),
         keyword_branches: std::collections::HashMap::new(),
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
@@ -420,8 +412,6 @@ fn no_dispatch_when_nullable_overlaps_follow() {
         shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
         ),
         eclass_facts: std::collections::HashMap::new(),
-        shape_dict_templates: Vec::new(),
-        shape_dict_selection: Vec::new(),
         keyword_branches: std::collections::HashMap::new(),
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
@@ -523,8 +513,6 @@ fn fallback_dispatch_typed_plus_catchall() {
         shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
         ),
         eclass_facts: std::collections::HashMap::new(),
-        shape_dict_templates: Vec::new(),
-        shape_dict_selection: Vec::new(),
         keyword_branches: std::collections::HashMap::new(),
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
@@ -618,8 +606,6 @@ fn fallback_dispatch_not_superset() {
         shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
         ),
         eclass_facts: std::collections::HashMap::new(),
-        shape_dict_templates: Vec::new(),
-        shape_dict_selection: Vec::new(),
         keyword_branches: std::collections::HashMap::new(),
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
@@ -701,8 +687,6 @@ fn fallback_dispatch_too_few_branches() {
         shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
         ),
         eclass_facts: std::collections::HashMap::new(),
-        shape_dict_templates: Vec::new(),
-        shape_dict_selection: Vec::new(),
         keyword_branches: std::collections::HashMap::new(),
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),

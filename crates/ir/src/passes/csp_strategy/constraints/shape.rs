@@ -1,35 +1,24 @@
-//! `ShapeTemplateAuthority` — pin Alt/Wrap decision variables to the
-//! strategy implied by an admitted shape-dictionary template.
+//! `RecognizerShapeAuthority` — pin Alt/Wrap decision variables to
+//! the strategy implied by the per-NodeId recognizer shape.
 //!
 //! # Rationale
 //!
-//! `ir.shape_dict_templates` is populated by
-//! [`crate::passes::recognizers::shape_dict::ShapeDictMiner`]: each
-//! eligible compound subtree (Alt / Wrap with a fixed leaf-hole
-//! pattern) gets a `(NodeId, ShapeTemplate)` entry. Without a
-//! constraint installer, the CSP saw the template pool as inert
-//! sidecar data — the per-site Alt / Wrap variables were free to pick
-//! any cost-min mode, and the consumer at codegen time fell back to a
-//! priority cascade that recomputed the choice from the same shape
-//! facts.
-//!
-//! This installer closes the loop: when a NodeId carries a recognizer
-//! shape that authoritatively implies a single strategy
+//! When a NodeId carries a recognizer shape that authoritatively
+//! implies a single strategy
 //! (`DelimiterBalanced` → `WrapMode::BalancedScan`,
 //! `SeparatorList` → `WrapMode::SepBy`,
 //! `TokenLedBranches` → `AltMode::ByteDispatch`,
-//! `KeywordPrefix` → `AltMode::KeyDispatch`), it pins the decision
-//! variable to that strategy via a hard equality constraint. The CSP
-//! solution then carries the structural choice as a first-class fact;
-//! the consumer reads `ir.recognizer_decisions` directly and the
-//! sidecar override path is no longer needed.
+//! `KeywordPrefix` → `AltMode::KeyDispatch`), this installer pins
+//! the decision variable to that strategy via a hard equality
+//! constraint. The CSP solution then carries the structural choice
+//! as a first-class fact; the consumer reads
+//! `ir.recognizer_decisions` directly and the sidecar override path
+//! is no longer needed.
 //!
 //! # Producer
 //!
-//! [`crate::passes::recognizers::ShapeDictMiner`] populates
-//! `ir.shape_dict_templates`; the per-NodeId
-//! `ir.node_facts[id].recognizer.shape` carries the categorical
-//! shape used by this installer. Both run before
+//! `mine_recognizers` populates `ir.node_facts[id].recognizer.shape`
+//! during the unified recognizer walk. This runs before
 //! `solve_grammar_components`.
 //!
 //! # Consumer

@@ -1,0 +1,152 @@
+AZ-IV.W4.3 — Shape SIMD Consumption — Decision Record
+=======================================================
+
+Decision: DELETE
+Mechanism: GrammarIR::shape_dict_templates and
+GrammarIR::shape_dict_selection are excised from the IR; the
+ShapeDictMiner recognizer pass and the
+csp_strategy::constraints::shape_dict installer are retired
+wholesale; the test that exclusively read the deleted fields is
+removed; the structural-scan substrate (live, CONSUMED) is left
+in place.
+
+Audit Citation
+==============
+HARDENING-2026-05-01-babbage.md classifies these substrates:
+
+* Row 9 — shape_dict_templates: WIRED-NOT-CONSUMED. Mined by
+  ShapeDictMiner and committed to GrammarIR; only test code reads.
+  No backend emitter site references the field.
+* Row 10 — shape_dict_selection: WIRED-NOT-CONSUMED. Selected by
+  solve_shape_dict_selection and committed to GrammarIR; only test
+  code reads. The doc-strings describe a runtime "ShapeRef" tape
+  emission and a "GrammarProfile::shape_dict" sink that never
+  materialised — GrammarProfile carries no `shape_dict` field.
+* Row 11 — simd-scan / structural scan: UNDERUTILIZED but
+  CONSUMED. 8/9 generated grammars wire `simd_scan::scan_structural`
+  via the per-grammar `__structural_index` adapter; the math
+  grammar's structural alphabet is empty so its adapter is
+  legitimately absent. Live consumption already exists; nothing to
+  retire.
+
+Search evidence (pre-edit, base 130303fc):
+
+  rg "shape_dict_templates|shape_dict_selection" crates/core/src/backend
+    → zero results
+
+  rg "ShapeDictMap|ShapeDictSelection|ShapeTemplate\b" crates/core/src/backend
+    → zero results
+
+  rg "GrammarProfile.*shape_dict|profile\.shape_dict" crates
+    → only doc-string mentions; no field, no read
+
+  rg "scan_structural" crates/core/src/grammar/generated
+    → 8/9 grammars wire it (math correctly absent)
+
+WIRE Path Considered, Rejected
+==============================
+Wiring would have required inventing a runtime tape encoding
+(ShapeRef record + per-template payload-blob layout), a per-grammar
+emitter projection from `shape_dict_selection` indices to the new
+record, and a runtime decoder. Per non-negotiables:
+
+* KISS DRY: delete unused over invent-a-consumer.
+* No-workarounds-arch and no-deferrals: the WIRE path is a wholly
+  new runtime substrate, not a small carve. Triumvirate-trigger
+  bullet "shape_dict or structural scan needs a new runtime
+  substrate not already present" applies — the W4.3 dispatch
+  forecloses this without orchestrator authority.
+
+Therefore the DELETE path is mechanically forced by W4 scope item
+4 ("consume or retire generic shape dictionary and structural scan
+claims") composed with the disposition matrix.
+
+Deletions
+=========
+1. Field: GrammarIR::shape_dict_templates
+   File: crates/ir/src/types/grammar.rs (line ~226)
+2. Field: GrammarIR::shape_dict_selection
+   File: crates/ir/src/types/grammar.rs (line ~237)
+3. Module: crates/ir/src/passes/csp_strategy/constraints/shape_dict.rs
+   (entire file, 190 LOC)
+4. Module: crates/ir/src/passes/recognizers/shape_dict.rs
+   (entire file, 541 LOC) — ShapeDictMiner, ShapeTemplate,
+   TemplatePiece, ShapeDictMap.
+5. Re-exports: pub use shape_dict::{...} in
+   crates/ir/src/passes/recognizers/mod.rs
+6. Module decls: pub mod shape_dict; in
+   crates/ir/src/passes/recognizers/mod.rs and
+   crates/ir/src/passes/csp_strategy/constraints/mod.rs
+7. MineOutputs::shape_dict_templates field +
+   ShapeDictMiner from miner registry +
+   ir.shape_dict_templates commit at
+   crates/ir/src/passes/recognizers/mod.rs
+8. Pipeline span: solve_shape_dict_selection at
+   crates/core/src/pipeline/compile/pipeline.rs
+9. Lower fallback init: shape_dict_templates / shape_dict_selection
+   at crates/core/src/lower/mod.rs
+10. Stale doc-comments on
+    crates/ir/src/passes/csp_strategy/constraints/shape.rs
+    (RecognizerShapeAuthority — the file STAYS, only its
+    docstring is corrected; the code already only reads
+    node_facts.recognizer.shape and delim_scan_configs).
+11. Test file: crates/core/tests/shape_dict_css.rs (sole
+    consumer of the deleted fields).
+12. ~30 test fixtures across crates/ir/tests and crates/core/tests
+    — initializer entries `shape_dict_templates: Vec::new()` and
+    `shape_dict_selection: Vec::new()` removed.
+
+Preserved (not part of deletion)
+================================
+* crates/ir/src/passes/recognizers/shape_dict_bbnf.rs and
+  GrammarProfile::bbnf_shape_templates — different substrate,
+  different consumer, separate `BbnfShapeTemplate` type. Test
+  `crates/core/tests/shape_dict_bbnf.rs` continues to read it.
+* crates/ir/src/passes/csp_strategy/constraints/shape.rs — the
+  installer reads node_facts.recognizer.shape (RecognizerShape)
+  and delim_scan_configs, NOT the deleted shape_dict_templates.
+  Doc-string is corrected; behaviour unchanged.
+* crates/simd-scan/** and the per-grammar __structural_index
+  adapter — live consumption via `simd_scan::scan_structural`,
+  8/9 grammars (math has empty alphabet by structural truth).
+* Pipeline pass `compute_structural_alphabet` — still consumed by
+  the per-grammar generated code at runtime.
+
+Hard-Gate Evidence
+==================
+Build (clean):
+  cargo build -p bbnf -p bbnf-ir -p simd-scan --profile ax-iter
+    Finished `ax-iter` profile [unoptimized + debuginfo]
+
+Test (no regression):
+  cargo nextest run -p bbnf -p bbnf-ir --profile ax-iter
+    [results in W4-shape-simd commit body]
+
+Substrate decision (DELETE):
+  rg "shape_dict_templates|shape_dict_selection" crates/
+    → only inside this audit doc. Field is gone from GrammarIR.
+
+structural-scan / simd-scan still consumed:
+  rg "scan_structural" crates/core/src/grammar/generated
+    → 8 grammars wire it. The math grammar's empty
+    structural_alphabet legitimately omits the adapter
+    (StructuralAlphabet::from_profile fast-paths empty).
+
+Known Misses
+============
+None. The deletion is total: producer, sidecar field, CSP
+selection, miner-registry slot, MineOutputs field, pipeline span,
+lower-fallback init, every test fixture, and the lone test that
+read the slot. No backend, runtime, or generated-code site
+references either substrate. The CSP-strategy `shape.rs`
+installer's docstring previously mis-identified its facts source as
+shape_dict_templates; the code never read that field, so the
+docstring fix is the only behaviour-preserving carve there.
+
+Substrate denominator update for AZ-IV.W4 ledger:
+
+| Row | Substrate | Pre-W4.3 | Post-W4.3 |
+|---|---|---|---|
+| 9 | shape_dict_templates | WIRED-NOT-CONSUMED | RETIRED |
+| 10 | shape_dict_selection | WIRED-NOT-CONSUMED | RETIRED |
+| 11 | simd-scan / structural scan | UNDERUTILIZED-CONSUMED | UNCHANGED (8/9 wired; math empty alphabet by truth) |

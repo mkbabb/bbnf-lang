@@ -211,31 +211,6 @@ pub struct GrammarIR {
     #[serde(skip, default)]
     pub eclass_facts: HashMap<dag::NodeId, egraph::EClassFacts>,
 
-    /// Tranche AV.5.2 — per-NodeId shape-dictionary template
-    /// candidates emitted by
-    /// [`passes::recognizers::ShapeDictMiner`].
-    ///
-    /// Each entry pairs a node with its discovered
-    /// [`passes::recognizers::shape_dict::ShapeTemplate`]. The CSP
-    /// shape-dict constraint
-    /// ([`passes::csp_strategy::constraints::shape_dict`]) selects a
-    /// budget-bounded subset; the emitter bakes the chosen subset
-    /// into `GrammarProfile::shape_dict`.
-    /// Not serialized.
-    #[serde(skip, default)]
-    pub shape_dict_templates: passes::recognizers::shape_dict::ShapeDictMap,
-
-    /// Tranche AV.5.3 — admitted shape-dictionary indices.
-    ///
-    /// Result of
-    /// [`passes::csp_strategy::constraints::shape_dict::solve_shape_dict_selection`]
-    /// — the indices into `shape_dict_templates` that survived the
-    /// budget-bounded selection. Sorted ascending so the emitter
-    /// sees a deterministic dictionary order across compile sessions.
-    /// Not serialized.
-    #[serde(skip, default)]
-    pub shape_dict_selection: passes::csp_strategy::constraints::shape_dict::ShapeDictSelection,
-
     /// AW-III.W6.2 — per-Alt keyword-branch mining.
     ///
     /// Populated by

@@ -59,8 +59,6 @@ fn prune_removes_unreachable() {
         shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
         ),
         eclass_facts: std::collections::HashMap::new(),
-        shape_dict_templates: Vec::new(),
-        shape_dict_selection: Vec::new(),
         keyword_branches: std::collections::HashMap::new(),
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
@@ -120,8 +118,6 @@ fn prune_keeps_all_when_all_reachable() {
         shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
         ),
         eclass_facts: std::collections::HashMap::new(),
-        shape_dict_templates: Vec::new(),
-        shape_dict_selection: Vec::new(),
         keyword_branches: std::collections::HashMap::new(),
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
@@ -201,8 +197,6 @@ fn prune_follows_alt_branches() {
         shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
         ),
         eclass_facts: std::collections::HashMap::new(),
-        shape_dict_templates: Vec::new(),
-        shape_dict_selection: Vec::new(),
         keyword_branches: std::collections::HashMap::new(),
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),

@@ -23,10 +23,6 @@
 //!   upstream `key_dispatch_configs` / `keyword_branches` /
 //!   precomputed dispatch table. Consumer:
 //!   `backend::strategy::alt_strategy::decide_alt_strategy`.
-//! - [`shape_dict`] — grammar-wide shape-template admission
-//!   selection (`solve_shape_dict_selection`). Consumer:
-//!   `ir.shape_dict_selection` read by codegen at
-//!   `crates/core/src/pipeline/compile.rs:861`.
 //!
 //! Each per-site installer adds at most one constraint per
 //! eligible NodeId, deriving the pin value from facts that the
@@ -40,7 +36,6 @@ pub mod dispatch;
 pub mod engine;
 pub mod layout;
 pub mod shape;
-pub mod shape_dict;
 
 use std::collections::HashMap;
 

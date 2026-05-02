@@ -28,8 +28,8 @@ use crate::types::AST;
 /// lowers to IR, computes FIRST sets, optionally eliminates
 /// left-recursion, runs the structural normalizer + e-graph
 /// saturation, and runs the body-mutating facts/restructuring passes.
-/// Profile-populating mining passes (regex_info, structural_alphabet,
-/// recognizers, shape_dict_selection) run unconditionally; the
+/// Profile-populating mining passes (regex_info,
+/// structural_alphabet, recognizers) run unconditionally; the
 /// codegen-decision passes (dispatch_tables, classify_materialization,
 /// solve_grammar_components, extract_regex_engine_decisions) run only
 /// when `options.structural` is `false`.
@@ -284,16 +284,14 @@ pub fn compile_ast_common<'a>(
 
     // AW-V.W5.1 — profile-populating mining passes.
     //
-    // The four passes in this block (`compute_regex_info`,
-    // `compute_structural_alphabet`, `mine_recognizers`,
-    // `solve_shape_dict_selection`) are purely non-mutating fact
-    // collectors: they read the stable DAG and populate sidecar
-    // slots on `GrammarIR` (`regex_info`, `structural_alphabet`,
-    // `keyword_branches`, `shape_dict_templates`,
-    // `shape_dict_selection`, etc.). They touch neither rule
-    // bodies nor rule identities, so they compose with
-    // `structural` mode verbatim — the `preserve_identity` flag
-    // set upstream still holds.
+    // The three passes in this block (`compute_regex_info`,
+    // `compute_structural_alphabet`, `mine_recognizers`) are
+    // purely non-mutating fact collectors: they read the stable
+    // DAG and populate sidecar slots on `GrammarIR`
+    // (`regex_info`, `structural_alphabet`, `keyword_branches`,
+    // etc.). They touch neither rule bodies nor rule identities,
+    // so they compose with `structural` mode verbatim — the
+    // `preserve_identity` flag set upstream still holds.
     //
     // Pre-W5.1 the entire block below (profile-populating + codegen-
     // decision) was gated on `!options.structural`, which silently
@@ -327,16 +325,6 @@ pub fn compile_ast_common<'a>(
     });
     timer.span("mine_recognizers", || {
         bbnf_ir::passes::mine_recognizers(&mut ir);
-    });
-    // Tranche AV.5.3 — shape-dictionary admission solve. Selects
-    // up to MAX_SHAPE_DICT_ENTRIES candidates from the
-    // `mine_recognizers`-emitted pool by greedy maximisation of
-    // `freq × savings - static_entry_cost`. The result indexes
-    // into `ir.shape_dict_templates`; the codegen emitter walks
-    // the selection to bake `GrammarProfile::shape_dict`.
-    timer.span("solve_shape_dict_selection", || {
-        ir.shape_dict_selection =
-            bbnf_ir::passes::csp_strategy::constraints::shape_dict::solve_shape_dict_selection(&ir);
     });
 
     if !options.structural {

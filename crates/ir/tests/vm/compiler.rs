@@ -45,8 +45,6 @@ fn make_simple_ir(body: IrNode) -> GrammarIR {
         shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
         ),
         eclass_facts: std::collections::HashMap::new(),
-        shape_dict_templates: Vec::new(),
-        shape_dict_selection: Vec::new(),
         keyword_branches: std::collections::HashMap::new(),
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
@@ -192,8 +190,6 @@ fn compile_memo_rule() {
         shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
         ),
         eclass_facts: std::collections::HashMap::new(),
-        shape_dict_templates: Vec::new(),
-        shape_dict_selection: Vec::new(),
         keyword_branches: std::collections::HashMap::new(),
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
@@ -272,8 +268,6 @@ fn compile_direct_left_recursive_rule_keeps_memo() {
         shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
         ),
         eclass_facts: std::collections::HashMap::new(),
-        shape_dict_templates: Vec::new(),
-        shape_dict_selection: Vec::new(),
         keyword_branches: std::collections::HashMap::new(),
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
@@ -446,8 +440,6 @@ fn compile_token_dispatch_emits_dispatch_token() {
         shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
         ),
         eclass_facts: std::collections::HashMap::new(),
-        shape_dict_templates: Vec::new(),
-        shape_dict_selection: Vec::new(),
         keyword_branches: std::collections::HashMap::new(),
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
@@ -545,8 +537,6 @@ fn compile_call() {
         shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
         ),
         eclass_facts: std::collections::HashMap::new(),
-        shape_dict_templates: Vec::new(),
-        shape_dict_selection: Vec::new(),
         keyword_branches: std::collections::HashMap::new(),
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),

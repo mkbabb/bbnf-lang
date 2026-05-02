@@ -49,8 +49,6 @@ fn literal_is_span_eligible() {
         shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
         ),
         eclass_facts: std::collections::HashMap::new(),
-        shape_dict_templates: Vec::new(),
-        shape_dict_selection: Vec::new(),
         keyword_branches: std::collections::HashMap::new(),
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
@@ -107,8 +105,6 @@ fn map_not_span_eligible() {
         shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
         ),
         eclass_facts: std::collections::HashMap::new(),
-        shape_dict_templates: Vec::new(),
-        shape_dict_selection: Vec::new(),
         keyword_branches: std::collections::HashMap::new(),
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
@@ -164,8 +160,6 @@ fn transitive_span_eligibility() {
         shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
         ),
         eclass_facts: std::collections::HashMap::new(),
-        shape_dict_templates: Vec::new(),
-        shape_dict_selection: Vec::new(),
         keyword_branches: std::collections::HashMap::new(),
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
@@ -226,8 +220,6 @@ fn cyclic_not_span_eligible() {
         shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
         ),
         eclass_facts: std::collections::HashMap::new(),
-        shape_dict_templates: Vec::new(),
-        shape_dict_selection: Vec::new(),
         keyword_branches: std::collections::HashMap::new(),
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
@@ -281,8 +273,6 @@ fn seq_of_literals_span_eligible() {
         shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(
         ),
         eclass_facts: std::collections::HashMap::new(),
-        shape_dict_templates: Vec::new(),
-        shape_dict_selection: Vec::new(),
         keyword_branches: std::collections::HashMap::new(),
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),

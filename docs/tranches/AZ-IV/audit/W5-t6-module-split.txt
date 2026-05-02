@@ -1,0 +1,108 @@
+AZ-IV.W5 T6 — generated module-split output (DEFERRED)
+
+Status: DEFERRED to follow-on. T4 landed within the 35-min cap; T6
+required xtask refactor surface that exceeds the remaining budget.
+
+Mechanism (per AUDIT-F transposition T6)
+---------------------------------------
+
+Today `crates/core/src/grammar/generated/<grammar>.rs` is a single
+file per grammar, ranging 624 LOC (math) to 91,185 LOC (css_l4). T6
+splits each grammar's emission into a directory:
+
+  crates/core/src/grammar/generated/<grammar>/
+  ├── mod.rs        — re-exports the public surface
+  ├── parsers.rs    — per-shape `parse_<shape>_<grammar>_<rule>` fns
+  ├── types.rs      — type definitions (struct/enum decls)
+  └── scanners.rs   — regex-scan adapter + DFA bodies
+
+Public import paths preserved through `mod.rs::pub use parsers::*;` etc.
+The change is internal layout — consumers continue to import via
+`bbnf::grammar::generated::<grammar>::*`.
+
+Why deferred
+------------
+
+Three xtask refactors required for T6 are non-trivial under the cap:
+
+1. **Per-section emission split**. The current emitter pipeline
+   (`emit_grammar_impl` in `crates/core/src/backend/rust/emitter/grammar.rs`)
+   produces ONE monolithic `TokenStream` carrying every emitted item.
+   Splitting requires partitioning the emission into per-section
+   streams (parsers / types / scanners / registry) and threading them
+   through `prettyplease::unparse` separately. The current
+   `bbnf::generate::generate_all` returns a single TokenStream; T6
+   needs a return shape carrying the per-section partition.
+
+2. **Per-section formatter invocations**. Each per-section file gets
+   its own `prettyplease::unparse` call; the file headers + `#![allow]`
+   blocks need per-section variants (only `parsers.rs` needs
+   `unused_assignments`; only `scanners.rs` needs the `clippy::all`
+   blanket; etc.).
+
+3. **`mod.rs` synthesis**. The mod.rs file is a NEW emission target
+   that doesn't exist in the current pipeline; it must enumerate the
+   sub-modules and re-export the marker struct + the per-grammar
+   parser-attrs items so consumers see the same import paths.
+
+Each of these is a fresh ~50-100 LOC change in `xtask/src/regen.rs` +
+the `bbnf::generate::generate_all` boundary. The integration risk is
+medium — the generated files already pass through `syn::parse2` +
+`prettyplease::unparse`; the partition must preserve the round-trip.
+
+Files (when re-dispatched)
+--------------------------
+
+  xtask/src/regen.rs
+    - Switch `output_path` from `<grammar>.rs` to `<grammar>/mod.rs`.
+    - Split `regen_grammar` into per-section emission, each with its
+      own `prettyplease::unparse` + content-equality skip.
+    - Synthesise mod.rs from the per-section module list.
+    - Update `regen_check_filtered` to enumerate the sub-files.
+
+  bbnf::generate::generate_all (or a new `generate_partitioned`)
+    - Return a `GenerateOutput { parsers, types, scanners, registry }`
+      shape instead of a single TokenStream.
+
+  crates/core/src/backend/rust/emitter/grammar.rs
+    - Emit per-section TokenStreams from `emit_grammar_impl`. The
+      existing surface produces:
+        * struct/enum decls    → types.rs
+        * shape emitters       → parsers.rs
+        * regex-scan adapter   → scanners.rs
+        * registry static      → mod.rs (or a dedicated registry.rs)
+        * keyword/precedence/path-plan tables → mod.rs (top-level)
+
+  crates/core/src/grammar/generated/mod.rs
+    - Update `pub mod <ident>;` declarations (no change — directory
+      modules use the same syntax). The bbnf re-export
+      `pub use bbnf::*;` continues to work because `bbnf/mod.rs` will
+      re-export the same surface.
+
+  crates/core/src/grammar/generated/<grammar>/mod.rs (new, × 9)
+  crates/core/src/grammar/generated/<grammar>/parsers.rs (new, × 9)
+  crates/core/src/grammar/generated/<grammar>/types.rs (new, × 9)
+  crates/core/src/grammar/generated/<grammar>/scanners.rs (new, × 9)
+
+Hard gate (when T6 lands)
+-------------------------
+
+1. Per-grammar directory exists with ≥ 3 sub-files.
+2. Public import paths preserved — every consumer's `use
+   bbnf::grammar::generated::<g>::*` continues to compile.
+3. `cargo xtask regen --check` clean.
+4. `cargo nextest run --workspace --cargo-profile ax-iter` no
+   regression vs T4 close.
+5. The largest file (`css_l4/parsers.rs`) is significantly smaller
+   than the current 91 KLOC monolith (target: ≤ 40 KLOC per
+   sub-file).
+
+Carry rationale
+---------------
+
+T6 is consumer-transparent and non-load-bearing for tranche close.
+The 91 KLOC css_l4 monolith is a developer-experience problem, not a
+correctness one — the AZ-IV thesis closes with T4 alone. T6 belongs
+in the next iteration window where xtask refactor surface is part of
+the wave's primary scope (a successor wave covering `xtask` enhancements
+or generator-output ergonomics).

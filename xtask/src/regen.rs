@@ -483,11 +483,7 @@ fn regen_grammar(workspace_root: &Path, entry: &GrammarEntry, target_path: &Path
 /// expansion time and dispatches each path-segment validation through
 /// the production registry instead of the synthetic fixture it
 /// previously carried.
-fn write_registry_sidecar(
-    ir: &bbnf_ir::GrammarIR,
-    target_path: &Path,
-    ident: &str,
-) -> Result<()> {
+fn write_registry_sidecar(ir: &bbnf_ir::GrammarIR, target_path: &Path, ident: &str) -> Result<()> {
     let sidecar_path = target_path.with_file_name(format!("{ident}.registry.json"));
 
     // Entry rule resolution mirrors the codegen-emitted
@@ -631,12 +627,10 @@ fn regen_check_filtered(
         } else {
             let regenerated_sidecar = std::fs::read(&tmp_sidecar)
                 .with_context(|| format!("read regenerated sidecar `{}`", tmp_sidecar.display()))?;
-            let checked_in_sidecar_bytes = std::fs::read(&checked_in_sidecar).with_context(|| {
-                format!(
-                    "read checked-in sidecar `{}`",
-                    checked_in_sidecar.display()
-                )
-            })?;
+            let checked_in_sidecar_bytes =
+                std::fs::read(&checked_in_sidecar).with_context(|| {
+                    format!("read checked-in sidecar `{}`", checked_in_sidecar.display())
+                })?;
             if regenerated_sidecar != checked_in_sidecar_bytes {
                 drift.push(format!(
                     "drift: `{}` differs from `cargo xtask regen --grammar {}` sidecar output",

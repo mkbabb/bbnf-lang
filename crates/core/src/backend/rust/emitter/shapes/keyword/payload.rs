@@ -61,10 +61,7 @@ pub(super) fn leading_literal_bytes(node: &IrNode, ir: &GrammarIR) -> Option<Vec
 /// for Map descriptors that do not project to a u32-encodable payload
 /// (`Span`, `FnCall`, etc., where the leaf push must carry the matched
 /// bytes via `push_leaf_with_str`).
-pub(super) fn rule_root_payload_value(
-    rule_body: &IrNode,
-    ir: &GrammarIR,
-) -> Option<TokenStream> {
+pub(super) fn rule_root_payload_value(rule_body: &IrNode, ir: &GrammarIR) -> Option<TokenStream> {
     fn find_map_fn(node: &IrNode) -> Option<u32> {
         match node {
             IrNode::Map { fn_id, .. } => Some(*fn_id),

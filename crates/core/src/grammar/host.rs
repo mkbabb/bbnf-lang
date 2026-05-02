@@ -23,8 +23,8 @@ use parse_that::Span;
 
 use crate::lower::view_walk::{find_descendant_by_kind, find_rhs_expression_descendant};
 use crate::pipeline::directives::DirectiveMaps;
-use crate::runtime::bbnf::{BbnfCompoundKind, BbnfDocument, BbnfKind, BbnfView};
 use crate::runtime::RuntimeView;
+use crate::runtime::bbnf::{BbnfCompoundKind, BbnfDocument, BbnfKind, BbnfView};
 use crate::types::*;
 
 /// Sink abstraction for absorbing a parsed grammar's rules and directives.

@@ -13,7 +13,7 @@ use bbnf_ir::{GrammarIR, IrNode};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use super::super::super::dfa_codegen::regex_scan_adapter_ident;
+use super::super::super::regex_scan_adapter::regex_scan_adapter_ident;
 use super::super::alt_dispatch::branches::branch_payload_push;
 use super::super::dispatcher::emit_ref_call_shape;
 use super::super::sanitise_grammar;

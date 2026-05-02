@@ -174,8 +174,8 @@ where
 }
 
 /// Sanitise a grammar name into a valid Rust ident suffix. Mirrors
-/// the `dta_walker::walker_fn_ident` sanitiser so the emitted PHF
-/// symbols live in the same namespace as the walker function.
+/// the regex-scan adapter's grammar sanitiser so the emitted PHF
+/// symbols live in the same namespace as the adapter.
 fn sanitise_ident(name: &str) -> String {
     let mut out = String::with_capacity(name.len());
     for ch in name.chars() {

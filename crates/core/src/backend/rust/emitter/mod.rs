@@ -1,22 +1,21 @@
 //! Emitter trait implementation for the Rust backend.
 //!
-//! `mod.rs` owns the single `impl Emitter for RustEmitter` block — Rust
-//! requires the trait impl to be one block. Post-AW-I.W4 the Rust
-//! backend routes parses through `dta_run` wholesale; the per-rule
-//! emit sibling modules (`alt`, `seq`, `repeat`, `binary`,
-//! `operator_chain`, `leaves`, `map_value`, `tape_prelude`,
-//! `dispatch`, `ws`, `string_decode`) deleted along with their
-//! trait-method impls. Surviving: `grammar` (impl block + parse
-//! entry), `dta`/`profile` (codegen data), `prettify`
-//! sub-dir (separate emission channel).
+//! `mod.rs` owns the single `impl Emitter for RustEmitter` block —
+//! Rust requires the trait impl to be one block. The Rust backend
+//! routes parses through the per-shape dispatcher; this module
+//! orchestrates the per-grammar emission. Surviving siblings:
+//! `grammar` (impl block + parse entry), `regex_scan_adapter` /
+//! `profile` / `keyword_dispatch` / `path_plan` / `precedence`
+//! (codegen data), `shapes` (per-shape emitter modules),
+//! `prettify` (separate emission channel).
 
-pub mod dfa_codegen;
 pub(crate) mod grammar;
 pub mod keyword_dispatch;
 pub mod path_plan;
 pub mod precedence;
 mod prettify;
 pub(crate) mod profile;
+pub mod regex_scan_adapter;
 pub mod shapes;
 
 // AZ-I.W2-act.A — `EmitStrategy` hoisted to `bbnf_ir::registry::strategy`.

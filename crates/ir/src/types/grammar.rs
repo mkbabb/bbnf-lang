@@ -178,20 +178,20 @@ pub struct GrammarIR {
     /// compare `Option<TypeDescId>` by `Copy` instead of cloning deep
     /// `TypeDesc::Tuple(Vec<_>)` trees. The interner also provides
     /// reference-equality structural typing for downstream consumers
-    /// (dispatch-share signatures in AA.5, TaggedUnion narrowing in
-    /// AA.7, tape view codegen in AB.2). Not serialized across the
-    /// WASM boundary: every compile rebuilds it from scratch so the
-    /// wire format stays compact.
+    /// (dispatch-share signatures, TaggedUnion narrowing, view
+    /// codegen). Not serialized across the WASM boundary: every
+    /// compile rebuilds it from scratch so the wire format stays
+    /// compact.
     #[serde(skip, default)]
     pub type_desc_interner: TypeDescInterner,
 
-    /// Tranche AB.0 — per-`NodeId` materialization class.
+    /// Per-`NodeId` materialization class.
     ///
     /// Populated by `classify_materialization` after `project_types`
-    /// in `finalize_compile`. Refined in Tranche AB.1 by the CSP
-    /// joint strategy + materialization solve. Consumed by the
-    /// tape-first emitter (AB.2) to decide per-rule prelude/epilogue
-    /// shape and per-ref inlining at call sites.
+    /// in `finalize_compile`. Refined by the CSP joint strategy +
+    /// materialization solve. Consumed by the per-shape emitter
+    /// modules to decide per-rule prelude/epilogue shape and per-ref
+    /// inlining at call sites.
     ///
     /// Keyed by `dag::NodeId` — requires `self.dag` to be populated.
     /// Not serialized: every compile rebuilds it from scratch.
@@ -235,13 +235,13 @@ pub struct GrammarIR {
     #[serde(skip, default)]
     pub disjoint_first_tables: passes::recognizers::disjoint_first::DisjointFirstMap,
 
-    /// AW-III.W5-carry — per-Regex matchable-byte alphabets.
+    /// Per-Regex matchable-byte alphabets.
     ///
     /// Populated by
     /// [`passes::recognizers::pattern_alphabet::PatternAlphabetMiner`].
-    /// Consumed by the walker's Regex arm to bound its scan when the
-    /// pattern's alphabet is disjoint from the grammar's structural
-    /// alphabet.
+    /// Consumed by shape emitters' Regex arms to bound the scan when
+    /// the pattern's alphabet is disjoint from the grammar's
+    /// structural alphabet.
     /// Not serialized.
     #[serde(skip, default)]
     pub pattern_alphabets: passes::recognizers::pattern_alphabet::PatternAlphabetMap,
@@ -317,32 +317,31 @@ pub struct GrammarIR {
     #[serde(skip, default)]
     pub push_fingerprint: Option<passes::sets::PushFingerprint>,
 
-    /// AW-IV.W4.3 — rules admitted to runtime bloom + GADT dedup.
+    /// Rules admitted to runtime bloom + GADT dedup.
     ///
     /// Populated by
     /// [`passes::recognizers::dedup_eligibility::mine_dedup_eligible_rules`].
     /// The IR projection at [`GrammarIR::profile`] folds this Vec into
     /// [`passes::profile::GrammarProfile::dedup_eligible_rules`]; the
     /// emitter lowers that to the runtime
-    /// `GRAMMAR_PROFILE.dedup_eligible_rules` slot; the walker's
-    /// compound-emit arm consults the slot at parse time.
+    /// `GRAMMAR_PROFILE.dedup_eligible_rules` slot; the
+    /// compound-emission arm consults the slot at parse time.
     /// Not serialized: every compile rebuilds it from scratch.
     #[serde(skip, default)]
     pub dedup_eligible_rules: Vec<u32>,
 
-    /// AW-V.W3.1 — per-rule shape-dispatch classification.
+    /// Per-rule shape-dispatch classification.
     ///
     /// Populated by
     /// [`passes::recognizers::shape_dispatch::shape_dispatch`] at the
-    /// tail of `mine_recognizers`. Maps each rule to one of 12
-    /// shape tags (Object / Array / String / Number / Keyword /
-    /// Scalar today; Pratt / Unordered / ArgList / Flat / Wrap /
-    /// HRegex lands W4). The per-shape emitter modules at
+    /// tail of `mine_recognizers`. Maps each rule to one of the
+    /// active shape tags (Object / Array / String / Number / Keyword
+    /// / Scalar / Pratt / Unordered / ArgList / Flat / Wrap /
+    /// HRegex). The per-shape emitter modules at
     /// `crates/core/src/backend/rust/emitter/shapes/` consume the
-    /// tags to route codegen; rules absent from the map fall back to
-    /// `__dta_walker_inline::run` per the AX cold-path replay
-    /// contract. Not serialized: every compile rebuilds it from
-    /// scratch.
+    /// tags to route codegen; rules absent from the map are
+    /// transparent / pruned and the dispatcher does not enter them.
+    /// Not serialized: every compile rebuilds it from scratch.
     #[serde(skip, default)]
     pub shape_assignments: passes::recognizers::shape_dispatch::ShapeAssignments,
 
@@ -357,9 +356,9 @@ pub struct GrammarIR {
     /// Consumed by the typed-`->` audit pass at
     /// [`passes::audit::payload_coverage`] (via the
     /// [`passes::audit::StructRegistryProbe`] trait impl on
-    /// `&StructRegistry`) and by the W2 / W3 emitter rewires that
-    /// drop tape materialisation on the three primary data grammars
-    /// (JSON, CSS L4, Sheets). Empty until `project_types` runs;
+    /// `&StructRegistry`) and by the per-shape emitter modules that
+    /// project the per-rule layout into struct-direct emission.
+    /// Empty until `project_types` runs;
     /// `BTreeMap`-stable iteration order keeps audit JSON snapshots
     /// byte-identical across runs. Not serialized: every compile
     /// rebuilds it from scratch.
@@ -548,9 +547,10 @@ impl GrammarIR {
 
     /// Intern a `TypeDesc`, returning its stable id. Idempotent.
     ///
-    /// Callers that need reference-equality structural typing (dispatch
-    /// signatures, TaggedUnion discriminants, tape view kinds) should
-    /// use this rather than comparing `TypeDesc` values directly.
+    /// Callers that need reference-equality structural typing
+    /// (dispatch signatures, TaggedUnion discriminants, view kinds)
+    /// should use this rather than comparing `TypeDesc` values
+    /// directly.
     pub fn intern_type(&mut self, ty: TypeDesc) -> TypeDescId {
         self.type_desc_interner.intern(ty)
     }

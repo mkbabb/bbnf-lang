@@ -12,18 +12,17 @@
 //!
 //! # Shape taxonomy (AW-V.md §"Shape taxonomy — 11 categories")
 //!
-//! W3 implements: **Object**, **Array**, **String**, **Number**,
-//! **Keyword**, **Scalar**. W4 extends with **Pratt**, **Unordered**,
-//! **ArgList**, **Flat**, **Wrap**, **HRegex**. Rules that match no
-//! shape detector stay [`ShapeTag::None`] and route through
-//! `__dta_walker_inline::run` per the AX cold-path replay contract.
+//! Active shapes: **Object**, **Array**, **String**, **Number**,
+//! **Keyword**, **Scalar**, **Pratt**, **Unordered**, **ArgList**,
+//! **Flat**, **Wrap**, **HRegex**. Rules that match no shape detector
+//! stay [`ShapeTag::None`] (transparent / pruned set; the dispatcher
+//! does not enter them).
 //!
 //! # Outputs
 //!
 //! [`shape_dispatch`] returns a [`ShapeAssignments`] mapping every
 //! classified rule to its [`ShapeTag`]. Rules absent from the map are
-//! implicitly `ShapeTag::None` — the emitter routes them to the
-//! walker fallback.
+//! implicitly `ShapeTag::None`.
 //!
 //! # Execution
 //!
@@ -81,8 +80,7 @@ use crate::types::{GrammarIR, RuleId};
 ///
 /// A `HashMap<RuleId, ShapeTag>` storing only classified rules.
 /// Rules absent from the map fall back to [`ShapeTag::None`] via
-/// [`get`](Self::get) — the emitter routes them to
-/// `__dta_walker_inline::run` per the AX replay contract.
+/// [`get`](Self::get) — the dispatcher does not enter them.
 #[derive(Debug, Clone, Default)]
 pub struct ShapeAssignments {
     /// Per-rule shape tag. Rules absent default to [`ShapeTag::None`].
@@ -120,19 +118,16 @@ impl ShapeAssignments {
 
 /// Shape categories the per-shape emitter modules consume.
 ///
-/// W3 actively classifies: [`Object`](Self::Object),
+/// Active classifications: [`Object`](Self::Object),
 /// [`Array`](Self::Array), [`String`](Self::String),
 /// [`Number`](Self::Number), [`Keyword`](Self::Keyword),
-/// [`Scalar`](Self::Scalar).
-///
-/// W4 extends with [`Pratt`](Self::Pratt),
+/// [`Scalar`](Self::Scalar), [`Pratt`](Self::Pratt),
 /// [`Unordered`](Self::Unordered), [`ArgList`](Self::ArgList),
 /// [`Flat`](Self::Flat), [`Wrap`](Self::Wrap),
-/// [`HRegex`](Self::HRegex). Their detector signatures are defined
-/// now; full bodies land W4.
+/// [`HRegex`](Self::HRegex).
 ///
-/// [`None`](Self::None) routes the rule through
-/// `__dta_walker_inline::run` (the AX cold-path replay surface).
+/// [`None`](Self::None) marks transparent / pruned rules the
+/// dispatcher does not enter.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ShapeTag {
     /// JSON `object`, CSS declaration block — key → value compound

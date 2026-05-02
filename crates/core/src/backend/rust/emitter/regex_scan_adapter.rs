@@ -1,31 +1,37 @@
-//! AW-IV.W1.4-aggressive — Per-state DFA inline body emission.
+//! Regex-scan adapter — per-grammar pattern-keyed DFA replay.
 //!
 //! # Architectural role
 //!
-//! Post-W1 the Regex arm of the per-grammar walker called a
-//! separately-emitted `__dfa_match_<grammar>_<state_idx>` function by
-//! name. JSON's small DFAs got LLVM-inlined by the compiler's heuristic,
-//! but CSS L4's larger DFAs stayed out-of-line as 26 fn symbols in the
-//! bench binary, paying a function-call boundary per Regex visit. Per
-//! the AW-IV §architectural-thesis binding rule:
+//! This module emits the cold-path regex replay surface used by
+//! shape-emitter sites that dispatch on a pattern string at runtime
+//! (`try_branch`, `handle_repeat_failure_bounded`, structural-branch
+//! prelude, wrap struct_direct prelude, hregex peek). Each per-grammar
+//! emission produces:
 //!
-//! > **Zero function-call boundary in the per-grammar walker hot path;
-//! > emit every callee inline at the source level.**
+//! 1. `__regex_scan_<grammar>(pattern: &str, input: &[u8], pos: usize)
+//!    -> Option<u32>` — the sole consumer-facing function. Its body
+//!    enumerates every regex-bearing state in the lifted grammar-fact
+//!    table, splices the per-pattern minimised DFA inline as a
+//!    labelled `'__dfa: { … }` block, and dispatches on
+//!    pointer-equality of the interned `&'static str` pattern key.
 //!
-//! W1.4-aggressive lifts the DFA's `loop { match state { ... } }` into
-//! the walker arm directly. There is no `fn __dfa_match_*` symbol; the
-//! DFA body is a labelled block spliced into each Regex / WsTrim / boundary-
-//! ws site. The walker arm is one giant straight-line Rust function
-//! whose Regex states carry the DFA match loop in the source — LLVM
-//! sees the entire arm as one basic block and can const-fold byte
-//! comparisons, jump-table layouts, and tail-call patterns at the point
-//! of use. Code-size cost is irrelevant per the binding rule.
+//! 2. The grammar-scoped pattern static decls
+//!    (`static __DTA_REGEX_<i>: &str`, `static __DTA_WS_<i>: &str`)
+//!    that the dispatch arms compare pointers against. The IR-side
+//!    state lift names them; this module declares them inside the
+//!    adapter.
 //!
-//! # Emission shape
+//! 3. Optional first-byte LUT
+//!    (`__REGEX_FIRST_BYTE_LUT_<grammar>`) and last-byte set table
+//!    (`__REGEX_LAST_BYTE_SET_<grammar>`) — fast-path admission
+//!    filters consulted before the DFA body for grammars with ≥ 4
+//!    patterns. The DFA body is invoked only when both filters
+//!    admit.
+//!
+//! # Emission shape (DFA body, per pattern)
 //!
 //! For a pattern whose minimised DFA has N states and K equivalence
-//! classes, [`emit_dfa_inline_body`] returns a labelled block of the
-//! form:
+//! classes the body splices a labelled block of the form:
 //!
 //! ```ignore
 //! '__dfa: {
@@ -41,10 +47,9 @@
 //!         match __dfa_state {
 //!             0 => match b {
 //!                 <bytes for target A> => __dfa_state = A,
-//!                 <bytes for target B> => __dfa_state = B,
 //!                 _ => break,
 //!             },
-//!             1 => match b { /* ... */ },
+//!             /* ... */
 //!             _ => unsafe { ::core::hint::unreachable_unchecked() },
 //!         }
 //!         __dfa_p += 1;
@@ -57,28 +62,11 @@
 //! }
 //! ```
 //!
-//! The caller supplies `input: &[u8]` and `pos: usize` in its scope;
-//! every internal binding uses the `__dfa_` prefix so no identifier
-//! collides with the walker's own bindings.
-//!
-//! Byte grouping follows the ByteDispatch-arm discipline in
-//! `dta_walker/lower_state.rs::emit_byte_dispatch_arm`: bytes sharing a
-//! target are coalesced into one `(b1 | b2 | b3)` arm, reducing the
-//! per-state arm count from 256 to the distinct-target cardinality. The
-//! DFA's `byte_classes` table already partitions the byte space by
-//! behavioural equivalence; emission walks it directly.
-//!
-//! # Adapter
-//!
-//! `__regex_scan_<grammar>(pattern: &str, input: &[u8], pos: usize) ->
-//! Option<u32>` is the SOLE out-of-line per-grammar fn this module
-//! emits. Its dispatch arms themselves splice inline DFA bodies (no
-//! chain of fn calls) so the adapter contains everything the walker
-//! needs to replay a regex scan by pattern string. Hot-path walker arms
-//! emit the DFA body directly; the adapter exists for cold-path
-//! `dispatch_one` / `try_branch` callers only.
+//! Bytes sharing a target are coalesced into one `(b1 | b2 | b3)` arm
+//! via the DFA's `byte_classes` partition, reducing per-state arm
+//! count from 256 to the distinct-target cardinality.
 
-use bbnf_ir::passes::recognizers::dta::{DtaState, DtaTable};
+use bbnf_ir::passes::recognizers::grammar_facts::{DtaState, DtaTable};
 use bbnf_ir::{GrammarIR, IrNode};
 use proc_macro2::{Literal, TokenStream};
 use quote::{format_ident, quote};
@@ -158,8 +146,8 @@ fn pattern_for_state<'a>(ir: &'a GrammarIR, table: &'a DtaTable, idx: usize) -> 
 ///    over with `#[ignore]`).
 ///
 /// Patterns appearing in both sources dedupe by string value: the
-/// DTA-classified entry wins (preserves the table-state indexing the
-/// `emit_dfa_inline_body` splice consumers depend on).
+/// grammar-fact-classified entry wins (preserves the table-state
+/// indexing the adapter's pointer-equality dispatch arms depend on).
 ///
 /// Returns `(synth_idx, resolved_pattern_string, pattern_static_ident)`
 /// triples. `synth_idx` is the dispatch-arm ordinal — for DTA-table
@@ -547,35 +535,6 @@ fn emit_hoisted_dfa_tables(
 /// code-size wins from the table hoist. The 10-state threshold
 /// splits the two.
 const DFA_HOIST_MIN_STATES: usize = 10;
-
-/// Emit the inline DFA body for the regex-bearing state at `idx` in
-/// `table.states`. The returned `TokenStream` is a labelled `'__dfa: {
-/// ... }` block yielding `Option<u32>`; the caller splices it where a
-/// `__dfa_match_<grammar>_<idx>(input, pos)` call would have sat.
-///
-/// The caller must have `input: &[u8]` and `pos: usize` in scope at the
-/// splice site. The body introduces `__dfa_`-prefixed locals only.
-///
-/// Panics at codegen time if `idx` is not a regex-bearing state (the
-/// caller already filtered by `DtaState::Regex` / `DtaState::WsTrim {
-/// pattern: Some(_) }`).
-pub fn emit_dfa_inline_body(
-    grammar: &str,
-    ir: &GrammarIR,
-    table: &DtaTable,
-    idx: usize,
-) -> TokenStream {
-    let _ = grammar; // retained for symmetry with the ident composer
-    let pattern = pattern_for_state(ir, table, idx).unwrap_or_else(|| {
-        panic!(
-            "AW-IV.W1.4-aggro: emit_dfa_inline_body invoked for state {} which \
-             is not regex-bearing — only DtaState::Regex and \
-             DtaState::WsTrim{{ pattern: Some(_) }} states are admissible",
-            idx,
-        )
-    });
-    emit_dfa_body_for_pattern(pattern)
-}
 
 /// Emit the per-grammar regex-scan adapter used by the cold-path replay
 /// (AX) and any call site that dispatches by pattern string.

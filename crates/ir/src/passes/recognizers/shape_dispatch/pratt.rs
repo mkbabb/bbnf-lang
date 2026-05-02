@@ -78,7 +78,7 @@
 //! state at the backend.
 
 use crate::passes::inspect::unwrap_map_ow;
-use crate::passes::recognizers::dta::match_operator_chain_rule;
+use crate::passes::recognizers::grammar_facts::match_operator_chain_rule;
 use crate::types::{GrammarIR, RuleId};
 
 /// Detect Pratt-shape: the rule's body is an operator-chain rung (or

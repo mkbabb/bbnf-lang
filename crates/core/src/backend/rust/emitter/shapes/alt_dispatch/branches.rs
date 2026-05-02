@@ -107,9 +107,10 @@ pub(super) fn emit_dispatch_arms_struct_direct(
             // declared u8 / u32 / bool instead of unit.
             IrNode::Regex(sid) => {
                 let pattern = ir.get_string(*sid).to_string();
-                let regex_scan_ident = super::super::super::dfa_codegen::regex_scan_adapter_ident(
-                    &super::super::sanitise_grammar(grammar_suffix),
-                );
+                let regex_scan_ident =
+                    super::super::super::regex_scan_adapter::regex_scan_adapter_ident(
+                        &super::super::sanitise_grammar(grammar_suffix),
+                    );
                 quote! {
                     {
                         if let ::core::option::Option::Some(match_len) =

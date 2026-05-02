@@ -66,9 +66,9 @@
 //! and composes the per-shape streams plus the dispatcher into the
 //! output consumed by `emit_grammar_impl`.
 //!
-//! Rules absent from [`ShapeAssignments`] (`ShapeTag::None`) route
-//! through `__dta_walker_inline::run` per the AX cold-path replay
-//! contract — their codegen path is unchanged.
+//! Every non-transparent rule in a production grammar carries a
+//! [`ShapeTag`] assignment; `ShapeTag::None` is reserved for the
+//! transparent / pruned set the dispatcher does not enter.
 
 pub mod alt_dispatch;
 pub mod arglist;
@@ -106,8 +106,9 @@ pub use dispatcher::dispatcher_fn_ident;
 
 /// Sanitise a grammar identifier into a Rust ident fragment.
 ///
-/// Mirrors the sibling helper in `emitter::dta_walker::mod.rs` so
-/// cross-emitter symbol composition agrees byte-for-byte.
+/// Mirrors the regex-scan adapter's sanitiser in
+/// `emitter::regex_scan_adapter` so cross-emitter symbol composition
+/// agrees byte-for-byte.
 pub(crate) fn sanitise_grammar(grammar: &str) -> String {
     let mut s = String::with_capacity(grammar.len());
     for ch in grammar.chars() {
@@ -123,22 +124,16 @@ pub(crate) fn sanitise_grammar(grammar: &str) -> String {
 /// Emit the full per-shape + dispatcher stream for every rule on `ir`.
 ///
 /// `grammar_ident_str` is the sanitised grammar symbol the caller
-/// already computed (matching `dta_walker`'s sanitise_grammar output);
-/// it is embedded into the emitted `parse_<shape>_<grammar>_<rule>`
+/// already computed (matching the regex-scan adapter's sanitiser); it
+/// is embedded into the emitted `parse_<shape>_<grammar>_<rule>`
 /// symbols so cross-emitter compositions agree.
 ///
 /// Walks [`GrammarIR::rules`], consults
 /// [`GrammarIR::shape_assignments`] per rule, and dispatches to the
-/// matching per-shape emitter. Unclassified rules contribute nothing
-/// to the stream — they continue through the walker fallback in
-/// `__dta_walker_inline::run`.
-///
-/// The dispatcher emitter runs once at the end, producing the
-/// grammar's top-level `parse_<grammar>_<root>` entry point. When
-/// the grammar has no shape-classified rules the dispatcher emits an
-/// empty token stream — `emit_grammar_impl` gates on the same
-/// condition to decide whether `parse()` routes through shape
-/// dispatch or the existing `dta_run_<grammar>`.
+/// matching per-shape emitter. The dispatcher emitter runs once at
+/// the end, producing the grammar's top-level
+/// `parse_<grammar>_<root>` entry point that `parse()` routes
+/// through.
 pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> TokenStream {
     // AX.W0b.A — the coverage gate retired alongside the walker;
     // every grammar admits shape emission post-W0a.2.h. Unclassified
@@ -206,14 +201,11 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
             }
         }
         let tag = ir.shape_assignments.get(rule.id);
-        // AW-V.W4-activation — emit per-shape fns for BOTH W3-active
-        // shapes (Object / Array / String / Number / Keyword / Scalar)
-        // AND W4-active shapes (Pratt / Unordered / ArgList / Flat /
-        // Wrap / HRegex). The W4 emitters landed functional bodies
-        // under AW-V.W4-fix; this activation wires them into the
-        // dispatcher's call surface. Unclassified rules (`ShapeTag::None`)
-        // continue routing through `__dta_walker_inline::run` per the
-        // AX cold-path replay contract.
+        // Emit per-shape fns for every classified shape (Object /
+        // Array / String / Number / Keyword / Scalar / Pratt /
+        // Unordered / ArgList / Flat / Wrap / HRegex). Unclassified
+        // (transparent / pruned) rules contribute nothing to the
+        // stream.
         if !tag.is_classified() {
             continue;
         }

@@ -17,9 +17,9 @@
 //! ShapeTag::Pratt`] — every rule the shape detector admits as
 //! Pratt-shape contributes its operator set. This decouples the LUT
 //! from DTA lift semantics: the DTA's
-//! [`crate::passes::recognizers::dta::collect_precedence_chain`]
+//! [`crate::passes::recognizers::grammar_facts::collect_precedence_chain`]
 //! requires ≥ 2 rungs to collapse a tower into one `ShuntingYard`
-//! state (a walker-path optimisation). The Pratt shape emitter,
+//! fact entry. The Pratt shape emitter,
 //! however, emits per-Pratt-rule `parse_pratt_*` bodies — including
 //! single-rung Pratt rules (BBNF's `binary_factor = mapped_factor ,
 //! (binary_operators ?w , mapped_factor) *`) whose operators must
@@ -40,14 +40,14 @@
 //! Rule sources:
 //!
 //! 1. `DtaTable::shunting_yard_chains` — the multi-rung towers the
-//!    DTA lift already mined. Each rule in a chain gets the chain's
-//!    shared precedence table (the rung doesn't own its own slice).
+//!    grammar-fact lift already mined. Each rule in a chain gets the
+//!    chain's shared precedence table (the rung doesn't own its own slice).
 //! 2. `ShapeTag::Pratt` rules outside those chains — structurally
-//!    matched via [`crate::passes::recognizers::dta::
+//!    matched via [`crate::passes::recognizers::grammar_facts::
 //!    match_operator_chain_rule`] to extract their operator entries
 //!    with precedence = 1 (single-rung).
 
-use crate::passes::recognizers::dta::{
+use crate::passes::recognizers::grammar_facts::{
     Associativity, DtaState, DtaTable, PrecedenceEntry, match_operator_chain_rule,
 };
 use crate::passes::recognizers::shape_dispatch::ShapeTag;

@@ -981,7 +981,7 @@ fn emit_inline_regex_struct_direct(
     grammar_suffix: &str,
     ir: &GrammarIR,
 ) -> TokenStream {
-    use super::super::super::dfa_codegen::regex_scan_adapter_ident;
+    use super::super::super::regex_scan_adapter::regex_scan_adapter_ident;
     use super::super::sanitise_grammar;
     let pattern = ir.get_string(sid);
     let pattern_lit = pattern.to_string();

@@ -1,75 +1,43 @@
-//! Dispatch Tape Automaton (DTA) lifter — Tranche AV Phase 3 (AV.3.1–3.4).
+//! Grammar-fact lifter — regex / operator-chain / precedence facts.
 //!
 //! # Architectural role
 //!
-//! The DTA replaces the recursive-descent-per-rule codegen for a
-//! grammar's hot path with a flat counter-DFA + frame stack + shunting-
-//! yard loop driven by byte-class dispatch. This file lifts a
-//! [`GrammarIR`] tree to the owned data the emitter lowers into
-//! `const DTA_TABLE: DtaTable = …` in `generated.rs`.
+//! This pass walks a [`GrammarIR`] tree once, assigns a `StateId` to
+//! every structural node, and records the static per-rule facts that
+//! downstream emission consumes:
 //!
-//! The lift is intentionally closed over the existing IR shape —
-//! Alt / Seq / Repeat / Ref / Map / literal / regex — so no grammar
-//! syntax has to change for a grammar to opt in. The lifter walks
-//! every rule body once, assigns a `StateId` to every structural node,
-//! and records the static per-node facts the runtime driver consults:
-//! byte-class dispatch keys, frame kind, counter-optional markers,
-//! operator precedence, payload hints.
+//! 1. **Regex pattern enumeration.** Every regex-bearing node lands
+//!    in a [`DtaState::Regex`] / [`DtaState::WsTrim`] entry, keyed by
+//!    a stable interned pattern string. The Rust regex-scan adapter
+//!    (`crates/core/src/backend/rust/emitter/regex_scan_adapter.rs`)
+//!    enumerates these to emit one cold-path replay arm per pattern.
 //!
-//! # Three layers (AV.md §Phase 3)
+//! 2. **Byte-class / dispatch facts.** `DtaState::ByteDispatch` and
+//!    `DtaState::ClassifyByte` carry the disjoint-FIRST decisions the
+//!    `DisjointFirstMiner` derives. Shape emitters consume the
+//!    per-Alt facts to choose between linear / dispatch-table /
+//!    classify-byte dispatch shapes.
 //!
-//! 1. **Byte-class dispatch.** `DtaState::ByteDispatch` carries a
-//!    128-entry LUT of `first byte → target StateId`. The AU.2.7
-//!    structural bitmap feeds this — the DTA consumes
-//!    `trailing_zeros(mask)` + `src[offset]` for every Alt whose
-//!    branches have disjoint FIRST sets.
+//! 3. **Operator-chain / precedence facts.** Rule chains of the form
+//!    `a_n = a_{n+1} (op_n a_{n+1})*` collapse to a single
+//!    [`DtaState::ShuntingYard`] entry with one precedence row per
+//!    operator. [`collect_precedence_chain`] detects multi-rung
+//!    towers; [`match_operator_chain_rule`] matches single-rung
+//!    Pratt-shape rules. Both feed the operator-chain miner that
+//!    drives the per-rule precedence LUT.
 //!
-//! 2. **Frame counter stack.** Each compound node (Seq frame, Alt
-//!    frame, Repeat frame) has a [`FrameKind`] telling the driver how
-//!    to advance: linear counter for Seq, branch-index pin for Alt,
-//!    body-pointer + count for Repeat. The driver's stack is a fixed-
-//!    size `[Frame; 64]`; rules whose nesting depth exceeds 64 spill
-//!    to a heap overflow region (not observed in the target corpus).
+//! 4. **Counter-optional flags.** Nested-optional-with-empty-body
+//!    rules (BBNF `mapped_factor`, CSS `alphaSep?`) carry a
+//!    `CounterOptional::Nested` marker the shape emitters consult to
+//!    pick the right empty-admission shape.
 //!
-//! 3. **Counter-DFA extensions (AV.3.2).** Nested-optional-with-
-//!    empty-body (BBNF `mapped_factor`, CSS `alphaSep?`) is compiled
-//!    to a counter state that tracks presence without state-space
-//!    explosion. Rules carrying this shape are flagged via
-//!    `CounterOptional::Nested`.
+//! # Output
 //!
-//! # Shunting-yard extension (AV.3.3)
-//!
-//! Rule chains of the form `a_n = a_{n+1} (op_n a_{n+1})*` for
-//! `n = 0..k` collapse to a single shunting-yard loop with one
-//! precedence entry per operator. The lifter detects the chain via
-//! [`collect_precedence_chain`] — if every rule in the chain has the
-//! operator-list shape and each rung's operators are disjoint from
-//! every other rung's, one [`PrecedenceTable`] covers the whole
-//! chain. Sheets' `__formula → … → __unary_expr` collapses from six
-//! nested functions to one shunting-yard loop emitted at the
-//! `formula` state.
-//!
-//! # Diagnostic replay (AV.3.4)
-//!
-//! The happy-path DTA does not backtrack. Diagnostic mode re-enters
-//! the same state table with an instrumentation hook that tracks
-//! deepest successful advance + failing state. This file exposes
-//! `DtaTable::states` as the single shared substrate; the driver's
-//! `DiagnosticRun` re-plays from state 0 with tracking enabled. One
-//! automaton, two driver modes — no second codegen path.
-//!
-//! # Deliverable scope (AV.3.1)
-//!
-//! The lifter produces correct, inspection-friendly data. The runtime
-//! driver that executes the state table lives in the emitter (AV.3.6
-//! — fn-per-rule deletion) and its stage-B pair ships in V4. This
-//! file therefore stops at "emit the table"; the emitter side embeds
-//! the table as const data and the V4 PSI driver reads it.
-//!
-//! Keeping the producer and the consumer in distinct crates is the
-//! same decoupling that isolates `GrammarProfile` from the emitter
-//! and the walker; the DTA table is another output channel on the
-//! grammar-fingerprint boundary.
+//! [`DtaTable::states`] is the durable fact array; downstream
+//! consumers index by `StateId` and read the typed [`DtaState`]
+//! payload. The table is codegen-time data — the emitter walks it to
+//! produce static decls + dispatch arms; no runtime walker consumes
+//! the table.
 
 use std::collections::HashMap;
 
@@ -370,15 +338,16 @@ pub enum Associativity {
     Right,
 }
 
-// ── DTA table — the owned lifter output ─────────────────────────────
+// ── Fact table — the owned lifter output ────────────────────────────
 
-/// The lifted dispatch automaton for one grammar.
+/// The lifted grammar-fact table for one grammar.
 ///
 /// Contains every rule's compiled state, the per-rule entry-state
 /// index, and the shunting-yard collapses discovered during the
-/// lift. The emitter embeds this directly as `const DTA_TABLE` in
-/// `generated.rs`; the runtime driver consumes it via
-/// [`DtaTable::state`] + frame-stack walking.
+/// lift. The emitter walks this table at codegen time to derive its
+/// regex pattern enumeration, byte-class dispatch decisions, and
+/// precedence LUT entries; the table itself is not embedded as
+/// runtime data.
 #[derive(Clone, Debug, Default)]
 pub struct DtaTable {
     /// Every state, index == `StateId(i)`. `states[0]` is the entry
@@ -1552,14 +1521,10 @@ fn infer_associativity(literal: &str) -> Associativity {
     }
 }
 
-// AZ-II.cutover.A — `summarise` / `DtaSummary` / `DtaProfile` retired
-// per `audit/AUDIT-3-DECAY-INVENTORY.md` §1 + AUDIT-6 §8.4. Verified
-// zero non-doc consumers across the workspace pre-deletion. The
-// remaining DTA surface (`DtaState`, `DtaTable`, `DtaBuilder`,
+// Surviving public surface (`DtaState`, `DtaTable`, `DtaBuilder`,
 // `lift_dta`, `Associativity`, `CounterOptional`, `FrameKind`,
 // `LiteralPayload`, `PrecedenceEntry`, `PrecedenceTable`,
 // `RegexPayloadKind`, `SeqPromote`, `StateId`) is consumed by
-// `core::backend::rust::emitter::dfa_codegen`,
-// `recognizers::operator_chain`, and `core::backend::rust::emitter::grammar`
-// — those entries stay live until cutover.C retires the tape-direct
-// path entirely.
+// `core::backend::rust::emitter::regex_scan_adapter`,
+// `recognizers::operator_chain`, and
+// `core::backend::rust::emitter::grammar`.

@@ -3,7 +3,7 @@
 //! Identifies every `IrNode::Alt` whose branches have mutually-
 //! disjoint FIRST sets — i.e., each branch starts with bytes that no
 //! other branch can match. Such Alts lower to
-//! [`DtaState::ClassifyByte`](crate::passes::recognizers::dta::DtaState::ClassifyByte)
+//! [`DtaState::ClassifyByte`](crate::passes::recognizers::grammar_facts::DtaState::ClassifyByte)
 //! — a 256-entry LUT dispatched in a single indexed load. The
 //! mechanism is general across grammars (CSS `compoundSelector` 5-way,
 //! BBNF `directive` `@`-prefix, JSON escape `\`-prefix, Sheets

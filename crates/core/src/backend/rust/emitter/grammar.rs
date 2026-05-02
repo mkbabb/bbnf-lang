@@ -1,11 +1,11 @@
 //! Grammar-level emission for the Rust backend — AX.W0b shape-dispatch era.
 //!
-//! Post-W0b the Rust backend emits no per-rule parse functions and
-//! no walker. `emit_rule_function_impl` is retained as an empty
-//! shim so the driver's call pipeline compiles; sibling per-rule
-//! emitter modules were dismantled in AW-I.W4β. The `parse()` entry
-//! point emitted by `emit_grammar_impl` routes through the
-//! shape dispatcher unconditionally.
+//! The Rust backend emits no per-rule parse functions.
+//! `emit_rule_function_impl` is retained as an empty shim so the
+//! driver's call pipeline compiles; sibling per-rule emitter modules
+//! were dismantled. The `parse()` entry point emitted by
+//! `emit_grammar_impl` routes through the shape dispatcher
+//! unconditionally.
 
 use bbnf_ir::{GrammarIR, IrRule, TypeDesc};
 use proc_macro2::TokenStream;
@@ -13,8 +13,8 @@ use quote::quote;
 
 use crate::backend::driver::analysis::BackendAnalysis;
 
-use super::dfa_codegen;
 use super::path_plan;
+use super::regex_scan_adapter;
 use super::{RustEmitCtx, RustEmitter};
 
 /// AW-V.W3.2 — emit the per-grammar shared helpers the active shape
@@ -73,15 +73,14 @@ impl RustEmitter {
         }
     }
 
-    /// AW-I.W4α: per-rule function emission is a no-op.
+    /// Per-rule function emission is a no-op.
     ///
-    /// The Rust backend's `parse()` dispatches through the DTA
-    /// walker wholesale (see [`Self::emit_grammar_impl`]), so the
-    /// per-rule `__<name>` function bodies previously assembled here
-    /// are dead surface. The driver still calls into this method
-    /// once per rule; returning an empty token stream drops the
-    /// body without disturbing the call pipeline. W4β dismantles
-    /// the sibling emitter modules that fed this path.
+    /// The Rust backend's `parse()` dispatches through the shape
+    /// dispatcher unconditionally (see [`Self::emit_grammar_impl`]),
+    /// so the per-rule `__<name>` function bodies previously
+    /// assembled here are dead surface. The driver still calls into
+    /// this method once per rule; returning an empty token stream
+    /// drops the body without disturbing the call pipeline.
     pub(super) fn emit_rule_function_impl(
         &mut self,
         _rule: &IrRule,
@@ -137,15 +136,20 @@ impl RustEmitter {
         let profile = ir.profile();
         let grammar_profile = super::profile::emit_grammar_profile(&profile);
 
-        // AW-IV.W1.4-aggro — regex-scan adapter. The shape emitters
-        // consume it for every Regex / WsTrim site; its dispatch arms
-        // splice inline DFA bodies so no chain of `fn` calls survives
-        // on the hot path. Lifts the DTA once to read the pattern
-        // set; the table is NOT emitted as runtime data.
+        // Regex-scan adapter — cold-path pattern-keyed replay surface.
+        // Shape emitters consume the adapter ident at every Regex /
+        // WsTrim site whose dispatch needs to replay a regex by
+        // pattern string. The adapter's dispatch arms splice the
+        // minimised DFA body inline (no chain of `fn` calls). Lifts
+        // grammar facts once to read the pattern set; the lift is
+        // codegen-time data, NOT a runtime table.
         let grammar_name = ident.to_string();
-        let dta_walker_table = bbnf_ir::passes::lift_dta(ir);
-        let regex_scan_adapter =
-            dfa_codegen::emit_regex_scan_adapter(grammar_name.as_str(), ir, &dta_walker_table);
+        let regex_facts_table = bbnf_ir::passes::lift_dta(ir);
+        let regex_scan_adapter_ts = regex_scan_adapter::emit_regex_scan_adapter(
+            grammar_name.as_str(),
+            ir,
+            &regex_facts_table,
+        );
 
         // AW-III.W6.2 — emit PHF keyword tables for every literal-led
         // Alt whose mined branch count exceeds the threshold. The
@@ -192,7 +196,7 @@ impl RustEmitter {
         // plus a sparse `PRECEDENCE_ENTRIES` slice. Consulted inline by
         // the shape-dispatch Pratt body.
         let precedence_lut = {
-            let chain_facts = bbnf_ir::passes::collect_operator_chains(ir, &dta_walker_table);
+            let chain_facts = bbnf_ir::passes::collect_operator_chains(ir, &regex_facts_table);
             super::precedence::emit_precedence_lut(ident.to_string().as_str(), &chain_facts)
         };
 
@@ -212,47 +216,23 @@ impl RustEmitter {
         // Walks the IR's ShapeAssignments (populated by the W3.1
         // classifier) and emits one `parse_<shape>_<grammar>_<rule>`
         // function per shape-classified rule, plus the top-level
-        // `parse_<grammar>_<root>` dispatcher. The emitted stream
-        // lives alongside `#dta_walker`; rules without shape match
-        // continue to route through `__dta_walker_inline::run` per
-        // the AX cold-path replay contract.
-        //
-        // When every non-transparent rule in the grammar has a W3-
-        // active shape classification (JSON after W3.1 ships), the
-        // grammar's `parse()` entry routes through the shape
-        // dispatcher — eliminating the structural scan + PSI +
-        // walker tax on the hot path. Grammars with unshaped rules
-        // (CSS / Sheets / BBNF until W4 extends the detectors)
-        // continue to call `dta_run_<grammar>`.
+        // `parse_<grammar>_<root>` dispatcher. Every non-transparent
+        // rule routes through the shape dispatcher; the dispatcher
+        // owns EOF, root dispatch, and capacity derivation.
         let shape_emitters = super::shapes::emit_shapes_for_grammar(ident.to_string().as_str(), ir);
         let shape_helpers = emit_shape_helpers(ident.to_string().as_str(), ir);
-        // AX.W0b — every grammar routes through the shape dispatcher
-        // post-W0a.2.h; the gate predicates retired with the walker.
         let shape_dispatcher_ident = super::shapes::root_rule_name(ir)
             .map(|root| super::shapes::dispatcher_fn_ident(ident.to_string().as_str(), &root));
 
-        // AW-I.W3: `parse()` dispatches through `dta_run` wholesale.
-        // The per-rule `rule_functions` stream and the trailing_ws /
-        // root_fn_ident / with_capacity scaffolding previously woven
-        // into the legacy body are retired — the DTA walker owns EOF,
-        // root dispatch, and capacity derivation. `rule_functions` is
-        // intentionally accepted (the upstream pipeline still compiles
-        // per-rule fragments) and discarded here; W4β removes the
-        // upstream compilation step once the sibling emitter modules
-        // are deleted.
-        //
-        // AW-IV.W1.4-aggro — the DtaDfaScanner ZST + RegexScanner impl
-        // + DTA_SCANNER const all delete. The walker emitter splices
-        // the DFA's `loop { match state { ... } }` body directly into
-        // every Regex / WsTrim / boundary-ws site at the source level;
-        // no separately-emitted `__dfa_match_*` fn exists. The
-        // `#regex_scan_adapter` below is the SOLE out-of-line
-        // regex-related fn emitted per grammar — used by cold-path
-        // replay callers (`try_branch`, `handle_repeat_failure_bounded`)
-        // that dispatch by pattern string; its dispatch arms also
-        // splice inline DFA bodies, so the fn-call boundary that
-        // AW-III's runtime DFA interpreter imposed (31.92% self-time
-        // on JSON twitter) is gone from the hot path entirely.
+        // The per-rule `rule_functions` stream is intentionally
+        // accepted (the upstream pipeline still composes per-rule
+        // fragments) and discarded here; the regex-scan adapter
+        // (emitted just above) is the SOLE out-of-line regex-related
+        // fn this module produces, used by cold-path callers
+        // (`try_branch`, `handle_repeat_failure_bounded`) that
+        // dispatch by pattern string. Its dispatch arms splice
+        // inline DFA bodies; no `__dfa_match_*` fn-call boundary
+        // survives.
         let _ = rule_functions;
 
         // AZ-II.cutover.O4 — codegen-time substrate selection is
@@ -333,13 +313,13 @@ impl RustEmitter {
             // row contents.
             #path_plan_static
 
-            // AW-IV.W1.4-aggro — per-grammar regex-scan adapter.
-            // Dispatches on pointer-equality of the interned pattern
-            // `&'static str` statics (`__DTA_REGEX_K` / `__DTA_WS_K`);
-            // each matched arm splices the corresponding DFA's loop
-            // body inline. Consumed by shape emitters whose Regex /
-            // WsTrim arms splice its dispatch in-line.
-            #regex_scan_adapter
+            // Per-grammar regex-scan adapter. Dispatches on
+            // pointer-equality of the interned pattern `&'static str`
+            // statics (`__DTA_REGEX_K` / `__DTA_WS_K`); each matched
+            // arm splices the corresponding DFA's loop body inline.
+            // Consumed by shape emitters whose Regex / WsTrim arms
+            // splice its dispatch in-line.
+            #regex_scan_adapter_ts
 
             // AW-V.W3.2 — per-shape emitter modules + helpers.
             #shape_helpers

@@ -181,9 +181,7 @@ fn is_span_leaf(node: &IrNode) -> bool {
 pub(super) fn recognize_body(node: &IrNode, ann: &mut PatternAnnotations, ir: &GrammarIR) {
     match node {
         IrNode::Seq(children) => recognize_seq_pattern(children, ann, ir),
-        IrNode::Alt(branches, dispatch) => {
-            recognize_alt_pattern(branches, dispatch.is_some(), ann)
-        }
+        IrNode::Alt(branches, dispatch) => recognize_alt_pattern(branches, dispatch.is_some(), ann),
         _ => {}
     }
 }

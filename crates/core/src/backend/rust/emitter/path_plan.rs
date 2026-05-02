@@ -177,9 +177,8 @@ fn rows_for_layout(layout: &StructLayout) -> Vec<PlanRow> {
 fn rows_for_struct_field(rule_id: RuleId, field: &StructField) -> Vec<PlanRow> {
     match field.source {
         FieldSource::SeqPosition { position } => {
-            let cut = u16::try_from(position).expect(
-                "Seq position exceeds u16 — rule child enumeration > 65535 children",
-            );
+            let cut = u16::try_from(position)
+                .expect("Seq position exceeds u16 — rule child enumeration > 65535 children");
             vec![
                 PlanRow {
                     rule_id,
@@ -222,9 +221,8 @@ fn rows_for_struct_field(rule_id: RuleId, field: &StructField) -> Vec<PlanRow> {
 fn rows_for_tagged_branch(rule_id: RuleId, field: &StructField) -> Vec<PlanRow> {
     match field.source {
         FieldSource::BranchTag { branch_index } => {
-            let cut = u16::try_from(branch_index).expect(
-                "Branch index exceeds u16 — variant enumeration > 65535 branches",
-            );
+            let cut = u16::try_from(branch_index)
+                .expect("Branch index exceeds u16 — variant enumeration > 65535 branches");
             vec![PlanRow {
                 rule_id,
                 segment_kind: SegmentKindTag::VariantName,

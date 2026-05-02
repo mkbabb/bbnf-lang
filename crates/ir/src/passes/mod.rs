@@ -56,7 +56,7 @@ pub use payload::{
 };
 pub use prefix::factor_common_prefixes;
 pub use profile::GrammarProfile;
-pub use recognizers::dta::{
+pub use recognizers::grammar_facts::{
     Associativity, CounterOptional, DtaBuilder, DtaState, DtaTable, FrameKind, LiteralPayload,
     PrecedenceEntry, PrecedenceTable, RegexPayloadKind, SeqPromote, StateId, lift_dta,
 };

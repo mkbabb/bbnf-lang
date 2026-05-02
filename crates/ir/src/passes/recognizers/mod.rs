@@ -63,7 +63,7 @@ mod context_facts_miner;
 pub mod dedup_eligibility;
 pub mod delim_scan;
 pub mod disjoint_first;
-pub mod dta;
+pub mod grammar_facts;
 mod identifier;
 pub mod kernel_shape;
 pub mod key_dispatch;

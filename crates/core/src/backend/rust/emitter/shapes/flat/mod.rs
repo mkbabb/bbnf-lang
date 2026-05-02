@@ -35,13 +35,11 @@
 //! # Wire contract
 //!
 //! Per the walker-tape parity contract (W3 Object / Array pattern),
-//! every structural IR production corresponds to one tape record.
-//! The Flat emitter walks the Seq structure once and emits a matching
-//! record stream. Positions the emitter cannot inline (complex
-//! Repeats, recursive Refs) dispatch through the grammar's value-
-//! position dispatcher — the walker's authoritative path. When the
-//! dispatcher rejects (no shape match), the top-level grammar's
-//! `parse()` falls back to `__dta_walker_inline::run`.
+//! every structural IR production corresponds to one record. The
+//! Flat emitter walks the Seq structure once and emits a matching
+//! body. Positions the emitter cannot inline (complex Repeats,
+//! recursive Refs) dispatch through the grammar's value-position
+//! dispatcher.
 //!
 //! The emitter is gated behind `has_full_shape_coverage` in
 //! [`super::emit_shapes_for_grammar`] — it compiles standalone for

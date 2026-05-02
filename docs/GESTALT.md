@@ -1,6 +1,6 @@
 # GESTALT — bbnf-lang, Universal Synthesis
 
-> **Refreshed at master (post-AZ-III terminal close, AZ-IV planned, BA recycled for rule discovery).** This file is the project synthesis: what bbnf-lang is, how it composes the SOTA literature into a grammar-derived parser fleet, what the value-API generalization is, and what the cross-repo shape looks like. Plan items, runway sequencing, decision records, and tranche schedules live in the per-tranche docs that own them (`docs/tranches/<LETTER>/<LETTER>.md`); they no longer live here. This is canon for project direction in totality.
+> **Refreshed at master cb14970f (post-AZ-IV close, BA recycled for rule discovery).** This file is the project synthesis: what bbnf-lang is, how it composes the SOTA literature into a grammar-derived parser fleet, what the value-API generalization is, and what the cross-repo shape looks like. Plan items, runway sequencing, decision records, and tranche schedules live in the per-tranche docs that own them (`docs/tranches/<LETTER>/<LETTER>.md`); they no longer live here. This is canon for project direction in totality.
 
 ## 1. Abstract
 
@@ -8,7 +8,7 @@ bbnf-lang is a grammar-derived compiler fleet. A BBNF grammar, typed by `->` ann
 
 The historical tape runtime is gone: `crates/tape/` was deleted at AZ-II.cutover.O5 + AZ-III.W1; `Parsed<R>` and `TapeDirect` deleted at AZ-II.cutover.O4; generated view helpers deleted at AZ-II.cutover.O3. AZ-III.W4 structural audits confirm static no-legacy GREEN. A parse-that substrate (`../parse-that`) carries the parser-combinator surface and bespoke regex HIR/NFA/DFA engine. A pprint substrate (`../pprint`) carries the gorgeous auto-formatter.
 
-AZ-IV is the union tranche in flight: it absorbs the AZ-III carry burn-down, every overfit-elimination and substrate-activation item the third hardening pass surfaced, the typed compile-time `path!` macro and lazy bail-out parse (formerly tranche BA scope), the per-grammar value-API consolidation (formerly tranche BB perf scope), the TS template-literal-tag binding, and a complete failing-test redress. The post-AZ-IV residual is one tranche of pure rule-discovery work; the **BA letter is recycled** for that successor; **BB is subsumed** (rule-discovery → recycled BA; perf items → AZ-IV).
+AZ-IV closed `complete_with_misses` at master `cb14970f` (2026-05-02; see `docs/tranches/AZ-IV/FINAL.md`). The union tranche absorbed the AZ-III carry burn-down, every overfit-elimination and substrate-activation item the third hardening pass surfaced, the typed compile-time `path!` macro and lazy bail-out parse (formerly tranche BA scope), the per-grammar value-API consolidation (formerly tranche BB perf scope), the TS template-literal-tag binding, and a complete failing-test redress. The post-AZ-IV residual is one tranche of pure rule-discovery work; the **BA letter is recycled** for that successor (opening next); **BB is subsumed** (rule-discovery → recycled BA; perf items → AZ-IV).
 
 The synthesis thesis: bbnf is a *compositional* SOTA of pieces from simdjson, sonic-rs, lightningcss, Ruler, egg, parse-that, and yyjson — where composition is mediated by grammar-derived semantics. Every technique is applied at grammar abstraction level; per-grammar hand-tuning is rejected at plan time.
 

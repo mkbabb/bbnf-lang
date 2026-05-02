@@ -138,9 +138,19 @@ fn format_expression(node: BbnfView<'_, '_>, indent_level: usize) -> String {
 
     match node.compound_kind() {
         Some(BbnfCompoundKind::Term) => match node.branch_tag() {
-            Some(0) => "epsilon".into(),
-            Some(1) => format_term_call(node, indent_level),
-            Some(b @ 4..=7) => format_term_grouped(node, b, indent_level),
+            // term grammar:
+            //   0 = "ε"          (Unicode epsilon glyph)
+            //   1 = "epsilon"    (ASCII keyword)
+            //   2 = identifier ( "(" call_arg* ")" )?
+            //   3 = literal
+            //   4 = regex
+            //   5 = "@{" rhs "}"
+            //   6 = "(" rhs ")"
+            //   7 = "[" rhs "]"
+            //   8 = "{" rhs "}"
+            Some(0) | Some(1) => "epsilon".into(),
+            Some(2) => format_term_call(node, indent_level),
+            Some(b @ 5..=8) => format_term_grouped(node, b, indent_level),
             _ => node
                 .child(0)
                 .map(|c| format_expression(c, indent_level))
@@ -328,10 +338,15 @@ fn format_term_grouped(node: BbnfView<'_, '_>, branch: u32, indent_level: usize)
         .map(|i| format_expression(i, indent_level + 1))
         .unwrap_or_else(|| span_or_dots(node));
     match branch {
-        4 => format!("@{{{}}}", inner),
-        5 => format!("({})", inner),
-        6 => format!("[{}]", inner),
-        7 => format!("{{{}}}", inner),
+        // term grammar branch indexes:
+        //   5 = "@{" rhs "}"
+        //   6 = "(" rhs ")"
+        //   7 = "[" rhs "]"
+        //   8 = "{" rhs "}"
+        5 => format!("@{{{}}}", inner),
+        6 => format!("({})", inner),
+        7 => format!("[{}]", inner),
+        8 => format!("{{{}}}", inner),
         _ => format!("({})", inner),
     }
 }

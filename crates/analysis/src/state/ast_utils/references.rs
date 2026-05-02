@@ -44,9 +44,18 @@ pub fn collect_references(node: BbnfView<'_, '_>, refs: &mut Vec<ReferenceInfo>)
     match node.compound_kind() {
         // Term: the identifier-call branch carries the ident as
         // child(0); other branches descend uniformly.
+        //
+        // term grammar branch indexes:
+        //   0 = "ε" / 1 = "epsilon"  (epsilon variants — no refs)
+        //   2 = identifier ( "(" call_arg* ")" )?
+        //   3 = literal / 4 = regex  (terminals — no refs)
+        //   5 = "@{" rhs "}"
+        //   6 = "(" rhs ")"
+        //   7 = "[" rhs "]"
+        //   8 = "{" rhs "}"
         Some(BbnfCompoundKind::Term) => {
             match node.branch_tag() {
-                Some(1) => {
+                Some(2) => {
                     // Identifier with optional call-args.
                     if let Some(ident) = node.child(0) {
                         if let (Some(text), Some((lo, hi))) =
@@ -69,7 +78,7 @@ pub fn collect_references(node: BbnfView<'_, '_>, refs: &mut Vec<ReferenceInfo>)
                         collect_references(c, refs);
                     }
                 }
-                Some(b @ 4..=7) => {
+                Some(b @ 5..=8) => {
                     // Grouped: descend into the inner Rhs subtree.
                     let _ = b;
                     if let Some(inner) = node
@@ -80,10 +89,10 @@ pub fn collect_references(node: BbnfView<'_, '_>, refs: &mut Vec<ReferenceInfo>)
                     }
                 }
                 _ => {
-                    // term_0 / term_2..3 (epsilon / literal / regex) —
-                    // no nonterminal references. Descend into any
-                    // substantive child (defensive: handles future
-                    // alphabet extensions).
+                    // term_0 / term_1 (epsilon variants), term_3 (literal),
+                    // term_4 (regex) — no nonterminal references. Descend
+                    // into any substantive child (defensive: handles
+                    // future alphabet extensions).
                     for c in node.children() {
                         collect_references(c, refs);
                     }

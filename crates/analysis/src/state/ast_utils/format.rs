@@ -21,10 +21,15 @@ pub fn format_expression_short(node: BbnfView<'_, '_>) -> String {
     }
 
     match node.compound_kind() {
+        // term grammar branch indexes:
+        //   0 = "ε" (Unicode glyph) / 1 = "epsilon" (ASCII keyword)
+        //   2 = identifier ( "(" call_arg* ")" )?
+        //   3 = literal / 4 = regex
+        //   5 = "@{" rhs "}" / 6 = "(" rhs ")" / 7 = "[" rhs "]" / 8 = "{" rhs "}"
         Some(BbnfCompoundKind::Term) => match node.branch_tag() {
-            Some(0) => "\u{03b5}".into(), // epsilon
-            Some(1) => format_term_call(node),
-            Some(b @ 4..=7) => format_term_grouped(node, b),
+            Some(0) | Some(1) => "\u{03b5}".into(), // epsilon
+            Some(2) => format_term_call(node),
+            Some(b @ 5..=8) => format_term_grouped(node, b),
             _ => node
                 .child(0)
                 .map(format_expression_short)
@@ -209,7 +214,13 @@ fn format_term_call(node: BbnfView<'_, '_>) -> String {
 }
 
 /// Format a grouped term — `( rhs )` / `[ rhs ]` / `{ rhs }` /
-/// `@{ rhs }`. The `branch` argument is the term's branch_tag (4..=7).
+/// `@{ rhs }`. The `branch` argument is the term's branch_tag (5..=8).
+///
+/// term grammar branch indexes:
+///   5 = "@{" rhs "}"
+///   6 = "(" rhs ")"
+///   7 = "[" rhs "]"
+///   8 = "{" rhs "}"
 fn format_term_grouped(node: BbnfView<'_, '_>, branch: u32) -> String {
     let inner_view = node
         .children()
@@ -218,10 +229,10 @@ fn format_term_grouped(node: BbnfView<'_, '_>, branch: u32) -> String {
         .map(format_expression_short)
         .unwrap_or_else(|| span_or_ellipsis(node));
     match branch {
-        4 => format!("@{{{}}}", inner),
-        5 => format!("({})", inner),
-        6 => format!("[{}]", inner),
-        7 => format!("{{{}}}", inner),
+        5 => format!("@{{{}}}", inner),
+        6 => format!("({})", inner),
+        7 => format!("[{}]", inner),
+        8 => format!("{{{}}}", inner),
         _ => format!("({})", inner),
     }
 }

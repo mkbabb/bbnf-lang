@@ -231,6 +231,15 @@ All previously-public API preserved by `pub use` chain.
 - **Service boundaries**: 1 god-orchestrator (`pipeline/compile.rs`) eliminated this dispatch; 1 god-document (`google_sheets/document.rs`) eliminated this dispatch; remaining surfaces clean.
 - **Pluggable decisions**: 4 of 5 decision points already pluggable (P1–P4). 1 (P5: pipeline pass list) routed to W4 as a substantive architectural lift.
 - **DI**: Driver state two-phase init flagged for W4; pipeline pass list flagged for W4; per-target dispatch hoisted to its own sub-module this dispatch.
-- **Test surface**: Workspace nextest baseline 1582 (per W2 close audit); audit changes preserve all public API; no test impact expected.
+- **Test surface**: Workspace nextest baseline 1582 (per W2 close audit); audit changes preserve all public API; one test (`crates/ir/tests/passes/dag_invariant.rs`) needed an `include_str!` path update after the pipeline split — landed in commit `d240146c` per the dispatch's "Test files may be touched ONLY to update use-paths after a split" allowance. `crates/ir` post-update: 425/425 PASS.
 
 The architecture is structurally sound; the surgical splits in §5 reduce the largest two god-modules; the remaining splits are sequenced into W4–W5 alongside their respective wave's primary work to avoid orthogonal write contention.
+
+## §8 Commits Landed
+
+| Commit | Subject | Files |
+|---|---|---|
+| `eae449d9` | `refactor(pipeline)/split-into-sub-modules` | -1 / +6 (`pipeline/compile.rs` → `pipeline/compile/{mod,timer,audit,closure_partition,target,pipeline}.rs`) |
+| `4a4735ae` | `refactor(runtime/google_sheets)/split-document-into-sub-modules` | -1 / +4 (`runtime/google_sheets/document.rs` → `runtime/google_sheets/document/{mod,canonical,view,path_query}.rs`) |
+| `7d096439` | `docs(az-iv/audit): land AUDIT-B encapsulation/boundaries audit` | this audit doc |
+| `d240146c` | `test(bbnf-ir/passes/dag_invariant)/update-include-path-after-split` | one test `include_str!` path update |

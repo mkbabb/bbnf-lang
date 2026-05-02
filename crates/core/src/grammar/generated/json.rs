@@ -864,10 +864,10 @@ mod __jsonparser_emit_impl {
         _first_byte: u8,
         _state: &mut __shape_support_JsonParser::ScanState,
         builder: &mut crate::runtime::json::JsonStructBuilder<'_>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         let _ = cursor;
@@ -899,10 +899,10 @@ mod __jsonparser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_JsonParser::ScanState,
         builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
@@ -1091,10 +1091,10 @@ mod __jsonparser_emit_impl {
         p: &mut usize,
         _state: &mut __shape_support_JsonParser::ScanState,
         builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         let open = *p;
@@ -1199,10 +1199,10 @@ mod __jsonparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_JsonParser::ScanState,
         builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder;
         use crate::path::cursor::Decision as __Decision;
@@ -1288,10 +1288,10 @@ mod __jsonparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_JsonParser::ScanState,
         builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder;
         use crate::path::cursor::Decision as __Decision;
@@ -1394,10 +1394,10 @@ mod __jsonparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_JsonParser::ScanState,
         builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -1497,10 +1497,10 @@ mod __jsonparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_JsonParser::ScanState,
         builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -1815,10 +1815,10 @@ mod __jsonparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_JsonParser::ScanState,
         builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         parse_JsonParser_value__value(input, p, state, builder, cursor)
     }
@@ -1833,10 +1833,10 @@ mod __jsonparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_JsonParser::ScanState,
         builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let first = __shape_support_JsonParser::skip_space(input, p, state)
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
@@ -2430,9 +2430,27 @@ mod __jsonparser_emit_impl {
             let __input_bytes = input.as_bytes();
             let mut state = __shape_support_JsonParser::ScanState::new();
             let mut builder = crate::runtime::json::JsonStructBuilder::new();
+            static __EAGER_EMPTY_PATH: ::std::sync::LazyLock<
+                crate::path::ir::TypedPath<crate::path::markers::Json, &'static str>,
+            > = ::std::sync::LazyLock::new(|| {
+                crate::path::ir::TypedPath::from_owned(::std::vec::Vec::new())
+            });
+            let mut __eager_cursor: crate::path::cursor::PathCursor<
+                'static,
+                crate::path::ir::TypedPath<crate::path::markers::Json, &'static str>,
+            > = crate::path::cursor::PathCursor::new(
+                &*__EAGER_EMPTY_PATH,
+                |_rid, _kind, _idx| crate::path::cursor::Decision::ParseFully,
+            );
             {
                 let mut pos: usize = 0;
-                parse_JsonParser_value(__input_bytes, &mut pos, &mut state, &mut builder)
+                parse_JsonParser_value(
+                        __input_bytes,
+                        &mut pos,
+                        &mut state,
+                        &mut builder,
+                        &mut __eager_cursor,
+                    )
                     .map_err(|e| match e {
                         crate::runtime::DtaError::Syntax { offset } => {
                             crate::runtime::ParseErr::Syntax {

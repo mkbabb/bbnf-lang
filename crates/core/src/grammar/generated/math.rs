@@ -562,10 +562,10 @@ mod __mathparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_MathParser::ScanState,
         builder: &mut crate::runtime::math::MathStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
         let span_lo = *p as u32;
@@ -608,10 +608,10 @@ mod __mathparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_MathParser::ScanState,
         builder: &mut crate::runtime::math::MathStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         parse_MathParser_number__value(input, p, state, builder, cursor)
     }
@@ -626,10 +626,10 @@ mod __mathparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_MathParser::ScanState,
         builder: &mut crate::runtime::math::MathStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = __shape_support_MathParser::skip_space(input, p, state);
         let _ = cursor.decide(0u32);
@@ -647,6 +647,18 @@ mod __mathparser_emit_impl {
             let __input_bytes = input.as_bytes();
             let mut state = __shape_support_MathParser::ScanState::new();
             let mut builder = crate::runtime::math::MathStructBuilder::new();
+            static __EAGER_EMPTY_PATH: ::std::sync::LazyLock<
+                crate::path::ir::TypedPath<crate::path::markers::Json, &'static str>,
+            > = ::std::sync::LazyLock::new(|| {
+                crate::path::ir::TypedPath::from_owned(::std::vec::Vec::new())
+            });
+            let mut __eager_cursor: crate::path::cursor::PathCursor<
+                'static,
+                crate::path::ir::TypedPath<crate::path::markers::Json, &'static str>,
+            > = crate::path::cursor::PathCursor::new(
+                &*__EAGER_EMPTY_PATH,
+                |_rid, _kind, _idx| crate::path::cursor::Decision::ParseFully,
+            );
             {
                 let mut pos: usize = 0;
                 parse_MathParser_number(
@@ -654,6 +666,7 @@ mod __mathparser_emit_impl {
                         &mut pos,
                         &mut state,
                         &mut builder,
+                        &mut __eager_cursor,
                     )
                     .map_err(|e| match e {
                         crate::runtime::DtaError::Syntax { offset } => {

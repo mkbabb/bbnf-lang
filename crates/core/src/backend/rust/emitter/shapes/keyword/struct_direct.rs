@@ -237,10 +237,10 @@ pub(super) fn emit_parse_keyword_struct_direct(
                     _first_byte: u8,
                     _state: &mut #support_mod::ScanState,
                     builder: &mut #builder_ty_e,
-                    cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+                    cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
                 ) -> ::core::result::Result<(), crate::runtime::DtaError>
                 where
-                    __P: crate::path::schema::PathSchema<'p>,
+                    __P: for<'__c> crate::path::schema::PathSchema<'__c>,
                 {
                     use crate::runtime::builder::StructBuilder as _;
                     let _ = cursor;
@@ -510,10 +510,10 @@ pub(super) fn emit_parse_keyword_struct_direct(
                     first_byte: u8,
                     state: &mut #support_mod::ScanState,
                     builder: &mut #builder_ty_p,
-                    cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+                    cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
                 ) -> ::core::result::Result<(), crate::runtime::DtaError>
                 where
-                    __P: crate::path::schema::PathSchema<'p>,
+                    __P: for<'__c> crate::path::schema::PathSchema<'__c>,
                 {
                     use crate::runtime::builder::StructBuilder as _;
                     let _ = state;

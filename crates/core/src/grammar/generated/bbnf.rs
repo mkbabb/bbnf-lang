@@ -3820,10 +3820,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
         let span_lo = *p as u32;
@@ -3886,10 +3886,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
         let span_lo = *p as u32;
@@ -3930,10 +3930,10 @@ mod __bbnfbootstrap_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
@@ -4016,10 +4016,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -4133,10 +4133,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
         let span_lo = *p as u32;
@@ -4177,10 +4177,10 @@ mod __bbnfbootstrap_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
@@ -4255,10 +4255,10 @@ mod __bbnfbootstrap_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
@@ -4318,10 +4318,10 @@ mod __bbnfbootstrap_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
@@ -4432,10 +4432,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder;
         let _ = cursor;
@@ -4626,10 +4626,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
         let span_lo = *p as u32;
@@ -4670,10 +4670,10 @@ mod __bbnfbootstrap_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
@@ -4920,10 +4920,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -5054,10 +5054,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -5197,10 +5197,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -5303,10 +5303,10 @@ mod __bbnfbootstrap_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
@@ -5392,10 +5392,10 @@ mod __bbnfbootstrap_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
@@ -5489,10 +5489,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -5623,10 +5623,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
@@ -5761,10 +5761,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -5926,10 +5926,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -6017,10 +6017,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         {
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
@@ -6063,10 +6063,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -6264,10 +6264,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -6436,10 +6436,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -6680,10 +6680,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -6993,10 +6993,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -7320,10 +7320,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -7553,10 +7553,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
@@ -7694,10 +7694,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
@@ -7820,10 +7820,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
@@ -7949,10 +7949,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
@@ -8078,10 +8078,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
@@ -8210,10 +8210,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -8391,10 +8391,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -8548,10 +8548,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -8628,10 +8628,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder;
         let _ = cursor;
@@ -8949,10 +8949,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder;
         let _ = cursor;
@@ -9157,10 +9157,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -9508,10 +9508,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -9886,10 +9886,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -10088,10 +10088,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -10287,10 +10287,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -10489,10 +10489,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -10671,10 +10671,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder;
         let _ = cursor;
@@ -11273,10 +11273,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
@@ -11406,10 +11406,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -11504,10 +11504,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -11774,10 +11774,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -11996,10 +11996,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -12196,10 +12196,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -12430,10 +12430,10 @@ mod __bbnfbootstrap_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
@@ -12686,10 +12686,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -12854,10 +12854,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder;
         use crate::path::cursor::Decision as __Decision;
@@ -12936,10 +12936,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         parse_BbnfBootstrap_grammar__value(input, p, state, builder, cursor)
     }
@@ -12954,10 +12954,10 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let _ = cursor.decide(52u32);
@@ -19967,6 +19967,18 @@ mod __bbnfbootstrap_emit_impl {
             let __input_bytes = input.as_bytes();
             let mut state = __shape_support_BbnfBootstrap::ScanState::new();
             let mut builder = crate::runtime::bbnf::BbnfStructBuilder::new();
+            static __EAGER_EMPTY_PATH: ::std::sync::LazyLock<
+                crate::path::ir::TypedPath<crate::path::markers::Json, &'static str>,
+            > = ::std::sync::LazyLock::new(|| {
+                crate::path::ir::TypedPath::from_owned(::std::vec::Vec::new())
+            });
+            let mut __eager_cursor: crate::path::cursor::PathCursor<
+                'static,
+                crate::path::ir::TypedPath<crate::path::markers::Json, &'static str>,
+            > = crate::path::cursor::PathCursor::new(
+                &*__EAGER_EMPTY_PATH,
+                |_rid, _kind, _idx| crate::path::cursor::Decision::ParseFully,
+            );
             {
                 let mut pos: usize = 0;
                 parse_BbnfBootstrap_grammar(
@@ -19974,6 +19986,7 @@ mod __bbnfbootstrap_emit_impl {
                         &mut pos,
                         &mut state,
                         &mut builder,
+                        &mut __eager_cursor,
                     )
                     .map_err(|e| match e {
                         crate::runtime::DtaError::Syntax { offset } => {

@@ -772,10 +772,10 @@ mod __csvparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CsvParser::ScanState,
         builder: &mut crate::runtime::csv::CsvStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
         let span_lo = *p as u32;
@@ -831,10 +831,10 @@ mod __csvparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CsvParser::ScanState,
         builder: &mut crate::runtime::csv::CsvStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -962,10 +962,10 @@ mod __csvparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CsvParser::ScanState,
         builder: &mut crate::runtime::csv::CsvStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -1236,10 +1236,10 @@ mod __csvparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CsvParser::ScanState,
         builder: &mut crate::runtime::csv::CsvStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
@@ -1371,10 +1371,10 @@ mod __csvparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CsvParser::ScanState,
         builder: &mut crate::runtime::csv::CsvStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         parse_CsvParser_csv__value(input, p, state, builder, cursor)
     }
@@ -1389,10 +1389,10 @@ mod __csvparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CsvParser::ScanState,
         builder: &mut crate::runtime::csv::CsvStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
     ) -> ::core::result::Result<(), crate::runtime::DtaError>
     where
-        __P: crate::path::schema::PathSchema<'p>,
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = __shape_support_CsvParser::skip_space(input, p, state);
         let _ = cursor.decide(3u32);
@@ -1410,9 +1410,27 @@ mod __csvparser_emit_impl {
             let __input_bytes = input.as_bytes();
             let mut state = __shape_support_CsvParser::ScanState::new();
             let mut builder = crate::runtime::csv::CsvStructBuilder::new();
+            static __EAGER_EMPTY_PATH: ::std::sync::LazyLock<
+                crate::path::ir::TypedPath<crate::path::markers::Json, &'static str>,
+            > = ::std::sync::LazyLock::new(|| {
+                crate::path::ir::TypedPath::from_owned(::std::vec::Vec::new())
+            });
+            let mut __eager_cursor: crate::path::cursor::PathCursor<
+                'static,
+                crate::path::ir::TypedPath<crate::path::markers::Json, &'static str>,
+            > = crate::path::cursor::PathCursor::new(
+                &*__EAGER_EMPTY_PATH,
+                |_rid, _kind, _idx| crate::path::cursor::Decision::ParseFully,
+            );
             {
                 let mut pos: usize = 0;
-                parse_CsvParser_csv(__input_bytes, &mut pos, &mut state, &mut builder)
+                parse_CsvParser_csv(
+                        __input_bytes,
+                        &mut pos,
+                        &mut state,
+                        &mut builder,
+                        &mut __eager_cursor,
+                    )
                     .map_err(|e| match e {
                         crate::runtime::DtaError::Syntax { offset } => {
                             crate::runtime::ParseErr::Syntax {

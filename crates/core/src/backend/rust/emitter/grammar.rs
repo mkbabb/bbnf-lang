@@ -403,19 +403,24 @@ fn emit_parse_body_struct_direct(
         let mut state = #support_mod_ident::ScanState::new();
         let mut builder = #builder_ty::new();
         // AZ-IV.W3.6 — eager parses construct an always-ParseFully
-        // cursor against an empty path. The cursor's state is unused
-        // by the emit body (the cursor consult returns ParseFully for
-        // every rule), but the dispatcher signature now carries a
-        // cursor parameter so eager and lazy lanes share the surface.
-        let __empty_path: crate::path::ir::TypedPath<
-            crate::path::markers::Json,
-            &'static str,
-        > = crate::path::ir::TypedPath::from_owned(::std::vec::Vec::new());
+        // cursor against a 'static empty path. The cursor's state is
+        // unused by the emit body (the cursor consult returns
+        // ParseFully for every rule), but the dispatcher signature
+        // carries a cursor parameter so eager and lazy lanes share
+        // the surface. The `LazyLock` keeps the empty path 'static so
+        // the cursor's borrow does not propagate the function-local
+        // lifetime through the dispatcher's `'p`-tied builder /
+        // document return type.
+        static __EAGER_EMPTY_PATH: ::std::sync::LazyLock<
+            crate::path::ir::TypedPath<crate::path::markers::Json, &'static str>,
+        > = ::std::sync::LazyLock::new(|| {
+            crate::path::ir::TypedPath::from_owned(::std::vec::Vec::new())
+        });
         let mut __eager_cursor: crate::path::cursor::PathCursor<
-            '_,
+            'static,
             crate::path::ir::TypedPath<crate::path::markers::Json, &'static str>,
         > = crate::path::cursor::PathCursor::new(
-            &__empty_path,
+            &*__EAGER_EMPTY_PATH,
             |_rid, _kind, _idx| crate::path::cursor::Decision::ParseFully,
         );
         {

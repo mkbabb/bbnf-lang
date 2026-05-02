@@ -295,10 +295,10 @@ fn emit_parse_unordered_struct_direct(
                 p: &mut usize,
                 state: &mut #support_mod::ScanState,
                 builder: &mut #builder_ty,
-                cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+                cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
             ) -> ::core::result::Result<(), crate::runtime::DtaError>
             where
-                __P: crate::path::schema::PathSchema<'p>,
+                __P: for<'__c> crate::path::schema::PathSchema<'__c>,
             {
                 let _ = #dispatcher_ident(input, p, state, builder, cursor)?;
                 Ok(())
@@ -344,10 +344,10 @@ fn emit_parse_unordered_struct_direct(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-            cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+            cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
         ) -> ::core::result::Result<(), crate::runtime::DtaError>
         where
-            __P: crate::path::schema::PathSchema<'p>,
+            __P: for<'__c> crate::path::schema::PathSchema<'__c>,
         {
             let _ = cursor;
             let __layout: ::bbnf_ir::registry::StructLayout =

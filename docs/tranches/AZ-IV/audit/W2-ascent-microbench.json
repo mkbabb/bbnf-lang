@@ -1,0 +1,82 @@
+{
+  "tranche": "AZ-IV",
+  "wave": "W2",
+  "sub_unit": "W2.5",
+  "artefact": "parent-pointer micro-bench",
+  "harness": "divan 0.1",
+  "bench": "crates/core/benches/path_ascent.rs",
+  "profile": "ax-iter",
+  "global_allocator": "mimalloc",
+  "host": "darwin/aarch64",
+  "samples_per_lane": 50,
+  "fixtures": [
+    {
+      "name": "sheets",
+      "shape": "balanced k-ary tree",
+      "nodes": 4000,
+      "fanout": 3,
+      "comment": "Synthetic; sized to the cardinality of the sheets formula AST under a typical document."
+    },
+    {
+      "name": "citm",
+      "shape": "balanced k-ary tree",
+      "nodes": 32000,
+      "fanout": 6,
+      "comment": "Synthetic; sized to the cardinality of citm_catalog.json under the JSON parser."
+    },
+    {
+      "name": "tailwind",
+      "shape": "balanced k-ary tree",
+      "nodes": 80000,
+      "fanout": 8,
+      "comment": "Synthetic; sized to the cardinality of tailwind.css under the CSS L4 parser."
+    }
+  ],
+  "lanes": {
+    "root_traversal": {
+      "bytes_per_node": 0,
+      "ascent_cost": "O(N) per ascent (re-walk via HashMap lookup)",
+      "construction": "borrowed walker callback — no allocation"
+    },
+    "in_struct_pointer": {
+      "bytes_per_node": 4,
+      "ascent_cost": "O(1) per ascent",
+      "construction": "eager Vec<NodeId> populated from parent list"
+    },
+    "hybrid_sidecar": {
+      "bytes_per_node": 4,
+      "ascent_cost": "O(1) per ascent (after population)",
+      "construction": "lazy: Vec<NodeId> materialised on first populate_from_walker call"
+    }
+  },
+  "results": {
+    "sheets": {
+      "hybrid_sidecar":     { "fastest_us": 190.2,  "slowest_us": 244.1,  "median_us": 237.2,  "mean_us": 236.0 },
+      "in_struct_pointer":  { "fastest_us": 192.3,  "slowest_us": 256.7,  "median_us": 246.7,  "mean_us": 246.0 },
+      "root_traversal":     { "fastest_us": 3038.0, "slowest_us": 3228.0, "median_us": 3147.0, "mean_us": 3143.0 }
+    },
+    "citm": {
+      "hybrid_sidecar":     { "fastest_us": 1742.0,  "slowest_us": 2214.0,  "median_us": 1847.0,  "mean_us": 1873.0 },
+      "in_struct_pointer":  { "fastest_us": 1767.0,  "slowest_us": 2065.0,  "median_us": 1876.0,  "mean_us": 1875.0 },
+      "root_traversal":     { "fastest_us": 24000.0, "slowest_us": 25560.0, "median_us": 24610.0, "mean_us": 24660.0 }
+    },
+    "tailwind": {
+      "hybrid_sidecar":     { "fastest_us": 4179.0,  "slowest_us": 4600.0,  "median_us": 4519.0,  "mean_us": 4493.0 },
+      "in_struct_pointer":  { "fastest_us": 4316.0,  "slowest_us": 4873.0,  "median_us": 4658.0,  "mean_us": 4629.0 },
+      "root_traversal":     { "fastest_us": 61720.0, "slowest_us": 64480.0, "median_us": 62840.0, "mean_us": 62970.0 }
+    }
+  },
+  "ranking": {
+    "sheets":   ["hybrid_sidecar", "in_struct_pointer", "root_traversal"],
+    "citm":     ["hybrid_sidecar", "in_struct_pointer", "root_traversal"],
+    "tailwind": ["hybrid_sidecar", "in_struct_pointer", "root_traversal"]
+  },
+  "default_pick": "hybrid_sidecar",
+  "rationale": [
+    "hybrid_sidecar wins (or ties within noise) on every fixture: sheets 237.2 us vs in-struct 246.7 us (-3.8%); citm 1.847 ms vs 1.876 ms (-1.5%); tailwind 4.519 ms vs 4.658 ms (-3.0%).",
+    "root_traversal is 13x to 14x slower across the matrix and only justifies the bytes-per-node savings when ascent is essentially never invoked.",
+    "hybrid_sidecar carries the same 4 B/node footprint as in_struct_pointer once populated, but pays nothing if the consumer never calls populate_from_walker — preserving the option to skip ascent entirely on parse paths that never walk upward.",
+    "Ranking is monotonic in node count: the sidecar's amortised population cost dominates only on the smallest fixture, where the 9 us delta is well under the noise floor."
+  ],
+  "type_alias": "pub type DefaultAscent = HybridSidecar"
+}

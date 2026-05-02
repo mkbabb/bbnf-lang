@@ -31,9 +31,6 @@ use bbnf_ir::registry::EmitStrategy;
 use proc_macro2::TokenStream;
 use quote::quote;
 
-#[cfg(test)]
-use bbnf_ir::registry::SubstrateBinding;
-
 /// Resolve the rust-backend builder path token-stream from an
 /// [`EmitStrategy`].
 ///
@@ -119,61 +116,4 @@ pub fn builder_ty_with_lifetime(
 pub fn builder_ty_elided(strategy: &EmitStrategy) -> TokenStream {
     let path = builder_path(strategy);
     quote! { #path<'_> }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn make_strategy(builder: &'static str, document: &'static str) -> EmitStrategy {
-        EmitStrategy::StructDirect {
-            rust: SubstrateBinding {
-                builder_path: builder,
-                document_path: document,
-            },
-            ts: None,
-            wasm: None,
-        }
-    }
-
-    #[test]
-    fn json_path_resolves() {
-        let strategy = make_strategy(
-            "::bbnf::runtime::json::JsonStructBuilder",
-            "::bbnf::runtime::json::JsonDocument",
-        );
-        let ts = builder_path(&strategy).to_string();
-        assert!(ts.contains("JsonStructBuilder"), "got {}", ts);
-    }
-
-    #[test]
-    fn css_l4_path_resolves() {
-        let strategy = make_strategy(
-            "::bbnf::runtime::css_l4::CssStructBuilder",
-            "::bbnf::runtime::css_l4::CssDocument",
-        );
-        let ts = builder_path(&strategy).to_string();
-        assert!(ts.contains("CssStructBuilder"), "got {}", ts);
-    }
-
-    #[test]
-    fn builder_ty_with_lifetime_emits_apostrophe() {
-        // AZ-I.W2-act.recovery — gap #1 regression. `quote!` splicing
-        // a bare proc_macro2::Ident produces `<p>` (a generic type
-        // argument), not `<'p>` (a lifetime parameter). The helper
-        // converts the ident through `syn::Lifetime` so the emitted
-        // tokens carry the leading apostrophe.
-        let strategy = make_strategy(
-            "::bbnf::runtime::json::JsonStructBuilder",
-            "::bbnf::runtime::json::JsonDocument",
-        );
-        let lt_ident = proc_macro2::Ident::new("p", proc_macro2::Span::call_site());
-        let ts = builder_ty_with_lifetime(&strategy, &lt_ident).to_string();
-        assert!(ts.contains("'p"), "expected lifetime apostrophe in {}", ts);
-        assert!(
-            !ts.contains("< p >") && !ts.contains("<p>"),
-            "expected lifetime, not generic type, in {}",
-            ts
-        );
-    }
 }

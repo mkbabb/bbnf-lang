@@ -149,6 +149,14 @@ name = "compile_pipeline"
 path = "benches/compile_pipeline.rs"
 harness = false
 
+# AZ-IV.W2.5 — parent-pointer micro-bench for the AscentStrategy
+# default pick. Synthetic node graphs sized to citm / tailwind /
+# sheets cardinality.
+[[bench]]
+name = "path_ascent"
+path = "benches/path_ascent.rs"
+harness = false
+
 # ── Competitor tier (`competitor` feature) ──────────────────────────
 
 [[bench]]

@@ -1,0 +1,84 @@
+AZ-IV.W2.2 — `path_check` IR Pass + Inline-Trace Sidecar — close evidence
+=========================================================================
+
+Date: 2026-05-02
+Worktree: /Users/mkbabb/Programming/bbnf-wt-aziv-w2-pass
+Target dir: target/w2-pass
+
+Commits landed (top-down, oldest first):
+  a89cb083 feat(ir-passes/inline-trace): record Ref(source)->body substitutions
+  f76e4d6a feat(ir-passes/path-check): source-rule-name resolver from inline trace + StructRegistry
+  b7c97a71 wire(pipeline/compile-path-check): route inline trace + run path_check after project_types
+  176ff803 test(ir-passes/inline-trace): golden tests for InlineTrace recording determinism
+  18e62355 test(ir-passes/path-check): fixture grammar fused-rule resolves through inline trace
+  49b2cf51 style(w2.2): apply cargo fmt to inline-trace + path-check files
+
+Sub-gates per W2.md §AZ-IV.W2.2:
+
+  [PASS] IR pass `path_check` runs after `project_types`
+         — `crates/core/src/backend/driver/analysis.rs` calls
+           `bbnf_ir::passes::run_path_check` immediately after
+           `project_types(ir)` for the Rust target.
+         — `crates/core/src/pipeline/compile.rs` `finalize_compile`
+           Vm/Ts/Wasm arms call `run_path_check_pass(&mut ir)`
+           one statement after their direct `project_types(&mut ir)`
+           call.
+
+  [PASS] Fixture grammar with `fuse_single_use`-fused rule still resolves
+         the source rule name.
+         — `crates/ir/tests/path_check.rs::fixture_grammar_fused_rule_still_resolves`
+           builds a 2-rule grammar (`entry = small ; small = "x"`),
+           runs `fuse_single_use_with_trace` + `prune_unreachable`,
+           populates the registry against the post-prune IR (only
+           `entry` survives), and asserts
+           `resolver.resolve("small") == Some(0)` (entry's RuleId).
+
+  [PASS] Inline-trace sidecar produces deterministic map (golden test).
+         — `crates/ir/tests/inline_trace.rs::trace_is_deterministic_across_runs`
+           constructs the same fixture twice, runs
+           `fuse_single_use_with_trace` on each, and asserts the
+           resulting `InlineTrace` values are equal.
+         — `crates/ir/tests/path_check.rs::resolver_first_absorber_is_deterministic`
+           verifies first-absorber-by-insertion-order is byte-stable.
+
+  [PASS] `path_check` IR-pass test surface 100% pass.
+         — Test suite `cargo test --profile ax-iter -p bbnf-ir
+           --test inline_trace --test path_check`:
+             5/5 inline_trace tests pass
+             8/8 path_check tests pass
+             total 13/13.
+         — Full IR test suite (425 tests) green:
+           `cargo nextest run --cargo-profile ax-iter -p bbnf-ir`
+           425 tests run: 425 passed, 0 skipped.
+
+  [PASS] regen --check (xtask regen --check --staged) green per
+         pre-commit hook on every W2.2 commit:
+           "regen --check --staged: nothing staged for grammar-relevant files"
+         (no grammar regeneration required by the W2.2 changes).
+
+Files touched:
+
+  Created:
+    crates/ir/src/passes/inline_trace.rs           (162 LOC)
+    crates/ir/src/passes/path_check.rs             (236 LOC)
+    crates/ir/tests/inline_trace.rs                (264 LOC)
+    crates/ir/tests/path_check.rs                  (321 LOC)
+
+  Modified:
+    crates/ir/src/passes/mod.rs                    (module + re-export wiring)
+    crates/ir/src/passes/transform/mod.rs          (re-export _with_trace variants)
+    crates/ir/src/passes/transform/inline.rs       (+ inline_acyclic_with_trace)
+    crates/ir/src/passes/transform/fuse.rs         (+ fuse_single_use_with_trace)
+    crates/ir/src/types/grammar.rs                 (+ inline_trace, path_check_resolver fields)
+    crates/core/src/lower/mod.rs                   (initialise new fields)
+    crates/core/src/pipeline/compile.rs            (route trace via _with_trace; run_path_check_pass helper)
+    crates/core/src/backend/driver/analysis.rs     (call run_path_check after project_types)
+    39 test fixtures across crates/{core,gorgeous,ir}/tests
+                                                    (init the new GrammarIR fields)
+
+Triumvirate-trigger discipline:
+  No second IR pipeline pass beyond the inline-trace sidecar.
+  Recording wrappers are layered over the bare `inline_acyclic` /
+  `fuse_single_use` passes (additive surface only); semantics of the
+  bare passes are byte-identical to pre-W2.2.
+  No diagnostic loops triggered; close-discipline holds.

@@ -269,6 +269,7 @@ fn make_pool() -> (GrammarIR, SharedStrings) {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     };
     let pool = SharedStrings::from_ir(&ir);
     (ir, pool)

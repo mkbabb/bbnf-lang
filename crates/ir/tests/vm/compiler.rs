@@ -53,6 +53,7 @@ fn make_simple_ir(body: IrNode) -> GrammarIR {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     }
 }
 
@@ -198,6 +199,7 @@ fn compile_memo_rule() {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     };
     let program = compile(&ir);
 
@@ -276,6 +278,7 @@ fn compile_direct_left_recursive_rule_keeps_memo() {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     };
     let program = compile(&ir);
 
@@ -448,6 +451,7 @@ fn compile_token_dispatch_emits_dispatch_token() {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     };
     let program = compile(&ir);
 
@@ -545,6 +549,7 @@ fn compile_call() {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     };
     let program = compile(&ir);
 

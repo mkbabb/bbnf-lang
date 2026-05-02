@@ -64,6 +64,7 @@ fn resolve_direct_alias() {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     };
 
     canonicalize_aliases(&mut ir);
@@ -130,6 +131,7 @@ fn resolve_chain_alias() {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     };
 
     canonicalize_aliases(&mut ir);

@@ -81,6 +81,7 @@ fn make_debug_ir() -> GrammarIR {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     }
 }
 
@@ -155,6 +156,7 @@ fn compiler_no_debug_break_without_flag() {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     };
     let program = compile(&ir);
 

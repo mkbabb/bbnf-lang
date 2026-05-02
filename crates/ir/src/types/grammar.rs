@@ -391,6 +391,25 @@ pub struct GrammarIR {
     #[serde(skip, default)]
     pub struct_registry: crate::registry::StructRegistry,
 
+    /// AZ-IV.W2.2 — recorded `Ref(source) → body` substitution events
+    /// from the structural normalizer loop's `inline_acyclic` /
+    /// `fuse_single_use` passes.
+    ///
+    /// Populated by the recording wrappers
+    /// [`passes::inline_acyclic_with_trace`] /
+    /// [`passes::fuse_single_use_with_trace`] when
+    /// `pipeline::compile` runs them through the trace channel.
+    /// Consumed downstream by the path resolver after `project_types`
+    /// to bind user-written source rule names to the post-pipeline
+    /// `RuleId`s their layouts resolve through. The W2.4 `path!`
+    /// proc-macro reads the resolver to honour the W2 invariant 8
+    /// ("Path resolution uses source rule names").
+    ///
+    /// Not serialized: the trace describes the in-process pipeline
+    /// shape and is recomputed every compile.
+    #[serde(skip, default)]
+    pub inline_trace: passes::inline_trace::InlineTrace,
+
     /// AZ-III.W3a — named type obligations surfaced by the projection
     /// CSP whenever a silent fallback would otherwise have collapsed
     /// under-determined Ref or Alt resolution into

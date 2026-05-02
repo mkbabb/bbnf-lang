@@ -67,6 +67,7 @@ fn prune_removes_unreachable() {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     };
 
     prune_unreachable(&mut ir);
@@ -126,6 +127,7 @@ fn prune_keeps_all_when_all_reachable() {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     };
 
     prune_unreachable(&mut ir);
@@ -205,6 +207,7 @@ fn prune_follows_alt_branches() {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     };
 
     prune_unreachable(&mut ir);

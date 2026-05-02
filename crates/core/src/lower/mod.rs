@@ -244,6 +244,7 @@ pub fn lower_to_ir<'a>(
         ),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     }
 }
 

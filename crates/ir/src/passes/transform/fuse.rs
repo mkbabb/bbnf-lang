@@ -18,6 +18,7 @@
 //!
 //! Now dispatch sees 'name' FIRST chars vs '"if"' → O(1) byte dispatch.
 
+use crate::passes::inline_trace::{InlinePass, InlineSubstitution, InlineTrace};
 use crate::{GrammarIR, IrNode, RuleId};
 
 /// Fuse single-use rules into their sole call site.
@@ -29,6 +30,24 @@ use crate::{GrammarIR, IrNode, RuleId};
 ///
 /// After fusion, run `prune_unreachable` to clean up dead rules.
 pub fn fuse_single_use(ir: &mut GrammarIR) {
+    fuse_single_use_inner(ir, None);
+}
+
+/// Same as [`fuse_single_use`] but appends an [`InlineSubstitution`]
+/// event to `trace` for every fused `Ref(source) → body` rewrite. Used
+/// by AZ-IV.W2.2's `path_check` IR pass to re-resolve `path!` literals
+/// that name a source rule whose layout was absorbed by the post-
+/// pipeline rule that contained the sole `Ref` to it.
+///
+/// Semantics are byte-identical to the bare [`fuse_single_use`]; only
+/// the recording channel differs. A fused source rule has exactly one
+/// absorber, so each substitution event maps a single source to a
+/// single absorber.
+pub fn fuse_single_use_with_trace(ir: &mut GrammarIR, trace: &mut InlineTrace) {
+    fuse_single_use_inner(ir, Some(trace));
+}
+
+fn fuse_single_use_inner(ir: &mut GrammarIR, mut trace: Option<&mut InlineTrace>) {
     // Count references for each rule.
     let mut ref_counts = vec![0u32; ir.rules.len()];
     for rule in &ir.rules {
@@ -86,9 +105,99 @@ pub fn fuse_single_use(ir: &mut GrammarIR) {
         bodies[*id as usize] = Some(body.clone());
     }
 
+    // Snapshot fusable source-rule names so the trace records the
+    // user-written name even after `prune_unreachable` removes the
+    // source rule's top-level entry. Single-use means each source has
+    // exactly one absorber; the recording wrapper records one event
+    // per `(source, absorber)` pair.
+    let fusable_names: Vec<(RuleId, String)> = fusable
+        .iter()
+        .map(|(id, _)| (*id, ir.get_string(ir.rules[*id as usize].name).to_string()))
+        .collect();
+
     // Rewrite all rule bodies, inlining single-use refs.
-    for rule in &mut ir.rules {
-        rule.body = inline_single_use(std::mem::replace(&mut rule.body, IrNode::Epsilon), &bodies);
+    for rule_index in 0..ir.rules.len() {
+        let absorber_id = ir.rules[rule_index].id;
+        let absorber_name = ir.get_string(ir.rules[rule_index].name).to_string();
+
+        if let Some(trace) = trace.as_deref_mut() {
+            let mut refs_seen = vec![false; bodies.len()];
+            collect_refs_to(&ir.rules[rule_index].body, &bodies, &mut refs_seen);
+            for (source_id, source_name) in &fusable_names {
+                if refs_seen
+                    .get(*source_id as usize)
+                    .copied()
+                    .unwrap_or(false)
+                {
+                    trace.record(InlineSubstitution::new(
+                        *source_id,
+                        source_name.clone(),
+                        absorber_id,
+                        absorber_name.clone(),
+                        InlinePass::FuseSingleUse,
+                    ));
+                }
+            }
+        }
+
+        let body = std::mem::replace(&mut ir.rules[rule_index].body, IrNode::Epsilon);
+        ir.rules[rule_index].body = inline_single_use(body, &bodies);
+    }
+}
+
+/// Mark every `Ref(id)` in `node` whose target is a fusable source
+/// (i.e. `bodies[id].is_some()`). The detection mirrors the rewrite in
+/// `inline_single_use` so the trace records exactly the substitutions
+/// the rewrite performs.
+fn collect_refs_to(node: &IrNode, bodies: &[Option<IrNode>], refs_seen: &mut [bool]) {
+    match node {
+        IrNode::Ref(id) => {
+            if let Some(slot) = refs_seen.get_mut(*id as usize) {
+                if bodies
+                    .get(*id as usize)
+                    .map(|b| b.is_some())
+                    .unwrap_or(false)
+                {
+                    *slot = true;
+                }
+            }
+        }
+        IrNode::Seq(children) => {
+            for c in children {
+                collect_refs_to(c, bodies, refs_seen);
+            }
+        }
+        IrNode::Alt(branches, _) => {
+            for b in branches {
+                // Mirror `inline_single_use`: bare `Ref(_)` Alt branches
+                // are not fused (codegen needs identity for variant
+                // wrapping); the trace skips them so it captures only
+                // the substitutions the rewrite actually performs.
+                if !matches!(&b.node, IrNode::Ref(_)) {
+                    collect_refs_to(&b.node, bodies, refs_seen);
+                }
+            }
+        }
+        IrNode::Repeat { inner, .. }
+        | IrNode::Negate(inner)
+        | IrNode::OptionalWhitespace(inner)
+        | IrNode::Map { inner, .. } => collect_refs_to(inner, bodies, refs_seen),
+        IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
+            collect_refs_to(a, bodies, refs_seen);
+            collect_refs_to(b, bodies, refs_seen);
+        }
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
+            collect_refs_to(token, bodies, refs_seen);
+            for a in arms {
+                collect_refs_to(&a.continuation, bodies, refs_seen);
+            }
+            collect_refs_to(fallback, bodies, refs_seen);
+        }
+        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => {}
     }
 }
 

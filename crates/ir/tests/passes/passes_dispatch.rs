@@ -76,6 +76,7 @@ fn dispatch_for_disjoint_branches() {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -159,6 +160,7 @@ fn no_dispatch_for_overlapping_branches() {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -240,6 +242,7 @@ fn dispatch_for_nested_alt() {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -329,6 +332,7 @@ fn dispatch_with_nullable_branch_via_follow() {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -420,6 +424,7 @@ fn no_dispatch_when_nullable_overlaps_follow() {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -521,6 +526,7 @@ fn fallback_dispatch_typed_plus_catchall() {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -614,6 +620,7 @@ fn fallback_dispatch_not_superset() {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -695,6 +702,7 @@ fn fallback_dispatch_too_few_branches() {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);

@@ -46,6 +46,7 @@ fn make_ir(rules: Vec<IrRule>) -> GrammarIR {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     }
 }
 
@@ -317,6 +318,7 @@ fn map_enum_wrap() {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     };
     bbnf_ir::dag::ensure_dag(&mut ir);
     project_types(&mut ir);
@@ -373,6 +375,7 @@ fn map_box_wrap() {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     };
     bbnf_ir::dag::ensure_dag(&mut ir);
     project_types(&mut ir);
@@ -428,6 +431,7 @@ fn make_ir_with_fns(rules: Vec<IrRule>, fns: Vec<FnDescriptor>, strings: Vec<Str
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     }
 }
 

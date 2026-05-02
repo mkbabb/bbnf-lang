@@ -83,6 +83,7 @@ fn empty_ir() -> GrammarIR {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     }
 }
 

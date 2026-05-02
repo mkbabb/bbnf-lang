@@ -77,6 +77,7 @@ fn follow_set_basic_seq() {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     };
 
     let follow = compute_follow_sets(&ir);
@@ -180,6 +181,7 @@ fn follow_set_propagates_through_nullable() {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     };
 
     let follow = compute_follow_sets(&ir);

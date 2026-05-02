@@ -57,6 +57,7 @@ fn literal_is_span_eligible() {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     };
 
     refine_span_eligibility(&mut ir);
@@ -113,6 +114,7 @@ fn map_not_span_eligible() {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     };
 
     refine_span_eligibility(&mut ir);
@@ -168,6 +170,7 @@ fn transitive_span_eligibility() {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     };
 
     refine_span_eligibility(&mut ir);
@@ -228,6 +231,7 @@ fn cyclic_not_span_eligible() {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     };
 
     refine_span_eligibility(&mut ir);
@@ -281,6 +285,7 @@ fn seq_of_literals_span_eligible() {
         ctns_lifts: std::collections::HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     };
 
     refine_span_eligibility(&mut ir);

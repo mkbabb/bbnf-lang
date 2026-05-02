@@ -8,6 +8,7 @@ pub mod context;
 pub mod csp_domains;
 pub mod csp_strategy;
 pub mod facts;
+pub mod inline_trace;
 pub mod inspect;
 pub mod lr;
 pub mod materialization;
@@ -42,6 +43,7 @@ pub use csp_strategy::{
     extract_regex_engine_decisions, solve_grammar_components,
 };
 pub use facts::FactAuthority;
+pub use inline_trace::{InlinePass, InlineSubstitution, InlineTrace};
 pub use lr::{eliminate_direct_lr, eliminate_indirect_lr};
 pub use materialization::{MaterializationClass, classify_materialization, mat_join};
 pub use metadata::{compute_aliases, compute_transparent, has_named_return_type};
@@ -70,8 +72,9 @@ pub use sets::{
 };
 pub use span::{compute_sp_method_rules, refine_span_eligibility};
 pub use transform::{
-    canonicalize_aliases, eliminate_epsilon, fuse_single_use, fuse_token_dispatch, inline_acyclic,
-    merge_literals, prune_unreachable,
+    canonicalize_aliases, eliminate_epsilon, fuse_single_use, fuse_single_use_with_trace,
+    fuse_token_dispatch, inline_acyclic, inline_acyclic_with_trace, merge_literals,
+    prune_unreachable,
 };
 pub use types::project_types;
 pub use types::registry::populate_struct_registry;

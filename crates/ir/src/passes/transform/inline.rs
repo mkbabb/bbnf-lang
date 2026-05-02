@@ -4,6 +4,7 @@
 //! acyclic, and not the entry point. Reduces call overhead in the interpreter
 //! and exposes further optimization opportunities (literal merging, dispatch).
 
+use crate::passes::inline_trace::{InlinePass, InlineSubstitution, InlineTrace};
 use crate::{GrammarIR, IrNode, RuleId};
 
 /// Maximum node count for a rule to be considered inlinable.
@@ -21,6 +22,24 @@ const INLINE_THRESHOLD: usize = 4;
 /// After inlining, the original rule remains (it may be referenced externally).
 /// Run `prune_unreachable` afterward to clean up dead rules.
 pub fn inline_acyclic(ir: &mut GrammarIR) {
+    inline_acyclic_inner(ir, None);
+}
+
+/// Same as [`inline_acyclic`] but appends an [`InlineSubstitution`]
+/// event to `trace` for every `Ref(source) → body` rewrite that
+/// actually fires. The events name the source rule (whose body got
+/// inlined) and the absorber rule (whose body grew to contain the
+/// inlined body). Used by AZ-IV.W2.2's `path_check` IR pass to
+/// re-resolve `path!` literals against post-pipeline rule names.
+///
+/// The call observes the same body-rewrite rule the bare
+/// [`inline_acyclic`] does — semantics are byte-identical; only the
+/// recording channel differs.
+pub fn inline_acyclic_with_trace(ir: &mut GrammarIR, trace: &mut InlineTrace) {
+    inline_acyclic_inner(ir, Some(trace));
+}
+
+fn inline_acyclic_inner(ir: &mut GrammarIR, mut trace: Option<&mut InlineTrace>) {
     // Identify inlinable rules.
     //
     // AU.2.5: rules whose body is a `Seq` of two or more children are
@@ -63,9 +82,109 @@ pub fn inline_acyclic(ir: &mut GrammarIR) {
         bodies[*id as usize] = Some(body.clone());
     }
 
+    // Pre-compute the source-rule-id → name table so the recording
+    // wrapper can build owned-string events without re-borrowing from
+    // `ir.strings` mid-rewrite. The trace wants the user-written name
+    // captured at substitution time (post-`prune_unreachable` the rule
+    // entry vanishes, but the trace event survives).
+    let inlinable_names: Vec<(RuleId, String)> = inlinable
+        .iter()
+        .map(|(id, _)| (*id, ir.get_string(ir.rules[*id as usize].name).to_string()))
+        .collect();
+
     // Rewrite all rule bodies.
-    for rule in &mut ir.rules {
-        rule.body = inline_refs(std::mem::replace(&mut rule.body, IrNode::Epsilon), &bodies);
+    //
+    // The recording channel notes a substitution per `(absorber, source)`
+    // pair the moment a `Ref(source)` is encountered inside the
+    // absorber's body. Multiple refs to the same source within a single
+    // absorber produce a single event — the trace records the
+    // substitution relationship, not per-occurrence counts.
+    for rule_index in 0..ir.rules.len() {
+        let absorber_id = ir.rules[rule_index].id;
+        let absorber_name = ir.get_string(ir.rules[rule_index].name).to_string();
+
+        // Track which inlinable sources are referenced by this absorber's
+        // body before the rewrite so the trace channel records exactly
+        // one event per (source, absorber) pair.
+        if let Some(trace) = trace.as_deref_mut() {
+            let mut refs_seen = vec![false; bodies.len()];
+            collect_refs_to(&ir.rules[rule_index].body, &bodies, &mut refs_seen);
+            for (source_id, source_name) in &inlinable_names {
+                if refs_seen
+                    .get(*source_id as usize)
+                    .copied()
+                    .unwrap_or(false)
+                {
+                    trace.record(InlineSubstitution::new(
+                        *source_id,
+                        source_name.clone(),
+                        absorber_id,
+                        absorber_name.clone(),
+                        InlinePass::InlineAcyclic,
+                    ));
+                }
+            }
+        }
+
+        let body = std::mem::replace(&mut ir.rules[rule_index].body, IrNode::Epsilon);
+        ir.rules[rule_index].body = inline_refs(body, &bodies);
+    }
+}
+
+/// Mark every `Ref(id)` in `node` whose `id` is an inlinable source
+/// (i.e. `bodies[id].is_some()`). Used by the recording wrapper to
+/// detect which sources a single absorber will inline before the
+/// rewrite collapses the `Ref` nodes.
+fn collect_refs_to(node: &IrNode, bodies: &[Option<IrNode>], refs_seen: &mut [bool]) {
+    match node {
+        IrNode::Ref(id) => {
+            if let Some(slot) = refs_seen.get_mut(*id as usize) {
+                if bodies
+                    .get(*id as usize)
+                    .map(|b| b.is_some())
+                    .unwrap_or(false)
+                {
+                    *slot = true;
+                }
+            }
+        }
+        IrNode::Seq(children) => {
+            for c in children {
+                collect_refs_to(c, bodies, refs_seen);
+            }
+        }
+        IrNode::Alt(branches, _) => {
+            for b in branches {
+                // Mirrors `inline_refs`: bare `Ref(_)` Alt branches are
+                // not inlined (codegen needs identity for variant
+                // wrapping); recursive `Ref` collection follows the
+                // same shape so the trace records what the rewrite
+                // actually performs.
+                if !matches!(&b.node, IrNode::Ref(_)) {
+                    collect_refs_to(&b.node, bodies, refs_seen);
+                }
+            }
+        }
+        IrNode::Repeat { inner, .. }
+        | IrNode::Negate(inner)
+        | IrNode::OptionalWhitespace(inner)
+        | IrNode::Map { inner, .. } => collect_refs_to(inner, bodies, refs_seen),
+        IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
+            collect_refs_to(a, bodies, refs_seen);
+            collect_refs_to(b, bodies, refs_seen);
+        }
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
+            collect_refs_to(token, bodies, refs_seen);
+            for a in arms {
+                collect_refs_to(&a.continuation, bodies, refs_seen);
+            }
+            collect_refs_to(fallback, bodies, refs_seen);
+        }
+        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => {}
     }
 }
 

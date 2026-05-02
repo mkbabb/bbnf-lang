@@ -80,6 +80,7 @@ fn base_ir() -> GrammarIR {
         ctns_lifts: HashSet::new(),
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
+        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
     }
 }
 

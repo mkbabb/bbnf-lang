@@ -24,9 +24,9 @@ pub mod pattern_dedup;
 mod prune;
 
 pub use alias::canonicalize_aliases;
-pub use fuse::fuse_single_use;
+pub use fuse::{fuse_single_use, fuse_single_use_with_trace};
 pub use fuse_token::fuse_token_dispatch;
-pub use inline::inline_acyclic;
+pub use inline::{inline_acyclic, inline_acyclic_with_trace};
 pub use optimize::{eliminate_epsilon, merge_literals};
 pub use pattern_dedup::{
     MAX_PATTERN_NODES, MIN_OCCURRENCES, MIN_PATTERN_NODES, hoist_recurring_patterns,

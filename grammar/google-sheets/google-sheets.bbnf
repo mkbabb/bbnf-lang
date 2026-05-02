@@ -42,11 +42,14 @@ error_literal = "#N/A"    -> 0u8
               | "#SPILL!" -> 8u8 ;
 
 // Sheet prefix: Sheet1! or 'Sheet Name'!
-// Nu8 tag distinguishes quoted (0) vs bare (1) prefix forms; quoted
-// prefixes carry doubled `''` escapes that decode to `'` in the
-// rendered sheet name (deferred to AU.6.7 alongside string decode).
-sheet_prefix = /'(?:[^']|'')*'!/ -> 0u8
-             | /[A-Za-z_]\w*!/   -> 1u8 ;
+//
+// AZ-IV.W1.2: typed-Nu8 alt-of-regex would silently drop the matched
+// span — typed projection replaces the matched bytes with the tag,
+// breaking round-trip serialization for the sheet-name text. The
+// quoted-vs-bare distinction is recoverable from the leading byte
+// (`'` for quoted), so a single span-projecting regex preserves the
+// surface text while keeping the structural shape unambiguous.
+sheet_prefix = /'(?:[^']|'')*'!|[A-Za-z_]\w*!/ -> input : Span ;
 
 // Cell reference: column letters + row digits (A1, $B$2).
 // Declared return shape is (row: u32, col: u32, abs_row: bool,

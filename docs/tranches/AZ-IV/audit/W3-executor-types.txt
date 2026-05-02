@@ -1,0 +1,215 @@
+AZ-IV.W3.1 — Path Executor + PathCursor + PathSchema (audit)
+================================================================
+
+Scope
+-----
+Land three new files under `crates/core/src/path/` that establish the
+runtime surface for the W3 lazy bail-out parser:
+
+  1. `path/schema.rs`    — `PathSchema<'p>` trait + `GrammarMarker` trait
+                          + `TypedPath<G,T>` impl
+  2. `path/cursor.rs`    — `PathCursor<'p, P>` state machine, `Decision`
+                          enum, `SegmentKind` alphabet, single-slot
+                          decision cache
+  3. `path/executor.rs`  — `PathExecutor::execute<'p, P, F, D>(...)`
+                          top-level orchestrator
+
+Plus modify-carve `crates/core/src/path/mod.rs` to register the modules
+and re-export the public surface.
+
+Design choices
+--------------
+
+Trait shape: `PathSchema<'p>`
+  - `type Output;`                              — what executor returns on success
+  - `fn segments(&'p self) -> Vec<PathSegment<'p>>` — re-projection of owned
+                                                     storage (used for tests + debug)
+  - `fn segment_count(&self) -> usize`          — cheap count without re-projection
+  - `fn segment_at(&'p self, n: usize) -> Option<PathSegment<'p>>`
+                                                — single-segment borrowing accessor;
+                                                  this is the cursor's hot path
+  - `fn is_empty(&self) -> bool` (default impl)
+  - `fn grammar_marker() -> &'static str`       — dispatch key for W3.2 entry
+                                                  point; `Self: Sized` bound
+
+Trait `GrammarMarker` (private companion):
+  - one `const MARKER: &'static str;`
+  - impls for `markers::{Json, CssL4, Sheets, Bbnf}`
+  - lets `TypedPath<G, T>` forward `grammar_marker()` to `G::MARKER`
+    without runtime branching
+
+`SegmentKind` alphabet (cursor.rs):
+  - `Field`, `Index`, `Wildcard`, `VariantName`, `Terminal`
+  - the decision plan keys on `(rule_id, SegmentKind)` rather than
+    `(rule_id, exact_segment_payload)` — payload is irrelevant to the
+    branch decision once the rule body has been threaded against the
+    segment-kind alphabet
+
+`Decision` enum (cursor.rs):
+  - `ParseFully`           — rule's subtree is past the path's reach;
+                            parse normally
+  - `ParseUntil(u16)`      — parse children `0..=child_index` only;
+                            `u16` chosen to fit in the same word as
+                            `(rule_id: u32, kind: SegmentKind)` cache
+                            slot when codegen lays it out flat
+  - `Skip`                 — rule does not enter the path's subtree;
+                            recognizer skips the byte range
+
+`DecisionFn<'p>` shape:
+  - `dyn Fn(rule_id: u32, kind: SegmentKind, segment_index: usize) -> Decision + 'p`
+  - the cursor stores a boxed trait object; production W3.3 codegen
+    wraps the per-grammar static decision plan in a thin reader closure
+    and supplies it; tests build hand-rolled closures over hand-rolled
+    plans.
+
+Cache: single slot
+  - `Option<CacheSlot { rule_id, kind, decision }>`
+  - hits are common because a rule body queries `(rule, kind)` once
+    before the loop and once per loop iteration; recursive descent
+    does not interleave queries from different `(rule, kind)` pairs
+  - misses recompute through `decision_fn` and write the slot
+  - `advance()` invalidates the slot — the rule context that produced
+    the cached decision is the *previous* segment, not the new one
+
+Ascent integration:
+  - `PathCursor::with_ascent(self, &dyn AscentStrategy) -> Self` builder
+  - cursor stores `Option<&'p dyn AscentStrategy>` and exposes `ascent()`
+  - only consulted under `Wildcard`-with-anchor sibling re-anchoring
+    (per W3 spec §6); eager and non-wildcard paths never reach for it
+
+Executor surface
+----------------
+`PathExecutor::execute<'p, P, F, D>(input, schema, decision_fn, parse_fn)`
+  - `P: PathSchema<'p>`
+  - `D: Fn(u32, SegmentKind, usize) -> Decision + 'p`
+  - `F: FnOnce(&str, &mut PathCursor<'p, P>) -> Option<P::Output>`
+  - returns `Option<P::Output>`
+
+Three obligations only:
+  1. Build a `PathCursor<'p, P>` via `PathCursor::new(schema, decision_fn)`.
+  2. Hand the cursor to the parse callback exactly once.
+  3. Surface the callback's `Option<P::Output>` verbatim.
+
+`PathExecutor` itself is a unit struct — every method is associated.
+This shape leaves room for future tranches to attach configuration
+(timeouts, memory caps, profile knobs) on the type without churning
+call sites.
+
+Co-design notes for W3.3 (codegen / `__path_plan`)
+--------------------------------------------------
+W3.3's brief mentions emitting `__path_plan::{SegmentKind, Decision,
+PathPlanEntry, PATH_PLAN}` per-grammar inline. The W3.1 surface lands
+canonical types in `crates/core/src/path/cursor.rs`:
+
+  - `path::cursor::SegmentKind` (5 variants)
+  - `path::cursor::Decision`    (3 variants, `ParseUntil(u16)`)
+
+W3.3's per-grammar generated files should NOT redeclare these types
+inline; they should `use bbnf::path::{SegmentKind, Decision}` and emit
+the per-grammar `PATH_PLAN: &[PathPlanEntry]` static against the shared
+canonical types. `PathPlanEntry` itself is a future-tranche addition —
+W3.1 left the entry shape to W3.3 because the cursor consumes the plan
+through a closure (`DecisionFn`), not a slice; the closure abstracts
+over whether the backing storage is a slice, a perfect-hash table, or
+a tagged decision DAG.
+
+Recommended W3.3 entry shape:
+
+    #[repr(C)]
+    pub struct PathPlanEntry {
+        pub rule_id: u32,
+        pub kind: SegmentKind,   // canonical, from path::cursor
+        pub decision: Decision,  // canonical, from path::cursor
+    }
+
+W3.3 wrapper:
+
+    fn path_plan_lookup(rule_id: u32, kind: SegmentKind, _idx: usize)
+        -> Decision
+    {
+        PATH_PLAN
+            .binary_search_by_key(&(rule_id, kind), |e| (e.rule_id, e.kind))
+            .map(|i| PATH_PLAN[i].decision)
+            .unwrap_or(Decision::Skip)
+    }
+
+The wrapper is then passed as `decision_fn` to `PathExecutor::execute`.
+
+Follow-on regen flag (does NOT block W3.1):
+  - Once W3.3 lands, all four per-grammar generated files
+    (`runtime::generated::{json,csv,sheets,bbnf}`) must be regenerated
+    so their `PATH_PLAN` statics use the shared canonical types from
+    `path::cursor` rather than redeclaring `SegmentKind` / `Decision`
+    inline. The W3.1 surface is the canonical home; codegen consumes it.
+
+Tests landed
+------------
+schema.rs:
+  - `typed_path_schema_round_trip` — TypedPath<Json, &str> with three
+    segments asserts segment_count, grammar_marker, segments() vector,
+    segment_at(n), and out-of-range None.
+  - `empty_path_marker` — TypedPath<Json, ()> with zero segments
+    asserts is_empty, segment_count.
+
+cursor.rs:
+  - `cursor_advance_consumes_segments` — three-segment fixture
+    (`statuses`/0/`text`); asserts every step transition + terminal.
+  - `cursor_decide_walks_decision_plan` — same fixture, fixture plan;
+    asserts ParseFully → ParseUntil(0) → ParseFully → terminal-fully
+    decision sequence + cache hit on repeat query.
+  - `cursor_peek_does_not_advance` — peek is observation, not motion.
+  - `cursor_cache_invalidated_by_advance` — advance() drops the slot.
+  - `empty_path_terminal_immediately` — zero-segment cursor reports
+    terminal at index 0.
+
+executor.rs:
+  - `executor_returns_leaf_on_success` — the parse callback walks the
+    cursor to terminal and emits a synthetic leaf string; executor
+    surfaces `Some("statuses.0.text.")`.
+  - `executor_returns_none_on_out_of_bounds` — callback bails with
+    None when the document does not satisfy the path; executor
+    surfaces None verbatim.
+  - `executor_threads_decision_table` — callback queries the cursor
+    and observes the supplied decision plan's answers verbatim
+    (ParseFully → ParseUntil(0) → Skip).
+
+Evidence
+--------
+
+Build (CARGO_TARGET_DIR=target/w3-executor, profile ax-iter):
+
+    Checking bbnf v0.2.11 (.../crates/core)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 9.04s
+
+Path-focused nextest (-E 'test(/path::/)'):
+
+    Starting 10 tests across 99 binaries (913 tests skipped)
+    Summary [   0.023s] 10 tests run: 10 passed, 913 skipped
+
+(10 = 2 schema + 5 cursor + 3 executor; existing `path::` tests in
+ir/error/markers/ascent/wildcard/variant_select are filtered against the
+double-colon pattern and pass alongside the new ones.)
+
+rustfmt --edition 2024 --check on the three new files: clean (zero diff).
+git diff --check: clean (no whitespace errors).
+cargo fmt --check at workspace level: pre-existing diff in
+  crates/ir/src/passes/recognizers/node_facts.rs (NOT touched by W3.1)
+  — unrelated formatting carry from before this branch diverged from
+  master; out of W3.1 scope.
+
+Misses
+------
+None on the W3.1 hard gates. The closure-based `DecisionFn` shape was
+chosen over a `&[PathPlanEntry]` slice signature so that codegen
+W3.3 can supply either a hand-coded reader, a binary-search wrapper,
+or a future perfect-hash dispatch without churning the cursor surface.
+This adds one indirection per `decide()` miss; cache hits stay direct
+(no closure call). Worth flagging if benchmarking reveals the
+indirection dominating; a static-dispatch generic shape
+(`PathCursor<'p, P, D: DecisionLookup>`) is a future tranche move.
+
+Commit
+------
+Hash: filled in by orchestrator after `git commit`.
+Scope: `path-executor`.
+Branch: `aziv-w3-executor`.

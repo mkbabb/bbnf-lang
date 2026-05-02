@@ -167,17 +167,28 @@ fn is_span_leaf(node: &IrNode) -> bool {
     )
 }
 
-// ── Legacy per-rule recognition (kept during migration) ─────────────────
+// ── Per-rule pattern recognition (PatternAnnotations population) ────────
+//
+// These helpers populate the per-rule [`PatternAnnotations`] map that
+// Pratt detection at `shape_dispatch::pratt::detect_operator_chain`
+// reads. The `_legacy` suffix on prior names was a misnomer — these
+// are the only producers of `is_operator_chain` and the only path that
+// records `AltPattern::DispatchTable` / `AltPattern::CheckpointFallback`
+// for downstream Pratt classification. Migration to a NodeFacts-only
+// Pratt detector is W4 territory; until that lands, these are
+// production-active helpers under their grammar-fact-suffixed names.
 
 pub(super) fn recognize_body(node: &IrNode, ann: &mut PatternAnnotations, ir: &GrammarIR) {
     match node {
-        IrNode::Seq(children) => recognize_seq_legacy(children, ann, ir),
-        IrNode::Alt(branches, dispatch) => recognize_alt_legacy(branches, dispatch.is_some(), ann),
+        IrNode::Seq(children) => recognize_seq_pattern(children, ann, ir),
+        IrNode::Alt(branches, dispatch) => {
+            recognize_alt_pattern(branches, dispatch.is_some(), ann)
+        }
         _ => {}
     }
 }
 
-fn recognize_seq_legacy(children: &[IrNode], ann: &mut PatternAnnotations, ir: &GrammarIR) {
+fn recognize_seq_pattern(children: &[IrNode], ann: &mut PatternAnnotations, ir: &GrammarIR) {
     if children.len() == 2 && is_operator_chain_tail(&children[1]) {
         ann.seq_pattern = Some(SeqPattern::OperatorChain);
         ann.is_operator_chain = true;
@@ -190,7 +201,7 @@ fn recognize_seq_legacy(children: &[IrNode], ann: &mut PatternAnnotations, ir: &
     ann.seq_pattern = Some(SeqPattern::Normal);
 }
 
-fn recognize_alt_legacy(branches: &[AltBranch], has_dispatch: bool, ann: &mut PatternAnnotations) {
+fn recognize_alt_pattern(branches: &[AltBranch], has_dispatch: bool, ann: &mut PatternAnnotations) {
     if has_dispatch {
         ann.alt_pattern = Some(AltPattern::DispatchTable);
     } else if branches.len() > 1 {

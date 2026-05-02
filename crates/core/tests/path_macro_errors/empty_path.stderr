@@ -1,0 +1,7 @@
+error: path! requires at least one segment after the grammar marker
+ --> tests/path_macro_errors/empty_path.rs:6:13
+  |
+6 |     let _ = path!(bbnf::path::Json);
+  |             ^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: this error originates in the macro `path` (in Nightly builds, run with -Z macro-backtrace for more info)

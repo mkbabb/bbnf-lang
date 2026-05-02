@@ -1,0 +1,84 @@
+AZ-IV.W2.4 — `path!` Proc-Macro evidence
+==========================================
+
+Worktree: /Users/mkbabb/Programming/bbnf-wt-aziv-w2-macro
+Crate:    crates/bbnf-path
+
+Hard Gate W2.4 sub-clause compliance
+-------------------------------------
+
+[gate] `path!(Json, "statuses", 0, "text")` expands to a typed
+       `TypedPath<Json, ()>` value at compile time.
+
+  $ cargo test --profile ax-iter -p bbnf --test path_macro_compile
+  ...
+  test json_statuses_zero_text_compiles_to_typed_path ... ok
+  test compound_string_literal_lowers_through_path_lexer ... ok
+  test bracket_index_in_string_literal_lowers_correctly ... ok
+  test wildcard_token_lands_wildcard_segment ... ok
+  test css_l4_marker_resolves_through_fixture ... ok
+  test bbnf_marker_resolves_through_fixture ... ok
+  test fully_qualified_marker_path_compiles ... ok
+
+  test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured;
+                   0 filtered out; finished in 0.00s
+
+[gate] An invalid path fails compilation with a diagnostic naming
+       the offending segment, the resolved struct type, and valid
+       alternatives.
+
+  $ cat crates/core/tests/path_macro_errors/unknown_field.stderr
+  error: path[2] `nope` not found on `Status`; valid fields: text, retweets, sensitive
+   --> tests/path_macro_errors/unknown_field.rs:9:61
+    |
+  9 |     let _: TypedPath<Json, ()> = path!(Json, "statuses", 0, "nope");
+    |                                                             ^^^^^^
+
+  Source fixture (tests/path_macro_errors/unknown_field.rs):
+    let _: TypedPath<Json, ()> = path!(Json, "statuses", 0, "nope");
+
+  The diagnostic carries:
+    - the offending segment text (`nope`),
+    - the resolved struct type (`Status`),
+    - the valid alternatives (`text, retweets, sensitive`),
+    - the `proc_macro2::Span` anchor (column 61–67 on line 9).
+
+[gate] Macro test surface 100 % pass
+
+  $ cargo test --profile ax-iter -p bbnf --test path_macro_compile \
+                                       --test path_macro_errors
+
+  test result: ok. 7 passed; 0 failed   (path_macro_compile)
+  test result: ok. 1 passed; 0 failed   (path_macro_errors)
+                                  └─ trybuild driver passes
+                                     all 4 .stderr fixtures.
+
+Architecture caveat (per dispatch §Architecture caveat)
+--------------------------------------------------------
+
+The dispatch noted that no production grammar yet exposes a
+`StructRegistry` const at the codegen module level. The W2.4 landing
+embeds a per-grammar synthetic fixture inside the proc-macro crate
+(`crates/bbnf-path/src/registry.rs`) keyed by grammar marker
+identifier. The fixture mirrors the canonical struct shape of each
+grammar (Json `Document`/`Status`, CssL4 `Stylesheet`/`Rule`/`Declaration`,
+Bbnf `Grammar`/`Rule`, Sheets `Formula`) so the hard-gate scenarios
+resolve end-to-end. When `cargo xtask regen` exposes the production
+const per grammar (W4 codegen / W5 binding), the fixture lookup swaps
+to the production const without changing the macro's public surface.
+
+Files
+-----
+
+  crates/bbnf-path/Cargo.toml          — proc-macro crate manifest
+  crates/bbnf-path/src/lib.rs          — `#[proc_macro] path` entry
+  crates/bbnf-path/src/path_macro.rs   — parse / lex / lower / validate / emit
+  crates/bbnf-path/src/registry.rs     — per-grammar fixture registry
+  crates/core/tests/path_macro_compile.rs            — positive (7 tests)
+  crates/core/tests/path_macro_errors.rs             — trybuild driver (1 test, 4 fixtures)
+  crates/core/tests/path_macro_errors/unknown_field.{rs,stderr}
+  crates/core/tests/path_macro_errors/unknown_marker.{rs,stderr}
+  crates/core/tests/path_macro_errors/index_into_struct.{rs,stderr}
+  crates/core/tests/path_macro_errors/empty_path.{rs,stderr}
+  Cargo.toml                            — workspace member added
+  crates/core/Cargo.toml                — bbnf-path + trybuild dev-deps

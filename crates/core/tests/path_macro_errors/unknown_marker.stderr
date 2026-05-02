@@ -1,0 +1,5 @@
+error: unknown grammar marker `NotARealGrammar`; supported markers: Bbnf, CssL4, Json, Sheets
+ --> tests/path_macro_errors/unknown_marker.rs:7:19
+  |
+7 |     let _ = path!(NotARealGrammar, "foo");
+  |                   ^^^^^^^^^^^^^^^

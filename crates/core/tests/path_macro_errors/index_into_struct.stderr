@@ -1,0 +1,5 @@
+error: path[1] `0` cannot descend into scalar payload of `Document`
+ --> tests/path_macro_errors/index_into_struct.rs:8:52
+  |
+8 |     let _: TypedPath<Json, ()> = path!(Json, "id", 0);
+  |                                                    ^

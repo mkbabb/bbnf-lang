@@ -25,19 +25,39 @@
 //! backslashes via the SIMD scan; the borrow path is the fast case
 //! (~90% of real-world inputs).
 
-use bbnf_ir::{GrammarIR, IrRule};
+use bbnf_ir::{GrammarIR, IrRule, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use super::dispatcher::shape_fn_ident;
 use bbnf_ir::registry::EmitStrategy;
 
+/// True when the rule's projected type is `TypeDesc::Span` — meaning
+/// the grammar declares `-> input : Span` (or omits the projection
+/// and inherits the Span default). Span-typed string rules must
+/// emit the FULL quoted span `[open..end+1]` so the source bytes
+/// (including the surrounding quotes) round-trip through the leaf;
+/// String-typed rules with a host-fn decoder (JSON's
+/// `decode_json_string_to_arena`) emit only the inner body
+/// `[body_start..end]` because the decoder produced the unquoted
+/// payload.
+fn rule_is_span_typed(rule: &IrRule, ir: &GrammarIR) -> bool {
+    ir.types.iter().any(|(rid, t)| {
+        if *rid == rule.id {
+            matches!(t, TypeDesc::Span)
+        } else {
+            false
+        }
+    })
+}
+
 /// Emit `pub fn parse_string_<grammar>_<rule>(input, p, state, builder)
 /// -> Result<(), DtaError>`.
 ///
 /// AZ-I.W2.RC / AZ-II.cutover.O4 — emits the struct-builder body.
-/// The borrow path slices `input[body_start..end]` with the parse-fn
-/// lifetime; the cold escape path decodes and emits through the same
+/// The borrow path slices `input[body_start..end]` (or `[open..end+1]`
+/// for `: Span`-typed rules) with the parse-fn lifetime; the cold
+/// escape path decodes and emits through the same
 /// `push_leaf_with_str` surface.
 pub fn emit_parse_string(
     grammar_suffix: &str,
@@ -51,6 +71,27 @@ pub fn emit_parse_string(
     let EmitStrategy::StructDirect { rust, .. } = strategy;
     let builder_ty: syn::Path = syn::parse_str(rust.builder_path)
         .expect("EmitStrategy::StructDirect.rust.builder_path must parse as a Rust path");
+    // AZ-IV.W1-CLOSE.A — Span-typed string rules (Sheets's
+    // `string -> input : Span`) capture the full quoted span; the
+    // borrow-path slice and the cold-escape Borrowed slice both
+    // include the surrounding quotes. Decoder-typed string rules
+    // (JSON's `string -> decode_json_string_to_arena(input) :
+    // String`) keep the inner-body slicing unchanged.
+    let is_span_typed = rule_is_span_typed(rule, ir);
+    let (borrow_start_expr, borrow_end_expr) = if is_span_typed {
+        (quote! { open }, quote! { end + 1 })
+    } else {
+        (quote! { body_start }, quote! { end })
+    };
+    let cold_borrowed_slice = if is_span_typed {
+        // Cold-escape path's Borrowed payload reports `[start, end)`
+        // for the body; widen to include the surrounding quotes.
+        // `start` is `open + 1` and `end` is the closing quote
+        // offset, so `[start - 1, end + 1)` is the full quoted span.
+        quote! { &input[(start as usize).saturating_sub(1)..(end as usize) + 1] }
+    } else {
+        quote! { &input[start as usize..end as usize] }
+    };
     quote! {
         /// AZ-I.W2.RC — per-grammar String-shape parse function
         /// (struct-direct substrate).
@@ -94,9 +135,12 @@ pub fn emit_parse_string(
                     // input. The `'p` lifetime threads through
                     // the parse-fn signature so the slice's
                     // lifetime matches the builder's arena.
+                    // For `: Span`-typed rules the slice spans
+                    // the full quoted region (`open..end+1`);
+                    // decoder-typed rules slice the inner body.
                     let body: &'p str = unsafe {
                         ::core::str::from_utf8_unchecked(
-                            &input[body_start..end],
+                            &input[#borrow_start_expr..#borrow_end_expr],
                         )
                     };
                     builder.push_leaf_with_str(body);
@@ -141,7 +185,7 @@ pub fn emit_parse_string(
                             *p = end_pos;
                             let body: &'p str = unsafe {
                                 ::core::str::from_utf8_unchecked(
-                                    &input[start as usize..end as usize],
+                                    #cold_borrowed_slice,
                                 )
                             };
                             builder.push_leaf_with_str(body);

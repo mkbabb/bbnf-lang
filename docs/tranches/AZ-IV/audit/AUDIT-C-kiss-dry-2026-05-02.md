@@ -161,9 +161,13 @@ $ cargo nextest run --profile ax-iter -p bbnf --test substrate_path_tokens
     Summary [   0.008s] 3 tests run: 3 passed, 0 skipped
 $ cargo xtask regen --check
     regen --check: clean (9 of 9 grammars matched)
+$ cargo nextest run --profile ax-iter -p simd-scan --test correctness json_twitter_canonical
+    Summary [   0.037s] 1 test run: 1 passed, 12 skipped
 ```
 
-Workspace nextest pre-AUDIT-C: 1582 / 0 fail (W2 close baseline). Post-AUDIT-C: pending verification on full workspace nextest after this audit doc commits.
+Worktree-init note: the worktree initially missed `data/{bbnf,css,json}` symlinks (the project gitignores `data/`; sibling worktrees carry symlinks to the canonical `bbnf-lang/data/` tree). One fixture-load test (`simd-scan::correctness::json_twitter_canonical`) failed on the first workspace nextest pass for that reason — uncorrelated with any AUDIT-C source change. Symlinks repaired; second pass clean.
+
+Workspace nextest pre-AUDIT-C: 1582 / 0 fail (W2 close baseline). Post-AUDIT-C: 1582 tests run / 1581 passed / 1 timed out / 28 skipped — the single timeout (`lightningcss_parity_tailwind`) is the pre-existing W4-routed tailwind perf timeout enumerated as carry in the W2 close audit doc (not a regression). Zero new failures.
 
 ## §3 Routing — Cross-Cutting Items
 

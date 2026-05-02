@@ -12,6 +12,9 @@ function createState(input) {
   return { input, offset: 0 };
 }
 
+// ── Named host types (W5 binding wave will replace `unknown` with executable types) ──
+
+
 // ── Grammar types ───────────────────────────────────────────────
 
 
@@ -63,7 +66,8 @@ function __string(s) {
 const __re7_m = __RE0.exec(s.input);
 let __re7 = null;
 if (__re7_m) { __re7 = span(s.offset, __RE0.lastIndex); s.offset = __RE0.lastIndex; }
-const __map8 = (__re7) !== null ? decode_json_string_to_arena(__input) : null;
+const __input = __re7;
+const __map8 = __input !== null ? decode_json_string_to_arena(__input) : null;
 
   const __body = __map8;
   return __body !== null ? ({ tag: "string", value: __body } as unknown as valueValue) : null;

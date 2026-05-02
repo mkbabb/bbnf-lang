@@ -8,16 +8,21 @@
 /// fn so the target writes directly into the same
 /// builder. Returns unit for StructDirect composition.
 #[inline(always)]
-#[allow(non_snake_case, clippy::too_many_arguments)]
-pub fn parse_keyword_JsonFixture_bool<'p>(
+#[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+pub fn parse_keyword_JsonFixture_bool<'p, __P>(
     input: &'p [u8],
     p: &mut usize,
     first_byte: u8,
     state: &mut __shape_support_JsonFixture::ScanState,
     builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-) -> ::core::result::Result<(), crate::runtime::DtaError> {
+    cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
+) -> ::core::result::Result<(), crate::runtime::DtaError>
+where
+    __P: for<'__c> crate::path::schema::PathSchema<'__c>,
+{
     use crate::runtime::builder::StructBuilder as _;
     let _ = state;
+    let _ = cursor;
     match first_byte {
         102u8 => {
             if input.len() >= *p + 5usize

@@ -5,15 +5,26 @@
 /// `begin_compound` / `end_compound` calls against the in-flight
 /// frame stack. Per-element pushes (string keys + value
 /// dispatch) land directly on the topmost open frame.
+///
+/// AZ-IV.W3.6 — Cursor-threaded. Each loop iteration consults
+/// `cursor.decide(rule_id) -> Decision` so the lazy bail-out
+/// parse can break after `ParseUntil(idx)` reaches the targeted
+/// child. Eager parses pass an always-`ParseFully` cursor,
+/// which makes the consult a no-op against the pre-W3.6 body.
 #[inline]
 #[allow(non_snake_case, clippy::too_many_arguments)]
-pub fn parse_object_JsonFixture_object<'p>(
+pub fn parse_object_JsonFixture_object<'p, __P>(
     input: &'p [u8],
     p: &mut usize,
     state: &mut __shape_support_JsonFixture::ScanState,
     builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-) -> ::core::result::Result<(), crate::runtime::DtaError> {
+    cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
+) -> ::core::result::Result<(), crate::runtime::DtaError>
+where
+    __P: for<'__c> crate::path::schema::PathSchema<'__c>,
+{
     use crate::runtime::builder::StructBuilder;
+    use crate::path::cursor::Decision as __Decision;
     if input.get(*p).copied() != Some(b'{') {
         return Err(crate::runtime::DtaError::Syntax {
             offset: *p as u32,
@@ -34,13 +45,25 @@ pub fn parse_object_JsonFixture_object<'p>(
         builder.end_compound(__handle);
         return Ok(());
     }
+    let __decision: __Decision = cursor.decide(9u32 as u32);
+    let mut __iter_idx: u32 = 0;
     loop {
+        let __seg_kind_pre = cursor.current_kind();
+        let __is_field_seg = matches!(
+            __seg_kind_pre, crate ::path::cursor::SegmentKind::Field,
+        );
+        let __key_save_p = *p;
+        let __key_checkpoint = if __is_field_seg {
+            Some(builder.checkpoint())
+        } else {
+            None
+        };
         if input.get(*p).copied() != Some(b'"') {
             return Err(crate::runtime::DtaError::Syntax {
                 offset: *p as u32,
             });
         }
-        parse_string_JsonFixture_string(input, p, state, builder)?;
+        parse_string_JsonFixture_string(input, p, state, builder, cursor)?;
         let _ = __shape_support_JsonFixture::skip_space(input, p, state);
         if input.get(*p).copied() != Some(b':') {
             return Err(crate::runtime::DtaError::Syntax {
@@ -49,10 +72,42 @@ pub fn parse_object_JsonFixture_object<'p>(
         }
         *p += 1;
         let _ = __shape_support_JsonFixture::skip_space(input, p, state);
-        ({
-            let _ = __shape_support_JsonFixture::skip_space(input, p, state);
-            parse_wrap_JsonFixture_value(input, p, state, builder)
-        })?;
+        let __matched: bool = if let Some(_cp) = &__key_checkpoint {
+            let mut __close = __key_save_p + 1;
+            while __close < input.len() {
+                let b = input[__close];
+                if b == b'\\' {
+                    __close += 2;
+                    continue;
+                }
+                if b == b'"' {
+                    break;
+                }
+                __close += 1;
+            }
+            let __key_bytes: &'p [u8] = if __close > __key_save_p + 1 {
+                &input[__key_save_p + 1..__close]
+            } else {
+                &[]
+            };
+            let __parsed_key: &'p str = unsafe {
+                ::core::str::from_utf8_unchecked(__key_bytes)
+            };
+            cursor.match_field(__parsed_key)
+        } else {
+            false
+        };
+        if __is_field_seg && !__matched {
+            if let Some(__cp) = __key_checkpoint {
+                builder.rollback(__cp);
+            }
+            __shape_support_JsonFixture::byte_skip_value(input, p)?;
+        } else {
+            ({
+                let _ = __shape_support_JsonFixture::skip_space(input, p, state);
+                parse_wrap_JsonFixture_value(input, p, state, builder, cursor)
+            })?;
+        }
         let _ = __shape_support_JsonFixture::skip_space(input, p, state);
         match input.get(*p).copied() {
             Some(b',') => {
@@ -65,10 +120,25 @@ pub fn parse_object_JsonFixture_object<'p>(
                 return Ok(());
             }
             _ => {
+                if __matched {
+                    builder.end_compound(__handle);
+                    return Ok(());
+                }
                 return Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
                 });
             }
+        }
+        if __matched {
+            builder.end_compound(__handle);
+            return Ok(());
+        }
+        __iter_idx = __iter_idx.saturating_add(1);
+        if let __Decision::ParseUntil(__cut) = __decision
+            && __iter_idx as u32 > __cut as u32
+        {
+            builder.end_compound(__handle);
+            return Ok(());
         }
     }
 }

@@ -1,14 +1,25 @@
 /// AZ-I.W2.RB — per-grammar Array-shape parse function,
 /// **struct-direct body** (Shape 1 — wrapped homogeneous repeat).
+///
+/// AZ-IV.W3.6 — Cursor-threaded. The element loop consults
+/// `cursor.decide(rule_id) -> Decision` so the lazy bail-out
+/// parse can break after `ParseUntil(idx)` reaches the targeted
+/// element index. Eager parses pass an always-`ParseFully`
+/// cursor; the consult is a no-op against the pre-W3.6 body.
 #[inline]
 #[allow(non_snake_case, clippy::too_many_arguments)]
-pub fn parse_array_JsonFixture_array<'p>(
+pub fn parse_array_JsonFixture_array<'p, __P>(
     input: &'p [u8],
     p: &mut usize,
     state: &mut __shape_support_JsonFixture::ScanState,
     builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-) -> ::core::result::Result<(), crate::runtime::DtaError> {
+    cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
+) -> ::core::result::Result<(), crate::runtime::DtaError>
+where
+    __P: for<'__c> crate::path::schema::PathSchema<'__c>,
+{
     use crate::runtime::builder::StructBuilder;
+    use crate::path::cursor::Decision as __Decision;
     if input.get(*p).copied() != Some(b'[') {
         return Err(crate::runtime::DtaError::Syntax {
             offset: *p as u32,
@@ -23,6 +34,8 @@ pub fn parse_array_JsonFixture_array<'p>(
     };
     let __array_checkpoint = builder.checkpoint();
     let __handle = builder.begin_compound(&__layout);
+    let __decision: __Decision = cursor.decide(8u32 as u32);
+    let mut __elem_idx: u32 = 0;
     let __array_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
         *p += 1;
         let _ = __shape_support_JsonFixture::skip_space(input, p, state);
@@ -31,10 +44,32 @@ pub fn parse_array_JsonFixture_array<'p>(
             return Ok(());
         }
         loop {
-            ({
-                let _ = __shape_support_JsonFixture::skip_space(input, p, state);
-                parse_wrap_JsonFixture_value(input, p, state, builder)
-            })?;
+            let __seg_kind = cursor.current_kind();
+            let __is_index_seg = matches!(
+                __seg_kind, crate ::path::cursor::SegmentKind::Index,
+            );
+            let __matched: bool = if __is_index_seg {
+                cursor.match_index(__elem_idx as usize)
+            } else {
+                false
+            };
+            if __is_index_seg && !__matched {
+                __shape_support_JsonFixture::byte_skip_value(input, p)?;
+            } else {
+                ({
+                    let _ = __shape_support_JsonFixture::skip_space(input, p, state);
+                    parse_wrap_JsonFixture_value(input, p, state, builder, cursor)
+                })?;
+            }
+            if __matched {
+                return Ok(());
+            }
+            if let __Decision::ParseUntil(__cut) = __decision
+                && __elem_idx as u32 >= __cut as u32
+            {
+                return Ok(());
+            }
+            __elem_idx = __elem_idx.saturating_add(1);
             let _ = __shape_support_JsonFixture::skip_space(input, p, state);
             match input.get(*p).copied() {
                 Some(b',') => {

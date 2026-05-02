@@ -6,13 +6,18 @@
 /// builder call.
 #[inline(always)]
 #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-pub fn parse_scalar_JsonFixture_comma<'p>(
+pub fn parse_scalar_JsonFixture_comma<'p, __P>(
     input: &'p [u8],
     p: &mut usize,
     _state: &mut __shape_support_JsonFixture::ScanState,
     builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-) -> ::core::result::Result<(), crate::runtime::DtaError> {
+    cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
+) -> ::core::result::Result<(), crate::runtime::DtaError>
+where
+    __P: for<'__c> crate::path::schema::PathSchema<'__c>,
+{
     use crate::runtime::builder::StructBuilder as _;
+    let _ = cursor;
     let at = *p;
     let end = at + 1usize;
     if input.len() < end || input[at..end] != [44u8] {

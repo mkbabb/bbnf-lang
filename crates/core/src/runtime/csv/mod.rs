@@ -38,10 +38,12 @@
 pub mod arena;
 pub mod builder;
 pub mod document;
+pub mod kind;
 pub mod value;
 pub mod view;
 
-pub use arena::{CsvArena, CsvCompound, CsvCompoundId, CsvCompoundKind};
+pub use arena::{CsvArena, CsvCompoundId};
 pub use builder::CsvStructBuilder;
 pub use document::{CsvDocument, CsvKind, CsvPathQuery, CsvView};
+pub use kind::{CsvCompound, CsvCompoundKind};
 pub use value::CsvValue;

@@ -5,9 +5,11 @@
 //! values, shared path/query traits, parse errors, and the remaining
 //! substrate types consumed by generated code.
 
+pub mod arena_template;
 pub mod bbnf;
 pub mod bnf;
 pub mod builder;
+pub mod builder_template;
 pub mod css_l4;
 pub mod css_pretty;
 pub mod csv;

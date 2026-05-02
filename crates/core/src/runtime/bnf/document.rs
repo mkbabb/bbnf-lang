@@ -1,7 +1,8 @@
 //! AZ-II.cutover.E (Phase 2) — `BnfDocument` + view / value /
 //! path accessor surface. Mirror of `CsvDocument`.
 
-use crate::runtime::bnf::arena::{BnfArena, BnfCompound, BnfCompoundId, BnfCompoundKind};
+use crate::runtime::bnf::arena::{BnfArena, BnfCompoundId};
+use crate::runtime::bnf::kind::{BnfCompound, BnfCompoundKind};
 use crate::runtime::bnf::value::BnfValue;
 use crate::runtime::path::{Path, PathSegment};
 

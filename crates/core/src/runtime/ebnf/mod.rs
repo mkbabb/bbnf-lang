@@ -7,10 +7,12 @@
 pub mod arena;
 pub mod builder;
 pub mod document;
+pub mod kind;
 pub mod value;
 pub mod view;
 
-pub use arena::{EbnfArena, EbnfCompound, EbnfCompoundId, EbnfCompoundKind};
+pub use arena::{EbnfArena, EbnfCompoundId};
 pub use builder::EbnfStructBuilder;
 pub use document::{EbnfDocument, EbnfKind, EbnfPathQuery, EbnfView};
+pub use kind::{EbnfCompound, EbnfCompoundKind};
 pub use value::EbnfValue;

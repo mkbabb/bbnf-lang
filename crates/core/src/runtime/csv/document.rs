@@ -9,7 +9,8 @@
 //! root [`CsvValue`] borrows from the input lifetime `'p` and whose
 //! [`CsvArena`] owns every compound child slice.
 
-use crate::runtime::csv::arena::{CsvArena, CsvCompound, CsvCompoundId, CsvCompoundKind};
+use crate::runtime::csv::arena::{CsvArena, CsvCompoundId};
+use crate::runtime::csv::kind::{CsvCompound, CsvCompoundKind};
 use crate::runtime::csv::value::CsvValue;
 use crate::runtime::path::{Path, PathSegment};
 

@@ -7,10 +7,12 @@
 pub mod arena;
 pub mod builder;
 pub mod document;
+pub mod kind;
 pub mod value;
 pub mod view;
 
-pub use arena::{CssPrettyArena, CssPrettyCompound, CssPrettyCompoundId, CssPrettyCompoundKind};
+pub use arena::{CssPrettyArena, CssPrettyCompoundId};
 pub use builder::CssPrettyStructBuilder;
 pub use document::{CssPrettyDocument, CssPrettyKind, CssPrettyPathQuery, CssPrettyView};
+pub use kind::{CssPrettyCompound, CssPrettyCompoundKind};
 pub use value::CssPrettyValue;

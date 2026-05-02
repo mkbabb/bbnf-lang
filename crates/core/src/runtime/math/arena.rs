@@ -1,143 +1,54 @@
-//! AZ-II.cutover.E (Phase 2) — Math parse arena.
-//!
-//! Mirror of `CsvArena` / `BbnfArena` / `JsonArena`. Owns every
-//! compound child slice; resolves handles via [`MathArena::compound`].
+//! AZ-IV.W5.3 — Math parse arena. Thin newtype around
+//! [`CompoundSlabArena<MathCompound<'p>>`].
 
-use bbnf_ir::registry::StructLayout;
+use crate::runtime::arena_template::CompoundSlabArena;
+use crate::runtime::math::kind::MathCompound;
 
-use crate::runtime::math::value::MathValue;
+#[derive(Debug, Default)]
+pub struct MathArena<'p>(CompoundSlabArena<MathCompound<'p>>);
 
-/// Discriminator — the structural shape of a [`MathValue::Compound`].
-///
-/// One arm per compound rule in `grammar/misc/math.bbnf`. The deep
-/// alias chain (`p` → `pp` → `ppp` → `pppp` → `ppppp` → `pppppp`)
-/// produces six distinct rule names that all wrap a literal `(`; the
-/// classifier admits each as its own kind so consumers can identify
-/// which alias level the parser threaded through.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum MathCompoundKind {
-    /// `expr = term, { ("+" | "-"), term }`.
-    Expr,
-    /// `term = factor, { ("*" | "/"), factor }`.
-    Term,
-    /// `factor = number | wrapped` — Alt.
-    Factor,
-    /// `wrapped = pppppp, expr, ")"`.
-    Wrapped,
-    /// `p = "("`.
-    P,
-    /// `pp = p` — alias chain link.
-    Pp,
-    /// `ppp = pp`.
-    Ppp,
-    /// `pppp = ppp`.
-    Pppp,
-    /// `ppppp = pppp`.
-    Ppppp,
-    /// `pppppp = ppppp`.
-    Pppppp,
-    /// Catch-all for compound rules not recognised by the alphabet.
-    Other,
-}
-
-impl MathCompoundKind {
-    /// Resolve a [`StructLayout`] to its kind.
-    ///
-    /// `grammar/misc/math.bbnf` parses purely through Pratt operator
-    /// emission: no struct layouts are emitted into the math grammar,
-    /// so the registry projection space is empty in production.
-    /// Variants are retained for AST exhaustiveness against future
-    /// structural emission; every layout collapses to
-    /// [`Self::Other`].
-    pub fn from_layout(_layout: &StructLayout) -> Self {
-        Self::Other
+impl<'p> MathArena<'p> {
+    #[inline]
+    pub fn new() -> Self {
+        Self(CompoundSlabArena::new())
+    }
+    #[inline]
+    pub fn with_capacity(n: usize) -> Self {
+        Self(CompoundSlabArena::with_capacity(n))
+    }
+    #[inline]
+    pub(crate) fn from_template(t: CompoundSlabArena<MathCompound<'p>>) -> Self {
+        Self(t)
+    }
+    #[inline]
+    pub fn push_compound(&mut self, c: MathCompound<'p>) -> MathCompoundId {
+        MathCompoundId(self.0.push_compound(c))
+    }
+    #[inline]
+    pub fn compound(&self, id: MathCompoundId) -> &MathCompound<'p> {
+        self.0.compound(id.0)
+    }
+    #[inline]
+    pub fn compound_count(&self) -> usize {
+        self.0.compound_count()
+    }
+    #[inline]
+    pub fn truncate(&mut self, n: usize) {
+        self.0.truncate(n);
     }
 }
 
-/// A compound entry in the arena.
-#[derive(Debug, Clone)]
-pub struct MathCompound<'p> {
-    pub kind: MathCompoundKind,
-    pub branch_tag: Option<u32>,
-    pub children: Vec<MathValue<'p>>,
-}
-
-impl<'p> Default for MathCompound<'p> {
-    fn default() -> Self {
-        Self {
-            kind: MathCompoundKind::Other,
-            branch_tag: None,
-            children: Vec::new(),
-        }
-    }
-}
-
-/// Opaque handle for a compound entry. `0` = `EMPTY`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MathCompoundId(u32);
 
 impl MathCompoundId {
     pub const EMPTY: Self = Self(0);
-
     #[inline]
     pub const fn is_empty(self) -> bool {
         self.0 == 0
     }
-
     #[inline]
-    fn slab_index(self) -> Option<usize> {
-        if self.0 == 0 {
-            None
-        } else {
-            Some((self.0 - 1) as usize)
-        }
-    }
-}
-
-/// Owning slab for compound entries.
-#[derive(Debug, Default)]
-pub struct MathArena<'p> {
-    compounds: Vec<MathCompound<'p>>,
-    empty: MathCompound<'p>,
-}
-
-impl<'p> MathArena<'p> {
-    #[inline]
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    #[inline]
-    pub fn with_capacity(compounds: usize) -> Self {
-        Self {
-            compounds: Vec::with_capacity(compounds),
-            empty: MathCompound::default(),
-        }
-    }
-
-    #[inline]
-    pub fn push_compound(&mut self, compound: MathCompound<'p>) -> MathCompoundId {
-        self.compounds.push(compound);
-        let idx = self.compounds.len() as u32;
-        MathCompoundId(idx)
-    }
-
-    #[inline]
-    pub fn compound(&self, id: MathCompoundId) -> &MathCompound<'p> {
-        match id.slab_index() {
-            None => &self.empty,
-            Some(i) => &self.compounds[i],
-        }
-    }
-
-    #[inline]
-    pub fn compound_count(&self) -> usize {
-        self.compounds.len()
-    }
-
-    /// Roll back the arena to a prior compound-count snapshot.
-    #[inline]
-    pub fn truncate(&mut self, compounds: usize) {
-        self.compounds.truncate(compounds);
+    pub(crate) const fn from_raw(id: u32) -> Self {
+        Self(id)
     }
 }

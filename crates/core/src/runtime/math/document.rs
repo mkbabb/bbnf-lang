@@ -1,7 +1,8 @@
 //! AZ-II.cutover.E (Phase 2) — `MathDocument` + view / value / path
 //! accessor surface. Mirror of `CsvDocument` / `BbnfDocument`.
 
-use crate::runtime::math::arena::{MathArena, MathCompound, MathCompoundId, MathCompoundKind};
+use crate::runtime::math::arena::{MathArena, MathCompoundId};
+use crate::runtime::math::kind::{MathCompound, MathCompoundKind};
 use crate::runtime::math::value::MathValue;
 use crate::runtime::path::{Path, PathSegment};
 

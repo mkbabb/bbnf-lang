@@ -1,7 +1,8 @@
 //! AZ-II.cutover.E (Phase 2) — `EbnfDocument` + view / value /
 //! path accessor surface. Mirror of `CsvDocument`.
 
-use crate::runtime::ebnf::arena::{EbnfArena, EbnfCompound, EbnfCompoundId, EbnfCompoundKind};
+use crate::runtime::ebnf::arena::{EbnfArena, EbnfCompoundId};
+use crate::runtime::ebnf::kind::{EbnfCompound, EbnfCompoundKind};
 use crate::runtime::ebnf::value::EbnfValue;
 use crate::runtime::path::{Path, PathSegment};
 

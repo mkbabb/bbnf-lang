@@ -1,9 +1,8 @@
 //! AZ-II.cutover.E (Phase 2) — `CssPrettyDocument` + view / value /
 //! path accessor surface. Mirror of `CsvDocument`.
 
-use crate::runtime::css_pretty::arena::{
-    CssPrettyArena, CssPrettyCompound, CssPrettyCompoundId, CssPrettyCompoundKind,
-};
+use crate::runtime::css_pretty::arena::{CssPrettyArena, CssPrettyCompoundId};
+use crate::runtime::css_pretty::kind::{CssPrettyCompound, CssPrettyCompoundKind};
 use crate::runtime::css_pretty::value::CssPrettyValue;
 use crate::runtime::path::{Path, PathSegment};
 

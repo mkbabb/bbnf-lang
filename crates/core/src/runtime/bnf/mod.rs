@@ -7,10 +7,12 @@
 pub mod arena;
 pub mod builder;
 pub mod document;
+pub mod kind;
 pub mod value;
 pub mod view;
 
-pub use arena::{BnfArena, BnfCompound, BnfCompoundId, BnfCompoundKind};
+pub use arena::{BnfArena, BnfCompoundId};
 pub use builder::BnfStructBuilder;
 pub use document::{BnfDocument, BnfKind, BnfPathQuery, BnfView};
+pub use kind::{BnfCompound, BnfCompoundKind};
 pub use value::BnfValue;

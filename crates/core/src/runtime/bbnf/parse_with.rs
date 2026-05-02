@@ -63,6 +63,29 @@ where
             let mut pos: usize = 0;
             parse_BbnfBootstrap_grammar(src.as_bytes(), &mut pos, &mut state, &mut builder, cursor)
                 .ok()?;
+            // AZ-IV.W3-DYNAMIC — when the path is empty, the lazy
+            // lane still requires the recogniser to admit *some*
+            // content. BBNF's Shape-2 list-rule body accepts zero
+            // iterations without erroring; on an entirely-malformed
+            // input that admission would conjure a `Some` from
+            // nothing. Guard with a forward-progress check: if the
+            // path is empty and the parser failed to consume past
+            // any leading whitespace AND the input still carries
+            // non-whitespace bytes, surface `None`.
+            if path.is_empty() {
+                let bytes = src.as_bytes();
+                let mut leading = 0usize;
+                while let Some(&b) = bytes.get(leading) {
+                    if matches!(b, b' ' | b'\t' | b'\n' | b'\r') {
+                        leading += 1;
+                    } else {
+                        break;
+                    }
+                }
+                if pos <= leading && leading < bytes.len() {
+                    return None;
+                }
+            }
             let doc: BbnfDocument<'_> = builder.finalise(src);
             let mut legacy: Vec<LegacySegment<'_>> = Vec::with_capacity(path.len());
             for owned in path.owned_segments() {

@@ -82,6 +82,140 @@ mod __csvparser_emit_impl {
     /// grammar. Non-zero iff the lift admitted ≥ 1 chain OR the
     /// shape classifier admitted ≥ 1 single-rung Pratt rule.
     pub const PRECEDENCE_OPERATOR_COUNT: usize = 0usize;
+    /// AZ-IV.W3.3 — codegen-emitted lazy-parse path plan.
+    ///
+    /// The static `PATH_PLAN` carries one row per `(rule, segment
+    /// kind)` decision the executor consults. The runtime cursor
+    /// linearly searches the static for a matching `(rule_id,
+    /// segment_kind)` pair and applies the recorded decision; a
+    /// missing match falls back to `ParseFully` at the executor
+    /// surface.
+    ///
+    /// W3.1's executor cherry-pick re-exports the types from
+    /// `crate::path::path_plan`; until then the local module
+    /// definitions keep this generated file compilable in
+    /// isolation per the AZ-IV.W0 regen-discipline contract.
+    #[allow(dead_code)]
+    pub mod __path_plan {
+        #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+        pub enum SegmentKind {
+            Field,
+            Index,
+            Wildcard,
+            VariantName,
+        }
+        #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+        pub enum Decision {
+            ParseFully,
+            ParseUntil(u32),
+            Skip,
+        }
+        #[derive(Clone, Copy, Debug)]
+        pub struct PathPlanEntry {
+            pub rule_id: u32,
+            pub segment_kind: SegmentKind,
+            /// Branch / position index when the decision is
+            /// `ParseUntil`; `u32::MAX` otherwise.
+            pub field_index: u32,
+            pub decision: Decision,
+        }
+        pub const PATH_PLAN_LEN: usize = 12;
+        pub static PATH_PLAN: &[PathPlanEntry; 12] = &[
+            PathPlanEntry {
+                rule_id: 0,
+                segment_kind: SegmentKind::Wildcard,
+                field_index: 4294967295,
+                decision: Decision::ParseFully,
+            },
+            PathPlanEntry {
+                rule_id: 1,
+                segment_kind: SegmentKind::Wildcard,
+                field_index: 4294967295,
+                decision: Decision::ParseFully,
+            },
+            PathPlanEntry {
+                rule_id: 2,
+                segment_kind: SegmentKind::Field,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 2,
+                segment_kind: SegmentKind::Index,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 2,
+                segment_kind: SegmentKind::Field,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 2,
+                segment_kind: SegmentKind::Index,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 2,
+                segment_kind: SegmentKind::Wildcard,
+                field_index: 4294967295,
+                decision: Decision::ParseFully,
+            },
+            PathPlanEntry {
+                rule_id: 3,
+                segment_kind: SegmentKind::Field,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 3,
+                segment_kind: SegmentKind::Index,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 3,
+                segment_kind: SegmentKind::Field,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 3,
+                segment_kind: SegmentKind::Index,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 3,
+                segment_kind: SegmentKind::Wildcard,
+                field_index: 4294967295,
+                decision: Decision::ParseFully,
+            },
+        ];
+        /// Linear search the plan for the first `(rule_id,
+        /// segment_kind)` match. The W3.1 executor consults this
+        /// fn through its cursor; `None` = fall back to
+        /// `ParseFully` at the executor surface.
+        #[inline]
+        pub fn lookup(
+            rule_id: u32,
+            segment_kind: SegmentKind,
+        ) -> ::core::option::Option<&'static PathPlanEntry> {
+            let mut i = 0usize;
+            while i < PATH_PLAN.len() {
+                let entry = &PATH_PLAN[i];
+                if entry.rule_id == rule_id
+                    && entry.segment_kind as u8 == segment_kind as u8
+                {
+                    return ::core::option::Option::Some(entry);
+                }
+                i += 1;
+            }
+            ::core::option::Option::None
+        }
+    }
     static __DTA_REGEX_2: &str = "[^\"]*";
     static __DTA_REGEX_17: &str = "\\r?\\n";
     static __DTA_HREGEX_22: &str = "[^,\"\\r\\n]+";

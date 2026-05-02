@@ -2,6 +2,8 @@
 //!
 //! Mirror of `crates/core/src/runtime/csv/arena.rs`.
 
+use bbnf_ir::RuleId;
+
 use crate::runtime::bnf::value::BnfValue;
 
 /// Discriminator — structural shape of a [`BnfValue::Compound`].
@@ -21,18 +23,20 @@ pub enum BnfCompoundKind {
 }
 
 impl BnfCompoundKind {
-    pub fn from_rule_name(name: &str) -> Self {
-        match name {
-            "identifier" => Self::Identifier,
-            "terminal" => Self::Terminal,
-            "nonterminal" => Self::Nonterminal,
-            "term" => Self::Term,
-            "expression" => Self::Expression,
-            "alternation" => Self::Alternation,
-            "rhs" => Self::Rhs,
-            "lhs" => Self::Lhs,
-            "rule" => Self::Rule,
-            "grammar" => Self::Grammar,
+    /// Resolve a rule id to a kind. Integer literals match the rule-id
+    /// allocation in `crates/core/src/grammar/generated/bnf.rs`. Ids
+    /// not in the alphabet collapse to [`Self::Other`].
+    pub fn from_rule_id(rule_id: RuleId) -> Self {
+        match rule_id {
+            0 => Self::Terminal,
+            1 => Self::Nonterminal,
+            2 => Self::Alternation,
+            3 => Self::Rule,
+            4 => Self::Grammar,
+            // Identifier / Term / Expression / Rhs / Lhs are retained
+            // for AST exhaustiveness; no layout is emitted for those
+            // rules in the current generated bnf.rs (they collapse via
+            // structural Wrap shape).
             _ => Self::Other,
         }
     }

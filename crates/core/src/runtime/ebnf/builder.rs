@@ -105,7 +105,7 @@ impl<'p> StructBuilder for EbnfStructBuilder<'p> {
     }
 
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
-        let kind = EbnfCompoundKind::from_rule_name(layout.rule_name.as_str());
+        let kind = EbnfCompoundKind::from_rule_id(layout.rule_id);
         self.stack.push(OpenFrame {
             kind,
             branch_tag: None,

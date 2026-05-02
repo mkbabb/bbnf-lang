@@ -101,8 +101,12 @@ enum OpenFrame<'p> {
     /// Length / angle / time / frequency / resolution / flex /
     /// percentage typed-numeric rules — collects `(f64, u8)` and
     /// finalises into the matching [`CssDimension`] variant.
+    ///
+    /// `kind` is the registry-projected discriminator selected from
+    /// the layout's `rule_id` at `begin_compound` time, eliminating
+    /// rule-name string matches from the runtime hot path.
     Numeric {
-        rule_name: &'p str,
+        kind: NumericKind,
         magnitude: Option<f64>,
         unit: Option<u8>,
     },
@@ -123,11 +127,52 @@ enum OpenFrame<'p> {
         right: Option<&'p CssColor<'p>>,
         right_pct: Option<f64>,
     },
-    /// Function call — name + argument value list.
+    /// Function call — registry-projected kind + parsed identifier
+    /// span (filled lazily by `push_leaf_with_str` for the
+    /// `genericFunction` family) + argument value list.
     Function {
+        kind: FunctionKind,
         name: &'p str,
         args: Vec<CssTypedValue<'p>>,
     },
+}
+
+/// Numeric-rule discriminator projected from `StructLayout::rule_id`.
+///
+/// One variant per typed-numeric CSS L4 rule the builder routes into
+/// the matching [`CssDimension`] variant at `end_compound` time. The
+/// projection is total — every rule_id mapping to a Numeric arm
+/// resolves to a known kind; unrecognised rule ids stay outside this
+/// alphabet (the `(layout.kind, layout.rule_id)` builder dispatch
+/// chooses a different `OpenFrame` variant).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) enum NumericKind {
+    Length,
+    Angle,
+    Time,
+    Frequency,
+    Resolution,
+    Flex,
+    Percentage,
+}
+
+/// Function-rule discriminator projected from `StructLayout::rule_id`.
+///
+/// One variant per typed-function CSS L4 rule the builder routes
+/// through `OpenFrame::Function`. `Generic` covers `genericFunction`
+/// (the open-ended /[a-zA-Z][\w-]*/-prefixed rule) where the actual
+/// identifier flows through `push_leaf_with_str` into the frame's
+/// `name` slot. `Url` covers `urlFunction`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) enum FunctionKind {
+    Calc,
+    Min,
+    Max,
+    Clamp,
+    Var,
+    Env,
+    Url,
+    Generic,
 }
 
 /// Concrete `StructBuilder` for the CSS L4 grammar.
@@ -322,92 +367,153 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
     }
 
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
-        let frame = match (layout.kind, layout.rule_name.as_str()) {
+        // Rule-id literals match the CSS L4 grammar's allocation in
+        // `crates/core/src/grammar/generated/css_l4.rs`. Each arm
+        // routes a layout to a typed `OpenFrame`; unrecognised ids
+        // collapse to the transparent Wrap shape. The projection is
+        // a registry-projected discriminator, not a rule-name string
+        // match (Fermat F2 / F7 redress).
+        let frame = match layout.rule_id {
             // Aggregate top-level rules.
-            (_, "stylesheet") | (_, "ruleList") => OpenFrame::StyleSheet { rules: Vec::new() },
-            (_, "qualifiedRule") | (_, "ruleBlock") => OpenFrame::StyleRule {
+            // 124 = ruleList (the structural body of `stylesheet`).
+            124 => OpenFrame::StyleSheet { rules: Vec::new() },
+            // 119 = qualifiedRule, 118 = ruleBlock.
+            119 | 118 => OpenFrame::StyleRule {
                 selectors: Vec::new(),
                 declarations: Vec::new(),
                 span: "",
             },
-            (_, "mediaRule") => OpenFrame::MediaRule {
+            // 120 = mediaRule.
+            120 => OpenFrame::MediaRule {
                 query: "",
                 rules: Vec::new(),
             },
-            (_, "keyframesRule") => OpenFrame::KeyframesRule {
+            // 115 = keyframesRule.
+            115 => OpenFrame::KeyframesRule {
                 name: "",
                 blocks: Vec::new(),
             },
-            (_, "keyframeBlock") => OpenFrame::KeyframeBlock {
-                selector: "",
-                declarations: Vec::new(),
-            },
-            (_, "genericAtRule") => OpenFrame::GenericAtRule {
+            // 117 = genericAtRule.
+            117 => OpenFrame::GenericAtRule {
                 name: "",
                 prelude: "",
                 body: "",
             },
-            // Declaration family — every typed `*Decl` rule.
-            (_, name)
-                if name.ends_with("Decl")
-                    || name == "declaration"
-                    || name == "customPropertyDecl"
-                    || name == "genericDecl" =>
-            {
-                OpenFrame::Declaration {
-                    property: None,
-                    values: Vec::new(),
-                    important: false,
-                }
-            }
-            (_, "selectorList") | (_, "compoundSelector") | (_, "complexSelector") => {
-                OpenFrame::SelectorList {
-                    selectors: Vec::new(),
-                }
-            }
+            // Declaration family — every typed `*Decl` rule plus
+            // `declaration` / `customPropertyDecl` / `genericDecl`.
+            // 38 = customPropertyDecl, 39 = genericDecl, 114 =
+            // declaration; 88..=113 are the 26 typed `*Decl` rules
+            // (colorDecl ... cursorDecl) in declaration order. The
+            // `__*Decl_cont_*` continuation rules (143..=168) are
+            // structural-only and route through Wrap.
+            38 | 39 | 88..=113 | 114 => OpenFrame::Declaration {
+                property: None,
+                values: Vec::new(),
+                important: false,
+            },
+            // 72 = selectorList, 75 = complexSelector, 77 =
+            // compoundSelector.
+            72 | 75 | 77 => OpenFrame::SelectorList {
+                selectors: Vec::new(),
+            },
             // Numeric typed rules — length / angle / time / etc.
-            (_, name)
-                if matches!(
-                    name,
-                    "length"
-                        | "angle"
-                        | "time"
-                        | "frequency"
-                        | "resolution"
-                        | "flex"
-                        | "percentage"
-                        | "unitless"
-                ) =>
-            {
-                OpenFrame::Numeric {
-                    rule_name: leak_static_str(name),
-                    magnitude: None,
-                    unit: None,
-                }
-            }
-            // Color function family.
-            (_, "colorFunction") | (_, "colorFn") => OpenFrame::ColorFunction {
+            55 => OpenFrame::Numeric {
+                kind: NumericKind::Length,
+                magnitude: None,
+                unit: None,
+            },
+            33 => OpenFrame::Numeric {
+                kind: NumericKind::Angle,
+                magnitude: None,
+                unit: None,
+            },
+            34 => OpenFrame::Numeric {
+                kind: NumericKind::Time,
+                magnitude: None,
+                unit: None,
+            },
+            35 => OpenFrame::Numeric {
+                kind: NumericKind::Frequency,
+                magnitude: None,
+                unit: None,
+            },
+            36 => OpenFrame::Numeric {
+                kind: NumericKind::Resolution,
+                magnitude: None,
+                unit: None,
+            },
+            37 => OpenFrame::Numeric {
+                kind: NumericKind::Flex,
+                magnitude: None,
+                unit: None,
+            },
+            29 => OpenFrame::Numeric {
+                kind: NumericKind::Percentage,
+                magnitude: None,
+                unit: None,
+            },
+            // Color function family. 62 = colorFn (the only typed
+            // colour-function rule in the current grammar; the
+            // `colorFunction` and `colorMix` allowlist arms
+            // referenced rules absent from the IR and routed dead).
+            62 => OpenFrame::ColorFunction {
                 kind_tag: None,
                 space_tag: None,
                 components: Vec::new(),
             },
-            (_, "colorMix") => OpenFrame::ColorMix {
-                mix_space: None,
-                hue_method: None,
-                left: None,
-                left_pct: None,
-                right: None,
-                right_pct: None,
-            },
             // Function family — calc / min / max / clamp / var / env /
-            // url / gradient / transformFunction / filterFunction /
-            // easingFunction / genericFunction.
-            (_, name) if name.ends_with("Function") || name == "url" => OpenFrame::Function {
-                name: leak_static_str(name),
+            // url / generic. The discriminator is rule-id keyed so the
+            // OpenFrame finalisation knows which `CssFunction` variant
+            // to emit. The `name` slot stays empty until
+            // `push_leaf_with_str` lands the parsed identifier
+            // (genericFunction's regex match flows through there).
+            81 => OpenFrame::Function {
+                kind: FunctionKind::Calc,
+                name: "",
                 args: Vec::new(),
             },
-            // Catch-all: transparent wrap shape.
-            _ => OpenFrame::Wrap { value: None },
+            82 => OpenFrame::Function {
+                kind: FunctionKind::Min,
+                name: "",
+                args: Vec::new(),
+            },
+            83 => OpenFrame::Function {
+                kind: FunctionKind::Max,
+                name: "",
+                args: Vec::new(),
+            },
+            84 => OpenFrame::Function {
+                kind: FunctionKind::Clamp,
+                name: "",
+                args: Vec::new(),
+            },
+            53 => OpenFrame::Function {
+                kind: FunctionKind::Var,
+                name: "",
+                args: Vec::new(),
+            },
+            54 => OpenFrame::Function {
+                kind: FunctionKind::Env,
+                name: "",
+                args: Vec::new(),
+            },
+            31 => OpenFrame::Function {
+                kind: FunctionKind::Url,
+                name: "",
+                args: Vec::new(),
+            },
+            49 => OpenFrame::Function {
+                kind: FunctionKind::Generic,
+                name: "",
+                args: Vec::new(),
+            },
+            // Catch-all: transparent wrap shape. The `LayoutKind`
+            // co-discriminator stays available for future structural
+            // dispatch but the Wrap fallback is uniform.
+            _ => {
+                let _ = layout.kind;
+                OpenFrame::Wrap { value: None }
+            }
         };
         self.stack.push(frame);
         self.next_handle = self.next_handle.wrapping_add(1);
@@ -513,37 +619,40 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                 }
             }
             OpenFrame::Numeric {
-                rule_name,
+                kind,
                 magnitude,
                 unit,
             } => {
                 let value = magnitude.unwrap_or(0.0);
-                let dim = match (rule_name, unit) {
-                    ("length", Some(u)) => CssDimension::Length(CssLength {
+                let dim = match (kind, unit) {
+                    (NumericKind::Length, Some(u)) => CssDimension::Length(CssLength {
                         value,
                         unit: CssLengthUnit::from_discriminant(u),
                     }),
-                    ("angle", Some(u)) => CssDimension::Angle(CssAngle {
+                    (NumericKind::Angle, Some(u)) => CssDimension::Angle(CssAngle {
                         value,
                         unit: CssAngleUnit::from_discriminant(u).unwrap_or(CssAngleUnit::Deg),
                     }),
-                    ("time", Some(u)) => CssDimension::Time(CssTime {
+                    (NumericKind::Time, Some(u)) => CssDimension::Time(CssTime {
                         value,
                         unit: CssTimeUnit::from_discriminant(u).unwrap_or(CssTimeUnit::S),
                     }),
-                    ("frequency", Some(u)) => CssDimension::Frequency(CssFrequency {
+                    (NumericKind::Frequency, Some(u)) => CssDimension::Frequency(CssFrequency {
                         value,
                         unit: CssFrequencyUnit::from_discriminant(u)
                             .unwrap_or(CssFrequencyUnit::Hz),
                     }),
-                    ("resolution", Some(u)) => CssDimension::Resolution(CssResolution {
+                    (NumericKind::Resolution, Some(u)) => CssDimension::Resolution(CssResolution {
                         value,
                         unit: CssResolutionUnit::from_discriminant(u)
                             .unwrap_or(CssResolutionUnit::Dppx),
                     }),
-                    ("flex", _) => CssDimension::Flex(CssFlex { value }),
-                    ("percentage", _) => CssDimension::Percentage(CssPercentage { value }),
-                    ("unitless", _) => CssDimension::Unitless(value),
+                    (NumericKind::Flex, _) => CssDimension::Flex(CssFlex { value }),
+                    (NumericKind::Percentage, _) => {
+                        CssDimension::Percentage(CssPercentage { value })
+                    }
+                    // Length / Angle / Time / Frequency / Resolution
+                    // without a parsed unit fall through to unitless.
                     _ => CssDimension::Unitless(value),
                 };
                 self.deposit_value(CssTypedValue::Dimension(dim));
@@ -616,25 +725,27 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                 };
                 self.deposit_value(CssTypedValue::Color(CssColor::Mix(mix)));
             }
-            OpenFrame::Function { name, args } => {
+            OpenFrame::Function { kind, name, args } => {
                 let id = self.arena.push_values(args);
-                // Route by name into the typed function family.
-                let func = match name {
-                    "calcFunction" => CssFunction::Calc { args: id },
-                    "minFunction" => CssFunction::Min { args: id },
-                    "maxFunction" => CssFunction::Max { args: id },
-                    "clampFunction" => CssFunction::Clamp { args: id },
-                    "varFunction" => CssFunction::Var {
+                // Route by registry-projected kind into the typed
+                // function family. The `name` slot carries the
+                // parsed function identifier for the Generic family;
+                // typed functions ignore it.
+                let func = match kind {
+                    FunctionKind::Calc => CssFunction::Calc { args: id },
+                    FunctionKind::Min => CssFunction::Min { args: id },
+                    FunctionKind::Max => CssFunction::Max { args: id },
+                    FunctionKind::Clamp => CssFunction::Clamp { args: id },
+                    FunctionKind::Var => CssFunction::Var {
                         name: "",
                         fallback: id,
                     },
-                    "envFunction" => CssFunction::Env {
+                    FunctionKind::Env => CssFunction::Env {
                         name: "",
                         fallback: id,
                     },
-                    "urlFunction" | "url" => CssFunction::Url { raw: "" },
-                    n if n.contains("gradient") => CssFunction::Gradient { name, args: id },
-                    _ => CssFunction::Generic { name, args: id },
+                    FunctionKind::Url => CssFunction::Url { raw: "" },
+                    FunctionKind::Generic => CssFunction::Generic { name, args: id },
                 };
                 self.deposit_value(CssTypedValue::Function(func));
             }
@@ -780,54 +891,5 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                 }
             }
         }
-    }
-}
-
-/// Lifetime-erase a static-lifetime string into the parse arena's `'p`.
-///
-/// The grammar's rule names live in the IR's interned string table for
-/// the program's lifetime; the builder's frame variants borrow them as
-/// `&'p str` for ergonomic comparison. Since `&'static str` outlives
-/// every `'p`, the cast is sound.
-#[inline]
-fn leak_static_str<'p>(s: &str) -> &'p str {
-    // Match the rule name against a known-static set so the leaked
-    // pointer stays inside the program's static read-only segment.
-    // Falls back to an empty static slice for unrecognised names.
-    match s {
-        "stylesheet" => "stylesheet",
-        "ruleList" => "ruleList",
-        "qualifiedRule" => "qualifiedRule",
-        "ruleBlock" => "ruleBlock",
-        "mediaRule" => "mediaRule",
-        "keyframesRule" => "keyframesRule",
-        "keyframeBlock" => "keyframeBlock",
-        "genericAtRule" => "genericAtRule",
-        "declaration" => "declaration",
-        "customPropertyDecl" => "customPropertyDecl",
-        "genericDecl" => "genericDecl",
-        "selectorList" => "selectorList",
-        "compoundSelector" => "compoundSelector",
-        "complexSelector" => "complexSelector",
-        "length" => "length",
-        "angle" => "angle",
-        "time" => "time",
-        "frequency" => "frequency",
-        "resolution" => "resolution",
-        "flex" => "flex",
-        "percentage" => "percentage",
-        "unitless" => "unitless",
-        "colorFunction" => "colorFunction",
-        "colorFn" => "colorFn",
-        "colorMix" => "colorMix",
-        "calcFunction" => "calcFunction",
-        "minFunction" => "minFunction",
-        "maxFunction" => "maxFunction",
-        "clampFunction" => "clampFunction",
-        "varFunction" => "varFunction",
-        "envFunction" => "envFunction",
-        "urlFunction" => "urlFunction",
-        "url" => "url",
-        _ => "",
     }
 }

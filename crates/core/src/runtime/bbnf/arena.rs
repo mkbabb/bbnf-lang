@@ -19,6 +19,8 @@
 //! arena is a private refactor on this module that doesn't ripple
 //! beyond [`crate::runtime::bbnf::BbnfStructBuilder`].
 
+use bbnf_ir::RuleId;
+
 use crate::runtime::bbnf::value::BbnfValue;
 
 /// Discriminator — the structural shape of a [`BbnfValue::Compound`].
@@ -127,48 +129,52 @@ pub enum BbnfCompoundKind {
 }
 
 impl BbnfCompoundKind {
-    /// Resolve a rule name (from
-    /// [`bbnf_ir::registry::StructLayout::rule_name`]) to a kind.
-    /// Names not in the alphabet collapse to [`Self::Other`].
-    pub fn from_rule_name(name: &str) -> Self {
-        match name {
-            "rule" => Self::Rule,
-            "term" => Self::Term,
-            "factor" => Self::Factor,
-            "mapped_factor" => Self::MappedFactor,
-            "binary_factor" => Self::BinaryFactor,
-            "concatenation" => Self::Concatenation,
-            "alternation" => Self::Alternation,
-            "closure" => Self::Closure,
-            "rhs" => Self::Rhs,
-            "lhs" => Self::Lhs,
-            "call_arg" => Self::CallArg,
-            "import_path" => Self::ImportPath,
-            "import_items" => Self::ImportItems,
-            "import_directive" => Self::ImportDirective,
-            "recover_directive" => Self::RecoverDirective,
-            "pretty_hint" => Self::PrettyHint,
-            "pretty_directive" => Self::PrettyDirective,
-            "ws_directive" => Self::WsDirective,
-            "token_directive" => Self::TokenDirective,
-            "debug_directive" => Self::DebugDirective,
-            "host_directive" => Self::HostDirective,
-            "directive" => Self::Directive,
-            "grammar_item" => Self::GrammarItem,
-            "grammar" => Self::Grammar,
-            // value-expression sub-grammar.
-            "value_expr" => Self::ValueExpr,
-            "value_closure" => Self::ValueClosure,
-            "value_or" => Self::ValueOr,
-            "value_and" => Self::ValueAnd,
-            "value_cmp" => Self::ValueCmp,
-            "value_add" => Self::ValueAdd,
-            "value_mul" => Self::ValueMul,
-            "value_unary" => Self::ValueUnary,
-            "value_atom" => Self::ValueAtom,
-            "value_path" => Self::ValuePath,
-            "value_input" => Self::ValueInput,
-            "value_fn_call" => Self::ValueFnCall,
+    /// Resolve a rule id (from
+    /// [`bbnf_ir::registry::StructLayout::rule_id`]) to a kind.
+    ///
+    /// Integer literals match the rule-id allocation in
+    /// `crates/core/src/grammar/generated/bbnf.rs`. Ids not in the
+    /// alphabet collapse to [`Self::Other`].
+    pub fn from_rule_id(rule_id: RuleId) -> Self {
+        match rule_id {
+            // Top-level grammar surface.
+            16 => Self::ImportPath,
+            21 => Self::ImportItems,
+            22 => Self::PrettyHint,
+            23 => Self::TokenDirective,
+            24 => Self::DebugDirective,
+            25 => Self::HostDirective,
+            26 => Self::WsDirective,
+            37 => Self::ImportDirective,
+            38 => Self::PrettyDirective,
+            39 => Self::Alternation,
+            40 => Self::CallArg,
+            41 => Self::Concatenation,
+            42 => Self::Closure,
+            43 => Self::Term,
+            44 => Self::BinaryFactor,
+            46 => Self::Factor,
+            47 => Self::MappedFactor,
+            48 => Self::Rule,
+            49 => Self::RecoverDirective,
+            51 => Self::GrammarItem,
+            52 => Self::Grammar,
+            // Value-expression sub-grammar.
+            17 => Self::ValuePath,
+            18 => Self::ValueInput,
+            27 => Self::ValueMul,
+            28 => Self::ValueOr,
+            29 => Self::ValueAdd,
+            30 => Self::ValueCmp,
+            31 => Self::ValueAnd,
+            32 => Self::ValueClosure,
+            33 => Self::ValueFnCall,
+            35 => Self::ValueAtom,
+            36 => Self::ValueUnary,
+            // ValueExpr / Rhs / Lhs / Directive are retained for AST
+            // exhaustiveness; their grammar rules collapse to Wrap or
+            // compose through typed-leaf surfaces, so no struct
+            // layout is emitted.
             _ => Self::Other,
         }
     }

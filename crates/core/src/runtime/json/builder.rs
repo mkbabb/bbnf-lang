@@ -259,20 +259,28 @@ impl<'p> StructBuilder for JsonStructBuilder<'p> {
     }
 
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
-        let frame = match (layout.kind, layout.rule_name.as_str()) {
+        // Rule-id literals match the JSON grammar's allocation in
+        // `crates/core/src/grammar/generated/json.rs`:
+        //   4 = "object", 5 = "array", 6 = "pair"
+        // The kind discriminator stays paired so the Alt-shape
+        // variants of `array` / `object` (struct-direct vs tagged
+        // wrappers) all route to the same OpenFrame; the rule-id
+        // alphabet is the gated discriminator, the `LayoutKind` is
+        // the structural-shape co-discriminator.
+        let frame = match (layout.kind, layout.rule_id) {
             // The `array` rule: collect `JsonValue` elements.
-            (LayoutKind::Struct, "array")
-            | (LayoutKind::TaggedEnum, "array")
-            | (LayoutKind::UntaggedEnum, "array") => OpenFrame::Array { items: Vec::new() },
+            (LayoutKind::Struct, 5)
+            | (LayoutKind::TaggedEnum, 5)
+            | (LayoutKind::UntaggedEnum, 5) => OpenFrame::Array { items: Vec::new() },
             // The `object` rule: collect `JsonPair` entries.
-            (LayoutKind::Struct, "object")
-            | (LayoutKind::TaggedEnum, "object")
-            | (LayoutKind::UntaggedEnum, "object") => OpenFrame::Object {
+            (LayoutKind::Struct, 4)
+            | (LayoutKind::TaggedEnum, 4)
+            | (LayoutKind::UntaggedEnum, 4) => OpenFrame::Object {
                 pairs: Vec::new(),
                 pending_key: None,
             },
             // The `pair` rule: typed two-position struct.
-            (LayoutKind::Struct, "pair") => OpenFrame::Pair {
+            (LayoutKind::Struct, 6) => OpenFrame::Pair {
                 key: None,
                 value: None,
             },

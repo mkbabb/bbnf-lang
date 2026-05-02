@@ -2,6 +2,8 @@
 //!
 //! Mirror of `crates/core/src/runtime/csv/arena.rs`.
 
+use bbnf_ir::RuleId;
+
 use crate::runtime::css_pretty::value::CssPrettyValue;
 
 /// Discriminator — structural shape of a [`CssPrettyValue::Compound`].
@@ -31,28 +33,27 @@ pub enum CssPrettyCompoundKind {
 }
 
 impl CssPrettyCompoundKind {
-    pub fn from_rule_name(name: &str) -> Self {
-        match name {
-            "ws" => Self::Ws,
-            "selectorSpan" => Self::SelectorSpan,
-            "valueSpan" => Self::ValueSpan,
-            "propertyName" => Self::PropertyName,
-            "important" => Self::Important,
-            "optSemicolon" => Self::OptSemicolon,
-            "declaration" => Self::Declaration,
-            "blockContent" => Self::BlockContent,
-            "ruleBlock" => Self::RuleBlock,
-            "qualifiedRule" => Self::QualifiedRule,
-            "mediaRule" => Self::MediaRule,
-            "supportsRule" => Self::SupportsRule,
-            "fontFaceRule" => Self::FontFaceRule,
-            "importRule" => Self::ImportRule,
-            "atRuleBody" => Self::AtRuleBody,
-            "genericAtRule" => Self::GenericAtRule,
-            "atRule" => Self::AtRule,
-            "ruleItem" => Self::RuleItem,
-            "ruleList" => Self::RuleList,
-            "stylesheet" => Self::Stylesheet,
+    /// Resolve a rule id to a kind. Integer literals match the rule-id
+    /// allocation in `crates/core/src/grammar/generated/css_pretty.rs`.
+    /// Ids not in the alphabet collapse to [`Self::Other`].
+    pub fn from_rule_id(rule_id: RuleId) -> Self {
+        match rule_id {
+            0 => Self::Important,
+            1 => Self::ImportRule,
+            2 => Self::Declaration,
+            3 => Self::GenericAtRule,
+            4 => Self::QualifiedRule,
+            5 => Self::MediaRule,
+            6 => Self::SupportsRule,
+            7 => Self::FontFaceRule,
+            9 => Self::RuleBlock,
+            10 => Self::BlockContent,
+            13 => Self::RuleList,
+            14 => Self::Stylesheet,
+            // Ws / SelectorSpan / ValueSpan / PropertyName /
+            // OptSemicolon / AtRuleBody / AtRule / RuleItem are
+            // retained for AST exhaustiveness; no layout is emitted
+            // for those rules in the current generated css_pretty.rs.
             _ => Self::Other,
         }
     }

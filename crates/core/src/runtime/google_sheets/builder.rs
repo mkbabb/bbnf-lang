@@ -11,7 +11,7 @@
 //! (or, when the stack is empty, set the document root).
 //!
 //! `begin_compound` opens a new frame keyed on the layout's
-//! `rule_name` via [`SheetsCompoundKind::from_rule_name`].
+//! `rule_id` via [`SheetsCompoundKind::from_rule_id`].
 //! `end_compound` finalises the frame's children into a
 //! [`crate::runtime::google_sheets::SheetsCompound`] entry on the
 //! arena, then deposits the resulting
@@ -58,7 +58,7 @@ use crate::runtime::handle::CompoundHandle;
 #[derive(Debug, Clone)]
 struct Frame<'p> {
     /// The compound's structural-kind tag, derived from the layout's
-    /// `rule_name` at `begin_compound` time.
+    /// `rule_id` at `begin_compound` time.
     kind: SheetsCompoundKind,
     /// The frame's pending children. Each leaf push or completed
     /// compound below this frame appends here.
@@ -198,10 +198,11 @@ impl<'p> StructBuilder for SheetsStructBuilder<'p> {
 
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
         // Layouts emitted by `populate_struct_registry` carry the
-        // grammar's rule name verbatim; resolve the structural kind
-        // from there. Layouts the registry doesn't recognise (defensive
-        // fallback) collapse onto Wrap.
-        let kind = SheetsCompoundKind::from_rule_name(layout.rule_name.as_str());
+        // grammar's stable rule id verbatim; resolve the structural
+        // kind via the registry-projected discriminator. Layouts
+        // outside the kind alphabet (defensive fallback) collapse onto
+        // Wrap.
+        let kind = SheetsCompoundKind::from_rule_id(layout.rule_id);
         self.next_handle = self.next_handle.wrapping_add(1);
         let handle_token = self.next_handle;
         self.stack.push(Frame {

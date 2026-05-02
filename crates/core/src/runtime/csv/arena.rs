@@ -12,6 +12,8 @@
 //! the empty-handle constant ([`CsvCompoundId::EMPTY`]) carries the
 //! discriminator for a zero-cost empty-resolution branch.
 
+use bbnf_ir::RuleId;
+
 use crate::runtime::csv::value::CsvValue;
 
 /// Discriminator — the structural shape of a [`CsvValue::Compound`].
@@ -42,14 +44,20 @@ pub enum CsvCompoundKind {
 }
 
 impl CsvCompoundKind {
-    /// Resolve a rule name (from
-    /// [`bbnf_ir::registry::StructLayout::rule_name`]) to a kind.
-    /// Names not in the alphabet collapse to [`Self::Other`].
-    pub fn from_rule_name(name: &str) -> Self {
-        match name {
-            "record" => Self::Record,
-            "csv" => Self::Csv,
-            "field" => Self::Field,
+    /// Resolve a rule id (from
+    /// [`bbnf_ir::registry::StructLayout::rule_id`]) to a kind.
+    ///
+    /// Integer literals match the rule-id allocation in
+    /// `crates/core/src/grammar/generated/csv.rs`. Ids not in the
+    /// alphabet collapse to [`Self::Other`].
+    pub fn from_rule_id(rule_id: RuleId) -> Self {
+        match rule_id {
+            // 1 = "escaped" (a Span newtype, projects to Other)
+            2 => Self::Record,
+            3 => Self::Csv,
+            // No `field` rule_id is currently emitted as a layout in
+            // generated csv.rs; the variant is retained for AST
+            // exhaustiveness against future grammar refactors.
             _ => Self::Other,
         }
     }

@@ -17,6 +17,8 @@
 //! scratch buffers. The Vec-backed slab keeps the surface lean; a
 //! switch to a bump arena later is a private refactor on this module.
 
+use bbnf_ir::RuleId;
+
 use crate::runtime::google_sheets::value::SheetsValue;
 
 /// Structural-kind discriminator for [`SheetsCompound`] entries.
@@ -34,7 +36,7 @@ use crate::runtime::google_sheets::value::SheetsValue;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SheetsCompoundKind {
     /// Default / unknown / structural fallback. The kind is filled in
-    /// at `begin_compound` time from the layout's `rule_name`; rules
+    /// at `begin_compound` time from the layout's `rule_id`; rules
     /// the variant set doesn't enumerate fall through to this arm.
     Unknown,
     /// `formula = /=?/ , expression` — top-level entry-point rule.
@@ -140,48 +142,48 @@ impl SheetsCompoundKind {
         )
     }
 
-    /// Resolve a kind from the rule name the layout carries. Used by
+    /// Resolve a kind from the rule id the layout carries.
+    ///
+    /// Integer literals match the rule-id allocation in
+    /// `crates/core/src/grammar/generated/google_sheets.rs`. Used by
     /// the builder when admitting a `begin_compound` against an
-    /// arbitrary rule; rules unmatched by the kind alphabet collapse
-    /// into [`SheetsCompoundKind::Unknown`] / [`SheetsCompoundKind::Wrap`].
-    pub fn from_rule_name(name: &str) -> Self {
-        match name {
-            "formula" => Self::Formula,
-            "expression" => Self::Expression,
-            "comparison_expr" => Self::ComparisonExpr,
-            "concat_expr" => Self::ConcatExpr,
-            "add_expr" => Self::AddExpr,
-            "mul_expr" => Self::MulExpr,
-            "exp_expr" => Self::ExpExpr,
-            "unary_expr" => Self::UnaryExpr,
-            "postfix_expr" => Self::PostfixExpr,
-            "primary" => Self::Primary,
-            "paren_expr" => Self::ParenExpr,
-            "func_open" => Self::FuncOpen,
-            "arg" => Self::Arg,
-            "func_args" => Self::FuncArgs,
-            "func_call" => Self::FuncCall,
-            "let_binding" => Self::LetBinding,
-            "let_args" => Self::LetArgs,
-            "let_call" => Self::LetCall,
-            "lambda_params" => Self::LambdaParams,
-            "lambda_call" => Self::LambdaCall,
-            "array_row" => Self::ArrayRow,
-            "array_rows" => Self::ArrayRows,
-            "array_literal" => Self::ArrayLiteral,
-            "cell" => Self::Cell,
-            "range_ref" => Self::RangeRef,
-            "range_end" => Self::RangeEnd,
-            "cell_or_range" => Self::CellOrRange,
-            "error_literal" => Self::ErrorLiteral,
-            "sheet_prefix" => Self::SheetPrefix,
-            "compare_op" => Self::CompareOp,
-            "add_op" => Self::AddOp,
-            "mul_op" => Self::MulOp,
-            "unary_prefix" => Self::UnaryPrefix,
-            // Transparent / wrap-shape rules and the structural
-            // fallback. The single-child forwarding behaviour matches
-            // JSON's `OpenFrame::Wrap` discipline.
+    /// arbitrary rule; rules unmatched by the rule-id alphabet
+    /// collapse into [`SheetsCompoundKind::Wrap`] (the structural
+    /// transparent-wrap fallback).
+    pub fn from_rule_id(rule_id: RuleId) -> Self {
+        match rule_id {
+            3 => Self::ErrorLiteral,
+            6 => Self::Cell,
+            7 => Self::FuncOpen,
+            8 => Self::RangeRef,
+            9 => Self::CellOrRange,
+            10 => Self::ComparisonExpr,
+            11 => Self::MulExpr,
+            12 => Self::UnaryExpr,
+            13 => Self::ParenExpr,
+            14 => Self::Arg,
+            15 => Self::FuncArgs,
+            16 => Self::LetBinding,
+            17 => Self::LambdaParams,
+            18 => Self::ArrayRow,
+            19 => Self::ArrayRows,
+            20 => Self::ArrayLiteral,
+            21 => Self::ConcatExpr,
+            22 => Self::AddExpr,
+            23 => Self::ExpExpr,
+            24 => Self::LambdaCall,
+            26 => Self::FuncCall,
+            27 => Self::LetArgs,
+            28 => Self::LetCall,
+            30 => Self::PostfixExpr,
+            31 => Self::Formula,
+            // Expression / Primary / RangeEnd / SheetPrefix /
+            // CompareOp / AddOp / MulOp / UnaryPrefix / Unknown are
+            // retained for AST exhaustiveness; their grammar rules
+            // emit no struct layout (the values flow through Wrap or
+            // operator-tagged Seq leaves). Transparent / wrap-shape
+            // rules and the structural fallback collapse to Wrap,
+            // matching JSON's `OpenFrame::Wrap` discipline.
             _ => Self::Wrap,
         }
     }

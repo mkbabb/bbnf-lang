@@ -11,7 +11,7 @@
 //! on the topmost frame's children vec, or onto the document root if
 //! the stack is empty.
 //!
-//! `begin_compound` consults the [`StructLayout::rule_name`] to
+//! `begin_compound` consults the [`StructLayout::rule_id`] to
 //! discover the [`BbnfCompoundKind`] for the frame; `end_compound`
 //! finalises the frame into a [`BbnfValue::Compound`] arena handle.
 
@@ -142,7 +142,7 @@ impl<'p> StructBuilder for BbnfStructBuilder<'p> {
     }
 
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
-        let kind = BbnfCompoundKind::from_rule_name(layout.rule_name.as_str());
+        let kind = BbnfCompoundKind::from_rule_id(layout.rule_id);
         self.stack.push(OpenFrame {
             kind,
             branch_tag: None,

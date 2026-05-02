@@ -3,6 +3,8 @@
 //! Mirror of `CsvArena` / `BbnfArena` / `JsonArena`. Owns every
 //! compound child slice; resolves handles via [`MathArena::compound`].
 
+use bbnf_ir::RuleId;
+
 use crate::runtime::math::value::MathValue;
 
 /// Discriminator — the structural shape of a [`MathValue::Compound`].
@@ -39,21 +41,16 @@ pub enum MathCompoundKind {
 }
 
 impl MathCompoundKind {
-    /// Resolve a rule name to a kind.
-    pub fn from_rule_name(name: &str) -> Self {
-        match name {
-            "expr" => Self::Expr,
-            "term" => Self::Term,
-            "factor" => Self::Factor,
-            "wrapped" => Self::Wrapped,
-            "p" => Self::P,
-            "pp" => Self::Pp,
-            "ppp" => Self::Ppp,
-            "pppp" => Self::Pppp,
-            "ppppp" => Self::Ppppp,
-            "pppppp" => Self::Pppppp,
-            _ => Self::Other,
-        }
+    /// Resolve a rule id to a kind.
+    ///
+    /// `grammar/misc/math.bbnf` parses purely through Pratt operator
+    /// emission: no struct layouts are emitted into
+    /// `crates/core/src/grammar/generated/math.rs`, so the rule-id
+    /// space is empty in production. Variants are retained for AST
+    /// exhaustiveness against future structural emission; every rule
+    /// id collapses to [`Self::Other`].
+    pub fn from_rule_id(_rule_id: RuleId) -> Self {
+        Self::Other
     }
 }
 

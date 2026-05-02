@@ -8,7 +8,7 @@
 //! [`CsvValue::Compound`] that lands on the parent frame's pending
 //! slot.
 //!
-//! `begin_compound` consults the [`StructLayout::rule_name`] to
+//! `begin_compound` consults the [`StructLayout::rule_id`] to
 //! discover the [`CsvCompoundKind`] for the frame; `end_compound`
 //! finalises the frame into a [`CsvValue::Compound`] arena handle.
 //!
@@ -141,7 +141,7 @@ impl<'p> StructBuilder for CsvStructBuilder<'p> {
     }
 
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
-        let kind = CsvCompoundKind::from_rule_name(layout.rule_name.as_str());
+        let kind = CsvCompoundKind::from_rule_id(layout.rule_id);
         self.stack.push(OpenFrame {
             kind,
             branch_tag: None,

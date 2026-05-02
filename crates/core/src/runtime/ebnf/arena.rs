@@ -2,6 +2,8 @@
 //!
 //! Mirror of `crates/core/src/runtime/csv/arena.rs`.
 
+use bbnf_ir::RuleId;
+
 use crate::runtime::ebnf::value::EbnfValue;
 
 /// Discriminator — structural shape of a [`EbnfValue::Compound`].
@@ -27,24 +29,24 @@ pub enum EbnfCompoundKind {
 }
 
 impl EbnfCompoundKind {
-    pub fn from_rule_name(name: &str) -> Self {
-        match name {
-            "letter" => Self::Letter,
-            "digit" => Self::Digit,
-            "symbol" => Self::Symbol,
-            "character" => Self::Character,
-            "identifier" => Self::Identifier,
-            "S" => Self::S,
-            "terminal" => Self::Terminal,
-            "terminator" => Self::Terminator,
-            "term" => Self::Term,
-            "factor" => Self::Factor,
-            "concatenation" => Self::Concatenation,
-            "alternation" => Self::Alternation,
-            "rhs" => Self::Rhs,
-            "lhs" => Self::Lhs,
-            "rule" => Self::Rule,
-            "grammar" => Self::Grammar,
+    /// Resolve a rule id to a kind. Integer literals match the rule-id
+    /// allocation in `crates/core/src/grammar/generated/ebnf.rs`. Ids
+    /// not in the alphabet collapse to [`Self::Other`].
+    pub fn from_rule_id(rule_id: RuleId) -> Self {
+        match rule_id {
+            0 => Self::Letter,
+            2 => Self::Symbol,
+            3 => Self::Identifier,
+            4 => Self::Character,
+            6 => Self::Concatenation,
+            7 => Self::Alternation,
+            9 => Self::Term,
+            10 => Self::Factor,
+            11 => Self::Rule,
+            12 => Self::Grammar,
+            // Digit / S / Terminal / Terminator / Rhs / Lhs are
+            // retained for AST exhaustiveness; no layout is emitted
+            // for those rules in the current generated ebnf.rs.
             _ => Self::Other,
         }
     }

@@ -1,19 +1,18 @@
 //! Foundational types for the rewrite-rule substrate.
 //!
-//! BB.scaffold.B is authored ahead of (or in parallel with) BB.scaffold.A,
-//! which lands the `egraph::ruler` substrate (CVC enumerator + VM oracle).
-//! This module defines the shapes the rewrite-rule storage layer needs
-//! *without* taking a hard dependency on `egraph::ruler`. BB.close
-//! (Wave 4) wires `egraph::ruler::Pattern<N>` into [`Pattern`] via the
-//! [`PatternBody::Ruler`] adapter variant.
+//! Defines the alphabet- and node-agnostic [`Pattern`] type and
+//! supporting witness primitives that the per-grammar rule storage
+//! layer (in `mod.rs`, `rank.rs`, `tiering.rs`, `schema.rs`) builds
+//! on. Recycled BA's rule-discovery substrate consumes these
+//! primitives once it lands.
 //!
 //! The design follows three rules:
 //!
 //! - **No circular crate edge.** `crates/ir/` already depends on
-//!   `crates/egraph/` for the `Language` / `EGraph` machinery, but the
-//!   rewrite-rule storage cannot wait on `ruler/` to land — author the
-//!   storage substrate against an alphabet- and node-agnostic
-//!   [`Pattern`] type, then specialise post-cutover.
+//!   `crates/egraph/` for the `Language` / `EGraph` machinery; this
+//!   module keeps the storage substrate alphabet- and node-agnostic
+//!   so downstream consumers can specialise per-grammar without
+//!   rewiring the foundation.
 //!
 //! - **RON-serialisable from day one.** Every type in this module is
 //!   `Serialize + Deserialize`. Pattern bodies that hold opaque
@@ -97,10 +96,10 @@ pub enum Atom {
 /// round-trip RON files authored against a different grammar than the
 /// one currently loaded.
 ///
-/// BB.close (Wave 4) lowers a [`Pattern`] into the matching
-/// `egraph::ruler::Pattern<GrammarENode>` shape via a per-grammar
-/// adapter; until then [`Pattern::Body`] carries the abstract
-/// representation directly.
+/// Recycled BA (post-AZ-IV) lowers a [`Pattern`] into the per-grammar
+/// e-graph shape via an adapter authored alongside the rule-discovery
+/// cohort; storage carries the abstract representation directly so
+/// the substrate is independent of any specific node language.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Pattern {
     /// A leaf atom.

@@ -72,12 +72,22 @@ CI uses `cargo xtask regen --check`.
 7. **(AOT only)** Strategy selection via `EmitStrategy`
 8. Rust codegen → `crates/core/src/grammar/generated/<ident>.rs`
 
-**IR Passes** (17 operations, 15 unique passes, in order):
-`canonicalize_aliases` → `prune_unreachable` → `inline_acyclic` →
-`force_inline` → `prune_unreachable` → `fuse_single_use` → `prune_unreachable` →
-`eliminate_epsilon` → `merge_literals` → `merge_regex_alts` →
-`factor_common_prefixes` → `refine_span_eligibility` → `compute_follow_sets` →
-`factor_regex_with_lookahead` → `generate_dispatch_tables` → `project_types`
+**IR Passes** (in invocation order; `prune_unreachable` repeats):
+`canonicalize_aliases` → `compute_scc` → `prune_unreachable` →
+`inline_acyclic` (with `&mut dyn TraceSink` recording channel per
+AZ-IV.W4.1 T3) → `prune_unreachable` → `compute_scc` →
+`fuse_single_use` (same TraceSink form) → `prune_unreachable` →
+`eliminate_epsilon` → `merge_literals` → `factor_common_prefixes` →
+(structural normalizer fixed-point loop converges) →
+`hoist_recurring_patterns` → e-graph saturation pass →
+`sort_alt_branches` → `refine_span_eligibility` →
+`compute_follow_sets` → `factor_regex_with_lookahead` →
+`fuse_token_dispatch` → `compute_regex_info` →
+`compute_structural_alphabet` → `mine_recognizers` →
+`solve_shape_dict_selection` → `generate_dispatch_tables` →
+`classify_materialization` → `solve_grammar_components` →
+`extract_regex_engine_decisions` → `project_types` →
+`run_path_check`
 
 Post-B2, `cargo xtask regen` is the single canonical Rust AOT
 entrypoint. The pre-B2 bootstrap script, proc-macro expansion, and

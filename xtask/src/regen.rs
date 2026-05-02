@@ -28,7 +28,6 @@ use bbnf::ParserAttributes;
 use bbnf::pipeline::{
     CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_paths_request,
 };
-use bbnf_ir::rewrites::RuleSet;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
@@ -63,28 +62,6 @@ impl GrammarEntry {
     /// Resolve the manifest's relative `path` against the workspace root.
     fn grammar_source(&self, workspace_root: &Path) -> PathBuf {
         workspace_root.join(&self.path)
-    }
-
-    /// Tranche BB.scaffold.C — per-grammar rewrites directory.
-    ///
-    /// Returns the canonical path `grammar/<ident>/rewrites/` under
-    /// the workspace root. The directory is optional; absence is
-    /// the no-rule baseline (handled by
-    /// [`RuleSet::load_from_dir`]). The path is derived from the
-    /// grammar source's parent — every grammar manifest entry
-    /// points at `grammar/<ident>/<file>.bbnf`, so the parent of
-    /// the source path is the grammar's own directory.
-    fn rewrites_dir(&self, workspace_root: &Path) -> PathBuf {
-        let source = self.grammar_source(workspace_root);
-        source
-            .parent()
-            .map(|p| p.join("rewrites"))
-            .unwrap_or_else(|| {
-                workspace_root
-                    .join("grammar")
-                    .join(&self.ident)
-                    .join("rewrites")
-            })
     }
 
     /// Marker-struct ident emitted into the per-grammar file. Mirrors
@@ -306,32 +283,11 @@ fn regen_grammar(workspace_root: &Path, entry: &GrammarEntry, target_path: &Path
     let parser_attrs = entry.parser_attributes(grammar_path.clone())?;
     let marker_ident = entry.marker_ident();
 
-    // Tranche BB.scaffold.C — load the per-grammar rewrite-rule
-    // directory `grammar/<ident>/rewrites/*.ron` into a `RuleSet`.
-    // Absent directory → empty ruleset (treated identically to
-    // `None` downstream). Read errors propagate up so a corrupted
-    // .ron payload fails regen rather than silently producing a
-    // half-loaded ruleset.
-    let rewrites_dir = entry.rewrites_dir(workspace_root);
-    let rewrites = RuleSet::load_from_dir(&rewrites_dir).with_context(|| {
-        format!(
-            "load rewrites from `{}` for grammar `{}`",
-            rewrites_dir.display(),
-            entry.ident
-        )
-    })?;
-    let rewrites_for_pipeline = if rewrites.is_empty() {
-        None
-    } else {
-        Some(rewrites.clone())
-    };
-
     let request = CompileRequest {
         options: PipelineOptions {
             remove_left_recursion: parser_attrs.remove_left_recursion,
             entry_rule: None,
             structural: parser_attrs.structural,
-            rewrites: rewrites_for_pipeline,
         },
         target: CompileTarget::Rust {
             requested_prettify: parser_attrs.prettify,
@@ -339,12 +295,11 @@ fn regen_grammar(workspace_root: &Path, entry: &GrammarEntry, target_path: &Path
     };
 
     eprintln!(
-        "[xtask::regen] {}: compile_paths_request started ({} paths, structural={}, prettify={}, rewrites={})",
+        "[xtask::regen] {}: compile_paths_request started ({} paths, structural={}, prettify={})",
         entry.ident,
         parser_attrs.paths.len(),
         parser_attrs.structural,
         parser_attrs.prettify,
-        rewrites.len(),
     );
     let t0 = std::time::Instant::now();
 

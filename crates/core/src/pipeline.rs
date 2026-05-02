@@ -26,15 +26,6 @@ pub struct PipelineOptions {
     /// Structural mode: disable ALL destructive IR optimizations analysis. Preserves all structural variants
     /// in the generated enum (no Span collapsing). Used by the bootstrap parser.
     pub structural: bool,
-    /// Tranche BB.scaffold.C — per-grammar rewrite rules loaded by
-    /// `cargo xtask regen` from `grammar/<ident>/rewrites/*.ron`.
-    /// `None` is the default no-op; `Some(ruleset)` threads the
-    /// loaded rules through the pipeline so downstream consumers
-    /// (the e-graph saturation cost model authored in BB.scaffold.B)
-    /// can read them. Empty rulesets are treated identically to
-    /// `None`. The xtask regen entry is the only production caller
-    /// that populates this field today.
-    pub rewrites: Option<bbnf_ir::rewrites::RuleSet>,
 }
 
 /// Backend-specific compilation target.

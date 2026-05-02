@@ -1,0 +1,118 @@
+W4 Rewrite/Ruler Chain — Deletion Ledger
+==========================================
+
+Tranche: AZ-IV
+Wave: W4 (Optimization Substrate Activation)
+Sub-unit: AZ-IV.W4.1 Rewrite Ruler Chain (DELETION)
+Decision: D2 ADOPTED — DELETE the unconsumed RuleSet field +
+egraph::ruler::* family. Recycled BA recreates the rule-discovery
+substrate clean against the surviving storage primitives.
+Reference: docs/tranches/AZ-IV/audit/SYNTHESIS-2026-05-02.md §6 D2,
+docs/tranches/AZ-IV/audit/AUDIT-E-pathforward-2026-05-02.md §8.
+Date: 2026-05-02
+
+Scope
+-----
+
+The ruler-style rule synthesis substrate landed wired-not-consumed:
+egraph::ruler::{enumerate,oracle,residue} produced no production
+caller; pipeline.rs::CompileOptions::rewrites threaded a loaded
+RuleSet into an eprintln-only sink at compile/pipeline.rs:43-60.
+Per AZ-IV §Hard Gates 14 and §Deletion Bias, the unconsumed half-
+broken substrate must be deleted; recycled BA recreates clean.
+
+Files Deleted
+-------------
+
+1. crates/egraph/src/ruler/enumerate.rs       (301 LOC)
+2. crates/egraph/src/ruler/oracle.rs          (140 LOC)
+3. crates/egraph/src/ruler/residue.rs         (126 LOC)
+4. crates/egraph/src/ruler/mod.rs              (33 LOC)
+5. crates/egraph/tests/ruler_enumerate.rs     (113 LOC, integration)
+6. crates/egraph/tests/ruler_oracle.rs         (72 LOC, integration)
+7. crates/egraph/tests/ruler_residue.rs        (49 LOC, integration)
+8. crates/egraph/tests/common/mod.rs          (136 LOC, fixture; tests-only)
+9. crates/egraph/examples/ruler_smoke.rs      (183 LOC, example)
+
+Total deleted lines: 1153 LOC across 9 files.
+
+Files Carved
+------------
+
+a. crates/core/src/pipeline.rs
+   - Deleted: PipelineOptions::rewrites field (Option<RuleSet>).
+b. crates/core/src/pipeline/compile/pipeline.rs
+   - Deleted: BBNF_PIPELINE_REPORT eprintln-only sink (lines 43-60
+     pre-edit).
+c. crates/egraph/src/lib.rs
+   - Deleted: pub mod ruler; declaration.
+d. crates/ir/src/rewrites/mod.rs
+   - Deleted: RuleSet::load_from_dir (zero-caller after xtask carve).
+   - Module docstring rewritten to reflect surviving-API surface.
+e. xtask/src/regen.rs
+   - Deleted: GrammarEntry::rewrites_dir method.
+   - Deleted: RuleSet::load_from_dir call site + rewrites_for_pipeline
+     plumbing into PipelineOptions.
+   - Deleted: bbnf_ir::rewrites::RuleSet import.
+
+Preserved (per plan §PRESERVE)
+------------------------------
+
+- crates/ir/src/rewrites/path_seed.rs                     (W3.0 product)
+- crates/ir/src/rewrites/mod.rs::RuleSet::merge_path_seed (W3.0 loader)
+- crates/ir/src/rewrites/{base,rank,schema,tiering}.rs    (storage)
+- crates/egraph/src/extract/**                             (cost extractor)
+- crates/egraph/src/lang/**                                (Language trait)
+- All other egraph/ infrastructure (analysis, cost_config, eclass,
+  egraph, extract, id, language, rewrite, scheduler, unionfind).
+
+T3 Transposition (folded in)
+----------------------------
+
+Per AUDIT-F transposition T3, the inline-trace recording channel was
+lifted from additive `_with_trace` wrappers into the canonical pass
+form via `&mut dyn TraceSink`. The W2.2 inline trace and W2.4 path!
+macro consumers continue to function unchanged; the production caller
+in pipeline/compile.rs threads an InlineTrace through the canonical
+inline_acyclic / fuse_single_use signature directly.
+
+Implementation:
+- Added `TraceSink` trait + `NoopTraceSink` zero-overhead unit type
+  to crates/ir/src/passes/inline_trace.rs.
+- `InlineTrace` impls `TraceSink`.
+- `inline_acyclic` and `fuse_single_use` signatures changed from
+  `(ir: &mut GrammarIR)` (with sibling _with_trace wrapper) to
+  `(ir: &mut GrammarIR, trace: &mut dyn TraceSink)`.
+- _with_trace wrappers + _inner private helpers deleted.
+- Public exports in passes/mod.rs and passes/transform/mod.rs updated.
+
+Closes mid-tranche §R2: inline-trace pipeline-ordering coupling
+(AUDIT-F finding) — the canonical pass form *is* the recording form;
+there is no longer a discipline question of which entry point to call.
+
+Hard Gate Evidence
+------------------
+
+1. cargo build -p bbnf -p bbnf-ir -p egraph --profile ax-iter: clean
+   (see commit hash in commit body; build artefact at
+   target/w4-rewrites/ax-iter/).
+2. grep -r "egraph::ruler|RuleSet::load|CompileOptions::rewrites"
+   crates/ src/: zero production matches; only references are in
+   docs/ (tranche history) and test fixtures preserved per §PRESERVE.
+3. cargo nextest run --workspace --cargo-profile ax-iter: results
+   recorded in W4-rulset-deletion-ledger.md with per-deleted-test
+   justification.
+
+Per-Test Justification (D2 per-test ledger)
+-------------------------------------------
+
+See docs/tranches/AZ-IV/audit/W4-rulset-deletion-ledger.md for the
+table covering the 4 test/example files deleted (ruler_enumerate,
+ruler_oracle, ruler_residue integration tests + ruler_smoke example
++ tests/common/mod.rs fixture).
+
+Commit
+------
+
+scope: egraph-ruler/delete + ir-passes/inline-trace-sink
+commit hash: <recorded in W4-rulset-deletion-ledger.md and FINAL.md>

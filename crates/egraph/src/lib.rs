@@ -40,7 +40,6 @@ mod extract;
 mod id;
 mod language;
 mod rewrite;
-pub mod ruler;
 mod scheduler;
 mod unionfind;
 

@@ -40,25 +40,6 @@ pub fn compile_ast_common<'a>(
 ) -> Result<GrammarIR, CompileError> {
     let mut timer = PipelineTimer::new();
 
-    // Tranche BB.scaffold.C — per-grammar rewrite-rule wiring. The
-    // xtask regen entry passes loaded rules through
-    // `PipelineOptions.rewrites`; the cost-config substrate that
-    // consumes them lands in BB.scaffold.B. Today the wiring is a
-    // diagnostic eprint when `BBNF_PIPELINE_REPORT=1` so the rule
-    // count is visible at compile time without forcing a noisy
-    // default. Empty rulesets are treated identically to `None`.
-    if std::env::var("BBNF_PIPELINE_REPORT").is_ok() {
-        match &options.rewrites {
-            Some(rs) if !rs.is_empty() => {
-                eprintln!(
-                    "[pipeline] rewrites: {} rule(s) loaded for cost-config",
-                    rs.len()
-                );
-            }
-            _ => {}
-        }
-    }
-
     // Determine the entry rule name: use override if provided, otherwise last rule in source order.
     let entry_rule_name: Option<String> = options
         .entry_rule
@@ -186,16 +167,19 @@ pub fn compile_ast_common<'a>(
                 bbnf_ir::passes::compute_scc(&mut ir);
                 bbnf_ir::passes::prune_unreachable(&mut ir);
                 // AZ-IV.W2.2 — route the inline passes through the
-                // recording wrappers so the inline trace captures every
-                // `Ref(source) → body` substitution. The trace is the
-                // sidecar `path_check` consumes after `project_types`
-                // to re-resolve `path!` literals that name source
-                // rules whose layouts the registry no longer holds.
+                // canonical `&mut dyn TraceSink` recording channel so
+                // the inline trace captures every `Ref(source) → body`
+                // substitution. The trace is the sidecar `path_check`
+                // consumes after `project_types` to re-resolve `path!`
+                // literals that name source rules whose layouts the
+                // registry no longer holds. AZ-IV.W4.1 (T3) eliminated
+                // the `_with_trace` wrapper duplication: the canonical
+                // pass form takes the sink directly.
                 let mut trace = std::mem::take(&mut ir.inline_trace);
-                bbnf_ir::passes::inline_acyclic_with_trace(&mut ir, &mut trace);
+                bbnf_ir::passes::inline_acyclic(&mut ir, &mut trace);
                 bbnf_ir::passes::prune_unreachable(&mut ir);
                 bbnf_ir::passes::compute_scc(&mut ir);
-                bbnf_ir::passes::fuse_single_use_with_trace(&mut ir, &mut trace);
+                bbnf_ir::passes::fuse_single_use(&mut ir, &mut trace);
                 ir.inline_trace = trace;
                 bbnf_ir::passes::prune_unreachable(&mut ir);
                 bbnf_ir::passes::eliminate_epsilon(&mut ir);

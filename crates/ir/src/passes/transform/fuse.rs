@@ -18,7 +18,7 @@
 //!
 //! Now dispatch sees 'name' FIRST chars vs '"if"' → O(1) byte dispatch.
 
-use crate::passes::inline_trace::{InlinePass, InlineSubstitution, InlineTrace};
+use crate::passes::inline_trace::{InlinePass, InlineSubstitution, TraceSink};
 use crate::{GrammarIR, IrNode, RuleId};
 
 /// Fuse single-use rules into their sole call site.
@@ -29,25 +29,19 @@ use crate::{GrammarIR, IrNode, RuleId};
 /// 3. It is referenced exactly once across all rule bodies
 ///
 /// After fusion, run `prune_unreachable` to clean up dead rules.
-pub fn fuse_single_use(ir: &mut GrammarIR) {
-    fuse_single_use_inner(ir, None);
-}
-
-/// Same as [`fuse_single_use`] but appends an [`InlineSubstitution`]
-/// event to `trace` for every fused `Ref(source) → body` rewrite. Used
-/// by AZ-IV.W2.2's `path_check` IR pass to re-resolve `path!` literals
-/// that name a source rule whose layout was absorbed by the post-
-/// pipeline rule that contained the sole `Ref` to it.
 ///
-/// Semantics are byte-identical to the bare [`fuse_single_use`]; only
-/// the recording channel differs. A fused source rule has exactly one
-/// absorber, so each substitution event maps a single source to a
-/// single absorber.
-pub fn fuse_single_use_with_trace(ir: &mut GrammarIR, trace: &mut InlineTrace) {
-    fuse_single_use_inner(ir, Some(trace));
-}
-
-fn fuse_single_use_inner(ir: &mut GrammarIR, mut trace: Option<&mut InlineTrace>) {
+/// `trace` is the recording channel for `Ref(source) → body`
+/// substitution events; pass
+/// [`NoopTraceSink`](crate::passes::inline_trace::NoopTraceSink) when
+/// recording is not wanted. Production callers (the structural
+/// normalizer loop) thread an
+/// [`InlineTrace`](crate::passes::InlineTrace) through so AZ-IV.W2.2's
+/// `path_check` IR pass can re-resolve `path!` literals that name a
+/// source rule whose layout was absorbed by the post-pipeline rule
+/// that contained the sole `Ref` to it. A fused source rule has
+/// exactly one absorber, so each substitution event maps a single
+/// source to a single absorber.
+pub fn fuse_single_use(ir: &mut GrammarIR, trace: &mut dyn TraceSink) {
     // Count references for each rule.
     let mut ref_counts = vec![0u32; ir.rules.len()];
     for rule in &ir.rules {
@@ -120,19 +114,20 @@ fn fuse_single_use_inner(ir: &mut GrammarIR, mut trace: Option<&mut InlineTrace>
         let absorber_id = ir.rules[rule_index].id;
         let absorber_name = ir.get_string(ir.rules[rule_index].name).to_string();
 
-        if let Some(trace) = trace.as_deref_mut() {
-            let mut refs_seen = vec![false; bodies.len()];
-            collect_refs_to(&ir.rules[rule_index].body, &bodies, &mut refs_seen);
-            for (source_id, source_name) in &fusable_names {
-                if refs_seen.get(*source_id as usize).copied().unwrap_or(false) {
-                    trace.record(InlineSubstitution::new(
-                        *source_id,
-                        source_name.clone(),
-                        absorber_id,
-                        absorber_name.clone(),
-                        InlinePass::FuseSingleUse,
-                    ));
-                }
+        // Record `(source, absorber)` substitution events on the
+        // recording channel. Callers that do not want recording pass
+        // `NoopTraceSink`, which drops every event.
+        let mut refs_seen = vec![false; bodies.len()];
+        collect_refs_to(&ir.rules[rule_index].body, &bodies, &mut refs_seen);
+        for (source_id, source_name) in &fusable_names {
+            if refs_seen.get(*source_id as usize).copied().unwrap_or(false) {
+                trace.record(InlineSubstitution::new(
+                    *source_id,
+                    source_name.clone(),
+                    absorber_id,
+                    absorber_name.clone(),
+                    InlinePass::FuseSingleUse,
+                ));
             }
         }
 

@@ -1,15 +1,16 @@
 //! AZ-IV.W2.2 — golden tests for the inline-trace sidecar.
 //!
-//! Verifies that the recording wrappers around `inline_acyclic` and
-//! `fuse_single_use` produce a deterministic
-//! [`bbnf_ir::passes::InlineTrace`] for fixture grammars where the
-//! substitution graph is known. The W2.2 sub-gate demands the trace be
-//! a deterministic side table; these tests are the gate evidence.
+//! Verifies that the canonical `inline_acyclic` and `fuse_single_use`
+//! pass form (per AZ-IV.W4.1 T3, taking `&mut dyn TraceSink` directly)
+//! produces a deterministic [`bbnf_ir::passes::InlineTrace`] for
+//! fixture grammars where the substitution graph is known. The W2.2
+//! sub-gate demands the trace be a deterministic side table; these
+//! tests are the gate evidence.
 
 use std::collections::HashMap;
 
 use bbnf_ir::passes::inline_trace::{InlinePass, InlineTrace};
-use bbnf_ir::passes::{fuse_single_use_with_trace, inline_acyclic_with_trace};
+use bbnf_ir::passes::{fuse_single_use, inline_acyclic};
 use bbnf_ir::{
     CostConfig, GrammarIR, IrNode, IrRule, RuleId, RuleMeta, StructRegistry, TypeDescInterner,
 };
@@ -93,7 +94,7 @@ fn fuse_single_use_records_one_substitution() {
     );
 
     let mut trace = InlineTrace::new();
-    fuse_single_use_with_trace(&mut ir, &mut trace);
+    fuse_single_use(&mut ir, &mut trace);
 
     assert_eq!(trace.len(), 1, "expected one substitution event");
     let event = &trace.events[0];
@@ -159,7 +160,7 @@ fn inline_acyclic_records_per_absorber() {
     );
 
     let mut trace = InlineTrace::new();
-    inline_acyclic_with_trace(&mut ir, &mut trace);
+    inline_acyclic(&mut ir, &mut trace);
 
     // Two events: one for left → small absorbed, one for right →
     // small absorbed. (entry's Seq doesn't directly reference small.)
@@ -213,8 +214,8 @@ fn trace_is_deterministic_across_runs() {
 
     let mut trace_a = InlineTrace::new();
     let mut trace_b = InlineTrace::new();
-    fuse_single_use_with_trace(&mut ir_a, &mut trace_a);
-    fuse_single_use_with_trace(&mut ir_b, &mut trace_b);
+    fuse_single_use(&mut ir_a, &mut trace_a);
+    fuse_single_use(&mut ir_b, &mut trace_b);
 
     assert_eq!(trace_a, trace_b);
     assert_eq!(trace_a.len(), 1);
@@ -252,8 +253,8 @@ fn no_inlinable_rules_produces_empty_trace() {
     );
 
     let mut trace = InlineTrace::new();
-    inline_acyclic_with_trace(&mut ir, &mut trace);
-    fuse_single_use_with_trace(&mut ir, &mut trace);
+    inline_acyclic(&mut ir, &mut trace);
+    fuse_single_use(&mut ir, &mut trace);
     assert!(trace.is_empty(), "cyclic rules must not be inlined");
 }
 
@@ -284,7 +285,7 @@ fn lookup_helpers_resolve_to_absorber() {
     );
 
     let mut trace = InlineTrace::new();
-    fuse_single_use_with_trace(&mut ir, &mut trace);
+    fuse_single_use(&mut ir, &mut trace);
 
     assert_eq!(trace.first_absorber_id("small"), Some(0));
     assert_eq!(trace.first_absorber_id("nonexistent"), None);

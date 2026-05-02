@@ -21,26 +21,24 @@
 //!
 //! ## Determinism
 //!
-//! The trace is a `Vec<InlineSubstitution>` and lists events in the
-//! order the recording wrappers see them — outer rule iteration order
-//! ascending by `RuleId`, then per-pass call order. The same grammar
-//! IR + same pass sequence produces a byte-identical trace, which the
+//! Events appear in stable insertion order (outer rule iteration by
+//! `RuleId` ascending, then per-pass call order). The same grammar IR
+//! + same pass sequence produces a byte-identical trace, which the
 //! W2.2 golden test exercises. The trace is **additive**: re-running
-//! the recording wrappers on the same IR appends new events without
-//! mutating prior ones; consumers should clear the trace between
-//! independent compile runs.
+//! the passes on the same IR appends new events without mutating prior
+//! ones; consumers should clear the trace between independent compile
+//! runs.
 //!
-//! ## Design discipline
+//! ## Recording channel — `TraceSink`
 //!
-//! Per the W2 triumvirate-dispatch rule, the inline trace must not
-//! change the semantics of `inline_acyclic` / `fuse_single_use`.
-//! Recording is therefore implemented as opt-in `with_trace` wrappers
-//! around the existing passes — the bare functions stay byte-identical
-//! to their pre-W2.2 behavior; only the wrapper variants populate the
-//! trace. The structural normalizer loop calls the wrapper variants so
-//! every production compile has the trace available; tests that drive
-//! a single pass in isolation can still call the bare function with no
-//! trace overhead.
+//! Per AUDIT-F transposition T3, the inline / fuse passes take a
+//! `&mut dyn TraceSink` recording channel directly. There is no
+//! sibling `_with_trace` wrapper: the canonical pass form *is* the
+//! pass form, and callers that do not want recording pass
+//! [`NoopTraceSink`] (a zero-overhead unit type that drops every
+//! event). [`InlineTrace`] is the production sink the structural
+//! normalizer loop threads through; tests use the same sink in
+//! isolation.
 
 use serde::{Deserialize, Serialize};
 
@@ -110,19 +108,19 @@ impl InlineSubstitution {
 
 /// Append-only sidecar of [`InlineSubstitution`] events.
 ///
-/// Population: the `with_trace` wrappers around `inline_acyclic` /
-/// `fuse_single_use` push events as they observe per-rule substitutions.
-/// Iteration: events appear in stable insertion order
-/// (`RuleId`-ascending, then per-pass call order); the W2.2 golden test
-/// exercises this stability.
+/// Population: the canonical `inline_acyclic` / `fuse_single_use`
+/// passes write into this sink (or [`NoopTraceSink`]) via the
+/// [`TraceSink`] interface. Iteration: events appear in stable
+/// insertion order (`RuleId`-ascending, then per-pass call order); the
+/// W2.2 golden test exercises this stability.
 ///
 /// Consumers (W2.2 `path_check`, W2.4 `path!` macro) treat the trace
 /// as read-only; the IR pass owns the population side, and downstream
 /// only reads.
 #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq)]
 pub struct InlineTrace {
-    /// Substitution events in the order the recording wrappers saw
-    /// them.
+    /// Substitution events in stable insertion order
+    /// (`RuleId`-ascending, then per-pass call order).
     pub events: Vec<InlineSubstitution>,
 }
 
@@ -179,4 +177,38 @@ impl InlineTrace {
             .find(|e| e.source_rule_name == source_rule_name)
             .map(|e| e.absorber_rule_id)
     }
+}
+
+/// Recording channel for the inline / fuse passes.
+///
+/// Per AUDIT-F transposition T3, the canonical `inline_acyclic` /
+/// `fuse_single_use` pass form takes a `&mut dyn TraceSink`. The
+/// production caller (the structural normalizer loop in
+/// `pipeline::compile`) passes [`InlineTrace`]; callers that do not
+/// want recording pass [`NoopTraceSink`] (zero-overhead unit type).
+/// This eliminates the `_with_trace` wrapper duplication the W2.2
+/// landing introduced and dissolves the inline-trace pipeline-ordering
+/// coupling that mid-tranche §R2 names.
+pub trait TraceSink {
+    /// Append a substitution event. Implementations may drop, queue,
+    /// or persist as the consumer demands; the inline / fuse passes
+    /// invoke this method once per `(source, absorber)` substitution.
+    fn record(&mut self, event: InlineSubstitution);
+}
+
+impl TraceSink for InlineTrace {
+    fn record(&mut self, event: InlineSubstitution) {
+        self.events.push(event);
+    }
+}
+
+/// Discarding [`TraceSink`] for callers that do not need the inline
+/// trace. Every recorded event is dropped; the type carries no state
+/// and incurs no allocation.
+#[derive(Default, Debug, Clone, Copy)]
+pub struct NoopTraceSink;
+
+impl TraceSink for NoopTraceSink {
+    #[inline]
+    fn record(&mut self, _event: InlineSubstitution) {}
 }

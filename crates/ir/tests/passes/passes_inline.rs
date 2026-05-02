@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use bbnf_ir::passes::inline_acyclic;
+use bbnf_ir::passes::{NoopTraceSink, inline_acyclic};
 use bbnf_ir::{GrammarIR, IrNode, IrRule, RuleId, RuleMeta};
 
 fn make_ir(rules: Vec<IrRule>, entry: RuleId) -> GrammarIR {
@@ -75,7 +75,7 @@ fn small_acyclic_inlined() {
         0,
     );
 
-    inline_acyclic(&mut ir);
+    inline_acyclic(&mut ir, &mut NoopTraceSink);
     // Rule 0 should now have Literal(2) instead of Ref(1).
     assert_eq!(ir.rules[0].body, IrNode::Literal(2));
 }
@@ -106,7 +106,7 @@ fn cyclic_not_inlined() {
         0,
     );
 
-    inline_acyclic(&mut ir);
+    inline_acyclic(&mut ir, &mut NoopTraceSink);
     // Rule 0 should still be Ref(1) -- rule 1 is cyclic.
     assert_eq!(ir.rules[0].body, IrNode::Ref(1));
 }
@@ -125,7 +125,7 @@ fn entry_point_not_inlined() {
         0,
     );
 
-    inline_acyclic(&mut ir);
+    inline_acyclic(&mut ir, &mut NoopTraceSink);
     assert_eq!(ir.rules[0].body, IrNode::Literal(2));
 }
 
@@ -157,7 +157,7 @@ fn large_rule_not_inlined() {
         0,
     );
 
-    inline_acyclic(&mut ir);
+    inline_acyclic(&mut ir, &mut NoopTraceSink);
     // Rule 0 should still be Ref(1) -- rule 1 is too large.
     assert_eq!(ir.rules[0].body, IrNode::Ref(1));
 }

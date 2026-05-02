@@ -395,15 +395,15 @@ pub struct GrammarIR {
     /// from the structural normalizer loop's `inline_acyclic` /
     /// `fuse_single_use` passes.
     ///
-    /// Populated by the recording wrappers
-    /// [`passes::inline_acyclic_with_trace`] /
-    /// [`passes::fuse_single_use_with_trace`] when
-    /// `pipeline::compile` runs them through the trace channel.
-    /// Consumed by [`passes::run_path_check`] (called after
-    /// `project_types`) to bind user-written source rule names to the
-    /// post-pipeline `RuleId`s their layouts resolve through. The
-    /// W2.4 `path!` proc-macro reads the resolver to honour the W2
-    /// invariant 8 ("Path resolution uses source rule names").
+    /// Populated by the canonical [`passes::inline_acyclic`] /
+    /// [`passes::fuse_single_use`] pass form (per AZ-IV.W4.1 T3,
+    /// taking `&mut dyn TraceSink` directly) when `pipeline::compile`
+    /// threads this trace through. Consumed by
+    /// [`passes::run_path_check`] (called after `project_types`) to
+    /// bind user-written source rule names to the post-pipeline
+    /// `RuleId`s their layouts resolve through. The W2.4 `path!`
+    /// proc-macro reads the resolver to honour the W2 invariant 8
+    /// ("Path resolution uses source rule names").
     ///
     /// Not serialized: the trace describes the in-process pipeline
     /// shape and is recomputed every compile.

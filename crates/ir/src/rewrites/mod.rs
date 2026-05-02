@@ -1,8 +1,6 @@
 //! Rewrite-rule storage substrate.
 //!
-//! The `rewrites/` module is the per-grammar rule store consumed by
-//! BB.close (Wave 4) and downstream cost-config integration. It
-//! provides:
+//! The `rewrites/` module is the per-grammar rule store. It provides:
 //!
 //! - [`Rule`] / [`RuleSet`] — owned rule data + ordered storage.
 //! - [`RuleClass`] — Class-1 / Class-2 / Class-3 tier (defined in
@@ -11,13 +9,15 @@
 //!   [`crate::types::RuleId`] (grammar-rule index): a rewrite-rule id.
 //! - RON load/save via [`RuleSet::load_from_ron`] /
 //!   [`RuleSet::save_to_ron`] (delegates to the [`schema`] layer).
-//! - Bulk directory load via [`RuleSet::load_from_dir`] (consumed by
-//!   `cargo xtask regen` per BB.scaffold.C wiring).
+//! - Path-shape seed registration via [`RuleSet::merge_path_seed`]
+//!   (Wave AZ-IV.W3.0 product, consumed by recycled BA's
+//!   rule-discovery substrate).
 //!
-//! BB.scaffold.B authors this substrate ahead of the e-graph `ruler`
-//! consumer; module loading is independent. BB.close wires the two
-//! together via the per-grammar adapter in
-//! `crates/ir/src/passes/cost_integration.rs` (Wave 4 file).
+//! Per AZ-IV.W4.1 (D2 ADOPTED in plan), the unconsumed bulk directory
+//! loader and the `egraph::ruler::*` family that previously
+//! routed-into-nothing have been deleted; the recycled-BA tranche
+//! recreates the rule-discovery substrate clean against the surviving
+//! storage primitives here.
 
 pub mod base;
 pub mod path_seed;
@@ -177,45 +177,6 @@ impl RuleSet {
         Self::from_file(file)
     }
 
-    /// Discover every `*.ron` file directly under `dir` and merge them
-    /// into a single ruleset. Used by `cargo xtask regen` per
-    /// BB.scaffold.C wiring (`xtask/src/regen.rs`).
-    ///
-    /// Errors:
-    /// - `Err` if `dir` exists but cannot be read (permission /
-    ///   I/O fault).
-    /// - `Err` if any contained `.ron` file fails schema validation.
-    /// - `Ok(RuleSet::empty())` if `dir` does not exist; the caller
-    ///   treats absence as "no rules" not "fault".
-    pub fn load_from_dir(dir: &Path) -> std::io::Result<Self> {
-        if !dir.exists() {
-            return Ok(Self::empty());
-        }
-        let mut acc = Self::empty();
-        for entry in std::fs::read_dir(dir)? {
-            let entry = entry?;
-            let path = entry.path();
-            if path.extension().and_then(|s| s.to_str()) != Some("ron") {
-                continue;
-            }
-            let loaded = Self::load_from_ron(&path).map_err(|e| {
-                std::io::Error::new(
-                    std::io::ErrorKind::InvalidData,
-                    format!("{}: {}", path.display(), e),
-                )
-            })?;
-            if acc.grammar.is_empty() {
-                acc.grammar = loaded.grammar;
-                acc.schema_version = loaded.schema_version;
-            }
-            for mut rule in loaded.rules {
-                rule.id = RewriteRuleId(acc.rules.len() as u32);
-                acc.rules.push(rule);
-            }
-        }
-        Ok(acc)
-    }
-
     /// Save this rule set to a RON file at `path`.
     pub fn save_to_ron(&self, path: &Path) -> Result<(), SchemaError> {
         let file = self.to_file();
@@ -238,11 +199,12 @@ impl RuleSet {
     /// order. Each merged rule is reassigned a fresh sequential id so
     /// the path-seed bag does not collide with per-grammar rule ids.
     ///
-    /// This is the registration site the egraph saturation layer
-    /// consumes: per-grammar rule files load via [`Self::load_from_dir`]
-    /// then call [`Self::merge_path_seed`] before saturation runs, so
-    /// the seed rewrites participate in extraction alongside any
-    /// authored or discovered rules.
+    /// This is the registration site recycled BA's rule-discovery
+    /// substrate consumes: rule files load via [`Self::load_from_ron`]
+    /// (or are constructed in-process), then [`Self::merge_path_seed`]
+    /// adds the seed rewrites before saturation runs, so the seed
+    /// rewrites participate in extraction alongside any authored or
+    /// discovered rules.
     pub fn merge_path_seed(&mut self) {
         let seed = path_seed::seed_ruleset();
         for mut rule in seed.rules {

@@ -209,7 +209,7 @@ fn resolver_first_absorber_is_deterministic() {
 #[test]
 fn fixture_grammar_fused_rule_still_resolves() {
     use bbnf_ir::passes::types::registry::populate_struct_registry;
-    use bbnf_ir::passes::{fuse_single_use_with_trace, prune_unreachable};
+    use bbnf_ir::passes::{fuse_single_use, prune_unreachable};
     use bbnf_ir::types::TypeDescInterner;
     use rustc_hash::FxHashMap;
     use std::collections::HashMap;
@@ -281,7 +281,7 @@ fn fixture_grammar_fused_rule_still_resolves() {
     // mirrors the structural normalizer loop's `fuse_single_use →
     // prune_unreachable` sequence.
     let mut trace = InlineTrace::new();
-    fuse_single_use_with_trace(&mut ir, &mut trace);
+    fuse_single_use(&mut ir, &mut trace);
     prune_unreachable(&mut ir);
 
     // After prune, only `entry` survives. The trace still carries the

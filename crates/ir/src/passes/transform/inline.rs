@@ -4,7 +4,7 @@
 //! acyclic, and not the entry point. Reduces call overhead in the interpreter
 //! and exposes further optimization opportunities (literal merging, dispatch).
 
-use crate::passes::inline_trace::{InlinePass, InlineSubstitution, InlineTrace};
+use crate::passes::inline_trace::{InlinePass, InlineSubstitution, TraceSink};
 use crate::{GrammarIR, IrNode, RuleId};
 
 /// Maximum node count for a rule to be considered inlinable.
@@ -21,25 +21,16 @@ const INLINE_THRESHOLD: usize = 4;
 ///
 /// After inlining, the original rule remains (it may be referenced externally).
 /// Run `prune_unreachable` afterward to clean up dead rules.
-pub fn inline_acyclic(ir: &mut GrammarIR) {
-    inline_acyclic_inner(ir, None);
-}
-
-/// Same as [`inline_acyclic`] but appends an [`InlineSubstitution`]
-/// event to `trace` for every `Ref(source) → body` rewrite that
-/// actually fires. The events name the source rule (whose body got
-/// inlined) and the absorber rule (whose body grew to contain the
-/// inlined body). Used by AZ-IV.W2.2's `path_check` IR pass to
-/// re-resolve `path!` literals against post-pipeline rule names.
 ///
-/// The call observes the same body-rewrite rule the bare
-/// [`inline_acyclic`] does — semantics are byte-identical; only the
-/// recording channel differs.
-pub fn inline_acyclic_with_trace(ir: &mut GrammarIR, trace: &mut InlineTrace) {
-    inline_acyclic_inner(ir, Some(trace));
-}
-
-fn inline_acyclic_inner(ir: &mut GrammarIR, mut trace: Option<&mut InlineTrace>) {
+/// `trace` is the recording channel for `Ref(source) → body`
+/// substitution events; pass
+/// [`NoopTraceSink`](crate::passes::inline_trace::NoopTraceSink) when
+/// recording is not wanted. Production callers (the structural
+/// normalizer loop) thread an
+/// [`InlineTrace`](crate::passes::InlineTrace) through so
+/// AZ-IV.W2.2's `path_check` IR pass can re-resolve `path!` literals
+/// against post-pipeline rule names.
+pub fn inline_acyclic(ir: &mut GrammarIR, trace: &mut dyn TraceSink) {
     // Identify inlinable rules.
     //
     // AU.2.5: rules whose body is a `Seq` of two or more children are
@@ -83,10 +74,10 @@ fn inline_acyclic_inner(ir: &mut GrammarIR, mut trace: Option<&mut InlineTrace>)
     }
 
     // Pre-compute the source-rule-id → name table so the recording
-    // wrapper can build owned-string events without re-borrowing from
-    // `ir.strings` mid-rewrite. The trace wants the user-written name
-    // captured at substitution time (post-`prune_unreachable` the rule
-    // entry vanishes, but the trace event survives).
+    // call below can build owned-string events without re-borrowing
+    // from `ir.strings` mid-rewrite. The trace wants the user-written
+    // name captured at substitution time (post-`prune_unreachable` the
+    // rule entry vanishes, but the trace event survives).
     let inlinable_names: Vec<(RuleId, String)> = inlinable
         .iter()
         .map(|(id, _)| (*id, ir.get_string(ir.rules[*id as usize].name).to_string()))
@@ -105,20 +96,19 @@ fn inline_acyclic_inner(ir: &mut GrammarIR, mut trace: Option<&mut InlineTrace>)
 
         // Track which inlinable sources are referenced by this absorber's
         // body before the rewrite so the trace channel records exactly
-        // one event per (source, absorber) pair.
-        if let Some(trace) = trace.as_deref_mut() {
-            let mut refs_seen = vec![false; bodies.len()];
-            collect_refs_to(&ir.rules[rule_index].body, &bodies, &mut refs_seen);
-            for (source_id, source_name) in &inlinable_names {
-                if refs_seen.get(*source_id as usize).copied().unwrap_or(false) {
-                    trace.record(InlineSubstitution::new(
-                        *source_id,
-                        source_name.clone(),
-                        absorber_id,
-                        absorber_name.clone(),
-                        InlinePass::InlineAcyclic,
-                    ));
-                }
+        // one event per (source, absorber) pair. Callers that do not
+        // want recording pass `NoopTraceSink`, which drops every event.
+        let mut refs_seen = vec![false; bodies.len()];
+        collect_refs_to(&ir.rules[rule_index].body, &bodies, &mut refs_seen);
+        for (source_id, source_name) in &inlinable_names {
+            if refs_seen.get(*source_id as usize).copied().unwrap_or(false) {
+                trace.record(InlineSubstitution::new(
+                    *source_id,
+                    source_name.clone(),
+                    absorber_id,
+                    absorber_name.clone(),
+                    InlinePass::InlineAcyclic,
+                ));
             }
         }
 

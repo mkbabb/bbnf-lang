@@ -93,10 +93,10 @@ mod __googlesheetsparser_emit_impl {
     pub const PRECEDENCE_LUT_mul_expr: [u8; 256] = [
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 4u8, 0u8, 0u8, 0u8, 2u8, 3u8, 0u8, 3u8, 0u8, 2u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 2u8, 0u8, 0u8, 0u8, 0u8, 2u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 17u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
@@ -116,21 +116,6 @@ mod __googlesheetsparser_emit_impl {
     /// set, to resolve the second byte + discriminant.
     pub const PRECEDENCE_ENTRIES_mul_expr: &[PrattEntry] = &[
         PrattEntry {
-            byte: 38u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
-        },
-        PrattEntry {
-            byte: 43u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
-        },
-        PrattEntry {
-            byte: 45u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 1u8,
-        },
-        PrattEntry {
             byte: 42u8,
             second_byte: ::core::option::Option::None,
             op_discriminant: 0u8,
@@ -139,11 +124,6 @@ mod __googlesheetsparser_emit_impl {
             byte: 47u8,
             second_byte: ::core::option::Option::None,
             op_discriminant: 1u8,
-        },
-        PrattEntry {
-            byte: 94u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
         },
     ];
     /// AX.W0a.2.l — per-rule dense Pratt precedence LUT.
@@ -156,7 +136,7 @@ mod __googlesheetsparser_emit_impl {
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 1u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 2u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
@@ -178,11 +158,6 @@ mod __googlesheetsparser_emit_impl {
     /// set, to resolve the second byte + discriminant.
     pub const PRECEDENCE_ENTRIES_array_row: &[PrattEntry] = &[
         PrattEntry {
-            byte: 59u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
-        },
-        PrattEntry {
             byte: 44u8,
             second_byte: ::core::option::Option::None,
             op_discriminant: 0u8,
@@ -197,7 +172,7 @@ mod __googlesheetsparser_emit_impl {
     pub const PRECEDENCE_LUT_array_rows: [u8; 256] = [
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 1u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 2u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
@@ -224,11 +199,6 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             op_discriminant: 0u8,
         },
-        PrattEntry {
-            byte: 44u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
-        },
     ];
     /// AX.W0a.2.l — per-rule dense Pratt precedence LUT.
     ///
@@ -239,10 +209,10 @@ mod __googlesheetsparser_emit_impl {
     pub const PRECEDENCE_LUT_concat_expr: [u8; 256] = [
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 4u8, 0u8, 0u8, 0u8, 2u8, 3u8, 0u8, 3u8, 0u8, 2u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 4u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 17u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
@@ -266,31 +236,6 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             op_discriminant: 0u8,
         },
-        PrattEntry {
-            byte: 43u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
-        },
-        PrattEntry {
-            byte: 45u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 1u8,
-        },
-        PrattEntry {
-            byte: 42u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
-        },
-        PrattEntry {
-            byte: 47u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 1u8,
-        },
-        PrattEntry {
-            byte: 94u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
-        },
     ];
     /// AX.W0a.2.l — per-rule dense Pratt precedence LUT.
     ///
@@ -301,10 +246,10 @@ mod __googlesheetsparser_emit_impl {
     pub const PRECEDENCE_LUT_add_expr: [u8; 256] = [
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 4u8, 0u8, 0u8, 0u8, 2u8, 3u8, 0u8, 3u8, 0u8, 2u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 3u8, 0u8, 3u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 17u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
@@ -324,11 +269,6 @@ mod __googlesheetsparser_emit_impl {
     /// set, to resolve the second byte + discriminant.
     pub const PRECEDENCE_ENTRIES_add_expr: &[PrattEntry] = &[
         PrattEntry {
-            byte: 38u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
-        },
-        PrattEntry {
             byte: 43u8,
             second_byte: ::core::option::Option::None,
             op_discriminant: 0u8,
@@ -337,21 +277,6 @@ mod __googlesheetsparser_emit_impl {
             byte: 45u8,
             second_byte: ::core::option::Option::None,
             op_discriminant: 1u8,
-        },
-        PrattEntry {
-            byte: 42u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
-        },
-        PrattEntry {
-            byte: 47u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 1u8,
-        },
-        PrattEntry {
-            byte: 94u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
         },
     ];
     /// AX.W0a.2.l — per-rule dense Pratt precedence LUT.
@@ -363,7 +288,7 @@ mod __googlesheetsparser_emit_impl {
     pub const PRECEDENCE_LUT_exp_expr: [u8; 256] = [
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 4u8, 0u8, 0u8, 0u8, 2u8, 3u8, 0u8, 3u8, 0u8, 2u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 17u8, 0u8,
@@ -385,31 +310,6 @@ mod __googlesheetsparser_emit_impl {
     /// body when the LUT byte's bit-7 two-byte flag is
     /// set, to resolve the second byte + discriminant.
     pub const PRECEDENCE_ENTRIES_exp_expr: &[PrattEntry] = &[
-        PrattEntry {
-            byte: 38u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
-        },
-        PrattEntry {
-            byte: 43u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
-        },
-        PrattEntry {
-            byte: 45u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 1u8,
-        },
-        PrattEntry {
-            byte: 42u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
-        },
-        PrattEntry {
-            byte: 47u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 1u8,
-        },
         PrattEntry {
             byte: 94u8,
             second_byte: ::core::option::Option::None,
@@ -508,21 +408,6 @@ mod __googlesheetsparser_emit_impl {
     /// Flat union of every rule's mined operator entries.
     pub const PRECEDENCE_ENTRIES: &[PrattEntry] = &[
         PrattEntry {
-            byte: 38u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
-        },
-        PrattEntry {
-            byte: 43u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
-        },
-        PrattEntry {
-            byte: 45u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 1u8,
-        },
-        PrattEntry {
             byte: 42u8,
             second_byte: ::core::option::Option::None,
             op_discriminant: 0u8,
@@ -531,16 +416,6 @@ mod __googlesheetsparser_emit_impl {
             byte: 47u8,
             second_byte: ::core::option::Option::None,
             op_discriminant: 1u8,
-        },
-        PrattEntry {
-            byte: 94u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
-        },
-        PrattEntry {
-            byte: 59u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
         },
         PrattEntry {
             byte: 44u8,
@@ -553,11 +428,6 @@ mod __googlesheetsparser_emit_impl {
             op_discriminant: 0u8,
         },
         PrattEntry {
-            byte: 44u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
-        },
-        PrattEntry {
             byte: 38u8,
             second_byte: ::core::option::Option::None,
             op_discriminant: 0u8,
@@ -569,76 +439,6 @@ mod __googlesheetsparser_emit_impl {
         },
         PrattEntry {
             byte: 45u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 1u8,
-        },
-        PrattEntry {
-            byte: 42u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
-        },
-        PrattEntry {
-            byte: 47u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 1u8,
-        },
-        PrattEntry {
-            byte: 94u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
-        },
-        PrattEntry {
-            byte: 38u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
-        },
-        PrattEntry {
-            byte: 43u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
-        },
-        PrattEntry {
-            byte: 45u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 1u8,
-        },
-        PrattEntry {
-            byte: 42u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
-        },
-        PrattEntry {
-            byte: 47u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 1u8,
-        },
-        PrattEntry {
-            byte: 94u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
-        },
-        PrattEntry {
-            byte: 38u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
-        },
-        PrattEntry {
-            byte: 43u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
-        },
-        PrattEntry {
-            byte: 45u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 1u8,
-        },
-        PrattEntry {
-            byte: 42u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
-        },
-        PrattEntry {
-            byte: 47u8,
             second_byte: ::core::option::Option::None,
             op_discriminant: 1u8,
         },
@@ -681,7 +481,7 @@ mod __googlesheetsparser_emit_impl {
     /// AW-III.W6.5 — total mined operator count for this
     /// grammar. Non-zero iff the lift admitted ≥ 1 chain OR the
     /// shape classifier admitted ≥ 1 single-rung Pratt rule.
-    pub const PRECEDENCE_OPERATOR_COUNT: usize = 34usize;
+    pub const PRECEDENCE_OPERATOR_COUNT: usize = 14usize;
     static __DTA_REGEX_0: &str = "(\\d+\\.?\\d*|\\.\\d+)([eE][+-]?\\d+)?";
     static __DTA_REGEX_1: &str = "\"([^\"]|\"\")*\"";
     static __DTA_REGEX_2: &str = "[tT][rR][uU][eE]";
@@ -2393,7 +2193,7 @@ mod __googlesheetsparser_emit_impl {
                 let end = body_start + off;
                 *p = end + 1;
                 let body: &'p str = unsafe {
-                    ::core::str::from_utf8_unchecked(&input[body_start..end])
+                    ::core::str::from_utf8_unchecked(&input[open..end + 1])
                 };
                 builder.push_leaf_with_str(body);
                 Ok(())
@@ -2434,7 +2234,8 @@ mod __googlesheetsparser_emit_impl {
                         *p = end_pos;
                         let body: &'p str = unsafe {
                             ::core::str::from_utf8_unchecked(
-                                &input[start as usize..end as usize],
+                                &input[(start as usize)
+                                    .saturating_sub(1)..(end as usize) + 1],
                             )
                         };
                         builder.push_leaf_with_str(body);
@@ -3939,6 +3740,7 @@ mod __googlesheetsparser_emit_impl {
                             (),
                             crate::runtime::DtaError,
                         > = (|| {
+                            let __alt_span_lo: usize = *p;
                             {
                                 let __scan_start = *p;
                                 let Some(match_len) = __regex_scan_GoogleSheetsParser(
@@ -3951,6 +3753,17 @@ mod __googlesheetsparser_emit_impl {
                                     });
                                 };
                                 *p += match_len as usize;
+                            }
+                            {
+                                let __alt_span_hi: usize = *p;
+                                let __alt_span_slice: &str = ::core::str::from_utf8(
+                                        &input[__alt_span_lo..__alt_span_hi],
+                                    )
+                                    .unwrap_or("");
+                                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                                    builder,
+                                    __alt_span_slice,
+                                );
                             }
                             Ok(())
                         })();
@@ -3972,6 +3785,7 @@ mod __googlesheetsparser_emit_impl {
                             (),
                             crate::runtime::DtaError,
                         > = (|| {
+                            let __alt_span_lo: usize = *p;
                             {
                                 let __scan_start = *p;
                                 let Some(match_len) = __regex_scan_GoogleSheetsParser(
@@ -3984,6 +3798,17 @@ mod __googlesheetsparser_emit_impl {
                                     });
                                 };
                                 *p += match_len as usize;
+                            }
+                            {
+                                let __alt_span_hi: usize = *p;
+                                let __alt_span_slice: &str = ::core::str::from_utf8(
+                                        &input[__alt_span_lo..__alt_span_hi],
+                                    )
+                                    .unwrap_or("");
+                                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                                    builder,
+                                    __alt_span_slice,
+                                );
                             }
                             Ok(())
                         })();
@@ -4055,6 +3880,7 @@ mod __googlesheetsparser_emit_impl {
                             (),
                             crate::runtime::DtaError,
                         > = (|| {
+                            let __alt_span_lo: usize = *p;
                             {
                                 let __scan_start = *p;
                                 let Some(match_len) = __regex_scan_GoogleSheetsParser(
@@ -4067,6 +3893,17 @@ mod __googlesheetsparser_emit_impl {
                                     });
                                 };
                                 *p += match_len as usize;
+                            }
+                            {
+                                let __alt_span_hi: usize = *p;
+                                let __alt_span_slice: &str = ::core::str::from_utf8(
+                                        &input[__alt_span_lo..__alt_span_hi],
+                                    )
+                                    .unwrap_or("");
+                                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                                    builder,
+                                    __alt_span_slice,
+                                );
                             }
                             Ok(())
                         })();
@@ -4088,6 +3925,7 @@ mod __googlesheetsparser_emit_impl {
                             (),
                             crate::runtime::DtaError,
                         > = (|| {
+                            let __alt_span_lo: usize = *p;
                             {
                                 let __scan_start = *p;
                                 let Some(match_len) = __regex_scan_GoogleSheetsParser(
@@ -4100,6 +3938,17 @@ mod __googlesheetsparser_emit_impl {
                                     });
                                 };
                                 *p += match_len as usize;
+                            }
+                            {
+                                let __alt_span_hi: usize = *p;
+                                let __alt_span_slice: &str = ::core::str::from_utf8(
+                                        &input[__alt_span_lo..__alt_span_hi],
+                                    )
+                                    .unwrap_or("");
+                                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                                    builder,
+                                    __alt_span_slice,
+                                );
                             }
                             Ok(())
                         })();

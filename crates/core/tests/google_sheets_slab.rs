@@ -244,7 +244,7 @@ fn wire_contract_compound_with_two_children() {
     // Build the equivalent of `formula = /=?/, expression` by hand:
     //   formula compound { Number(1.0), Number(2.0) }
     let mut b = SheetsStructBuilder::new();
-    let formula_layout = synth_layout(0, "formula", LayoutKind::Struct);
+    let formula_layout = synth_layout(31, "formula", LayoutKind::Struct);
     let h = b.begin_compound(&formula_layout);
     b.push_leaf_with_f64(1.0);
     b.push_leaf_with_f64(2.0);
@@ -298,14 +298,14 @@ fn wire_contract_compound_kind_disambiguates_role() {
     // Two compounds with the same Tag(0) child but different kinds —
     // an AddExpr Tag(0) means `+`, a MulExpr Tag(0) means `*`.
     let mut b1 = SheetsStructBuilder::new();
-    let add_layout = synth_layout(0, "add_expr", LayoutKind::Struct);
+    let add_layout = synth_layout(22, "add_expr", LayoutKind::Struct);
     let h = b1.begin_compound(&add_layout);
     b1.push_branch_tag(0);
     b1.end_compound(h);
     let doc1 = b1.finalise("");
 
     let mut b2 = SheetsStructBuilder::new();
-    let mul_layout = synth_layout(0, "mul_expr", LayoutKind::Struct);
+    let mul_layout = synth_layout(11, "mul_expr", LayoutKind::Struct);
     let h = b2.begin_compound(&mul_layout);
     b2.push_branch_tag(0);
     b2.end_compound(h);
@@ -353,7 +353,7 @@ fn wire_contract_get_path_resolves_compound_index() {
     // Build a compound with three numeric children, query each by
     // index via the path API.
     let mut b = SheetsStructBuilder::new();
-    let layout = synth_layout(0, "func_args", LayoutKind::Struct);
+    let layout = synth_layout(15, "func_args", LayoutKind::Struct);
     let h = b.begin_compound(&layout);
     b.push_leaf_with_f64(10.0);
     b.push_leaf_with_f64(20.0);

@@ -602,7 +602,7 @@ mod wire_contract {
     #[test]
     fn compound_kind_preserves_role_for_operator_alt() {
         let mut b = SheetsStructBuilder::new();
-        let add_layout = synth_layout(0, "add_expr", LayoutKind::Struct);
+        let add_layout = synth_layout(22, "add_expr", LayoutKind::Struct);
         let h = b.begin_compound(&add_layout);
         b.push_leaf_with_f64(1.0);
         b.push_branch_tag(0); // `+`
@@ -625,7 +625,7 @@ mod wire_contract {
     #[test]
     fn formula_compound_carries_expression_child() {
         let mut b = SheetsStructBuilder::new();
-        let formula_layout = synth_layout(0, "formula", LayoutKind::Struct);
+        let formula_layout = synth_layout(31, "formula", LayoutKind::Struct);
         let h = b.begin_compound(&formula_layout);
         b.push_leaf_with_f64(3.14);
         b.end_compound(h);
@@ -645,10 +645,10 @@ mod wire_contract {
     #[test]
     fn func_call_compound_carries_head_and_args() {
         let mut b = SheetsStructBuilder::new();
-        let fn_call = synth_layout(0, "func_call", LayoutKind::Struct);
+        let fn_call = synth_layout(26, "func_call", LayoutKind::Struct);
         let h = b.begin_compound(&fn_call);
         b.push_leaf_identifier("SUM");
-        let args = synth_layout(0, "func_args", LayoutKind::Struct);
+        let args = synth_layout(15, "func_args", LayoutKind::Struct);
         let h2 = b.begin_compound(&args);
         b.push_leaf_with_f64(1.0);
         b.push_leaf_with_f64(2.0);
@@ -682,7 +682,7 @@ mod wire_contract {
     #[test]
     fn cell_compound_carries_prefix_and_cell_ref() {
         let mut b = SheetsStructBuilder::new();
-        let cell = synth_layout(0, "cell", LayoutKind::Struct);
+        let cell = synth_layout(6, "cell", LayoutKind::Struct);
         let h = b.begin_compound(&cell);
         b.push_leaf_sheet_prefix(1, "Sheet1!");
         b.push_leaf_cell_ref("A1");

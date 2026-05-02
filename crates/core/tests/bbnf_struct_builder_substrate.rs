@@ -15,12 +15,15 @@ use bbnf::runtime::builder::StructBuilder;
 use bbnf::runtime::handle::CompoundHandle;
 use bbnf_ir::registry::{LayoutKind, StructLayout};
 
-/// Construct a synthetic `StructLayout` for a named rule. Used by
-/// the smoke tests to drive `begin_compound` without standing up a
-/// full IR.
-fn synth_layout(rule_name: &str) -> StructLayout {
+/// Construct a synthetic `StructLayout` for a rule keyed by its
+/// rule-id. Used by the smoke tests to drive `begin_compound` without
+/// standing up a full IR. The id literal must match the BBNF
+/// grammar's allocation in `crates/core/src/grammar/generated/bbnf.rs`
+/// so [`BbnfCompoundKind::from_rule_id`] resolves the expected
+/// discriminator.
+fn synth_layout(rule_id: u32, rule_name: &str) -> StructLayout {
     StructLayout {
-        rule_id: 0,
+        rule_id,
         rule_name: rule_name.to_string(),
         kind: LayoutKind::Struct,
         fields: Vec::new(),
@@ -58,7 +61,9 @@ fn bbnf_struct_builder_round_trips_a_bool_leaf() {
 #[test]
 fn bbnf_struct_builder_round_trips_a_compound_with_three_children() {
     let mut builder = BbnfStructBuilder::new();
-    let layout = synth_layout("rule");
+    // BBNF grammar's `rule` rule has rule_id 48; resolves through
+    // `BbnfCompoundKind::from_rule_id` to `Rule`.
+    let layout = synth_layout(48, "rule");
     let _handle: CompoundHandle = builder.begin_compound(&layout);
     builder.push_leaf_with_str("lhs_name");
     builder.push_leaf_with_str("=");
@@ -79,7 +84,12 @@ fn bbnf_struct_builder_round_trips_a_compound_with_three_children() {
 #[test]
 fn bbnf_struct_builder_branch_tag_records_alt_index() {
     let mut builder = BbnfStructBuilder::new();
-    let layout = synth_layout("directive");
+    // The BBNF grammar's `directive` rule is a transparent
+    // Alt-of-Refs forwarder (no struct layout emitted); the tagged
+    // branch lands on the concrete sub-rule. Use `import_directive`
+    // (rule_id 37) so the round-trip resolves to a real registered
+    // kind via `BbnfCompoundKind::from_rule_id`.
+    let layout = synth_layout(37, "import_directive");
     let handle: CompoundHandle = builder.begin_compound(&layout);
     builder.push_branch_tag(2);
     builder.push_leaf_with_str("@import");
@@ -90,7 +100,7 @@ fn bbnf_struct_builder_branch_tag_records_alt_index() {
         BbnfValue::Compound(id) => {
             let compound = doc.compound(*id);
             assert_eq!(compound.branch_tag, Some(2));
-            assert_eq!(compound.kind, BbnfCompoundKind::Directive);
+            assert_eq!(compound.kind, BbnfCompoundKind::ImportDirective);
         }
         other => panic!("expected Compound root, got {other:?}"),
     }

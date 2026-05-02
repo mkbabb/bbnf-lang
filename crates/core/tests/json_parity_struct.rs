@@ -134,7 +134,7 @@ fn wire_contract_string_borrows_input_lifetime() {
 #[test]
 fn wire_contract_empty_array_resolves_to_empty_slice() {
     let mut b = JsonStructBuilder::new();
-    let layout = synth_layout(1, "array", LayoutKind::Struct);
+    let layout = synth_layout(5, "array", LayoutKind::Struct);
     let h = b.begin_compound(&layout);
     b.end_compound(h);
     let doc = b.finalise(SYNTH_INPUT);
@@ -150,7 +150,7 @@ fn wire_contract_empty_array_resolves_to_empty_slice() {
 #[test]
 fn wire_contract_array_of_scalars_collects_in_order() {
     let mut b = JsonStructBuilder::new();
-    let layout = synth_layout(1, "array", LayoutKind::Struct);
+    let layout = synth_layout(5, "array", LayoutKind::Struct);
     let h = b.begin_compound(&layout);
     b.push_leaf_with_f64(1.0);
     b.push_leaf_with_f64(2.0);
@@ -172,7 +172,7 @@ fn wire_contract_array_of_scalars_collects_in_order() {
 #[test]
 fn wire_contract_checkpoint_discards_completed_root_attempt() {
     let mut b = JsonStructBuilder::new();
-    let layout = synth_layout(1, "array", LayoutKind::Struct);
+    let layout = synth_layout(5, "array", LayoutKind::Struct);
     let checkpoint = b.checkpoint();
 
     let h = b.begin_compound(&layout);
@@ -188,9 +188,9 @@ fn wire_contract_checkpoint_discards_completed_root_attempt() {
 #[test]
 fn wire_contract_checkpoint_restores_open_frame() {
     let mut b = JsonStructBuilder::new();
-    let array_layout = synth_layout(1, "array", LayoutKind::Struct);
-    let object_layout = synth_layout(2, "object", LayoutKind::Struct);
-    let pair_layout = synth_layout(3, "pair", LayoutKind::Struct);
+    let array_layout = synth_layout(5, "array", LayoutKind::Struct);
+    let object_layout = synth_layout(4, "object", LayoutKind::Struct);
+    let pair_layout = synth_layout(6, "pair", LayoutKind::Struct);
 
     let arr = b.begin_compound(&array_layout);
     b.push_leaf_with_f64(1.0);
@@ -221,7 +221,7 @@ fn wire_contract_checkpoint_restores_open_frame() {
 #[test]
 fn wire_contract_empty_object_resolves_to_empty_slice() {
     let mut b = JsonStructBuilder::new();
-    let layout = synth_layout(1, "object", LayoutKind::Struct);
+    let layout = synth_layout(4, "object", LayoutKind::Struct);
     let h = b.begin_compound(&layout);
     b.end_compound(h);
     let doc = b.finalise(SYNTH_INPUT);
@@ -237,8 +237,8 @@ fn wire_contract_empty_object_resolves_to_empty_slice() {
 #[test]
 fn wire_contract_object_collects_pairs_via_pair_compound() {
     let mut b = JsonStructBuilder::new();
-    let object_layout = synth_layout(1, "object", LayoutKind::Struct);
-    let pair_layout = synth_layout(2, "pair", LayoutKind::Struct);
+    let object_layout = synth_layout(4, "object", LayoutKind::Struct);
+    let pair_layout = synth_layout(6, "pair", LayoutKind::Struct);
 
     let obj = b.begin_compound(&object_layout);
     {
@@ -272,9 +272,9 @@ fn wire_contract_object_collects_pairs_via_pair_compound() {
 #[test]
 fn wire_contract_nested_array_of_objects() {
     let mut b = JsonStructBuilder::new();
-    let array_layout = synth_layout(1, "array", LayoutKind::Struct);
-    let object_layout = synth_layout(2, "object", LayoutKind::Struct);
-    let pair_layout = synth_layout(3, "pair", LayoutKind::Struct);
+    let array_layout = synth_layout(5, "array", LayoutKind::Struct);
+    let object_layout = synth_layout(4, "object", LayoutKind::Struct);
+    let pair_layout = synth_layout(6, "pair", LayoutKind::Struct);
 
     let arr = b.begin_compound(&array_layout);
     {
@@ -327,7 +327,7 @@ fn wire_contract_value_alt_branch_tag_is_idempotent() {
     // surface is symmetric across grammars (Sheets / CSS will
     // STORE the branch tag; JSON's projection collapses it).
     let mut b = JsonStructBuilder::new();
-    let value_layout = synth_layout(1, "value", LayoutKind::TaggedEnum);
+    let value_layout = synth_layout(0, "value", LayoutKind::TaggedEnum);
     let h = b.begin_compound(&value_layout);
     b.push_branch_tag(2);
     b.push_leaf_with_f64(2.71);

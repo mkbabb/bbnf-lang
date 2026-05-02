@@ -650,9 +650,9 @@ mod struct_direct_wire {
     fn document_add_expr_one_plus_two_via_wire_contract() {
         let mut b = SheetsStructBuilder::new();
         // formula > add_expr > [1, +, 2]
-        let formula = synth_layout(0, "formula", LayoutKind::Struct);
+        let formula = synth_layout(31, "formula", LayoutKind::Struct);
         let h_formula = b.begin_compound(&formula);
-        let add_expr = synth_layout(0, "add_expr", LayoutKind::Struct);
+        let add_expr = synth_layout(22, "add_expr", LayoutKind::Struct);
         let h_add = b.begin_compound(&add_expr);
         b.push_leaf_with_f64(1.0);
         b.push_branch_tag(0); // `+`
@@ -689,10 +689,10 @@ mod struct_direct_wire {
     #[test]
     fn document_func_call_via_wire_contract() {
         let mut b = SheetsStructBuilder::new();
-        let func_call = synth_layout(0, "func_call", LayoutKind::Struct);
+        let func_call = synth_layout(26, "func_call", LayoutKind::Struct);
         let h_call = b.begin_compound(&func_call);
         b.push_leaf_identifier("SUM");
-        let args = synth_layout(0, "func_args", LayoutKind::Struct);
+        let args = synth_layout(15, "func_args", LayoutKind::Struct);
         let h_args = b.begin_compound(&args);
         b.push_leaf_cell_ref("A1");
         b.push_leaf_cell_ref("A10");

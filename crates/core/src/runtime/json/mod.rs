@@ -42,10 +42,12 @@
 pub mod arena;
 pub mod builder;
 pub mod document;
+pub mod parse_with;
 pub mod value;
 pub mod view;
 
 pub use arena::{JsonArena, JsonArrayId, JsonObjectId};
 pub use builder::JsonStructBuilder;
 pub use document::{JsonDocument, JsonKind, JsonPathQuery, JsonView};
+pub use parse_with::parse_with;
 pub use value::{JsonArray, JsonNumber, JsonObject, JsonPair, JsonValue};

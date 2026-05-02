@@ -38,6 +38,7 @@
 pub mod arena;
 pub mod builder;
 pub mod document;
+pub mod parse_with;
 pub mod serialize;
 pub mod value;
 pub mod view;
@@ -45,5 +46,6 @@ pub mod view;
 pub use arena::{BbnfArena, BbnfCompound, BbnfCompoundId, BbnfCompoundKind};
 pub use builder::BbnfStructBuilder;
 pub use document::{BbnfDocument, BbnfKind, BbnfPathQuery, BbnfView};
+pub use parse_with::parse_with;
 pub use serialize::serialize_compact_doc;
 pub use value::BbnfValue;

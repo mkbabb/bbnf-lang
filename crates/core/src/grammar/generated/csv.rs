@@ -91,25 +91,13 @@ mod __csvparser_emit_impl {
     /// missing match falls back to `ParseFully` at the executor
     /// surface.
     ///
-    /// W3.1's executor cherry-pick re-exports the types from
-    /// `crate::path::path_plan`; until then the local module
-    /// definitions keep this generated file compilable in
-    /// isolation per the AZ-IV.W0 regen-discipline contract.
+    /// `SegmentKind` and `Decision` re-export from
+    /// `crate::path::cursor` — the runtime executor's canonical
+    /// alphabet — so the plan rows and the cursor's decision
+    /// vocabulary stay byte-identical without duplication.
     #[allow(dead_code)]
     pub mod __path_plan {
-        #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-        pub enum SegmentKind {
-            Field,
-            Index,
-            Wildcard,
-            VariantName,
-        }
-        #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-        pub enum Decision {
-            ParseFully,
-            ParseUntil(u32),
-            Skip,
-        }
+        pub use crate::path::cursor::{Decision, SegmentKind};
         #[derive(Clone, Copy, Debug)]
         pub struct PathPlanEntry {
             pub rule_id: u32,

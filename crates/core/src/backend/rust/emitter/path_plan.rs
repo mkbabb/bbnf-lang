@@ -26,10 +26,7 @@
 //!
 //! ```text
 //! pub mod __path_plan {
-//!     #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-//!     pub enum SegmentKind { Field, Index, Wildcard, VariantName }
-//!     #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-//!     pub enum Decision { ParseFully, ParseUntil(u32), Skip }
+//!     pub use crate::path::cursor::{Decision, SegmentKind};
 //!     pub struct PathPlanEntry {
 //!         pub rule_id: u32,
 //!         pub segment_kind: SegmentKind,
@@ -40,12 +37,10 @@
 //! }
 //! ```
 //!
-//! The runtime executor (W3.1) re-exports these types from a shared
-//! `crate::path::path_plan` surface; until W3.1 lands, every grammar's
-//! file carries its own type definitions so the static compiles
-//! standalone. The cherry-pick after W3.1 lands replaces the local
-//! definitions with `pub use crate::path::path_plan::*;` re-exports —
-//! the `PATH_PLAN` static reference shape stays byte-identical.
+//! The runtime executor (W3.1) holds the canonical `SegmentKind` and
+//! `Decision` enums at `crate::path::cursor`; every generated grammar
+//! re-exports them through its `__path_plan` module so the plan-row
+//! and cursor alphabets stay byte-identical without duplication.
 //!
 //! ## Determinism
 //!
@@ -62,15 +57,17 @@ use quote::{format_ident, quote};
 /// Decision a [`PathCursor`] makes when descending into a rule's
 /// generated parse function.
 ///
-/// Mirrors the runtime enum the W3.1 executor consults; emitted as a
-/// local definition until the W3.1 cherry-pick replaces the per-file
-/// definitions with re-exports from `crate::path::path_plan`.
+/// Mirrors the runtime enum the W3.1 executor consults: per-grammar
+/// generated `__path_plan` modules `pub use` `crate::path::cursor`'s
+/// canonical enum, so this emitter-side mirror keeps the plan-row
+/// computation a pure-data transform. `ParseUntil` carries the same
+/// `u16` width as the runtime executor — child enumerations are
+/// per-rule (no rule has > 65535 children).
 ///
 /// `Skip` is part of the plan vocabulary even when the present
 /// codegen rules never produce it: the W3.1 executor consumes the
 /// full alphabet, and W3.4 negative-fixture tests construct `Skip`
-/// rows directly to exercise the lazy-error-elision contract. The
-/// `dead_code` allow keeps the variant in the source-of-truth enum.
+/// rows directly to exercise the lazy-error-elision contract.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[allow(dead_code)]
 enum Decision {
@@ -81,7 +78,7 @@ enum Decision {
     /// Parse only the prefix of the rule's body up to and including the
     /// child at the given branch / position index. Sibling children
     /// after the cut may be skipped.
-    ParseUntil(u32),
+    ParseUntil(u16),
     /// Skip the rule's body entirely — the path's reach proves the
     /// rule's bytes are not visited.
     Skip,
@@ -179,20 +176,25 @@ fn rows_for_layout(layout: &StructLayout) -> Vec<PlanRow> {
 /// name.
 fn rows_for_struct_field(rule_id: RuleId, field: &StructField) -> Vec<PlanRow> {
     match field.source {
-        FieldSource::SeqPosition { position } => vec![
-            PlanRow {
-                rule_id,
-                segment_kind: SegmentKindTag::Field,
-                field_index: position,
-                decision: Decision::ParseUntil(position),
-            },
-            PlanRow {
-                rule_id,
-                segment_kind: SegmentKindTag::Index,
-                field_index: position,
-                decision: Decision::ParseUntil(position),
-            },
-        ],
+        FieldSource::SeqPosition { position } => {
+            let cut = u16::try_from(position).expect(
+                "Seq position exceeds u16 — rule child enumeration > 65535 children",
+            );
+            vec![
+                PlanRow {
+                    rule_id,
+                    segment_kind: SegmentKindTag::Field,
+                    field_index: position,
+                    decision: Decision::ParseUntil(cut),
+                },
+                PlanRow {
+                    rule_id,
+                    segment_kind: SegmentKindTag::Index,
+                    field_index: position,
+                    decision: Decision::ParseUntil(cut),
+                },
+            ]
+        }
         FieldSource::RepeatElement => vec![PlanRow {
             rule_id,
             segment_kind: SegmentKindTag::Wildcard,
@@ -207,12 +209,17 @@ fn rows_for_struct_field(rule_id: RuleId, field: &StructField) -> Vec<PlanRow> {
 /// Per-branch rows for a `TaggedEnum` layout.
 fn rows_for_tagged_branch(rule_id: RuleId, field: &StructField) -> Vec<PlanRow> {
     match field.source {
-        FieldSource::BranchTag { branch_index } => vec![PlanRow {
-            rule_id,
-            segment_kind: SegmentKindTag::VariantName,
-            field_index: branch_index,
-            decision: Decision::ParseUntil(branch_index),
-        }],
+        FieldSource::BranchTag { branch_index } => {
+            let cut = u16::try_from(branch_index).expect(
+                "Branch index exceeds u16 — variant enumeration > 65535 branches",
+            );
+            vec![PlanRow {
+                rule_id,
+                segment_kind: SegmentKindTag::VariantName,
+                field_index: branch_index,
+                decision: Decision::ParseUntil(cut),
+            }]
+        }
         _ => Vec::new(),
     }
 }
@@ -259,26 +266,13 @@ pub fn emit_path_plan(grammar_ident_str: &str, ir: &GrammarIR) -> TokenStream {
         /// missing match falls back to `ParseFully` at the executor
         /// surface.
         ///
-        /// W3.1's executor cherry-pick re-exports the types from
-        /// `crate::path::path_plan`; until then the local module
-        /// definitions keep this generated file compilable in
-        /// isolation per the AZ-IV.W0 regen-discipline contract.
+        /// `SegmentKind` and `Decision` re-export from
+        /// `crate::path::cursor` — the runtime executor's canonical
+        /// alphabet — so the plan rows and the cursor's decision
+        /// vocabulary stay byte-identical without duplication.
         #[allow(dead_code)]
         pub mod #plan_mod_ident {
-            #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-            pub enum SegmentKind {
-                Field,
-                Index,
-                Wildcard,
-                VariantName,
-            }
-
-            #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-            pub enum Decision {
-                ParseFully,
-                ParseUntil(u32),
-                Skip,
-            }
+            pub use crate::path::cursor::{Decision, SegmentKind};
 
             #[derive(Clone, Copy, Debug)]
             pub struct PathPlanEntry {
@@ -344,7 +338,7 @@ fn emit_decision(decision: Decision) -> TokenStream {
     match decision {
         Decision::ParseFully => quote! { Decision::ParseFully },
         Decision::ParseUntil(idx) => {
-            let lit = Literal::u32_unsuffixed(idx);
+            let lit = Literal::u16_unsuffixed(idx);
             quote! { Decision::ParseUntil(#lit) }
         }
         Decision::Skip => quote! { Decision::Skip },

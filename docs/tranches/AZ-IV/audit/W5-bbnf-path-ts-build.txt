@@ -6,6 +6,7 @@ Sub-unit: AZ-IV.W5.1 (bbnf-path-ts cdylib + Template Tag + Isomorphism Tests)
 Worktree: /Users/mkbabb/Programming/bbnf-wt-aziv-w5-cdylib
 Branch: aziv-w5-cdylib
 Base commit (W4 close): 9cef79c563ba47fb418a2028a4e20b1de4dd6748
+W5.1 commit hash: 3adf9d03
 CARGO_TARGET_DIR: /Users/mkbabb/Programming/bbnf-wt-aziv-w5-cdylib/target/w5-cdylib
 
 Crate

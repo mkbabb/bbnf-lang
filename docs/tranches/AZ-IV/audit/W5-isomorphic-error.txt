@@ -5,6 +5,7 @@ Wave: AZ-IV.W5
 Sub-unit: AZ-IV.W5.1 (Isomorphism Tests)
 Worktree: /Users/mkbabb/Programming/bbnf-wt-aziv-w5-cdylib
 Branch: aziv-w5-cdylib
+W5.1 commit hash: 3adf9d03
 Test file: crates/bbnf-path-ts/tests/isomorphic_path_error.rs
 
 Surface under test

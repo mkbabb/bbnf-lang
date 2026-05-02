@@ -3803,6 +3803,134 @@ mod __bbnfbootstrap_emit_impl {
             *p = end;
             true
         }
+        /// AZ-IV.W3-DYNAMIC — byte-balanced value skip for the
+        /// lazy bail-out parser's mismatched-key fast path.
+        ///
+        /// Advances `*p` past one structural value (object,
+        /// array, string, number, true / false / null,
+        /// identifier-shaped scalar) without producing any
+        /// builder push. The scan is a forward state machine:
+        ///
+        /// - `{` / `[` — track open/close depth (treating bytes
+        ///   inside `"…"` strings as opaque) and stop at depth
+        ///   zero with the matching close.
+        /// - `"` — scan to the next unescaped `"`.
+        /// - everything else — read until the next structural
+        ///   delimiter (`,` `}` `]` whitespace).
+        ///
+        /// Returns `Err` only on premature EOF inside an
+        /// unterminated string or compound; the lazy-error-
+        /// elision contract ensures the caller never propagates
+        /// that error.
+        #[inline]
+        pub fn byte_skip_value(
+            input: &[u8],
+            p: &mut usize,
+        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+            let start = *p;
+            let first = match input.get(start).copied() {
+                Some(b) => b,
+                None => {
+                    return Err(crate::runtime::DtaError::UnexpectedEnd {
+                        offset: start as u32,
+                    });
+                }
+            };
+            match first {
+                b'{' | b'[' => byte_skip_balanced(input, p),
+                b'"' => byte_skip_string(input, p),
+                _ => byte_skip_scalar(input, p),
+            }
+        }
+        /// AZ-IV.W3-DYNAMIC — balanced-compound skip. Honours
+        /// `"` strings (with `\"` escapes) so `}` / `]` bytes
+        /// inside string literals do not falsely close.
+        #[inline]
+        fn byte_skip_balanced(
+            input: &[u8],
+            p: &mut usize,
+        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+            let start = *p;
+            let mut depth: u32 = 0;
+            let mut i = start;
+            while let Some(&b) = input.get(i) {
+                match b {
+                    b'{' | b'[' => depth = depth.saturating_add(1),
+                    b'}' | b']' => {
+                        if depth <= 1 {
+                            *p = i + 1;
+                            return Ok(());
+                        }
+                        depth -= 1;
+                    }
+                    b'"' => {
+                        i += 1;
+                        while let Some(&sb) = input.get(i) {
+                            if sb == b'\\' {
+                                i += 2;
+                                continue;
+                            }
+                            if sb == b'"' {
+                                break;
+                            }
+                            i += 1;
+                        }
+                        if input.get(i).is_none() {
+                            return Err(crate::runtime::DtaError::UnexpectedEnd {
+                                offset: start as u32,
+                            });
+                        }
+                    }
+                    _ => {}
+                }
+                i += 1;
+            }
+            Err(crate::runtime::DtaError::UnexpectedEnd {
+                offset: start as u32,
+            })
+        }
+        /// AZ-IV.W3-DYNAMIC — quoted-string skip. Advances past
+        /// the closing `"` honouring `\"` and `\\` escapes.
+        #[inline]
+        fn byte_skip_string(
+            input: &[u8],
+            p: &mut usize,
+        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+            let start = *p;
+            let mut i = start + 1;
+            while let Some(&b) = input.get(i) {
+                if b == b'\\' {
+                    i += 2;
+                    continue;
+                }
+                if b == b'"' {
+                    *p = i + 1;
+                    return Ok(());
+                }
+                i += 1;
+            }
+            Err(crate::runtime::DtaError::UnexpectedEnd {
+                offset: start as u32,
+            })
+        }
+        /// AZ-IV.W3-DYNAMIC — scalar skip. Advances past
+        /// non-structural bytes until a delimiter (`,` `}` `]`
+        /// whitespace) or EOF.
+        #[inline]
+        fn byte_skip_scalar(
+            input: &[u8],
+            p: &mut usize,
+        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+            let mut i = *p;
+            while let Some(&b) = input.get(i) {
+                match b {
+                    b',' | b'}' | b']' | b' ' | b'\t' | b'\n' | b'\r' => break,
+                    _ => i += 1,
+                }
+            }
+            *p = i;
+            Ok(())
+        }
     }
     /// AZ-I.W2-act.B3 — per-grammar HRegex-shape parse function,
     /// **struct-direct body**.
@@ -12882,19 +13010,36 @@ mod __bbnfbootstrap_emit_impl {
                 break;
             }
             let __iter_builder_checkpoint = builder.checkpoint();
+            let __seg_kind = cursor.current_kind();
+            let __is_index_seg = matches!(
+                __seg_kind, crate ::path::cursor::SegmentKind::Index,
+            );
+            let __matched: bool = if __is_index_seg {
+                cursor.match_index(__elem_idx as usize)
+            } else {
+                false
+            };
             let __iter_result: ::core::result::Result<(), crate::runtime::DtaError> = (||
             {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                ({
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_wrap_BbnfBootstrap_grammar_item(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    )
-                })?;
+                if __is_index_seg && !__matched {
+                    __shape_support_BbnfBootstrap::byte_skip_value(input, p)?;
+                } else {
+                    ({
+                        let _ = __shape_support_BbnfBootstrap::skip_space(
+                            input,
+                            p,
+                            state,
+                        );
+                        parse_wrap_BbnfBootstrap_grammar_item(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
+                    })?;
+                }
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 Ok(())
             })();
@@ -12904,7 +13049,14 @@ mod __bbnfbootstrap_emit_impl {
                         builder.rollback(__iter_builder_checkpoint);
                         break;
                     }
-                    builder.commit(__iter_builder_checkpoint);
+                    if __is_index_seg && !__matched {
+                        builder.rollback(__iter_builder_checkpoint);
+                    } else {
+                        builder.commit(__iter_builder_checkpoint);
+                    }
+                    if __matched {
+                        break;
+                    }
                     __elem_idx = __elem_idx.saturating_add(1);
                 }
                 Err(_) => {

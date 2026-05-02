@@ -1,0 +1,1810 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+   Compiling bbnf v0.2.11 (/Users/mkbabb/Programming/bbnf-wt-aziv-w1-sheets/crates/core)
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:11940:69
+      |
+11940 | / ...                   break 'avx2_scan {
+11941 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
+11942 | | ...                   };
+      | |_______________________^
+      |
+      = note: `#[warn(break_with_label_and_loop)]` on by default
+help: wrap this expression in parentheses
+      |
+11940 ~                                                                     break 'avx2_scan ({
+11941 |                                                                         ::core::option::Option::Some((__i + __rel) - __start)
+11942 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:11959:69
+      |
+11959 | / ...                   break 'avx2_scan {
+11960 | | ...                       ::core::option::Option::Some(__i - __start)
+11961 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+11959 ~                                                                     break 'avx2_scan ({
+11960 |                                                                         ::core::option::Option::Some(__i - __start)
+11961 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:12115:69
+      |
+12115 | / ...                   break 'avx2_scan {
+12116 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
+12117 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+12115 ~                                                                     break 'avx2_scan ({
+12116 |                                                                         ::core::option::Option::Some((__i + __rel) - __start)
+12117 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:12134:69
+      |
+12134 | / ...                   break 'avx2_scan {
+12135 | | ...                       ::core::option::Option::Some(__i - __start)
+12136 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+12134 ~                                                                     break 'avx2_scan ({
+12135 |                                                                         ::core::option::Option::Some(__i - __start)
+12136 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:12994:69
+      |
+12994 | / ...                   break 'avx2_scan {
+12995 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
+12996 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+12994 ~                                                                     break 'avx2_scan ({
+12995 |                                                                         ::core::option::Option::Some((__i + __rel) - __start)
+12996 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:13013:69
+      |
+13013 | / ...                   break 'avx2_scan {
+13014 | | ...                       ::core::option::Option::Some(__i - __start)
+13015 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+13013 ~                                                                     break 'avx2_scan ({
+13014 |                                                                         ::core::option::Option::Some(__i - __start)
+13015 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:17077:81
+      |
+17077 | / ...                   break 'avx2_scan {
+17078 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
+17079 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+17077 ~                                                                                 break 'avx2_scan ({
+17078 |                                                                                     ::core::option::Option::Some((__i + __rel) - __start)
+17079 ~                                                                                 });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:17096:81
+      |
+17096 | / ...                   break 'avx2_scan {
+17097 | | ...                       ::core::option::Option::Some(__i - __start)
+17098 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+17096 ~                                                                                 break 'avx2_scan ({
+17097 |                                                                                     ::core::option::Option::Some(__i - __start)
+17098 ~                                                                                 });
+      |
+
+warning: function `body_emits_to_builder` is never used
+   --> crates/core/src/backend/rust/emitter/shapes/flat/struct_direct.rs:100:4
+    |
+100 | fn body_emits_to_builder(node: &IrNode) -> bool {
+    |    ^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `lower_string_lit` is never used
+   --> crates/core/src/lower/value_expr/atom.rs:568:15
+    |
+568 | pub(super) fn lower_string_lit<'a, 'p: 'a>(
+    |               ^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:4140:24
+     |
+4140 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(unused_comparisons)]` on by default
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:4412:24
+     |
+4412 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:4570:24
+     |
+4570 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:4765:24
+     |
+4765 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:5022:24
+     |
+5022 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:5197:24
+     |
+5197 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:5299:24
+     |
+5299 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:5492:24
+     |
+5492 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:6268:24
+     |
+6268 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:7246:24
+     |
+7246 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:7567:24
+     |
+7567 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:7725:36
+     |
+7725 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:7904:36
+     |
+7904 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:8086:36
+     |
+8086 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:8266:24
+     |
+8266 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:8501:44
+     |
+8501 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:8535:32
+     |
+8535 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:9141:24
+     |
+9141 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:9207:24
+     |
+9207 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:9261:24
+     |
+9261 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:9438:36
+     |
+9438 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:9462:24
+     |
+9462 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:9823:24
+     |
+9823 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bnf.rs:1355:24
+     |
+1355 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bnf.rs:1535:24
+     |
+1535 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:16287:24
+      |
+16287 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:16798:24
+      |
+16798 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:18167:24
+      |
+18167 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:18339:24
+      |
+18339 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:19266:24
+      |
+19266 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:19522:24
+      |
+19522 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:19649:24
+      |
+19649 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:20244:36
+      |
+20244 | ...                   if __iter_count < 0u32 {
+      |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:20268:24
+      |
+20268 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:21397:32
+      |
+21397 | ...                   if __iter_count < 0u32 {
+      |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:23779:24
+      |
+23779 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:23978:24
+      |
+23978 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:24056:24
+      |
+24056 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:24776:24
+      |
+24776 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:24906:24
+      |
+24906 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:25056:24
+      |
+25056 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:25200:24
+      |
+25200 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:25548:24
+      |
+25548 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:27929:24
+      |
+27929 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:27984:24
+      |
+27984 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:28595:24
+      |
+28595 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:28650:24
+      |
+28650 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:29548:24
+      |
+29548 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:29603:24
+      |
+29603 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:30724:24
+      |
+30724 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:30779:24
+      |
+30779 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:31332:24
+      |
+31332 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:31387:24
+      |
+31387 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:31949:24
+      |
+31949 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:32004:24
+      |
+32004 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:32847:24
+      |
+32847 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:32902:24
+      |
+32902 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:33582:24
+      |
+33582 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:33637:24
+      |
+33637 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:33858:24
+      |
+33858 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:33913:24
+      |
+33913 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:34135:24
+      |
+34135 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:34190:24
+      |
+34190 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:34593:24
+      |
+34593 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:34648:24
+      |
+34648 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:34873:24
+      |
+34873 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:34928:24
+      |
+34928 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:35153:24
+      |
+35153 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:35208:24
+      |
+35208 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:35430:24
+      |
+35430 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:35485:24
+      |
+35485 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:36048:24
+      |
+36048 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:36103:24
+      |
+36103 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:36444:24
+      |
+36444 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:36499:24
+      |
+36499 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:36659:24
+      |
+36659 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:36714:24
+      |
+36714 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:36939:24
+      |
+36939 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:36994:24
+      |
+36994 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:37157:24
+      |
+37157 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:37212:24
+      |
+37212 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:37663:24
+      |
+37663 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:37718:24
+      |
+37718 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:38169:24
+      |
+38169 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:38224:24
+      |
+38224 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:38753:24
+      |
+38753 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:38808:24
+      |
+38808 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:38967:24
+      |
+38967 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:39022:24
+      |
+39022 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:39247:24
+      |
+39247 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:39302:24
+      |
+39302 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:39527:24
+      |
+39527 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:39582:24
+      |
+39582 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:39803:24
+      |
+39803 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:39858:24
+      |
+39858 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:41393:36
+      |
+41393 | ...                   if __iter_count < 0u32 {
+      |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:41435:24
+      |
+41435 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:42348:24
+      |
+42348 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:42475:24
+      |
+42475 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:44215:24
+      |
+44215 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:44378:24
+      |
+44378 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:44541:24
+      |
+44541 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:45392:24
+      |
+45392 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:45646:24
+      |
+45646 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:45701:24
+      |
+45701 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:45848:24
+      |
+45848 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:45903:24
+      |
+45903 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:46050:24
+      |
+46050 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:46105:24
+      |
+46105 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:46314:24
+      |
+46314 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:46369:24
+      |
+46369 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:46516:24
+      |
+46516 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:46571:24
+      |
+46571 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:46718:24
+      |
+46718 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:46773:24
+      |
+46773 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:46920:24
+      |
+46920 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:46975:24
+      |
+46975 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:47122:24
+      |
+47122 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:47177:24
+      |
+47177 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:47386:24
+      |
+47386 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:47441:24
+      |
+47441 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:47650:24
+      |
+47650 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:47705:24
+      |
+47705 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:47914:24
+      |
+47914 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:47969:24
+      |
+47969 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:48178:24
+      |
+48178 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:48233:24
+      |
+48233 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:48442:24
+      |
+48442 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:48497:24
+      |
+48497 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:48706:24
+      |
+48706 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:48761:24
+      |
+48761 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:48970:24
+      |
+48970 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:49025:24
+      |
+49025 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:49172:24
+      |
+49172 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:49227:24
+      |
+49227 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:49374:24
+      |
+49374 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:49429:24
+      |
+49429 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:49638:24
+      |
+49638 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:49693:24
+      |
+49693 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:49840:24
+      |
+49840 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:49895:24
+      |
+49895 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:50104:24
+      |
+50104 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:50159:24
+      |
+50159 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:50368:24
+      |
+50368 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:50423:24
+      |
+50423 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:50570:24
+      |
+50570 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:50625:24
+      |
+50625 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:50772:24
+      |
+50772 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:50827:24
+      |
+50827 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:51036:24
+      |
+51036 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:51091:24
+      |
+51091 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:51300:24
+      |
+51300 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:51355:24
+      |
+51355 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:51564:24
+      |
+51564 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:51619:24
+      |
+51619 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/css_pretty.rs:1603:24
+     |
+1603 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/css_pretty.rs:1853:36
+     |
+1853 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/css_pretty.rs:1877:24
+     |
+1877 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/css_pretty.rs:1931:24
+     |
+1931 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/css_pretty.rs:1980:24
+     |
+1980 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/css_pretty.rs:2926:24
+     |
+2926 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/css_pretty.rs:3258:24
+     |
+3258 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+   --> crates/core/src/grammar/generated/csv.rs:989:24
+    |
+989 |                     if __iter_count < 0u32 {
+    |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/csv.rs:1117:24
+     |
+1117 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/ebnf.rs:2097:24
+     |
+2097 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/ebnf.rs:2398:32
+     |
+2398 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/ebnf.rs:2557:32
+     |
+2557 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/ebnf.rs:2749:36
+     |
+2749 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/ebnf.rs:2942:36
+     |
+2942 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/google_sheets.rs:3613:24
+     |
+3613 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/google_sheets.rs:3839:24
+     |
+3839 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/google_sheets.rs:4565:24
+     |
+4565 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/google_sheets.rs:4800:24
+     |
+4800 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/google_sheets.rs:4950:36
+     |
+4950 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/google_sheets.rs:5235:36
+     |
+5235 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/google_sheets.rs:6324:24
+     |
+6324 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/google_sheets.rs:7064:24
+     |
+7064 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: `bbnf` (lib) generated 187 warnings (run `cargo fix --lib -p bbnf` to apply 8 suggestions)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 3.80s
+────────────
+ Nextest run ID 1b7fb9bd-e113-461e-8797-16386e77a193 with nextest profile: default
+    Starting 143 tests across 3 binaries
+        PASS [   0.010s] (  1/143) bbnf::google_sheets_slab wire_contract_compound_kind_disambiguates_role
+        PASS [   0.010s] (  2/143) bbnf::google_sheets_slab prettify_if_formula
+        PASS [   0.012s] (  3/143) bbnf::google_sheets_slab wire_contract_cell_ref_specialised_leaf
+        PASS [   0.012s] (  4/143) bbnf::google_sheets_slab wire_contract_bool_true_leaf
+        PASS [   0.012s] (  5/143) bbnf::google_sheets_slab prettify_nested_formula
+        PASS [   0.013s] (  6/143) bbnf::google_sheets_slab parse_let_nested
+        PASS [   0.013s] (  7/143) bbnf::google_sheets_slab wire_contract_bool_false_leaf
+        PASS [   0.014s] (  8/143) bbnf::google_sheets_slab wire_contract_error_literal_carries_tag
+        PASS [   0.014s] (  9/143) bbnf::google_sheets_slab prettify_index_match_formula
+        PASS [   0.014s] ( 10/143) bbnf::google_sheets_slab wire_contract_compound_with_two_children
+        PASS [   0.015s] ( 11/143) bbnf::google_sheets_slab parse_arithmetic
+        PASS [   0.015s] ( 12/143) bbnf::google_sheets_slab parse_if
+        PASS [   0.015s] ( 13/143) bbnf::google_sheets_slab wire_contract_branch_tag_deposits_as_tag
+        PASS [   0.016s] ( 14/143) bbnf::google_sheets_slab parse_index_match
+        PASS [   0.015s] ( 15/143) bbnf::google_sheets_slab parse_sum
+        PASS [   0.016s] ( 16/143) bbnf::google_sheets_slab prettify_simple_formula
+        PASS [   0.010s] ( 17/143) bbnf::google_sheets_slab wire_contract_get_path_resolves_compound_index
+        PASS [   0.013s] ( 18/143) bbnf::google_sheets_slab wire_contract_identifier_specialised_leaf
+        PASS [   0.011s] ( 19/143) bbnf::sheets_parity add_op_first_branch_fires_0u8
+        PASS [   0.013s] ( 20/143) bbnf::google_sheets_slab wire_contract_sheet_prefix_carries_tag_and_text
+        PASS [   0.012s] ( 21/143) bbnf::google_sheets_slab wire_contract_view_kind_discriminates_root
+        PASS [   0.014s] ( 22/143) bbnf::google_sheets_slab wire_contract_number_is_f64_leaf
+        PASS [   0.013s] ( 23/143) bbnf::google_sheets_slab wire_contract_string_leaf_borrows_input
+        PASS [   0.012s] ( 24/143) bbnf::google_sheets_slab wire_contract_wrap_with_one_child_collapses
+        PASS [   0.013s] ( 25/143) bbnf::google_sheets_slab wire_contract_to_value_borrows_root
+        PASS [   0.011s] ( 26/143) bbnf::sheets_parity boolean_parses_both_cases
+        PASS [   0.011s] ( 27/143) bbnf::sheets_parity cell_ref_parses_absolute_and_relative
+        PASS [   0.013s] ( 28/143) bbnf::sheets_parity child_iter_walks_complex_formula
+        PASS [   0.013s] ( 29/143) bbnf::sheets_parity error_literal_factored_branch_fires_payload
+        PASS [   0.015s] ( 30/143) bbnf::sheets_parity error_literal_error_branch_fires_payload
+        PASS [   0.016s] ( 31/143) bbnf::sheets_parity boolean_first_branch_fires_true_payload
+        PASS [   0.015s] ( 32/143) bbnf::sheets_parity error_literal_divzero_branch_fires_payload
+        PASS [   0.011s] ( 33/143) bbnf::sheets_parity error_literal_first_branch_fires
+        PASS [   0.010s] ( 34/143) bbnf::sheets_parity error_literal_parses_all_branches
+        PASS [   0.012s] ( 35/143) bbnf::sheets_parity error_literal_name_branch_fires_payload
+        PASS [   0.010s] ( 36/143) bbnf::sheets_parity nested_arithmetic_materialises_first_branch_ops
+        PASS [   0.011s] ( 37/143) bbnf::sheets_parity error_literal_spill_branch_fires_payload
+        PASS [   0.012s] ( 38/143) bbnf::sheets_parity error_literal_ref_branch_fires_payload
+        PASS [   0.012s] ( 39/143) bbnf::sheets_parity mul_op_first_branch_fires_0u8
+        PASS [   0.011s] ( 40/143) bbnf::sheets_parity operator_branches_parse
+        PASS [   0.013s] ( 41/143) bbnf::sheets_parity error_literal_num_branch_fires_payload
+        PASS [   0.013s] ( 42/143) bbnf::sheets_parity error_literal_value_branch_fires_payload
+        PASS [   0.009s] ( 43/143) bbnf::sheets_parity unary_prefix_first_branch_fires_0u8
+        PASS [   0.013s] ( 44/143) bbnf::sheets_parity number_parses_int_and_decimal
+        PASS [   0.013s] ( 45/143) bbnf::sheets_parity range_ref_parses_with_and_without_sheet_prefix
+        PASS [   0.013s] ( 46/143) bbnf::sheets_parity string_parses_quoted_literal
+        PASS [   0.015s] ( 47/143) bbnf::sheets_parity pinned_mul_op_div_branch_drops_payload
+        PASS [   0.016s] ( 48/143) bbnf::sheets_parity pinned_add_op_minus_branch_drops_payload
+        PASS [   0.014s] ( 49/143) bbnf::sheets_parity pinned_number_drops_f64_payload
+        PASS [   0.012s] ( 50/143) bbnf::sheets_parity wire_contract::add_op_first_branch_maps_to_tag_zero
+        PASS [   0.012s] ( 51/143) bbnf::sheets_parity wire_contract::cell_compound_carries_prefix_and_cell_ref
+        PASS [   0.013s] ( 52/143) bbnf::sheets_parity wire_contract::add_op_second_branch_maps_to_tag_one
+        PASS [   0.011s] ( 53/143) bbnf::sheets_parity wire_contract::formula_compound_carries_expression_child
+        PASS [   0.013s] ( 54/143) bbnf::sheets_parity wire_contract::boolean_true_lands_as_bool_leaf
+        PASS [   0.012s] ( 55/143) bbnf::sheets_parity wire_contract::compound_kind_preserves_role_for_operator_alt
+        PASS [   0.011s] ( 56/143) bbnf::sheets_parity wire_contract::func_call_compound_carries_head_and_args
+        PASS [   0.012s] ( 57/143) bbnf::sheets_parity wire_contract::error_literal_n_a_lands_as_error_zero
+        PASS [   0.012s] ( 58/143) bbnf::sheets_parity wire_contract::error_literal_null_lands_as_error_four
+        PASS [   0.010s] ( 59/143) bbnf::sheets_parity wire_contract::number_42_lands_as_f64_leaf
+  TRY 1 FAIL [   0.013s] (───────) bbnf::sheets_self_parity corpus_nested
+  stdout ───
+
+    running 1 test
+    test corpus_nested ... FAILED
+
+    failures:
+
+    failures:
+        corpus_nested
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+    [DIAG roundtrip] src="=IF(AND(A1>0, B1<100), VLOOKUP(A1, C1:E100, 3, FALSE), IFERROR(INDEX(MATCH(A1, F1:F100, 0), G1:G100), \"N/A\"))" -> "=IF(AND(A1>0,B1<100),VLOOKUP(A1,C1:E100,3,FALSE),IFERROR(INDEX(MATCH(A1,F1:F100,0),G1:G100),N/A))"
+    [DIAG roundtrip] src="=IF(AND(A1>0,B1<100),VLOOKUP(A1,C1:E100,3,FALSE),IFERROR(INDEX(MATCH(A1,F1:F100,0),G1:G100),N/A))" -> "=IF(AND(A1>0,B1<100),VLOOKUP(A1,C1:E100,3,FALSE),IFERROR(INDEX(MATCH(A1,F1:F100,0),G1:G100),N^A))"
+
+    thread 'corpus_nested' (38962090) panicked at crates/core/tests/sheets_self_parity.rs:528:9:
+    assertion `left == right` failed: [nested] serialize_compact non-idempotent at line 0 ("=IF(AND(A1>0, B1<100), VLOOKUP(A1, C1:E100, 3, FALSE), IFERROR(INDEX(MATCH(A1, F1:F100, 0), G1:G100), \"N/A\"))")
+      left: "=IF(AND(A1>0,B1<100),VLOOKUP(A1,C1:E100,3,FALSE),IFERROR(INDEX(MATCH(A1,F1:F100,0),G1:G100),N/A))"
+     right: "=IF(AND(A1>0,B1<100),VLOOKUP(A1,C1:E100,3,FALSE),IFERROR(INDEX(MATCH(A1,F1:F100,0),G1:G100),N^A))"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+   DELAY 2/2 by   1.000s (───────) bbnf::sheets_self_parity corpus_nested
+  TRY 1 FAIL [   0.012s] (───────) bbnf::sheets_self_parity corpus_simple
+  stdout ───
+
+    running 1 test
+    test corpus_simple ... FAILED
+
+    failures:
+
+    failures:
+        corpus_simple
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+    [DIAG roundtrip] src="=A1+B1" -> "=A1^B1"
+    [DIAG roundtrip] src="=IF(A1>0, B1, C1)" -> "=IF(A1>0,B1,C1)"
+    [DIAG roundtrip] src="=VLOOKUP(A1, B1:D100, 3, FALSE)" -> "=VLOOKUP(A1,B1:D100,3,FALSE)"
+    [DIAG roundtrip] src="=CONCATENATE(A1, \" \", B1)" -> "=CONCATENATE(A1, ,B1)"
+    [DIAG roundtrip] src="=CONCATENATE(A1, ,B1)" -> "=CONCATENATE(A1,,B1)"
+
+    thread 'corpus_simple' (38962103) panicked at crates/core/tests/sheets_self_parity.rs:528:9:
+    assertion `left == right` failed: [simple] serialize_compact non-idempotent at line 4 ("=CONCATENATE(A1, \" \", B1)")
+      left: "=CONCATENATE(A1, ,B1)"
+     right: "=CONCATENATE(A1,,B1)"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+   DELAY 2/2 by   1.000s (───────) bbnf::sheets_self_parity corpus_simple
+        PASS [   0.012s] ( 60/143) bbnf::sheets_self_parity prettify_idempotent_array_literal_multi_row
+        PASS [   0.012s] ( 61/143) bbnf::sheets_self_parity prettify_idempotent_array_literal_single_row
+        PASS [   0.012s] ( 62/143) bbnf::sheets_self_parity prettify_idempotent_add_op
+        PASS [   0.009s] ( 63/143) bbnf::sheets_self_parity prettify_idempotent_cell_ref_absolute
+        PASS [   0.011s] ( 64/143) bbnf::sheets_self_parity prettify_idempotent_boolean_true
+        PASS [   0.010s] ( 65/143) bbnf::sheets_self_parity prettify_idempotent_compare_chain
+  TRY 1 FAIL [   0.015s] (───────) bbnf::sheets_self_parity corpus_stress
+  stdout ───
+
+    running 1 test
+    test corpus_stress ... FAILED
+
+    failures:
+
+    failures:
+        corpus_stress
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.01s
+
+  stderr ───
+    [DIAG roundtrip] src="=LET(raw, A2:E1000, filtered, FILTER(raw, INDEX(raw,,3)>100), sorted, SORT(filtered, 3, FALSE), IF(ROWS(sorted)>0, MAP(SEQUENCE(MIN(10, ROWS(sorted))), LAMBDA(i, INDEX(sorted, i, 1))), \"No results\"))" -> "=LET(raw,A2:E1000,filtered,FILTER(raw,INDEX(raw,,3)>100),sorted,SORT(filtered,3,FALSE),IF(ROWS(sorted)>0,MAP(SEQUENCE(MIN(10,ROWS(sorted))),LAMBDA(i,INDEX(sorted,i,1))),No results))"
+    [DIAG roundtrip] src="=LET(raw,A2:E1000,filtered,FILTER(raw,INDEX(raw,,3)>100),sorted,SORT(filtered,3,FALSE),IF(ROWS(sorted)>0,MAP(SEQUENCE(MIN(10,ROWS(sorted))),LAMBDA(i,INDEX(sorted,i,1))),No results))" -> "=LET(raw,A2:E1000,filtered,FILTER(raw,INDEX(raw,,3)>100),sorted,SORT(filtered,3,FALSE),IF(ROWS(sorted)>0,MAP(SEQUENCE(MIN(10,ROWS(sorted))),LAMBDA(i,INDEX(sorted,i,1))),No,results))"
+
+    thread 'corpus_stress' (38962100) panicked at crates/core/tests/sheets_self_parity.rs:528:9:
+    assertion `left == right` failed: [stress] serialize_compact non-idempotent at line 0 ("=LET(raw, A2:E1000, filtered, FILTER(raw, INDEX(raw,,3)>100), sorted, SORT(filtered, 3, FALSE), IF(ROWS(sorted)>0, MAP(SEQUENCE(MIN(10, ROWS(sorted))), LAMBDA(i, INDEX(sorted, i, 1))), \"No results\"))")
+      left: "=LET(raw,A2:E1000,filtered,FILTER(raw,INDEX(raw,,3)>100),sorted,SORT(filtered,3,FALSE),IF(ROWS(sorted)>0,MAP(SEQUENCE(MIN(10,ROWS(sorted))),LAMBDA(i,INDEX(sorted,i,1))),No results))"
+     right: "=LET(raw,A2:E1000,filtered,FILTER(raw,INDEX(raw,,3)>100),sorted,SORT(filtered,3,FALSE),IF(ROWS(sorted)>0,MAP(SEQUENCE(MIN(10,ROWS(sorted))),LAMBDA(i,INDEX(sorted,i,1))),No,results))"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+   DELAY 2/2 by   1.000s (───────) bbnf::sheets_self_parity corpus_stress
+        PASS [   0.010s] ( 66/143) bbnf::sheets_self_parity prettify_idempotent_error_na
+        PASS [   0.011s] ( 67/143) bbnf::sheets_self_parity prettify_idempotent_cell_ref_relative
+        PASS [   0.011s] ( 68/143) bbnf::sheets_self_parity prettify_idempotent_compare_eq
+        PASS [   0.009s] ( 69/143) bbnf::sheets_self_parity prettify_idempotent_fn_call_multi_arg
+        PASS [   0.010s] ( 70/143) bbnf::sheets_self_parity prettify_idempotent_error_value
+        PASS [   0.008s] ( 71/143) bbnf::sheets_self_parity prettify_idempotent_fn_call_nested
+        PASS [   0.015s] ( 72/143) bbnf::sheets_self_parity prettify_idempotent_concat_op
+        PASS [   0.014s] ( 73/143) bbnf::sheets_self_parity prettify_idempotent_exp_op
+        PASS [   0.008s] ( 74/143) bbnf::sheets_self_parity prettify_idempotent_identifier_bare
+        PASS [   0.009s] ( 75/143) bbnf::sheets_self_parity prettify_idempotent_fn_call_zero_args
+        PASS [   0.008s] ( 76/143) bbnf::sheets_self_parity prettify_idempotent_lambda_call
+        PASS [   0.007s] ( 77/143) bbnf::sheets_self_parity prettify_idempotent_paren_expr
+        PASS [   0.011s] ( 78/143) bbnf::sheets_self_parity prettify_idempotent_fn_call_single_arg
+        PASS [   0.008s] ( 79/143) bbnf::sheets_self_parity prettify_idempotent_number_int
+        PASS [   0.009s] ( 80/143) bbnf::sheets_self_parity prettify_idempotent_let_call
+        PASS [   0.009s] ( 81/143) bbnf::sheets_self_parity prettify_idempotent_number_decimal
+        PASS [   0.010s] ( 82/143) bbnf::sheets_self_parity prettify_idempotent_postfix_percent
+        PASS [   0.011s] ( 83/143) bbnf::sheets_self_parity prettify_idempotent_mul_op
+        PASS [   0.007s] ( 84/143) bbnf::sheets_self_parity prettify_idempotent_range_ref_sheet_prefixed
+        PASS [   0.010s] ( 85/143) bbnf::sheets_self_parity prettify_idempotent_range_ref_column
+        PASS [   0.009s] ( 86/143) bbnf::sheets_self_parity prettify_idempotent_string_basic
+        PASS [   0.009s] ( 87/143) bbnf::sheets_self_parity prettify_idempotent_unary_plus
+        PASS [   0.011s] ( 88/143) bbnf::sheets_self_parity prettify_idempotent_range_ref_pair
+        PASS [   0.010s] ( 89/143) bbnf::sheets_self_parity prettify_idempotent_unary_minus
+  TRY 1 FAIL [   0.008s] (───────) bbnf::sheets_self_parity serialize_roundtrip_array_literal_single_row
+  stdout ───
+
+    running 1 test
+    test serialize_roundtrip_array_literal_single_row ... FAILED
+
+    failures:
+
+    failures:
+        serialize_roundtrip_array_literal_single_row
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+    [DIAG roundtrip] src="={1,2,3}" -> "={1,,2,,3}"
+
+    thread 'serialize_roundtrip_array_literal_single_row' (38962193) panicked at crates/core/tests/sheets_self_parity.rs:37:9:
+    sheets parse must succeed: Syntax { offset: 1, rule: None } for input "={1,,2,,3}"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+   DELAY 2/2 by   1.000s (───────) bbnf::sheets_self_parity serialize_roundtrip_array_literal_single_row
+  TRY 1 FAIL [   0.008s] (───────) bbnf::sheets_self_parity serialize_roundtrip_array_literal_multi_row
+  stdout ───
+
+    running 1 test
+    test serialize_roundtrip_array_literal_multi_row ... FAILED
+
+    failures:
+
+    failures:
+        serialize_roundtrip_array_literal_multi_row
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+    [DIAG roundtrip] src="={1,2;3,4}" -> "={1,,2,,3,,4}"
+
+    thread 'serialize_roundtrip_array_literal_multi_row' (38962191) panicked at crates/core/tests/sheets_self_parity.rs:37:9:
+    sheets parse must succeed: Syntax { offset: 1, rule: None } for input "={1,,2,,3,,4}"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+   DELAY 2/2 by   1.000s (───────) bbnf::sheets_self_parity serialize_roundtrip_array_literal_multi_row
+        PASS [   0.010s] ( 90/143) bbnf::sheets_self_parity serialize_roundtrip_add_op_plus
+        PASS [   0.011s] ( 91/143) bbnf::sheets_self_parity serialize_roundtrip_add_op_minus
+        PASS [   0.009s] ( 92/143) bbnf::sheets_self_parity serialize_roundtrip_boolean_false
+        PASS [   0.008s] ( 93/143) bbnf::sheets_self_parity serialize_roundtrip_boolean_true
+        PASS [   0.007s] ( 94/143) bbnf::sheets_self_parity serialize_roundtrip_cell_ref_absolute
+        PASS [   0.009s] ( 95/143) bbnf::sheets_self_parity serialize_roundtrip_boolean_lower
+        PASS [   0.008s] ( 96/143) bbnf::sheets_self_parity serialize_roundtrip_cell_ref_relative
+        PASS [   0.007s] ( 97/143) bbnf::sheets_self_parity serialize_roundtrip_compare_gt
+        PASS [   0.009s] ( 98/143) bbnf::sheets_self_parity serialize_roundtrip_cell_ref_wide
+        PASS [   0.009s] ( 99/143) bbnf::sheets_self_parity serialize_roundtrip_compare_eq
+        PASS [   0.009s] (100/143) bbnf::sheets_self_parity serialize_roundtrip_compare_ge
+        PASS [   0.009s] (101/143) bbnf::sheets_self_parity serialize_roundtrip_compare_le
+        PASS [   0.008s] (102/143) bbnf::sheets_self_parity serialize_roundtrip_compare_ne
+        PASS [   0.010s] (103/143) bbnf::sheets_self_parity serialize_roundtrip_compare_lt
+        PASS [   0.009s] (104/143) bbnf::sheets_self_parity serialize_roundtrip_concat_op
+        PASS [   0.009s] (105/143) bbnf::sheets_self_parity serialize_roundtrip_error_divzero
+        PASS [   0.007s] (106/143) bbnf::sheets_self_parity serialize_roundtrip_error_na
+        PASS [   0.008s] (107/143) bbnf::sheets_self_parity serialize_roundtrip_error_generic
+        PASS [   0.009s] (108/143) bbnf::sheets_self_parity serialize_roundtrip_error_name
+        PASS [   0.007s] (109/143) bbnf::sheets_self_parity serialize_roundtrip_error_ref
+        PASS [   0.009s] (110/143) bbnf::sheets_self_parity serialize_roundtrip_error_null
+        PASS [   0.008s] (111/143) bbnf::sheets_self_parity serialize_roundtrip_error_num
+        PASS [   0.008s] (112/143) bbnf::sheets_self_parity serialize_roundtrip_error_spill
+        PASS [   0.008s] (113/143) bbnf::sheets_self_parity serialize_roundtrip_error_value
+        PASS [   0.008s] (114/143) bbnf::sheets_self_parity serialize_roundtrip_fn_call_multi_arg
+        PASS [   0.008s] (115/143) bbnf::sheets_self_parity serialize_roundtrip_exp_op
+        PASS [   0.009s] (116/143) bbnf::sheets_self_parity serialize_roundtrip_fn_call_zero_args
+        PASS [   0.010s] (117/143) bbnf::sheets_self_parity serialize_roundtrip_fn_call_nested
+        PASS [   0.010s] (118/143) bbnf::sheets_self_parity serialize_roundtrip_fn_call_single_arg
+        PASS [   0.008s] (119/143) bbnf::sheets_self_parity serialize_roundtrip_mul_op_slash
+        PASS [   0.009s] (120/143) bbnf::sheets_self_parity serialize_roundtrip_identifier_bare
+        PASS [   0.009s] (121/143) bbnf::sheets_self_parity serialize_roundtrip_lambda_call
+        PASS [   0.009s] (122/143) bbnf::sheets_self_parity serialize_roundtrip_let_call
+        PASS [   0.007s] (123/143) bbnf::sheets_self_parity serialize_roundtrip_number_decimal
+        PASS [   0.007s] (124/143) bbnf::sheets_self_parity serialize_roundtrip_number_exponent
+        PASS [   0.009s] (125/143) bbnf::sheets_self_parity serialize_roundtrip_mul_op_star
+        PASS [   0.007s] (126/143) bbnf::sheets_self_parity serialize_roundtrip_number_int
+        PASS [   0.009s] (127/143) bbnf::sheets_self_parity serialize_roundtrip_number_leading_dot
+        PASS [   0.009s] (128/143) bbnf::sheets_self_parity serialize_roundtrip_number_signed_exponent
+        PASS [   0.008s] (129/143) bbnf::sheets_self_parity serialize_roundtrip_paren_expr
+        PASS [   0.008s] (130/143) bbnf::sheets_self_parity serialize_roundtrip_postfix_percent
+  TRY 1 FAIL [   0.008s] (───────) bbnf::sheets_self_parity serialize_roundtrip_range_ref_column
+  stdout ───
+
+    running 1 test
+    test serialize_roundtrip_range_ref_column ... FAILED
+
+    failures:
+
+    failures:
+        serialize_roundtrip_range_ref_column
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+    [DIAG roundtrip] src="=A:A" -> "="
+
+    thread 'serialize_roundtrip_range_ref_column' (38962318) panicked at crates/core/tests/sheets_self_parity.rs:37:9:
+    sheets parse must succeed: Syntax { offset: 1, rule: None } for input "="
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+   DELAY 2/2 by   1.000s (───────) bbnf::sheets_self_parity serialize_roundtrip_range_ref_column
+        PASS [   0.009s] (131/143) bbnf::sheets_self_parity serialize_roundtrip_range_ref_pair
+        PASS [   0.008s] (132/143) bbnf::sheets_self_parity serialize_roundtrip_range_ref_quoted_sheet
+        PASS [   0.008s] (133/143) bbnf::sheets_self_parity serialize_roundtrip_range_ref_sheet_prefixed
+  TRY 1 FAIL [   0.007s] (───────) bbnf::sheets_self_parity serialize_roundtrip_string_empty
+  stdout ───
+
+    running 1 test
+    test serialize_roundtrip_string_empty ... FAILED
+
+    failures:
+
+    failures:
+        serialize_roundtrip_string_empty
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+    [DIAG roundtrip] src="=\"\"" -> "="
+
+    thread 'serialize_roundtrip_string_empty' (38962324) panicked at crates/core/tests/sheets_self_parity.rs:37:9:
+    sheets parse must succeed: Syntax { offset: 1, rule: None } for input "="
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+   DELAY 2/2 by   1.000s (───────) bbnf::sheets_self_parity serialize_roundtrip_string_empty
+        PASS [   0.007s] (134/143) bbnf::sheets_self_parity serialize_roundtrip_unary_minus
+        PASS [   0.008s] (135/143) bbnf::sheets_self_parity serialize_roundtrip_string_basic
+        PASS [   0.006s] (136/143) bbnf::sheets_self_parity serialize_roundtrip_unary_plus
+  TRY 2 FAIL [   0.008s] (137/143) bbnf::sheets_self_parity corpus_simple
+  stdout ───
+
+    running 1 test
+    test corpus_simple ... FAILED
+
+    failures:
+
+    failures:
+        corpus_simple
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+    [DIAG roundtrip] src="=A1+B1" -> "=A1^B1"
+    [DIAG roundtrip] src="=IF(A1>0, B1, C1)" -> "=IF(A1>0,B1,C1)"
+    [DIAG roundtrip] src="=VLOOKUP(A1, B1:D100, 3, FALSE)" -> "=VLOOKUP(A1,B1:D100,3,FALSE)"
+    [DIAG roundtrip] src="=CONCATENATE(A1, \" \", B1)" -> "=CONCATENATE(A1, ,B1)"
+    [DIAG roundtrip] src="=CONCATENATE(A1, ,B1)" -> "=CONCATENATE(A1,,B1)"
+
+    thread 'corpus_simple' (38962463) panicked at crates/core/tests/sheets_self_parity.rs:528:9:
+    assertion `left == right` failed: [simple] serialize_compact non-idempotent at line 4 ("=CONCATENATE(A1, \" \", B1)")
+      left: "=CONCATENATE(A1, ,B1)"
+     right: "=CONCATENATE(A1,,B1)"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.009s] (138/143) bbnf::sheets_self_parity corpus_nested
+  stdout ───
+
+    running 1 test
+    test corpus_nested ... FAILED
+
+    failures:
+
+    failures:
+        corpus_nested
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+    [DIAG roundtrip] src="=IF(AND(A1>0, B1<100), VLOOKUP(A1, C1:E100, 3, FALSE), IFERROR(INDEX(MATCH(A1, F1:F100, 0), G1:G100), \"N/A\"))" -> "=IF(AND(A1>0,B1<100),VLOOKUP(A1,C1:E100,3,FALSE),IFERROR(INDEX(MATCH(A1,F1:F100,0),G1:G100),N/A))"
+    [DIAG roundtrip] src="=IF(AND(A1>0,B1<100),VLOOKUP(A1,C1:E100,3,FALSE),IFERROR(INDEX(MATCH(A1,F1:F100,0),G1:G100),N/A))" -> "=IF(AND(A1>0,B1<100),VLOOKUP(A1,C1:E100,3,FALSE),IFERROR(INDEX(MATCH(A1,F1:F100,0),G1:G100),N^A))"
+
+    thread 'corpus_nested' (38962464) panicked at crates/core/tests/sheets_self_parity.rs:528:9:
+    assertion `left == right` failed: [nested] serialize_compact non-idempotent at line 0 ("=IF(AND(A1>0, B1<100), VLOOKUP(A1, C1:E100, 3, FALSE), IFERROR(INDEX(MATCH(A1, F1:F100, 0), G1:G100), \"N/A\"))")
+      left: "=IF(AND(A1>0,B1<100),VLOOKUP(A1,C1:E100,3,FALSE),IFERROR(INDEX(MATCH(A1,F1:F100,0),G1:G100),N/A))"
+     right: "=IF(AND(A1>0,B1<100),VLOOKUP(A1,C1:E100,3,FALSE),IFERROR(INDEX(MATCH(A1,F1:F100,0),G1:G100),N^A))"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.010s] (139/143) bbnf::sheets_self_parity corpus_stress
+  stdout ───
+
+    running 1 test
+    test corpus_stress ... FAILED
+
+    failures:
+
+    failures:
+        corpus_stress
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+    [DIAG roundtrip] src="=LET(raw, A2:E1000, filtered, FILTER(raw, INDEX(raw,,3)>100), sorted, SORT(filtered, 3, FALSE), IF(ROWS(sorted)>0, MAP(SEQUENCE(MIN(10, ROWS(sorted))), LAMBDA(i, INDEX(sorted, i, 1))), \"No results\"))" -> "=LET(raw,A2:E1000,filtered,FILTER(raw,INDEX(raw,,3)>100),sorted,SORT(filtered,3,FALSE),IF(ROWS(sorted)>0,MAP(SEQUENCE(MIN(10,ROWS(sorted))),LAMBDA(i,INDEX(sorted,i,1))),No results))"
+    [DIAG roundtrip] src="=LET(raw,A2:E1000,filtered,FILTER(raw,INDEX(raw,,3)>100),sorted,SORT(filtered,3,FALSE),IF(ROWS(sorted)>0,MAP(SEQUENCE(MIN(10,ROWS(sorted))),LAMBDA(i,INDEX(sorted,i,1))),No results))" -> "=LET(raw,A2:E1000,filtered,FILTER(raw,INDEX(raw,,3)>100),sorted,SORT(filtered,3,FALSE),IF(ROWS(sorted)>0,MAP(SEQUENCE(MIN(10,ROWS(sorted))),LAMBDA(i,INDEX(sorted,i,1))),No,results))"
+
+    thread 'corpus_stress' (38962466) panicked at crates/core/tests/sheets_self_parity.rs:528:9:
+    assertion `left == right` failed: [stress] serialize_compact non-idempotent at line 0 ("=LET(raw, A2:E1000, filtered, FILTER(raw, INDEX(raw,,3)>100), sorted, SORT(filtered, 3, FALSE), IF(ROWS(sorted)>0, MAP(SEQUENCE(MIN(10, ROWS(sorted))), LAMBDA(i, INDEX(sorted, i, 1))), \"No results\"))")
+      left: "=LET(raw,A2:E1000,filtered,FILTER(raw,INDEX(raw,,3)>100),sorted,SORT(filtered,3,FALSE),IF(ROWS(sorted)>0,MAP(SEQUENCE(MIN(10,ROWS(sorted))),LAMBDA(i,INDEX(sorted,i,1))),No results))"
+     right: "=LET(raw,A2:E1000,filtered,FILTER(raw,INDEX(raw,,3)>100),sorted,SORT(filtered,3,FALSE),IF(ROWS(sorted)>0,MAP(SEQUENCE(MIN(10,ROWS(sorted))),LAMBDA(i,INDEX(sorted,i,1))),No,results))"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.007s] (140/143) bbnf::sheets_self_parity serialize_roundtrip_array_literal_multi_row
+  stdout ───
+
+    running 1 test
+    test serialize_roundtrip_array_literal_multi_row ... FAILED
+
+    failures:
+
+    failures:
+        serialize_roundtrip_array_literal_multi_row
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+    [DIAG roundtrip] src="={1,2;3,4}" -> "={1,,2,,3,,4}"
+
+    thread 'serialize_roundtrip_array_literal_multi_row' (38962471) panicked at crates/core/tests/sheets_self_parity.rs:37:9:
+    sheets parse must succeed: Syntax { offset: 1, rule: None } for input "={1,,2,,3,,4}"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.007s] (141/143) bbnf::sheets_self_parity serialize_roundtrip_array_literal_single_row
+  stdout ───
+
+    running 1 test
+    test serialize_roundtrip_array_literal_single_row ... FAILED
+
+    failures:
+
+    failures:
+        serialize_roundtrip_array_literal_single_row
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+    [DIAG roundtrip] src="={1,2,3}" -> "={1,,2,,3}"
+
+    thread 'serialize_roundtrip_array_literal_single_row' (38962472) panicked at crates/core/tests/sheets_self_parity.rs:37:9:
+    sheets parse must succeed: Syntax { offset: 1, rule: None } for input "={1,,2,,3}"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.009s] (142/143) bbnf::sheets_self_parity serialize_roundtrip_range_ref_column
+  stdout ───
+
+    running 1 test
+    test serialize_roundtrip_range_ref_column ... FAILED
+
+    failures:
+
+    failures:
+        serialize_roundtrip_range_ref_column
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+    [DIAG roundtrip] src="=A:A" -> "="
+
+    thread 'serialize_roundtrip_range_ref_column' (38962477) panicked at crates/core/tests/sheets_self_parity.rs:37:9:
+    sheets parse must succeed: Syntax { offset: 1, rule: None } for input "="
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.009s] (143/143) bbnf::sheets_self_parity serialize_roundtrip_string_empty
+  stdout ───
+
+    running 1 test
+    test serialize_roundtrip_string_empty ... FAILED
+
+    failures:
+
+    failures:
+        serialize_roundtrip_string_empty
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+    [DIAG roundtrip] src="=\"\"" -> "="
+
+    thread 'serialize_roundtrip_string_empty' (38962478) panicked at crates/core/tests/sheets_self_parity.rs:37:9:
+    sheets parse must succeed: Syntax { offset: 1, rule: None } for input "="
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+────────────
+     Summary [   1.121s] 143 tests run: 136 passed, 7 failed, 0 skipped
+  TRY 2 FAIL [   0.008s] (137/143) bbnf::sheets_self_parity corpus_simple
+  stdout ───
+
+    running 1 test
+    test corpus_simple ... FAILED
+
+    failures:
+
+    failures:
+        corpus_simple
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+    [DIAG roundtrip] src="=A1+B1" -> "=A1^B1"
+    [DIAG roundtrip] src="=IF(A1>0, B1, C1)" -> "=IF(A1>0,B1,C1)"
+    [DIAG roundtrip] src="=VLOOKUP(A1, B1:D100, 3, FALSE)" -> "=VLOOKUP(A1,B1:D100,3,FALSE)"
+    [DIAG roundtrip] src="=CONCATENATE(A1, \" \", B1)" -> "=CONCATENATE(A1, ,B1)"
+    [DIAG roundtrip] src="=CONCATENATE(A1, ,B1)" -> "=CONCATENATE(A1,,B1)"
+
+    thread 'corpus_simple' (38962463) panicked at crates/core/tests/sheets_self_parity.rs:528:9:
+    assertion `left == right` failed: [simple] serialize_compact non-idempotent at line 4 ("=CONCATENATE(A1, \" \", B1)")
+      left: "=CONCATENATE(A1, ,B1)"
+     right: "=CONCATENATE(A1,,B1)"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.009s] (138/143) bbnf::sheets_self_parity corpus_nested
+  stdout ───
+
+    running 1 test
+    test corpus_nested ... FAILED
+
+    failures:
+
+    failures:
+        corpus_nested
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+    [DIAG roundtrip] src="=IF(AND(A1>0, B1<100), VLOOKUP(A1, C1:E100, 3, FALSE), IFERROR(INDEX(MATCH(A1, F1:F100, 0), G1:G100), \"N/A\"))" -> "=IF(AND(A1>0,B1<100),VLOOKUP(A1,C1:E100,3,FALSE),IFERROR(INDEX(MATCH(A1,F1:F100,0),G1:G100),N/A))"
+    [DIAG roundtrip] src="=IF(AND(A1>0,B1<100),VLOOKUP(A1,C1:E100,3,FALSE),IFERROR(INDEX(MATCH(A1,F1:F100,0),G1:G100),N/A))" -> "=IF(AND(A1>0,B1<100),VLOOKUP(A1,C1:E100,3,FALSE),IFERROR(INDEX(MATCH(A1,F1:F100,0),G1:G100),N^A))"
+
+    thread 'corpus_nested' (38962464) panicked at crates/core/tests/sheets_self_parity.rs:528:9:
+    assertion `left == right` failed: [nested] serialize_compact non-idempotent at line 0 ("=IF(AND(A1>0, B1<100), VLOOKUP(A1, C1:E100, 3, FALSE), IFERROR(INDEX(MATCH(A1, F1:F100, 0), G1:G100), \"N/A\"))")
+      left: "=IF(AND(A1>0,B1<100),VLOOKUP(A1,C1:E100,3,FALSE),IFERROR(INDEX(MATCH(A1,F1:F100,0),G1:G100),N/A))"
+     right: "=IF(AND(A1>0,B1<100),VLOOKUP(A1,C1:E100,3,FALSE),IFERROR(INDEX(MATCH(A1,F1:F100,0),G1:G100),N^A))"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.010s] (139/143) bbnf::sheets_self_parity corpus_stress
+  stdout ───
+
+    running 1 test
+    test corpus_stress ... FAILED
+
+    failures:
+
+    failures:
+        corpus_stress
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+    [DIAG roundtrip] src="=LET(raw, A2:E1000, filtered, FILTER(raw, INDEX(raw,,3)>100), sorted, SORT(filtered, 3, FALSE), IF(ROWS(sorted)>0, MAP(SEQUENCE(MIN(10, ROWS(sorted))), LAMBDA(i, INDEX(sorted, i, 1))), \"No results\"))" -> "=LET(raw,A2:E1000,filtered,FILTER(raw,INDEX(raw,,3)>100),sorted,SORT(filtered,3,FALSE),IF(ROWS(sorted)>0,MAP(SEQUENCE(MIN(10,ROWS(sorted))),LAMBDA(i,INDEX(sorted,i,1))),No results))"
+    [DIAG roundtrip] src="=LET(raw,A2:E1000,filtered,FILTER(raw,INDEX(raw,,3)>100),sorted,SORT(filtered,3,FALSE),IF(ROWS(sorted)>0,MAP(SEQUENCE(MIN(10,ROWS(sorted))),LAMBDA(i,INDEX(sorted,i,1))),No results))" -> "=LET(raw,A2:E1000,filtered,FILTER(raw,INDEX(raw,,3)>100),sorted,SORT(filtered,3,FALSE),IF(ROWS(sorted)>0,MAP(SEQUENCE(MIN(10,ROWS(sorted))),LAMBDA(i,INDEX(sorted,i,1))),No,results))"
+
+    thread 'corpus_stress' (38962466) panicked at crates/core/tests/sheets_self_parity.rs:528:9:
+    assertion `left == right` failed: [stress] serialize_compact non-idempotent at line 0 ("=LET(raw, A2:E1000, filtered, FILTER(raw, INDEX(raw,,3)>100), sorted, SORT(filtered, 3, FALSE), IF(ROWS(sorted)>0, MAP(SEQUENCE(MIN(10, ROWS(sorted))), LAMBDA(i, INDEX(sorted, i, 1))), \"No results\"))")
+      left: "=LET(raw,A2:E1000,filtered,FILTER(raw,INDEX(raw,,3)>100),sorted,SORT(filtered,3,FALSE),IF(ROWS(sorted)>0,MAP(SEQUENCE(MIN(10,ROWS(sorted))),LAMBDA(i,INDEX(sorted,i,1))),No results))"
+     right: "=LET(raw,A2:E1000,filtered,FILTER(raw,INDEX(raw,,3)>100),sorted,SORT(filtered,3,FALSE),IF(ROWS(sorted)>0,MAP(SEQUENCE(MIN(10,ROWS(sorted))),LAMBDA(i,INDEX(sorted,i,1))),No,results))"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.007s] (140/143) bbnf::sheets_self_parity serialize_roundtrip_array_literal_multi_row
+  stdout ───
+
+    running 1 test
+    test serialize_roundtrip_array_literal_multi_row ... FAILED
+
+    failures:
+
+    failures:
+        serialize_roundtrip_array_literal_multi_row
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+    [DIAG roundtrip] src="={1,2;3,4}" -> "={1,,2,,3,,4}"
+
+    thread 'serialize_roundtrip_array_literal_multi_row' (38962471) panicked at crates/core/tests/sheets_self_parity.rs:37:9:
+    sheets parse must succeed: Syntax { offset: 1, rule: None } for input "={1,,2,,3,,4}"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.007s] (141/143) bbnf::sheets_self_parity serialize_roundtrip_array_literal_single_row
+  stdout ───
+
+    running 1 test
+    test serialize_roundtrip_array_literal_single_row ... FAILED
+
+    failures:
+
+    failures:
+        serialize_roundtrip_array_literal_single_row
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+    [DIAG roundtrip] src="={1,2,3}" -> "={1,,2,,3}"
+
+    thread 'serialize_roundtrip_array_literal_single_row' (38962472) panicked at crates/core/tests/sheets_self_parity.rs:37:9:
+    sheets parse must succeed: Syntax { offset: 1, rule: None } for input "={1,,2,,3}"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.009s] (142/143) bbnf::sheets_self_parity serialize_roundtrip_range_ref_column
+  stdout ───
+
+    running 1 test
+    test serialize_roundtrip_range_ref_column ... FAILED
+
+    failures:
+
+    failures:
+        serialize_roundtrip_range_ref_column
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+    [DIAG roundtrip] src="=A:A" -> "="
+
+    thread 'serialize_roundtrip_range_ref_column' (38962477) panicked at crates/core/tests/sheets_self_parity.rs:37:9:
+    sheets parse must succeed: Syntax { offset: 1, rule: None } for input "="
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.009s] (143/143) bbnf::sheets_self_parity serialize_roundtrip_string_empty
+  stdout ───
+
+    running 1 test
+    test serialize_roundtrip_string_empty ... FAILED
+
+    failures:
+
+    failures:
+        serialize_roundtrip_string_empty
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+    [DIAG roundtrip] src="=\"\"" -> "="
+
+    thread 'serialize_roundtrip_string_empty' (38962478) panicked at crates/core/tests/sheets_self_parity.rs:37:9:
+    sheets parse must succeed: Syntax { offset: 1, rule: None } for input "="
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+error: test run failed

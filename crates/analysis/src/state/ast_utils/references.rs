@@ -79,13 +79,19 @@ pub fn collect_references(node: BbnfView<'_, '_>, refs: &mut Vec<ReferenceInfo>)
                     }
                 }
                 Some(b @ 5..=8) => {
-                    // Grouped: descend into the inner Rhs subtree.
+                    // Grouped: `(`...`)`, `[`...`]`, `{`...`}`, `@{`...`}`.
+                    // The inner expression may project as a `Rhs` compound
+                    // OR (post-W0 lowering) directly as the substantive
+                    // operator compound (`Alternation` / `Concatenation` /
+                    // `BinaryFactor` / etc.) when the Rhs wrapper is
+                    // structurally transparent. Recurse into every child
+                    // compound so the references inside the group reach
+                    // the collector.
                     let _ = b;
-                    if let Some(inner) = node
-                        .children()
-                        .find(|c| c.compound_kind() == Some(BbnfCompoundKind::Rhs))
-                    {
-                        collect_references(inner, refs);
+                    for c in node.children() {
+                        if c.is_compound() {
+                            collect_references(c, refs);
+                        }
                     }
                 }
                 _ => {

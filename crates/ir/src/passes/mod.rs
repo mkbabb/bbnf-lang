@@ -13,6 +13,7 @@ pub mod inspect;
 pub mod lr;
 pub mod materialization;
 pub mod metadata;
+pub mod path_check;
 pub mod patterns;
 pub mod payload;
 pub mod prefix;
@@ -47,6 +48,7 @@ pub use inline_trace::{InlinePass, InlineSubstitution, InlineTrace};
 pub use lr::{eliminate_direct_lr, eliminate_indirect_lr};
 pub use materialization::{MaterializationClass, classify_materialization, mat_join};
 pub use metadata::{compute_aliases, compute_transparent, has_named_return_type};
+pub use path_check::{PathCheckResolver, run_path_check};
 pub use payload::{
     LARGE_PAYLOAD_MAX, MAX_PAYLOAD_BYTES, NamedTypeResolver, NullResolver, PayloadField,
     PayloadLayout, compute_payload_layouts, compute_payload_layouts_with_resolver,

@@ -78,6 +78,7 @@ fn follow_set_basic_seq() {
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
         inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
+        path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     };
 
     let follow = compute_follow_sets(&ir);
@@ -182,6 +183,7 @@ fn follow_set_propagates_through_nullable() {
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
         inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
+        path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     };
 
     let follow = compute_follow_sets(&ir);

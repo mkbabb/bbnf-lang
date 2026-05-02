@@ -54,6 +54,7 @@ fn make_simple_ir(body: IrNode) -> GrammarIR {
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
         inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
+        path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     }
 }
 
@@ -200,6 +201,7 @@ fn compile_memo_rule() {
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
         inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
+        path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     };
     let program = compile(&ir);
 
@@ -279,6 +281,7 @@ fn compile_direct_left_recursive_rule_keeps_memo() {
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
         inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
+        path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     };
     let program = compile(&ir);
 
@@ -452,6 +455,7 @@ fn compile_token_dispatch_emits_dispatch_token() {
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
         inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
+        path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     };
     let program = compile(&ir);
 
@@ -550,6 +554,7 @@ fn compile_call() {
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
         inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
+        path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     };
     let program = compile(&ir);
 

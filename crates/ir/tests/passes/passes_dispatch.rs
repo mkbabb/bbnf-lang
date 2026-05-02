@@ -77,6 +77,7 @@ fn dispatch_for_disjoint_branches() {
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
         inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
+        path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -161,6 +162,7 @@ fn no_dispatch_for_overlapping_branches() {
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
         inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
+        path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -243,6 +245,7 @@ fn dispatch_for_nested_alt() {
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
         inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
+        path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -333,6 +336,7 @@ fn dispatch_with_nullable_branch_via_follow() {
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
         inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
+        path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -425,6 +429,7 @@ fn no_dispatch_when_nullable_overlaps_follow() {
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
         inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
+        path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -527,6 +532,7 @@ fn fallback_dispatch_typed_plus_catchall() {
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
         inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
+        path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -621,6 +627,7 @@ fn fallback_dispatch_not_superset() {
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
         inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
+        path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -703,6 +710,7 @@ fn fallback_dispatch_too_few_branches() {
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
         inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
+        path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);

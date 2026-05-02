@@ -70,6 +70,7 @@ fn make_ir(rules: Vec<(&str, IrNode, Option<u32>, bool)>) -> GrammarIR {
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
         inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
+        path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
         dedup_eligible_rules: Vec::new(),
 
         shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(

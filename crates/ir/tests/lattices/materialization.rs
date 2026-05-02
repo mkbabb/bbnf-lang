@@ -156,6 +156,7 @@ fn make_ir(rules: Vec<IrRule>, strings: Vec<String>) -> GrammarIR {
         struct_registry: bbnf_ir::StructRegistry::default(),
         type_obligations: Vec::new(),
         inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
+        path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     };
     bbnf_ir::dag::ensure_dag(&mut ir);
     ir

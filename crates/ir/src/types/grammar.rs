@@ -399,16 +399,29 @@ pub struct GrammarIR {
     /// [`passes::inline_acyclic_with_trace`] /
     /// [`passes::fuse_single_use_with_trace`] when
     /// `pipeline::compile` runs them through the trace channel.
-    /// Consumed downstream by the path resolver after `project_types`
-    /// to bind user-written source rule names to the post-pipeline
-    /// `RuleId`s their layouts resolve through. The W2.4 `path!`
-    /// proc-macro reads the resolver to honour the W2 invariant 8
-    /// ("Path resolution uses source rule names").
+    /// Consumed by [`passes::run_path_check`] (called after
+    /// `project_types`) to bind user-written source rule names to the
+    /// post-pipeline `RuleId`s their layouts resolve through. The
+    /// W2.4 `path!` proc-macro reads the resolver to honour the W2
+    /// invariant 8 ("Path resolution uses source rule names").
     ///
     /// Not serialized: the trace describes the in-process pipeline
     /// shape and is recomputed every compile.
     #[serde(skip, default)]
     pub inline_trace: passes::inline_trace::InlineTrace,
+
+    /// AZ-IV.W2.2 — source-rule-name → post-pipeline `RuleId`
+    /// resolver, computed by [`passes::run_path_check`] after
+    /// `project_types`.
+    ///
+    /// Maps every user-written rule name to a `RuleId` whose
+    /// `StructLayout` describes the rule's body. For rules that
+    /// survived the pipeline the binding maps to the rule's own id;
+    /// for rules absorbed by `inline_acyclic` / `fuse_single_use` the
+    /// binding maps to the absorber's id. Empty until
+    /// `run_path_check` runs. Not serialized.
+    #[serde(skip, default)]
+    pub path_check_resolver: passes::path_check::PathCheckResolver,
 
     /// AZ-III.W3a — named type obligations surfaced by the projection
     /// CSP whenever a silent fallback would otherwise have collapsed

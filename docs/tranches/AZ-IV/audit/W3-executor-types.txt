@@ -210,6 +210,6 @@ indirection dominating; a static-dispatch generic shape
 
 Commit
 ------
-Hash: filled in by orchestrator after `git commit`.
+Hash: bcff3423
 Scope: `path-executor`.
 Branch: `aziv-w3-executor`.

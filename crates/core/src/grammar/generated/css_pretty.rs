@@ -4433,7 +4433,188 @@ mod __cssprettyparser_emit_impl {
                     };
                     {
                         let __start = state.offset;
-                        if ::parse_that::scan_ws_block_comments(state).is_none() {
+                        if {
+                            let __start = state.offset;
+                            let __result: Option<()> = (|| {
+                                {
+                                    let mut __rep_count: u32 = 0;
+                                    loop {
+                                        let __save = state.offset;
+                                        let __ok = (|| -> Option<()> {
+                                            {
+                                                let __save_dispatch = state.offset;
+                                                let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                                match __dispatch_b {
+                                                    b'\t' | b'\n' | b'\x0B' | b'\x0C' | b'\r' | b' ' => {
+                                                        let __ok = (|| -> Option<()> {
+                                                            {
+                                                                let __b = *state.src_bytes.get(state.offset)?;
+                                                                if !(__b.is_ascii_whitespace()) {
+                                                                    return None;
+                                                                }
+                                                                state.offset += 1;
+                                                            }
+                                                            Some(())
+                                                        })();
+                                                        if __ok.is_none() {
+                                                            state.offset = __save_dispatch;
+                                                            return None;
+                                                        }
+                                                    }
+                                                    b'/' => {
+                                                        let __ok = (|| -> Option<()> {
+                                                            if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                            {
+                                                                return None;
+                                                            }
+                                                            state.offset += 1;
+                                                            if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                            {
+                                                                return None;
+                                                            }
+                                                            state.offset += 1;
+                                                            {
+                                                                let __end = state.src_bytes.len();
+                                                                let mut __pos = state.offset;
+                                                                while __pos < __end {
+                                                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                    if !(__b == b'*') {
+                                                                        __pos += 1;
+                                                                    } else {
+                                                                        break;
+                                                                    }
+                                                                }
+                                                                state.offset = __pos;
+                                                            }
+                                                            {
+                                                                let mut __rep_count: u32 = 0;
+                                                                loop {
+                                                                    let __save = state.offset;
+                                                                    let __ok = (|| -> Option<()> {
+                                                                        {
+                                                                            let mut __rep_count: u32 = 0;
+                                                                            loop {
+                                                                                let __save = state.offset;
+                                                                                let __ok = (|| -> Option<()> {
+                                                                                    if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                                    {
+                                                                                        return None;
+                                                                                    }
+                                                                                    state.offset += 1;
+                                                                                    Some(())
+                                                                                })();
+                                                                                if __ok.is_none() {
+                                                                                    state.offset = __save;
+                                                                                    break;
+                                                                                }
+                                                                                if state.offset == __save {
+                                                                                    break;
+                                                                                }
+                                                                                __rep_count += 1;
+                                                                            }
+                                                                            if __rep_count < 1 {
+                                                                                return None;
+                                                                            }
+                                                                        }
+                                                                        {
+                                                                            let __b = *state.src_bytes.get(state.offset)?;
+                                                                            if !(!(__b == b'/')) {
+                                                                                return None;
+                                                                            }
+                                                                            state.offset += 1;
+                                                                        }
+                                                                        {
+                                                                            let __end = state.src_bytes.len();
+                                                                            let mut __pos = state.offset;
+                                                                            while __pos < __end {
+                                                                                let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                                if !(__b == b'*') {
+                                                                                    __pos += 1;
+                                                                                } else {
+                                                                                    break;
+                                                                                }
+                                                                            }
+                                                                            state.offset = __pos;
+                                                                        }
+                                                                        Some(())
+                                                                    })();
+                                                                    if __ok.is_none() {
+                                                                        state.offset = __save;
+                                                                        break;
+                                                                    }
+                                                                    if state.offset == __save {
+                                                                        break;
+                                                                    }
+                                                                    __rep_count += 1;
+                                                                }
+                                                            }
+                                                            {
+                                                                let mut __rep_count: u32 = 0;
+                                                                loop {
+                                                                    let __save = state.offset;
+                                                                    let __ok = (|| -> Option<()> {
+                                                                        if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                        {
+                                                                            return None;
+                                                                        }
+                                                                        state.offset += 1;
+                                                                        Some(())
+                                                                    })();
+                                                                    if __ok.is_none() {
+                                                                        state.offset = __save;
+                                                                        break;
+                                                                    }
+                                                                    if state.offset == __save {
+                                                                        break;
+                                                                    }
+                                                                    __rep_count += 1;
+                                                                }
+                                                                if __rep_count < 1 {
+                                                                    return None;
+                                                                }
+                                                            }
+                                                            if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                            {
+                                                                return None;
+                                                            }
+                                                            state.offset += 1;
+                                                            Some(())
+                                                        })();
+                                                        if __ok.is_none() {
+                                                            state.offset = __save_dispatch;
+                                                            return None;
+                                                        }
+                                                    }
+                                                    _ => {
+                                                        return None;
+                                                    }
+                                                }
+                                            }
+                                            Some(())
+                                        })();
+                                        if __ok.is_none() {
+                                            state.offset = __save;
+                                            break;
+                                        }
+                                        if state.offset == __save {
+                                            break;
+                                        }
+                                        __rep_count += 1;
+                                    }
+                                }
+                                Some(())
+                            })();
+                            if __result.is_some() {
+                                Some(
+                                    ::parse_that::Span::new(__start, state.offset, state.src),
+                                )
+                            } else {
+                                state.offset = __start;
+                                None
+                            }
+                        }
+                            .is_none()
+                        {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
@@ -4541,7 +4722,188 @@ mod __cssprettyparser_emit_impl {
                                         };
                                         {
                                             let __start = state.offset;
-                                            if ::parse_that::scan_ws_block_comments(state).is_none() {
+                                            if {
+                                                let __start = state.offset;
+                                                let __result: Option<()> = (|| {
+                                                    {
+                                                        let mut __rep_count: u32 = 0;
+                                                        loop {
+                                                            let __save = state.offset;
+                                                            let __ok = (|| -> Option<()> {
+                                                                {
+                                                                    let __save_dispatch = state.offset;
+                                                                    let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                                                    match __dispatch_b {
+                                                                        b'\t' | b'\n' | b'\x0B' | b'\x0C' | b'\r' | b' ' => {
+                                                                            let __ok = (|| -> Option<()> {
+                                                                                {
+                                                                                    let __b = *state.src_bytes.get(state.offset)?;
+                                                                                    if !(__b.is_ascii_whitespace()) {
+                                                                                        return None;
+                                                                                    }
+                                                                                    state.offset += 1;
+                                                                                }
+                                                                                Some(())
+                                                                            })();
+                                                                            if __ok.is_none() {
+                                                                                state.offset = __save_dispatch;
+                                                                                return None;
+                                                                            }
+                                                                        }
+                                                                        b'/' => {
+                                                                            let __ok = (|| -> Option<()> {
+                                                                                if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                                                {
+                                                                                    return None;
+                                                                                }
+                                                                                state.offset += 1;
+                                                                                if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                                {
+                                                                                    return None;
+                                                                                }
+                                                                                state.offset += 1;
+                                                                                {
+                                                                                    let __end = state.src_bytes.len();
+                                                                                    let mut __pos = state.offset;
+                                                                                    while __pos < __end {
+                                                                                        let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                                        if !(__b == b'*') {
+                                                                                            __pos += 1;
+                                                                                        } else {
+                                                                                            break;
+                                                                                        }
+                                                                                    }
+                                                                                    state.offset = __pos;
+                                                                                }
+                                                                                {
+                                                                                    let mut __rep_count: u32 = 0;
+                                                                                    loop {
+                                                                                        let __save = state.offset;
+                                                                                        let __ok = (|| -> Option<()> {
+                                                                                            {
+                                                                                                let mut __rep_count: u32 = 0;
+                                                                                                loop {
+                                                                                                    let __save = state.offset;
+                                                                                                    let __ok = (|| -> Option<()> {
+                                                                                                        if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                                                        {
+                                                                                                            return None;
+                                                                                                        }
+                                                                                                        state.offset += 1;
+                                                                                                        Some(())
+                                                                                                    })();
+                                                                                                    if __ok.is_none() {
+                                                                                                        state.offset = __save;
+                                                                                                        break;
+                                                                                                    }
+                                                                                                    if state.offset == __save {
+                                                                                                        break;
+                                                                                                    }
+                                                                                                    __rep_count += 1;
+                                                                                                }
+                                                                                                if __rep_count < 1 {
+                                                                                                    return None;
+                                                                                                }
+                                                                                            }
+                                                                                            {
+                                                                                                let __b = *state.src_bytes.get(state.offset)?;
+                                                                                                if !(!(__b == b'/')) {
+                                                                                                    return None;
+                                                                                                }
+                                                                                                state.offset += 1;
+                                                                                            }
+                                                                                            {
+                                                                                                let __end = state.src_bytes.len();
+                                                                                                let mut __pos = state.offset;
+                                                                                                while __pos < __end {
+                                                                                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                                                    if !(__b == b'*') {
+                                                                                                        __pos += 1;
+                                                                                                    } else {
+                                                                                                        break;
+                                                                                                    }
+                                                                                                }
+                                                                                                state.offset = __pos;
+                                                                                            }
+                                                                                            Some(())
+                                                                                        })();
+                                                                                        if __ok.is_none() {
+                                                                                            state.offset = __save;
+                                                                                            break;
+                                                                                        }
+                                                                                        if state.offset == __save {
+                                                                                            break;
+                                                                                        }
+                                                                                        __rep_count += 1;
+                                                                                    }
+                                                                                }
+                                                                                {
+                                                                                    let mut __rep_count: u32 = 0;
+                                                                                    loop {
+                                                                                        let __save = state.offset;
+                                                                                        let __ok = (|| -> Option<()> {
+                                                                                            if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                                            {
+                                                                                                return None;
+                                                                                            }
+                                                                                            state.offset += 1;
+                                                                                            Some(())
+                                                                                        })();
+                                                                                        if __ok.is_none() {
+                                                                                            state.offset = __save;
+                                                                                            break;
+                                                                                        }
+                                                                                        if state.offset == __save {
+                                                                                            break;
+                                                                                        }
+                                                                                        __rep_count += 1;
+                                                                                    }
+                                                                                    if __rep_count < 1 {
+                                                                                        return None;
+                                                                                    }
+                                                                                }
+                                                                                if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                                                {
+                                                                                    return None;
+                                                                                }
+                                                                                state.offset += 1;
+                                                                                Some(())
+                                                                            })();
+                                                                            if __ok.is_none() {
+                                                                                state.offset = __save_dispatch;
+                                                                                return None;
+                                                                            }
+                                                                        }
+                                                                        _ => {
+                                                                            return None;
+                                                                        }
+                                                                    }
+                                                                }
+                                                                Some(())
+                                                            })();
+                                                            if __ok.is_none() {
+                                                                state.offset = __save;
+                                                                break;
+                                                            }
+                                                            if state.offset == __save {
+                                                                break;
+                                                            }
+                                                            __rep_count += 1;
+                                                        }
+                                                    }
+                                                    Some(())
+                                                })();
+                                                if __result.is_some() {
+                                                    Some(
+                                                        ::parse_that::Span::new(__start, state.offset, state.src),
+                                                    )
+                                                } else {
+                                                    state.offset = __start;
+                                                    None
+                                                }
+                                            }
+                                                .is_none()
+                                            {
                                                 return false;
                                             }
                                             let __matched = &state.src[__start..state.offset];
@@ -4766,7 +5128,188 @@ mod __cssprettyparser_emit_impl {
                         };
                         {
                             let __start = state.offset;
-                            if ::parse_that::scan_ws_block_comments(state).is_none() {
+                            if {
+                                let __start = state.offset;
+                                let __result: Option<()> = (|| {
+                                    {
+                                        let mut __rep_count: u32 = 0;
+                                        loop {
+                                            let __save = state.offset;
+                                            let __ok = (|| -> Option<()> {
+                                                {
+                                                    let __save_dispatch = state.offset;
+                                                    let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                                    match __dispatch_b {
+                                                        b'\t' | b'\n' | b'\x0B' | b'\x0C' | b'\r' | b' ' => {
+                                                            let __ok = (|| -> Option<()> {
+                                                                {
+                                                                    let __b = *state.src_bytes.get(state.offset)?;
+                                                                    if !(__b.is_ascii_whitespace()) {
+                                                                        return None;
+                                                                    }
+                                                                    state.offset += 1;
+                                                                }
+                                                                Some(())
+                                                            })();
+                                                            if __ok.is_none() {
+                                                                state.offset = __save_dispatch;
+                                                                return None;
+                                                            }
+                                                        }
+                                                        b'/' => {
+                                                            let __ok = (|| -> Option<()> {
+                                                                if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                                {
+                                                                    return None;
+                                                                }
+                                                                state.offset += 1;
+                                                                if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                {
+                                                                    return None;
+                                                                }
+                                                                state.offset += 1;
+                                                                {
+                                                                    let __end = state.src_bytes.len();
+                                                                    let mut __pos = state.offset;
+                                                                    while __pos < __end {
+                                                                        let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                        if !(__b == b'*') {
+                                                                            __pos += 1;
+                                                                        } else {
+                                                                            break;
+                                                                        }
+                                                                    }
+                                                                    state.offset = __pos;
+                                                                }
+                                                                {
+                                                                    let mut __rep_count: u32 = 0;
+                                                                    loop {
+                                                                        let __save = state.offset;
+                                                                        let __ok = (|| -> Option<()> {
+                                                                            {
+                                                                                let mut __rep_count: u32 = 0;
+                                                                                loop {
+                                                                                    let __save = state.offset;
+                                                                                    let __ok = (|| -> Option<()> {
+                                                                                        if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                                        {
+                                                                                            return None;
+                                                                                        }
+                                                                                        state.offset += 1;
+                                                                                        Some(())
+                                                                                    })();
+                                                                                    if __ok.is_none() {
+                                                                                        state.offset = __save;
+                                                                                        break;
+                                                                                    }
+                                                                                    if state.offset == __save {
+                                                                                        break;
+                                                                                    }
+                                                                                    __rep_count += 1;
+                                                                                }
+                                                                                if __rep_count < 1 {
+                                                                                    return None;
+                                                                                }
+                                                                            }
+                                                                            {
+                                                                                let __b = *state.src_bytes.get(state.offset)?;
+                                                                                if !(!(__b == b'/')) {
+                                                                                    return None;
+                                                                                }
+                                                                                state.offset += 1;
+                                                                            }
+                                                                            {
+                                                                                let __end = state.src_bytes.len();
+                                                                                let mut __pos = state.offset;
+                                                                                while __pos < __end {
+                                                                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                                    if !(__b == b'*') {
+                                                                                        __pos += 1;
+                                                                                    } else {
+                                                                                        break;
+                                                                                    }
+                                                                                }
+                                                                                state.offset = __pos;
+                                                                            }
+                                                                            Some(())
+                                                                        })();
+                                                                        if __ok.is_none() {
+                                                                            state.offset = __save;
+                                                                            break;
+                                                                        }
+                                                                        if state.offset == __save {
+                                                                            break;
+                                                                        }
+                                                                        __rep_count += 1;
+                                                                    }
+                                                                }
+                                                                {
+                                                                    let mut __rep_count: u32 = 0;
+                                                                    loop {
+                                                                        let __save = state.offset;
+                                                                        let __ok = (|| -> Option<()> {
+                                                                            if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                            {
+                                                                                return None;
+                                                                            }
+                                                                            state.offset += 1;
+                                                                            Some(())
+                                                                        })();
+                                                                        if __ok.is_none() {
+                                                                            state.offset = __save;
+                                                                            break;
+                                                                        }
+                                                                        if state.offset == __save {
+                                                                            break;
+                                                                        }
+                                                                        __rep_count += 1;
+                                                                    }
+                                                                    if __rep_count < 1 {
+                                                                        return None;
+                                                                    }
+                                                                }
+                                                                if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                                {
+                                                                    return None;
+                                                                }
+                                                                state.offset += 1;
+                                                                Some(())
+                                                            })();
+                                                            if __ok.is_none() {
+                                                                state.offset = __save_dispatch;
+                                                                return None;
+                                                            }
+                                                        }
+                                                        _ => {
+                                                            return None;
+                                                        }
+                                                    }
+                                                }
+                                                Some(())
+                                            })();
+                                            if __ok.is_none() {
+                                                state.offset = __save;
+                                                break;
+                                            }
+                                            if state.offset == __save {
+                                                break;
+                                            }
+                                            __rep_count += 1;
+                                        }
+                                    }
+                                    Some(())
+                                })();
+                                if __result.is_some() {
+                                    Some(
+                                        ::parse_that::Span::new(__start, state.offset, state.src),
+                                    )
+                                } else {
+                                    state.offset = __start;
+                                    None
+                                }
+                            }
+                                .is_none()
+                            {
                                 return false;
                             }
                             let __matched = &state.src[__start..state.offset];
@@ -4783,7 +5326,188 @@ mod __cssprettyparser_emit_impl {
                         };
                         {
                             let __start = state.offset;
-                            if ::parse_that::scan_ws_block_comments(state).is_none() {
+                            if {
+                                let __start = state.offset;
+                                let __result: Option<()> = (|| {
+                                    {
+                                        let mut __rep_count: u32 = 0;
+                                        loop {
+                                            let __save = state.offset;
+                                            let __ok = (|| -> Option<()> {
+                                                {
+                                                    let __save_dispatch = state.offset;
+                                                    let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                                    match __dispatch_b {
+                                                        b'\t' | b'\n' | b'\x0B' | b'\x0C' | b'\r' | b' ' => {
+                                                            let __ok = (|| -> Option<()> {
+                                                                {
+                                                                    let __b = *state.src_bytes.get(state.offset)?;
+                                                                    if !(__b.is_ascii_whitespace()) {
+                                                                        return None;
+                                                                    }
+                                                                    state.offset += 1;
+                                                                }
+                                                                Some(())
+                                                            })();
+                                                            if __ok.is_none() {
+                                                                state.offset = __save_dispatch;
+                                                                return None;
+                                                            }
+                                                        }
+                                                        b'/' => {
+                                                            let __ok = (|| -> Option<()> {
+                                                                if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                                {
+                                                                    return None;
+                                                                }
+                                                                state.offset += 1;
+                                                                if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                {
+                                                                    return None;
+                                                                }
+                                                                state.offset += 1;
+                                                                {
+                                                                    let __end = state.src_bytes.len();
+                                                                    let mut __pos = state.offset;
+                                                                    while __pos < __end {
+                                                                        let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                        if !(__b == b'*') {
+                                                                            __pos += 1;
+                                                                        } else {
+                                                                            break;
+                                                                        }
+                                                                    }
+                                                                    state.offset = __pos;
+                                                                }
+                                                                {
+                                                                    let mut __rep_count: u32 = 0;
+                                                                    loop {
+                                                                        let __save = state.offset;
+                                                                        let __ok = (|| -> Option<()> {
+                                                                            {
+                                                                                let mut __rep_count: u32 = 0;
+                                                                                loop {
+                                                                                    let __save = state.offset;
+                                                                                    let __ok = (|| -> Option<()> {
+                                                                                        if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                                        {
+                                                                                            return None;
+                                                                                        }
+                                                                                        state.offset += 1;
+                                                                                        Some(())
+                                                                                    })();
+                                                                                    if __ok.is_none() {
+                                                                                        state.offset = __save;
+                                                                                        break;
+                                                                                    }
+                                                                                    if state.offset == __save {
+                                                                                        break;
+                                                                                    }
+                                                                                    __rep_count += 1;
+                                                                                }
+                                                                                if __rep_count < 1 {
+                                                                                    return None;
+                                                                                }
+                                                                            }
+                                                                            {
+                                                                                let __b = *state.src_bytes.get(state.offset)?;
+                                                                                if !(!(__b == b'/')) {
+                                                                                    return None;
+                                                                                }
+                                                                                state.offset += 1;
+                                                                            }
+                                                                            {
+                                                                                let __end = state.src_bytes.len();
+                                                                                let mut __pos = state.offset;
+                                                                                while __pos < __end {
+                                                                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                                    if !(__b == b'*') {
+                                                                                        __pos += 1;
+                                                                                    } else {
+                                                                                        break;
+                                                                                    }
+                                                                                }
+                                                                                state.offset = __pos;
+                                                                            }
+                                                                            Some(())
+                                                                        })();
+                                                                        if __ok.is_none() {
+                                                                            state.offset = __save;
+                                                                            break;
+                                                                        }
+                                                                        if state.offset == __save {
+                                                                            break;
+                                                                        }
+                                                                        __rep_count += 1;
+                                                                    }
+                                                                }
+                                                                {
+                                                                    let mut __rep_count: u32 = 0;
+                                                                    loop {
+                                                                        let __save = state.offset;
+                                                                        let __ok = (|| -> Option<()> {
+                                                                            if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                            {
+                                                                                return None;
+                                                                            }
+                                                                            state.offset += 1;
+                                                                            Some(())
+                                                                        })();
+                                                                        if __ok.is_none() {
+                                                                            state.offset = __save;
+                                                                            break;
+                                                                        }
+                                                                        if state.offset == __save {
+                                                                            break;
+                                                                        }
+                                                                        __rep_count += 1;
+                                                                    }
+                                                                    if __rep_count < 1 {
+                                                                        return None;
+                                                                    }
+                                                                }
+                                                                if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                                {
+                                                                    return None;
+                                                                }
+                                                                state.offset += 1;
+                                                                Some(())
+                                                            })();
+                                                            if __ok.is_none() {
+                                                                state.offset = __save_dispatch;
+                                                                return None;
+                                                            }
+                                                        }
+                                                        _ => {
+                                                            return None;
+                                                        }
+                                                    }
+                                                }
+                                                Some(())
+                                            })();
+                                            if __ok.is_none() {
+                                                state.offset = __save;
+                                                break;
+                                            }
+                                            if state.offset == __save {
+                                                break;
+                                            }
+                                            __rep_count += 1;
+                                        }
+                                    }
+                                    Some(())
+                                })();
+                                if __result.is_some() {
+                                    Some(
+                                        ::parse_that::Span::new(__start, state.offset, state.src),
+                                    )
+                                } else {
+                                    state.offset = __start;
+                                    None
+                                }
+                            }
+                                .is_none()
+                            {
                                 return false;
                             }
                             let __matched = &state.src[__start..state.offset];
@@ -4850,7 +5574,188 @@ mod __cssprettyparser_emit_impl {
                                                             };
                                                             {
                                                                 let __start = state.offset;
-                                                                if ::parse_that::scan_ws_block_comments(state).is_none() {
+                                                                if {
+                                                                    let __start = state.offset;
+                                                                    let __result: Option<()> = (|| {
+                                                                        {
+                                                                            let mut __rep_count: u32 = 0;
+                                                                            loop {
+                                                                                let __save = state.offset;
+                                                                                let __ok = (|| -> Option<()> {
+                                                                                    {
+                                                                                        let __save_dispatch = state.offset;
+                                                                                        let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                                                                        match __dispatch_b {
+                                                                                            b'\t' | b'\n' | b'\x0B' | b'\x0C' | b'\r' | b' ' => {
+                                                                                                let __ok = (|| -> Option<()> {
+                                                                                                    {
+                                                                                                        let __b = *state.src_bytes.get(state.offset)?;
+                                                                                                        if !(__b.is_ascii_whitespace()) {
+                                                                                                            return None;
+                                                                                                        }
+                                                                                                        state.offset += 1;
+                                                                                                    }
+                                                                                                    Some(())
+                                                                                                })();
+                                                                                                if __ok.is_none() {
+                                                                                                    state.offset = __save_dispatch;
+                                                                                                    return None;
+                                                                                                }
+                                                                                            }
+                                                                                            b'/' => {
+                                                                                                let __ok = (|| -> Option<()> {
+                                                                                                    if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                                                                    {
+                                                                                                        return None;
+                                                                                                    }
+                                                                                                    state.offset += 1;
+                                                                                                    if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                                                    {
+                                                                                                        return None;
+                                                                                                    }
+                                                                                                    state.offset += 1;
+                                                                                                    {
+                                                                                                        let __end = state.src_bytes.len();
+                                                                                                        let mut __pos = state.offset;
+                                                                                                        while __pos < __end {
+                                                                                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                                                            if !(__b == b'*') {
+                                                                                                                __pos += 1;
+                                                                                                            } else {
+                                                                                                                break;
+                                                                                                            }
+                                                                                                        }
+                                                                                                        state.offset = __pos;
+                                                                                                    }
+                                                                                                    {
+                                                                                                        let mut __rep_count: u32 = 0;
+                                                                                                        loop {
+                                                                                                            let __save = state.offset;
+                                                                                                            let __ok = (|| -> Option<()> {
+                                                                                                                {
+                                                                                                                    let mut __rep_count: u32 = 0;
+                                                                                                                    loop {
+                                                                                                                        let __save = state.offset;
+                                                                                                                        let __ok = (|| -> Option<()> {
+                                                                                                                            if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                                                                            {
+                                                                                                                                return None;
+                                                                                                                            }
+                                                                                                                            state.offset += 1;
+                                                                                                                            Some(())
+                                                                                                                        })();
+                                                                                                                        if __ok.is_none() {
+                                                                                                                            state.offset = __save;
+                                                                                                                            break;
+                                                                                                                        }
+                                                                                                                        if state.offset == __save {
+                                                                                                                            break;
+                                                                                                                        }
+                                                                                                                        __rep_count += 1;
+                                                                                                                    }
+                                                                                                                    if __rep_count < 1 {
+                                                                                                                        return None;
+                                                                                                                    }
+                                                                                                                }
+                                                                                                                {
+                                                                                                                    let __b = *state.src_bytes.get(state.offset)?;
+                                                                                                                    if !(!(__b == b'/')) {
+                                                                                                                        return None;
+                                                                                                                    }
+                                                                                                                    state.offset += 1;
+                                                                                                                }
+                                                                                                                {
+                                                                                                                    let __end = state.src_bytes.len();
+                                                                                                                    let mut __pos = state.offset;
+                                                                                                                    while __pos < __end {
+                                                                                                                        let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                                                                        if !(__b == b'*') {
+                                                                                                                            __pos += 1;
+                                                                                                                        } else {
+                                                                                                                            break;
+                                                                                                                        }
+                                                                                                                    }
+                                                                                                                    state.offset = __pos;
+                                                                                                                }
+                                                                                                                Some(())
+                                                                                                            })();
+                                                                                                            if __ok.is_none() {
+                                                                                                                state.offset = __save;
+                                                                                                                break;
+                                                                                                            }
+                                                                                                            if state.offset == __save {
+                                                                                                                break;
+                                                                                                            }
+                                                                                                            __rep_count += 1;
+                                                                                                        }
+                                                                                                    }
+                                                                                                    {
+                                                                                                        let mut __rep_count: u32 = 0;
+                                                                                                        loop {
+                                                                                                            let __save = state.offset;
+                                                                                                            let __ok = (|| -> Option<()> {
+                                                                                                                if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                                                                {
+                                                                                                                    return None;
+                                                                                                                }
+                                                                                                                state.offset += 1;
+                                                                                                                Some(())
+                                                                                                            })();
+                                                                                                            if __ok.is_none() {
+                                                                                                                state.offset = __save;
+                                                                                                                break;
+                                                                                                            }
+                                                                                                            if state.offset == __save {
+                                                                                                                break;
+                                                                                                            }
+                                                                                                            __rep_count += 1;
+                                                                                                        }
+                                                                                                        if __rep_count < 1 {
+                                                                                                            return None;
+                                                                                                        }
+                                                                                                    }
+                                                                                                    if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                                                                    {
+                                                                                                        return None;
+                                                                                                    }
+                                                                                                    state.offset += 1;
+                                                                                                    Some(())
+                                                                                                })();
+                                                                                                if __ok.is_none() {
+                                                                                                    state.offset = __save_dispatch;
+                                                                                                    return None;
+                                                                                                }
+                                                                                            }
+                                                                                            _ => {
+                                                                                                return None;
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                    Some(())
+                                                                                })();
+                                                                                if __ok.is_none() {
+                                                                                    state.offset = __save;
+                                                                                    break;
+                                                                                }
+                                                                                if state.offset == __save {
+                                                                                    break;
+                                                                                }
+                                                                                __rep_count += 1;
+                                                                            }
+                                                                        }
+                                                                        Some(())
+                                                                    })();
+                                                                    if __result.is_some() {
+                                                                        Some(
+                                                                            ::parse_that::Span::new(__start, state.offset, state.src),
+                                                                        )
+                                                                    } else {
+                                                                        state.offset = __start;
+                                                                        None
+                                                                    }
+                                                                }
+                                                                    .is_none()
+                                                                {
                                                                     return false;
                                                                 }
                                                                 let __matched = &state.src[__start..state.offset];
@@ -4937,7 +5842,188 @@ mod __cssprettyparser_emit_impl {
                                         };
                                         {
                                             let __start = state.offset;
-                                            if ::parse_that::scan_ws_block_comments(state).is_none() {
+                                            if {
+                                                let __start = state.offset;
+                                                let __result: Option<()> = (|| {
+                                                    {
+                                                        let mut __rep_count: u32 = 0;
+                                                        loop {
+                                                            let __save = state.offset;
+                                                            let __ok = (|| -> Option<()> {
+                                                                {
+                                                                    let __save_dispatch = state.offset;
+                                                                    let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                                                    match __dispatch_b {
+                                                                        b'\t' | b'\n' | b'\x0B' | b'\x0C' | b'\r' | b' ' => {
+                                                                            let __ok = (|| -> Option<()> {
+                                                                                {
+                                                                                    let __b = *state.src_bytes.get(state.offset)?;
+                                                                                    if !(__b.is_ascii_whitespace()) {
+                                                                                        return None;
+                                                                                    }
+                                                                                    state.offset += 1;
+                                                                                }
+                                                                                Some(())
+                                                                            })();
+                                                                            if __ok.is_none() {
+                                                                                state.offset = __save_dispatch;
+                                                                                return None;
+                                                                            }
+                                                                        }
+                                                                        b'/' => {
+                                                                            let __ok = (|| -> Option<()> {
+                                                                                if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                                                {
+                                                                                    return None;
+                                                                                }
+                                                                                state.offset += 1;
+                                                                                if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                                {
+                                                                                    return None;
+                                                                                }
+                                                                                state.offset += 1;
+                                                                                {
+                                                                                    let __end = state.src_bytes.len();
+                                                                                    let mut __pos = state.offset;
+                                                                                    while __pos < __end {
+                                                                                        let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                                        if !(__b == b'*') {
+                                                                                            __pos += 1;
+                                                                                        } else {
+                                                                                            break;
+                                                                                        }
+                                                                                    }
+                                                                                    state.offset = __pos;
+                                                                                }
+                                                                                {
+                                                                                    let mut __rep_count: u32 = 0;
+                                                                                    loop {
+                                                                                        let __save = state.offset;
+                                                                                        let __ok = (|| -> Option<()> {
+                                                                                            {
+                                                                                                let mut __rep_count: u32 = 0;
+                                                                                                loop {
+                                                                                                    let __save = state.offset;
+                                                                                                    let __ok = (|| -> Option<()> {
+                                                                                                        if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                                                        {
+                                                                                                            return None;
+                                                                                                        }
+                                                                                                        state.offset += 1;
+                                                                                                        Some(())
+                                                                                                    })();
+                                                                                                    if __ok.is_none() {
+                                                                                                        state.offset = __save;
+                                                                                                        break;
+                                                                                                    }
+                                                                                                    if state.offset == __save {
+                                                                                                        break;
+                                                                                                    }
+                                                                                                    __rep_count += 1;
+                                                                                                }
+                                                                                                if __rep_count < 1 {
+                                                                                                    return None;
+                                                                                                }
+                                                                                            }
+                                                                                            {
+                                                                                                let __b = *state.src_bytes.get(state.offset)?;
+                                                                                                if !(!(__b == b'/')) {
+                                                                                                    return None;
+                                                                                                }
+                                                                                                state.offset += 1;
+                                                                                            }
+                                                                                            {
+                                                                                                let __end = state.src_bytes.len();
+                                                                                                let mut __pos = state.offset;
+                                                                                                while __pos < __end {
+                                                                                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                                                    if !(__b == b'*') {
+                                                                                                        __pos += 1;
+                                                                                                    } else {
+                                                                                                        break;
+                                                                                                    }
+                                                                                                }
+                                                                                                state.offset = __pos;
+                                                                                            }
+                                                                                            Some(())
+                                                                                        })();
+                                                                                        if __ok.is_none() {
+                                                                                            state.offset = __save;
+                                                                                            break;
+                                                                                        }
+                                                                                        if state.offset == __save {
+                                                                                            break;
+                                                                                        }
+                                                                                        __rep_count += 1;
+                                                                                    }
+                                                                                }
+                                                                                {
+                                                                                    let mut __rep_count: u32 = 0;
+                                                                                    loop {
+                                                                                        let __save = state.offset;
+                                                                                        let __ok = (|| -> Option<()> {
+                                                                                            if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                                            {
+                                                                                                return None;
+                                                                                            }
+                                                                                            state.offset += 1;
+                                                                                            Some(())
+                                                                                        })();
+                                                                                        if __ok.is_none() {
+                                                                                            state.offset = __save;
+                                                                                            break;
+                                                                                        }
+                                                                                        if state.offset == __save {
+                                                                                            break;
+                                                                                        }
+                                                                                        __rep_count += 1;
+                                                                                    }
+                                                                                    if __rep_count < 1 {
+                                                                                        return None;
+                                                                                    }
+                                                                                }
+                                                                                if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                                                {
+                                                                                    return None;
+                                                                                }
+                                                                                state.offset += 1;
+                                                                                Some(())
+                                                                            })();
+                                                                            if __ok.is_none() {
+                                                                                state.offset = __save_dispatch;
+                                                                                return None;
+                                                                            }
+                                                                        }
+                                                                        _ => {
+                                                                            return None;
+                                                                        }
+                                                                    }
+                                                                }
+                                                                Some(())
+                                                            })();
+                                                            if __ok.is_none() {
+                                                                state.offset = __save;
+                                                                break;
+                                                            }
+                                                            if state.offset == __save {
+                                                                break;
+                                                            }
+                                                            __rep_count += 1;
+                                                        }
+                                                    }
+                                                    Some(())
+                                                })();
+                                                if __result.is_some() {
+                                                    Some(
+                                                        ::parse_that::Span::new(__start, state.offset, state.src),
+                                                    )
+                                                } else {
+                                                    state.offset = __start;
+                                                    None
+                                                }
+                                            }
+                                                .is_none()
+                                            {
                                                 return false;
                                             }
                                             let __matched = &state.src[__start..state.offset];
@@ -4996,7 +6082,188 @@ mod __cssprettyparser_emit_impl {
                             };
                             {
                                 let __start = state.offset;
-                                if ::parse_that::scan_ws_block_comments(state).is_none() {
+                                if {
+                                    let __start = state.offset;
+                                    let __result: Option<()> = (|| {
+                                        {
+                                            let mut __rep_count: u32 = 0;
+                                            loop {
+                                                let __save = state.offset;
+                                                let __ok = (|| -> Option<()> {
+                                                    {
+                                                        let __save_dispatch = state.offset;
+                                                        let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                                        match __dispatch_b {
+                                                            b'\t' | b'\n' | b'\x0B' | b'\x0C' | b'\r' | b' ' => {
+                                                                let __ok = (|| -> Option<()> {
+                                                                    {
+                                                                        let __b = *state.src_bytes.get(state.offset)?;
+                                                                        if !(__b.is_ascii_whitespace()) {
+                                                                            return None;
+                                                                        }
+                                                                        state.offset += 1;
+                                                                    }
+                                                                    Some(())
+                                                                })();
+                                                                if __ok.is_none() {
+                                                                    state.offset = __save_dispatch;
+                                                                    return None;
+                                                                }
+                                                            }
+                                                            b'/' => {
+                                                                let __ok = (|| -> Option<()> {
+                                                                    if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                                    {
+                                                                        return None;
+                                                                    }
+                                                                    state.offset += 1;
+                                                                    if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                    {
+                                                                        return None;
+                                                                    }
+                                                                    state.offset += 1;
+                                                                    {
+                                                                        let __end = state.src_bytes.len();
+                                                                        let mut __pos = state.offset;
+                                                                        while __pos < __end {
+                                                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                            if !(__b == b'*') {
+                                                                                __pos += 1;
+                                                                            } else {
+                                                                                break;
+                                                                            }
+                                                                        }
+                                                                        state.offset = __pos;
+                                                                    }
+                                                                    {
+                                                                        let mut __rep_count: u32 = 0;
+                                                                        loop {
+                                                                            let __save = state.offset;
+                                                                            let __ok = (|| -> Option<()> {
+                                                                                {
+                                                                                    let mut __rep_count: u32 = 0;
+                                                                                    loop {
+                                                                                        let __save = state.offset;
+                                                                                        let __ok = (|| -> Option<()> {
+                                                                                            if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                                            {
+                                                                                                return None;
+                                                                                            }
+                                                                                            state.offset += 1;
+                                                                                            Some(())
+                                                                                        })();
+                                                                                        if __ok.is_none() {
+                                                                                            state.offset = __save;
+                                                                                            break;
+                                                                                        }
+                                                                                        if state.offset == __save {
+                                                                                            break;
+                                                                                        }
+                                                                                        __rep_count += 1;
+                                                                                    }
+                                                                                    if __rep_count < 1 {
+                                                                                        return None;
+                                                                                    }
+                                                                                }
+                                                                                {
+                                                                                    let __b = *state.src_bytes.get(state.offset)?;
+                                                                                    if !(!(__b == b'/')) {
+                                                                                        return None;
+                                                                                    }
+                                                                                    state.offset += 1;
+                                                                                }
+                                                                                {
+                                                                                    let __end = state.src_bytes.len();
+                                                                                    let mut __pos = state.offset;
+                                                                                    while __pos < __end {
+                                                                                        let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                                        if !(__b == b'*') {
+                                                                                            __pos += 1;
+                                                                                        } else {
+                                                                                            break;
+                                                                                        }
+                                                                                    }
+                                                                                    state.offset = __pos;
+                                                                                }
+                                                                                Some(())
+                                                                            })();
+                                                                            if __ok.is_none() {
+                                                                                state.offset = __save;
+                                                                                break;
+                                                                            }
+                                                                            if state.offset == __save {
+                                                                                break;
+                                                                            }
+                                                                            __rep_count += 1;
+                                                                        }
+                                                                    }
+                                                                    {
+                                                                        let mut __rep_count: u32 = 0;
+                                                                        loop {
+                                                                            let __save = state.offset;
+                                                                            let __ok = (|| -> Option<()> {
+                                                                                if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                                {
+                                                                                    return None;
+                                                                                }
+                                                                                state.offset += 1;
+                                                                                Some(())
+                                                                            })();
+                                                                            if __ok.is_none() {
+                                                                                state.offset = __save;
+                                                                                break;
+                                                                            }
+                                                                            if state.offset == __save {
+                                                                                break;
+                                                                            }
+                                                                            __rep_count += 1;
+                                                                        }
+                                                                        if __rep_count < 1 {
+                                                                            return None;
+                                                                        }
+                                                                    }
+                                                                    if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                                    {
+                                                                        return None;
+                                                                    }
+                                                                    state.offset += 1;
+                                                                    Some(())
+                                                                })();
+                                                                if __ok.is_none() {
+                                                                    state.offset = __save_dispatch;
+                                                                    return None;
+                                                                }
+                                                            }
+                                                            _ => {
+                                                                return None;
+                                                            }
+                                                        }
+                                                    }
+                                                    Some(())
+                                                })();
+                                                if __ok.is_none() {
+                                                    state.offset = __save;
+                                                    break;
+                                                }
+                                                if state.offset == __save {
+                                                    break;
+                                                }
+                                                __rep_count += 1;
+                                            }
+                                        }
+                                        Some(())
+                                    })();
+                                    if __result.is_some() {
+                                        Some(
+                                            ::parse_that::Span::new(__start, state.offset, state.src),
+                                        )
+                                    } else {
+                                        state.offset = __start;
+                                        None
+                                    }
+                                }
+                                    .is_none()
+                                {
                                     return false;
                                 }
                                 let __matched = &state.src[__start..state.offset];
@@ -5171,7 +6438,188 @@ mod __cssprettyparser_emit_impl {
                         };
                         {
                             let __start = state.offset;
-                            if ::parse_that::scan_ws_block_comments(state).is_none() {
+                            if {
+                                let __start = state.offset;
+                                let __result: Option<()> = (|| {
+                                    {
+                                        let mut __rep_count: u32 = 0;
+                                        loop {
+                                            let __save = state.offset;
+                                            let __ok = (|| -> Option<()> {
+                                                {
+                                                    let __save_dispatch = state.offset;
+                                                    let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                                    match __dispatch_b {
+                                                        b'\t' | b'\n' | b'\x0B' | b'\x0C' | b'\r' | b' ' => {
+                                                            let __ok = (|| -> Option<()> {
+                                                                {
+                                                                    let __b = *state.src_bytes.get(state.offset)?;
+                                                                    if !(__b.is_ascii_whitespace()) {
+                                                                        return None;
+                                                                    }
+                                                                    state.offset += 1;
+                                                                }
+                                                                Some(())
+                                                            })();
+                                                            if __ok.is_none() {
+                                                                state.offset = __save_dispatch;
+                                                                return None;
+                                                            }
+                                                        }
+                                                        b'/' => {
+                                                            let __ok = (|| -> Option<()> {
+                                                                if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                                {
+                                                                    return None;
+                                                                }
+                                                                state.offset += 1;
+                                                                if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                {
+                                                                    return None;
+                                                                }
+                                                                state.offset += 1;
+                                                                {
+                                                                    let __end = state.src_bytes.len();
+                                                                    let mut __pos = state.offset;
+                                                                    while __pos < __end {
+                                                                        let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                        if !(__b == b'*') {
+                                                                            __pos += 1;
+                                                                        } else {
+                                                                            break;
+                                                                        }
+                                                                    }
+                                                                    state.offset = __pos;
+                                                                }
+                                                                {
+                                                                    let mut __rep_count: u32 = 0;
+                                                                    loop {
+                                                                        let __save = state.offset;
+                                                                        let __ok = (|| -> Option<()> {
+                                                                            {
+                                                                                let mut __rep_count: u32 = 0;
+                                                                                loop {
+                                                                                    let __save = state.offset;
+                                                                                    let __ok = (|| -> Option<()> {
+                                                                                        if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                                        {
+                                                                                            return None;
+                                                                                        }
+                                                                                        state.offset += 1;
+                                                                                        Some(())
+                                                                                    })();
+                                                                                    if __ok.is_none() {
+                                                                                        state.offset = __save;
+                                                                                        break;
+                                                                                    }
+                                                                                    if state.offset == __save {
+                                                                                        break;
+                                                                                    }
+                                                                                    __rep_count += 1;
+                                                                                }
+                                                                                if __rep_count < 1 {
+                                                                                    return None;
+                                                                                }
+                                                                            }
+                                                                            {
+                                                                                let __b = *state.src_bytes.get(state.offset)?;
+                                                                                if !(!(__b == b'/')) {
+                                                                                    return None;
+                                                                                }
+                                                                                state.offset += 1;
+                                                                            }
+                                                                            {
+                                                                                let __end = state.src_bytes.len();
+                                                                                let mut __pos = state.offset;
+                                                                                while __pos < __end {
+                                                                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                                    if !(__b == b'*') {
+                                                                                        __pos += 1;
+                                                                                    } else {
+                                                                                        break;
+                                                                                    }
+                                                                                }
+                                                                                state.offset = __pos;
+                                                                            }
+                                                                            Some(())
+                                                                        })();
+                                                                        if __ok.is_none() {
+                                                                            state.offset = __save;
+                                                                            break;
+                                                                        }
+                                                                        if state.offset == __save {
+                                                                            break;
+                                                                        }
+                                                                        __rep_count += 1;
+                                                                    }
+                                                                }
+                                                                {
+                                                                    let mut __rep_count: u32 = 0;
+                                                                    loop {
+                                                                        let __save = state.offset;
+                                                                        let __ok = (|| -> Option<()> {
+                                                                            if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                            {
+                                                                                return None;
+                                                                            }
+                                                                            state.offset += 1;
+                                                                            Some(())
+                                                                        })();
+                                                                        if __ok.is_none() {
+                                                                            state.offset = __save;
+                                                                            break;
+                                                                        }
+                                                                        if state.offset == __save {
+                                                                            break;
+                                                                        }
+                                                                        __rep_count += 1;
+                                                                    }
+                                                                    if __rep_count < 1 {
+                                                                        return None;
+                                                                    }
+                                                                }
+                                                                if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                                {
+                                                                    return None;
+                                                                }
+                                                                state.offset += 1;
+                                                                Some(())
+                                                            })();
+                                                            if __ok.is_none() {
+                                                                state.offset = __save_dispatch;
+                                                                return None;
+                                                            }
+                                                        }
+                                                        _ => {
+                                                            return None;
+                                                        }
+                                                    }
+                                                }
+                                                Some(())
+                                            })();
+                                            if __ok.is_none() {
+                                                state.offset = __save;
+                                                break;
+                                            }
+                                            if state.offset == __save {
+                                                break;
+                                            }
+                                            __rep_count += 1;
+                                        }
+                                    }
+                                    Some(())
+                                })();
+                                if __result.is_some() {
+                                    Some(
+                                        ::parse_that::Span::new(__start, state.offset, state.src),
+                                    )
+                                } else {
+                                    state.offset = __start;
+                                    None
+                                }
+                            }
+                                .is_none()
+                            {
                                 return false;
                             }
                             let __matched = &state.src[__start..state.offset];
@@ -5360,7 +6808,188 @@ mod __cssprettyparser_emit_impl {
                     };
                     {
                         let __start = state.offset;
-                        if ::parse_that::scan_ws_block_comments(state).is_none() {
+                        if {
+                            let __start = state.offset;
+                            let __result: Option<()> = (|| {
+                                {
+                                    let mut __rep_count: u32 = 0;
+                                    loop {
+                                        let __save = state.offset;
+                                        let __ok = (|| -> Option<()> {
+                                            {
+                                                let __save_dispatch = state.offset;
+                                                let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                                match __dispatch_b {
+                                                    b'\t' | b'\n' | b'\x0B' | b'\x0C' | b'\r' | b' ' => {
+                                                        let __ok = (|| -> Option<()> {
+                                                            {
+                                                                let __b = *state.src_bytes.get(state.offset)?;
+                                                                if !(__b.is_ascii_whitespace()) {
+                                                                    return None;
+                                                                }
+                                                                state.offset += 1;
+                                                            }
+                                                            Some(())
+                                                        })();
+                                                        if __ok.is_none() {
+                                                            state.offset = __save_dispatch;
+                                                            return None;
+                                                        }
+                                                    }
+                                                    b'/' => {
+                                                        let __ok = (|| -> Option<()> {
+                                                            if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                            {
+                                                                return None;
+                                                            }
+                                                            state.offset += 1;
+                                                            if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                            {
+                                                                return None;
+                                                            }
+                                                            state.offset += 1;
+                                                            {
+                                                                let __end = state.src_bytes.len();
+                                                                let mut __pos = state.offset;
+                                                                while __pos < __end {
+                                                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                    if !(__b == b'*') {
+                                                                        __pos += 1;
+                                                                    } else {
+                                                                        break;
+                                                                    }
+                                                                }
+                                                                state.offset = __pos;
+                                                            }
+                                                            {
+                                                                let mut __rep_count: u32 = 0;
+                                                                loop {
+                                                                    let __save = state.offset;
+                                                                    let __ok = (|| -> Option<()> {
+                                                                        {
+                                                                            let mut __rep_count: u32 = 0;
+                                                                            loop {
+                                                                                let __save = state.offset;
+                                                                                let __ok = (|| -> Option<()> {
+                                                                                    if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                                    {
+                                                                                        return None;
+                                                                                    }
+                                                                                    state.offset += 1;
+                                                                                    Some(())
+                                                                                })();
+                                                                                if __ok.is_none() {
+                                                                                    state.offset = __save;
+                                                                                    break;
+                                                                                }
+                                                                                if state.offset == __save {
+                                                                                    break;
+                                                                                }
+                                                                                __rep_count += 1;
+                                                                            }
+                                                                            if __rep_count < 1 {
+                                                                                return None;
+                                                                            }
+                                                                        }
+                                                                        {
+                                                                            let __b = *state.src_bytes.get(state.offset)?;
+                                                                            if !(!(__b == b'/')) {
+                                                                                return None;
+                                                                            }
+                                                                            state.offset += 1;
+                                                                        }
+                                                                        {
+                                                                            let __end = state.src_bytes.len();
+                                                                            let mut __pos = state.offset;
+                                                                            while __pos < __end {
+                                                                                let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                                if !(__b == b'*') {
+                                                                                    __pos += 1;
+                                                                                } else {
+                                                                                    break;
+                                                                                }
+                                                                            }
+                                                                            state.offset = __pos;
+                                                                        }
+                                                                        Some(())
+                                                                    })();
+                                                                    if __ok.is_none() {
+                                                                        state.offset = __save;
+                                                                        break;
+                                                                    }
+                                                                    if state.offset == __save {
+                                                                        break;
+                                                                    }
+                                                                    __rep_count += 1;
+                                                                }
+                                                            }
+                                                            {
+                                                                let mut __rep_count: u32 = 0;
+                                                                loop {
+                                                                    let __save = state.offset;
+                                                                    let __ok = (|| -> Option<()> {
+                                                                        if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                        {
+                                                                            return None;
+                                                                        }
+                                                                        state.offset += 1;
+                                                                        Some(())
+                                                                    })();
+                                                                    if __ok.is_none() {
+                                                                        state.offset = __save;
+                                                                        break;
+                                                                    }
+                                                                    if state.offset == __save {
+                                                                        break;
+                                                                    }
+                                                                    __rep_count += 1;
+                                                                }
+                                                                if __rep_count < 1 {
+                                                                    return None;
+                                                                }
+                                                            }
+                                                            if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                            {
+                                                                return None;
+                                                            }
+                                                            state.offset += 1;
+                                                            Some(())
+                                                        })();
+                                                        if __ok.is_none() {
+                                                            state.offset = __save_dispatch;
+                                                            return None;
+                                                        }
+                                                    }
+                                                    _ => {
+                                                        return None;
+                                                    }
+                                                }
+                                            }
+                                            Some(())
+                                        })();
+                                        if __ok.is_none() {
+                                            state.offset = __save;
+                                            break;
+                                        }
+                                        if state.offset == __save {
+                                            break;
+                                        }
+                                        __rep_count += 1;
+                                    }
+                                }
+                                Some(())
+                            })();
+                            if __result.is_some() {
+                                Some(
+                                    ::parse_that::Span::new(__start, state.offset, state.src),
+                                )
+                            } else {
+                                state.offset = __start;
+                                None
+                            }
+                        }
+                            .is_none()
+                        {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
@@ -5449,7 +7078,188 @@ mod __cssprettyparser_emit_impl {
                             {
                                 {
                                     let __start = state.offset;
-                                    if ::parse_that::scan_ws_block_comments(state).is_none() {
+                                    if {
+                                        let __start = state.offset;
+                                        let __result: Option<()> = (|| {
+                                            {
+                                                let mut __rep_count: u32 = 0;
+                                                loop {
+                                                    let __save = state.offset;
+                                                    let __ok = (|| -> Option<()> {
+                                                        {
+                                                            let __save_dispatch = state.offset;
+                                                            let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                                            match __dispatch_b {
+                                                                b'\t' | b'\n' | b'\x0B' | b'\x0C' | b'\r' | b' ' => {
+                                                                    let __ok = (|| -> Option<()> {
+                                                                        {
+                                                                            let __b = *state.src_bytes.get(state.offset)?;
+                                                                            if !(__b.is_ascii_whitespace()) {
+                                                                                return None;
+                                                                            }
+                                                                            state.offset += 1;
+                                                                        }
+                                                                        Some(())
+                                                                    })();
+                                                                    if __ok.is_none() {
+                                                                        state.offset = __save_dispatch;
+                                                                        return None;
+                                                                    }
+                                                                }
+                                                                b'/' => {
+                                                                    let __ok = (|| -> Option<()> {
+                                                                        if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                                        {
+                                                                            return None;
+                                                                        }
+                                                                        state.offset += 1;
+                                                                        if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                        {
+                                                                            return None;
+                                                                        }
+                                                                        state.offset += 1;
+                                                                        {
+                                                                            let __end = state.src_bytes.len();
+                                                                            let mut __pos = state.offset;
+                                                                            while __pos < __end {
+                                                                                let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                                if !(__b == b'*') {
+                                                                                    __pos += 1;
+                                                                                } else {
+                                                                                    break;
+                                                                                }
+                                                                            }
+                                                                            state.offset = __pos;
+                                                                        }
+                                                                        {
+                                                                            let mut __rep_count: u32 = 0;
+                                                                            loop {
+                                                                                let __save = state.offset;
+                                                                                let __ok = (|| -> Option<()> {
+                                                                                    {
+                                                                                        let mut __rep_count: u32 = 0;
+                                                                                        loop {
+                                                                                            let __save = state.offset;
+                                                                                            let __ok = (|| -> Option<()> {
+                                                                                                if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                                                {
+                                                                                                    return None;
+                                                                                                }
+                                                                                                state.offset += 1;
+                                                                                                Some(())
+                                                                                            })();
+                                                                                            if __ok.is_none() {
+                                                                                                state.offset = __save;
+                                                                                                break;
+                                                                                            }
+                                                                                            if state.offset == __save {
+                                                                                                break;
+                                                                                            }
+                                                                                            __rep_count += 1;
+                                                                                        }
+                                                                                        if __rep_count < 1 {
+                                                                                            return None;
+                                                                                        }
+                                                                                    }
+                                                                                    {
+                                                                                        let __b = *state.src_bytes.get(state.offset)?;
+                                                                                        if !(!(__b == b'/')) {
+                                                                                            return None;
+                                                                                        }
+                                                                                        state.offset += 1;
+                                                                                    }
+                                                                                    {
+                                                                                        let __end = state.src_bytes.len();
+                                                                                        let mut __pos = state.offset;
+                                                                                        while __pos < __end {
+                                                                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                                            if !(__b == b'*') {
+                                                                                                __pos += 1;
+                                                                                            } else {
+                                                                                                break;
+                                                                                            }
+                                                                                        }
+                                                                                        state.offset = __pos;
+                                                                                    }
+                                                                                    Some(())
+                                                                                })();
+                                                                                if __ok.is_none() {
+                                                                                    state.offset = __save;
+                                                                                    break;
+                                                                                }
+                                                                                if state.offset == __save {
+                                                                                    break;
+                                                                                }
+                                                                                __rep_count += 1;
+                                                                            }
+                                                                        }
+                                                                        {
+                                                                            let mut __rep_count: u32 = 0;
+                                                                            loop {
+                                                                                let __save = state.offset;
+                                                                                let __ok = (|| -> Option<()> {
+                                                                                    if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                                    {
+                                                                                        return None;
+                                                                                    }
+                                                                                    state.offset += 1;
+                                                                                    Some(())
+                                                                                })();
+                                                                                if __ok.is_none() {
+                                                                                    state.offset = __save;
+                                                                                    break;
+                                                                                }
+                                                                                if state.offset == __save {
+                                                                                    break;
+                                                                                }
+                                                                                __rep_count += 1;
+                                                                            }
+                                                                            if __rep_count < 1 {
+                                                                                return None;
+                                                                            }
+                                                                        }
+                                                                        if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                                        {
+                                                                            return None;
+                                                                        }
+                                                                        state.offset += 1;
+                                                                        Some(())
+                                                                    })();
+                                                                    if __ok.is_none() {
+                                                                        state.offset = __save_dispatch;
+                                                                        return None;
+                                                                    }
+                                                                }
+                                                                _ => {
+                                                                    return None;
+                                                                }
+                                                            }
+                                                        }
+                                                        Some(())
+                                                    })();
+                                                    if __ok.is_none() {
+                                                        state.offset = __save;
+                                                        break;
+                                                    }
+                                                    if state.offset == __save {
+                                                        break;
+                                                    }
+                                                    __rep_count += 1;
+                                                }
+                                            }
+                                            Some(())
+                                        })();
+                                        if __result.is_some() {
+                                            Some(
+                                                ::parse_that::Span::new(__start, state.offset, state.src),
+                                            )
+                                        } else {
+                                            state.offset = __start;
+                                            None
+                                        }
+                                    }
+                                        .is_none()
+                                    {
                                         return false;
                                     }
                                     let __matched = &state.src[__start..state.offset];
@@ -5463,7 +7273,188 @@ mod __cssprettyparser_emit_impl {
                             };
                             {
                                 let __start = state.offset;
-                                if ::parse_that::scan_ws_block_comments(state).is_none() {
+                                if {
+                                    let __start = state.offset;
+                                    let __result: Option<()> = (|| {
+                                        {
+                                            let mut __rep_count: u32 = 0;
+                                            loop {
+                                                let __save = state.offset;
+                                                let __ok = (|| -> Option<()> {
+                                                    {
+                                                        let __save_dispatch = state.offset;
+                                                        let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                                        match __dispatch_b {
+                                                            b'\t' | b'\n' | b'\x0B' | b'\x0C' | b'\r' | b' ' => {
+                                                                let __ok = (|| -> Option<()> {
+                                                                    {
+                                                                        let __b = *state.src_bytes.get(state.offset)?;
+                                                                        if !(__b.is_ascii_whitespace()) {
+                                                                            return None;
+                                                                        }
+                                                                        state.offset += 1;
+                                                                    }
+                                                                    Some(())
+                                                                })();
+                                                                if __ok.is_none() {
+                                                                    state.offset = __save_dispatch;
+                                                                    return None;
+                                                                }
+                                                            }
+                                                            b'/' => {
+                                                                let __ok = (|| -> Option<()> {
+                                                                    if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                                    {
+                                                                        return None;
+                                                                    }
+                                                                    state.offset += 1;
+                                                                    if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                    {
+                                                                        return None;
+                                                                    }
+                                                                    state.offset += 1;
+                                                                    {
+                                                                        let __end = state.src_bytes.len();
+                                                                        let mut __pos = state.offset;
+                                                                        while __pos < __end {
+                                                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                            if !(__b == b'*') {
+                                                                                __pos += 1;
+                                                                            } else {
+                                                                                break;
+                                                                            }
+                                                                        }
+                                                                        state.offset = __pos;
+                                                                    }
+                                                                    {
+                                                                        let mut __rep_count: u32 = 0;
+                                                                        loop {
+                                                                            let __save = state.offset;
+                                                                            let __ok = (|| -> Option<()> {
+                                                                                {
+                                                                                    let mut __rep_count: u32 = 0;
+                                                                                    loop {
+                                                                                        let __save = state.offset;
+                                                                                        let __ok = (|| -> Option<()> {
+                                                                                            if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                                            {
+                                                                                                return None;
+                                                                                            }
+                                                                                            state.offset += 1;
+                                                                                            Some(())
+                                                                                        })();
+                                                                                        if __ok.is_none() {
+                                                                                            state.offset = __save;
+                                                                                            break;
+                                                                                        }
+                                                                                        if state.offset == __save {
+                                                                                            break;
+                                                                                        }
+                                                                                        __rep_count += 1;
+                                                                                    }
+                                                                                    if __rep_count < 1 {
+                                                                                        return None;
+                                                                                    }
+                                                                                }
+                                                                                {
+                                                                                    let __b = *state.src_bytes.get(state.offset)?;
+                                                                                    if !(!(__b == b'/')) {
+                                                                                        return None;
+                                                                                    }
+                                                                                    state.offset += 1;
+                                                                                }
+                                                                                {
+                                                                                    let __end = state.src_bytes.len();
+                                                                                    let mut __pos = state.offset;
+                                                                                    while __pos < __end {
+                                                                                        let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                                        if !(__b == b'*') {
+                                                                                            __pos += 1;
+                                                                                        } else {
+                                                                                            break;
+                                                                                        }
+                                                                                    }
+                                                                                    state.offset = __pos;
+                                                                                }
+                                                                                Some(())
+                                                                            })();
+                                                                            if __ok.is_none() {
+                                                                                state.offset = __save;
+                                                                                break;
+                                                                            }
+                                                                            if state.offset == __save {
+                                                                                break;
+                                                                            }
+                                                                            __rep_count += 1;
+                                                                        }
+                                                                    }
+                                                                    {
+                                                                        let mut __rep_count: u32 = 0;
+                                                                        loop {
+                                                                            let __save = state.offset;
+                                                                            let __ok = (|| -> Option<()> {
+                                                                                if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                                {
+                                                                                    return None;
+                                                                                }
+                                                                                state.offset += 1;
+                                                                                Some(())
+                                                                            })();
+                                                                            if __ok.is_none() {
+                                                                                state.offset = __save;
+                                                                                break;
+                                                                            }
+                                                                            if state.offset == __save {
+                                                                                break;
+                                                                            }
+                                                                            __rep_count += 1;
+                                                                        }
+                                                                        if __rep_count < 1 {
+                                                                            return None;
+                                                                        }
+                                                                    }
+                                                                    if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                                    {
+                                                                        return None;
+                                                                    }
+                                                                    state.offset += 1;
+                                                                    Some(())
+                                                                })();
+                                                                if __ok.is_none() {
+                                                                    state.offset = __save_dispatch;
+                                                                    return None;
+                                                                }
+                                                            }
+                                                            _ => {
+                                                                return None;
+                                                            }
+                                                        }
+                                                    }
+                                                    Some(())
+                                                })();
+                                                if __ok.is_none() {
+                                                    state.offset = __save;
+                                                    break;
+                                                }
+                                                if state.offset == __save {
+                                                    break;
+                                                }
+                                                __rep_count += 1;
+                                            }
+                                        }
+                                        Some(())
+                                    })();
+                                    if __result.is_some() {
+                                        Some(
+                                            ::parse_that::Span::new(__start, state.offset, state.src),
+                                        )
+                                    } else {
+                                        state.offset = __start;
+                                        None
+                                    }
+                                }
+                                    .is_none()
+                                {
                                     return false;
                                 }
                                 let __matched = &state.src[__start..state.offset];
@@ -5521,7 +7512,188 @@ mod __cssprettyparser_emit_impl {
                                     {
                                         {
                                             let __start = state.offset;
-                                            if ::parse_that::scan_ws_block_comments(state).is_none() {
+                                            if {
+                                                let __start = state.offset;
+                                                let __result: Option<()> = (|| {
+                                                    {
+                                                        let mut __rep_count: u32 = 0;
+                                                        loop {
+                                                            let __save = state.offset;
+                                                            let __ok = (|| -> Option<()> {
+                                                                {
+                                                                    let __save_dispatch = state.offset;
+                                                                    let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                                                    match __dispatch_b {
+                                                                        b'\t' | b'\n' | b'\x0B' | b'\x0C' | b'\r' | b' ' => {
+                                                                            let __ok = (|| -> Option<()> {
+                                                                                {
+                                                                                    let __b = *state.src_bytes.get(state.offset)?;
+                                                                                    if !(__b.is_ascii_whitespace()) {
+                                                                                        return None;
+                                                                                    }
+                                                                                    state.offset += 1;
+                                                                                }
+                                                                                Some(())
+                                                                            })();
+                                                                            if __ok.is_none() {
+                                                                                state.offset = __save_dispatch;
+                                                                                return None;
+                                                                            }
+                                                                        }
+                                                                        b'/' => {
+                                                                            let __ok = (|| -> Option<()> {
+                                                                                if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                                                {
+                                                                                    return None;
+                                                                                }
+                                                                                state.offset += 1;
+                                                                                if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                                {
+                                                                                    return None;
+                                                                                }
+                                                                                state.offset += 1;
+                                                                                {
+                                                                                    let __end = state.src_bytes.len();
+                                                                                    let mut __pos = state.offset;
+                                                                                    while __pos < __end {
+                                                                                        let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                                        if !(__b == b'*') {
+                                                                                            __pos += 1;
+                                                                                        } else {
+                                                                                            break;
+                                                                                        }
+                                                                                    }
+                                                                                    state.offset = __pos;
+                                                                                }
+                                                                                {
+                                                                                    let mut __rep_count: u32 = 0;
+                                                                                    loop {
+                                                                                        let __save = state.offset;
+                                                                                        let __ok = (|| -> Option<()> {
+                                                                                            {
+                                                                                                let mut __rep_count: u32 = 0;
+                                                                                                loop {
+                                                                                                    let __save = state.offset;
+                                                                                                    let __ok = (|| -> Option<()> {
+                                                                                                        if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                                                        {
+                                                                                                            return None;
+                                                                                                        }
+                                                                                                        state.offset += 1;
+                                                                                                        Some(())
+                                                                                                    })();
+                                                                                                    if __ok.is_none() {
+                                                                                                        state.offset = __save;
+                                                                                                        break;
+                                                                                                    }
+                                                                                                    if state.offset == __save {
+                                                                                                        break;
+                                                                                                    }
+                                                                                                    __rep_count += 1;
+                                                                                                }
+                                                                                                if __rep_count < 1 {
+                                                                                                    return None;
+                                                                                                }
+                                                                                            }
+                                                                                            {
+                                                                                                let __b = *state.src_bytes.get(state.offset)?;
+                                                                                                if !(!(__b == b'/')) {
+                                                                                                    return None;
+                                                                                                }
+                                                                                                state.offset += 1;
+                                                                                            }
+                                                                                            {
+                                                                                                let __end = state.src_bytes.len();
+                                                                                                let mut __pos = state.offset;
+                                                                                                while __pos < __end {
+                                                                                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                                                    if !(__b == b'*') {
+                                                                                                        __pos += 1;
+                                                                                                    } else {
+                                                                                                        break;
+                                                                                                    }
+                                                                                                }
+                                                                                                state.offset = __pos;
+                                                                                            }
+                                                                                            Some(())
+                                                                                        })();
+                                                                                        if __ok.is_none() {
+                                                                                            state.offset = __save;
+                                                                                            break;
+                                                                                        }
+                                                                                        if state.offset == __save {
+                                                                                            break;
+                                                                                        }
+                                                                                        __rep_count += 1;
+                                                                                    }
+                                                                                }
+                                                                                {
+                                                                                    let mut __rep_count: u32 = 0;
+                                                                                    loop {
+                                                                                        let __save = state.offset;
+                                                                                        let __ok = (|| -> Option<()> {
+                                                                                            if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                                            {
+                                                                                                return None;
+                                                                                            }
+                                                                                            state.offset += 1;
+                                                                                            Some(())
+                                                                                        })();
+                                                                                        if __ok.is_none() {
+                                                                                            state.offset = __save;
+                                                                                            break;
+                                                                                        }
+                                                                                        if state.offset == __save {
+                                                                                            break;
+                                                                                        }
+                                                                                        __rep_count += 1;
+                                                                                    }
+                                                                                    if __rep_count < 1 {
+                                                                                        return None;
+                                                                                    }
+                                                                                }
+                                                                                if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                                                {
+                                                                                    return None;
+                                                                                }
+                                                                                state.offset += 1;
+                                                                                Some(())
+                                                                            })();
+                                                                            if __ok.is_none() {
+                                                                                state.offset = __save_dispatch;
+                                                                                return None;
+                                                                            }
+                                                                        }
+                                                                        _ => {
+                                                                            return None;
+                                                                        }
+                                                                    }
+                                                                }
+                                                                Some(())
+                                                            })();
+                                                            if __ok.is_none() {
+                                                                state.offset = __save;
+                                                                break;
+                                                            }
+                                                            if state.offset == __save {
+                                                                break;
+                                                            }
+                                                            __rep_count += 1;
+                                                        }
+                                                    }
+                                                    Some(())
+                                                })();
+                                                if __result.is_some() {
+                                                    Some(
+                                                        ::parse_that::Span::new(__start, state.offset, state.src),
+                                                    )
+                                                } else {
+                                                    state.offset = __start;
+                                                    None
+                                                }
+                                            }
+                                                .is_none()
+                                            {
                                                 return false;
                                             }
                                             let __matched = &state.src[__start..state.offset];
@@ -5771,7 +7943,188 @@ mod __cssprettyparser_emit_impl {
                                 {
                                     {
                                         let __start = state.offset;
-                                        if ::parse_that::scan_ws_block_comments(state).is_none() {
+                                        if {
+                                            let __start = state.offset;
+                                            let __result: Option<()> = (|| {
+                                                {
+                                                    let mut __rep_count: u32 = 0;
+                                                    loop {
+                                                        let __save = state.offset;
+                                                        let __ok = (|| -> Option<()> {
+                                                            {
+                                                                let __save_dispatch = state.offset;
+                                                                let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                                                match __dispatch_b {
+                                                                    b'\t' | b'\n' | b'\x0B' | b'\x0C' | b'\r' | b' ' => {
+                                                                        let __ok = (|| -> Option<()> {
+                                                                            {
+                                                                                let __b = *state.src_bytes.get(state.offset)?;
+                                                                                if !(__b.is_ascii_whitespace()) {
+                                                                                    return None;
+                                                                                }
+                                                                                state.offset += 1;
+                                                                            }
+                                                                            Some(())
+                                                                        })();
+                                                                        if __ok.is_none() {
+                                                                            state.offset = __save_dispatch;
+                                                                            return None;
+                                                                        }
+                                                                    }
+                                                                    b'/' => {
+                                                                        let __ok = (|| -> Option<()> {
+                                                                            if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                                            {
+                                                                                return None;
+                                                                            }
+                                                                            state.offset += 1;
+                                                                            if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                            {
+                                                                                return None;
+                                                                            }
+                                                                            state.offset += 1;
+                                                                            {
+                                                                                let __end = state.src_bytes.len();
+                                                                                let mut __pos = state.offset;
+                                                                                while __pos < __end {
+                                                                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                                    if !(__b == b'*') {
+                                                                                        __pos += 1;
+                                                                                    } else {
+                                                                                        break;
+                                                                                    }
+                                                                                }
+                                                                                state.offset = __pos;
+                                                                            }
+                                                                            {
+                                                                                let mut __rep_count: u32 = 0;
+                                                                                loop {
+                                                                                    let __save = state.offset;
+                                                                                    let __ok = (|| -> Option<()> {
+                                                                                        {
+                                                                                            let mut __rep_count: u32 = 0;
+                                                                                            loop {
+                                                                                                let __save = state.offset;
+                                                                                                let __ok = (|| -> Option<()> {
+                                                                                                    if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                                                    {
+                                                                                                        return None;
+                                                                                                    }
+                                                                                                    state.offset += 1;
+                                                                                                    Some(())
+                                                                                                })();
+                                                                                                if __ok.is_none() {
+                                                                                                    state.offset = __save;
+                                                                                                    break;
+                                                                                                }
+                                                                                                if state.offset == __save {
+                                                                                                    break;
+                                                                                                }
+                                                                                                __rep_count += 1;
+                                                                                            }
+                                                                                            if __rep_count < 1 {
+                                                                                                return None;
+                                                                                            }
+                                                                                        }
+                                                                                        {
+                                                                                            let __b = *state.src_bytes.get(state.offset)?;
+                                                                                            if !(!(__b == b'/')) {
+                                                                                                return None;
+                                                                                            }
+                                                                                            state.offset += 1;
+                                                                                        }
+                                                                                        {
+                                                                                            let __end = state.src_bytes.len();
+                                                                                            let mut __pos = state.offset;
+                                                                                            while __pos < __end {
+                                                                                                let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                                                if !(__b == b'*') {
+                                                                                                    __pos += 1;
+                                                                                                } else {
+                                                                                                    break;
+                                                                                                }
+                                                                                            }
+                                                                                            state.offset = __pos;
+                                                                                        }
+                                                                                        Some(())
+                                                                                    })();
+                                                                                    if __ok.is_none() {
+                                                                                        state.offset = __save;
+                                                                                        break;
+                                                                                    }
+                                                                                    if state.offset == __save {
+                                                                                        break;
+                                                                                    }
+                                                                                    __rep_count += 1;
+                                                                                }
+                                                                            }
+                                                                            {
+                                                                                let mut __rep_count: u32 = 0;
+                                                                                loop {
+                                                                                    let __save = state.offset;
+                                                                                    let __ok = (|| -> Option<()> {
+                                                                                        if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                                        {
+                                                                                            return None;
+                                                                                        }
+                                                                                        state.offset += 1;
+                                                                                        Some(())
+                                                                                    })();
+                                                                                    if __ok.is_none() {
+                                                                                        state.offset = __save;
+                                                                                        break;
+                                                                                    }
+                                                                                    if state.offset == __save {
+                                                                                        break;
+                                                                                    }
+                                                                                    __rep_count += 1;
+                                                                                }
+                                                                                if __rep_count < 1 {
+                                                                                    return None;
+                                                                                }
+                                                                            }
+                                                                            if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                                            {
+                                                                                return None;
+                                                                            }
+                                                                            state.offset += 1;
+                                                                            Some(())
+                                                                        })();
+                                                                        if __ok.is_none() {
+                                                                            state.offset = __save_dispatch;
+                                                                            return None;
+                                                                        }
+                                                                    }
+                                                                    _ => {
+                                                                        return None;
+                                                                    }
+                                                                }
+                                                            }
+                                                            Some(())
+                                                        })();
+                                                        if __ok.is_none() {
+                                                            state.offset = __save;
+                                                            break;
+                                                        }
+                                                        if state.offset == __save {
+                                                            break;
+                                                        }
+                                                        __rep_count += 1;
+                                                    }
+                                                }
+                                                Some(())
+                                            })();
+                                            if __result.is_some() {
+                                                Some(
+                                                    ::parse_that::Span::new(__start, state.offset, state.src),
+                                                )
+                                            } else {
+                                                state.offset = __start;
+                                                None
+                                            }
+                                        }
+                                            .is_none()
+                                        {
                                             return false;
                                         }
                                         let __matched = &state.src[__start..state.offset];
@@ -5828,7 +8181,188 @@ mod __cssprettyparser_emit_impl {
                     {
                         {
                             let __start = state.offset;
-                            if ::parse_that::scan_ws_block_comments(state).is_none() {
+                            if {
+                                let __start = state.offset;
+                                let __result: Option<()> = (|| {
+                                    {
+                                        let mut __rep_count: u32 = 0;
+                                        loop {
+                                            let __save = state.offset;
+                                            let __ok = (|| -> Option<()> {
+                                                {
+                                                    let __save_dispatch = state.offset;
+                                                    let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                                    match __dispatch_b {
+                                                        b'\t' | b'\n' | b'\x0B' | b'\x0C' | b'\r' | b' ' => {
+                                                            let __ok = (|| -> Option<()> {
+                                                                {
+                                                                    let __b = *state.src_bytes.get(state.offset)?;
+                                                                    if !(__b.is_ascii_whitespace()) {
+                                                                        return None;
+                                                                    }
+                                                                    state.offset += 1;
+                                                                }
+                                                                Some(())
+                                                            })();
+                                                            if __ok.is_none() {
+                                                                state.offset = __save_dispatch;
+                                                                return None;
+                                                            }
+                                                        }
+                                                        b'/' => {
+                                                            let __ok = (|| -> Option<()> {
+                                                                if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                                {
+                                                                    return None;
+                                                                }
+                                                                state.offset += 1;
+                                                                if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                {
+                                                                    return None;
+                                                                }
+                                                                state.offset += 1;
+                                                                {
+                                                                    let __end = state.src_bytes.len();
+                                                                    let mut __pos = state.offset;
+                                                                    while __pos < __end {
+                                                                        let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                        if !(__b == b'*') {
+                                                                            __pos += 1;
+                                                                        } else {
+                                                                            break;
+                                                                        }
+                                                                    }
+                                                                    state.offset = __pos;
+                                                                }
+                                                                {
+                                                                    let mut __rep_count: u32 = 0;
+                                                                    loop {
+                                                                        let __save = state.offset;
+                                                                        let __ok = (|| -> Option<()> {
+                                                                            {
+                                                                                let mut __rep_count: u32 = 0;
+                                                                                loop {
+                                                                                    let __save = state.offset;
+                                                                                    let __ok = (|| -> Option<()> {
+                                                                                        if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                                        {
+                                                                                            return None;
+                                                                                        }
+                                                                                        state.offset += 1;
+                                                                                        Some(())
+                                                                                    })();
+                                                                                    if __ok.is_none() {
+                                                                                        state.offset = __save;
+                                                                                        break;
+                                                                                    }
+                                                                                    if state.offset == __save {
+                                                                                        break;
+                                                                                    }
+                                                                                    __rep_count += 1;
+                                                                                }
+                                                                                if __rep_count < 1 {
+                                                                                    return None;
+                                                                                }
+                                                                            }
+                                                                            {
+                                                                                let __b = *state.src_bytes.get(state.offset)?;
+                                                                                if !(!(__b == b'/')) {
+                                                                                    return None;
+                                                                                }
+                                                                                state.offset += 1;
+                                                                            }
+                                                                            {
+                                                                                let __end = state.src_bytes.len();
+                                                                                let mut __pos = state.offset;
+                                                                                while __pos < __end {
+                                                                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                                    if !(__b == b'*') {
+                                                                                        __pos += 1;
+                                                                                    } else {
+                                                                                        break;
+                                                                                    }
+                                                                                }
+                                                                                state.offset = __pos;
+                                                                            }
+                                                                            Some(())
+                                                                        })();
+                                                                        if __ok.is_none() {
+                                                                            state.offset = __save;
+                                                                            break;
+                                                                        }
+                                                                        if state.offset == __save {
+                                                                            break;
+                                                                        }
+                                                                        __rep_count += 1;
+                                                                    }
+                                                                }
+                                                                {
+                                                                    let mut __rep_count: u32 = 0;
+                                                                    loop {
+                                                                        let __save = state.offset;
+                                                                        let __ok = (|| -> Option<()> {
+                                                                            if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                            {
+                                                                                return None;
+                                                                            }
+                                                                            state.offset += 1;
+                                                                            Some(())
+                                                                        })();
+                                                                        if __ok.is_none() {
+                                                                            state.offset = __save;
+                                                                            break;
+                                                                        }
+                                                                        if state.offset == __save {
+                                                                            break;
+                                                                        }
+                                                                        __rep_count += 1;
+                                                                    }
+                                                                    if __rep_count < 1 {
+                                                                        return None;
+                                                                    }
+                                                                }
+                                                                if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                                {
+                                                                    return None;
+                                                                }
+                                                                state.offset += 1;
+                                                                Some(())
+                                                            })();
+                                                            if __ok.is_none() {
+                                                                state.offset = __save_dispatch;
+                                                                return None;
+                                                            }
+                                                        }
+                                                        _ => {
+                                                            return None;
+                                                        }
+                                                    }
+                                                }
+                                                Some(())
+                                            })();
+                                            if __ok.is_none() {
+                                                state.offset = __save;
+                                                break;
+                                            }
+                                            if state.offset == __save {
+                                                break;
+                                            }
+                                            __rep_count += 1;
+                                        }
+                                    }
+                                    Some(())
+                                })();
+                                if __result.is_some() {
+                                    Some(
+                                        ::parse_that::Span::new(__start, state.offset, state.src),
+                                    )
+                                } else {
+                                    state.offset = __start;
+                                    None
+                                }
+                            }
+                                .is_none()
+                            {
                                 return false;
                             }
                             let __matched = &state.src[__start..state.offset];
@@ -5842,7 +8376,188 @@ mod __cssprettyparser_emit_impl {
                     };
                     {
                         let __start = state.offset;
-                        if ::parse_that::scan_ws_block_comments(state).is_none() {
+                        if {
+                            let __start = state.offset;
+                            let __result: Option<()> = (|| {
+                                {
+                                    let mut __rep_count: u32 = 0;
+                                    loop {
+                                        let __save = state.offset;
+                                        let __ok = (|| -> Option<()> {
+                                            {
+                                                let __save_dispatch = state.offset;
+                                                let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                                match __dispatch_b {
+                                                    b'\t' | b'\n' | b'\x0B' | b'\x0C' | b'\r' | b' ' => {
+                                                        let __ok = (|| -> Option<()> {
+                                                            {
+                                                                let __b = *state.src_bytes.get(state.offset)?;
+                                                                if !(__b.is_ascii_whitespace()) {
+                                                                    return None;
+                                                                }
+                                                                state.offset += 1;
+                                                            }
+                                                            Some(())
+                                                        })();
+                                                        if __ok.is_none() {
+                                                            state.offset = __save_dispatch;
+                                                            return None;
+                                                        }
+                                                    }
+                                                    b'/' => {
+                                                        let __ok = (|| -> Option<()> {
+                                                            if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                            {
+                                                                return None;
+                                                            }
+                                                            state.offset += 1;
+                                                            if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                            {
+                                                                return None;
+                                                            }
+                                                            state.offset += 1;
+                                                            {
+                                                                let __end = state.src_bytes.len();
+                                                                let mut __pos = state.offset;
+                                                                while __pos < __end {
+                                                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                    if !(__b == b'*') {
+                                                                        __pos += 1;
+                                                                    } else {
+                                                                        break;
+                                                                    }
+                                                                }
+                                                                state.offset = __pos;
+                                                            }
+                                                            {
+                                                                let mut __rep_count: u32 = 0;
+                                                                loop {
+                                                                    let __save = state.offset;
+                                                                    let __ok = (|| -> Option<()> {
+                                                                        {
+                                                                            let mut __rep_count: u32 = 0;
+                                                                            loop {
+                                                                                let __save = state.offset;
+                                                                                let __ok = (|| -> Option<()> {
+                                                                                    if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                                    {
+                                                                                        return None;
+                                                                                    }
+                                                                                    state.offset += 1;
+                                                                                    Some(())
+                                                                                })();
+                                                                                if __ok.is_none() {
+                                                                                    state.offset = __save;
+                                                                                    break;
+                                                                                }
+                                                                                if state.offset == __save {
+                                                                                    break;
+                                                                                }
+                                                                                __rep_count += 1;
+                                                                            }
+                                                                            if __rep_count < 1 {
+                                                                                return None;
+                                                                            }
+                                                                        }
+                                                                        {
+                                                                            let __b = *state.src_bytes.get(state.offset)?;
+                                                                            if !(!(__b == b'/')) {
+                                                                                return None;
+                                                                            }
+                                                                            state.offset += 1;
+                                                                        }
+                                                                        {
+                                                                            let __end = state.src_bytes.len();
+                                                                            let mut __pos = state.offset;
+                                                                            while __pos < __end {
+                                                                                let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                                if !(__b == b'*') {
+                                                                                    __pos += 1;
+                                                                                } else {
+                                                                                    break;
+                                                                                }
+                                                                            }
+                                                                            state.offset = __pos;
+                                                                        }
+                                                                        Some(())
+                                                                    })();
+                                                                    if __ok.is_none() {
+                                                                        state.offset = __save;
+                                                                        break;
+                                                                    }
+                                                                    if state.offset == __save {
+                                                                        break;
+                                                                    }
+                                                                    __rep_count += 1;
+                                                                }
+                                                            }
+                                                            {
+                                                                let mut __rep_count: u32 = 0;
+                                                                loop {
+                                                                    let __save = state.offset;
+                                                                    let __ok = (|| -> Option<()> {
+                                                                        if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                        {
+                                                                            return None;
+                                                                        }
+                                                                        state.offset += 1;
+                                                                        Some(())
+                                                                    })();
+                                                                    if __ok.is_none() {
+                                                                        state.offset = __save;
+                                                                        break;
+                                                                    }
+                                                                    if state.offset == __save {
+                                                                        break;
+                                                                    }
+                                                                    __rep_count += 1;
+                                                                }
+                                                                if __rep_count < 1 {
+                                                                    return None;
+                                                                }
+                                                            }
+                                                            if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                            {
+                                                                return None;
+                                                            }
+                                                            state.offset += 1;
+                                                            Some(())
+                                                        })();
+                                                        if __ok.is_none() {
+                                                            state.offset = __save_dispatch;
+                                                            return None;
+                                                        }
+                                                    }
+                                                    _ => {
+                                                        return None;
+                                                    }
+                                                }
+                                            }
+                                            Some(())
+                                        })();
+                                        if __ok.is_none() {
+                                            state.offset = __save;
+                                            break;
+                                        }
+                                        if state.offset == __save {
+                                            break;
+                                        }
+                                        __rep_count += 1;
+                                    }
+                                }
+                                Some(())
+                            })();
+                            if __result.is_some() {
+                                Some(
+                                    ::parse_that::Span::new(__start, state.offset, state.src),
+                                )
+                            } else {
+                                state.offset = __start;
+                                None
+                            }
+                        }
+                            .is_none()
+                        {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];

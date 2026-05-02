@@ -66024,7 +66024,137 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     let __start = state.offset;
-                    if ::parse_that::scan_number_span(state).is_none() {
+                    if {
+                        let __start = state.offset;
+                        let __result: Option<()> = (|| {
+                            {
+                                let __save = state.offset;
+                                let __ok = (|| -> Option<()> {
+                                    {
+                                        let __b = *state.src_bytes.get(state.offset)?;
+                                        if !((__b == b'+' || __b == b'-')) {
+                                            return None;
+                                        }
+                                        state.offset += 1;
+                                    }
+                                    Some(())
+                                })();
+                                if __ok.is_none() {
+                                    state.offset = __save;
+                                }
+                            }
+                            {
+                                let __save_dispatch = state.offset;
+                                let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                match __dispatch_b {
+                                    b'0' | b'1' | b'2' | b'3' | b'4' | b'5' | b'6' | b'7' | b'8'
+                                    | b'9' => {
+                                        let __ok = (|| -> Option<()> {
+                                            {
+                                                if ::parse_that::scan_digits_mut(state).is_none() {
+                                                    return None;
+                                                }
+                                            }
+                                            {
+                                                let __save = state.offset;
+                                                let __ok = (|| -> Option<()> {
+                                                    if state.src_bytes.get(state.offset).copied() != Some(b'.')
+                                                    {
+                                                        return None;
+                                                    }
+                                                    state.offset += 1;
+                                                    {
+                                                        if ::parse_that::scan_digits_mut(state).is_none() {
+                                                            return None;
+                                                        }
+                                                    }
+                                                    Some(())
+                                                })();
+                                                if __ok.is_none() {
+                                                    state.offset = __save;
+                                                }
+                                            }
+                                            Some(())
+                                        })();
+                                        if __ok.is_none() {
+                                            state.offset = __save_dispatch;
+                                            return None;
+                                        }
+                                    }
+                                    b'.' => {
+                                        let __ok = (|| -> Option<()> {
+                                            if state.src_bytes.get(state.offset).copied() != Some(b'.')
+                                            {
+                                                return None;
+                                            }
+                                            state.offset += 1;
+                                            {
+                                                if ::parse_that::scan_digits_mut(state).is_none() {
+                                                    return None;
+                                                }
+                                            }
+                                            Some(())
+                                        })();
+                                        if __ok.is_none() {
+                                            state.offset = __save_dispatch;
+                                            return None;
+                                        }
+                                    }
+                                    _ => {
+                                        return None;
+                                    }
+                                }
+                            }
+                            {
+                                let __save = state.offset;
+                                let __ok = (|| -> Option<()> {
+                                    {
+                                        let __b = *state.src_bytes.get(state.offset)?;
+                                        if !((__b == b'E' || __b == b'e')) {
+                                            return None;
+                                        }
+                                        state.offset += 1;
+                                    }
+                                    {
+                                        let __save = state.offset;
+                                        let __ok = (|| -> Option<()> {
+                                            {
+                                                let __b = *state.src_bytes.get(state.offset)?;
+                                                if !((__b == b'+' || __b == b'-')) {
+                                                    return None;
+                                                }
+                                                state.offset += 1;
+                                            }
+                                            Some(())
+                                        })();
+                                        if __ok.is_none() {
+                                            state.offset = __save;
+                                        }
+                                    }
+                                    {
+                                        if ::parse_that::scan_digits_mut(state).is_none() {
+                                            return None;
+                                        }
+                                    }
+                                    Some(())
+                                })();
+                                if __ok.is_none() {
+                                    state.offset = __save;
+                                }
+                            }
+                            Some(())
+                        })();
+                        if __result.is_some() && state.offset > __start {
+                            Some(
+                                ::parse_that::Span::new(__start, state.offset, state.src),
+                            )
+                        } else {
+                            state.offset = __start;
+                            None
+                        }
+                    }
+                        .is_none()
+                    {
                         return false;
                     }
                     let __matched = &state.src[__start..state.offset];
@@ -75743,10 +75873,47 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     let __start = state.offset;
-                    if ::parse_that::scan_ident(
-                            state,
-                            &::parse_that::DEFAULT_IDENT_CONFIG,
-                        )
+                    if {
+                        let __start = state.offset;
+                        let __result: Option<()> = (|| {
+                            {
+                                let __b = *state.src_bytes.get(state.offset)?;
+                                if !(((__b >= b'A' && __b <= b'Z') || __b == b'_'
+                                    || (__b >= b'a' && __b <= b'z')
+                                    || (__b >= b'\x80' && __b <= b'\xFF')))
+                                {
+                                    return None;
+                                }
+                                state.offset += 1;
+                            }
+                            {
+                                let __end = state.src_bytes.len();
+                                let mut __pos = state.offset;
+                                while __pos < __end {
+                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                    if (__b == b'-' || (__b >= b'0' && __b <= b'9')
+                                        || (__b >= b'A' && __b <= b'Z') || __b == b'_'
+                                        || (__b >= b'a' && __b <= b'z')
+                                        || (__b >= b'\x80' && __b <= b'\xFF'))
+                                    {
+                                        __pos += 1;
+                                    } else {
+                                        break;
+                                    }
+                                }
+                                state.offset = __pos;
+                            }
+                            Some(())
+                        })();
+                        if __result.is_some() && state.offset > __start {
+                            Some(
+                                ::parse_that::Span::new(__start, state.offset, state.src),
+                            )
+                        } else {
+                            state.offset = __start;
+                            None
+                        }
+                    }
                         .is_none()
                     {
                         return false;
@@ -80363,7 +80530,43 @@ mod __cssl4parser_emit_impl {
                                         let __ok = (|| -> bool {
                                             {
                                                 let __start = state.offset;
-                                                if ::parse_that::scan_number_span(state).is_none() {
+                                                if {
+                                                    let __start = state.offset;
+                                                    let __result: Option<()> = (|| {
+                                                        {
+                                                            let __save = state.offset;
+                                                            let __ok = (|| -> Option<()> {
+                                                                {
+                                                                    let __b = *state.src_bytes.get(state.offset)?;
+                                                                    if !((__b == b'+' || __b == b'-')) {
+                                                                        return None;
+                                                                    }
+                                                                    state.offset += 1;
+                                                                }
+                                                                Some(())
+                                                            })();
+                                                            if __ok.is_none() {
+                                                                state.offset = __save;
+                                                            }
+                                                        }
+                                                        {
+                                                            if ::parse_that::scan_digits_mut(state).is_none() {
+                                                                return None;
+                                                            }
+                                                        }
+                                                        Some(())
+                                                    })();
+                                                    if __result.is_some() && state.offset > __start {
+                                                        Some(
+                                                            ::parse_that::Span::new(__start, state.offset, state.src),
+                                                        )
+                                                    } else {
+                                                        state.offset = __start;
+                                                        None
+                                                    }
+                                                }
+                                                    .is_none()
+                                                {
                                                     return false;
                                                 }
                                                 let __matched = &state.src[__start..state.offset];
@@ -81028,7 +81231,137 @@ mod __cssl4parser_emit_impl {
                 {
                     {
                         let __start = state.offset;
-                        if ::parse_that::scan_number_span(state).is_none() {
+                        if {
+                            let __start = state.offset;
+                            let __result: Option<()> = (|| {
+                                {
+                                    let __save = state.offset;
+                                    let __ok = (|| -> Option<()> {
+                                        {
+                                            let __b = *state.src_bytes.get(state.offset)?;
+                                            if !((__b == b'+' || __b == b'-')) {
+                                                return None;
+                                            }
+                                            state.offset += 1;
+                                        }
+                                        Some(())
+                                    })();
+                                    if __ok.is_none() {
+                                        state.offset = __save;
+                                    }
+                                }
+                                {
+                                    let __save_dispatch = state.offset;
+                                    let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                    match __dispatch_b {
+                                        b'0' | b'1' | b'2' | b'3' | b'4' | b'5' | b'6' | b'7' | b'8'
+                                        | b'9' => {
+                                            let __ok = (|| -> Option<()> {
+                                                {
+                                                    if ::parse_that::scan_digits_mut(state).is_none() {
+                                                        return None;
+                                                    }
+                                                }
+                                                {
+                                                    let __save = state.offset;
+                                                    let __ok = (|| -> Option<()> {
+                                                        if state.src_bytes.get(state.offset).copied() != Some(b'.')
+                                                        {
+                                                            return None;
+                                                        }
+                                                        state.offset += 1;
+                                                        {
+                                                            if ::parse_that::scan_digits_mut(state).is_none() {
+                                                                return None;
+                                                            }
+                                                        }
+                                                        Some(())
+                                                    })();
+                                                    if __ok.is_none() {
+                                                        state.offset = __save;
+                                                    }
+                                                }
+                                                Some(())
+                                            })();
+                                            if __ok.is_none() {
+                                                state.offset = __save_dispatch;
+                                                return None;
+                                            }
+                                        }
+                                        b'.' => {
+                                            let __ok = (|| -> Option<()> {
+                                                if state.src_bytes.get(state.offset).copied() != Some(b'.')
+                                                {
+                                                    return None;
+                                                }
+                                                state.offset += 1;
+                                                {
+                                                    if ::parse_that::scan_digits_mut(state).is_none() {
+                                                        return None;
+                                                    }
+                                                }
+                                                Some(())
+                                            })();
+                                            if __ok.is_none() {
+                                                state.offset = __save_dispatch;
+                                                return None;
+                                            }
+                                        }
+                                        _ => {
+                                            return None;
+                                        }
+                                    }
+                                }
+                                {
+                                    let __save = state.offset;
+                                    let __ok = (|| -> Option<()> {
+                                        {
+                                            let __b = *state.src_bytes.get(state.offset)?;
+                                            if !((__b == b'E' || __b == b'e')) {
+                                                return None;
+                                            }
+                                            state.offset += 1;
+                                        }
+                                        {
+                                            let __save = state.offset;
+                                            let __ok = (|| -> Option<()> {
+                                                {
+                                                    let __b = *state.src_bytes.get(state.offset)?;
+                                                    if !((__b == b'+' || __b == b'-')) {
+                                                        return None;
+                                                    }
+                                                    state.offset += 1;
+                                                }
+                                                Some(())
+                                            })();
+                                            if __ok.is_none() {
+                                                state.offset = __save;
+                                            }
+                                        }
+                                        {
+                                            if ::parse_that::scan_digits_mut(state).is_none() {
+                                                return None;
+                                            }
+                                        }
+                                        Some(())
+                                    })();
+                                    if __ok.is_none() {
+                                        state.offset = __save;
+                                    }
+                                }
+                                Some(())
+                            })();
+                            if __result.is_some() && state.offset > __start {
+                                Some(
+                                    ::parse_that::Span::new(__start, state.offset, state.src),
+                                )
+                            } else {
+                                state.offset = __start;
+                                None
+                            }
+                        }
+                            .is_none()
+                        {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
@@ -81749,7 +82082,137 @@ mod __cssl4parser_emit_impl {
                 {
                     {
                         let __start = state.offset;
-                        if ::parse_that::scan_number_span(state).is_none() {
+                        if {
+                            let __start = state.offset;
+                            let __result: Option<()> = (|| {
+                                {
+                                    let __save = state.offset;
+                                    let __ok = (|| -> Option<()> {
+                                        {
+                                            let __b = *state.src_bytes.get(state.offset)?;
+                                            if !((__b == b'+' || __b == b'-')) {
+                                                return None;
+                                            }
+                                            state.offset += 1;
+                                        }
+                                        Some(())
+                                    })();
+                                    if __ok.is_none() {
+                                        state.offset = __save;
+                                    }
+                                }
+                                {
+                                    let __save_dispatch = state.offset;
+                                    let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                    match __dispatch_b {
+                                        b'0' | b'1' | b'2' | b'3' | b'4' | b'5' | b'6' | b'7' | b'8'
+                                        | b'9' => {
+                                            let __ok = (|| -> Option<()> {
+                                                {
+                                                    if ::parse_that::scan_digits_mut(state).is_none() {
+                                                        return None;
+                                                    }
+                                                }
+                                                {
+                                                    let __save = state.offset;
+                                                    let __ok = (|| -> Option<()> {
+                                                        if state.src_bytes.get(state.offset).copied() != Some(b'.')
+                                                        {
+                                                            return None;
+                                                        }
+                                                        state.offset += 1;
+                                                        {
+                                                            if ::parse_that::scan_digits_mut(state).is_none() {
+                                                                return None;
+                                                            }
+                                                        }
+                                                        Some(())
+                                                    })();
+                                                    if __ok.is_none() {
+                                                        state.offset = __save;
+                                                    }
+                                                }
+                                                Some(())
+                                            })();
+                                            if __ok.is_none() {
+                                                state.offset = __save_dispatch;
+                                                return None;
+                                            }
+                                        }
+                                        b'.' => {
+                                            let __ok = (|| -> Option<()> {
+                                                if state.src_bytes.get(state.offset).copied() != Some(b'.')
+                                                {
+                                                    return None;
+                                                }
+                                                state.offset += 1;
+                                                {
+                                                    if ::parse_that::scan_digits_mut(state).is_none() {
+                                                        return None;
+                                                    }
+                                                }
+                                                Some(())
+                                            })();
+                                            if __ok.is_none() {
+                                                state.offset = __save_dispatch;
+                                                return None;
+                                            }
+                                        }
+                                        _ => {
+                                            return None;
+                                        }
+                                    }
+                                }
+                                {
+                                    let __save = state.offset;
+                                    let __ok = (|| -> Option<()> {
+                                        {
+                                            let __b = *state.src_bytes.get(state.offset)?;
+                                            if !((__b == b'E' || __b == b'e')) {
+                                                return None;
+                                            }
+                                            state.offset += 1;
+                                        }
+                                        {
+                                            let __save = state.offset;
+                                            let __ok = (|| -> Option<()> {
+                                                {
+                                                    let __b = *state.src_bytes.get(state.offset)?;
+                                                    if !((__b == b'+' || __b == b'-')) {
+                                                        return None;
+                                                    }
+                                                    state.offset += 1;
+                                                }
+                                                Some(())
+                                            })();
+                                            if __ok.is_none() {
+                                                state.offset = __save;
+                                            }
+                                        }
+                                        {
+                                            if ::parse_that::scan_digits_mut(state).is_none() {
+                                                return None;
+                                            }
+                                        }
+                                        Some(())
+                                    })();
+                                    if __ok.is_none() {
+                                        state.offset = __save;
+                                    }
+                                }
+                                Some(())
+                            })();
+                            if __result.is_some() && state.offset > __start {
+                                Some(
+                                    ::parse_that::Span::new(__start, state.offset, state.src),
+                                )
+                            } else {
+                                state.offset = __start;
+                                None
+                            }
+                        }
+                            .is_none()
+                        {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
@@ -81783,7 +82246,137 @@ mod __cssl4parser_emit_impl {
                 {
                     {
                         let __start = state.offset;
-                        if ::parse_that::scan_number_span(state).is_none() {
+                        if {
+                            let __start = state.offset;
+                            let __result: Option<()> = (|| {
+                                {
+                                    let __save = state.offset;
+                                    let __ok = (|| -> Option<()> {
+                                        {
+                                            let __b = *state.src_bytes.get(state.offset)?;
+                                            if !((__b == b'+' || __b == b'-')) {
+                                                return None;
+                                            }
+                                            state.offset += 1;
+                                        }
+                                        Some(())
+                                    })();
+                                    if __ok.is_none() {
+                                        state.offset = __save;
+                                    }
+                                }
+                                {
+                                    let __save_dispatch = state.offset;
+                                    let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                    match __dispatch_b {
+                                        b'0' | b'1' | b'2' | b'3' | b'4' | b'5' | b'6' | b'7' | b'8'
+                                        | b'9' => {
+                                            let __ok = (|| -> Option<()> {
+                                                {
+                                                    if ::parse_that::scan_digits_mut(state).is_none() {
+                                                        return None;
+                                                    }
+                                                }
+                                                {
+                                                    let __save = state.offset;
+                                                    let __ok = (|| -> Option<()> {
+                                                        if state.src_bytes.get(state.offset).copied() != Some(b'.')
+                                                        {
+                                                            return None;
+                                                        }
+                                                        state.offset += 1;
+                                                        {
+                                                            if ::parse_that::scan_digits_mut(state).is_none() {
+                                                                return None;
+                                                            }
+                                                        }
+                                                        Some(())
+                                                    })();
+                                                    if __ok.is_none() {
+                                                        state.offset = __save;
+                                                    }
+                                                }
+                                                Some(())
+                                            })();
+                                            if __ok.is_none() {
+                                                state.offset = __save_dispatch;
+                                                return None;
+                                            }
+                                        }
+                                        b'.' => {
+                                            let __ok = (|| -> Option<()> {
+                                                if state.src_bytes.get(state.offset).copied() != Some(b'.')
+                                                {
+                                                    return None;
+                                                }
+                                                state.offset += 1;
+                                                {
+                                                    if ::parse_that::scan_digits_mut(state).is_none() {
+                                                        return None;
+                                                    }
+                                                }
+                                                Some(())
+                                            })();
+                                            if __ok.is_none() {
+                                                state.offset = __save_dispatch;
+                                                return None;
+                                            }
+                                        }
+                                        _ => {
+                                            return None;
+                                        }
+                                    }
+                                }
+                                {
+                                    let __save = state.offset;
+                                    let __ok = (|| -> Option<()> {
+                                        {
+                                            let __b = *state.src_bytes.get(state.offset)?;
+                                            if !((__b == b'E' || __b == b'e')) {
+                                                return None;
+                                            }
+                                            state.offset += 1;
+                                        }
+                                        {
+                                            let __save = state.offset;
+                                            let __ok = (|| -> Option<()> {
+                                                {
+                                                    let __b = *state.src_bytes.get(state.offset)?;
+                                                    if !((__b == b'+' || __b == b'-')) {
+                                                        return None;
+                                                    }
+                                                    state.offset += 1;
+                                                }
+                                                Some(())
+                                            })();
+                                            if __ok.is_none() {
+                                                state.offset = __save;
+                                            }
+                                        }
+                                        {
+                                            if ::parse_that::scan_digits_mut(state).is_none() {
+                                                return None;
+                                            }
+                                        }
+                                        Some(())
+                                    })();
+                                    if __ok.is_none() {
+                                        state.offset = __save;
+                                    }
+                                }
+                                Some(())
+                            })();
+                            if __result.is_some() && state.offset > __start {
+                                Some(
+                                    ::parse_that::Span::new(__start, state.offset, state.src),
+                                )
+                            } else {
+                                state.offset = __start;
+                                None
+                            }
+                        }
+                            .is_none()
+                        {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
@@ -81817,7 +82410,137 @@ mod __cssl4parser_emit_impl {
                 {
                     {
                         let __start = state.offset;
-                        if ::parse_that::scan_number_span(state).is_none() {
+                        if {
+                            let __start = state.offset;
+                            let __result: Option<()> = (|| {
+                                {
+                                    let __save = state.offset;
+                                    let __ok = (|| -> Option<()> {
+                                        {
+                                            let __b = *state.src_bytes.get(state.offset)?;
+                                            if !((__b == b'+' || __b == b'-')) {
+                                                return None;
+                                            }
+                                            state.offset += 1;
+                                        }
+                                        Some(())
+                                    })();
+                                    if __ok.is_none() {
+                                        state.offset = __save;
+                                    }
+                                }
+                                {
+                                    let __save_dispatch = state.offset;
+                                    let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                    match __dispatch_b {
+                                        b'0' | b'1' | b'2' | b'3' | b'4' | b'5' | b'6' | b'7' | b'8'
+                                        | b'9' => {
+                                            let __ok = (|| -> Option<()> {
+                                                {
+                                                    if ::parse_that::scan_digits_mut(state).is_none() {
+                                                        return None;
+                                                    }
+                                                }
+                                                {
+                                                    let __save = state.offset;
+                                                    let __ok = (|| -> Option<()> {
+                                                        if state.src_bytes.get(state.offset).copied() != Some(b'.')
+                                                        {
+                                                            return None;
+                                                        }
+                                                        state.offset += 1;
+                                                        {
+                                                            if ::parse_that::scan_digits_mut(state).is_none() {
+                                                                return None;
+                                                            }
+                                                        }
+                                                        Some(())
+                                                    })();
+                                                    if __ok.is_none() {
+                                                        state.offset = __save;
+                                                    }
+                                                }
+                                                Some(())
+                                            })();
+                                            if __ok.is_none() {
+                                                state.offset = __save_dispatch;
+                                                return None;
+                                            }
+                                        }
+                                        b'.' => {
+                                            let __ok = (|| -> Option<()> {
+                                                if state.src_bytes.get(state.offset).copied() != Some(b'.')
+                                                {
+                                                    return None;
+                                                }
+                                                state.offset += 1;
+                                                {
+                                                    if ::parse_that::scan_digits_mut(state).is_none() {
+                                                        return None;
+                                                    }
+                                                }
+                                                Some(())
+                                            })();
+                                            if __ok.is_none() {
+                                                state.offset = __save_dispatch;
+                                                return None;
+                                            }
+                                        }
+                                        _ => {
+                                            return None;
+                                        }
+                                    }
+                                }
+                                {
+                                    let __save = state.offset;
+                                    let __ok = (|| -> Option<()> {
+                                        {
+                                            let __b = *state.src_bytes.get(state.offset)?;
+                                            if !((__b == b'E' || __b == b'e')) {
+                                                return None;
+                                            }
+                                            state.offset += 1;
+                                        }
+                                        {
+                                            let __save = state.offset;
+                                            let __ok = (|| -> Option<()> {
+                                                {
+                                                    let __b = *state.src_bytes.get(state.offset)?;
+                                                    if !((__b == b'+' || __b == b'-')) {
+                                                        return None;
+                                                    }
+                                                    state.offset += 1;
+                                                }
+                                                Some(())
+                                            })();
+                                            if __ok.is_none() {
+                                                state.offset = __save;
+                                            }
+                                        }
+                                        {
+                                            if ::parse_that::scan_digits_mut(state).is_none() {
+                                                return None;
+                                            }
+                                        }
+                                        Some(())
+                                    })();
+                                    if __ok.is_none() {
+                                        state.offset = __save;
+                                    }
+                                }
+                                Some(())
+                            })();
+                            if __result.is_some() && state.offset > __start {
+                                Some(
+                                    ::parse_that::Span::new(__start, state.offset, state.src),
+                                )
+                            } else {
+                                state.offset = __start;
+                                None
+                            }
+                        }
+                            .is_none()
+                        {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
@@ -81851,7 +82574,137 @@ mod __cssl4parser_emit_impl {
                 {
                     {
                         let __start = state.offset;
-                        if ::parse_that::scan_number_span(state).is_none() {
+                        if {
+                            let __start = state.offset;
+                            let __result: Option<()> = (|| {
+                                {
+                                    let __save = state.offset;
+                                    let __ok = (|| -> Option<()> {
+                                        {
+                                            let __b = *state.src_bytes.get(state.offset)?;
+                                            if !((__b == b'+' || __b == b'-')) {
+                                                return None;
+                                            }
+                                            state.offset += 1;
+                                        }
+                                        Some(())
+                                    })();
+                                    if __ok.is_none() {
+                                        state.offset = __save;
+                                    }
+                                }
+                                {
+                                    let __save_dispatch = state.offset;
+                                    let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                    match __dispatch_b {
+                                        b'0' | b'1' | b'2' | b'3' | b'4' | b'5' | b'6' | b'7' | b'8'
+                                        | b'9' => {
+                                            let __ok = (|| -> Option<()> {
+                                                {
+                                                    if ::parse_that::scan_digits_mut(state).is_none() {
+                                                        return None;
+                                                    }
+                                                }
+                                                {
+                                                    let __save = state.offset;
+                                                    let __ok = (|| -> Option<()> {
+                                                        if state.src_bytes.get(state.offset).copied() != Some(b'.')
+                                                        {
+                                                            return None;
+                                                        }
+                                                        state.offset += 1;
+                                                        {
+                                                            if ::parse_that::scan_digits_mut(state).is_none() {
+                                                                return None;
+                                                            }
+                                                        }
+                                                        Some(())
+                                                    })();
+                                                    if __ok.is_none() {
+                                                        state.offset = __save;
+                                                    }
+                                                }
+                                                Some(())
+                                            })();
+                                            if __ok.is_none() {
+                                                state.offset = __save_dispatch;
+                                                return None;
+                                            }
+                                        }
+                                        b'.' => {
+                                            let __ok = (|| -> Option<()> {
+                                                if state.src_bytes.get(state.offset).copied() != Some(b'.')
+                                                {
+                                                    return None;
+                                                }
+                                                state.offset += 1;
+                                                {
+                                                    if ::parse_that::scan_digits_mut(state).is_none() {
+                                                        return None;
+                                                    }
+                                                }
+                                                Some(())
+                                            })();
+                                            if __ok.is_none() {
+                                                state.offset = __save_dispatch;
+                                                return None;
+                                            }
+                                        }
+                                        _ => {
+                                            return None;
+                                        }
+                                    }
+                                }
+                                {
+                                    let __save = state.offset;
+                                    let __ok = (|| -> Option<()> {
+                                        {
+                                            let __b = *state.src_bytes.get(state.offset)?;
+                                            if !((__b == b'E' || __b == b'e')) {
+                                                return None;
+                                            }
+                                            state.offset += 1;
+                                        }
+                                        {
+                                            let __save = state.offset;
+                                            let __ok = (|| -> Option<()> {
+                                                {
+                                                    let __b = *state.src_bytes.get(state.offset)?;
+                                                    if !((__b == b'+' || __b == b'-')) {
+                                                        return None;
+                                                    }
+                                                    state.offset += 1;
+                                                }
+                                                Some(())
+                                            })();
+                                            if __ok.is_none() {
+                                                state.offset = __save;
+                                            }
+                                        }
+                                        {
+                                            if ::parse_that::scan_digits_mut(state).is_none() {
+                                                return None;
+                                            }
+                                        }
+                                        Some(())
+                                    })();
+                                    if __ok.is_none() {
+                                        state.offset = __save;
+                                    }
+                                }
+                                Some(())
+                            })();
+                            if __result.is_some() && state.offset > __start {
+                                Some(
+                                    ::parse_that::Span::new(__start, state.offset, state.src),
+                                )
+                            } else {
+                                state.offset = __start;
+                                None
+                            }
+                        }
+                            .is_none()
+                        {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
@@ -81885,7 +82738,137 @@ mod __cssl4parser_emit_impl {
                 {
                     {
                         let __start = state.offset;
-                        if ::parse_that::scan_number_span(state).is_none() {
+                        if {
+                            let __start = state.offset;
+                            let __result: Option<()> = (|| {
+                                {
+                                    let __save = state.offset;
+                                    let __ok = (|| -> Option<()> {
+                                        {
+                                            let __b = *state.src_bytes.get(state.offset)?;
+                                            if !((__b == b'+' || __b == b'-')) {
+                                                return None;
+                                            }
+                                            state.offset += 1;
+                                        }
+                                        Some(())
+                                    })();
+                                    if __ok.is_none() {
+                                        state.offset = __save;
+                                    }
+                                }
+                                {
+                                    let __save_dispatch = state.offset;
+                                    let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                    match __dispatch_b {
+                                        b'0' | b'1' | b'2' | b'3' | b'4' | b'5' | b'6' | b'7' | b'8'
+                                        | b'9' => {
+                                            let __ok = (|| -> Option<()> {
+                                                {
+                                                    if ::parse_that::scan_digits_mut(state).is_none() {
+                                                        return None;
+                                                    }
+                                                }
+                                                {
+                                                    let __save = state.offset;
+                                                    let __ok = (|| -> Option<()> {
+                                                        if state.src_bytes.get(state.offset).copied() != Some(b'.')
+                                                        {
+                                                            return None;
+                                                        }
+                                                        state.offset += 1;
+                                                        {
+                                                            if ::parse_that::scan_digits_mut(state).is_none() {
+                                                                return None;
+                                                            }
+                                                        }
+                                                        Some(())
+                                                    })();
+                                                    if __ok.is_none() {
+                                                        state.offset = __save;
+                                                    }
+                                                }
+                                                Some(())
+                                            })();
+                                            if __ok.is_none() {
+                                                state.offset = __save_dispatch;
+                                                return None;
+                                            }
+                                        }
+                                        b'.' => {
+                                            let __ok = (|| -> Option<()> {
+                                                if state.src_bytes.get(state.offset).copied() != Some(b'.')
+                                                {
+                                                    return None;
+                                                }
+                                                state.offset += 1;
+                                                {
+                                                    if ::parse_that::scan_digits_mut(state).is_none() {
+                                                        return None;
+                                                    }
+                                                }
+                                                Some(())
+                                            })();
+                                            if __ok.is_none() {
+                                                state.offset = __save_dispatch;
+                                                return None;
+                                            }
+                                        }
+                                        _ => {
+                                            return None;
+                                        }
+                                    }
+                                }
+                                {
+                                    let __save = state.offset;
+                                    let __ok = (|| -> Option<()> {
+                                        {
+                                            let __b = *state.src_bytes.get(state.offset)?;
+                                            if !((__b == b'E' || __b == b'e')) {
+                                                return None;
+                                            }
+                                            state.offset += 1;
+                                        }
+                                        {
+                                            let __save = state.offset;
+                                            let __ok = (|| -> Option<()> {
+                                                {
+                                                    let __b = *state.src_bytes.get(state.offset)?;
+                                                    if !((__b == b'+' || __b == b'-')) {
+                                                        return None;
+                                                    }
+                                                    state.offset += 1;
+                                                }
+                                                Some(())
+                                            })();
+                                            if __ok.is_none() {
+                                                state.offset = __save;
+                                            }
+                                        }
+                                        {
+                                            if ::parse_that::scan_digits_mut(state).is_none() {
+                                                return None;
+                                            }
+                                        }
+                                        Some(())
+                                    })();
+                                    if __ok.is_none() {
+                                        state.offset = __save;
+                                    }
+                                }
+                                Some(())
+                            })();
+                            if __result.is_some() && state.offset > __start {
+                                Some(
+                                    ::parse_that::Span::new(__start, state.offset, state.src),
+                                )
+                            } else {
+                                state.offset = __start;
+                                None
+                            }
+                        }
+                            .is_none()
+                        {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
@@ -82246,10 +83229,106 @@ mod __cssl4parser_emit_impl {
                                 {
                                     {
                                         let __start = state.offset;
-                                        if ::parse_that::scan_ident(
-                                                state,
-                                                &::parse_that::CSS_IDENT_CONFIG,
-                                            )
+                                        if {
+                                            let __start = state.offset;
+                                            let __result: Option<()> = (|| {
+                                                {
+                                                    let __save_alt = state.offset;
+                                                    let __alt_ok = (|| -> Option<()> {
+                                                        if state.src_bytes.get(state.offset).copied() != Some(b'-')
+                                                        {
+                                                            return None;
+                                                        }
+                                                        state.offset += 1;
+                                                        if state.src_bytes.get(state.offset).copied() != Some(b'-')
+                                                        {
+                                                            return None;
+                                                        }
+                                                        state.offset += 1;
+                                                        {
+                                                            let __loop_start = state.offset;
+                                                            let __end = state.src_bytes.len();
+                                                            let mut __pos = state.offset;
+                                                            while __pos < __end {
+                                                                let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                if (__b == b'-' || (__b >= b'0' && __b <= b'9')
+                                                                    || (__b >= b'A' && __b <= b'Z') || __b == b'_'
+                                                                    || (__b >= b'a' && __b <= b'z'))
+                                                                {
+                                                                    __pos += 1;
+                                                                } else {
+                                                                    break;
+                                                                }
+                                                            }
+                                                            if __pos < __loop_start + 1 as usize {
+                                                                return None;
+                                                            }
+                                                            state.offset = __pos;
+                                                        }
+                                                        Some(())
+                                                    })();
+                                                    let __alt_ok = if __alt_ok.is_none() {
+                                                        state.offset = __save_alt;
+                                                        (|| -> Option<()> {
+                                                            {
+                                                                let __save = state.offset;
+                                                                let __ok = (|| -> Option<()> {
+                                                                    if state.src_bytes.get(state.offset).copied() != Some(b'-')
+                                                                    {
+                                                                        return None;
+                                                                    }
+                                                                    state.offset += 1;
+                                                                    Some(())
+                                                                })();
+                                                                if __ok.is_none() {
+                                                                    state.offset = __save;
+                                                                }
+                                                            }
+                                                            {
+                                                                let __b = *state.src_bytes.get(state.offset)?;
+                                                                if !(((__b >= b'A' && __b <= b'Z') || __b == b'_'
+                                                                    || (__b >= b'a' && __b <= b'z')))
+                                                                {
+                                                                    return None;
+                                                                }
+                                                                state.offset += 1;
+                                                            }
+                                                            {
+                                                                let __end = state.src_bytes.len();
+                                                                let mut __pos = state.offset;
+                                                                while __pos < __end {
+                                                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                    if (__b == b'-' || (__b >= b'0' && __b <= b'9')
+                                                                        || (__b >= b'A' && __b <= b'Z') || __b == b'_'
+                                                                        || (__b >= b'a' && __b <= b'z'))
+                                                                    {
+                                                                        __pos += 1;
+                                                                    } else {
+                                                                        break;
+                                                                    }
+                                                                }
+                                                                state.offset = __pos;
+                                                            }
+                                                            Some(())
+                                                        })()
+                                                    } else {
+                                                        __alt_ok
+                                                    };
+                                                    if __alt_ok.is_none() {
+                                                        return None;
+                                                    }
+                                                }
+                                                Some(())
+                                            })();
+                                            if __result.is_some() && state.offset > __start {
+                                                Some(
+                                                    ::parse_that::Span::new(__start, state.offset, state.src),
+                                                )
+                                            } else {
+                                                state.offset = __start;
+                                                None
+                                            }
+                                        }
                                             .is_none()
                                         {
                                             return false;
@@ -84114,10 +85193,43 @@ mod __cssl4parser_emit_impl {
                 {
                     {
                         let __start = state.offset;
-                        if ::parse_that::scan_ident(
-                                state,
-                                &::parse_that::DEFAULT_IDENT_CONFIG,
-                            )
+                        if {
+                            let __start = state.offset;
+                            let __result: Option<()> = (|| {
+                                {
+                                    let __b = *state.src_bytes.get(state.offset)?;
+                                    if !(__b.is_ascii_alphabetic()) {
+                                        return None;
+                                    }
+                                    state.offset += 1;
+                                }
+                                {
+                                    let __end = state.src_bytes.len();
+                                    let mut __pos = state.offset;
+                                    while __pos < __end {
+                                        let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                        if (__b == b'-' || (__b >= b'0' && __b <= b'9')
+                                            || (__b >= b'A' && __b <= b'Z') || __b == b'_'
+                                            || (__b >= b'a' && __b <= b'z'))
+                                        {
+                                            __pos += 1;
+                                        } else {
+                                            break;
+                                        }
+                                    }
+                                    state.offset = __pos;
+                                }
+                                Some(())
+                            })();
+                            if __result.is_some() && state.offset > __start {
+                                Some(
+                                    ::parse_that::Span::new(__start, state.offset, state.src),
+                                )
+                            } else {
+                                state.offset = __start;
+                                None
+                            }
+                        }
                             .is_none()
                         {
                             return false;
@@ -84187,10 +85299,47 @@ mod __cssl4parser_emit_impl {
                         let __ows213 = state.offset;
                         {
                             let __start = state.offset;
-                            if ::parse_that::scan_ident(
-                                    state,
-                                    &::parse_that::DEFAULT_IDENT_CONFIG,
-                                )
+                            if {
+                                let __start = state.offset;
+                                let __result: Option<()> = (|| {
+                                    {
+                                        let __b = *state.src_bytes.get(state.offset)?;
+                                        if !(((__b >= b'A' && __b <= b'Z') || __b == b'_'
+                                            || (__b >= b'a' && __b <= b'z')
+                                            || (__b >= b'\x80' && __b <= b'\xFF')))
+                                        {
+                                            return None;
+                                        }
+                                        state.offset += 1;
+                                    }
+                                    {
+                                        let __end = state.src_bytes.len();
+                                        let mut __pos = state.offset;
+                                        while __pos < __end {
+                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                            if (__b == b'-' || (__b >= b'0' && __b <= b'9')
+                                                || (__b >= b'A' && __b <= b'Z') || __b == b'_'
+                                                || (__b >= b'a' && __b <= b'z')
+                                                || (__b >= b'\x80' && __b <= b'\xFF'))
+                                            {
+                                                __pos += 1;
+                                            } else {
+                                                break;
+                                            }
+                                        }
+                                        state.offset = __pos;
+                                    }
+                                    Some(())
+                                })();
+                                if __result.is_some() && state.offset > __start {
+                                    Some(
+                                        ::parse_that::Span::new(__start, state.offset, state.src),
+                                    )
+                                } else {
+                                    state.offset = __start;
+                                    None
+                                }
+                            }
                                 .is_none()
                             {
                                 return false;
@@ -85913,10 +87062,45 @@ mod __cssl4parser_emit_impl {
                         };
                         {
                             let __start = state.offset;
-                            if ::parse_that::scan_ident(
-                                    state,
-                                    &::parse_that::DEFAULT_IDENT_CONFIG,
-                                )
+                            if {
+                                let __start = state.offset;
+                                let __result: Option<()> = (|| {
+                                    {
+                                        let __b = *state.src_bytes.get(state.offset)?;
+                                        if !(((__b >= b'A' && __b <= b'Z') || __b == b'_'
+                                            || (__b >= b'a' && __b <= b'z')))
+                                        {
+                                            return None;
+                                        }
+                                        state.offset += 1;
+                                    }
+                                    {
+                                        let __end = state.src_bytes.len();
+                                        let mut __pos = state.offset;
+                                        while __pos < __end {
+                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                            if (__b == b'-' || (__b >= b'0' && __b <= b'9')
+                                                || (__b >= b'A' && __b <= b'Z') || __b == b'_'
+                                                || (__b >= b'a' && __b <= b'z'))
+                                            {
+                                                __pos += 1;
+                                            } else {
+                                                break;
+                                            }
+                                        }
+                                        state.offset = __pos;
+                                    }
+                                    Some(())
+                                })();
+                                if __result.is_some() && state.offset > __start {
+                                    Some(
+                                        ::parse_that::Span::new(__start, state.offset, state.src),
+                                    )
+                                } else {
+                                    state.offset = __start;
+                                    None
+                                }
+                            }
                                 .is_none()
                             {
                                 return false;
@@ -85987,7 +87171,137 @@ mod __cssl4parser_emit_impl {
                 {
                     {
                         let __start = state.offset;
-                        if ::parse_that::scan_number_span(state).is_none() {
+                        if {
+                            let __start = state.offset;
+                            let __result: Option<()> = (|| {
+                                {
+                                    let __save = state.offset;
+                                    let __ok = (|| -> Option<()> {
+                                        {
+                                            let __b = *state.src_bytes.get(state.offset)?;
+                                            if !((__b == b'+' || __b == b'-')) {
+                                                return None;
+                                            }
+                                            state.offset += 1;
+                                        }
+                                        Some(())
+                                    })();
+                                    if __ok.is_none() {
+                                        state.offset = __save;
+                                    }
+                                }
+                                {
+                                    let __save_dispatch = state.offset;
+                                    let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                    match __dispatch_b {
+                                        b'0' | b'1' | b'2' | b'3' | b'4' | b'5' | b'6' | b'7' | b'8'
+                                        | b'9' => {
+                                            let __ok = (|| -> Option<()> {
+                                                {
+                                                    if ::parse_that::scan_digits_mut(state).is_none() {
+                                                        return None;
+                                                    }
+                                                }
+                                                {
+                                                    let __save = state.offset;
+                                                    let __ok = (|| -> Option<()> {
+                                                        if state.src_bytes.get(state.offset).copied() != Some(b'.')
+                                                        {
+                                                            return None;
+                                                        }
+                                                        state.offset += 1;
+                                                        {
+                                                            if ::parse_that::scan_digits_mut(state).is_none() {
+                                                                return None;
+                                                            }
+                                                        }
+                                                        Some(())
+                                                    })();
+                                                    if __ok.is_none() {
+                                                        state.offset = __save;
+                                                    }
+                                                }
+                                                Some(())
+                                            })();
+                                            if __ok.is_none() {
+                                                state.offset = __save_dispatch;
+                                                return None;
+                                            }
+                                        }
+                                        b'.' => {
+                                            let __ok = (|| -> Option<()> {
+                                                if state.src_bytes.get(state.offset).copied() != Some(b'.')
+                                                {
+                                                    return None;
+                                                }
+                                                state.offset += 1;
+                                                {
+                                                    if ::parse_that::scan_digits_mut(state).is_none() {
+                                                        return None;
+                                                    }
+                                                }
+                                                Some(())
+                                            })();
+                                            if __ok.is_none() {
+                                                state.offset = __save_dispatch;
+                                                return None;
+                                            }
+                                        }
+                                        _ => {
+                                            return None;
+                                        }
+                                    }
+                                }
+                                {
+                                    let __save = state.offset;
+                                    let __ok = (|| -> Option<()> {
+                                        {
+                                            let __b = *state.src_bytes.get(state.offset)?;
+                                            if !((__b == b'E' || __b == b'e')) {
+                                                return None;
+                                            }
+                                            state.offset += 1;
+                                        }
+                                        {
+                                            let __save = state.offset;
+                                            let __ok = (|| -> Option<()> {
+                                                {
+                                                    let __b = *state.src_bytes.get(state.offset)?;
+                                                    if !((__b == b'+' || __b == b'-')) {
+                                                        return None;
+                                                    }
+                                                    state.offset += 1;
+                                                }
+                                                Some(())
+                                            })();
+                                            if __ok.is_none() {
+                                                state.offset = __save;
+                                            }
+                                        }
+                                        {
+                                            if ::parse_that::scan_digits_mut(state).is_none() {
+                                                return None;
+                                            }
+                                        }
+                                        Some(())
+                                    })();
+                                    if __ok.is_none() {
+                                        state.offset = __save;
+                                    }
+                                }
+                                Some(())
+                            })();
+                            if __result.is_some() && state.offset > __start {
+                                Some(
+                                    ::parse_that::Span::new(__start, state.offset, state.src),
+                                )
+                            } else {
+                                state.offset = __start;
+                                None
+                            }
+                        }
+                            .is_none()
+                        {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
@@ -86719,7 +88033,137 @@ mod __cssl4parser_emit_impl {
                                                                                 let __ok = (|| -> bool {
                                                                                     {
                                                                                         let __start = state.offset;
-                                                                                        if ::parse_that::scan_number_span(state).is_none() {
+                                                                                        if {
+                                                                                            let __start = state.offset;
+                                                                                            let __result: Option<()> = (|| {
+                                                                                                {
+                                                                                                    let __save = state.offset;
+                                                                                                    let __ok = (|| -> Option<()> {
+                                                                                                        {
+                                                                                                            let __b = *state.src_bytes.get(state.offset)?;
+                                                                                                            if !((__b == b'+' || __b == b'-')) {
+                                                                                                                return None;
+                                                                                                            }
+                                                                                                            state.offset += 1;
+                                                                                                        }
+                                                                                                        Some(())
+                                                                                                    })();
+                                                                                                    if __ok.is_none() {
+                                                                                                        state.offset = __save;
+                                                                                                    }
+                                                                                                }
+                                                                                                {
+                                                                                                    let __save_dispatch = state.offset;
+                                                                                                    let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                                                                                    match __dispatch_b {
+                                                                                                        b'0' | b'1' | b'2' | b'3' | b'4' | b'5' | b'6' | b'7' | b'8'
+                                                                                                        | b'9' => {
+                                                                                                            let __ok = (|| -> Option<()> {
+                                                                                                                {
+                                                                                                                    if ::parse_that::scan_digits_mut(state).is_none() {
+                                                                                                                        return None;
+                                                                                                                    }
+                                                                                                                }
+                                                                                                                {
+                                                                                                                    let __save = state.offset;
+                                                                                                                    let __ok = (|| -> Option<()> {
+                                                                                                                        if state.src_bytes.get(state.offset).copied() != Some(b'.')
+                                                                                                                        {
+                                                                                                                            return None;
+                                                                                                                        }
+                                                                                                                        state.offset += 1;
+                                                                                                                        {
+                                                                                                                            if ::parse_that::scan_digits_mut(state).is_none() {
+                                                                                                                                return None;
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                        Some(())
+                                                                                                                    })();
+                                                                                                                    if __ok.is_none() {
+                                                                                                                        state.offset = __save;
+                                                                                                                    }
+                                                                                                                }
+                                                                                                                Some(())
+                                                                                                            })();
+                                                                                                            if __ok.is_none() {
+                                                                                                                state.offset = __save_dispatch;
+                                                                                                                return None;
+                                                                                                            }
+                                                                                                        }
+                                                                                                        b'.' => {
+                                                                                                            let __ok = (|| -> Option<()> {
+                                                                                                                if state.src_bytes.get(state.offset).copied() != Some(b'.')
+                                                                                                                {
+                                                                                                                    return None;
+                                                                                                                }
+                                                                                                                state.offset += 1;
+                                                                                                                {
+                                                                                                                    if ::parse_that::scan_digits_mut(state).is_none() {
+                                                                                                                        return None;
+                                                                                                                    }
+                                                                                                                }
+                                                                                                                Some(())
+                                                                                                            })();
+                                                                                                            if __ok.is_none() {
+                                                                                                                state.offset = __save_dispatch;
+                                                                                                                return None;
+                                                                                                            }
+                                                                                                        }
+                                                                                                        _ => {
+                                                                                                            return None;
+                                                                                                        }
+                                                                                                    }
+                                                                                                }
+                                                                                                {
+                                                                                                    let __save = state.offset;
+                                                                                                    let __ok = (|| -> Option<()> {
+                                                                                                        {
+                                                                                                            let __b = *state.src_bytes.get(state.offset)?;
+                                                                                                            if !((__b == b'E' || __b == b'e')) {
+                                                                                                                return None;
+                                                                                                            }
+                                                                                                            state.offset += 1;
+                                                                                                        }
+                                                                                                        {
+                                                                                                            let __save = state.offset;
+                                                                                                            let __ok = (|| -> Option<()> {
+                                                                                                                {
+                                                                                                                    let __b = *state.src_bytes.get(state.offset)?;
+                                                                                                                    if !((__b == b'+' || __b == b'-')) {
+                                                                                                                        return None;
+                                                                                                                    }
+                                                                                                                    state.offset += 1;
+                                                                                                                }
+                                                                                                                Some(())
+                                                                                                            })();
+                                                                                                            if __ok.is_none() {
+                                                                                                                state.offset = __save;
+                                                                                                            }
+                                                                                                        }
+                                                                                                        {
+                                                                                                            if ::parse_that::scan_digits_mut(state).is_none() {
+                                                                                                                return None;
+                                                                                                            }
+                                                                                                        }
+                                                                                                        Some(())
+                                                                                                    })();
+                                                                                                    if __ok.is_none() {
+                                                                                                        state.offset = __save;
+                                                                                                    }
+                                                                                                }
+                                                                                                Some(())
+                                                                                            })();
+                                                                                            if __result.is_some() && state.offset > __start {
+                                                                                                Some(
+                                                                                                    ::parse_that::Span::new(__start, state.offset, state.src),
+                                                                                                )
+                                                                                            } else {
+                                                                                                state.offset = __start;
+                                                                                                None
+                                                                                            }
+                                                                                        }
+                                                                                            .is_none()
+                                                                                        {
                                                                                             return false;
                                                                                         }
                                                                                         let __matched = &state.src[__start..state.offset];
@@ -88662,7 +90106,137 @@ mod __cssl4parser_emit_impl {
                                                                 let __ok = (|| -> bool {
                                                                     {
                                                                         let __start = state.offset;
-                                                                        if ::parse_that::scan_number_span(state).is_none() {
+                                                                        if {
+                                                                            let __start = state.offset;
+                                                                            let __result: Option<()> = (|| {
+                                                                                {
+                                                                                    let __save = state.offset;
+                                                                                    let __ok = (|| -> Option<()> {
+                                                                                        {
+                                                                                            let __b = *state.src_bytes.get(state.offset)?;
+                                                                                            if !((__b == b'+' || __b == b'-')) {
+                                                                                                return None;
+                                                                                            }
+                                                                                            state.offset += 1;
+                                                                                        }
+                                                                                        Some(())
+                                                                                    })();
+                                                                                    if __ok.is_none() {
+                                                                                        state.offset = __save;
+                                                                                    }
+                                                                                }
+                                                                                {
+                                                                                    let __save_dispatch = state.offset;
+                                                                                    let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                                                                    match __dispatch_b {
+                                                                                        b'0' | b'1' | b'2' | b'3' | b'4' | b'5' | b'6' | b'7' | b'8'
+                                                                                        | b'9' => {
+                                                                                            let __ok = (|| -> Option<()> {
+                                                                                                {
+                                                                                                    if ::parse_that::scan_digits_mut(state).is_none() {
+                                                                                                        return None;
+                                                                                                    }
+                                                                                                }
+                                                                                                {
+                                                                                                    let __save = state.offset;
+                                                                                                    let __ok = (|| -> Option<()> {
+                                                                                                        if state.src_bytes.get(state.offset).copied() != Some(b'.')
+                                                                                                        {
+                                                                                                            return None;
+                                                                                                        }
+                                                                                                        state.offset += 1;
+                                                                                                        {
+                                                                                                            if ::parse_that::scan_digits_mut(state).is_none() {
+                                                                                                                return None;
+                                                                                                            }
+                                                                                                        }
+                                                                                                        Some(())
+                                                                                                    })();
+                                                                                                    if __ok.is_none() {
+                                                                                                        state.offset = __save;
+                                                                                                    }
+                                                                                                }
+                                                                                                Some(())
+                                                                                            })();
+                                                                                            if __ok.is_none() {
+                                                                                                state.offset = __save_dispatch;
+                                                                                                return None;
+                                                                                            }
+                                                                                        }
+                                                                                        b'.' => {
+                                                                                            let __ok = (|| -> Option<()> {
+                                                                                                if state.src_bytes.get(state.offset).copied() != Some(b'.')
+                                                                                                {
+                                                                                                    return None;
+                                                                                                }
+                                                                                                state.offset += 1;
+                                                                                                {
+                                                                                                    if ::parse_that::scan_digits_mut(state).is_none() {
+                                                                                                        return None;
+                                                                                                    }
+                                                                                                }
+                                                                                                Some(())
+                                                                                            })();
+                                                                                            if __ok.is_none() {
+                                                                                                state.offset = __save_dispatch;
+                                                                                                return None;
+                                                                                            }
+                                                                                        }
+                                                                                        _ => {
+                                                                                            return None;
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                                {
+                                                                                    let __save = state.offset;
+                                                                                    let __ok = (|| -> Option<()> {
+                                                                                        {
+                                                                                            let __b = *state.src_bytes.get(state.offset)?;
+                                                                                            if !((__b == b'E' || __b == b'e')) {
+                                                                                                return None;
+                                                                                            }
+                                                                                            state.offset += 1;
+                                                                                        }
+                                                                                        {
+                                                                                            let __save = state.offset;
+                                                                                            let __ok = (|| -> Option<()> {
+                                                                                                {
+                                                                                                    let __b = *state.src_bytes.get(state.offset)?;
+                                                                                                    if !((__b == b'+' || __b == b'-')) {
+                                                                                                        return None;
+                                                                                                    }
+                                                                                                    state.offset += 1;
+                                                                                                }
+                                                                                                Some(())
+                                                                                            })();
+                                                                                            if __ok.is_none() {
+                                                                                                state.offset = __save;
+                                                                                            }
+                                                                                        }
+                                                                                        {
+                                                                                            if ::parse_that::scan_digits_mut(state).is_none() {
+                                                                                                return None;
+                                                                                            }
+                                                                                        }
+                                                                                        Some(())
+                                                                                    })();
+                                                                                    if __ok.is_none() {
+                                                                                        state.offset = __save;
+                                                                                    }
+                                                                                }
+                                                                                Some(())
+                                                                            })();
+                                                                            if __result.is_some() && state.offset > __start {
+                                                                                Some(
+                                                                                    ::parse_that::Span::new(__start, state.offset, state.src),
+                                                                                )
+                                                                            } else {
+                                                                                state.offset = __start;
+                                                                                None
+                                                                            }
+                                                                        }
+                                                                            .is_none()
+                                                                        {
                                                                             return false;
                                                                         }
                                                                         let __matched = &state.src[__start..state.offset];
@@ -88885,7 +90459,137 @@ mod __cssl4parser_emit_impl {
                                                                         let __ok = (|| -> bool {
                                                                             {
                                                                                 let __start = state.offset;
-                                                                                if ::parse_that::scan_number_span(state).is_none() {
+                                                                                if {
+                                                                                    let __start = state.offset;
+                                                                                    let __result: Option<()> = (|| {
+                                                                                        {
+                                                                                            let __save = state.offset;
+                                                                                            let __ok = (|| -> Option<()> {
+                                                                                                {
+                                                                                                    let __b = *state.src_bytes.get(state.offset)?;
+                                                                                                    if !((__b == b'+' || __b == b'-')) {
+                                                                                                        return None;
+                                                                                                    }
+                                                                                                    state.offset += 1;
+                                                                                                }
+                                                                                                Some(())
+                                                                                            })();
+                                                                                            if __ok.is_none() {
+                                                                                                state.offset = __save;
+                                                                                            }
+                                                                                        }
+                                                                                        {
+                                                                                            let __save_dispatch = state.offset;
+                                                                                            let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                                                                            match __dispatch_b {
+                                                                                                b'0' | b'1' | b'2' | b'3' | b'4' | b'5' | b'6' | b'7' | b'8'
+                                                                                                | b'9' => {
+                                                                                                    let __ok = (|| -> Option<()> {
+                                                                                                        {
+                                                                                                            if ::parse_that::scan_digits_mut(state).is_none() {
+                                                                                                                return None;
+                                                                                                            }
+                                                                                                        }
+                                                                                                        {
+                                                                                                            let __save = state.offset;
+                                                                                                            let __ok = (|| -> Option<()> {
+                                                                                                                if state.src_bytes.get(state.offset).copied() != Some(b'.')
+                                                                                                                {
+                                                                                                                    return None;
+                                                                                                                }
+                                                                                                                state.offset += 1;
+                                                                                                                {
+                                                                                                                    if ::parse_that::scan_digits_mut(state).is_none() {
+                                                                                                                        return None;
+                                                                                                                    }
+                                                                                                                }
+                                                                                                                Some(())
+                                                                                                            })();
+                                                                                                            if __ok.is_none() {
+                                                                                                                state.offset = __save;
+                                                                                                            }
+                                                                                                        }
+                                                                                                        Some(())
+                                                                                                    })();
+                                                                                                    if __ok.is_none() {
+                                                                                                        state.offset = __save_dispatch;
+                                                                                                        return None;
+                                                                                                    }
+                                                                                                }
+                                                                                                b'.' => {
+                                                                                                    let __ok = (|| -> Option<()> {
+                                                                                                        if state.src_bytes.get(state.offset).copied() != Some(b'.')
+                                                                                                        {
+                                                                                                            return None;
+                                                                                                        }
+                                                                                                        state.offset += 1;
+                                                                                                        {
+                                                                                                            if ::parse_that::scan_digits_mut(state).is_none() {
+                                                                                                                return None;
+                                                                                                            }
+                                                                                                        }
+                                                                                                        Some(())
+                                                                                                    })();
+                                                                                                    if __ok.is_none() {
+                                                                                                        state.offset = __save_dispatch;
+                                                                                                        return None;
+                                                                                                    }
+                                                                                                }
+                                                                                                _ => {
+                                                                                                    return None;
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                        {
+                                                                                            let __save = state.offset;
+                                                                                            let __ok = (|| -> Option<()> {
+                                                                                                {
+                                                                                                    let __b = *state.src_bytes.get(state.offset)?;
+                                                                                                    if !((__b == b'E' || __b == b'e')) {
+                                                                                                        return None;
+                                                                                                    }
+                                                                                                    state.offset += 1;
+                                                                                                }
+                                                                                                {
+                                                                                                    let __save = state.offset;
+                                                                                                    let __ok = (|| -> Option<()> {
+                                                                                                        {
+                                                                                                            let __b = *state.src_bytes.get(state.offset)?;
+                                                                                                            if !((__b == b'+' || __b == b'-')) {
+                                                                                                                return None;
+                                                                                                            }
+                                                                                                            state.offset += 1;
+                                                                                                        }
+                                                                                                        Some(())
+                                                                                                    })();
+                                                                                                    if __ok.is_none() {
+                                                                                                        state.offset = __save;
+                                                                                                    }
+                                                                                                }
+                                                                                                {
+                                                                                                    if ::parse_that::scan_digits_mut(state).is_none() {
+                                                                                                        return None;
+                                                                                                    }
+                                                                                                }
+                                                                                                Some(())
+                                                                                            })();
+                                                                                            if __ok.is_none() {
+                                                                                                state.offset = __save;
+                                                                                            }
+                                                                                        }
+                                                                                        Some(())
+                                                                                    })();
+                                                                                    if __result.is_some() && state.offset > __start {
+                                                                                        Some(
+                                                                                            ::parse_that::Span::new(__start, state.offset, state.src),
+                                                                                        )
+                                                                                    } else {
+                                                                                        state.offset = __start;
+                                                                                        None
+                                                                                    }
+                                                                                }
+                                                                                    .is_none()
+                                                                                {
                                                                                     return false;
                                                                                 }
                                                                                 let __matched = &state.src[__start..state.offset];
@@ -89002,10 +90706,47 @@ mod __cssl4parser_emit_impl {
                                                                                                         let __ok = (|| -> bool {
                                                                                                             {
                                                                                                                 let __start = state.offset;
-                                                                                                                if ::parse_that::scan_ident(
-                                                                                                                        state,
-                                                                                                                        &::parse_that::DEFAULT_IDENT_CONFIG,
-                                                                                                                    )
+                                                                                                                if {
+                                                                                                                    let __start = state.offset;
+                                                                                                                    let __result: Option<()> = (|| {
+                                                                                                                        {
+                                                                                                                            let __b = *state.src_bytes.get(state.offset)?;
+                                                                                                                            if !(((__b >= b'A' && __b <= b'Z') || __b == b'_'
+                                                                                                                                || (__b >= b'a' && __b <= b'z')
+                                                                                                                                || (__b >= b'\x80' && __b <= b'\xFF')))
+                                                                                                                            {
+                                                                                                                                return None;
+                                                                                                                            }
+                                                                                                                            state.offset += 1;
+                                                                                                                        }
+                                                                                                                        {
+                                                                                                                            let __end = state.src_bytes.len();
+                                                                                                                            let mut __pos = state.offset;
+                                                                                                                            while __pos < __end {
+                                                                                                                                let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                                                                                if (__b == b'-' || (__b >= b'0' && __b <= b'9')
+                                                                                                                                    || (__b >= b'A' && __b <= b'Z') || __b == b'_'
+                                                                                                                                    || (__b >= b'a' && __b <= b'z')
+                                                                                                                                    || (__b >= b'\x80' && __b <= b'\xFF'))
+                                                                                                                                {
+                                                                                                                                    __pos += 1;
+                                                                                                                                } else {
+                                                                                                                                    break;
+                                                                                                                                }
+                                                                                                                            }
+                                                                                                                            state.offset = __pos;
+                                                                                                                        }
+                                                                                                                        Some(())
+                                                                                                                    })();
+                                                                                                                    if __result.is_some() && state.offset > __start {
+                                                                                                                        Some(
+                                                                                                                            ::parse_that::Span::new(__start, state.offset, state.src),
+                                                                                                                        )
+                                                                                                                    } else {
+                                                                                                                        state.offset = __start;
+                                                                                                                        None
+                                                                                                                    }
+                                                                                                                }
                                                                                                                     .is_none()
                                                                                                                 {
                                                                                                                     return false;
@@ -94581,10 +96322,47 @@ mod __cssl4parser_emit_impl {
                             let __ows883 = state.offset;
                             {
                                 let __start = state.offset;
-                                if ::parse_that::scan_ident(
-                                        state,
-                                        &::parse_that::DEFAULT_IDENT_CONFIG,
-                                    )
+                                if {
+                                    let __start = state.offset;
+                                    let __result: Option<()> = (|| {
+                                        {
+                                            let __b = *state.src_bytes.get(state.offset)?;
+                                            if !(((__b >= b'A' && __b <= b'Z') || __b == b'_'
+                                                || (__b >= b'a' && __b <= b'z')
+                                                || (__b >= b'\x80' && __b <= b'\xFF')))
+                                            {
+                                                return None;
+                                            }
+                                            state.offset += 1;
+                                        }
+                                        {
+                                            let __end = state.src_bytes.len();
+                                            let mut __pos = state.offset;
+                                            while __pos < __end {
+                                                let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                if (__b == b'-' || (__b >= b'0' && __b <= b'9')
+                                                    || (__b >= b'A' && __b <= b'Z') || __b == b'_'
+                                                    || (__b >= b'a' && __b <= b'z')
+                                                    || (__b >= b'\x80' && __b <= b'\xFF'))
+                                                {
+                                                    __pos += 1;
+                                                } else {
+                                                    break;
+                                                }
+                                            }
+                                            state.offset = __pos;
+                                        }
+                                        Some(())
+                                    })();
+                                    if __result.is_some() && state.offset > __start {
+                                        Some(
+                                            ::parse_that::Span::new(__start, state.offset, state.src),
+                                        )
+                                    } else {
+                                        state.offset = __start;
+                                        None
+                                    }
+                                }
                                     .is_none()
                                 {
                                     return false;
@@ -95620,7 +97398,137 @@ mod __cssl4parser_emit_impl {
                     } {
                         {
                             let __start = state.offset;
-                            if ::parse_that::scan_number_span(state).is_none() {
+                            if {
+                                let __start = state.offset;
+                                let __result: Option<()> = (|| {
+                                    {
+                                        let __save = state.offset;
+                                        let __ok = (|| -> Option<()> {
+                                            {
+                                                let __b = *state.src_bytes.get(state.offset)?;
+                                                if !((__b == b'+' || __b == b'-')) {
+                                                    return None;
+                                                }
+                                                state.offset += 1;
+                                            }
+                                            Some(())
+                                        })();
+                                        if __ok.is_none() {
+                                            state.offset = __save;
+                                        }
+                                    }
+                                    {
+                                        let __save_dispatch = state.offset;
+                                        let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                        match __dispatch_b {
+                                            b'0' | b'1' | b'2' | b'3' | b'4' | b'5' | b'6' | b'7' | b'8'
+                                            | b'9' => {
+                                                let __ok = (|| -> Option<()> {
+                                                    {
+                                                        if ::parse_that::scan_digits_mut(state).is_none() {
+                                                            return None;
+                                                        }
+                                                    }
+                                                    {
+                                                        let __save = state.offset;
+                                                        let __ok = (|| -> Option<()> {
+                                                            if state.src_bytes.get(state.offset).copied() != Some(b'.')
+                                                            {
+                                                                return None;
+                                                            }
+                                                            state.offset += 1;
+                                                            {
+                                                                if ::parse_that::scan_digits_mut(state).is_none() {
+                                                                    return None;
+                                                                }
+                                                            }
+                                                            Some(())
+                                                        })();
+                                                        if __ok.is_none() {
+                                                            state.offset = __save;
+                                                        }
+                                                    }
+                                                    Some(())
+                                                })();
+                                                if __ok.is_none() {
+                                                    state.offset = __save_dispatch;
+                                                    return None;
+                                                }
+                                            }
+                                            b'.' => {
+                                                let __ok = (|| -> Option<()> {
+                                                    if state.src_bytes.get(state.offset).copied() != Some(b'.')
+                                                    {
+                                                        return None;
+                                                    }
+                                                    state.offset += 1;
+                                                    {
+                                                        if ::parse_that::scan_digits_mut(state).is_none() {
+                                                            return None;
+                                                        }
+                                                    }
+                                                    Some(())
+                                                })();
+                                                if __ok.is_none() {
+                                                    state.offset = __save_dispatch;
+                                                    return None;
+                                                }
+                                            }
+                                            _ => {
+                                                return None;
+                                            }
+                                        }
+                                    }
+                                    {
+                                        let __save = state.offset;
+                                        let __ok = (|| -> Option<()> {
+                                            {
+                                                let __b = *state.src_bytes.get(state.offset)?;
+                                                if !((__b == b'E' || __b == b'e')) {
+                                                    return None;
+                                                }
+                                                state.offset += 1;
+                                            }
+                                            {
+                                                let __save = state.offset;
+                                                let __ok = (|| -> Option<()> {
+                                                    {
+                                                        let __b = *state.src_bytes.get(state.offset)?;
+                                                        if !((__b == b'+' || __b == b'-')) {
+                                                            return None;
+                                                        }
+                                                        state.offset += 1;
+                                                    }
+                                                    Some(())
+                                                })();
+                                                if __ok.is_none() {
+                                                    state.offset = __save;
+                                                }
+                                            }
+                                            {
+                                                if ::parse_that::scan_digits_mut(state).is_none() {
+                                                    return None;
+                                                }
+                                            }
+                                            Some(())
+                                        })();
+                                        if __ok.is_none() {
+                                            state.offset = __save;
+                                        }
+                                    }
+                                    Some(())
+                                })();
+                                if __result.is_some() && state.offset > __start {
+                                    Some(
+                                        ::parse_that::Span::new(__start, state.offset, state.src),
+                                    )
+                                } else {
+                                    state.offset = __start;
+                                    None
+                                }
+                            }
+                                .is_none()
+                            {
                                 return false;
                             }
                             let __matched = &state.src[__start..state.offset];
@@ -96064,10 +97972,45 @@ mod __cssl4parser_emit_impl {
                         };
                         {
                             let __start = state.offset;
-                            if ::parse_that::scan_ident(
-                                    state,
-                                    &::parse_that::DEFAULT_IDENT_CONFIG,
-                                )
+                            if {
+                                let __start = state.offset;
+                                let __result: Option<()> = (|| {
+                                    {
+                                        let __b = *state.src_bytes.get(state.offset)?;
+                                        if !(((__b >= b'A' && __b <= b'Z') || __b == b'_'
+                                            || (__b >= b'a' && __b <= b'z')))
+                                        {
+                                            return None;
+                                        }
+                                        state.offset += 1;
+                                    }
+                                    {
+                                        let __end = state.src_bytes.len();
+                                        let mut __pos = state.offset;
+                                        while __pos < __end {
+                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                            if (__b == b'-' || (__b >= b'0' && __b <= b'9')
+                                                || (__b >= b'A' && __b <= b'Z') || __b == b'_'
+                                                || (__b >= b'a' && __b <= b'z'))
+                                            {
+                                                __pos += 1;
+                                            } else {
+                                                break;
+                                            }
+                                        }
+                                        state.offset = __pos;
+                                    }
+                                    Some(())
+                                })();
+                                if __result.is_some() && state.offset > __start {
+                                    Some(
+                                        ::parse_that::Span::new(__start, state.offset, state.src),
+                                    )
+                                } else {
+                                    state.offset = __start;
+                                    None
+                                }
+                            }
                                 .is_none()
                             {
                                 return false;

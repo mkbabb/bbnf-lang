@@ -87,6 +87,14 @@ divan = "0.1"
 mimalloc = "0.1"
 sonic-rs = "0.5"
 
+# AZ-IV.W2.4 — `bbnf-path` proc-macro under test from
+# `crates/core/tests/path_macro_*`. Compile-time fixtures import
+# `bbnf::path::TypedPath` from this crate plus the `path!` macro from
+# the proc-macro crate; trybuild-style negative fixtures ride alongside
+# (path_macro_errors).
+bbnf-path = { version = "0.1", path = "../bbnf-path" }
+trybuild = "1"
+
 # JSON competitor parsers
 serde_json = "1"
 serde = { version = "1", features = ["derive"] }

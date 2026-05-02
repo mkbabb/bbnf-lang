@@ -1,0 +1,27 @@
+[package]
+name = "bbnf-path"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "`path!` proc-macro: compile-time-typed path literals against a bbnf StructRegistry"
+repository = "https://github.com/mkbabb/bbnf-lang"
+
+[lib]
+proc-macro = true
+
+# AZ-IV.W2.4 — `path!` proc-macro entry. The crate is `proc-macro = true`
+# and cdylib-free (Rust frontend only); the future TS template-literal
+# tag (W5) is a separate cdylib that consumes the same Path IR.
+#
+# Dependencies:
+# * `syn` / `quote` / `proc-macro2` — the proc-macro substrate.
+# * `bbnf-regex` — the W2.3 path-string lexer (`lex_path` + `PathToken`).
+# * `bbnf-ir` — `StructRegistry`, `StructLayout`, `LayoutKind`,
+#   `TypeDesc`; the macro walks its compile-time fixture registry
+#   through this surface to validate each segment against the grammar.
+[dependencies]
+syn = { version = "2", features = ["full", "extra-traits"] }
+quote = "1"
+proc-macro2 = "1"
+bbnf-regex = { version = "0.1" }
+bbnf-ir = { version = "0.1" }

@@ -115,4 +115,7 @@ Commit
 ------
 
 scope: egraph-ruler/delete + ir-passes/inline-trace-sink
-commit hash: <recorded in W4-rulset-deletion-ledger.md and FINAL.md>
+commit hash: 8fa9df03
+branch: aziv-w4-rewrites (worktree at /Users/mkbabb/Programming/
+                           bbnf-wt-aziv-w4-rewrites)
+base: 130303fc (master @ AZ-IV.W3 close)

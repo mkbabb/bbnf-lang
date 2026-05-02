@@ -83,4 +83,4 @@ The W2.2 production caller in `crates/core/src/pipeline/compile/pipeline.rs` thr
 ## Commit
 
 - **Scope**: `egraph-ruler/delete` + `ir-passes/inline-trace-sink` (single combined commit per W4.1 unit; commit body names both transpositions).
-- **Hash**: recorded in the commit body and FINAL.md after landing.
+- **Hash**: `8fa9df03` on branch `aziv-w4-rewrites`, base `130303fc`.

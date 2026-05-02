@@ -603,6 +603,674 @@ mod __ebnfparser_emit_impl {
             ::core::option::Option::None
         }
     }
+    /// AZ-IV.W5 T4 — codegen-emitted production registry.
+    ///
+    /// `LazyLock<StructRegistry>` projected from the IR's
+    /// `project_types` closure at `cargo xtask regen` time. The
+    /// `bbnf-path` proc-macro consumes this static through the
+    /// per-marker resolver in `crates/bbnf-path/src/registry.rs`; the
+    /// runtime audit pass + emitter consume the same registry shape
+    /// from `GrammarIR::struct_registry`.
+    ///
+    /// `Deref` on `LazyLock` makes the registry's accessor surface
+    /// available without explicit deref — `REGISTRY.layout(rule_id)`
+    /// reads through the deref impl directly.
+    pub static REGISTRY: ::std::sync::LazyLock<::bbnf_ir::registry::StructRegistry> = ::std::sync::LazyLock::new(||
+    {
+        let mut __registry = ::bbnf_ir::registry::StructRegistry::new();
+        __registry
+            .insert(::bbnf_ir::registry::StructLayout {
+                rule_id: 0u32,
+                rule_name: ::std::string::String::from("letter"),
+                kind: ::bbnf_ir::registry::LayoutKind::UntaggedEnum,
+                rule_type: ::bbnf_ir::TypeDesc::Span,
+                fields: ::std::vec![
+                    ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_0"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 0u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_1"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 1u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_2"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 2u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_3"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 3u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_4"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 4u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_5"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 5u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_6"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 6u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_7"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 7u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_8"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 8u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_9"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 9u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_10"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 10u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_11"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 11u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_12"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 12u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_13"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 13u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_14"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 14u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_15"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 15u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_16"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 16u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_17"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 17u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_18"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 18u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_19"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 19u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_20"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 20u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_21"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 21u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_22"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 22u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_23"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 23u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_24"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 24u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_25"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 25u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_26"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 26u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_27"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 27u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_28"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 28u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_29"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 29u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_30"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 30u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_31"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 31u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_32"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 32u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_33"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 33u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_34"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 34u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_35"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 35u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_36"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 36u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_37"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 37u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_38"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 38u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_39"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 39u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_40"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 40u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_41"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 41u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_42"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 42u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_43"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 43u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_44"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 44u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_45"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 45u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_46"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 46u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_47"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 47u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_48"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 48u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_49"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 49u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_50"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 50u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_51"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 51u32,
+                    }, }
+                ],
+            });
+        __registry
+            .insert(::bbnf_ir::registry::StructLayout {
+                rule_id: 1u32,
+                rule_name: ::std::string::String::from("digit"),
+                kind: ::bbnf_ir::registry::LayoutKind::UntaggedEnum,
+                rule_type: ::bbnf_ir::TypeDesc::Span,
+                fields: ::std::vec![
+                    ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_0"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 0u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_1"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 1u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_2"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 2u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_3"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 3u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_4"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 4u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_5"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 5u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_6"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 6u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_7"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 7u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_8"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 8u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_9"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 9u32, },
+                    }
+                ],
+            });
+        __registry
+            .insert(::bbnf_ir::registry::StructLayout {
+                rule_id: 2u32,
+                rule_name: ::std::string::String::from("symbol"),
+                kind: ::bbnf_ir::registry::LayoutKind::UntaggedEnum,
+                rule_type: ::bbnf_ir::TypeDesc::Span,
+                fields: ::std::vec![
+                    ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_0"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 0u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_1"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 1u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_2"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 2u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_3"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 3u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_4"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 4u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_5"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 5u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_6"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 6u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_7"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 7u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_8"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 8u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_9"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 9u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_10"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 10u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_11"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 11u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_12"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 12u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_13"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 13u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_14"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 14u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_15"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 15u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_16"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 16u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_17"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 17u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_18"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 18u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_19"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 19u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_20"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 20u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_21"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 21u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_22"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 22u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_23"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 23u32,
+                    }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_24"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 24u32,
+                    }, }
+                ],
+            });
+        __registry
+            .insert(::bbnf_ir::registry::StructLayout {
+                rule_id: 3u32,
+                rule_name: ::std::string::String::from("identifier"),
+                kind: ::bbnf_ir::registry::LayoutKind::Struct,
+                rule_type: ::bbnf_ir::TypeDesc::Span,
+                fields: ::std::vec![
+                    ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("letter"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 0u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("field_1"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 1u32, }, }
+                ],
+            });
+        __registry
+            .insert(::bbnf_ir::registry::StructLayout {
+                rule_id: 4u32,
+                rule_name: ::std::string::String::from("character"),
+                kind: ::bbnf_ir::registry::LayoutKind::UntaggedEnum,
+                rule_type: ::bbnf_ir::TypeDesc::Span,
+                fields: ::std::vec![
+                    ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_0"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 0u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_1"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 1u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_2"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 2u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_3"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 3u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_4"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 4u32, },
+                    }
+                ],
+            });
+        __registry
+            .insert(::bbnf_ir::registry::StructLayout {
+                rule_id: 5u32,
+                rule_name: ::std::string::String::from("terminal"),
+                kind: ::bbnf_ir::registry::LayoutKind::UntaggedEnum,
+                rule_type: ::bbnf_ir::TypeDesc::Tuple(
+                    ::std::vec![
+                        ::bbnf_ir::TypeDesc::Span,
+                        ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum)),
+                        ::bbnf_ir::TypeDesc::Span
+                    ],
+                ),
+                fields: ::std::vec![
+                    ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_0"), type_desc :
+                    ::bbnf_ir::TypeDesc::Tuple(::std::vec![::bbnf_ir::TypeDesc::Span,
+                    ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum)),
+                    ::bbnf_ir::TypeDesc::Span]), source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 0u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_1"), type_desc :
+                    ::bbnf_ir::TypeDesc::Tuple(::std::vec![::bbnf_ir::TypeDesc::Span,
+                    ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum)),
+                    ::bbnf_ir::TypeDesc::Span]), source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 1u32, },
+                    }
+                ],
+            });
+        __registry
+            .insert(::bbnf_ir::registry::StructLayout {
+                rule_id: 6u32,
+                rule_name: ::std::string::String::from("concatenation"),
+                kind: ::bbnf_ir::registry::LayoutKind::Struct,
+                rule_type: ::bbnf_ir::TypeDesc::Vec(
+                    ::std::boxed::Box::new(
+                        ::bbnf_ir::TypeDesc::Tuple(
+                            ::std::vec![
+                                ::bbnf_ir::TypeDesc::Span, ::bbnf_ir::TypeDesc::BoxedEnum,
+                                ::bbnf_ir::TypeDesc::Span
+                            ],
+                        ),
+                    ),
+                ),
+                fields: ::std::vec![
+                    ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("element"), type_desc :
+                    ::bbnf_ir::TypeDesc::Tuple(::std::vec![::bbnf_ir::TypeDesc::Span,
+                    ::bbnf_ir::TypeDesc::BoxedEnum, ::bbnf_ir::TypeDesc::Span]), source :
+                    ::bbnf_ir::registry::FieldSource::RepeatElement, }
+                ],
+            });
+        __registry
+            .insert(::bbnf_ir::registry::StructLayout {
+                rule_id: 7u32,
+                rule_name: ::std::string::String::from("alternation"),
+                kind: ::bbnf_ir::registry::LayoutKind::Struct,
+                rule_type: ::bbnf_ir::TypeDesc::Vec(
+                    ::std::boxed::Box::new(
+                        ::bbnf_ir::TypeDesc::Tuple(
+                            ::std::vec![
+                                ::bbnf_ir::TypeDesc::Span, ::bbnf_ir::TypeDesc::BoxedEnum,
+                                ::bbnf_ir::TypeDesc::Span
+                            ],
+                        ),
+                    ),
+                ),
+                fields: ::std::vec![
+                    ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("element"), type_desc :
+                    ::bbnf_ir::TypeDesc::Tuple(::std::vec![::bbnf_ir::TypeDesc::Span,
+                    ::bbnf_ir::TypeDesc::BoxedEnum, ::bbnf_ir::TypeDesc::Span]), source :
+                    ::bbnf_ir::registry::FieldSource::RepeatElement, }
+                ],
+            });
+        __registry
+            .insert(::bbnf_ir::registry::StructLayout {
+                rule_id: 8u32,
+                rule_name: ::std::string::String::from("rhs"),
+                kind: ::bbnf_ir::registry::LayoutKind::Struct,
+                rule_type: ::bbnf_ir::TypeDesc::BoxedEnum,
+                fields: ::std::vec![
+                    ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("alternation"), type_desc :
+                    ::bbnf_ir::TypeDesc::BoxedEnum, source :
+                    ::bbnf_ir::registry::FieldSource::RuleReference { target_rule : 7u32,
+                    }, }
+                ],
+            });
+        __registry
+            .insert(::bbnf_ir::registry::StructLayout {
+                rule_id: 9u32,
+                rule_name: ::std::string::String::from("term"),
+                kind: ::bbnf_ir::registry::LayoutKind::TaggedEnum,
+                rule_type: ::bbnf_ir::TypeDesc::HeterogeneousAltJoin(
+                    ::std::vec![
+                        ::bbnf_ir::TypeDesc::Tuple(::std::vec![::bbnf_ir::TypeDesc::Span,
+                        ::bbnf_ir::TypeDesc::BoxedEnum, ::bbnf_ir::TypeDesc::Span]),
+                        ::bbnf_ir::TypeDesc::BoxedEnum, ::bbnf_ir::TypeDesc::Span
+                    ],
+                ),
+                fields: ::std::vec![
+                    ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("105"), type_desc :
+                    ::bbnf_ir::TypeDesc::Tuple(::std::vec![::bbnf_ir::TypeDesc::Span,
+                    ::bbnf_ir::TypeDesc::BoxedEnum, ::bbnf_ir::TypeDesc::Span]), source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 0u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("105"), type_desc :
+                    ::bbnf_ir::TypeDesc::Tuple(::std::vec![::bbnf_ir::TypeDesc::Span,
+                    ::bbnf_ir::TypeDesc::BoxedEnum, ::bbnf_ir::TypeDesc::Span]), source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 1u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("105"), type_desc :
+                    ::bbnf_ir::TypeDesc::Tuple(::std::vec![::bbnf_ir::TypeDesc::Span,
+                    ::bbnf_ir::TypeDesc::BoxedEnum, ::bbnf_ir::TypeDesc::Span]), source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 2u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_3"), type_desc :
+                    ::bbnf_ir::TypeDesc::BoxedEnum, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 3u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("106"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 4u32, },
+                    }
+                ],
+            });
+        __registry
+            .insert(::bbnf_ir::registry::StructLayout {
+                rule_id: 10u32,
+                rule_name: ::std::string::String::from("factor"),
+                kind: ::bbnf_ir::registry::LayoutKind::Struct,
+                rule_type: ::bbnf_ir::TypeDesc::Tuple(
+                    ::std::vec![
+                        ::bbnf_ir::TypeDesc::BoxedEnum,
+                        ::bbnf_ir::TypeDesc::Tuple(::std::vec![::bbnf_ir::TypeDesc::Span,
+                        ::bbnf_ir::TypeDesc::HeterogeneousAltJoin(::std::vec![::bbnf_ir::TypeDesc::Span,
+                        ::bbnf_ir::TypeDesc::Tuple(::std::vec![::bbnf_ir::TypeDesc::Span,
+                        ::bbnf_ir::TypeDesc::BoxedEnum])])])
+                    ],
+                ),
+                fields: ::std::vec![
+                    ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("term"), type_desc :
+                    ::bbnf_ir::TypeDesc::BoxedEnum, source :
+                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 0u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("field_1"), type_desc :
+                    ::bbnf_ir::TypeDesc::Tuple(::std::vec![::bbnf_ir::TypeDesc::Span,
+                    ::bbnf_ir::TypeDesc::HeterogeneousAltJoin(::std::vec![::bbnf_ir::TypeDesc::Span,
+                    ::bbnf_ir::TypeDesc::Tuple(::std::vec![::bbnf_ir::TypeDesc::Span,
+                    ::bbnf_ir::TypeDesc::BoxedEnum])])]), source :
+                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 1u32, }, }
+                ],
+            });
+        __registry
+            .insert(::bbnf_ir::registry::StructLayout {
+                rule_id: 11u32,
+                rule_name: ::std::string::String::from("rule"),
+                kind: ::bbnf_ir::registry::LayoutKind::Struct,
+                rule_type: ::bbnf_ir::TypeDesc::Tuple(
+                    ::std::vec![
+                        ::bbnf_ir::TypeDesc::Span, ::bbnf_ir::TypeDesc::BoxedEnum,
+                        ::bbnf_ir::TypeDesc::Span
+                    ],
+                ),
+                fields: ::std::vec![
+                    ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("identifier"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 0u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("field_1"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 1u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("field_2"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 2u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("field_3"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 3u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("rhs"), type_desc :
+                    ::bbnf_ir::TypeDesc::BoxedEnum, source :
+                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 4u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("field_5"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 5u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("field_6"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 6u32, }, }
+                ],
+            });
+        __registry
+            .insert(::bbnf_ir::registry::StructLayout {
+                rule_id: 12u32,
+                rule_name: ::std::string::String::from("grammar"),
+                kind: ::bbnf_ir::registry::LayoutKind::Struct,
+                rule_type: ::bbnf_ir::TypeDesc::Vec(
+                    ::std::boxed::Box::new(
+                        ::bbnf_ir::TypeDesc::Tuple(
+                            ::std::vec![
+                                ::bbnf_ir::TypeDesc::Span, ::bbnf_ir::TypeDesc::BoxedEnum,
+                                ::bbnf_ir::TypeDesc::Span
+                            ],
+                        ),
+                    ),
+                ),
+                fields: ::std::vec![
+                    ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("element"), type_desc :
+                    ::bbnf_ir::TypeDesc::Tuple(::std::vec![::bbnf_ir::TypeDesc::Span,
+                    ::bbnf_ir::TypeDesc::BoxedEnum, ::bbnf_ir::TypeDesc::Span]), source :
+                    ::bbnf_ir::registry::FieldSource::RepeatElement, }
+                ],
+            });
+        __registry
+    });
+    /// AZ-IV.W5 T4 — entry-rule name for the per-grammar registry.
+    ///
+    /// `bbnf-path` resolves the document-root rule through this const;
+    /// the value is the first non-transparent rule's name (typically
+    /// the start production of the grammar's top-level production).
+    pub const REGISTRY_ENTRY_RULE: &str = "grammar";
     static __DTA_REGEX_124: &str = "[ \\t\\n\\r\\f]*";
     #[inline]
     #[cold]

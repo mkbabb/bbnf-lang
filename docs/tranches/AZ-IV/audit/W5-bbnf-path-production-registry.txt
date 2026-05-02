@@ -1,0 +1,133 @@
+AZ-IV.W5 T4 — bbnf-path production registry transposition
+
+Mechanism
+---------
+
+Per AUDIT-F transposition T4: codegen emits `pub static REGISTRY:
+LazyLock<StructRegistry>` per generated grammar module, and
+`cargo xtask regen` writes the same `StructRegistry` to a sidecar JSON
+file at `crates/core/src/grammar/generated/<ident>.registry.json`. The
+`bbnf-path` proc-macro reads the sidecar at expansion time, replacing
+the synthetic hand-authored fixture in `crates/bbnf-path/src/registry.rs`.
+
+Why a sidecar (architecture caveat)
+-----------------------------------
+
+A proc-macro cannot import the consumer crate's REGISTRY const because
+`bbnf-core` depends on `bbnf-path` (for the `path!` symbol). Importing
+`bbnf::grammar::generated::json::REGISTRY` from `bbnf-path` would form
+a dependency cycle. The sidecar JSON breaks the cycle:
+
+  - The proc-macro reads bytes via `std::fs` at expansion time.
+  - Deserialises through `serde_json` against `bbnf-ir`'s
+    `StructRegistry` (which already derives serde).
+  - Caches per-marker via `OnceLock` to avoid re-parsing on every macro
+    invocation in the same compiler process.
+
+The sidecar's path is anchored on the proc-macro crate's own
+`CARGO_MANIFEST_DIR` (`crates/bbnf-path`) and offset to
+`../core/src/grammar/generated/<ident>.registry.json` — a stable
+workspace invariant the regen pipeline maintains.
+
+Files modified
+--------------
+
+  crates/bbnf-path/Cargo.toml
+    - Added `serde` (with `derive` feature) and `serde_json` deps.
+
+  crates/bbnf-path/src/registry.rs
+    - Replaced `GrammarFixture` + four hand-authored
+      {json,css_l4,sheets,bbnf}_fixture() functions with
+      `GrammarRegistry` and the `registry_for_marker(marker)` resolver
+      that reads the sidecar JSON.
+    - Per-marker `OnceLock` cache; concurrent invocations share the
+      cached registry across the proc-macro process.
+    - `marker_to_grammar_ident` carries the explicit marker → grammar
+      ident mapping (Json → json, CssL4 → css_l4, Sheets →
+      google_sheets, Bbnf → bbnf).
+
+  crates/bbnf-path/src/path_macro.rs
+    - `validate_against_fixture` now takes `&GrammarRegistry`
+      (production data) instead of `&GrammarFixture` (synthetic data).
+    - The `expand` entry point routes the marker through
+      `registry_for_marker` instead of `fixture_for_marker`; missing
+      sidecars surface as `syn::Error` anchored at the marker token.
+
+  crates/core/src/backend/rust/emitter/registry_emit.rs
+    - `emit_registry(ir)` emits `pub static REGISTRY:
+      LazyLock<StructRegistry>` and `pub const REGISTRY_ENTRY_RULE:
+      &str`, both projected from `ir.struct_registry` and `ir.entry`.
+    - The `LazyLock<StructRegistry>` shape (vs. `const`) is dictated
+      by the registry's runtime type (`BTreeMap<RuleId, StructLayout>`
+      with `String` field names is not const-compatible). The runtime
+      `Deref` impl on `LazyLock` exposes the registry's accessor
+      surface without explicit deref.
+
+  crates/core/src/backend/rust/emitter/grammar.rs
+    - `emit_grammar_impl` calls `registry_emit::emit_registry(ir)` and
+      splices the resulting tokenstream into the per-grammar
+      `__<grammar>_emit_impl` module alongside the path-plan static
+      and the regex-scan adapter.
+
+  crates/core/src/backend/rust/emitter/mod.rs
+    - Registered `pub mod registry_emit;`.
+
+  xtask/src/regen.rs
+    - `GrammarRegistrySidecar { entry_rule, registry }` carries the
+      per-grammar payload; serialised via `serde_json::to_string_pretty`.
+    - `write_registry_sidecar` writes
+      `crates/core/src/grammar/generated/<ident>.registry.json` next
+      to the per-grammar `.rs` output. Content-equality skip preserves
+      mtime when the registry is unchanged.
+    - `regen_check_filtered` diffs the sidecar JSON alongside the
+      `.rs` output, surfacing drift on either.
+
+  crates/core/src/grammar/generated/<ident>.registry.json (9 grammars)
+    - Generated artefacts. Each carries the per-grammar entry rule
+      name + the full `StructRegistry`.
+
+  crates/core/src/grammar/generated/<ident>.rs (9 grammars)
+    - Regenerated to include the `REGISTRY` static + `REGISTRY_ENTRY_RULE`
+      const.
+
+  crates/core/tests/path_macro_compile.rs
+    - Migrated positive fixtures from the synthetic Twitter-shape
+      paths (`path!(Json, "statuses", 0, "text")`) to production-
+      registry paths (`path!(Json, "@object", "element")` etc.). The
+      test contract — that valid paths against the macro's resolved
+      registry compile + emit a typed expression — survives.
+
+  crates/core/tests/path_macro_errors/{unknown_field,index_into_struct}.{rs,stderr}
+    - Migrated negative fixtures from synthetic to production
+      registry shapes. trybuild's `TRYBUILD=overwrite` regenerates
+      .stderr expected outputs against the new diagnostic prose.
+
+Hard gate evidence
+------------------
+
+Codegen emits `pub static REGISTRY: LazyLock<StructRegistry>`:
+  $ grep -c "pub static REGISTRY" crates/core/src/grammar/generated/*.rs
+  9 grammars × 1 occurrence = 9 statics emitted.
+
+Production sidecars exist for every grammar:
+  $ ls crates/core/src/grammar/generated/*.registry.json | wc -l
+  9 sidecars present.
+
+Workspace builds clean:
+  $ cargo build -p bbnf -p bbnf-ir -p bbnf-path --profile ax-iter
+  Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 50.71s
+
+`cargo xtask regen` is deterministic across runs (content-equality
+skip preserves mtime; second invocation writes zero bytes).
+
+`cargo xtask regen --check` validates both the `.rs` and the
+`.registry.json` sidecar against on-disk; any drift on either surface
+fails the check.
+
+Closes
+------
+
+AUDIT-F mid-tranche §R1 — synthetic registry fixture is no longer the
+source of truth. The macro consumes the production registry the IR
+pipeline projected; the source-of-truth swap is complete and the
+public surface of `path!(Marker, ...)` is unchanged.

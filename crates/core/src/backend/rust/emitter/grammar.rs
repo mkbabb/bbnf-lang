@@ -15,6 +15,7 @@ use crate::backend::driver::analysis::BackendAnalysis;
 
 use super::path_plan;
 use super::regex_scan_adapter;
+use super::registry_emit;
 use super::{RustEmitCtx, RustEmitter};
 
 /// AW-V.W3.2 — emit the per-grammar shared helpers the active shape
@@ -209,6 +210,16 @@ impl RustEmitter {
         // `StructField::source` provenance facts.
         let path_plan_static = path_plan::emit_path_plan(ident.to_string().as_str(), ir);
 
+        // AZ-IV.W5 T4 — codegen-emitted production `StructRegistry`.
+        // Materialises the registry the IR pipeline projected as a
+        // `LazyLock<StructRegistry>` static the `bbnf-path` proc-macro
+        // (and any other in-tree consumer) reaches through the
+        // per-grammar generated module. Replaces the synthetic
+        // hand-authored fixture in `crates/bbnf-path/src/registry.rs` —
+        // the macro's lex / lower / validate stages stay unchanged;
+        // only the source of truth swaps.
+        let registry_static = registry_emit::emit_registry(ir);
+
         let extra = &self.extra_impl_methods;
 
         // AW-V.W3.2 — per-shape emitter modules.
@@ -312,6 +323,15 @@ impl RustEmitter {
             // `crate::path::path_plan` while preserving byte-stable
             // row contents.
             #path_plan_static
+
+            // AZ-IV.W5 T4 — production `StructRegistry`. The
+            // `bbnf-path` proc-macro consumes this static (instead of
+            // the synthetic fixture it shipped through W2/W3/W4)
+            // through the per-marker resolver; the runtime audit pass
+            // and emitter consume the same registry shape from
+            // `GrammarIR::struct_registry`. Closes AUDIT-F mid-tranche
+            // §R1.
+            #registry_static
 
             // Per-grammar regex-scan adapter. Dispatches on
             // pointer-equality of the interned pattern `&'static str`

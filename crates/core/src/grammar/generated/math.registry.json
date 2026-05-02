@@ -1,0 +1,20 @@
+{
+  "entry_rule": "number",
+  "registry": {
+    "layouts": {
+      "0": {
+        "rule_id": 0,
+        "rule_name": "number",
+        "kind": "NewtypeWrapper",
+        "rule_type": "Span",
+        "fields": [
+          {
+            "name": "value",
+            "type_desc": "Span",
+            "source": "TypedLeaf"
+          }
+        ]
+      }
+    }
+  }
+}

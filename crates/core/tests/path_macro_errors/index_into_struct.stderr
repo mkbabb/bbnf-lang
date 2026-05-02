@@ -1,5 +1,5 @@
-error: path[1] `0` cannot descend into scalar payload of `Document`
- --> tests/path_macro_errors/index_into_struct.rs:8:52
-  |
-8 |     let _: TypedPath<Json, ()> = path!(Json, "id", 0);
-  |                                                    ^
+error: path[1] index/wildcard on non-list under `stylesheet`
+  --> tests/path_macro_errors/index_into_struct.rs:13:60
+   |
+13 |     let _: TypedPath<CssL4, ()> = path!(CssL4, "ruleList", 0);
+   |                                                            ^

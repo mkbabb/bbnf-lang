@@ -16,6 +16,7 @@ pub mod precedence;
 mod prettify;
 pub(crate) mod profile;
 pub mod regex_scan_adapter;
+pub mod registry_emit;
 pub mod shapes;
 
 // AZ-I.W2-act.A — `EmitStrategy` hoisted to `bbnf_ir::registry::strategy`.

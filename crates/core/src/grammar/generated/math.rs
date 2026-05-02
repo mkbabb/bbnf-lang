@@ -135,6 +135,42 @@ mod __mathparser_emit_impl {
             ::core::option::Option::None
         }
     }
+    /// AZ-IV.W5 T4 — codegen-emitted production registry.
+    ///
+    /// `LazyLock<StructRegistry>` projected from the IR's
+    /// `project_types` closure at `cargo xtask regen` time. The
+    /// `bbnf-path` proc-macro consumes this static through the
+    /// per-marker resolver in `crates/bbnf-path/src/registry.rs`; the
+    /// runtime audit pass + emitter consume the same registry shape
+    /// from `GrammarIR::struct_registry`.
+    ///
+    /// `Deref` on `LazyLock` makes the registry's accessor surface
+    /// available without explicit deref — `REGISTRY.layout(rule_id)`
+    /// reads through the deref impl directly.
+    pub static REGISTRY: ::std::sync::LazyLock<::bbnf_ir::registry::StructRegistry> = ::std::sync::LazyLock::new(||
+    {
+        let mut __registry = ::bbnf_ir::registry::StructRegistry::new();
+        __registry
+            .insert(::bbnf_ir::registry::StructLayout {
+                rule_id: 0u32,
+                rule_name: ::std::string::String::from("number"),
+                kind: ::bbnf_ir::registry::LayoutKind::NewtypeWrapper,
+                rule_type: ::bbnf_ir::TypeDesc::Span,
+                fields: ::std::vec![
+                    ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("value"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::TypedLeaf, }
+                ],
+            });
+        __registry
+    });
+    /// AZ-IV.W5 T4 — entry-rule name for the per-grammar registry.
+    ///
+    /// `bbnf-path` resolves the document-root rule through this const;
+    /// the value is the first non-transparent rule's name (typically
+    /// the start production of the grammar's top-level production).
+    pub const REGISTRY_ENTRY_RULE: &str = "number";
     static __DTA_REGEX_0: &str = "(\\d+)?(\\.\\d+)?([eE][-+]?\\d+)?";
     #[inline]
     #[cold]

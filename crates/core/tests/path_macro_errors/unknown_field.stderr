@@ -1,5 +1,5 @@
-error: path[2] `nope` not found on `Status`; valid fields: text, retweets, sensitive
- --> tests/path_macro_errors/unknown_field.rs:9:61
-  |
-9 |     let _: TypedPath<Json, ()> = path!(Json, "statuses", 0, "nope");
-  |                                                             ^^^^^^
+error: path[0] `nope`: expected variant on tagged-enum `value`; valid variants: branch_0, branch_1, branch_2, branch_3, branch_4, branch_5
+  --> tests/path_macro_errors/unknown_field.rs:16:46
+   |
+16 |     let _: TypedPath<Json, ()> = path!(Json, "nope");
+   |                                              ^^^^^^

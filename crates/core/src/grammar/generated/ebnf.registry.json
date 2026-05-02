@@ -1,0 +1,1262 @@
+{
+  "entry_rule": "grammar",
+  "registry": {
+    "layouts": {
+      "0": {
+        "rule_id": 0,
+        "rule_name": "letter",
+        "kind": "UntaggedEnum",
+        "rule_type": "Span",
+        "fields": [
+          {
+            "name": "branch_0",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 0
+              }
+            }
+          },
+          {
+            "name": "branch_1",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 1
+              }
+            }
+          },
+          {
+            "name": "branch_2",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 2
+              }
+            }
+          },
+          {
+            "name": "branch_3",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 3
+              }
+            }
+          },
+          {
+            "name": "branch_4",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 4
+              }
+            }
+          },
+          {
+            "name": "branch_5",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 5
+              }
+            }
+          },
+          {
+            "name": "branch_6",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 6
+              }
+            }
+          },
+          {
+            "name": "branch_7",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 7
+              }
+            }
+          },
+          {
+            "name": "branch_8",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 8
+              }
+            }
+          },
+          {
+            "name": "branch_9",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 9
+              }
+            }
+          },
+          {
+            "name": "branch_10",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 10
+              }
+            }
+          },
+          {
+            "name": "branch_11",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 11
+              }
+            }
+          },
+          {
+            "name": "branch_12",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 12
+              }
+            }
+          },
+          {
+            "name": "branch_13",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 13
+              }
+            }
+          },
+          {
+            "name": "branch_14",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 14
+              }
+            }
+          },
+          {
+            "name": "branch_15",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 15
+              }
+            }
+          },
+          {
+            "name": "branch_16",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 16
+              }
+            }
+          },
+          {
+            "name": "branch_17",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 17
+              }
+            }
+          },
+          {
+            "name": "branch_18",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 18
+              }
+            }
+          },
+          {
+            "name": "branch_19",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 19
+              }
+            }
+          },
+          {
+            "name": "branch_20",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 20
+              }
+            }
+          },
+          {
+            "name": "branch_21",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 21
+              }
+            }
+          },
+          {
+            "name": "branch_22",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 22
+              }
+            }
+          },
+          {
+            "name": "branch_23",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 23
+              }
+            }
+          },
+          {
+            "name": "branch_24",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 24
+              }
+            }
+          },
+          {
+            "name": "branch_25",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 25
+              }
+            }
+          },
+          {
+            "name": "branch_26",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 26
+              }
+            }
+          },
+          {
+            "name": "branch_27",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 27
+              }
+            }
+          },
+          {
+            "name": "branch_28",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 28
+              }
+            }
+          },
+          {
+            "name": "branch_29",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 29
+              }
+            }
+          },
+          {
+            "name": "branch_30",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 30
+              }
+            }
+          },
+          {
+            "name": "branch_31",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 31
+              }
+            }
+          },
+          {
+            "name": "branch_32",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 32
+              }
+            }
+          },
+          {
+            "name": "branch_33",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 33
+              }
+            }
+          },
+          {
+            "name": "branch_34",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 34
+              }
+            }
+          },
+          {
+            "name": "branch_35",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 35
+              }
+            }
+          },
+          {
+            "name": "branch_36",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 36
+              }
+            }
+          },
+          {
+            "name": "branch_37",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 37
+              }
+            }
+          },
+          {
+            "name": "branch_38",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 38
+              }
+            }
+          },
+          {
+            "name": "branch_39",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 39
+              }
+            }
+          },
+          {
+            "name": "branch_40",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 40
+              }
+            }
+          },
+          {
+            "name": "branch_41",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 41
+              }
+            }
+          },
+          {
+            "name": "branch_42",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 42
+              }
+            }
+          },
+          {
+            "name": "branch_43",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 43
+              }
+            }
+          },
+          {
+            "name": "branch_44",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 44
+              }
+            }
+          },
+          {
+            "name": "branch_45",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 45
+              }
+            }
+          },
+          {
+            "name": "branch_46",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 46
+              }
+            }
+          },
+          {
+            "name": "branch_47",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 47
+              }
+            }
+          },
+          {
+            "name": "branch_48",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 48
+              }
+            }
+          },
+          {
+            "name": "branch_49",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 49
+              }
+            }
+          },
+          {
+            "name": "branch_50",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 50
+              }
+            }
+          },
+          {
+            "name": "branch_51",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 51
+              }
+            }
+          }
+        ]
+      },
+      "1": {
+        "rule_id": 1,
+        "rule_name": "digit",
+        "kind": "UntaggedEnum",
+        "rule_type": "Span",
+        "fields": [
+          {
+            "name": "branch_0",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 0
+              }
+            }
+          },
+          {
+            "name": "branch_1",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 1
+              }
+            }
+          },
+          {
+            "name": "branch_2",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 2
+              }
+            }
+          },
+          {
+            "name": "branch_3",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 3
+              }
+            }
+          },
+          {
+            "name": "branch_4",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 4
+              }
+            }
+          },
+          {
+            "name": "branch_5",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 5
+              }
+            }
+          },
+          {
+            "name": "branch_6",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 6
+              }
+            }
+          },
+          {
+            "name": "branch_7",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 7
+              }
+            }
+          },
+          {
+            "name": "branch_8",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 8
+              }
+            }
+          },
+          {
+            "name": "branch_9",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 9
+              }
+            }
+          }
+        ]
+      },
+      "2": {
+        "rule_id": 2,
+        "rule_name": "symbol",
+        "kind": "UntaggedEnum",
+        "rule_type": "Span",
+        "fields": [
+          {
+            "name": "branch_0",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 0
+              }
+            }
+          },
+          {
+            "name": "branch_1",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 1
+              }
+            }
+          },
+          {
+            "name": "branch_2",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 2
+              }
+            }
+          },
+          {
+            "name": "branch_3",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 3
+              }
+            }
+          },
+          {
+            "name": "branch_4",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 4
+              }
+            }
+          },
+          {
+            "name": "branch_5",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 5
+              }
+            }
+          },
+          {
+            "name": "branch_6",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 6
+              }
+            }
+          },
+          {
+            "name": "branch_7",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 7
+              }
+            }
+          },
+          {
+            "name": "branch_8",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 8
+              }
+            }
+          },
+          {
+            "name": "branch_9",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 9
+              }
+            }
+          },
+          {
+            "name": "branch_10",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 10
+              }
+            }
+          },
+          {
+            "name": "branch_11",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 11
+              }
+            }
+          },
+          {
+            "name": "branch_12",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 12
+              }
+            }
+          },
+          {
+            "name": "branch_13",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 13
+              }
+            }
+          },
+          {
+            "name": "branch_14",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 14
+              }
+            }
+          },
+          {
+            "name": "branch_15",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 15
+              }
+            }
+          },
+          {
+            "name": "branch_16",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 16
+              }
+            }
+          },
+          {
+            "name": "branch_17",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 17
+              }
+            }
+          },
+          {
+            "name": "branch_18",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 18
+              }
+            }
+          },
+          {
+            "name": "branch_19",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 19
+              }
+            }
+          },
+          {
+            "name": "branch_20",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 20
+              }
+            }
+          },
+          {
+            "name": "branch_21",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 21
+              }
+            }
+          },
+          {
+            "name": "branch_22",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 22
+              }
+            }
+          },
+          {
+            "name": "branch_23",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 23
+              }
+            }
+          },
+          {
+            "name": "branch_24",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 24
+              }
+            }
+          }
+        ]
+      },
+      "3": {
+        "rule_id": 3,
+        "rule_name": "identifier",
+        "kind": "Struct",
+        "rule_type": "Span",
+        "fields": [
+          {
+            "name": "letter",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          }
+        ]
+      },
+      "4": {
+        "rule_id": 4,
+        "rule_name": "character",
+        "kind": "UntaggedEnum",
+        "rule_type": "Span",
+        "fields": [
+          {
+            "name": "branch_0",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 0
+              }
+            }
+          },
+          {
+            "name": "branch_1",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 1
+              }
+            }
+          },
+          {
+            "name": "branch_2",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 2
+              }
+            }
+          },
+          {
+            "name": "branch_3",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 3
+              }
+            }
+          },
+          {
+            "name": "branch_4",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 4
+              }
+            }
+          }
+        ]
+      },
+      "5": {
+        "rule_id": 5,
+        "rule_name": "terminal",
+        "kind": "UntaggedEnum",
+        "rule_type": {
+          "Tuple": [
+            "Span",
+            {
+              "Vec": "Enum"
+            },
+            "Span"
+          ]
+        },
+        "fields": [
+          {
+            "name": "branch_0",
+            "type_desc": {
+              "Tuple": [
+                "Span",
+                {
+                  "Vec": "Enum"
+                },
+                "Span"
+              ]
+            },
+            "source": {
+              "BranchTag": {
+                "branch_index": 0
+              }
+            }
+          },
+          {
+            "name": "branch_1",
+            "type_desc": {
+              "Tuple": [
+                "Span",
+                {
+                  "Vec": "Enum"
+                },
+                "Span"
+              ]
+            },
+            "source": {
+              "BranchTag": {
+                "branch_index": 1
+              }
+            }
+          }
+        ]
+      },
+      "6": {
+        "rule_id": 6,
+        "rule_name": "concatenation",
+        "kind": "Struct",
+        "rule_type": {
+          "Vec": {
+            "Tuple": [
+              "Span",
+              "BoxedEnum",
+              "Span"
+            ]
+          }
+        },
+        "fields": [
+          {
+            "name": "element",
+            "type_desc": {
+              "Tuple": [
+                "Span",
+                "BoxedEnum",
+                "Span"
+              ]
+            },
+            "source": "RepeatElement"
+          }
+        ]
+      },
+      "7": {
+        "rule_id": 7,
+        "rule_name": "alternation",
+        "kind": "Struct",
+        "rule_type": {
+          "Vec": {
+            "Tuple": [
+              "Span",
+              "BoxedEnum",
+              "Span"
+            ]
+          }
+        },
+        "fields": [
+          {
+            "name": "element",
+            "type_desc": {
+              "Tuple": [
+                "Span",
+                "BoxedEnum",
+                "Span"
+              ]
+            },
+            "source": "RepeatElement"
+          }
+        ]
+      },
+      "8": {
+        "rule_id": 8,
+        "rule_name": "rhs",
+        "kind": "Struct",
+        "rule_type": "BoxedEnum",
+        "fields": [
+          {
+            "name": "alternation",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "RuleReference": {
+                "target_rule": 7
+              }
+            }
+          }
+        ]
+      },
+      "9": {
+        "rule_id": 9,
+        "rule_name": "term",
+        "kind": "TaggedEnum",
+        "rule_type": {
+          "HeterogeneousAltJoin": [
+            {
+              "Tuple": [
+                "Span",
+                "BoxedEnum",
+                "Span"
+              ]
+            },
+            "BoxedEnum",
+            "Span"
+          ]
+        },
+        "fields": [
+          {
+            "name": "105",
+            "type_desc": {
+              "Tuple": [
+                "Span",
+                "BoxedEnum",
+                "Span"
+              ]
+            },
+            "source": {
+              "BranchTag": {
+                "branch_index": 0
+              }
+            }
+          },
+          {
+            "name": "105",
+            "type_desc": {
+              "Tuple": [
+                "Span",
+                "BoxedEnum",
+                "Span"
+              ]
+            },
+            "source": {
+              "BranchTag": {
+                "branch_index": 1
+              }
+            }
+          },
+          {
+            "name": "105",
+            "type_desc": {
+              "Tuple": [
+                "Span",
+                "BoxedEnum",
+                "Span"
+              ]
+            },
+            "source": {
+              "BranchTag": {
+                "branch_index": 2
+              }
+            }
+          },
+          {
+            "name": "branch_3",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "BranchTag": {
+                "branch_index": 3
+              }
+            }
+          },
+          {
+            "name": "106",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 4
+              }
+            }
+          }
+        ]
+      },
+      "10": {
+        "rule_id": 10,
+        "rule_name": "factor",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "BoxedEnum",
+            {
+              "Tuple": [
+                "Span",
+                {
+                  "HeterogeneousAltJoin": [
+                    "Span",
+                    {
+                      "Tuple": [
+                        "Span",
+                        "BoxedEnum"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "fields": [
+          {
+            "name": "term",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": {
+              "Tuple": [
+                "Span",
+                {
+                  "HeterogeneousAltJoin": [
+                    "Span",
+                    {
+                      "Tuple": [
+                        "Span",
+                        "BoxedEnum"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          }
+        ]
+      },
+      "11": {
+        "rule_id": 11,
+        "rule_name": "rule",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "Span",
+            "BoxedEnum",
+            "Span"
+          ]
+        },
+        "fields": [
+          {
+            "name": "identifier",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          },
+          {
+            "name": "field_2",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 2
+              }
+            }
+          },
+          {
+            "name": "field_3",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 3
+              }
+            }
+          },
+          {
+            "name": "rhs",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "SeqPosition": {
+                "position": 4
+              }
+            }
+          },
+          {
+            "name": "field_5",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 5
+              }
+            }
+          },
+          {
+            "name": "field_6",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 6
+              }
+            }
+          }
+        ]
+      },
+      "12": {
+        "rule_id": 12,
+        "rule_name": "grammar",
+        "kind": "Struct",
+        "rule_type": {
+          "Vec": {
+            "Tuple": [
+              "Span",
+              "BoxedEnum",
+              "Span"
+            ]
+          }
+        },
+        "fields": [
+          {
+            "name": "element",
+            "type_desc": {
+              "Tuple": [
+                "Span",
+                "BoxedEnum",
+                "Span"
+              ]
+            },
+            "source": "RepeatElement"
+          }
+        ]
+      }
+    }
+  }
+}

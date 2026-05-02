@@ -1,0 +1,103 @@
+{
+  "entry_rule": "csv",
+  "registry": {
+    "layouts": {
+      "0": {
+        "rule_id": 0,
+        "rule_name": "textdata",
+        "kind": "NewtypeWrapper",
+        "rule_type": "Span",
+        "fields": [
+          {
+            "name": "value",
+            "type_desc": "Span",
+            "source": "TypedLeaf"
+          }
+        ]
+      },
+      "1": {
+        "rule_id": 1,
+        "rule_name": "escaped",
+        "kind": "NewtypeWrapper",
+        "rule_type": "Span",
+        "fields": [
+          {
+            "name": "value",
+            "type_desc": "Span",
+            "source": "TypedLeaf"
+          }
+        ]
+      },
+      "2": {
+        "rule_id": 2,
+        "rule_name": "record",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "Span",
+            {
+              "Vec": "Enum"
+            }
+          ]
+        },
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": {
+              "Vec": "Enum"
+            },
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          }
+        ]
+      },
+      "3": {
+        "rule_id": 3,
+        "rule_name": "csv",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "Span",
+            {
+              "Vec": "Enum"
+            }
+          ]
+        },
+        "fields": [
+          {
+            "name": "record",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": {
+              "Vec": "Enum"
+            },
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

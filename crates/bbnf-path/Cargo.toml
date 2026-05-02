@@ -25,3 +25,11 @@ quote = "1"
 proc-macro2 = "1"
 bbnf-regex = { version = "0.1" }
 bbnf-ir = { version = "0.1" }
+# AZ-IV.W5 T4 — proc-macro deserialises the per-grammar registry from
+# the sidecar JSON file `cargo xtask regen` writes alongside the
+# generated `.rs` modules. Replaces the synthetic hand-authored fixture
+# the macro carried through W2/W3/W4. `bbnf-ir`'s `StructRegistry` already
+# derives `serde::Serialize/Deserialize`; the proc-macro reads the
+# sidecar at expansion time via `std::fs`.
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

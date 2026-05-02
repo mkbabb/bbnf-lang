@@ -1,0 +1,1251 @@
+{
+  "entry_rule": "formula",
+  "registry": {
+    "layouts": {
+      "0": {
+        "rule_id": 0,
+        "rule_name": "number",
+        "kind": "NewtypeWrapper",
+        "rule_type": "F64",
+        "fields": [
+          {
+            "name": "value",
+            "type_desc": "F64",
+            "source": "TypedLeaf"
+          }
+        ]
+      },
+      "1": {
+        "rule_id": 1,
+        "rule_name": "string",
+        "kind": "NewtypeWrapper",
+        "rule_type": "Span",
+        "fields": [
+          {
+            "name": "value",
+            "type_desc": "Span",
+            "source": "TypedLeaf"
+          }
+        ]
+      },
+      "2": {
+        "rule_id": 2,
+        "rule_name": "boolean",
+        "kind": "UntaggedEnum",
+        "rule_type": "Bool",
+        "fields": [
+          {
+            "name": "branch_0",
+            "type_desc": "Bool",
+            "source": {
+              "BranchTag": {
+                "branch_index": 0
+              }
+            }
+          },
+          {
+            "name": "branch_1",
+            "type_desc": "Bool",
+            "source": {
+              "BranchTag": {
+                "branch_index": 1
+              }
+            }
+          }
+        ]
+      },
+      "3": {
+        "rule_id": 3,
+        "rule_name": "error_literal",
+        "kind": "Struct",
+        "rule_type": "Span",
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          }
+        ]
+      },
+      "4": {
+        "rule_id": 4,
+        "rule_name": "sheet_prefix",
+        "kind": "NewtypeWrapper",
+        "rule_type": "Span",
+        "fields": [
+          {
+            "name": "value",
+            "type_desc": "Span",
+            "source": "TypedLeaf"
+          }
+        ]
+      },
+      "5": {
+        "rule_id": 5,
+        "rule_name": "cell_ref",
+        "kind": "NewtypeWrapper",
+        "rule_type": "Span",
+        "fields": [
+          {
+            "name": "value",
+            "type_desc": "Span",
+            "source": "TypedLeaf"
+          }
+        ]
+      },
+      "6": {
+        "rule_id": 6,
+        "rule_name": "identifier",
+        "kind": "NewtypeWrapper",
+        "rule_type": "Span",
+        "fields": [
+          {
+            "name": "value",
+            "type_desc": "Span",
+            "source": "TypedLeaf"
+          }
+        ]
+      },
+      "7": {
+        "rule_id": 7,
+        "rule_name": "compare_op",
+        "kind": "UntaggedEnum",
+        "rule_type": "Span",
+        "fields": [
+          {
+            "name": "branch_0",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 0
+              }
+            }
+          },
+          {
+            "name": "branch_1",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 1
+              }
+            }
+          },
+          {
+            "name": "branch_2",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 2
+              }
+            }
+          },
+          {
+            "name": "branch_3",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 3
+              }
+            }
+          },
+          {
+            "name": "branch_4",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 4
+              }
+            }
+          }
+        ]
+      },
+      "8": {
+        "rule_id": 8,
+        "rule_name": "unary_prefix",
+        "kind": "UntaggedEnum",
+        "rule_type": "Span",
+        "fields": [
+          {
+            "name": "branch_0",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 0
+              }
+            }
+          },
+          {
+            "name": "branch_1",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 1
+              }
+            }
+          }
+        ]
+      },
+      "9": {
+        "rule_id": 9,
+        "rule_name": "mul_op",
+        "kind": "UntaggedEnum",
+        "rule_type": "Span",
+        "fields": [
+          {
+            "name": "branch_0",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 0
+              }
+            }
+          },
+          {
+            "name": "branch_1",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 1
+              }
+            }
+          }
+        ]
+      },
+      "10": {
+        "rule_id": 10,
+        "rule_name": "add_op",
+        "kind": "UntaggedEnum",
+        "rule_type": "Span",
+        "fields": [
+          {
+            "name": "branch_0",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 0
+              }
+            }
+          },
+          {
+            "name": "branch_1",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 1
+              }
+            }
+          }
+        ]
+      },
+      "11": {
+        "rule_id": 11,
+        "rule_name": "cell",
+        "kind": "Struct",
+        "rule_type": "Span",
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "cell_ref",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          }
+        ]
+      },
+      "12": {
+        "rule_id": 12,
+        "rule_name": "func_open",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "Span",
+            "Span"
+          ]
+        },
+        "fields": [
+          {
+            "name": "identifier",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          }
+        ]
+      },
+      "13": {
+        "rule_id": 13,
+        "rule_name": "range_ref",
+        "kind": "Struct",
+        "rule_type": "Span",
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          },
+          {
+            "name": "field_2",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 2
+              }
+            }
+          },
+          {
+            "name": "field_3",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 3
+              }
+            }
+          }
+        ]
+      },
+      "14": {
+        "rule_id": 14,
+        "rule_name": "cell_or_range",
+        "kind": "UntaggedEnum",
+        "rule_type": "Span",
+        "fields": [
+          {
+            "name": "branch_0",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 0
+              }
+            }
+          },
+          {
+            "name": "branch_1",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 1
+              }
+            }
+          }
+        ]
+      },
+      "15": {
+        "rule_id": 15,
+        "rule_name": "comparison_expr",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "BoxedEnum",
+            {
+              "Vec": {
+                "Tuple": [
+                  "Span",
+                  "BoxedEnum"
+                ]
+              }
+            }
+          ]
+        },
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": {
+              "Vec": {
+                "Tuple": [
+                  "Span",
+                  "BoxedEnum"
+                ]
+              }
+            },
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          }
+        ]
+      },
+      "16": {
+        "rule_id": 16,
+        "rule_name": "mul_expr",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "BoxedEnum",
+            {
+              "Vec": {
+                "Tuple": [
+                  "Span",
+                  "BoxedEnum"
+                ]
+              }
+            }
+          ]
+        },
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": {
+              "Vec": {
+                "Tuple": [
+                  "Span",
+                  "BoxedEnum"
+                ]
+              }
+            },
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          }
+        ]
+      },
+      "17": {
+        "rule_id": 17,
+        "rule_name": "unary_expr",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            {
+              "Vec": "Enum"
+            },
+            "BoxedEnum"
+          ]
+        },
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": {
+              "Vec": "Enum"
+            },
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "postfix_expr",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          }
+        ]
+      },
+      "18": {
+        "rule_id": 18,
+        "rule_name": "paren_expr",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "Span",
+            "BoxedEnum",
+            "Span"
+          ]
+        },
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          },
+          {
+            "name": "field_2",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 2
+              }
+            }
+          }
+        ]
+      },
+      "19": {
+        "rule_id": 19,
+        "rule_name": "arg",
+        "kind": "Struct",
+        "rule_type": {
+          "Option": "BoxedEnum"
+        },
+        "fields": [
+          {
+            "name": "expression",
+            "type_desc": {
+              "Option": "BoxedEnum"
+            },
+            "source": {
+              "RuleReference": {
+                "target_rule": 30
+              }
+            }
+          }
+        ]
+      },
+      "20": {
+        "rule_id": 20,
+        "rule_name": "func_args",
+        "kind": "Struct",
+        "rule_type": {
+          "Vec": "Enum"
+        },
+        "fields": [
+          {
+            "name": "element",
+            "type_desc": "BoxedEnum",
+            "source": "RepeatElement"
+          }
+        ]
+      },
+      "21": {
+        "rule_id": 21,
+        "rule_name": "let_binding",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "BoxedEnum",
+            "BoxedEnum"
+          ]
+        },
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "expression",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          }
+        ]
+      },
+      "22": {
+        "rule_id": 22,
+        "rule_name": "lambda_params",
+        "kind": "Struct",
+        "rule_type": {
+          "Vec": "Enum"
+        },
+        "fields": [
+          {
+            "name": "element",
+            "type_desc": "BoxedEnum",
+            "source": "RepeatElement"
+          }
+        ]
+      },
+      "23": {
+        "rule_id": 23,
+        "rule_name": "array_row",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "BoxedEnum",
+            {
+              "Vec": {
+                "Tuple": [
+                  "Span",
+                  "BoxedEnum"
+                ]
+              }
+            }
+          ]
+        },
+        "fields": [
+          {
+            "name": "expression",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": {
+              "Vec": {
+                "Tuple": [
+                  "Span",
+                  "BoxedEnum"
+                ]
+              }
+            },
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          }
+        ]
+      },
+      "24": {
+        "rule_id": 24,
+        "rule_name": "array_rows",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "BoxedEnum",
+            {
+              "Vec": {
+                "Tuple": [
+                  "Span",
+                  "BoxedEnum"
+                ]
+              }
+            }
+          ]
+        },
+        "fields": [
+          {
+            "name": "array_row",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": {
+              "Vec": {
+                "Tuple": [
+                  "Span",
+                  "BoxedEnum"
+                ]
+              }
+            },
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          }
+        ]
+      },
+      "25": {
+        "rule_id": 25,
+        "rule_name": "array_literal",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "Span",
+            "BoxedEnum",
+            "Span"
+          ]
+        },
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          },
+          {
+            "name": "field_2",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 2
+              }
+            }
+          }
+        ]
+      },
+      "26": {
+        "rule_id": 26,
+        "rule_name": "concat_expr",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "BoxedEnum",
+            {
+              "Vec": {
+                "Tuple": [
+                  "Span",
+                  "BoxedEnum"
+                ]
+              }
+            }
+          ]
+        },
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": {
+              "Vec": {
+                "Tuple": [
+                  "Span",
+                  "BoxedEnum"
+                ]
+              }
+            },
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          }
+        ]
+      },
+      "27": {
+        "rule_id": 27,
+        "rule_name": "add_expr",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "BoxedEnum",
+            {
+              "Vec": {
+                "Tuple": [
+                  "Span",
+                  "BoxedEnum"
+                ]
+              }
+            }
+          ]
+        },
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": {
+              "Vec": {
+                "Tuple": [
+                  "Span",
+                  "BoxedEnum"
+                ]
+              }
+            },
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          }
+        ]
+      },
+      "28": {
+        "rule_id": 28,
+        "rule_name": "exp_expr",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "BoxedEnum",
+            {
+              "Vec": {
+                "Tuple": [
+                  "Span",
+                  "BoxedEnum"
+                ]
+              }
+            }
+          ]
+        },
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": {
+              "Vec": {
+                "Tuple": [
+                  "Span",
+                  "BoxedEnum"
+                ]
+              }
+            },
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          }
+        ]
+      },
+      "29": {
+        "rule_id": 29,
+        "rule_name": "lambda_call",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "Span",
+            "BoxedEnum",
+            "Span"
+          ]
+        },
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          },
+          {
+            "name": "field_2",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 2
+              }
+            }
+          }
+        ]
+      },
+      "30": {
+        "rule_id": 30,
+        "rule_name": "expression",
+        "kind": "Struct",
+        "rule_type": "BoxedEnum",
+        "fields": [
+          {
+            "name": "comparison_expr",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "RuleReference": {
+                "target_rule": 15
+              }
+            }
+          }
+        ]
+      },
+      "31": {
+        "rule_id": 31,
+        "rule_name": "func_call",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "BoxedEnum",
+            {
+              "Option": "BoxedEnum"
+            },
+            "Span"
+          ]
+        },
+        "fields": [
+          {
+            "name": "func_open",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": {
+              "Option": "BoxedEnum"
+            },
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          },
+          {
+            "name": "field_2",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 2
+              }
+            }
+          }
+        ]
+      },
+      "32": {
+        "rule_id": 32,
+        "rule_name": "let_args",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            {
+              "Vec": "Enum"
+            },
+            "BoxedEnum"
+          ]
+        },
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": {
+              "Vec": "Enum"
+            },
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "expression",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          }
+        ]
+      },
+      "33": {
+        "rule_id": 33,
+        "rule_name": "let_call",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "Span",
+            "BoxedEnum",
+            "Span"
+          ]
+        },
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          },
+          {
+            "name": "field_2",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 2
+              }
+            }
+          }
+        ]
+      },
+      "34": {
+        "rule_id": 34,
+        "rule_name": "primary",
+        "kind": "TaggedEnum",
+        "rule_type": {
+          "HeterogeneousAltJoin": [
+            "BoxedEnum",
+            "F64",
+            "Bool",
+            "Span"
+          ]
+        },
+        "fields": [
+          {
+            "name": "branch_0",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "BranchTag": {
+                "branch_index": 0
+              }
+            }
+          },
+          {
+            "name": "branch_1",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "BranchTag": {
+                "branch_index": 1
+              }
+            }
+          },
+          {
+            "name": "branch_2",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "BranchTag": {
+                "branch_index": 2
+              }
+            }
+          },
+          {
+            "name": "branch_3",
+            "type_desc": "F64",
+            "source": {
+              "BranchTag": {
+                "branch_index": 3
+              }
+            }
+          },
+          {
+            "name": "branch_4",
+            "type_desc": "Bool",
+            "source": {
+              "BranchTag": {
+                "branch_index": 4
+              }
+            }
+          },
+          {
+            "name": "branch_5",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 5
+              }
+            }
+          },
+          {
+            "name": "branch_6",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 6
+              }
+            }
+          },
+          {
+            "name": "branch_7",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 7
+              }
+            }
+          },
+          {
+            "name": "branch_8",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 8
+              }
+            }
+          },
+          {
+            "name": "branch_9",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "BranchTag": {
+                "branch_index": 9
+              }
+            }
+          },
+          {
+            "name": "branch_10",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "BranchTag": {
+                "branch_index": 10
+              }
+            }
+          }
+        ]
+      },
+      "35": {
+        "rule_id": 35,
+        "rule_name": "postfix_expr",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "BoxedEnum",
+            "Span"
+          ]
+        },
+        "fields": [
+          {
+            "name": "primary",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          }
+        ]
+      },
+      "36": {
+        "rule_id": 36,
+        "rule_name": "formula",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "Span",
+            "BoxedEnum"
+          ]
+        },
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "expression",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

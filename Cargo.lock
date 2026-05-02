@@ -290,6 +290,8 @@ dependencies = [
  "bbnf-regex",
  "proc-macro2",
  "quote",
+ "serde",
+ "serde_json",
  "syn 2.0.117",
 ]
 

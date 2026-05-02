@@ -267,9 +267,53 @@ fn output_path(workspace_root: &Path, ident: &str) -> PathBuf {
         .join(format!("{ident}.rs"))
 }
 
+/// AZ-IV.W5 T4 — sidecar JSON path for a grammar's serialised
+/// [`StructRegistry`].
+///
+/// The proc-macro `path!` crate consumes this file at expansion time
+/// (proc-macros cannot import the consumer crate's `REGISTRY` const, so
+/// the registry round-trips through serde-JSON instead). The sidecar
+/// lives next to the per-grammar `.rs` file under
+/// `crates/core/src/grammar/generated/<ident>.registry.json`; the
+/// proc-macro resolves it via its own `CARGO_MANIFEST_DIR` + a stable
+/// workspace-relative offset.
+fn registry_sidecar_path(workspace_root: &Path, ident: &str) -> PathBuf {
+    workspace_root
+        .join("crates")
+        .join("core")
+        .join("src")
+        .join("grammar")
+        .join("generated")
+        .join(format!("{ident}.registry.json"))
+}
+
+/// AZ-IV.W5 T4 — sidecar payload deserialised by the `bbnf-path`
+/// proc-macro. Carries the per-grammar [`StructRegistry`] alongside the
+/// entry-rule name. Serialised as JSON next to the per-grammar `.rs`
+/// file at `crates/core/src/grammar/generated/<ident>.registry.json`.
+///
+/// The shape mirrors the codegen-emitted `REGISTRY` /
+/// `REGISTRY_ENTRY_RULE` pair (see
+/// `crates/core/src/backend/rust/emitter/registry_emit.rs`); the
+/// proc-macro consumer reconstructs the registry from this sidecar
+/// instead of through the consumer-side const (which a proc-macro
+/// cannot import without a dependency cycle).
+#[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
+pub struct GrammarRegistrySidecar {
+    /// Entry-rule name extracted from the IR's rule list. The
+    /// proc-macro resolves the path's anchor through this name so the
+    /// macro and the runtime agree on the document root rule.
+    pub entry_rule: String,
+    /// Per-grammar [`bbnf_ir::registry::StructRegistry`] projected by
+    /// the IR's `project_types` pass. The full registry — every
+    /// `StructLayout` keyed by `RuleId` — round-trips through serde.
+    pub registry: bbnf_ir::registry::StructRegistry,
+}
+
 /// Regenerate a single grammar. Reads the grammar source, runs the
 /// 17-pass IR pipeline, runs `generate_all`, writes the formatted
-/// output to `target_path`.
+/// output to `target_path`. AZ-IV.W5 T4 — also writes the
+/// `<ident>.registry.json` sidecar consumed by `bbnf-path`.
 fn regen_grammar(workspace_root: &Path, entry: &GrammarEntry, target_path: &Path) -> Result<usize> {
     let grammar_path = entry.grammar_source(workspace_root);
     if !grammar_path.exists() {
@@ -416,7 +460,69 @@ fn regen_grammar(workspace_root: &Path, entry: &GrammarEntry, target_path: &Path
             .with_context(|| format!("write `{}`", target_path.display()))?;
     }
 
+    // AZ-IV.W5 T4 — emit the per-grammar registry sidecar consumed by
+    // the `bbnf-path` proc-macro. The sidecar lives next to the `.rs`
+    // file under `crates/core/src/grammar/generated/<ident>.registry
+    // .json`; the proc-macro reads it via `std::fs` at expansion time.
+    //
+    // The same content-equality short-circuit applies: the IR pipeline
+    // is deterministic, and an unchanged registry skips the write to
+    // preserve mtime + cargo fingerprints.
+    write_registry_sidecar(&prepared.ir, target_path, &entry.ident)?;
+
     Ok(bytes)
+}
+
+/// AZ-IV.W5 T4 — write the per-grammar `<ident>.registry.json`
+/// sidecar adjacent to the per-grammar `.rs` output.
+///
+/// The sidecar carries the registry projected by the IR's
+/// `project_types` pass, plus the entry-rule name extracted in the
+/// same shape as the codegen-emitted `REGISTRY_ENTRY_RULE` const. The
+/// `bbnf-path` proc-macro deserialises the file via `serde_json` at
+/// expansion time and dispatches each path-segment validation through
+/// the production registry instead of the synthetic fixture it
+/// previously carried.
+fn write_registry_sidecar(
+    ir: &bbnf_ir::GrammarIR,
+    target_path: &Path,
+    ident: &str,
+) -> Result<()> {
+    let sidecar_path = target_path.with_file_name(format!("{ident}.registry.json"));
+
+    // Entry rule resolution mirrors the codegen-emitted
+    // `REGISTRY_ENTRY_RULE` const — see
+    // `crates/core/src/backend/rust/emitter/registry_emit.rs`. The
+    // grammar's declared start rule (`ir.entry`) is canonical; the
+    // codegen const + this sidecar must agree byte-for-byte.
+    let entry_rule = ir
+        .rules
+        .iter()
+        .find(|r| r.id == ir.entry)
+        .map(|r| ir.get_string(r.name).to_string())
+        .unwrap_or_default();
+
+    let payload = GrammarRegistrySidecar {
+        entry_rule,
+        registry: ir.struct_registry.clone(),
+    };
+
+    let serialized = serde_json::to_string_pretty(&payload)
+        .with_context(|| format!("serialize registry sidecar for `{ident}`"))?;
+    let serialized_bytes = serialized.as_bytes();
+
+    let on_disk = std::fs::read(&sidecar_path).ok();
+    let unchanged = matches!(&on_disk, Some(existing) if existing.as_slice() == serialized_bytes);
+    if !unchanged {
+        if let Some(parent) = sidecar_path.parent() {
+            std::fs::create_dir_all(parent)
+                .with_context(|| format!("create parent dir for `{}`", sidecar_path.display()))?;
+        }
+        std::fs::write(&sidecar_path, serialized_bytes)
+            .with_context(|| format!("write `{}`", sidecar_path.display()))?;
+    }
+
+    Ok(())
 }
 
 /// File header emitted before the per-grammar body. Carries the
@@ -508,6 +614,36 @@ fn regen_check_filtered(
                 checked_in.display(),
                 entry.ident
             ));
+        }
+
+        // AZ-IV.W5 T4 — also diff the sidecar JSON. `regen_grammar`
+        // wrote the sidecar adjacent to `tmp_target`; the canonical
+        // checked-in copy lives at
+        // `crates/core/src/grammar/generated/<ident>.registry.json`.
+        let tmp_sidecar = tmp_target.with_file_name(format!("{}.registry.json", entry.ident));
+        let checked_in_sidecar = registry_sidecar_path(workspace_root, &entry.ident);
+        if !checked_in_sidecar.exists() {
+            drift.push(format!(
+                "missing checked-in `{}` — regenerate with `cargo xtask regen --grammar {}`",
+                checked_in_sidecar.display(),
+                entry.ident
+            ));
+        } else {
+            let regenerated_sidecar = std::fs::read(&tmp_sidecar)
+                .with_context(|| format!("read regenerated sidecar `{}`", tmp_sidecar.display()))?;
+            let checked_in_sidecar_bytes = std::fs::read(&checked_in_sidecar).with_context(|| {
+                format!(
+                    "read checked-in sidecar `{}`",
+                    checked_in_sidecar.display()
+                )
+            })?;
+            if regenerated_sidecar != checked_in_sidecar_bytes {
+                drift.push(format!(
+                    "drift: `{}` differs from `cargo xtask regen --grammar {}` sidecar output",
+                    checked_in_sidecar.display(),
+                    entry.ident
+                ));
+            }
         }
     }
 

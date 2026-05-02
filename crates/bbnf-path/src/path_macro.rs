@@ -46,7 +46,7 @@ use syn::{Error, Lit, LitInt, LitStr, Path, Result, Token};
 use bbnf_ir::TypeDesc;
 use bbnf_ir::registry::{LayoutKind, StructLayout, StructRegistry};
 
-use crate::registry::{GrammarFixture, fixture_for_marker, supported_markers};
+use crate::registry::{GrammarRegistry, registry_for_marker, supported_markers};
 
 /// One owned path segment as the macro carries it internally between
 /// lex / validate / emit. Mirrors `bbnf::path::OwnedPathSegment`; kept
@@ -163,16 +163,27 @@ pub(crate) fn expand(input: TokenStream) -> Result<TokenStream> {
         })?;
     let marker_name = marker_ident.to_string();
 
-    let fixture = fixture_for_marker(&marker_name).ok_or_else(|| {
-        Error::new(
-            marker_ident.span(),
-            format!(
-                "unknown grammar marker `{}`; supported markers: {}",
-                marker_name,
-                supported_markers().join(", "),
-            ),
-        )
-    })?;
+    // AZ-IV.W5 T4 — production registry resolver. The macro previously
+    // consumed a synthetic per-grammar fixture; now it reads the
+    // registry the IR's `project_types` pass projected and `cargo xtask
+    // regen` serialised to disk. The macro's lex / lower / validate
+    // stages stay unchanged — only the source of truth swaps.
+    let fixture = match registry_for_marker(&marker_name) {
+        Some(Ok(reg)) => reg,
+        Some(Err(msg)) => {
+            return Err(Error::new(marker_ident.span(), msg));
+        }
+        None => {
+            return Err(Error::new(
+                marker_ident.span(),
+                format!(
+                    "unknown grammar marker `{}`; supported markers: {}",
+                    marker_name,
+                    supported_markers().join(", "),
+                ),
+            ));
+        }
+    };
 
     // Lower every macro argument into one or more `OwnedSegment`s.
     let segments = lower_args_to_segments(&parsed.args)?;
@@ -235,6 +246,27 @@ fn lower_args_to_segments(args: &[MacroArg]) -> Result<Vec<OwnedSegment>> {
 fn lower_string_lit(lit: &LitStr, out: &mut Vec<OwnedSegment>) -> Result<()> {
     let span = lit.span();
     let raw = lit.value();
+
+    // Variant-select syntax is dedicated: a `LitStr` whose first
+    // character is `@` selects a tagged-enum variant by name. The
+    // path-string lexer's alphabet does NOT include `@`, so this
+    // branch must execute BEFORE the lexer sees the input — otherwise
+    // `lex_path` rejects the `@` byte with `unexpected character '@'`.
+    if let Some(rest) = raw.strip_prefix('@') {
+        let trimmed = rest.trim();
+        if trimmed.is_empty() {
+            return Err(Error::new(
+                span,
+                "path! variant-name segment must name a variant after `@`",
+            ));
+        }
+        out.push(OwnedSegment::VariantName {
+            text: trimmed.to_string(),
+            span,
+        });
+        return Ok(());
+    }
+
     let tokens = bbnf_regex::lex_path(&raw, span).map_err(|err| {
         Error::new(
             err.span,
@@ -254,26 +286,8 @@ fn lower_string_lit(lit: &LitStr, out: &mut Vec<OwnedSegment>) -> Result<()> {
     //
     // `@ident` (variant select) is not part of the path-string lexer
     // alphabet; variant selection arrives only via the dedicated
-    // syntax (a `LitStr` whose first character is `@`) — see W2.5
-    // `variant_select` for the runtime side.
+    // syntax (a `LitStr` whose first character is `@`) handled above.
     use bbnf_regex::PathTokenKind as K;
-
-    // If the literal starts with `@`, treat the entire string as a
-    // variant-name segment (no further structural tokens accepted).
-    if let Some(rest) = raw.strip_prefix('@') {
-        let trimmed = rest.trim();
-        if trimmed.is_empty() {
-            return Err(Error::new(
-                span,
-                "path! variant-name segment must name a variant after `@`",
-            ));
-        }
-        out.push(OwnedSegment::VariantName {
-            text: trimmed.to_string(),
-            span,
-        });
-        return Ok(());
-    }
 
     let mut idx = 0usize;
     while idx < tokens.len() {
@@ -385,10 +399,10 @@ enum ResolveCursor<'a> {
     Type(&'a TypeDesc, &'a str),
 }
 
-fn validate_against_fixture(segments: &[OwnedSegment], fixture: &GrammarFixture) -> Result<()> {
+fn validate_against_fixture(segments: &[OwnedSegment], fixture: &GrammarRegistry) -> Result<()> {
     let entry_layout = fixture
         .registry
-        .layout_by_name(fixture.entry_rule)
+        .layout_by_name(&fixture.entry_rule)
         .ok_or_else(|| {
             Error::new(
                 segments
@@ -396,7 +410,7 @@ fn validate_against_fixture(segments: &[OwnedSegment], fixture: &GrammarFixture)
                     .map(OwnedSegment::span)
                     .unwrap_or_else(Span::call_site),
                 format!(
-                    "internal: grammar fixture entry rule `{}` not registered",
+                    "internal: grammar registry entry rule `{}` not registered",
                     fixture.entry_rule
                 ),
             )

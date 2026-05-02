@@ -4,11 +4,33 @@
 //! Each method is `pub(super)` so the trait impl in `mod.rs` can delegate
 //! to it via `self.emit_xxx_impl(...)`.
 
-use bbnf_ir::{GrammarIR, IrRule};
+use bbnf_ir::{GrammarIR, IrRule, TypeDesc};
 
 use crate::backend::driver::analysis::BackendAnalysis;
 
 use super::{TsCode, TsEmitCtx, TsEmitter, type_desc_to_ts};
+
+fn collect_named_types(td: &TypeDesc, ir: &GrammarIR, names: &mut std::collections::BTreeSet<String>) {
+    match td {
+        TypeDesc::Named(sid) => {
+            names.insert(ir.get_string(*sid).to_string());
+        }
+        TypeDesc::Option(inner) | TypeDesc::Vec(inner) => {
+            collect_named_types(inner, ir, names);
+        }
+        TypeDesc::Tuple(elems) => {
+            for inner in elems {
+                collect_named_types(inner, ir, names);
+            }
+        }
+        TypeDesc::HeterogeneousAltJoin(branches) => {
+            for inner in branches {
+                collect_named_types(inner, ir, names);
+            }
+        }
+        _ => {}
+    }
+}
 
 impl TsEmitter {
     pub(super) fn emit_rule_function_impl(
@@ -100,12 +122,30 @@ impl TsEmitter {
 
         let union_body = variants.join("\n");
 
+        let mut named_types = std::collections::BTreeSet::new();
+        for (_, td) in &ir.types {
+            collect_named_types(td, ir, &mut named_types);
+        }
+        let named_aliases = if named_types.is_empty() {
+            String::new()
+        } else {
+            let mut s = String::from(
+                "// ── Named host types (W5 binding wave will replace `unknown` with executable types) ──\n\n",
+            );
+            for name in &named_types {
+                s.push_str(&format!("type {name} = unknown;\n"));
+            }
+            s.push('\n');
+            s
+        };
+
         TsCode::expr(format!(
             "// ── Runtime types ────────────────────────────────────────────────\n\n\
              interface ParserState {{\n  input: string;\n  offset: number;\n}}\n\n\
              interface Span {{\n  start: number;\n  end: number;\n}}\n\n\
              function span(start: number, end: number): Span {{\n  return {{ start, end }};\n}}\n\n\
              function createState(input: string): ParserState {{\n  return {{ input, offset: 0 }};\n}}\n\n\
+             {named_aliases}\
              // ── Grammar types ───────────────────────────────────────────────\n\n\
              type {enum_name} =\n{union_body};\n\n"
         ))

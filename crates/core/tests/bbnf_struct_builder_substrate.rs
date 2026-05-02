@@ -112,6 +112,7 @@ fn bbnf_view_kind_classifies_leaves_and_compounds() {
     let id = arena.push_compound(BbnfCompound {
         kind: BbnfCompoundKind::Grammar,
         branch_tag: None,
+        bounds: None,
         children: vec![
             BbnfValue::Span("rule_name"),
             BbnfValue::Int(7),

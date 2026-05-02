@@ -198,11 +198,14 @@ impl<'a, 'p: 'a> BbnfView<'a, 'p> {
     }
 }
 
-/// Recursive helper: derive the focused value's byte-offset span by
-/// walking down through compounds until a [`BbnfValue::Span`] leaf
-/// surfaces. The returned `(lo, hi)` covers the leftmost descendant
-/// span's start through the rightmost descendant span's end. Returns
-/// `None` when no descendant carries a source-borrowed slice.
+/// Recursive helper: derive the focused value's byte-offset span.
+///
+/// AZ-IV.W1.9 — compounds prefer the bounds recorded by the builder
+/// at `begin_compound` / `end_compound` time (covering alt-branch
+/// literals consumed by byte advance without a Span push). When
+/// recorded bounds are absent (legacy emission paths or non-BBNF
+/// builders that do not surface the extension), fall back to the
+/// leftmost-Span-leaf union via descendant walk.
 fn compute_byte_span<'p>(
     doc: &crate::runtime::bbnf::document::BbnfDocument<'p>,
     focus: BbnfValue<'p>,
@@ -224,6 +227,12 @@ fn compute_byte_span<'p>(
         }
         BbnfValue::Compound(id) => {
             let entry = doc.compound(id);
+            // Codegen-recorded bounds win — they capture the
+            // compound's actual byte extent including non-Span-pushing
+            // tokens.
+            if let Some(bounds) = entry.bounds {
+                return Some(bounds);
+            }
             let mut lo: Option<u32> = None;
             let mut hi: Option<u32> = None;
             for child in &entry.children {

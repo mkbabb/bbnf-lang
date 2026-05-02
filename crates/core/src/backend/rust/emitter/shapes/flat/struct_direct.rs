@@ -388,10 +388,14 @@ pub(super) fn emit_parse_flat_struct_direct(
             // own concrete OpenFrame variant.
             let __flat_checkpoint = builder.checkpoint();
             #span_capture_pre
+            let __compound_start: u32 = *p as u32;
             let #layout_var: ::bbnf_ir::registry::StructLayout = #layout_literal;
             let #handle_var = <
                 #builder_ty_elided as crate::runtime::StructBuilder
             >::begin_compound(builder, &#layout_var);
+            <
+                #builder_ty_elided as crate::runtime::StructBuilder
+            >::record_compound_bounds_start(builder, __compound_start);
 
             // AZ-II.cutover.K Phase 2 — wrap per-position emission in
             // an IIFE so any inner `return Err(...)` propagates as a
@@ -416,6 +420,9 @@ pub(super) fn emit_parse_flat_struct_direct(
             match __body_result {
                 ::core::result::Result::Ok(()) => {
                     #span_synthesis_post
+                    <
+                        #builder_ty_elided as crate::runtime::StructBuilder
+                    >::record_compound_bounds_end(builder, *p as u32);
                     <
                         #builder_ty_elided as crate::runtime::StructBuilder
                     >::end_compound(builder, #handle_var);

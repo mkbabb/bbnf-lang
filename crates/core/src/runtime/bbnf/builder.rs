@@ -28,6 +28,17 @@ use crate::runtime::handle::CompoundHandle;
 struct OpenFrame<'p> {
     kind: BbnfCompoundKind,
     branch_tag: Option<u32>,
+    /// AZ-IV.W1.9 — actual source bounds the compound's parse fn
+    /// consumed. `start` is recorded at `begin_compound` (snapshotted
+    /// from `*p` before any child parse runs); `end` is recorded
+    /// just before `end_compound` (snapshotted from `*p` after the
+    /// last child parses). Together they describe the compound's
+    /// byte range even when alt-branch literals (`@import`, `:`,
+    /// `(`) inside the body advance `*p` without pushing a Span.
+    /// `None` until set by [`BbnfStructBuilder::record_bounds_start`] /
+    /// [`BbnfStructBuilder::record_bounds_end`].
+    start_offset: Option<u32>,
+    end_offset: Option<u32>,
     children: Vec<BbnfValue<'p>>,
 }
 
@@ -146,6 +157,8 @@ impl<'p> StructBuilder for BbnfStructBuilder<'p> {
         self.stack.push(OpenFrame {
             kind,
             branch_tag: None,
+            start_offset: None,
+            end_offset: None,
             children: Vec::new(),
         });
         self.next_handle = self.next_handle.wrapping_add(1);
@@ -157,9 +170,14 @@ impl<'p> StructBuilder for BbnfStructBuilder<'p> {
             .stack
             .pop()
             .expect("BbnfStructBuilder::end_compound on empty stack");
+        let bounds = match (frame.start_offset, frame.end_offset) {
+            (Some(start), Some(end)) => Some((start, end)),
+            _ => None,
+        };
         let id = self.arena.push_compound(BbnfCompound {
             kind: frame.kind,
             branch_tag: frame.branch_tag,
+            bounds,
             children: frame.children,
         });
         self.deposit(BbnfValue::Compound(id));
@@ -206,6 +224,20 @@ impl<'p> StructBuilder for BbnfStructBuilder<'p> {
     fn push_branch_tag(&mut self, branch_index: u32) {
         if let Some(frame) = self.stack.last_mut() {
             frame.branch_tag = Some(branch_index);
+        }
+    }
+
+    #[inline]
+    fn record_compound_bounds_start(&mut self, offset: u32) {
+        if let Some(frame) = self.stack.last_mut() {
+            frame.start_offset = Some(offset);
+        }
+    }
+
+    #[inline]
+    fn record_compound_bounds_end(&mut self, offset: u32) {
+        if let Some(frame) = self.stack.last_mut() {
+            frame.end_offset = Some(offset);
         }
     }
 }

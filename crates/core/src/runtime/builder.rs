@@ -123,4 +123,19 @@ pub trait StructBuilder {
     /// [`bbnf_ir::registry::FieldSource::BranchTag`] entry on the
     /// layout passed to the enclosing [`Self::begin_compound`].
     fn push_branch_tag(&mut self, branch_index: u32);
+
+    /// AZ-IV.W1.9 — record the topmost open compound's start byte
+    /// offset. Default no-op: only the BBNF builder consumes this to
+    /// preserve the compound's actual byte extent (alt-branch
+    /// literals consumed without a Span push break the leftmost-Span-
+    /// leaf union otherwise). JSON / Sheets / CSS L4 builders ignore.
+    #[inline]
+    #[allow(unused_variables)]
+    fn record_compound_bounds_start(&mut self, offset: u32) {}
+
+    /// AZ-IV.W1.9 — record the topmost open compound's end byte
+    /// offset. Default no-op; see [`Self::record_compound_bounds_start`].
+    #[inline]
+    #[allow(unused_variables)]
+    fn record_compound_bounds_end(&mut self, offset: u32) {}
 }

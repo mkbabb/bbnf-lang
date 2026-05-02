@@ -24,7 +24,11 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-const COMPILE_RS: &str = include_str!("../../../core/src/pipeline/compile.rs");
+// AZ-IV.AUDIT-B — `compile.rs` was split into `compile/` directory
+// module; the production `GrammarDag::from_ir(...)` call site moved
+// into `pipeline/compile/pipeline.rs` (the canonical pass-list
+// orchestrator). Read the orchestrator file for the call-site count.
+const COMPILE_RS: &str = include_str!("../../../core/src/pipeline/compile/pipeline.rs");
 const DAG_MOD_RS: &str = include_str!("../../src/dag/mod.rs");
 
 /// Count only fully-qualified call sites — `GrammarDag::from_ir(...)`

@@ -1,0 +1,60 @@
+AZ-IV.W2.3 — bbnf-regex Path Lexer evidence
+============================================
+
+Worktree: /Users/mkbabb/Programming/bbnf-wt-aziv-w2-lexer
+Source crate: /Users/mkbabb/Programming/parse-that/rust/regex
+  (resolved via [patch.crates-io] bbnf-regex = { path = "../parse-that/rust/regex" })
+
+Hard Gate 6 sub-gate compliance
+-------------------------------
+
+[gate] Lexer ≤ 200 LOC
+  $ wc -l rust/regex/src/path_lexer.rs
+       186 rust/regex/src/path_lexer.rs
+
+[gate] No regex-syntax dependency in path lexer
+  $ grep -E "regex-syntax|regex_syntax" rust/regex/src/path_lexer.rs rust/regex/Cargo.toml
+  (no match)
+
+[gate] proc-macro2 dependency added (default features — callable in lib + proc-macro contexts)
+  rust/regex/Cargo.toml diff:
+    + proc-macro2 = "1"
+
+[gate] Custom HIR API exported from bbnf-regex::path_lexer
+  rust/regex/src/lib.rs diff:
+    + pub mod path_lexer;
+    + pub use path_lexer::{PathLexError, PathToken, PathTokenKind, lex_path};
+
+[gate] Deterministic Span attribution on every token
+  Test: deterministic_span_attribution (passes) — every token's span
+  debug-prints identically to the call-site base span passed to
+  lex_path; byte_offset field is monotonic + matches input layout
+  (offsets [0,1,2,3,4,5,6] for input "$.a[0]").
+
+[gate] Round-trip on adversarial path strings
+  Tests passing:
+    - lexes_jsonpath_style       ($.statuses[0].text)
+    - lexes_dotted_path          (users.0.name)
+    - lexes_wildcard_path        (a.*.b)
+    - ignores_interstitial_whitespace
+    - lexes_underscore_idents
+    - lexes_unicode_identifiers  (Greek/Cyrillic/Hiragana)
+    - lexes_index_runs_into_brackets
+    - lexes_escaped_quote_in_input
+    - rejects_unexpected_punctuation
+    - rejects_invalid_utf8_lead_byte
+    - empty_input_yields_only_eof
+    - whitespace_only_input_yields_only_eof
+    - round_trip_text_preserves_input
+    - error_carries_provided_span
+    - deterministic_span_attribution
+
+Lint cadence
+------------
+  $ cargo fmt -p bbnf-regex -- --check     → clean
+  $ cargo clippy -p bbnf-regex --tests     → 0 path_lexer warnings
+                                             (28 pre-existing warnings
+                                              in utf8.rs / automata —
+                                              not in scope for W2.3)
+  $ cargo test -p bbnf-regex --test path_lexer
+       → 15 passed; 0 failed

@@ -1,0 +1,161 @@
+AZ-IV.W4.2 — CSP Regex Authority Evidence Ledger
+==================================================
+
+Date: 2026-05-02
+Worktree: /Users/mkbabb/Programming/bbnf-wt-aziv-w4-csp-regex
+Branch: aziv-w4-csp-regex (base 130303fc)
+Agent: AZ-IV.W4.2 CSP Regex Authority
+
+Scope
+-----
+1. Retire the `crates/core/src/backend/strategy/alt_strategy.rs:163-184`
+   re-override of CSP-chosen `AltMode` via
+   `ir.key_dispatch_configs.contains_key(id)` — Babbage Hard Finding 7.
+2. Make CSP authority hold post-selection — sidecars carry payload, not
+   strategy.
+3. Reconcile CSP domain so the `dispatch::install` pin (`AltMode =
+   KeyDispatch` whenever a key-dispatch sidecar exists) is satisfiable.
+4. Tailwind perf timeout — investigated; perf carry from AZ-III C5
+   remains an upstream issue (engine-propagation O(n^2 × 7) constraint
+   surface in CSS L4's largest component). Not regressed by this slice.
+5. AUDIT-F transposition T9 (sidecar unification) — HALTED with
+   divergence named, see §T9 Divergence below.
+
+Override Deletion Site
+----------------------
+File: crates/core/src/backend/strategy/alt_strategy.rs
+Pre-change lines 161-166, 177-183, 193-196 — three independent
+`ir.key_dispatch_configs.contains_key(&id)` checks that re-overrode
+the CSP's chosen `AltMode`. All three retired.
+
+Static scan after change:
+  $ rg -n 'key_dispatch_configs.contains_key' \
+       crates/core/src/backend/strategy/
+  (zero matches)
+
+Decision authority now flows: CSP `recognizer_decisions[id].alt_mode`
+is the sole source of truth post-selection. The
+`crates/ir/src/passes/csp_strategy/constraints/dispatch.rs::install`
+constraint pins `AltMode = KeyDispatch` whenever
+`ir.key_dispatch_configs.contains_key(&id)` or
+`ir.keyword_branches.contains_key(&id)`; the consumer reads the CSP
+fact directly.
+
+Domain Reconciliation
+---------------------
+File: crates/ir/src/passes/csp_strategy/mod.rs
+Function: `build_alt_domain` — added `has_key_dispatch` parameter.
+
+When the upstream structural detectors authoritatively populated a
+key-dispatch sidecar (`key_dispatch_configs` / `keyword_branches`),
+`build_alt_domain` now returns a singleton domain `{KeyDispatch}`
+with the configured dispatch cost. The variable becomes a unit-domain
+pin without invoking branch-and-bound search.
+
+Pre-change failure mode: the `dispatch::install` constraint was
+unsatisfiable (`KeyDispatch` not in domain), the CSP fell through to
+`decode_fallback`, and the consumer's sidecar-override at
+`alt_strategy.rs:163-184` was the de-facto authority. With the
+override retired, the singleton-domain encoding makes the structural
+fact authoritative inside the CSP itself.
+
+The supplementary `decode_fallback` path (used when the CSP is
+provably UNSAT) also gains the `sidecar_keys` parameter so the
+deterministic fallback honours the same authority. New signature:
+`fallback_alt_mode(fact, has_dispatch, sidecar_keys) -> AltMode`.
+
+T9 Divergence — Sidecars Are NOT Parallel
+------------------------------------------
+The dispatch instructions named T9 ("collapse `recognizer_decisions`
++ `key_dispatch_configs` sidecars into one unified `ir.decisions`
+stream"). After inspection the two sidecars encode disjoint
+concepts:
+
+- `recognizer_decisions: HashMap<NodeId, RecognizerDecision>` carries
+  the CSP-chosen STRATEGY ENUM
+  (`{AltMode, WrapMode, RegexEngine}`). One `RecognizerDecision`
+  variant per family.
+
+- `key_dispatch_configs: HashMap<NodeId, KeyDispatchMatch>` carries
+  the EMISSION PAYLOAD — a struct with keyword strings, separator
+  literals, fallback indices, regex scanner ID, dispatched-byte set.
+  Consumed by `crates/core/src/backend/driver/alt.rs:201-256` to
+  emit the actual key-dispatch code.
+
+Encoding the payload struct as a value in a strategy-decision
+stream would either (a) widen the strategy enum to carry the
+payload, defeating the strategy/payload separation, or (b) keep
+the payload elsewhere, leaving the unified stream as a strategy
+sidecar by another name.
+
+The W4.2 invariant the override-retire enforces is the correct one:
+"CSP authority must hold post-selection — sidecars carry payload,
+not strategy." That invariant is now satisfied without merging the
+two streams. T9 unification HALTED per the empty-return rule
+("if T9 unification reveals the two sidecars are NOT actually
+parallel ..., HALT with the divergence named").
+
+Tailwind Perf
+-------------
+Test fixture: crates/core/tests/lightningcss_parity.rs::lightningcss_parity_tailwind
+              crates/core/tests/css_pretty.rs::parse_tailwind_css
+              crates/core/tests/ax_w0a2s_real_css_probe.rs::tailwind_full_parse
+
+The Tailwind data file lives at `data/css/tailwind.css` (3.6 MB). In
+the W4.2 worktree it is symlinked from `/Users/mkbabb/Programming/
+bbnf-lang/data/css/`.
+
+Baseline (pre-change) and post-change both compile CSS L4 in
+~18-24 s on the ax-iter profile. The CSS L4 largest CSP component
+(187 rules, 483 sites) hits the 1M-node `SolveConfig::node_budget`
+in both cases: pre-change via UNSAT cascade (`dispatch::install`
+constraint unsatisfiable), post-change via the
+`engine::install` pairwise propagation (O(n² × 7) constraint surface
+on ≈16 regex variables). Both paths fall back to
+`decode_min_cost_per_variable`.
+
+The runtime parse-time tailwind regression (per AZ-III C5) is
+upstream of W4.2's strategy authority work — the emitted scanner is
+the same; the cost is in `__regex_scan_CssL4Parser`'s linear
+pattern-dispatch chain over 28 patterns, not in the W4.2 surface.
+Recovery requires either: (a) PHF-dispatched scanner table (W4.4
+scope), (b) BB regex-rewrite enumeration (post-AZ-IV BA tranche,
+named in AZ-III FINAL.md row W2.2). Carry retained — W4.2 closes
+the strategy-authority half.
+
+Test Verification
+-----------------
+$ cargo build -p bbnf -p bbnf-ir --profile ax-iter
+  Finished `ax-iter` profile [unoptimized + debuginfo] target(s)
+
+$ cargo nextest run -p bbnf -p bbnf-ir --profile ax-iter \
+    -E 'test(csp_authority) | test(/recognizer_decisions/) |
+        test(authoritative) | test(/csp_/)'
+  Summary 29 tests run: 29 passed, 1346 skipped
+
+$ cargo nextest run -p bbnf-ir --profile default
+  Summary 431 tests run: 431 passed, 0 skipped
+
+$ cargo nextest run -p bbnf --profile default \
+    -E 'binary(regex_engine_authoritative)'
+  PASS json_regex_decisions_are_populated
+  PASS css_l4_regex_decisions_are_populated  (24.46s)
+
+CSP Authority Tests (full pass)
+-------------------------------
+crates/ir/tests/lattices/csp_authority.rs:
+- shape_constraint_disconnect_falls_back_to_checkpoint
+- shape_constraint_pins_alt_mode_for_keyword_prefix
+- layout_constraint_disconnect_picks_generic_without_fact
+- layout_constraint_pins_wrap_mode_when_delim_scan_present
+- dispatch_constraint_pins_alt_mode_when_key_dispatch_config_present
+
+Files Modified
+--------------
+- crates/core/src/backend/strategy/alt_strategy.rs (override retire)
+- crates/ir/src/passes/csp_strategy/mod.rs (singleton domain +
+  fallback_alt_mode signature)
+
+Commit
+------
+(filled in after commit-discipline)

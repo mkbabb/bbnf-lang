@@ -12,6 +12,14 @@
 //! backend `ValuePlacement::Inline` context that isn't visible to the IR
 //! pipeline. The driver gets the structural eligibility from this pass
 //! and makes the final emission call.
+//!
+//! AZ-IV.W4.2 — CSP authority is post-selection: this file no longer
+//! re-overrides the CSP's `AltMode` via `ir.key_dispatch_configs`
+//! lookups. The `dispatch::install` constraint upstream pins
+//! `AltMode = KeyDispatch` whenever the structural detector populated
+//! a key-dispatch sidecar (or the keyword-stats miner committed a
+//! `keyword_branches` entry). Sidecars carry payload only after the
+//! solve; strategy is owned by `recognizer_decisions`.
 
 use std::collections::HashMap;
 
@@ -102,26 +110,25 @@ fn collect_alt_strategies(
 
 /// Decide strategy for a single Alt node.
 ///
-/// Tranche X.8b: pure lookup against `ir.recognizer_decisions` plus
-/// the sidecar `ir.key_dispatch_configs` (populated upstream in
-/// `mine_recognizers` during Tranche X.8a).
+/// AZ-IV.W4.2 — pure lookup against `ir.recognizer_decisions`. The
+/// CSP's `dispatch::install` constraint pins `AltMode = KeyDispatch`
+/// whenever a `key_dispatch_configs` / `keyword_branches` sidecar
+/// exists, so the consumer reads the CSP fact directly without
+/// re-overriding via sidecar `contains_key` lookups.
 ///
 /// 1. `AllLiteral` is checked first because it's a backend emission
-///    optimization not modeled by the strategy CSP.
+///    optimization not modeled by the strategy CSP (depends on the
+///    runtime `ValuePlacement::Inline` context).
 /// 2. Otherwise, read the per-NodeId `AltMode` from
-///    `ir.recognizer_decisions` and map it to `AltStrategy`. The CSP's
-///    `ByteDispatch` becomes `DispatchTable`; `KeyDispatch` becomes
-///    `KeyDispatch`; everything else (`Checkpoint`, `TokenDispatch`,
-///    `SharedHelper(_)`) becomes `Checkpoint` until those backend
-///    emission paths are wired.
-/// 3. If the upstream `ir.key_dispatch_configs` sidecar has an entry
-///    for this NodeId, elevate the strategy to `KeyDispatch`. This
-///    covers alts where the CSP recognizer-shape input did not yield
-///    a `KeywordPrefix` shape but the structural key-dispatch
-///    detector still identified a shape (common for multi-branch
-///    `"keyword" ":" value` alt patterns with a regex fallback).
-/// 4. The `AltDispatch` precomputed dispatch table wins over the
-///    default `Checkpoint` fallback.
+///    `ir.recognizer_decisions` and map it to `AltStrategy`:
+///    - `ByteDispatch` ⇒ `DispatchTable` when the inline `AltDispatch`
+///      payload exists, else `Checkpoint` (the precomputed table is
+///      the load-bearing emission data).
+///    - `KeyDispatch` ⇒ `KeyDispatch`.
+///    - `Checkpoint` ⇒ `Checkpoint`.
+/// 3. When no CSP decision exists (structural-only compile path
+///    where `mine_recognizers` is skipped), the `AltDispatch`
+///    precomputed table wins over the default `Checkpoint` fallback.
 fn decide_alt_strategy(
     node_id: Option<NodeId>,
     branches: &[AltBranch],
@@ -136,65 +143,37 @@ fn decide_alt_strategy(
         return AltStrategy::AllLiteral;
     }
 
-    // Priority 2: read the strategy CSP decision.
+    // Priority 2: read the strategy CSP decision (post-selection
+    // authority — CSP owns the dispatch choice).
     let csp_alt_mode = node_id
         .and_then(|id| ir.recognizer_decisions.get(&id))
         .and_then(|d| d.alt_mode.as_ref());
 
     if let Some(mode) = csp_alt_mode {
-        match mode {
+        return match mode {
             // Tranche Y.3: `TokenDispatch` was folded into
-            // `ByteDispatch`. Both the CSP emission and the backend
-            // dispatch now converge on a single strong-discrimination
-            // variant. `fuse_token_dispatch` converts the strongest
-            // cases into `IrNode::TokenDispatch` upstream, so this
-            // arm only fires on the remaining ByteDispatch residue —
-            // which always has either a dispatch table populated or
-            // falls back to the generic ByteDispatch emission path.
+            // `ByteDispatch`. The CSP and the backend converge on a
+            // single strong-discrimination variant.
+            // `fuse_token_dispatch` converts the strongest cases
+            // into `IrNode::TokenDispatch` upstream, so this arm
+            // only fires on the remaining ByteDispatch residue —
+            // which always has either a dispatch table populated
+            // or falls back to the generic Checkpoint emission path.
             AltMode::ByteDispatch => {
                 if dispatch.is_some() {
-                    return AltStrategy::DispatchTable;
+                    AltStrategy::DispatchTable
+                } else {
+                    AltStrategy::Checkpoint
                 }
-                // Strong-discrimination Alt without a pre-built
-                // dispatch table — promote to key-dispatch if the
-                // sidecar has an entry, else Checkpoint.
-                if node_id
-                    .map(|id| ir.key_dispatch_configs.contains_key(&id))
-                    .unwrap_or(false)
-                {
-                    return AltStrategy::KeyDispatch;
-                }
-                return AltStrategy::Checkpoint;
             }
-            AltMode::KeyDispatch => return AltStrategy::KeyDispatch,
-            // Checkpoint falls through to the universal Checkpoint
-            // emission path. Except: if the upstream recognizer
-            // pass populated a key-dispatch config for this NodeId,
-            // prefer key-dispatch — the structural detector has
-            // higher coverage than the CSP recognizer shapes.
-            // Tranche Y.2 deleted the SharedHelper co-branch.
-            AltMode::Checkpoint => {
-                if node_id
-                    .map(|id| ir.key_dispatch_configs.contains_key(&id))
-                    .unwrap_or(false)
-                {
-                    return AltStrategy::KeyDispatch;
-                }
-                return AltStrategy::Checkpoint;
-            }
-        }
+            AltMode::KeyDispatch => AltStrategy::KeyDispatch,
+            AltMode::Checkpoint => AltStrategy::Checkpoint,
+        };
     }
 
-    // Priority 3: authoritative sidecar lookup when the CSP produced
-    // no decision. Structural-only compiles (where `mine_recognizers`
-    // is skipped) end up here with `csp_alt_mode = None` and no
-    // `ir.key_dispatch_configs` entry, so they fall through to the
-    // dispatch table or checkpoint default.
-    if let Some(id) = node_id {
-        if ir.key_dispatch_configs.contains_key(&id) {
-            return AltStrategy::KeyDispatch;
-        }
-    }
+    // Priority 3: structural-only compile path (no CSP decision —
+    // `mine_recognizers` was skipped). The `AltDispatch` precomputed
+    // table wins over the default `Checkpoint` fallback.
     if dispatch.is_some() {
         return AltStrategy::DispatchTable;
     }

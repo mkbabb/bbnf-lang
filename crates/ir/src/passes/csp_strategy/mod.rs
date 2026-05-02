@@ -807,7 +807,23 @@ fn collect_sites(
 
         match node {
             IrNode::Alt(branches, dispatch) => {
-                let domain = build_alt_domain(fact, dispatch.is_some(), branches.len(), cfg);
+                // AZ-IV.W4.2 — domain must contain `KeyDispatch` whenever
+                // the upstream structural detector populated a sidecar
+                // payload (`key_dispatch_configs`) or the keyword-stats
+                // miner (`keyword_branches`) committed to this Alt. The
+                // `dispatch` constraint installer pins `AltMode = KeyDispatch`
+                // on those nodes; without the variant in the domain the
+                // pin is unsatisfiable and the solve falls back, defeating
+                // CSP authority.
+                let has_key_dispatch = ir.key_dispatch_configs.contains_key(&node_id)
+                    || ir.keyword_branches.contains_key(&node_id);
+                let domain = build_alt_domain(
+                    fact,
+                    dispatch.is_some(),
+                    has_key_dispatch,
+                    branches.len(),
+                    cfg,
+                );
                 let var = csp.add_variable(domain);
                 sites.push((var, Site::Alt(node_id)));
                 by_node.entry(node_id).or_default().0 = Some(var);
@@ -946,17 +962,11 @@ fn collect_engine_vars_in(
 fn build_alt_domain(
     fact: Option<&Recognizer>,
     has_byte_dispatch: bool,
+    has_key_dispatch: bool,
     arm_count: usize,
     cfg: &CostConfig,
 ) -> StrategyDomain {
-    let mut values: Vec<(StrategyValue, f64)> = Vec::with_capacity(4);
     let w = &cfg.egraph.weights;
-
-    // Universal fallback — always legal, highest cost.
-    values.push((
-        StrategyValue::Alt(AltMode::Checkpoint),
-        10.0 * cfg.literal_cost,
-    ));
 
     // AG.5 — dispatch cost via the per-arm formula. Defaults:
     // `dispatch_branch = 0.0`, `dispatch_table = 0.0`, so under
@@ -966,6 +976,30 @@ fn build_alt_domain(
     // AF.2 contract tests, the formula dominates the checkpoint
     // cost and flips the decision.
     let dispatch_cost = (arm_count as f64) * w.dispatch_branch + w.dispatch_table;
+
+    // AZ-IV.W4.2 — when the upstream structural detectors
+    // authoritatively populated a key-dispatch sidecar payload
+    // (`key_dispatch_configs` / `keyword_branches`) the strategy
+    // is structurally fixed; the CSP has no remaining choice. Build
+    // the domain as a singleton so the variable becomes a unit-domain
+    // pin without invoking branch-and-bound search. This matches the
+    // production reality (the `dispatch::install` constraint pins the
+    // value regardless) and keeps CSS L4's largest component from
+    // exhausting the 1M-node budget proving the pinned answer.
+    if has_key_dispatch {
+        return StrategyDomain::new(vec![(
+            StrategyValue::Alt(AltMode::KeyDispatch),
+            dispatch_cost,
+        )]);
+    }
+
+    let mut values: Vec<(StrategyValue, f64)> = Vec::with_capacity(4);
+
+    // Universal fallback — always legal, highest cost.
+    values.push((
+        StrategyValue::Alt(AltMode::Checkpoint),
+        10.0 * cfg.literal_cost,
+    ));
 
     if has_byte_dispatch {
         values.push((StrategyValue::Alt(AltMode::ByteDispatch), dispatch_cost));
@@ -1164,7 +1198,15 @@ fn decode_fallback(
 
         match node {
             IrNode::Alt(_, dispatch) => {
-                dec.alt_mode = Some(fallback_alt_mode(fact, dispatch.is_some()));
+                // AZ-IV.W4.2 — fallback honours sidecar key-dispatch
+                // payloads (the same authority the `dispatch` constraint
+                // installer applies in the regular solve). Without this,
+                // a CSP-unsatisfiable fallback would silently regress
+                // to Checkpoint on Alts that the structural detector
+                // already proved key-dispatchable.
+                let sidecar_keys = ir.key_dispatch_configs.contains_key(&node_id)
+                    || ir.keyword_branches.contains_key(&node_id);
+                dec.alt_mode = Some(fallback_alt_mode(fact, dispatch.is_some(), sidecar_keys));
             }
             IrNode::Skip(_, _) | IrNode::Next(_, _) => {
                 if is_wrap_shape(node) {
@@ -1189,7 +1231,7 @@ fn decode_fallback(
     visit_children_alt(node, |child| decode_fallback(child, ir, dag, decisions));
 }
 
-fn fallback_alt_mode(fact: Option<&Recognizer>, has_dispatch: bool) -> AltMode {
+fn fallback_alt_mode(fact: Option<&Recognizer>, has_dispatch: bool, sidecar_keys: bool) -> AltMode {
     if has_dispatch {
         return AltMode::ByteDispatch;
     }
@@ -1201,6 +1243,9 @@ fn fallback_alt_mode(fact: Option<&Recognizer>, has_dispatch: bool) -> AltMode {
         if matches!(rec.shape, RecognizerShape::KeywordPrefix { .. }) {
             return AltMode::KeyDispatch;
         }
+    }
+    if sidecar_keys {
+        return AltMode::KeyDispatch;
     }
     AltMode::Checkpoint
 }

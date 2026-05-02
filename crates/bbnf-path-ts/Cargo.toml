@@ -1,0 +1,57 @@
+[package]
+name = "bbnf-path-ts"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "TS/wasm binding for the BBNF `path!` macro: cdylib + wasm-bindgen template-literal tag"
+repository = "https://github.com/mkbabb/bbnf-lang"
+publish = false
+
+# AZ-IV.W5.1 — TS frontend for the typed `path!` surface.
+#
+# The cdylib exposes `compile_path(path_str, grammar)` and
+# `execute_path(typed_path, document_view)` to the TS frontend at
+# `ts/path.ts`. The TS template-literal tag (`` path`$.statuses[0].text` ``)
+# invokes `compile_path` at load-time (or at build-time under
+# constant-folding bundlers — Vite, esbuild, SWC) and produces the
+# same `TypedPath` shape the Rust `path!` macro emits.
+#
+# Path-deps:
+# * `bbnf-ir` — `StructRegistry`, `StructLayout`, `LayoutKind`,
+#   `TypeDesc`. The cdylib walks the same compile-time fixture
+#   registry the proc-macro consumes (via the synthetic per-grammar
+#   shapes defined here until T4 production REGISTRY consts arrive).
+# * `bbnf-regex` — `lex_path` + `PathToken` for parsing path strings.
+#   Identical lexer the proc-macro uses, so segment alphabet is
+#   isomorphic across Rust + TS frontends.
+#
+# `bbnf-path` (proc-macro = true) cannot be a library dependency, so
+# the macro's lex / lower / validate logic is mirrored here at function
+# scope. The error taxonomy (`PathError { segment, struct_name,
+# alternatives, reason }`) is shared with the Rust frontend through
+# `bbnf::path::error::PathError` — see `tests/isomorphic_path_error.rs`
+# for the fidelity assertion.
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+bbnf-ir = { version = "0.1", path = "../ir" }
+bbnf-regex = { version = "0.1" }
+proc-macro2 = "1"
+wasm-bindgen = "0.2"
+js-sys = "0.3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde-wasm-bindgen = "0.6"
+console_error_panic_hook = { version = "0.1", optional = true }
+
+[dev-dependencies]
+bbnf = { version = "0.2", path = "../core" }
+
+[features]
+default = []
+panic-hook = ["dep:console_error_panic_hook"]
+
+[package.metadata.wasm-pack.profile.release]
+# Requires binaryen >= 119 installed (brew install binaryen).
+wasm-opt = ["-O3", "--enable-simd"]

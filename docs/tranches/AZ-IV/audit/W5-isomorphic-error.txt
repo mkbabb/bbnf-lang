@@ -1,0 +1,118 @@
+AZ-IV.W5.1 — PathError taxonomy fidelity (Rust + TS)
+====================================================
+
+Wave: AZ-IV.W5
+Sub-unit: AZ-IV.W5.1 (Isomorphism Tests)
+Worktree: /Users/mkbabb/Programming/bbnf-wt-aziv-w5-cdylib
+Branch: aziv-w5-cdylib
+Test file: crates/bbnf-path-ts/tests/isomorphic_path_error.rs
+
+Surface under test
+------------------
+- canonical: `bbnf::path::PathError` + `bbnf::path::PathErrorReason`
+- TS bridge: `bbnf_path_ts::PathErrorPayload` +
+             `bbnf_path_ts::PathErrorReasonPayload`
+
+Both surfaces carry the same field set:
+  segment_index   : usize
+  segment_str     : String           (canonical: String;
+                                      payload: String)
+  struct_name     : String           (same on both sides)
+  alternatives    : Vec<&'static str> on canonical;
+                    Vec<String>      on payload (static-borrow lifetimes
+                                                 do not survive a serde
+                                                 round-trip — value
+                                                 contents are identical)
+  reason          : enum PathErrorReason (8 variants); mirrored 1:1 by
+                    PathErrorReasonPayload.
+
+Test results
+------------
+$ cd /Users/mkbabb/Programming/bbnf-wt-aziv-w5-cdylib
+$ CARGO_TARGET_DIR=.../target/w5-cdylib cargo test \
+      -p bbnf-path-ts --profile ax-iter --test isomorphic_path_error
+
+  running 5 tests
+  test reason_variants_are_isomorphic ............................. ok
+  test unregistered_grammar_marker_surfaces_unregistered_rule ..... ok
+  test empty_path_rust_and_ts_match ............................... ok
+  test index_into_scalar_rust_and_ts_match ........................ ok
+  test unknown_field_at_entry_rule_rust_and_ts_match .............. ok
+
+  test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured;
+                   0 filtered out; finished in 0.00s
+
+Coverage notes
+--------------
+1. `unknown_field_at_entry_rule_rust_and_ts_match` — drives both surfaces
+   with `$.nope` against a JSON-fixture `Document` rule. Asserts identical
+   `(reason, segment_index, segment_str, struct_name, alternatives_set)`
+   tuples. Top-level case avoids the deeper `Named(_)` descent asymmetry
+   documented inline (see file).
+
+2. `index_into_scalar_rust_and_ts_match` — drives `$.id[0]` against the
+   same fixture. `Document.id : F64`; both surfaces classify the second
+   step as `FieldOnScalar` (the scalar arm fires before the
+   non-list-index fall-through in `step_into_type`).
+
+3. `empty_path_rust_and_ts_match` — drives the empty-path/empty-string
+   case. Rust returns `PathErrorReason::EmptyPath` from
+   `check_path_against_registry`; the cdylib returns
+   `PathErrorReasonPayload::EmptyPath` from `compile_path_native("", ...)`.
+   `segment_index` and `struct_name` agree.
+
+4. `unregistered_grammar_marker_surfaces_unregistered_rule` — TS-only path
+   (the proc-macro handles unknown markers at parse time; no canonical
+   counterpart). Asserts the cdylib returns `UnregisteredRule` with the
+   canonical alternatives list `["Bbnf", "CssL4", "Json", "Sheets"]`.
+
+5. `reason_variants_are_isomorphic` — exhaustive 8-pair mapping coverage.
+   Adding a new variant on either side without updating the mirror fails
+   the test by virtue of the exhaustive match in `rust_reason_to_payload`.
+
+Known asymmetry (documented in test source)
+-------------------------------------------
+The deeper case `$.statuses[0].nope` exercises a known divergence between:
+- Canonical offline checker (`bbnf::path::type_check`) — leaves
+  `TypeDesc::Named(_)` intact at the cursor and surfaces
+  `UnregisteredRule` when a follow-up segment needs to descend (the
+  strings table that maps `StringId -> RuleId` lives on `GrammarIR`, not
+  on the offline checker entry).
+- cdylib (`crates/bbnf-path-ts/src/compile.rs`) — resolves `Named(_)`
+  eagerly through `StructRegistry::layout(rule_id)` since the fixture
+  uses the 1:1 `rule_id == StringId` shortcut.
+
+The two surfaces converge at the IR `path_check` pass (W2.2) and the
+proc-macro's IR-resolved walker (`bbnf-path::path_macro`); the present
+test pins the surface where both surfaces agree. The deeper alignment is
+a downstream concern for the IR pass that holds the strings table.
+
+PathErrorPayload field names match canonical struct
+---------------------------------------------------
+canonical (crates/core/src/path/error.rs::PathError)
+  segment_index : usize
+  segment_str   : String
+  struct_name   : String
+  alternatives  : Vec<&'static str>
+  reason        : PathErrorReason
+
+cdylib (crates/bbnf-path-ts/src/schema.rs::PathErrorPayload)
+  segment_index : usize
+  segment_str   : String
+  struct_name   : String
+  alternatives  : Vec<String>
+  reason        : PathErrorReasonPayload
+
+Wire format (serde, post serde-wasm-bindgen):
+  { "segment_index": <usize>,
+    "segment_str": <string>,
+    "struct_name": <string>,
+    "alternatives": [<string>, ...],
+    "reason": <"UnknownField" | "UnknownVariant" | "IndexIntoNonList"
+             | "FieldOnScalar" | "EmptyPath" | "UnregisteredRule"
+             | "AmbiguousVariant" | "WildcardOverflow"> }
+
+The TS-side `PathError` class (crates/bbnf-path-ts/ts/path.ts) presents
+this shape through its readonly fields, with `format(payload)` rendering
+`path[N] \`<segment>\` on \`<struct>\`: <reason>; valid: [<alts>]` to
+match `bbnf::path::PathError`'s `Display` impl.

@@ -1,0 +1,105 @@
+AZ-IV.W5.1 — bbnf-path-ts cdylib build evidence
+================================================
+
+Wave: AZ-IV.W5
+Sub-unit: AZ-IV.W5.1 (bbnf-path-ts cdylib + Template Tag + Isomorphism Tests)
+Worktree: /Users/mkbabb/Programming/bbnf-wt-aziv-w5-cdylib
+Branch: aziv-w5-cdylib
+Base commit (W4 close): 9cef79c563ba47fb418a2028a4e20b1de4dd6748
+CARGO_TARGET_DIR: /Users/mkbabb/Programming/bbnf-wt-aziv-w5-cdylib/target/w5-cdylib
+
+Crate
+-----
+crates/bbnf-path-ts/
+  Cargo.toml             cdylib + rlib; wasm-bindgen 0.2 + js-sys + serde +
+                         serde-wasm-bindgen 0.6 + proc-macro2 + bbnf-ir +
+                         bbnf-regex; dev-dep on bbnf for the isomorphism test;
+                         optional `panic-hook` feature.
+  src/lib.rs             wasm-bindgen exports `init`, `compile_path`,
+                         `execute_path`; native shims `compile_path_native`,
+                         `execute_path_native` for Rust-side tests; re-exports
+                         `OwnedSegmentPayload`, `PathErrorPayload`,
+                         `PathErrorReasonPayload`, `TypedPathPayload`,
+                         `TEMPLATE_TAG_JS`.
+  src/compile.rs         lex/lower/validate pipeline mirroring `bbnf-path`
+                         proc-macro; consumes `bbnf_regex::lex_path`; walks
+                         per-grammar `StructRegistry` fixture; surfaces
+                         `PathErrorPayload`.
+  src/fixture.rs         Per-grammar fixtures (Json/CssL4/Sheets/Bbnf) shaped
+                         identically to `crates/bbnf-path/src/registry.rs`.
+                         Swap-target for the future production
+                         `pub const REGISTRY: StructRegistry` (T4).
+  src/schema.rs          serde-derive payloads mirroring `bbnf::path::*`
+                         shapes (`OwnedSegmentPayload`, `TypedPathPayload`,
+                         `PathErrorPayload`, `PathErrorReasonPayload`).
+  src/template_tag.rs    `pub const TEMPLATE_TAG_JS: &str` — JS shim for the
+                         tagged template literal (`makePathTag`).
+  ts/path.ts             TS-side wrapper: `OwnedPathSegment`, `TypedPath`,
+                         `PathErrorPayload`, `PathErrorReason`, `PathError`
+                         class, `makePathTag` factory.
+  ts/index.ts            Public TS surface re-exports.
+  tests/isomorphic_path_error.rs
+                         5-test isomorphism suite (see W5-isomorphic-error.txt).
+
+Workspace integration
+---------------------
+Cargo.toml: added "crates/bbnf-path-ts" to [workspace] members.
+
+Build evidence
+--------------
+Native build (host = aarch64-apple-darwin):
+  $ cd /Users/mkbabb/Programming/bbnf-wt-aziv-w5-cdylib
+  $ CARGO_TARGET_DIR=.../target/w5-cdylib cargo build -p bbnf-path-ts \
+        --profile ax-iter
+  Compiling bbnf-path-ts v0.1.0
+      Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 0.64s
+
+wasm32 cross-compile (target = wasm32-unknown-unknown):
+  $ CARGO_TARGET_DIR=.../target/w5-cdylib cargo build -p bbnf-path-ts \
+        --target wasm32-unknown-unknown --profile ax-iter
+  Compiling bbnf-path-ts v0.1.0
+      Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 48.72s
+
+cdylib + rlib artefact present at:
+  target/w5-cdylib/wasm32-unknown-unknown/ax-iter/deps/libbbnf_path_ts-*.rlib
+  (cdylib emission via wasm-pack lands in W5.5 once profiling discipline
+   is wired; the cargo build above proves the toolchain accepts the crate).
+
+Lint cadence
+------------
+$ cargo fmt --all -- --check                              clean (post-fmt)
+$ cargo clippy -p bbnf-path-ts --profile ax-iter \
+      --all-targets                                       no warnings from
+                                                          bbnf-path-ts; pre-
+                                                          existing warnings
+                                                          in `bbnf` (188) and
+                                                          `egraph-derive`
+                                                          (collapsible_if)
+                                                          are not touched by
+                                                          W5.1's file bounds.
+$ git diff --check                                        clean
+
+Hard gate alignment (per W5.md §Hard Gate)
+------------------------------------------
+1. cdylib builds on native + wasm32                       PASS (above)
+2. Template-literal tag shape (`makePathTag`) ships       PASS — ts/path.ts
+                                                          carries the factory;
+                                                          src/template_tag.rs
+                                                          ships JS shim const.
+3. Isomorphic error taxonomy                              PASS — 5/5 tests
+                                                          green (see
+                                                          W5-isomorphic-error
+                                                          audit doc).
+12. cargo fmt --all -- --check                            PASS
+    cargo clippy --profile ax-iter (focused)              PASS (no warnings
+                                                          from W5.1 surface)
+
+Known misses (deferred to other W5 sub-units / waves)
+-----------------------------------------------------
+- W5.2 owns the `tests/node_execute.rs` Node-execute proof; W5.1 stops at
+  the cdylib + isomorphism boundary.
+- W5.5 owns wasm-pack invocation + samply attribution + the post-AZ-IV/W5
+  profiling artefacts.
+- T4 (production `pub const REGISTRY`) is upstream of the cdylib — once it
+  lands, src/fixture.rs and crates/bbnf-path/src/registry.rs both swap to
+  the production const. The cdylib's public surface is unchanged.

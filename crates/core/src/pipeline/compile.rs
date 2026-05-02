@@ -264,6 +264,19 @@ fn write_audit_coverage_artefact(ir: &GrammarIR) {
     let _ = write_coverage_report(&report, &path);
 }
 
+/// Run the AZ-IV.W2.2 `path_check` IR pass against the post-`project_types`
+/// IR. The pass folds the recorded inline trace + the populated
+/// `StructRegistry` into a `PathCheckResolver` that binds every
+/// user-written source rule name to a post-pipeline `RuleId`. The
+/// borrow dance avoids holding a shared borrow of `ir` and a mutable
+/// borrow of `ir.path_check_resolver` at once: take the trace by value,
+/// run the pass, write the resolver back, return the trace.
+fn run_path_check_pass(ir: &mut bbnf_ir::GrammarIR) {
+    let trace = std::mem::take(&mut ir.inline_trace);
+    ir.path_check_resolver = bbnf_ir::passes::run_path_check(ir, &trace);
+    ir.inline_trace = trace;
+}
+
 fn finalize_compile(
     mut ir: GrammarIR,
     target: &CompileTarget,
@@ -287,6 +300,8 @@ fn finalize_compile(
         }
         CompileTarget::Vm => {
             bbnf_ir::passes::project_types(&mut ir);
+            // AZ-IV.W2.2 — path_check resolver after project_types.
+            run_path_check_pass(&mut ir);
             // Tranche AQ.6.B — plan aggregate payload layouts so any
             // VM consumer that reads `ir.payload_layouts` sees the
             // same map the Rust backend does.
@@ -298,6 +313,8 @@ fn finalize_compile(
         CompileTarget::Ts => {
             bbnf_ir::passes::compute_sp_method_rules(&mut ir);
             bbnf_ir::passes::project_types(&mut ir);
+            // AZ-IV.W2.2 — path_check resolver after project_types.
+            run_path_check_pass(&mut ir);
             ir.payload_layouts = bbnf_ir::passes::compute_payload_layouts(&ir);
             write_audit_coverage_artefact(&ir);
 
@@ -328,6 +345,8 @@ fn finalize_compile(
         CompileTarget::Wasm => {
             bbnf_ir::passes::compute_sp_method_rules(&mut ir);
             bbnf_ir::passes::project_types(&mut ir);
+            // AZ-IV.W2.2 — path_check resolver after project_types.
+            run_path_check_pass(&mut ir);
             ir.payload_layouts = bbnf_ir::passes::compute_payload_layouts(&ir);
             write_audit_coverage_artefact(&ir);
 
@@ -700,10 +719,18 @@ fn compile_ast_common<'a>(
                 // consumes the coordinated update.
                 bbnf_ir::passes::compute_scc(&mut ir);
                 bbnf_ir::passes::prune_unreachable(&mut ir);
-                bbnf_ir::passes::inline_acyclic(&mut ir);
+                // AZ-IV.W2.2 — route the inline passes through the
+                // recording wrappers so the inline trace captures every
+                // `Ref(source) → body` substitution. The trace is the
+                // sidecar `path_check` consumes after `project_types`
+                // to re-resolve `path!` literals that name source
+                // rules whose layouts the registry no longer holds.
+                let mut trace = std::mem::take(&mut ir.inline_trace);
+                bbnf_ir::passes::inline_acyclic_with_trace(&mut ir, &mut trace);
                 bbnf_ir::passes::prune_unreachable(&mut ir);
                 bbnf_ir::passes::compute_scc(&mut ir);
-                bbnf_ir::passes::fuse_single_use(&mut ir);
+                bbnf_ir::passes::fuse_single_use_with_trace(&mut ir, &mut trace);
+                ir.inline_trace = trace;
                 bbnf_ir::passes::prune_unreachable(&mut ir);
                 bbnf_ir::passes::eliminate_epsilon(&mut ir);
                 bbnf_ir::passes::merge_literals(&mut ir);

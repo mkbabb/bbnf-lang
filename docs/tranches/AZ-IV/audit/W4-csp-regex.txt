@@ -158,4 +158,5 @@ Files Modified
 
 Commit
 ------
-(filled in after commit-discipline)
+a63bb7e3 refactor(csp-strategy/authority): retire alt_strategy sidecar
+         override; pin KeyDispatch via singleton domain (AZ-IV.W4.2)

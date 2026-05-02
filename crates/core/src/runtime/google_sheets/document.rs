@@ -271,19 +271,40 @@ fn write_compound<'p>(doc: &SheetsDocument<'p>, id: SheetsCompoundId, out: &mut 
             out.push('}');
         }
         SheetsCompoundKind::ArrayRows => {
-            for (i, child) in entry.children.iter().enumerate() {
-                if i > 0 {
+            // AZ-IV.W1-CLOSE.A — array_rows is a Pratt rule with `;`
+            // as its operator. The Pratt loop deposits children as
+            // `[row, Tag(0), row, Tag(0), …]` where each Tag IS the
+            // separator. Skip Tag children when emitting and rely on
+            // the index-based `;` insertion between operand
+            // positions; mirror the symmetry in `ArrayRow`.
+            let mut emitted_operands: usize = 0;
+            for child in entry.children.iter() {
+                if matches!(child, SheetsValue::Tag(_)) {
+                    continue;
+                }
+                if emitted_operands > 0 {
                     out.push(';');
                 }
                 write_value(doc, child, kind, out);
+                emitted_operands += 1;
             }
         }
         SheetsCompoundKind::ArrayRow => {
-            for (i, child) in entry.children.iter().enumerate() {
-                if i > 0 {
+            // AZ-IV.W1-CLOSE.A — array_row is a Pratt rule with `,`
+            // as its operator. Children are
+            // `[expr, Tag(0), expr, Tag(0), …]`; the Tag IS the
+            // separator (its `tag_lexeme` is empty). Skip Tag
+            // children and emit `,` between operands.
+            let mut emitted_operands: usize = 0;
+            for child in entry.children.iter() {
+                if matches!(child, SheetsValue::Tag(_)) {
+                    continue;
+                }
+                if emitted_operands > 0 {
                     out.push(',');
                 }
                 write_value(doc, child, kind, out);
+                emitted_operands += 1;
             }
         }
         SheetsCompoundKind::RangeRef => {

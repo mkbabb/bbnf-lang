@@ -751,6 +751,20 @@ fn emit_position_core_struct_direct(
 /// so nested structural composition works. The first matching
 /// branch breaks the loop; on no-match the position fails with
 /// `Syntax`.
+///
+/// AZ-IV.W1-CLOSE.A — when an Alt branch is a bare `Regex` or
+/// `Literal` whose declared TypeDesc is Span (Sheets `range_end =
+/// cell_ref | /\$?[A-Za-z]{1,3}/ | /\$?\d+/` post-inline-acyclic),
+/// the branch must deposit the matched bytes as a `push_leaf_with_str`
+/// leaf. The pre-fix emission advanced `*p` without pushing; the
+/// surrounding compound therefore captured no children for the
+/// regex-led alternatives, causing `=A:A` to round-trip as `=`. The
+/// Ref branches (cell_ref) push their own leaves through their
+/// per-shape parse fns; this fix restores parity for the
+/// Regex / Literal alternatives without touching the structural
+/// regex positions inside Seq bodies (which intentionally do not
+/// push leaves — BBNF `comment = "//", /[^\n]*/` is the canonical
+/// Span-suppressing case).
 fn emit_inline_alt_struct_direct(
     branches: &[AltBranch],
     support_mod: &proc_macro2::Ident,
@@ -760,7 +774,7 @@ fn emit_inline_alt_struct_direct(
 ) -> TokenStream {
     let mut arms: Vec<TokenStream> = Vec::with_capacity(branches.len());
     for branch in branches {
-        let body = emit_position_core_struct_direct(
+        let body = emit_alt_branch_struct_direct(
             &branch.node,
             support_mod,
             dispatcher_ident,
@@ -801,6 +815,70 @@ fn emit_inline_alt_struct_direct(
                 },
             );
         }
+    }
+}
+
+/// Emit one Alt branch body for the inline-Alt Flat path. Span-typed
+/// `Regex` / `Literal` branches gain a `push_leaf_with_str` capture
+/// over the matched bytes so the surrounding compound holds the
+/// branch's source contribution; everything else delegates to the
+/// generic position emitter.
+///
+/// Span-detection prefers the per-branch TypeDesc (`ir.node_type`),
+/// falling back to the parent rule's TypeDesc when the per-node map
+/// is unset for the branch. The fallback is the post-inline shape
+/// case (Sheets `range_end` after `inline_acyclic`): the inlined
+/// branches lose direct DAG identity but the host rule's typed
+/// projection still requires a Span leaf per regex match.
+fn emit_alt_branch_struct_direct(
+    branch_node: &IrNode,
+    support_mod: &proc_macro2::Ident,
+    dispatcher_ident: &proc_macro2::Ident,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    use bbnf_ir::TypeDesc;
+    // Strip OptionalWhitespace wrappers to inspect the branch leaf.
+    fn strip_ws(node: &IrNode) -> &IrNode {
+        match node {
+            IrNode::OptionalWhitespace(inner) => strip_ws(inner),
+            other => other,
+        }
+    }
+    let leaf = strip_ws(branch_node);
+    let is_span = matches!(ir.node_type(leaf), Some(TypeDesc::Span));
+    match leaf {
+        IrNode::Regex(_) | IrNode::Literal(_) if is_span => {
+            let inner = emit_position_core_struct_direct(
+                branch_node,
+                support_mod,
+                dispatcher_ident,
+                grammar_suffix,
+                ir,
+            );
+            quote! {
+                let __alt_span_lo: usize = *p;
+                #inner
+                {
+                    let __alt_span_hi: usize = *p;
+                    let __alt_span_slice: &str = ::core::str::from_utf8(
+                        &input[__alt_span_lo..__alt_span_hi],
+                    )
+                    .unwrap_or("");
+                    <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                        builder,
+                        __alt_span_slice,
+                    );
+                }
+            }
+        }
+        _ => emit_position_core_struct_direct(
+            branch_node,
+            support_mod,
+            dispatcher_ident,
+            grammar_suffix,
+            ir,
+        ),
     }
 }
 

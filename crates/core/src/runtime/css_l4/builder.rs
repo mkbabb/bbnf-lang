@@ -375,88 +375,88 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
         // match (Fermat F2 / F7 redress).
         let frame = match layout.rule_id {
             // Aggregate top-level rules.
-            // 124 = ruleList (the structural body of `stylesheet`).
-            124 => OpenFrame::StyleSheet { rules: Vec::new() },
-            // 119 = qualifiedRule, 118 = ruleBlock.
-            119 | 118 => OpenFrame::StyleRule {
+            // 148 = ruleList (the structural body of `stylesheet`).
+            148 => OpenFrame::StyleSheet { rules: Vec::new() },
+            // 143 = qualifiedRule, 142 = ruleBlock.
+            143 | 142 => OpenFrame::StyleRule {
                 selectors: Vec::new(),
                 declarations: Vec::new(),
                 span: "",
             },
-            // 120 = mediaRule.
-            120 => OpenFrame::MediaRule {
+            // 144 = mediaRule.
+            144 => OpenFrame::MediaRule {
                 query: "",
                 rules: Vec::new(),
             },
-            // 115 = keyframesRule.
-            115 => OpenFrame::KeyframesRule {
+            // 139 = keyframesRule.
+            139 => OpenFrame::KeyframesRule {
                 name: "",
                 blocks: Vec::new(),
             },
-            // 117 = genericAtRule.
-            117 => OpenFrame::GenericAtRule {
+            // 141 = genericAtRule.
+            141 => OpenFrame::GenericAtRule {
                 name: "",
                 prelude: "",
                 body: "",
             },
             // Declaration family — every typed `*Decl` rule plus
             // `declaration` / `customPropertyDecl` / `genericDecl`.
-            // 38 = customPropertyDecl, 39 = genericDecl, 114 =
-            // declaration; 88..=113 are the 26 typed `*Decl` rules
+            // 62 = customPropertyDecl, 63 = genericDecl, 138 =
+            // declaration; 112..=137 are the 26 typed `*Decl` rules
             // (colorDecl ... cursorDecl) in declaration order. The
-            // `__*Decl_cont_*` continuation rules (143..=168) are
-            // structural-only and route through Wrap.
-            38 | 39 | 88..=113 | 114 => OpenFrame::Declaration {
+            // `__*Decl_cont_*` continuation rules are structural-only
+            // and route through Wrap.
+            62 | 63 | 112..=137 | 138 => OpenFrame::Declaration {
                 property: None,
                 values: Vec::new(),
                 important: false,
             },
-            // 72 = selectorList, 75 = complexSelector, 77 =
+            // 96 = selectorList, 99 = complexSelector, 101 =
             // compoundSelector.
-            72 | 75 | 77 => OpenFrame::SelectorList {
+            96 | 99 | 101 => OpenFrame::SelectorList {
                 selectors: Vec::new(),
             },
             // Numeric typed rules — length / angle / time / etc.
-            55 => OpenFrame::Numeric {
+            79 => OpenFrame::Numeric {
                 kind: NumericKind::Length,
                 magnitude: None,
                 unit: None,
             },
-            33 => OpenFrame::Numeric {
+            57 => OpenFrame::Numeric {
                 kind: NumericKind::Angle,
                 magnitude: None,
                 unit: None,
             },
-            34 => OpenFrame::Numeric {
+            58 => OpenFrame::Numeric {
                 kind: NumericKind::Time,
                 magnitude: None,
                 unit: None,
             },
-            35 => OpenFrame::Numeric {
+            59 => OpenFrame::Numeric {
                 kind: NumericKind::Frequency,
                 magnitude: None,
                 unit: None,
             },
-            36 => OpenFrame::Numeric {
+            60 => OpenFrame::Numeric {
                 kind: NumericKind::Resolution,
                 magnitude: None,
                 unit: None,
             },
-            37 => OpenFrame::Numeric {
+            61 => OpenFrame::Numeric {
                 kind: NumericKind::Flex,
                 magnitude: None,
                 unit: None,
             },
-            29 => OpenFrame::Numeric {
+            53 => OpenFrame::Numeric {
                 kind: NumericKind::Percentage,
                 magnitude: None,
                 unit: None,
             },
-            // Color function family. 62 = colorFn (the only typed
+            // Color function family. 86 = colorFn (the only typed
             // colour-function rule in the current grammar; the
             // `colorFunction` and `colorMix` allowlist arms
             // referenced rules absent from the IR and routed dead).
-            62 => OpenFrame::ColorFunction {
+            86 => OpenFrame::ColorFunction {
                 kind_tag: None,
                 space_tag: None,
                 components: Vec::new(),
@@ -467,42 +467,42 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
             // to emit. The `name` slot stays empty until
             // `push_leaf_with_str` lands the parsed identifier
             // (genericFunction's regex match flows through there).
-            81 => OpenFrame::Function {
+            105 => OpenFrame::Function {
                 kind: FunctionKind::Calc,
                 name: "",
                 args: Vec::new(),
             },
-            82 => OpenFrame::Function {
+            106 => OpenFrame::Function {
                 kind: FunctionKind::Min,
                 name: "",
                 args: Vec::new(),
             },
-            83 => OpenFrame::Function {
+            107 => OpenFrame::Function {
                 kind: FunctionKind::Max,
                 name: "",
                 args: Vec::new(),
             },
-            84 => OpenFrame::Function {
+            108 => OpenFrame::Function {
                 kind: FunctionKind::Clamp,
                 name: "",
                 args: Vec::new(),
             },
-            53 => OpenFrame::Function {
+            77 => OpenFrame::Function {
                 kind: FunctionKind::Var,
                 name: "",
                 args: Vec::new(),
             },
-            54 => OpenFrame::Function {
+            78 => OpenFrame::Function {
                 kind: FunctionKind::Env,
                 name: "",
                 args: Vec::new(),
             },
-            31 => OpenFrame::Function {
+            55 => OpenFrame::Function {
                 kind: FunctionKind::Url,
                 name: "",
                 args: Vec::new(),
             },
-            49 => OpenFrame::Function {
+            73 => OpenFrame::Function {
                 kind: FunctionKind::Generic,
                 name: "",
                 args: Vec::new(),

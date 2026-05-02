@@ -224,7 +224,18 @@ pub(super) fn emit_dispatch_arms_struct_direct(
 /// `push_leaf_with_unit()` so the branch still records its
 /// discriminator without fabricating typed payload the grammar
 /// didn't declare.
-pub(super) fn branch_payload_push(branch_root: &IrNode, ir: &GrammarIR) -> TokenStream {
+///
+/// AZ-IV.W1-CLOSE.B — visibility widened from `pub(super)` to the
+/// shapes module so the inline structural-branch helper can apply
+/// the same fold to each inner Alt arm encountered while emitting a
+/// prefix-tree-factored Seq. Without per-inner-arm fold the 148
+/// non-singleton namedColor branches lose their declared u32 payload
+/// (the outer Seq's tail is the inner Alt; `find_map_fn` cannot
+/// recover a single fn_id from N alternative arms).
+pub(in crate::backend::rust::emitter::shapes) fn branch_payload_push(
+    branch_root: &IrNode,
+    ir: &GrammarIR,
+) -> TokenStream {
     fn find_map_fn(node: &IrNode) -> Option<u32> {
         match node {
             IrNode::Map { fn_id, .. } => Some(*fn_id),
@@ -314,6 +325,16 @@ pub(super) fn emit_seq_position(node: &IrNode, ir: &GrammarIR) -> TokenStream {
             }
         }
         IrNode::Alt(branches, _) => {
+            // AZ-IV.W1-CLOSE.B — emit per-inner-arm typed payload pushes
+            // for prefix-tree-factored namedColor branches that flatten
+            // to a pure-literal chain. Each inner arm carries its own
+            // `Map { fn_id }` (the factor pass at
+            // `crates/ir/src/passes/prefix.rs:243-250` wraps the
+            // continuation in Map when the original branch was mapped).
+            // `branch_payload_push` walks the original `branch.node`
+            // (not the trivia-stripped form) so the Map wrapper is
+            // visible. Without this push the 148 prefix-factored
+            // namedColor inner arms drop their declared u32 payload.
             let alt_arms: Vec<TokenStream> = branches
                 .iter()
                 .filter_map(|b| match unwrap_trivia(&b.node) {
@@ -322,6 +343,7 @@ pub(super) fn emit_seq_position(node: &IrNode, ir: &GrammarIR) -> TokenStream {
                         let len = bytes.len();
                         let byte_lits: Vec<TokenStream> =
                             bytes.iter().map(|byte| quote! { #byte }).collect();
+                        let payload_push = branch_payload_push(&b.node, ir);
                         Some(quote! {
                             if !alt_hit {
                                 let at = *p;
@@ -330,6 +352,7 @@ pub(super) fn emit_seq_position(node: &IrNode, ir: &GrammarIR) -> TokenStream {
                                     && input[at..end] == [#(#byte_lits),*]
                                 {
                                     *p = end;
+                                    #payload_push
                                     alt_hit = true;
                                 }
                             }

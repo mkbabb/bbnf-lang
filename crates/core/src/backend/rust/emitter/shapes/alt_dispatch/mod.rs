@@ -41,7 +41,7 @@ use super::dispatcher::shape_fn_ident;
 use super::substrate::builder_ty_with_lifetime;
 use bbnf_ir::registry::EmitStrategy;
 
-mod branches;
+pub(in crate::backend::rust::emitter::shapes) mod branches;
 
 use branches::unwrap_trivia;
 

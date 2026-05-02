@@ -14,6 +14,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 
 use super::super::super::dfa_codegen::regex_scan_adapter_ident;
+use super::super::alt_dispatch::branches::branch_payload_push;
 use super::super::dispatcher::emit_ref_call_shape;
 use super::super::sanitise_grammar;
 
@@ -186,6 +187,24 @@ fn emit_branch_position_core_struct_direct(
             }
         }
         IrNode::Alt(branches, _) => {
+            // AZ-IV.W1-CLOSE.B — descend into nested Alt children and
+            // emit per-inner-arm typed payload pushes for prefix-tree-
+            // factored Seqs. The factor pass at
+            // `crates/ir/src/passes/prefix.rs:178-291` rewrites
+            // `Map(Literal("aliceblue"), fn_aliceblue) | Map(Literal("antiquewhite"), fn_aw) | …`
+            // into `Seq(Literal("a"), Alt([Map(Literal("liceblue"), fn_aliceblue), Map(Literal("ntiquewhite"), fn_aw), …]))`.
+            // The outer `branch_payload_push` walker in
+            // `alt_dispatch/branches.rs::find_map_fn` returns `None`
+            // for the inner Alt because there are N candidate fn_ids;
+            // the per-arm push happens here, immediately after the
+            // inner literal match commits.
+            //
+            // Each inner `branch.node` carries its own
+            // `Map { fn_id, … }`; `branch_payload_push` resolves it
+            // exactly as the outer dispatch arm would. Non-Map inner
+            // arms fall through to `push_leaf_with_unit()` (the helper's
+            // default), preserving the discriminator-without-payload
+            // contract for unannotated arms.
             let arms: Vec<TokenStream> = branches
                 .iter()
                 .map(|branch| {
@@ -195,6 +214,7 @@ fn emit_branch_position_core_struct_direct(
                         grammar_suffix,
                         ir,
                     );
+                    let payload_push = branch_payload_push(&branch.node, ir);
                     quote! {
                         {
                             let __alt_save_p = *p;
@@ -208,6 +228,7 @@ fn emit_branch_position_core_struct_direct(
                             })();
                             match __alt_result {
                                 ::core::result::Result::Ok(()) => {
+                                    #payload_push
                                     builder.commit(__alt_builder_checkpoint);
                                     break 'try_branches;
                                 }

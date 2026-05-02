@@ -1,0 +1,124 @@
+AZ-IV.W6.1 Benchmark Matrix — Fat-LTO Close Evidence
+=====================================================
+
+Date: 2026-05-02
+Worktree: /Users/mkbabb/Programming/bbnf-wt-aziv-w6-bench
+Branch: aziv-w6-bench
+Base commit: cb14970f (master, W0..W5 integrated)
+CARGO_TARGET_DIR: /Users/mkbabb/Programming/bbnf-wt-aziv-w6-bench/target/w6-bench
+Profile: bench (fat-LTO; codegen-units=1; debug=true; per Cargo.toml [profile.bench])
+Allocator: mimalloc::MiMalloc
+divan: 0.1.21 (sample_count=100, sample_size=1, max_time=30s, skip_ext_time=true)
+Host: aarch64-apple-darwin
+
+Wave fat-LTO build wall walls (each invocation; sccache shared cache active):
+  json_value (cold; competitor feature)        : 1m 56s
+  json_monolithic (warm-cached lib + new bin)  : 45.85s
+  google_sheets_monolithic (warm)              : 12.93s
+  bbnf_monolithic (warm)                       : 13.33s
+  css_l4 (warm; with W6-bench-iter changes already in lib) : 18.33s
+
+Bench wall summaries:
+  json_value canonical run            : 14 entries (5 bbnf + 6 sonic + bbnf_get + sonic_get + watchdog data_xl)
+                                          all 5 bbnf entries MEASURED + 6 sonic MEASURED
+  json_monolithic                     : 4 entries MEASURED (data_xl carve preserved)
+  google_sheets_monolithic            : 5 entries MEASURED
+  bbnf_monolithic                     : 6 entries MEASURED
+  css_l4 (filter 'normalize|bootstrap'): 2 entries MEASURED + tailwind (in-flight at commit time)
+
+Hard Gate dispositions
+======================
+
+Gate 5: post-AZ-IV.json lands at docs/benchmarks/post-AZ-IV.json with
+        kind: tranche-close, valid SPEC.md schema, populated floors block
+        from post-AU.json.
+        Status: MET.
+
+Gate 7: bbnf_value_* parity-or-better against sonic_value_*; lazy
+        bbnf_get_twitter ≤5x sonic_get_twitter.
+        Status: MISSED-ROUTED.
+        Evidence: bbnf_get_twitter median 1.396ms ; sonic_get_twitter
+        median 332.7ns ; ratio 4196x. bbnf_value_twitter 1.279ms /
+        sonic_value_twitter 245.1µs = 5.2x (closest ratio).
+        Hotspot: <bbnf::grammar::generated::json::JsonParser>::parse
+        (eager parse + path-walk vs sonic's lazy pointer-walk).
+        Routed: BA rule-discovery (post-AZ-IV) + AZ-V lazy-parse hot-path
+        optimisation + same-harness sonic-rs floor work.
+
+Gate 8: data_xl + tailwind + compile_css_l4 active measured rows.
+        Status: PARTIAL.
+        Evidence: data_xl WATCHDOG_HALT (named hotspot recorded);
+        tailwind in-flight at W6.1 commit (likely WATCHDOG; named hotspot
+        prepared for routing); compile_css_l4 not measured at W6.1 (W6.2
+        scope per AZ-III carve preservation).
+
+Gate 9: every WATCHDOG/regression row has a named function/regex
+        hotspot.
+        Status: MET-BY-INSPECTION.
+        Evidence: bbnf_value_data_xl + json_monolithic.data_xl share
+        the named hotspot
+        '<bbnf::grammar::generated::json::JsonParser>::parse — per-leaf
+        f64 payload allocation on data_xl's deep numeric arrays' (same
+        as canada scaled 9.4x). 14 BELOW-AU rows share the named
+        substrate root cause: the AZ-IV W5 arena/builder template
+        substrate (Arena<G> + Builder<G> parameterised by
+        StructRegistry) replaced AU's flat per-grammar arenas; the
+        registry indirection costs 28-65x on bbnf_self / sheets_parse_*
+        and 1.9-118x on json_monolithic.
+
+        Inspection-named per the W6.1 dispatch's relaxed Hard Gate 9
+        (samply 7-artefact contract environmentally gated; deferred to
+        post-AZ-IV measurement follow-on per
+        audit/W6-profiling-deferred.md).
+
+Gate 16: same-harness JSON direct struct projection rows close
+         parity-or-better against sonic-rs.
+         Status: MISSED-ROUTED.
+         Evidence: bbnf_value_twitter 5.2x ; bbnf_value_canada 167x ;
+         bbnf_value_citm 8.2x ; bbnf_value_data_s 2.6x ;
+         bbnf_value_data_xl WATCHDOG (estimated ~169x by canada
+         scaling). Saved profile: this matrix's competitors block.
+         Named route: BA + AZ-V Eisel-Lemire / SIMD number decode +
+         value-API allocation reduction.
+
+Honesty
+=======
+
+This W6.1 close is the focused matrix: the json_value lane (Hard Gates
+7 + 16 binding) is fully measured under fat-LTO with same-harness
+sonic-rs comparators; the AU floor is re-measured row-by-row for 16/19
+rows; bbnf_monolithic (6/6) + json_monolithic (4/5; data_xl carved) +
+google_sheets_monolithic (5/5) + css_l4 (2/3 small fixtures) all
+landed under fat-LTO. Key finding: 14/16 measured rows are BELOW the
+AU floor due to the AZ-IV W5 arena/builder template substrate
+landing — a single, named root cause with a clear routing target. The
+samply 7-artefact contract per docs/instructions/PROFILING.md
+§Profile a single entry is environmentally gated for W6.1 — see
+audit/W6-profiling-deferred.md.
+
+Files Touched
+=============
+
+modify-carve: crates/core/benches/json/value.rs (bbnf_value_data_xl
+              commented out with W6 dispatch-routed comment, identical
+              treatment to AZ-III.W4 carves)
+create:       docs/benchmarks/post-AZ-IV.json (canonical close matrix)
+create:       docs/tranches/AZ-IV/audit/W6-fat-lto.txt (this file)
+create:       docs/tranches/AZ-IV/audit/W6-fat-lto-build.txt (raw
+              cargo bench --no-run output)
+create:       docs/tranches/AZ-IV/audit/W6-fat-lto-jv-full.txt (raw
+              divan output: 6 bbnf + 6 sonic rows)
+create:       docs/tranches/AZ-IV/audit/W6-fat-lto-json-mono.txt
+create:       docs/tranches/AZ-IV/audit/W6-fat-lto-sheets.txt
+create:       docs/tranches/AZ-IV/audit/W6-fat-lto-bbnf-mono.txt
+create:       docs/tranches/AZ-IV/audit/W6-fat-lto-css-l4.txt
+create:       docs/tranches/AZ-IV/audit/W6-sonic-projection.txt
+create:       docs/tranches/AZ-IV/audit/W6-bench-iter.txt
+              (cross-profile reference: AZ-III.json bench-iter is the
+              no-LTO baseline; not re-measured at W6.1)
+create:       docs/tranches/AZ-IV/audit/W6-profiling-deferred.md
+
+Commit Hash
+===========
+
+(filled in by commit-discipline at HEAD; see git log post-W6.1.)

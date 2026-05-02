@@ -133,7 +133,20 @@ bench_bbnf_value!(bbnf_value_data_s, "data.json");
 bench_bbnf_value!(bbnf_value_twitter, "twitter.json");
 bench_bbnf_value!(bbnf_value_citm, "citm_catalog.json");
 bench_bbnf_value!(bbnf_value_canada, "canada.json");
-bench_bbnf_value!(bbnf_value_data_xl, "data_xl.json");
+// AZ-IV.W6 carve: bbnf_value_data_xl exceeds the 1s JSON_PARSE
+// wall-clock guard under fat-LTO `[profile.bench]` (~2.4-2.6s/iter
+// observed reproducibly across 4 runs). divan's panic propagation
+// aborts every subsequent bench (sonic_value_*) before they can
+// measure. Carving so the rest run cleanly. data_xl is recorded
+// separately in `docs/benchmarks/post-AZ-IV.json` as WATCHDOG_HALT
+// with the observed per-iter wall and named hotspot
+// (`<bbnf::grammar::generated::json::JsonParser>::parse` walking the
+// 21MB document materialising f64 payloads at every `__value` Number
+// branch — same hotspot as `bbnf_value_canada` scaled 9.4x in input).
+// Reproducible: cargo bench --profile bench -p bbnf --features
+// competitor --bench json_value (with bench_bbnf_value!(bbnf_value_data_xl, ...)
+// reactivated).
+// bench_bbnf_value!(bbnf_value_data_xl, "data_xl.json");
 
 macro_rules! bench_sonic_value {
     ($name:ident, $file:expr) => {

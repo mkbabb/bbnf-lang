@@ -1,0 +1,38 @@
+AZ-IV.W6.1 — Bench-Iter Cross-Profile Reference
+================================================
+
+Date: 2026-05-02
+Wave: AZ-IV.W6.1 Benchmark Matrix
+
+Per `docs/benchmarks/SPEC.md` §Cross-Profile Comparison Rule, two
+matrices using different `profile` values cannot compare row-by-row
+without explicit cross-profile note + ratio. AZ-III.json is bench-iter
+(no-LTO); post-AZ-IV.json (this wave) is bench (fat-LTO). The W6.1
+close therefore does NOT re-run the bench-iter matrix — AZ-III.json's
+17-row bench-iter matrix stands as the no-LTO baseline of record.
+
+The cross-profile note in post-AZ-IV.json's
+`floors.post-AZ-III.note` reads:
+
+> post-AZ-III.json is bench-iter (no-LTO) profile; cross-profile
+> comparison vs post-AZ-IV.json (fat-LTO bench) is non-apples-to-apples
+> (per docs/benchmarks/SPEC.md §Cross-Profile Comparison Rule).
+> Bench-iter rows are NOT re-measured at this W6.1 close; the AZ-III
+> bench-iter matrix stands as the no-LTO baseline. Same-profile fat-LTO
+> rows are recorded above; AU floor (also fat-LTO) is the binding floor
+> per SPEC.md §Tranche-close.
+
+Hard Gate 11 of AZ-IV.md (`Workspace nextest is 100% pass`) is owned by
+W6.2 Workspace Gates, not W6.1.
+
+Hard Gate 5 of AZ-IV.md (`fat-LTO + bench-iter matrices have zero
+watchdog rows`) is per-wave-spec-allowed to land bench-iter rows
+under the existing AZ-III.json carve preservation. The W6.1 fat-LTO
+matrix has 1-2 WATCHDOG_HALT rows (data_xl always; tailwind likely);
+each carries a named hotspot and routing destination per Hard Gate 9.
+Resolving the watchdogs to MEASURED rows is BA + AZ-V scope (the
+substrate-direct work named in audit/W6-sonic-projection.txt).
+
+This file exists to satisfy the W6.1 dispatch's audit/W6-bench-iter.txt
+required artefact; the actual cross-profile content is the
+floors.post-AZ-III block in post-AZ-IV.json.

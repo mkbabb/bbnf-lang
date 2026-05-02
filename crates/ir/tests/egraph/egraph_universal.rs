@@ -240,7 +240,6 @@ fn make_pool() -> (GrammarIR, SharedStrings) {
         debug_all: false,
         debug_labels: vec![],
         type_map: None,
-        pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
         node_facts: std::collections::HashMap::new(),
         recognizer_decisions: std::collections::HashMap::new(),

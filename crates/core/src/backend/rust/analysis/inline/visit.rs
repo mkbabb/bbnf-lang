@@ -102,10 +102,7 @@ pub fn estimate_expansion_cost(node: &IrNode) -> usize {
 /// projections of [`egraph::CostWeights::call_overhead`] and
 /// [`egraph::CostWeights::inline_body_size_penalty`]. See
 /// [`CostBudgets::from_weights`] for the derivation.
-pub(crate) fn estimate_expansion_cost_with_budgets(
-    node: &IrNode,
-    budgets: &CostBudgets,
-) -> usize {
+pub(crate) fn estimate_expansion_cost_with_budgets(node: &IrNode, budgets: &CostBudgets) -> usize {
     match node {
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => budgets.leaf_cost,
         IrNode::Ref(_) => budgets.ref_cost,
@@ -165,9 +162,7 @@ pub(super) fn body_has_self_ref(node: &IrNode, rule_id: RuleId) -> bool {
     match node {
         IrNode::Ref(id) => *id == rule_id,
         IrNode::Seq(children) => children.iter().any(|c| body_has_self_ref(c, rule_id)),
-        IrNode::Alt(branches, _) => {
-            branches.iter().any(|b| body_has_self_ref(&b.node, rule_id))
-        }
+        IrNode::Alt(branches, _) => branches.iter().any(|b| body_has_self_ref(&b.node, rule_id)),
         IrNode::Repeat { inner, .. }
         | IrNode::Negate(inner)
         | IrNode::OptionalWhitespace(inner)

@@ -244,7 +244,6 @@ fn fixture_grammar_fused_rule_still_resolves() {
         debug_all: false,
         debug_labels: Vec::new(),
         type_map: None,
-        pattern_annotations: HashMap::new(),
         regex_info: HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),

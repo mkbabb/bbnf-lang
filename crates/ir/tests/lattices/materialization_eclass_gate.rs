@@ -51,7 +51,6 @@ fn make_ir_with_entry(rules: Vec<IrRule>, strings: Vec<String>, entry: u32) -> G
         debug_all: false,
         debug_labels: vec![],
         type_map: None,
-        pattern_annotations: HashMap::new(),
         regex_info: HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),

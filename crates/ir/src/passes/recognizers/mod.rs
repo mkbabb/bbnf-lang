@@ -1,12 +1,16 @@
 //! Tranche V — recognizer mining pass (consolidated in Tranche Z.0,
-//! extended with context-facts fusion in Tranche AF.1).
+//! extended with context-facts fusion in Tranche AF.1, with Pratt
+//! detection migrated to NodeFacts-only reads in AZ-IV.W4.5).
 //!
 //! Replaces the old `passes/patterns/recognize.rs` with a richer mining
-//! pipeline that populates `NodeFacts` with both the legacy structural
+//! pipeline that populates `NodeFacts` with the per-NodeId structural
 //! flags (`operator_chain`, `sep_by`, `all_span_collapse`) and the
 //! `Recognizer` records introduced in V.3. Since AF.1 the same walk
 //! also produces `ContextFacts` (role-in-parent facts previously
-//! produced by the standalone `compute_context_facts` pass).
+//! produced by the standalone `compute_context_facts` pass). Per
+//! AZ-IV.W4.5 the legacy per-rule `PatternAnnotations` map (and its
+//! producer phase) is retired — Pratt detection consumes NodeFacts
+//! through the DAG instead.
 //!
 //! Ten miners run as one phase under the `mine_recognizers` entry
 //! point. Mining order is load-bearing: later miners read earlier
@@ -85,7 +89,7 @@ use std::collections::HashMap;
 use crate::dag::{GrammarDag, NodeId};
 use crate::passes::context::ContextFactsMap;
 use crate::passes::inspect::visit_children_alt;
-use crate::passes::patterns::{NodeFacts, NodeFactsMap, PatternAnnotations, Recognizer};
+use crate::passes::patterns::{NodeFacts, NodeFactsMap, Recognizer};
 use crate::{DelimScanConfig, GrammarIR, IrNode, KeyDispatchMatch};
 
 pub use signature::{compute_shape_hash, hash_recognizer_shape};
@@ -200,9 +204,11 @@ fn walk_unified(
 /// Tranche V — `mine_recognizers` entry point (Z.0 consolidation).
 ///
 /// Walks every rule body once via the unified Z.0 orchestrator and
-/// populates the legacy `ir.pattern_annotations` (per-rule), the
-/// per-node `ir.node_facts` (NodeId-keyed), plus the sidecar config
-/// maps `ir.delim_scan_configs` / `ir.key_dispatch_configs`.
+/// populates the per-node `ir.node_facts` (NodeId-keyed), plus the
+/// sidecar config maps `ir.delim_scan_configs` /
+/// `ir.key_dispatch_configs`. AZ-IV.W4.5 — the legacy per-rule
+/// `pattern_annotations` Phase 1 producer is retired; Pratt detection
+/// reads NodeFacts via the DAG.
 ///
 /// `ir.eclass_facts` is also populated here, before the unified
 /// walk, so its bottom-up lattice (closure-free / fixed-shape /
@@ -216,33 +222,27 @@ pub fn mine_recognizers(ir: &mut GrammarIR) {
         ir.eclass_facts = crate::passes::materialization::compute_eclass_facts(ir);
     }
 
-    let mut legacy_annotations = HashMap::new();
     let mut node_facts: NodeFactsMap = HashMap::new();
 
-    // Phase 1: legacy per-rule annotations.
-    for rule in &ir.rules {
-        let mut ann = PatternAnnotations::default();
-        node_facts::recognize_body(&rule.body, &mut ann, ir);
-        if ann.alt_pattern.is_some() || ann.seq_pattern.is_some() || ann.is_operator_chain {
-            legacy_annotations.insert(rule.id, ann);
-        }
-    }
-
-    // Phase 2: per-node structural facts (operator_chain, sep_by,
-    // all_span_collapse). Kept as a separate walk because it produces
-    // `NodeFacts`, a different output type than the `Recognizer`
-    // records the Phase 3 miners emit, and the miners read it.
+    // Phase 1 (AZ-IV.W4.5): per-node structural facts (operator_chain,
+    // sep_by, all_span_collapse). Kept as a separate walk because it
+    // produces `NodeFacts`, a different output type than the
+    // `Recognizer` records the Phase 2 miners emit, and the miners
+    // read it. The previous per-rule `PatternAnnotations` Phase 1 is
+    // retired; downstream consumers (Pratt detection in
+    // `shape_dispatch::pratt::detect_pratt`) now read NodeFacts
+    // through the DAG via `unwrap_map_ow` to peel `Map` /
+    // `OptionalWhitespace` wrappers.
     if let Some(dag) = ir.dag.as_ref() {
         for rule in &ir.rules {
             node_facts::recognize_tree(&rule.body, &mut node_facts, ir, dag);
         }
     }
 
-    // Commit Phase 1+2 outputs so Phase 3 miners can read them.
-    ir.pattern_annotations = legacy_annotations;
+    // Commit Phase 1 outputs so Phase 2 miners can read them.
     ir.node_facts = node_facts;
 
-    // Phase 3 (Tranche Z.0 + AF.1): unified single-walk recognizer mining.
+    // Phase 2 (Tranche Z.0 + AF.1): unified single-walk recognizer mining.
     //
     // Pre-Z this ran nine independent tree descents — one per miner.
     // Z.0 collapsed them into one orchestrator walk dispatching every

@@ -1,0 +1,205 @@
+AZ-IV.W4.5 — Pratt View Generality + PatternAnnotations Migration + AUDIT-B inline.rs split
+==============================================================================================
+
+Date: 2026-05-02
+Worktree: /Users/mkbabb/Programming/bbnf-wt-aziv-w4-pratt-view
+Branch: aziv-w4-pratt-view (from master 130303fc)
+CARGO_TARGET_DIR: /Users/mkbabb/Programming/bbnf-wt-aziv-w4-pratt-view/target/w4-pratt-view
+
+
+1. Pratt projection generality
+------------------------------
+
+The Pratt-shape emitter at crates/core/src/backend/rust/emitter/shapes/pratt/
+was already grammar-general before W4.5 opened. The mechanism:
+
+(a) Per-rule operator facts surface at codegen time as the generated
+    constants
+
+        PRECEDENCE_LUT_<rule>      : [u8; 256]
+        PRECEDENCE_ENTRIES_<rule>  : &[PrecedenceEntry]
+
+    emitted by the precedence emitter (crates/core/src/backend/rust/
+    emitter/precedence.rs) from the typed grammar's declared operator
+    set + associativity. The Pratt body in shapes/pratt/struct_direct.rs
+    references these constants by name; per-rule customisation is
+    expressed in the generated tables, not in the Rust source.
+
+(b) The Pratt body resolves operands through
+
+        - extract_first_ref(&rule.body) — walks the rule's typed IR
+          body (Map / OptionalWhitespace / Seq / Next / Skip / Repeat
+          peeled to find the head Ref); per-grammar dispatch is
+          codegen-time, not runtime.
+        - emit_ref_call_shape(grammar_suffix, rid, ir) — resolves the
+          operand rule to its concrete shape parse fn through the
+          per-grammar dispatcher infrastructure shared with all other
+          shape emitters.
+
+(c) The body uses the grammar's concrete StructBuilder type via
+    builder_ty_with_lifetime / builder_ty_elided projecting from the
+    EmitStrategy.rust binding. push_branch_tag, begin_compound,
+    end_compound, the layout literal — all addressed through the
+    StructBuilder trait surface; no per-grammar match arms.
+
+The view rendering surfaces (crates/core/src/runtime/css_l4/view.rs,
+crates/core/src/runtime/google_sheets/view.rs, crates/core/src/runtime/
+view.rs) implement the grammar-agnostic RuntimeView trait. The
+trait's associated `Kind` type is each grammar's typed-shape
+discriminator (CssDocumentKind, SheetsKind) — a named typed grammar
+surface, not a hardcoded enum match. The match arms inside each
+view's `kind()` / `span()` / `children()` are over the per-grammar
+typed value sum (CssTypedValue, SheetsValue) — the grammar's own
+typed surface, not a synthetic operator map.
+
+Conclusion: no rule-name dispatch survives in either Pratt or view
+projection. Pratt behaviour is driven by per-rule generated facts;
+view behaviour is driven by the grammar's named typed-shape
+discriminator. No changes were required to satisfy W4.5 hard gate
+clause 1.
+
+
+2. PatternAnnotations migration / deletion
+------------------------------------------
+
+Status: DELETED.
+
+Pre-W4.5 Pratt detection at crates/ir/src/passes/recognizers/
+shape_dispatch/pratt.rs::detect_pratt consulted two parallel sources:
+
+    let structural = ir.pattern_annotations.get(&rule.id)
+                       .is_some_and(|ann| ann.is_operator_chain)
+        || ir.dag.as_ref()
+              .and_then(|dag| dag.node_for(unwrap_map_ow(&rule.body)))
+              .and_then(|node_id| ir.node_facts.get(&node_id))
+              .is_some_and(|facts| facts.operator_chain);
+
+The fallback (the second branch) is sufficient: `unwrap_map_ow` peels
+Map / OptionalWhitespace, then the per-NodeId structural fact
+populated by `node_facts::recognize_tree` carries the same
+`operator_chain: true` bit the per-rule producer set. The two
+producers (the per-rule Phase 1 producer in
+`recognizers::mod::mine_recognizers` and the Phase 2 per-NodeId
+producer) were redundant.
+
+Migration:
+- crates/ir/src/passes/recognizers/shape_dispatch/pratt.rs::detect_pratt
+  rewritten to consult only `node_facts` via the DAG.
+- crates/ir/src/passes/recognizers/mod.rs: Phase 1 (per-rule
+  PatternAnnotations) producer removed; the unified mining walk now
+  has only Phase 1 (NodeFacts) and Phase 2 (recognizer mining).
+- crates/ir/src/passes/recognizers/node_facts.rs: legacy producers
+  (`recognize_body`, `recognize_seq_pattern`, `recognize_alt_pattern`)
+  deleted along with the `AltPattern` / `SeqPattern` / `AltBranch`
+  imports they pulled in.
+- crates/ir/src/passes/patterns/mod.rs: `PatternAnnotations`,
+  `AltPattern`, `SeqPattern`, `KeyClass`, `PatternMap` deleted.
+- crates/ir/src/types/grammar.rs: `pub pattern_annotations: HashMap<
+  RuleId, PatternAnnotations>` field deleted.
+- crates/core/src/lower/mod.rs: `pattern_annotations: HashMap::new()`
+  init deleted.
+- All test fixtures across `crates/ir/tests/`, `crates/core/tests/`,
+  `crates/gorgeous/tests/` updated by stripping the `pattern_annotations:
+  HashMap::new(),` initializer line.
+
+Evidence: `rg -n 'pattern_annotations|PatternAnnotations|::AltPattern|
+::SeqPattern|patterns::PatternMap' crates/` returns only doc-comment
+references in `recognizers/mod.rs` and `node_facts.rs` describing the
+retirement, plus the audit/W4-pratt-view.txt this file.
+
+
+3. AUDIT-B inline.rs split (673 LOC -> 4 cohesive sub-modules)
+-------------------------------------------------------------
+
+Pre-split: crates/core/src/backend/rust/analysis/inline.rs at 673 LOC
+mixed cost-budget projections, IR-tree visitors, CSP domain +
+constraints, and the public plan entrypoint into one module.
+
+Post-split: crates/core/src/backend/rust/analysis/inline/ directory
+module:
+
+    inline/
+        mod.rs         (38 LOC)   public API surface, sub-module
+                                  declarations + re-exports
+        budgets.rs     (111 LOC)  CostBudgets derived from
+                                  egraph::CostWeights (Tranche AF.2)
+                                  + MAX_ALT_BRANCHES constant
+        visit.rs       (220 LOC)  count_refs_vec, max_alt_branches,
+                                  estimate_expansion_cost,
+                                  estimate_expansion_cost_with_budgets,
+                                  body_has_self_ref,
+                                  compute_single_site_inline_with_ref_counts
+        constraints.rs (235 LOC)  InlineDomain, InlineDecision,
+                                  ForceCallMode, CostBudgetConstraint,
+                                  should_force_direct_call
+        plan.rs        (185 LOC)  CallMode, InlinePlan,
+                                  analyze_parse_inline_plan
+
+Cohesion:
+- budgets.rs is one concept (cost budget projection).
+- visit.rs is the IR-tree-walker family — five recursive descent
+  helpers that share an IrNode-shape contract and feed plan.rs.
+- constraints.rs is the CSP machinery — the lattice domain and the
+  two constraint types are tightly coupled to the InlineDecision
+  monotone progression.
+- plan.rs is the public entrypoint — orchestrates phases (count refs,
+  compute single-site, build CSP, propagate, extract) without
+  carrying any walker / domain implementation details.
+- mod.rs is the public surface — `pub use` re-exports preserve the
+  pre-split API verbatim.
+
+Public API preservation:
+- `analyze_parse_inline_plan` (plan.rs)
+- `CallMode`, `InlinePlan` (plan.rs)
+- `count_refs_vec`, `max_alt_branches`, `estimate_expansion_cost`
+  (visit.rs)
+- `should_force_direct_call` (constraints.rs)
+
+All re-exported via `pub use` from inline/mod.rs. External call
+sites in `crates/core/src/pipeline/compile/pipeline.rs` and
+`crates/core/tests/inline_analysis.rs` remain unchanged because the
+crate-relative path `analysis::inline::*` continues to resolve.
+
+`CostBudgets` retained as `pub(crate)` plus a `#[cfg(test)]
+pub(crate) use` in mod.rs so test code can construct budgets if
+required (matches the pre-split visibility).
+
+
+4. AUDIT-B routed splits not landed in W4.5
+-------------------------------------------
+
+- crates/ir/src/passes/recognizers/dta.rs (1565 LOC): owned by W4.4
+  which is renaming the file to grammar_facts.rs (per W4 scope item
+  17). The split is deferred to a follow-on pass after W4.4's rename
+  lands, per the W4 dispatch contract ("If W4.4 renames to
+  grammar_facts.rs, the AUDIT-B split applies AFTER the rename").
+
+- crates/ir/src/passes/csp_strategy/mod.rs (1316 LOC): owned by W4.2
+  which is modifying csp_strategy/strategy.rs + regex.rs (per W4
+  scope item 11). The mod.rs split is deferred to avoid race contention
+  with W4.2's edits.
+
+Both splits remain in the AUDIT-B routed-to-W4 queue as described in
+docs/tranches/AZ-IV/audit/AUDIT-B-arch-2026-05-02.md §6 R1 / R2.
+
+
+5. Hard-gate evidence
+---------------------
+
+(a) BBNF / Sheets / CSS projection tests prove Pratt/view behaviour
+    from generated operator facts or named typed grammar surfaces:
+    the existing pratt/view test suites continue to exercise the
+    NodeFacts-only detection path; no test was rewritten because the
+    detection contract preserved the behaviour the pattern_annotations
+    fast-path produced. Test command:
+
+        cargo nextest run -p bbnf --profile ax-iter
+            -E 'test(pratt) | test(view)'
+
+(b) PatternAnnotations migration documented above (§2). Status:
+    DELETED.
+
+(c) AUDIT-B inline.rs split: 673 LOC -> 4 cohesive sub-modules + 1
+    mod.rs, max sub-file 235 LOC. Full file decomposition in §3.
+
+(d) `cargo build -p bbnf -p bbnf-ir --profile ax-iter`: clean.

@@ -2,13 +2,17 @@
 //! all_span_collapse). This is the migrated body of the old
 //! `passes/patterns/recognize.rs` — the implementation is verbatim
 //! and the entry points are re-exported through the new
-//! `mine_recognizers` phase.
+//! `mine_recognizers` phase. AZ-IV.W4.5 retired the per-rule
+//! `recognize_body` / `recognize_seq_pattern` / `recognize_alt_pattern`
+//! producers; downstream Pratt detection now reads the NodeFacts map
+//! through the DAG (peeling `Map` / `OptionalWhitespace` wrappers via
+//! `unwrap_map_ow`).
 
 use std::collections::HashMap;
 
 use crate::dag::{GrammarDag, NodeId};
-use crate::passes::patterns::{AltPattern, NodeFacts, NodeKind, PatternAnnotations, SeqPattern};
-use crate::{AltBranch, GrammarIR, IrNode};
+use crate::passes::patterns::{NodeFacts, NodeKind};
+use crate::{GrammarIR, IrNode};
 
 // ── Recursive tree walk (per-node facts, NodeId-keyed) ──────────────────
 
@@ -140,8 +144,8 @@ fn is_operator_chain_tail(tail: &IrNode) -> bool {
 /// encodings of a 2-element sequence where only one side contributes
 /// to the value. `strip_transparent_owned` at DTA-lift time unwraps
 /// them into `Seq`; the per-node structural predicate mirrors that
-/// unwrap so `pattern_annotations.is_operator_chain` stays in sync
-/// with the DTA lift's chain-admission contract.
+/// unwrap so the per-NodeId `operator_chain` fact stays in sync with
+/// the DTA lift's chain-admission contract.
 fn is_operator_chain_repeat_body(inner: &IrNode) -> bool {
     match inner {
         IrNode::Seq(inner_children) => inner_children.len() == 2,
@@ -165,58 +169,4 @@ fn is_span_leaf(node: &IrNode) -> bool {
         node,
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon
     )
-}
-
-// ── Per-rule pattern recognition (PatternAnnotations population) ────────
-//
-// These helpers populate the per-rule [`PatternAnnotations`] map that
-// Pratt detection at `shape_dispatch::pratt::detect_pratt` reads.
-// They are the only producers of `is_operator_chain` and the only
-// path that records `AltPattern::DispatchTable` /
-// `AltPattern::CheckpointFallback` for downstream Pratt
-// classification.
-//
-// **Retirement plan (AZ-IV.W4.5).** The Pratt detector at
-// `shape_dispatch::pratt::detect_pratt` already falls back to
-// `ir.node_facts.<NodeId>.operator_chain` when the per-rule
-// [`PatternAnnotations`] entry is absent (line ~101). Successor
-// field-set: `NodeFacts.operator_chain` (top-level Seq body, after
-// `unwrap_map_ow`) covers the structural admission; the alt
-// dispatch / checkpoint-fallback marker becomes implicit on the
-// emitter side via `KeyDispatchMatch` / `is_classified()` on
-// `ShapeAssignments`. W4.5 closes the migration by deleting the PA
-// branch in `detect_pratt` and dropping `recognize_body` /
-// `recognize_seq_pattern` / `recognize_alt_pattern` in lockstep
-// with `GrammarIR::pattern_annotations`. W4.4 lands the registry-
-// projection seam (transposition T1) and the rename surface;
-// PatternAnnotations migration is sequenced after Pratt routes
-// through `node_facts` directly.
-
-pub(super) fn recognize_body(node: &IrNode, ann: &mut PatternAnnotations, ir: &GrammarIR) {
-    match node {
-        IrNode::Seq(children) => recognize_seq_pattern(children, ann, ir),
-        IrNode::Alt(branches, dispatch) => recognize_alt_pattern(branches, dispatch.is_some(), ann),
-        _ => {}
-    }
-}
-
-fn recognize_seq_pattern(children: &[IrNode], ann: &mut PatternAnnotations, ir: &GrammarIR) {
-    if children.len() == 2 && is_operator_chain_tail(&children[1]) {
-        ann.seq_pattern = Some(SeqPattern::OperatorChain);
-        ann.is_operator_chain = true;
-        return;
-    }
-    if ir.collapse_simple_spans && children.iter().all(is_span_leaf) {
-        ann.seq_pattern = Some(SeqPattern::AllSpanCollapse);
-        return;
-    }
-    ann.seq_pattern = Some(SeqPattern::Normal);
-}
-
-fn recognize_alt_pattern(branches: &[AltBranch], has_dispatch: bool, ann: &mut PatternAnnotations) {
-    if has_dispatch {
-        ann.alt_pattern = Some(AltPattern::DispatchTable);
-    } else if branches.len() > 1 {
-        ann.alt_pattern = Some(AltPattern::CheckpointFallback);
-    }
 }

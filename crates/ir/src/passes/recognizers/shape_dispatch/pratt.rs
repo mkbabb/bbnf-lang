@@ -19,10 +19,12 @@
 //! # Two-stage admission
 //!
 //! 1. **Structural** — the rule's body matches the operator-chain
-//!    rung shape. Sourced from [`GrammarIR::pattern_annotations`]
-//!    (`is_operator_chain`) or the DAG's per-NodeId facts
-//!    (`operator_chain`). These are pure-shape checks populated by
+//!    rung shape. Sourced from the DAG's per-NodeId facts
+//!    (`operator_chain`) populated by
 //!    [`crate::passes::recognizers::node_facts::recognize_tree`].
+//!    `Map` / `OptionalWhitespace` wrappers are peeled via
+//!    [`crate::passes::inspect::unwrap_map_ow`] before the NodeId
+//!    lookup so wrapped operator-chain bodies surface the same fact.
 //!
 //! 2. **Operator-literal mineable** — [`match_operator_chain_rule`]
 //!    must succeed AND produce at least one operator entry. This is
@@ -87,27 +89,20 @@ use crate::types::{GrammarIR, RuleId};
 pub fn detect_pratt(rule_id: RuleId, ir: &GrammarIR) -> bool {
     let rule = &ir.rules[rule_id as usize];
     // Stage 1 — structural. The operator-chain flag rides on the
-    // rule's PatternAnnotations, which the `mine_recognizers`
-    // Phase 1 pass populates for every rule whose top-level Seq
-    // matches `Seq(operand, Repeat(Seq(op, rhs)))`. Reading the
-    // rule-level annotation (not the node-facts) ensures we hit the
-    // *outer* chain-rung body even after the body is Map /
-    // OptionalWhitespace wrapped.
-    //
-    // Falls back to the DAG's per-NodeId facts when the annotation
-    // isn't present — some rules with `?w`-wrapped bodies surface the
-    // operator_chain bit on the inner Seq NodeId rather than on the
-    // rule-level annotation.
+    // per-NodeId `node_facts` map populated by
+    // [`crate::passes::recognizers::node_facts::recognize_tree`]. Peel
+    // Map / OptionalWhitespace wrappers via `unwrap_map_ow` so a
+    // rule whose body is `Map(Seq(operand, Repeat(...))) ` or
+    // `OptionalWhitespace(Seq(...))` surfaces the same per-Seq fact
+    // the bare-Seq case does. The DAG must be present — every
+    // production grammar populates `ir.dag` before recognizer mining;
+    // its absence is a pipeline-ordering bug, not a soft-fall-through.
     let structural = ir
-        .pattern_annotations
-        .get(&rule.id)
-        .is_some_and(|ann| ann.is_operator_chain)
-        || ir
-            .dag
-            .as_ref()
-            .and_then(|dag| dag.node_for(unwrap_map_ow(&rule.body)))
-            .and_then(|node_id| ir.node_facts.get(&node_id))
-            .is_some_and(|facts| facts.operator_chain);
+        .dag
+        .as_ref()
+        .and_then(|dag| dag.node_for(unwrap_map_ow(&rule.body)))
+        .and_then(|node_id| ir.node_facts.get(&node_id))
+        .is_some_and(|facts| facts.operator_chain);
     if !structural {
         return false;
     }

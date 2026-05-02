@@ -14,56 +14,14 @@
 
 use std::collections::HashMap;
 
-use serde::{Deserialize, Serialize};
+use crate::StringId;
 
-use crate::{RuleId, StringId};
-
-// ── Legacy types (kept for backward compat during migration) ─────────────
-
-/// Pattern annotation for an alternation node.
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub enum AltPattern {
-    /// Standard checkpoint-based fallback.
-    CheckpointFallback,
-    /// All branches have disjoint FIRST sets -> byte dispatch table.
-    DispatchTable,
-    /// Branches keyed by leading literal (identifier or quoted string).
-    KeyDispatch {
-        key_class: KeyClass,
-        separator: Option<StringId>,
-    },
-}
-
-/// Pattern annotation for a sequence node.
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub enum SeqPattern {
-    /// Normal sequence.
-    Normal,
-    /// Binary operator chain: `head (op rhs)*`.
-    OperatorChain,
-    /// All children are Span-typed leaves.
-    AllSpanCollapse,
-}
-
-/// Key classification for key-dispatch patterns.
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub enum KeyClass {
-    Identifier,
-    QuotedString { quote_char: u8 },
-}
-
-/// Per-rule pattern annotations (legacy, will be replaced by NodeFacts).
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
-pub struct PatternAnnotations {
-    pub alt_pattern: Option<AltPattern>,
-    pub seq_pattern: Option<SeqPattern>,
-    pub is_operator_chain: bool,
-}
-
-/// Map from RuleId -> pattern annotations (legacy).
-pub type PatternMap = HashMap<RuleId, PatternAnnotations>;
-
-// ── New: per-node structural facts ───────────────────────────────────────
+// ── Per-node structural facts ────────────────────────────────────────────
+//
+// AZ-IV.W4.5 retired the legacy per-rule `PatternAnnotations` map and
+// the `AltPattern` / `SeqPattern` / `KeyClass` enums it carried. The
+// only surviving consumer (Pratt detection) reads `node_facts` through
+// the DAG.
 
 /// Classifies the IR node kind for consumer contracts.
 #[derive(Clone, Debug, PartialEq, Eq)]

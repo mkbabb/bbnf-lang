@@ -73,10 +73,6 @@ pub struct GrammarIR {
     #[serde(skip)]
     pub type_map: Option<passes::TypeMap>,
 
-    /// Structural pattern annotations per rule. Built by `recognize_patterns` pass.
-    #[serde(default)]
-    pub pattern_annotations: HashMap<RuleId, passes::patterns::PatternAnnotations>,
-
     /// Cached regex analysis per interned regex pattern. Built by `compute_regex_info` pass.
     /// Pointer-stable within a compile session. Not serializable.
     #[serde(skip)]

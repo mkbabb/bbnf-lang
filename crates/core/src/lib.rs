@@ -33,5 +33,6 @@ pub use graph::*;
 pub mod imports;
 
 pub mod lower;
+pub mod path;
 pub mod pipeline;
 pub mod runtime;

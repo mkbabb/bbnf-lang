@@ -23,8 +23,8 @@ use parse_that::Span;
 
 use crate::lower::view_walk::{find_descendant_by_kind, find_rhs_expression_descendant};
 use crate::pipeline::directives::DirectiveMaps;
-use crate::runtime::RuntimeView;
 use crate::runtime::bbnf::{BbnfCompoundKind, BbnfDocument, BbnfKind, BbnfView};
+use crate::runtime::RuntimeView;
 use crate::types::*;
 
 /// Sink abstraction for absorbing a parsed grammar's rules and directives.
@@ -234,14 +234,12 @@ fn absorb_item<'a, S: GrammarSink<'a>>(item: BbnfView<'a, 'a>, sink: &mut S) {
             }
         }
         Some(BbnfCompoundKind::TokenDirective) => {
-            if let Some(name) = decode_single_name(item, "@token") {
+            if let Some(name) = decode_token_name(item) {
                 sink.push_token_name(name);
             }
         }
         Some(BbnfCompoundKind::DebugDirective) => {
-            if let Some(name) = decode_single_name(item, "@debug") {
-                sink.push_debug_name(name);
-            }
+            sink.push_debug_name(decode_debug_name(item));
         }
         Some(BbnfCompoundKind::WsDirective) => {
             if let Some(pattern) = decode_ws(item) {
@@ -355,53 +353,47 @@ fn collect_pretty_hint_descendants<'a>(view: BbnfView<'a, 'a>, out: &mut Vec<Cow
     }
 }
 
-/// Directives with the shape `@keyword (identifier | "*") ;` —
-/// `@token` (identifier only) and `@debug` (identifier or `*`).
-///
-/// The `*` wildcard branch projects no identifier child; we descend
-/// the directive's view structurally looking for a `*` Span leaf.
-///
-/// **AZ-IV.W1.5 (Fermat F10) — grammar-derived recovery**: pre-W1.5
-/// the wildcard fallback used `text.strip_prefix(keyword)` over the
-/// directive's full span text. Per the audit, the keyword strings
-/// (`"@token"`, `"@debug"`) are hand-coded literals — exactly the
-/// rule-name overfit the hardening pass names as a deletion target.
-/// The structural descend below reads the typed `BbnfView` tree
-/// produced by the canonical generated parser; the keyword-strip
-/// argument is now unused.
-fn decode_single_name<'a>(item: BbnfView<'a, 'a>, _keyword: &str) -> Option<Cow<'a, str>> {
-    if let Some(name) = find_first_identifier(item) {
-        if !name.is_empty() {
-            return Some(Cow::Owned(name.to_string()));
-        }
-    }
-    if find_wildcard_span(item) {
-        Some(Cow::Borrowed("*"))
-    } else {
-        None
-    }
+/// `@token identifier ;` — extract the identifier projection. The
+/// grammar (`token_directive = "@token" ?w , identifier ?w , …`)
+/// admits only the identifier branch, so a missing identifier means
+/// the directive parsed but carries no payload.
+fn decode_token_name<'a>(item: BbnfView<'a, 'a>) -> Option<Cow<'a, str>> {
+    find_first_identifier(item).map(|s| Cow::Owned(s.to_string()))
 }
 
-/// Descend `view` looking for a `*` Span leaf among descendants.
+/// `@debug ( identifier | "*" ) ;` — extract the identifier or
+/// wildcard sentinel.
 ///
-/// The `@debug *` wildcard branch projects a single `*` Span leaf
-/// past the keyword leaf. `find_first_identifier` rejects `*`
-/// because it isn't an identifier, so this companion descent
-/// confirms the wildcard's structural presence without
-/// keyword-stripping.
-fn find_wildcard_span(view: BbnfView<'_, '_>) -> bool {
-    fn descend(view: BbnfView<'_, '_>) -> bool {
-        if view.kind() == BbnfKind::Span && view.span_text().trim() == "*" {
-            return true;
-        }
-        for child in view.children() {
-            if descend(child) {
-                return true;
-            }
-        }
-        false
+/// The grammar's alt branches are:
+///
+/// ```ignore
+/// debug_directive = "@debug" ?w , ( "*" | identifier ) ?w , …
+/// ```
+///
+/// The `"*"` literal branch consumes the byte without pushing a
+/// Span leaf into the typed AST (alt-branch literals collapse to
+/// their position-only effect under struct-direct projection),
+/// while the `identifier` branch projects the matched name as a
+/// Span leaf via the `identifier` regex compound. Grammar
+/// admittance therefore lets us deduce wildcard from the absence
+/// of an identifier without consulting the keyword text or
+/// stripping prefixes:
+///
+///   - `find_first_identifier` returns `Some(name)` ⇒ identifier branch.
+///   - `find_first_identifier` returns `None` ⇒ wildcard branch (the
+///     only other admitted alt) ⇒ canonical `"*"` sentinel.
+///
+/// **AZ-IV.W1.5 (Fermat F10)**: this replaces the original
+/// keyword-strip wildcard fallback (`text.strip_prefix("@debug")`)
+/// flagged by the audit as rule-name overfit. The deduction here
+/// reads only typed `BbnfView` structure; no keyword string is
+/// consulted.
+fn decode_debug_name<'a>(item: BbnfView<'a, 'a>) -> Cow<'a, str> {
+    if let Some(name) = find_first_identifier(item) {
+        Cow::Owned(name.to_string())
+    } else {
+        Cow::Borrowed("*")
     }
-    descend(view)
 }
 
 /// `@ws /regex/ ;` — find the regex leaf and strip the surrounding

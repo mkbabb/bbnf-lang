@@ -88,7 +88,39 @@ pub(crate) fn lower_mapped_factor<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx
         }
         let span_text = c.span_text();
         let trimmed = span_text.trim();
-        if trimmed.is_empty() {
+        // AZ-IV.W1.2 — value-expression compounds whose body projects
+        // to a typed leaf (`MapExpr::IntLit`, `FloatLit`, etc.) collapse
+        // to a `BbnfValue::Int(_)` / `Float(_)` / etc. payload at parse
+        // time, leaving the wrapping `value_expr` / `value_or` /
+        // `value_and` / `value_atom` compound with `byte_span() == None`
+        // and `span_text() == ""`. The pre-W1.2 loop's blanket
+        // empty-span skip dropped those compounds — the `Map { fn_id:
+        // IntLit(N) }` wrapper for every `"#N/A" -> 0u8` /
+        // `"+" -> 0u8` style declaration silently vanished.
+        //
+        // Accept compounds whose `compound_kind` identifies a
+        // value-expression head even when their span is empty;
+        // span-driven classification still discriminates among Span
+        // leaves (modifier punctuators, `->`/`=>` arrows,
+        // type-annotation `:` prefixes, factor source slices).
+        let is_value_expr_compound_head = matches!(
+            c.compound_kind(),
+            Some(
+                BbnfCompoundKind::ValueExpr
+                    | BbnfCompoundKind::ValueClosure
+                    | BbnfCompoundKind::ValueOr
+                    | BbnfCompoundKind::ValueAnd
+                    | BbnfCompoundKind::ValueCmp
+                    | BbnfCompoundKind::ValueAdd
+                    | BbnfCompoundKind::ValueMul
+                    | BbnfCompoundKind::ValueUnary
+                    | BbnfCompoundKind::ValueAtom
+                    | BbnfCompoundKind::ValuePath
+                    | BbnfCompoundKind::ValueInput
+                    | BbnfCompoundKind::ValueFnCall,
+            ),
+        );
+        if trimmed.is_empty() && !is_value_expr_compound_head {
             continue;
         }
         if matches!(trimmed, "?" | "?w" | "*" | "+") {
@@ -113,6 +145,17 @@ pub(crate) fn lower_mapped_factor<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx
         // wrapper whose source span starts with `:`.
         if trimmed.starts_with(':') {
             type_annotation = Some(c);
+            continue;
+        }
+        // Value-expression compound head — claim it as the value_expr
+        // even when its span text is empty (typed-leaf projection
+        // dropped the source bytes). The factor's compound_kind is
+        // `Factor` / `Term`, never one of the value_expr kinds, so
+        // ordering against the term_node placement is unambiguous.
+        if is_value_expr_compound_head {
+            if value_expr_head.is_none() {
+                value_expr_head = Some(c);
+            }
             continue;
         }
         if term_node.is_none() {

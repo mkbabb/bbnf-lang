@@ -129,6 +129,25 @@ pub(super) fn lower_value_atom<'a, 'p: 'a>(
         return folded;
     }
 
+    // AZ-IV.W1.2 — value_atom may wrap a structural value-expression
+    // sub-compound (`ValueInput`, `ValuePath`, `ValueFnCall`,
+    // `ValueClosure`) whose own source bytes are consumed by typed
+    // projection (the `input` keyword pushes no Span; path segment
+    // separators consume bytes silently). Descend through the atom's
+    // children when one of those compound kinds is present, then
+    // re-dispatch via the central value-expression dispatcher.
+    for child in RuntimeView::children(&node) {
+        match child.compound_kind() {
+            Some(BbnfCompoundKind::ValueInput)
+            | Some(BbnfCompoundKind::ValuePath)
+            | Some(BbnfCompoundKind::ValueFnCall)
+            | Some(BbnfCompoundKind::ValueClosure) => {
+                return dispatch_value_expr(child, ctx);
+            }
+            _ => {}
+        }
+    }
+
     // Compound atom — classify by span text.
     let text = node.span_text_opt().unwrap_or_else(|| {
         panic!(
@@ -227,11 +246,12 @@ fn classify_span_atom<'p>(text: &'p str, ctx: &mut LowerCtx<'p>) -> MapExpr {
     match first {
         Some(b'"') | Some(b'\'') => MapExpr::StringLit(intern_string_lit_inner(trimmed, ctx)),
         Some(b'0'..=b'9') => parse_numeric_literal_text(trimmed),
-        Some(b'.') if trimmed
-            .as_bytes()
-            .get(1)
-            .copied()
-            .is_some_and(|b| b.is_ascii_digit()) =>
+        Some(b'.')
+            if trimmed
+                .as_bytes()
+                .get(1)
+                .copied()
+                .is_some_and(|b| b.is_ascii_digit()) =>
         {
             parse_float_literal(trimmed)
         }
@@ -345,6 +365,17 @@ pub(super) fn lower_input_chain<'a, 'p: 'a>(
     // `.ident` segment yields one prop name; we use the LAST prop
     // (matching the legacy semantics — only the leaf prop is
     // surfaced as a `MapExpr::InputProp`).
+    //
+    // AZ-IV.W1.2 — typed projection may drop the `input` keyword's
+    // bytes, leaving `trimmed` shorter than `"input"`. The bare
+    // `input` (no `.prop` chain) lowers to `MapExpr::Input` with no
+    // further inspection; only when the span carries the keyword
+    // and the property accessors do we walk the dot-chain.
+    if !trimmed.starts_with("input") {
+        let _ = node;
+        let _ = ctx;
+        return MapExpr::Input;
+    }
     let after = &trimmed[5..]; // skip "input"
     let mut last_prop: Option<&str> = None;
     let mut rest = after;

@@ -90,18 +90,18 @@ pub fn emit_ref_call_shape(
                     .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                         offset: *p as u32,
                     })?;
-                #target_fn(input, p, __first, state, builder)
+                #target_fn(input, p, __first, state, builder, cursor)
             }
         },
         _ if pre_skip_needed => quote! {
             {
                 let _ = #support_mod::skip_space(input, p, state);
-                #target_fn(input, p, state, builder)
+                #target_fn(input, p, state, builder, cursor)
             }
         },
         _ => quote! {
             {
-                #target_fn(input, p, state, builder)
+                #target_fn(input, p, state, builder, cursor)
             }
         },
     };

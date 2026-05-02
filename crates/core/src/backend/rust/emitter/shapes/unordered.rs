@@ -290,13 +290,17 @@ fn emit_parse_unordered_struct_direct(
         return quote! {
             #[inline]
             #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-            pub fn #fn_ident<'p>(
+            pub fn #fn_ident<'p, __P>(
                 input: &'p [u8],
                 p: &mut usize,
                 state: &mut #support_mod::ScanState,
                 builder: &mut #builder_ty,
-            ) -> ::core::result::Result<(), crate::runtime::DtaError> {
-                let _ = #dispatcher_ident(input, p, state, builder)?;
+                cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+            ) -> ::core::result::Result<(), crate::runtime::DtaError>
+            where
+                __P: crate::path::schema::PathSchema<'p>,
+            {
+                let _ = #dispatcher_ident(input, p, state, builder, cursor)?;
                 Ok(())
             }
         };
@@ -313,7 +317,7 @@ fn emit_parse_unordered_struct_direct(
             .and_then(|rid| emit_ref_call_shape(grammar_suffix, rid, ir))
             .map(|call| quote! { let _ = (#call)?; })
             .unwrap_or_else(|| {
-                quote! { let _ = #dispatcher_ident(input, p, state, builder)?; }
+                quote! { let _ = #dispatcher_ident(input, p, state, builder, cursor)?; }
             });
         branch_arms.push(quote! {
             #pattern => {
@@ -335,12 +339,17 @@ fn emit_parse_unordered_struct_direct(
         /// canonical case.
         #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-        pub fn #fn_ident<'p>(
+        pub fn #fn_ident<'p, __P>(
             input: &'p [u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+            cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        ) -> ::core::result::Result<(), crate::runtime::DtaError>
+        where
+            __P: crate::path::schema::PathSchema<'p>,
+        {
+            let _ = cursor;
             let __layout: ::bbnf_ir::registry::StructLayout =
                 ::bbnf_ir::registry::StructLayout {
                     rule_id: #rule_id_lit as ::bbnf_ir::RuleId,

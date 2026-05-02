@@ -11,6 +11,7 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::parse_str;
 
+use super::super::cursor_param::{cursor_param, cursor_where_clause};
 use super::super::{has_shape_dispatch, root_rule_name};
 use super::shape_tag_name;
 use super::symbol_composition::{dispatcher_fn_ident, shape_fn_ident};
@@ -50,7 +51,9 @@ pub fn emit_dispatcher(
     strategy: &EmitStrategy,
 ) -> TokenStream {
     let builder_ty = dispatcher_builder_type(strategy);
-    let (lifetime_params, input_lifetime) = (quote! { <'p> }, quote! { &'p });
+    let (lifetime_params, input_lifetime) = (quote! { <'p, __P> }, quote! { &'p });
+    let cursor_p = cursor_param();
+    let cursor_where = cursor_where_clause();
     let Some(root_name) = root_rule_name(ir) else {
         return quote! {};
     };
@@ -59,6 +62,7 @@ pub fn emit_dispatcher(
         return quote! {};
     };
 
+    let entry_rule_id_lit = entry as u32;
     let dispatcher_ident = dispatcher_fn_ident(grammar_suffix, &root_name);
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
 
@@ -83,7 +87,7 @@ pub fn emit_dispatcher(
             //     first non-ws byte, passes it in.
             //   - Object / Array / String / Scalar / Pratt / Unordered /
             //     ArgList / Flat / Wrap / HRegex take `(input, p, state,
-            //     builder)` — the dispatcher skips leading ws and delegates.
+            //     builder, cursor)` — the dispatcher skips leading ws and delegates.
             let shape_name = shape_tag_name(root_tag);
             let target_ident = shape_fn_ident(shape_name, grammar_suffix, &root_name);
             match root_tag {
@@ -94,16 +98,19 @@ pub fn emit_dispatcher(
                 ShapeTag::Number => quote! {
                     let first = #support_mod::skip_space(input, p, state)
                         .ok_or(crate::runtime::DtaError::UnexpectedEnd { offset: *p as u32 })?;
+                    let _ = cursor.decide(#entry_rule_id_lit);
                     #target_ident(input, p, first, builder)
                 },
                 ShapeTag::Keyword => quote! {
                     let first = #support_mod::skip_space(input, p, state)
                         .ok_or(crate::runtime::DtaError::UnexpectedEnd { offset: *p as u32 })?;
-                    #target_ident(input, p, first, state, builder)
+                    let _ = cursor.decide(#entry_rule_id_lit);
+                    #target_ident(input, p, first, state, builder, cursor)
                 },
                 _ => quote! {
                     let _ = #support_mod::skip_space(input, p, state);
-                    #target_ident(input, p, state, builder)
+                    let _ = cursor.decide(#entry_rule_id_lit);
+                    #target_ident(input, p, state, builder, cursor)
                 },
             }
         } else if matches!(root_tag, ShapeTag::None) && has_shape_dispatch(ir) {
@@ -162,8 +169,12 @@ pub fn emit_dispatcher(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
-            #nonroot_ident(input, p, state, builder)
+            #cursor_p,
+        ) -> ::core::result::Result<(), crate::runtime::DtaError>
+        where
+            #cursor_where,
+        {
+            #nonroot_ident(input, p, state, builder, cursor)
         }
 
         /// AW-V.W3.2 — value-position shape dispatcher. Called both at
@@ -177,7 +188,11 @@ pub fn emit_dispatcher(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+            #cursor_p,
+        ) -> ::core::result::Result<(), crate::runtime::DtaError>
+        where
+            #cursor_where,
+        {
             #dispatch_body
         }
     }
@@ -256,15 +271,15 @@ pub(super) fn emit_alt_dispatch_body(
     // resolved. Missing branches fall into the default error arm.
     let object_arm = object_fn
         .as_ref()
-        .map(|f| quote! { b'{' => { #f(input, p, state, builder) } })
+        .map(|f| quote! { b'{' => { #f(input, p, state, builder, cursor) } })
         .unwrap_or_else(|| quote! {});
     let array_arm = array_fn
         .as_ref()
-        .map(|f| quote! { b'[' => { #f(input, p, state, builder) } })
+        .map(|f| quote! { b'[' => { #f(input, p, state, builder, cursor) } })
         .unwrap_or_else(|| quote! {});
     let string_arm = string_fn
         .as_ref()
-        .map(|f| quote! { b'"' => { #f(input, p, state, builder) } })
+        .map(|f| quote! { b'"' => { #f(input, p, state, builder, cursor) } })
         .unwrap_or_else(|| quote! {});
     let number_arm = number_fn
         .as_ref()
@@ -278,11 +293,11 @@ pub(super) fn emit_alt_dispatch_body(
     // path for grammars that admit Ref-led Keyword branches.
     let true_arm = keyword_bool_fn
         .as_ref()
-        .map(|f| quote! { b't' | b'f' => { #f(input, p, first, state, builder) } })
+        .map(|f| quote! { b't' | b'f' => { #f(input, p, first, state, builder, cursor) } })
         .unwrap_or_else(|| quote! {});
     let null_arm = keyword_null_fn
         .as_ref()
-        .map(|f| quote! { b'n' => { #f(input, p, first, state, builder) } })
+        .map(|f| quote! { b'n' => { #f(input, p, first, state, builder, cursor) } })
         .unwrap_or_else(|| quote! {});
 
     quote! {

@@ -73,6 +73,7 @@
 pub mod alt_dispatch;
 pub mod arglist;
 pub mod array;
+pub mod cursor_param;
 pub mod dispatcher;
 pub mod flat;
 pub mod hregex;

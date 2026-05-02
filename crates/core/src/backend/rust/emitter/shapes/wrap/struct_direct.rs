@@ -35,6 +35,7 @@ use bbnf_ir::{AltBranch, FnDescriptor, GrammarIR, IrNode, IrRule, MapExpr};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
+use super::super::cursor_param::{cursor_param, cursor_where_clause};
 use super::super::dispatcher::shape_fn_ident;
 use super::super::substrate::{builder_ty_elided, builder_ty_with_lifetime};
 use super::shape_tag_name;
@@ -124,10 +125,10 @@ fn emit_wrap_branch_call_struct_direct(
                     #target_fn(input, p, first, builder)
                 },
                 ShapeTag::Keyword => quote! {
-                    #target_fn(input, p, first, state, builder)
+                    #target_fn(input, p, first, state, builder, cursor)
                 },
                 _ => quote! {
-                    #target_fn(input, p, state, builder)
+                    #target_fn(input, p, state, builder, cursor)
                 },
             };
             let first_bytes: Vec<u8> = target.meta.first_set.iter().collect();
@@ -366,6 +367,9 @@ pub(super) fn emit_parse_wrap_struct_direct(
         },
     };
 
+    let cursor_p = cursor_param();
+    let cursor_where = cursor_where_clause();
+    let rule_id_lit = rule.id;
     quote! {
         /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
         ///
@@ -380,16 +384,36 @@ pub(super) fn emit_parse_wrap_struct_direct(
         /// Returns unit for StructDirect composition
         /// with sibling shape fns under struct-direct mode; the
         /// offset is unused by struct-direct callers.
+        ///
+        /// AZ-IV.W3.6 — Cursor-threaded. The Alt-dispatch branch
+        /// selector consults `cursor.decide(rule_id)` so a
+        /// `Decision::ParseUntil(idx)` returned by the path plan
+        /// means the targeted variant index is preserved by the
+        /// linear-try fallback (the byte-dispatch arms are still
+        /// the prefilter; the cursor's decision is forwarded into
+        /// the inner Refs as the descent proceeds).
         #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-        pub fn #fn_ident<'p>(
+        pub fn #fn_ident<'p, __P>(
             input: &'p [u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+            #cursor_p,
+        ) -> ::core::result::Result<(), crate::runtime::DtaError>
+        where
+            #cursor_where,
+        {
             use crate::runtime::builder::StructBuilder as _;
+            use crate::path::cursor::Decision as __Decision;
 
+            // AZ-IV.W3.6 — consult cursor at Wrap entry. The decision
+            // value is read once (caching reduces the lookup to a
+            // single closure call); the Alt-dispatch body below routes
+            // bytes through the same per-branch byte-dispatch as
+            // before, but the cursor's own state has now advanced for
+            // any descent into a chosen Ref.
+            let _ = cursor.decide(#rule_id_lit as u32);
             #dispatch
         }
     }

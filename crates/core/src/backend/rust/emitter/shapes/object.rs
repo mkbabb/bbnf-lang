@@ -38,6 +38,7 @@ use bbnf_ir::{GrammarIR, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
+use super::cursor_param::{cursor_param, cursor_where_clause};
 use super::dispatcher::{dispatcher_fn_ident, emit_ref_call_shape, shape_fn_ident};
 use super::root_rule_name;
 use super::substrate::{builder_ty_elided, builder_ty_with_lifetime};
@@ -109,9 +110,12 @@ fn emit_parse_object_struct_direct(
         .map(|call| quote! { (#call)?; })
         .unwrap_or_else(|| {
             quote! {
-                #dispatcher_ident(input, p, state, builder)?;
+                #dispatcher_ident(input, p, state, builder, cursor)?;
             }
         });
+
+    let cursor_p = cursor_param();
+    let cursor_where = cursor_where_clause();
 
     quote! {
         /// AZ-I.W2.RB — per-grammar Object-shape parse function,
@@ -121,15 +125,26 @@ fn emit_parse_object_struct_direct(
         /// `begin_compound` / `end_compound` calls against the in-flight
         /// frame stack. Per-element pushes (string keys + value
         /// dispatch) land directly on the topmost open frame.
+        ///
+        /// AZ-IV.W3.6 — Cursor-threaded. Each loop iteration consults
+        /// `cursor.decide(rule_id) -> Decision` so the lazy bail-out
+        /// parse can break after `ParseUntil(idx)` reaches the targeted
+        /// child. Eager parses pass an always-`ParseFully` cursor,
+        /// which makes the consult a no-op against the pre-W3.6 body.
         #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments)]
-        pub fn #fn_ident<'p>(
+        pub fn #fn_ident<'p, __P>(
             input: &'p [u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+            #cursor_p,
+        ) -> ::core::result::Result<(), crate::runtime::DtaError>
+        where
+            #cursor_where,
+        {
             use crate::runtime::builder::StructBuilder;
+            use crate::path::cursor::Decision as __Decision;
 
             if input.get(*p).copied() != Some(b'{') {
                 return Err(crate::runtime::DtaError::Syntax {
@@ -160,6 +175,14 @@ fn emit_parse_object_struct_direct(
                 return Ok(());
             }
 
+            // AZ-IV.W3.6 — consult the cursor's decision for this rule's
+            // segment kind. ParseFully or no-match (None) keeps
+            // every iteration; ParseUntil(idx) limits iterations to
+            // 0..=idx; Skip is unreachable here (the executor would have
+            // routed through the skip scanner upstream).
+            let __decision: __Decision = cursor.decide(#rule_id_lit as u32);
+
+            let mut __iter_idx: u32 = 0;
             loop {
                 // Key: string shape fn pushes the decoded slice.
                 if input.get(*p).copied() != Some(b'"') {
@@ -167,7 +190,7 @@ fn emit_parse_object_struct_direct(
                         offset: *p as u32,
                     });
                 }
-                #string_fn(input, p, state, builder)?;
+                #string_fn(input, p, state, builder, cursor)?;
 
                 // Colon.
                 let _ = #support_mod::skip_space(input, p, state);
@@ -197,6 +220,17 @@ fn emit_parse_object_struct_direct(
                     _ => return Err(crate::runtime::DtaError::Syntax {
                         offset: *p as u32,
                     }),
+                }
+                __iter_idx = __iter_idx.saturating_add(1);
+                if let __Decision::ParseUntil(__cut) = __decision
+                    && __iter_idx as u32 > __cut as u32
+                {
+                    // Indexed cut reached. The remaining iterations'
+                    // bytes still need to advance `*p` to the closing
+                    // brace, but no further records are pushed; the
+                    // brace-balanced skip scanner is W3.7's job.
+                    builder.end_compound(__handle);
+                    return Ok(());
                 }
             }
         }

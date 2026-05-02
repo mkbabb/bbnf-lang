@@ -29,6 +29,7 @@ use bbnf_ir::{GrammarIR, IrRule, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
+use super::cursor_param::{cursor_param, cursor_where_clause};
 use super::dispatcher::shape_fn_ident;
 use bbnf_ir::registry::EmitStrategy;
 
@@ -92,6 +93,8 @@ pub fn emit_parse_string(
     } else {
         quote! { &input[start as usize..end as usize] }
     };
+    let cursor_p = cursor_param();
+    let cursor_where = cursor_where_clause();
     quote! {
         /// AZ-I.W2.RC — per-grammar String-shape parse function
         /// (struct-direct substrate).
@@ -103,14 +106,22 @@ pub fn emit_parse_string(
         /// path decodes into the builder's arena and emits
         /// the decoded bytes via the same `push_leaf_with_str`
         /// surface.
+        ///
+        /// AZ-IV.W3.6 — Cursor parameter is threaded for signature
+        /// uniformity; string is a leaf (no recursion), so the
+        /// cursor is not consulted in the body.
         #[inline(always)]
         #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-        pub fn #fn_ident<'p>(
+        pub fn #fn_ident<'p, __P>(
             input: &'p [u8],
             p: &mut usize,
             _state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty<'p>,
-        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+            #cursor_p,
+        ) -> ::core::result::Result<(), crate::runtime::DtaError>
+        where
+            #cursor_where,
+        {
             use crate::runtime::builder::StructBuilder as _;
             let open = *p;
             if input.get(open).copied() != Some(b'"') {

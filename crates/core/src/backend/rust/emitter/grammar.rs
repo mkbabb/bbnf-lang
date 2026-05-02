@@ -402,6 +402,22 @@ fn emit_parse_body_struct_direct(
         // recovers the rooted document.
         let mut state = #support_mod_ident::ScanState::new();
         let mut builder = #builder_ty::new();
+        // AZ-IV.W3.6 — eager parses construct an always-ParseFully
+        // cursor against an empty path. The cursor's state is unused
+        // by the emit body (the cursor consult returns ParseFully for
+        // every rule), but the dispatcher signature now carries a
+        // cursor parameter so eager and lazy lanes share the surface.
+        let __empty_path: crate::path::ir::TypedPath<
+            crate::path::markers::Json,
+            &'static str,
+        > = crate::path::ir::TypedPath::from_owned(::std::vec::Vec::new());
+        let mut __eager_cursor: crate::path::cursor::PathCursor<
+            '_,
+            crate::path::ir::TypedPath<crate::path::markers::Json, &'static str>,
+        > = crate::path::cursor::PathCursor::new(
+            &__empty_path,
+            |_rid, _kind, _idx| crate::path::cursor::Decision::ParseFully,
+        );
         {
             let mut pos: usize = 0;
             #dispatcher(
@@ -409,6 +425,7 @@ fn emit_parse_body_struct_direct(
                 &mut pos,
                 &mut state,
                 &mut builder,
+                &mut __eager_cursor,
             )
             .map_err(|e| match e {
                 crate::runtime::DtaError::Syntax { offset } => {

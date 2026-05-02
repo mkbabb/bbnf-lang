@@ -60,6 +60,7 @@ use bbnf_ir::{AltBranch, GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
+use super::super::cursor_param::{cursor_param, cursor_where_clause};
 use super::super::dispatcher::{emit_ref_call_shape, shape_fn_ident};
 use super::super::root_rule_name;
 use super::super::substrate::{builder_ty_elided, builder_ty_with_lifetime};
@@ -258,6 +259,7 @@ pub(super) fn emit_parse_flat_struct_direct(
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("flat", grammar_suffix, rule_name);
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
+    let rule_id_lit = rule.id;
 
     // The dispatcher ident is needed only for unclassified Refs. Under
     // StructDirect every Ref-target the JSON grammar exercises is shape-
@@ -342,6 +344,9 @@ pub(super) fn emit_parse_flat_struct_direct(
         quote! {}
     };
 
+    let cursor_p = cursor_param();
+    let cursor_where = cursor_where_clause();
+
     quote! {
         /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
         /// **struct-direct body**. Targets the grammar's concrete
@@ -374,13 +379,22 @@ pub(super) fn emit_parse_flat_struct_direct(
         /// `-> Span` or whose host walker reads via `byte_span()`).
         #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-        pub fn #fn_ident<'p>(
+        pub fn #fn_ident<'p, __P>(
             input: &'p [u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+            #cursor_p,
+        ) -> ::core::result::Result<(), crate::runtime::DtaError>
+        where
+            #cursor_where,
+        {
             use crate::runtime::builder::StructBuilder as _;
+            use crate::path::cursor::Decision as __Decision;
+            // AZ-IV.W3.6 — consult cursor at Flat entry. Each
+            // positional emission below honours the `ParseUntil(idx)`
+            // cut where applicable; the consult primes the cache.
+            let __decision: __Decision = cursor.decide(#rule_id_lit as u32);
 
             // AZ-I.W2.RF — open the Flat compound. The layout literal is
             // built inline from the rule's registered metadata; the
@@ -521,7 +535,7 @@ fn emit_position_core_struct_direct(
                 // Under StructDirect the dispatcher takes the same
                 // builder argument; the call is signature-compatible.
                 quote! {
-                    let _ = #dispatcher_ident(input, p, state, builder)?;
+                    let _ = #dispatcher_ident(input, p, state, builder, cursor)?;
                 }
             }
         }
@@ -735,7 +749,7 @@ fn emit_position_core_struct_direct(
         // cutover.G plan).
         IrNode::TokenDispatch { .. } => {
             quote! {
-                let _ = #dispatcher_ident(input, p, state, builder)?;
+                let _ = #dispatcher_ident(input, p, state, builder, cursor)?;
             }
         }
     }

@@ -79,13 +79,18 @@ pub fn emit_parse_scalar(
                 /// builder call.
                 #[inline(always)]
                 #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-                pub fn #fn_ident<'p>(
+                pub fn #fn_ident<'p, __P>(
                     input: &'p [u8],
                     p: &mut usize,
                     _state: &mut #support_mod::ScanState,
                     builder: &mut #builder_ty<'p>,
-                ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+                    cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+                ) -> ::core::result::Result<(), crate::runtime::DtaError>
+                where
+                    __P: crate::path::schema::PathSchema<'p>,
+                {
                     use crate::runtime::builder::StructBuilder as _;
+                    let _ = cursor;
                     let at = *p;
                     let end = at + #len;
                     if input.len() < end || input[at..end] != [#(#byte_lits),*] {
@@ -121,12 +126,16 @@ pub fn emit_parse_scalar(
                 /// struct-builder.
                 #[inline]
                 #[allow(non_snake_case, clippy::too_many_arguments)]
-                pub fn #fn_ident<'p>(
+                pub fn #fn_ident<'p, __P>(
                     input: &'p [u8],
                     p: &mut usize,
                     state: &mut #support_mod::ScanState,
                     builder: &mut #builder_ty<'p>,
-                ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+                    cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+                ) -> ::core::result::Result<(), crate::runtime::DtaError>
+                where
+                    __P: crate::path::schema::PathSchema<'p>,
+                {
                     #call
                 }
             }

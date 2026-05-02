@@ -230,15 +230,20 @@ pub(super) fn emit_parse_keyword_struct_direct(
                 /// emission; the offset is unused by struct-direct
                 /// callers (the dispatcher discards `Ok(_)` payloads).
                 #[inline(always)]
-                #[allow(non_snake_case, clippy::too_many_arguments)]
-                pub fn #fn_ident(
-                    input: &[u8],
+                #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+                pub fn #fn_ident<'p, __P>(
+                    input: &'p [u8],
                     p: &mut usize,
                     _first_byte: u8,
                     _state: &mut #support_mod::ScanState,
                     builder: &mut #builder_ty_e,
-                ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+                    cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+                ) -> ::core::result::Result<(), crate::runtime::DtaError>
+                where
+                    __P: crate::path::schema::PathSchema<'p>,
+                {
                     use crate::runtime::builder::StructBuilder as _;
+                    let _ = cursor;
                     let at = *p;
                     let end = at + #len;
                     if input.len() < end || input[at..end] != [#(#byte_lits),*] {
@@ -498,16 +503,21 @@ pub(super) fn emit_parse_keyword_struct_direct(
                 /// fn so the target writes directly into the same
                 /// builder. Returns unit for StructDirect composition.
                 #[inline(always)]
-                #[allow(non_snake_case, clippy::too_many_arguments)]
-                pub fn #fn_ident<'p>(
+                #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+                pub fn #fn_ident<'p, __P>(
                     input: &'p [u8],
                     p: &mut usize,
                     first_byte: u8,
                     state: &mut #support_mod::ScanState,
                     builder: &mut #builder_ty_p,
-                ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+                    cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+                ) -> ::core::result::Result<(), crate::runtime::DtaError>
+                where
+                    __P: crate::path::schema::PathSchema<'p>,
+                {
                     use crate::runtime::builder::StructBuilder as _;
                     let _ = state;
+                    let _ = cursor;
                     match first_byte {
                         #(#arms)*
                         _ => ::core::result::Result::Err(

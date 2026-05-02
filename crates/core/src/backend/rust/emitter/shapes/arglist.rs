@@ -174,12 +174,17 @@ fn emit_parse_arglist_struct_direct(
         /// / var / env / url / gradient / transform / etc.).
         #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-        pub fn #fn_ident<'p>(
+        pub fn #fn_ident<'p, __P>(
             input: &'p [u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+            cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        ) -> ::core::result::Result<(), crate::runtime::DtaError>
+        where
+            __P: crate::path::schema::PathSchema<'p>,
+        {
+            let _ = cursor;
             let __layout: ::bbnf_ir::registry::StructLayout =
                 ::bbnf_ir::registry::StructLayout {
                     rule_id: #rule_id_lit as ::bbnf_ir::RuleId,
@@ -284,7 +289,7 @@ fn emit_struct_direct_position_core(
                 quote! { let _ = (#call)?; }
             } else {
                 quote! {
-                    let _ = #dispatcher_ident(input, p, state, builder)?;
+                    let _ = #dispatcher_ident(input, p, state, builder, cursor)?;
                 }
             }
         }
@@ -377,7 +382,7 @@ fn emit_struct_direct_position_core(
         | IrNode::Minus(_, _)
         | IrNode::TokenDispatch { .. } => {
             quote! {
-                let _ = #dispatcher_ident(input, p, state, builder)?;
+                let _ = #dispatcher_ident(input, p, state, builder, cursor)?;
             }
         }
     }

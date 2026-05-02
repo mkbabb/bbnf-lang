@@ -183,7 +183,7 @@ pub(super) fn emit_parse_pratt_struct_direct(
         .map(|call| quote! { let _ = (#call)?; })
         .unwrap_or_else(|| {
             quote! {
-                let _ = #dispatcher_ident(input, p, state, builder)?;
+                let _ = #dispatcher_ident(input, p, state, builder, cursor)?;
             }
         });
     let rhs_call = operand_ref
@@ -191,7 +191,7 @@ pub(super) fn emit_parse_pratt_struct_direct(
         .map(|call| quote! { let _ = (#call)?; })
         .unwrap_or_else(|| {
             quote! {
-                let _ = #dispatcher_ident(input, p, state, builder)?;
+                let _ = #dispatcher_ident(input, p, state, builder, cursor)?;
             }
         });
 
@@ -229,12 +229,17 @@ pub(super) fn emit_parse_pratt_struct_direct(
         /// cross-shape recursive edge through the value dispatcher.
         #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut, unused_assignments)]
-        pub fn #fn_ident<'p>(
+        pub fn #fn_ident<'p, __P>(
             input: &'p [u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+            cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        ) -> ::core::result::Result<(), crate::runtime::DtaError>
+        where
+            __P: crate::path::schema::PathSchema<'p>,
+        {
+            let _ = cursor;
             let _ = #support_mod::skip_space(input, p, state);
 
             // ── Open the rule compound ──────────────────────────────

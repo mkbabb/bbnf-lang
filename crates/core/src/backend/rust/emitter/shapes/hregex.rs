@@ -343,12 +343,17 @@ fn emit_parse_hregex_struct_direct(
         /// shape fns under struct-direct mode.
         #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-        pub fn #fn_ident<'p>(
+        pub fn #fn_ident<'p, __P>(
             input: &'p [u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+            cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        ) -> ::core::result::Result<(), crate::runtime::DtaError>
+        where
+            __P: crate::path::schema::PathSchema<'p>,
+        {
+            let _ = cursor;
             let span_lo = *p as u32;
             let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
                 return Err(crate::runtime::DtaError::Syntax {
@@ -460,13 +465,17 @@ fn emit_struct_direct_unsupported_stub(
     quote! {
         #[inline(always)]
         #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-        pub fn #fn_ident<'p>(
+        pub fn #fn_ident<'p, __P>(
             input: &'p [u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
-            let _ = (input, state, builder);
+            cursor: &mut crate::path::cursor::PathCursor<'p, __P>,
+        ) -> ::core::result::Result<(), crate::runtime::DtaError>
+        where
+            __P: crate::path::schema::PathSchema<'p>,
+        {
+            let _ = (input, state, builder, cursor);
             Err(crate::runtime::DtaError::Syntax {
                 offset: *p as u32,
             })

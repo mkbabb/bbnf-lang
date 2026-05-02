@@ -201,7 +201,19 @@ fn rows_for_struct_field(rule_id: RuleId, field: &StructField) -> Vec<PlanRow> {
             field_index: u32::MAX,
             decision: Decision::ParseFully,
         }],
-        FieldSource::TypedLeaf | FieldSource::RuleReference { .. } => Vec::new(),
+        // AZ-IV.W3.6 — typed leaves emit a `Decision::Skip` row keyed
+        // on the unmatched-segment-kinds path: when the cursor's
+        // current segment is `Index` or `Wildcard` against a typed
+        // scalar rule, the path provably never enters the leaf bytes.
+        // The runtime executor honours the skip by routing past the
+        // rule's bytes via the per-shape `skip_*` scanner (W3.7+).
+        FieldSource::TypedLeaf => vec![PlanRow {
+            rule_id,
+            segment_kind: SegmentKindTag::Index,
+            field_index: u32::MAX,
+            decision: Decision::Skip,
+        }],
+        FieldSource::RuleReference { .. } => Vec::new(),
         FieldSource::BranchTag { .. } => Vec::new(),
     }
 }

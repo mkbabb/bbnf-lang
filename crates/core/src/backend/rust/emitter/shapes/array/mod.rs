@@ -39,6 +39,7 @@ use bbnf_ir::{GrammarIR, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
+use super::cursor_param::{cursor_param, cursor_where_clause};
 use super::dispatcher::{dispatcher_fn_ident, emit_ref_call_shape, shape_fn_ident};
 use super::root_rule_name;
 use bbnf_ir::registry::EmitStrategy;
@@ -138,22 +139,36 @@ fn emit_parse_array_struct_direct_wrapped(
         .map(|call| quote! { (#call)?; })
         .unwrap_or_else(|| {
             quote! {
-                #dispatcher_ident(input, p, state, builder)?;
+                #dispatcher_ident(input, p, state, builder, cursor)?;
             }
         });
+
+    let cursor_p = cursor_param();
+    let cursor_where = cursor_where_clause();
 
     quote! {
         /// AZ-I.W2.RB — per-grammar Array-shape parse function,
         /// **struct-direct body** (Shape 1 — wrapped homogeneous repeat).
+        ///
+        /// AZ-IV.W3.6 — Cursor-threaded. The element loop consults
+        /// `cursor.decide(rule_id) -> Decision` so the lazy bail-out
+        /// parse can break after `ParseUntil(idx)` reaches the targeted
+        /// element index. Eager parses pass an always-`ParseFully`
+        /// cursor; the consult is a no-op against the pre-W3.6 body.
         #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments)]
-        pub fn #fn_ident<'p>(
+        pub fn #fn_ident<'p, __P>(
             input: &'p [u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+            #cursor_p,
+        ) -> ::core::result::Result<(), crate::runtime::DtaError>
+        where
+            #cursor_where,
+        {
             use crate::runtime::builder::StructBuilder;
+            use crate::path::cursor::Decision as __Decision;
 
             if input.get(*p).copied() != Some(b'[') {
                 return Err(crate::runtime::DtaError::Syntax {
@@ -175,6 +190,13 @@ fn emit_parse_array_struct_direct_wrapped(
                 };
             let __array_checkpoint = builder.checkpoint();
             let __handle = builder.begin_compound(&__layout);
+
+            // AZ-IV.W3.6 — consult the cursor's decision once; the
+            // result is invariant over the loop body for a fixed
+            // (rule_id, segment_kind).
+            let __decision: __Decision = cursor.decide(#rule_id_lit as u32);
+            let mut __elem_idx: u32 = 0;
+
             let __array_result: ::core::result::Result<
                 (),
                 crate::runtime::DtaError,
@@ -190,6 +212,19 @@ fn emit_parse_array_struct_direct_wrapped(
                 loop {
                     // Element dispatch — per-Ref routing matches tape path.
                     #value_call
+
+                    // AZ-IV.W3.6 — ParseUntil cut: after the element at
+                    // index `cut` is consumed, break. The remaining
+                    // bytes through `]` need a brace-balanced skip
+                    // scanner (W3.7 wires); the loop break here drops
+                    // out so the bytes-past-cut path never reaches
+                    // record emission.
+                    if let __Decision::ParseUntil(__cut) = __decision
+                        && __elem_idx as u32 >= __cut as u32
+                    {
+                        return Ok(());
+                    }
+                    __elem_idx = __elem_idx.saturating_add(1);
 
                     let _ = #support_mod::skip_space(input, p, state);
                     match input.get(*p).copied() {
@@ -284,7 +319,7 @@ fn emit_parse_array_struct_direct_list(
     };
 
     // Per-Ref direct value call when classified. Every per-shape
-    // struct-direct fn carries the `(input, p, state, builder)`
+    // struct-direct fn carries the `(input, p, state, builder, cursor)`
     // signature.
     let value_ref = element::extract_array_value_ref(&rule.body, ir);
     let value_call = value_ref
@@ -292,7 +327,7 @@ fn emit_parse_array_struct_direct_list(
         .map(|call| quote! { (#call)?; })
         .unwrap_or_else(|| {
             quote! {
-                #dispatcher_ident(input, p, state, builder)?;
+                #dispatcher_ident(input, p, state, builder, cursor)?;
             }
         });
 
@@ -319,6 +354,9 @@ fn emit_parse_array_struct_direct_list(
         quote! {}
     };
 
+    let cursor_p = cursor_param();
+    let cursor_where = cursor_where_clause();
+
     quote! {
         /// AZ-II.cutover.F — per-grammar Array-shape parse function
         /// (Shape 2 — entry-rule list, **struct-direct body**).
@@ -328,15 +366,24 @@ fn emit_parse_array_struct_direct_list(
         /// closes the frame on first-byte rejection or EOF. NO
         /// bracket-delimiter literals — termination is driven by
         /// the inner dispatcher's first-set check.
+        ///
+        /// AZ-IV.W3.6 — Cursor-threaded. Each iteration consults
+        /// `cursor.decide(rule_id) -> Decision` to honour the lazy
+        /// bail-out parse's `ParseUntil(idx)` cut.
         #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments)]
-        pub fn #fn_ident<'p>(
+        pub fn #fn_ident<'p, __P>(
             input: &'p [u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
+            #cursor_p,
+        ) -> ::core::result::Result<(), crate::runtime::DtaError>
+        where
+            #cursor_where,
+        {
             use crate::runtime::builder::StructBuilder;
+            use crate::path::cursor::Decision as __Decision;
 
             // Open the rule's compound frame (the outer Repeat).
             let __layout: ::bbnf_ir::registry::StructLayout =
@@ -349,6 +396,10 @@ fn emit_parse_array_struct_direct_list(
                 };
             let __handle = builder.begin_compound(&__layout);
 
+            // AZ-IV.W3.6 — consult cursor decision once.
+            let __decision: __Decision = cursor.decide(#rule_id_lit as u32);
+            let mut __elem_idx: u32 = 0;
+
             // Outer-OW leading skip. No-op when the body is a bare
             // Repeat without an outer OW wrapper.
             #leading_ow_skip
@@ -357,6 +408,12 @@ fn emit_parse_array_struct_direct_list(
                 let __iter_save_p = *p;
                 // EOF terminates iteration.
                 if input.get(*p).is_none() {
+                    break;
+                }
+                // AZ-IV.W3.6 — ParseUntil cut.
+                if let __Decision::ParseUntil(__cut) = __decision
+                    && __elem_idx as u32 > __cut as u32
+                {
                     break;
                 }
                 let __iter_builder_checkpoint = builder.checkpoint();
@@ -380,6 +437,7 @@ fn emit_parse_array_struct_direct_list(
                             break;
                         }
                         builder.commit(__iter_builder_checkpoint);
+                        __elem_idx = __elem_idx.saturating_add(1);
                     }
                     Err(_) => {
                         *p = __iter_save_p;

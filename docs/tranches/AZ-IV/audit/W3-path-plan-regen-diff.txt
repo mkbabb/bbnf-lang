@@ -1,0 +1,144 @@
+AZ-IV.W3.3 — Path-Plan Emitter Regen Diff Evidence
+===================================================
+
+Worktree:        /Users/mkbabb/Programming/bbnf-wt-aziv-w3-emit
+Branch:          aziv-w3-emit
+Base commit:     4c8251b1 docs(az-iv/waves): encode D2/D5/D6 + AUDIT-F T1/T3/T4/T6/T9 + AUDIT-B routed splits
+CARGO_TARGET_DIR /Users/mkbabb/Programming/bbnf-wt-aziv-w3-emit/target/w3-emit
+
+
+cargo xtask regen --check
+-------------------------
+
+regen --check: clean (9 of 9 grammars matched)
+
+Per-grammar plan-row counts (`PATH_PLAN_LEN` from generated statics):
+
+  bbnf            257 entries
+  bnf              30 entries
+  csv              12 entries
+  css_l4         1049 entries
+  css_pretty       82 entries
+  ebnf             43 entries
+  google_sheets   148 entries
+  json             20 entries
+  math              1 entry
+
+Each row is `(rule_id, segment_kind, field_index, decision)`. Iteration
+walks `StructRegistry` in `RuleId` order; per-layout iteration walks
+`StructLayout::fields` in declaration order. Both orderings are
+`BTreeMap`-stable / `Vec`-stable, so the same `(GrammarIR, manifest)`
+pair always produces the same byte-stable plan.
+
+
+Sample entries — `crates/core/src/grammar/generated/json.rs`
+------------------------------------------------------------
+
+The JSON grammar's `StructRegistry` projects 8 layouts; the
+post-pipeline shape produces 20 plan rows. Sample below shows the
+shape mix the emitter generates:
+
+- rule_ids 0..=5 contribute one Wildcard → ParseFully row each
+  (NewtypeWrapper / UntaggedEnum projections — no per-field cuts).
+- rule_id 6 (`pair` — `Seq[key, value]`, projected to LayoutKind::Struct)
+  contributes 5 rows: Field(0), Index(0), Field(1), Index(1), Wildcard.
+- rule_id 7 (`value` — `Alt[6 branches]`, projected to
+  LayoutKind::TaggedEnum) contributes 7 rows: 6 VariantName entries
+  (one per branch) + Wildcard fallback.
+
+```
+PathPlanEntry {
+    rule_id: 6,
+    segment_kind: SegmentKind::Field,
+    field_index: 0,
+    decision: Decision::ParseUntil(0),
+},
+PathPlanEntry {
+    rule_id: 6,
+    segment_kind: SegmentKind::Index,
+    field_index: 0,
+    decision: Decision::ParseUntil(0),
+},
+PathPlanEntry {
+    rule_id: 6,
+    segment_kind: SegmentKind::Field,
+    field_index: 1,
+    decision: Decision::ParseUntil(1),
+},
+PathPlanEntry {
+    rule_id: 6,
+    segment_kind: SegmentKind::Index,
+    field_index: 1,
+    decision: Decision::ParseUntil(1),
+},
+PathPlanEntry {
+    rule_id: 6,
+    segment_kind: SegmentKind::Wildcard,
+    field_index: 4294967295,
+    decision: Decision::ParseFully,
+},
+PathPlanEntry {
+    rule_id: 7,
+    segment_kind: SegmentKind::VariantName,
+    field_index: 0,
+    decision: Decision::ParseUntil(0),
+},
+PathPlanEntry {
+    rule_id: 7,
+    segment_kind: SegmentKind::VariantName,
+    field_index: 1,
+    decision: Decision::ParseUntil(1),
+},
+[...]
+PathPlanEntry {
+    rule_id: 7,
+    segment_kind: SegmentKind::Wildcard,
+    field_index: 4294967295,
+    decision: Decision::ParseFully,
+},
+```
+
+
+Grammar generality enforcement
+------------------------------
+
+`crates/core/src/backend/rust/emitter/path_plan.rs` is grammar-general
+by construction:
+
+- The emitter walks `StructRegistry::iter()` (every layout, in `RuleId`
+  order) and projects from `LayoutKind` + `StructField::source` —
+  both facts the `project_types` CSP solver computes from grammar
+  data.
+- No literal rule names, parser idents, or grammar-name strings
+  appear in the emitter.
+- AST scan over the file:
+
+    rg -n '"json"|"css"|"sheets"|"bbnf"|"csv"|"ebnf"|"math"|"bnf"' \
+       crates/core/src/backend/rust/emitter/path_plan.rs
+
+  returns zero hits (verified at commit time).
+- `match` arms in the emitter key off `LayoutKind` / `FieldSource` /
+  `SegmentKindTag` / `Decision` — the projected discriminator
+  vocabulary, never a rule-name string.
+
+Adding a new grammar to the workspace manifest produces a
+deterministic path plan for that grammar with zero changes to this
+module.
+
+
+Compile evidence
+----------------
+
+  cargo check  -p bbnf --profile ax-iter  : clean
+  cargo clippy -p bbnf --profile ax-iter  : clean (path_plan.rs)
+  cargo fmt   (path_plan.rs)              : clean
+
+Pre-existing fmt drift in
+`crates/ir/src/passes/recognizers/node_facts.rs` is unrelated to W3.3
+and falls outside this wave's modify-carve.
+
+
+Commit hashes
+-------------
+
+(filled in by the post-commit revision of this file)

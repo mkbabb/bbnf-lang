@@ -13,6 +13,7 @@
 pub mod dfa_codegen;
 pub(crate) mod grammar;
 pub mod keyword_dispatch;
+pub mod path_plan;
 pub mod precedence;
 mod prettify;
 pub(crate) mod profile;

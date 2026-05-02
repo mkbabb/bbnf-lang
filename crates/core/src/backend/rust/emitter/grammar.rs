@@ -14,6 +14,7 @@ use quote::quote;
 use crate::backend::driver::analysis::BackendAnalysis;
 
 use super::dfa_codegen;
+use super::path_plan;
 use super::{RustEmitCtx, RustEmitter};
 
 /// AW-V.W3.2 — emit the per-grammar shared helpers the active shape
@@ -195,6 +196,15 @@ impl RustEmitter {
             super::precedence::emit_precedence_lut(ident.to_string().as_str(), &chain_facts)
         };
 
+        // AZ-IV.W3.3 — codegen-emitted path plan (lazy bail-out parse).
+        // Walks the grammar's `StructRegistry` (populated by the
+        // `project_types` CSP solver) to produce a flat
+        // `(RuleId, SegmentKind, Decision)` static array the W3.1
+        // path executor consults. Grammar-general — no rule-name
+        // matching; the plan derives entirely from `LayoutKind` +
+        // `StructField::source` provenance facts.
+        let path_plan_static = path_plan::emit_path_plan(ident.to_string().as_str(), ir);
+
         let extra = &self.extra_impl_methods;
 
         // AW-V.W3.2 — per-shape emitter modules.
@@ -311,6 +321,17 @@ impl RustEmitter {
             // packed byte layout + sparse metadata slice for two-byte
             // operators. Consulted by the shape-dispatch Pratt body.
             #precedence_lut
+
+            // AZ-IV.W3.3 — lazy bail-out parse plan. Static array of
+            // `(rule_id, segment_kind, field_index, decision)`
+            // entries; the W3.1 `PathCursor` consults the plan when
+            // descending into a rule's parse function with a typed
+            // path attached. The local `__path_plan` module carries
+            // the row schema definitions; W3.1's executor cherry-pick
+            // replaces them with re-exports from
+            // `crate::path::path_plan` while preserving byte-stable
+            // row contents.
+            #path_plan_static
 
             // AW-IV.W1.4-aggro — per-grammar regex-scan adapter.
             // Dispatches on pointer-equality of the interned pattern

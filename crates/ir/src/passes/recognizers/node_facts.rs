@@ -170,13 +170,27 @@ fn is_span_leaf(node: &IrNode) -> bool {
 // ── Per-rule pattern recognition (PatternAnnotations population) ────────
 //
 // These helpers populate the per-rule [`PatternAnnotations`] map that
-// Pratt detection at `shape_dispatch::pratt::detect_operator_chain`
-// reads. The `_legacy` suffix on prior names was a misnomer — these
-// are the only producers of `is_operator_chain` and the only path that
-// records `AltPattern::DispatchTable` / `AltPattern::CheckpointFallback`
-// for downstream Pratt classification. Migration to a NodeFacts-only
-// Pratt detector is W4 territory; until that lands, these are
-// production-active helpers under their grammar-fact-suffixed names.
+// Pratt detection at `shape_dispatch::pratt::detect_pratt` reads.
+// They are the only producers of `is_operator_chain` and the only
+// path that records `AltPattern::DispatchTable` /
+// `AltPattern::CheckpointFallback` for downstream Pratt
+// classification.
+//
+// **Retirement plan (AZ-IV.W4.5).** The Pratt detector at
+// `shape_dispatch::pratt::detect_pratt` already falls back to
+// `ir.node_facts.<NodeId>.operator_chain` when the per-rule
+// [`PatternAnnotations`] entry is absent (line ~101). Successor
+// field-set: `NodeFacts.operator_chain` (top-level Seq body, after
+// `unwrap_map_ow`) covers the structural admission; the alt
+// dispatch / checkpoint-fallback marker becomes implicit on the
+// emitter side via `KeyDispatchMatch` / `is_classified()` on
+// `ShapeAssignments`. W4.5 closes the migration by deleting the PA
+// branch in `detect_pratt` and dropping `recognize_body` /
+// `recognize_seq_pattern` / `recognize_alt_pattern` in lockstep
+// with `GrammarIR::pattern_annotations`. W4.4 lands the registry-
+// projection seam (transposition T1) and the rename surface;
+// PatternAnnotations migration is sequenced after Pratt routes
+// through `node_facts` directly.
 
 pub(super) fn recognize_body(node: &IrNode, ann: &mut PatternAnnotations, ir: &GrammarIR) {
     match node {

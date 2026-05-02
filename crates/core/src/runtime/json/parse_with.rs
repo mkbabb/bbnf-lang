@@ -1,25 +1,29 @@
-//! AZ-IV.W3.2 — JSON `parse_with` entry point.
+//! AZ-IV.W3.7 — JSON `parse_with` entry point (cursor-threaded).
 //!
 //! Lazy bail-out parse surface for the JSON grammar. The function
 //! constructs a [`PathCursor`] over a [`PathSchema`] (today only
 //! [`TypedPath<Json, T>`](crate::path::TypedPath)), wires the cursor's
 //! decision-lookup closure to the codegen-emitted
-//! `__path_plan::lookup` static-search, and hands the cursor to
-//! [`PathExecutor::execute`]. The executor's parse-fn closure runs the
-//! existing eager [`JsonParser::parse`] and projects the path's leaf
-//! through [`JsonDocument::get`] using the `JsonPathQuery` trait
-//! family the document already owns.
+//! `__path_plan::lookup` static-search, and threads the cursor through
+//! the cursor-aware generated dispatcher
+//! [`parse_JsonParser_value`](crate::grammar::generated::json::parse_JsonParser_value).
+//! The dispatcher consults the cursor at every shape-decision site
+//! (Array / Object / Wrap / Flat / cross-shape Ref); subtrees the path
+//! does not visit are byte-skipped and never push records into the
+//! [`JsonStructBuilder`]. After the dispatcher returns, the builder is
+//! finalised against `input` and the leaf is projected through
+//! [`JsonDocument::get`] using the document's
+//! [`JsonPathQuery`] trait family.
 //!
-//! ## Lazy vs. eager today
+//! ## Lazy-error-elision contract
 //!
-//! W3.2 lands the entry-point dispatch surface and the cursor wiring;
-//! truly-lazy descent through the generated parse functions is the
-//! W3.3 follow-on (the codegen plan exists, the cursor consults it,
-//! but the parse loop today runs the eager path and re-projects via
-//! the document's typed path traits). Same `Option<T>` semantics as
-//! `parse(input)?.get(path)`; the cursor carries the decision plan so
-//! when W3.3 threads the cursor through `parse_<rule>` the entry point
-//! does not change shape.
+//! Bytes the cursor causes the dispatcher to skip never reach a parse
+//! error path — that is the contract by construction. Specifically, on
+//! a fixture where bytes after the path's reach are malformed, the
+//! lazy lane returns `Some(leaf)` (the path resolved before the
+//! malformation was observed) while the eager lane returns a parse
+//! error. The negative-fixture row in
+//! `crates/core/tests/parse_with_json.rs` exercises this directly.
 //!
 //! ## Path mapping
 //!
@@ -33,24 +37,26 @@
 //! - `VariantName(s)`  → `runtime::path::PathSegment::Field(s)` (the
 //!   document's existing walker treats variant-selection as a field
 //!   step against the typed-value sum; full enum-aware variant
-//!   resolution lands with the W3.3 plan + W4 typed-step executor.)
-//! - `Wildcard`        → bails (`None`); the eager fallback cannot
-//!   materialise a wildcard iter without an additional lane. Lazy
-//!   wildcard execution belongs to the cursor-threaded path that
-//!   W3.3 wires.
+//!   resolution lands with the W4 typed-step executor.)
+//! - `Wildcard`        → bails (`None`); the document's `get` cannot
+//!   materialise a wildcard iter. Lazy wildcard execution belongs to a
+//!   future stream-shaped surface.
 
 use super::document::{JsonDocument, JsonPathQuery};
-use crate::grammar::generated::json::{__path_plan, JsonParser};
+use crate::grammar::generated::json::{
+    __path_plan, __shape_support_JsonParser, parse_JsonParser_value,
+};
 use crate::path::cursor::Decision;
 use crate::path::executor::PathExecutor;
 use crate::path::ir::{PathSegment as TypedSegment, TypedPath};
 use crate::path::markers::Json;
+use crate::runtime::json::JsonStructBuilder;
 use crate::runtime::path::{Path as LegacyPath, PathSegment as LegacySegment};
 
 /// Lower a typed-path segment into the legacy borrowed alphabet the
 /// document's `get` consumes. `Wildcard` is unrepresentable in the
-/// eager fallback and the caller (`parse_with`) bails before reaching
-/// the document walker.
+/// document's projection step and the caller (`parse_with`) bails
+/// before reaching the document walker.
 fn lower<'a>(seg: &TypedSegment<'a>) -> Option<LegacySegment<'a>> {
     match seg {
         TypedSegment::Field(s) => Some(LegacySegment::Field(s)),
@@ -64,9 +70,10 @@ fn lower<'a>(seg: &TypedSegment<'a>) -> Option<LegacySegment<'a>> {
 ///
 /// `T` is the leaf type the path resolves to; today the bound is the
 /// document-owned [`JsonPathQuery`] trait, matching the existing
-/// `JsonDocument::get` surface. Returns `None` when the parse fails,
-/// the path falls outside the document, or any segment fails to
-/// resolve (per the trait's `Option<T>` contract).
+/// `JsonDocument::get` surface. Returns `None` when the parse fails
+/// inside the path's reach, the path falls outside the document, or
+/// any segment fails to resolve. Parse errors past the path's reach
+/// are silently elided — the lazy contract.
 pub fn parse_with<T>(input: &str, path: &TypedPath<Json, T>) -> Option<T>
 where
     T: JsonPathQuery,
@@ -79,8 +86,13 @@ where
                 .map(|e| e.decision)
                 .unwrap_or(Decision::ParseFully)
         },
-        |src, _cursor| {
-            let doc: JsonDocument<'_> = JsonParser::parse(src).ok()?;
+        |src, cursor| {
+            let mut state = __shape_support_JsonParser::ScanState::new();
+            let mut builder = JsonStructBuilder::new();
+            let mut pos: usize = 0;
+            parse_JsonParser_value(src.as_bytes(), &mut pos, &mut state, &mut builder, cursor)
+                .ok()?;
+            let doc: JsonDocument<'_> = builder.finalise(src);
             let mut legacy: Vec<LegacySegment<'_>> = Vec::with_capacity(path.len());
             for owned in path.owned_segments() {
                 legacy.push(lower(&owned.as_borrowed())?);

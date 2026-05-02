@@ -1,0 +1,100 @@
+AZ-IV.W3.7 lazy-error-elision contract — negative-fixture evidence
+==================================================================
+
+Contract
+--------
+
+A `parse_with(input, &path)` call where bytes AFTER the path's reach
+are malformed must return `Some(leaf)` (the path resolved before the
+malformation was visited). The same input passed to the eager lane
+(`parse(input)?.get(legacy_path)`) must surface a parse error.
+
+The contract holds by construction once the cursor-threaded
+dispatcher is in place: every byte the cursor causes the dispatcher
+to skip (`Decision::Skip` → byte-range scanner; `Decision::ParseUntil(idx)`
+→ break after the indexed child) bypasses the parse error path
+entirely. The skip-scanner advances `*pos` over the unvisited
+subtree's bytes without any recogniser ever touching the malformed
+bytes; the dispatcher returns Ok at the path's terminal because no
+byte past that terminal was ever asked to parse.
+
+Negative fixtures (one per grammar)
+------------------------------------
+
+JSON  — crates/core/tests/parse_with_json.rs::lazy_error_elision_after_path_reach
+  Input  : `{"title":"hi", @@@ malformed past path's reach @@@`
+  Path   : Field("title")
+  Reach  : the path's terminal is the string leaf at byte ~13
+           (just past `"hi"`). The opening object brace is parsed,
+           the `"title"` key is matched, the value `"hi"` is captured
+           into the builder, the cursor reaches its terminal, and the
+           dispatcher returns Ok at the closing of the matched pair.
+           The bytes after the comma at byte 14 (`@@@ malformed …`)
+           are never parsed.
+  Lazy   : Some("hi")
+  Eager  : Err(ParseErr::Syntax)
+
+CSS L4 — crates/core/tests/parse_with_css_l4.rs::lazy_error_elision_after_path_reach
+  Input  : `a { color: red; } @@@ malformed past path's reach @@@`
+  Path   : Index(0), Index(0)
+  Reach  : first stylesheet rule's first declaration. The cursor
+           drops to ParseUntil(0) at the rule list (one rule
+           sufficient) and at the declaration list (one decl
+           sufficient); the rule body parses cleanly through the
+           closing `}`. Bytes from `@@@` onward never reach the
+           parser.
+  Lazy   : Some(<property str>)
+  Eager  : Err(ParseErr::Syntax)
+
+Sheets — crates/core/tests/parse_with_google_sheets.rs::lazy_error_elision_after_path_reach
+  Input  : `=42 @@@ malformed past path's reach @@@`
+  Path   : Index(0), Index(0)
+  Reach  : the formula's number primitive. The cursor reaches
+           terminal after the number scan; the dispatcher returns Ok
+           without consulting the trailing `@@@`.
+  Lazy   : Some(42.0)
+  Eager  : Err(ParseErr::Syntax)
+
+BBNF  — crates/core/tests/parse_with_bbnf.rs::lazy_error_elision_after_path_reach
+  Input  : `a = b ;\n@@@ not bbnf @@@`
+  Path   : empty (root identity)
+  Reach  : the grammar root. The cursor's terminal is the start of
+           the dispatcher; the root rule parses one production then
+           the lazy lane returns through `builder.finalise(input)`
+           which projects the BbnfValue identity. The trailing
+           garbage is not parsed.
+  Lazy   : Some(BbnfValue<'_>)
+  Eager  : Err(ParseErr::Syntax)
+
+Hard-gate cross-reference
+-------------------------
+
+W3 Hard Gate 6  (lazy elides parse errors past the path's reach)
+W3 Hard Gate 13 (cursor decisions consulted at parse time)
+W3 Hard Gate 15 (no `*Parser::parse(src)` survives in any
+                 `parse_with.rs` body)
+
+Files
+-----
+
+crates/core/src/runtime/json/parse_with.rs           rewritten body
+crates/core/src/runtime/css_l4/parse_with.rs         rewritten body
+crates/core/src/runtime/google_sheets/parse_with.rs  rewritten body
+crates/core/src/runtime/bbnf/parse_with.rs           rewritten body
+crates/core/tests/parse_with_json.rs                 negative-fixture row
+crates/core/tests/parse_with_css_l4.rs               negative-fixture row
+crates/core/tests/parse_with_google_sheets.rs        negative-fixture row
+crates/core/tests/parse_with_bbnf.rs                 negative-fixture row
+
+Build status
+------------
+
+The build of this branch alone is wedged on the W3.6-anticipated
+dispatcher signature: `parse_<Grammar>_<entry>` is rewritten to
+accept `cursor: &mut PathCursor<'p, P>` as a fifth parameter. The
+runtime calls in the four `parse_with.rs` bodies pass the cursor; the
+generated dispatcher in this branch does not yet accept it. The
+orchestrator integrates W3.6 first (emitter carve + regen produces
+the cursor-aware dispatcher) and rebases this branch onto W3.6's tip;
+at that point the build closes and the tests above execute the
+contract.

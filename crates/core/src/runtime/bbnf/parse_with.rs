@@ -1,25 +1,30 @@
-//! AZ-IV.W3.2 — BBNF `parse_with` entry point.
+//! AZ-IV.W3.7 — BBNF `parse_with` entry point (cursor-threaded).
 //!
 //! Lazy bail-out parse surface for the BBNF self-host grammar.
 //! Constructs a [`PathCursor`] over a [`PathSchema`] (today only
 //! [`TypedPath<Bbnf, T>`](crate::path::TypedPath)), wires the cursor's
 //! decision-lookup closure to the codegen-emitted
-//! `__path_plan::lookup` static-search, and hands the cursor to
-//! [`PathExecutor::execute`]. The executor's parse-fn closure runs the
-//! existing eager [`BbnfBootstrap::parse`] and projects the path's
-//! leaf through [`BbnfDocument::get`] using the `BbnfPathQuery` trait
-//! family the document already owns.
+//! `__path_plan::lookup` static-search, and threads the cursor
+//! through the cursor-aware generated dispatcher
+//! [`parse_BbnfBootstrap_grammar`](crate::grammar::generated::bbnf::parse_BbnfBootstrap_grammar).
+//! Subtrees the path does not visit are byte-skipped and never push
+//! records into the [`BbnfStructBuilder`]. After the dispatcher
+//! returns, the builder is finalised against `input` and the leaf is
+//! projected through [`BbnfDocument::get`].
 //!
 //! BBNF compounds are positional, so the cursor sees `Index` steps
 //! exclusively in well-formed paths; `Field` steps against a BBNF
 //! compound resolve to `None` per `BbnfPathQuery::query`.
 
 use super::document::{BbnfDocument, BbnfPathQuery};
-use crate::grammar::generated::bbnf::{__path_plan, BbnfBootstrap};
+use crate::grammar::generated::bbnf::{
+    __path_plan, __shape_support_BbnfBootstrap, parse_BbnfBootstrap_grammar,
+};
 use crate::path::cursor::Decision;
 use crate::path::executor::PathExecutor;
 use crate::path::ir::{PathSegment as TypedSegment, TypedPath};
 use crate::path::markers::Bbnf;
+use crate::runtime::bbnf::BbnfStructBuilder;
 use crate::runtime::path::{Path as LegacyPath, PathSegment as LegacySegment};
 
 /// Lower a typed-path segment into the legacy borrowed alphabet the
@@ -36,7 +41,10 @@ fn lower<'a>(seg: &TypedSegment<'a>) -> Option<LegacySegment<'a>> {
 /// Run a path-driven BBNF parse and project the leaf at `path`.
 ///
 /// `T` is the leaf type; the bound is the document-owned
-/// [`BbnfPathQuery`] trait.
+/// [`BbnfPathQuery`] trait. Returns `None` when the parse fails
+/// inside the path's reach, the path falls outside the document, or
+/// any segment fails to resolve. Parse errors past the path's reach
+/// are silently elided — the lazy contract.
 pub fn parse_with<T>(input: &str, path: &TypedPath<Bbnf, T>) -> Option<T>
 where
     T: BbnfPathQuery,
@@ -49,8 +57,13 @@ where
                 .map(|e| e.decision)
                 .unwrap_or(Decision::ParseFully)
         },
-        |src, _cursor| {
-            let doc: BbnfDocument<'_> = BbnfBootstrap::parse(src).ok()?;
+        |src, cursor| {
+            let mut state = __shape_support_BbnfBootstrap::ScanState::new();
+            let mut builder = BbnfStructBuilder::new();
+            let mut pos: usize = 0;
+            parse_BbnfBootstrap_grammar(src.as_bytes(), &mut pos, &mut state, &mut builder, cursor)
+                .ok()?;
+            let doc: BbnfDocument<'_> = builder.finalise(src);
             let mut legacy: Vec<LegacySegment<'_>> = Vec::with_capacity(path.len());
             for owned in path.owned_segments() {
                 legacy.push(lower(&owned.as_borrowed())?);

@@ -10,7 +10,11 @@ use crate::backend::driver::analysis::BackendAnalysis;
 
 use super::{TsCode, TsEmitCtx, TsEmitter, type_desc_to_ts};
 
-fn collect_named_types(td: &TypeDesc, ir: &GrammarIR, names: &mut std::collections::BTreeSet<String>) {
+fn collect_named_types(
+    td: &TypeDesc,
+    ir: &GrammarIR,
+    names: &mut std::collections::BTreeSet<String>,
+) {
     match td {
         TypeDesc::Named(sid) => {
             names.insert(ir.get_string(*sid).to_string());

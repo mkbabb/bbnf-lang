@@ -113,7 +113,7 @@ impl<'p> StructBuilder for MathStructBuilder<'p> {
     }
 
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
-        let kind = MathCompoundKind::from_rule_id(layout.rule_id);
+        let kind = MathCompoundKind::from_layout(layout);
         self.stack.push(OpenFrame {
             kind,
             branch_tag: None,

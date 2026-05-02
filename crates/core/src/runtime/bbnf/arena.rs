@@ -19,7 +19,7 @@
 //! arena is a private refactor on this module that doesn't ripple
 //! beyond [`crate::runtime::bbnf::BbnfStructBuilder`].
 
-use bbnf_ir::RuleId;
+use bbnf_ir::registry::{StructLayout, StructRegistry};
 
 use crate::runtime::bbnf::value::BbnfValue;
 
@@ -139,53 +139,55 @@ pub enum BbnfCompoundKind {
 }
 
 impl BbnfCompoundKind {
-    /// Resolve a rule id (from
-    /// [`bbnf_ir::registry::StructLayout::rule_id`]) to a kind.
+    /// Resolve a [`StructLayout`] to its compound-kind discriminator.
     ///
-    /// Integer literals match the rule-id allocation in
-    /// `crates/core/src/grammar/generated/bbnf.rs`. Ids not in the
-    /// alphabet collapse to [`Self::Other`].
-    pub fn from_rule_id(rule_id: RuleId) -> Self {
-        match rule_id {
+    /// Per AZ-IV.W4.4 transposition T1: the projection is registry-
+    /// authored — [`StructRegistry::compound_kind_for_layout`]
+    /// returns the rule's stable name, and this match selects the
+    /// typed enum variant. Names match the BBNF grammar's rule
+    /// declarations in `grammar/bbnf/`; ids drift between regen
+    /// passes, names are the durable contract surface.
+    pub fn from_layout(layout: &StructLayout) -> Self {
+        match StructRegistry::compound_kind_for_layout(layout) {
             // Top-level grammar surface.
-            16 => Self::ImportPath,
-            21 => Self::ImportItems,
-            22 => Self::PrettyHint,
-            23 => Self::TokenDirective,
-            24 => Self::DebugDirective,
-            25 => Self::HostDirective,
-            26 => Self::WsDirective,
-            37 => Self::ImportDirective,
-            38 => Self::PrettyDirective,
-            39 => Self::Alternation,
-            40 => Self::CallArg,
-            41 => Self::Concatenation,
-            42 => Self::Closure,
-            43 => Self::Term,
-            44 => Self::BinaryFactor,
-            46 => Self::Factor,
-            47 => Self::MappedFactor,
-            48 => Self::Rule,
-            49 => Self::RecoverDirective,
-            51 => Self::GrammarItem,
-            52 => Self::Grammar,
+            "import_path" => Self::ImportPath,
+            "import_items" => Self::ImportItems,
+            "pretty_hint" => Self::PrettyHint,
+            "token_directive" => Self::TokenDirective,
+            "debug_directive" => Self::DebugDirective,
+            "host_directive" => Self::HostDirective,
+            "ws_directive" => Self::WsDirective,
+            "import_directive" => Self::ImportDirective,
+            "pretty_directive" => Self::PrettyDirective,
+            "alternation" => Self::Alternation,
+            "call_arg" => Self::CallArg,
+            "concatenation" => Self::Concatenation,
+            "closure" => Self::Closure,
+            "term" => Self::Term,
+            "binary_factor" => Self::BinaryFactor,
+            "factor" => Self::Factor,
+            "mapped_factor" => Self::MappedFactor,
+            "rule" => Self::Rule,
+            "recover_directive" => Self::RecoverDirective,
+            "grammar_item" => Self::GrammarItem,
+            "grammar" => Self::Grammar,
             // Value-expression sub-grammar.
-            17 => Self::ValuePath,
-            18 => Self::ValueInput,
-            19 => Self::TypeAnnotation,
-            27 => Self::ValueMul,
-            28 => Self::ValueOr,
-            29 => Self::ValueAdd,
-            30 => Self::ValueCmp,
-            31 => Self::ValueAnd,
-            32 => Self::ValueClosure,
-            33 => Self::ValueFnCall,
-            35 => Self::ValueAtom,
-            36 => Self::ValueUnary,
+            "value_path" => Self::ValuePath,
+            "value_input" => Self::ValueInput,
+            "type_annotation" => Self::TypeAnnotation,
+            "value_mul" => Self::ValueMul,
+            "value_or" => Self::ValueOr,
+            "value_add" => Self::ValueAdd,
+            "value_cmp" => Self::ValueCmp,
+            "value_and" => Self::ValueAnd,
+            "value_closure" => Self::ValueClosure,
+            "value_fn_call" => Self::ValueFnCall,
+            "value_atom" => Self::ValueAtom,
+            "value_unary" => Self::ValueUnary,
             // ValueExpr / Rhs / Lhs / Directive are retained for AST
             // exhaustiveness; their grammar rules collapse to Wrap or
             // compose through typed-leaf surfaces, so no struct
-            // layout is emitted.
+            // layout is emitted under those names.
             _ => Self::Other,
         }
     }

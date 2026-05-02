@@ -27,7 +27,7 @@ use bbnf_ir::registry::{LayoutKind, StructLayout};
 /// the StructRegistry. The `rule_id` literal must match the CSS L4
 /// grammar's allocation in
 /// `crates/core/src/grammar/generated/css_l4.rs` so the runtime
-/// builder's `from_rule_id`-keyed dispatch resolves the expected
+/// builder's `from_layout`-keyed dispatch resolves the expected
 /// `OpenFrame` variant.
 fn layout_for(rule_id: u32, rule_name: &str, kind: LayoutKind) -> StructLayout {
     StructLayout {

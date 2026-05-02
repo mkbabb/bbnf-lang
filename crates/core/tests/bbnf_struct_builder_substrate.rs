@@ -19,7 +19,7 @@ use bbnf_ir::registry::{LayoutKind, StructLayout};
 /// rule-id. Used by the smoke tests to drive `begin_compound` without
 /// standing up a full IR. The id literal must match the BBNF
 /// grammar's allocation in `crates/core/src/grammar/generated/bbnf.rs`
-/// so [`BbnfCompoundKind::from_rule_id`] resolves the expected
+/// so [`BbnfCompoundKind::from_layout`] resolves the expected
 /// discriminator.
 fn synth_layout(rule_id: u32, rule_name: &str) -> StructLayout {
     StructLayout {
@@ -62,7 +62,7 @@ fn bbnf_struct_builder_round_trips_a_bool_leaf() {
 fn bbnf_struct_builder_round_trips_a_compound_with_three_children() {
     let mut builder = BbnfStructBuilder::new();
     // BBNF grammar's `rule` rule has rule_id 48; resolves through
-    // `BbnfCompoundKind::from_rule_id` to `Rule`.
+    // `BbnfCompoundKind::from_layout` to `Rule`.
     let layout = synth_layout(48, "rule");
     let _handle: CompoundHandle = builder.begin_compound(&layout);
     builder.push_leaf_with_str("lhs_name");
@@ -88,7 +88,7 @@ fn bbnf_struct_builder_branch_tag_records_alt_index() {
     // Alt-of-Refs forwarder (no struct layout emitted); the tagged
     // branch lands on the concrete sub-rule. Use `import_directive`
     // (rule_id 37) so the round-trip resolves to a real registered
-    // kind via `BbnfCompoundKind::from_rule_id`.
+    // kind via `BbnfCompoundKind::from_layout`.
     let layout = synth_layout(37, "import_directive");
     let handle: CompoundHandle = builder.begin_compound(&layout);
     builder.push_branch_tag(2);

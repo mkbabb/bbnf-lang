@@ -153,7 +153,7 @@ impl<'p> StructBuilder for BbnfStructBuilder<'p> {
     }
 
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
-        let kind = BbnfCompoundKind::from_rule_id(layout.rule_id);
+        let kind = BbnfCompoundKind::from_layout(layout);
         self.stack.push(OpenFrame {
             kind,
             branch_tag: None,

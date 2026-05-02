@@ -12,7 +12,7 @@
 //! the empty-handle constant ([`CsvCompoundId::EMPTY`]) carries the
 //! discriminator for a zero-cost empty-resolution branch.
 
-use bbnf_ir::RuleId;
+use bbnf_ir::registry::{StructLayout, StructRegistry};
 
 use crate::runtime::csv::value::CsvValue;
 
@@ -44,20 +44,19 @@ pub enum CsvCompoundKind {
 }
 
 impl CsvCompoundKind {
-    /// Resolve a rule id (from
-    /// [`bbnf_ir::registry::StructLayout::rule_id`]) to a kind.
+    /// Resolve a [`StructLayout`] to its kind.
     ///
-    /// Integer literals match the rule-id allocation in
-    /// `crates/core/src/grammar/generated/csv.rs`. Ids not in the
-    /// alphabet collapse to [`Self::Other`].
-    pub fn from_rule_id(rule_id: RuleId) -> Self {
-        match rule_id {
-            // 1 = "escaped" (a Span newtype, projects to Other)
-            2 => Self::Record,
-            3 => Self::Csv,
-            // No `field` rule_id is currently emitted as a layout in
-            // generated csv.rs; the variant is retained for AST
-            // exhaustiveness against future grammar refactors.
+    /// Per AZ-IV.W4.4 transposition T1: registry-projected — names
+    /// match the CSV grammar rule declarations in `grammar/misc/csv.bbnf`.
+    /// Unmatched rules collapse to [`Self::Other`].
+    pub fn from_layout(layout: &StructLayout) -> Self {
+        match StructRegistry::compound_kind_for_layout(layout) {
+            "record" => Self::Record,
+            "csv" => Self::Csv,
+            // `escaped` is a Span newtype (projects to Other);
+            // `field` is an Alt that collapses to its chosen leaf —
+            // the variant is retained for AST exhaustiveness against
+            // future grammar refactors.
             _ => Self::Other,
         }
     }

@@ -369,4 +369,23 @@ impl StructRegistry {
     pub fn clear(&mut self) {
         self.layouts.clear();
     }
+
+    /// Project a layout into its canonical compound-kind discriminator.
+    ///
+    /// Per-grammar runtime arenas key their typed `CompoundKind` enum
+    /// off this projection: the registry returns the rule's stable
+    /// name (`layout.rule_name`), and each grammar's
+    /// `CompoundKind::from_layout` matches on the projected name to
+    /// pick its variant. Centralising the projection here keeps
+    /// arenas free of rule-id arithmetic — rule ids drift between
+    /// regen passes; rule names are the durable contract surface.
+    ///
+    /// Per AZ-IV.W4.4 transposition T1: this method IS the lookup the
+    /// per-grammar `from_rule_id` integer arms used to hold; the
+    /// arenas project from the registry rather than re-deriving the
+    /// id-keyed mapping.
+    #[inline]
+    pub fn compound_kind_for_layout<'a>(layout: &'a StructLayout) -> &'a str {
+        layout.rule_name.as_str()
+    }
 }

@@ -2,7 +2,7 @@
 //!
 //! Mirror of `crates/core/src/runtime/csv/arena.rs`.
 
-use bbnf_ir::RuleId;
+use bbnf_ir::registry::{StructLayout, StructRegistry};
 
 use crate::runtime::bnf::value::BnfValue;
 
@@ -23,19 +23,22 @@ pub enum BnfCompoundKind {
 }
 
 impl BnfCompoundKind {
-    /// Resolve a rule id to a kind. Integer literals match the rule-id
-    /// allocation in `crates/core/src/grammar/generated/bnf.rs`. Ids
-    /// not in the alphabet collapse to [`Self::Other`].
-    pub fn from_rule_id(rule_id: RuleId) -> Self {
-        match rule_id {
-            0 => Self::Terminal,
-            1 => Self::Nonterminal,
-            2 => Self::Alternation,
-            3 => Self::Rule,
-            4 => Self::Grammar,
+    /// Resolve a [`StructLayout`] to its kind.
+    ///
+    /// Per AZ-IV.W4.4 transposition T1: registry-projected — names
+    /// match the BNF grammar rule declarations in
+    /// `grammar/bnf/bnf.bbnf`. Unmatched rules collapse to
+    /// [`Self::Other`].
+    pub fn from_layout(layout: &StructLayout) -> Self {
+        match StructRegistry::compound_kind_for_layout(layout) {
+            "terminal" => Self::Terminal,
+            "nonterminal" => Self::Nonterminal,
+            "alternation" => Self::Alternation,
+            "rule" => Self::Rule,
+            "grammar" => Self::Grammar,
             // Identifier / Term / Expression / Rhs / Lhs are retained
             // for AST exhaustiveness; no layout is emitted for those
-            // rules in the current generated bnf.rs (they collapse via
+            // rules in the current generated bnf (they collapse via
             // structural Wrap shape).
             _ => Self::Other,
         }

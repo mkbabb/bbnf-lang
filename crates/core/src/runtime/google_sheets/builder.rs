@@ -10,8 +10,8 @@
 //! [`SheetsValue`] onto the topmost open frame's `children` Vec
 //! (or, when the stack is empty, set the document root).
 //!
-//! `begin_compound` opens a new frame keyed on the layout's
-//! `rule_id` via [`SheetsCompoundKind::from_rule_id`].
+//! `begin_compound` opens a new frame keyed on the layout via
+//! [`SheetsCompoundKind::from_layout`].
 //! `end_compound` finalises the frame's children into a
 //! [`crate::runtime::google_sheets::SheetsCompound`] entry on the
 //! arena, then deposits the resulting
@@ -202,7 +202,7 @@ impl<'p> StructBuilder for SheetsStructBuilder<'p> {
         // kind via the registry-projected discriminator. Layouts
         // outside the kind alphabet (defensive fallback) collapse onto
         // Wrap.
-        let kind = SheetsCompoundKind::from_rule_id(layout.rule_id);
+        let kind = SheetsCompoundKind::from_layout(layout);
         self.next_handle = self.next_handle.wrapping_add(1);
         let handle_token = self.next_handle;
         self.stack.push(Frame {

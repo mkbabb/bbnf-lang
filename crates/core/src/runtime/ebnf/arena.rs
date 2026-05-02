@@ -2,7 +2,7 @@
 //!
 //! Mirror of `crates/core/src/runtime/csv/arena.rs`.
 
-use bbnf_ir::RuleId;
+use bbnf_ir::registry::{StructLayout, StructRegistry};
 
 use crate::runtime::ebnf::value::EbnfValue;
 
@@ -29,24 +29,27 @@ pub enum EbnfCompoundKind {
 }
 
 impl EbnfCompoundKind {
-    /// Resolve a rule id to a kind. Integer literals match the rule-id
-    /// allocation in `crates/core/src/grammar/generated/ebnf.rs`. Ids
-    /// not in the alphabet collapse to [`Self::Other`].
-    pub fn from_rule_id(rule_id: RuleId) -> Self {
-        match rule_id {
-            0 => Self::Letter,
-            2 => Self::Symbol,
-            3 => Self::Identifier,
-            4 => Self::Character,
-            6 => Self::Concatenation,
-            7 => Self::Alternation,
-            9 => Self::Term,
-            10 => Self::Factor,
-            11 => Self::Rule,
-            12 => Self::Grammar,
+    /// Resolve a [`StructLayout`] to its kind.
+    ///
+    /// Per AZ-IV.W4.4 transposition T1: registry-projected — names
+    /// match the EBNF grammar rule declarations in
+    /// `grammar/ebnf/ebnf.bbnf`. Unmatched rules collapse to
+    /// [`Self::Other`].
+    pub fn from_layout(layout: &StructLayout) -> Self {
+        match StructRegistry::compound_kind_for_layout(layout) {
+            "letter" => Self::Letter,
+            "symbol" => Self::Symbol,
+            "identifier" => Self::Identifier,
+            "character" => Self::Character,
+            "concatenation" => Self::Concatenation,
+            "alternation" => Self::Alternation,
+            "term" => Self::Term,
+            "factor" => Self::Factor,
+            "rule" => Self::Rule,
+            "grammar" => Self::Grammar,
             // Digit / S / Terminal / Terminator / Rhs / Lhs are
             // retained for AST exhaustiveness; no layout is emitted
-            // for those rules in the current generated ebnf.rs.
+            // for those rules in the current generated ebnf.
             _ => Self::Other,
         }
     }

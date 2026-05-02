@@ -17,7 +17,7 @@
 //! scratch buffers. The Vec-backed slab keeps the surface lean; a
 //! switch to a bump arena later is a private refactor on this module.
 
-use bbnf_ir::RuleId;
+use bbnf_ir::registry::{StructLayout, StructRegistry};
 
 use crate::runtime::google_sheets::value::SheetsValue;
 
@@ -142,48 +142,49 @@ impl SheetsCompoundKind {
         )
     }
 
-    /// Resolve a kind from the rule id the layout carries.
+    /// Resolve a kind from the rule the layout describes.
     ///
-    /// Integer literals match the rule-id allocation in
-    /// `crates/core/src/grammar/generated/google_sheets.rs`. Used by
-    /// the builder when admitting a `begin_compound` against an
-    /// arbitrary rule; rules unmatched by the rule-id alphabet
+    /// Per AZ-IV.W4.4 transposition T1: the projection is registry-
+    /// authored. [`StructRegistry::compound_kind_for_layout`] returns
+    /// the rule's stable name; this match selects the typed enum
+    /// variant. Names match the Sheets grammar rule declarations in
+    /// `grammar/google-sheets/google-sheets.bbnf`. Unmatched rules
     /// collapse into [`SheetsCompoundKind::Wrap`] (the structural
-    /// transparent-wrap fallback).
-    pub fn from_rule_id(rule_id: RuleId) -> Self {
-        match rule_id {
-            3 => Self::ErrorLiteral,
-            11 => Self::Cell,
-            12 => Self::FuncOpen,
-            13 => Self::RangeRef,
-            14 => Self::CellOrRange,
-            15 => Self::ComparisonExpr,
-            16 => Self::MulExpr,
-            17 => Self::UnaryExpr,
-            18 => Self::ParenExpr,
-            19 => Self::Arg,
-            20 => Self::FuncArgs,
-            21 => Self::LetBinding,
-            22 => Self::LambdaParams,
-            23 => Self::ArrayRow,
-            24 => Self::ArrayRows,
-            25 => Self::ArrayLiteral,
-            26 => Self::ConcatExpr,
-            27 => Self::AddExpr,
-            28 => Self::ExpExpr,
-            29 => Self::LambdaCall,
-            31 => Self::FuncCall,
-            32 => Self::LetArgs,
-            33 => Self::LetCall,
-            35 => Self::PostfixExpr,
-            36 => Self::Formula,
+    /// transparent-wrap fallback, mirroring JSON's
+    /// `OpenFrame::Wrap` discipline).
+    pub fn from_layout(layout: &StructLayout) -> Self {
+        match StructRegistry::compound_kind_for_layout(layout) {
+            "error_literal" => Self::ErrorLiteral,
+            "cell" => Self::Cell,
+            "func_open" => Self::FuncOpen,
+            "range_ref" => Self::RangeRef,
+            "cell_or_range" => Self::CellOrRange,
+            "comparison_expr" => Self::ComparisonExpr,
+            "mul_expr" => Self::MulExpr,
+            "unary_expr" => Self::UnaryExpr,
+            "paren_expr" => Self::ParenExpr,
+            "arg" => Self::Arg,
+            "func_args" => Self::FuncArgs,
+            "let_binding" => Self::LetBinding,
+            "lambda_params" => Self::LambdaParams,
+            "array_row" => Self::ArrayRow,
+            "array_rows" => Self::ArrayRows,
+            "array_literal" => Self::ArrayLiteral,
+            "concat_expr" => Self::ConcatExpr,
+            "add_expr" => Self::AddExpr,
+            "exp_expr" => Self::ExpExpr,
+            "lambda_call" => Self::LambdaCall,
+            "func_call" => Self::FuncCall,
+            "let_args" => Self::LetArgs,
+            "let_call" => Self::LetCall,
+            "postfix_expr" => Self::PostfixExpr,
+            "formula" => Self::Formula,
             // Expression / Primary / RangeEnd / SheetPrefix /
             // CompareOp / AddOp / MulOp / UnaryPrefix / Unknown are
             // retained for AST exhaustiveness; their grammar rules
             // emit no struct layout (the values flow through Wrap or
             // operator-tagged Seq leaves). Transparent / wrap-shape
-            // rules and the structural fallback collapse to Wrap,
-            // matching JSON's `OpenFrame::Wrap` discipline.
+            // rules and the structural fallback collapse to Wrap.
             _ => Self::Wrap,
         }
     }

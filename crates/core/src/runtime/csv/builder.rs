@@ -141,7 +141,7 @@ impl<'p> StructBuilder for CsvStructBuilder<'p> {
     }
 
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
-        let kind = CsvCompoundKind::from_rule_id(layout.rule_id);
+        let kind = CsvCompoundKind::from_layout(layout);
         self.stack.push(OpenFrame {
             kind,
             branch_tag: None,

@@ -124,11 +124,7 @@ fn fuse_single_use_inner(ir: &mut GrammarIR, mut trace: Option<&mut InlineTrace>
             let mut refs_seen = vec![false; bodies.len()];
             collect_refs_to(&ir.rules[rule_index].body, &bodies, &mut refs_seen);
             for (source_id, source_name) in &fusable_names {
-                if refs_seen
-                    .get(*source_id as usize)
-                    .copied()
-                    .unwrap_or(false)
-                {
+                if refs_seen.get(*source_id as usize).copied().unwrap_or(false) {
                     trace.record(InlineSubstitution::new(
                         *source_id,
                         source_name.clone(),

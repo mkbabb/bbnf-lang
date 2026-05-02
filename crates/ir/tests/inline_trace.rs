@@ -59,8 +59,7 @@ fn make_ir(rules: Vec<IrRule>, entry: RuleId, strings: Vec<String>) -> GrammarIR
         struct_registry: StructRegistry::default(),
         type_obligations: Vec::new(),
         inline_trace: InlineTrace::default(),
-        path_check_resolver:
-            bbnf_ir::passes::path_check::PathCheckResolver::default(),
+        path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     }
 }
 
@@ -113,7 +112,12 @@ fn fuse_single_use_records_one_substitution() {
 /// total — one for each absorber).
 #[test]
 fn inline_acyclic_records_per_absorber() {
-    let strings: Vec<String> = vec!["entry".into(), "left".into(), "right".into(), "small".into()];
+    let strings: Vec<String> = vec![
+        "entry".into(),
+        "left".into(),
+        "right".into(),
+        "small".into(),
+    ];
     let mut ir = make_ir(
         vec![
             // entry = left | right ; (Alt with two non-bare-Ref branches keeps

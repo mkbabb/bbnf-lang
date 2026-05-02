@@ -57,8 +57,7 @@ fn fixture(
 
 #[test]
 fn surviving_rule_resolves_to_self() {
-    let (registry, rules, strings) =
-        fixture(&[(0, "entry"), (1, "value")], &[]);
+    let (registry, rules, strings) = fixture(&[(0, "entry"), (1, "value")], &[]);
     let trace = InlineTrace::new();
 
     let resolver = build_resolver(&registry, &trace, &rules, &strings);
@@ -153,19 +152,15 @@ fn empty_inputs_produce_empty_resolver() {
 
 #[test]
 fn resolver_iter_is_btreemap_stable() {
-    let (registry, rules, strings) = fixture(
-        &[
-            (0, "alpha"),
-            (1, "beta"),
-            (2, "gamma"),
-        ],
-        &[],
-    );
+    let (registry, rules, strings) = fixture(&[(0, "alpha"), (1, "beta"), (2, "gamma")], &[]);
     let trace = InlineTrace::new();
     let resolver = build_resolver(&registry, &trace, &rules, &strings);
 
     let names: Vec<String> = resolver.iter().map(|(n, _)| n.clone()).collect();
-    assert_eq!(names, vec!["alpha".to_string(), "beta".into(), "gamma".into()]);
+    assert_eq!(
+        names,
+        vec!["alpha".to_string(), "beta".into(), "gamma".into()]
+    );
 }
 
 #[test]

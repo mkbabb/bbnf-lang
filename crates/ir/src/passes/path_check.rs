@@ -221,9 +221,7 @@ fn resolve_through_trace(
     }
     visited.push(source_name.to_owned());
 
-    let absorber = trace
-        .iter()
-        .find(|e| e.source_rule_name == source_name)?;
+    let absorber = trace.iter().find(|e| e.source_rule_name == source_name)?;
 
     if registry.contains(absorber.absorber_rule_id) {
         return Some(absorber.absorber_rule_id);

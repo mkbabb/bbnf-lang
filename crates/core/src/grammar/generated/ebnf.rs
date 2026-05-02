@@ -1988,6 +1988,7 @@ mod __ebnfparser_emit_impl {
                                         (),
                                         crate::runtime::DtaError,
                                     > = (|| {
+                                        let __alt_span_lo: usize = *p;
                                         let at = *p;
                                         let end = at + 1usize;
                                         if input.len() < end || input[at..end] != [95u8] {
@@ -1996,6 +1997,17 @@ mod __ebnfparser_emit_impl {
                                             });
                                         }
                                         *p = end;
+                                        {
+                                            let __alt_span_hi: usize = *p;
+                                            let __alt_span_slice: &str = ::core::str::from_utf8(
+                                                    &input[__alt_span_lo..__alt_span_hi],
+                                                )
+                                                .unwrap_or("");
+                                            <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                                                builder,
+                                                __alt_span_slice,
+                                            );
+                                        }
                                         Ok(())
                                     })();
                                     match __alt_result {
@@ -3436,6 +3448,7 @@ mod __ebnfparser_emit_impl {
                             (),
                             crate::runtime::DtaError,
                         > = (|| {
+                            let __alt_span_lo: usize = *p;
                             let at = *p;
                             let end = at + 1usize;
                             if input.len() < end || input[at..end] != [63u8] {
@@ -3444,6 +3457,17 @@ mod __ebnfparser_emit_impl {
                                 });
                             }
                             *p = end;
+                            {
+                                let __alt_span_hi: usize = *p;
+                                let __alt_span_slice: &str = ::core::str::from_utf8(
+                                        &input[__alt_span_lo..__alt_span_hi],
+                                    )
+                                    .unwrap_or("");
+                                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                                    builder,
+                                    __alt_span_slice,
+                                );
+                            }
                             Ok(())
                         })();
                         match __alt_result {
@@ -3464,6 +3488,7 @@ mod __ebnfparser_emit_impl {
                             (),
                             crate::runtime::DtaError,
                         > = (|| {
+                            let __alt_span_lo: usize = *p;
                             let at = *p;
                             let end = at + 1usize;
                             if input.len() < end || input[at..end] != [42u8] {
@@ -3472,6 +3497,17 @@ mod __ebnfparser_emit_impl {
                                 });
                             }
                             *p = end;
+                            {
+                                let __alt_span_hi: usize = *p;
+                                let __alt_span_slice: &str = ::core::str::from_utf8(
+                                        &input[__alt_span_lo..__alt_span_hi],
+                                    )
+                                    .unwrap_or("");
+                                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                                    builder,
+                                    __alt_span_slice,
+                                );
+                            }
                             Ok(())
                         })();
                         match __alt_result {
@@ -3492,6 +3528,7 @@ mod __ebnfparser_emit_impl {
                             (),
                             crate::runtime::DtaError,
                         > = (|| {
+                            let __alt_span_lo: usize = *p;
                             let at = *p;
                             let end = at + 1usize;
                             if input.len() < end || input[at..end] != [43u8] {
@@ -3500,6 +3537,17 @@ mod __ebnfparser_emit_impl {
                                 });
                             }
                             *p = end;
+                            {
+                                let __alt_span_hi: usize = *p;
+                                let __alt_span_slice: &str = ::core::str::from_utf8(
+                                        &input[__alt_span_lo..__alt_span_hi],
+                                    )
+                                    .unwrap_or("");
+                                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                                    builder,
+                                    __alt_span_slice,
+                                );
+                            }
                             Ok(())
                         })();
                         match __alt_result {
@@ -3739,6 +3787,7 @@ mod __ebnfparser_emit_impl {
                             (),
                             crate::runtime::DtaError,
                         > = (|| {
+                            let __alt_span_lo: usize = *p;
                             let at = *p;
                             let end = at + 1usize;
                             if input.len() < end || input[at..end] != [59u8] {
@@ -3747,6 +3796,17 @@ mod __ebnfparser_emit_impl {
                                 });
                             }
                             *p = end;
+                            {
+                                let __alt_span_hi: usize = *p;
+                                let __alt_span_slice: &str = ::core::str::from_utf8(
+                                        &input[__alt_span_lo..__alt_span_hi],
+                                    )
+                                    .unwrap_or("");
+                                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                                    builder,
+                                    __alt_span_slice,
+                                );
+                            }
                             Ok(())
                         })();
                         match __alt_result {
@@ -3767,6 +3827,7 @@ mod __ebnfparser_emit_impl {
                             (),
                             crate::runtime::DtaError,
                         > = (|| {
+                            let __alt_span_lo: usize = *p;
                             let at = *p;
                             let end = at + 1usize;
                             if input.len() < end || input[at..end] != [46u8] {
@@ -3775,6 +3836,17 @@ mod __ebnfparser_emit_impl {
                                 });
                             }
                             *p = end;
+                            {
+                                let __alt_span_hi: usize = *p;
+                                let __alt_span_slice: &str = ::core::str::from_utf8(
+                                        &input[__alt_span_lo..__alt_span_hi],
+                                    )
+                                    .unwrap_or("");
+                                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                                    builder,
+                                    __alt_span_slice,
+                                );
+                            }
                             Ok(())
                         })();
                         match __alt_result {

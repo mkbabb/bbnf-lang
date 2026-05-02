@@ -1,0 +1,5094 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.45
+   Compiling unicode-ident v1.0.24
+   Compiling serde_core v1.0.228
+   Compiling serde v1.0.228
+   Compiling libc v0.2.183
+   Compiling memchr v2.8.0
+   Compiling once_cell v1.21.4
+   Compiling cfg-if v1.0.4
+   Compiling equivalent v1.0.2
+   Compiling hashbrown v0.16.1
+   Compiling zmij v1.0.21
+   Compiling itoa v1.0.18
+   Compiling rustc-hash v2.1.2
+   Compiling serde_json v1.0.149
+   Compiling version_check v0.9.5
+   Compiling csp-solver v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-aziv-w1-shape/crates/csp-solver)
+   Compiling crossbeam-utils v0.8.21
+   Compiling autocfg v1.5.0
+   Compiling getrandom v0.3.4
+   Compiling zerocopy v0.8.48
+   Compiling ryu v1.0.23
+   Compiling num-traits v0.2.19
+   Compiling either v1.15.0
+   Compiling rayon-core v1.13.0
+   Compiling aho-corasick v1.1.4
+   Compiling smallbox v0.8.8
+   Compiling typeid v1.0.3
+   Compiling itoap v1.0.1
+   Compiling fast-float2 v0.2.3
+   Compiling colored v3.1.1
+   Compiling allocator-api2 v0.2.21
+   Compiling ahash v0.8.12
+   Compiling bbnf-ser v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-aziv-w1-shape/crates/ser)
+   Compiling parking_lot_core v0.9.12
+   Compiling scopeguard v1.2.0
+   Compiling indexmap v2.13.0
+   Compiling bitflags v2.11.0
+   Compiling shlex v1.3.0
+   Compiling rustix v1.1.4
+   Compiling find-msvc-tools v0.1.9
+   Compiling syn v2.0.117
+   Compiling crossbeam-epoch v0.9.18
+   Compiling crossbeam-deque v0.8.6
+   Compiling lock_api v0.4.14
+   Compiling serde_derive v1.0.228
+   Compiling egraph-derive v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-aziv-w1-shape/crates/egraph-derive)
+   Compiling pprint_derive v0.2.2 (/Users/mkbabb/Programming/pprint/rust/derive)
+   Compiling simd-scan v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-aziv-w1-shape/crates/simd-scan)
+   Compiling heck v0.5.0
+   Compiling getrandom v0.4.2
+   Compiling syn v1.0.109
+   Compiling pprint v0.3.6 (/Users/mkbabb/Programming/pprint/rust)
+   Compiling utf8parse v0.2.2
+   Compiling rayon v1.11.0
+   Compiling anstyle-parse v1.0.0
+   Compiling anstyle v1.0.14
+   Compiling anstyle-query v1.1.5
+   Compiling colorchoice v1.0.5
+   Compiling thiserror v1.0.69
+   Compiling is_terminal_polyfill v1.70.2
+   Compiling rmp v0.8.15
+   Compiling anstream v1.0.0
+   Compiling thiserror-impl v1.0.69
+   Compiling strsim v0.11.1
+   Compiling clap_lex v1.1.0
+   Compiling fastrand v2.3.0
+   Compiling clap_derive v4.6.1
+   Compiling ref-cast v1.0.25
+   Compiling anyhow v1.0.102
+   Compiling ref-cast-impl v1.0.25
+   Compiling errno v0.3.14
+   Compiling jobserver v0.1.34
+   Compiling cc v1.2.58
+   Compiling termcolor v1.4.1
+   Compiling simdutf8 v0.1.5
+   Compiling rustc-demangle v0.1.27
+   Compiling divan-macros v0.1.21
+   Compiling condtype v1.3.0
+   Compiling bytes v1.11.1
+   Compiling regex-lite v0.1.9
+   Compiling semver v1.0.27
+   Compiling rand_core v0.6.4
+   Compiling siphasher v1.0.2
+   Compiling rand v0.8.5
+   Compiling toml_write v0.1.2
+   Compiling phf_shared v0.11.3
+   Compiling regex-syntax v0.8.10
+   Compiling foldhash v0.1.5
+   Compiling log v0.4.29
+   Compiling phf_generator v0.11.3
+   Compiling winnow v0.7.15
+   Compiling hashbrown v0.15.5
+   Compiling bumpalo v3.20.2
+   Compiling cranelift-isle v0.116.1
+   Compiling thiserror v2.0.18
+   Compiling typenum v1.19.0
+   Compiling wasmtime-versioned-export-macros v29.0.1
+   Compiling thiserror-impl v2.0.18
+   Compiling generic-array v0.14.7
+   Compiling target-lexicon v0.13.5
+   Compiling prettyplease v0.2.37
+   Compiling pkg-config v0.3.32
+   Compiling cranelift-codegen-shared v0.116.1
+   Compiling cranelift-codegen-meta v0.116.1
+   Compiling zstd-sys v2.0.16+zstd.1.5.7
+   Compiling gimli v0.31.1
+   Compiling crc32fast v1.5.0
+   Compiling cranelift-codegen v0.116.1
+   Compiling phf_macros v0.11.3
+   Compiling terminal_size v0.4.4
+   Compiling tempfile v3.27.0
+   Compiling libmimalloc-sys v0.1.44
+   Compiling clap_builder v4.6.0
+   Compiling ahash v0.7.8
+   Compiling object v0.36.7
+   Compiling tree-sitter-language v0.1.7
+   Compiling dtoa v1.0.11
+   Compiling arbitrary v1.4.2
+   Compiling wasmparser v0.221.3
+   Compiling smallvec v1.15.1
+   Compiling rmp-serde v1.3.1
+   Compiling ron v0.12.1
+   Compiling serde_spanned v0.6.9
+   Compiling toml_datetime v0.6.11
+   Compiling cranelift-bitset v0.116.1
+   Compiling egraph v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-aziv-w1-shape/crates/egraph)
+   Compiling toml_edit v0.22.27
+   Compiling cranelift-entity v0.116.1
+   Compiling cobs v0.3.0
+   Compiling bbnf-regex v0.1.0 (/Users/mkbabb/Programming/parse-that/rust/regex)
+   Compiling regalloc2 v0.11.2
+   Compiling cranelift-bforest v0.116.1
+   Compiling dtoa-short v0.3.5
+   Compiling cranelift-control v0.116.1
+   Compiling phf v0.11.3
+   Compiling getrandom v0.2.17
+   Compiling cssparser-macros v0.6.1
+   Compiling rustix v0.38.44
+   Compiling ucd-trie v0.1.7
+   Compiling cpp_demangle v0.4.5
+   Compiling zstd-safe v7.2.4
+   Compiling pest v2.8.6
+   Compiling hashbrown v0.14.5
+   Compiling parse_that v0.4.0 (/Users/mkbabb/Programming/parse-that/rust/parse_that)
+   Compiling ptr_meta_derive v0.1.4
+   Compiling crypto-common v0.1.7
+   Compiling block-buffer v0.10.4
+   Compiling postcard v1.1.3
+   Compiling phf_codegen v0.11.3
+   Compiling leb128 v0.2.5
+   Compiling leb128fmt v0.1.0
+   Compiling static_assertions v1.1.0
+   Compiling outref v0.1.0
+   Compiling libm v0.2.16
+   Compiling id-arena v2.3.0
+   Compiling unicode-xid v0.2.6
+   Compiling radium v0.7.0
+   Compiling rkyv v0.7.46
+   Compiling simd-abstraction v0.7.1
+   Compiling wasm-encoder v0.246.1
+   Compiling wasm-encoder v0.221.3
+   Compiling lexical-util v0.8.5
+   Compiling digest v0.10.7
+   Compiling mimalloc v0.1.48
+   Compiling parcel_selectors v0.28.2
+   Compiling ptr_meta v0.1.4
+   Compiling rkyv_derive v0.7.46
+   Compiling hashbrown v0.12.3
+   Compiling pest_meta v2.8.6
+   Compiling cssparser v0.33.0
+   Compiling clap v4.6.1
+   Compiling divan v0.1.21
+   Compiling wasmtime-fiber v29.0.1
+   Compiling toml v0.8.23
+   Compiling dirs-sys-next v0.1.2
+   Compiling cpufeatures v0.2.17
+   Compiling wasmtime-component-util v29.0.1
+   Compiling tap v1.0.1
+   Compiling wasmtime-cache v29.0.1
+   Compiling unicode-width v0.2.2
+   Compiling unicode-segmentation v1.13.2
+   Compiling matches v0.1.10
+   Compiling uuid v1.23.0
+   Compiling byteorder v1.5.0
+   Compiling seahash v4.1.0
+   Compiling paste v1.0.15
+   Compiling wasmtime-component-macro v29.0.1
+   Compiling wit-parser v0.221.3
+   Compiling tree-sitter v0.25.10
+   Compiling fxhash v0.2.1
+   Compiling wast v246.0.1
+   Compiling data-url v0.1.1
+   Compiling debugid v0.8.0
+   Compiling convert_case v0.6.0
+   Compiling wyz v0.5.1
+   Compiling lexical-parse-integer v0.8.6
+   Compiling sha2 v0.10.9
+   Compiling directories-next v2.0.0
+   Compiling bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-wt-aziv-w1-shape/crates/ir)
+   Compiling pest_generator v2.8.6
+   Compiling zstd v0.13.3
+   Compiling base64-simd v0.7.0
+   Compiling halfbrown v0.2.5
+   Compiling const-str-proc-macro v0.3.2
+   Compiling regex-automata v0.4.14
+   Compiling wasmtime v29.0.1
+   Compiling tree-sitter-json v0.24.8
+   Compiling float-cmp v0.10.0
+   Compiling num-integer v0.1.46
+   Compiling itertools v0.12.1
+   Compiling wasmtime-asm-macros v29.0.1
+   Compiling funty v2.0.0
+   Compiling jiter v0.8.2
+   Compiling precomputed-hash v0.1.1
+   Compiling vlq v0.5.1
+   Compiling base64 v0.21.7
+   Compiling pest_derive v2.8.6
+   Compiling num-bigint v0.4.6
+   Compiling bitvec v1.0.1
+   Compiling wasmtime-math v29.0.1
+   Compiling value-trait v0.10.1
+   Compiling const-str v0.3.2
+   Compiling lexical-parse-float v0.8.5
+   Compiling parcel_sourcemap v2.1.1
+   Compiling fxprof-processed-profile v0.6.0
+   Compiling lightningcss-derive v1.0.0-alpha.43
+   Compiling cssparser-color v0.1.0
+   Compiling addr2line v0.24.2
+   Compiling dashmap v5.5.3
+   Compiling serde-content v0.1.2
+   Compiling faststr v0.2.34
+   Compiling wasmtime-jit-icache-coherence v29.0.1
+   Compiling mach2 v0.4.3
+   Compiling trait-variant v0.1.2
+   Compiling async-trait v0.1.89
+   Compiling itertools v0.10.5
+   Compiling sonic-simd v0.1.4
+   Compiling sonic-number v0.1.2
+   Compiling wasmtime-jit-debug v29.0.1
+   Compiling encoding_rs v0.8.35
+   Compiling minimal-lexical v0.2.1
+   Compiling lazy_static v1.5.0
+   Compiling data-encoding v2.10.0
+   Compiling sptr v0.3.2
+   Compiling wasmtime-slab v29.0.1
+   Compiling streaming-iterator v0.1.9
+   Compiling pathdiff v0.2.3
+   Compiling pastey v0.1.1
+   Compiling nom v7.1.3
+   Compiling sonic-rs v0.5.8
+   Compiling wasmtime-wit-bindgen v29.0.1
+   Compiling pest_grammars v2.8.6
+   Compiling simd-json v0.14.3
+   Compiling regex v1.12.3
+   Compiling cssparser v0.34.0
+   Compiling serde_json_borrow v0.9.0
+   Compiling pin-project-lite v0.2.17
+   Compiling tracing-attributes v0.1.31
+   Compiling lightningcss v1.0.0-alpha.71
+   Compiling tracing-core v0.1.36
+   Compiling dashmap v6.1.0
+   Compiling serde_derive_internals v0.29.1
+   Compiling schemars v0.8.22
+   Compiling dyn-clone v1.0.20
+   Compiling proc-macro-error-attr v1.0.4
+   Compiling proc-macro-error v1.0.4
+   Compiling tracing v0.1.44
+   Compiling schemars_derive v0.8.22
+   Compiling similar v2.7.0
+   Compiling rustc-hash v1.1.0
+   Compiling countme v3.0.1
+   Compiling borrow-or-share v0.2.4
+   Compiling percent-encoding v2.3.2
+   Compiling fluent-uri v0.4.1
+   Compiling futures-core v0.3.32
+   Compiling futures-sink v0.3.32
+   Compiling object v0.37.3
+   Compiling futures-macro v0.3.32
+   Compiling biome_diagnostics_categories v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling futures-channel v0.3.32
+   Compiling slab v0.4.12
+   Compiling futures-io v0.3.32
+   Compiling gimli v0.32.3
+   Compiling adler2 v2.0.1
+   Compiling self_cell v1.2.2
+   Compiling futures-task v0.3.32
+   Compiling miniz_oxide v0.8.9
+   Compiling biome_markup v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling futures-util v0.3.32
+   Compiling parking_lot v0.12.5
+   Compiling signal-hook-registry v1.4.8
+   Compiling mio v1.2.0
+   Compiling ls-types v0.0.6
+   Compiling socket2 v0.6.3
+   Compiling bpaf_derive v0.5.23
+   Compiling tokio-macros v2.6.1
+   Compiling enumflags2_derive v0.7.12
+   Compiling json-strip-comments v1.0.4
+   Compiling void v1.0.2
+   Compiling unicode-width v0.1.14
+   Compiling result v1.0.0
+   Compiling httparse v1.10.1
+   Compiling biome_string_case v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling wasmprinter v0.221.3
+   Compiling dunce v1.0.5
+   Compiling enumflags2 v0.7.12
+   Compiling oxc_resolver v1.12.0
+   Compiling serde_ini v0.2.0
+   Compiling bpaf v0.9.24
+   Compiling tokio v1.50.0
+   Compiling biome_diagnostics_macros v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling rand_core v0.9.5
+   Compiling wat v1.246.1
+   Compiling tower-layer v0.3.3
+   Compiling biome_text_size v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling tower-service v0.3.3
+   Compiling sync_wrapper v1.0.2
+   Compiling biome_text_edit v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_console v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling camino v1.2.2
+   Compiling biome_rowan v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling ppv-lite86 v0.2.21
+   Compiling wait-timeout v0.2.1
+   Compiling biome_unicode_table v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling unicode-bom v2.0.3
+   Compiling fnv v1.0.7
+   Compiling quick-error v1.2.3
+   Compiling drop_bomb v0.1.5
+   Compiling bit-vec v0.8.0
+   Compiling rusty-fork v0.3.1
+   Compiling rand_chacha v0.9.0
+   Compiling bit-set v0.8.0
+   Compiling rand_xorshift v0.4.0
+   Compiling bbnf v0.2.11 (/Users/mkbabb/Programming/bbnf-wt-aziv-w1-shape/crates/core)
+   Compiling rand v0.9.4
+   Compiling cargo-platform v0.1.9
+   Compiling unarray v0.1.4
+   Compiling cargo_metadata v0.18.1
+   Compiling biome_deserialize_macros v0.6.0 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling addr2line v0.25.1
+   Compiling proptest v1.11.0
+   Compiling wasmtime-environ v29.0.1
+   Compiling biome_json_syntax v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_css_syntax v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling futures v0.3.32
+   Compiling tower v0.5.3
+   Compiling biome_json_factory v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling backtrace v0.3.76
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:11917:69
+      |
+11917 | / ...                   break 'avx2_scan {
+11918 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
+11919 | | ...                   };
+      | |_______________________^
+      |
+      = note: `#[warn(break_with_label_and_loop)]` on by default
+help: wrap this expression in parentheses
+      |
+11917 ~                                                                     break 'avx2_scan ({
+11918 |                                                                         ::core::option::Option::Some((__i + __rel) - __start)
+11919 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:11936:69
+      |
+11936 | / ...                   break 'avx2_scan {
+11937 | | ...                       ::core::option::Option::Some(__i - __start)
+11938 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+11936 ~                                                                     break 'avx2_scan ({
+11937 |                                                                         ::core::option::Option::Some(__i - __start)
+11938 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:12092:69
+      |
+12092 | / ...                   break 'avx2_scan {
+12093 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
+12094 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+12092 ~                                                                     break 'avx2_scan ({
+12093 |                                                                         ::core::option::Option::Some((__i + __rel) - __start)
+12094 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:12111:69
+      |
+12111 | / ...                   break 'avx2_scan {
+12112 | | ...                       ::core::option::Option::Some(__i - __start)
+12113 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+12111 ~                                                                     break 'avx2_scan ({
+12112 |                                                                         ::core::option::Option::Some(__i - __start)
+12113 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:12971:69
+      |
+12971 | / ...                   break 'avx2_scan {
+12972 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
+12973 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+12971 ~                                                                     break 'avx2_scan ({
+12972 |                                                                         ::core::option::Option::Some((__i + __rel) - __start)
+12973 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:12990:69
+      |
+12990 | / ...                   break 'avx2_scan {
+12991 | | ...                       ::core::option::Option::Some(__i - __start)
+12992 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+12990 ~                                                                     break 'avx2_scan ({
+12991 |                                                                         ::core::option::Option::Some(__i - __start)
+12992 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:17054:81
+      |
+17054 | / ...                   break 'avx2_scan {
+17055 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
+17056 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+17054 ~                                                                                 break 'avx2_scan ({
+17055 |                                                                                     ::core::option::Option::Some((__i + __rel) - __start)
+17056 ~                                                                                 });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:17073:81
+      |
+17073 | / ...                   break 'avx2_scan {
+17074 | | ...                       ::core::option::Option::Some(__i - __start)
+17075 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+17073 ~                                                                                 break 'avx2_scan ({
+17074 |                                                                                     ::core::option::Option::Some(__i - __start)
+17075 ~                                                                                 });
+      |
+
+   Compiling biome_diagnostics v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_parser v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_suppression v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_json_parser v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_deserialize v0.6.0 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling tokio-util v0.7.18
+   Compiling biome_formatter v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_css_factory v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_css_parser v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_css_formatter v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling cranelift-frontend v0.116.1
+   Compiling cranelift-native v0.116.1
+   Compiling wasmtime-cranelift v29.0.1
+   Compiling tower-lsp-server v0.23.0
+warning: function `lower_string_lit` is never used
+   --> crates/core/src/lower/value_expr/atom.rs:538:15
+    |
+538 | pub(super) fn lower_string_lit<'a, 'p: 'a>(
+    |               ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:4117:24
+     |
+4117 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(unused_comparisons)]` on by default
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:4389:24
+     |
+4389 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:4547:24
+     |
+4547 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:4742:24
+     |
+4742 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:4999:24
+     |
+4999 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:5174:24
+     |
+5174 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:5276:24
+     |
+5276 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:5469:24
+     |
+5469 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:6245:24
+     |
+6245 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:7223:24
+     |
+7223 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:7544:24
+     |
+7544 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:7702:36
+     |
+7702 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:7881:36
+     |
+7881 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:8063:36
+     |
+8063 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:8243:24
+     |
+8243 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:8478:44
+     |
+8478 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:8512:32
+     |
+8512 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:9118:24
+     |
+9118 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:9184:24
+     |
+9184 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:9238:24
+     |
+9238 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:9415:36
+     |
+9415 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:9439:24
+     |
+9439 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:9800:24
+     |
+9800 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bnf.rs:1355:24
+     |
+1355 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bnf.rs:1535:24
+     |
+1535 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:16287:24
+      |
+16287 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:16798:24
+      |
+16798 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:18167:24
+      |
+18167 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:18339:24
+      |
+18339 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:19266:24
+      |
+19266 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:19522:24
+      |
+19522 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:19649:24
+      |
+19649 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:20244:36
+      |
+20244 | ...                   if __iter_count < 0u32 {
+      |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:20268:24
+      |
+20268 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:21397:32
+      |
+21397 | ...                   if __iter_count < 0u32 {
+      |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:23779:24
+      |
+23779 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:23978:24
+      |
+23978 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:24056:24
+      |
+24056 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:24776:24
+      |
+24776 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:24906:24
+      |
+24906 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:25056:24
+      |
+25056 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:25200:24
+      |
+25200 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:25548:24
+      |
+25548 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:27929:24
+      |
+27929 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:27984:24
+      |
+27984 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:28595:24
+      |
+28595 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:28650:24
+      |
+28650 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:29548:24
+      |
+29548 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:29603:24
+      |
+29603 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:30724:24
+      |
+30724 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:30779:24
+      |
+30779 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:31332:24
+      |
+31332 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:31387:24
+      |
+31387 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:31949:24
+      |
+31949 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:32004:24
+      |
+32004 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:32847:24
+      |
+32847 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:32902:24
+      |
+32902 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:33582:24
+      |
+33582 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:33637:24
+      |
+33637 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:33858:24
+      |
+33858 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:33913:24
+      |
+33913 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:34135:24
+      |
+34135 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:34190:24
+      |
+34190 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:34593:24
+      |
+34593 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:34648:24
+      |
+34648 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:34873:24
+      |
+34873 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:34928:24
+      |
+34928 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:35153:24
+      |
+35153 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:35208:24
+      |
+35208 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:35430:24
+      |
+35430 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:35485:24
+      |
+35485 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:36048:24
+      |
+36048 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:36103:24
+      |
+36103 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:36444:24
+      |
+36444 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:36499:24
+      |
+36499 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:36659:24
+      |
+36659 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:36714:24
+      |
+36714 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:36939:24
+      |
+36939 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:36994:24
+      |
+36994 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:37157:24
+      |
+37157 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:37212:24
+      |
+37212 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:37663:24
+      |
+37663 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:37718:24
+      |
+37718 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:38169:24
+      |
+38169 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:38224:24
+      |
+38224 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:38753:24
+      |
+38753 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:38808:24
+      |
+38808 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:38967:24
+      |
+38967 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:39022:24
+      |
+39022 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:39247:24
+      |
+39247 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:39302:24
+      |
+39302 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:39527:24
+      |
+39527 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:39582:24
+      |
+39582 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:39803:24
+      |
+39803 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:39858:24
+      |
+39858 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:41393:36
+      |
+41393 | ...                   if __iter_count < 0u32 {
+      |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:41435:24
+      |
+41435 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:42348:24
+      |
+42348 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:42475:24
+      |
+42475 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:44215:24
+      |
+44215 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:44378:24
+      |
+44378 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:44541:24
+      |
+44541 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:45392:24
+      |
+45392 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:45646:24
+      |
+45646 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:45701:24
+      |
+45701 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:45848:24
+      |
+45848 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:45903:24
+      |
+45903 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:46050:24
+      |
+46050 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:46105:24
+      |
+46105 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:46314:24
+      |
+46314 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:46369:24
+      |
+46369 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:46516:24
+      |
+46516 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:46571:24
+      |
+46571 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:46718:24
+      |
+46718 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:46773:24
+      |
+46773 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:46920:24
+      |
+46920 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:46975:24
+      |
+46975 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:47122:24
+      |
+47122 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:47177:24
+      |
+47177 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:47386:24
+      |
+47386 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:47441:24
+      |
+47441 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:47650:24
+      |
+47650 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:47705:24
+      |
+47705 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:47914:24
+      |
+47914 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:47969:24
+      |
+47969 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:48178:24
+      |
+48178 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:48233:24
+      |
+48233 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:48442:24
+      |
+48442 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:48497:24
+      |
+48497 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:48706:24
+      |
+48706 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:48761:24
+      |
+48761 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:48970:24
+      |
+48970 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:49025:24
+      |
+49025 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:49172:24
+      |
+49172 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:49227:24
+      |
+49227 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:49374:24
+      |
+49374 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:49429:24
+      |
+49429 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:49638:24
+      |
+49638 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:49693:24
+      |
+49693 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:49840:24
+      |
+49840 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:49895:24
+      |
+49895 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:50104:24
+      |
+50104 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:50159:24
+      |
+50159 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:50368:24
+      |
+50368 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:50423:24
+      |
+50423 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:50570:24
+      |
+50570 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:50625:24
+      |
+50625 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:50772:24
+      |
+50772 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:50827:24
+      |
+50827 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:51036:24
+      |
+51036 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:51091:24
+      |
+51091 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:51300:24
+      |
+51300 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:51355:24
+      |
+51355 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:51564:24
+      |
+51564 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:51619:24
+      |
+51619 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/css_pretty.rs:1603:24
+     |
+1603 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/css_pretty.rs:1853:36
+     |
+1853 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/css_pretty.rs:1877:24
+     |
+1877 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/css_pretty.rs:1931:24
+     |
+1931 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/css_pretty.rs:1980:24
+     |
+1980 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/css_pretty.rs:2926:24
+     |
+2926 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/css_pretty.rs:3258:24
+     |
+3258 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+   --> crates/core/src/grammar/generated/csv.rs:989:24
+    |
+989 |                     if __iter_count < 0u32 {
+    |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/csv.rs:1117:24
+     |
+1117 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/ebnf.rs:2097:24
+     |
+2097 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/ebnf.rs:2398:32
+     |
+2398 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/ebnf.rs:2557:32
+     |
+2557 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/ebnf.rs:2749:36
+     |
+2749 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/ebnf.rs:2942:36
+     |
+2942 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/google_sheets.rs:3221:24
+     |
+3221 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/google_sheets.rs:3447:24
+     |
+3447 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/google_sheets.rs:4217:24
+     |
+4217 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/google_sheets.rs:4452:24
+     |
+4452 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/google_sheets.rs:4602:36
+     |
+4602 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/google_sheets.rs:4887:36
+     |
+4887 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/google_sheets.rs:5976:24
+     |
+5976 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/google_sheets.rs:6716:24
+     |
+6716 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+   Compiling bbnf-analysis v0.1.1 (/Users/mkbabb/Programming/bbnf-wt-aziv-w1-shape/crates/analysis)
+   Compiling bbnf-bootstrap v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-aziv-w1-shape/crates/bootstrap)
+   Compiling xtask v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-aziv-w1-shape/xtask)
+   Compiling gorgeous v0.1.10 (/Users/mkbabb/Programming/bbnf-wt-aziv-w1-shape/crates/gorgeous)
+warning: function `is_term_kind` is never used
+   --> crates/analysis/src/state/ast_utils/mod.rs:156:15
+    |
+156 | pub(crate) fn is_term_kind(node: BbnfView<'_, '_>) -> bool {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `is_grouped_term` is never used
+   --> crates/analysis/src/state/ast_utils/mod.rs:176:15
+    |
+176 | pub(crate) fn is_grouped_term(node: BbnfView<'_, '_>) -> bool {
+    |               ^^^^^^^^^^^^^^^
+
+   Compiling bbnf-lsp v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-aziv-w1-shape/crates/lsp)
+warning: `bbnf-analysis` (lib) generated 2 warnings
+warning: `bbnf` (lib) generated 186 warnings (run `cargo fix --lib -p bbnf` to apply 8 suggestions)
+warning: unused import: `bbnf::calculate_ast_deps`
+ --> crates/core/tests/pipeline.rs:1:5
+  |
+1 | use bbnf::calculate_ast_deps;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused imports: `tarjan_scc` and `topological_sort_scc`
+ --> crates/core/tests/pipeline.rs:3:19
+  |
+3 | use bbnf::graph::{tarjan_scc, topological_sort_scc};
+  |                   ^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `DirectiveSet` and `lower_to_ir`
+ --> crates/core/tests/pipeline.rs:4:19
+  |
+4 | use bbnf::lower::{DirectiveSet, lower_to_ir};
+  |                   ^^^^^^^^^^^^  ^^^^^^^^^^^
+
+warning: `bbnf-analysis` (lib test) generated 2 warnings (2 duplicates)
+warning: `bbnf` (test "pipeline") generated 3 warnings (run `cargo fix --test "pipeline" -p bbnf` to apply 3 suggestions)
+warning: fields `null` and `colon` are never read
+  --> crates/core/tests/shape_dispatch_emission/fixtures.rs:29:9
+   |
+28 | pub struct JsonRules {
+   |            --------- fields in this struct
+29 |     pub null: RuleId,
+   |         ^^^^
+...
+33 |     pub colon: RuleId,
+   |         ^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `bbnf` (test "struct_direct_snapshots") generated 1 warning
+warning: unused import: `MaterializationClass`
+  --> crates/ir/tests/vm/cross_rule_csp.rs:13:40
+   |
+13 | use bbnf_ir::passes::materialization::{MaterializationClass, classify_materialization};
+   |                                        ^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused imports: `PrettyHints` and `RuleDirectives`
+  --> crates/ir/tests/vm/cross_rule_csp.rs:16:55
+   |
+16 |     AltBranch, CostConfig, GrammarIR, IrNode, IrRule, PrettyHints, RuleDirectives, RuleMeta,
+   |                                                       ^^^^^^^^^^^  ^^^^^^^^^^^^^^
+
+warning: function `rule_with_meta` is never used
+  --> crates/ir/tests/vm/cross_rule_csp.rs:85:4
+   |
+85 | fn rule_with_meta(id: u32, name: StringId, body: IrNode, meta: RuleMeta) -> IrRule {
+   |    ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `null`, `colon`, `pair`, and `value` are never read
+  --> crates/core/tests/shape_dispatch_emission/fixtures.rs:29:9
+   |
+28 | pub struct JsonRules {
+   |            --------- fields in this struct
+29 |     pub null: RuleId,
+   |         ^^^^
+...
+33 |     pub colon: RuleId,
+   |         ^^^^^
+34 |     pub string: RuleId,
+35 |     pub pair: RuleId,
+   |         ^^^^
+...
+38 |     pub value: RuleId,
+   |         ^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `bbnf` (test "regen_shape_goldens") generated 1 warning
+warning: `bbnf-ir` (test "vm") generated 3 warnings (run `cargo fix --test "vm" -p bbnf-ir` to apply 2 suggestions)
+warning: `bbnf` (lib test) generated 186 warnings (186 duplicates)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 2m 25s
+────────────
+ Nextest run ID 54ee6fdf-d152-41fc-a5b4-601d6c230e4a with nextest profile: default
+    Starting 1538 tests across 142 binaries (26 tests skipped)
+  TRY 2 FAIL [   0.017s] bbnf::ax_w0a2s_real_css_probe tailwind_full_parse
+  stdout ───
+
+    running 1 test
+    test tailwind_full_parse ... FAILED
+
+    failures:
+
+    failures:
+        tailwind_full_parse
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'tailwind_full_parse' (38709603) panicked at crates/core/tests/ax_w0a2s_real_css_probe.rs:23:66:
+    read ../../data/css/tailwind.css: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.019s] bbnf::ax_w0a2s_real_css_probe normalize_full_parse
+  stdout ───
+
+    running 1 test
+    test normalize_full_parse ... FAILED
+
+    failures:
+
+    failures:
+        normalize_full_parse
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'normalize_full_parse' (38709605) panicked at crates/core/tests/ax_w0a2s_real_css_probe.rs:23:66:
+    read ../../data/css/normalize.css: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.018s] bbnf::ax_w0a2s_real_css_probe bootstrap_full_parse
+  stdout ───
+
+    running 1 test
+    test bootstrap_full_parse ... FAILED
+
+    failures:
+
+    failures:
+        bootstrap_full_parse
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'bootstrap_full_parse' (38709607) panicked at crates/core/tests/ax_w0a2s_real_css_probe.rs:23:66:
+    read ../../data/css/bootstrap.css: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.020s] bbnf::css_l4 parse_bootstrap_css
+  stdout ───
+
+    running 1 test
+    test parse_bootstrap_css ... FAILED
+
+    failures:
+
+    failures:
+        parse_bootstrap_css
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 17 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'parse_bootstrap_css' (38709890) panicked at crates/core/tests/css_l4.rs:25:5:
+    could not find data file 'bootstrap.css'; tried: ["../../data/css/bootstrap.css", "../data/css/bootstrap.css"]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.025s] bbnf::css_l4 hex_color_roundtrip_8digit
+  stdout ───
+
+    running 1 test
+    test hex_color_roundtrip_8digit ... FAILED
+
+    failures:
+
+    failures:
+        hex_color_roundtrip_8digit
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 17 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'hex_color_roundtrip_8digit' (38709910) panicked at crates/core/tests/css_l4.rs:223:10:
+    hex #12345678 must materialise as a 4-byte KvPair payload
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.042s] bbnf::css_l4 hex_color_roundtrip_6digit
+  stdout ───
+
+    running 1 test
+    test hex_color_roundtrip_6digit ... FAILED
+
+    failures:
+
+    failures:
+        hex_color_roundtrip_6digit
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 17 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'hex_color_roundtrip_6digit' (38709932) panicked at crates/core/tests/css_l4.rs:206:10:
+    hex #FF00FF must materialise as a 4-byte KvPair payload
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.046s] bbnf::css_l4 hex_color_roundtrip_3digit
+  stdout ───
+
+    running 1 test
+    test hex_color_roundtrip_3digit ... FAILED
+
+    failures:
+
+    failures:
+        hex_color_roundtrip_3digit
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 17 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'hex_color_roundtrip_3digit' (38709958) panicked at crates/core/tests/css_l4.rs:215:10:
+    hex #abc must expand to 0xAABBCCFF in a 4-byte KvPair payload
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.050s] bbnf::css_l4 parse_normalize_css
+  stdout ───
+
+    running 1 test
+    test parse_normalize_css ... FAILED
+
+    failures:
+
+    failures:
+        parse_normalize_css
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 17 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'parse_normalize_css' (38709962) panicked at crates/core/tests/css_l4.rs:25:5:
+    could not find data file 'normalize.css'; tried: ["../../data/css/normalize.css", "../data/css/normalize.css"]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.029s] bbnf::css_l4_canonical_parity scale_interop_bootstrap
+  stdout ───
+
+    running 1 test
+    test scale_interop_bootstrap ... FAILED
+
+    failures:
+
+    failures:
+        scale_interop_bootstrap
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'scale_interop_bootstrap' (38709993) panicked at crates/core/tests/css_l4_canonical_parity.rs:139:65:
+    ../../data/css/bootstrap.css: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.040s] bbnf::css_l4_canonical_parity canonical_parity_normalize
+  stdout ───
+
+    running 1 test
+    test canonical_parity_normalize ... FAILED
+
+    failures:
+
+    failures:
+        canonical_parity_normalize
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'canonical_parity_normalize' (38710003) panicked at crates/core/tests/css_l4_canonical_parity.rs:50:65:
+    ../../data/css/normalize.css: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.008s] bbnf::css_l4_canonical_parity scale_interop_tailwind
+  stdout ───
+
+    running 1 test
+    test scale_interop_tailwind ... FAILED
+
+    failures:
+
+    failures:
+        scale_interop_tailwind
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'scale_interop_tailwind' (38711005) panicked at crates/core/tests/css_l4_canonical_parity.rs:139:65:
+    ../../data/css/tailwind.css: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.010s] bbnf::css_l4_named_color_parity white_materialises
+  stdout ───
+
+    running 1 test
+    test white_materialises ... FAILED
+
+    failures:
+
+    failures:
+        white_materialises
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'white_materialises' (38711211) panicked at crates/core/tests/css_l4_named_color_parity.rs:160:5:
+    assertion `left == right` failed: white must decode as 0xFFFFFFFFu32 in the typed CSS value graph
+      left: None
+     right: Some(4294967295)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.011s] bbnf::css_l4_parity dir_pseudo_ltr_branch_fires_payload
+  stdout ───
+
+    running 1 test
+    test dir_pseudo_ltr_branch_fires_payload ... FAILED
+
+    failures:
+
+    failures:
+        dir_pseudo_ltr_branch_fires_payload
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 16 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'dir_pseudo_ltr_branch_fires_payload' (38711218) panicked at crates/core/tests/css_l4_parity.rs:193:41:
+    parse: Syntax { offset: 0, rule: None }
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.010s] bbnf::css_l4_parity dir_pseudo_rtl_branch_fires_payload
+  stdout ───
+
+    running 1 test
+    test dir_pseudo_rtl_branch_fires_payload ... FAILED
+
+    failures:
+
+    failures:
+        dir_pseudo_rtl_branch_fires_payload
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 16 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'dir_pseudo_rtl_branch_fires_payload' (38711220) panicked at crates/core/tests/css_l4_parity.rs:193:41:
+    parse: Syntax { offset: 0, rule: None }
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.009s] bbnf::css_l4_parity hex_color_6digit_materialises_u32
+  stdout ───
+
+    running 1 test
+    test hex_color_6digit_materialises_u32 ... FAILED
+
+    failures:
+
+    failures:
+        hex_color_6digit_materialises_u32
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 16 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'hex_color_6digit_materialises_u32' (38711223) panicked at crates/core/tests/css_l4_parity.rs:247:5:
+    hex "a { color: #FF00FF; }" must materialise as CssColor::Hex(0xFF00FFFF) in the typed graph
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.012s] bbnf::css_l4_parity hex_color_3digit_expands_u32
+  stdout ───
+
+    running 1 test
+    test hex_color_3digit_expands_u32 ... FAILED
+
+    failures:
+
+    failures:
+        hex_color_3digit_expands_u32
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 16 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'hex_color_3digit_expands_u32' (38711227) panicked at crates/core/tests/css_l4_parity.rs:247:5:
+    hex "a { color: #abc; }" must materialise as CssColor::Hex(0xAABBCCFF) in the typed graph
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.011s] bbnf::css_l4_parity hex_color_8digit_alpha_materialises
+  stdout ───
+
+    running 1 test
+    test hex_color_8digit_alpha_materialises ... FAILED
+
+    failures:
+
+    failures:
+        hex_color_8digit_alpha_materialises
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 16 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'hex_color_8digit_alpha_materialises' (38711228) panicked at crates/core/tests/css_l4_parity.rs:247:5:
+    hex "a { color: #12345678; }" must materialise as CssColor::Hex(0x12345678) in the typed graph
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.027s] bbnf::css_l4_named_color_parity every_named_color_materialises_its_u32_payload
+  stdout ───
+
+    running 1 test
+    test every_named_color_materialises_its_u32_payload ... FAILED
+
+    failures:
+
+    failures:
+        every_named_color_materialises_its_u32_payload
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.02s
+
+  stderr ───
+
+    thread 'every_named_color_materialises_its_u32_payload' (38711231) panicked at crates/core/tests/css_l4_named_color_parity.rs:134:9:
+    150/150 named colors failed payload parity:
+      aliceblue: expected 0xF0F8FFFF, got None
+      antiquewhite: expected 0xFAEBD7FF, got None
+      aquamarine: expected 0x7FFFD4FF, got None
+      aqua: expected 0x00FFFFFF, got None
+      azure: expected 0xF0FFFFFF, got None
+      beige: expected 0xF5F5DCFF, got None
+      bisque: expected 0xFFE4C4FF, got None
+      black: expected 0x000000FF, got None
+      blanchedalmond: expected 0xFFEBCDFF, got None
+      blueviolet: expected 0x8A2BE2FF, got None
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.012s] bbnf::css_l4_parity named_color_aliceblue_fires_inline_u32
+  stdout ───
+
+    running 1 test
+    test named_color_aliceblue_fires_inline_u32 ... FAILED
+
+    failures:
+
+    failures:
+        named_color_aliceblue_fires_inline_u32
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 16 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'named_color_aliceblue_fires_inline_u32' (38711253) panicked at crates/core/tests/css_l4_parity.rs:293:5:
+    namedColor parse must produce at least one CssColor::Hex payload in the typed graph; got: []
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.011s] bbnf::css_pretty parse_bootstrap_css
+  stdout ───
+
+    running 1 test
+    test parse_bootstrap_css ... FAILED
+
+    failures:
+
+    failures:
+        parse_bootstrap_css
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'parse_bootstrap_css' (38711594) panicked at crates/core/tests/css_pretty.rs:16:5:
+    could not find data file 'bootstrap.css'; tried: ["../../data/css/bootstrap.css", "../data/css/bootstrap.css"]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.011s] bbnf::css_pretty parse_normalize_css
+  stdout ───
+
+    running 1 test
+    test parse_normalize_css ... FAILED
+
+    failures:
+
+    failures:
+        parse_normalize_css
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'parse_normalize_css' (38711891) panicked at crates/core/tests/css_pretty.rs:16:5:
+    could not find data file 'normalize.css'; tried: ["../../data/css/normalize.css", "../data/css/normalize.css"]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.008s] bbnf::css_pretty parse_tailwind_css
+  stdout ───
+
+    running 1 test
+    test parse_tailwind_css ... FAILED
+
+    failures:
+
+    failures:
+        parse_tailwind_css
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'parse_tailwind_css' (38712090) panicked at crates/core/tests/css_pretty.rs:16:5:
+    could not find data file 'tailwind.css'; tried: ["../../data/css/tailwind.css", "../data/css/tailwind.css"]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.008s] bbnf::debug parse_debug_wildcard
+  stdout ───
+
+    running 1 test
+    test parse_debug_wildcard ... FAILED
+
+    failures:
+
+    failures:
+        parse_debug_wildcard
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'parse_debug_wildcard' (38712099) panicked at crates/core/tests/debug.rs:20:5:
+    assertion `left == right` failed
+      left: 0
+     right: 1
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.009s] bbnf::debug pipeline_debug_wildcard_sets_all
+  stdout ───
+
+    running 1 test
+    test pipeline_debug_wildcard_sets_all ... FAILED
+
+    failures:
+
+    failures:
+        pipeline_debug_wildcard_sets_all
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'pipeline_debug_wildcard_sets_all' (38712103) panicked at crates/core/tests/debug.rs:59:5:
+    debug_all should be true
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.014s] bbnf::dfa_fidelity pipeline_css_dfa_fidelity
+  stdout ───
+
+    running 1 test
+    test pipeline_css_dfa_fidelity ... FAILED
+
+    failures:
+
+    failures:
+        pipeline_css_dfa_fidelity
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'pipeline_css_dfa_fidelity' (38712119) panicked at crates/core/tests/dfa_fidelity.rs:66:10:
+    failed to read tailwind.css: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.009s] bbnf::json_canonical_parity canonical_parity_citm_catalog
+  stdout ───
+
+    running 1 test
+    test canonical_parity_citm_catalog ... FAILED
+
+    failures:
+
+    failures:
+        canonical_parity_citm_catalog
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'canonical_parity_citm_catalog' (38712179) panicked at crates/core/tests/json_canonical_parity.rs:107:65:
+    ../../data/json/citm_catalog.json: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.009s] bbnf::json_canonical_parity canonical_parity_canada
+  stdout ───
+
+    running 1 test
+    test canonical_parity_canada ... FAILED
+
+    failures:
+
+    failures:
+        canonical_parity_canada
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'canonical_parity_canada' (38712180) panicked at crates/core/tests/json_canonical_parity.rs:107:65:
+    ../../data/json/canada.json: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.008s] bbnf::json_canonical_parity canonical_parity_data
+  stdout ───
+
+    running 1 test
+    test canonical_parity_data ... FAILED
+
+    failures:
+
+    failures:
+        canonical_parity_data
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'canonical_parity_data' (38712183) panicked at crates/core/tests/json_canonical_parity.rs:107:65:
+    ../../data/json/data.json: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.010s] bbnf::json_canonical_parity canonical_parity_twitter
+  stdout ───
+
+    running 1 test
+    test canonical_parity_twitter ... FAILED
+
+    failures:
+
+    failures:
+        canonical_parity_twitter
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'canonical_parity_twitter' (38712186) panicked at crates/core/tests/json_canonical_parity.rs:107:65:
+    ../../data/json/twitter.json: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.022s] bbnf::json_parity every_declared_leaf_reaches_the_document
+  stdout ───
+
+    running 1 test
+    test every_declared_leaf_reaches_the_document ... FAILED
+
+    failures:
+
+    failures:
+        every_declared_leaf_reaches_the_document
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'every_declared_leaf_reaches_the_document' (38712313) panicked at crates/core/tests/json_parity.rs:329:5:
+    assertion failed: matches!(items[0], JsonValue::Null)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.020s] bbnf::json_parity null_materialises_to_null_value
+  stdout ───
+
+    running 1 test
+    test null_materialises_to_null_value ... FAILED
+
+    failures:
+
+    failures:
+        null_materialises_to_null_value
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'null_materialises_to_null_value' (38712331) panicked at crates/core/tests/json_parity.rs:176:5:
+    assertion failed: matches!(doc.root, JsonValue::Null)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.021s] bbnf::json_parity nested_object_preserves_typed_payloads
+  stdout ───
+
+    running 1 test
+    test nested_object_preserves_typed_payloads ... FAILED
+
+    failures:
+
+    failures:
+        nested_object_preserves_typed_payloads
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'nested_object_preserves_typed_payloads' (38712334) panicked at crates/core/tests/json_parity.rs:279:5:
+    assertion `left == right` failed: two nulls must materialise
+      left: 0
+     right: 2
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.012s] bbnf::json_parity parity_canada_json
+  stdout ───
+
+    running 1 test
+    test parity_canada_json ... FAILED
+
+    failures:
+
+    failures:
+        parity_canada_json
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'parity_canada_json' (38712353) panicked at crates/core/tests/json_parity.rs:134:65:
+    ../../data/json/canada.json: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.017s] bbnf::json_parity parity_citm_catalog_json
+  stdout ───
+
+    running 1 test
+    test parity_citm_catalog_json ... FAILED
+
+    failures:
+
+    failures:
+        parity_citm_catalog_json
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'parity_citm_catalog_json' (38712364) panicked at crates/core/tests/json_parity.rs:134:65:
+    ../../data/json/citm_catalog.json: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.031s] bbnf::json_parity parity_twitter_json
+  stdout ───
+
+    running 1 test
+    test parity_twitter_json ... FAILED
+
+    failures:
+
+    failures:
+        parity_twitter_json
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'parity_twitter_json' (38712441) panicked at crates/core/tests/json_parity.rs:134:65:
+    ../../data/json/twitter.json: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.038s] bbnf::json_parity parity_data_json
+  stdout ───
+
+    running 1 test
+    test parity_data_json ... FAILED
+
+    failures:
+
+    failures:
+        parity_data_json
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'parity_data_json' (38712445) panicked at crates/core/tests/json_parity.rs:134:65:
+    ../../data/json/data.json: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.036s] bbnf::json_parity_struct native_parity_serde_citm_catalog_json
+  stdout ───
+
+    running 1 test
+    test native_parity_serde_citm_catalog_json ... FAILED
+
+    failures:
+
+    failures:
+        native_parity_serde_citm_catalog_json
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 19 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'native_parity_serde_citm_catalog_json' (38712452) panicked at crates/core/tests/json_parity_struct.rs:443:65:
+    ../../data/json/citm_catalog.json: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.041s] bbnf::json_parity_struct native_parity_serde_canada_json
+  stdout ───
+
+    running 1 test
+    test native_parity_serde_canada_json ... FAILED
+
+    failures:
+
+    failures:
+        native_parity_serde_canada_json
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 19 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'native_parity_serde_canada_json' (38712451) panicked at crates/core/tests/json_parity_struct.rs:443:65:
+    ../../data/json/canada.json: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.024s] bbnf::json_parity_struct native_parity_serde_data_json
+  stdout ───
+
+    running 1 test
+    test native_parity_serde_data_json ... FAILED
+
+    failures:
+
+    failures:
+        native_parity_serde_data_json
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 19 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'native_parity_serde_data_json' (38712630) panicked at crates/core/tests/json_parity_struct.rs:443:65:
+    ../../data/json/data.json: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.013s] bbnf::json_parity_struct native_parity_serde_twitter_json
+  stdout ───
+
+    running 1 test
+    test native_parity_serde_twitter_json ... FAILED
+
+    failures:
+
+    failures:
+        native_parity_serde_twitter_json
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 19 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'native_parity_serde_twitter_json' (38712660) panicked at crates/core/tests/json_parity_struct.rs:443:65:
+    ../../data/json/twitter.json: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.013s] bbnf::json_slab parse_citm_catalog_json
+  stdout ───
+
+    running 1 test
+    test parse_citm_catalog_json ... FAILED
+
+    failures:
+
+    failures:
+        parse_citm_catalog_json
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'parse_citm_catalog_json' (38712682) panicked at crates/core/tests/json_slab.rs:28:5:
+    could not find data file 'citm_catalog.json'; tried: ["../../data/json/citm_catalog.json", "../data/json/citm_catalog.json"]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.013s] bbnf::json_slab parse_canada_json
+  stdout ───
+
+    running 1 test
+    test parse_canada_json ... FAILED
+
+    failures:
+
+    failures:
+        parse_canada_json
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'parse_canada_json' (38712683) panicked at crates/core/tests/json_slab.rs:28:5:
+    could not find data file 'canada.json'; tried: ["../../data/json/canada.json", "../data/json/canada.json"]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.011s] bbnf::json_slab parse_data_json
+  stdout ───
+
+    running 1 test
+    test parse_data_json ... FAILED
+
+    failures:
+
+    failures:
+        parse_data_json
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'parse_data_json' (38712687) panicked at crates/core/tests/json_slab.rs:28:5:
+    could not find data file 'data.json'; tried: ["../../data/json/data.json", "../data/json/data.json"]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.025s] bbnf::json_slab parse_twitter_json
+  stdout ───
+
+    running 1 test
+    test parse_twitter_json ... FAILED
+
+    failures:
+
+    failures:
+        parse_twitter_json
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'parse_twitter_json' (38712739) panicked at crates/core/tests/json_slab.rs:28:5:
+    could not find data file 'twitter.json'; tried: ["../../data/json/twitter.json", "../data/json/twitter.json"]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.037s] bbnf::json_value_parity json_parses_mixed_value_tree
+  stdout ───
+
+    running 1 test
+    test json_parses_mixed_value_tree ... FAILED
+
+    failures:
+
+    failures:
+        json_parses_mixed_value_tree
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'json_parses_mixed_value_tree' (38712748) panicked at crates/core/tests/json_value_parity.rs:75:27:
+    $[2]: shape divergence — bbnf=String("null"), serde=Null
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.033s] bbnf::json_value_parity json_parses_nested_object
+  stdout ───
+
+    running 1 test
+    test json_parses_nested_object ... FAILED
+
+    failures:
+
+    failures:
+        json_parses_nested_object
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'json_parses_nested_object' (38712750) panicked at crates/core/tests/json_value_parity.rs:75:27:
+    $.outer.inner[1]: shape divergence — bbnf=String("null"), serde=Null
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.044s] bbnf::json_value_parity json_parses_null
+  stdout ───
+
+    running 1 test
+    test json_parses_null ... FAILED
+
+    failures:
+
+    failures:
+        json_parses_null
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'json_parses_null' (38712755) panicked at crates/core/tests/json_value_parity.rs:75:27:
+    $: shape divergence — bbnf=String("null"), serde=Null
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.018s] bbnf::json_value_parity simdjson_parity_mixed_array
+  stdout ───
+
+    running 1 test
+    test simdjson_parity_mixed_array ... FAILED
+
+    failures:
+
+    failures:
+        simdjson_parity_mixed_array
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'simdjson_parity_mixed_array' (38713041) panicked at crates/core/tests/json_value_parity.rs:204:17:
+    $[2]: bbnf=String but simd-json=Null
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.017s] bbnf::json_value_parity simdjson_parity_scalars
+  stdout ───
+
+    running 1 test
+    test simdjson_parity_scalars ... FAILED
+
+    failures:
+
+    failures:
+        simdjson_parity_scalars
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'simdjson_parity_scalars' (38713051) panicked at crates/core/tests/json_value_parity.rs:204:17:
+    $: bbnf=String but simd-json=Null
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.012s] bbnf::lightningcss_parity lightningcss_parity_normalize
+  stdout ───
+
+    running 1 test
+    test lightningcss_parity_normalize ... FAILED
+
+    failures:
+
+    failures:
+        lightningcss_parity_normalize
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'lightningcss_parity_normalize' (38713074) panicked at crates/core/tests/lightningcss_parity.rs:57:59:
+    ../../data/css/normalize.css: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.014s] bbnf::lightningcss_parity lightningcss_parity_bootstrap
+  stdout ───
+
+    running 1 test
+    test lightningcss_parity_bootstrap ... FAILED
+
+    failures:
+
+    failures:
+        lightningcss_parity_bootstrap
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'lightningcss_parity_bootstrap' (38713077) panicked at crates/core/tests/lightningcss_parity.rs:57:59:
+    ../../data/css/bootstrap.css: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.013s] bbnf::lightningcss_parity lightningcss_parity_tailwind
+  stdout ───
+
+    running 1 test
+    test lightningcss_parity_tailwind ... FAILED
+
+    failures:
+
+    failures:
+        lightningcss_parity_tailwind
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'lightningcss_parity_tailwind' (38713086) panicked at crates/core/tests/lightningcss_parity.rs:57:59:
+    ../../data/css/tailwind.css: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.019s] bbnf::named_type_preservation json_named_types
+  stdout ───
+
+    running 1 test
+    test json_named_types ... FAILED
+
+    failures:
+
+    failures:
+        json_named_types
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'json_named_types' (38713280) panicked at crates/core/tests/named_type_preservation.rs:198:17:
+    AY invariant 23: rule `string` projects as Span at emit; expected Named("String"). The grammar-declared annotation was collapsed somewhere between lowering and `project_types` (see `named_pipeline_probe` for empirical discrimination of the collapse site).
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.024s] bbnf::pipeline pipeline_vm_full_css_bootstrap
+  stdout ───
+
+    running 1 test
+    test pipeline_vm_full_css_bootstrap ... FAILED
+
+    failures:
+
+    failures:
+        pipeline_vm_full_css_bootstrap
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 27 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'pipeline_vm_full_css_bootstrap' (38713667) panicked at crates/core/tests/pipeline.rs:599:63:
+    ../../data/css/bootstrap.css: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.025s] bbnf::pipeline pipeline_vm_full_css_normalize
+  stdout ───
+
+    running 1 test
+    test pipeline_vm_full_css_normalize ... FAILED
+
+    failures:
+
+    failures:
+        pipeline_vm_full_css_normalize
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 27 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'pipeline_vm_full_css_normalize' (38713670) panicked at crates/core/tests/pipeline.rs:599:63:
+    ../../data/css/normalize.css: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.022s] bbnf::pipeline pipeline_vm_full_json_canada
+  stdout ───
+
+    running 1 test
+    test pipeline_vm_full_json_canada ... FAILED
+
+    failures:
+
+    failures:
+        pipeline_vm_full_json_canada
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 27 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'pipeline_vm_full_json_canada' (38713742) panicked at crates/core/tests/pipeline.rs:599:63:
+    ../../data/json/canada.json: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.019s] bbnf::pipeline pipeline_vm_full_json_data
+  stdout ───
+
+    running 1 test
+    test pipeline_vm_full_json_data ... FAILED
+
+    failures:
+
+    failures:
+        pipeline_vm_full_json_data
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 27 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'pipeline_vm_full_json_data' (38713744) panicked at crates/core/tests/pipeline.rs:599:63:
+    ../../data/json/data.json: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.021s] bbnf::pipeline pipeline_vm_full_json_twitter
+  stdout ───
+
+    running 1 test
+    test pipeline_vm_full_json_twitter ... FAILED
+
+    failures:
+
+    failures:
+        pipeline_vm_full_json_twitter
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 27 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'pipeline_vm_full_json_twitter' (38713915) panicked at crates/core/tests/pipeline.rs:599:63:
+    ../../data/json/twitter.json: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.015s] bbnf::serialize_roundtrip json_null
+  stdout ───
+
+    running 1 test
+    test json_null ... FAILED
+
+    failures:
+
+    failures:
+        json_null
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 18 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'json_null' (38719458) panicked at crates/core/tests/serialize_roundtrip.rs:133:5:
+    assertion `left == right` failed
+      left: "\"null\""
+     right: "null"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.012s] bbnf::sheets_parity error_literal_divzero_branch_fires_payload
+  stdout ───
+
+    running 1 test
+    test error_literal_divzero_branch_fires_payload ... FAILED
+
+    failures:
+
+    failures:
+        error_literal_divzero_branch_fires_payload
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'error_literal_divzero_branch_fires_payload' (38720868) panicked at crates/core/tests/sheets_parity.rs:371:5:
+    AV.0.1 close-out: error_literal '#DIV/0!' -> 3u8 must fire. Payloads = []
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.015s] bbnf::sheets_parity error_literal_error_branch_fires_payload
+  stdout ───
+
+    running 1 test
+    test error_literal_error_branch_fires_payload ... FAILED
+
+    failures:
+
+    failures:
+        error_literal_error_branch_fires_payload
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'error_literal_error_branch_fires_payload' (38721048) panicked at crates/core/tests/sheets_parity.rs:382:5:
+    AV.0.1 close-out: error_literal '#ERROR!' -> 7u8 must fire. Payloads = []
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.014s] bbnf::sheets_parity error_literal_factored_branch_fires_payload
+  stdout ───
+
+    running 1 test
+    test error_literal_factored_branch_fires_payload ... FAILED
+
+    failures:
+
+    failures:
+        error_literal_factored_branch_fires_payload
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'error_literal_factored_branch_fires_payload' (38721067) panicked at crates/core/tests/sheets_parity.rs:300:5:
+    AV.0.1 Bug 1: error_literal '#NULL!' -> 4u8 must fire after the per-branch payload-write hoisting. Payloads = []
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.011s] bbnf::sheets_parity error_literal_first_branch_fires
+  stdout ───
+
+    running 1 test
+    test error_literal_first_branch_fires ... FAILED
+
+    failures:
+
+    failures:
+        error_literal_first_branch_fires
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'error_literal_first_branch_fires' (38721409) panicked at crates/core/tests/sheets_parity.rs:283:5:
+    error_literal '#N/A' -> 0u8 must fire; got payloads = []
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.012s] bbnf::sheets_parity error_literal_name_branch_fires_payload
+  stdout ───
+
+    running 1 test
+    test error_literal_name_branch_fires_payload ... FAILED
+
+    failures:
+
+    failures:
+        error_literal_name_branch_fires_payload
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'error_literal_name_branch_fires_payload' (38721416) panicked at crates/core/tests/sheets_parity.rs:322:5:
+    AV.0.1 Bug 1: error_literal '#NAME?' -> 5u8 must fire. Payloads = []
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.014s] bbnf::sheets_parity error_literal_num_branch_fires_payload
+  stdout ───
+
+    running 1 test
+    test error_literal_num_branch_fires_payload ... FAILED
+
+    failures:
+
+    failures:
+        error_literal_num_branch_fires_payload
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'error_literal_num_branch_fires_payload' (38721659) panicked at crates/core/tests/sheets_parity.rs:311:5:
+    AV.0.1 Bug 1: error_literal '#NUM!' -> 6u8 must fire. Payloads = []
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.014s] bbnf::sheets_parity error_literal_ref_branch_fires_payload
+  stdout ───
+
+    running 1 test
+    test error_literal_ref_branch_fires_payload ... FAILED
+
+    failures:
+
+    failures:
+        error_literal_ref_branch_fires_payload
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'error_literal_ref_branch_fires_payload' (38721667) panicked at crates/core/tests/sheets_parity.rs:360:5:
+    AV.0.1 close-out: error_literal '#REF!' -> 2u8 must fire. Payloads = []
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.015s] bbnf::sheets_parity error_literal_spill_branch_fires_payload
+  stdout ───
+
+    running 1 test
+    test error_literal_spill_branch_fires_payload ... FAILED
+
+    failures:
+
+    failures:
+        error_literal_spill_branch_fires_payload
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'error_literal_spill_branch_fires_payload' (38721833) panicked at crates/core/tests/sheets_parity.rs:393:5:
+    AV.0.1 close-out: error_literal '#SPILL!' -> 8u8 must fire. Payloads = []
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.012s] bbnf::sheets_parity error_literal_value_branch_fires_payload
+  stdout ───
+
+    running 1 test
+    test error_literal_value_branch_fires_payload ... FAILED
+
+    failures:
+
+    failures:
+        error_literal_value_branch_fires_payload
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'error_literal_value_branch_fires_payload' (38721868) panicked at crates/core/tests/sheets_parity.rs:348:5:
+    AV.0.1 close-out: error_literal '#VALUE!' -> 1u8 must fire through the checkpoint per-branch payload-write hoist. Payloads = []
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.015s] bbnf::sheets_parity unary_prefix_first_branch_fires_0u8
+  stdout ───
+
+    running 1 test
+    test unary_prefix_first_branch_fires_0u8 ... FAILED
+
+    failures:
+
+    failures:
+        unary_prefix_first_branch_fires_0u8
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'unary_prefix_first_branch_fires_0u8' (38722081) panicked at crates/core/tests/sheets_parity.rs:251:5:
+    AV.0.1: unary_prefix '+' -> 0u8 must fire; got payloads = []
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.018s] bbnf::sheets_self_parity corpus_nested
+  stdout ───
+
+    running 1 test
+    test corpus_nested ... FAILED
+
+    failures:
+
+    failures:
+        corpus_nested
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'corpus_nested' (38722113) panicked at crates/core/tests/sheets_self_parity.rs:522:9:
+    assertion `left == right` failed: [nested] serialize_compact non-idempotent at line 0 ("=IF(AND(A1>0, B1<100), VLOOKUP(A1, C1:E100, 3, FALSE), IFERROR(INDEX(MATCH(A1, F1:F100, 0), G1:G100), \"N/A\"))")
+      left: "=IF(AND(A1>0,B1<100),VLOOKUP(A1,C1:E100,3,FALSE),IFERROR(INDEX(MATCH(A1,F1:F100,0),G1:G100),N/A))"
+     right: "=IF(AND(A1>0,B1<100),VLOOKUP(A1,C1:E100,3,FALSE),IFERROR(INDEX(MATCH(A1,F1:F100,0),G1:G100),N^A))"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.032s] bbnf::sheets_self_parity corpus_simple
+  stdout ───
+
+    running 1 test
+    test corpus_simple ... FAILED
+
+    failures:
+
+    failures:
+        corpus_simple
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'corpus_simple' (38722272) panicked at crates/core/tests/sheets_self_parity.rs:522:9:
+    assertion `left == right` failed: [simple] serialize_compact non-idempotent at line 4 ("=CONCATENATE(A1, \" \", B1)")
+      left: "=CONCATENATE(A1, ,B1)"
+     right: "=CONCATENATE(A1,,B1)"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.045s] bbnf::sheets_self_parity corpus_stress
+  stdout ───
+
+    running 1 test
+    test corpus_stress ... FAILED
+
+    failures:
+
+    failures:
+        corpus_stress
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'corpus_stress' (38722279) panicked at crates/core/tests/sheets_self_parity.rs:522:9:
+    assertion `left == right` failed: [stress] serialize_compact non-idempotent at line 0 ("=LET(raw, A2:E1000, filtered, FILTER(raw, INDEX(raw,,3)>100), sorted, SORT(filtered, 3, FALSE), IF(ROWS(sorted)>0, MAP(SEQUENCE(MIN(10, ROWS(sorted))), LAMBDA(i, INDEX(sorted, i, 1))), \"No results\"))")
+      left: "=LET(raw,A2:E1000,filtered,FILTER(raw,INDEX(raw,,3)>100),sorted,SORT(filtered,3,FALSE),IF(ROWS(sorted)>0,MAP(SEQUENCE(MIN(10,ROWS(sorted))),LAMBDA(i,INDEX(sorted,i,1))),No results))"
+     right: "=LET(raw,A2:E1000,filtered,FILTER(raw,INDEX(raw,,3)>100),sorted,SORT(filtered,3,FALSE),IF(ROWS(sorted)>0,MAP(SEQUENCE(MIN(10,ROWS(sorted))),LAMBDA(i,INDEX(sorted,i,1))),No,results))"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.017s] bbnf::sheets_self_parity serialize_roundtrip_array_literal_multi_row
+  stdout ───
+
+    running 1 test
+    test serialize_roundtrip_array_literal_multi_row ... FAILED
+
+    failures:
+
+    failures:
+        serialize_roundtrip_array_literal_multi_row
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'serialize_roundtrip_array_literal_multi_row' (38722444) panicked at crates/core/tests/sheets_self_parity.rs:36:48:
+    sheets parse must succeed: Syntax { offset: 1, rule: None }
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.014s] bbnf::sheets_self_parity serialize_roundtrip_array_literal_single_row
+  stdout ───
+
+    running 1 test
+    test serialize_roundtrip_array_literal_single_row ... FAILED
+
+    failures:
+
+    failures:
+        serialize_roundtrip_array_literal_single_row
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'serialize_roundtrip_array_literal_single_row' (38722473) panicked at crates/core/tests/sheets_self_parity.rs:36:48:
+    sheets parse must succeed: Syntax { offset: 1, rule: None }
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.026s] bbnf::sheets_self_parity serialize_roundtrip_range_ref_column
+  stdout ───
+
+    running 1 test
+    test serialize_roundtrip_range_ref_column ... FAILED
+
+    failures:
+
+    failures:
+        serialize_roundtrip_range_ref_column
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'serialize_roundtrip_range_ref_column' (38722519) panicked at crates/core/tests/sheets_self_parity.rs:36:48:
+    sheets parse must succeed: Syntax { offset: 1, rule: None }
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.014s] bbnf::sheets_self_parity serialize_roundtrip_string_empty
+  stdout ───
+
+    running 1 test
+    test serialize_roundtrip_string_empty ... FAILED
+
+    failures:
+
+    failures:
+        serialize_roundtrip_string_empty
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'serialize_roundtrip_string_empty' (38722528) panicked at crates/core/tests/sheets_self_parity.rs:36:48:
+    sheets parse must succeed: Syntax { offset: 1, rule: None }
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.131s] bbnf::sonic_rs_parity sonic_rs_parity_citm
+  stdout ───
+
+    running 1 test
+    test sonic_rs_parity_citm ... FAILED
+
+    failures:
+
+    failures:
+        sonic_rs_parity_citm
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.12s
+
+  stderr ───
+
+    thread 'sonic_rs_parity_citm' (38722559) panicked at crates/core/tests/sonic_rs_parity.rs:197:14:
+    variant mismatch at citm_catalog.json.events.138586341.description: bbnf=Discriminant(3) sonic=Discriminant(0)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.058s] bbnf::sonic_rs_parity sonic_rs_parity_twitter
+  stdout ───
+
+    running 1 test
+    test sonic_rs_parity_twitter ... FAILED
+
+    failures:
+
+    failures:
+        sonic_rs_parity_twitter
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.03s
+
+  stderr ───
+
+    thread 'sonic_rs_parity_twitter' (38722562) panicked at crates/core/tests/sonic_rs_parity.rs:197:14:
+    variant mismatch at twitter.json.statuses[0].in_reply_to_status_id: bbnf=Discriminant(3) sonic=Discriminant(0)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.027s] bbnf::structural structural_scalar_null
+  stdout ───
+
+    running 1 test
+    test structural_scalar_null ... FAILED
+
+    failures:
+
+    failures:
+        structural_scalar_null
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 15 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'structural_scalar_null' (38722720) panicked at crates/core/tests/structural.rs:295:5:
+    expected null
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.026s] bbnf::wrap_compound_elision json_scalar_at_top_level_emits_one_record
+  stdout ───
+
+    running 1 test
+    test json_scalar_at_top_level_emits_one_record ... FAILED
+
+    failures:
+
+    failures:
+        json_scalar_at_top_level_emits_one_record
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'json_scalar_at_top_level_emits_one_record' (38723491) panicked at crates/core/tests/wrap_compound_elision.rs:49:32:
+    assertion `left == right` failed: scalar "null": got String("null"), want Null
+      left: String("null")
+     right: Null
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.026s] bbnf-analysis::directives import_directive_has_semantic_tokens
+  stdout ───
+
+    running 1 test
+    test import_directive_has_semantic_tokens ... FAILED
+
+    failures:
+
+    failures:
+        import_directive_has_semantic_tokens
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'import_directive_has_semantic_tokens' (38723704) panicked at crates/analysis/tests/directives.rs:232:5:
+    should have semantic token for @import keyword
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.029s] bbnf-lsp::integration test_hover_recover_keyword
+  stdout ───
+
+    running 1 test
+    test test_hover_recover_keyword ... FAILED
+
+    failures:
+
+    failures:
+        test_hover_recover_keyword
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 45 filtered out; finished in 0.01s
+
+  stderr ───
+    @recover keyword hover: {"jsonrpc":"2.0","result":null,"id":10}
+
+    thread 'test_hover_recover_keyword' (38726622) panicked at crates/lsp/tests/integration.rs:1456:5:
+    Expected @recover in hover, got: {"jsonrpc":"2.0","result":null,"id":10}
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.032s] bbnf-lsp::integration test_large_grammar
+  stdout ───
+
+    running 1 test
+    test test_large_grammar ... FAILED
+
+    failures:
+
+    failures:
+        test_large_grammar
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 45 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'test_large_grammar' (38727141) panicked at crates/lsp/tests/integration.rs:1067:5:
+    Expected at least 4 inlay hints for non-trivial rules, got 2: {"jsonrpc":"2.0","result":[{"position":{"line":5,"character":4},"label":" {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P'…}","kind":1,"tooltip":"Characters that can begin a parse of `pair`","paddingLeft":true},{"position":{"line":7,"character":5},"label":" {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'…}","kind":1,"tooltip":"Characters that can begin a parse of `value`","paddingLeft":true}],"id":42}
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.022s] bbnf-lsp::integration test_range_formatting
+  stdout ───
+
+    running 1 test
+    test test_range_formatting ... FAILED
+
+    failures:
+
+    failures:
+        test_range_formatting
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 45 filtered out; finished in 0.01s
+
+  stderr ───
+    Range formatting response: {"jsonrpc":"2.0","result":[{"range":{"start":{"line":0,"character":0},"end":{"line":1,"character":0}},"newText":"number = @{/[0-9]+/};\n"}],"id":32}
+
+    thread 'test_range_formatting' (38727165) panicked at crates/lsp/tests/integration.rs:840:5:
+    Expected formatted rule text, got: number = @{/[0-9]+/};
+
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [  32.223s] bbnf::named_type_preservation no_spurious_named_entries
+  stdout ───
+
+    running 1 test
+    test no_spurious_named_entries ... FAILED
+
+    failures:
+
+    failures:
+        no_spurious_named_entries
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 4 filtered out; finished in 32.21s
+
+  stderr ───
+    csp_strategy::solve_component budget_exceeded nodes_explored=1000000 constraints_added=1134 sites=455 component_size=169; falling back to per-variable trivial pick
+    Note: sub-variant type collision between `valueUnit::valueUnit_0` and `mathValue::mathValue_0` (F64). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `__pattern_dacbd3dacdd35992::__pattern_dacbd3dacdd35992_0` and `mathValue::mathValue_0` (F64). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `value::value_1` and `mathValue::mathValue_0` (F64). Codegen will resolve by rule-scoped lookup.
+
+    thread 'no_spurious_named_entries' (38720258) panicked at crates/core/tests/named_type_preservation.rs:297:5:
+    assertion `left == right` failed: CSS L4 Named entries must be exactly {colorFn → Color}; got []
+      left: []
+     right: [("colorFn", "Color")]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [  32.536s] bbnf::named_type_preservation css_l4_named_types
+  stdout ───
+
+    running 1 test
+    test css_l4_named_types ... FAILED
+
+    failures:
+
+    failures:
+        css_l4_named_types
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 4 filtered out; finished in 32.52s
+
+  stderr ───
+    csp_strategy::solve_component budget_exceeded nodes_explored=1000000 constraints_added=1134 sites=455 component_size=169; falling back to per-variable trivial pick
+    Note: sub-variant type collision between `mathValue::mathValue_0` and `valueUnit::valueUnit_0` (F64). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `value::value_1` and `valueUnit::valueUnit_0` (F64). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `__pattern_dacbd3dacdd35992::__pattern_dacbd3dacdd35992_0` and `valueUnit::valueUnit_0` (F64). Codegen will resolve by rule-scoped lookup.
+
+    thread 'css_l4_named_types' (38720221) panicked at crates/core/tests/named_type_preservation.rs:198:17:
+    AY invariant 23: rule `colorFn` projects as Tuple([Span, BoxedEnum, BoxedEnum, BoxedEnum, Option(BoxedEnum)]) at emit; expected Named("Color"). The grammar-declared annotation was collapsed somewhere between lowering and `project_types` (see `named_pipeline_probe` for empirical discrimination of the collapse site).
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [  32.592s] bbnf::named_type_preservation admitted_projection_surfaces
+  stdout ───
+
+    running 1 test
+    test admitted_projection_surfaces ... FAILED
+
+    failures:
+
+    failures:
+        admitted_projection_surfaces
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 4 filtered out; finished in 32.58s
+
+  stderr ───
+    csp_strategy::solve_component budget_exceeded nodes_explored=1000000 constraints_added=1134 sites=455 component_size=169; falling back to per-variable trivial pick
+    Note: sub-variant type collision between `valueUnit::valueUnit_0` and `mathValue::mathValue_0` (F64). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `__pattern_dacbd3dacdd35992::__pattern_dacbd3dacdd35992_0` and `mathValue::mathValue_0` (F64). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `value::value_1` and `mathValue::mathValue_0` (F64). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `term::term_2` and `value_atom::value_atom_3` (Tuple([Span, BoxedEnum, Span])). Codegen will resolve by rule-scoped lookup.
+
+    thread 'admitted_projection_surfaces' (38720218) panicked at crates/core/tests/named_type_preservation.rs:351:9:
+    CSS L4 payload layouts must include "colorSpace"; got {"__pattern_0c18f80f38c86647", "__pattern_3efcb010c1831f40", "alignKeyword", "angle", "borderStyleKeyword", "borderWidthKeyword", "boxSizingKeyword", "combinator", "cssString", "cursorKeyword", "dashIdent", "dirPseudo", "displayKeyword", "flex", "flexDirKeyword", "flexWrapKeyword", "fontLengthUnit", "fontWeightKeyword", "frequency", "globalKeyword", "hash", "hex", "ident", "importantSuffix", "keyframeSel", "length", "overflowKeyword", "percentage", "positionKeyword", "resolution", "selectorIdent", "string", "textAlignKeyword", "time", "visibilityKeyword"}
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+ TERMINATING [> 90.000s] bbnf-lsp::integration test_completion
+   TRY 2 TMT [  90.005s] bbnf-lsp::integration test_completion
+  stdout ───
+
+    running 1 test
+    test test_completion has been running for over 60 seconds
+
+    (test timed out)
+
+ TERMINATING [> 90.000s] bbnf-lsp::integration test_cross_file_completion_includes_imported_rules
+   TRY 2 TMT [  90.006s] bbnf-lsp::integration test_cross_file_completion_includes_imported_rules
+  stdout ───
+
+    running 1 test
+    test test_cross_file_completion_includes_imported_rules has been running for over 60 seconds
+
+    (test timed out)
+
+────────────
+     Summary [ 262.344s] 1538 tests run: 1449 passed (20 slow, 2 flaky, 1 leaky), 87 failed, 2 timed out, 26 skipped
+   FLAKY 2/2 [  43.900s] bbnf::bbnf_bootstrap_reproducibility bbnf_regen_is_idempotent
+   FLAKY 2/2 [  43.757s] bbnf::bbnf_bootstrap_reproducibility json_regen_is_idempotent
+  TRY 2 FAIL [   0.018s] bbnf::ax_w0a2s_real_css_probe bootstrap_full_parse
+  stdout ───
+
+    running 1 test
+    test bootstrap_full_parse ... FAILED
+
+    failures:
+
+    failures:
+        bootstrap_full_parse
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'bootstrap_full_parse' (38709607) panicked at crates/core/tests/ax_w0a2s_real_css_probe.rs:23:66:
+    read ../../data/css/bootstrap.css: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.019s] bbnf::ax_w0a2s_real_css_probe normalize_full_parse
+  stdout ───
+
+    running 1 test
+    test normalize_full_parse ... FAILED
+
+    failures:
+
+    failures:
+        normalize_full_parse
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'normalize_full_parse' (38709605) panicked at crates/core/tests/ax_w0a2s_real_css_probe.rs:23:66:
+    read ../../data/css/normalize.css: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.017s] bbnf::ax_w0a2s_real_css_probe tailwind_full_parse
+  stdout ───
+
+    running 1 test
+    test tailwind_full_parse ... FAILED
+
+    failures:
+
+    failures:
+        tailwind_full_parse
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'tailwind_full_parse' (38709603) panicked at crates/core/tests/ax_w0a2s_real_css_probe.rs:23:66:
+    read ../../data/css/tailwind.css: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.046s] bbnf::css_l4 hex_color_roundtrip_3digit
+  stdout ───
+
+    running 1 test
+    test hex_color_roundtrip_3digit ... FAILED
+
+    failures:
+
+    failures:
+        hex_color_roundtrip_3digit
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 17 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'hex_color_roundtrip_3digit' (38709958) panicked at crates/core/tests/css_l4.rs:215:10:
+    hex #abc must expand to 0xAABBCCFF in a 4-byte KvPair payload
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.042s] bbnf::css_l4 hex_color_roundtrip_6digit
+  stdout ───
+
+    running 1 test
+    test hex_color_roundtrip_6digit ... FAILED
+
+    failures:
+
+    failures:
+        hex_color_roundtrip_6digit
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 17 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'hex_color_roundtrip_6digit' (38709932) panicked at crates/core/tests/css_l4.rs:206:10:
+    hex #FF00FF must materialise as a 4-byte KvPair payload
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.025s] bbnf::css_l4 hex_color_roundtrip_8digit
+  stdout ───
+
+    running 1 test
+    test hex_color_roundtrip_8digit ... FAILED
+
+    failures:
+
+    failures:
+        hex_color_roundtrip_8digit
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 17 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'hex_color_roundtrip_8digit' (38709910) panicked at crates/core/tests/css_l4.rs:223:10:
+    hex #12345678 must materialise as a 4-byte KvPair payload
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.020s] bbnf::css_l4 parse_bootstrap_css
+  stdout ───
+
+    running 1 test
+    test parse_bootstrap_css ... FAILED
+
+    failures:
+
+    failures:
+        parse_bootstrap_css
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 17 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'parse_bootstrap_css' (38709890) panicked at crates/core/tests/css_l4.rs:25:5:
+    could not find data file 'bootstrap.css'; tried: ["../../data/css/bootstrap.css", "../data/css/bootstrap.css"]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.050s] bbnf::css_l4 parse_normalize_css
+  stdout ───
+
+    running 1 test
+    test parse_normalize_css ... FAILED
+
+    failures:
+
+    failures:
+        parse_normalize_css
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 17 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'parse_normalize_css' (38709962) panicked at crates/core/tests/css_l4.rs:25:5:
+    could not find data file 'normalize.css'; tried: ["../../data/css/normalize.css", "../data/css/normalize.css"]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.040s] bbnf::css_l4_canonical_parity canonical_parity_normalize
+  stdout ───
+
+    running 1 test
+    test canonical_parity_normalize ... FAILED
+
+    failures:
+
+    failures:
+        canonical_parity_normalize
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'canonical_parity_normalize' (38710003) panicked at crates/core/tests/css_l4_canonical_parity.rs:50:65:
+    ../../data/css/normalize.css: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.029s] bbnf::css_l4_canonical_parity scale_interop_bootstrap
+  stdout ───
+
+    running 1 test
+    test scale_interop_bootstrap ... FAILED
+
+    failures:
+
+    failures:
+        scale_interop_bootstrap
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'scale_interop_bootstrap' (38709993) panicked at crates/core/tests/css_l4_canonical_parity.rs:139:65:
+    ../../data/css/bootstrap.css: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.008s] bbnf::css_l4_canonical_parity scale_interop_tailwind
+  stdout ───
+
+    running 1 test
+    test scale_interop_tailwind ... FAILED
+
+    failures:
+
+    failures:
+        scale_interop_tailwind
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'scale_interop_tailwind' (38711005) panicked at crates/core/tests/css_l4_canonical_parity.rs:139:65:
+    ../../data/css/tailwind.css: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.027s] bbnf::css_l4_named_color_parity every_named_color_materialises_its_u32_payload
+  stdout ───
+
+    running 1 test
+    test every_named_color_materialises_its_u32_payload ... FAILED
+
+    failures:
+
+    failures:
+        every_named_color_materialises_its_u32_payload
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.02s
+
+  stderr ───
+
+    thread 'every_named_color_materialises_its_u32_payload' (38711231) panicked at crates/core/tests/css_l4_named_color_parity.rs:134:9:
+    150/150 named colors failed payload parity:
+      aliceblue: expected 0xF0F8FFFF, got None
+      antiquewhite: expected 0xFAEBD7FF, got None
+      aquamarine: expected 0x7FFFD4FF, got None
+      aqua: expected 0x00FFFFFF, got None
+      azure: expected 0xF0FFFFFF, got None
+      beige: expected 0xF5F5DCFF, got None
+      bisque: expected 0xFFE4C4FF, got None
+      black: expected 0x000000FF, got None
+      blanchedalmond: expected 0xFFEBCDFF, got None
+      blueviolet: expected 0x8A2BE2FF, got None
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.010s] bbnf::css_l4_named_color_parity white_materialises
+  stdout ───
+
+    running 1 test
+    test white_materialises ... FAILED
+
+    failures:
+
+    failures:
+        white_materialises
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'white_materialises' (38711211) panicked at crates/core/tests/css_l4_named_color_parity.rs:160:5:
+    assertion `left == right` failed: white must decode as 0xFFFFFFFFu32 in the typed CSS value graph
+      left: None
+     right: Some(4294967295)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.011s] bbnf::css_l4_parity dir_pseudo_ltr_branch_fires_payload
+  stdout ───
+
+    running 1 test
+    test dir_pseudo_ltr_branch_fires_payload ... FAILED
+
+    failures:
+
+    failures:
+        dir_pseudo_ltr_branch_fires_payload
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 16 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'dir_pseudo_ltr_branch_fires_payload' (38711218) panicked at crates/core/tests/css_l4_parity.rs:193:41:
+    parse: Syntax { offset: 0, rule: None }
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.010s] bbnf::css_l4_parity dir_pseudo_rtl_branch_fires_payload
+  stdout ───
+
+    running 1 test
+    test dir_pseudo_rtl_branch_fires_payload ... FAILED
+
+    failures:
+
+    failures:
+        dir_pseudo_rtl_branch_fires_payload
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 16 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'dir_pseudo_rtl_branch_fires_payload' (38711220) panicked at crates/core/tests/css_l4_parity.rs:193:41:
+    parse: Syntax { offset: 0, rule: None }
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.012s] bbnf::css_l4_parity hex_color_3digit_expands_u32
+  stdout ───
+
+    running 1 test
+    test hex_color_3digit_expands_u32 ... FAILED
+
+    failures:
+
+    failures:
+        hex_color_3digit_expands_u32
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 16 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'hex_color_3digit_expands_u32' (38711227) panicked at crates/core/tests/css_l4_parity.rs:247:5:
+    hex "a { color: #abc; }" must materialise as CssColor::Hex(0xAABBCCFF) in the typed graph
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.009s] bbnf::css_l4_parity hex_color_6digit_materialises_u32
+  stdout ───
+
+    running 1 test
+    test hex_color_6digit_materialises_u32 ... FAILED
+
+    failures:
+
+    failures:
+        hex_color_6digit_materialises_u32
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 16 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'hex_color_6digit_materialises_u32' (38711223) panicked at crates/core/tests/css_l4_parity.rs:247:5:
+    hex "a { color: #FF00FF; }" must materialise as CssColor::Hex(0xFF00FFFF) in the typed graph
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.011s] bbnf::css_l4_parity hex_color_8digit_alpha_materialises
+  stdout ───
+
+    running 1 test
+    test hex_color_8digit_alpha_materialises ... FAILED
+
+    failures:
+
+    failures:
+        hex_color_8digit_alpha_materialises
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 16 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'hex_color_8digit_alpha_materialises' (38711228) panicked at crates/core/tests/css_l4_parity.rs:247:5:
+    hex "a { color: #12345678; }" must materialise as CssColor::Hex(0x12345678) in the typed graph
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.012s] bbnf::css_l4_parity named_color_aliceblue_fires_inline_u32
+  stdout ───
+
+    running 1 test
+    test named_color_aliceblue_fires_inline_u32 ... FAILED
+
+    failures:
+
+    failures:
+        named_color_aliceblue_fires_inline_u32
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 16 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'named_color_aliceblue_fires_inline_u32' (38711253) panicked at crates/core/tests/css_l4_parity.rs:293:5:
+    namedColor parse must produce at least one CssColor::Hex payload in the typed graph; got: []
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.011s] bbnf::css_pretty parse_bootstrap_css
+  stdout ───
+
+    running 1 test
+    test parse_bootstrap_css ... FAILED
+
+    failures:
+
+    failures:
+        parse_bootstrap_css
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'parse_bootstrap_css' (38711594) panicked at crates/core/tests/css_pretty.rs:16:5:
+    could not find data file 'bootstrap.css'; tried: ["../../data/css/bootstrap.css", "../data/css/bootstrap.css"]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.011s] bbnf::css_pretty parse_normalize_css
+  stdout ───
+
+    running 1 test
+    test parse_normalize_css ... FAILED
+
+    failures:
+
+    failures:
+        parse_normalize_css
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'parse_normalize_css' (38711891) panicked at crates/core/tests/css_pretty.rs:16:5:
+    could not find data file 'normalize.css'; tried: ["../../data/css/normalize.css", "../data/css/normalize.css"]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.008s] bbnf::css_pretty parse_tailwind_css
+  stdout ───
+
+    running 1 test
+    test parse_tailwind_css ... FAILED
+
+    failures:
+
+    failures:
+        parse_tailwind_css
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'parse_tailwind_css' (38712090) panicked at crates/core/tests/css_pretty.rs:16:5:
+    could not find data file 'tailwind.css'; tried: ["../../data/css/tailwind.css", "../data/css/tailwind.css"]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.008s] bbnf::debug parse_debug_wildcard
+  stdout ───
+
+    running 1 test
+    test parse_debug_wildcard ... FAILED
+
+    failures:
+
+    failures:
+        parse_debug_wildcard
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'parse_debug_wildcard' (38712099) panicked at crates/core/tests/debug.rs:20:5:
+    assertion `left == right` failed
+      left: 0
+     right: 1
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.009s] bbnf::debug pipeline_debug_wildcard_sets_all
+  stdout ───
+
+    running 1 test
+    test pipeline_debug_wildcard_sets_all ... FAILED
+
+    failures:
+
+    failures:
+        pipeline_debug_wildcard_sets_all
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'pipeline_debug_wildcard_sets_all' (38712103) panicked at crates/core/tests/debug.rs:59:5:
+    debug_all should be true
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.014s] bbnf::dfa_fidelity pipeline_css_dfa_fidelity
+  stdout ───
+
+    running 1 test
+    test pipeline_css_dfa_fidelity ... FAILED
+
+    failures:
+
+    failures:
+        pipeline_css_dfa_fidelity
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'pipeline_css_dfa_fidelity' (38712119) panicked at crates/core/tests/dfa_fidelity.rs:66:10:
+    failed to read tailwind.css: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.009s] bbnf::json_canonical_parity canonical_parity_canada
+  stdout ───
+
+    running 1 test
+    test canonical_parity_canada ... FAILED
+
+    failures:
+
+    failures:
+        canonical_parity_canada
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'canonical_parity_canada' (38712180) panicked at crates/core/tests/json_canonical_parity.rs:107:65:
+    ../../data/json/canada.json: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.009s] bbnf::json_canonical_parity canonical_parity_citm_catalog
+  stdout ───
+
+    running 1 test
+    test canonical_parity_citm_catalog ... FAILED
+
+    failures:
+
+    failures:
+        canonical_parity_citm_catalog
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'canonical_parity_citm_catalog' (38712179) panicked at crates/core/tests/json_canonical_parity.rs:107:65:
+    ../../data/json/citm_catalog.json: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.008s] bbnf::json_canonical_parity canonical_parity_data
+  stdout ───
+
+    running 1 test
+    test canonical_parity_data ... FAILED
+
+    failures:
+
+    failures:
+        canonical_parity_data
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'canonical_parity_data' (38712183) panicked at crates/core/tests/json_canonical_parity.rs:107:65:
+    ../../data/json/data.json: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.010s] bbnf::json_canonical_parity canonical_parity_twitter
+  stdout ───
+
+    running 1 test
+    test canonical_parity_twitter ... FAILED
+
+    failures:
+
+    failures:
+        canonical_parity_twitter
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'canonical_parity_twitter' (38712186) panicked at crates/core/tests/json_canonical_parity.rs:107:65:
+    ../../data/json/twitter.json: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.022s] bbnf::json_parity every_declared_leaf_reaches_the_document
+  stdout ───
+
+    running 1 test
+    test every_declared_leaf_reaches_the_document ... FAILED
+
+    failures:
+
+    failures:
+        every_declared_leaf_reaches_the_document
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'every_declared_leaf_reaches_the_document' (38712313) panicked at crates/core/tests/json_parity.rs:329:5:
+    assertion failed: matches!(items[0], JsonValue::Null)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.021s] bbnf::json_parity nested_object_preserves_typed_payloads
+  stdout ───
+
+    running 1 test
+    test nested_object_preserves_typed_payloads ... FAILED
+
+    failures:
+
+    failures:
+        nested_object_preserves_typed_payloads
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'nested_object_preserves_typed_payloads' (38712334) panicked at crates/core/tests/json_parity.rs:279:5:
+    assertion `left == right` failed: two nulls must materialise
+      left: 0
+     right: 2
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.020s] bbnf::json_parity null_materialises_to_null_value
+  stdout ───
+
+    running 1 test
+    test null_materialises_to_null_value ... FAILED
+
+    failures:
+
+    failures:
+        null_materialises_to_null_value
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'null_materialises_to_null_value' (38712331) panicked at crates/core/tests/json_parity.rs:176:5:
+    assertion failed: matches!(doc.root, JsonValue::Null)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.012s] bbnf::json_parity parity_canada_json
+  stdout ───
+
+    running 1 test
+    test parity_canada_json ... FAILED
+
+    failures:
+
+    failures:
+        parity_canada_json
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'parity_canada_json' (38712353) panicked at crates/core/tests/json_parity.rs:134:65:
+    ../../data/json/canada.json: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.017s] bbnf::json_parity parity_citm_catalog_json
+  stdout ───
+
+    running 1 test
+    test parity_citm_catalog_json ... FAILED
+
+    failures:
+
+    failures:
+        parity_citm_catalog_json
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'parity_citm_catalog_json' (38712364) panicked at crates/core/tests/json_parity.rs:134:65:
+    ../../data/json/citm_catalog.json: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.038s] bbnf::json_parity parity_data_json
+  stdout ───
+
+    running 1 test
+    test parity_data_json ... FAILED
+
+    failures:
+
+    failures:
+        parity_data_json
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'parity_data_json' (38712445) panicked at crates/core/tests/json_parity.rs:134:65:
+    ../../data/json/data.json: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.031s] bbnf::json_parity parity_twitter_json
+  stdout ───
+
+    running 1 test
+    test parity_twitter_json ... FAILED
+
+    failures:
+
+    failures:
+        parity_twitter_json
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'parity_twitter_json' (38712441) panicked at crates/core/tests/json_parity.rs:134:65:
+    ../../data/json/twitter.json: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.041s] bbnf::json_parity_struct native_parity_serde_canada_json
+  stdout ───
+
+    running 1 test
+    test native_parity_serde_canada_json ... FAILED
+
+    failures:
+
+    failures:
+        native_parity_serde_canada_json
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 19 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'native_parity_serde_canada_json' (38712451) panicked at crates/core/tests/json_parity_struct.rs:443:65:
+    ../../data/json/canada.json: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.036s] bbnf::json_parity_struct native_parity_serde_citm_catalog_json
+  stdout ───
+
+    running 1 test
+    test native_parity_serde_citm_catalog_json ... FAILED
+
+    failures:
+
+    failures:
+        native_parity_serde_citm_catalog_json
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 19 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'native_parity_serde_citm_catalog_json' (38712452) panicked at crates/core/tests/json_parity_struct.rs:443:65:
+    ../../data/json/citm_catalog.json: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.024s] bbnf::json_parity_struct native_parity_serde_data_json
+  stdout ───
+
+    running 1 test
+    test native_parity_serde_data_json ... FAILED
+
+    failures:
+
+    failures:
+        native_parity_serde_data_json
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 19 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'native_parity_serde_data_json' (38712630) panicked at crates/core/tests/json_parity_struct.rs:443:65:
+    ../../data/json/data.json: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.013s] bbnf::json_parity_struct native_parity_serde_twitter_json
+  stdout ───
+
+    running 1 test
+    test native_parity_serde_twitter_json ... FAILED
+
+    failures:
+
+    failures:
+        native_parity_serde_twitter_json
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 19 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'native_parity_serde_twitter_json' (38712660) panicked at crates/core/tests/json_parity_struct.rs:443:65:
+    ../../data/json/twitter.json: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.013s] bbnf::json_slab parse_canada_json
+  stdout ───
+
+    running 1 test
+    test parse_canada_json ... FAILED
+
+    failures:
+
+    failures:
+        parse_canada_json
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'parse_canada_json' (38712683) panicked at crates/core/tests/json_slab.rs:28:5:
+    could not find data file 'canada.json'; tried: ["../../data/json/canada.json", "../data/json/canada.json"]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.013s] bbnf::json_slab parse_citm_catalog_json
+  stdout ───
+
+    running 1 test
+    test parse_citm_catalog_json ... FAILED
+
+    failures:
+
+    failures:
+        parse_citm_catalog_json
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'parse_citm_catalog_json' (38712682) panicked at crates/core/tests/json_slab.rs:28:5:
+    could not find data file 'citm_catalog.json'; tried: ["../../data/json/citm_catalog.json", "../data/json/citm_catalog.json"]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.011s] bbnf::json_slab parse_data_json
+  stdout ───
+
+    running 1 test
+    test parse_data_json ... FAILED
+
+    failures:
+
+    failures:
+        parse_data_json
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'parse_data_json' (38712687) panicked at crates/core/tests/json_slab.rs:28:5:
+    could not find data file 'data.json'; tried: ["../../data/json/data.json", "../data/json/data.json"]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.025s] bbnf::json_slab parse_twitter_json
+  stdout ───
+
+    running 1 test
+    test parse_twitter_json ... FAILED
+
+    failures:
+
+    failures:
+        parse_twitter_json
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'parse_twitter_json' (38712739) panicked at crates/core/tests/json_slab.rs:28:5:
+    could not find data file 'twitter.json'; tried: ["../../data/json/twitter.json", "../data/json/twitter.json"]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.037s] bbnf::json_value_parity json_parses_mixed_value_tree
+  stdout ───
+
+    running 1 test
+    test json_parses_mixed_value_tree ... FAILED
+
+    failures:
+
+    failures:
+        json_parses_mixed_value_tree
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'json_parses_mixed_value_tree' (38712748) panicked at crates/core/tests/json_value_parity.rs:75:27:
+    $[2]: shape divergence — bbnf=String("null"), serde=Null
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.033s] bbnf::json_value_parity json_parses_nested_object
+  stdout ───
+
+    running 1 test
+    test json_parses_nested_object ... FAILED
+
+    failures:
+
+    failures:
+        json_parses_nested_object
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'json_parses_nested_object' (38712750) panicked at crates/core/tests/json_value_parity.rs:75:27:
+    $.outer.inner[1]: shape divergence — bbnf=String("null"), serde=Null
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.044s] bbnf::json_value_parity json_parses_null
+  stdout ───
+
+    running 1 test
+    test json_parses_null ... FAILED
+
+    failures:
+
+    failures:
+        json_parses_null
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'json_parses_null' (38712755) panicked at crates/core/tests/json_value_parity.rs:75:27:
+    $: shape divergence — bbnf=String("null"), serde=Null
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.018s] bbnf::json_value_parity simdjson_parity_mixed_array
+  stdout ───
+
+    running 1 test
+    test simdjson_parity_mixed_array ... FAILED
+
+    failures:
+
+    failures:
+        simdjson_parity_mixed_array
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'simdjson_parity_mixed_array' (38713041) panicked at crates/core/tests/json_value_parity.rs:204:17:
+    $[2]: bbnf=String but simd-json=Null
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.017s] bbnf::json_value_parity simdjson_parity_scalars
+  stdout ───
+
+    running 1 test
+    test simdjson_parity_scalars ... FAILED
+
+    failures:
+
+    failures:
+        simdjson_parity_scalars
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'simdjson_parity_scalars' (38713051) panicked at crates/core/tests/json_value_parity.rs:204:17:
+    $: bbnf=String but simd-json=Null
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.014s] bbnf::lightningcss_parity lightningcss_parity_bootstrap
+  stdout ───
+
+    running 1 test
+    test lightningcss_parity_bootstrap ... FAILED
+
+    failures:
+
+    failures:
+        lightningcss_parity_bootstrap
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'lightningcss_parity_bootstrap' (38713077) panicked at crates/core/tests/lightningcss_parity.rs:57:59:
+    ../../data/css/bootstrap.css: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.012s] bbnf::lightningcss_parity lightningcss_parity_normalize
+  stdout ───
+
+    running 1 test
+    test lightningcss_parity_normalize ... FAILED
+
+    failures:
+
+    failures:
+        lightningcss_parity_normalize
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'lightningcss_parity_normalize' (38713074) panicked at crates/core/tests/lightningcss_parity.rs:57:59:
+    ../../data/css/normalize.css: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.013s] bbnf::lightningcss_parity lightningcss_parity_tailwind
+  stdout ───
+
+    running 1 test
+    test lightningcss_parity_tailwind ... FAILED
+
+    failures:
+
+    failures:
+        lightningcss_parity_tailwind
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'lightningcss_parity_tailwind' (38713086) panicked at crates/core/tests/lightningcss_parity.rs:57:59:
+    ../../data/css/tailwind.css: read failed: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [  32.592s] bbnf::named_type_preservation admitted_projection_surfaces
+  stdout ───
+
+    running 1 test
+    test admitted_projection_surfaces ... FAILED
+
+    failures:
+
+    failures:
+        admitted_projection_surfaces
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 4 filtered out; finished in 32.58s
+
+  stderr ───
+    csp_strategy::solve_component budget_exceeded nodes_explored=1000000 constraints_added=1134 sites=455 component_size=169; falling back to per-variable trivial pick
+    Note: sub-variant type collision between `valueUnit::valueUnit_0` and `mathValue::mathValue_0` (F64). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `__pattern_dacbd3dacdd35992::__pattern_dacbd3dacdd35992_0` and `mathValue::mathValue_0` (F64). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `value::value_1` and `mathValue::mathValue_0` (F64). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `term::term_2` and `value_atom::value_atom_3` (Tuple([Span, BoxedEnum, Span])). Codegen will resolve by rule-scoped lookup.
+
+    thread 'admitted_projection_surfaces' (38720218) panicked at crates/core/tests/named_type_preservation.rs:351:9:
+    CSS L4 payload layouts must include "colorSpace"; got {"__pattern_0c18f80f38c86647", "__pattern_3efcb010c1831f40", "alignKeyword", "angle", "borderStyleKeyword", "borderWidthKeyword", "boxSizingKeyword", "combinator", "cssString", "cursorKeyword", "dashIdent", "dirPseudo", "displayKeyword", "flex", "flexDirKeyword", "flexWrapKeyword", "fontLengthUnit", "fontWeightKeyword", "frequency", "globalKeyword", "hash", "hex", "ident", "importantSuffix", "keyframeSel", "length", "overflowKeyword", "percentage", "positionKeyword", "resolution", "selectorIdent", "string", "textAlignKeyword", "time", "visibilityKeyword"}
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [  32.536s] bbnf::named_type_preservation css_l4_named_types
+  stdout ───
+
+    running 1 test
+    test css_l4_named_types ... FAILED
+
+    failures:
+
+    failures:
+        css_l4_named_types
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 4 filtered out; finished in 32.52s
+
+  stderr ───
+    csp_strategy::solve_component budget_exceeded nodes_explored=1000000 constraints_added=1134 sites=455 component_size=169; falling back to per-variable trivial pick
+    Note: sub-variant type collision between `mathValue::mathValue_0` and `valueUnit::valueUnit_0` (F64). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `value::value_1` and `valueUnit::valueUnit_0` (F64). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `__pattern_dacbd3dacdd35992::__pattern_dacbd3dacdd35992_0` and `valueUnit::valueUnit_0` (F64). Codegen will resolve by rule-scoped lookup.
+
+    thread 'css_l4_named_types' (38720221) panicked at crates/core/tests/named_type_preservation.rs:198:17:
+    AY invariant 23: rule `colorFn` projects as Tuple([Span, BoxedEnum, BoxedEnum, BoxedEnum, Option(BoxedEnum)]) at emit; expected Named("Color"). The grammar-declared annotation was collapsed somewhere between lowering and `project_types` (see `named_pipeline_probe` for empirical discrimination of the collapse site).
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.019s] bbnf::named_type_preservation json_named_types
+  stdout ───
+
+    running 1 test
+    test json_named_types ... FAILED
+
+    failures:
+
+    failures:
+        json_named_types
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'json_named_types' (38713280) panicked at crates/core/tests/named_type_preservation.rs:198:17:
+    AY invariant 23: rule `string` projects as Span at emit; expected Named("String"). The grammar-declared annotation was collapsed somewhere between lowering and `project_types` (see `named_pipeline_probe` for empirical discrimination of the collapse site).
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [  32.223s] bbnf::named_type_preservation no_spurious_named_entries
+  stdout ───
+
+    running 1 test
+    test no_spurious_named_entries ... FAILED
+
+    failures:
+
+    failures:
+        no_spurious_named_entries
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 4 filtered out; finished in 32.21s
+
+  stderr ───
+    csp_strategy::solve_component budget_exceeded nodes_explored=1000000 constraints_added=1134 sites=455 component_size=169; falling back to per-variable trivial pick
+    Note: sub-variant type collision between `valueUnit::valueUnit_0` and `mathValue::mathValue_0` (F64). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `__pattern_dacbd3dacdd35992::__pattern_dacbd3dacdd35992_0` and `mathValue::mathValue_0` (F64). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `value::value_1` and `mathValue::mathValue_0` (F64). Codegen will resolve by rule-scoped lookup.
+
+    thread 'no_spurious_named_entries' (38720258) panicked at crates/core/tests/named_type_preservation.rs:297:5:
+    assertion `left == right` failed: CSS L4 Named entries must be exactly {colorFn → Color}; got []
+      left: []
+     right: [("colorFn", "Color")]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.024s] bbnf::pipeline pipeline_vm_full_css_bootstrap
+  stdout ───
+
+    running 1 test
+    test pipeline_vm_full_css_bootstrap ... FAILED
+
+    failures:
+
+    failures:
+        pipeline_vm_full_css_bootstrap
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 27 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'pipeline_vm_full_css_bootstrap' (38713667) panicked at crates/core/tests/pipeline.rs:599:63:
+    ../../data/css/bootstrap.css: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.025s] bbnf::pipeline pipeline_vm_full_css_normalize
+  stdout ───
+
+    running 1 test
+    test pipeline_vm_full_css_normalize ... FAILED
+
+    failures:
+
+    failures:
+        pipeline_vm_full_css_normalize
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 27 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'pipeline_vm_full_css_normalize' (38713670) panicked at crates/core/tests/pipeline.rs:599:63:
+    ../../data/css/normalize.css: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.022s] bbnf::pipeline pipeline_vm_full_json_canada
+  stdout ───
+
+    running 1 test
+    test pipeline_vm_full_json_canada ... FAILED
+
+    failures:
+
+    failures:
+        pipeline_vm_full_json_canada
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 27 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'pipeline_vm_full_json_canada' (38713742) panicked at crates/core/tests/pipeline.rs:599:63:
+    ../../data/json/canada.json: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.019s] bbnf::pipeline pipeline_vm_full_json_data
+  stdout ───
+
+    running 1 test
+    test pipeline_vm_full_json_data ... FAILED
+
+    failures:
+
+    failures:
+        pipeline_vm_full_json_data
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 27 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'pipeline_vm_full_json_data' (38713744) panicked at crates/core/tests/pipeline.rs:599:63:
+    ../../data/json/data.json: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.021s] bbnf::pipeline pipeline_vm_full_json_twitter
+  stdout ───
+
+    running 1 test
+    test pipeline_vm_full_json_twitter ... FAILED
+
+    failures:
+
+    failures:
+        pipeline_vm_full_json_twitter
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 27 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'pipeline_vm_full_json_twitter' (38713915) panicked at crates/core/tests/pipeline.rs:599:63:
+    ../../data/json/twitter.json: No such file or directory (os error 2)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.015s] bbnf::serialize_roundtrip json_null
+  stdout ───
+
+    running 1 test
+    test json_null ... FAILED
+
+    failures:
+
+    failures:
+        json_null
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 18 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'json_null' (38719458) panicked at crates/core/tests/serialize_roundtrip.rs:133:5:
+    assertion `left == right` failed
+      left: "\"null\""
+     right: "null"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.012s] bbnf::sheets_parity error_literal_divzero_branch_fires_payload
+  stdout ───
+
+    running 1 test
+    test error_literal_divzero_branch_fires_payload ... FAILED
+
+    failures:
+
+    failures:
+        error_literal_divzero_branch_fires_payload
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'error_literal_divzero_branch_fires_payload' (38720868) panicked at crates/core/tests/sheets_parity.rs:371:5:
+    AV.0.1 close-out: error_literal '#DIV/0!' -> 3u8 must fire. Payloads = []
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.015s] bbnf::sheets_parity error_literal_error_branch_fires_payload
+  stdout ───
+
+    running 1 test
+    test error_literal_error_branch_fires_payload ... FAILED
+
+    failures:
+
+    failures:
+        error_literal_error_branch_fires_payload
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'error_literal_error_branch_fires_payload' (38721048) panicked at crates/core/tests/sheets_parity.rs:382:5:
+    AV.0.1 close-out: error_literal '#ERROR!' -> 7u8 must fire. Payloads = []
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.014s] bbnf::sheets_parity error_literal_factored_branch_fires_payload
+  stdout ───
+
+    running 1 test
+    test error_literal_factored_branch_fires_payload ... FAILED
+
+    failures:
+
+    failures:
+        error_literal_factored_branch_fires_payload
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'error_literal_factored_branch_fires_payload' (38721067) panicked at crates/core/tests/sheets_parity.rs:300:5:
+    AV.0.1 Bug 1: error_literal '#NULL!' -> 4u8 must fire after the per-branch payload-write hoisting. Payloads = []
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.011s] bbnf::sheets_parity error_literal_first_branch_fires
+  stdout ───
+
+    running 1 test
+    test error_literal_first_branch_fires ... FAILED
+
+    failures:
+
+    failures:
+        error_literal_first_branch_fires
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'error_literal_first_branch_fires' (38721409) panicked at crates/core/tests/sheets_parity.rs:283:5:
+    error_literal '#N/A' -> 0u8 must fire; got payloads = []
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.012s] bbnf::sheets_parity error_literal_name_branch_fires_payload
+  stdout ───
+
+    running 1 test
+    test error_literal_name_branch_fires_payload ... FAILED
+
+    failures:
+
+    failures:
+        error_literal_name_branch_fires_payload
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'error_literal_name_branch_fires_payload' (38721416) panicked at crates/core/tests/sheets_parity.rs:322:5:
+    AV.0.1 Bug 1: error_literal '#NAME?' -> 5u8 must fire. Payloads = []
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.014s] bbnf::sheets_parity error_literal_num_branch_fires_payload
+  stdout ───
+
+    running 1 test
+    test error_literal_num_branch_fires_payload ... FAILED
+
+    failures:
+
+    failures:
+        error_literal_num_branch_fires_payload
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'error_literal_num_branch_fires_payload' (38721659) panicked at crates/core/tests/sheets_parity.rs:311:5:
+    AV.0.1 Bug 1: error_literal '#NUM!' -> 6u8 must fire. Payloads = []
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.014s] bbnf::sheets_parity error_literal_ref_branch_fires_payload
+  stdout ───
+
+    running 1 test
+    test error_literal_ref_branch_fires_payload ... FAILED
+
+    failures:
+
+    failures:
+        error_literal_ref_branch_fires_payload
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'error_literal_ref_branch_fires_payload' (38721667) panicked at crates/core/tests/sheets_parity.rs:360:5:
+    AV.0.1 close-out: error_literal '#REF!' -> 2u8 must fire. Payloads = []
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.015s] bbnf::sheets_parity error_literal_spill_branch_fires_payload
+  stdout ───
+
+    running 1 test
+    test error_literal_spill_branch_fires_payload ... FAILED
+
+    failures:
+
+    failures:
+        error_literal_spill_branch_fires_payload
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'error_literal_spill_branch_fires_payload' (38721833) panicked at crates/core/tests/sheets_parity.rs:393:5:
+    AV.0.1 close-out: error_literal '#SPILL!' -> 8u8 must fire. Payloads = []
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.012s] bbnf::sheets_parity error_literal_value_branch_fires_payload
+  stdout ───
+
+    running 1 test
+    test error_literal_value_branch_fires_payload ... FAILED
+
+    failures:
+
+    failures:
+        error_literal_value_branch_fires_payload
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'error_literal_value_branch_fires_payload' (38721868) panicked at crates/core/tests/sheets_parity.rs:348:5:
+    AV.0.1 close-out: error_literal '#VALUE!' -> 1u8 must fire through the checkpoint per-branch payload-write hoist. Payloads = []
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.015s] bbnf::sheets_parity unary_prefix_first_branch_fires_0u8
+  stdout ───
+
+    running 1 test
+    test unary_prefix_first_branch_fires_0u8 ... FAILED
+
+    failures:
+
+    failures:
+        unary_prefix_first_branch_fires_0u8
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'unary_prefix_first_branch_fires_0u8' (38722081) panicked at crates/core/tests/sheets_parity.rs:251:5:
+    AV.0.1: unary_prefix '+' -> 0u8 must fire; got payloads = []
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.018s] bbnf::sheets_self_parity corpus_nested
+  stdout ───
+
+    running 1 test
+    test corpus_nested ... FAILED
+
+    failures:
+
+    failures:
+        corpus_nested
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'corpus_nested' (38722113) panicked at crates/core/tests/sheets_self_parity.rs:522:9:
+    assertion `left == right` failed: [nested] serialize_compact non-idempotent at line 0 ("=IF(AND(A1>0, B1<100), VLOOKUP(A1, C1:E100, 3, FALSE), IFERROR(INDEX(MATCH(A1, F1:F100, 0), G1:G100), \"N/A\"))")
+      left: "=IF(AND(A1>0,B1<100),VLOOKUP(A1,C1:E100,3,FALSE),IFERROR(INDEX(MATCH(A1,F1:F100,0),G1:G100),N/A))"
+     right: "=IF(AND(A1>0,B1<100),VLOOKUP(A1,C1:E100,3,FALSE),IFERROR(INDEX(MATCH(A1,F1:F100,0),G1:G100),N^A))"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.032s] bbnf::sheets_self_parity corpus_simple
+  stdout ───
+
+    running 1 test
+    test corpus_simple ... FAILED
+
+    failures:
+
+    failures:
+        corpus_simple
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'corpus_simple' (38722272) panicked at crates/core/tests/sheets_self_parity.rs:522:9:
+    assertion `left == right` failed: [simple] serialize_compact non-idempotent at line 4 ("=CONCATENATE(A1, \" \", B1)")
+      left: "=CONCATENATE(A1, ,B1)"
+     right: "=CONCATENATE(A1,,B1)"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.045s] bbnf::sheets_self_parity corpus_stress
+  stdout ───
+
+    running 1 test
+    test corpus_stress ... FAILED
+
+    failures:
+
+    failures:
+        corpus_stress
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'corpus_stress' (38722279) panicked at crates/core/tests/sheets_self_parity.rs:522:9:
+    assertion `left == right` failed: [stress] serialize_compact non-idempotent at line 0 ("=LET(raw, A2:E1000, filtered, FILTER(raw, INDEX(raw,,3)>100), sorted, SORT(filtered, 3, FALSE), IF(ROWS(sorted)>0, MAP(SEQUENCE(MIN(10, ROWS(sorted))), LAMBDA(i, INDEX(sorted, i, 1))), \"No results\"))")
+      left: "=LET(raw,A2:E1000,filtered,FILTER(raw,INDEX(raw,,3)>100),sorted,SORT(filtered,3,FALSE),IF(ROWS(sorted)>0,MAP(SEQUENCE(MIN(10,ROWS(sorted))),LAMBDA(i,INDEX(sorted,i,1))),No results))"
+     right: "=LET(raw,A2:E1000,filtered,FILTER(raw,INDEX(raw,,3)>100),sorted,SORT(filtered,3,FALSE),IF(ROWS(sorted)>0,MAP(SEQUENCE(MIN(10,ROWS(sorted))),LAMBDA(i,INDEX(sorted,i,1))),No,results))"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.017s] bbnf::sheets_self_parity serialize_roundtrip_array_literal_multi_row
+  stdout ───
+
+    running 1 test
+    test serialize_roundtrip_array_literal_multi_row ... FAILED
+
+    failures:
+
+    failures:
+        serialize_roundtrip_array_literal_multi_row
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'serialize_roundtrip_array_literal_multi_row' (38722444) panicked at crates/core/tests/sheets_self_parity.rs:36:48:
+    sheets parse must succeed: Syntax { offset: 1, rule: None }
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.014s] bbnf::sheets_self_parity serialize_roundtrip_array_literal_single_row
+  stdout ───
+
+    running 1 test
+    test serialize_roundtrip_array_literal_single_row ... FAILED
+
+    failures:
+
+    failures:
+        serialize_roundtrip_array_literal_single_row
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'serialize_roundtrip_array_literal_single_row' (38722473) panicked at crates/core/tests/sheets_self_parity.rs:36:48:
+    sheets parse must succeed: Syntax { offset: 1, rule: None }
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.026s] bbnf::sheets_self_parity serialize_roundtrip_range_ref_column
+  stdout ───
+
+    running 1 test
+    test serialize_roundtrip_range_ref_column ... FAILED
+
+    failures:
+
+    failures:
+        serialize_roundtrip_range_ref_column
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'serialize_roundtrip_range_ref_column' (38722519) panicked at crates/core/tests/sheets_self_parity.rs:36:48:
+    sheets parse must succeed: Syntax { offset: 1, rule: None }
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.014s] bbnf::sheets_self_parity serialize_roundtrip_string_empty
+  stdout ───
+
+    running 1 test
+    test serialize_roundtrip_string_empty ... FAILED
+
+    failures:
+
+    failures:
+        serialize_roundtrip_string_empty
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'serialize_roundtrip_string_empty' (38722528) panicked at crates/core/tests/sheets_self_parity.rs:36:48:
+    sheets parse must succeed: Syntax { offset: 1, rule: None }
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.131s] bbnf::sonic_rs_parity sonic_rs_parity_citm
+  stdout ───
+
+    running 1 test
+    test sonic_rs_parity_citm ... FAILED
+
+    failures:
+
+    failures:
+        sonic_rs_parity_citm
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.12s
+
+  stderr ───
+
+    thread 'sonic_rs_parity_citm' (38722559) panicked at crates/core/tests/sonic_rs_parity.rs:197:14:
+    variant mismatch at citm_catalog.json.events.138586341.description: bbnf=Discriminant(3) sonic=Discriminant(0)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.058s] bbnf::sonic_rs_parity sonic_rs_parity_twitter
+  stdout ───
+
+    running 1 test
+    test sonic_rs_parity_twitter ... FAILED
+
+    failures:
+
+    failures:
+        sonic_rs_parity_twitter
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.03s
+
+  stderr ───
+
+    thread 'sonic_rs_parity_twitter' (38722562) panicked at crates/core/tests/sonic_rs_parity.rs:197:14:
+    variant mismatch at twitter.json.statuses[0].in_reply_to_status_id: bbnf=Discriminant(3) sonic=Discriminant(0)
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.027s] bbnf::structural structural_scalar_null
+  stdout ───
+
+    running 1 test
+    test structural_scalar_null ... FAILED
+
+    failures:
+
+    failures:
+        structural_scalar_null
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 15 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'structural_scalar_null' (38722720) panicked at crates/core/tests/structural.rs:295:5:
+    expected null
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.026s] bbnf::wrap_compound_elision json_scalar_at_top_level_emits_one_record
+  stdout ───
+
+    running 1 test
+    test json_scalar_at_top_level_emits_one_record ... FAILED
+
+    failures:
+
+    failures:
+        json_scalar_at_top_level_emits_one_record
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'json_scalar_at_top_level_emits_one_record' (38723491) panicked at crates/core/tests/wrap_compound_elision.rs:49:32:
+    assertion `left == right` failed: scalar "null": got String("null"), want Null
+      left: String("null")
+     right: Null
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.026s] bbnf-analysis::directives import_directive_has_semantic_tokens
+  stdout ───
+
+    running 1 test
+    test import_directive_has_semantic_tokens ... FAILED
+
+    failures:
+
+    failures:
+        import_directive_has_semantic_tokens
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'import_directive_has_semantic_tokens' (38723704) panicked at crates/analysis/tests/directives.rs:232:5:
+    should have semantic token for @import keyword
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+   TRY 2 TMT [  90.005s] bbnf-lsp::integration test_completion
+  stdout ───
+
+    running 1 test
+    test test_completion has been running for over 60 seconds
+
+    (test timed out)
+
+   TRY 2 TMT [  90.006s] bbnf-lsp::integration test_cross_file_completion_includes_imported_rules
+  stdout ───
+
+    running 1 test
+    test test_cross_file_completion_includes_imported_rules has been running for over 60 seconds
+
+    (test timed out)
+
+  TRY 2 FAIL [   0.029s] bbnf-lsp::integration test_hover_recover_keyword
+  stdout ───
+
+    running 1 test
+    test test_hover_recover_keyword ... FAILED
+
+    failures:
+
+    failures:
+        test_hover_recover_keyword
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 45 filtered out; finished in 0.01s
+
+  stderr ───
+    @recover keyword hover: {"jsonrpc":"2.0","result":null,"id":10}
+
+    thread 'test_hover_recover_keyword' (38726622) panicked at crates/lsp/tests/integration.rs:1456:5:
+    Expected @recover in hover, got: {"jsonrpc":"2.0","result":null,"id":10}
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.032s] bbnf-lsp::integration test_large_grammar
+  stdout ───
+
+    running 1 test
+    test test_large_grammar ... FAILED
+
+    failures:
+
+    failures:
+        test_large_grammar
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 45 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'test_large_grammar' (38727141) panicked at crates/lsp/tests/integration.rs:1067:5:
+    Expected at least 4 inlay hints for non-trivial rules, got 2: {"jsonrpc":"2.0","result":[{"position":{"line":5,"character":4},"label":" {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P'…}","kind":1,"tooltip":"Characters that can begin a parse of `pair`","paddingLeft":true},{"position":{"line":7,"character":5},"label":" {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'…}","kind":1,"tooltip":"Characters that can begin a parse of `value`","paddingLeft":true}],"id":42}
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.022s] bbnf-lsp::integration test_range_formatting
+  stdout ───
+
+    running 1 test
+    test test_range_formatting ... FAILED
+
+    failures:
+
+    failures:
+        test_range_formatting
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 45 filtered out; finished in 0.01s
+
+  stderr ───
+    Range formatting response: {"jsonrpc":"2.0","result":[{"range":{"start":{"line":0,"character":0},"end":{"line":1,"character":0}},"newText":"number = @{/[0-9]+/};\n"}],"id":32}
+
+    thread 'test_range_formatting' (38727165) panicked at crates/lsp/tests/integration.rs:840:5:
+    Expected formatted rule text, got: number = @{/[0-9]+/};
+
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+error: test run failed

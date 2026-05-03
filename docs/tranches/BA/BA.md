@@ -1,6 +1,6 @@
 # Tranche BA — Direct-Projection Codegen
 
-**Status**: planned. Opens after AZ-IV close + Phase 2 cleanup absorption.
+**Status**: planned. Opens after AZ-IV close + the 6-polymath BA/BB/BC hardening pass per `docs/tranches/AZ-IV/audit/HANDOFF-HARDENING-PROMPT.md`. BA.W0 absorbs the 3 cleanup commits (18 zero-caller substrate DELETE + 3 module-cluster retirements + `merge_path_seed` decision) into the wave itself; there is no separate pre-BA cleanup phase.
 **Base**: master `40e1835d` (post-Phase 1 plan-surgery).
 **Letter discipline**: un-recycled at master `40092b28`. The previous BA tranche (typed pointer-path queries; absorbed into AZ-IV.W2) and the subsequently-recycled BA tranche (rule-discovery; routed to BB) are archived at `docs/tranches/BA/historical/recycled-rule-discovery/`. The canonical post-AZ-IV letter sequence is **AZ → BA (direct-projection) → BB (rule-discovery) → BC (cleanup) → BD+ (TS/WASM re-engineering)** per `docs/tranches/AZ-IV/audit/DEEP-SYNTHESIS.md`.
 
@@ -179,7 +179,7 @@ If deletion is unsafe because a current consumer exists, the wave must name the 
 
 ## Cross-Tranche Debt
 
-- **BA opens after AZ-IV close + Phase 2 cleanup absorption** (3 commits at master `40e1835d` plus the 3 cleanup commits).
+- **BA opens after AZ-IV close + the 6-polymath BA/BB/BC hardening pass** (handoff at `docs/tranches/AZ-IV/audit/HANDOFF-HARDENING-PROMPT.md`); BA.W0 absorbs the 3 cleanup commits as its first scope items rather than as a separate pre-BA phase.
 - **BB opens after BA closes** with the rule-discovery scope (the original BB scope, un-subsumed; identical to the recycled-BA plan that lives at `docs/tranches/BA/historical/recycled-rule-discovery/`).
 - **BC opens after BB closes** as the cleanup pass (Audit-A's TRANSPOSE bucket + AUDIT-B's routed splits + worktree fixture symlink contract finalisation + samply 7-artefact contract canonicalization + cross-repo discipline).
 - **BD+ reserved** for TS/WASM re-engineering or shared-ABI tranche (per user punt).

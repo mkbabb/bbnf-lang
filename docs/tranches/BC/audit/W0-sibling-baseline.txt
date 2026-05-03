@@ -1,0 +1,21 @@
+# BC.W0c — Sibling Repository Baseline (placeholder)
+
+Date placeholder: populated by BC execution at BC.W0c open. Per surgery 29 (HARDENING-PLAN-SYNTHESIS-2026-05-03.md:69).
+Per `audit/HARDENING-SYNTHESIS-2026-05-03.md:158-164`, capture sibling state before BC edits cross-repo.
+
+The execution agent runs:
+  cd /Users/mkbabb/Programming/parse-that && git rev-parse --short HEAD && git status --short
+  cd /Users/mkbabb/Programming/pprint && git rev-parse --short HEAD && git status --short
+  cd /Users/mkbabb/Programming/csc411 && git rev-parse --short HEAD && git status --short
+  cd /Users/mkbabb/Programming/bbnf-buddy && git rev-parse --short HEAD && git status --short
+  cd /Users/mkbabb/Programming/ffuzzy && git rev-parse --short HEAD && git status --short
+
+Expected schema (one row per sibling):
+  parse-that:        SHA  STATUS
+  pprint:            SHA  STATUS
+  csc411/csp-solver: SHA  STATUS
+  bbnf-buddy:        SHA  STATUS
+  ffuzzy:            SHA  STATUS
+
+BC.W5d uses this baseline to separate pre-existing sibling dirt from W5 output.
+The file is a fact-record artefact, not a plan artefact; population happens at execution time.

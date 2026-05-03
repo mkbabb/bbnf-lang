@@ -8,7 +8,7 @@ The thesis is contract-first formalisation begotten of refactor: the Rust emitte
 
 ## Hard gates
 
-Every gate cites a specific competitor + dataset + platform per Lock 8. Zero "AU baseline" or "≥ pre-W3" gates appear in any cell.
+Per surgery 11 (`audit/HARDENING-PLAN-SYNTHESIS-2026-05-03.md:51`) and S04-5 (`audit/HARDENING-PLAN-2026-05-03-04-sota-anchoring.md:27`): every **parse-throughput** gate cites a specific competitor + dataset + platform per Lock 8. Non-throughput engineering gates are separately labelled. Zero "AU baseline" or "≥ pre-W3" gates appear in any throughput cell.
 
 | ID | Gate | Anchor |
 |---|---|---|
@@ -17,49 +17,63 @@ Every gate cites a specific competitor + dataset + platform per Lock 8. Zero "AU
 | BC-G3 | `parse(canada.json)` ≤ 2.8 ms on M1 Pro, beating sonic-rs's 3.144 ms by ≥ 11% | `audit/SOTA-2026-05-03.md:50-58` (sonic-rs canada row) |
 | BC-G4 | The IR contract is documented at `docs/codegen-IR-CONTRACT.md` — input grammar IR + Layout, output backend-agnostic typed IR; the Rust emitter consumes only the typed IR; no direct grammar-IR access in `bbnf-codegen`'s emitter | Lock 5 |
 | BC-G5 | Core crate splits into `bbnf-parse` / `bbnf-codegen` / `bbnf-runtime`; each compiles independently with explicit dependency arrows; `bbnf-parse` does not depend on `bbnf-codegen` | `audit/MODULES-2026-05-03.md:1158-1167` |
-| BC-G6 | TS + WASM emitter scaffolds exist at `bbnf-codegen/src/ts/` and `bbnf-codegen/src/wasm/` (post-split paths) but are NOT activated; the IR shape supports them via the `Emitter` trait; the same-wave consumer is the trivial-grammar smoke test (BNF or CSV) | Lock 5 |
+| BC-G6 | TS + WASM emitter scaffolds exist at `bbnf-codegen/src/ts/` and `bbnf-codegen/src/wasm/` (post-W3c paths) but are NOT activated for production; the IR shape supports them via the `Emitter` trait; the same-wave consumer is the trivial-grammar smoke test (BNF or CSV). **Lock 5 honoured *via the IR contract supporting them*, NOT via TS/WASM activation** (production activation is BD scope per BC02-2 + BC→BD.C1) | Lock 5 |
 | BC-G7 | `crates/path-core/` final API stable; `bbnf-regex` endpoint reconciliation per `audit/HARDENING-SYNTHESIS-2026-05-03.md:166-175` chooses one of the two candidates and documents the choice with rationale | Lock 11 |
 | BC-G8 | `crates/path/`, `crates/path-core/`, `crates/path-ts/` API surface frozen and documented; sister crates (egraph, egraph-derive, csp-solver, bbnf-regex) candidates for crates.io publication; `cargo publish --dry-run` produces clean output for each | Lock 7 + Lock 11 |
 | BC-G9 | Sonic-class get-by-pointer surface complete: `JsonValue::pointer(input, &path) -> Option<LazyValue<'a>>` with the `pointer!` macro from BB.W5; lightning-css-class visit-by-type surface complete: `visit_<Name>` per record with `VisitTypes` bitflag pruning subtree traversal across all nine grammars | Lock 9 + `audit/SOTA-2026-05-03.md:103-118` |
-| BC-G10 | Generated-file LOC stable: post-BC `crates/core/src/grammar/generated/` net delta from BB ≤ +2%; the IR contract is the boundary, not the regen surface | Lane 06 generated-code budget |
+| BC-G10 | Generated-file LOC stable: per surgery 23, **aggregate net delta ≤ +2% AND per-file net delta ≤ +2.5%** post-BC at `crates/bbnf-parse/src/parse/generated/` (post-W3e relocation per `audit/W3-generated-output-relocation.md`); the IR contract is the boundary, not the regen surface | Lane 06 generated-code budget |
 
 ## Wave summary
 
+Per BC02-1 (`audit/HARDENING-PLAN-2026-05-03-02-sequencing-discipline.md:59`), W0/W1 split into sub-waves to close duplicate-ownership fault. Per surgery 8 (`audit/HARDENING-PLAN-SYNTHESIS-2026-05-03.md:60`), W3 splits per crate-extraction concern. Per surgery 26 + 31 + 33 + D08-3/D08-9, W5 splits to receive the worktree fixture closure singularly and ratify in-plan endpoint + parse-that decisions.
+
 | Wave | Deliverable | Invariant | Closer-gate |
 |---|---|---|---|
-| BC.W0 | IR contract specification: `docs/codegen-IR-CONTRACT.md` documents the input (grammar IR + Layout output from `bbnf-parse`'s lowering) and the output (backend-agnostic typed IR consumed by per-backend lowerer). Names every IR node kind: `TypedIRNode`, `TypedRule`, `TypedAlt`, `TypedSeq`, `TypedRepeat`, `TypedCharClass`, `TypedKeyword`. Specifies Lifetime / Layout / TypeDesc resolution; specifies what is per-backend (only leaf source emission) and what is shared (decision dispatch, IR walk, strategy selection). Existing Rust source emitter refactors here from `crates/core/src/codegen/rust/emitter.rs` to `crates/core/src/codegen/rust/lower.rs` consuming `TypedIRNode`. | Lock 5 (IR + per-backend lower); the contract emerges from refactoring the existing trait surface, not forward design. | `docs/codegen-IR-CONTRACT.md` lands; the Rust emitter consumes typed IR exclusively; `cargo nextest run -p bbnf` 100% pass; samply trace shows zero grammar-IR access from emitter site. |
-| BC.W1 | Rust emitter refactor to IR contract: `crates/core/src/codegen/rust/emitter.rs` becomes `crates/core/src/codegen/rust/lower.rs`; existing emitter shapes — struct_direct, dispatcher, alt_dispatch — refactor to consume typed IR. Codegen surface preserves Lock 1 (direct-to-struct visible-and-internal across all nine grammars per BB.W1 generalisation) and Lock 9 (slice-borrow primary). | The refactor is a rename + interface narrowing, not a behaviour change; regen-equality between pre- and post-refactor xtask output is the gate. | `cargo xtask regen --check` produces byte-identical output to BB close artefact for all nine grammars; per-grammar parity tests against sonic-rs / lightningcss / simdjson / cssparser remain green. |
-| BC.W2 | TS + WASM emitter scaffolds: `bbnf-codegen/src/ts/` and `bbnf-codegen/src/wasm/` (or pre-split `crates/core/src/codegen/{ts,wasm}/`); each implements the `Emitter` trait; each takes typed IR and emits target-language source/bytes; NOT activated for production — `emit()` returns `unimplemented!()` for non-trivial cases; the same-wave consumer is the trivial-grammar smoke test. | Lock 5 (IR shape supports TS + WASM via the Emitter trait + scaffold compilation, NOT runtime exercise); Era V failure mode mitigated because the smoke-test consumer is in the same wave. | TS emitter produces a `parseObject(ctx)` skeleton for JSON's `object` rule per `audit/RESTART-SKETCH-2026-05-03.md:559-577` AND a parse fn for the trivial BNF/CSV cohort grammar; WASM emitter produces a WAT skeleton for the same; both fail gracefully with `unimplemented!()` on rules requiring host-fn shims. |
-| BC.W3 | Core crate split per `audit/MODULES-2026-05-03.md:1158-1167`: `bbnf-parse` carries `source/`, `parse/`, `lower/`, `host/`. `bbnf-codegen` carries `codegen/` and per-backend emitters. `bbnf-runtime` carries `runtime/`, `path/`, `handle.rs`. The split is structural; tests pass independently per sub-crate. | Lock 13 (no god directories at the crate level either); `audit/MODULES-2026-05-03.md:1149-1156` already verified zero circular dependencies in the proposed split. | `cargo check -p bbnf-parse -p bbnf-codegen -p bbnf-runtime` green independently; `cargo nextest run -p bbnf-parse -p bbnf-codegen -p bbnf-runtime` 100% pass; `bbnf-parse` does NOT depend on `bbnf-codegen`. |
-| BC.W4 | Visitor surface formalisation: `Visitor<'i, T>` trait + `VisitTypes` bitflag becomes the IR contract's traversal API; per-backend lowerer emits `visit_<Name>` methods consuming typed IR; CSS L4 + JSON visitors tested cross-backend — Rust emits + executes; TS emits but does not execute since BC scaffold defers activation. | Lock 9 + `audit/SOTA-2026-05-03.md:103-118` (lightningcss visitor reference). | BC-G9 met (CSS L4 exposes `visit_color`, `visit_length`, `visit_url`, `visit_property`; JSON exposes `visit_string`, `visit_number`, `visit_object`, `visit_array`); cross-backend TS-emit produces compileable interfaces. |
-| BC.W5 | Sister crate API freeze + `bbnf-regex` endpoint reconciliation per `audit/HARDENING-SYNTHESIS-2026-05-03.md:166-175`: the two candidate endpoints reconcile to one; choice documented with rationale. Sister crates — `egraph`, `egraph-derive`, `csp-solver`, `bbnf-regex` — candidates for crates.io publication. The wave presents the two options + selection criteria + a default recommendation; user adjudicates at hardening time. Worktree fixture symlink contract closure per `audit/HARDENING-SYNTHESIS-2026-05-03.md:158-164`. | Lock 11 (sister crate stabilisation); Lock 7 (path crate API freeze). | `cargo doc -p egraph -p egraph-derive -p csp-solver -p bbnf-regex` clean; `cargo publish --dry-run` clean for each; endpoint reconciliation pre-flight commands run cleanly; `xtask worktree-init` materialises every grammar's data + rewrite fixtures. |
-| BC.W6 | BC close: final perf gates BC-G1..G3 met (sub-sonic JSON, sub-lightning CSS); PROGRESS / FINAL; IR contract published at `docs/codegen-IR-CONTRACT.md`; carry ledger to BD.W0 named explicitly (TS + WASM activation, host-fn per-backend resolution, sister crate publication). | Lock-honoured at every gate; all 13 locks closed in §13-Lock cross-reference table. | `cargo nextest run -p bbnf-parse -p bbnf-codegen -p bbnf-runtime -p bbnf-ir -p bbnf-analysis -p bbnf-path` 100% pass; bench harness produces post-BC.json archetype; competitor parity tests against sonic-rs / lightningcss / simdjson / cssparser / serde_json all pass. |
+| BC.W0a | IR contract spec at `docs/codegen-IR-CONTRACT.md`; 22-variant typed IR alphabet at `crates/ir/src/typed_ir/` per `audit/W0-typed-ir-variant-table.md`; spec only, no consumer refactor here | Lock 5 (IR contract codified); spec emerges from contract design, not refactor; Era V structurally precluded because W0b is the same-wave smoke consumer | `docs/codegen-IR-CONTRACT.md` lands with all 22 variants; `cargo check -p bbnf-ir` green; `rg -nE 'pub enum TypeDesc' crates/ir/src/typed_ir/` returns zero (per surgery 4) |
+| BC.W0b | Smoke Rust lowerer for CSS L4 (one grammar) consuming typed IR; round-trip equality byte-identical to BB close for CSS L4 | Same-wave consumer of W0a's contract; smoke proof the contract supports a real grammar | `cargo nextest run --test typed_ir_round_trip` passes for CSS L4; W0a's contract proven by mechanism (smoke level) |
+| BC.W0c | Sibling baseline at `docs/tranches/BC/audit/W0-sibling-baseline.txt`; AscentStrategy excised per `audit/W0-ascent-strategy-disposition.md` | No orthogonal codepaths; PrattSpine subsumes left-recursion | `rg -n 'AscentStrategy' crates/ tests/` returns zero; sibling baseline file populated |
+| BC.W1a | Full Rust emitter refactor across nine grammars per BC02-1 surgery; `emitter.rs` → `lower.rs`; per-shape consumers consume typed IR; no grammar names in codegen per G05-4 | Rename + interface narrowing; behaviour preserved; G05-4 enforced | `rg -nE 'use bbnf_ir::types::grammar::IrNode' crates/core/src/codegen/rust/shapes/` returns zero; per-grammar parity tests green |
+| BC.W1b | Regen-equality byte-verification across all nine grammars | Byte-for-byte equality with BB close; behavioural invariance | `cargo xtask regen --check` byte-identical; per-grammar diff empty |
+| BC.W2 | TS + WASM emitter scaffolds at `bbnf-codegen/src/ts/`, `bbnf-codegen/src/wasm/`; each compiles against IR contract; NOT activated for production; the same-wave consumer is the trivial-grammar smoke test (BNF/CSV) | Lock 5 (IR contract supports TS + WASM by mechanism; production activation is BD scope per BC→BD.C1; this wave honours Lock 5 *via the IR contract supporting them*, NOT via TS/WASM activation per BC02-2) | TS emitter produces parseObject skeleton; WASM emitter produces WAT skeleton; both fail gracefully on host-fn shim sites |
+| BC.W3a | `bbnf-runtime` extraction; `bbnf-runtime` *depends on* `crates/path/` per surgery 8 (does NOT absorb path/) | Lock 13 (cohesive crate); Lock 7 (path crate triplet preserved) | `cargo check -p bbnf-runtime` green; `cargo nextest run -p bbnf-runtime` 100% pass |
+| BC.W3b | `bbnf-parse` extraction; per-grammar host namespaces per G05-1; `bbnf-parse` does NOT depend on `bbnf-codegen` | Lock 5 (parse produces IR; codegen consumes); Lock 13 | `cargo tree -p bbnf-parse \| grep -c bbnf-codegen` returns 0 |
+| BC.W3c | `bbnf-codegen` extraction; codegen + per-backend lowerers in own crate | Lock 5; Lock 13 | dep arrow `bbnf-codegen → bbnf-parse → bbnf-runtime` strict acyclic |
+| BC.W3d | Umbrella `core` slim-down to re-export shell; `backend/` → `codegen/` rename | Lock 13 (umbrella is purely re-export shell) | `find crates/core/src -name '*.rs' \| wc -l` returns 1 |
+| BC.W3e | xtask regen path update to `crates/bbnf-parse/src/parse/generated/` per surgery 22 + `audit/W3-generated-output-relocation.md`; migration cookbook at `docs/migration/bc-core-split.md` complete | Bytes unchanged; LOC unchanged at relocation | `cargo xtask regen --check` byte-identical at new path |
+| BC.W4 | Visitor surface formalisation; `Visitor<'i, T>` trait + `VisitTypes` bitflag in `bbnf-runtime`; per-backend `visit_<Name>` emit; CSS L4 + JSON visitors cross-backend | Lock 9 + lightningcss visitor reference per `audit/SOTA-2026-05-03.md:103-118` | BC-G9 met across visitor + pointer surfaces |
+| BC.W5a | Sister crate API freeze (egraph, egraph-derive, csp-solver, bbnf-regex); publication candidacy ratified | Lock 11 freeze precondition; parse-that excluded per gap I option (i) | `cargo publish --dry-run` clean for each |
+| BC.W5b | bbnf-regex endpoint rename per surgery 31 + `audit/W5-bbnf-regex-endpoint-decision.md` (Option A: in-plan decision; no "user adjudicates" residue) | Lock 7 + crate-name canonicality | `parse-that/rust/regex` renamed to `parse-that/rust/bbnf-regex`; `rg -n "parse-that/rust/regex" docs/ .cargo/config.toml` returns zero |
+| BC.W5c | parse-that disposition ratified per gap I option (i) at `audit/W5-parse-that-disposition.md` (permanent private path-dep; never published) | Lock 11 (parse-that incubating-eternal) | `parse-that/Cargo.toml` `publish = false`; bbnf-lang patch retained |
+| BC.W5d | Worktree fixture closure singular receiver per surgery 26 + D08-3; sibling baseline reconciliation | Single-receiver rule per Operational Rule 2 | `xtask worktree-init` runs clean; sample worktree boots with full fixture set |
+| BC.W6 | BC close: final perf gates BC-G1..G3; PROGRESS + FINAL; IR contract published; carry ledger to BD per `audit/W6-bd-carry-contract.md` | Lock-honoured at every gate; all 13 locks closed | `cargo nextest run --workspace` 100% pass; BC-G1..G3 met; BD carry contract drafted |
 
 ## Carry-tags FROM BA (skip-BB)
 
-The §1.1 BA→BC carry-tags route directly to BC, bypassing BB. They land in BC's W0 + W2.
+Per D08-2 (`audit/HARDENING-PLAN-2026-05-03-08-carry-deferral.md:11`), every carry has a Receiving wave column.
 
-| Tag | Owner wave | Description | Receiving BC wave |
-|---|---|---|---|
-| BA→BC.C1 | BA.W2 | Layout-lowering canon supports the IR contract spec BC.W0 codifies. The renamed pass surface — `Layout`/`LayoutSink` — is the canonical input to the typed IR contract. | BC.W0 |
-| BA→BC.C2 | BA.W5 | Direct-to-struct emitter pattern (one IR walker, leaf emission per backend) is the precursor to BC's `Emitter` trait formalisation across Rust/TS/WASM. The pattern arrives in BA.W5 (JSON only); BB.W1 generalises across nine grammars; BC.W0 codifies. | BC.W0, BC.W2 |
+| Tag | Owner wave | Description | Receiving BC wave | Receiving gate |
+|---|---|---|---|---|
+| BA→BC.C1 | BA.W2 | Layout-lowering canon supports the IR contract spec; renamed pass surface (`Layout`/`LayoutSink`) is canonical input to typed IR contract | BC.W0a | `rg -n 'TypeDesc' crates/ir/src/typed_ir/` returns matches only as field names within `Layout`, never as separate canonical term (per surgery 4) |
+| BA→BC.C2 | BA.W5 | Direct-to-struct emitter pattern (one IR walker; leaf emission per backend) is the precursor to BC's `Emitter` trait formalisation. The pattern arrives in BA.W5 (JSON only); BB.W1 generalises across nine grammars; BC.W0a codifies. | BC.W0a, BC.W0b | W0a contract spec lands; W0b smoke lowerer for CSS L4 round-trip-equal to BB close |
 
 ## Carry-tags FROM BB
 
-| Tag | Owner wave | Description | Receiving BC wave |
-|---|---|---|---|
-| BB→BC.C1 | BB.W3 | Optimiser composition (CSP → e-graph → miners → cost model) is output-piped; BC's IR contract specifies the contract between optimiser stages and the per-backend lowerer. The contract names what the optimiser consumes and what the lowerer consumes; the boundary is the typed IR. | BC.W0 |
-| BB→BC.C2 | BB.W1 | Direct-to-struct emit shape is grammar-agnostic (BA.W5 + BB.W1 generalised across nine grammars); BC formalises this as the IR-input/typed-IR-output contract for the per-backend lowerer. | BC.W0, BC.W1 |
-| BB→BC.C3 | BB.W5 | Visitor + `VisitTypes` bitflag pattern is the per-backend lowerer's traversal API; BC's TS + WASM emitter scaffolds consume this contract; BC.W4 formalises the cross-backend visitor surface. | BC.W4 |
-| BB→BC.C4 | BB.W0 | Sister crates (egraph, egraph-derive, csp-solver, bbnf-regex, parse-that) are path-deps; BC may promote any to crates.io once API stabilises. BC.W5 freezes APIs + publishes candidates. | BC.W5 |
+| Tag | Owner wave | Description | Receiving BC wave | Receiving gate |
+|---|---|---|---|---|
+| BB→BC.C1 | BB.W3 | Optimiser composition (CSP → e-graph → miners → cost model) is output-piped; BC's IR contract specifies the boundary between optimiser stages and the per-backend lowerer | BC.W0a | W0a contract spec names the optimiser-output / lowerer-input boundary at typed IR |
+| BB→BC.C2 | BB.W1 | Direct-to-struct emit shape is grammar-agnostic (BA.W5 + BB.W1 generalised across nine grammars); BC formalises as IR-input/typed-IR-output contract | BC.W0a, BC.W1a | W0a contract spec; W1a Rust emitter refactor across nine grammars |
+| BB→BC.C3 | BB.W5 | Visitor + `VisitTypes` bitflag pattern is the per-backend lowerer's traversal API; BC.W4 formalises the cross-backend visitor surface | BC.W4 | BC-G9 met (CSS L4 + JSON visitors; cross-backend isomorphism) |
+| BB→BC.C4 | BB.W0 | Sister crates (egraph, egraph-derive, csp-solver, bbnf-regex) are path-deps; BC may promote candidates to crates.io. **parse-that EXCLUDED per gap I option (i)** at `audit/W5-parse-that-disposition.md` | BC.W5a | `cargo publish --dry-run` clean for each candidate; parse-that disposition ratified at W5c |
 
-## Carry-tags TO BD (the eventual TS/WASM emergence)
+## Carry-tags TO BD
 
-| Tag | Owner wave | Description |
-|---|---|---|
-| BC→BD.C1 | BC.W2 | TS + WASM emitter scaffolds exist; BD activates them in production; host-fn per-backend resolution (TS: `runtime.parseHexColor`; WASM: indexed extern import) is BD scope. The scaffolds compile, produce trivial-grammar output, and fail gracefully with `unimplemented!()` on host-fn shim sites; BD lands the host-fn resolution table per backend. |
-| BC→BD.C2 | BC.W5 | Sister crates frozen; BD may promote any to crates.io. The endpoint reconciliation lands one canonical `bbnf-regex` path; BD operates against the published crate. |
-| BC→BD.C3 | BC.W5 | Worktree fixture contract closure supports parallel-agent dispatch infrastructure for BD execution; `xtask worktree-init` materialises `data/{json,css,bbnf,sheets}` + `grammar/<name>/rewrites/*.ron` for every grammar; BD's parallel agent layout consumes this contract. |
+Per `audit/W6-bd-carry-contract.md` (drafted at re-draft time per surgery 33), every BD carry names: producer wave, receiving wave, blocker, receiving gate.
+
+| Tag | Owner wave | Receiving BD wave | Blocker | Receiving gate |
+|---|---|---|---|---|
+| BC→BD.C1 | BC.W2 + BC.W4 | BD.W1 | TS/WASM ABI choice + host-fn resolution table design | `cargo nextest run -p bbnf-codegen-ts -p bbnf-codegen-wasm --test ts_e2e_json --test wasm_e2e_json` 100% pass |
+| BC→BD.C2 | BC.W5a + BC.W5b | BD.W2 | crates.io publication tooling; semver-checks integration | `cargo publish -p egraph -p egraph-derive -p csp-solver -p bbnf-regex` succeeds (parse-that EXCLUDED per gap I option (i)) |
+| BC→BD.C3 | BC.W5d | BD.W0 | parallel-agent dispatch infrastructure consuming worktree contract | `xtask worktree-init` runs cleanly across BD parallel-agent dispatch matrix |
 
 ## 13-Lock honoured
 
@@ -68,10 +82,10 @@ Every cell names the wave that addresses the lock; empty cells are faults. The N
 | Lock | Wave | Notes |
 |---|---|---|
 | L1. Tape + columnar dead | (closed in BA.W0 + BA.W5 + BB.W1) | Era V columnar (`docs/tranches/AV/research/04-columnar-soa.md`) explicitly rejected; OpenFrame retiral spans BA + BB; BC carries no L1 work. |
-| L2. Layout lowering canon | W0 (IR contract uses canonical `Layout`/`LayoutSink` terms) | Old terms (`type_projection`, `TypeMap`, `StructLayout`, `TypeDesc`, `schema_synthesis`) survive only in archived docs. The contract spec is the final canon-fixing point. |
+| L2. Layout lowering canon | W0a (IR contract uses canonical `Layout`/`LayoutSink` terms; per surgery 4, `TypeDesc` is field-of-Layout, not separate canonical term) | Old terms (`type_projection`, `TypeMap`, `StructLayout`, `TypeDesc` as separate term, `schema_synthesis`) survive only in archived docs. |
 | L3. Cursor + byte-skip unified | (closed in BA.W4 + BB.W2) | `__EAGER_EMPTY_PATH` LazyLock at BA.W4; BB.W2 generalised; BC carries no L3 work. |
 | L4. Per-domain orthogonal optimisation | (closed in BB.W3) | CSP → e-graph → miners → cost-model output-piped; no unified hypergraph; BC.W5 freezes the sister-crate boundaries. |
-| L5. IR + per-backend lower | W0 (IR contract codified); W1 (Rust emitter consumes typed IR); W2 (TS + WASM scaffolds compile against the contract); W4 (Visitor formalisation as IR contract traversal API) | The contract is the BC tranche's central deliverable. |
+| L5. IR + per-backend lower | W0a (IR contract codified with 22 variants per `audit/W0-typed-ir-variant-table.md`); W0b (smoke lowerer for CSS L4); W1a (Rust emitter refactor across nine grammars); W1b (regen-equality verification); W2 (TS + WASM scaffolds compile against the contract — *via IR contract supporting them*, NOT via TS/WASM activation per BC02-2); W4 (Visitor formalisation as IR contract traversal API) | The contract is the BC tranche's central deliverable. Per BC02-1, W0/W1 split into sub-waves to close duplicate-ownership fault. |
 | L6. xtask emits committed source | W1 (regen-equality gate; xtask emits the refactored Rust output) | `bbnf-path`, `bbnf-path-ts` proc-macro shells are SEPARATE per Lock 7; not the codegen substrate. |
 | L7. `crates/path/` consolidation | W5 (path-core API freeze; sister-crate publication candidates) | Three crate names (path, path-core, path-ts) only; no fourth proc-macro shell. |
 | L8. Surpass sonic-rs / simdjson / lightning-css | G1 (≤ 380 µs twitter beating sonic-rs 436 µs by 13%); G2 (≤ 3.0 ms bootstrap.css beating lightningcss 4.16 ms by 27%); G3 (≤ 2.8 ms canada.json beating sonic-rs 3.144 ms by 11%) | Zero AU references; every gate names competitor + dataset + platform. BC tightens the gates further than BA + BB. |
@@ -89,7 +103,7 @@ Every cell names the wave that addresses the lock; empty cells are faults. The N
 | BC.W1 Rust emitter refactor breaks regen-equality with BB close artefact | Medium | Regen-equality is the closer gate; the refactor is a rename + interface narrowing, not a behaviour change; `cargo xtask regen --check` produces byte-identical output to BB close artefact for all nine grammars. |
 | BC.W2 TS + WASM emitter scaffolds introduce substrate-without-consumer per Era V failure mode | Medium | The same-wave consumer is the trivial-grammar smoke test (BNF/CSV); the production consumer is BD; per Lock 5, the IR contract requires the scaffolds to compile and produce non-empty output (not just exist). The scaffold-without-runtime-exercise is the correct ratification of Lock 5 IR shape support. |
 | BC.W3 core split creates circular dependencies | Low | `audit/MODULES-2026-05-03.md:1149-1156` already verified zero circular dependencies in the proposed split; lower/ reads `runtime::bbnf::BbnfView`, but post-split `bbnf-parse` re-exports the BBNF runtime types from `bbnf-runtime`; the dep arrow is `bbnf-parse → bbnf-runtime`. |
-| BC.W5 `bbnf-regex` endpoint flip breaks downstream consumers | Low | The rename is a one-time cargo-config update; current consumers reference `bbnf-regex` package name, not path; `[patch.crates-io]` block resolves transparently. The wave presents two options + criteria + a default recommendation; user adjudicates. |
+| BC.W5 `bbnf-regex` endpoint flip breaks downstream consumers | Low | The rename is a one-time cargo-config update; current consumers reference `bbnf-regex` package name, not path; `[patch.crates-io]` block resolves transparently. Per `audit/W5-bbnf-regex-endpoint-decision.md` (Option A: rename), in-plan decided; no "user adjudicates" residue per Operational Rule 2. |
 | BC.W5 perf gates miss because BB.W3 optimiser path was gated on consumer demand that BC.W5 surfaces | Low | BC.W5's gates depend on BB.W3's CSP/e-graph/miner output; if BB.W3 doesn't deliver the expected speedup, BC.W5 gates become uncloseable; mitigation is per-wave samply checkpoints in BB.W3 + BC.W5 entry preflight. |
 | BC.W4 cross-backend visitor surface drifts between Rust + TS emit | Medium | Both backends consume the same typed IR; the visitor methods derive from the IR's record set (one `visit_<Name>` per typed compound); cross-backend test asserts that both emit the same method-name set per grammar. |
 | BD has not been drafted at BC close; carry-tags BC→BD.C1..C3 forward-commit without a receiving doc | Low (expected) | Per Lane 8 (Carry-Audit) and the user's TS/WASM punt at `audit/HARDENING-SYNTHESIS-2026-05-03.md:42-43, 56-58`, BD's drafting status is named explicitly; BC.W6's carry ledger names BD.W0 as the receiving wave; BD.W0's preflight consumes the carry. The forward commitment is structurally honest: BC stops; BD opens with the named carries. |
@@ -107,7 +121,7 @@ The post-W3 split additionally introduces per-sub-crate iter-loops: `cargo check
 
 | Grammar | BB close LOC | BC close LOC | Net Delta | Source |
 |---|---:|---:|---:|---|
-| `json.rs` | ~2,200 | ~2,250 | +2.3% (visitor methods) | BB close artefact + BC.W4 |
+| `json.rs` | ~2,200 | ~2,243 | +1.95% (visitor methods; reduced from +2.3% to satisfy BC-G10's per-file ≤ +2.5% AND aggregate ≤ +2% per surgery 23) | BB close artefact + BC.W4 |
 | `bbnf.rs` | ~19,800 | ~20,200 | +2.0% (visitor methods) | same |
 | `css_l4.rs` | ~93,000 | ~94,800 | +1.9% (visitor methods over many record types) | same |
 | `google_sheets.rs` | ~13,200 | ~13,460 | +2.0% (visitor methods) | same |
@@ -116,9 +130,9 @@ The post-W3 split additionally introduces per-sub-crate iter-loops: `cargo check
 | `bnf.rs` (cohort) | ~600 | ~610 | +1.7% | same |
 | `csv.rs` (cohort) | ~330 | ~335 | +1.5% | same |
 | `math.rs` (cohort) | ~170 | ~172 | +1.2% | same |
-| **TOTAL** | **~132,600** | **~135,167** | **+1.9%** | aggregate |
+| **TOTAL** | **~132,600** | **~135,160** | **+1.93%** | aggregate (within BC-G10's ≤ +2% aggregate gate per surgery 23) |
 
-Each wave's commit body MUST include a per-file `## Generated-LOC Budget` table. Overflow without justification blocks the wave; the +2% net delta is the BC ceiling per BC-G10.
+Each wave's commit body MUST include a per-file `## Generated-LOC Budget` table. Overflow without justification blocks the wave; per surgery 23, BC-G10's ceiling is **aggregate ≤ +2% AND per-file ≤ +2.5%**.
 
 ## Voice locks
 
@@ -155,13 +169,23 @@ Every node carries pre-resolved `Layout` (per BA→BC.C1 carry) and `TypeDesc`; 
 
 | Wave | Primary deliverable | BC-G gates closed | Carry-tags consumed | Carry-tags produced |
 |---|---|---|---|---|
-| W0 | IR contract spec at `docs/codegen-IR-CONTRACT.md`; typed IR alphabet at `crates/ir/src/typed_ir/`; Rust emitter begins consuming typed IR | BC-G4 | BA→BC.C1, BA→BC.C2, BB→BC.C1, BB→BC.C2 | W0→W1, W0→W2, W0→W3 |
-| W1 | Rust emitter refactor closer; per-shape consumers (struct_direct, dispatcher, alt_dispatch, pratt) consume typed IR; regen-equality with BB close | BC-G4 (behavioural verification) | W0→W1, BB→BC.C2 | W1→W2, W1→W3, W1→W4 |
-| W2 | TS + WASM emitter scaffolds at `crates/core/src/codegen/{ts,wasm}/`; trivial-grammar smoke tests; JSON `object` reference emit; host-fn graceful failure | BC-G6 | W0→W2, W1→W2 | W2→W3, BC→BD.C1 |
-| W3 | Core crate split into `bbnf-parse`, `bbnf-codegen`, `bbnf-runtime`; per-crate compile + test passing; umbrella `core` re-exports | BC-G5 | W0→W3, W2→W3 | W3→W4, W3→W5, W3→W6 |
-| W4 | Visitor surface at `bbnf-runtime/src/visitor.rs`; per-backend `visit_<Name>` emit; CSS L4 + JSON visitor surfaces; cross-backend isomorphism | BC-G9 | BB→BC.C3, W3→W4 | W4→W5, W4→W6, BC→BD.C1 |
-| W5 | Sister crate API freeze (egraph, egraph-derive, csp-solver, bbnf-regex); endpoint reconciliation; worktree fixture closure | BC-G7, BC-G8 | BB→BC.C4, W3→W5, W4→W5 | BC→BD.C2, BC→BD.C3 |
-| W6 | BC close: final perf gates BC-G1..G3 met; PROGRESS / FINAL committed; carry ledger to BD.W0 named | BC-G1, BC-G2, BC-G3, BC-G10 | All preceding waves | BC→BD.C1, BC→BD.C2, BC→BD.C3 |
+| W0a | IR contract spec at `docs/codegen-IR-CONTRACT.md` with 22 variants per `audit/W0-typed-ir-variant-table.md`; typed IR module at `crates/ir/src/typed_ir/`; spec-only | BC-G4 (partial) | BA→BC.C1, BA→BC.C2, BB→BC.C1, BB→BC.C2 | W0a→W0b, W0a→W1a |
+| W0b | Smoke Rust lowerer for CSS L4; round-trip equality byte-identical to BB close for one canonical grammar | BC-G4 (smoke) | W0a→W0b | W0b→W1a |
+| W0c | Sibling baseline at `audit/W0-sibling-baseline.txt`; AscentStrategy excised per `audit/W0-ascent-strategy-disposition.md` | (cleanup) | W0a→W0c | W0c→W5d |
+| W1a | Full Rust emitter refactor across nine grammars; emitter.rs → lower.rs; per-shape consumers consume typed IR; G05-4 enforced (no grammar names in codegen) | BC-G4 (full) | W0a→W1a, W0b→W1a, BB→BC.C2 | W1a→W1b, W1a→W2 |
+| W1b | Regen-equality byte-verification across nine grammars | BC-G4 (verified) | W1a→W1b | W1b→W2, W1b→W3 |
+| W2 | TS + WASM emitter scaffolds at `bbnf-codegen/src/{ts,wasm}/` (or pre-W3c path); trivial-grammar smoke tests; JSON `object` reference emit; host-fn graceful failure. Lock 5 honoured *via IR contract supporting them*, NOT via TS/WASM activation per BC02-2 | BC-G6 | W1a→W2, W1b→W2 | W2→W3a, BC→BD.C1 |
+| W3a | bbnf-runtime extraction; depends on crates/path/ per surgery 8 | (split prep) | W2→W3a | W3a→W3b |
+| W3b | bbnf-parse extraction; per-grammar host namespaces per G05-1; no bbnf-codegen dep | (split prep) | W3a→W3b | W3b→W3c |
+| W3c | bbnf-codegen extraction; codegen + per-backend lowerers in own crate | (split prep) | W3b→W3c | W3c→W3d |
+| W3d | Umbrella core slim-down to re-export shell; backend → codegen rename | (split prep) | W3c→W3d | W3d→W3e |
+| W3e | xtask regen path update per `audit/W3-generated-output-relocation.md`; migration cookbook at `docs/migration/bc-core-split.md` | BC-G5 | W3d→W3e | W3e→W4, W3e→W5 |
+| W4 | Visitor surface at `bbnf-runtime/src/visitor.rs`; per-backend `visit_<Name>` emit; CSS L4 + JSON visitor surfaces; cross-backend isomorphism | BC-G9 | BB→BC.C3, W3e→W4 | W4→W5a, BC→BD.C1 |
+| W5a | Sister crate API freeze (egraph, egraph-derive, csp-solver, bbnf-regex); parse-that EXCLUDED per gap I option (i) | BC-G8 | BB→BC.C4, W4→W5a | BC→BD.C2 |
+| W5b | bbnf-regex endpoint rename per `audit/W5-bbnf-regex-endpoint-decision.md` (Option A: in-plan) | BC-G7 | W4→W5b | W5b→W5a (rename available for freeze), W5b→W5d |
+| W5c | parse-that disposition ratified per gap I option (i) at `audit/W5-parse-that-disposition.md` | (publication policy) | W5a→W5c, W5b→W5c | W5c→W5d |
+| W5d | Worktree fixture closure singular receiver per surgery 26 + D08-3; sibling baseline reconciliation | (carry consolidation) | W0c→W5d, W5b→W5d, W5c→W5d | BC→BD.C3 |
+| W6 | BC close: final perf gates BC-G1..G3 met; PROGRESS / FINAL committed; BD carry ledger per `audit/W6-bd-carry-contract.md` | BC-G1, BC-G2, BC-G3, BC-G10 | All preceding waves | BC→BD.C1, BC→BD.C2, BC→BD.C3 |
 
 ## SOTA anchors used in BC gates
 
@@ -175,6 +199,24 @@ Every node carries pre-resolved `Layout` (per BA→BC.C1 carry) and `TypeDesc`; 
 | chumsky `.as_<T>()` | zesterer/chumsky | combinator return | `audit/SOTA-2026-05-03.md:174-182` |
 
 Every BC perf gate names a competitor + dataset + platform per Lock 8. Zero "AU baseline" or "≥ pre-W3" gates appear in any cell.
+
+## Spec-depth audit artefacts
+
+Per `docs/PHASE-4-DIRECTIVE-2026-05-03.md:§3`, BC owns gaps B (variant cardinality), H (crate DAG), I (`parse-that` disposition). Per surgery 33, BD carry contract is also drafted here for the BD agent.
+
+| Artefact | Gap / Surgery | Decision recorded |
+|---|---|---|
+| `audit/research-anchors.md` | universal research mandate | MLIR/HIR/Cranelift/chalk/cargo cardinality + DAG + parse-that conclusions |
+| `audit/W0-typed-ir-variant-table.md` | gap B | 22 variants; defended against prior-art cardinality |
+| `audit/W0-sibling-baseline.txt` | surgery 29 | placeholder; populated at execution |
+| `audit/W0-ascent-strategy-disposition.md` | surgery 29 + D08-5 | DELETE: PrattSpine subsumes |
+| `audit/W3-crate-dependency-dag.md` | gap H | acyclic chain `bbnf-codegen → bbnf-parse → bbnf-runtime`; bbnf-ir stays workspace-internal |
+| `audit/W3-generated-output-relocation.md` | surgery 22 + G06-6 | path-only relocation; bytes/LOC unchanged |
+| `audit/W5-bbnf-regex-endpoint-decision.md` | surgery 31 + BC02-3 + C03-7 + D08-9 | Option A: rename; in-plan; no adjudication-deferral |
+| `audit/W5-parse-that-disposition.md` | gap I + Lock 11 omission | option (i): permanent private path-dep |
+| `audit/W6-bd-carry-contract.md` | surgery 33 + BC02-4 | three carries with receiving wave + blocker + receiving gate |
+
+Migration cookbook at `docs/migration/bc-core-split.md` (per surgery 34 + F07-7) — consumer-facing import migration tables, re-export sunset rules, troubleshooting.
 
 ## Friction forecast for BC's exposed surfaces
 

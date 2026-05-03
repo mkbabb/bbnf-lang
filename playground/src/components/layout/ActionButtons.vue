@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { Tooltip, TooltipTrigger, TooltipContent, DockIconButton } from "@mkbabb/glass-ui";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@mkbabb/glass-ui";
+import { DockIconButton } from "@mkbabb/glass-ui/dock";
 import FormatterSettings from "@/components/layout/FormatterSettings.vue";
 import { Copy, Link2, RotateCcw } from "lucide-vue-next";
 

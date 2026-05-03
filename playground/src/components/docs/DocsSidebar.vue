@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from "vue";
 import { PanelLeftClose, ChevronRight } from "lucide-vue-next";
-import { FuzzySearch, useFuzzySearch, useScrollTracker, buildTreeIndex } from "@mkbabb/glass-ui";
-import type { SearchableItem, SidebarSection } from "@mkbabb/glass-ui";
+import { FuzzySearch, useFuzzySearch } from "@mkbabb/glass-ui/search";
+import type { SearchableItem } from "@mkbabb/glass-ui/search";
+import { buildTreeIndex, useScrollTracker } from "@mkbabb/glass-ui/sidebar";
+import type { SidebarSection } from "@mkbabb/glass-ui/sidebar";
 import { useDocs } from "@/composables/useDocs";
 import { getSectionTheme } from "@/lib/sectionTheme";
 import { useRouter } from "vue-router";

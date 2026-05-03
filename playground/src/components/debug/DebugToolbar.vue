@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Tooltip, TooltipTrigger, TooltipContent, DockIconButton } from "@mkbabb/glass-ui";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@mkbabb/glass-ui";
+import { DockIconButton } from "@mkbabb/glass-ui/dock";
 import { Play, StepForward, ArrowDownToLine, Square } from "lucide-vue-next";
 import type { UseDebugSessionReturn } from "@/components/debug/useDebugSession";
 

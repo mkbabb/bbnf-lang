@@ -3,7 +3,7 @@ import { ref, computed, onMounted, onBeforeUnmount, useTemplateRef } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { onClickOutside } from "@vueuse/core";
 import { HeaderRibbon } from "@/components/custom/header-ribbon";
-import { DarkModeToggle } from "@mkbabb/glass-ui";
+import { DarkModeToggle } from "@mkbabb/glass-ui/controls";
 import { BbnfLogo } from "@/components/custom/bbnf-logo";
 import { ChevronDown, Home } from "lucide-vue-next";
 import { navIcons } from "@/lib/sectionTheme";

@@ -1,97 +1,30 @@
-# Tranche BC - Shared Precepts Consumer Rollout
+# Tranche BC — Cleanup Pass + Discipline Codification
 
-BC wires every named consumer to the shared orchestration canon at
-`docs/precepts/`, plus a small repo-local tail for commands, runtime proof,
-profiling, deployment, and project invariants.
+> **Letter status — repurposed at master `40092b28` (post-AZ-IV close).**
+> The previous BC tranche ("Shared Precepts Consumer Rollout" — orchestration meta-tranche; closed cleanly with the precepts submodule pinned at `e490e8ed`) is **archived unmodified** at `docs/tranches/BC/orchestration-archive-2026-04-30/`. The close artefact, audit, research, and waves directories are all preserved. Per `docs/tranches/AZ-IV/audit/DEEP-SYNTHESIS.md`, the canonical post-AZ-IV letter sequence is **AZ → BA (direct-projection) → BB (rule-discovery) → BC (cleanup) → BD+**. The BC letter is repurposed as the cleanup tranche; the orchestration content is preserved unchanged in the archive directory.
+>
+> BC opens after BB close.
 
 ## Thesis
 
-Agent orchestration is shared infrastructure. Rust profiling, Home Assistant
-deployment, Vue visual checks, animation engine dist hygiene, color parser
-benches, dictionary AI pipelines, Fourier web/runtime checks, parser
-benchmarks, simulation cost controls, and fuzzy-search Rust/Python bindings
-are local concerns. BC separates those concerns cleanly:
+BC absorbs the residual carries that survived BA (direct-projection) + BB (rule-discovery) without invalidating either's thesis: the Audit-A TRANSPOSE bucket (12 items), the AUDIT-B routed splits (`runtime/css_l4/builder.rs` 1014 LOC, `passes/types/mod.rs` 786 LOC, `csp_strategy/mod.rs` further splits), the worktree fixture symlink contract (W6.2 known miss), the samply 7-artefact contract canonicalization (no more environmental gating), and the post-BA-and-BB substrate-audit residual.
 
-1. `precepts` owns the reusable rules: KISS, DRY, bounded parallelism,
-   research, challenge, triumvirate, wave specs, scope-dilation response, and
-   doc-update close.
-2. Consumers reference `precepts` at `docs/precepts` as a submodule.
-3. Consumers keep only `docs/instructions/README.md` local tails.
-4. Existing duplicated tranche instruction paths are removed; consumers read
-   `docs/precepts` directly.
+## Wave Table (skeleton; full body produced at BC open)
 
-## Invariants
+| Wave | Scope |
+|---|---|
+| BC.W0 | Truth + cleanup-substrate inventory; refresh substrate-audit denominator after BA + BB; identify residual TRANSPOSE items |
+| BC.W1 | AUDIT-B routed splits land (css_l4/builder.rs, passes/types/mod.rs, csp_strategy/mod.rs splits) |
+| BC.W2 | Worktree fixture symlink contract codified (W6.2 carry) — `data/{json,css,bbnf,sheets}` materialise on worktree open via `xtask worktree-init` or equivalent |
+| BC.W3 | Samply 7-artefact contract canonicalization — every close-state row carries the contract; environmental gating retires |
+| BC.W4 | Audit-A TRANSPOSE residue absorption (any items not closed in BA or BB) |
+| BC.W5 | Final cross-repo discipline (csp-solver canonical-source split refresh; bbnf-regex sub-crate-of-parse-that resolution) |
+| BC.W6 | Measurement + close + FINAL.md |
 
-1. **One shared rule set.** Shared orchestration rules live in `precepts`, not
-   copied into consumers.
-2. **Local tails only.** Consumer instruction READMEs state only project-
-   specific commands, proof surfaces, local invariants, and dirty-worktree
-   cautions.
-3. **Ten-agent cap is explicit.** `precepts` permits up to 10 parallel agents
-   when file bounds and context load justify it; challenge waves scale to
-   half the research wave.
-4. **Triumvirate is load-bearing.** Scope dilation, diagnostic stalls, and
-   unusable first-pass returns trigger research + plan augment/synthesis +
-   redress/redeployment before work resumes.
-5. **No duplicate submodule for nested crates.** `crates/csp-solver` inherits
-   through bbnf-lang's top-level `docs/precepts`.
-6. **No user work reverted.** Dirty worktrees are respected; BC edits only
-   instruction docs, submodule pointers, and tranche rollout docs.
+## Non-Routable Carries
 
-## Wave Schedule
+Whatever survived BA close + BB close as routed carry, with named close criterion per row.
 
-| Wave | Agents | Closes On | Status |
-|---|---:|---|---|
-| W0 | 10 research + 2 challenge | Synthesis and challenge ledger saved | complete |
-| W1 | direct + bounded implementation | `precepts` updated for 10-agent/triumvirate/no-overfitting protocol | complete |
-| W2 | direct + repo-sliced implementation | every consumer references `docs/precepts` and has local tail | complete |
-| W3 | direct audit | status, submodules, and docs verified; FINAL written | complete |
+## TS / WASM Position
 
-## Critical Files
-
-| Path | Owner | Purpose |
-|---|---|---|
-| `/Users/mkbabb/Programming/precepts/instructions/**` | W1 | Shared canon updates |
-| `docs/tranches/BC/**` | W0/W3 | BC tranche record |
-| `docs/precepts` in each repo | W2 | Shared submodule reference |
-| `docs/instructions/README.md` in each repo | W2 | Project-local tail |
-| `docs/instructions/tranche/*.md` where already present | W2 | Removed duplicate shared canon |
-| `crates/csp-solver/docs/instructions/README.md` | W2 | Nested crate local note |
-
-## Consumers
-
-- `/Users/mkbabb/Programming/bbnf-lang`
-- `/Volumes/config`
-- `/Users/mkbabb/Programming/glass-ui`
-- `/Users/mkbabb/Programming/speedtest`
-- `/Users/mkbabb/Programming/keyframes.js`
-- `/Users/mkbabb/Programming/value.js`
-- `/Users/mkbabb/Programming/words`
-- `/Users/mkbabb/Programming/fourier-analysis`
-- `/Users/mkbabb/Programming/parse-that`
-- `/Users/mkbabb/Programming/gaggle`
-- `/Users/mkbabb/Programming/ffuzzy`
-- `/Users/mkbabb/Programming/bbnf-lang/crates/csp-solver`
-
-## Hard Gates
-
-1. `precepts` docs contain no stale six-agent cap.
-2. `precepts` names the lifecycle:
-   research -> challenge -> plan -> wave spec -> implementation -> doc update.
-3. Every top-level consumer has `docs/precepts` and `docs/instructions/README.md`.
-4. Existing consumer `docs/instructions/tranche/*.md` duplicate files are
-   absent.
-5. `git status --short` for each repo shows only BC files plus pre-existing
-   dirty work.
-6. `FINAL.md` records consumers updated, misses, and follow-on work.
-
-## Scope-Dilation Protocol
-
-If implementation reveals a consumer needs more than a docs tail and a
-submodule reference, pause the repo slice. Dispatch the triumvirate:
-
-1. research: identify the exact extra scope and prior local process docs;
-2. plan augment/synthesis: amend BC wave docs and file bounds;
-3. redress/redeployment: implement the amended slice.
-
-No consumer receives a half-migrated instruction surface.
+The TS/WASM re-engineering tranche (BD candidate) opens after BC close. BC does not touch TS or WASM.

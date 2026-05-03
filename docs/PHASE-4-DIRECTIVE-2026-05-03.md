@@ -293,12 +293,24 @@ The synthesis agent verifies these AFTER all four tranche re-drafts land:
 | Every "all-X" claim has a per-X table | grep "all .* grammars", "every grammar", "all backends"; for each, the immediately following text is a markdown table. |
 | Every deferral has receiver + blocker + receiving gate | grep "deferred", "carries to", "future", "TBD"; reject any without all three. |
 | Every parse-throughput gate cites competitor + dataset + platform | grep "G\d.*sonic-rs|simdjson|lightning|cssparser|chumsky|serde_json"; verify each gate. Non-throughput gates must NOT claim Lock 8 honour. |
-| 13-lock honoured table is exhaustive across tranches | every lock has at least one wave-cell; locks not addressed in BA/BB are addressed in BC/BD; locks deferred are explicitly deferred-with-receiver. |
+| 14-lock honoured table is exhaustive across tranches | every lock has at least one wave-cell; locks not addressed in BA/BB are addressed in BC/BD; locks deferred are explicitly deferred-with-receiver. |
 | File-size distribution honours Lock 13 | BA.W2's file-size-distribution.md exists; ≥500 LOC bucket has 0 files; <50 LOC bucket is bounded. |
+| **Lock 14 — full grammar generalisation; zero overfitting** | grep verifications:<br/>(a) `rg -n 'JsonParser\|CssL4Parser\|BbnfBootstrap\|GoogleSheetsParser' crates/{ir,parse,codegen,runtime,path,path-core,egraph,csp-solver,bbnf-regex,parse-that,simd-scan,analysis,lsp}/src/` returns ZERO post-tranche-close.<br/>(b) `find crates/core/src/runtime -mindepth 1 -maxdepth 1 -type d` returns ZERO per-grammar dirs after BB.W2 generic template emission lands.<br/>(c) `rg -nE 'match\s+\w+\s*\{[^}]*Json\s*=>\|CssL4\s*=>\|Bbnf\w*\s*=>\|GoogleSheets\w*\s*=>' crates/` returns ZERO matches in non-generated source under generic-crate paths.<br/>(d) Per-grammar host fns live ONLY in per-grammar declaration crates `crates/<grammar>/` or in generated-from-metadata namespaces — NOT in `crates/core/src/host/<grammar>.rs` generic-root pattern.<br/>(e) Every wave's §4 invariants section names Lock 14 honoured / deferred-with-receiver explicitly. Any silence is a fault.<br/>(f) The cohort template (BB.W2) generalises across ALL 9 grammars, NOT only the 5 simple cohort grammars; specialised grammars (JSON, CSS L4, BBNF, Sheets) consume the same generator differing only by metadata + grammar source. |
 | Generated-LOC budgets are wave-level (not just tranche-level) | every wave §1 / §3 / §7 names its generated-LOC delta from prior wave. |
 | TS/WASM scaffold (BC.W2) has BD activation receiver | BD.W0 / BD.W1 / BD.W2 carry TS/WASM activation gates; otherwise BC.W2 is "scaffold-only" with explicit non-Lock-5 disposition. |
 | `parse-that` disposition decided in-plan | BC.W5's parse-that-disposition.md exists; one of (i)/(ii)/(iii) is chosen. |
 | `pointer!` syntax decided in-plan | BB.W5's pointer-syntax-decision.md exists; one of (i)/(ii)/(iii) is chosen. |
+
+### Lock 14 — special verification protocol
+
+The synthesis agent runs these verifications additionally:
+
+1. **Static-analysis sweep** of the entire post-Phase-4 plan-set:
+   - `rg -ni 'json\|css_l4\|bbnf\|google_sheets\|sheets\|css_pretty\|bnf\|csv\|ebnf\|math' docs/tranches/{BA,BB,BC,BD}/` — every match in plan text either (i) is in a per-grammar table cell of a per-X table, OR (ii) is a per-grammar declaration crate path (`crates/<grammar>/`), OR (iii) is in an audit/research-anchors document citing primary sources. Other matches are faults; the surrounding paragraph hardcodes a grammar in plan logic that should be metadata-driven.
+2. **Plan-text sweep** for hardcoded grammar-name match-arms in plan pseudocode:
+   - any `match grammar { … }` in plan text MUST cite "metadata-driven dispatch" or "registry lookup"; raw match-arms enumerating grammar idents are faults.
+3. **Generic-crate sweep** verifying that BC.W3 dependency-DAG (per gap H) shows ZERO grammar-name imports in any generic-crate's public or private API surface.
+4. **Future-grammar onboarding test**: the synthesis agent invents a hypothetical 10th grammar (`yaml.bbnf` or similar) and walks the plan to verify that adding it requires ONLY: (a) a `yaml.bbnf` source file, (b) a `[workspace.metadata.bbnf-strategy.grammars.yaml]` block, (c) optionally a `crates/yaml/` crate for host fns. NO code edits in any other crate. If the plan implies otherwise, that is a Lock-14 fault.
 
 ---
 
@@ -339,11 +351,12 @@ If a wave produces substrate without a consumer, fault. Either move the substrat
 
 Per the user's third operational rule + `feedback_no-workarounds`:
 
-- **No claim of lock-honoured if substrate is preserved**. If `OpenFrame` is alive at BA close, Lock 1 is **deferred-with-receiver**, not honoured. Mark it explicitly. The 13-lock table cell says "deferred to BB.W1a" not "honoured at W5".
+- **No claim of lock-honoured if substrate is preserved**. If `OpenFrame` is alive at BA close, Lock 1 is **deferred-with-receiver**, not honoured. Mark it explicitly. The 14-lock table cell says "deferred to BB.W1a" not "honoured at W5".
 - **No "carries to BB" without naming the wave**. Carries name `BA→BB.W1a.M3`, not "carries to BB".
 - **No "user adjudicates"**. Decide in-plan.
 - **No "future BD" with BD undrafted**. BD is drafted in Phase 4.
 - **No "investigate later"**. Every milestone has an exit-criterion that is a cargo / rg / shell command, not "investigate".
+- **No grammar-specific code in generic crates** (Lock 14). Every wave that produces or modifies code in `bbnf-parse`, `bbnf-codegen`, `bbnf-runtime`, `bbnf-ir`, `path`, `path-core`, `egraph`, `csp-solver`, `bbnf-regex`, `parse-that`, `simd-scan`, `analysis`, `lsp` MUST verify zero grammar-name leakage as part of its closer-gate. Per-grammar deviations are encoded in metadata or per-grammar declaration crates (`crates/<grammar>/`), never in branching code. Adding a new grammar is config + grammar-source, never a code edit in another crate. **The current overfitting mess — 14-variant OpenFrame, per-grammar runtime modules, hardcoded registry arms — is the failure mode this rule prevents from recurring.**
 
 ---
 

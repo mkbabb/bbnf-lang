@@ -60,17 +60,21 @@ Audit-D commits to **DIRECT-PROJECTION CODEGEN** as the single thesis and enumer
 
 ## III — The Decision
 
-**The next tranche is BC, not BA, and not the fictional AZ-V.**
+**Letter correction (revised after status review).** The earlier draft of this synthesis named "BC" as the direct-projection codegen tranche. **BC is taken and closed**: BC was the orchestration tranche ("Shared Precepts Consumer Rollout") that moved shared rules into the `precepts` submodule (`docs/tranches/BC/FINAL.md`). It is meta, not code, and unambiguously done.
 
-Per `AZ-IV.md §Cross-Tranche Debt`, the recycled BA was earmarked for rule-discovery (Ruler CVC enumerator, VM oracle, ranker). Audit-C confirms the rule-discovery scope is genuinely deferrable — the 4196× perf gap is NOT a rule-discovery problem. It is a **codegen-direct-projection** problem, and that is what BC must close.
+**The next code tranche is BD**, not BC, and not the fictional AZ-V.
 
-**BC's thesis**: direct-projection codegen. The arena/builder template indirection retires; the lazy path becomes canonical; the value-API reroutes through `parse_with`; eager is `parse_with(input, &EMPTY_PATH)`; the AU floor and the sonic-rs gap close through the same mechanism, not two.
+Per `AZ-IV.md §Cross-Tranche Debt`, the recycled BA was earmarked for rule-discovery (Ruler CVC enumerator, VM oracle, ranker). Audit-C confirms the rule-discovery scope is genuinely deferrable — the 4196× perf gap is NOT a rule-discovery problem. It is a **codegen-direct-projection** problem, and BD owns it.
 
-**BB (rule-discovery)** opens AFTER BC. The recycled-BA scope (Ruler CVC, VM oracle, ranker, grammar-colocated rewrite dirs, Tranche-H rediscovery ≥80%) routes to BB.
+**BD's thesis**: direct-projection codegen. The arena/builder template indirection retires; the lazy path becomes canonical; the value-API reroutes through `parse_with`; eager is `parse_with(input, &EMPTY_PATH)`; the AU floor (18/19 BELOW per `post-AZ-IV.json`) and the sonic-rs gap close through the same mechanism, not two.
 
-**BD = BC+1**: the cleanup pass that absorbs Audit-A's TRANSPOSE bucket (12 items), Audit-B's module-cluster retirements (3 modules), and Audit-C's CHRONIC-RISK carries (F4 Tailwind, F8 32-substrate cleanup, F10 watchdog rows). BD opens after BC closes.
+**BA (rule-discovery, recycled)** opens after BD closes. BA's plan is locked at `docs/tranches/BA/BA.md` and its 8 hard-opening gates are AZ-IV close conditions, all met. BA's `merge_path_seed` consumer wiring is its first wave; the W3.0 path-shape rewrites are BA's seed bag.
 
-The trajectory becomes: **AZ-IV (closed) → BC (direct-projection codegen) → BB (rule-discovery) → BD (cleanup pass)**. This eliminates the fictional AZ-V and binds every routed AZ-IV carry to a named, real, tranche-letter destination.
+**BE = BD+1+BA**: the cleanup pass that absorbs Audit-A's TRANSPOSE bucket (12 items), Audit-B's module-cluster retirements (3 modules), and Audit-C's CHRONIC-RISK carries (F4 Tailwind unless BA's regex-rewrite enumeration closes it first, F8 32-substrate cleanup, F10 watchdog rows).
+
+The trajectory becomes: **AZ-IV (closed) → BD (direct-projection codegen) → BA (rule-discovery, recycled) → BE (cleanup pass)**. This eliminates the fictional AZ-V and binds every routed AZ-IV carry to a named, real, tranche-letter destination. (BB remains SUBSUMED per `docs/tranches/BB/BB.md`; BC remains CLOSED per `docs/tranches/BC/FINAL.md`.)
+
+**Sequencing rationale**: BD precedes BA because three of the four chronic-perf MASKED-DEFERRALs (F2 sonic, F5 TS, AF AU floor) close on BD's mechanism, not BA's. BA's hard opening gates already permit BD to open first; nothing in `BA.md` requires BA to open before any other post-AZ-IV tranche, only that it open *after* AZ-IV close.
 
 ## IV — Immediate Dispatch (before BC opens)
 
@@ -86,20 +90,20 @@ Total: ≈ −750 LOC, three commits. None create a new mechanism. All close exi
 
 After these land, BC opens.
 
-## V — BC Tranche Shape
+## V — BD Tranche Shape
 
-**Letter**: BC (recycled — see `AZ-IV.md §Cross-Tranche Debt` for letter-recycling discipline; BC was previously bbnf-buddy per memory `project_bbnf_buddy.md`. Either bbnf-buddy moves to BD or BE, or this letter routes to a new letter; the orchestrator picks at BC open.)
+**Letter**: BD (the next available code letter after AZ-IV; BC is the closed precepts tranche, not bbnf-buddy as the earlier draft assumed).
 
 **Thesis**: Direct-projection codegen. The lazy path is canonical; eager is its degenerate case.
 
 **Waves** (6 + close):
-- BC.W0 — Truth & regen baseline (mirrors AZ-IV.W0 pattern; record current `post-AZ-IV.json` rows as floor; resolve worktree fixture symlink contract per W6.2 known miss).
-- BC.W1 — Eager-as-degenerate-lazy collapse (Audit-D T1). The `parse()` entry is rewritten as `parse_with(input, &EMPTY_PATH)`. Per-grammar phantom marker types replace the hardcoded `markers::Json` in eager bodies. The HRTB `__P: for<'__c> PathSchema<'__c>` propagates everywhere or simplifies; resolve at codegen-time.
-- BC.W2 — Cursor consult unification (Audit-D T2): `cursor.match_field` + `match_index` + `decide` collapse into one `cursor.consult(&ParsedSegment)` polymorphic on the path's segment alphabet. Eliminates one orthogonal call shape (`feedback_no_orthogonal_codepaths`).
-- BC.W3 — Arena/builder template retirement on value-API path (Audit-D T4). The W5 dedup template stays for the 5 simple grammars (it works there); the 4 outlier grammars (JSON, CSS L4, Sheets, BBNF) get direct-projection codegen. The AU floor 18/19 BELOW closes here.
-- BC.W4 — `Document::get<T>(path)` reroutes through `parse_with` (Audit-D T5). The 4196× `bbnf_get_twitter` sonic gap closes here. Same-harness `bbnf_get_*` ≤ 5× `sonic_get_*` becomes a hard-met gate, not a routed carry.
-- BC.W5 — TS aggregate-as-iterable fix (W1 backend-ts gap). `runtime::ts::emit_value` for object/array shapes emits an iterable JS array of pairs/elements, not a span over input bytes. The W5.2 `ts_node_execute` test goes GREEN. F5 closes through MECHANISM.
-- BC.W6 — Measurement & close. Same-harness sonic-rs floor MET; AU floor MET (or named per-row blocker with profile evidence); tailwind WATCHDOG resolves through direct-projection (Pratt + unordered shape paths) or routes EXPLICITLY to BD with named close criterion.
+- BD.W0 — Truth & regen baseline (mirrors AZ-IV.W0 pattern; record current `post-AZ-IV.json` rows as floor; resolve worktree fixture symlink contract per W6.2 known miss).
+- BD.W1 — Eager-as-degenerate-lazy collapse (Audit-D T1). The `parse()` entry is rewritten as `parse_with(input, &EMPTY_PATH)`. Per-grammar phantom marker types replace the hardcoded `markers::Json` in eager bodies. The HRTB `__P: for<'__c> PathSchema<'__c>` propagates everywhere or simplifies; resolve at codegen-time.
+- BD.W2 — Cursor consult unification (Audit-D T2): `cursor.match_field` + `match_index` + `decide` collapse into one `cursor.consult(&ParsedSegment)` polymorphic on the path's segment alphabet. Eliminates one orthogonal call shape (`feedback_no_orthogonal_codepaths`).
+- BD.W3 — Arena/builder template retirement on value-API path (Audit-D T4). The W5 dedup template stays for the 5 simple grammars (it works there); the 4 outlier grammars (JSON, CSS L4, Sheets, BBNF) get direct-projection codegen. The AU floor 18/19 BELOW closes here.
+- BD.W4 — `Document::get<T>(path)` reroutes through `parse_with` (Audit-D T5). The 4196× `bbnf_get_twitter` sonic gap closes here. Same-harness `bbnf_get_*` ≤ 5× `sonic_get_*` becomes a hard-met gate, not a routed carry.
+- BD.W5 — TS aggregate-as-iterable fix (W1 backend-ts gap). `runtime::ts::emit_value` for object/array shapes emits an iterable JS array of pairs/elements, not a span over input bytes. The W5.2 `ts_node_execute` test goes GREEN. F5 closes through MECHANISM.
+- BD.W6 — Measurement & close. Same-harness sonic-rs floor MET; AU floor MET (or named per-row blocker with profile evidence); tailwind WATCHDOG resolves through direct-projection (Pratt + unordered shape paths) or routes EXPLICITLY to BE with named close criterion.
 
 **Hard Gates** (target ≥ 20):
 - Direct-projection lazy lane: `bbnf_get_twitter ≤ 5× sonic_get_twitter` MET on same-harness comparison.
@@ -114,13 +118,13 @@ After these land, BC opens.
 - Per-grammar arena/builder: 4 outlier grammars retire dedicated modules in favor of direct-projection codegen.
 
 **Non-Routable Carries** (the disciplined backbone — none route to a successor):
-- Every Audit-C MASKED-DEFERRAL closes inside BC. F2 (sonic gap) → W4. F5 (TS Node) → W5. AF (AU floor) → W3.
-- Every Audit-A LegacyPath / `__EAGER_EMPTY_PATH` / AscentStrategy finding closes inside BC.
-- Every Audit-D T1-T5 transposition lands inside BC.
+- Every Audit-C MASKED-DEFERRAL closes inside BD. F2 (sonic gap) → W4. F5 (TS Node) → W5. AF (AU floor) → W3.
+- Every Audit-A LegacyPath / `__EAGER_EMPTY_PATH` / AscentStrategy finding closes inside BD.
+- Every Audit-D T1-T5 transposition lands inside BD.
 
-## VI — BB Tranche Shape (after BC)
+## VI — BA Tranche Shape (recycled, after BD)
 
-**Letter**: BB (recycled — rule-discovery scope from AZ-IV's recycled-BA-routing; AZ-IV §Cross-Tranche Debt names this exact reroute).
+**Letter**: BA (recycled per `AZ-IV.md §Cross-Tranche Debt` — rule-discovery scope; plan locked at `docs/tranches/BA/BA.md`).
 
 **Thesis**: Rule discovery. Ruler CVC enumerator + VM oracle on residue + ranker + Class-1/2/3 tiering. Grammar-colocated rewrite dirs. Synthetic-grammar extensibility.
 
@@ -130,7 +134,7 @@ After these land, BC opens.
 - `merge_path_seed` consumed at the canonical egraph saturation site (the W3.0 path-shape rewrites become BB's seed bag).
 - Tailwind regex_scan timeout closes via emitted scanner path (this is the F4 carry; routes here because rule-discovery generates the regex rewrites that close it).
 
-## VII — BD Tranche Shape (cleanup pass after BB)
+## VII — BE Tranche Shape (cleanup pass after BA)
 
 **Thesis**: Architectural cleanup absorbing Audit-A TRANSPOSE bucket + Audit-B module-cluster retirements + Audit-C residual CHRONIC-RISK.
 
@@ -142,7 +146,7 @@ After these land, BC opens.
 
 ## VIII — One-Path Discipline
 
-For every "two ways to do X" surviving AZ-IV, BC commits to ONE WAY:
+For every "two ways to do X" surviving AZ-IV, BD commits to ONE WAY:
 
 | Currently two | One way |
 |---|---|
@@ -156,10 +160,10 @@ For every "two ways to do X" surviving AZ-IV, BC commits to ONE WAY:
 
 ## IX — Performance Closure
 
-The 4196× `bbnf_get_twitter` gap is not "make AST descent faster". sonic-rs scans bytes; we descend the AST. The gap closes through **mechanism inversion**: when the path projects to a single leaf, the lazy parser does NOT materialize a document at all — `parse_with(input, &path)` short-circuits at the first segment match, yields the leaf, and discards the in-flight builder state without ever calling `finalise`. The current implementation builds the document then walks the path. Inverting this — leaf-extraction-before-finalise — is the BC.W4 mechanism. Sonic-rs's 332ns is the architectural target; ≤ 5× routes the gap and BC.W4 closes it.
+The 4196× `bbnf_get_twitter` gap is not "make AST descent faster". sonic-rs scans bytes; we descend the AST. The gap closes through **mechanism inversion**: when the path projects to a single leaf, the lazy parser does NOT materialize a document at all — `parse_with(input, &path)` short-circuits at the first segment match, yields the leaf, and discards the in-flight builder state without ever calling `finalise`. The current implementation builds the document then walks the path. Inverting this — leaf-extraction-before-finalise — is the BD.W4 mechanism. Sonic-rs's 332ns is the architectural target; ≤ 5× routes the gap and BD.W4 closes it.
 
 ## X — Recommended Next Step
 
-Dispatch the three immediate commits (Section IV). After they land, the orchestrator opens BC.W0 with the wave-shape locked above. Recycled-BA's pre-existing scope routes to BB after BC closes. The fictional AZ-V is removed from all close-state docs.
+Dispatch the three immediate commits (Section IV). After they land, the orchestrator opens BD.W0 with the wave-shape locked above. Recycled-BA's pre-existing scope opens after BD closes. The fictional AZ-V is removed from all close-state docs.
 
 This synthesis closes the post-AZ-IV audit cohort. Every chronic-deferral surfaced has a named, real destination; every legacy survivor has a deletion plan; every architectural transposition has a wave-and-mechanism binding. ONE path forward.

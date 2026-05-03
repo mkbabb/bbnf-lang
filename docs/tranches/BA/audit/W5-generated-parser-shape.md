@@ -303,9 +303,49 @@ fn parse_hex<'p>(input: &'p [u8], p: &mut usize) -> Result<CssColor, ParseErr> {
 
 **Cost-model decision point:** none; host-fn dispatch is mechanical.
 
-## §2 — JSON-only commit
+## §2 — All-grammar commit (per option (a))
 
-The shapes above are the BA.W5 JSON-side contract. CSS L4, BBNF, Sheets, and the cohort grammars retain `OpenFrame` substrate at BA close (per `docs/tranches/BA/audit/W5-substrate-identity-decision.md` option (b)); BB.W1a/W1b/W1c/W2 extend the shapes per-grammar.
+The shapes above are the BA.W5a JSON-side canonical exemplar. Per `docs/tranches/BA/audit/W5-substrate-identity-decision.md` option (a), BA owns the all-grammar migration; per-grammar emission patterns extend the JSON shape construct-by-construct across W5a..W5e. Per-grammar deviations are noted in the respective sub-wave §1 deliverables; the canonical shape table here is the master contract.
+
+Hereupon BA owns all-grammar migration; BB.W1 retires. The construct-by-construct emission patterns for W5b..W5e:
+
+### §2.1 — CSS L4 (W5b) deviations
+
+- **Alt (speculative case)** per §1.2 — CSS L4's `value` rule has overlapping FIRST sets (color names overlap with function names); speculative `attempt_p` with O(1) tuple Checkpoint, not `Vec<OpenFrame>::clone`.
+- **Keyword (≥ 4 case)** per §1.7 — CSS L4 declares many color names (`red`, `green`, `blue`, `aqua`, ...); `phf::Map` lookup emits.
+- **CharClass (medium-density)** per §1.6 — CSS L4's identifier and length-unit classes are mid-density; SIMD shuffle emits per `simd_eligibility = "auto"` metadata.
+- **HostCall** per §1.10 — CSS L4 has multiple host fns (`parse_hex_color`, etc.); per surgery #15 host fns relocate to `crates/core/src/grammar/host/css_l4/` per-grammar namespace.
+
+CSS L4's full per-construct deviation table is at `docs/tranches/BA/waves/W5b.md` §1.
+
+### §2.2 — BBNF (W5c) deviations
+
+- **Pratt operator chain** — BBNF carries grammar operators (`|`, `,`, `&`, `=`); operator-token lookup table emits with recursive descent for operands. Per `feedback_grammar_closures` BBNF's operators carry first-class closures and beta-reduction at compile time.
+- **HostCall** per §1.10 — BBNF has host fns for grammar-introspection (e.g. `@debug` markers per `project_debug_infra`); under surgery #15 extension, host fns relocate to `crates/core/src/grammar/host/bbnf/`.
+
+BBNF's full per-construct deviation table is at `docs/tranches/BA/waves/W5c.md` §1.
+
+### §2.3 — Sheets (W5d) deviations
+
+- **Per-leaf direct emission** — Sheets' specialised leaf-deposit pattern (cell_ref, identifier, sheet_prefix, error) per `audit/MODULES-2026-05-03.md:963` becomes per-leaf direct-projection.
+- **Scanner (regex DFA)** per §1.8 — bespoke regex DFA for cell_ref (`[A-Z]+[0-9]+`), range, error literals (`#REF!`, `#DIV/0!`, `#NAME?`).
+- **Arena-fallback resolution** per surgery #18 — `arena.rs:38, 40, 103, 153` "fallback" comments resolve to explicit panic-on-violation OR delete unreachable arms.
+
+Sheets' full per-construct deviation table is at `docs/tranches/BA/waves/W5d.md` §1.
+
+### §2.4 — Cohort (W5e) — five hand-written grammars
+
+The cohort grammars (BNF, CSV, EBNF, CSS Pretty, Math) each exercise a strict subset of constructs from §1; W5e produces five hand-written direct-to-struct modules. Per-cohort exercises:
+
+| Cohort grammar | Constructs | Notable deviations |
+|---|---|---|
+| BNF | Alt (byte-disjoint), Seq, Repeat, Optional, CharClass, Keyword | none — canonical exemplar |
+| CSV | Alt (byte-disjoint), Seq, Repeat, CharClass, Scanner | scanner regex for quoted-field |
+| EBNF | Alt (byte-disjoint, speculative), Seq, Repeat, Optional, CharClass, Keyword | speculative Alt for choice operators |
+| CSS Pretty | Alt (byte-disjoint, speculative), Seq, Repeat, Optional, CharClass, Keyword, MapExpr | typed-enum constructors per declaration |
+| Math | Alt (byte-disjoint), Seq, Repeat, CharClass, Keyword, Pratt operator chain | Pratt for arithmetic operators |
+
+Cohort full per-construct deviation tables are at `docs/tranches/BA/waves/W5e.md` §1. BB.W2 consolidates the five hand-written modules into one parameterised template per gap D (`docs/tranches/BB/audit/W2-cohort-template-spec.md`).
 
 ## §3 — Sample-emission compilation note
 
@@ -313,8 +353,10 @@ Each sample emission above must compile mentally: the types resolve (`JsonValue<
 
 ## §4 — Closer reference
 
-The W5 close confirms the per-construct shapes by:
+The W5 close (W5e) confirms the per-construct shapes for all nine grammars by:
 
-1. Reading post-regen `crates/core/src/grammar/generated/json.rs` and verifying the `parse_value` body matches §1.1's emission.
-2. Bench-confirming BA-G1 (`twitter ≤ 400 µs`) — the shape's performance proof.
-3. Allocation-confirming BA-G2 (`≤ 2 heap allocations per parse-call`) — the shape's allocation discipline proof.
+1. Reading post-regen `crates/core/src/grammar/generated/json.rs` (W5a) and verifying the `parse_value` body matches §1.1's emission.
+2. Reading post-regen `crates/core/src/grammar/generated/{css_l4,bbnf,google_sheets,bnf,csv,ebnf,css_pretty,math}.rs` (W5b..W5e) and verifying per-grammar deviations match §2.1-§2.4.
+3. Bench-confirming BA-G1 (`twitter ≤ 400 µs`) — JSON-side performance proof.
+4. Allocation-confirming BA-G2 (`≤ 2 heap allocations per parse-call`) — JSON-side allocation discipline proof.
+5. Verifying `rg -n 'enum OpenFrame' crates/core/src/runtime/` returns 0 across all nine grammars (Lock 1 honoured at BA close).

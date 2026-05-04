@@ -77,6 +77,35 @@ Backend IR final variant table:
 
 Cardinality defence: BC's research anchors put the useful compiler-IR band at roughly 20-30 variants, comparing MLIR `arith` at 60, Cranelift `InstructionData` at 40, rustc HIR `ExprKind` at 35, rustc HIR `ItemKind` at 16, and chalk `TyKind` at 23 (`docs/tranches/BC/audit/research-anchors.md:12-18`, `docs/tranches/BC/audit/W0-typed-ir-variant-table.md:319-329`). PASS-2's 23 variants stay inside that band. swc is kept as backend-separation inheritance rather than a cardinality bound because local README cites swc for WASM/codegen pipeline shape (`restart/README.md:369`), and current rustdoc shows JavaScript AST statement/expression sums with different domain pressure (`https://rustdoc.swc.rs/swc_ecma_ast/enum.Stmt.html`, `https://rustdoc.swc.rs/swc_ecma_ast/enum.Expr.html`).
 
+Payload-refiner contract — PASS-2's role in the BIR contract:
+
+PASS-2 is **payload refiner, not BIR re-owner**. The variant alphabet, the variant inventory, and the producer-side semantics belong upstream at PASS-1 + Architecture §7 (PASS-1.md:55, "PASS-2 may sharpen field types ... PASS-2 may not introduce new variants, retire variants, or redefine the alphabet"). PASS-2 may sharpen the payload of every variant and may add lower-time evidence; PASS-2 may not bypass or re-own Backend IR.
+
+| Refinement scope (PASS-2 may sharpen) | Refinement floor (PASS-2 may not touch) |
+|---|---|
+| Payload field widths, alignment, and packing for each variant. | The 23-variant alphabet itself; new variants and retirements return to PASS-1. |
+| Layout-tag specialisation (e.g., `AltDispatch`-vs-`AltSpeculative` selection). | Producer-side semantics (typed grammar IR; e-graph; cost-model trait; CSP solver). |
+| Cost-derived dispatch shape (`match` vs PHF vs scan tree). | Lower-time invariants stated at PASS-1.md:43-53 (no OpenFrame clone stack; regex owns Unicode; auto-detection only). |
+| SIMD-vs-scalar kernel selection from `KernelShape` evidence. | Diagnostic-string surface owned by PASS-1 (PASS-1.md:92-101 owns `BBNF1004` etc.). |
+| Pratt LUT and operator-spine state machine layout. | Grammar IR variants and side tables; `passes::extract` is the only consumer. |
+| `StructuralAlphabet` constants from BIR `SimdScan` payload. | Backend IR variant ordering and stable id keys. |
+| Per-variant span/source-map metadata in payload tail. | Cross-pass hand-off contracts owned by SYNTHESIS. |
+| Per-payload runtime template parameters (per the §2 schema table). | The refiner-vs-re-owner boundary itself. |
+
+Per-payload-category lowering test gates owned by PASS-2 — every gate references a per-backend lowering obligation at PASS-1.md:59-67:
+
+| Payload category | Lowering test gate (PASS-2 owned) | Backend obligation source |
+|---|---|---|
+| Entry/control | `cargo test -p codegen --test entry_lowering` — basic-block parity Rust vs WASM. | PASS-1.md:61 (entry/control row). |
+| Dispatch/speculation | `cargo test -p codegen --test dispatch_lowering` — bounded-rollback proof + jump-table parity. | PASS-1.md:62 (dispatch/speculation row). |
+| Terminal/scanner | `cargo test -p codegen --test scanner_lowering` — slice-compare + regex + `simd-scan` parity. | PASS-1.md:63 (terminal/scanner row). |
+| Pratt/SIMD | `cargo test -p codegen --test pratt_simd_lowering` — Pratt LUT + SIMD-vs-scalar selection. | PASS-1.md:64 (Pratt/SIMD row). |
+| Host/layout/error | `cargo test -p codegen --test host_layout_error_lowering` — `host::call_<name>` dispatch + `@error` recovery shells + WASM host-fn imports. | PASS-1.md:65 (host/layout/error row). |
+| Tape/direct/value | `cargo test -p codegen --test tape_value_lowering` — `TapeEmit` + `DirectBuild` projection + WASM linear-memory parity. | PASS-1.md:66 (tape/direct/value row). |
+| Debug/path | `cargo test -p codegen --test debug_path_lowering` — source-map sidecar + `DebugMark` cfg-gate + WASM sidecar segment. | PASS-1.md:67 (debug/path row). |
+
+The hand-off contract is precise: PASS-1 owns variants + alphabet + invariants + producer-side semantics + diagnostic strings (PASS-1.md:43-53, PASS-1.md:55, PASS-1.md:92-101); PASS-2 owns payload refinement + per-backend lowering obligations + emission tests (this section, the §3 lowerer trees, the §6 generated-LOC budgets); PASS-3 owns tape ABI + visitor + path metadata consumption (§4 hand-off). Cross-pass conflict on a payload returns to SYNTHESIS for reconciliation, not to a unilateral edit on either side.
+
 Emitter public API:
 
 ```rust
@@ -152,6 +181,8 @@ ir/src/backend_ir/
   snapshot.rs
 ```
 
+PASS-2 ratifies Backend IR type-definition + variant-alphabet ownership at `ir/src/backend_ir/`, per the upstream declaration at PASS-1.md:41 ("type definitions and the variant alphabet live under `ir/src/backend_ir/`"). PASS-2 names no `codegen/src/backend_ir/` ownership path; the `codegen` crate's role is **lowerer + adapter + snapshot + emission-test consumer** — it imports `ir::backend_ir::*`, never defines or extends the BIR node alphabet, and never re-owns variant definitions. The lowerers (`codegen/src/lower/{rust,wasm,ts_stub}/`) consume; the adapters (`codegen/src/runtime_template/`) consume; the snapshot printer at `codegen/src/runtime_template/files.rs` produces stable BIR snapshots for the regen-equality gate; the emission tests under `codegen/tests/` exercise BIR-to-source equivalence. New variants, retired variants, and alphabet edits return upstream to PASS-1 + Architecture §7 and rerun the hardening gate before they land (per PASS-1.md:55).
+
 `codegen`:
 
 ```text
@@ -197,6 +228,14 @@ Import-deny floor:
 | WASM lowerer imports | `codegen::lower::wasm::*` imports the same BIR module as Rust. | WASM has forked the lowering contract. |
 | Runtime template imports | Template parameters are serializable BIR snapshots or runtime metadata, not Grammar IR nodes. | Template has become a hidden compiler pass. |
 | Snapshot gate | `cargo xtask bbnf bir --all --check` emits stable BIR snapshots before lowerers run. | The BIR boundary is not externally inspectable. |
+
+Verbatim deny command — the codegen close gate:
+
+```text
+rg -n "GrammarIR" crates/codegen/src/lower crates/codegen/src/runtime_template
+```
+
+Expected output: zero matches. Any non-zero result fails codegen close, emits diagnostic `BBNF-GEN001`, and blocks the regen-equality gate (`xtask regen --check`) downstream. The only crate exempt from this deny is `passes` — specifically the BIR producer pass under `passes/extract/` that consumes Grammar IR from the typed/shape-mined/e-graph-extracted upstream and emits Backend IR for `ir::backend_ir`. PASS-1.md:41 names the producer-side exemption: "only the BIR producer pass under `passes` may import Grammar IR; lowerers walk Backend IR alone." `codegen` has no such exemption; every codegen lowerer consumes BIR and never reaches behind it. The gate runs at every PR check, every codegen close, and every regen-equality verification; it is not a one-shot audit.
 
 `runtime`:
 

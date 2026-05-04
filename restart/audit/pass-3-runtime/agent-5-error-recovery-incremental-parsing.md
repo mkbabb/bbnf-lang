@@ -96,3 +96,7 @@ Risk: DAP/debug snapshots retain too much memory. Mitigation: cap retained snaps
 ## §8 Verdict
 
 KEEP `@error`, `@recover`, `@layout`, DAP stepping, LSP concepts, and range edit application. REINVENT current full-reparse analysis into snapshot-based incremental parsing. DISCARD rewrite-mode and any design that treats incremental edit handling as sufficient without incremental parse reuse.
+
+## Wave 2 correction note
+
+`@recover` is folded into `@error(recover = ...)`; standalone `@recover` survives only as a legacy alias for migration parsers, not as a new V1 grammar surface. Incremental fallback is now bound to dataset-level thresholds at PASS-3.md §5 (JSON corpus >= 85 percent reuse / <= 5 percent fallback; CSS corpus >= 75 percent / <= 10 percent; BBNF self-edit >= 70 percent / <= 15 percent). LSP user-facing output is silent on fallback by default; debug channel reports under `BBNF_LSP_DEBUG=1`. The layout diagnostic strings `BBNF-LAYOUT001` and `BBNF-LAYOUT002` are committed verbatim at PASS-3.md §6b.

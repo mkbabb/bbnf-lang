@@ -75,3 +75,7 @@ Risk: host function decomposition could leak into per-grammar crates. Mitigation
 ## §7 Verdict
 
 KEEP the three public constructors, typed generated roots, untyped tool value, and host-function extension set. REINVENT the value substrate as a first-class tape/direct-to-struct union. DISCARD per-grammar declaration crates, grammar-level Unicode algebra, rewrite-mode APIs, and all public `ParseStream` naming.
+
+## Wave 2 correction note
+
+This agent's lifetime-surface obligation feeds two PASS-3 Wave-2 amendments: the consumer acceptance gates at PASS-3.md §3 close (emitted parse signatures must compile under `parse`, `parse_in`, `parse_owned` wrappers) and the diagnostic ledger at PASS-3.md §6b (codes `BBNF-LIFE001` and `BBNF-LIFE002` cover the borrowed-escape and arena-mismatch failure modes this agent's API split exposes). The verbatim strings are committed at PASS-3.md §6b.

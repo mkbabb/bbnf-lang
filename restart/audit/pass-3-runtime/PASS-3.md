@@ -91,6 +91,27 @@ PASS-3 commitment:
 - Generated grammar metadata replaces fixture registries.
 - Both explicit type suffixes and implicit terminal inference are supported, matching the W5 pointer decision (`docs/tranches/BB/audit/W5-pointer-syntax-decision.md:20-27`, `docs/tranches/BB/audit/W5-pointer-syntax-decision.md:148-156`).
 
+**Registry deletion close gate.** Hardcoded grammar marker registries are not a deferral; they are a deletion item. Final close fails unless the following all hold:
+
+```text
+rg -n 'GRAMMAR_PATH_REGISTRY|GrammarMarkerRegistry|hardcoded_grammar_registry' \
+   crates/path crates/path-core crates/path-ts crates/bbnf crates/codegen \
+   crates/runtime crates/ir
+=> zero outside generated data
+```
+
+Generated metadata produced by xtask-emitted descriptors is the only validation surface for `pointer!` and `select!`. Owner: PASS-3 amendment in coordination with SYNTHESIS deletion-gate ledger.
+
+**Consumer acceptance gates.** PASS-3 surfaces are not closeable on prose-only hand-offs from PASS-2. The emission contract from PASS-2 must satisfy three executable consumer gates before PASS-3 closes:
+
+| Consumer gate | Surface under test | Acceptance criterion |
+|---|---|---|
+| Emitted parse signatures compile under PASS-3 wrappers | `parse`, `parse_in`, `parse_owned` for every extant grammar plus yaml | Generated runtime crate compiles when `Json::parse(&str)`, `Json::parse_in(&str, &Arena)`, and `Json::parse_owned(String)` are called from a PASS-3 consumer smoke. |
+| `DocumentView` metadata feeds visitors and selectors | `DocumentView::root_value`, `DocumentView::diagnostics`, generated `Visitor` trait, `pointer!`, `select!` | Generated `DocumentView::root_value()` projects to the same `ValueRef` index space the visitor walker, `pointer!` runtime plan, and `select!` traversal plan consume. |
+| Materialisation cost tables generated and documented | Per-grammar runtime emission | Codegen emits a `materialisation_cost.toml` (or equivalent generated artefact) with field counts, payload arena bytes, and tape-token width per node kind; the cookbook references it. |
+
+These gates appear as receiver/blocker/receiving-gate rows in §8.
+
 Visitors keep the W5 design: generated `Visitor` traits, `Visit`/walker support, and `VisitTypes` bitflag pruning (`docs/tranches/BB/audit/W5-visitor-bitflag-spec.md:11-19`, `docs/tranches/BB/audit/W5-visitor-bitflag-spec.md:107-123`, `docs/tranches/BB/audit/W5-visitor-bitflag-spec.md:127-174`). Mutation happens through visitors/edit builders only, as required by the README (`restart/README.md:318`). Cookbook examples for visitor collection, pruning, mutation, and warnings remain the documentation backbone (`docs/cookbook/visitors.md:102-124`, `docs/cookbook/visitors.md:153-165`, `docs/cookbook/visitors.md:177-188`, `docs/cookbook/visitors.md:248`).
 
 ## §4 Tape/direct runtime architecture
@@ -157,6 +178,17 @@ pub enum ReparsePlan {
 
 The server may fall back to full parse when anchors fail, but bench/dev output must report fallback rates. Users should see stable diagnostics, not implementation warnings. The language server should consolidate current analysis, LSP, and DAP surfaces, matching archived PASS-C guidance (`restart-archive-2026-05-04/audit/passes/PASS-C.md:90-92`, `restart-archive-2026-05-04/audit/passes/PASS-C.md:158-159`).
 
+**Fallback-rate gates by dataset.** PASS-3 binds the incremental parse contract to dataset-level thresholds. A miss does not merely log; it blocks bench close.
+
+| Edit corpus | Snapshot reuse target | Fallback-rate ceiling | Surface |
+|---|---|---|---|
+| JSON edit corpus (twitter, citm, canada with synthesized point edits) | >= 85 percent of token spans reused | <= 5 percent full-reparse fallback | `incremental/edit_anchor` bench. |
+| CSS edit corpus (bootstrap, animate with selector/property edits) | >= 75 percent of rule spans reused | <= 10 percent full-reparse fallback | `incremental/edit_anchor` bench. |
+| BBNF self-edit corpus (grammar source point edits) | >= 70 percent of rule spans reused | <= 15 percent full-reparse fallback | `incremental/edit_anchor` bench. |
+| Large-paste corpus (10x-source paste) | reuse target N/A; full-reparse expected | report only; not a regression gate | `incremental/edit_anchor` bench. |
+
+**LSP user-facing output policy.** Fallbacks are diagnostic noise to the user; they are signal to the engineer. Default LSP output is silent on fallback. A debug-only diagnostic channel reports fallback events with snapshot id and reason; the channel is disabled in shipped builds and enabled in development with `BBNF_LSP_DEBUG=1`. Fallback ledgers are written to bench output, never to LSP `Diagnostic` items, never to a `showMessage` notification. The HARDENING-CONSOLIDATED §4.36 policy "keep user-facing LSP output quiet unless policy says otherwise" is normative.
+
 ## §6 Crate and module tree
 
 `bbnf`:
@@ -165,17 +197,17 @@ The server may fall back to full parse when anchors fail, but bench/dev output m
 crates/bbnf/src/
   lib.rs
   prelude.rs
-  grammar/
   parse/
   document/
-  value/
-  tape/
+  query/
   visitor/
   diagnostics/
-  host/
+  metadata/
+  value/
+  tape/
 ```
 
-The public crate keeps 8 top-level children after `lib.rs`/`prelude.rs`. `layout`, `metadata`, and path adapters live under those concern directories or in their owning crates, keeping Lock 13's 4-10 child-count discipline.
+The public crate keeps 8 cohesive children after `lib.rs`/`prelude.rs`: `parse/` (entry constructors), `document/` (root + view), `query/` (`pointer!`/`select!` adapters), `visitor/` (generated traits + `VisitTypes` pruning), `diagnostics/` (rendering + categories), `metadata/` (workspace-metadata access, host route surface, layout descriptors), `value/` (typed-root projection), and `tape/` (re-export of substrate cursor types). The grammar-specific surface (`Json`, `CssL4`, etc.) is generated under per-grammar runtime crates referenced from `metadata/`, not as a sibling directory in `bbnf/src/`. Host-function bindings, layout lowering hooks, and metadata sidecars all live under `metadata/`. Lock 13's 4-10 child-count discipline holds.
 
 `bbnf-cli`:
 
@@ -287,6 +319,56 @@ fixtures/
 
 Fixture directories are data and manifests only. Rust fixture code is grammar-agnostic, preserving Amendment 01 (`restart-archive-2026-05-04/audit/master-plan/AMENDMENT-01-NO-PER-GRAMMAR-CRATES.md:58-62`) and Lock 14 no-overfit pressure (`restart/locks/14-LOCKS.md:60`).
 
+**Fixture separation.** Lock 14 onboarding admits exactly two surfaces: the grammar source file (`yaml.bbnf`) and one workspace-metadata block (`[workspace.metadata.bbnf.grammars.yaml]`). `fixtures/yaml/*` is *not* part of the onboarding allowance. The four `fixtures/<grammar>/` directories above are post-onboarding parity evidence — they appear after a grammar's runtime emission, visitor, `pointer!`/`select!` adapters, and host route are already proven. Adding yaml therefore proceeds in two phases:
+
+1. **Onboarding phase** — `yaml.bbnf` plus the metadata block. Generated value API, `pointer!`, `select!`, visitor, host route, and bench manifest must all appear from metadata + codegen with zero Rust edits and zero entries under `fixtures/yaml/`.
+2. **Parity phase** (separate gate) — `fixtures/yaml/` data files and a `fixtures/yaml/manifest.toml` may be added later to feed the parity bench cohort. This is a cookbook-level gate, never an onboarding gate.
+
+The grep gate `rg -n 'fixtures/yaml' restart/ARCHITECTURE.md restart/MASTER-PLAN.md restart/audit/pass-*` must return zero hits inside Lock 14 onboarding allowances; matches are confined to parity-phase prose.
+
+## §6a Per-grammar feeder table
+
+PASS-3 owns the column-feeder rows for the SYNTHESIS-owned 10x9 per-grammar table. Each row records the user-runtime surface PASS-3 must emit per grammar; SYNTHESIS composes these with PASS-1 substrate and PASS-2 emission columns to assemble the architecture-level table.
+
+| Grammar | Typed root | `ValueRef` kind | Generated runtime files | Visitor + `VisitTypes` | Path schema | Fixture manifest | Host route |
+|---|---|---|---|---|---|---|---|
+| `bbnf` | `Bbnf` | `BbnfRoot` | `generated.rs`, `parser.rs`, `host.rs` | `BbnfVisitor`, `BbnfVisitTypes` | `bbnf.path-schema.toml` | `fixtures/bbnf/manifest.toml` | self-host primitives plus regen utilities |
+| `bnf` | `Bnf` | `BnfRoot` | `generated.rs`, `parser.rs` | `BnfVisitor`, `BnfVisitTypes` | `bnf.path-schema.toml` | `fixtures/bnf/manifest.toml` | none (pure recogniser) |
+| `csv` | `Csv` | `CsvRoot` | `generated.rs`, `parser.rs` | `CsvVisitor`, `CsvVisitTypes` | `csv.path-schema.toml` | `fixtures/csv/manifest.toml` | none |
+| `css_l4` | `CssL4` | `CssL4Root` | `generated.rs`, `parser.rs`, `host.rs`, `layout.rs` | `CssL4Visitor`, `CssL4VisitTypes` | `css_l4.path-schema.toml` | `fixtures/css/manifest.toml` | colour-function host primitives plus length conversion |
+| `css_pretty` | `CssPretty` | `CssPrettyRoot` | `generated.rs`, `parser.rs`, `layout.rs` | `CssPrettyVisitor`, `CssPrettyVisitTypes` | `css_pretty.path-schema.toml` | shares `fixtures/css/` corpus | none |
+| `ebnf` | `Ebnf` | `EbnfRoot` | `generated.rs`, `parser.rs` | `EbnfVisitor`, `EbnfVisitTypes` | `ebnf.path-schema.toml` | `fixtures/ebnf/manifest.toml` | none |
+| `google_sheets` | `GoogleSheets` | `GoogleSheetsRoot` | `generated.rs`, `parser.rs`, `host.rs` | `GoogleSheetsVisitor`, `GoogleSheetsVisitTypes` | `google_sheets.path-schema.toml` | `fixtures/sheets/manifest.toml` | range/date/array-literal host primitives |
+| `json` | `Json` | `JsonRoot` | `generated.rs`, `parser.rs` | `JsonVisitor`, `JsonVisitTypes` | `json.path-schema.toml` | `fixtures/json/manifest.toml` | none |
+| `math` | `Math` | `MathRoot` | `generated.rs`, `parser.rs` | `MathVisitor`, `MathVisitTypes` | `math.path-schema.toml` | `fixtures/math/manifest.toml` | none (Pratt-eligible operator chain only) |
+| `yaml` (onboarding proof) | `Yaml` | `YamlRoot` | `generated.rs`, `parser.rs`, `host.rs` (if metadata declares host route) | `YamlVisitor`, `YamlVisitTypes` | `yaml.path-schema.toml` | parity-phase `fixtures/yaml/manifest.toml` | as declared in `[workspace.metadata.bbnf.grammars.yaml]` |
+
+The yaml row exists at the onboarding boundary: every cell to the left of the parity-phase fixture manifest must be generated from `yaml.bbnf` plus the workspace-metadata block, with zero Rust edits and zero per-grammar match arms in any generic crate.
+
+## §6b Compiler diagnostic ledger
+
+PASS-3 owns the user-facing diagnostic strings for runtime, pointer/select, lifetime, layout, optimizer, host, and yaml-onboarding surfaces. Strings are committed verbatim; later prose may not soften them. Each diagnostic carries a stable code, the target user, the mental model the user holds at the point of failure, the confusion point the message resolves, and the artefact that closes the loop.
+
+| Code | Verbatim text | Target user | Mental model | Confusion point | Artefact |
+|---|---|---|---|---|---|
+| `BBNF-LIFE001` | `error[BBNF-LIFE001]: borrowed value escapes parse scope; the source string `&str` was dropped before this projection. help: use `Json::parse_owned(input)` to retain the data, or hold `&input` alive for the duration of `doc`.` | Application author | "I parsed once and stored the result." | Default `parse(&str)` borrows. | Cookbook §lifetime-surfaces. |
+| `BBNF-LIFE002` | `error[BBNF-LIFE002]: arena mismatch; root was parsed in arena #N but projected through arena #M. help: use the same `&Arena` for parse and projection.` | Arena user | "I'm batching parses through one bumpalo." | Two arenas in scope. | Cookbook arena chapter. |
+| `BBNF-LAYOUT001` | `warning[BBNF-LAYOUT001]: @layout directive is unused by generated formatter; rule never reaches a layout-sensitive emit path.` | Grammar author | "@layout always shapes output." | Rule has no emitting use. | Layout cookbook. |
+| `BBNF-LAYOUT002` | `error[BBNF-LAYOUT002]: rule `{rule}` has no resolvable layout; reason: {cause}. help: layout descriptors must derive from a leaf, an explicit `@layout(...)`, or an upstream rule with a known layout.` | Grammar author | "Lowering finds layout from context." | Layout chain underdetermined. | Layout cookbook §unresolved-layout. |
+| `BBNF-OPT001` | `note[BBNF-OPT001]: Pratt was not applied to `{rule}`; reason: {cause}. The grammar still parses; performance fallback uses recursive-descent.` | Grammar author | "Auto-Pratt always fires for operator chains." | Cost model declined. | Cookbook §pratt-detection. |
+| `BBNF-OPT002` | `note[BBNF-OPT002]: SIMD scanner was not selected for `{rule}`; reason: {cause}. The grammar still parses; performance fallback uses scalar scan.` | Grammar author | "SIMD is always faster." | Dispatch cost outweighs win. | Cookbook §simd-detection. |
+| `BBNF-GRAMMAR001` | `error[BBNF-GRAMMAR001]: workspace metadata block missing for grammar `{name}`. help: add `[workspace.metadata.bbnf.grammars.{name}]` to your Cargo workspace metadata; the grammar source file alone is not sufficient.` | New-grammar author | "Source file is enough." | Lock 14 requires both surfaces. | Onboarding cookbook §two-surfaces. |
+| `BBNF-POINTER001` | `error[BBNF-POINTER001]: unknown pointer segment `{segment}` in `{pointer_macro_input}`; rule has no field with that name.` | Application author | "Pointers traverse fields by name." | Field name typo or stale. | Pointer cookbook §validation. |
+| `BBNF-POINTER002` | `error[BBNF-POINTER002]: pointer grammar inference failed; help: add an explicit grammar prefix like `pointer!(Json => "/...")`.` | Application author | "Implicit grammar always works." | Two grammars in scope. | Pointer cookbook §explicit-grammar. |
+| `BBNF-POINTER003` | `error[BBNF-POINTER003]: terminal type for pointer `{path}` is not yet known to the macro; help: regenerate with `cargo xtask regen` so the schema is in sync.` | Application author | "Macro reads metadata at compile time." | Stale generated schema. | Pointer cookbook §regen. |
+| `LookbehindWidth` | `error[BBNF-LIFE003]: lookbehind `|<` width is unbounded for `{rule}`; help: lookbehinds must be finite-width; use a bounded alternative or move the constraint into a regex with `(?<=...)`.` | Grammar author | "Lookbehind takes any pattern." | Unbounded width. | Grammar surface spec. |
+| `HostSignature` | `error[BBNF-HOST001]: host function `{name}` cannot satisfy signature `{expected}`; argument {index} inferred `{actual}` at {span}.` | Host author | "@host fn body just runs." | Type flow mismatch. | Host cookbook §signatures. |
+| `ChainStep` | `error[BBNF-HOST002]: chain step `{step}` does not accept `{input_type}` from previous step; the chain `-> f1 -> f2` requires `f2` to accept `f1`'s output.` | Host author | "Chains compose." | Step type fault. | Host cookbook §chains. |
+| `WasmHost` | `error[BBNF-HOST003]: host chain `{chain}` cannot lower to WASM; reason: {cause}. The Rust backend continues to compile.` | TS/WASM author | "Hosts work everywhere." | Host primitive missing in WASM ABI. | WASM ABI cookbook. |
+| `LowererImport` | `error[BBNF-CG001]: lowerer at `{path}` imports `bbnf_ir::grammar_ir`; only the BIR producer may consume Grammar IR. help: lower against `bbnf_ir::backend_ir`.` | Codegen author | "All IR is one IR." | Two-IR contract violation. | Architecture §7. |
+
+These strings are part of the SYNTHESIS-owned diagnostic ledger; PASS-3 commits the text and cookbook receivers, the lowerer-import-deny code is mirrored from PASS-2 ownership, and the layout/lookbehind/host/chain codes are mirrored from PASS-1 ownership.
+
 ## §7 Benchmark and SOTA gates
 
 Every perf gate names a competitor per Lock 14 (`restart/locks/14-LOCKS.md:207`). The SOTA corpus compares sonic-rs, simdjson/simd-json, lightningcss, and tree-sitter style tradeoffs (`restart/corpora/SOTA.md:12-16`, `restart/corpora/SOTA.md:35-42`, `restart/corpora/SOTA.md:64-77`, `restart/corpora/SOTA.md:103-118`). PASS-3 gates must report parse mode, trace mode, and surface under test.
@@ -311,7 +393,7 @@ Exact PASS-3 benchmark rows:
 | `json/canada/array_scan` | <= 2.8ms | array-heavy parse and selector scan. |
 | `css/bootstrap/visitor` | <= 3.0ms | generated visitor pruning over CSS. |
 | `css/animate/layout` | <= 1.6ms | layout metadata plus parser surface. |
-| `bbnf/self_host/internal` | progress-only until final close | BBNF grammar parses itself through the public runtime. |
+| `bbnf/self_host/internal` | <= 100 ms full self-parse + format roundtrip; non-Lock-8 internal gate; no SOTA peer claim attaches. | BBNF grammar parses itself through the public runtime. |
 | `incremental/edit_anchor` | report fallback rate | LSP edit reparse plan. |
 | `debug/trace_overhead` | report overhead | DAP/playground trace projection. |
 
@@ -319,22 +401,31 @@ Generated API budget:
 
 | Surface | Budget gate |
 |---|---|
-| Visitor traits | Per-grammar generated visitor LOC reported separately; no handwritten visitor file over 500 LOC. |
-| Path metadata | Generated schema rows are counted against grammar runtime budget; `path-core` handwritten files obey Lock 13. |
-| Tape projections | Generated projection LOC counted with runtime module budget. |
+| Visitor traits | Per-grammar generated visitor LOC reported separately; no handwritten visitor file over 500 LOC; per-grammar visitor LOC delta beyond W3 baseline carries a +2 percent ceiling per regen. |
+| Path metadata (Rust) | Generated schema rows are counted against grammar runtime budget; `path-core` handwritten files obey Lock 13; per-grammar path-schema Rust budget <= 32 KB. |
+| Path metadata (sidecar) | Generated `*.path-schema.toml` sidecar size <= 64 KB per grammar; bench manifest sidecar <= 8 KB per grammar. |
+| Tape projections | Generated projection LOC counted with runtime module budget; per-grammar projection delta beyond W3 baseline carries a +2 percent ceiling per regen. |
+| Tape identity field/method delta | Adding a tape identity field or `ValueRef` method costs <= 1 field plus 2 methods per regen; larger deltas open a named amendment. |
+| Bench-report generation | Per-grammar bench-report markdown <= 16 KB; per-grammar bench-report JSON <= 8 KB; aggregate bench summary <= 64 KB. |
+| Regen wall budget | `cargo xtask regen --check` <= 12 s on M1 Pro for the nine extant grammars; <= 14 s including yaml; over-budget regen blocks close. |
 | Diagnostics | Generated code list is data; diagnostic rendering code remains shared and non-generated. |
 
 ## §8 Cross-pass hand-offs
 
-| Contract | Receiver | Blocker | Gate |
+| Contract | Receiver | Blocker | Receiving gate |
 |---|---|---|---|
 | Tape token packing, payload arenas, span widths, child/sibling traversal, recovery/layout/debug flags, and snapshot identity. | PASS-1 / Tranche B | PASS-3 cannot prove cursor, visitor, incremental, or DAP identity. | Runtime identity tests over direct root and `ValueRef`. |
 | Tape as the substrate name; no public `ParseStream`. | PASS-1 / SYNTHESIS | Naming fork leaks into public APIs. | Conflict guard for `ParseStream` in public docs and code. |
 | Typed roots, three parse constructors, `DocumentView`, `ValueRef`, visitors, `VisitTypes`, diagnostic metadata, path schemas, host metadata, and fixture/bench metadata. | PASS-2 / Tranche F | Generated runtime lacks consumer-facing metadata. | PASS-3 consumer smokes from generated runtime. |
+| Consumer acceptance: emitted parse signatures compile under PASS-3 wrappers, `DocumentView` metadata feeds visitors and selectors, materialisation cost tables generated and documented. | PASS-2 / Tranche F + Tranche I | PASS-3 close on prose-only hand-off. | Three executable consumer gates pass on every extant grammar plus yaml. |
 | No per-grammar declaration crates, rewrite-mode hooks, or grammar Unicode algebra APIs. | PASS-2 / SYNTHESIS | Generated surfaces reintroduce discarded extension scope. | Negative API and parser fixtures. |
 | Final crate names: `path`, `path-core`, `path-ts`, and `test-fixtures`. | SYNTHESIS / Tranche A | Legacy package names survive into greenfield docs. | Workspace crate-name check. |
+| Hardcoded grammar registry deletion. | SYNTHESIS / Tranche I close gate | Registry survives parallel to metadata. | `rg -n 'GRAMMAR_PATH_REGISTRY\|GrammarMarkerRegistry' crates/` returns zero outside generated data. |
 | CLI/LSP/DAP ownership. | SYNTHESIS / Tranche I | Old PASS-C CLI deferral leaves top-layer gap. | CLI and LSP diagnostics parity test. |
 | Performance rows integrated with PASS-1/PASS-2 outputs. | SYNTHESIS / Tranche H/J | Bench gates become narrative only. | Exact benchmark rows above appear in master plan gates. |
+| Incremental fallback gates by dataset and LSP user-facing silence policy. | PASS-1 / Tranche I | Fallbacks become an unreported workaround. | Dataset-level fallback ledger + LSP policy enforcement test. |
+| Per-grammar feeder rows for typed root, `ValueRef`, runtime files, visitor, path schema, fixture manifest, host route. | SYNTHESIS / Architecture per-X table | All-grammar claims fall to prose. | 10-row table consumed verbatim by Architecture; columns match SYNTHESIS schema. |
+| Compiler diagnostic ledger with committed strings. | SYNTHESIS + cookbook receivers | Diagnostics drift between PASS, cookbook, and runtime. | Every code in §6b appears in cookbook table-of-contents and runtime emit tests. |
 
 ## §9 KEEP / REINVENT / DISCARD summary
 
@@ -370,12 +461,20 @@ DISCARD:
 
 ## §10 Unresolved punch-list
 
-1. SYNTHESIS must reconcile stale `ParseStream` and extension clauses in prompt/README/inheritance materials.
-2. PASS-1 must confirm tape ABI, node IDs, span widths, snapshot IDs, and incremental anchors.
-3. PASS-2 must confirm generated metadata schema for paths, visitors, host functions, diagnostics, and fixtures.
-4. Final workspace naming must enforce package names `path`, `path-core`, `path-ts`, and `test-fixtures`.
-5. Bench harness must codify exact target numbers and machine profiles after PASS-1/PASS-2 designs land.
-6. Rare host adapter escape-valve policy must be written so it cannot become per-grammar declaration crates by another name.
+| Carry | Receiver | Blocker | Receiving gate |
+|---|---|---|---|
+| Stale `ParseStream` and extension clauses in prompt/README/inheritance materials. | SYNTHESIS input-normalization table | Stale text propagates into greenfield docs. | `rg -n 'ParseStream\|rewrite-mode\|Unicode class algebra'` against the SYNTHESIS trio classifies every match as stale-input or deleted surface. |
+| Tape ABI: node IDs, span widths, snapshot IDs, and incremental anchors. | PASS-1 / Tranche B | PASS-3 cursor and visitor identity unproven. | PASS-1 publishes the ABI table; PASS-3 binds against it in identity tests. |
+| Generated metadata schema for paths, visitors, host functions, diagnostics, and fixtures. | PASS-2 / Tranche F | PASS-3 cannot validate `pointer!`/`select!` or visitors at compile time. | Schema is enumerated and PASS-3 macros consume it without fixture registries. |
+| Workspace naming: `path`, `path-core`, `path-ts`, `test-fixtures`. | SYNTHESIS / Tranche A | Prefixed names re-leak into greenfield. | `rg -n 'bbnf-path\|bbnf-test-fixtures' restart/` returns zero outside deletion archaeology. |
+| Bench harness target numbers and machine profiles. | SYNTHESIS / Tranche H/J | Bench rows become aspirational. | Master/Architecture inline competitor + dataset + platform + bbnf number for every row. |
+| Rare host adapter escape-valve policy. | SYNTHESIS / Architecture rare-escape form | Per-grammar declaration crates re-enter through naming. | Review form requires reason, owner, why metadata + `@host fn` fail, declaration location, deletion path, reviewer, receiving gate. |
+| Hardcoded grammar registry deletion. | PASS-3 amendment + SYNTHESIS deletion-gate ledger | Registry survives parallel to metadata route. | `rg` close gate returns zero outside generated data. |
+| Consumer acceptance gates for PASS-2 emission contract. | PASS-2 / Tranche F + Tranche I | PASS-3 closes on prose only. | Three executable consumer gates pass on every extant grammar plus yaml. |
+| Diagnostic ledger committed strings. | SYNTHESIS + cookbook receivers | Strings drift across docs. | Every code in §6b appears verbatim in cookbook + runtime emit tests. |
+| Per-grammar feeder rows. | SYNTHESIS / Architecture per-X table | "All grammars" claims rest on prose. | Architecture consumes the §6a table verbatim. |
+| Fixture separation from Lock 14 onboarding. | SYNTHESIS / Architecture Lock 14 proof | yaml fixtures re-enter onboarding allowance. | `rg -n 'fixtures/yaml' restart/` returns zero hits inside Lock 14 onboarding allowance. |
+| Incremental fallback dataset gates and LSP silence policy. | PASS-1 / Tranche I | Fallback becomes unreported workaround. | Dataset thresholds + LSP policy test + bench ledger row. |
 
 ## §11 Final posture
 

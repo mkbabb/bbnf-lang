@@ -72,3 +72,7 @@ Risk: metadata descriptors become a hidden declaration crate. Mitigation: descri
 ## §7 Verdict
 
 KEEP typed `path!`, `select!`, explicit suffixes, implicit inference, dynamic runtime parsing, and cookbook examples. REINVENT path implementation around `bbnf-path-core` plus generated metadata. DISCARD fixture-bound registries, `()` terminal placeholders, Rust/TS duplicated compilers, and runtime-string-only designs.
+
+## Wave 2 correction note
+
+The authored Rust macro is `pointer!` (this agent's `path!` references survive only as legacy citation). The crate set is `path`, `path-core`, `path-ts`, `test-fixtures` (no `bbnf-` prefix). Hardcoded grammar marker registries are not a deferral — they are a deletion item bound to the close gate at PASS-3.md §3. The diagnostic codes `BBNF-POINTER001` (unknown segment), `BBNF-POINTER002` (grammar-inference failure), and `BBNF-POINTER003` (stale schema) appear verbatim at PASS-3.md §6b and must round-trip into the cookbook receivers.

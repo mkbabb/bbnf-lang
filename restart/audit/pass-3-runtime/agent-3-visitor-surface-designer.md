@@ -86,3 +86,7 @@ Risk: mutation loses source maps. Mitigation: edit builders must preserve tape I
 ## §7 Verdict
 
 KEEP generated visitors, `VisitTypes`, mutation-through-visitors, generic fallback visitors, and recovery-node hooks. REINVENT cohort visitors and diagnostics around restart metadata. DISCARD direct-struct-only traversal and any mutation API that writes through arbitrary `Value` handles.
+
+## Wave 2 correction note
+
+This agent's visitor-surface obligation feeds two PASS-3 Wave-2 amendments. Visitor LOC carries an explicit per-grammar budget at PASS-3.md §7 (no handwritten file over 500 LOC; +2 percent regen ceiling). The per-grammar feeder table at PASS-3.md §6a names this agent's `<Grammar>Visitor` and `<Grammar>VisitTypes` rows for all nine extant grammars plus yaml; the table is consumed verbatim by Architecture's per-X surface.

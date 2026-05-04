@@ -107,3 +107,7 @@ Risk: old anti-tape SOTA text causes design churn. Mitigation: explicitly mark i
 ## §8 Verdict
 
 KEEP direct-to-struct roots, on-demand `ValueRef`, tape-backed debug, and visitor-mediated mutation. REINVENT tape as the single advanced substrate unioned with direct structs. DISCARD `ParseStream` as a public name, columnar SoA, parallel substrates, and arbitrary mutable value handles.
+
+## Wave 2 correction note
+
+Tape identity now carries an explicit field/method delta budget at PASS-3.md §7 (<= 1 field plus 2 methods per regen; larger deltas open a named amendment). The bbnf aggregator child-count repair at PASS-3.md §6 places `tape/` and `value/` as cohesive children alongside `parse/`, `document/`, `query/`, `visitor/`, `diagnostics/`, and `metadata/`; tape projection LOC counts against the runtime module budget.

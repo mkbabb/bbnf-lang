@@ -192,3 +192,7 @@ Risk: benchmarks become marketing. Mitigation: require competitor names and raw 
 ## §7 Verdict
 
 KEEP `bbnf`, consolidated language server, bench harness, grammar-agnostic fixtures, playground/extension consumers, and thin ecosystem wrappers. REINVENT CLI and path crate split around restart runtime contracts. DISCARD per-grammar declaration crates, hardcoded fixture registries, duplicated TS path compilers, and any ecosystem package that bypasses tape/direct runtime identity.
+
+## Wave 2 correction note
+
+The `bbnf` aggregator now obeys the canonical 8-children layout at PASS-3.md §6: `parse/`, `document/`, `query/`, `visitor/`, `diagnostics/`, `metadata/`, `value/`, `tape/`. `fixtures/yaml/*` is removed from Lock 14 onboarding allowance and routed to a separate post-onboarding parity gate (PASS-3.md §6, fixture separation block). The bench-report generation budget and regen wall budget at PASS-3.md §7 bind the harness this agent designs.

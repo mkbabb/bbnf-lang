@@ -38,6 +38,8 @@ Grammar IR schema floor:
 
 Backend IR shape: executable plan nodes. Proposed variants are `Entry`, `Seq`, `DispatchAlt`, `SpeculativeAlt`, `RepeatLoop`, `OptionalBranch`, `ByteLiteral`, `RegexProgram`, `SimdScan`, `PrattSpine`, `CallRule`, `CallHost`, `HostChain`, `LayoutPush`, `LayoutPop`, `ErrorRecover`, `SpanMark`, `TapeEmit`, `DirectBuild`, `ValueProject`, `PathEval`, and `DebugMark`.
 
+Backend IR ownership: type definitions and the variant alphabet live under `ir/src/backend_ir/`. PASS-1 (Grammar IR producer) and the lowering passes (consumer) both depend on `ir`; neither owns BIR types itself. The `codegen` crate is limited to lowerers, adapters, generated-source snapshots, and emission tests; it imports `ir::backend_ir` and never re-defines or extends the BIR node alphabet. The lowerer import-deny gate `rg -n "GrammarIR" crates/codegen/src/lower crates/codegen/src/runtime_template` returns zero — only the BIR producer pass under `passes` may import Grammar IR; lowerers walk Backend IR alone.
+
 Backend IR ownership and invariant floor:
 
 | Variant family | Payload category | Lower-time invariant | PASS-2 refinement rule |
@@ -49,6 +51,20 @@ Backend IR ownership and invariant floor:
 | Host/layout/error | typed host chain, layout facts, recovery policy | no default declaration crate; `@error` owns recovery | PASS-2 emits generic host/runtime hooks |
 | Tape/direct/value | tape kind, span, payload slot, direct fields | direct values borrow from tape identity | PASS-3 consumes emitted view metadata |
 | Debug/path | source map, selected alternative, path plan hook | diagnostic spans are stable | PASS-3 consumes for LSP/path/debug |
+
+PASS-2's role is payload refiner, not BIR re-owner. PASS-2 may sharpen field types, add lower-time evidence (cost weights, scanner alphabets, dispatch tables), and split BIR submodules for cohesion; PASS-2 may not introduce new variants, retire variants, or redefine the alphabet. New variants and alphabet changes return to PASS-1 + Architecture §7 and rerun the hardening gate before they land.
+
+Per-backend lowering obligations, by variant family — Rust V1 and WASM V1 are in scope; TS production is deferred per Q28 but the BIR shape supports TS lower without retrofit when scope opens:
+
+| Variant family | Rust V1 lowering obligation | WASM V1 lowering obligation |
+|---|---|---|
+| Entry/control | emit `fn parse_<rule>` plus per-node match arms; preserve control successors as basic blocks | emit guest-resident control-flow instructions; basic blocks reuse Rust shape via shared structural snapshot |
+| Dispatch/speculation | emit `match` over dispatch keys with bounded rollback checkpoints (no clone-stack) | emit guest-side jump table backed by linear memory; rollback uses tape position alone |
+| Terminal/scanner | emit `&[u8]` slice compares plus generated regex programs; SIMD scanners route through `simd-scan` cfg-gated kernels | emit `wasm-simd128` scanner kernels with portable scalar fallback; regex programs cross-compile via shared automata |
+| Pratt/SIMD | emit Pratt LUT and operator-spine state machine; SIMD selection driven by cost-model evidence | emit Pratt LUT into WASM data segment; SIMD selection limited to `simd128` with portable scalar fallback |
+| Host/layout/error | emit `host::call_<name>` trait dispatch backed by metadata-resolved primitives; `@error` recovery emits typed recovery shells | emit guest-side host-fn imports plus host-chain marshalling; `@error` recovery routes through host boundary diagnostics |
+| Tape/direct/value | emit `TapeEmit` into runtime tape buffer; `DirectBuild` projects typed records borrowing tape spans | emit tape buffer into linear memory; direct projections cross the WASM boundary as host-side typed views |
+| Debug/path | emit source-map side tables and `DebugMark` instrumentation behind a `cfg(feature = "debug")` gate | emit source maps into a sidecar segment; `DebugMark` is opt-in via host policy |
 
 Type system algorithm: HM inference generates core constraints; bidirectional checking handles explicit signatures/directives; CSP-backed constrained unification solves finite choices for host overload, layout representation, recognizer eligibility, direct/tape materialization, recovery strategy, and backend plan.
 

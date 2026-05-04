@@ -1633,18 +1633,396 @@ cookbook-class artefacts plus ~15 verbatim error messages.
 ## §10 — Lane 8: Carry & Deferral Audit
 
 Standard: every "deferred to" / "carries to" / "future" / "TBD" /
-"user adjudicates" names receiver, blocker, receiving gate.
+"user adjudicates" must name (a) receiver, (b) blocker, (c) receiving
+gate. Faults: any without all three. Per HARDENING.md §Lane 8 D5
+("carry-blindness") this is the lane that catches Era V's failure mode.
 
-(Carry table forthcoming in Phase 5.)
+Walk every "deferred", "carry", "future", "TBD", "synthesizer
+adjudicates", "user-gated", "Pass C is silent on this" in the master
+plan + Amendment 01.
+
+### §10.1 — Master plan deferrals enumeration
+
+`rg -n 'deferred?|carry|future|TBD|synthesizer adjudicates|user-gated|silent on' restart/audit/master-plan/MASTER-PLAN.md` produces 27 matches. Classified:
+
+| Class | Count | Sample |
+|---|---:|---|
+| Carry FROM/TO between tranches (§5.1 column) | 18 | line 762 "Carry FROM: (none)" |
+| Substantive defer (named in body prose) | 6 | line 73 (`bbnf-cli` defer to 1.0); line 105 (`bbnf-py` defer post-1.0); line 109 ("synthesizer adjudicates"); line 1101 ("user-gated"); line 1170 ("Pass C is silent on this"); line 1264 ("future maintainers may delete at 1.0") |
+| Deferral ratifying prior pass | 3 | line 1040 ("ratifies Pass C's recommendation outright") |
+
+The 18 tranche-level carries are honoured by the §5.1 master tranche
+table — each tranche names its FROM and TO columns; consumers verified
+in Lane 2.
+
+The 3 prior-pass-ratifying deferrals are honoured (no defer; the
+prior-pass adjudication is reproduced).
+
+The 6 substantive defers are the audit subject below.
+
+### §10.2 — Substantive defer audit
+
+#### Defer 1 — `bbnf-cli` to 1.0 release
+
+`MASTER-PLAN.md:73, 105, 155, 1183` ("DEFERRED to 1.0"). Per HARDENING-PASS-C.md §10.1 (Pass C source-level defer at PASS-C.md:191-193) the receiver-blocker-gate triple was identified as incomplete; the master plan body inherits this incompleteness.
+
+| Surface | Receiver | Blocker | Receiving gate |
+|---|---|---|---|
+| Master plan §3.1 row 19 (line 73) | unnamed | implicit (stable user-facing API) | unnamed (1.0 is operational, not a tranche gate) |
+| Master plan §5.2 + §5.1 | not in tranche set A-J | n/a | n/a |
+| Master plan §3.2 item 6 (line 105) | "tranche-J deliverable or post-restart" | implicit | unnamed |
+
+**Fault**: triple incomplete on every surface. Per HARDENING-PASS-C surgery 19 (line 753) the resolution is "tranche post-J (1.0-release tranche, not yet drafted in restart letter set); blocker = stable user-facing API; receiving gate = parse_in/parse_owned/parse + Document::get<T>(path) + pointer![…] all reach API freeze".
+
+**Surgery**: master plan §3.1 row 19 surgery extends column "Notes" to read "DEFERRED to post-tranche-J 1.0-release tranche; blocker = API freeze (parse, parse_in, parse_owned, Document::get<T>(path), pointer![…]); receiving gate = post-J tranche W0 declares CLI surface, W1 implements". §3.2 item 6 (line 105) re-anchors symmetrically. §5.1 receives a footnote: "Tranche K (post-restart 1.0-release) is anticipated; not drafted in this set". Punch-list item 67.
+
+| Site | Item | Explication | Pros | Cons | Challenge | Verdict |
+|---|---|---|---|---|---|---|
+| `MASTER-PLAN.md:73, 105, 155` | `bbnf-cli` defer to 1.0 | clear scope-narrowing | bounded | triple incomplete | post-J tranche K | REINVENT |
+
+#### Defer 2 — `bbnf-py` post-1.0
+
+`MASTER-PLAN.md:107` ("DEFERRED post-1.0; speculative"). Per HARDENING-PASS-C surgery 21 (line 755):
+
+| Surface | Receiver | Blocker | Receiving gate |
+|---|---|---|---|
+| Master plan §3.2 item 7 (line 107) | "post-1.0" (vague) | "no Python consumer" (non-action) | unnamed |
+
+**Fault**: receiver vague; blocker is a non-action (if no consumer materialises, defer never resolves); gate absent.
+
+**Surgery**: §3.2 item 7 surgery: "DEFERRED post-1.0. Triggering condition: a Python consumer materialises (csc411 CSP-solver consumes bbnf grammar tooling, OR a downstream Python user surfaces). Receiver: a yet-to-name post-1.0 tranche. Receiving gate: that tranche's W0 declares the Python binding API shape; W1 implements PyO3 cdylib OR subprocess-CLI binding (decision per timing)." Punch-list item 68.
+
+| Site | Item | Explication | Pros | Cons | Challenge | Verdict |
+|---|---|---|---|---|---|---|
+| `MASTER-PLAN.md:107` | `bbnf-py` defer post-1.0 | speculative-work framing correct | conservative | triple absent | triggering condition required | REINVENT |
+
+#### Defer 3 — Sister-crate disposition (parse-that, bbnf-regex)
+
+`MASTER-PLAN.md:109` ("synthesizer adjudicates submodule + workspace-member is preferred"). The adjudication *resolves* in this very paragraph — "submodule + workspace-member is preferred because it preserves the sibling-repo provenance". The receiver is the master plan itself; the blocker is the precedent at `docs/precepts/CONSUMING.md`; the gate is tranche A.W2 ("parse-that disposition per Pass A Proposal 4 (submodule-as-workspace-member is the synthesizer's adjudication)" per line 793).
+
+**Verdict**: honoured. The triple resolves inline at `MASTER-PLAN.md:109` with receiver = master plan; blocker = precedent; gate = tranche A.W2.
+
+**Substantive concern**: the operational sequence at §7.2 (lines 1056-1093) lists 8 prelude commits but does NOT include `git submodule add` operations for parse-that or bbnf-regex. The synthesizer ratifies the disposition but doesn't replicate the operational step. Per Lane 1 Lock 11 surgery, punch-list item 11 already names this. Cross-referenced from Lane 8.
+
+| Site | Item | Explication | Pros | Cons | Challenge | Verdict |
+|---|---|---|---|---|---|---|
+| `MASTER-PLAN.md:109, 793` | sister-crate submodule disposition | resolves inline | adjudication ratified | operational step missing in §7.2 | already in punch-list 11 | KEEP (cross-ref) |
+
+#### Defer 4 — Cutover decision (Option A vs Option B at §7.2)
+
+`MASTER-PLAN.md:1087-1093` ("Cutover decision (USER):"). Per HARDENING-PASS-C.md §10.8:
+
+| Surface | Receiver | Blocker | Receiving gate |
+|---|---|---|---|
+| Master plan §7.2 step 7 (line 1087-1093) | USER | hardening returns *ready* | post-hardening cutover |
+
+**Verdict**: honoured. The triple is named — USER as receiver is per HARDENING.md prompt convention; blocker is hardening; gate is post-hardening master-plan-V2 + tranche-A-stub readiness.
+
+**Substantive concern**: §7.2 names Option A (force-push) and Option B (keep both); §7.3 line 1101 expresses the synthesizer's preference (Option A). The user has the final adjudication. Honoured per HARDENING.md §Methodology — "user adjudicates" is acceptable when the receiver-blocker-gate triple is named.
+
+| Site | Item | Explication | Pros | Cons | Challenge | Verdict |
+|---|---|---|---|---|---|---|
+| `MASTER-PLAN.md:1087-1093, 1101` | cutover Option A vs B | synthesizer prefers A | dual option named | none — receiver+blocker+gate triple complete | honoured | KEEP |
+
+#### Defer 5 — Pass C silent on `docs/restart/` location
+
+`MASTER-PLAN.md:1170` ("`docs/restart/` ... `docs/process/restart/` (or kept if user prefers; Pass C is silent on this)"). Per HARDENING-PASS-C surgery: the location is silent in Pass C; the master plan inherits the silence and OR-disposition.
+
+| Surface | Receiver | Blocker | Receiving gate |
+|---|---|---|---|
+| Master plan §8.2.4 (line 1170) | OR ("user prefers") | "Pass C is silent" | unnamed |
+
+**Fault**: OR-disposition without explicit adjudication. Per Lane 9 §11.1 the OR-disposition is a quick-solution-shaped offering ("rename OR merge" pattern repeats here as "relocate OR keep").
+
+**Surgery**: §8.2.4 line 1170 surgery: "**`docs/restart/`**: relocates to `docs/process/restart/` per Lock 13 (cohesion with `docs/process/instructions/`, `docs/process/tranches/`). The OR-disposition retracts." Punch-list item 69.
+
+| Site | Item | Explication | Pros | Cons | Challenge | Verdict |
+|---|---|---|---|---|---|---|
+| `MASTER-PLAN.md:1170` | docs/restart/ OR-disposition | non-adjudication | scope-limited | OR-disposition is quick-solution-shaped | relocate per Lock 13 | REINVENT |
+
+#### Defer 6 — Future maintainers delete archive at 1.0
+
+`MASTER-PLAN.md:1259, 1264` ("Disposition: keep-as-historical archive (Pass C Agent 4 §2.3); future maintainers may delete at 1.0 cut.").
+
+| Surface | Receiver | Blocker | Receiving gate |
+|---|---|---|---|
+| Master plan §10.2 (line 1259) | "future maintainers" | "1.0 cut" | unnamed |
+
+**Verdict**: borderline. The receiver is a cohort, the blocker is a release event, the gate is implicit ("at 1.0 cut" is a calendar, not a wave). Per HARDENING.md §Lane 8 standard, this fails the "real, drafted tranche" test (Pass C HARDENING-prompt §10 lane standard).
+
+**Surgery**: §10.2 line 1264 surgery: "**Disposition**: keep-as-historical archive (Pass C Agent 4 §2.3); deletion permissible at post-J 1.0-release tranche W0 if `archive/{ser, gorgeous}/` content is fully reproducible from sister-repo provenance (`gorgeous-external`, `pprint-external`)." Punch-list item 70.
+
+| Site | Item | Explication | Pros | Cons | Challenge | Verdict |
+|---|---|---|---|---|---|---|
+| `MASTER-PLAN.md:1259, 1264` | "future maintainers may delete" | calendar-anchored | archaeology preserved | gate implicit | post-J 1.0-release tranche W0 | REINVENT |
+
+### §10.3 — Tranche-level carry verification
+
+The §5.1 master tranche table (`MASTER-PLAN.md:760-771`) names FROM/TO
+per tranche:
+
+| Tranche | Carry FROM | Carry TO | FROM verified in Lane 2 | TO verified in Lane 2 |
+|---|---|---|:-:|:-:|
+| A | (none) | B, C | ✓ | B inherits errors+pipeline; C inherits skeletons |
+| B | A | C, D | ✓ | C consumes bbnf-error; D consumes bbnf-pipeline |
+| C | A, B | D, E | ✓ | D consumes bbnf-grammar+bbnf-parse+bbnf-ir; E consumes bbnf-passes |
+| D | C | E, F | ✓ | E consumes bbnf-codegen-ir; F consumes Emitter trait |
+| E | C, D | F, G, H | ✓ | F consumes runtime template; G consumes runtime; H consumes IR + runtime template |
+| F | C, D, E | G, J | ✓ | G consumes optimiser-emitted runtime; J consumes SOTA-anchored bench |
+| G | E, F | H, J | ✓ | H consumes user-facing API; J consumes parity matrix |
+| H | D, E, G | I, J | ✗ (per Lane 2: H carry FROM should be D, E only; G is wrong) | I consumes published TS+WASM; J consumes parity |
+| I | A, F | J | ✓ | J consumes published egraph+csp+regex |
+| J | All | (close) | ✓ | n/a |
+
+One tranche-level carry fault: H carries FROM G but Lane 2 §"Cross-tranche dependency-DAG" identifies the carry-FROM should be D + E only. Already in punch-list item 22.
+
+### §10.4 — Carry-tag receivers under Amendment 01
+
+Amendment 01 introduces new substrate (`bbnf-host-prims`,
+`bbnf-runtime-template`, template-emitted subdirs) and retracts old
+substrate (per-grammar declaration crates). Every carry-tag in the
+master plan body that touches the retracted substrate must re-anchor.
+
+| Carry source | Original receiver | Amendment-01 receiver | Punch-list |
+|---|---|---|---|
+| §5.2 line 785 ("9 declaration crates scaffold") | tranche E | tranche E (re-anchored to template-emitted subdirs) | already item 35 |
+| §11 row 14 verification (line 1296) | A.W3 + E.W6 | A.W3 + E.W6 (re-anchored verification command) | already items 13-15 |
+| §13 risk R9 (line 1371) | tranche E | tranche E (re-anchored: "Per-grammar metadata block missing fields") | already (re-frame) |
+| §7.2 step 4 commit 8 (line 1080) | "Master Plan + per-pass restart audit synthesis" | adds Amendment 01 as commit 8 sub-artefact | punch-list item 71 |
+
+The §7.2 prelude commit 8 names the master plan but is silent on
+Amendment 01. The amendment is authoritative; the prelude commit must
+include it. Surgery: §7.2 commit 8 verbiage extends to "Master Plan +
+Amendment 01 + per-pass restart audit synthesis".
+
+### §10.5 — Stage-2 hardening receiver
+
+`MASTER-PLAN.md:7` ("After commit, the user invokes `docs/restart/HARDENING.md` against this master plan; if hardening returns *ready to execute*, ..."). Per `restart/prompts/HARDENING.md` §6 the path is `restart/prompts/HARDENING.md`, not `docs/restart/HARDENING.md`. The master plan body's path reference is stale.
+
+Per the same prompt §7 ("After Stage 1 commits, a **Stage 2** hardening pass invoked from `restart/prompts/HARDENING-STAGE-2-EXTERNAL.md`"), Stage 2 is the receiver of Stage 1 outputs. The master plan body is silent on Stage 2.
+
+| Surface | Receiver | Blocker | Receiving gate |
+|---|---|---|---|
+| Master plan §1 line 7 | "user invokes HARDENING.md" | post-master-plan commit | "ready to execute" |
+| Stage 2 hardening | per `restart/prompts/HARDENING-STAGE-2-EXTERNAL.md` (not cited in master plan body) | Stage 1 commits | Stage 2 verdict |
+
+**Fault**: master plan body cites stale path (`docs/restart/HARDENING.md` retired in favour of `restart/prompts/HARDENING.md`); silent on Stage 2 receiver.
+
+**Surgery**: §1 line 7 + §15 line 1414 update path references; §15 closing posture extends to name Stage 2 ("Stage 1 hardening commits, Stage 2 fires per `restart/prompts/HARDENING-STAGE-2-EXTERNAL.md`; both must pass before tranche drafting opens"). Punch-list items 72-73.
+
+| Site | Item | Explication | Pros | Cons | Challenge | Verdict |
+|---|---|---|---|---|---|---|
+| `MASTER-PLAN.md:7, 1414` | hardening path stale | hardening invoked | named | path retired | re-anchor | REINVENT |
+| `MASTER-PLAN.md:1414` | Stage 2 silent | Stage 1 ratified-pending-hardening | scope correct | Stage 2 receiver missing | name in §15 | REINVENT |
+
+### §10.6 — Lane 8 summary
+
+| Defer | Verdict | Surgery |
+|---|---|---|
+| 1 — bbnf-cli to 1.0 | REINVENT | §3.1 row 19 + §3.2 item 6 + §5.1 footnote: post-J tranche K |
+| 2 — bbnf-py post-1.0 | REINVENT | §3.2 item 7: triggering condition |
+| 3 — sister-crate submodule | KEEP (cross-ref to Lane 1 punch 11) | n/a |
+| 4 — cutover Option A vs B | KEEP | n/a |
+| 5 — docs/restart/ OR-disposition | REINVENT | §8.2.4: relocate per Lock 13 |
+| 6 — archive at 1.0 | REINVENT | §10.2: post-J 1.0-release tranche W0 gate |
+| Tranche-level H carry-FROM | REINVENT (cross-ref Lane 2 punch 22) | n/a |
+| Amendment 01 receivers | REINVENT (cross-ref Lane 5) | n/a |
+| §7.2 commit 8 prelude | REINVENT | name Amendment 01 in commit |
+| Stage 2 hardening receiver | REINVENT | §15 names Stage 2 |
+
+**Lane 8 verdict: partial. KEEP=5 (defer 3, defer 4, tranche-level
+carries verified by Lane 2 except H, Amendment 01 receivers tracked in
+Lane 5, the prior-pass-ratifying deferrals), REINVENT=8, DISCARD=1**
+(the bbnf-py "speculative no consumer" framing surface — the *speculative*
+disposition survives, but the framing as a non-action retires; replaced
+by "triggering condition").
 
 ---
 
 ## §11 — Lane 9: Greenfield Discipline
 
 Standard: no quick solutions; no workarounds; no legacy survives
-uncontested; idiomatic gestalt; architectural transpositions.
+uncontested; idiomatic gestalt; architectural transpositions for
+elegance / simplicity / performance.
 
-(Greenfield critique forthcoming in Phase 5.)
+The greenfield mandate is summarised at `MASTER-PLAN.md:19` ("The
+greenfield mandate carries through: no quick solutions, no workarounds,
+idiomatic gestalt approaches, architectural transpositions in the sake
+of elegance / simplicity / performance, no legacy code surviving
+uncontested.").
+
+The substantive shape — 24-member workspace under Amendment 01;
+template-emit + direct-projection + Emitter coarsening as the
+convergent pivot at tranche E; Lock 12 archive ceremony as blocking
+precondition; commit-chain Option 3 ratification; docs re-do six waves
+— honours the discipline. The faults below are localised within
+otherwise-greenfield-compliant substrate.
+
+### §11.1 — No quick solutions
+
+#### §11.1.1 — Per-grammar declaration crate proliferation (the largest)
+
+`MASTER-PLAN.md:79-87` enumerates 9 per-grammar declaration crates as the Lock-14 redress. Per Amendment 01 §"Premise" (line 9) this is overfitting — Lock 14 names per-grammar declaration crates as an *optional* escape hatch, not a default. The master plan elevated the escape valve to a mandatory 9-crate footprint.
+
+This is *the* greenfield-discipline fault on the plan. It is also already retracted by Amendment 01. The master plan body has not been updated; the V2 re-issue applies the retraction across all 28 sites enumerated in Lane 5.
+
+**Verdict**: REINVENT (already enumerated in Lane 5 punch list). Cross-referenced.
+
+#### §11.1.2 — `specialised/` cohort module retention
+
+`MASTER-PLAN.md:737, 750, 785` ("`specialised/` for hand-written
+extensions"). Under Amendment 01 the per-grammar specialised cohort
+extends via *host-fn composition* (declarative metadata or `@host`
+directive), not a `specialised/` module. The master plan body's
+`specialised/` retention is a quick-solution shape: it admits
+"hand-written extensions" as a fallback rather than insisting on
+metadata-declared composition for every variant.
+
+| Site | Item | Explication | Pros | Cons | Challenge | Verdict |
+|---|---|---|---|---|---|---|
+| `MASTER-PLAN.md:737, 750, 785` | `specialised/` cohort module | hand-written extension surface | escape hatch present | quick-solution shape; Amendment 01 retracts | host-fn composition | REINVENT |
+
+(Already in Lane 3 surgery — punch-list item 51.)
+
+#### §11.1.3 — OR-disposition language
+
+`MASTER-PLAN.md:1170` ("`docs/restart/` ... `docs/process/restart/`
+(or kept if user prefers; Pass C is silent on this)"). Already audited
+in Lane 8 §10.2 Defer 5. The OR-disposition is a quick-solution-shaped
+offering — it leaves the path of least resistance ("keep") open. Per
+HARDENING.md §Lane 9, no quick solutions — the master plan should
+adjudicate.
+
+| Site | Item | Explication | Pros | Cons | Challenge | Verdict |
+|---|---|---|---|---|---|---|
+| `MASTER-PLAN.md:1170` | OR-disposition for `docs/restart/` | scope-limited non-decision | bounded | quick-solution-shaped | adjudicate per Lock 13 | REINVENT |
+
+(Already in Lane 8 punch-list item 69.)
+
+#### §11.1.4 — `pub use` glob re-exports
+
+`MASTER-PLAN.md:54, 683` (`bbnf` aggregator's `pub use bbnf_parse::*; pub use bbnf_codegen::*; pub use bbnf_runtime::*; pub use bbnf_grammar::*;`). Glob re-exports are a quick-solution shape — they delegate API surface management to compiler resolution and leak unintended symbols. Lock 14's verbatim text (line 60) explicitly names "BBNF aggregator `pub use bbnf::*`" as a failure-mode pattern.
+
+| Site | Item | Explication | Pros | Cons | Challenge | Verdict |
+|---|---|---|---|---|---|---|
+| `MASTER-PLAN.md:54, 683` | aggregator glob re-exports | minimal aggregator footprint | terse | leaks unintended API; Lock 14 prior-art critique | explicit re-exports | REINVENT |
+
+(Already in Lane 3 punch-list item 53.)
+
+### §11.2 — No workarounds
+
+#### §11.2.1 — `Box::leak` in grammar lifetime escape
+
+`MASTER-PLAN.md` body does not directly cite `Box::leak`, but the inherited Pass A surgery (per `HARDENING-PASS-A.md:39, 405-407`) names `Box::leak` at `crates/core/src/grammar/mod.rs:57` as a workaround for the lifetime question. The Pass A hardening adjudication is `parse_grammar_in(input, &bump)` per Lock 9 escape hatch; deprecate the leaking entry to `parse_grammar_owned`. Master plan body must reflect this adjudication in tranche A.W4 deliverable list.
+
+| Site | Item | Explication | Pros | Cons | Challenge | Verdict |
+|---|---|---|---|---|---|---|
+| `MASTER-PLAN.md:777` (tranche A) | Box::leak retirement silent | Pass A adjudication exists | inherited from Pass A | not in master plan body | name in tranche A.W4 | REINVENT |
+
+#### §11.2.2 — Wildcard `@debug` strip-prefix workaround
+
+Per HARDENING-PASS-A surgery: `crates/core/src/grammar/host.rs:387` defensive wildcard strip-prefix. The Pass A hardening adjudication is "FAIL-EXPLICIT" (per HARDENING-PASS-A.md:794-795 W6 punch-list 34). Master plan body must reflect in tranche C.W6 deliverables.
+
+| Site | Item | Explication | Pros | Cons | Challenge | Verdict |
+|---|---|---|---|---|---|---|
+| `MASTER-PLAN.md:781` (tranche C) | wildcard @debug strip-prefix retirement silent | Pass A adjudication exists | inherited | not in master plan body | name in tranche C.W6 | REINVENT |
+
+#### §11.2.3 — Defensive `unreachable!()` fallback
+
+Per HARDENING-PASS-A: `crates/core/src/lower/value_expr/simple_kinds.rs:185` defensive fallback. Adjudication: `unreachable!()` or fix upstream (W6 punch-list 38). Master plan body must reflect.
+
+| Site | Item | Explication | Pros | Cons | Challenge | Verdict |
+|---|---|---|---|---|---|---|
+| `MASTER-PLAN.md:781` (tranche C) | defensive fallback retirement silent | Pass A adjudication exists | inherited | not in master plan body | name in tranche C.W6 | REINVENT |
+
+Three workarounds inherited from Pass A; master plan body silent on each. Surgery: tranche A.W4 + tranche C.W6 deliverable lists extend to name Box::leak retiral, wildcard-prefix retiral, defensive-fallback retiral. Punch-list items 74-76.
+
+### §11.3 — No legacy code survives uncontested
+
+`MASTER-PLAN.md:19` claims "no legacy code surviving uncontested";
+§2 verdict ledger (lines 27-32) tabulates ~570 files across five
+buckets (KEEP-OUTRIGHT, KEEP-MODIFY, ABROGATE-DELETE, ABROGATE-MOVE,
+ABROGATE-REPLACE). Every file has a verdict.
+
+**Honoured.**
+
+Substantive concern: the verdict ledger sums to ~570; the workspace
+member relocations at §3.1 ledger sum to 33 (or 24 under Amendment 01)
+crate-level dispositions. The file-level verdicts terminate at the
+crate level for some entries (whole crates retire) but the per-file
+disposition is in the per-pass synthesis (Pass A / B / C), not in the
+master plan body. This is appropriate — the master plan composes
+pass-level findings.
+
+| Site | Item | Explication | Pros | Cons | Challenge | Verdict |
+|---|---|---|---|---|---|---|
+| `MASTER-PLAN.md:27-32` | five-bucket ledger | every file contested | enumerated | per-file verdicts in pass syntheses, not master plan | appropriate composition | KEEP |
+
+### §11.4 — Idiomatic gestalt approaches
+
+`MASTER-PLAN.md:13-19` claims "the convergent pivot — Lock 1 (tape
+dead), Lock 13 (no god directories), and Lock 14 (full grammar
+generalisation) retire as one architectural movement". This is gestalt
+— three locks retire through one substrate (template-emit +
+direct-projection + Emitter coarsening), not three separate patches.
+
+Per HARDENING.md §Lane 9 ("Rust-idiomatic; sonic-rs / lightning-css /
+simdjson cohesion the standard"):
+
+| Cohesion exemplar | Crates | Workspace shape | Master plan posture |
+|---|---:|---|---|
+| sonic-rs | 1 | `src/{parser, value, serde, util, lazyvalue, ...}` | bbnf has 24 (under Amendment 01); 33 in master plan body |
+| lightning-css | 1 | `src/{rules, properties, selector, declaration, traits, ...}` | bbnf has 24 |
+| simdjson | 1 (single repo) | `{dom, ondemand, generic, ...}` | bbnf has 24 |
+
+The 24-member shape (under Amendment 01) is *farther* from one-crate cohesion than sonic-rs etc., but workspace decomposition is mandated by Lock 13 ("4-10 children at the next level; uniform sub-API"). The 24-member shape honours Lock 13's per-directory cohesion at the workspace level — every member names one concern; siblings are peer partitions; sub-APIs uniform.
+
+The 33-member shape (master plan body, pre-Amendment-01) was *overfit* — per Amendment 01 §"Premise", the 9 per-grammar declaration crates are escape-valve overfitting. 33 → 24 brings the workspace closer to sonic-rs cohesion *while honouring* Lock 13.
+
+| Site | Item | Explication | Pros | Cons | Challenge | Verdict |
+|---|---|---|---|---|---|---|
+| `MASTER-PLAN.md:50-89` | 33 → 24 workspace shape | sonic-rs-class cohesion | pre-Amendment overfit | Amendment 01 retracts | already in Lane 5 surgery | REINVENT |
+
+(Already in Lane 5 punch list.)
+
+### §11.5 — Architectural transpositions
+
+`MASTER-PLAN.md:13` claims "architectural transposition required, not
+patch". The pivot at tranche E (Lock 1 + Lock 13 + Lock 14 retire as
+one) is a transposition; the Emitter trait collapse (30 → 8-10 methods)
+at tranche D is a transposition; the path-crate triplet (Lock 7) at
+tranches A + C is a transposition; the sister-crate path-deps + publish
+sequence (Lock 11) at tranches A + I is a transposition.
+
+Six transpositions enumerated (Pass A's Proposals 1-6 per HARDENING-PASS-A §11.5; Pass B's per-grammar declaration crate proliferation per HARDENING-PASS-B §11.5 retracted by Amendment 01; Pass C's bbnf-language-server consolidation per HARDENING-PASS-C §11.5).
+
+**Honoured.**
+
+| Site | Item | Explication | Pros | Cons | Challenge | Verdict |
+|---|---|---|---|---|---|---|
+| `MASTER-PLAN.md:13-17` | architectural-transposition framing | pivot at tranche E | gestalt | substrate-name re-anchor under Amendment 01 | retraction is naming, not substance | KEEP |
+
+### §11.6 — Greenfield-discipline summary
+
+| Sub-lane | Substrate | Verdict | Surgery |
+|---|---|---|---|
+| §11.1.1 per-grammar declaration crate proliferation | 9-crate footprint | REINVENT (Lane 5 punch list) | retract per Amendment 01 |
+| §11.1.2 specialised/ cohort module | hand-written extension | REINVENT (Lane 3 punch 51) | host-fn composition |
+| §11.1.3 OR-disposition language | docs/restart/ ambiguity | REINVENT (Lane 8 punch 69) | adjudicate per Lock 13 |
+| §11.1.4 pub use glob re-exports | aggregator footprint | REINVENT (Lane 3 punch 53) | explicit re-exports |
+| §11.2.1 Box::leak retiral silent | grammar lifetime escape | REINVENT (punch 74) | name in tranche A.W4 |
+| §11.2.2 wildcard @debug retiral silent | host fn defensive | REINVENT (punch 75) | name in tranche C.W6 |
+| §11.2.3 defensive fallback retiral silent | lower simple_kinds | REINVENT (punch 76) | name in tranche C.W6 |
+| §11.3 no legacy uncontested | five-bucket ledger | KEEP | n/a |
+| §11.4 idiomatic gestalt | 24-member workspace | REINVENT (Lane 5 punch list) | re-anchor per Amendment 01 |
+| §11.5 architectural transpositions | six transpositions enumerated | KEEP | n/a |
+
+**Lane 9 verdict: partial. KEEP=2 (§11.3 + §11.5 honoured),
+REINVENT=8 (every quick-solution surface re-anchors per cited
+sub-lane), DISCARD=0.** All eight REINVENT surgeries cross-reference to
+prior-lane punch-list entries; Lane 9 produces no net-new punch-list
+items beyond cross-references plus the three Pass-A-inherited
+workaround retirements (74-76).
 
 ---
 

@@ -25,17 +25,17 @@ Sister Stage-2 reports landed previously: PASS-A (commit `6187ed1e`) and PASS-B 
 
 | Lane | Stage-2 verdict | Notes |
 |---|---|---|
-| 2A Confirmation-Drift | PARTIAL | 21 CONFIRM + 9 STRENGTHEN + 3 WEAKEN + 2 REVERSE-soft across 35 audited Stage-1 verdicts; 4 master-plan items unsurfaced (specialised-cohort host-fn 14-variant decomposition, Tranche-A.W3 IR-side-only scrub framing, the §3.3 ordering's archive-vs-no-members ambiguity, the §13 R20 scope-pivot lock cross-reference) |
+| 2A Confirmation-Drift | PARTIAL | 57 CONFIRM + 2 STRENGTHEN + 1 WEAKEN + 1 REVERSE-soft across 61 audited Stage-1 verdicts; 4 master-plan items unsurfaced (specialised-cohort host-fn 14-variant decomposition, Tranche-A.W3 IR-side-only scrub framing, the §3.3 ordering's archive-vs-no-members ambiguity, the §13 R20 scope-pivot lock cross-reference) |
 | 2B Discipline Lapse | HONOURED with two-row PARTIAL | Per-row Pro/Con/Explication/Challenge tables present across all nine Stage-1 lanes; KEEP/REINVENT/DISCARD verdict vocabulary used throughout; discipline variance between initial dispatch (§3-§7) and continuation (§8-§13) is real but small — initial dispatch's Lane 1 carries denser steelman than continuation's Lane 9 (cross-references prior items rather than steelman freshly) |
 | 2C Steelman | SURVIVES with three WEAKENED | 24-member workspace count survives steelman; tranche allocation A-J with 53 waves survives; commit-chain Option 3 survives. Three claims weaken: convergent-pivot-at-E (Lock 1+13+14 retire as one) admits a staggered three-tranche alternative the synthesizer did not consider; bbnf-host-prims as a Rust crate weakens against extended-BBNF-directives-only; the pivot's "OpenFrame retires by mechanism" claim weakens against per-grammar staged retiral |
-| 2D Verdict Imbalance | BALANCED-with-anomalies | Aggregate 38% KEEP / 56% REINVENT / 6% DISCARD across 113 master-plan-specific items lies in the under-ratifying band (40% threshold). The 56% REINVENT signals the Amendment-01 reconciliation overhead (28 sites of body-vs-amendment drift); ABSENT amendment-rec the underlying KEEP fraction is healthy 60-65%. Lane 7 (KEEP=0) genuinely over-rejects per Stage-2 steelman of two friction surfaces. Lane 1 KEEP fraction 36% is appropriate given Amendment-01-driven Lock-14 + Lock-6 + Lock-13 reanchorings. |
+| 2D Verdict Imbalance | BALANCED-with-anomalies | Aggregate 35% KEEP / 58% REINVENT / 7% DISCARD across 113 master-plan-specific items lies in the under-ratifying band (40% threshold). The 58% REINVENT signals the Amendment-01 reconciliation overhead (28 sites of body-vs-amendment drift); ABSENT amendment-rec the underlying KEEP fraction is healthy 62-65%. Lane 7 (KEEP=0) survives Stage-2 steelman of all six friction surfaces — genuine REINVENT. Lane 1 KEEP fraction 64% is appropriate. |
 | 2E Recommendation Quality | STRENGTHEN | 76 punch-list items. ~70% are concrete verbatim re-anchorings (items 24-49 are mass-mechanical Amendment-01 site rewrites); ~20% are well-scoped paragraph-level surgeries; ~10% are too vague or too aggressive in scope (items 7, 8, 9, 17, 22, 50, 67-73 cluster around mid-tranche SOTA gates and carry-receiver triples where the fix is sketched rather than spelled). §12.G "cumulative reconciliation" table tabulates 161 cumulative edits but does NOT deduplicate against per-pass punch lists — this is the largest Stage-1 fault Stage-2 surfaces in this lane. |
 
 **Final Stage-2 decision: STAGE-1 RATIFIED WITH AMENDMENTS REQUIRED.**
 
-Stage-1 MASTER-PLAN's substantive shape holds. Its 76-item punch list lands as the V2 re-issue's working surface; the Amendment-01 reconciliation cohort (items 23-49) is the most extensive concrete-amendment surface in the suite and survives Stage-2 verification line-by-line. The Lane 1 lock-honoured table reanchorings are concrete; the Lane 4 mid-tranche SOTA gate additions for tranches F/G/H are correct in direction; the Lane 7 friction-surface enumeration covers the six mandatory surfaces; the Lane 8 carry-deferral triples for `bbnf-cli`, `bbnf-py`, `docs/restart/`, archive deletion, and Stage 2 hardening receiver are correctly identified.
+Stage-1 MASTER-PLAN's substantive shape holds. Its 76-item punch list lands as the V2 re-issue's working surface; the Amendment-01 reconciliation cohort (items 23-49) is the most extensive concrete-amendment surface in the suite and survives Stage-2 verification line-by-line. The Lane 1 lock-honoured table reanchorings are concrete; the Lane 4 mid-tranche SOTA gate additions for tranches F/G/H are correct in direction; the Lane 7 friction-surface enumeration covers the six mandatory surfaces and each REINVENT survives Stage-2 steelman; the Lane 8 carry-deferral triples for `bbnf-cli`, `bbnf-py`, `docs/restart/`, archive deletion, and Stage 2 hardening receiver are correctly identified.
 
-The Stage-2 amendments fold into the master-plan-V2 punch list as items #77-#88: (i) deduplicate §12.G cumulative table against per-pass punch lists (Lane 2E redress); (ii) surface the four unsurfaced master-plan items (Lane 2A redress); (iii) tighten the three weakened Stage-1 KEEPs (Lane 2C redress for convergent pivot, bbnf-host-prims home, OpenFrame mechanism claim); (iv) acknowledge the verdict-imbalance signal at Lane 7 (KEEP=0) by checking each REINVENT against alternative friction-discharge mechanisms (e.g., metadata schema documentation may discharge §9.6 onboarding without a separate cookbook).
+The Stage-2 amendments fold into the master-plan-V2 punch list as items #77-#88: (i) deduplicate §12.G cumulative table against per-pass punch lists (Lane 2E redress, item #77); (ii) surface the four unsurfaced master-plan items (Lane 2A redress, items #78, #81-#84); (iii) tighten the convergent-pivot framing toward staggered partial closures (Lane 2C redress, item #85); (iv) refine specific surgery wave-assignments and clarify H carry-FROM (items #79, #87, #88); (v) acknowledge the friction-onboarding REVERSE-soft (item #80 trims sub-friction-cookbook count from 5 to 3 textual artefacts); (vi) sharpen Stage-1 surgery 73's closing posture (item #86).
 
 Stage-1 MASTER-PLAN does NOT require re-audit — its substantive findings survive Stage-2 scrutiny robustly. The faults are amenable to a single Stage-2 amendment agent's pass; the V2 re-issue agent receives both Stage-1 and Stage-2 punch lists alongside the master plan and Amendment 01. The 14 locks are settled; the precepts are settled; Amendment 01 is settled. Stage-2 verifies; Stage-2 does NOT relitigate.
 
@@ -143,7 +143,7 @@ The walk surfaces four master-plan items present in MASTER-PLAN.md that Stage-1 
 | Lane 8 Carry & Deferral | 7 | 7 | 0 | 0 | 0 | confirmation-drift HONOURED |
 | Lane 9 Greenfield Discipline | 8 | 8 | 0 | 0 | 0 | confirmation-drift HONOURED |
 | Items Stage-1 silenced | 4 unsurfaced | — | — | — | — | confirmation-drift FAULT — surface as amendment items #81-#84 |
-| Aggregate | 65 (35 distinct + 30 cross-refs) | 57 | 2 | 1 | 1 | **PARTIAL** |
+| Aggregate | 61 + 4 unsurfaced = 65 | 57 | 2 | 1 | 1 | **PARTIAL** |
 
 **Lane 2A verdict: PARTIAL CONFIRMATION-DRIFT.** Stage-1 honoured the discipline across nine lanes with mechanical thoroughness on Lock 14 + Amendment 01 reconciliation (Lane 5 + Lane 1 Lock 14); the four unsurfaced items + two STRENGTHEN/WEAKEN/REVERSE-soft items are the surface. Stage-2 amendments #79-#84 below address the drift faults; the underlying audit holds.
 
@@ -317,7 +317,29 @@ The locks share E.W6 as the *final closure point* but they each have *partial cl
 
 However, Stage-2 surfaces a sub-question (cross-ref Lane 2A §3.3 item 4): are the 8 primitives sufficient to compose CSS L4's 14-variant OpenFrame? If not, `bbnf-host-prims` needs more primitives, OR the per-grammar `@host` body carries bespoke Rust beyond primitive composition. Stage-2 amendment item #84 covers this.
 
-### §5.6 — Per-decision steelman table
+### §5.6 — Decision 6: Docs re-do six-wave plan (auxiliary architectural decision)
+
+**Stage-1 verdict**: KEEP (per `HARDENING-MASTER-PLAN.md:75` — "the docs re-do plan" survives the lanes; `MASTER-PLAN.md:1187` distributes docs work into A.W3 + A.W6 + C.W3 + C.W4 + C.W7 + J.W4).
+
+**Stage-1 challenge**: Stage-1 surfaces individual fault items (e.g., Lane 8 OR-disposition for `docs/restart/`) but does not interrogate the *six-wave allocation* itself. Challenge strength: 2 (paraphrase ratification of Pass C's plan).
+
+**Stage-2 steelman alternatives**:
+
+- **Alternative A: Three-wave plan**. Could the docs work compress into A.W3 (relocate) + C.W7 (rewrite + new spec) + J.W4 (final synthesis)? Six waves seem high for ~10 KB of docs.
+
+- **Alternative B: Tranche-distributed approach**. Could each tranche author its own per-tranche docs (e.g., Tranche F authors `docs/optimizer/`, Tranche G authors `docs/howto/cookbook/path-macro.md`, Tranche H authors `docs/spec/codegen.md` updates for TS+WASM)? This ensures docs land alongside the substrate they describe.
+
+**Stage-2 evaluation**:
+
+- *Alternative A defeats*: three-wave compression fails because the docs corpus has different concerns (relocation = mechanical = A.W3; rewrite = semantic = C.W3-W4; new specs = synthesis = C.W7; new cookbooks = consumer-aware = G.W2-W3). Each concern needs its own wave. The six-wave plan honours `feedback_doc-style` and `feedback_doc-alongside-code`.
+
+- *Alternative B defeats*: tranche-distributed approach is the actual HARDENING-MASTER-PLAN.md recommendation. Stage-1 surgery 60 (G.W3 path-macro cookbook), surgery 61 (G.W2 lifetime cookbook), surgery 62 (C.W2 layout-lowering page), surgery 63 (F.W3 pratt-simd cookbook), surgery 64 (C.W4 migration page extends), surgery 65-66 (E.W6 host-fn-composition + C.W3 test-fixtures cookbooks per Stage-2 #88) ARE the tranche-distributed approach. The master plan §8.3 "Sequencing per tranche" already names "tranche A.W3 (mechanical) + A.W6 + C.W3 + C.W4 + C.W7 + J.W4" but each cookbook lands at the consuming wave. Honoured.
+
+- **Steelman verdict**: SURVIVES. The six-wave docs allocation maps to distinct concerns (relocation, rewrite, new spec, new cookbook, new migration, final synthesis); tranche-distributed cookbook landings layer on top per Stage-1 surgery 60-66. Honoured.
+
+**Stage-1 verdict survives steelman.**
+
+### §5.7 — Per-decision steelman table
 
 | Decision | Stage-1 verdict | Stage-1 challenge strength (1-5) | Stage-2 steelman | Survives steelman? | Stage-2 verdict |
 |---|---|---:|---|---|---|
@@ -326,8 +348,9 @@ However, Stage-2 surfaces a sub-question (cross-ref Lane 2A §3.3 item 4): are t
 | Convergent pivot at E | KEEP | 2 | staggered closures across A.W3 + A.W4 + C.W6 + E.W6 — partial weakness in framing | yes (with sharpening) | WEAKENED |
 | Commit-chain Option 3 | KEEP (paraphrase) | 3 | Options 1 (squash all) + 2 (squash per tranche) + 4 (per-tranche branches) — all defeat | yes | SURVIVES (sharpened) |
 | bbnf-host-prims as host-fn home | KEEP | 3 | directives-only no-crate alternative — defeats; Rust primitives need Rust home | yes | SURVIVES |
+| Docs re-do six-wave plan | KEEP (paraphrase) | 2 | three-wave (compress) vs tranche-distributed (already implemented) — both defeat | yes | SURVIVES |
 
-### §5.7 — Lane 2C verdict
+### §5.8 — Lane 2C verdict
 
 **Lane 2C verdict: SURVIVES with two sharpenings (one WEAKENED, one strengthened paraphrase).**
 
@@ -428,7 +451,22 @@ Stage-1 verdict for each: REINVENT (each requires a cookbook + verbatim error co
 
 **Stage-2 verdict**: BALANCED-with-anomalies. The literal aggregate 35% is below the 40% under-ratifying threshold, but the under-ratification is structurally driven (Amendment 01 reconciliation, methodological orphan-claim accounting, Stage-2-emergent receivers). The audit discipline is not over-rejecting; the rejection cluster is concentrated in Amendment-01-mandatory sites.
 
-### §6.5 — Lane 2D verdict
+### §6.5 — Cross-target verdict-imbalance comparison (sister Stage-2 reports)
+
+Per orchestrator brief: "If Stage 2 against PASS-A/B/C complete before you, their Stage-2 punch lists become useful comparison points for verdict-imbalance Lane 2D." The three sister Stage-2 reports landed prior:
+
+| Report | Stage-2 verdict | KEEP fraction (aggregate) | Lane 2D verdict |
+|---|---|---:|---|
+| HARDENING-STAGE-2-PASS-A | PARTIAL (CONFIRM 12/STRENGTHEN 7/WEAKEN 3) | 58% | BALANCED |
+| HARDENING-STAGE-2-PASS-B | RATIFIED with minor amendments | ~60% (estimated) | BALANCED |
+| HARDENING-STAGE-2-PASS-C | RATIFIED-pending-amendment | mixed (1 honoured-mostly / 6 partial / 1 violated / 2 n/a) | BALANCED (Lane 9 honoured-mostly justified by periphery scope) |
+| **HARDENING-STAGE-2-MASTER-PLAN** (this) | RATIFIED with amendments | 35% literal / 62-65% adjusted | BALANCED-with-anomalies |
+
+The MASTER-PLAN target's 35% literal aggregate KEEP is the lowest of the four — but uniquely this is driven by Amendment-01 mass reconciliation (28 sites of REINVENT). Sister Stage-2 reports verify their target Stage-1 reports also carry Amendment-01 reconciliation cohorts (PASS-A 10 sites; PASS-B 18 sites; PASS-C minimal — periphery scope). The MASTER-PLAN aggregates all 28 master-plan-body sites + 23 cross-pass reanchorings + Lane-7 friction + Lane-8 carry redress. Per cross-comparison: MASTER-PLAN's aggregate REINVENT density is 1.5-2× higher than sister reports because its scope INCLUDES sister-pass-inherited reanchorings PLUS master-plan-body sites PLUS Stage-2-emergent receivers (Stage-2 hardening receiver, V2 reissue gate). The under-ratifying signal is real but justified.
+
+**Cross-target signal**: no over-ratification across any of the four targets; no single Stage-1 over-rejected; the four Stage-1 audits + four Stage-2 verifications uniformly hold. The MASTER-PLAN is the apex: its 76 entries are the V2 surface; its under-ratifying signal is structural; its convergent-pivot WEAKENED is the only steelman finding that touches substantive framing (versus mechanical Amendment-01 reanchoring).
+
+### §6.6 — Lane 2D verdict
 
 **Lane 2D verdict: BALANCED-with-anomalies.**
 
@@ -605,6 +643,73 @@ Approximate deduplicated physical-site count: ~75-80 distinct physical-site surg
 The 9 minor refinements (items 7-9, 15, 16, 17, 21, 24, 53) are additive sharpenings that the V2 re-issue agent absorbs as part of its single pass; they do not require dedicated amendment-agent dispatch. The 2 substantive amendments (#79 H carry-FROM extends to F; #87 Tranche E 8-wave allocation specifies template-vs-consumer waves) become Stage-2 punch-list items.
 
 ---
+
+## §8 — Stage-2 Punch List
+
+Ordered amendments to Stage-1 verdicts and recommendations. Owner: V2 re-issue agent throughout (a single agent applies the punch list alongside Stage-1's 76 entries). Each amendment cross-references its source Stage-2 lane.
+
+### §8.A — Items #77-#80 — Lane 2E + Lane 2A redress
+
+| # | Target | Stage-1 verdict to amend | Stage-2 amended verdict | Reason | Lane |
+|---:|---|---|---|---|---|
+| 77 | `HARDENING-MASTER-PLAN.md:2155-2161` (§12.G cumulative reconciliation table) | "Cumulative 161 entries" | Reformat as per-physical-site cross-reference table; deduplicate against per-pass entries; specify ~75-80 distinct physical-site surgeries with each report's surgery citation as a column | The §12.G is a TOTAL of report-internal punch-list lengths, not a CONSOLIDATION against underlying physical sites; 161 overstates work by ~2× | 2E |
+| 78 | `HARDENING-MASTER-PLAN.md` (introduce new §3.4 cell or extend §3.1) | (no Stage-1 row for this) | Add row for the §3.3 archive-vs-no-members ambiguity: master plan §3.3 line 173 says `archive/` is NOT a workspace member but does NOT specify `[workspace] exclude`; surgery: master plan §3.3 commit explicit `exclude = ["archive/*"]` if `archive/{ser, gorgeous}` carry their own Cargo.toml; otherwise commit explicit assertion that they don't | Lane 2A surfaces unsurfaced master-plan item | 2A |
+| 79 | `HARDENING-MASTER-PLAN.md:773` (surgery 22) | "H carries FROM D + E only (G dependency is wrong)" | Amend: H carries FROM D + E + F (F's optimiser pipeline lands cost-model output-piping that bbnf-passes consumes; H's TS+WASM emit consumes through bbnf-passes the optimised IR, so F is in H's transitive carry chain even though G's slice-borrow API surface is NOT) | Lane 2A STRENGTHEN: master plan §5.2 line 791 names "post-tranche-D Emitter trait collapse" as the consumed substrate; F's optimiser also flows through bbnf-passes which H reads | 2A |
+| 80 | `HARDENING-MASTER-PLAN.md:1607-1612` (surgery 65-66 + Lane 7 §9.6) | "Five sub-friction surfaces require 2 cookbooks (host-fn-composition + test-fixtures)" | Refine: 5 sub-frictions discharge through (1) `docs/spec/codegen.md` for metadata schema + source-path conventions; (2) `docs/howto/cookbook/host-fn-composition.md` for host-fn declaration; (3) `docs/howto/cookbook/test-fixtures.md` for fixture conventions; (4) `cargo xtask regen` CLI output for diagnostic — total 3 textual artefacts + CLI output | Lane 2A REVERSE-soft: metadata schema lives in spec doc (already in §8.2.5), not separate cookbook | 2A |
+
+### §8.B — Items #81-#84 — Lane 2A unsurfaced item redress
+
+| # | Target | Stage-1 verdict to amend | Stage-2 amended verdict | Reason | Lane |
+|---:|---|---|---|---|---|
+| 81 | `MASTER-PLAN.md:173` (`archive/` is NOT a workspace member) | (silent) | Master plan §3.3 commits explicit `[workspace] exclude = ["archive/**"]` declaration if archived crates retain Cargo.toml for build-ability of the historical state; otherwise explicit assertion that archived crates carry no Cargo.toml | Lane 2A unsurfaced item: workspace-member-vs-excluded ambiguity | 2A |
+| 82 | `MASTER-PLAN.md:777` (Tranche A.W3 IR Lock-14 retirement framing) | (silent on scope) | Tranche A.W3 surgery clarifies: A.W3 retires the 7 Pass-A IR-side sites (per Pass A §7 W1) — IR-side scrub. The deeper Lock-14 closure (template-emit zero-grammar-code; the Pass B 18-site reanchor) lands at E.W6 with full-stack template-emit. A.W3 is NOT Pass-B-scope retiral. | Lane 2A unsurfaced item: scope of A.W3 framed unclearly | 2A |
+| 83 | `MASTER-PLAN.md:1382` (R20 scope-pivot risk) | (silent on cross-references) | §13 R20 mitigation extends to cross-reference `tranche/SPEC.md` §Scope Reveal AND memory item `feedback_new-tranche-new-doc` AND `2026-04-30 - Scope Pivots Open A New Letter` lesson; specify absorption ceiling = 2 paths + unchanged hard gate | Lane 2A unsurfaced item: R20 lacks operational cross-references | 2A |
+| 84 | `MASTER-PLAN.md:785, 1167` (specialised cohort + 14-variant OpenFrame) | Stage-1 surgery 51 reanchors language but doesn't gate feasibility | Tranche E close gate adds CSS L4 14-variant OpenFrame composability proof: post-template-emit, all 14 variants either (a) compose from `bbnf-host-prims` 8 primitives expressed in metadata, OR (b) compose from `@host` directive bodies in `grammar/css-l4/css-l4.bbnf` referencing primitives. If neither, surface a Tranche-E.W4 design-block triumvirate: extend `bbnf-host-prims` primitive count, OR ratify per-grammar `@host` body bespoke Rust as Lock-14 escape valve. Cross-reference Pass B Agent B.4 §Q2 / hardening-PASS-B fault C.3 | Lane 2A unsurfaced item: feasibility silence | 2A |
+
+### §8.C — Items #85-#86 — Lane 2C steelman redress
+
+| # | Target | Stage-1 verdict to amend | Stage-2 amended verdict | Reason | Lane |
+|---:|---|---|---|---|---|
+| 85 | `HARDENING-MASTER-PLAN.md:2003` (§11.5 architectural-transposition row 1 Pro/Con/Challenge) | "retraction is naming, not substance" | Pro column extends to: "retiral movement spans tranches A.W3 + A.W4 + C.W6 + E.W6; the *closure* converges at E.W6 even if partial closures stagger. Lock 1 partial closes at A.W4 (narrative scrub) + full closes at E.W6 (direct-projection emit retires OpenFrame); Lock 13 partial closes at A.W4 + full closes at C.W6 (final SPLITs); Lock 14 partial closes at A.W3 (7 IR sites) + full closes at E.W6 (template-emit). The 'as one' framing means 'reach final closure at E.W6', not 'retire only at E'." | Lane 2C WEAKENED: convergent pivot framing understates staggered partial closures | 2C |
+| 86 | `HARDENING-MASTER-PLAN.md:2138` (surgery 73 closing posture) | "§15 closing posture extends to name Stage 2 hardening invocation" | Stage-1 surgery is correct; Stage-2 strengthens by suggesting §15 closing posture additionally enumerate the three rejected Options (1, 2, 4) with one-sentence-each defeat — making Stage-1's challenge column thicker and self-documenting against future re-litigation | Lane 2C SURVIVES (sharpened) | 2C |
+
+### §8.D — Items #87-#88 — Lane 2E surgery refinement
+
+| # | Target | Stage-1 verdict to amend | Stage-2 amended verdict | Reason | Lane |
+|---:|---|---|---|---|---|
+| 87 | `HARDENING-MASTER-PLAN.md:2065` (surgery 20 Tranche E 8-wave breakdown) | "enumerate substrate-consumer sequencing" (vague) | Tighten: E.W1 lands `bbnf-host-prims` skeleton (the 8 primitives + composition table); E.W2 lands `bbnf-runtime-template` skeleton (template emitter shell); E.W3 lands per-grammar metadata composition declarations + `@host` directive parser; E.W4 lands direct-projection emit substrate (one grammar — JSON — round-trips); E.W5 extends template-emit to specialised cohort (bbnf, css-l4, sheets); E.W6 extends to trivial cohort (bnf, csv, ebnf, css-pretty, math); E.W7 retires `crates/core/src/runtime/<grammar>/` hand-written modules; E.W8 close gate fires (future-grammar onboarding test, samply gate, grammar-agnosticism gate, samply <1% checkpoint share) | Lane 2E STRENGTHEN: Stage-1 surgery 20 was vague at paragraph level | 2E |
+| 88 | `HARDENING-MASTER-PLAN.md:2125-2126` (surgery 65-66 wave assignment vagueness) | "lands at C.W3 or E.W6" | Specify: `host-fn-composition.md` lands at E.W6 (co-locates with `bbnf-host-prims` substrate completion); `test-fixtures.md` lands at C.W3 (co-locates with `bbnf-test-fixtures` workspace member creation per master plan §3.1 row 14) | Lane 2E STRENGTHEN: Stage-1 surgery 65-66 OR-disposition mirrors the quick-solution language Stage-1 itself catches in Lane 9 | 2E |
+
+### §8.E — Stage-2 punch-list summary
+
+The 12 Stage-2 amendments (#77-#88) integrate with Stage-1's 76-entry punch list. Categorised:
+
+| Lane source | Items | Substantive impact |
+|---|---|---|
+| 2A Confirmation-Drift | #78, #79, #80, #81, #82, #83, #84 (seven) | Surface 4 unsurfaced master-plan items + STRENGTHEN H carry-FROM + REVERSE-soft sub-friction-cookbook count |
+| 2B Discipline Lapse | (no items; HONOURED with two-row PARTIAL absorbed in V2 reformatting) | n/a |
+| 2C Steelman | #85, #86 (two) | Sharpen convergent-pivot framing + closing-posture enumerate-rejected-options |
+| 2D Verdict Imbalance | (no items; BALANCED-with-anomalies; structural explanation suffices) | n/a |
+| 2E Recommendation Quality | #77, #87, #88 (three) | Reformat §12.G cumulative table + tighten Tranche-E wave breakdown + tighten cookbook wave assignments |
+
+**Stage-2 punch-list aggregate**: 12 amendments. The V2 re-issue agent absorbs them alongside Stage-1's 76 entries to produce MASTER-PLAN-V2.md. Of the 12, only 7 are user-visible amendments to the punch list itself (the rest are re-grouping of existing surgeries or extensions to existing rows).
+
+---
+
+## §9 — Final readiness
+
+> **Stage-2 Decision: STAGE-1 RATIFIED with amendments required.**
+>
+> Stage-1 MASTER-PLAN's audit-quality holds. The 76-item punch list is the V2 re-issue agent's working surface; the Amendment-01 mass reconciliation cohort (items 23-49) survives Stage-2 verification line-by-line; the per-tranche-wave SOTA gates for F+G+H mid-tranche are correctly demanded; the friction-surface enumeration is exhaustive against the six mandatory surfaces; the carry-deferral triples for `bbnf-cli`, `bbnf-py`, `docs/restart/`, archive deletion, and Stage-2 hardening receiver are correctly identified; the Pass-A-inherited workaround retirals (Box::leak, wildcard @debug, defensive fallback) are correctly named with tranche-wave receivers. The substantive shape — 24-member workspace, 10-tranche A-J allocation, convergent-pivot at E (with Stage-2 framing sharpening), commit-chain Option 3, bbnf-host-prims as host-fn home — survives Lane 2C steelman against the strongest counter-arguments.
+>
+> Where Stage-1 falls short is mechanical, not structural: §12.G "cumulative reconciliation" tabulates 161 cumulative edits without deduplicating against per-pass punch lists (Stage-2 amendment #77 reformats); 4 master-plan items go unsurfaced for per-row evaluation (items #81-#84 surface them); Lane 9's cross-reference-heavy Pro/Con/Challenge density is honest discipline acknowledgment rather than fault but Lane 2B logs it; the convergent-pivot Lane 2C verdict WEAKENS against staggered-closure steelman (item #85 sharpens the framing); H carry-FROM extends from D+E to D+E+F (item #79). The Lane 2D under-ratifying signal is structurally explainable (Amendment-01 reconciliation drives 28 of 65 REINVENTs; methodological orphan-claim accounting drives 8; Lane 7 friction surfaces genuinely require artefacts) — the audit is not over-rejecting; the rejection cluster is concentrated in Amendment-01-mandatory sites.
+>
+> The 12 Stage-2 amendments (#77-#88) integrate with Stage-1's 76-entry punch list. Cumulatively, the V2 re-issue agent receives 88 punch-list items (76 from Stage-1 MASTER-PLAN + 12 from this Stage-2) plus 25 from sister Stage-1 PASS-A + 30 from sister Stage-1 PASS-B + 30 from sister Stage-1 PASS-C + adjusted Stage-2-PASS-A + Stage-2-PASS-B + Stage-2-PASS-C amendments. After deduplication against underlying physical sites (Stage-2 amendment #77's reformatted §12.G table), the actual physical-site surgery count is approximately 90-110 distinct surgeries. The 161 + 12 cumulative figure overstates the V2 work by approximately 1.5-2×.
+>
+> Stage-1 MASTER-PLAN does NOT require re-audit. Its substantive findings survive Stage-2 scrutiny robustly. The 14 locks remain settled; the precepts remain settled; Amendment 01 remains authoritative. Stage-2 verifies; Stage-2 does not relitigate. The greenfield mandate carries through; the convergent-pivot identity (with Stage-2 sharpening of "as one closure point" rather than "in one tranche") is preserved; the workspace shape (24 members) is calibrated against sonic-rs / lightning-css / simdjson cohesion exemplars; the tranche allocation (A-J; 53 waves; 7-9 month calendar) survives both 8-tranche and 12-tranche steelmen; the commit-chain Option 3 wins against Options 1, 2, 4 on attribution-preservation + lessons-preservation + operational-simplicity grounds.
+>
+> Hereupon the V2 re-issue agent applies the cumulative punch list (Stage-1's 76 + Stage-2's 12 + sister Stage-1 reports' 85 + sister Stage-2 reports' amendments) to produce `MASTER-PLAN-V2.md`. Amendment 01 absorbs into the V2 body wholesale; the 28 retracted-substrate sites reanchor; the future-grammar onboarding test crystallises as a Tranche-E close gate; the Lock-14 verification command extends to 16 generic crates including `bbnf-host-prims`; the per-tranche perf gates land at F.W6 + G.W5 + H.W4 (mid-tranche) plus J close (terminal); the friction surfaces gate at C.W2 + C.W4 + E.W6 + F.W3 + G.W2 + G.W3; the carry triples (bbnf-cli + bbnf-py + archive disposition) name receivers + blockers + gates; the Pass-A-inherited workaround retirals land at A.W4 + C.W6 (×2). With V2 + Amendment 01 committed and the four Stage-2 reports landed, tranche drafting opens — the 10 tranche-drafting agents read V2 + Amendment 01 + their tranche-specific stubs at `restart/tranches/{X}/{X}.md`; the per-tranche execution agents draft full waves under each stub; tranche execution is out of suite scope. The plan from here is the V2 re-issue agent's; the substrate is settled; Stage 1 + Stage 2 hardening have closed; the greenfield mandate remains the disposition.
+
 
 
 

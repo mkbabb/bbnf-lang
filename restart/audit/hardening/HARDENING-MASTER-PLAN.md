@@ -2028,11 +2028,154 @@ workaround retirements (74-76).
 
 ## §12 — Punch list
 
-Ordered surgical edits for V2. ~50-70 entries forthcoming in Phase 6.
-Per entry: target file:line, verbatim edit, source verdict (REINVENT /
-DISCARD), owner, scope, lanes producing the surgery.
+Ordered surgical edits for the V2 re-issue. Per entry: item number,
+target file:line, verbatim edit (or surgery description), source
+verdict (REINVENT / DISCARD), owner, estimated surgery scope, lane(s)
+producing.
 
-(Punch list forthcoming in Phase 6.)
+The list draws from Lanes 1-9; entries cross-reference both the
+master-plan body sites that re-anchor and the synthesizer's adjacent
+audit artefacts (Pass A / B / C reports, Amendment 01). Owner is
+"V2 re-issue agent" throughout — a single agent applies the punch
+list to produce `MASTER-PLAN-V2.md`.
+
+### §12.A — Lock-Adherence reconciliation (items 1-22)
+
+| # | Target | Surgery | Verdict | Scope | Lane |
+|---:|---|---|---|---|---|
+| 1 | `MASTER-PLAN.md:1283` | Extend Lock-1 verification command to grep also `crates/bbnf-runtime/src/grammars/`, `crates/bbnf-runtime-template/src/`, `crates/bbnf-host-prims/src/` per Amendment 01 substrate | REINVENT | single-line | 1 |
+| 2 | `MASTER-PLAN.md:1284` | Extend Lock-2 verification to: "trait LayoutSink in bbnf-ir/src/registry/sink.rs is greppable; consumer count ≥ 2" | REINVENT | single-line | 1 |
+| 3 | `MASTER-PLAN.md:1285` | Reanchor Lock-3 verification: cookbook entry at `docs/howto/cookbook/path-macro.md` is a tranche-G deliverable, not C.W6; cite tranche G.W3 instead | REINVENT | single-line | 1 |
+| 4 | `MASTER-PLAN.md:1286` | Extend Lock-4 verification with negative claim: "no `crates/bbnf-fused-solver/` workspace member exists; verified by `[workspace] members` enumeration" | REINVENT | single-line | 1 |
+| 5 | `MASTER-PLAN.md:1287` | Extend Lock-5 verification: "post-tranche-H, trait method counts compare three-way (Rust + TS + WASM); pre-tranche-H is two-way" | REINVENT | single-line | 1 |
+| 6 | `MASTER-PLAN.md:1288` | Reanchor Lock-6 verification: regen targets are `crates/bbnf-runtime/src/grammars/<name>/{generated.rs, runtime.rs}` per Amendment 01, not `crates/<grammar>/src/generated.rs` | REINVENT | single-line | 1 |
+| 7 | `MASTER-PLAN.md:1290, 787` | Extend Lock-8 row + tranche F gestalt: F.W6 close gate cites "JSON twitter parse measured before + after Pratt + SIMD auto-detection lands; expected within ±5% of pre-F or improvement; no regression > 5%" | REINVENT | paragraph | 1, 4 |
+| 8 | `MASTER-PLAN.md:1290, 789` | Extend Lock-8 row + tranche G gestalt: G.W5 close gate cites "twitter.json parsed via parse(input), parse_in(input, &bump), parse_owned(input); slice-borrow ≤ sonic-rs's 436 µs (M1 Pro Criterion); arena variant within ±10%; owned variant within +30%" | REINVENT | paragraph | 1, 4 |
+| 9 | `MASTER-PLAN.md:1290, 791` | Extend Lock-8 row + tranche H gestalt: H.W4 close gate cites "TS-emitted JSON parser parses twitter.json; emits typed-tree byte-for-byte equivalent to Rust-emit; WASM-emit equivalent" | REINVENT | paragraph | 1, 4 |
+| 10 | `MASTER-PLAN.md:1291` | Extend Lock-9 verification to also grep `bbnf-parse/src/lib.rs` for the underlying impl, not just the bbnf aggregator re-export | REINVENT | single-line | 1 |
+| 11 | `MASTER-PLAN.md:1056-1093, 1293` | Extend §7.2 prelude commits to include `git submodule add` operations for parse-that and bbnf-regex; Lock-11 verification cites the submodule-add step | REINVENT | paragraph | 1 |
+| 12 | `MASTER-PLAN.md:1295` | Reanchor Lock-13 verification: annotate that `crates/bbnf-runtime/src/grammars/` is exempt per Amendment 01 §"Lock 13 footnote" — the per-grammar subdirectory is permissible because every subdirectory is structurally identical (template-emitted) | REINVENT | single-line | 1 |
+| 13 | `MASTER-PLAN.md:1296` | Strike "creating its declaration crate" step from Lock-14 verification command; future-grammar onboarding test is two-step ceremony per Amendment 01 | DISCARD | single-line | 1, 5 |
+| 14 | `MASTER-PLAN.md:1296` | Extend Lock-14 generic-crate enumeration with `bbnf-host-prims/src/` per Amendment 01 | REINVENT | single-line | 1, 5 |
+| 15 | `MASTER-PLAN.md:1296` | Reformat Lock-14 verification as 16-row per-crate table; each row shows expected verification command output (zero hits) | REINVENT | multi-section | 1, 5 |
+| 16 | `MASTER-PLAN.md:785` | Extend tranche E gestalt: future-grammar onboarding test (yaml.bbnf) gates the tranche E close per Amendment 01 §item 5 | REINVENT | single-line | 1, 5 |
+| 17 | `MASTER-PLAN.md:781, 1289` | Tighten tranche C path-core scope: C.W6 covers `path-core/` only; `path/` proc-macro shell lands in G.W3; `path-ts/` cdylib lands in H.W2 | REINVENT | paragraph | 2 |
+| 18 | `MASTER-PLAN.md:766, 785` | Reanchor tranche E "9 declaration crates" to "9 template-emitted runtime subdirs under `bbnf-runtime/src/grammars/`" + bbnf-host-prims | DISCARD | paragraph | 1, 2, 5 |
+| 19 | `MASTER-PLAN.md:785` | Tranche E gestalt names future-grammar onboarding test as a close gate | REINVENT | paragraph | 1, 2, 5 |
+| 20 | `MASTER-PLAN.md:766, 785` | Tranche E 8-wave breakdown enumerates substrate-consumer sequencing: template arrives W1-W3; consumer exercises W4-W8 with per-grammar tests | REINVENT | paragraph | 2 |
+| 21 | `MASTER-PLAN.md:768, 1230` | Tighten tranche-A.W2 path/ + path-ts/ shell registration: Cargo.toml entry + lib.rs stub citing "tranche G implements" / "tranche H implements"; substantive impl lands in tranche G + H with same-wave consumer test | REINVENT | paragraph | 2 |
+| 22 | `MASTER-PLAN.md:769, 1230-1233` | Reconcile §9.2 dependency-DAG with §5.1 H carry-FROM: H carries FROM D + E only (G dependency is wrong; H's TS+WASM emit doesn't depend on G's slice-borrow API surface) | REINVENT | paragraph | 2 |
+
+### §12.B — Cohesion + amendment-01 reconciliation (items 23-49)
+
+| # | Target | Surgery | Verdict | Scope | Lane |
+|---:|---|---|---|---|---|
+| 23 | `MASTER-PLAN.md:785` | Tranche E (E.W6 close) gate adds samply gate per Pass B hardening surgery: post-direct-projection-emit, JsonStructBuilder::checkpoint share <1% on twitter.json | REINVENT | single-line | 3 |
+| 24 | `MASTER-PLAN.md:79-87, 1306-1319` | Reconcile §3.1 LOC column sums (168 020) with §12.1 baseline (168 750); update §3.1 estimates to CENSUS-exact figures (preferred) or annotate the 730-LOC drift inline | REINVENT | paragraph | 3, 6 |
+| 25 | `MASTER-PLAN.md:13-17` | Strike "per-grammar declaration crates carrying generated parser + template-emitted runtime + host functions"; replace with "metadata-driven grammar onboarding via two declarative surfaces" | REINVENT | paragraph | 3, 5 |
+| 26 | `MASTER-PLAN.md:38` | Reaffirm wording: "9 per-grammar runtime directories that retire for template emission" — wording is correct under Amendment 01 (template-emitted subdirectories under `bbnf-runtime/src/grammars/`); no surgery beyond clarifying the substrate path | REINVENT | single-line | 5 |
+| 27 | `MASTER-PLAN.md:79-87` | Strike rows for `bbnf-meta`, `json`, `css-l4`, `google-sheets`, `bnf`, `csv`, `ebnf`, `css-pretty`, `math` (9 rows); add `bbnf-host-prims` row + `bbnf-test-fixtures` clarification per Amendment 01 §"Corrected workspace shape" | DISCARD | multi-section | 5 |
+| 28 | `MASTER-PLAN.md:93` | Reanchor "9 are per-grammar declaration crates" to "0 per-grammar declaration crates; 9 template-emitted subdirs under `bbnf-runtime/src/grammars/`; 1 `bbnf-host-prims`" | REINVENT | paragraph | 5 |
+| 29 | `MASTER-PLAN.md:99` | Strike reconciliation item 3 ("`bbnf-host` extracted from `bbnf-grammar`") — the host-fn primitive library is `bbnf-host-prims` per Amendment 01; `bbnf-host` (dispatch + registry mechanism) survives | REINVENT | paragraph | 5 |
+| 30 | `MASTER-PLAN.md:111` | Strike entire reconciliation item 9 ("Per-grammar declaration crate names") — moot under Amendment 01 | DISCARD | paragraph | 5 |
+| 31 | `MASTER-PLAN.md:157-167` | Strike 9 per-grammar member entries from `[workspace] members`; add `bbnf-host-prims` entry; total drops from 33 to 24 | DISCARD | multi-section | 5 |
+| 32 | `MASTER-PLAN.md:719` | Reanchor "per-grammar benches live in per-grammar declaration crates" to "per-grammar benches template-emitted from `bbnf-bench/`" | REINVENT | single-line | 5 |
+| 33 | `MASTER-PLAN.md:722-750` | Strike subsection §4.20 "Per-grammar declaration crate skeleton (`crates/<grammar>/`)" entirely; replace with "Per-grammar runtime subdir (`crates/bbnf-runtime/src/grammars/<name>/`)" | DISCARD | multi-section | 5 |
+| 34 | `MASTER-PLAN.md:766` | Reanchor tranche E (line 766) gestalt: "`bbnf-host-prims` + `bbnf-runtime-template` + template-emitted per-grammar runtime subdirs + direct-projection emit + Lock 14 metadata-driven host-fn composition" | REINVENT | paragraph | 5 |
+| 35 | `MASTER-PLAN.md:785` | Reanchor "9 per-grammar declaration crates scaffold" to "9 template-emitted runtime subdirs under `bbnf-runtime/src/grammars/`" | REINVENT | paragraph | 5 |
+| 36 | `MASTER-PLAN.md:876` | Reanchor `[workspace.metadata.bbnf.grammars.bbnf-meta] output_dir` to `crates/bbnf-runtime/src/grammars/bbnf-meta/` | REINVENT | single-line | 5 |
+| 37 | `MASTER-PLAN.md:887` | Reanchor `[workspace.metadata.bbnf.grammars.json] output_dir` to `crates/bbnf-runtime/src/grammars/json/` | REINVENT | single-line | 5 |
+| 38 | `MASTER-PLAN.md:898` | Reanchor `[workspace.metadata.bbnf.grammars.css-l4] output_dir` | REINVENT | single-line | 5 |
+| 39 | `MASTER-PLAN.md:909` | Reanchor `[workspace.metadata.bbnf.grammars.google-sheets] output_dir` | REINVENT | single-line | 5 |
+| 40 | `MASTER-PLAN.md:920` | Reanchor `[workspace.metadata.bbnf.grammars.bnf] output_dir` | REINVENT | single-line | 5 |
+| 41 | `MASTER-PLAN.md:931` | Reanchor `[workspace.metadata.bbnf.grammars.csv] output_dir` | REINVENT | single-line | 5 |
+| 42 | `MASTER-PLAN.md:942` | Reanchor `[workspace.metadata.bbnf.grammars.ebnf] output_dir` | REINVENT | single-line | 5 |
+| 43 | `MASTER-PLAN.md:953` | Reanchor `[workspace.metadata.bbnf.grammars.css-pretty] output_dir` | REINVENT | single-line | 5 |
+| 44 | `MASTER-PLAN.md:964` | Reanchor `[workspace.metadata.bbnf.grammars.math] output_dir` | REINVENT | single-line | 5 |
+| 45 | `MASTER-PLAN.md:973-999` | Strike entire §6.2 "Per-crate Cargo.toml schema" — no per-grammar Cargo.toml exists under Amendment 01 | DISCARD | multi-section | 5 |
+| 46 | `MASTER-PLAN.md:1215` | Reanchor §9.1 phase summary tranche E entry to match item 34 wording | REINVENT | single-line | 5 |
+| 47 | `MASTER-PLAN.md:1288` | Reanchor Lock-6 verification per item 6 above (cross-ref) | REINVENT | single-line | 1, 5 |
+| 48 | `MASTER-PLAN.md:1296` | Strike "creating its declaration crate" step per item 13 above (cross-ref) | DISCARD | single-line | 1, 5 |
+| 49 | `MASTER-PLAN.md:1325` | Reanchor §12.2 trajectory entry: "per-grammar runtime subdirs under `bbnf-runtime/src/grammars/` receive `generated.rs` as moved-not-modified" | REINVENT | single-line | 5 |
+
+### §12.C — Tranche-E close gate + future-grammar test (items 50-59)
+
+| # | Target | Surgery | Verdict | Scope | Lane |
+|---:|---|---|---|---|---|
+| 50 | `MASTER-PLAN.md:766, 785` | Tranche E close gate (E.W8) names: (a) all 9 grammars template-emit; (b) one grammar passes future-grammar onboarding test (yaml.bbnf added with two-surface ceremony); (c) samply gate fires; (d) bbnf-runtime-template grammar-agnosticism gate fires | REINVENT | paragraph | 3, 4, 5, 6 |
+| 51 | `MASTER-PLAN.md:785` | Strike "specialised cohort retain `specialised/` for extensions only"; replace with "specialised cohort retain extensions via host-fn composition (metadata or grammar-source @host directive)" per Amendment 01 | REINVENT | paragraph | 3, 9 |
+| 52 | `MASTER-PLAN.md:111` | Strike §3.2 reconciliation item 9 entirely (cross-ref item 30) | DISCARD | paragraph | 3 |
+| 53 | `MASTER-PLAN.md:54, 683` | Replace `pub use ... ::*;` glob re-exports with explicit re-exports of canonical 10-15 public symbols per crate; aggregator at `bbnf/src/lib.rs` carries enumerated `pub use` statements | REINVENT | multi-section | 3, 9 |
+| 54 | `MASTER-PLAN.md:64, 785` | Tranche E close gate adds `bbnf-runtime-template` grammar-agnosticism verification: `rg 'JsonValue\|CssL4Value\|BbnfValue\|GoogleSheetsValue' crates/bbnf-runtime-template/src/` returns 0 | REINVENT | single-line | 3 |
+| 55 | `MASTER-PLAN.md:787` | Tranche F (F.W6 close) gate adds: "JSON twitter parse measured before + after Pratt + SIMD auto-detection; expected within ±5% of pre-F or improvement; regression >5% blocks the wave" | REINVENT | single-line | 4 |
+| 56 | `MASTER-PLAN.md:789` | Tranche G (G.W5 close) gate adds: "twitter.json parsed via three lifetime APIs; slice-borrow ≤ sonic-rs's 436 µs (M1 Pro); arena ±10%; owned within +30%" | REINVENT | single-line | 4 |
+| 57 | `MASTER-PLAN.md:791` | Tranche H (H.W4 close) gate adds: "TS-emitted JSON parser typed-tree byte-for-byte equivalent to Rust-emit; WASM-emit equivalent" | REINVENT | single-line | 4 |
+| 58 | `MASTER-PLAN.md:1296` | Reformat Lock-14 verification cell as 16-row per-crate table per HARDENING.md §Lane 5 "Per-X tables" standard (cross-ref item 15) | REINVENT | multi-section | 5 |
+| 59 | `MASTER-PLAN.md:1296` | Future-grammar onboarding ceremony reduces from three steps to two surfaces per Amendment 01 §"Settled position" lines 13-25; strike crates/yaml/ creation step (cross-ref item 13) | DISCARD | single-line | 5 |
+
+### §12.D — Generated-LOC budget + xtask wall (items 60-66)
+
+| # | Target | Surgery | Verdict | Scope | Lane |
+|---:|---|---|---|---|---|
+| 60 | `MASTER-PLAN.md:789, 1183` | Tranche G.W3 deliverable list extends with `docs/howto/cookbook/path-macro.md` lands; verbatim error messages committed (rule-name typo, wildcard misuse, index/key disambiguation) | REINVENT | paragraph | 6, 7 |
+| 61 | `MASTER-PLAN.md:789, 1291` | Tranche G.W2 deliverable list extends with `docs/howto/cookbook/lifetime-surfaces.md` lands; verbatim error messages committed (when-to-use decision tree, bump ergonomics, lifetime escape) | REINVENT | paragraph | 6, 7 |
+| 62 | `MASTER-PLAN.md:781, 1284` | Tranche C.W2 deliverable list extends with `docs/errors/layout-lowering.md` lands; verbatim error messages committed (untyped rule, mismatched layout, missing host fn) | REINVENT | paragraph | 6, 7 |
+| 63 | `MASTER-PLAN.md:787, 1292` | Tranche F.W3 deliverable list extends with `docs/optimizer/pratt-simd-detection.md` cookbook + `cargo xtask diag` subcommand; cost-model trace verbatim | REINVENT | paragraph | 6, 7 |
+| 64 | `MASTER-PLAN.md:1183` | Tranche C.W4 `docs/howto/migration/2026-restart.md` extends to carry verbatim sed-recipes (import-path breakage, Cargo.toml dep update); `git log --diff-filter=R` rename-discovery hint | REINVENT | paragraph | 6, 7 |
+| 65 | `MASTER-PLAN.md:1183` | New cookbook `docs/howto/cookbook/host-fn-composition.md` lands at C.W3 or E.W6 (per Amendment 01 §"Host-fn implementations") | REINVENT | single-line | 6, 7 |
+| 66 | `MASTER-PLAN.md:1183` | New cookbook `docs/howto/cookbook/test-fixtures.md` lands at C.W3 or E.W6 | REINVENT | single-line | 6, 7 |
+
+### §12.E — Carry & deferral fixes (items 67-73)
+
+| # | Target | Surgery | Verdict | Scope | Lane |
+|---:|---|---|---|---|---|
+| 67 | `MASTER-PLAN.md:73, 105, 155` | `bbnf-cli` defer Notes column extends to "DEFERRED to post-tranche-J 1.0-release tranche; blocker = API freeze (parse, parse_in, parse_owned, Document::get<T>(path), pointer![…]); receiving gate = post-J tranche W0 declares CLI surface, W1 implements"; §5.1 receives footnote naming tranche K | REINVENT | paragraph | 8 |
+| 68 | `MASTER-PLAN.md:107` | `bbnf-py` §3.2 item 7 reads "DEFERRED post-1.0. Triggering condition: a Python consumer materialises (csc411, OR a downstream Python user surfaces). Receiver: a yet-to-name post-1.0 tranche. Receiving gate: that tranche's W0 declares the Python binding API shape; W1 implements PyO3 cdylib OR subprocess-CLI binding" | REINVENT | paragraph | 8 |
+| 69 | `MASTER-PLAN.md:1170` | Strike OR-disposition for `docs/restart/`; commit to relocation: "**`docs/restart/`** relocates to `docs/process/restart/` per Lock 13 (cohesion with `docs/process/instructions/`, `docs/process/tranches/`)" | REINVENT | single-line | 8, 9 |
+| 70 | `MASTER-PLAN.md:1259, 1264` | `archive/{ser, gorgeous}/` disposition: "deletion permissible at post-J 1.0-release tranche W0 if `archive/` content is fully reproducible from sister-repo provenance (gorgeous-external, pprint-external)" | REINVENT | paragraph | 8 |
+| 71 | `MASTER-PLAN.md:1080` | §7.2 prelude commit 8 verbiage extends to "Master Plan + Amendment 01 + per-pass restart audit synthesis" | REINVENT | single-line | 8 |
+| 72 | `MASTER-PLAN.md:7` | Update path reference: `docs/restart/HARDENING.md` → `restart/prompts/HARDENING.md` | REINVENT | single-line | 8 |
+| 73 | `MASTER-PLAN.md:1414` | §15 closing posture extends to name Stage 2: "Stage 1 hardening commits, Stage 2 fires per `restart/prompts/HARDENING-STAGE-2-EXTERNAL.md`; both must pass before tranche drafting opens" | REINVENT | paragraph | 8 |
+
+### §12.F — Greenfield-discipline workaround retirements (items 74-76)
+
+| # | Target | Surgery | Verdict | Scope | Lane |
+|---:|---|---|---|---|---|
+| 74 | `MASTER-PLAN.md:777` | Tranche A.W4 deliverable list extends to name "Box::leak retiral at `crates/core/src/grammar/mod.rs:57`; replaced by `parse_grammar_in(input, &bump)` per Lock 9 escape hatch; entry point deprecated to `parse_grammar_owned`" per Pass A hardening adjudication | REINVENT | paragraph | 9 |
+| 75 | `MASTER-PLAN.md:781` | Tranche C.W6 deliverable list extends to name "wildcard `@debug` strip-prefix at `crates/core/src/grammar/host.rs:387` retired; FAIL-EXPLICIT replacement" per Pass A hardening adjudication | REINVENT | paragraph | 9 |
+| 76 | `MASTER-PLAN.md:781` | Tranche C.W6 deliverable list extends to name "defensive `unreachable!()` fallback at `crates/core/src/lower/value_expr/simple_kinds.rs:185` retired; either `unreachable!()` or upstream invariant fix" per Pass A hardening adjudication | REINVENT | paragraph | 9 |
+
+### §12.G — Cumulative reconciliation with sister Stage-1 reports
+
+The four Stage-1 hardening reports (PASS-A 25 entries, PASS-B 30
+entries, PASS-C 30 entries, this MASTER-PLAN report 76 entries)
+collectively gate the master-plan V2 re-issue. Cumulative surgical
+edits:
+
+| Report | Entries | Apex faults |
+|---|---:|---|
+| HARDENING-PASS-A.md | 25 | per-grammar declaration crate sites (10), residue gates (4), friction surfaces (5), cohesion + budget (4), future-grammar test (1), carry triple (1) |
+| HARDENING-PASS-B.md | 30 | per-grammar declaration crate reanchorings (18), SOTA gates (5), LOC budget (4), friction surface (1), greenfield posture (2) |
+| HARDENING-PASS-C.md | 30 | bbnf-language-server framing (4), cohesion paths (7), LOC budget (4), friction (3), carry triples (3), defer scope (9) |
+| **HARDENING-MASTER-PLAN.md** (this) | 76 | Lock reconciliations (22), Amendment 01 reanchorings (27), tranche-E close + future-grammar (10), generated-LOC + cookbook (7), carry & deferral (7), workaround retirals (3) |
+| **Cumulative** | **161** | |
+
+The cumulative 161-edit punch list applies as follows:
+
+1. **Pass-source surgeries** (PASS-A 25 + PASS-B 30 + PASS-C 30 = 85
+   entries): apply via **amendment agents** to each pass synthesis
+   document (or as `AMENDMENT-02-PASS-{A,B,C}-RECONCILIATION.md`
+   sidecars per the orchestrator's preference).
+2. **Master-plan surgeries** (this report's 76 entries): apply via
+   **V2 re-issue agent** to produce `MASTER-PLAN-V2.md`.
+3. **Amendment 01** is authoritative supersedence; V2 absorbs its body
+   wholesale.
+4. **Stage 2 hardening** re-evaluates the V2 plus reconciled passes;
+   user signs off; tranche drafting opens.
+
+The largest single surgery cohort is §12.B (Amendment 01
+reconciliation: 27 entries 23-49). The cumulative punch list completes
+in a single V2 re-issue agent's pass.
 
 ---
 

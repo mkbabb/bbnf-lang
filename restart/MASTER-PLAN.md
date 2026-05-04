@@ -122,16 +122,32 @@ Lock 13 defines the tree-shape and LOC ceiling (`restart/locks/14-LOCKS.md:58`).
 Lock 8 defines SOTA competitor anchors (`restart/locks/14-LOCKS.md:48`).
 PASS-2 defines generated LOC budget tracking (`restart/audit/pass-2-codegen/PASS-2.md:293-310`).
 
-Exact SOTA close rows:
+Exact SOTA close rows. Each row binds a competitor baseline, a bbnf target, and
+the platform that produces both. The baseline numbers are the corpus anchors
+in `restart/corpora/SOTA.md:50-89` and `restart/corpora/SOTA.md:130-136`.
 
-| Row | Target | Owner |
-|---|---|---|
-| `json/twitter` | <= 380us with CPU/OS/input hash metadata. | H/J |
-| `json/citm` | <= 750us with selector mode metadata. | H/J |
-| `json/canada` | <= 2.8ms with array scan profile. | H/J |
-| `css/bootstrap` | <= 3.0ms with layout and visitor mode metadata. | H/J |
-| `css/animate` | <= 1.6ms with layout and visitor mode metadata. | H/J |
-| `simd/structural_scan` | report GB/s-class throughput and scalar parity hash. | H/J |
+| Row | Competitor baseline | bbnf target | Platform | Owner |
+|---|---|---|---|---|
+| `json/twitter` | sonic-rs 436us; simd-json 424us. | <= 380us. | M1 Pro macOS, native Rust release with `target-cpu=native`. | H.W4, J.W1. |
+| `json/citm` | sonic-rs 854us; simd-json 831us. | <= 750us. | M1 Pro macOS, native Rust release with `target-cpu=native`. | H.W4, J.W1. |
+| `json/canada` | sonic-rs 3.144ms; simd-json comparable. | <= 2.8ms. | M1 Pro macOS, native Rust release with `target-cpu=native`. | H.W4, J.W1. |
+| `css/bootstrap` | lightning-css 4.16ms. | <= 3.0ms. | M1 Pro macOS, native Rust release with `target-cpu=native`. | H.W5, J.W1. |
+| `css/animate` | lightning-css 1.97ms. | <= 1.6ms. | M1 Pro macOS, native Rust release with `target-cpu=native`. | H.W5, J.W1. |
+| `simd/structural_scan` | simdjson On-Demand ~7 GB/s on x86 AVX2; ~5 GB/s on M-series NEON. | >= 5 GB/s on M-series, >= 7 GB/s on x86 AVX2; scalar parity hash matches. | M1 Pro macOS NEON and x86_64 AVX2 build host. | H.W1/H.W4, J.W1. |
+
+Benchmark reproducibility schema. Every benchmark row at H.W4, H.W5, and J.W1
+must serialise the following metadata; rows missing any field fail the gate.
+
+| Field | Source |
+|---|---|
+| CPU model and microarchitecture. | `sysctl -n machdep.cpu.brand_string` on macOS, `lscpu` on Linux. |
+| OS name and kernel version. | `uname -a`. |
+| Compiler flags and target. | `RUSTFLAGS`, `target-cpu`, `--release`, profile name. |
+| Input hash. | `sha256sum` of the corpus file. |
+| Competitor crate name and version. | `Cargo.lock` for sonic-rs/simd-json/lightning-css; record path. |
+| bbnf commit. | `git rev-parse HEAD`. |
+| Warmup policy. | sample count, warmup iterations, criterion configuration. |
+| Sample policy. | confidence interval, outlier rejection, statistical method. |
 
 ## 5. Tranche Set
 
@@ -207,8 +223,8 @@ Stub waves:
 
 | Wave | Scope | Consumer gate |
 |---|---|---|
-| A.W0 | Branch/tag preflight, archive `ser` and `gorgeous`, remove them from workspace. | `cargo metadata` succeeds without archive crates. |
-| A.W1 | Create 24 crate skeletons with Lock 13 tree shape. | `cargo check --workspace` reaches expected stubs. |
+| A.W0 | Branch/tag preflight, archive `ser` and `gorgeous`, remove them from workspace. | `cargo metadata` succeeds without archive crates; `git rev-parse pre-restart-2026-05-04` resolves; greenfield branch exists. |
+| A.W1 | Create 24 crate skeletons with Lock 13 tree shape; bind crate package names per Architecture §1 (unprefixed internal crates: `path`, `path-core`, `path-ts`, `test-fixtures`, `passes`, `simd-scan`, `egraph`, `csp-solver`; user-facing crates retain `bbnf-` prefix). | `cargo check --workspace` reaches expected stubs; `rg "bbnf-path\|bbnf-test-fixtures"` returns zero hits in workspace member declarations. |
 | A.W2 | Replace root metadata schema. | Metadata validation accepts current nine grammars. |
 | A.W3 | Add source/error/grammar minimal APIs. | `grammar` can parse a seed `.bbnf` into AST. |
 | A.W4 | Add generalization and tree-shape lint gates. | No hardcoded grammar dispatch in generic crates. |
@@ -440,9 +456,9 @@ Stub waves:
 | H.W0 | Pratt recognizer facts and BIR `PrattSpine`. | Expression grammar uses auto-detected Pratt. |
 | H.W1 | SIMD recognizer facts and `SimdScan` integration. | Literal/regex scans route through scanner kernels. |
 | H.W2 | AVX2/NEON/scalar dispatch gates. | Platform-specific tests or skipped metadata. |
-| H.W3 | WASM V1 via wasm32 Rust binding. | WASM package parses seed grammar. |
-| H.W4 | Early JSON SOTA gates. | twitter/citm/canada rows run with metadata and numeric deltas. |
-| H.W5 | Early CSS SOTA gates. | bootstrap/animate rows run with metadata and numeric deltas. |
+| H.W3 | WASM V1 via wasm32 Rust binding. | WASM package parses seed grammar at <= 3x native cost on M1 Pro Safari WASM runtime; metadata records WASM runtime, host browser, and bbnf commit. |
+| H.W4 | Early JSON SOTA gates. | `json/twitter` <= 480us, `json/citm` <= 950us, `json/canada` <= 3.5ms on M1 Pro with metadata; final J.W1 thresholds at 380us / 750us / 2.8ms. |
+| H.W5 | Early CSS SOTA gates. | `css/bootstrap` <= 3.8ms, `css/animate` <= 1.9ms on M1 Pro with metadata; final J.W1 thresholds at 3.0ms / 1.6ms. |
 
 Hard close:
 
@@ -505,7 +521,7 @@ Stub waves:
 | J.W0 | Cross-backend parity matrix for Rust, VM, WASM V1. | Parity matrix passes for seed grammars. |
 | J.W1 | Final SOTA gate and benchmark report. | JSON/CSS/SIMD targets met; misses require amendment before close. |
 | J.W2 | Public docs redo. | Docs build and examples run. |
-| J.W3 | Package readiness for public crates. | Dry-run publish metadata passes. |
+| J.W3 | Package readiness for public crates: confirm publication-name plan, validate `[workspace.package]` defaults, dry-run `cargo publish` for every public crate, and verify path-dep incubation does not leak to `crates.io`. | `cargo xtask publish --dry-run` passes for `bbnf`, `bbnf-cli`, `bbnf-language-server`, `bbnf-bench`, `path`, `path-core`, `path-ts`, `parse-that`, `egraph`, `egraph-derive`, `csp-solver`; private crates are unpublished. |
 | J.W4 | Archive and migration audit. | No stale crates/docs in production workspace. |
 | J.W5 | Restart close report. | All locks, gates, and routed punch-list items recorded. |
 
@@ -603,14 +619,34 @@ Generated source is a tracked product, not incidental output.
 | Stage | Generated code state | Budget action |
 |---|---|---|
 | Before F | Old generated code exists only as migration input. | Record baseline. |
-| F.W0-F.W2 | New lowerer emits partial seed grammar output. | Budget report can be advisory. |
-| F.W3 | Template headers and equality land. | Budget gate becomes required. |
-| F.W5 | Current nine seed grammars regenerate. | +2 percent ceiling enforced. |
-| H | SIMD/WASM generation may add target-specific output. | Attribute budget by target. |
-| J | Final release artifacts regenerate from clean checkout. | Budget and equality are release gates. |
+| F.W0-F.W2 | New lowerer emits partial seed grammar output. | Budget report can be advisory; xtask wall under 30s on M1 baseline machine. |
+| F.W3 | Template headers and equality land. | Budget gate becomes required; per-grammar runtime LOC must be in PASS-2 baseline +/- 2 percent; xtask wall under 60s. |
+| F.W4 | Generated LOC budget tooling. | `cargo xtask generated-loc-budget` returns under +2 percent across the seed set; wall under 60s. |
+| F.W5 | Current nine seed grammars regenerate. | +2 percent ceiling enforced for every grammar; wall under 90s. |
+| H.W3 | WASM V1 binding emits wasm32 target output. | WASM-attributed LOC reported separately; aggregate +2 percent ceiling holds; wall under 120s including WASM. |
+| H.W4 | Early JSON SOTA gates run with SIMD-target output. | SIMD-attributed LOC reported by target (AVX2/NEON/scalar); JSON SOTA delta numeric; wall under 150s. |
+| H.W5 | Early CSS SOTA gates. | CSS visitor/path additions reported separately under PASS-3 generated visitor LOC budget; wall under 150s. |
+| J | Final release artifacts regenerate from clean checkout. | Budget and equality are release gates; wall under 180s end-to-end including parity matrix. |
 
 PASS-2 is the authority for the +2 percent generated LOC ceiling
 (`restart/audit/pass-2-codegen/PASS-2.md:293-310`).
+
+Per-grammar generated LOC baseline. PASS-2 §11 carries the per-grammar census;
+this table promotes the seed grammar set into MASTER-PLAN so all "nine seed
+grammars" claims close without chasing PASS-2.
+
+| Grammar | Current baseline LOC (PASS-2 §11) | F.W5 ceiling | Tranche owner |
+|---|---:|---|---|
+| `bbnf` | self-host bootstrap; baseline recorded at A.W2. | F.W5 baseline +2 percent. | F. |
+| `bnf` | small reference; baseline recorded at A.W2. | F.W5 baseline +2 percent. | F. |
+| `csv` | small line-oriented; baseline recorded at A.W2. | F.W5 baseline +2 percent. | F. |
+| `css_l4` | typed L4; baseline recorded at A.W2. | F.W5 baseline +2 percent. | F. |
+| `css_pretty` | pretty subset; baseline recorded at A.W2. | F.W5 baseline +2 percent. | F. |
+| `ebnf` | reference EBNF; baseline recorded at A.W2. | F.W5 baseline +2 percent. | F. |
+| `google_sheets` | spreadsheet expression; baseline recorded at A.W2. | F.W5 baseline +2 percent. | F. |
+| `json` | RFC 8259 with SOTA target; baseline recorded at A.W2. | F.W5 baseline +2 percent; SIMD additions at H attribute by target. | F/H. |
+| `math` | Pratt-bearing arithmetic; baseline recorded at A.W2. | F.W5 baseline +2 percent. | F. |
+| `yaml` (probe) | not in seed budget; reported separately under future-grammar metadata until admitted. | yaml never closes a tranche on a seed-grammar gate before admission. | A/G/F. |
 
 Budget enforcement rows:
 
@@ -640,6 +676,18 @@ Budget enforcement rows:
 | 13 Tree discipline | A through J | `lint-tree`, `lint-loc`. |
 | 14 Grammar generalization | A/D/F/G/J | Future grammar test and no hardcoded dispatch. |
 
+Lock 13 verification rows. Each row is the executable evidence the named owner
+must produce when closing its tranche; ARCHITECTURE.md §13 owns the exception
+ledger.
+
+| Surface | Child-count gate | LOC gate | Exception rationale | Enforcing command |
+|---|---|---|---|---|
+| Handwritten crate `src/` directories | 4-10 immediate children. | No handwritten file over 500 LOC. | Migration may temporarily raise the child count with a tranche-local rationale; lint allowlist names the exception. | `cargo xtask lint-tree` and `cargo xtask lint-loc --handwritten-max 500`. |
+| Generated grammar/runtime files (`runtime/src/grammars/<name>/generated.rs`). | Not bound by 4-10. | LOC excepted; budget rows in §20 govern. | Lock 6 requires committed generation; LOC ceiling is the +2 percent budget. | `cargo xtask generated-loc-budget --max-growth 1.02`. |
+| Generated data tables (Pratt, SIMD, scanner). | Not bound. | Excepted with header metadata. | Data products carry source metadata and stable headers, not LOC ceilings. | `cargo xtask lint-generated-headers`. |
+| Proc-macro roots (`*-derive`, `path/src/macro_impl`). | 4-10. | 500 LOC handwritten ceiling. | None; proc-macro roots follow the handwritten rule. | `cargo xtask lint-tree` and `cargo xtask lint-loc`. |
+| SIMD intrinsic files (`simd-scan/src/avx2.rs`, `neon.rs`). | 4-10 in parent dir. | 500 LOC ceiling unless the file is single-target intrinsics. | Single-target intrinsic files carry a tranche-local LOC exception. | `cargo xtask lint-loc --simd-exception`. |
+
 The lock table in README marks all 14 locks as restart inputs
 (`restart/README.md:377-397`).
 
@@ -665,7 +713,7 @@ that discipline (`restart/README.md:452`). Style follows the local precepts
 
 | Risk | Mitigation |
 |---|---|
-| Old grammar registries reappear in new crates. | Lock 14 lint from A onward; future grammar test in G. |
+| Old grammar registries reappear in new crates. | Lock 14 lint from A onward; future grammar test in G; `cargo xtask lint-no-hardcoded-grammars` enforced as a close gate at A.W4, G.W4, and J.W4 with `rg "PRODUCTION_MANIFEST_TABLE\|GrammarAuditTag\|bbnf-strategy"` returning zero outside generated data and corpus citations. |
 | Direct-to-struct bypasses tape. | B/F tests prove direct views share spans/events with tape. |
 | Backend lowerer imports Grammar IR for convenience. | E/F boundary tests and crate dependency checks. |
 | `@host fn` becomes a hidden declaration-crate requirement. | D host tests prove generic primitives and metadata path first. |
@@ -687,6 +735,28 @@ that discipline (`restart/README.md:452`). Style follows the local precepts
 | SOTA metadata | H/J | Bench numbers lack machine/input/build metadata. | Benchmark report schema rejects incomplete rows. |
 | yaml onboarding | A/F/G/J | Future grammar requires any manual Rust registry/path/host edit. | yaml source + workspace metadata plus generated runtime only. |
 | Archive closure | A/J | `ser` or `gorgeous` remains in production workspace. | workspace membership check and migration audit. |
+| TS production | G/I/J | TS path emitter or schema produces TS without grammar names in source. | `path-ts` schema dump for the seed set; LSP TS bridge test. |
+| BD parity | F/J | BD-equivalent parity matrix not run for Rust/VM/WASM V1 backends. | `cargo xtask parity --all` matrix passes for nine seed grammars. |
+| PASS-1 reconciliation | C/D | Grammar IR, side tables, or BBNF surface drift between PASS-1 and synthesis. | Architecture §7 schema matches PASS-1 §2 enum; reconciliation noted in close report. |
+| PASS-3 API docs | G/I/J | Public docs for `pointer!`, `select!`, visitor, language-server omit committed string diagnostics. | PASS-3 carry ledger column closes; cookbook pages list every diagnostic code. |
+| Publication readiness | A/J | Crate package names, README, license, dependencies fail dry-run publish. | `cargo xtask publish --dry-run` clean for every public crate. |
+| Fixture handoff | A/G/J | `test-fixtures` lacks parity fixtures or duplicate fixtures live in old crates. | Fixture audit at J.W4; per-grammar fixture manifest column in §12.1 table. |
+| `path-ts` schema | G | TS schema does not derive from the same `path-core` semantics the Rust macro uses. | `path-ts` and `path` consume identical `path-core` AST; schema dump round-trips. |
+| WASM ABI | H/J | WASM exported ABI not specified for V1 binding. | H.W3 records exported function names and host-call shape; J.W3 dry-run publish includes WASM binding. |
+
+Cookbook and migration friction rows. Every row binds a target user, a mental
+model, a confusion point, the artefact that resolves it, and the diagnostic the
+user sees when they get it wrong.
+
+| Friction | Target user | Mental model | Confusion point | Artefact | Diagnostic |
+|---|---|---|---|---|---|
+| `pointer!` and `select!` | Library consumer building queries against generated documents. | A path expression is checked against the grammar's path schema at compile time. | "Why does my path not compile when the JSON looks fine?" | Cookbook page `cookbook/path-pointer.md` plus `path-ts` schema dump. | `BBNF-POINTER-UNKNOWN-SEGMENT` and `BBNF-POINTER-GRAMMAR-MISMATCH`. |
+| Lifetime constructors | Library consumer choosing between `parse`, `parse_in`, `parse_owned`. | `parse` borrows; `parse_in` borrows into a caller arena; `parse_owned` allocates a self-contained document. | "Why does my borrow live longer than the source?" | Cookbook page `cookbook/parse-lifetimes.md` plus `runtime` API doc. | `BBNF-LIFETIME-ESCAPE` and `BBNF-ARENA-MISMATCH`. |
+| Visitor mutation | Library consumer mutating documents through the visitor. | Mutation goes through the read-write visitor only; direct field writes are forbidden. | "Why does the borrow checker reject my edit?" | Cookbook page `cookbook/visitor-mutation.md` plus PASS-3 visitor contract. | `BBNF-VISITOR-MUTATION-OUTSIDE-ENTRY`. |
+| Layout errors | Grammar author writing layout-bearing rules. | `@layout` lowers through `LayoutFacts` and BIR `LayoutPush`/`LayoutPop`; conflicts are typed errors. | "Why does the layout not nest the way I expected?" | Cookbook page `cookbook/layout.md`. | `BBNF-LAYOUT-CONFLICT` and `BBNF-LAYOUT-UNCLOSED`. |
+| Pratt/SIMD decisions | Grammar author wondering why a recognizer was or was not applied. | Pratt and SIMD are auto-detected from grammar shape; metadata can disable but not force. | "Why did Pratt not apply to my expression rule?" | Cookbook page `cookbook/recognizers.md` plus `cargo xtask explain-recognizer`. | `BBNF-PRATT-NOT-APPLIED` and `BBNF-SIMD-NOT-SELECTED`. |
+| Crate split migration | Migrating from old workspace shape. | Old `bbnf-path*` and `core` are split into unprefixed crates. | "Where did `bbnf-path` go?" | Cookbook page `cookbook/migration-crate-split.md` plus MIGRATION.md §3.1. | None; this is documentation friction, not a runtime diagnostic. |
+| Adding yaml | Grammar author adding a new grammar. | Two surfaces only: `grammars/yaml.bbnf` plus `[workspace.metadata.bbnf.grammars.yaml]`. | "Where do I register yaml in Rust?" | Cookbook page `cookbook/add-grammar.md` plus future-grammar test. | `BBNF-METADATA-MISSING-GRAMMAR` and `BBNF-GRAMMAR-NAME-IN-GENERIC-CRATE`. |
 
 ## 25. Implementation Order
 

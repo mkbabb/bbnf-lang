@@ -993,6 +993,18 @@ Regex         ::= "/" RegexProgram "/"
 `RegexProgram` is parsed by `parse-that/regex`. Unicode classes may exist
 inside that regex syntax, but BBNF itself does not expose a set algebra surface.
 
+Input-normalization deletions are explicit and named. Every surface listed below
+is forbidden from the BBNF grammar and from any IR variant; the named substrate
+is the only place the corresponding capability may live.
+
+| Surface | Status at BBNF level | Routed substrate | Closing gate |
+|---|---|---|---|
+| Rewrite-mode (transducer/rewrite ladders). | Deleted; not parsed, not lowered, not represented in either IR. | None; rewrite-mode does not survive as a feature. | `rg "rewrite-mode\|RewriteMode\|@rewrite"` returns zero outside this deletion table. |
+| Unicode class set algebra (`[[:alpha:]]&&[^a-z]`, `\p{L}--\p{Cyrillic}`). | Deleted from BBNF grammar surface. | `parse-that/regex` HIR may model class algebra inside a regex literal; BBNF never exposes it as productions. | Architecture §8.1 has no `CharClass`/`ClassExpr` production; `parse-that/regex` carries the algebra under HIR. |
+| Grammar-level `(?<= ...)` lookbehind syntax. | Deleted in favor of `|<` and `|<!`. | `parse-that/regex` retains regex-internal `(?<= ...)`; BBNF parser rejects it outside regex literals. | PASS-1 spec uses `|<` only; lookbehind diagnostic carries `BBNF-LOOKBEHIND-WIDTH`. |
+| Standalone `@recover` directive. | Folded into `@error(recover = ...)`; not a separate top-level form. | `error` crate keeps the recovery descriptor; grammar parser rejects bare `@recover`. | PASS-3 amendment; no production for `Recover ::= ...` outside `@error` body. |
+| Per-grammar declaration crates. | Not default; allowed only via fenced metadata escape valve. | Workspace `[workspace.metadata.bbnf.grammars.<name>]` plus the §5.6 review form. | Lock 14 lint passes; the §5.6 fence supplies reason/scope/deletion path. |
+
 ### 8.2 Type System
 
 The type system is Hindley-Milner plus bidirectional checks and CSP constraints.
@@ -1144,12 +1156,12 @@ Exact gate rows:
 
 | Row | Competitor baseline | Restart target | Required metadata |
 |---|---|---|---|
-| `json/twitter` | sonic-rs M1 twitter 436us. | <= 380us. | CPU, OS, compiler flags, input hash, parse mode. |
-| `json/citm` | sonic/simd-json citm corpus. | <= 750us. | CPU, OS, compiler flags, input hash, selector mode. |
-| `json/canada` | sonic/simd-json canada corpus. | <= 2.8ms. | CPU, OS, compiler flags, input hash, array scan profile. |
-| `css/bootstrap` | lightning-css bootstrap 4.16ms. | <= 3.0ms. | CSS fixture hash, layout mode, visitor mode. |
-| `css/animate` | lightning-css animate 1.97ms. | <= 1.6ms. | CSS fixture hash, layout mode, visitor mode. |
-| `simd/structural_scan` | simdjson on-demand 7 GB/s-class anchor. | Report GB/s and parity against scalar. | ISA, CPU flags, kernel, scalar parity hash. |
+| `json/twitter` | sonic-rs 436us, simd-json 424us on M1 Pro. | <= 380us on M1 Pro. | CPU model, OS, compiler flags, input hash, parse mode, competitor version, bbnf commit, warmup, sample policy. |
+| `json/citm` | sonic-rs 854us, simd-json 831us on M1 Pro. | <= 750us on M1 Pro. | CPU model, OS, compiler flags, input hash, selector mode, competitor version, bbnf commit, warmup, sample policy. |
+| `json/canada` | sonic-rs 3.144ms on M1 Pro. | <= 2.8ms on M1 Pro. | CPU model, OS, compiler flags, input hash, array scan profile, competitor version, bbnf commit, warmup, sample policy. |
+| `css/bootstrap` | lightning-css 4.16ms on M1 Pro. | <= 3.0ms on M1 Pro. | CSS fixture hash, layout mode, visitor mode, competitor version, bbnf commit, warmup, sample policy. |
+| `css/animate` | lightning-css 1.97ms on M1 Pro. | <= 1.6ms on M1 Pro. | CSS fixture hash, layout mode, visitor mode, competitor version, bbnf commit, warmup, sample policy. |
+| `simd/structural_scan` | simdjson On-Demand ~7 GB/s on x86 AVX2; ~5 GB/s on M-series NEON. | >= 5 GB/s on M-series, >= 7 GB/s on x86 AVX2; scalar parity hash matches. | ISA, CPU flags, kernel, scalar parity hash, competitor version, bbnf commit, warmup, sample policy. |
 
 Generated LOC budget rows:
 
@@ -1197,6 +1209,30 @@ git diff -- crates ':!crates/runtime/src/grammars/yaml'
 
 The last command must show no handwritten crate source changes other than
 generated runtime output under `runtime/src/grammars/yaml`.
+
+### 12.1 Per-Grammar Authority Table
+
+Lock 14 mandates per-X tables for "all nine seed grammars" claims. The full
+10x9 table — bbnf, bnf, csv, css_l4, css_pretty, ebnf, google_sheets, json,
+math, plus future yaml, with columns for typed root, `ValueRef` shape, runtime
+files, visitor, path schema, fixture manifest, host route, generated LOC, and
+declaration-crate status — lands in the Wave 3 single-SYNTHESIS amendment. The
+amendment is fed by the per-grammar runtime-emission rows in PASS-2 §3 and the
+runtime/visitor/path budget rows in PASS-3.
+
+Until Wave 3 lands the full matrix, every "all extant grammars" claim in this
+document refers to the corpus-derived grammar set: bbnf, bnf, csv, css_l4,
+css_pretty, ebnf, google_sheets, json, math. yaml is the onboarding probe and
+is not yet part of the seed set.
+
+| Column | Wave 3 source |
+|---|---|
+| Typed root type and `ValueRef` shape. | PASS-1 §2 type contract plus PASS-3 §5 value posture. |
+| Runtime file inventory (`generated.rs`, `parser.rs`, `host.rs`, layout, error). | PASS-2 §3 runtime template emission table. |
+| Visitor, path schema, fixture manifest. | PASS-3 §6 visitor/path commitments plus §11 fixture handoff. |
+| Host route (`@host fn`, generic primitives, metadata, declaration crate). | PASS-1 §3 host decomposition plus §5.6 review form. |
+| Generated LOC budget. | PASS-2 §11 +2 percent ceiling and per-grammar baselines. |
+| Declaration-crate status (default vs. fenced exception). | §5.6 review form must be empty for the seed set. |
 
 ## 13. File And Directory Discipline
 

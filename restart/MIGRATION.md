@@ -108,6 +108,62 @@ The exact current LOC total is not a planning invariant because generated files
 dominate `core`. The migration invariant is fate by directory and gate, not
 preserving current LOC.
 
+#### 3.1.1 Mixed-Fate Crosswalk
+
+Every current crate that distributes files across more than one fate bucket
+appears below. The crosswalk audits the 834-file disposition by family rather
+than by individual file; the per-family row counts must match the live tree
+when tranche A starts.
+
+| Current crate | Mixed | Family bucket | File count (current) | New location | Owner tranche |
+|---|---|---|---:|---|---|
+| `crates/analysis` | yes | Diagnostics + report helpers. | ~14. | `error/`, `bbnf-language-server/diagnostics/`. | A/I. |
+| `crates/analysis` | yes | Semantic index. | ~18. | `bbnf-language-server/semantic/`. | I. |
+| `crates/analysis` | yes | Document snapshot/edit helpers. | ~10. | `source/snapshot/`, `bbnf-language-server/document/`. | A/I. |
+| `crates/analysis` | yes | Grammar-specific assumptions. | ~4. | none (ABROGATE-DELETE). | A. |
+| `crates/bbnf-path` | yes | Macro entrypoint. | ~1. | `path/src/macro_impl/`. | G. |
+| `crates/bbnf-path` | yes | Parser/evaluator logic. | ~2. | `path-core/src/parse/`, `path-core/src/eval/`. | G. |
+| `crates/bbnf-path-ts` | yes | TS emitter/schema. | ~3. | `path-ts/src/schema/`, `path-ts/src/emit/`. | G. |
+| `crates/bbnf-path-ts` | yes | Hardcoded grammar registries. | ~1. | none (ABROGATE-DELETE). | A/G. |
+| `crates/bbnf-path-ts` | yes | Fixture duplicates. | ~2. | `test-fixtures/`. | A. |
+| `crates/bootstrap` | yes | IR dump/debug commands. | ~2. | `bbnf-cli/debug/`, `vm/debug/`. | E. |
+| `crates/bootstrap` | yes | Bootstrap parse command. | ~1. | `grammar/bootstrap/`, `pipeline/`. | A. |
+| `crates/bootstrap` | yes | Standalone crate shell. | ~1. | none (ABROGATE-DELETE). | A. |
+| `crates/core` | yes | Generated grammars. | ~9 (one per seed grammar). | `runtime/src/grammars/<name>/generated.rs`. | F. |
+| `crates/core` | yes | Generated registry JSON. | 1. | none (ABROGATE-DELETE). | A. |
+| `crates/core` | yes | Grammar AST/parser helpers. | ~80. | `grammar/src/*`. | A/D. |
+| `crates/core` | yes | Imports, source maps, spans. | ~40. | `source/src/*`. | A. |
+| `crates/core` | yes | Lower / normalization. | ~30. | `passes/`, `ir/`, `codegen/`. | C/E/F. |
+| `crates/core` | yes | Backend walkers (`backend/**`). | ~80. | `codegen/src/*`. | E/F. |
+| `crates/core` | yes | Runtime support. | ~30. | `runtime/src/document/`, `runtime/src/support/`. | B. |
+| `crates/core` | yes | Per-grammar runtime modules. | ~120. | `runtime/src/grammars/<name>/**` (GENERATED-REPLACE). | F. |
+| `crates/core` | yes | Path executor. | ~5. | `path-core/`, `runtime/`. | G. |
+| `crates/core` | yes | CSS types and host shims. | ~10. | `host/`, metadata, generated `host.rs`. | D/F. |
+| `crates/core` | yes | Generate/serialize. | ~5. | none (ABROGATE-DELETE; `ser` archive). | A. |
+| `crates/core` | yes | Old tests bound to grammar names. | ~25. | `test-fixtures/` plus owner crates. | A/G. |
+| `crates/ir` | yes | IR IDs and types. | ~30. | `ir/src/grammar_ir/`, `ir/src/backend_ir/`. | C/E. |
+| `crates/ir` | yes | Strategy registry. | ~3. | none (ABROGATE-DELETE). | A. |
+| `crates/ir` | yes | Type / shape / recognizer / cost facts. | ~80. | `passes/src/*`, `ir/src/side_tables/`. | C. |
+| `crates/ir` | yes | VM and debug. | ~40. | `vm/`. | E. |
+| `crates/ir` | yes | Egraph/CSP bridge. | ~25. | `passes/src/bridge/`. | C. |
+| `crates/ir` | yes | Other (shared utilities). | ~46. | `ir/src/util/` plus `passes/`. | C. |
+| `crates/csp-solver` | partly | Generic core retained. | ~40. | `csp-solver/`. | A. |
+| `crates/csp-solver` | partly | BBNF-specific adapters. | ~5. | `passes/src/bridge/`. | C. |
+| `crates/csp-solver` | partly | Oversized modules. | ~5. | `csp-solver/` split. | A. |
+| `crates/egraph` and `crates/egraph-derive` | partly | Generic core retained. | ~17. | `egraph/`, `egraph-derive/`. | A. |
+| `crates/egraph` and `crates/egraph-derive` | partly | BBNF terms/adapters. | ~2. | `passes/src/bridge/`. | C. |
+| `crates/lsp` | yes | LSP protocol server. | ~6. | `bbnf-language-server/protocol/`. | I. |
+| `crates/lsp` | yes | Diagnostics bridge. | ~4. | `bbnf-language-server/diagnostics/`. | I. |
+| `crates/lsp` | yes | Incremental parser glue. | ~3. | `bbnf-language-server/document/`, `pipeline/`. | I. |
+| `crates/simd-scan` | partly | Generic core retained. | ~13. | `simd-scan/`. | A/H. |
+| `crates/simd-scan` | partly | BBNF-specific recognizer wiring. | ~2. | `passes/src/recognizers/`. | C/H. |
+| `crates/gorgeous` | no | Whole crate ARCHIVE. | 17. | `restart-archive`/legacy reference only. | A. |
+| `crates/ser` | no | Whole crate ARCHIVE. | 5. | `restart-archive`/legacy reference only. | A. |
+
+The per-family row counts are approximate and refine to exact per-file numbers
+during tranche A.W2 when the migration manifest crystallises. Aggregate row
+counts must reconcile to the 834-file total before A.W2 closes.
+
 ### 3.2 Per-Crate Disposition Tables
 
 The following rows are abbreviated by uniform directory where that is the
@@ -567,12 +623,14 @@ does not create branches or tags.
 
 Branch/tag routing floor:
 
-| Artifact | Status |
-|---|---|
-| `pre-restart-2026-05-04` | Required history marker before implementation source edits. |
-| `master-greenfield-2026-05-04` | Suggested implementation branch unless the user selects another branch name. |
-| Archive commits | Body-bearing and narrow to workspace/archive membership. |
-| Generated commits | Body-bearing with equality, generated LOC, and routed remainder evidence. |
+| Artifact | Status | Owner | Evidence command |
+|---|---|---|---|
+| `pre-restart-2026-05-04` tag | Required history marker before implementation source edits. | A.W0. | `git rev-parse pre-restart-2026-05-04` resolves to a commit. |
+| `master-greenfield-2026-05-04` branch | Suggested implementation branch unless the user selects another branch name. | A.W0. | `git rev-parse --verify master-greenfield-2026-05-04` resolves; `git symbolic-ref refs/heads/master-greenfield-2026-05-04` shows the tracked branch. |
+| Workspace skeleton commit | Body-bearing workspace genesis with `[workspace.members]` named per Architecture §1. | A.W1. | `git diff --name-only A.W0..A.W1` lists only `Cargo.toml`, crate `Cargo.toml`, and `lib.rs` stubs. |
+| Archive commits | Body-bearing and narrow to workspace/archive membership. | A.W0. | `git diff --stat A.W0~..A.W0` shows only archive-membership files; `cargo metadata --no-deps` lists no archive crate. |
+| Generated commits | Body-bearing with equality, generated LOC, and routed remainder evidence. | F. | `cargo xtask bbnf build --all && git diff --exit-code crates/runtime/src/grammars`. |
+| Branch operation enforcement | No tranche after A.W0 may create or rename branches/tags without an explicit migration commit. | All. | `git reflog --date=iso master` shows no rewrite-history operations after A close. |
 
 ## 16. Legacy BA-BD Inheritance
 

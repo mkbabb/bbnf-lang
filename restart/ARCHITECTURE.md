@@ -346,12 +346,13 @@ and PASS-3 supply the corresponding crate tree expectations
 ```text
 bbnf/src/
   lib.rs
-  grammar/
-  document/
-  value/
-  host/
-  workspace/
   prelude.rs
+  parse/
+  document/
+  query/
+  visitor/
+  diagnostics/
+  metadata/
 
 bbnf-cli/src/
   main.rs
@@ -377,6 +378,17 @@ bbnf-bench/src/
   gates/
   report/
 ```
+
+The `bbnf` aggregator carries exactly 8 immediate children — `lib.rs`,
+`prelude.rs`, `parse/`, `document/`, `query/`, `visitor/`, `diagnostics/`,
+`metadata/` — which satisfies Lock 13's 4-10 child-count rule and the
+HARDENING-CONSOLIDATED §4.19 fix for the prior 7-children divergence. `tape/`
+and `value/` live under `runtime/src/{tape,value}/` per Lock 1; the aggregator
+re-exports the substrate cursor types and the typed-root projection through
+`prelude.rs` rather than carrying duplicate sibling directories. The
+grammar-specific surface (`Json`, `CssL4`, etc.) is generated under
+`runtime/src/grammars/<name>/` and referenced from `metadata/`, never as a
+sibling of `parse/` or `document/`.
 
 ### 4.2 Compiler Pipeline Crates
 
@@ -708,15 +720,44 @@ Schema rules:
 Metadata validation errors are normal diagnostics, not panics. They flow
 through `error` so CLI and LSP report the same code for the same bad metadata.
 
-Declaration-crate review form:
+Declaration-crate review form. Per HARDENING-CONSOLIDATED §4.15, every escape
+valve carries the following eight fields. The exception table is empty for the
+nine extant grammars (`bbnf`, `bnf`, `csv`, `css_l4`, `css_pretty`, `ebnf`,
+`google_sheets`, `json`, `math`) and stays empty unless a metadata + `@host fn`
+demonstration of insufficiency lands first.
 
 | Field | Required content |
 |---|---|
-| Grammar | The grammar name and metadata stanza requesting the escape valve. |
-| Failed surface | Why generic host primitives, workspace metadata, and `@host fn` cannot express the boundary. |
-| Scope | Exact exported declarations and why they are not grammar parser logic. |
-| Deletion path | The condition that lets the declaration crate disappear. |
-| Review gate | Architecture owner approval plus Lock 14 lint proving no registry/match-arm shortcut. |
+| Reason | The specific boundary requiring a per-grammar declaration crate (e.g., a trait-impl bridge that `host::primitives` cannot express, or a backend-specific FFI that `@host fn` bodies cannot express). State the boundary in mechanism terms, not in convenience terms. |
+| Owner | The named human or team accountable for the declaration crate's source, regen discipline, and deletion path. |
+| Why metadata fails | Specific demonstration that `[workspace.metadata.bbnf.grammars.<name>]` cannot describe the boundary. Cite metadata schema lines that would have to grow and explain why the growth contaminates the generic schema. |
+| Why `@host fn` fails | Specific demonstration that a block-bodied `@host fn` decomposing into `host::primitives` cannot express the boundary. Cite the generic primitive set considered and the gap that survives. |
+| Declaration location | Explicit path, normally `runtime/src/grammars/<name>/decl/` (sub-module of the per-grammar generated runtime). The declaration crate may not live at a workspace-level path that pollutes generic crate graphs. |
+| No generic import | Proof that no generic crate (`bbnf`, `pipeline`, `passes`, `ir`, `codegen`, `runtime`, `host`, `path`, `path-core`, `egraph`, `csp-solver`, `parse-that`, `simd-scan`) imports the per-grammar declaration crate. The proof is a `rg` command in the review record. |
+| Deletion path | Explicit named condition that retires the declaration crate (e.g., "deletes when `host::primitives::<name>` lands and the per-grammar trait moves to BBNF metadata"). The deletion path must terminate; "indefinite" is rejected. |
+| Reviewer | Named human (architecture owner) plus the receiving tranche gate where the exception is reviewed (e.g., A.W4 metadata-schema gate, J.W2 close gate). The reviewer is distinct from the owner. |
+
+Reified as TOML under `[workspace.metadata.bbnf.grammars.<name>.declaration_crate]`:
+
+```toml
+[workspace.metadata.bbnf.grammars.<name>.declaration_crate]
+allow = false
+reason = ""
+owner = ""
+why_metadata_fails = ""
+why_host_fn_fails = ""
+declaration_location = "runtime/src/grammars/<name>/decl/"
+no_generic_import_proof = ""
+deletion_path = ""
+reviewer = ""
+receiving_gate = ""
+```
+
+`allow = true` requires every other field to be populated; the metadata
+validator rejects partial fences. `allow = false` (the default for all nine
+extant grammars) treats the remaining keys as documentation slots and writes
+nothing to the runtime. The fence is reviewed at A.W4 (metadata-schema close)
+and re-verified at every receiving tranche named in `receiving_gate`.
 
 ## 6. Pipeline
 
@@ -930,18 +971,23 @@ Backend IR invariants:
 ### 7.3 Side Tables
 
 The optimized IR is not a third core IR. README says optimized IR is side-table
-data, not another central tree (`restart/README.md:104-118`). Side tables are:
+data, not another central tree (`restart/README.md:104-118`). Per Lock 2 and
+HARDENING-CONSOLIDATED §3 conflict #4, the layout-lowering pass is the public
+surface; HM/CSP type checking is its internal subroutine. `TypeFacts` is an
+internal scratch artefact of `passes::layout` (used by HM unification and CSP
+constrained choice) and never appears as a public side table; downstream passes
+read `LayoutFacts` instead. Public side tables are:
 
-| Table | Producer | Consumer |
-|---|---|---|
-| `TypeFacts` | Type inference | Backend IR builder, host registry, diagnostics. |
-| `ShapeFacts` | Shape mining | Direct builder, Value API, path typing. |
-| `RecognizerFacts` | Recognizer mining | BIR builder, SIMD/Pratt lowerers. |
-| `EGraphFacts` | Egraph bridge | Cost extraction. |
-| `CspSolution` | CSP solver | Cost extraction, layout, host chain typing. |
-| `CostFacts` | Cost model | Backend IR extraction, benchmark report. |
-| `RecoveryFacts` | Error pass | `ErrorRecover`, LSP diagnostics. |
-| `LayoutFacts` | Layout pass | `LayoutPush`, `LayoutPop`. |
+| Table | Producer | Consumer | Visibility |
+|---|---|---|---|
+| `LayoutFacts` | `passes::layout` (folds HM + bidirectional + CSP into layout decisions). | Backend IR builder (`LayoutPush`, `LayoutPop`), host registry, diagnostics. | Public. |
+| `ShapeFacts` | Shape mining. | Direct builder, Value API, path typing. | Public. |
+| `RecognizerFacts` | Recognizer mining. | BIR builder, SIMD/Pratt lowerers. | Public. |
+| `EGraphFacts` | Egraph bridge. | Cost extraction. | Public. |
+| `CspSolution` | CSP solver (when called by `passes::layout` or other clients). | Cost extraction, layout, host chain typing. | Public when produced for cost extraction; internal when produced inside layout lowering. |
+| `CostFacts` | Cost model. | Backend IR extraction, benchmark report. | Public. |
+| `RecoveryFacts` | Error pass. | `ErrorRecover`, LSP diagnostics. | Public. |
+| `TypeFacts` | HM + bidirectional checker (internal to `passes::layout`). | `passes::layout` only. | Internal subroutine artefact; not exported across pass boundaries. |
 
 ## 8. BBNF Language Surface
 
@@ -1017,7 +1063,7 @@ Type rules:
 
 | Rule | Contract |
 |---|---|
-| Inference is grammar-wide. | Rule references and host calls unify through `TypeFacts`. |
+| Inference is grammar-wide. | Rule references and host calls unify inside `passes::layout` through internal `TypeFacts`; downstream passes consume `LayoutFacts`, never `TypeFacts` directly. |
 | Annotations narrow, not bypass, inferred types. | Contradictions are diagnostics. |
 | Host functions are typed. | `@host fn` declarations and generic primitives share the same checker. |
 | Chains compose left-to-right. | Output of one host call is input to the next. |
@@ -1212,27 +1258,45 @@ generated runtime output under `runtime/src/grammars/yaml`.
 
 ### 12.1 Per-Grammar Authority Table
 
-Lock 14 mandates per-X tables for "all nine seed grammars" claims. The full
-10x9 table — bbnf, bnf, csv, css_l4, css_pretty, ebnf, google_sheets, json,
-math, plus future yaml, with columns for typed root, `ValueRef` shape, runtime
-files, visitor, path schema, fixture manifest, host route, generated LOC, and
-declaration-crate status — lands in the Wave 3 single-SYNTHESIS amendment. The
-amendment is fed by the per-grammar runtime-emission rows in PASS-2 §3 and the
-runtime/visitor/path budget rows in PASS-3.
+Lock 14 mandates per-X tables for "all nine seed grammars" claims. The
+authoritative 10-row × 9-column matrix below covers the nine extant grammars
+plus the `yaml` onboarding probe. It is fed by PASS-2 §3 runtime emission table
+(`restart/audit/pass-2-codegen/PASS-2.md:461-475`), PASS-2 §6 LOC budget table
+(`restart/audit/pass-2-codegen/PASS-2.md:380-392`), and PASS-3 §6a feeder table
+(`restart/audit/pass-3-runtime/PASS-3.md:333-344`); architecture is the
+authoritative consumer, the PASS surfaces remain the producer-side reference.
+Every "all extant grammars" or "all nine seed grammars" claim elsewhere in this
+document resolves against this table.
 
-Until Wave 3 lands the full matrix, every "all extant grammars" claim in this
-document refers to the corpus-derived grammar set: bbnf, bnf, csv, css_l4,
-css_pretty, ebnf, google_sheets, json, math. yaml is the onboarding probe and
-is not yet part of the seed set.
+| Grammar | Typed root | `ValueRef` borrow shape | Runtime files emitted | Visitor + `VisitTypes` | Path schema | Fixture manifest | Host route | Generated LOC (current → max) | Declaration-crate status |
+|---|---|---|---|---|---|---|---|---:|---|
+| `bbnf` | `Bbnf` | `BbnfRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, `host.rs`, layout, error, `PrattSpine` LUT | `BbnfVisitor`, `BbnfVisitTypes` | `bbnf.path-schema.toml` | `fixtures/bbnf/manifest.toml` | self-host primitives plus regen utilities; metadata + `@host fn` blocks in `bbnf.bbnf` | 21,503 → 21,933 | none (default; §5.6 fence empty) |
+| `bnf` | `Bnf` | `BnfRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, layout, error | `BnfVisitor`, `BnfVisitTypes` | `bnf.path-schema.toml` | `fixtures/bnf/manifest.toml` | none (pure recogniser; metadata-only host stanza) | 3,290 → 3,356 | none |
+| `csv` | `Csv` | `CsvRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, layout, error, `SimdScan` for delimiter alphabet | `CsvVisitor`, `CsvVisitTypes` | `csv.path-schema.toml` | `fixtures/csv/manifest.toml` | metadata + escape host fns from `host::primitives` | 1,693 → 1,727 | none |
+| `css_l4` | `CssL4` | `CssL4Root` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, `host.rs`, `layout.rs`, error, `SimdScan` for structural alphabet | `CssL4Visitor`, `CssL4VisitTypes` | `css_l4.path-schema.toml` | `fixtures/css/manifest.toml` | colour-function host primitives plus length conversion via `host::primitives`; metadata + `@host fn` blocks | 107,138 → 109,281 | none |
+| `css_pretty` | `CssPretty` | `CssPrettyRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, `layout.rs`, error | `CssPrettyVisitor`, `CssPrettyVisitTypes` | `css_pretty.path-schema.toml` | shares `fixtures/css/` corpus | metadata + format host fns from `host::primitives` | 9,021 → 9,201 | none |
+| `ebnf` | `Ebnf` | `EbnfRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, layout, error | `EbnfVisitor`, `EbnfVisitTypes` | `ebnf.path-schema.toml` | `fixtures/ebnf/manifest.toml` | none (metadata-only host stanza) | 7,646 → 7,799 | none |
+| `google_sheets` | `GoogleSheets` | `GoogleSheetsRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, `host.rs`, layout, error, `PrattSpine` for operator precedence | `GoogleSheetsVisitor`, `GoogleSheetsVisitTypes` | `google_sheets.path-schema.toml` | `fixtures/sheets/manifest.toml` | range/date/array-literal host primitives plus formula host chains | 14,088 → 14,370 | none |
+| `json` | `Json` | `JsonRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, layout, error, `SimdScan` for structural alphabet (twitter/citm/canada hot path) | `JsonVisitor`, `JsonVisitTypes` | `json.path-schema.toml` | `fixtures/json/manifest.toml` | metadata + numeric/string host fns from `host::primitives` | 3,500 → 3,570 | none |
+| `math` | `Math` | `MathRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, layout, error, `PrattSpine` for operator precedence | `MathVisitor`, `MathVisitTypes` | `math.path-schema.toml` | `fixtures/math/manifest.toml` | metadata + numeric host fns from `host::primitives` (Pratt-eligible operator chain only) | 871 → 888 | none |
+| `yaml` (onboarding probe) | `Yaml` | `YamlRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, `host.rs` (if metadata declares host route), layout, error; Pratt/SIMD auto-detected from grammar shape | `YamlVisitor`, `YamlVisitTypes` | `yaml.path-schema.toml` | parity-phase `fixtures/yaml/manifest.toml` (post-onboarding gate, never an onboarding surface) | 0 → ≤ 4,000 (provisional; SYNTHESIS Wave-2 owner) | none (Lock 14 onboarding admits exactly two surfaces: `yaml.bbnf` plus `[workspace.metadata.bbnf.grammars.yaml]`; declaration crate is forbidden at onboarding) |
 
-| Column | Wave 3 source |
+Column semantics:
+
+| Column | Definition |
 |---|---|
-| Typed root type and `ValueRef` shape. | PASS-1 §2 type contract plus PASS-3 §5 value posture. |
-| Runtime file inventory (`generated.rs`, `parser.rs`, `host.rs`, layout, error). | PASS-2 §3 runtime template emission table. |
-| Visitor, path schema, fixture manifest. | PASS-3 §6 visitor/path commitments plus §11 fixture handoff. |
-| Host route (`@host fn`, generic primitives, metadata, declaration crate). | PASS-1 §3 host decomposition plus §5.6 review form. |
-| Generated LOC budget. | PASS-2 §11 +2 percent ceiling and per-grammar baselines. |
-| Declaration-crate status (default vs. fenced exception). | §5.6 review form must be empty for the seed set. |
+| Typed root | The generated direct-to-struct type returned by `parse(&'i str)` per PASS-3 §2. |
+| `ValueRef` borrow shape | The untyped tape-cursor view over `&'i Tape<'i>` that backs `pointer!`, `select!`, visitors, and the debugger per Lock 1 and PASS-3 §4. |
+| Runtime files emitted | Template-emitted files under `runtime/src/grammars/<name>/`; every cell is generated or data-only, hand-written runtime files are forbidden by Lock 14. |
+| Visitor + `VisitTypes` | The generated `Visitor` trait and its bitflag-pruned visit-type set per PASS-3 §3. |
+| Path schema | The generated path-schema sidecar consumed by `pointer!`/`select!` typing per PASS-3 §3. |
+| Fixture manifest | The corpus manifest under `crates/test-fixtures/corpus/`; `yaml` carries a parity-phase manifest only. |
+| Host route | The host-function decomposition source: `@host fn` blocks in the grammar, generic primitives in `host::primitives`, or workspace-metadata directives. Declaration crates are not part of the default host route. |
+| Generated LOC | PASS-2 §6 baselines and +2% ceiling per grammar; LOC excludes `parser.rs` macros and `host.rs` shells per Lock 13's generated-file exemption. |
+| Declaration-crate status | `none` (default; §5.6 fence empty) for every grammar in the seed set. Any future entry must populate the eight-field §5.6 review form. |
+
+The "Until Wave 3 lands the full matrix" note that previously occupied this
+section retires; the matrix above is the matrix.
 
 ## 13. File And Directory Discipline
 

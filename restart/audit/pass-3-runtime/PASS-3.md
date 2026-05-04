@@ -203,11 +203,9 @@ crates/bbnf/src/
   visitor/
   diagnostics/
   metadata/
-  value/
-  tape/
 ```
 
-The public crate keeps 8 cohesive children after `lib.rs`/`prelude.rs`: `parse/` (entry constructors), `document/` (root + view), `query/` (`pointer!`/`select!` adapters), `visitor/` (generated traits + `VisitTypes` pruning), `diagnostics/` (rendering + categories), `metadata/` (workspace-metadata access, host route surface, layout descriptors), `value/` (typed-root projection), and `tape/` (re-export of substrate cursor types). The grammar-specific surface (`Json`, `CssL4`, etc.) is generated under per-grammar runtime crates referenced from `metadata/`, not as a sibling directory in `bbnf/src/`. Host-function bindings, layout lowering hooks, and metadata sidecars all live under `metadata/`. Lock 13's 4-10 child-count discipline holds.
+The public crate carries exactly 8 immediate children — `lib.rs`, `prelude.rs`, `parse/` (entry constructors), `document/` (root + view), `query/` (`pointer!`/`select!` adapters), `visitor/` (generated traits + `VisitTypes` pruning), `diagnostics/` (rendering + categories), and `metadata/` (workspace-metadata access, host route surface, layout descriptors) — per HARDENING-CONSOLIDATED §4.19 and Lock 13's 4-10 child-count rule. The substrate cursor (`tape/`) and the typed-root projection (`value/`) live under `runtime/src/tape/` and `runtime/src/value/` per Lock 1; the aggregator re-exports them through `prelude.rs` rather than carrying duplicate sibling directories. The grammar-specific surface (`Json`, `CssL4`, etc.) is generated under per-grammar runtime crates referenced from `metadata/`, not as a sibling directory in `bbnf/src/`. Host-function bindings, layout lowering hooks, and metadata sidecars all live under `metadata/`.
 
 `bbnf-cli`:
 

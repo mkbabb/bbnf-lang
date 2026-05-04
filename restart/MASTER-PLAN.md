@@ -292,7 +292,7 @@ Stub waves:
 | Wave | Scope | Consumer gate |
 |---|---|---|
 | C.W0 | Grammar IR enum, IDs, spans, validation. | Seed grammar lowers AST to Grammar IR. |
-| C.W1 | TypeFacts and HM/bidirectional core. | Host-free seed grammar typechecks. |
+| C.W1 | HM + bidirectional + CSP type-checking subroutine inside `passes::layout`; `LayoutFacts` as the public side-table. `TypeFacts` lives only inside the layout pass. | Host-free seed grammar typechecks; downstream passes read `LayoutFacts`, never `TypeFacts`. |
 | C.W2 | ShapeFacts and value-shape mining. | Direct-builder shell contract consumes ShapeFacts in a C fixture and records B integration gaps. |
 | C.W3 | RecognizerFacts and Pratt/SIMD candidate mining. | Facts feed E-owned BIR snapshots, not placeholder hints. |
 | C.W4 | CSP/egraph bridge tables. | Egraph and CSP exchange facts through bridge API. |

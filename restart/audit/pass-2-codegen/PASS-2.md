@@ -136,21 +136,28 @@ Detection thresholds:
 
 ## §3 Per-Crate Trees
 
+`ir` Backend IR ownership:
+
+```text
+ir/src/backend_ir/
+  mod.rs
+  module.rs
+  node.rs
+  shape.rs
+  host.rs
+  layout.rs
+  lookbehind.rs
+  pratt.rs
+  simd.rs
+  snapshot.rs
+```
+
 `codegen`:
 
 ```text
 codegen/src/
   backend_ir/
-    mod.rs
-    module.rs
-    node.rs
-    shape.rs
-    host.rs
-    layout.rs
-    lookbehind.rs
-    pratt.rs
-    simd.rs
-    snapshot.rs
+    README.md
   lower/
     mod.rs
     rust/
@@ -180,7 +187,16 @@ codegen/src/
     budgets.rs
 ```
 
-Rationale: the current `Emitter` surface spans hundreds of lines (`crates/core/src/backend/emitter.rs:31-566`). PASS-B already called for collapsing it to 8-10 methods (`restart-archive-2026-05-04/audit/passes/PASS-B.md:181-186`). The new tree makes Backend IR a crate-local contract and lowerers shallow consumers.
+Rationale: the current `Emitter` surface spans hundreds of lines (`crates/core/src/backend/emitter.rs:31-566`). PASS-B already called for collapsing it to 8-10 methods (`restart-archive-2026-05-04/audit/passes/PASS-B.md:181-186`). Backend IR types live in `ir`, because Lock 5 makes BIR the cross-crate contract. `codegen/src/backend_ir/README.md` is documentation only: it records the import boundary and points contributors to `ir::backend_ir`.
+
+Import-deny floor:
+
+| Gate | Required assertion | Failure means |
+|---|---|---|
+| Rust lowerer imports | `codegen::lower::*` imports `ir::backend_ir::*` and does not import Grammar IR modules. | Lowerer is walking source grammar. |
+| WASM lowerer imports | `codegen::lower::wasm::*` imports the same BIR module as Rust. | WASM has forked the lowering contract. |
+| Runtime template imports | Template parameters are serializable BIR snapshots or runtime metadata, not Grammar IR nodes. | Template has become a hidden compiler pass. |
+| Snapshot gate | `cargo xtask bbnf bir --all --check` emits stable BIR snapshots before lowerers run. | The BIR boundary is not externally inspectable. |
 
 `runtime`:
 
@@ -270,6 +286,7 @@ PASS-3 receives these contracts:
 | Host table metadata | `host` registry plus generated `host.rs` | package integration and user host bindings |
 | WASM ABI descriptor | `codegen/lower/wasm/abi.rs` | npm/browser packaging |
 | Materialisation cost table | BIR decision log | API docs and performance explanation |
+| Consumer proof | generated metadata for paths, visitors, diagnostics, and host tables | `path-core`, `runtime`, and language-server smoke tests |
 
 BD.W5 parity is not a PASS-2 close gate. It remains downstream: 9 grammars times at least 3 fixtures times 3 backends, for at least 81 cells (`docs/tranches/BD/waves/W5.md:181-217`).
 
@@ -290,6 +307,16 @@ PASS-2 assumes PASS-1 will provide:
 
 The PASS-1 prompt names these products as hand-offs (`restart/prompts/PASS-1-SUBSTRATE.md:57-70`). In this parallel Phase 1 run, PASS-1 output is intentionally unavailable; SYNTHESIS must reconcile final PASS-1 artefacts later.
 
+Future grammar onboarding smoke:
+
+| Surface | PASS-2 proof |
+|---|---|
+| Grammar source | `grammars/yaml.bbnf` lowers to BIR without hand-written Rust. |
+| Metadata | workspace metadata registers yaml and feeds template parameters. |
+| Runtime emission | `runtime/src/grammars/yaml/*` is generated from BIR/runtime template only. |
+| Registry | generated registry sees yaml through metadata, not grammar-name dispatch. |
+| Gate | `cargo xtask bbnf build yaml --check && cargo test -p runtime future_grammar_yaml_runtime`. |
+
 ## §6 Generated LOC
 
 Generated Rust output starts from PASS-B's 168,750 LOC baseline across 9 grammars (`restart-archive-2026-05-04/audit/passes/PASS-B.md:91-101`). Lock 14's budget block starts at 168K and requires budget checks (`restart/locks/14-LOCKS.md:118-125`). PASS-2 sets an initial +2% ceiling while the template transition lands:
@@ -309,6 +336,16 @@ Generated Rust output starts from PASS-B's 168,750 LOC baseline across 9 grammar
 
 Generated files are exempt from the per-file LOC cap but not from this budget. Non-generated files still obey Lock 13's 500 LOC cap (`restart/locks/14-LOCKS.md:58`).
 
+Non-generated budget and child-count floor:
+
+| Area | Budget |
+|---|---|
+| `ir/src/backend_ir/*` | No handwritten file over 500 LOC; each module must stay inside the 4-10 sibling shape. |
+| `codegen/src/lower/rust/*` | No handwritten file over 500 LOC; lowerer files partition by emitted concern, not by grammar. |
+| `codegen/src/lower/wasm/*` | No handwritten file over 500 LOC; wasm32 binding path shares BIR tests with Rust. |
+| `codegen/src/runtime_template/*` | No handwritten file over 500 LOC; template files are concern-split and grammar-agnostic. |
+| `xtask/src/regen/*` | Split before new generation paths land; `regen.rs` does not grow further. |
+
 Regen-cycle wall-time budget:
 
 | Cycle | Budget | Reason |
@@ -324,13 +361,17 @@ Performance gates come from README: JSON twitter ≤380us, canada ≤2.8ms, citm
 
 Trajectory:
 
-| Gate | PASS-2 mechanism | Evidence artefact |
-|---|---|---|
-| Remove OpenFrame checkpoint cost | TapeBuilder length checkpoints | samply confirms no `Vec<OpenFrame>::clone`; old pathology cited at `restart/corpora/RESTART-SKETCH.md:154-184` |
-| JSON structural scan | `SimdScan` BIR plus `simd-scan` kernels | kernel parity and index throughput |
-| CSS scanner/layout | `Layout`, `RegexDfa`, `HostCall`, `SimdScan` | bootstrap/animate benchmark rows |
-| Pratt expressions | `PrattSpine` auto-detected | operator table snapshot and formula fixtures |
-| WASM | wasm32 binding path with scalar/SIMD scan parity | JSON smoke and twitter WASM bench handoff |
+| Gate | Competitor anchor | PASS-2 mechanism | Evidence artefact |
+|---|---|---|---|
+| Remove OpenFrame checkpoint cost | Internal old sketch checkpoint clone pathology (`restart/corpora/RESTART-SKETCH.md:154-184`). | TapeBuilder length checkpoints. | samply confirms no `Vec<OpenFrame>::clone`. |
+| JSON twitter <= 380us | sonic-rs M1 twitter 436us and simd-json fixture anchor (`restart/corpora/SOTA.md:50-58`). | `SimdScan` BIR plus `simd-scan` structural scan. | `cargo bench -p bbnf-bench --bench sota_json -- twitter`. |
+| JSON citm <= 750us | sonic/simd-json citm anchor (`restart/corpora/SOTA.md:50-58`). | PHF/dispatch plus tape/direct object traversal. | `cargo bench -p bbnf-bench --bench sota_json -- citm`. |
+| JSON canada <= 2.8ms | sonic/simd-json canada anchor (`restart/corpora/SOTA.md:50-58`). | Array-heavy tape builder and scanner constants. | `cargo bench -p bbnf-bench --bench sota_json -- canada`. |
+| CSS bootstrap <= 3.0ms | lightning-css bootstrap 4.16ms (`restart/corpora/SOTA.md:130-136`). | `Layout`, `RegexDfa`, `HostCall`, `SimdScan`. | `cargo bench -p bbnf-bench --bench sota_css -- bootstrap`. |
+| CSS animate <= 1.6ms | lightning-css animate 1.97ms (`restart/corpora/SOTA.md:130-136`). | recognizer facts plus layout lowering. | `cargo bench -p bbnf-bench --bench sota_css -- animate`. |
+| simdjson-class structural scan | simdjson on-demand 7 GB/s-class anchor (`restart/corpora/SOTA.md:73-89`). | data-only `StructuralAlphabet` and arch parity. | kernel parity and index throughput report. |
+| Pratt expressions | Current Pratt LUT inheritance. | `PrattSpine` auto-detected. | operator table snapshot and formula fixtures. |
+| WASM | BD wasm-bindgen production path. | wasm32 binding path with scalar/SIMD scan parity. | JSON smoke and twitter WASM bench handoff. |
 
 PASS-2 should not claim final perf wins until generated parsers run the corpus, but it defines the only mechanisms by which those gates can be met.
 
@@ -345,6 +386,21 @@ Per-construct contribution plan:
 | `PrattSpine` | Replaces layered recursive descent for expression families with loop/table dispatch. | current generated Rust already carries Pratt LUT inheritance (`crates/core/src/backend/rust/emitter/grammar.rs:194-202`). |
 | `HostCall` | Moves chained host functions into typed generic calls. | README host fn and chaining scope (`restart/README.md:145-166`). |
 | `Layout` | Centralizes skip policy and prevents repeated whitespace scanning. | `@layout` in V1 (`restart/README.md:176-178`). |
+
+Runtime emission table:
+
+| Grammar | Runtime module | Required smoke |
+|---|---|---|
+| bbnf | `runtime/src/grammars/bbnf/` | parse grammar corpus and emit metadata. |
+| bnf | `runtime/src/grammars/bnf/` | parse canonical BNF fixtures. |
+| csv | `runtime/src/grammars/csv/` | parse row/quote fixtures. |
+| css_l4 | `runtime/src/grammars/css_l4/` | parse bootstrap/animate fixtures. |
+| css_pretty | `runtime/src/grammars/css_pretty/` | parse pretty-print fixtures. |
+| ebnf | `runtime/src/grammars/ebnf/` | parse EBNF corpus. |
+| google_sheets | `runtime/src/grammars/google_sheets/` | parse formula fixtures and host chains. |
+| json | `runtime/src/grammars/json/` | parse twitter/citm/canada fixtures. |
+| math | `runtime/src/grammars/math/` | parse Pratt expression fixtures. |
+| yaml | `runtime/src/grammars/yaml/` | future-grammar smoke from source + metadata only. |
 
 ## §8 Inheritance Ledger
 
@@ -371,9 +427,29 @@ Wave-by-wave carries:
 | BD.W3 | Publication order and semver check discipline (`docs/tranches/BD/waves/W3.md:8-27`, `docs/tranches/BD/waves/W3.md:79-96`). | Route to PASS-3/package release work. | Publishing claims in PASS-2. |
 | BD.W4 | Fleet fixture and matrix shape (`docs/tranches/BD/waves/W4.md:8-27`, `docs/tranches/BD/waves/W4.md:187-197`). | Use as downstream parity fixtures. | PASS-2 fixture fleet implementation. |
 
+Diagnostic ledger:
+
+| Code | Trigger | PASS-2 producer |
+|---|---|---|
+| `BBNF-GEN001` | lowerer imports Grammar IR or source AST. | import-deny check. |
+| `BBNF-GEN014` | generated LOC exceeds per-grammar or total budget. | regen budget check. |
+| `BBNF-CODEGEN021` | BIR snapshot changed without committed generated output. | regen equality. |
+| `BBNF-CODEGEN033` | runtime template lacks path/visitor/diagnostic metadata. | metadata consumer smoke. |
+| `BBNF-LIFE009` | emitted owned/borrowed constructor violates lifetime surface. | runtime compile tests. |
+| `BBNF-SEM040` | unbounded lookbehind reaches BIR. | BIR validation. |
+
+Carry ledger:
+
+| Item | Receiver | Blocker | Gate |
+|---|---|---|---|
+| PASS-1 Grammar IR to BIR handoff | SYNTHESIS and Tranche E | PASS-1 final schema differs from this BIR table. | Stable BIR snapshot for every extant grammar. |
+| PASS-3 metadata consumption | SYNTHESIS and Tranche G | Runtime template omits path/visitor/diagnostic metadata. | PASS-3 consumer tests listed in §4. |
+| WASM parity | Tranche H/J | wasm32 binding compiles but does not share Rust parser core. | Rust/VM/WASM parity matrix for seed grammars. |
+| yaml onboarding | Tranche A/G/F | Any manual registry or Rust source edit is required. | Future grammar smoke in §5. |
+
 ## §9 Punch List
 
-1. Implement `codegen::backend_ir` with the 23-variant table and snapshot printer.
+1. Implement `ir::backend_ir` with the 23-variant table and snapshot printer.
 2. Add PASS-1 to PASS-2 handoff tests once PASS-1 artefacts exist: Grammar IR to BIR, cost plan, host signatures, layout/error annotations.
 3. Replace the broad `Emitter` trait with BIR consumer APIs and enforce import-deny checks.
 4. Build `runtime/src/tape/` and TapeBuilder checkpoints; delete OpenFrame-style runtime builders during migration.

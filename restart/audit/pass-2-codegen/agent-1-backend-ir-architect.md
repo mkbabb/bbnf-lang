@@ -105,3 +105,7 @@ Cross-pass risk: prompt text from inheritance still states ParseStream and rewri
 | PASS-B | Emitter trait collapse to 8-10 methods and runtime-template pivot (`restart-archive-2026-05-04/audit/passes/PASS-B.md:181-186`). | Apply to Tape/direct-to-struct, not direct-only. | Old no-tape posture. |
 | Amendment 01 | Zero per-grammar crates for the 9 grammars (`restart-archive-2026-05-04/audit/master-plan/AMENDMENT-01-NO-PER-GRAMMAR-CRATES.md:13-24`). | Re-anchor crate names to current README's no-prefix internal workspace. | Mandatory per-grammar declaration crates from MASTER-PLAN (`restart-archive-2026-05-04/audit/master-plan/MASTER-PLAN.md:79-89`). |
 | SOTA | simdjson tape insight and sonic-rs direct structs are both useful (`restart/corpora/SOTA.md:73-89`, `restart/corpora/SOTA.md:30-44`). | Union the ideas through Tape-backed direct typed values. | Old corpus anti-tape verdict (`restart/corpora/SOTA.md:202-214`). |
+
+## Wave 2 correction note
+
+This agent's BIR ownership tree (agent-1 §1, line 25 cited by HARDENING-PASS-2 punch item 1) is superseded by the PASS-1.md:41 ratification: type definitions and the variant alphabet live under `ir/src/backend_ir/`. PASS-2 ratifies that ownership at PASS-2.md:184; new variants and alphabet edits return to PASS-1 + Architecture §7. This agent's text remains useful as the per-variant payload and lowering-rule source record; the ownership path it carried is corrected upstream.

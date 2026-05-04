@@ -101,3 +101,7 @@ PASS-3 receives: parse signatures, document/view names, error shape, visitor hoo
 | Builder template | Arena/checkpoint vocabulary (`crates/core/src/runtime/builder_template.rs:121-210`). | Convert to TapeBuilder length checkpoints. | OpenFrame stack and `Clone` checkpoints. |
 | sonic-rs | Direct struct and lazy value lessons (`restart/corpora/SOTA.md:30-44`). | Direct views borrow into Tape. | Direct-only substrate that bypasses Tape. |
 | simdjson | Tape and structural scan lessons (`restart/corpora/SOTA.md:73-89`). | Use tape with typed views, not untyped DOM only. | Separate tape from typed values. |
+
+## Wave 2 correction note
+
+This agent's Rust V1 lowerer obligation (agent-2 §6 risk mitigation, line 84 cited by HARDENING-PASS-2 punch item 9) is augmented by PASS-2's PASS-3 consumer acceptance gates at the close of PASS-2.md §4. The emitted parse signatures must compile under PASS-3 API wrappers; document/view metadata must feed visitor + selectors; the materialisation cost table must be generated and documented. The named verification commands at PASS-2.md §4 close are the binding gate; this agent's lowerer obligation tree feeds those gates.

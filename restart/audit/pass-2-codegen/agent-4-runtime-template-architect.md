@@ -101,3 +101,7 @@ PASS-3 consumes: parse function names, document/view types, visitor trait, selec
 | Current arena template | Compact slab arena concept (`crates/core/src/runtime/arena_template.rs:80-134`). | Payload arena under Tape. | Grammar opt-out comments and outlier split. |
 | Current runtime tree | Names of existing grammars for migration inventory (`crates/core/src/runtime/mod.rs:8-23`). | Generated per-grammar subdirs. | Manual module list and re-export fanout. |
 | Amendment 01 | Zero per-grammar crates and metadata-driven onboarding (`restart-archive-2026-05-04/audit/master-plan/AMENDMENT-01-NO-PER-GRAMMAR-CRATES.md:13-24`). | Re-anchor to current crate names. | MASTER-PLAN per-grammar crate skeletons. |
+
+## Wave 2 correction note
+
+This agent's runtime template emission (agent-4 §1, line 23 cited by HARDENING-PASS-2 punch items 3 and 4; agent-4 §2/§3, line 82 cited by punch item 7) is augmented by PASS-2's per-grammar runtime emission table (PASS-2.md §6) whose columns are `generated.rs`, `parser.rs`, `host.rs`, host source, layout source, error source, Pratt/SIMD source. Hand-written runtime files are forbidden; every cell is template-emitted or data-only, with the prohibition enforced by `rg -n "// hand-written" crates/runtime/src/grammars/` returning zero. The yaml smoke row reaches the table at the same column shape; this agent's template parameter schema feeds every column.

@@ -67,3 +67,7 @@ PASS-3 receives WASM API choices: package surface, JS init flow, result serializ
 | BD.W2 | wasm-bindgen and pointer/length direction (`docs/tranches/BD/waves/W2.md:38-62`, `docs/tranches/BD/waves/W2.md:165-183`). | Re-anchor crate names and host model to current README. | Per-grammar parser crates. |
 | `simd-scan` | Existing architecture and arch dispatch (`crates/simd-scan/src/lib.rs:19-29`). | Configure only via BIR structural alphabets. | Grammar-specific scanner code. |
 | SOTA | simdjson structural scan throughput target (`restart/corpora/SOTA.md:73-89`). | Use for grammar-specific alphabets and Tape offsets. | Separate DOM-like tape with no typed views. |
+
+## Wave 2 correction note
+
+This agent's perf trajectory (agent-3 §1, line 20 cited by HARDENING-PASS-2 punch item 5) is superseded by PASS-2.md §7's row-complete SOTA table whose columns are `Competitor / Dataset / Platform / bbnf target / PASS-2 mechanism / Evidence artefact`. Mechanism-only rows (OpenFrame deletion, Pratt auto-detection, WASM parity) are demoted to a sister mechanism-gate table per HARDENING-CONSOLIDATED §4.29. The wasm32 binding-path obligation this agent carries remains intact; the SOTA gate routing is corrected.

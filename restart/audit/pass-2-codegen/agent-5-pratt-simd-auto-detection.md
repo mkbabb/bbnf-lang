@@ -91,3 +91,7 @@ PASS-3 receives decision logs and materialisation cost. API docs can expose why 
 | Current Rust emitter | Existing Pratt/PHF table knowledge (`crates/core/src/backend/rust/emitter/grammar.rs:155-202`). | Move selection out of emitter into BIR annotations. | Lowerer-local strategy selection. |
 | `simd-scan` | Data-driven alphabets and kernel shapes (`crates/simd-scan/src/alphabet.rs:1-18`, `crates/simd-scan/src/alphabet.rs:98-125`). | Couple scan results to Tape node offsets. | Grammar-specific scanner variants. |
 | SOTA | simdjson and lightningcss performance anchors (`restart/corpora/SOTA.md:12-16`, `restart/corpora/SOTA.md:130-136`). | Use anchors as gates for BIR cost trajectory. | Blind benchmark claims without corpus rows. |
+
+## Wave 2 correction note
+
+This agent's Pratt/SIMD/PHF/Lookbehind decision rules (agent-5 §1, lines 13-17 cited by HARDENING-PASS-2 punch item 7) are augmented by PASS-2's lookbehind co-amendment at PASS-2.md §2 adjacent to the `Lookbehind` detection threshold. The codegen-side ratification binds canonical `|<` grammar-level syntax to finite-width legality; PASS-1's `BBNF1004` reaches the user surface; PASS-2's `BBNF-SEM040` halts codegen close before any lowerer emits a parser file. The Pratt-not-applied (`BBNF2103`) and SIMD-not-selected (`BBNF2104`) diagnostic strings remain owned by PASS-1 (PASS-1.md:100-101); this agent's selection logic feeds both.

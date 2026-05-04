@@ -81,3 +81,7 @@ PASS-3: PASS-2 emits runtime module shape and materialisation cost. PASS-3 owns 
 | CENSUS | God-module evidence and per-grammar runtime inventory (`restart/corpora/CENSUS.md:321-354`, `restart/corpora/CENSUS.md:435-527`). | Convert inventory to greenfield crate tree. | Manual runtime module re-exports. |
 | PASS-B | Generated LOC baseline and emitter collapse (`restart-archive-2026-05-04/audit/passes/PASS-B.md:91-101`, `restart-archive-2026-05-04/audit/passes/PASS-B.md:181-186`). | Apply to Tape and no per-grammar crates. | Old direct-only/no-tape wording. |
 | BD parity waves | Production parity test shape (`docs/tranches/BD/waves/W5.md:181-217`). | Keep as PASS-3/BD handoff. | Claiming it at PASS-2 close. |
+
+## Wave 2 correction note
+
+This agent's codegen close gate enumeration (agent-6 §1, lines 39-43 cited by HARDENING-PASS-2 punch items 2 and 6) is augmented by PASS-2's expanded non-generated LOC + child-count budget table at PASS-2.md §6, which now binds `runtime/src/*` and `host/src/*` budgets, child-count proofs, and per-area enforcing commands. The verbatim deny command `rg -n "GrammarIR" crates/codegen/src/lower crates/codegen/src/runtime_template` remains the codegen close gate at PASS-2.md:232; the BIR ownership ratification at PASS-2.md:184 corrects the ownership path. The carry ledger at PASS-2.md §8 carries the eight Receiver/Blocker/Receiving-gate triples per HARDENING-CONSOLIDATED §4.39.

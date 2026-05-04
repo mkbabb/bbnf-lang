@@ -410,9 +410,17 @@ The **14 locks** at `restart/locks/14-LOCKS.md` are settled and govern the green
 | PASS-3 | `restart/prompts/PASS-3-RUNTIME.md` | top | bbnf aggregator / value API / path + select DSLs / visitor surface / tape + direct-to-struct union / lazy materialisation / error recovery / incremental parsing / LSP / CLI / fixtures / playground / docs |
 | SYNTHESIS | `restart/prompts/SYNTHESIS.md` | meta | consolidates 3 PASS outputs into ARCHITECTURE.md + MIGRATION.md + the master plan |
 | HARDENING | `restart/prompts/HARDENING.md` | gate | per-target nine-lane audit; Pro/Con/Explication/Challenge per-item discipline; KEEP/REINVENT/DISCARD verdicts |
-| HARDENING-ORCHESTRATOR | `restart/prompts/HARDENING-ORCHESTRATOR.md` | gate | invokes HARDENING.md against four targets (PASS-1, PASS-2, PASS-3, SYNTHESIS); consolidates four reports into single readiness verdict; gates tranche drafting |
+| HARDENING-ORCHESTRATOR | `restart/prompts/HARDENING-ORCHESTRATOR.md` | pipeline | **the entry-point prompt** for single-agent execution (Codex). Walks all six phases serially: PASS-1 → PASS-2 → PASS-3 → SYNTHESIS (3 documents) → 4 hardening passes → consolidation. Resumable across invocations via artefact-detection. Executor reads this prompt, determines which phase is next, executes that phase, commits, optionally continues or halts for next invocation |
 
 **No Stage-2 hardening. No Stage-3 meta-review. One round.** The three prior stages were a contrivance; the user has flagged this. One PASS suite, one synthesis, one hardening orchestrated across four targets, then tranches.
+
+### Single-agent execution (Codex)
+
+For a single-agent executor without sub-agent dispatch capability (e.g., Codex), `restart/prompts/HARDENING-ORCHESTRATOR.md` is the **single entry-point prompt**. The executor reads it once; the prompt names six phases; the executor walks them serially (one per invocation, or multiple per invocation if budget permits); commits between phases; resumes from the next-uncomitted phase on subsequent invocations.
+
+The PASS-N prompts' "six sub-agents" decompose into **six analytical lenses applied sequentially within ONE PASS-N.md synthesis** under single-agent execution. The executor does NOT produce six per-lens files; it produces one synthesis file whose §3-§8 (or equivalent) carry the six lens findings as numbered sections.
+
+For multi-agent executors (Claude Code with full sub-agent dispatch), each PASS-N prompt independently dispatches its six sub-agents in parallel, then synthesises; the orchestrator coordinates across PASS instances. Either model produces the same artefact set.
 
 After hardening returns *ready*, full-spec tranche drafting begins. **Not before.** Tranches are layer-aligned: tranches earning each layer's milestones land in dependency order. The fresh tranche set begins at letter A; the prior BA-BD plan-set survives at `docs/tranches/{BA,BB,BC,BD}/` as inheritance reference, archived to `docs/tranches/archive/legacy-Y-BD/` at Tranche-A.W0 execution time per Pass-C's ratification.
 

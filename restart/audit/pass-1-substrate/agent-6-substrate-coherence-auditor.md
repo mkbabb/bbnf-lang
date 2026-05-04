@@ -59,3 +59,9 @@ Verdict: tape is the substrate term. It is implemented as a union with direct-to
 | BB path/lazy value surface | Slice-borrow and lazy path surface survive (`docs/tranches/BB/BB.md:5`-`docs/tranches/BB/BB.md:7`). | Direct-only premise dissolves. | Path API reads one value substrate. |
 | BC visitor/pointer formalization | Pointer and visitor pressure survives (`docs/tranches/BC/BC.md:23`). | Old crate split is not binding. | PASS-1 names value and visitor contracts. |
 | BD parity fixtures | Cross-backend parity pressure survives (`docs/tranches/BD/BD.md:35`-`docs/tranches/BD/BD.md:37`). | Fixture implementation is later. | Tape/direct values must serialize consistently across backends. |
+
+## Wave 2 correction note — OpenFrame framing retired
+
+Source: `restart/audit/hardening/HARDENING-CONSOLIDATED.md` §4 item 46; `restart/audit/hardening/HARDENING-PASS-1.md:198`.
+
+The §2 row above for "Runtime builders" frames OpenFrame as "Useful as backend-internal stack detail." That framing is retired. OpenFrame is not a useful generic substrate detail and must not appear as an internal generic-runtime stack mechanism. The PASS-1 amendment in `restart/audit/pass-1-substrate/PASS-1.md` §2 commits the positive replacement: dispatch and speculation use generated Backend IR builder frames keyed by `RuleId`/`NodeId` plus `TapeBuilder` checkpoints, with rollback by checkpoint restore rather than frame cloning. Existing OpenFrame code in `crates/core/src/runtime/{json,css_l4}/builder.rs` is deletion archaeology only; no public substrate API and no generic runtime crate carries an `OpenFrame` type after restart, and the BIR producer never emits a clone-stack frame variant. The verdict on the "Runtime builders" row is to be read as REINVENT-by-replacement: the existing builders dissolve into generated builder frames; no OpenFrame name survives.

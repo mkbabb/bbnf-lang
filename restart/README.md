@@ -410,17 +410,38 @@ The **14 locks** at `restart/locks/14-LOCKS.md` are settled and govern the green
 | PASS-3 | `restart/prompts/PASS-3-RUNTIME.md` | top | bbnf aggregator / value API / path + select DSLs / visitor surface / tape + direct-to-struct union / lazy materialisation / error recovery / incremental parsing / LSP / CLI / fixtures / playground / docs |
 | SYNTHESIS | `restart/prompts/SYNTHESIS.md` | meta | consolidates 3 PASS outputs into ARCHITECTURE.md + MIGRATION.md + the master plan |
 | HARDENING | `restart/prompts/HARDENING.md` | gate | per-target nine-lane audit; Pro/Con/Explication/Challenge per-item discipline; KEEP/REINVENT/DISCARD verdicts |
-| HARDENING-ORCHESTRATOR | `restart/prompts/HARDENING-ORCHESTRATOR.md` | pipeline | **the entry-point prompt** for single-agent execution (Codex). Walks all six phases serially: PASS-1 → PASS-2 → PASS-3 → SYNTHESIS (3 documents) → 4 hardening passes → consolidation. Resumable across invocations via artefact-detection. Executor reads this prompt, determines which phase is next, executes that phase, commits, optionally continues or halts for next invocation |
+| HARDENING-ORCHESTRATOR | `restart/prompts/HARDENING-ORCHESTRATOR.md` | pipeline | **the entry-point prompt**. Coordinates six phases: dispatches three PASS orchestrators in parallel (Phase 1); dispatches SYNTHESIS (Phase 2); dispatches four hardening agents in parallel (Phase 3); consolidates the four hardening reports into a single readiness verdict (Phase 6). Each dispatched PASS orchestrator internally dispatches its six sub-agents per the PASS-N contract. Total fan-out at peak: 3 PASS orchestrators × 6 sub-agents + 4 hardeners = 22 concurrent agents. Idempotent: every phase checks artefact existence and skips completed phases; safe to re-invoke after interruption. |
 
 **No Stage-2 hardening. No Stage-3 meta-review. One round.** The three prior stages were a contrivance; the user has flagged this. One PASS suite, one synthesis, one hardening orchestrated across four targets, then tranches.
 
-### Single-agent execution (Codex)
+### Pipeline shape
 
-For a single-agent executor without sub-agent dispatch capability (e.g., Codex), `restart/prompts/HARDENING-ORCHESTRATOR.md` is the **single entry-point prompt**. The executor reads it once; the prompt names six phases; the executor walks them serially (one per invocation, or multiple per invocation if budget permits); commits between phases; resumes from the next-uncomitted phase on subsequent invocations.
+Invoke `restart/prompts/HARDENING-ORCHESTRATOR.md`. The orchestrator dispatches sub-agents across phases:
 
-The PASS-N prompts' "six sub-agents" decompose into **six analytical lenses applied sequentially within ONE PASS-N.md synthesis** under single-agent execution. The executor does NOT produce six per-lens files; it produces one synthesis file whose §3-§8 (or equivalent) carry the six lens findings as numbered sections.
+```
+Phase 1: dispatch 3 PASS orchestrators in parallel
+         each PASS orchestrator dispatches its own 6 sub-agents internally
+         total: 3 × (1 + 6) = 21 agents in flight
+         all PASS syntheses commit before Phase 2 enters
 
-For multi-agent executors (Claude Code with full sub-agent dispatch), each PASS-N prompt independently dispatches its six sub-agents in parallel, then synthesises; the orchestrator coordinates across PASS instances. Either model produces the same artefact set.
+Phase 2: dispatch 1 SYNTHESIS agent
+         consumes 3 PASS outputs; produces ARCHITECTURE.md + MIGRATION.md + MASTER-PLAN.md
+         commit before Phase 3 enters
+
+Phase 3: dispatch 4 hardening agents in parallel
+         targets: PASS-1, PASS-2, PASS-3, MASTER-PLAN-trio
+         each runs the nine-lane audit per HARDENING.md contract
+         all four commits before Phase 6 enters
+
+Phase 6: orchestrator's own synthesis
+         consolidates four hardening reports
+         produces HARDENING-CONSOLIDATED.md
+         single readiness verdict gates per-tranche full-spec drafting
+```
+
+The orchestrator's idempotency check at the entry of every phase makes the pipeline safe to re-invoke after interruption — completed phases skip; partial phases re-dispatch their outstanding work.
+
+Total wall (under good fan-out): ~6-7 hours from Phase 1 dispatch to Phase 6 commit.
 
 After hardening returns *ready*, full-spec tranche drafting begins. **Not before.** Tranches are layer-aligned: tranches earning each layer's milestones land in dependency order. The fresh tranche set begins at letter A; the prior BA-BD plan-set survives at `docs/tranches/{BA,BB,BC,BD}/` as inheritance reference, archived to `docs/tranches/archive/legacy-Y-BD/` at Tranche-A.W0 execution time per Pass-C's ratification.
 

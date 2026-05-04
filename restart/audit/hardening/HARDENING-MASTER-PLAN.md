@@ -2181,4 +2181,54 @@ in a single V2 re-issue agent's pass.
 
 ## §13 — Final readiness
 
-(Decision + 3-5 sentence summary forthcoming in Phase 6.)
+> **Decision: amendment-required.**
+>
+> The master plan's substantive shape — the 10-tranche allocation
+> across A through J, the convergent pivot at tranche E retiring Lock
+> 1 + Lock 13 + Lock 14 as one architectural movement, the
+> commit-chain disposition (Option 3 + branch reset) ratification,
+> the docs re-do plan, the §11 14-lock honoured table, the §12
+> generated-LOC trajectory, the §13 risk table — survives the lanes.
+> Each pass synthesis (Pass A, B, C) was correctly composed; the
+> reconciliation in §3.2 is correct; the §5 tranche set sequencing is
+> Era-V-correct (modulo the H carry-FROM and tranche-C path-core scope
+> faults). What requires amendment is the *body* — the master plan
+> body has not absorbed Amendment 01 (which retracts the per-grammar
+> declaration crate default), so 28 sites carry retracted language;
+> the per-tranche-wave SOTA gates are silent at F + G + H mid-tranche
+> (only J close gates the SOTA anchors); the friction surfaces (six
+> per HARDENING.md §Lane 7) are uniformly silent on user-facing
+> cookbooks and verbatim error messages; the carry-and-deferral
+> triples for `bbnf-cli`, `bbnf-py`, `docs/restart/`, archive
+> deletion, Stage 2 hardening receiver are incomplete; the three
+> Pass-A-inherited workaround retirals (Box::leak, wildcard @debug
+> strip, defensive fallback) are silent.
+>
+> The 76-entry master-plan-specific punch list at §12 plus the 85
+> entries from sister Stage-1 reports (Pass A 25 + Pass B 30 + Pass C
+> 30) totals 161 cumulative surgical edits gating the V2 re-issue.
+> The largest single surgery cohort is §12.B (Amendment 01
+> reconciliation: 27 entries) — every site naming "per-grammar
+> declaration crates" re-anchors per Amendment 01's authoritative
+> retraction. The 9-crate proliferation was overfitting on Lock 14's
+> escape valve; the 24-member workspace under Amendment 01 brings
+> bbnf closer to sonic-rs / lightning-css / simdjson cohesion. The
+> Lock 14 verification command, the future-grammar onboarding test,
+> the workspace member list, the per-grammar metadata `output_dir`
+> entries, the §12.2 LOC trajectory destinations, and the §13 risk
+> R9 framing all materialise the retraction.
+>
+> Hereupon the V2 re-issue agent applies the master-plan punch list
+> (76 entries) to produce `MASTER-PLAN-V2.md`; amendment agents
+> apply the per-pass punch lists (Pass A 25, Pass B 30, Pass C 30)
+> to each pass synthesis (in-place patch or sidecar
+> `AMENDMENT-02-PASS-{A,B,C}-RECONCILIATION.md`). With V2 + reconciled
+> passes committed, Stage 2 hardening fires per
+> `restart/prompts/HARDENING-STAGE-2-EXTERNAL.md` — fresh adversary,
+> no shared context, distinct system — to re-evaluate the cumulative
+> Stage 1 outputs. Stage 2's verdict gates the user sign-off and the
+> opening of tranche drafting (10 agents A through J), each
+> consuming `MASTER-PLAN-V2.md` plus `AMENDMENT-01-NO-PER-GRAMMAR-CRATES.md`
+> plus their tranche-specific stubs at `restart/tranches/{X}/{X}.md`.
+> The plan from here is the V2 re-issue agent's; the substrate is
+> settled; the greenfield mandate carries through.

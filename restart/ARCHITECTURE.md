@@ -63,8 +63,8 @@ set below is authoritative for tranche planning and for migration disposition.
 | `test-fixtures` | Internal/dev | Shared fixtures, parity matrix, generated snapshots, perf corpora. | New crate from legacy fixture work and BD fixture specs. |
 
 Crates not in this list do not survive as production crates. `ser` and
-`gorgeous` are archived before the first implementation tranche, as Lock 10
-requires (`restart/locks/14-LOCKS.md:54-56`). `bootstrap` is slimmed into
+`gorgeous` are archived before the first implementation tranche, as Lock 12
+requires (`restart/locks/14-LOCKS.md:56`). `bootstrap` is slimmed into
 bootstrap artifacts and developer commands, not kept as a first-class runtime
 crate.
 
@@ -708,6 +708,16 @@ Schema rules:
 Metadata validation errors are normal diagnostics, not panics. They flow
 through `error` so CLI and LSP report the same code for the same bad metadata.
 
+Declaration-crate review form:
+
+| Field | Required content |
+|---|---|
+| Grammar | The grammar name and metadata stanza requesting the escape valve. |
+| Failed surface | Why generic host primitives, workspace metadata, and `@host fn` cannot express the boundary. |
+| Scope | Exact exported declarations and why they are not grammar parser logic. |
+| Deletion path | The condition that lets the declaration crate disappear. |
+| Review gate | Architecture owner approval plus Lock 14 lint proving no registry/match-arm shortcut. |
+
 ## 6. Pipeline
 
 The pipeline order is fixed:
@@ -745,6 +755,14 @@ The pipeline invariants are:
 | Cost extraction selects from alternatives; it does not introduce new grammar semantics. | `cost-model`, `passes::extract` |
 | Backend IR is the only input to lowerers. | `codegen::lower` |
 | Generated output is committed and equality-checked. | `codegen::verify`, `pipeline::verify` |
+
+Cursor and skip gates:
+
+| Lock 3 proof | Required test |
+|---|---|
+| Empty-path parse does not allocate a cursor path. | `__EAGER_EMPTY_PATH` regression fixture. |
+| Byte-skipping is explicit and observable. | `CursorDecision::Skip` unit and VM replay fixture. |
+| Scanner fast path preserves diagnostics. | skipped spans round-trip through tape and LSP diagnostics. |
 
 ## 7. IR Contract
 
@@ -903,7 +921,7 @@ Backend IR invariants:
 
 | Invariant | Gate |
 |---|---|
-| Lowerers never inspect Grammar IR. | Compile-time module boundary and tests. |
+| Lowerers never inspect Grammar IR. | Compile-time module boundary, import-deny tests, and `ir::backend_ir` snapshots. |
 | Tape and direct-to-struct are one materialization strategy. | `TapeEmit` and `DirectBuild` are scheduled together from side tables. |
 | OpenFrame clone stacks are absent. | Generated code review plus perf gate. |
 | SIMD and Pratt are mined, not syntax-directed. | `passes::recognizers` owns detection. |
@@ -1122,6 +1140,26 @@ Gate owners:
 PASS-2 sets a generated LOC budget baseline and allows a +2 percent ceiling
 for emitted runtime source (`restart/audit/pass-2-codegen/PASS-2.md:293-310`).
 
+Exact gate rows:
+
+| Row | Competitor baseline | Restart target | Required metadata |
+|---|---|---|---|
+| `json/twitter` | sonic-rs M1 twitter 436us. | <= 380us. | CPU, OS, compiler flags, input hash, parse mode. |
+| `json/citm` | sonic/simd-json citm corpus. | <= 750us. | CPU, OS, compiler flags, input hash, selector mode. |
+| `json/canada` | sonic/simd-json canada corpus. | <= 2.8ms. | CPU, OS, compiler flags, input hash, array scan profile. |
+| `css/bootstrap` | lightning-css bootstrap 4.16ms. | <= 3.0ms. | CSS fixture hash, layout mode, visitor mode. |
+| `css/animate` | lightning-css animate 1.97ms. | <= 1.6ms. | CSS fixture hash, layout mode, visitor mode. |
+| `simd/structural_scan` | simdjson on-demand 7 GB/s-class anchor. | Report GB/s and parity against scalar. | ISA, CPU flags, kernel, scalar parity hash. |
+
+Generated LOC budget rows:
+
+| Scope | Budget |
+|---|---|
+| Nine seed grammars total | PASS-2 baseline plus 2 percent. |
+| Per-grammar generated runtime | PASS-2 table maximum for that grammar. |
+| New yaml grammar | Reported separately until admitted as a seed grammar. |
+| WASM/SIMD target-specific output | Attributed by target and justified in SOTA report. |
+
 ## 12. Future Grammar Onboarding Test
 
 The future grammar test proves Lock 14. It is the greenfield version of “add a
@@ -1134,7 +1172,6 @@ Allowed changes:
 ```text
 grammars/yaml.bbnf
 Cargo.toml [workspace.metadata.bbnf.grammars.yaml]
-fixtures/yaml/*
 ```
 
 Forbidden changes:
@@ -1179,6 +1216,15 @@ Rules:
 | Generated files carry headers and budget tags. | `codegen::verify`. |
 | No grammar names in generic crate source. | `cargo xtask lint-grammar-generalization`. |
 | No old strategy registries. | `cargo xtask lint-no-hardcoded-grammars`. |
+
+Lock 13 exception ledger:
+
+| Exception | Allowed? | Rationale |
+|---|---|---|
+| Generated grammar/runtime files over 500 LOC. | Yes, budgeted separately. | Lock 6 requires committed generation; budget gates replace handwritten LOC cap. |
+| Generated data tables. | Yes, with headers and source metadata. | Scanner, Pratt, and diagnostic tables are data products. |
+| Handwritten parser/lowerer/runtime files over 500 LOC. | No. | Split by concern before landing implementation. |
+| More than 10 children in source directory. | Only with tranche-local rationale and lint allowlist. | Temporary migration shape must not become the default. |
 
 ## 14. Documentation And Voice
 

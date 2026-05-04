@@ -78,8 +78,8 @@ plumbing are replaced; old archive crates leave the production workspace.
 | `crates/gorgeous` | ARCHIVE. | `restart-archive`/legacy reference only. |
 
 The corpus already classifies `ser` and `gorgeous` as archive-only
-(`restart/corpora/MODULES.md:165-212`), and Lock 10 requires that archive before
-BA.W0 (`restart/locks/14-LOCKS.md:54-56`).
+(`restart/corpora/MODULES.md:165-212`), and Lock 12 requires that archive before
+implementation starts (`restart/locks/14-LOCKS.md:56`).
 
 ### 3.1 Current Inventory By Crate
 
@@ -565,6 +565,15 @@ greenfield change obvious in Git.
 The exact branch operation is future implementation work; this synthesis commit
 does not create branches or tags.
 
+Branch/tag routing floor:
+
+| Artifact | Status |
+|---|---|
+| `pre-restart-2026-05-04` | Required history marker before implementation source edits. |
+| `master-greenfield-2026-05-04` | Suggested implementation branch unless the user selects another branch name. |
+| Archive commits | Body-bearing and narrow to workspace/archive membership. |
+| Generated commits | Body-bearing with equality, generated LOC, and routed remainder evidence. |
+
 ## 16. Legacy BA-BD Inheritance
 
 The legacy plan-set is not discarded. It is mined. The inheritance index maps
@@ -622,7 +631,7 @@ bodies with why, what landed, evidence, and routed remainder
 
 ## 19. Migration Gates
 
-### 16.1 Generalization
+### 19.1 Generalization
 
 ```sh
 cargo xtask lint-grammar-generalization
@@ -632,7 +641,7 @@ rg "PRODUCTION_MANIFEST_TABLE|GrammarAuditTag|bbnf-strategy" Cargo.toml crates
 
 Expected result: no production hits in generic crates.
 
-### 16.2 Tree Shape
+### 19.2 Tree Shape
 
 ```sh
 cargo xtask lint-tree
@@ -642,10 +651,11 @@ cargo xtask lint-loc --handwritten-max 500
 Expected result: 4-10 children per handwritten source directory and no
 handwritten Rust file over 500 LOC.
 
-### 16.3 Backend Boundary
+### 19.3 Backend Boundary
 
 ```sh
 rg "GrammarIr|GrammarIR|grammar_ir" crates/codegen/src
+rg "use .*grammar_ir|crate::grammar_ir|ir::grammar_ir" crates/codegen/src
 cargo test -p codegen backend_ir_only
 cargo test -p vm replay_all_backend_ir_variants
 ```
@@ -653,18 +663,20 @@ cargo test -p vm replay_all_backend_ir_variants
 Expected result: codegen can name Backend IR and side-table types, but lowerers
 do not walk Grammar IR.
 
-### 16.4 Runtime Substrate
+### 19.4 Runtime Substrate
 
 ```sh
 rg "OpenFrame|Vec<OpenFrame>|ParseStream" crates/runtime/src crates/codegen/src
 cargo test -p runtime tape_direct_union
+cargo test -p runtime __EAGER_EMPTY_PATH
+cargo test -p runtime cursor_decision_skip
 cargo bench -p bbnf-bench --bench sota_json
 ```
 
 Expected result: no old OpenFrame clone stack or ParseStream runtime concept.
 `ParseStream` may remain only in proc-macro code that uses `syn`.
 
-### 16.5 Generated Equality
+### 19.5 Generated Equality
 
 ```sh
 cargo xtask bbnf build --all
@@ -673,6 +685,31 @@ cargo xtask generated-loc-budget --max-growth 1.02
 ```
 
 Expected result: regenerated output is equal and within budget.
+
+### 19.6 Future Grammar
+
+```sh
+git diff --exit-code -- grammars/yaml.bbnf Cargo.toml
+cargo xtask bbnf check yaml
+cargo xtask bbnf build yaml
+git diff -- crates ':!crates/runtime/src/grammars/yaml'
+rg "yaml|Yaml" crates/*/src
+```
+
+Expected result: yaml enters through only `grammars/yaml.bbnf` plus workspace
+metadata. Runtime output may be generated; generic crate source may not learn a
+yaml name.
+
+### 19.7 Diagnostic And Carry Proof
+
+```sh
+cargo test -p error diagnostic_codes_are_stable
+cargo test -p bbnf-language-server diagnostics_match_cli
+cargo xtask migration-carry --check
+```
+
+Expected result: migration does not drop receiver/blocker/gate rows for
+deferred work, and public diagnostics are shared by CLI and LSP.
 
 ## 20. Unresolved Migration Punch List
 
@@ -687,6 +724,8 @@ that tranche A or later tranches must pin down with code and tests.
 | WASM exported ABI details | H | V1 goes through wasm32 Rust binding. |
 | Benchmark host hardware profiles | H/J | Must cite SOTA baselines and record machine metadata. |
 | Archive destination for `ser`/`gorgeous` | A | Must be outside production workspace. |
+| PASS-2 BIR snapshots | E/F | Must live under `ir::backend_ir` and feed codegen import-deny tests. |
+| Lock 3 cursor gates | B/H | Must include `__EAGER_EMPTY_PATH` and `CursorDecision::Skip`. |
 
 ## 21. Migration Close
 

@@ -82,8 +82,8 @@ rule (`restart/README.md:29-60`).
 | Dev/test | `test-fixtures`. |
 
 The old workspace crates map to this set according to `restart/MIGRATION.md`.
-`ser` and `gorgeous` are archive-only before implementation starts, per Lock 10
-(`restart/locks/14-LOCKS.md:54-56`).
+`ser` and `gorgeous` are archive-only before implementation starts, per Lock 12
+(`restart/locks/14-LOCKS.md:56`).
 
 ## 3. IR And BBNF Contract Summary
 
@@ -107,7 +107,7 @@ inputs, not work to reopen inside tranche drafting.
 
 | Gate | Command family | Owner tranche |
 |---|---|---|
-| Future grammar add | Add `yaml.bbnf` plus metadata; no Rust source edits except generated runtime. | A/G/F |
+| Future grammar add | Add `yaml.bbnf` plus workspace metadata; generated runtime is derivative output. | A/G/F |
 | No grammar-name dispatch | `rg` for parser type names, strategy tables, and grammar-name registries. | A through J |
 | Backend IR only | Codegen tests and `rg` proving lowerers do not walk Grammar IR. | E/F/H |
 | Tape/direct substrate | Runtime tests, no OpenFrame clone stack, no ParseStream runtime concept. | B/F/H |
@@ -121,6 +121,17 @@ inputs, not work to reopen inside tranche drafting.
 Lock 13 defines the tree-shape and LOC ceiling (`restart/locks/14-LOCKS.md:58`).
 Lock 8 defines SOTA competitor anchors (`restart/locks/14-LOCKS.md:48`).
 PASS-2 defines generated LOC budget tracking (`restart/audit/pass-2-codegen/PASS-2.md:293-310`).
+
+Exact SOTA close rows:
+
+| Row | Target | Owner |
+|---|---|---|
+| `json/twitter` | <= 380us with CPU/OS/input hash metadata. | H/J |
+| `json/citm` | <= 750us with selector mode metadata. | H/J |
+| `json/canada` | <= 2.8ms with array scan profile. | H/J |
+| `css/bootstrap` | <= 3.0ms with layout and visitor mode metadata. | H/J |
+| `css/animate` | <= 1.6ms with layout and visitor mode metadata. | H/J |
+| `simd/structural_scan` | report GB/s-class throughput and scalar parity hash. | H/J |
 
 ## 5. Tranche Set
 
@@ -232,7 +243,7 @@ Stub waves:
 | B.W0 | `runtime/src/tape` tokens, spans, append builder. | Tape builder unit tests. |
 | B.W1 | Bounded checkpoints and rollback. | Speculative branch test without OpenFrame clone. |
 | B.W2 | `DocumentView`, `OwnedDocument`, `NodeView`, `TokenView`. | `bbnf` facade exposes parse API stubs. |
-| B.W3 | Direct builder side-by-side with tape. | Direct view borrows spans from tape. |
+| B.W3 | Direct builder shell and tape identity hooks. | Direct view borrows spans from tape. |
 | B.W4 | Seed generated grammar shell. | One grammar parses through tape/direct shell. |
 
 Hard close:
@@ -266,8 +277,8 @@ Stub waves:
 |---|---|---|
 | C.W0 | Grammar IR enum, IDs, spans, validation. | Seed grammar lowers AST to Grammar IR. |
 | C.W1 | TypeFacts and HM/bidirectional core. | Host-free seed grammar typechecks. |
-| C.W2 | ShapeFacts and value-shape mining. | Direct builder consumes ShapeFacts. |
-| C.W3 | RecognizerFacts and Pratt/SIMD candidate mining. | Facts feed placeholder BIR hints. |
+| C.W2 | ShapeFacts and value-shape mining. | Direct-builder shell contract consumes ShapeFacts in a C fixture and records B integration gaps. |
+| C.W3 | RecognizerFacts and Pratt/SIMD candidate mining. | Facts feed E-owned BIR snapshots, not placeholder hints. |
 | C.W4 | CSP/egraph bridge tables. | Egraph and CSP exchange facts through bridge API. |
 | C.W5 | CostFacts and extraction skeleton. | Backend IR builder receives selected alternatives. |
 
@@ -363,7 +374,7 @@ Stub waves:
 |---|---|---|
 | F.W0 | Rust lowerer skeleton for control flow and literals. | Generated seed grammar compiles. |
 | F.W1 | Tape/direct emit and builder integration. | Runtime parse returns `DocumentView`. |
-| F.W2 | Host calls/chains, layout, error recover. | Extension seed grammar compiles and runs. |
+| F.W2 | Host calls/chains, layout, `@error(recover = ...)`. | Extension seed grammar compiles and runs. |
 | F.W3 | Generated module template and headers. | Regenerated output is equal. |
 | F.W4 | Generated LOC budget tooling. | Budget report under +2 percent. |
 | F.W5 | Current nine grammar regeneration. | Nine seed grammars build through new template. |
@@ -398,7 +409,7 @@ Stub waves:
 | G.W1 | Rust `pointer!` and `select!`. | Compile-time path diagnostics work. |
 | G.W2 | `ValueRef`, `ValueOwned`, shape-backed projection. | Value API reads seed grammar. |
 | G.W3 | Read-write visitor mutation. | Mutation updates document through visitor only. |
-| G.W4 | `path-ts` schema and future grammar test. | Add `yaml.bbnf` plus metadata without Rust edits. |
+| G.W4 | `path-ts` schema and future grammar test. | yaml enters through grammar source plus metadata; generated runtime is derivative. |
 
 Hard close:
 
@@ -430,8 +441,8 @@ Stub waves:
 | H.W1 | SIMD recognizer facts and `SimdScan` integration. | Literal/regex scans route through scanner kernels. |
 | H.W2 | AVX2/NEON/scalar dispatch gates. | Platform-specific tests or skipped metadata. |
 | H.W3 | WASM V1 via wasm32 Rust binding. | WASM package parses seed grammar. |
-| H.W4 | Early JSON SOTA gates. | twitter/citm/canada progress report. |
-| H.W5 | Early CSS SOTA gates. | bootstrap/animate progress report. |
+| H.W4 | Early JSON SOTA gates. | twitter/citm/canada rows run with metadata and numeric deltas. |
+| H.W5 | Early CSS SOTA gates. | bootstrap/animate rows run with metadata and numeric deltas. |
 
 Hard close:
 
@@ -492,7 +503,7 @@ Stub waves:
 | Wave | Scope | Consumer gate |
 |---|---|---|
 | J.W0 | Cross-backend parity matrix for Rust, VM, WASM V1. | Parity matrix passes for seed grammars. |
-| J.W1 | Final SOTA gate and benchmark report. | JSON/CSS/SIMD targets met or formally routed. |
+| J.W1 | Final SOTA gate and benchmark report. | JSON/CSS/SIMD targets met; misses require amendment before close. |
 | J.W2 | Public docs redo. | Docs build and examples run. |
 | J.W3 | Package readiness for public crates. | Dry-run publish metadata passes. |
 | J.W4 | Archive and migration audit. | No stale crates/docs in production workspace. |
@@ -601,6 +612,15 @@ Generated source is a tracked product, not incidental output.
 PASS-2 is the authority for the +2 percent generated LOC ceiling
 (`restart/audit/pass-2-codegen/PASS-2.md:293-310`).
 
+Budget enforcement rows:
+
+| Scope | Gate |
+|---|---|
+| F lowerer/runtime template | per-grammar generated runtime budget plus equality check. |
+| H SIMD/WASM additions | target-attributed generated LOC with benchmark justification. |
+| J release close | clean-checkout regeneration, total <= PASS-2 +2 percent unless amended. |
+| Handwritten support | Lock 13: no file over 500 LOC and 4-10 children per source directory. |
+
 ## 21. Lock Ownership
 
 | Lock | Owner tranche | Close proof |
@@ -656,7 +676,19 @@ that discipline (`restart/README.md:452`). Style follows the local precepts
 | SOTA gates are measured on unclear hardware. | H/J benchmark metadata records CPU, OS, build flags, input hashes. |
 | Legacy archive becomes active code again. | A/J workspace membership checks. |
 
-## 24. Implementation Order
+## 24. Carry And Friction Ledger
+
+| Item | Receiver | Blocker | Gate |
+|---|---|---|---|
+| Declaration-crate escape valve | A/D | Review form missing reason, scope, owner, or deletion path. | Metadata validator rejects `allow_declaration_crate = true` without full review fields. |
+| Layout lowering | D/F | `@layout` remains parser metadata and does not lower through `LayoutFacts` and BIR. | LayoutFacts test plus BIR `LayoutPush`/`LayoutPop` replay. |
+| Cursor skip | B/H | Runtime cannot prove empty-path and byte-skip behavior. | `__EAGER_EMPTY_PATH` and `CursorDecision::Skip` fixtures. |
+| PASS-3 consumers | F/G/I | Generated runtime omits path, visitor, diagnostics, or host metadata. | `path-core`, visitor, and language-server consumer smokes. |
+| SOTA metadata | H/J | Bench numbers lack machine/input/build metadata. | Benchmark report schema rejects incomplete rows. |
+| yaml onboarding | A/F/G/J | Future grammar requires any manual Rust registry/path/host edit. | yaml source + workspace metadata plus generated runtime only. |
+| Archive closure | A/J | `ser` or `gorgeous` remains in production workspace. | workspace membership check and migration audit. |
+
+## 25. Implementation Order
 
 The implementation order is:
 
@@ -677,7 +709,7 @@ The implementation order is:
 No implementation tranche starts by editing PASS outputs, prompt contracts,
 locks, corpora, or inheritance docs. Those documents are inputs.
 
-## 25. Master Close
+## 26. Master Close
 
 The restart is ready for tranche drafting when:
 

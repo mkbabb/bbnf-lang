@@ -30,9 +30,9 @@ Conflicts surfaced:
 | Parse constructors | `parse`, `parse_in`, and `parse_owned` implement Lock 9 slice-borrow/default plus explicit arena/owned modes (`restart/locks/14-LOCKS.md:50`). | Covers low allocation, batch, and durable use cases. | Owned mode can hide copies. | Bench all modes separately. | KEEP |
 | Tape/direct union | Tape is the single advanced substrate; direct structs remain the ergonomic default (`restart/README.md:285-314`, `restart/locks/14-LOCKS.md:34`). | Unifies path, visitors, debug, LSP, and benchmarks. | Requires careful identity invariants. | Every visible direct node carries tape identity. | REINVENT |
 | `ParseStream` | Stale replacement name in prompts/inheritance. | None under current authority. | Would fork naming and contracts. | Mention only as stale conflict. | DISCARD |
-| Path/select DSL | `path!` and `select!` validate against generated metadata and lower to runtime traversal plans. | Strong diagnostics and static typing. | Current registry is overfit. | Replace hardcoded fixtures with metadata. | REINVENT |
+| Path/select DSL | `pointer!` and `select!` validate against generated metadata and lower to runtime traversal plans. | Strong diagnostics and static typing. | Current registry is overfit. | Replace hardcoded fixtures with metadata. | REINVENT |
 | Visitors | Generated visitors plus `VisitTypes` bitflag pruning are the only mutation channel. | Matches W5 and lightningcss-style traversal. | Large generated APIs need restraint. | Expose simple prelude plus advanced modules. | KEEP |
-| Error/recovery/layout | `@error`, `@recover`, and `@layout` feed generated diagnostics, formatter, and recovery nodes. | Better author control and LSP output. | Can become semantic-action sprawl. | Keep declarative; no rewrite-mode. | KEEP / REINVENT |
+| Error/recovery/layout | `@error(recover = ...)` and `@layout` feed generated diagnostics, formatter, and recovery nodes. Legacy `@recover` may parse only as an alias during migration. | Better author control and LSP output. | Can become semantic-action sprawl. | Keep declarative; no rewrite-mode. | KEEP / REINVENT |
 | Incremental parsing | LSP retains range edit application but parse state becomes snapshot-based with reparse plans. | Moves beyond full reparse. | Needs PASS-1 anchors. | Report fallback-to-full-parse rates. | REINVENT |
 | Per-grammar declaration crates | Amendment 01 rejects them (`restart-archive-2026-05-04/audit/master-plan/AMENDMENT-01-NO-PER-GRAMMAR-CRATES.md:13-22`). | None for default design. | Rare host escape may be needed. | Only metadata-reviewed host adapters. | DISCARD |
 | Rewrite-mode / grammar Unicode algebra | Settled out or deferred to regex (`restart/README.md:123`, `restart/README.md:133-143`). | Reduces grammar/runtime scope. | Old prompt text lingers. | Remove from generated APIs and docs. | DISCARD |
@@ -77,17 +77,17 @@ pub trait DocumentView<'input> {
 }
 ```
 
-Direct structs and tape are not competing products. Direct roots are what normal users author against. Tape-backed `ValueRef` is the shared cursor for `path!`, `select!`, visitors, debugger, CLI projections, LSP features, and playground inspection. This resolves the old SOTA recommendation against tape (`restart/corpora/SOTA.md:205-214`) by applying Lock 1 and the current dispatch authority.
+Direct structs and tape are not competing products. Direct roots are what normal users author against. Tape-backed `ValueRef` is the shared cursor for `pointer!`, `select!`, visitors, debugger, CLI projections, LSP features, and playground inspection. This resolves the old SOTA recommendation against tape (`restart/corpora/SOTA.md:205-214`) by applying Lock 1 and the current dispatch authority.
 
 ## §3 Path, select, and visitor commitments
 
-`path!` and `select!` survive, but their implementation is rebuilt. The current `bbnf-path` code demonstrates the macro direction (`crates/bbnf-path/src/lib.rs:1-22`, `crates/bbnf-path/src/path_macro.rs:146-210`) while also exposing two dead ends: hardcoded grammar marker registries (`crates/bbnf-path/src/registry.rs:80-98`, `crates/bbnf-path/src/registry.rs:125-138`) and placeholder terminal typing (`crates/bbnf-path/src/path_macro.rs:198-199`). The TypeScript mirror duplicates compiler logic because the proc-macro crate cannot be consumed directly (`crates/bbnf-path-ts/src/compile.rs:1-12`, `crates/bbnf-path-ts/src/compile.rs:41-65`).
+`pointer!` and `select!` survive, but their implementation is rebuilt. The current `bbnf-path` code demonstrates the macro direction (`crates/bbnf-path/src/lib.rs:1-22`, `crates/bbnf-path/src/path_macro.rs:146-210`) while also exposing two dead ends: hardcoded grammar marker registries (`crates/bbnf-path/src/registry.rs:80-98`, `crates/bbnf-path/src/registry.rs:125-138`) and placeholder terminal typing (`crates/bbnf-path/src/path_macro.rs:198-199`). The TypeScript mirror duplicates compiler logic because the proc-macro crate cannot be consumed directly (`crates/bbnf-path-ts/src/compile.rs:1-12`, `crates/bbnf-path-ts/src/compile.rs:41-65`). These citations are legacy evidence only; restart package names are `path`, `path-core`, and `path-ts`.
 
 PASS-3 commitment:
 
-- `bbnf-path-core` owns parsing, lowering, validation, diagnostics, metadata schema, and runtime plans.
-- `bbnf-path` owns Rust proc macros.
-- `bbnf-path-ts` owns TS template tags and schema bindings.
+- `path-core` owns parsing, lowering, validation, diagnostics, metadata schema, and runtime plans.
+- `path` owns Rust proc macros: `pointer!` and `select!`.
+- `path-ts` owns TS template tags and schema bindings.
 - Generated grammar metadata replaces fixture registries.
 - Both explicit type suffixes and implicit terminal inference are supported, matching the W5 pointer decision (`docs/tranches/BB/audit/W5-pointer-syntax-decision.md:20-27`, `docs/tranches/BB/audit/W5-pointer-syntax-decision.md:148-156`).
 
@@ -136,7 +136,7 @@ Debug and DAP should reuse this identity. Existing DAP code already contains ses
 
 ## §5 Error recovery, incremental parsing, LSP, and DAP
 
-`@error`, `@recover`, and `@layout` are in. Existing code already has recovery directive extraction and hover docs (`crates/analysis/src/directives/recover.rs:10-37`, `crates/analysis/src/directives/recover.rs:39-77`, `crates/analysis/src/features/hover/directive.rs:22-44`). PASS-3 keeps the authoring intent and rebuilds implementation on generated metadata.
+`@error(recover = ...)` and `@layout` are in. Existing code already has recovery directive extraction and hover docs (`crates/analysis/src/directives/recover.rs:10-37`, `crates/analysis/src/directives/recover.rs:39-77`, `crates/analysis/src/features/hover/directive.rs:22-44`). PASS-3 keeps the authoring intent and rebuilds implementation on generated metadata. A standalone `@recover` token is a legacy alias only if SYNTHESIS keeps a migration parser; it is not a new V1 extension.
 
 Current LSP applies incremental text edits but reparses/reanalyzes the full document after updates (`crates/lsp/src/server/protocol.rs:82-109`, `crates/lsp/src/server/mod.rs:56-80`, `crates/analysis/src/state/mod.rs:55-83`). That is a useful entry shape, not the final incremental parse design. Restart target:
 
@@ -165,18 +165,17 @@ The server may fall back to full parse when anchors fail, but bench/dev output m
 crates/bbnf/src/
   lib.rs
   prelude.rs
-  grammar.rs
-  parse.rs
-  document.rs
-  value.rs
-  tape.rs
-  visitor.rs
-  path.rs
-  diagnostics.rs
-  host.rs
-  layout.rs
-  metadata.rs
+  grammar/
+  parse/
+  document/
+  value/
+  tape/
+  visitor/
+  diagnostics/
+  host/
 ```
+
+The public crate keeps 8 top-level children after `lib.rs`/`prelude.rs`. `layout`, `metadata`, and path adapters live under those concern directories or in their owning crates, keeping Lock 13's 4-10 child-count discipline.
 
 `bbnf-cli`:
 
@@ -241,10 +240,10 @@ benches/
   incremental.rs
 ```
 
-`bbnf-path-core`, `bbnf-path`, `bbnf-path-ts`:
+`path-core`, `path`, `path-ts`:
 
 ```text
-crates/bbnf-path-core/src/
+crates/path-core/src/
   lib.rs
   ast.rs
   lexer.rs
@@ -256,23 +255,23 @@ crates/bbnf-path-core/src/
   runtime/selector.rs
   schema.rs
 
-crates/bbnf-path/src/
+crates/path/src/
   lib.rs
-  path_macro.rs
+  pointer_macro.rs
   select_macro.rs
   diagnostics.rs
 
-crates/bbnf-path-ts/src/
+crates/path-ts/src/
   lib.rs
   template_tag.rs
   schema.rs
   bindings.rs
 ```
 
-`bbnf-test-fixtures`:
+`test-fixtures`:
 
 ```text
-crates/bbnf-test-fixtures/src/
+crates/test-fixtures/src/
   lib.rs
   manifest.rs
   metadata.rs
@@ -295,35 +294,47 @@ Every perf gate names a competitor per Lock 14 (`restart/locks/14-LOCKS.md:207`)
 | Dataset | Baseline citation | PASS-3 gate |
 | --- | --- | --- |
 | `twitter.json` | sonic/simd-json fixture references (`restart/corpora/SOTA.md:54-56`) | borrowed parse, tape cursor, direct root |
-| `citm_catalog.json` | sonic/simd-json fixture references (`restart/corpora/SOTA.md:54-56`) | object traversal and `path!` |
+| `citm_catalog.json` | sonic/simd-json fixture references (`restart/corpora/SOTA.md:54-56`) | object traversal and `pointer!` |
 | `canada.json` | sonic/simd-json fixture references (`restart/corpora/SOTA.md:54-56`) | selector scan and array-heavy parse |
 | CSS bootstrap/animate | lightningcss visitor and perf evidence (`restart/corpora/SOTA.md:103-118`, `restart/corpora/SOTA.md:134-136`) | generated visitor pruning and layout metadata |
 | BBNF grammar corpus | restart full-grammar generalization (`restart/locks/14-LOCKS.md:60`) | no per-grammar overfit |
 
-PASS-3 recommends bench reports include: borrowed/arena/owned timings, tape/direct projection timings, `path!` and `select!` traversal timings, visitor pruning win/loss, incremental fallback rate, and DAP trace overhead.
+PASS-3 recommends bench reports include: borrowed/arena/owned timings, tape/direct projection timings, `pointer!` and `select!` traversal timings, visitor pruning win/loss, incremental fallback rate, and DAP trace overhead.
+
+Exact PASS-3 benchmark rows:
+
+| Row | Target | Surface under test |
+|---|---|---|
+| `json/twitter/borrowed` | <= 380us | `parse(&str)` plus direct root. |
+| `json/twitter/tape_cursor` | <= borrowed + 10% | `ValueRef` cursor projection. |
+| `json/citm/pointer` | <= 750us parse target plus reported selector time | `pointer!` object traversal. |
+| `json/canada/array_scan` | <= 2.8ms | array-heavy parse and selector scan. |
+| `css/bootstrap/visitor` | <= 3.0ms | generated visitor pruning over CSS. |
+| `css/animate/layout` | <= 1.6ms | layout metadata plus parser surface. |
+| `bbnf/self_host/internal` | progress-only until final close | BBNF grammar parses itself through the public runtime. |
+| `incremental/edit_anchor` | report fallback rate | LSP edit reparse plan. |
+| `debug/trace_overhead` | report overhead | DAP/playground trace projection. |
+
+Generated API budget:
+
+| Surface | Budget gate |
+|---|---|
+| Visitor traits | Per-grammar generated visitor LOC reported separately; no handwritten visitor file over 500 LOC. |
+| Path metadata | Generated schema rows are counted against grammar runtime budget; `path-core` handwritten files obey Lock 13. |
+| Tape projections | Generated projection LOC counted with runtime module budget. |
+| Diagnostics | Generated code list is data; diagnostic rendering code remains shared and non-generated. |
 
 ## §8 Cross-pass hand-offs
 
-To PASS-1:
-
-- Define tape token packing, payload arenas, span widths, child/sibling traversal, recovery/layout/debug flags, and snapshot identity.
-- Keep tape as the substrate name and contract; do not expose `ParseStream`.
-- Avoid columnar SoA and parallel substrates.
-- Provide enough anchor identity for incremental parse reuse and DAP snapshots.
-
-To PASS-2:
-
-- Emit typed roots, three parse constructors, `DocumentView`, `ValueRef` projections, generated visitors, `VisitTypes`, recovery/error/layout metadata, path schemas, host-function metadata, and fixture/bench metadata.
-- Do not emit per-grammar declaration crates by default.
-- Do not generate rewrite-mode hooks or grammar-level Unicode class algebra APIs.
-- Ensure direct structs and tape round-trip identity is tested.
-
-To SYNTHESIS:
-
-- Normalize stale prompt text across PASS-1/PASS-2/PASS-3.
-- Decide final crate names if the restart workspace chooses unprefixed `path`/`path-core` module names versus crate package names like `bbnf-path-core`.
-- Reconcile old PASS-C CLI deferral notes with the current PASS-3 top-layer ownership.
-- Ensure performance gates are integrated with PASS-1/PASS-2 outputs before implementation sequencing.
+| Contract | Receiver | Blocker | Gate |
+|---|---|---|---|
+| Tape token packing, payload arenas, span widths, child/sibling traversal, recovery/layout/debug flags, and snapshot identity. | PASS-1 / Tranche B | PASS-3 cannot prove cursor, visitor, incremental, or DAP identity. | Runtime identity tests over direct root and `ValueRef`. |
+| Tape as the substrate name; no public `ParseStream`. | PASS-1 / SYNTHESIS | Naming fork leaks into public APIs. | Conflict guard for `ParseStream` in public docs and code. |
+| Typed roots, three parse constructors, `DocumentView`, `ValueRef`, visitors, `VisitTypes`, diagnostic metadata, path schemas, host metadata, and fixture/bench metadata. | PASS-2 / Tranche F | Generated runtime lacks consumer-facing metadata. | PASS-3 consumer smokes from generated runtime. |
+| No per-grammar declaration crates, rewrite-mode hooks, or grammar Unicode algebra APIs. | PASS-2 / SYNTHESIS | Generated surfaces reintroduce discarded extension scope. | Negative API and parser fixtures. |
+| Final crate names: `path`, `path-core`, `path-ts`, and `test-fixtures`. | SYNTHESIS / Tranche A | Legacy package names survive into greenfield docs. | Workspace crate-name check. |
+| CLI/LSP/DAP ownership. | SYNTHESIS / Tranche I | Old PASS-C CLI deferral leaves top-layer gap. | CLI and LSP diagnostics parity test. |
+| Performance rows integrated with PASS-1/PASS-2 outputs. | SYNTHESIS / Tranche H/J | Bench gates become narrative only. | Exact benchmark rows above appear in master plan gates. |
 
 ## §9 KEEP / REINVENT / DISCARD summary
 
@@ -332,8 +343,8 @@ KEEP:
 - `parse`, `parse_in`, `parse_owned`.
 - Typed generated roots and grammar-specific visitors.
 - Untyped `ValueRef`/generic value for tools.
-- `path!`, `select!`, explicit and implicit pointer forms.
-- `@host fn`, multi-function chaining, generics, `@error`, `@recover`, `@layout`.
+- `pointer!`, `select!`, explicit and implicit pointer forms.
+- `@host fn`, multi-function chaining, generics, `@error(recover = ...)`, `@layout`.
 - Consolidated language server with LSP and DAP.
 - Data-only grammar fixtures and competitor-named benches.
 
@@ -362,7 +373,7 @@ DISCARD:
 1. SYNTHESIS must reconcile stale `ParseStream` and extension clauses in prompt/README/inheritance materials.
 2. PASS-1 must confirm tape ABI, node IDs, span widths, snapshot IDs, and incremental anchors.
 3. PASS-2 must confirm generated metadata schema for paths, visitors, host functions, diagnostics, and fixtures.
-4. Final workspace naming must choose package names for `path`, `path-core`, and `path-ts`.
+4. Final workspace naming must enforce package names `path`, `path-core`, `path-ts`, and `test-fixtures`.
 5. Bench harness must codify exact target numbers and machine profiles after PASS-1/PASS-2 designs land.
 6. Rare host adapter escape-valve policy must be written so it cannot become per-grammar declaration crates by another name.
 

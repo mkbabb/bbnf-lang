@@ -118,34 +118,68 @@ The "optimised IR" of the prior plan is **Grammar IR with extra metadata** — n
 
 ---
 
-## §5 — BBNF Extensions (Settled Positions Q12-Q13, ffuzzy primitives)
+## §5 — BBNF Extensions
 
-The greenfield BBNF folds in **three independently-motivated primitives** (per ffuzzy `docs/ffuzzy.md`, decoupled from any specific consumer) plus **four greenfield additions** the audit surfaced.
+The greenfield BBNF carries the following extensions. All land in the V1 plan; nothing is deferred. The ffuzzy three-primitive proposal is reduced — only lookbehind survives as a grammar-level surface; rewrite mode is rejected (the Visitor surface covers it); Unicode is solved at the regex layer, not the grammar layer.
 
-### Three primitives (from ffuzzy)
+### Lookbehind (`|<`)
 
-| Primitive | Syntax | Use case beyond ICU |
-|---|---|---|
-| **Rewrite mode** | `#[parser(path = "...", mode = "rewrite")]` produces `apply(input: &str) -> String` instead of typed AST | sed/awk pipelines, URL slug sanitisation, code migration tools, log scrubbing, source-map-preserving edits, Markdown-to-HTML inline rewriting |
-| **Bounded-width lookbehind** | `"s" \|< "ch" -> "k"` — match `"ch"` only if preceded by `"s"`; cursor advances by `\|"ch"\|` only | context-sensitive tokenization, type-vs-value disambiguation in C++/Rust/Scala, Markdown's `*` after whitespace vs letter, delimiter-sensitive parsing, lookbehind-as-regex |
-| **Unicode char-class algebra** | `[:L:]`, `[:Cyrillic:]`, `A & B`, `A - B`, `A \| B`, `^A`, named productions like `consonants = [:L:] - [aeiou]` | Unicode identifier parsing (`XID_Start` / `XID_Continue`), script-restricted grammars, mathematical notation grammars |
+Bounded-width lookbehind operator. `"s" |< "ch" -> "k"` matches `"ch"` only when preceded by `"s"`; cursor advances by `|"ch"|` only. The walker tracks a k-byte rolling window of recent input (k = max lookbehind width across all rules); at each position checks whether the window ends with the lookbehind pattern. ~350 LOC across `ir` + `passes` + `runtime`.
 
-These are upstream BBNF additions that also cover ICU rule compilation as a downstream consequence. The egraph `Language` derive subsumes the new-IR-node need ffuzzy initially proposed; no new IR variant is required for transducers — they emerge from rewrite-mode + lookbehind + Unicode sets composed.
+Use cases beyond ICU: context-sensitive tokenization (type-vs-value disambiguation in C++ / Rust / Scala grammars); Markdown inline parsing (`*` behaves differently after whitespace vs letter); delimiter-sensitive parsing (`'` as apostrophe vs string quote depends on preceding char); regex-with-lookbehind replacement in grammars that today fall back to hand-written state machines.
 
-### Four greenfield additions
+### Rich regex with first-class modern Unicode
 
-| Addition | Syntax sketch | Rationale |
-|---|---|---|
-| **`@host fn` directive** | `@host fn parse_hex_color(s: regex("#[0-9a-fA-F]{6}")) -> Color { Color::Rgb(parse_hex_pair($1[1..3]), parse_hex_pair($1[3..5]), parse_hex_pair($1[5..7])) }` | host-fn definition in-grammar, declarative; composed of generic primitives; closure semantics inspired by Rust |
-| **Generic rules** | `Object<V> = "{" pair<V> ("," pair<V>)* "}"; pair<V> = String ":" V` | DRY; faster grammar authoring; smaller grammar source. CSP solves type-variable propagation; codegen monomorphises per call site |
-| **`@error(skip \| recover \| halt)` directive** | per-rule error-recovery hint; defaults to inferred from rule shape | treesitter-class error recovery via "MISSING" / "ERROR" nodes; folds into LSP path |
-| **`@layout(struct \| enum \| tuple \| slice)` hint** | optional override when type inference is ambiguous | inference is default (Q21 lean iv); annotations stay where useful (hybrid) |
+Grammar-level Unicode char-class algebra (`[:L:]`, `A & B`, etc.) is **not** added. The regex layer at `parse-that/regex/` carries the Unicode coverage instead:
 
-The shape miner auto-detects Pratt and SIMD opportunities (Q19, Lock 10). No `@pratt` or `@simd` directives — emerges from grammar shape via cost-model decision.
+- Latest Unicode standard version (currently 16.0, 2024-09)
+- Full property support (`\p{L}`, `\p{XID_Start}`, `\p{XID_Continue}`, `\p{Cyrillic}`, `\p{Mark}`, `\p{Number}`, etc.)
+- Script-property regex (`\p{sc=Hangul}`, `\p{sc=Han}`, etc.)
+- Set algebra inside regex character classes (`[\p{L}--\p{Mark}]`, `[\p{XID_Start}&&\p{ASCII}]`)
+- Grapheme cluster awareness
+- Normalisation (NFC, NFD, NFKC, NFKD) as composable regex modifiers
+- Named character classes via regex literals: `consonants = /\p{L}--[aeiou]/` is the in-grammar surface
+
+The grammar's regex literals are the rich-Unicode entry point. Grammars needing Unicode (CSS L4 identifier; future Python / Rust / OCaml grammars) express through regex; no separate grammar-level surface required.
+
+### `@host fn` directive
+
+In-grammar host-fn definition with closure semantics:
+
+```bbnf
+@host fn parse_hex_color(s: regex("#[0-9a-fA-F]{6}")) -> Color {
+  Color::Rgb(parse_hex_pair(s[1..3]), parse_hex_pair(s[3..5]), parse_hex_pair(s[5..7]))
+}
+```
+
+Closure semantics: lexical scoping; type-variable propagation through bidirectional inference; type-checked against generic primitive library at compile time. The `@host fn` body uses chained applications via Rust-style `.method()` syntax. Named identifiers in scope: the rule's captures (`s` above), the workspace's generic primitives (`parse_hex_pair`, `parse_int_radix`, `cow_unescape`, etc.), and any other `@host fn` declared in the same grammar.
+
+Composition is the canonical surface; declaration-crate escape valve (Lock 14) is the rare last resort.
 
 ### Multi-function chaining
 
-The ffuzzy gap. Today's BBNF supports `->` for terminal-side type projection; multi-function chaining (`-> f1 -> f2 -> f3`) needs first-class semantics with bidirectional inference. The `@host fn` directive's body uses chained applications via Rust-style `.method()` or piped `|>`. PASS-1 specifies the formal closure semantics, type-variable propagation, and CSP-backed inference algorithm.
+`-> f1 -> f2 -> f3` chains type projections. Today's BBNF supports terminal-side `-> Type`; the chain extends this with first-class bidirectional inference. The `@host fn` directive's body uses chained applications. Type inference flows through each stage; CSP backs the constraint collection.
+
+```bbnf
+hex_byte = /[0-9a-fA-F]{2}/ -> parse_hex_pair -> u8
+color = "#" (hex_byte hex_byte hex_byte) -> tuple_to_color -> Color
+```
+
+### Generic rules
+
+`Object<V> = "{" pair<V> ("," pair<V>)* "}"; pair<V> = String ":" V`. Type system carries type variables; CSP propagates; codegen monomorphises per call site (Rust handles natively; WASM via type erasure + dispatch). Grammar-level DRY across grammars sharing structural patterns. Land V1.
+
+### `@error(skip | recover | halt)` directive
+
+Per-rule error-recovery hint. Default is auto-inferred from rule shape via shape mining (treesitter-class error recovery via "MISSING" / "ERROR" nodes). The directive overrides when inference disagrees with author intent. Folds into LSP path.
+
+### `@layout(struct | enum | tuple | slice)` hint
+
+Optional override when type inference is ambiguous. Inference is default (per Q21 hybrid); the hint is the explicit-control surface for cases where users want a specific layout. Land V1.
+
+### Auto-detected (no directive)
+
+Pratt operator chains, SIMD scanner opportunities, PHF keyword sets — all emerge from grammar shape via cost-model decision. No `@pratt` / `@simd` / `@phf` directives. Per Lock 10.
 
 ---
 
@@ -158,35 +192,53 @@ The pipeline is **fixed-point co-iteration** with SSA-style discipline. Each pha
 ```
 1. Parse           (.bbnf  →  Grammar IR)
 2. Validate        (well-formedness; reachability; cycle classification)
-3. Type inference  (CSP + bidirectional + Pierce-Turner adapted; produces TypedGrammarIR)
+3. Type inference  (CSP + bidirectional + Hindley-Milner; produces TypedGrammarIR)
                        ┌──── fixed-point co-iteration with (2) ────┐
-4. Shape mining    (recogniser miners; identify Pratt operators, SIMD scanners, PHF keywords)
-5. E-graph saturation  (algebraic simplification; charclass merging; keyword sets;
-                        operator-chain detection; repeat-loop hoisting; tail-call elim;
-                        non-progressing-Alt removal)
+4. Shape mining    (recogniser miners; identify Pratt operators, SIMD scanners, PHF keywords,
+                    error-recovery boundaries, lookbehind window widths)
+5. E-graph saturation  (all 7 rewrite categories: algebraic simplification, charclass merging,
+                        keyword-set detection, operator-chain detection, repeat-loop hoisting,
+                        tail-call elimination, non-progressing-Alt removal)
 6. Cost-model extraction  (e-graph  →  optimal-cost AST per cost model)
-7. Lower to Backend IR   (TypedGrammarIR  →  ~22-variant Backend IR)
-8. Per-backend lower     (Backend IR  →  Rust source / WASM bytes; TS deferred per Q28)
+7. Lower to Backend IR   (TypedGrammarIR  →  Backend IR)
+8. Per-backend lower     (Backend IR  →  Rust source + WASM bytes; TS scope-deferred per Q28
+                          but the Backend IR shape supports TS lower without retrofit)
 9. Regen-equality verification  (xtask --check; byte-identical re-emission)
 ```
 
-Type inference (3) and validation (2) co-iterate to fixed-point; left-recursion classification depends on types (typed left-recursion); types depend on validation (well-formed inference domain). Single forward pass of the rest.
+Type inference (3) and validation (2) co-iterate to fixed-point with SSA-style discipline; left-recursion classification depends on types (typed left-recursion); types depend on validation (well-formed inference domain). Single forward pass of (4)-(9).
 
-### Cost model: hybrid (Q15 lean iv)
+### Cost model: hybrid
 
 Local costs per construct feed e-graph extraction (per-construct shape selection). Global costs per rule feed the strategy resolver (which rules emit Pratt vs descent). Per-path costs handle Pratt LUT propagation in left-recursive operator chains.
 
-### Cost model integration: trait-based (Q16 lean iii)
+### Cost model integration: trait-based
 
 `Cost` is a trait with `score(&self, ctx: &Context) -> u64` and `branches(&self) -> impl Iterator<Item = (Choice, u64)>`. The parser cost model implements; the regex cost model implements; the comparison logic lives in `cost-model`. Bridging via `Cost` allows the parser to know "this regex scan is X cheap" without knowing regex internals.
 
-### CSP scope (Q18)
+### CSP + e-graph bridge (the union system)
 
-CSP is the **central inference substrate**. E-graphs are used only where saturation-style equivalence-class extraction is the natural fit (algebraic rewrites; cost extraction). The two compose by output-piping — CSP infers types and costs; its outputs feed the e-graph's rewrite engine; the e-graph's extracted ASTs feed cost-model selection. A **union system** between CSP variables and e-graph e-classes lives at `passes/csp_egraph_bridge.rs` — when the CSP solves a constraint that names an e-class, the e-class is promoted to a CSP value; when the e-graph extracts an optimal AST that references CSP variables, the CSP's solution is consulted.
+CSP is the **central inference substrate**. E-graphs are the rewrite + extraction substrate. They compose via an explicit bridge at `passes/csp_egraph_bridge.rs`:
 
-### E-graph rewrites (Q17 lean all)
+- When the CSP solves a constraint that names an e-class, the e-class is promoted to a CSP value (the e-graph's chosen representative becomes the CSP's value)
+- When the e-graph extracts an optimal AST that references a CSP variable, the CSP's solution is consulted (the constraint propagation feeds the extraction)
+- The bridge maintains a bidirectional name map: CSP variable IDs ↔ e-graph class IDs
 
-Algebraic, charclass-merging, keyword-set detection, operator-chain detection, repeat-loop hoisting, tail-call elimination, non-progressing-Alt removal — **all** ship V1. Plus more as miners surface them. The `egraph` crate is generic; bbnf-specific rewrites live as passes in `passes/egraph_rewrites/`, plugged in via `linkme` or `inventory`-style registry.
+The bridge is real architecture, not a fused type. CSP and e-graph stay separate substrates with explicit interface methods. This is the union system you named at Q18 — bridged, not unioned-as-one-type.
+
+### E-graph rewrites — all 7 categories V1
+
+| Category | Examples | Owner pass |
+|---|---|---|
+| Algebraic | `(a \| a)` → `a`; `(a, ε)` → `a`; `(a*)?` → `a*`; `(a+)*` → `a*`; ε-elimination | `passes/egraph_rewrites/algebraic.rs` |
+| Charclass merging | `[a-z] \| [A-Z]` → `[a-zA-Z]` | `passes/egraph_rewrites/charclass.rs` |
+| Keyword set detection | alternation of literals → PHF candidate | `passes/egraph_rewrites/keyword_phf.rs` |
+| Operator-chain detection | left-recursive `expr := expr "+" expr \| term` → Pratt | `passes/egraph_rewrites/operator_chain.rs` |
+| Repeat-loop hoisting | `(item separator)*` → repeat-with-separator construct | `passes/egraph_rewrites/repeat_loop.rs` |
+| Tail-call elimination | `rule := A rule` → loop | `passes/egraph_rewrites/tail_call.rs` |
+| Non-progressing-Alt removal | alternatives whose FIRST sets prove empty | `passes/egraph_rewrites/dead_alt.rs` |
+
+The `egraph` crate is generic (egg-inspired or egg-based); bbnf-specific rewrites live as plug-in passes registered via `linkme` / `inventory`. New rewrites land additively without re-architecture.
 
 ### Shape mining (Q19)
 
@@ -203,13 +255,17 @@ Mindful of combinatorial argument increase: hints carry weights; cost model damp
 
 ---
 
-## §7 — Type System (Settled Positions Q20-Q23)
+## §7 — Type System
 
-**Pierce-Turner local type inference** adapted to grammar shape, with **CSP backing the constraint-collection phase**, with **full Hindley-Milner-style inference** as the canonical algorithm. The PT/HM choice is not exclusive — PT is a *style* of bidirectional check/synth; HM is the underlying inference engine. The greenfield uses Hindley-Milner with bidirectional check/synth at every grammar node, with CSP-backed unification.
+**Hindley-Milner inference + bidirectional check/synth in Pierce-Turner style + CSP-backed unification.** The three are composed, not exclusive — Hindley-Milner is the inference engine; bidirectional check/synth is the algorithmic style at each grammar node; CSP backs the constraint-collection + unification phase. PASS-1's Type System sub-agent does the formal deep dive (rust-analyzer's `chalk`, GHC's `OutsideIn(X)`, Stephen Dolan's algebraic subtyping, Dunfield-Krishnaswami's bidirectional papers, Pierce-Turner's local inference) and commits to the specific algorithm + the formal proof obligations + citations.
 
-The research punt (Q20, Q23): PASS-1's Type System sub-agent does the deep dive against rust-analyzer's `chalk`, GHC's `OutsideIn(X)`, Stephen Dolan's algebraic subtyping, and the latest research (Dunfield-Krishnaswami's bidirectional papers, Pierce-Turner's local inference). PASS-1 commits to a specific algorithm with citations.
+**Annotation surface: hybrid.** Pure inference is default. First-class explicit annotations welcome where the author wants control (`rule -> u32`, `rule -> Color`, generic-rule type parameters). Multi-function chaining (`-> f1 -> f2 -> f3`) flows types through stages with bidirectional check at each.
 
-**Type annotation surface: hybrid (Q21).** Pure inference is default; first-class explicit annotations welcome where users want them (`rule -> u32` for terminal disambiguation; `rule -> Color` for compound aliases). Generic rules ship V1 (Q22). Subtyping is **full Hindley-Milner with subsumption** (Q23) — the CSP relaxes constraints; coercion is a constraint relaxation; no informal numeric tower bolted on.
+**Generic rules: V1.** `Object<V> = "{" pair<V> ("," pair<V>)* "}"; pair<V> = String ":" V`. CSP propagates type variables; codegen monomorphises per call site (Rust handles natively; WASM via type erasure + dispatch). The expected case for parameterised rules: shared structural patterns across grammars (object, array, key-value pair).
+
+**Subtyping: full Hindley-Milner with subsumption.** CSP relaxes constraints; coercion is a constraint relaxation. Numeric coercion (`i32 → i64 → f64`); lifetime coercion (`&'i str → Cow<'i, str> → String`); typed-record narrowing (a struct with optional fields can subsume a struct with fewer fields). No informal coercion tower bolted on.
+
+**Lookbehind types.** The `|<` operator's left operand is a *constraint* on context, not a *capture* of value. The right operand carries the value. Type system tracks this asymmetry: `("s" |< "ch") -> "k"` has the type of `"ch" -> "k"` (the lookbehind context contributes nothing to the value but everything to the constraint).
 
 ---
 
@@ -226,14 +282,36 @@ The research punt (Q20, Q23): PASS-1's Type System sub-agent does the deep dive 
 
 Both compile-time (both are proc-macros). Both grammar-derived (read the per-grammar registry that codegen emits). One substrate (`path-core` carries the path AST + lex/lower/validate); two surfaces (`path` ships the proc-macros for both `pointer!` and `select!`).
 
-### Lazy materialisation: tape + direct-to-struct UNION (Q25)
+### Lazy materialisation: tape + direct-to-struct UNION
 
-The user's deep concern: it isn't tape's *name* that was the problem — it was 2,000 commits of failed unioning between tape and direct-to-struct. The greenfield's substrate is a **proper union** of:
+The user's deep concern: the failure was **implementation**, not naming. The greenfield's substrate is a proper tape + direct-to-struct union, called **tape**. The 2,000-commit failure was orthogonal codepaths, type ambivalence, and OpenFrame leakage — not the name. Implemented properly, tape is the right substrate.
 
-- **Token stream** — contiguous representation of parsed tokens with offset references; the simdjson structural insight
-- **Direct-to-struct** — typed values projected from the token stream on materialisation; the sonic-rs LazyValue idiom
+Tape is:
 
-Naming: not "tape" (carries baggage); not "direct-to-struct" (incomplete); call it **`ParseStream`** — a contiguous token stream that direct-to-struct values borrow into. Materialisation walks ParseStream offsets; the contiguous representation is cache-locality-optimal; the typed values borrow slices into the source string + carry ParseStream offsets. PASS-3 specifies the ParseStream layout, the typed-value-borrow shape, and the materialisation cost.
+- **Contiguous parsed-token stream** — the simdjson structural insight; cache-locality-optimal; SIMD-friendly scan
+- **Typed-value-borrow target** — direct-to-struct values borrow into the tape; the sonic-rs LazyValue idiom; materialisation walks tape offsets
+
+Tape carries: token discriminant (kind tag), source span (`(lo, hi)` byte offsets into `&'i str`), payload offset (into a parallel payload arena for non-trivial payloads), structural pointer (sib_skip per AV.04 archaeology — tested at AU peak, then lost to substrate-without-consumer; the greenfield re-introduces under proper consumer wiring).
+
+Typed values borrow into tape:
+
+```rust
+// Conceptual; refined in PASS-3
+struct JsonValue<'i> {
+    kind: TokenKind,        // 1 byte
+    span: (u32, u32),       // 8 bytes; into &'i str
+    tape: &'i Tape<'i>,     // 8 bytes; pointer
+    idx: u32,               // 4 bytes; into tape.tokens
+}
+```
+
+Materialisation: `value.as_str()` indexes `tape.tokens[idx]` for the kind, slices `tape.source[span]` for the bytes, returns `&'i str`. Constant-time; cache-coherent. `value.as_i64()` does the same plus an integer parse on the slice. Object/array iteration walks `tape.tokens[idx..]` until the structural pointer's matching close.
+
+Slice-borrow integration: `&'i str` source borrow is the primary lifetime; tape borrows from the same `'i`. Bumpalo opt-in via `parse_in(input, &bump)` returns `JsonValue<'arena, 'i>` where `'arena: 'i`. Owned escape via `parse_owned(input)` deep-copies tape + source.
+
+PASS-3 specifies the tape layout (token-record byte layout; payload arena structure; sib_skip-vs-explicit-end-pointer choice), the typed-value-borrow shape (variant tag size; lifetime parameterisation; index encoding), and the materialisation cost (per-method cycle estimate; per-grammar codegen size projection).
+
+**This time it lands.** The convergent pivot at Tranche F retires OpenFrame across all 9 grammars in a single architectural movement; the tape lives at `runtime/src/tape/`; per-grammar runtime modules at `runtime/src/grammars/<name>/` borrow into tape via the codegen-emitted accessors. No orthogonal codepath; no parallel substrate; no Vec<OpenFrame> ladder. One representation; one materialisation surface; one Visitor pattern.
 
 ### Mutation: read-write visitor only (Q27)
 
@@ -241,9 +319,9 @@ Direct typed-property mutation is unsound under slice-borrow (mutation invalidat
 
 ---
 
-## §9 — Performance & Backends (Settled Positions Q28-Q30)
+## §9 — Performance & Backends
 
-**Backend agnostic in design; Rust + WASM in V1; TS deferred** (Q28). The gate: beat the competitor set per dataset:
+**Backend agnostic in design; Rust + WASM in scope; TS scope-deferred per Q28 but the Backend IR shape supports TS lower without retrofit when scope opens.** The gate: beat the competitor set per dataset:
 
 | Workload | Competitor floor | bbnf target |
 |---|---|---|
@@ -261,20 +339,24 @@ Direct typed-property mutation is unsound under slice-borrow (mutation invalidat
 
 ARM NEON (M1/M2/M3), x86 AVX2 + AVX-512, WASM-SIMD (wasm-simd128), portable scalar fallback. PASS-2 specifies the per-kernel SIMD coverage matrix.
 
-### Incremental parsing: ii + iii (Q30)
+### Incremental parsing
 
-Opt-in feature mode for batch parsers (compile-time `--incremental`); always-on for LSP-class consumers. Treesitter-style: stable node identity + diff-against-prior-tree. PASS-3 specifies the incremental-parse data model + the LSP integration path.
+Opt-in feature mode for batch parsers (compile-time `--incremental`); always-on for LSP-class consumers (`bbnf-language-server`). Treesitter-style: stable node identity per parsed token; diff-against-prior-tree algorithm; minimal re-parse window per edit; lossless concrete syntax tree (rowan-inspired).
+
+PASS-3 specifies: the incremental-parse data model (per-token stable identity; tree-edit primitives; diff algorithm); the LSP integration (`Lsp` events emit incremental requests; bbnf-language-server consumes; partial re-parses propagate to type inference + cost-model; the e-graph caches survive across edits where invariants hold).
+
+The VM (kept per Q7) is the debug + replay runtime: incremental edits replay through the VM to produce stepped diagnostics; the LSP exposes "show parse trace" as a feature on top.
 
 ---
 
-## §10 — SOTA Synthesis (Settled Positions Q31-Q33, all-of-the-above)
+## §10 — SOTA Synthesis
 
-**Deep-dive for V1 design**:
+**All 16 projects deep-dive.** Per Q31. Each contributes specific architectural insight; each gets cited in PASS-1/2/3 sub-agent research-anchor docs; each lands an absorbed substrate in a named crate.
 
 | Project | Idea adopted | Crate that absorbs |
 |---|---|---|
-| **simdjson** | contiguous token stream (renamed ParseStream); two-pass parse (structural scan + materialisation); on-demand API | `runtime` (ParseStream) + `host` (escape-handling SIMD primitives) + `simd-scan` (kernels) |
-| **sonic-rs** | LazyValue<'a> idiom; pointer! macro; serde-derive-style typed access | `runtime` + `path` + `path-core` |
+| **simdjson** | contiguous tape (token stream + payload arena); two-pass parse (structural scan + materialisation); on-demand API; SIMD escape-handling primitives | `runtime/tape` + `host/prims` + `simd-scan` |
+| **sonic-rs** | LazyValue<'a> idiom; pointer! macro; serde-derive-style typed access; on-demand JSON API | `runtime` + `path` + `path-core` |
 | **lightning-css** | Visitor + VisitTypes bitflag; per-record `visit_<Name>`; read-write traversal; CSS selector DSL | `runtime` + `path` |
 | **treesitter** | error recovery via MISSING/ERROR nodes; lossless concrete syntax tree; external scanners (escape valve for grammars exceeding BBNF expressiveness); query DSL (folded into `select!`); incremental parsing | `runtime` (CST + recovery) + `bbnf-language-server` (incremental); query DSL into `path` |
 | **rust-analyzer** | Salsa-style incremental computation (lazy, memoized, on-demand); ungrammar declarative grammars; rowan-style lossless trees; `chalk_ir` for type-system reference | `passes` (Salsa-style); `ir` (rowan-inspired lossless representation); `passes/types` (chalk-inspired) |
@@ -298,7 +380,7 @@ The **14 locks** at `restart/locks/14-LOCKS.md` are settled and govern the green
 
 | Lock | Greenfield posture |
 |---|---|
-| 1 — Tape + columnar dead | Honoured by the ParseStream union (§8 Q25). Tape's name dies; tape's structural insight folds into ParseStream. Columnar SoA stays buried (per AV.04 archaeology). |
+| 1 — Tape + columnar dead | **Reframed.** Tape is the substrate of the greenfield, properly implemented (per §8). The lock retired the *prior failed implementation* — orthogonal codepaths, OpenFrame parallel substrate, type ambivalence, the Vec<OpenFrame>::clone 86.07% pathology. The greenfield's tape is unioned with direct-to-struct (no parallel substrate); columnar SoA stays buried (AV.04 archaeology). The lock's spirit (no parallel-substrate failure) honours; the lock's letter (don't use the name "tape") is amended — tape is the right name for the right insight when implemented properly. |
 | 2 — Layout-lowering canon | Honoured at `passes/layout/`; `TypeDesc`/`StructLayout`/`TypeMap` aliases retire workspace-wide. |
 | 3 — Cursor + byte-skip unified | Honoured at `runtime/parse/`; one parse implementation; eager fast-path elides cursor consultation. |
 | 4 — Per-domain orthogonal optimisation | Honoured by `passes` composing `egraph` + `csp-solver` + `cost-model` by output-piping; no fused hypergraph. The CSP↔egraph union (§6) is bridged, not fused. |
@@ -325,11 +407,12 @@ The **14 locks** at `restart/locks/14-LOCKS.md` are settled and govern the green
 |---|---|---|---|
 | PASS-1 | `restart/prompts/PASS-1-SUBSTRATE.md` | bottom | source / grammar / IR / passes / vm / host / cost-model / egraph / csp-solver / type system / BBNF extensions / error vocabulary |
 | PASS-2 | `restart/prompts/PASS-2-CODEGEN.md` | middle | codegen / runtime / runtime-template / per-backend lowerers (Rust + WASM) / generated-output regen / SIMD scanner kernels / Pratt + SIMD auto-detection / cost-model integration |
-| PASS-3 | `restart/prompts/PASS-3-RUNTIME.md` | top | bbnf aggregator / value API / path + select DSLs / visitor surface / lazy materialisation / ParseStream union / error recovery / incremental parsing / LSP / CLI / fixtures / playground / docs |
+| PASS-3 | `restart/prompts/PASS-3-RUNTIME.md` | top | bbnf aggregator / value API / path + select DSLs / visitor surface / tape + direct-to-struct union / lazy materialisation / error recovery / incremental parsing / LSP / CLI / fixtures / playground / docs |
 | SYNTHESIS | `restart/prompts/SYNTHESIS.md` | meta | consolidates 3 PASS outputs into ARCHITECTURE.md + MIGRATION.md + the master plan |
-| HARDENING | `restart/prompts/HARDENING.md` | gate | nine-lane double-back audit (lock-adherence, sequencing, cohesion, SOTA-anchoring, grammar-authoritative, generated-code budget, friction forecast, carry-deferral, greenfield-discipline) with Pro/Con/Explication/Challenge per-item discipline |
+| HARDENING | `restart/prompts/HARDENING.md` | gate | per-target nine-lane audit; Pro/Con/Explication/Challenge per-item discipline; KEEP/REINVENT/DISCARD verdicts |
+| HARDENING-ORCHESTRATOR | `restart/prompts/HARDENING-ORCHESTRATOR.md` | gate | invokes HARDENING.md against four targets (PASS-1, PASS-2, PASS-3, SYNTHESIS); consolidates four reports into single readiness verdict; gates tranche drafting |
 
-**No Stage-2 hardening. No Stage-3 meta-review. One round.** The three prior stages were a contrivance; the user has flagged this. One PASS suite, one synthesis, one hardening, then tranches.
+**No Stage-2 hardening. No Stage-3 meta-review. One round.** The three prior stages were a contrivance; the user has flagged this. One PASS suite, one synthesis, one hardening orchestrated across four targets, then tranches.
 
 After hardening returns *ready*, full-spec tranche drafting begins. **Not before.** Tranches are layer-aligned: tranches earning each layer's milestones land in dependency order. The fresh tranche set begins at letter A; the prior BA-BD plan-set survives at `docs/tranches/{BA,BB,BC,BD}/` as inheritance reference, archived to `docs/tranches/archive/legacy-Y-BD/` at Tranche-A.W0 execution time per Pass-C's ratification.
 

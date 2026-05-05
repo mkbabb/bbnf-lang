@@ -584,4 +584,6 @@ Carry ledger — every deferral carries Receiver, Blocker, and Receiving gate pe
 
 PASS-2 closes on a clear middle-layer architecture: Backend IR is the only codegen input; Tape is the only runtime substrate; typed values borrow into Tape; Rust and WASM lowerers consume the same BIR; `simd-scan` stays generic; Pratt/SIMD/PHF are auto-detected; runtime modules are template-emitted from grammar source plus metadata; regen is byte-identical and budgeted.
 
+The research-fold grounding is binding: `CostDecision` and bridge evidence drive extraction before lowerers run; `TapeShape` and `ValueShape` project one tape identity; `RegexDfa` is a verifier-bound regex-program payload, not a full-DFA mandate; exact SIMD scans prove scalar parity, prefilters verify before tape emission, and SOTA benchmark rows carry validation/source-ownership metadata.
+
 The main inherited contradictions are resolved, not carried. ParseStream is stale. Rewrite mode is out. Grammar-level Unicode sets are out. Per-grammar declaration crates are not default and are unused for the 9 existing grammars. TS production is deferred. The remaining work is implementation and cross-pass reconciliation with PASS-1 and PASS-3, not another architecture fork.

@@ -112,7 +112,7 @@ Generated metadata produced by xtask-emitted descriptors is the only validation 
 
 These gates appear as receiver/blocker/receiving-gate rows in §8.
 
-Visitors keep the W5 design: generated `Visitor` traits, `Visit`/walker support, and `VisitTypes` bitflag pruning (`docs/tranches/BB/audit/W5-visitor-bitflag-spec.md:11-19`, `docs/tranches/BB/audit/W5-visitor-bitflag-spec.md:107-123`, `docs/tranches/BB/audit/W5-visitor-bitflag-spec.md:127-174`). Mutation happens through visitors/edit builders only, as required by the README (`restart/README.md:318`). Cookbook examples for visitor collection, pruning, mutation, and warnings remain the documentation backbone (`docs/cookbook/visitors.md:102-124`, `docs/cookbook/visitors.md:153-165`, `docs/cookbook/visitors.md:177-188`, `docs/cookbook/visitors.md:248`).
+Visitors keep the W5 design: generated `Visitor` traits, `Visit`/walker support, and `VisitTypes` bitflag pruning (`docs/tranches/BB/audit/W5-visitor-bitflag-spec.md:11-19`, `docs/tranches/BB/audit/W5-visitor-bitflag-spec.md:107-123`, `docs/tranches/BB/audit/W5-visitor-bitflag-spec.md:127-174`). Mutation happens through visitors/edit builders only, as required by the README (`restart/README.md:318`). Cookbook examples for visitor collection, pruning, mutation, and warnings remain the documentation backbone (`docs/cookbook/visitors.md:102-124`, `docs/cookbook/visitors.md:153-165`, `docs/cookbook/visitors.md:177-188`, `docs/cookbook/visitors.md:248`). Visitor diagnostics emitted by the runtime carry `BBNF-VISIT*` codes (rows in §6b); the visitor cookbook table-of-contents indexes each code so authors land on the relevant chapter from the diagnostic alone.
 
 ## §4 Tape/direct runtime architecture
 
@@ -339,7 +339,7 @@ PASS-3 owns the column-feeder rows for the SYNTHESIS-owned 10x9 per-grammar tabl
 | `google_sheets` | `GoogleSheets` | `GoogleSheetsRoot` | `generated.rs`, `parser.rs`, `host.rs` | `GoogleSheetsVisitor`, `GoogleSheetsVisitTypes` | `google_sheets.path-schema.toml` | `fixtures/sheets/manifest.toml` | range/date/array-literal host primitives |
 | `json` | `Json` | `JsonRoot` | `generated.rs`, `parser.rs` | `JsonVisitor`, `JsonVisitTypes` | `json.path-schema.toml` | `fixtures/json/manifest.toml` | none |
 | `math` | `Math` | `MathRoot` | `generated.rs`, `parser.rs` | `MathVisitor`, `MathVisitTypes` | `math.path-schema.toml` | `fixtures/math/manifest.toml` | none (Pratt-eligible operator chain only) |
-| `yaml` (onboarding proof) | `Yaml` | `YamlRoot` | `generated.rs`, `parser.rs`, `host.rs` (if metadata declares host route) | `YamlVisitor`, `YamlVisitTypes` | `yaml.path-schema.toml` | parity-phase `fixtures/yaml/manifest.toml` | as declared in `[workspace.metadata.bbnf.grammars.yaml]` |
+| `yaml` (onboarding proof) | `Yaml` | `YamlRoot` | `generated.rs`, `parser.rs`, `host.rs` (if metadata declares host route) | `YamlVisitor`, `YamlVisitTypes` | `yaml.path-schema.toml` | parity-phase `fixtures/yaml/manifest.toml` | decomposed via `host::primitives` + `@host fn` chain in the metadata block per `restart/README.md:155`; no Rust per-grammar code emerges from the onboarding two surfaces |
 
 The yaml row exists at the onboarding boundary: every cell to the left of the parity-phase fixture manifest must be generated from `yaml.bbnf` plus the workspace-metadata block, with zero Rust edits and zero per-grammar match arms in any generic crate.
 
@@ -359,6 +359,9 @@ PASS-3 owns the user-facing diagnostic strings for runtime, pointer/select, life
 | `BBNF-POINTER001` | `error[BBNF-POINTER001]: unknown pointer segment `{segment}` in `{pointer_macro_input}`; rule has no field with that name.` | Application author | "Pointers traverse fields by name." | Field name typo or stale. | Pointer cookbook §validation. |
 | `BBNF-POINTER002` | `error[BBNF-POINTER002]: pointer grammar inference failed; help: add an explicit grammar prefix like `pointer!(Json => "/...")`.` | Application author | "Implicit grammar always works." | Two grammars in scope. | Pointer cookbook §explicit-grammar. |
 | `BBNF-POINTER003` | `error[BBNF-POINTER003]: terminal type for pointer `{path}` is not yet known to the macro; help: regenerate with `cargo xtask regen` so the schema is in sync.` | Application author | "Macro reads metadata at compile time." | Stale generated schema. | Pointer cookbook §regen. |
+| `BBNF-VISIT001` | `warning[BBNF-VISIT001]: visitor declares no matching node kinds. help: add the desired kind to `VisitTypes` or remove the visitor.` | Visitor author | "Empty `VisitTypes` walks every node." | Bitflag default vs. declared-kinds intent. | Visitor cookbook §pruning. |
+| `BBNF-VISIT002` | `error[BBNF-VISIT002]: borrowed parse tree cannot be mutated in place. help: use `parse_owned`, `parse_in` with a mutable arena document, or emit an edit plan via the edit builder.` | Visitor author | "Visitors always mutate." | Borrowed root is shared-immutable. | Visitor cookbook §mutation. |
+| `BBNF-VISIT003` | `warning[BBNF-VISIT003]: recovery nodes skipped by this visitor. help: implement `visit_error` or enable `VisitTypes::ERROR`.` | Visitor author | "Default visitor sees every node." | Recovery nodes opted out by default. | Visitor cookbook §recovery. |
 | `LookbehindWidth` | `error[BBNF-LIFE003]: lookbehind `|<` width is unbounded for `{rule}`; help: lookbehinds must be finite-width; use a bounded alternative or move the constraint into a regex with `(?<=...)`.` | Grammar author | "Lookbehind takes any pattern." | Unbounded width. | Grammar surface spec. |
 | `HostSignature` | `error[BBNF-HOST001]: host function `{name}` cannot satisfy signature `{expected}`; argument {index} inferred `{actual}` at {span}.` | Host author | "@host fn body just runs." | Type flow mismatch. | Host cookbook §signatures. |
 | `ChainStep` | `error[BBNF-HOST002]: chain step `{step}` does not accept `{input_type}` from previous step; the chain `-> f1 -> f2` requires `f2` to accept `f1`'s output.` | Host author | "Chains compose." | Step type fault. | Host cookbook §chains. |
@@ -381,32 +384,32 @@ Every perf gate names a competitor per Lock 14 (`restart/locks/14-LOCKS.md:207`)
 
 PASS-3 recommends bench reports include: borrowed/arena/owned timings, tape/direct projection timings, `pointer!` and `select!` traversal timings, visitor pruning win/loss, incremental fallback rate, and DAP trace overhead.
 
-Exact PASS-3 benchmark rows:
+Exact PASS-3 benchmark rows. Competitor floor + Platform columns inline the per-row attribution mandated by Lock 8 (`restart/locks/14-LOCKS.md:50` and `restart/README.md:328-334`); cross-document carry to SYNTHESIS H/J at §10 remains as insurance for any post-PASS-3 ratification.
 
-| Row | Target | Surface under test |
+| Row | Target | Competitor floor | Platform | Surface under test |
+|---|---|---|---|---|
+| `json/twitter/borrowed` | <= 380us | sonic-rs 436 µs / simd-json 424 µs | M1 Pro | `parse(&str)` plus direct root. |
+| `json/twitter/tape_cursor` | <= borrowed + 10% | (no Lock-8 claim; relative to bbnf borrowed row) | M1 Pro | `ValueRef` cursor projection. |
+| `json/citm/pointer` | <= 750us parse target plus reported selector time | sonic-rs 854 µs / simd-json 831 µs | M1 Pro | `pointer!` object traversal. |
+| `json/canada/array_scan` | <= 2.8ms | sonic-rs 3.144 ms | M1 Pro | array-heavy parse and selector scan. |
+| `css/bootstrap/visitor` | <= 3.0ms | lightning-css ~4.16 ms | M1 Pro (PASS-3 §9 disclaim re: platform ratification per `restart/README.md:336`) | generated visitor pruning over CSS. |
+| `css/animate/layout` | <= 1.6ms | lightning-css 1.97 ms | M1 Pro (same disclaim as bootstrap row) | layout metadata plus parser surface. |
+| `bbnf/self_host/internal` | <= 100 ms full self-parse + format roundtrip; non-Lock-8 internal gate; no SOTA peer claim attaches. | (no SOTA peer claim attaches) | M1 Pro | BBNF grammar parses itself through the public runtime. |
+| `incremental/edit_anchor` | report fallback rate | (no Lock-8 claim; non-throughput row) | M1 Pro | LSP edit reparse plan. |
+| `debug/trace_overhead` | report overhead | (no Lock-8 claim; non-throughput row) | M1 Pro | DAP/playground trace projection. |
+
+Generated API budget. The +2 percent regen ceiling rows below anchor against the W3 baseline LOC totals captured in `restart/audit/pass-2-codegen/PASS-2.md:380-392` (per-grammar generated_loc table observed against PASS-B audit): css_l4 ≈ 107,138 LOC, bbnf ≈ 21,503 LOC, google_sheets ≈ 14,088 LOC, css_pretty ≈ 9,021 LOC, ebnf ≈ 7,646 LOC, json ≈ 3,500 LOC, bnf ≈ 3,290 LOC, csv ≈ 1,693 LOC, math ≈ 871 LOC, total 168,750 LOC across the nine extant grammars; yaml provisional ≤ 4,000 LOC. The delta semantics ("+2 percent") gate against these anchors per regen.
+
+| Surface | W3 baseline LOC | Budget gate |
 |---|---|---|
-| `json/twitter/borrowed` | <= 380us | `parse(&str)` plus direct root. |
-| `json/twitter/tape_cursor` | <= borrowed + 10% | `ValueRef` cursor projection. |
-| `json/citm/pointer` | <= 750us parse target plus reported selector time | `pointer!` object traversal. |
-| `json/canada/array_scan` | <= 2.8ms | array-heavy parse and selector scan. |
-| `css/bootstrap/visitor` | <= 3.0ms | generated visitor pruning over CSS. |
-| `css/animate/layout` | <= 1.6ms | layout metadata plus parser surface. |
-| `bbnf/self_host/internal` | <= 100 ms full self-parse + format roundtrip; non-Lock-8 internal gate; no SOTA peer claim attaches. | BBNF grammar parses itself through the public runtime. |
-| `incremental/edit_anchor` | report fallback rate | LSP edit reparse plan. |
-| `debug/trace_overhead` | report overhead | DAP/playground trace projection. |
-
-Generated API budget:
-
-| Surface | Budget gate |
-|---|---|
-| Visitor traits | Per-grammar generated visitor LOC reported separately; no handwritten visitor file over 500 LOC; per-grammar visitor LOC delta beyond W3 baseline carries a +2 percent ceiling per regen. |
-| Path metadata (Rust) | Generated schema rows are counted against grammar runtime budget; `path-core` handwritten files obey Lock 13; per-grammar path-schema Rust budget <= 32 KB. |
-| Path metadata (sidecar) | Generated `*.path-schema.toml` sidecar size <= 64 KB per grammar; bench manifest sidecar <= 8 KB per grammar. |
-| Tape projections | Generated projection LOC counted with runtime module budget; per-grammar projection delta beyond W3 baseline carries a +2 percent ceiling per regen. |
-| Tape identity field/method delta | Adding a tape identity field or `ValueRef` method costs <= 1 field plus 2 methods per regen; larger deltas open a named amendment. |
-| Bench-report generation | Per-grammar bench-report markdown <= 16 KB; per-grammar bench-report JSON <= 8 KB; aggregate bench summary <= 64 KB. |
-| Regen wall budget | `cargo xtask regen --check` <= 12 s on M1 Pro for the nine extant grammars; <= 14 s including yaml; over-budget regen blocks close. |
-| Diagnostics | Generated code list is data; diagnostic rendering code remains shared and non-generated. |
+| Visitor traits | css_l4 visitor ≤ 22 K LOC at W3 baseline (≈ 20 percent of 107 K); bbnf visitor ≤ 6 K LOC at W3 baseline (≈ 28 percent of 21 K); other-grammar visitor LOC scales with each grammar's `generated_loc` row in PASS-2.md §6. | Per-grammar generated visitor LOC reported separately; no handwritten visitor file over 500 LOC; per-grammar visitor LOC delta beyond the W3 baseline anchor carries a +2 percent ceiling per regen. |
+| Path metadata (Rust) | Counted within each grammar's `generated_loc` PASS-2 row; no separate W3 anchor. | Generated schema rows are counted against grammar runtime budget; `path-core` handwritten files obey Lock 13; per-grammar path-schema Rust budget <= 32 KB. |
+| Path metadata (sidecar) | Sidecar files are not Rust source; no W3 LOC anchor applies. | Generated `*.path-schema.toml` sidecar size <= 64 KB per grammar; bench manifest sidecar <= 8 KB per grammar. |
+| Tape projections | css_l4 projection ≤ 35 K LOC at W3 baseline (≈ 33 percent of 107 K); bbnf projection ≤ 8 K LOC at W3 baseline (≈ 38 percent of 21 K); other-grammar projection LOC scales with PASS-2.md §6. | Generated projection LOC counted with runtime module budget; per-grammar projection delta beyond the W3 baseline anchor carries a +2 percent ceiling per regen. |
+| Tape identity field/method delta | Field/method count, not LOC; the W3 anchor is the post-PASS-1 substrate definition (§4 above). | Adding a tape identity field or `ValueRef` method costs <= 1 field plus 2 methods per regen; larger deltas open a named amendment. |
+| Bench-report generation | Generated artefacts; no W3 LOC anchor applies. | Per-grammar bench-report markdown <= 16 KB; per-grammar bench-report JSON <= 8 KB; aggregate bench summary <= 64 KB. |
+| Regen wall budget | Wall time, not LOC; PASS-2.md §6 carries observed-vs-provisional baselines. | `cargo xtask regen --check` <= 12 s on M1 Pro for the nine extant grammars; <= 14 s including yaml; over-budget regen blocks close. |
+| Diagnostics | Diagnostic-rendering code is non-generated; W3 anchor governs the per-grammar diagnostic data only. | Generated code list is data; diagnostic rendering code remains shared and non-generated. |
 
 ## §8 Cross-pass hand-offs
 

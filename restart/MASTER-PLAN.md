@@ -130,7 +130,7 @@ in `restart/corpora/SOTA.md:50-89` and `restart/corpora/SOTA.md:130-136`.
 |---|---|---|---|---|
 | `json/twitter` | sonic-rs 436us; simd-json 424us. | <= 380us. | M1 Pro macOS, native Rust release with `target-cpu=native`. | H.W4, J.W1. |
 | `json/citm` | sonic-rs 854us; simd-json 831us. | <= 750us. | M1 Pro macOS, native Rust release with `target-cpu=native`. | H.W4, J.W1. |
-| `json/canada` | sonic-rs 3.144ms; simd-json comparable. | <= 2.8ms. | M1 Pro macOS, native Rust release with `target-cpu=native`. | H.W4, J.W1. |
+| `json/canada` | sonic-rs 3.144ms; simd-json 3.226ms (`restart/corpora/SOTA.md:56`). | <= 2.8ms. | M1 Pro macOS, native Rust release with `target-cpu=native`. | H.W4, J.W1. |
 | `css/bootstrap` | lightning-css 4.16ms. | <= 3.0ms. | M1 Pro macOS, native Rust release with `target-cpu=native`. | H.W5, J.W1. |
 | `css/animate` | lightning-css 1.97ms. | <= 1.6ms. | M1 Pro macOS, native Rust release with `target-cpu=native`. | H.W5, J.W1. |
 | `simd/structural_scan` | simdjson On-Demand ~7 GB/s on x86 AVX2; ~5 GB/s on M-series NEON. | >= 5 GB/s on M-series, >= 7 GB/s on x86 AVX2; scalar parity hash matches. | M1 Pro macOS NEON and x86_64 AVX2 build host. | H.W1/H.W4, J.W1. |
@@ -455,7 +455,7 @@ Stub waves:
 |---|---|---|
 | H.W0 | Pratt recognizer facts and BIR `PrattSpine`. | Expression grammar uses auto-detected Pratt. |
 | H.W1 | SIMD recognizer facts and `SimdScan` integration. | Literal/regex scans route through scanner kernels. |
-| H.W2 | AVX2/NEON/scalar dispatch gates. | Platform-specific tests or skipped metadata. |
+| H.W2 | AVX2/NEON/scalar dispatch gates. | Platform-specific tests pass on supporting hardware; tests on non-supporting hardware are skipped with a CI-readable skip-marker recording the missing capability (for example `cpu_feature: avx2_unsupported`). |
 | H.W3 | WASM V1 via wasm32 Rust binding. | WASM package parses seed grammar at <= 3x native cost on M1 Pro Safari WASM runtime; metadata records WASM runtime, host browser, and bbnf commit. |
 | H.W4 | Early JSON SOTA gates. | `json/twitter` <= 480us, `json/citm` <= 950us, `json/canada` <= 3.5ms on M1 Pro with metadata; final J.W1 thresholds at 380us / 750us / 2.8ms. |
 | H.W5 | Early CSS SOTA gates. | `css/bootstrap` <= 3.8ms, `css/animate` <= 1.9ms on M1 Pro with metadata; final J.W1 thresholds at 3.0ms / 1.6ms. |
@@ -631,22 +631,25 @@ Generated source is a tracked product, not incidental output.
 PASS-2 is the authority for the +2 percent generated LOC ceiling
 (`restart/audit/pass-2-codegen/PASS-2.md:293-310`).
 
-Per-grammar generated LOC baseline. PASS-2 §11 carries the per-grammar census;
-this table promotes the seed grammar set into MASTER-PLAN so all "nine seed
-grammars" claims close without chasing PASS-2.
+Per-grammar generated LOC baseline. The firm per-grammar baselines live in
+`restart/ARCHITECTURE.md` §12.1 (`Generated LOC (current → max)` column,
+lines 1273-1281); this table mirrors them so all "nine seed grammars" claims
+close without chasing PASS-2 or ARCHITECTURE. A.W2 verifies the firm numerics
+against the live W3 branch and reports drift; the numbers themselves are
+recorded, not deferred.
 
-| Grammar | Current baseline LOC (PASS-2 §11) | F.W5 ceiling | Tranche owner |
+| Grammar | Current baseline LOC (ARCHITECTURE §12.1) | F.W5 ceiling | Tranche owner |
 |---|---:|---|---|
-| `bbnf` | self-host bootstrap; baseline recorded at A.W2. | F.W5 baseline +2 percent. | F. |
-| `bnf` | small reference; baseline recorded at A.W2. | F.W5 baseline +2 percent. | F. |
-| `csv` | small line-oriented; baseline recorded at A.W2. | F.W5 baseline +2 percent. | F. |
-| `css_l4` | typed L4; baseline recorded at A.W2. | F.W5 baseline +2 percent. | F. |
-| `css_pretty` | pretty subset; baseline recorded at A.W2. | F.W5 baseline +2 percent. | F. |
-| `ebnf` | reference EBNF; baseline recorded at A.W2. | F.W5 baseline +2 percent. | F. |
-| `google_sheets` | spreadsheet expression; baseline recorded at A.W2. | F.W5 baseline +2 percent. | F. |
-| `json` | RFC 8259 with SOTA target; baseline recorded at A.W2. | F.W5 baseline +2 percent; SIMD additions at H attribute by target. | F/H. |
-| `math` | Pratt-bearing arithmetic; baseline recorded at A.W2. | F.W5 baseline +2 percent. | F. |
-| `yaml` (probe) | not in seed budget; reported separately under future-grammar metadata until admitted. | yaml never closes a tranche on a seed-grammar gate before admission. | A/G/F. |
+| `bbnf` | 21,503. | F.W5 baseline +2 percent (21,933). | F. |
+| `bnf` | 3,290. | F.W5 baseline +2 percent (3,356). | F. |
+| `csv` | 1,693. | F.W5 baseline +2 percent (1,727). | F. |
+| `css_l4` | 107,138. | F.W5 baseline +2 percent (109,281). | F. |
+| `css_pretty` | 9,021. | F.W5 baseline +2 percent (9,201). | F. |
+| `ebnf` | 7,646. | F.W5 baseline +2 percent (7,799). | F. |
+| `google_sheets` | 14,088. | F.W5 baseline +2 percent (14,370). | F. |
+| `json` | 3,500. | F.W5 baseline +2 percent (3,570); SIMD additions at H attribute by target. | F/H. |
+| `math` | 871. | F.W5 baseline +2 percent (888). | F. |
+| `yaml` (probe) | 0 (not in seed budget; reported separately under future-grammar metadata until admitted). | provisional ceiling ≤ 4,000 (SYNTHESIS Wave-2 owner); yaml never closes a tranche on a seed-grammar gate before admission. | A/G/F. |
 
 Budget enforcement rows:
 

@@ -35,7 +35,7 @@ Balanced split, granular where befitting, terse where befitting. **The `bbnf-` p
 | `bbnf` | user-facing aggregator (re-exports Parser, Value, Document, Visitor, pointer!, select!) | yes | crates.io |
 | `bbnf-cli` | user-facing CLI tool | yes | crates.io |
 | `bbnf-language-server` | LSP (consolidates analysis + lsp) | yes | crates.io |
-| `bbnf-bench` | vitest-style bench harness | yes | workspace-internal |
+| `bbnf-bench` | vitest-style bench harness | yes | crates.io |
 | `error` | unified error type (`bbnf::Error` re-export) | no | workspace-internal |
 | `pipeline` | phase-state pipeline coordinator | no | workspace-internal |
 | `source` | input acquisition + line-column infra | no | workspace-internal |

@@ -310,18 +310,19 @@ Stub waves:
 | Wave | Scope | Consumer gate |
 |---|---|---|
 | C.W0 | Grammar IR enum, IDs, spans, validation. | Seed grammar lowers AST to Grammar IR. |
-| C.W1 | HM + bidirectional + CSP type-checking subroutine inside `passes::layout`; `LayoutFacts` as the public side-table. `TypeFacts` lives only inside the layout pass. | Host-free seed grammar typechecks; downstream passes read `LayoutFacts`, never `TypeFacts`. |
+| C.W1 | HM principal-scheme core plus expected-type checking inside `passes::layout`, with first-order equality unification before bounded coercion and finite CSP choices; `LayoutFacts` is public, while `TypeFacts` and `TypeObligationLog` remain internal. | Host-free seed grammar proves principal schemes; type-obligation snapshot separates equality, expected, coercion, and finite-choice stages; downstream passes read `LayoutFacts`, never `TypeFacts`. |
 | C.W2 | ShapeFacts and value-shape mining. | Direct-builder shell contract consumes ShapeFacts in a C fixture and records B integration gaps. |
 | C.W3 | RecognizerFacts and Pratt/SIMD candidate mining. | Facts feed E-owned BIR snapshots, not placeholder hints. |
-| C.W4 | CSP/egraph bridge tables. | Egraph and CSP exchange facts through bridge API. |
-| C.W5 | CostFacts and extraction skeleton. | Backend IR builder receives selected alternatives. |
+| C.W4 | CSP/egraph bridge tables: stable ID maps, monotone fact exchange, rewrite guard API, rewrite budget policy, representative-stability test, and bridge-justification records. | Egraph and CSP exchange facts through bridge API; extraction never reads a stale e-node representative. |
+| C.W5 | `CostFacts`, `CostDecision` evidence, objective profiles, Pareto/frontier extraction, solver-backed composition skeleton, and bridge-justified legality. | Backend IR builder receives selected alternatives plus evidence for rejected and dominated candidates. |
 
 Hard close:
 
 ```sh
 cargo test -p ir grammar_ir
 cargo test -p passes types shapes recognizers bridge
-cargo test -p cost-model facts
+cargo test -p passes type_obligations principal_core bridge_representative_stability
+cargo test -p cost-model facts frontier solve
 ```
 
 No C work may introduce a third optimized IR tree.
@@ -343,9 +344,9 @@ Stub waves:
 | Wave | Scope | Consumer gate |
 |---|---|---|
 | D.W0 | Lookbehind parser, bounds checker, Grammar IR node. | Bounded positive/negative lookbehind tests. |
-| D.W1 | Generic rules and annotations. | Generic seed grammar typechecks. |
+| D.W1 | Generic rules, annotations, scheme instantiation, finite monomorphisation-set evidence, and generic-cycle diagnostics. | Generic seed grammar typechecks; generated instance-set report is finite. |
 | D.W2 | Block-bodied `@host fn` definitions and host primitive registry. | Host call compiles without declaration crate. |
-| D.W3 | Multi-function chaining type/runtime contract. | Chain result feeds a later parser expression. |
+| D.W3 | Multi-function chaining type/runtime contract, including left-to-right expected-argument obligations, bounded coercion-site fixtures, and first-mismatch diagnostics. | Chain result feeds a later parser expression; a negative chain fixture fails at the first mismatching step with `BBNF-HOST002` or `BBNF-SUBSUMPTION-EDGE`. |
 | D.W4 | `@error`, `@layout`, regex Unicode routing, rewrite rejection. | Rewrite syntax fails; regex Unicode stays in `parse-that/regex`. |
 
 Hard close:
@@ -353,6 +354,7 @@ Hard close:
 ```sh
 cargo test -p grammar extensions
 cargo test -p passes host_generics lookbehind
+cargo test -p passes type_obligations principal_core chain_expected_flow monomorphisation_set
 cargo test -p parse-that regex_unicode
 ```
 
@@ -472,7 +474,7 @@ Stub waves:
 | Wave | Scope | Consumer gate |
 |---|---|---|
 | H.W0 | Pratt recognizer facts and BIR `PrattSpine`. | Expression grammar uses auto-detected Pratt. |
-| H.W1 | SIMD recognizer facts and `SimdScan` integration. | Literal/regex scans route through scanner kernels. |
+| H.W1 | SIMD recognizer facts and `SimdScan` integration, with `Exact` structural scans, `Prefilter` candidate scans, scalar offset-vector parity, verifier-before-tape emission, and `regex-automata` oracle parity for regex fixtures. | Literal and regex scans route through scanner kernels only when exactness and cost evidence win; missing verifier routes fall back to scalar or regex verifier-first. |
 | H.W2 | AVX2/NEON/scalar dispatch gates. | Platform-specific tests pass on supporting hardware; tests on non-supporting hardware are skipped with a CI-readable skip-marker recording the missing capability (for example `cpu_feature: avx2_unsupported`). |
 | H.W3 | WASM V1 via wasm32 Rust binding. | WASM package parses `css/bootstrap` on M1 Pro Safari WASM runtime within `{N}`ms (lightning-css/WASM baseline `{M}`ms on the same fixture; `{N}` and `{M}` are TBD at H.W3 measurement, owner = H.W3 lead, blocker = WASM build of lightning-css available for comparison); metadata records WASM runtime, host browser, lightning-css/WASM version, the bbnf commit, and the fixture hash. The competitor-anchored ratio honours Lock 8 (`restart/locks/14-LOCKS.md:48`); the prior `<= 3x native cost` self-reference is retired. |
 | H.W4 | Early JSON SOTA gates. | `json/twitter` <= 480us, `json/citm` <= 950us, `json/canada` <= 3.5ms on M1 Pro with metadata; final J.W1 thresholds at 380us / 750us / 2.8ms. |
@@ -516,7 +518,7 @@ Stub waves:
 | Wave | Scope | Consumer gate |
 |---|---|---|
 | I.W0 | RecoveryFacts and diagnostic codes. | Error directive fixtures produce stable diagnostics. |
-| I.W1 | Incremental source snapshots and reparse plans. | Edited seed grammar reparses changed region. |
+| I.W1 | Incremental source snapshots, snapshot-scoped `TapeId`, old-to-new reuse maps, query invalidation keys, and reparse plans. | Edited seed grammar reparses changed region or reports a named fallback reason, reuse-map absence, invalidated queries, and silent LSP behavior in the `incremental/edit_anchor` ledger. |
 | I.W2 | LSP diagnostics and semantic index. | Editor fixture sees grammar/type errors. |
 | I.W3 | Debug/replay and playground hooks. | VM trace displayed through server/debug API. |
 | I.W4 | CLI and LSP parity for diagnostics. | Same input yields same diagnostic codes. |
@@ -692,16 +694,16 @@ Budget enforcement rows:
 
 | Lock | Owner tranche | Close proof |
 |---|---|---|
-| 1 Tape/direct substrate | B/F/H | Runtime tests, no OpenFrame clone stack. |
+| 1 Tape/direct substrate | B/F/H | Runtime identity tests, payload projection tests, no OpenFrame clone stack. |
 | 2 Layout lowering term | D/F | Layout facts lower through BIR. |
 | 3 Cursor-parse/byte-skip | B/H | Empty-path elision and scanner tests. |
-| 4 CSP/egraph bridge | C | Bridge tests, no fused hypergraph. |
+| 4 CSP/egraph bridge | C | Bridge tests, no fused hypergraph, representative-stability test, rewrite-budget test, bridge-justification round-trip. |
 | 5 Backend IR lowerers | E/F/H | Codegen BIR-only tests. |
 | 6 Committed codegen | F/J | Regeneration equality. |
 | 7 Path split | G | `path`, `path-core`, `path-ts` tests. |
-| 8 SOTA gates | H/J | Bench report with baselines. |
+| 8 SOTA gates | H/J | Bench report with baselines, validation mode, source ownership mode, materialisation mode, objective profile, and complete host hardware metadata. |
 | 9 Slice-borrow API | B/G | `parse`, `parse_in`, `parse_owned` tests. |
-| 10 Pratt/SIMD auto | C/H | Recognizer facts, no directives. |
+| 10 Pratt/SIMD auto | C/H | Recognizer facts, no directives, scalar parity for exact scans, verifier route for prefilters. |
 | 11 Path-dep incubation | A/J | Sister crates remain generic and publishable. |
 | 12 Archive `ser`/`gorgeous` | A/J | Archive paths outside workspace. |
 | 13 Tree discipline | A through J | `lint-tree`, `lint-loc`. |
@@ -769,6 +771,9 @@ rather than duplicating receivers.
 | Cursor skip | B/H | Runtime cannot prove empty-path and byte-skip behavior. | `__EAGER_EMPTY_PATH` and `CursorDecision::Skip` fixtures. | synthesis + migration |
 | PASS-3 consumers | F/G/I | Generated runtime omits path, visitor, diagnostics, or host metadata. | `path-core`, visitor, and language-server consumer smokes. | synthesis |
 | SOTA metadata | H/J | Bench numbers lack machine/input/build metadata. | Benchmark report schema rejects incomplete rows; benchmark host hardware profiles cite SOTA baselines and record machine metadata. | synthesis + migration |
+| Cost evidence | C/F/H/J | Selected-only cost evidence loses rejected, dominated, profile, target, or objective-mode provenance. | `cost-model` evidence report lists selected, rejected, dominated, objective mode, target, profile, and extraction method. | synthesis |
+| Regex oracle lane | D/H/J | Bespoke `parse-that/regex` reimplements regex engines without grammar-owned delta or parity evidence. | `parse-that/regex` fixtures compare grammar HIR/verifier integration against `regex-automata` oracle cases for Unicode class algebra, no-capture DFA, lazy/full DFA, and prefilter candidates. | synthesis |
+| Runtime materialisation metadata | B/F/J | Direct/tape materialisation rows hide payload, string-normalisation, scalar-cache, or repeated-access cost. | Generated materialisation report includes token width, payload class, string-normalization policy, numeric policy, direct-field count, repeated-access class, and source ownership mode per node kind. | synthesis |
 | yaml onboarding | A/F/G/J | Future grammar requires any manual Rust registry/path/host edit. | yaml source + workspace metadata plus generated runtime only. | synthesis |
 | Archive closure | A/J | `ser` or `gorgeous` remains in production workspace; archive destination must be outside production workspace. | Workspace membership check and migration audit; `archive/<crate>/` placement verified. | synthesis + migration |
 | TS production | G/I/J | TS path emitter or schema produces TS without grammar names in source. | `path-ts` schema dump for the seed set; LSP TS bridge test. | synthesis |
@@ -796,6 +801,7 @@ user sees when they get it wrong.
 | Pratt/SIMD decisions | Grammar author wondering why a recognizer was or was not applied. | Pratt and SIMD are auto-detected from grammar shape; metadata can disable but not force. | "Why did Pratt not apply to my expression rule?" | Cookbook page `cookbook/recognizers.md` plus `cargo xtask explain-recognizer`. | `BBNF-PRATT-NOT-APPLIED` and `BBNF-SIMD-NOT-SELECTED`. |
 | Crate split migration | Migrating from old workspace shape. | Old `bbnf-path*` and `core` are split into unprefixed crates. | "Where did `bbnf-path` go?" | Cookbook page `cookbook/migration-crate-split.md` plus MIGRATION.md §3.1. | None; this is documentation friction, not a runtime diagnostic. |
 | Adding yaml | Grammar author adding a new grammar. | Two surfaces only: `grammars/yaml.bbnf` plus `[workspace.metadata.bbnf.grammars.yaml]`; generated runtime/path/visitor/host outputs and the bench manifest are derivatives. | "Where do I register yaml in Rust?" | Cookbook page `cookbook/add-grammar.md` plus Architecture §12.1 walkthrough and future-grammar test. | `BBNF-METADATA-MISSING-GRAMMAR` and `BBNF-GRAMMAR-NAME-IN-GENERIC-CRATE`. |
+| yaml syntax error | Grammar author editing a new yaml grammar under LSP. | The grammar remains admitted while a sample edit is malformed; typed recovery is carried by `DocumentSnapshot`, `TapeId` reuse maps, and recovery facts over the same tape/direct identity. | "Why did the LSP keep a typed `YamlRoot` when indentation is broken?" | Recovery cookbook plus `DocumentSnapshot` trace and `incremental/edit_anchor` ledger. | `BBNF-RECOVERY001` plus debug-only fallback reason when anchors fail. |
 
 ## 25. Implementation Order
 

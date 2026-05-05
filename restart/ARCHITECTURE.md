@@ -29,6 +29,12 @@ resumed as-is (`restart/inheritance/INDEX.md:1-5`).
 | IR boundary | Two IRs plus side tables. | Old backend walkers that emit from Grammar IR directly. | README requires Grammar IR and Backend IR (`restart/README.md:104-118`); Lock 5 forbids emitter walking grammar directly (`restart/locks/14-LOCKS.md:42`). |
 | Optimization graph | CSP, egraph, miners, and cost model compose by output piping. | A fused global hypergraph. | README and Lock 4 require bridged sister crates rather than a fused graph (`restart/README.md:219-228`, `restart/locks/14-LOCKS.md:40`). |
 
+egglog-style Datalog/equality-saturation fusion is a known SOTA alternative,
+not an omitted design. V1 keeps bridge tables because CSP, egraph, miners, and
+cost model have separate crate APIs, diagnostic ownership, and stabilization
+gates; fusion remains a post-V1 research comparison rather than the governing
+substrate.
+
 ## 1. Workspace Shape
 
 The greenfield workspace has about 24 crates. Internal crates drop the `bbnf-`
@@ -319,7 +325,7 @@ are not part of the public contract.
 | `egraph` | Generic egraph arena, rewrite, extraction, explanation APIs. | BBNF bridge terms. |
 | `egraph-derive` | Derive macro entrypoints for generic egraph terms. | Expansion scratch state. |
 | `csp-solver` | Generic variables, domains, constraints, solver, explanations. | BBNF-specific fact conversion. |
-| `parse-that` | Regex parser/program APIs, DFA/literal helpers, Unicode data wrappers. | BBNF grammar parser state. |
+| `parse-that` | Regex HIR/program APIs, NFA/DFA/VM execution plans, prefilter contracts, literal helpers, Unicode data wrappers. | BBNF grammar parser state. |
 | `simd-scan` | Scanner traits, scalar/NEON/AVX dispatch handles, feature detection. | Intrinsic-specific loop bodies not needed by callers. |
 | `test-fixtures` | Fixture manifest, corpus loader, parity matrix schema. | Local fixture generation scratch files. |
 
@@ -487,6 +493,9 @@ cost-model/src/
   facts/
   profiles/
   score/
+  frontier/
+  solve/
+  evidence/
   gates/
   loc_budget/
 ```
@@ -534,8 +543,11 @@ csp-solver/src/
 
 parse-that/src/
   lib.rs
-  regex/
-  dfa/
+  regex/hir/
+  regex/nfa/
+  regex/dfa/
+  regex/vm/
+  regex/prefilter/
   unicode/
   literal/
 
@@ -585,7 +597,7 @@ and the 500 LOC handwritten file ceiling, generated files excepted
 | `egraph` | Arena compaction state and extraction work queues. | Generic API remains clean. |
 | `egraph-derive` | Token expansion scratch modules. | Macro output is the visible contract. |
 | `csp-solver` | Propagation queue internals and search heuristics. | Solver inputs, outputs, and explanations are stable. |
-| `parse-that` | Unicode table generation scratch data and DFA builder state. | Regex program APIs are stable. |
+| `parse-that` | Unicode table generation scratch data, HIR simplification caches, NFA/DFA builder state, lazy-DFA cache policy, and SIMD prefilter plans. | Regex program APIs and verifier contracts are stable. |
 | `simd-scan` | Intrinsic loop bodies and dispatch probe cache. | Scanner trait and dispatch handle are stable. |
 | `test-fixtures` | Local fixture generation scratch state. | Fixture manifests and corpus loaders are stable. |
 
@@ -775,7 +787,7 @@ source load
   -> shape mining
   -> recognizer mining
   -> egraph rewrite
-  -> CSP solve
+  -> global CSP extraction solve
   -> cost extraction
   -> Backend IR
   -> lowerers
@@ -787,6 +799,9 @@ README names the core order as parse, validation, inference, shape mining,
 egraph, cost extraction, Backend IR, lowerers, and regen equality
 (`restart/README.md:188-207`). PASS-1 adds CSP/egraph bridge facts and keeps
 the optimizer crates separate (`restart/audit/pass-1-substrate/PASS-1.md:46-61`).
+The type/layout CSP subroutine runs inside `passes::layout`; the later global
+CSP solve consumes public solved or narrowed facts for extraction-time legality
+and optimization choices, not layout-internal `TypeFacts`.
 
 The pipeline invariants are:
 
@@ -796,8 +811,8 @@ The pipeline invariants are:
 | Type inference annotates Grammar IR; it does not mutate grammar syntax. | `passes::layout` (HM + bidirectional + CSP run as a subroutine inside layout lowering per Lock 2). |
 | Shape mining produces side tables. | `passes::shapes` |
 | Recognizer mining produces side tables and BIR hints. | `passes::recognizers` |
-| Egraph and CSP exchange facts through bridge tables. | `passes::bridge` |
-| Cost extraction selects from alternatives; it does not introduce new grammar semantics. | `cost-model`, `passes::extract` |
+| Egraph and CSP exchange monotone facts through bridge tables; CSP search state remains inside `csp-solver`. | `passes::bridge` |
+| Cost extraction selects from legal alternatives by `CostDecision` evidence; it does not introduce new grammar semantics. | `cost-model`, `passes::extract` |
 | Backend IR is the only input to lowerers. | `codegen::lower` |
 | Generated output is committed and equality-checked. | `codegen::verify`, `pipeline::verify` |
 
@@ -917,8 +932,8 @@ Backend IR payload and lowerer matrix:
 | `RepeatLoop` | Body, min/max, exit guard. | Emits loop with progress guard. | Iterates with progress check. | SIMD may accelerate body prefix. |
 | `OptionalBranch` | Body and empty branch shape. | Emits branch. | Runs or skips. | No special handling. |
 | `ByteLiteral` | Bytes, case policy, span. | Emits byte compare. | Consumes on match. | SIMD may widen compare. |
-| `RegexProgram` | Regex program handle. | Calls regex engine. | Executes regex VM/DFA. | Unicode stays below BBNF. |
-| `SimdScan` | Scanner kind, needle/class, fallback. | Emits dispatch to `simd-scan`. | Calls scalar reference. | Main SIMD hook. |
+| `RegexProgram` | Regex program handle and execution plan. | Calls regex verifier. | Executes regex VM, lazy DFA, or full DFA plan. | Unicode stays below BBNF; `regex-automata` remains the oracle lane until parity is proven. |
+| `SimdScan` | `SimdScanMode::{Exact, Prefilter}`, needle/class, fallback, verifier route. | Emits dispatch to `simd-scan`. | Exact mode must match scalar offsets; prefilter mode emits candidates only. | Prefilter acceptance routes to `RegexProgram` or scalar verifier before tape emission. |
 | `PrattSpine` | Operators, precedence, associativity, atom rule. | Emits Pratt loop. | Executes Pratt interpreter. | Auto-detected only. |
 | `CallRule` | Callee ID, args, result slot. | Emits function call. | Pushes rule frame. | No special handling. |
 | `CallHost` | Host function ID, args, result slot. | Emits registry dispatch. | Calls host shim. | WASM requires ABI-safe wrapper. |
@@ -945,8 +960,8 @@ Example source-to-BIR coverage:
 | `RepeatLoop` | `digit+` | Progress guard required. |
 | `OptionalBranch` | `sign? number` | Empty branch keeps shape. |
 | `ByteLiteral` | `"{"` | Byte literal. |
-| `RegexProgram` | `/[0-9]+/` | Regex program is opaque to BBNF. |
-| `SimdScan` | Long literal set or regex prefilter. | Mined by recognizer pass. |
+| `RegexProgram` | `/[0-9]+/` | Regex program is the semantic verifier and is opaque to BBNF. |
+| `SimdScan` | Long literal set, exact structural alphabet, or regex prefilter. | Exact scans require scalar parity; prefilters require verifier acceptance before tape emission. |
 | `PrattSpine` | Expression grammar with precedence pattern. | Auto-detected, no directive. |
 | `CallRule` | `value` inside another rule. | Rule reference. |
 | `CallHost` | `@trim(text)` | Single host call. |
@@ -980,18 +995,22 @@ HARDENING-CONSOLIDATED §3 conflict #4, the layout-lowering pass is the public
 surface; HM/CSP type checking is its internal subroutine. `TypeFacts` is an
 internal scratch artefact of `passes::layout` (used by HM unification and CSP
 constrained choice) and never appears as a public side table; downstream passes
-read `LayoutFacts` instead. Public side tables are:
+read `LayoutFacts` instead. `TypeObligationLog` is retained only as internal
+diagnostic provenance until `LayoutFacts` and `RecoveryFacts` are emitted. Side
+tables and internal fact logs are:
 
 | Table | Producer | Consumer | Visibility |
 |---|---|---|---|
 | `LayoutFacts` | `passes::layout` (folds HM + bidirectional + CSP into layout decisions). | Backend IR builder (`LayoutPush`, `LayoutPop`), host registry, diagnostics. | Public. |
 | `ShapeFacts` | Shape mining. | Direct builder, Value API, path typing. | Public. |
 | `RecognizerFacts` | Recognizer mining. | BIR builder, SIMD/Pratt lowerers. | Public. |
-| `EGraphFacts` | Egraph bridge. | Cost extraction. | Public. |
-| `CspSolution` | CSP solver (when called by `passes::layout` or other clients). | Cost extraction, layout, host chain typing. | Public when produced for cost extraction; internal when produced inside layout lowering. |
-| `CostFacts` | Cost model. | Backend IR extraction, benchmark report. | Public. |
+| `EGraphFacts` | Egraph bridge. | Cost extraction. | Public; keys stable e-class/node facts, not chosen representatives. |
+| `BridgeJustification` | `passes::bridge`, with egraph and CSP explanation refs. | Cost extraction, diagnostics, bridge tests. | Public proof reference; does not expose pass-local bridge terms from generic crates. |
+| `CspSolution` | CSP solver (when called by `passes::layout` or other clients). | Cost extraction, layout, host chain typing. | Public when produced for extraction legality; internal when produced inside layout lowering. |
+| `CostFacts` | Cost model. | Backend IR extraction, benchmark report. | Public; stores `CostDecision` records, objective vectors, Pareto/frontier membership, scalarization profile, selected alternative, rejected alternatives, dominated alternatives, and extraction method. |
 | `RecoveryFacts` | Error pass. | `ErrorRecover`, LSP diagnostics. | Public. |
 | `TypeFacts` | HM + bidirectional checker (internal to `passes::layout`). | `passes::layout` only. | Internal subroutine artefact; not exported across pass boundaries. |
+| `TypeObligationLog` | HM equality, expected checking, coercion, and finite-choice stages inside `passes::layout`. | Diagnostics until layout/recovery facts are emitted. | Internal diagnostic evidence only. |
 
 ### 7.4 Diagnostic Vocabulary
 
@@ -1019,7 +1038,7 @@ references this catalogue rather than re-enumerating codes.
 | `BBNF-LAYOUT001` | `@layout` lowering. | `@layout` directive is unused by the generated formatter; warning. |
 | `BBNF-LOOKBEHIND-WIDTH` (PASS-1 string `BBNF1004`) | Grammar IR `Lookbehind`. | Unbounded lookbehind reaches Grammar IR; rejected before Backend IR. |
 | `BBNF-PRATT-NOT-APPLIED` (alias `BBNF-OPT001`) | `passes::recognizers`. | Pratt detection ran but rejected the rule; cost model declined. |
-| `BBNF-SIMD-NOT-SELECTED` (alias `BBNF-OPT002`) | `passes::recognizers`. | SIMD detection ran but rejected the rule; dispatch cost outweighs the win. |
+| `BBNF-SIMD-NOT-SELECTED` (alias `BBNF-OPT002`) | `passes::recognizers`. | SIMD detection ran but rejected the rule; cost, unsupported Unicode semantics, or missing exact/prefilter verifier contract rejected the SIMD path. |
 | `BBNF-METADATA-MISSING-GRAMMAR` (alias `BBNF-GRAMMAR001`) | `pipeline::workspace`. | Grammar source declared but no `[workspace.metadata.bbnf.grammars.<name>]` block; Lock 14 requires both surfaces. |
 | `BBNF-GRAMMAR-NAME-IN-GENERIC-CRATE` | Lock 14 lint. | A generic crate hardcodes a grammar name; `cargo xtask lint-no-hardcoded-grammars` enforces. |
 | `BBNF-POINTER-UNKNOWN-SEGMENT` (alias `BBNF-POINTER001`) | `path` macro. | Path segment does not match the grammar schema. |
@@ -1028,6 +1047,9 @@ references this catalogue rather than re-enumerating codes.
 | `BBNF-HOST001` | `passes::layout` host signature unification. | Host function body cannot satisfy the inferred signature. |
 | `BBNF-HOST002` | `passes::layout` chain composition. | Chain step does not accept the previous step's output type. |
 | `BBNF-HOST003` | WASM lowerer. | Host chain cannot lower to WASM; primitive missing in WASM ABI. |
+| `BBNF-SUBSUMPTION-EDGE` | `passes::layout` coercion check. | A chain, annotation, host call, or generated-shape projection needs a coercion, but no registered bounded coercion rule exists at that checking edge. |
+| `BBNF-GENERIC-CYCLE` | `passes::layout` generic instantiation. | Generic rule monomorphisation would produce an unbounded `(RuleId, TypeArgs)` instance set; add a return annotation, break the recursive type argument, or route through a concrete rule. |
+| `BBNF-LOCAL-EQUALITY-ANNOTATION` | Future indexed/GADT-like extension gate. | A branch-local type equality lacks a principal inferred type; add an explicit return annotation or keep the extension closed. |
 | `BBNF-RECOVERY*` | Error pass. | `@error` directive recovery codes; emitted by `RecoveryFacts` and routed through `ErrorRecover` and LSP diagnostics. |
 | `BBNF-GEN001` (alias `BBNF-CG001`) | Lowerer import-deny check. | Lowerer imports Grammar IR; only the BIR producer pass may consume Grammar IR. |
 | `BBNF-GEN014` | Generated LOC budget. | Generated LOC exceeds the per-grammar or aggregate +2 percent budget. |
@@ -1114,9 +1136,11 @@ is the only place the corresponding capability may live.
 
 ### 8.2 Type System
 
-The type system is Hindley-Milner plus bidirectional checks and CSP constraints.
-README sets HM, bidirectional typing, CSP use, explicit annotations, generic
-rules, subtyping/coercion, and lookbehind types as in-scope
+The V1 type system has a rank-1 Hindley-Milner principal-scheme core, an
+expected-type check/synth interface, bounded coercion obligations, and finite
+CSP choices for grammar-derived implementation alternatives. README sets HM,
+bidirectional typing, CSP use, explicit annotations, generic rules,
+subtyping/coercion, and lookbehind types as in-scope
 (`restart/README.md:258-268`). PASS-1 adds host/chaining/generic constraints
 to the type contract (`restart/audit/pass-1-substrate/PASS-1.md:24-42`).
 
@@ -1124,12 +1148,27 @@ Type rules:
 
 | Rule | Contract |
 |---|---|
-| Inference is grammar-wide. | Rule references and host calls unify inside `passes::layout` through internal `TypeFacts`; downstream passes consume `LayoutFacts`, never `TypeFacts` directly. |
-| Annotations narrow, not bypass, inferred types. | Contradictions are diagnostics. |
-| Host functions are typed. | Block-bodied `@host fn` definitions and generic primitives share the same checker. |
-| Chains compose left-to-right. | Output of one host call is input to the next. |
+| HM equality constraints | Fresh type variables, scheme instantiation, generalization, and first-order unification produce internal `TypeFacts`; failures preserve source-span, expected-from, actual-from, and solver-stage metadata in `TypeObligationLog`. |
+| Expected-type checking | Nodes synthesize unless an annotation, directive, host signature, branch context, or chain step supplies an expected type; annotations check inferred types rather than bypassing them. |
+| Bounded coercion | Numeric widening, lifetime-owned escalation, generated-record shape narrowing, and host-improvement rules produce named obligations at explicit checking edges; each obligation lowers to an explicit coercion or fails before Backend IR. |
+| Finite-choice CSP | CSP solves bounded non-HM choices: host overload selection, layout representation, materialization mode, recognizer eligibility, recovery strategy, backend erasure, and extraction legality. |
+| Generic rules | Rule schemes are generalized at definition, instantiated at each `Ref`/call site, recorded with source spans, and admitted to codegen only after finite `(RuleId, TypeArgs)` monomorphisation evidence exists. |
+| Host functions are typed. | Block-bodied `@host fn` definitions and generic primitives share the same checker; host overloads with determining arguments are represented as explicit improvement constraints before finite CSP selection. |
+| Chains compose left-to-right. | The left expression synthesizes a value type; each step checks against the previous step's output as its first expected argument; the chain fails at the first mismatch. |
 | Lookbehind must be bounded. | Unbounded lookbehind is rejected before Backend IR. |
 | Layout and error directives are typed side effects. | They produce `LayoutFacts` and `RecoveryFacts`, not ad hoc codegen flags. |
+
+V1 generic rules are parametric HM schemes. No V1 construct introduces GADT
+branch-local type equalities. Higher-rank, existential, indexed, or GADT-like
+grammar types are out of V1 unless a later architecture amendment opens a
+Dunfield-Krishnaswami or OutsideIn-style proof gate with ordered existential
+contexts, principality tracking, decidability, soundness, completeness, and
+explicit annotation rules for non-principal programs.
+
+Record narrowing in V1 is finite generated-shape coercion only: source and
+target shapes must both be known at compile time. Open row polymorphism and
+unbounded structural record subtyping are routed to a later type-system
+research gate, not inferred by the CSP solver.
 
 ### 8.3 Host Functions
 
@@ -1183,6 +1222,7 @@ architecture and an illustrative token model (`restart/audit/pass-3-runtime/PASS
 | `token` | Token/event representation. |
 | `builder` | Append-only builder with bounded checkpoints. |
 | `span` | Span and source slice linkage. |
+| `payload` | Scalar payload slots, normalized strings, and auxiliary arenas. |
 | `view` | Borrowed read views. |
 | `trace` | Debug/replay event hooks. |
 
@@ -1192,14 +1232,17 @@ Tape invariants:
 |---|---|
 | Append-only after committed checkpoints. | Builder tests. |
 | Rollback is bounded and does not clone OpenFrame stacks. | Perf tests and code review. |
-| Tokens borrow source slices where possible. | Slice-borrow API tests. |
+| Tokens borrow source slices where possible, and payload policy declares when normalized strings or parsed scalars live in the payload arena. | Slice-borrow API tests plus materialisation-cost artefact. |
 | Direct views can point into tape. | `DocumentView` tests. |
+| Every public node has one `(TapeId, node id, payload class)` identity. | Runtime identity smoke for document root, `ValueRef`, pointer/select, visitor, and debug trace. |
 
 ### 9.2 Direct-To-Struct Union
 
 Direct builders do not bypass the tape. They are scheduled with `TapeEmit` and
-`DirectBuild` from Backend IR and share spans, source slices, and diagnostics.
-The direct value is a typed view/projection over the same parse event stream.
+`DirectBuild` from Backend IR and share spans, source slices, diagnostics, node
+kind, and payload slots. The direct value is a typed view/projection over the
+same parse event stream; direct scalar fields are caches over declared payload
+slots, never a second authoritative tree.
 
 Generated per-grammar runtime lives under:
 
@@ -1230,7 +1273,7 @@ Lowerers:
 |---|---|
 | Rust | Primary production lowerer. Emits runtime template, tape/direct builder, host chain calls, visitors, value projections. |
 | WASM | V1 through wasm32 Rust binding and exported API surface. No independent hand emitter. |
-| SIMD | Pattern lowerer fed by recognizer facts and `SimdScan` BIR. |
+| SIMD | Pattern lowerer fed by recognizer facts and validated `SimdScan` BIR; exact scans need scalar parity, and prefilters need a verifier route before tape emission. |
 | VM | Executable interpreter for debug, replay, and golden equality. |
 
 Generated source is committed. Lock 6 rejects a proc-macro facade and requires
@@ -1258,6 +1301,12 @@ Gate owners:
 
 PASS-2 sets a generated LOC budget baseline and allows a +2 percent ceiling
 for emitted runtime source (`restart/audit/pass-2-codegen/PASS-2.md` §6).
+All benchmark rows record parse mode, validation mode, source ownership mode,
+materialisation mode, string ownership mode, scalar-cache policy where direct
+or tape cursor rows expose one, competitor flags, and whether regex/SIMD paths
+ran as exact scans, prefilters, VM, lazy DFA, or full DFA. `parse(&str)` rows
+record Rust prevalidation; byte/file entry-point rows record bbnf validation
+before any `ValueRef` is exposed.
 
 Exact gate rows:
 

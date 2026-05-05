@@ -453,13 +453,16 @@ Path crates may use fixture names in tests, but not production registries.
 
 The corpus classifies `csp-solver` as generic and worth keeping, while calling
 out large files and split work (`restart/corpora/MODULES.md:73-132`).
+It remains a finite-domain choice solver, not the owner of HM equality
+unification; `passes::layout` produces internal type obligations before any
+CSP-backed finite choice is solved.
 
 Fate:
 
 | Area | Fate |
 |---|---|
 | Generic domain/constraint/solve APIs | KEEP-OUTRIGHT/KEEP-MODIFY |
-| BBNF-specific bridge code | ABROGATE-MOVE to `passes` |
+| BBNF-specific bridge code | ABROGATE-MOVE to `passes::bridge`, keyed by stable Grammar IR node IDs and e-class IDs rather than chosen e-node representatives. |
 | Oversized modules | KEEP-MODIFY split under Lock 13 |
 | Tests | KEEP-MODIFY |
 
@@ -467,6 +470,8 @@ Fate:
 
 The corpus says `egraph` and `egraph-derive` are extracted together and useful
 as generic crates (`restart/corpora/MODULES.md:136-162`).
+The migration keeps generic arena/rewrite/extract/explain code while moving
+bridge justifications, rewrite guards, and CSP legality facts into `passes`.
 
 Fate:
 
@@ -486,11 +491,17 @@ Fate:
 | Area | Fate |
 |---|---|
 | Scalar/NEON/AVX kernels | KEEP-OUTRIGHT/KEEP-MODIFY |
-| Dispatch API | KEEP-MODIFY for `SimdScan` BIR integration |
+| Dispatch API | KEEP-MODIFY for `SimdScan` BIR integration, with `Exact` scans proving scalar offset parity and `Prefilter` scans routing candidate offsets through `RegexProgram` or scalar verification before tape emission. |
 | Tests/fixtures | KEEP-MODIFY |
 
 PASS-2 requires SIMD coverage across scalar, NEON, AVX2, AVX512, and WASM SIMD
 paths (`restart/audit/pass-2-codegen/PASS-2.md` §3).
+
+Research-source hygiene: this migration surface relies on the local corpora and
+PASS citations above for disposition evidence. Unverified research-index leads
+such as Hubbard's JSON comparison row, Almomany cost-model wording, the exact
+Deb bibliography variant, Ungar/Adams, and HelpMate remain bibliography
+receivers, not migration evidence.
 
 ## 10. Archive Crates
 
@@ -570,14 +581,14 @@ optional; they are the replacement architecture.
 | `crates/source` | Source files, spans, snapshots. | A/I | README pipeline/incremental (`restart/README.md:188-207`, `restart/README.md:344-348`). |
 | `crates/grammar` | BBNF AST/parser/validation. | A/D | PASS-1 crate tree (`restart/audit/pass-1-substrate/PASS-1.md:46-61`). |
 | `crates/pipeline` | Stage orchestration and artifact verification. | A/F | README pass order (`restart/README.md:188-207`). |
-| `crates/passes` | Type/shape/recognizer/extract/bridge passes. | C/H | PASS-1 commitments (`restart/audit/pass-1-substrate/PASS-1.md:24-42`). |
+| `crates/passes` | Type/shape/recognizer/extract/bridge passes, including HM equality obligations, expected checking, bounded coercion, finite CSP choices, stable bridge IDs, and extraction-time legality. | C/H | PASS-1 commitments (`restart/audit/pass-1-substrate/PASS-1.md:24-42`). |
 | `crates/vm` | Backend IR replay/debug. | E/I | README VM debug/replay (`restart/README.md:344-348`). |
 | `crates/codegen` | BIR-only lowerers and templates. | E/F/H | PASS-2 (`restart/audit/pass-2-codegen/PASS-2.md` §2-§7). |
-| `crates/runtime` | Tape/direct runtime and generated grammar modules. | B/F | Lock 1 (`restart/locks/14-LOCKS.md:34`). |
+| `crates/runtime` | Tape/direct runtime, payload policy, snapshot-scoped tape identity, typed projections, and generated grammar modules. | B/F | Lock 1 (`restart/locks/14-LOCKS.md:34`). |
 | `crates/host` | Generic host primitive/registry system. | D/F | README host decisions (`restart/README.md:160-182`). |
-| `crates/cost-model` | Cost facts, profiles, LOC budgets. | C/H/J | PASS-1 cost model (`restart/audit/pass-1-substrate/PASS-1.md:46-61`). |
+| `crates/cost-model` | `CostDecision` facts, objective profiles, Pareto/frontier evidence, solver-backed extraction adapters, LOC budgets. | C/H/J | PASS-1 cost model (`restart/audit/pass-1-substrate/PASS-1.md:46-61`). |
 | `crates/path-core` | Shared path semantics. | G | Lock 7 (`restart/locks/14-LOCKS.md:46`). |
-| `crates/parse-that` | Regex/Unicode substrate below BBNF. | D/H | README Unicode routing (`restart/README.md:131-143`). |
+| `crates/parse-that` | Regex/Unicode substrate below BBNF, with grammar-owned HIR/verifier integration and `regex-automata` as oracle/reference until bespoke parity is proven. | D/H | README Unicode routing (`restart/README.md:131-143`). |
 | `crates/test-fixtures` | Shared fixtures and parity matrix. | A/G/J | Inheritance map (`restart/inheritance/INDEX.md:29-40`). |
 
 ## 14. LOC Trajectory
@@ -658,13 +669,13 @@ dependency, not topic (`docs/precepts/instructions/LESSONS-LEARNED.md:1-34`).
 |---|---|
 | A | Workspace genesis, archive crates, Cargo metadata schema, source/error/grammar skeleton, tree lint gates. |
 | B | Tape/direct runtime substrate, value/document API, generated runtime template shell. |
-| C | Grammar IR, type facts, shape facts, CSP/egraph/cost bridge. |
-| D | BBNF extension parser/typing for lookbehind, generics, host declarations/chains, error/layout; regex Unicode below BBNF. |
+| C | Grammar IR, internal type obligations, shape facts, stable CSP/egraph bridge facts, objective cost evidence, extraction legality. |
+| D | BBNF extension parser/typing for lookbehind, rank-1 generics, host definitions/chains, bounded coercion sites, error/layout; regex Unicode below BBNF. |
 | E | Backend IR, VM, extraction, lowerer contract. |
 | F | Rust lowerer, runtime template output, regen equality. |
 | G | Path/path-core/path-ts split, visitor, mutation API, future grammar gate. |
-| H | Pratt, SIMD, WASM V1, SOTA early gates. |
-| I | Error recovery, incremental parsing, language server, playground/debug surfaces. |
+| H | Pratt, verifier-bound exact/prefilter SIMD, regex oracle parity, WASM V1, SOTA early gates. |
+| I | Error recovery, snapshot/reuse-map incremental parsing, language server, playground/debug surfaces. |
 | J | Parity, benchmarks, docs, publication readiness, close. |
 
 This sequence keeps the tranche set at stub level. Full per-wave drafting
@@ -728,11 +739,15 @@ rg "OpenFrame|Vec<OpenFrame>|ParseStream" crates/runtime/src crates/codegen/src
 cargo test -p runtime tape_direct_union
 cargo test -p runtime __EAGER_EMPTY_PATH
 cargo test -p runtime cursor_decision_skip
+cargo test -p runtime tape_identity_payload_projection
 cargo bench -p bbnf-bench --bench sota_json
 ```
 
 Expected result: no old OpenFrame clone stack or ParseStream runtime concept.
 `ParseStream` may remain only in proc-macro code that uses `syn`.
+Runtime rows prove one `(TapeId, node id, payload class)` identity, direct
+scalar caches over declared payload slots, validation/source ownership metadata,
+and verifier-before-tape behavior for any SIMD prefilter path.
 
 ### 19.5 Generated Equality
 

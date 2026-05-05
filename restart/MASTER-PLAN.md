@@ -495,6 +495,8 @@ Hard close:
 ```sh
 cargo test -p passes recognizers
 cargo test -p simd-scan
+cargo test -p simd-scan exact_prefilter_parity
+cargo test -p parse-that regex_automata_oracle
 cargo test -p codegen wasm
 cargo bench -p bbnf-bench --bench sota_json
 cargo bench -p bbnf-bench --bench sota_css

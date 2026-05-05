@@ -318,7 +318,7 @@ are not part of the public contract.
 | `codegen` | Lowerer traits, emit requests, generated artifact manifest. | Template renderer internals, backend-specific scratch trees. |
 | `runtime` | Tape/direct document APIs, builders needed by generated code, visitor traits. | Token storage layout and checkpoint internals. |
 | `host` | Host registry, primitive signatures, chain typing, dispatch handles. | Function pointer tables and metadata normalization state. |
-| `cost-model` | Cost facts, profiles, SOTA gate schema, generated LOC budget API. | Raw scorer tuning internals and platform cache. |
+| `cost-model` | `CostDecision` facts, objective profiles, Pareto/frontier reports, SOTA gate schema, generated LOC budget API. | Raw scorer tuning internals, solver adapter scratch state, and platform cache. |
 | `path` | `pointer!`, `select!`, typed path wrappers, visitor selector helpers. | Macro parser scratch AST. |
 | `path-core` | Path AST, parser, typed evaluator, diagnostics. | Rust macro glue and TypeScript emitter details. |
 | `path-ts` | TypeScript package generation schema and exported TS API definitions. | Rust path macro internals. |

@@ -502,6 +502,9 @@ PASS citations above for disposition evidence. Unverified research-index leads
 such as Hubbard's JSON comparison row, Almomany cost-model wording, the exact
 Deb bibliography variant, Ungar/Adams, and HelpMate remain bibliography
 receivers, not migration evidence.
+Regex and SIMD migration gates therefore compare behavior against verified
+local corpora, PASS contracts, and the `regex-automata` oracle lane rather than
+unverified catalogue leads.
 
 ## 10. Archive Crates
 

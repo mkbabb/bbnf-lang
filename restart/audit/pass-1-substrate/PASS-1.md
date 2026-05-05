@@ -86,8 +86,11 @@ Rare escape-valve fence:
 | Failure proof | The amendment states why workspace metadata, generic primitives, and `@host fn` cannot express the adapter. |
 | Location | A fenced declaration crate may exist only after Architecture records the exception. |
 | Import rule | Generic crates must not import the declaration crate. Generated host tables call through a trait or metadata-dispatched adapter. |
+| Deletion path | The exception records the stability condition that deletes the declaration crate or folds it back into metadata/generic primitives. |
+| Reviewer | The exception names the reviewer who accepted the failure proof, deletion path, and non-import rule. |
 | Extant grammars | Exception table is empty for bbnf, bnf, csv, css_l4, css_pretty, ebnf, google_sheets, json, and math. |
 | Verification | `rg -n "crates/(json|css|bbnf|sheets|math|csv|bnf|ebnf)" crates/{ir,passes,codegen,runtime,host,path,path-core}` returns zero outside generated data. |
+| Canonical review form | Architecture owns the full eight-field declaration-crate review form; PASS-1 keeps this substrate fence in sync and does not admit a declaration crate by itself. |
 
 Error vocabulary: at minimum `Syntax`, `TypeMismatch`, `HostSignature`, `HostFailure`, `LayoutConflict`, `LookbehindWidth`, `RegexClass`, `Recovery`, `BackendUnsupported`, and `InternalInvariant`.
 
@@ -225,6 +228,8 @@ Future grammar onboarding proof:
 | Add source | `grammars/yaml.bbnf` | `crates/yaml/` or handwritten runtime file | `git diff --name-only` shows the grammar source. |
 | Add metadata | `[workspace.metadata.bbnf.grammars.yaml]` | generic-crate match arm or registry edit | `rg -n "Yaml|yaml" crates/{ir,passes,codegen,runtime,host,path,path-core}` returns zero outside generated data. |
 | Generate | xtask-emitted runtime/path/visitor metadata | manual fixture as onboarding requirement | generated output is committed and budgeted. |
+
+The onboarding proof counts only the two author inputs: grammar source and workspace metadata. Generated runtime, path, visitor, host, diagnostic, and budget files may appear as xtask outputs; they are not a third onboarding surface and must not require a manual Rust registry edit.
 
 Per-X broad-claim table:
 

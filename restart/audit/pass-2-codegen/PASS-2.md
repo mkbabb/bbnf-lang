@@ -66,7 +66,7 @@ Backend IR final variant table:
 | 13 | `Span` | span projection | rule lowering | span value | offset/len | scaffold |
 | 14 | `Layout` | skip policy | `@layout` analysis | layout consume | same core | scaffold |
 
-Layout canon — Lock 2 vocabulary at the BIR boundary: PASS-1's `passes::layout` produces the `LayoutFacts` side-table; PASS-2's `Layout` BIR variant consumes it via `LayoutSink`. The producer/side-table/consumer triple is the single source of truth for layout lowering across the BIR boundary; the `@layout` analysis surface mentioned in the variant table feeds `passes::layout`, and the runtime `Layout` lowering at line 459 (per-construct contribution) and the per-grammar `layout source` column at line 475 (runtime emission table) both bind to `LayoutFacts` consumed through `LayoutSink`.
+Layout canon — Lock 2 vocabulary at the BIR boundary: PASS-1's `passes::layout` produces the `LayoutFacts` side-table; PASS-2's `Layout` BIR variant consumes it via `LayoutSink`. The producer/side-table/consumer triple is the single source of truth for layout lowering across the BIR boundary; the `@layout` analysis surface mentioned in the variant table feeds `passes::layout`, and both the §7 per-construct contribution plan and the §7 runtime emission table bind runtime layout lowering to `LayoutFacts` consumed through `LayoutSink`.
 
 | 15 | `MapExpr` | projection expression | type/e-graph lower | typed conversion | same core | scaffold |
 | 16 | `HostCall` | host chain, generics, error policy | host inference | `host` registry call | primitive or extern import | scaffold |
@@ -106,6 +106,8 @@ Per-payload-category lowering test gates owned by PASS-2 — every gate referenc
 | Host/layout/error | `cargo test -p codegen --test host_layout_error_lowering` — `host::call_<name>` dispatch + `@error` recovery shells + WASM host-fn imports. | PASS-1.md:65 (host/layout/error row). |
 | Tape/direct/value | `cargo test -p codegen --test tape_value_lowering` — `TapeEmit` + `DirectBuild` projection + WASM linear-memory parity. | PASS-1.md:66 (tape/direct/value row). |
 | Debug/path | `cargo test -p codegen --test debug_path_lowering` — source-map sidecar + `DebugMark` cfg-gate + WASM sidecar segment. | PASS-1.md:67 (debug/path row). |
+
+WASM host primitive route: host primitives are a lowerer/runtime ABI concern. PASS-2 emits exported function names, host-call shape, marshalling descriptors, and scalar/SIMD parity evidence for the WASM host ABI receiver; BBNF source keeps the existing `@host fn` body form and gains no primitive annotation or force directive.
 
 The hand-off contract is precise: PASS-1 owns variants + alphabet + invariants + producer-side semantics + diagnostic strings (PASS-1.md:43-53, PASS-1.md:55, PASS-1.md:92-101); PASS-2 owns payload refinement + per-backend lowering obligations + emission tests (this section, the §3 lowerer trees, the §6 generated-LOC budgets); PASS-3 owns tape ABI + visitor + path metadata consumption (§4 hand-off). Cross-pass conflict on a payload returns to SYNTHESIS for reconciliation, not to a unilateral edit on either side.
 
@@ -171,7 +173,7 @@ Detection thresholds:
 
 Lookbehind co-amendment — codegen-side ratification of the BBNF surface:
 
-PASS-2 ratifies the canonical `|<` grammar-level lookbehind syntax that PASS-1 owns at the formal-grammar level (HARDENING-CONSOLIDATED §4.7; `restart/audit/hardening/HARDENING-PASS-1.md:183`). Regex-style `(?<=...)` lookbehind stays inside regex literals only; grammar-level lookbehind is `|<` and reaches BIR through the `Lookbehind` variant (#21, line 74). The codegen-side legality contract is finite-width-only: PASS-1's width analysis annotates the bound; PASS-2 lowering accepts `Bounded(n)` and rejects unbounded predicates at the lowering boundary, before any source emission. The diagnostic surface composes — PASS-1 owns the user-facing string `BBNF1004` (PASS-1.md:96, "lookbehind in rule {rule} must have finite maximum width; {expr} is unbounded after {operator}."); PASS-2 owns the routing diagnostic `BBNF-SEM040` (line 478) that fires when an unbounded `Lookbehind` reaches BIR validation. The two diagnostics are produced together: `BBNF1004` reaches the user through the PASS-3 diagnostic surface; `BBNF-SEM040` halts codegen close before any lowerer emits a parser file. Lowering emits a reverse predicate with the bound encoded as a compile-time constant; both Rust V1 and WASM V1 share the BIR payload and the same finite-width invariant (PASS-1.md:64).
+PASS-2 ratifies the canonical `|<` grammar-level lookbehind syntax that PASS-1 owns in §6, "BBNF Grammar Formal Specification". Regex-style `(?<=...)` lookbehind stays inside regex literals only; grammar-level lookbehind is `|<` and reaches BIR through the `Lookbehind` variant in the §2 Backend IR final variant table. The codegen-side legality contract is finite-width-only: PASS-1's width analysis annotates the bound; PASS-2 lowering accepts `Bounded(n)` and rejects unbounded predicates at the lowering boundary, before any source emission. The diagnostic surface composes — PASS-1 owns the user-facing code `BBNF1004`, alphabetic alias `BBNF-LOOKBEHIND-WIDTH`, and error kind `LookbehindWidth`; PASS-2 owns the routing diagnostic `BBNF-SEM040` in the §8 diagnostic ledger when an unbounded `Lookbehind` reaches BIR validation. The two diagnostics are produced together: `BBNF1004` reaches the user through the PASS-3 diagnostic surface; `BBNF-SEM040` halts codegen close before any lowerer emits a parser file. Lowering emits a reverse predicate with the bound encoded as a compile-time constant; both Rust V1 and WASM V1 share the BIR payload and the same finite-width invariant from PASS-1's per-backend lowering obligations.
 
 Unified cursor + byte-skip obligation — Lock 3 ratification at the codegen-side: Rust V1 lowerer emits one parse implementation; cursor consultation generates a byte-skip when consult returns `Skip`; the empty-path case (`__EAGER_EMPTY_PATH`) elides cursor calls. The unified path is realized by `Ref` / `Lit` / `RegexDfa` / `Scanner` BIR variants; `PrattSpine` and `SimdScan` carry their own dispatch and elide cursor consultation in the inner loop. WASM V1 honours the same obligation, sharing the BIR payload and the structural snapshot consumed by Rust V1; the cursor-vs-byte-skip decision is a lowering choice, not a substrate split.
 
@@ -295,6 +297,8 @@ host/src/
 
 Rationale: host functions decompose through generic primitives, metadata, or `@host fn` (`restart/README.md:13-25`, `restart/README.md:145-157`). No default per-grammar declaration crate is part of PASS-2.
 
+Rare declaration crates stay behind the Architecture/Lock 11 incubation fence: PASS-2 may emit generated host adapters only from approved metadata or `@host fn` bodies, and generic codegen/runtime crates never import a declaration crate. Registry promotion belongs to the stability owner after the review form records failure proof, deletion path, reviewer, and receiving gate.
+
 `simd-scan`:
 
 ```text
@@ -383,7 +387,8 @@ Future grammar onboarding smoke:
 | Runtime emission | `runtime/src/grammars/yaml/*` is generated from BIR/runtime template only. |
 | Registry | generated registry sees yaml through metadata, not grammar-name dispatch. |
 | Gate | `cargo xtask bbnf build yaml --check && cargo test -p runtime future_grammar_yaml_runtime`. |
-| Two-surface invariant | `git diff HEAD~1` reveals exactly two added paths: `grammars/yaml.bbnf` and one `[workspace.metadata.bbnf.grammars.yaml]` block in `Cargo.toml`. Verify with `rg 'JsonParser\|CssL4Parser\|BbnfBootstrap\|GoogleSheetsParser' crates/{ir,codegen,runtime,host,passes}/src/` returns zero and `find crates/runtime/src/grammars/yaml -mindepth 1 -maxdepth 1` returns the generated subdir only. |
+| Two-surface invariant | Author input consists only of `grammars/yaml.bbnf` and one `[workspace.metadata.bbnf.grammars.yaml]` block in `Cargo.toml`. Generated runtime/path/visitor/host/diagnostic/budget files may be committed as xtask output, but they are not author inputs. Verify with `rg 'JsonParser\|CssL4Parser\|BbnfBootstrap\|GoogleSheetsParser' crates/{ir,codegen,runtime,host,passes}/src/` returns zero and `find crates/runtime/src/grammars/yaml -mindepth 1 -maxdepth 1` returns the generated subdir only. |
+| Rejected onboarding path | Manual Rust registry edits, hand-written yaml runtime files, fixture-only admission, and a yaml declaration crate fail onboarding before codegen close. |
 
 ## §6 Generated LOC
 
@@ -537,8 +542,8 @@ Diagnostic ledger:
 | `BBNF-CODEGEN033` | runtime template lacks path/visitor/diagnostic metadata. | metadata consumer smoke. | `"runtime template for {grammar} omits {metadata}; PASS-3 consumer cannot bind"` |
 | `BBNF-LIFE009` | emitted owned/borrowed constructor violates lifetime surface. | runtime compile tests. | `"emitted constructor for {rule} returns {actual} but rule annotation {annot} requires {expected}; check @layout(...) hint or grammar -> projection"` |
 | `BBNF-SEM040` | unbounded lookbehind reaches BIR. | BIR validation. | `"lookbehind in rule {rule} reaches BIR with unbounded width; PASS-1 BBNF1004 should have caught upstream"` |
-| `BBNF-OPT001` | optimizer rejects an apparent operator-chain candidate. | cost-model decision. | `"rule {rule} resembles an operator chain (left-recursive with operator-bearing alts at {line}) but {reason}; promote to PrattSpine with @pratt or restructure the rule"` |
-| `BBNF-OPT002` | optimizer rejects an apparent SIMD candidate. | cost-model decision. | `"rule {rule} has structural alphabet {alpha} but kernel-shape evidence is {shape}; falling back to scalar; @simd hint may force"` |
+| `BBNF-OPT001` | optimizer rejects an apparent operator-chain candidate. | cost-model decision. | `"rule {rule} resembles an operator chain (left-recursive with operator-bearing alts at {line}) but {reason}; PrattSpine was not auto-selected; add stable precedence metadata or restructure the rule"` |
+| `BBNF-OPT002` | optimizer rejects an apparent SIMD candidate. | cost-model decision. | `"rule {rule} has structural alphabet {alpha} but kernel-shape evidence is {shape}; falling back to scalar because SIMD cost evidence did not win; metadata may disable unsupported kernels but cannot force SIMD"` |
 
 Carry ledger — every deferral carries Receiver, Blocker, and Receiving gate per HARDENING-CONSOLIDATED §4.39:
 
@@ -551,7 +556,7 @@ Carry ledger — every deferral carries Receiver, Blocker, and Receiving gate pe
 | Publication (`bbnf` aggregator + `bbnf-cli` + `bbnf-language-server`) | Tranche BD.W3 (publication) and SYNTHESIS package routing | Workspace crate names are bound; package-name details are not yet routed. | A.W1 / J.W3 publication gate per HARDENING-CONSOLIDATED §4.22; PASS-2 supplies emitted runtime modules and parse signatures. |
 | Fixtures (post-onboarding parity, not onboarding surface) | Tranche BD.W4 (fleet fixtures) and downstream parity gates | Lock 14 onboarding accepts only grammar source + workspace metadata; fixtures land separately to avoid third-surface inflation. | BD.W4 fleet-fixture gate (`docs/tranches/BD/waves/W4.md:8-27`); PASS-2 emits the runtime modules that fixtures exercise. |
 | `path-ts` proc-macro shell | Tranche BD.W1 / Tranche A.W1 | Rust toolchain forbids proc-macro path-dep sharing; `path-ts` lives at `crates/path-ts/` because Rust limitation, not boundary failure (`restart/locks/14-LOCKS.md:46`). | `path-ts` builds against the same `path-core` AST + compile logic that `path` consumes; PASS-2 has no `path-ts` obligation. |
-| WASM ABI descriptor + npm packaging | Tranche BD.W2 (WASM production) and Tranche BD.W3 (publication) | WASM ABI descriptor is emitted by PASS-2 lowerer (`codegen/lower/wasm/abi.rs`); packaging surface is downstream. | BD.W2 wasm-bindgen production path (`docs/tranches/BD/waves/W2.md:38-62`) consuming the descriptor without runtime trait dispatch. |
+| WASM host primitive ABI descriptor + npm packaging | Tranche BD.W2 / H.W3 (WASM host ABI) and Tranche BD.W3 (publication) | WASM host primitives are emitted as lowerer/runtime ABI descriptors, not grammar annotations; packaging surface is downstream. | BD.W2 wasm-bindgen production path (`docs/tranches/BD/waves/W2.md:38-62`) consuming exported function names, host-call shape rows, marshalling descriptors, and scalar/SIMD parity evidence without runtime trait dispatch. |
 
 ## §9 Punch List
 

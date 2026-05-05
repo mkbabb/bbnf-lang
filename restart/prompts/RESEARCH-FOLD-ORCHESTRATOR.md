@@ -1,138 +1,223 @@
 # RESEARCH-FOLD ORCHESTRATOR — Wave 5+ (Greenfield Restart)
 
-You are the research-fold orchestrator. Wave 4 returned READY at `restart/audit/hardening/HARDENING-CONSOLIDATED-V4.md` (commit `f0b186ea`). Your role is to dispatch (a) one final metahardening V5 cycle that knows the V1→V4 history and audits for what those cycles structurally missed, then (b) a research-folding cycle that grounds the SOTA-asserted architecture in the source literature, then (c) a final hardening V6 against the folded artefacts.
+This document is a runnable orchestrator specification. It is written to be executed by a coding-agent (Codex, Claude Code, or equivalent) operating against the bbnf-lang greenfield-restart corpus. Wave 4 returned READY at `restart/audit/hardening/HARDENING-CONSOLIDATED-V4.md` (commit `f0b186ea`).
 
-The pipeline is single-round per phase; phases sequence with autonomous amendment loops where intermediate verdicts demand surgery. The terminal verdict (Phase 4 V6 consolidation) gates per-tranche full-spec drafting.
+The pipeline executes four phases in sequence with autonomous amendment loops where intermediate verdicts demand surgery. The terminal verdict (Phase 4 V6 consolidation) gates per-tranche full-spec drafting.
 
-## §1 — Required reading (mandatory)
+The orchestrator-agent dispatches sub-agents (per phase) and consolidates their outputs. The orchestrator-agent is not the author of per-phase content (except Phase 0/4 consolidations and Phase 2 escalation summary). Per-agent dispatch prompts are composed at dispatch time, parameterised per phase + target / topic, carrying the verify-then-patch discipline + reviewer-reconciliation directives + scope boundary + hard cap.
+
+## §1 — Required reading (mandatory; the orchestrator-agent reads end-to-end before dispatch)
 
 1. `restart/README.md` — gestalt anchor; settled positions; 14 locks; BBNF V1 extensions; tape + direct-to-struct union; SOTA synthesis.
 2. `restart/locks/14-LOCKS.md` — settled architectural commitments.
-3. `restart/audit/hardening/HARDENING-CONSOLIDATED-V4.md` — V4 cohort verdict + closure ledger (the carry-baseline).
+3. `restart/audit/hardening/HARDENING-CONSOLIDATED-V4.md` — V4 cohort verdict (READY); the carry-baseline.
 4. `restart/audit/hardening/HARDENING-CONSOLIDATED.md` (V1) + `HARDENING-CONSOLIDATED-V2.md` + `HARDENING-CONSOLIDATED-V3.md` — V1→V4 history (audit drift evidence).
-5. `restart/prompts/HARDENING-ORCHESTRATOR.md` — the per-target hardening contract (you reuse it unchanged for V5 + V6).
-6. `restart/prompts/HARDENING.md` — the per-target audit specification.
-7. `restart/prompts/AMENDMENT-DISPATCH.md` — verify-then-patch discipline (you reuse it for any intermediate amendment cycle).
-8. `docs/precepts/instructions/STYLE.md` + `LESSONS-LEARNED.md` + `CONSUMING.md`.
-9. `restart/ARCHITECTURE.md`, `restart/MIGRATION.md`, `restart/MASTER-PLAN.md` — folded surfaces.
-10. `restart/audit/pass-{1-substrate,2-codegen,3-runtime}/PASS-{1,2,3}.md` — folded surfaces.
+5. `restart/research/INDEX.md` — the research catalogue (the eight deep-dive topics, their anchors, sources, deliverable shapes).
+6. `restart/prompts/HARDENING-ORCHESTRATOR.md` — the per-target hardening contract (reused unchanged for V6).
+7. `restart/prompts/HARDENING.md` — the per-target audit specification.
+8. `restart/prompts/AMENDMENT-DISPATCH.md` — verify-then-patch discipline (reused for any intermediate amendment cycle).
+9. `docs/precepts/instructions/STYLE.md` + `LESSONS-LEARNED.md` + `CONSUMING.md`.
+10. `restart/ARCHITECTURE.md`, `restart/MIGRATION.md`, `restart/MASTER-PLAN.md` — folded surfaces.
+11. `restart/audit/pass-{1-substrate,2-codegen,3-runtime}/PASS-{1,2,3}.md` — folded surfaces.
 
 ## §2 — Phase 0 — V5 metahardening (4 parallel; carry-aware)
 
-The V1→V4 cycles audited per-target punch lists. V5 audits what those cycles structurally missed because of their punch-list focus. Five lenses V5 applies that V1-V4 did not centrally apply:
+The V1→V4 cycles audited per-target punch lists. V5 audits what those cycles structurally missed. Five carry-aware lenses + three LLM-pathology lenses below; total eight lenses.
 
-- **Inter-document narrative coherence**: does the trio (ARCHITECTURE + MIGRATION + MASTER-PLAN) read as one document or three independent voices? Where does narrative bind across files versus drift?
-- **Vocabulary drift**: post-Wave-4.1 amendments may have introduced subtle terminology shifts. Does `LayoutFacts` mean the same thing in PASS-1 §3, ARCHITECTURE §7.3, MASTER-PLAN C.W1? Same for `passes::layout`, `BackendIR`, `Tape`, `LayoutSink`, `pointer!`/`select!`, `fixture-manifest`, `bench cohort`?
-- **Worked-example scarcity**: V1-V4 audited gates and tables but rarely demanded one complete walkthrough. Does the corpus carry: (1) a complete yaml onboarding worked example, grammar→generated→benchmark; (2) a complete query worked example through `pointer!` + `select!`; (3) a complete incremental-parse walkthrough?
-- **Coverage gaps**: lanes V1-V4 did not push (publication readiness, ergonomics under unfamiliar use, fault-tolerant incremental parsing, WASM-host primitive surface, debug-runtime hooks). Are these settled in document text or only in lock summaries?
-- **Architectural axiom cumulative consistency**: do the 14 locks hold under their cumulative constraints? E.g., does Lock 1 (tape + direct union) survive Lock 6 (e-graph rewrites that may transform tape projections)? Does Lock 4 (HM + bidirectional + CSP) survive Lock 10 (generic rules + chains)?
+### Carry-aware lenses (lenses A-E)
 
-Output paths: `restart/audit/hardening/HARDENING-{PASS-1,PASS-2,PASS-3,MASTER-PLAN}-V5.md`. Each agent applies the five lenses + the standard 9-lane audit (compressed verification mode since V4 closed) + the 16-command tightened gate-rerun. Verdict: READY / AMENDMENT-REQUIRED / RE-DRAFT.
+**Lens A — Inter-document narrative coherence.** Does the trio (ARCHITECTURE + MIGRATION + MASTER-PLAN) read as one document or three independent voices? Where does narrative bind across files (cite path:line) versus drift?
 
-Each V5 agent reads the V1-V4 history reports for its target before forming the audit; V1-V4 evidence is the carry-baseline, not the verdict source. The lenses look for what those cycles missed.
+**Lens B — Vocabulary drift.** Post-Wave-4.1 amendments may have introduced subtle terminology shifts. Verify across primary surfaces: `LayoutFacts` / `LayoutSink` / `passes::layout`; `BackendIR` / `BIR`; `Tape` / `TapeBuilder` / `runtime/src/tape/`; `pointer!` / `select!` (and `path!` retired everywhere); `LookbehindWidth` / `BBNF-LOOKBEHIND-WIDTH` / `BBNF1004`; `OpenFrame` (deletion archaeology only); `@host fn` block-bodied; `bbnf/src/` 8-children layout.
 
-Cap: 75 min per parallel agent. Wall ~75 min.
+**Lens C — Worked-example scarcity.** V1-V4 audited gates and tables but rarely demanded one complete walkthrough. Does the corpus carry: (1) yaml grammar onboarding worked example end-to-end (grammar → metadata → generated → benchmark); (2) one complete query worked example through `pointer!` + `select!` with diagnostics; (3) one complete incremental-parse walkthrough; (4) one complete error-recovery walkthrough through `@error(recover)`; (5) one complete tranche A→F→J trajectory for a single grammar?
 
-After all four V5 commits land, you (the orchestrator) consolidate at `restart/audit/hardening/HARDENING-CONSOLIDATED-V5.md` (~400-800 lines; §1 target identifications, §2 cohort verdict, §3 cross-target conflicts, §4 punch list, §5 final verdict, §6 voice locks, §7 closing posture).
+**Lens D — Coverage gaps.** Lanes V1-V4 did not push centrally: ergonomics under unfamiliar grammar onboarding, fault-tolerant incremental parsing, debug-runtime hooks, generic-rule typing under `@error` recovery, WASM-host primitive surface, LSP fault-tolerant fallback policy, incubation-crate stability gate (Lock 11). Apply Pro/Con/Explication/Challenge to each candidate.
 
-If V5 returns AMENDMENT-REQUIRED with ≤10 narrow items: dispatch a single parallel narrow-amendment cycle (3 agents on non-overlapping surfaces) per AMENDMENT-DISPATCH §3 Wave 4.1 pattern, then re-verify with one V5.1 cycle. If still AMENDMENT-REQUIRED, escalate to RE-DRAFT class.
+**Lens E — Architectural axiom cumulative consistency.** Do the 14 locks hold under their cumulative constraints? Specific tensions to test:
+- Lock 1 (tape + direct union) under Lock 6 (e-graph rewrites that may transform tape projections).
+- Lock 4 (HM + bidirectional + CSP) under Lock 10 (generic rules `Object<V>` + chains `-> f1 -> f2` + lookbehind).
+- Lock 14 (yaml two-surface) under Lock 5 (BIR ownership) under Lock 13 (child-count + 500 LOC).
+- Lock 11 (incubation vs publication) under Lock 8 (SOTA close).
+- Lock 7 (cost models) under Lock 6 (e-graph) under Lock 4 (type system).
+
+### LLM-pathology lenses (lenses F-H)
+
+These lenses guard against pathologies introduced by LLM authorship of the restart corpus. The corpus was largely generated by an LLM under iterative prompting; artefacts of that authorship may have escaped V1-V4 audit because V1-V4's lane discipline was punch-list / gate-rerun rather than authorship-pathology.
+
+**Lens F — LLM bias.** Surface and challenge each pathology class:
+- **Hedging where commitment is needed** — "may", "should", "consider", "potentially" in clauses that ought to be settled commitments.
+- **Reference-stuffing** — citing 16 SOTA projects without integrating their lessons; long lists of competitor names where one or two would suffice and integrate better.
+- **Pseudo-precise numerics** — exact numbers ("≤ 380 us", "+2 percent") without provenance, without measurement, without owner. Acceptable when scoped to a tranche gate (e.g., "H.W4 measures") but a fault when free-floating.
+- **Unfalsifiable claims** — "idiomatic", "elegant", "sensible", "production-ready" used as primary justification rather than as decoration on top of mechanical evidence.
+- **Apologising / softening** — "we hereby" instead of "we", "hereupon" used purely ornamentally rather than to carry temporal logic, hedged transitions ("it is worth noting that") that pad rather than carry weight.
+- **Verbal complexity hiding semantic ambiguity** — long sentences that can be parsed two ways or mean nothing if forced to commit; nominalisations ("the realisation of x") where verbs commit ("realises x").
+- **Buzzword reliance** — "zero-cost", "monomorphic", "type-driven", "SIMD-first", "first-class" without naming the actual mechanism. "Tape is zero-copy" is a buzzword unless followed by "borrow `&'i Tape<'i>` plus `NodeId` indexes a slice without allocation".
+- **Confident generality** — "the latest standard" / "the most modern" / "the canonical" used without naming the specific version, paper, or commit.
+
+For each instance found, name path:line + the pathology subclass + the rewrite that closes it. The lens does not penalize ornamental archaic diction (it is the user's deliberate voice per `restart/README.md` §13) but does penalize ornament substituted for commitment.
+
+**Lens G — Overfitting.** The architecture may be over-fit to the LLM's training distribution or to the conversation-prompt history rather than to bbnf's actual constraints. Pathologies:
+- **SOTA-only justification** — architectural choices defended only by "SOTA does it this way" without engaging bbnf's specific Grammar IR / Backend IR / grammar-authoritative posture.
+- **Pattern-lift wholesale** — "we'll do what egg does" / "we'll do what rust-analyzer does" without sensitivity to where bbnf's design problem differs.
+- **Missing alternative-considered text** — when only one design is described in detail and rejected alternatives are absent, the choice may be pattern-matched rather than reasoned. For each load-bearing architectural decision, audit: does the corpus name at least one rejected alternative + the reason for rejection?
+- **Convergence with a specific SOTA project** — the architecture as described looks too much like one specific project (e.g., rust-analyzer, treesitter, sonic-rs). Surface where convergence is principled (the design problem genuinely matches) versus where it is mimetic (the LLM defaulted to a familiar shape).
+- **Constraint inheritance from training corpus** — assumptions imported from common architectures (e.g., "obviously the parser should produce a CST first, then an AST") that may not hold for bbnf's tape + direct union.
+
+For each instance, name the architectural decision + the lifted/inherited assumption + the bbnf-specific reason (or counter-reason) for adopting it.
+
+**Lens H — Hallucination + provenance gaps.** The corpus carries SOTA citations, benchmark numbers, and external references. Pathologies:
+- **Non-existent papers / codebases** — citations the LLM may have confabulated. Verify against `restart/research/INDEX.md` §3 (the curated source list) where overlap exists; flag any citation that does not match a known source.
+- **Wrong-line citations** — `path:line` references that don't carry the claimed content. Spot-check a sample.
+- **Benchmark numbers without provenance** — performance claims that lack `restart/corpora/SOTA.md` or equivalent corpus citation. Acceptable if the number is target-only and named "tbd at H.W4 measurement"; a fault if the number is asserted as fact without source.
+- **Assertions about external systems unverified** — claims like "sonic-rs uses a tape" or "rust-analyzer's salsa is incremental" that match common knowledge are usually fine; claims about specific implementation details (e.g., "lightning-css parses css/bootstrap in 4.16ms on M1 Pro") require source citation.
+- **Derived claims from unstated premises** — chains of reasoning where a step depends on an unstated assumption (e.g., "therefore Pratt detection must be cost-aware" without naming the cost model).
+
+For each instance, name path:line + the unverified claim + the proposed verification (cite a source, mark TBD, or remove).
+
+### Output per V5 agent
+
+Produce `restart/audit/hardening/HARDENING-{TARGET}-V5.md` (~400-700 lines) with §1-§11:
+
+§1 — Target identification (commits audited; carry-baseline references; lenses applied).
+§2 — Carry-aware lens table — A through E × per-lens rows (≥3 per lens; total ≥15 lens-driven rows).
+§3 — LLM-pathology lens table — F through H × per-lens rows (≥3 per lens; total ≥9 pathology-driven rows).
+§4 — Compressed 9-lane verification (≥15 confirmation rows; Lane 2 N/A for PASS targets, full for MASTER-PLAN).
+§5 — Tightened 16-command gate-rerun results.
+§6 — Cross-document binding ledger — for the trio target, every load-bearing claim that should bind elsewhere; for PASS targets, every claim that binds to ARCH/MASTER-PLAN/MIGRATION.
+§7 — Punch list (consolidated lens-driven + lane-driven; deduplicated; cite path:line + surgery + acceptance gate; classify by lens of origin so the orchestrator can route per-amendment-cycle).
+§8 — V1→V4 history note — one paragraph: what V1-V4 missed that V5 surfaced; what V1-V4 caught that V5 confirms.
+§9 — LLM-pathology summary — one paragraph naming the most concerning pathology found (or stating none found and what was searched for).
+§10 — Final verdict: READY / AMENDMENT-REQUIRED / RE-DRAFT.
+§11 — Closing posture (one paragraph; if AMENDMENT-REQUIRED, name the surgeries' total wall-time estimate).
+
+### Phase 0 dispatch protocol
+
+The orchestrator-agent dispatches four V5 sub-agents in a single message (multiple agent-tool invocations, all run in parallel). Each sub-agent:
+- Reads §1 required reading + §2 lens specifications above.
+- Reads its target file end-to-end + the V1-V4 history reports for its target.
+- Walks the eight lenses systematically.
+- Runs the gate-rerun.
+- Authors `restart/audit/hardening/HARDENING-{TARGET}-V5.md`.
+- Commits autonomously: `docs(restart/audit/hardening): hardening pass v5 against {TARGET} — carry-aware metahardening`.
+
+Hard cap: 75 min per parallel agent (90 min for MASTER-PLAN trio). Wall ~75-90 min.
+
+### Phase 0 consolidation
+
+After all four V5 commits land, the orchestrator-agent consolidates at `restart/audit/hardening/HARDENING-CONSOLIDATED-V5.md` (~500-1000 lines) with §1-§7 per `HARDENING-ORCHESTRATOR.md` Phase 6 + an additional §8 LLM-pathology summary across the cohort.
+
+Phase 0 commit: `docs(restart/audit/hardening): consolidate four-target hardening V5 — verdict {READY / AMENDMENT-REQUIRED / RE-DRAFT}`.
+
+### Phase 0 amendment cycle (conditional)
+
+If V5 returns AMENDMENT-REQUIRED with ≤10 narrow items: dispatch a single parallel narrow-amendment cycle (3 agents on non-overlapping surfaces) per `AMENDMENT-DISPATCH.md` §3 Wave 4.1 pattern, then re-verify with one V5.1 cycle (3 parallel verification agents on the amended surfaces; PASS-1 carries V5-READY through if its V5 was READY).
+
+If still AMENDMENT-REQUIRED after V5.1: the orchestrator escalates to RE-DRAFT class (out of scope for autonomous resolution; halt and report).
 
 If V5 returns READY: proceed to Phase 1.
 
 ## §3 — Phase 1 — Research deep-dives (8 parallel)
 
-Eight research topics, each grounding one or two architectural locks. Each agent reads the existing restart corpus + the SOTA literature for its topic (papers, canonical codebases, blog posts, benchmark reports), and produces a research artefact at `restart/research/<topic>.md` (~500-1000 lines).
+The orchestrator-agent dispatches eight research sub-agents per `restart/research/INDEX.md` §3. Each sub-agent reads:
+- `restart/research/INDEX.md` §1 (required reading) + §2 (output contract) + §3 (its topic-specific entry with anchor locks, anchor sections, engagement question, key sources).
+- The named anchor sections of the existing trio + PASS surfaces.
+- The key sources for its topic (papers + canonical codebases + benchmarks). Web search permitted for primary sources; local corpus search for benchmark provenance.
 
-The research artefact carries:
-- §1 — Settled position in the restart (cite path:line).
-- §2 — SOTA literature deep-dive (papers + codebases + benchmarks); each citation = primary source.
-- §3 — Convergence points (where restart matches SOTA).
-- §4 — Divergence points (where restart departs and why).
-- §5 — Refinements to fold (specific text changes for the existing trio + PASS surfaces).
-- §6 — Adversarial findings (where SOTA contradicts a settled lock or proves a settled claim too weak/too strong).
-- §7 — Surgery proposals (concrete edits Phase 2 would land).
+Each sub-agent produces `restart/research/<topic-slug>.md` (~500-1000 lines) per the `INDEX.md` §2 output contract.
 
-The eight topics:
+Topic slugs:
+- `topic-1-hm-foundations.md` — Type system foundations: HM + algorithm W + Damas-Milner.
+- `topic-2-bidirectional.md` — Bidirectional + Pierce-Turner + Dunfield-Krishnaswami.
+- `topic-3-csp-gadts.md` — CSP-backed unification + GADTs + parametric polymorphism + generic rules.
+- `topic-4-egraphs.md` — E-graphs + equality saturation + bridge-vs-union.
+- `topic-5-cost-models.md` — Cost models + Pareto extraction + SMT-backed.
+- `topic-6-tape.md` — Tape encoding + direct-to-struct union.
+- `topic-7-green-red-incremental.md` — Green/red trees + incremental parsing + fault tolerance.
+- `topic-8-simd-dfa.md` — SIMD scanning + DFA construction + bespoke regex HIR.
 
-| # | Topic | Anchors | Owner locks | Key sources |
-|---|---|---|---|---|
-| 1 | Type system foundations: HM + algorithm W + Damas-Milner | Lock 4 | Restart README §7 + ARCH §8 | Damas-Milner 1982; Pierce *Types & Programming Languages* ch. 22; algorithm-W canonical impls in OCaml/SML |
-| 2 | Bidirectional + Pierce-Turner + Dunfield-Krishnaswami | Lock 4 | Restart README §7 + ARCH §8 | Pierce-Turner 1998; Dunfield-Krishnaswami 2013 *Complete and Easy Bidirectional Typechecking*; Dunfield 2019 |
-| 3 | CSP-backed unification + GADTs + parametric polymorphism + generic rules | Lock 4 + Lock 10 | Restart README §7 + §5 | Pottier-Rémy *Essence of ML Type Inference*; OutsideIn(X) GHC; HM(X) variants; System F applications |
-| 4 | E-graphs + equality saturation + bridge-vs-union | Lock 6 | Restart README §6 + ARCH §10 | Tate 2009; Willsey 2021 *egg*; Chow extraction; egglog |
-| 5 | Cost models + Pareto extraction + SMT-backed | Lock 6 + Lock 7 | Restart README §6 + ARCH §10 | egg analysis trait; SMT-LIB cost composition; multi-objective optimisation |
-| 6 | Tape encoding + direct-to-struct union | Lock 1 | Restart README §8 + ARCH §11 | sonic-rs Tape; simdjson 2018/2020 papers; yyjson; rapidjson; mtreelib |
-| 7 | Green/red trees + incremental parsing + fault tolerance | Lock 1 + carry-incr | Restart README §8 + carry ledger | rowan; treesitter incremental; rust-analyzer salsa; tree-sitter parsing under errors |
-| 8 | SIMD scanning + DFA construction + bespoke regex HIR | Lock 1 + bbnf-regex | Restart README §6 + ARCH §10 | simdjson SIMD; vectorscan; logos; regex-automata; Cox 2007 *Regular Expression Matching: the Virtual Machine Approach* |
+Each sub-agent commits autonomously: `docs(restart/research): <topic-slug> — research deep-dive`.
 
-Cap: 90 min per agent. Wall ~90 min (8 parallel).
-
-Each agent commits its research artefact: `docs(restart/research): <topic> — research deep-dive`.
+Hard cap: 90 min per parallel agent. Wall ~90 min.
 
 ## §4 — Phase 2 — Synthesis fold (4 parallel)
 
-Four agents read the eight research artefacts and fold findings into the existing surfaces.
+The orchestrator-agent dispatches four fold sub-agents per the routing matrix in `RESEARCH-FOLD-ORCHESTRATOR.md` previous section (§4). Each sub-agent reads the eight research artefacts + its target surface, then folds §5 (refinements) and §7 (surgery proposals) into the target. §6 (adversarial findings) does not fold; it surfaces to Phase 2 escalation.
+
+Discipline: verify-then-patch per `AMENDMENT-DISPATCH.md` §1. The fold sub-agent rejects any fold that contradicts a settled lock without escalation; such contradictions surface in the §6 of the source research artefact and trigger Phase 2 escalation (see §5 below).
 
 Routing matrix:
 
-| Agent | Surface | Folded findings |
+| Sub-agent | Surface | Folded findings (from research artefacts) |
 |---|---|---|
-| PASS-1 fold | `restart/audit/pass-1-substrate/PASS-1.md` | Topics 1 + 2 + 3 (type system); topic 4 + 5 (e-graph evidence touching Grammar IR); topic 7 (incremental — Grammar-IR-side fault tolerance) |
-| PASS-2 fold | `restart/audit/pass-2-codegen/PASS-2.md` | Topics 6 + 8 (tape + SIMD lower-time obligations); topic 4 + 5 (cost-model trait + e-graph drive codegen); topic 3 (generic-rule lowering) |
-| PASS-3 fold | `restart/audit/pass-3-runtime/PASS-3.md` | Topics 6 + 7 (tape + green/red runtime); topic 8 (regex-side runtime); topic 1 + 2 (HM-backed value typing visible to user) |
-| SYNTHESIS fold | `restart/ARCHITECTURE.md`, `restart/MIGRATION.md`, `restart/MASTER-PLAN.md` | All eight topics' Phase-2-routed text; ARCHITECTURE §8 (type system) + §10 (optimization) + §11 (runtime); MASTER-PLAN tranche-level evidence rows; MIGRATION corpus citations |
+| PASS-1 fold | `restart/audit/pass-1-substrate/PASS-1.md` | Topics 1 + 2 + 3 (type system foundations, bidirectional, CSP/GADTs); Topic 4 + 5 partial (e-graph evidence touching Grammar IR); Topic 7 partial (Grammar-IR-side fault tolerance). |
+| PASS-2 fold | `restart/audit/pass-2-codegen/PASS-2.md` | Topics 6 + 8 (tape + SIMD lower-time obligations); Topics 4 + 5 (cost-model trait + e-graph drive codegen); Topic 3 partial (generic-rule lowering). |
+| PASS-3 fold | `restart/audit/pass-3-runtime/PASS-3.md` | Topics 6 + 7 (tape + green/red runtime); Topic 8 partial (regex-side runtime); Topics 1 + 2 partial (HM-backed value typing visible to user). |
+| SYNTHESIS fold | `restart/ARCHITECTURE.md`, `restart/MIGRATION.md`, `restart/MASTER-PLAN.md` | All eight topics' Phase-2-routed text; ARCHITECTURE §8 (type system) + §10 (optimization) + §11 (runtime); MASTER-PLAN tranche-level evidence rows; MIGRATION corpus citations. |
 
-Discipline: verify-then-patch per AMENDMENT-DISPATCH §1. Each fold is verified against the research artefact's §6 (adversarial findings) and §7 (surgery proposals). The fold agent rejects any fold that contradicts a settled lock without escalation; such contradictions surface in the §6 adversarial findings of the research artefact and trigger a Phase 2 escalation amendment cycle (see §5).
+Each fold sub-agent commits two:
+1. `docs(restart/<surface>): wave-5-fold classification — research-driven items {list}`
+2. `docs(restart/<surface>): wave-5-fold amendment — research grounding fold`
 
-Each fold agent commits two: classification + amendment per the Wave-2 pattern.
-
-Cap: 75 min per agent. Wall ~75 min (4 parallel).
+Hard cap: 75 min per parallel agent. Wall ~75 min.
 
 ## §5 — Phase 2 escalation (conditional)
 
-If any research artefact's §6 (adversarial findings) carries a finding that contradicts a settled lock — e.g., "Pierce-Turner alone insufficient for the rule-quantifier surface; Dunfield-Krishnaswami required" — the fold agent surfaces it as a Phase-2-escalation item rather than folding it.
+If any research artefact's §6 (adversarial findings) carries a finding that contradicts a settled lock — e.g., "Pierce-Turner alone insufficient for the rule-quantifier surface; Dunfield-Krishnaswami required" — the fold sub-agent surfaces it as a Phase-2-escalation item rather than folding it.
 
-The orchestrator (you) consolidates Phase-2-escalation items at `restart/research/escalation-summary.md` (~100-300 lines) listing per-finding: the contradicted lock, the SOTA evidence, the proposed amendment, the receiving phase. If escalation count is zero: no action; proceed to Phase 3. If 1-5: dispatch a single narrow-amendment cycle to address before Phase 3. If >5 or any item argues for a structural lock change: return RE-DRAFT and halt.
+The orchestrator-agent consolidates Phase-2-escalation items at `restart/research/escalation-summary.md` (~100-300 lines) listing per-finding: contradicted lock / SOTA evidence (primary citation) / proposed amendment / receiving phase. Phase-2-escalation commit: `docs(restart/research): phase-2 escalation summary — {N} adversarial findings`.
 
-## §6 — Phase 3 — Hardening V6 (4 parallel; HARDENING-ORCHESTRATOR.md Phase 3 reused)
+Decision rules:
+- If escalation count is zero: no action; proceed to Phase 3.
+- If 1-5: dispatch a single narrow-amendment cycle (1-3 parallel agents on the affected surfaces) to address before Phase 3.
+- If >5 or any item argues for a structural lock change: return RE-DRAFT and halt.
 
-Reuse `restart/prompts/HARDENING-ORCHESTRATOR.md` Phase 3 unchanged. Output paths use V6 suffix:
+## §6 — Phase 3 — Hardening V6 (4 parallel)
+
+The orchestrator-agent reuses `restart/prompts/HARDENING-ORCHESTRATOR.md` Phase 3 unchanged, parameterised with V6 output paths:
 - `restart/audit/hardening/HARDENING-PASS-1-V6.md`
 - `restart/audit/hardening/HARDENING-PASS-2-V6.md`
 - `restart/audit/hardening/HARDENING-PASS-3-V6.md`
 - `restart/audit/hardening/HARDENING-MASTER-PLAN-V6.md`
 
-Each V6 agent applies the standard 9-lane audit (P/C/E/C per row) + the 16-command tightened gate-rerun. Each V6 agent additionally reads the eight research artefacts as evidence corpus; the audit verifies that folded research is coherent with the surface that absorbed it.
+Each V6 sub-agent applies the standard 9-lane audit (Pro/Con/Explication/Challenge per row) + the 16-command tightened gate-rerun + an additional V6 obligation: read the eight research artefacts as evidence corpus and verify that folded research is coherent with the surface that absorbed it.
 
-Cap: 70 min per agent. Wall ~70 min (4 parallel).
+V6 sub-agents apply the same lens-F/G/H pathology checks from V5; the V6 audit verifies that fold did not re-introduce LLM pathologies.
+
+Hard cap: 70 min per parallel agent. Wall ~70 min.
 
 ## §7 — Phase 4 — V6 consolidation
 
-You (the orchestrator) consolidate at `restart/audit/hardening/HARDENING-CONSOLIDATED-V6.md` (~600-1200 lines; §1-§7 per HARDENING-ORCHESTRATOR.md Phase 6).
+The orchestrator-agent consolidates at `restart/audit/hardening/HARDENING-CONSOLIDATED-V6.md` (~600-1200 lines) with §1-§8 per `HARDENING-ORCHESTRATOR.md` Phase 6 + the additional §8 LLM-pathology summary.
+
+Phase 4 commit: `docs(restart/audit/hardening): consolidate four-target hardening V6 — verdict {READY / AMENDMENT-REQUIRED / RE-DRAFT}`.
 
 Final verdict:
-- READY → per-tranche full-spec drafting unblocks.
+- READY → per-tranche full-spec drafting unblocks (Tranche A through Tranche J; ~3,000-5,000 lines per tranche; inheritance per `restart/inheritance/INDEX.md`).
 - AMENDMENT-REQUIRED with ≤10 narrow items → narrow-amendment cycle + V6.1 re-verify.
 - RE-DRAFT or AMENDMENT-REQUIRED with structural items → escalate to user.
 
 ## §8 — Cross-tranche scope boundary
 
-You touch ONLY:
+The orchestrator-agent touches ONLY:
 - The Agent dispatch invocations (Phases 0, 1, 2, 3).
 - `restart/audit/hardening/HARDENING-CONSOLIDATED-V5.md` (Phase 0 consolidation).
 - `restart/research/escalation-summary.md` (Phase 2 escalation, conditional).
 - `restart/audit/hardening/HARDENING-CONSOLIDATED-V6.md` (Phase 4 consolidation).
 
-You do NOT modify:
-- `restart/README.md`, `restart/locks/`, `restart/prompts/`, `restart/inheritance/`, `restart/corpora/`.
-- The dispatched agents' V5/research/fold/V6 outputs (they own theirs).
+The orchestrator-agent does NOT modify:
+- `restart/README.md`, `restart/locks/`, `restart/prompts/` (this prompt, `HARDENING-ORCHESTRATOR.md`, etc), `restart/inheritance/`, `restart/corpora/`.
+- `restart/research/INDEX.md` — the catalogue is fixed at orchestration start.
+- The dispatched agents' V5 / research / fold / V6 outputs.
 - `crates/`, `docs/`, `restart-archive-2026-05-04/`.
+
+Sub-agents are scoped per their dispatch prompts (per phase); the orchestrator-agent enforces scope discipline via the dispatch contract.
 
 ## §9 — Hard caps + total wall
 
 | Phase | Wall (parallel) | Sequencing |
 |---|---|---|
-| Phase 0 V5 + consolidation | ~100 min | 4 parallel + 1 consolidation |
+| Phase 0 V5 metahardening + consolidation | ~100 min | 4 parallel + 1 consolidation |
 | Phase 0.5 amendment cycle (conditional) | ~60 min | 3 parallel + 1 verification |
 | Phase 1 research | ~90 min | 8 parallel |
 | Phase 2 fold | ~75 min | 4 parallel |
@@ -143,26 +228,35 @@ You do NOT modify:
 
 If amendment cycles trigger at Phase 0 or Phase 2, add ~60-90 min each. Worst-case wall ~10-12 hours.
 
-## §10 — Methodology
+## §10 — Per-agent dispatch prompt template
 
-You orchestrate; you do not author per-phase content (except Phase 0/4 consolidations and Phase 2 escalation summary). Per-phase substantive work is the dispatched agents' role.
+For each phase + per-target / per-topic dispatch, the orchestrator-agent composes a prompt that includes:
 
-- Phase 0 + Phase 1 + Phase 2 + Phase 3 dispatches: parallel — multiple Agent tool invocations in a single message; each `run_in_background: true`; each carries the per-target / per-topic dispatch prompt the orchestrator composes.
-- Phase 0/2/4 consolidations: direct.
-- Cross-target conflicts and SOTA-vs-lock contradictions surface at consolidation; the dispatched agents catch what they can, the orchestrator catches what falls between.
+1. **Agent role + scope** — e.g., "Phase 0 V5 metahardening agent for target = PASS-1" or "Phase 1 research agent for topic = topic-4-egraphs".
+2. **Reference to the operational contract** — `RESEARCH-FOLD-ORCHESTRATOR.md` (this prompt) §N for the phase; `restart/research/INDEX.md` §3 for research topics; `HARDENING-ORCHESTRATOR.md` for V6 hardening.
+3. **Required reading list** — the per-phase mandatory inputs.
+4. **The verify-then-patch discipline** — for fold + amendment agents.
+5. **Per-item table** — the lens / topic / punch / surgery directives.
+6. **Pre-fill verification step** — for fold + amendment agents.
+7. **Voice + discipline locks** — per `restart/README.md` §13.
+8. **Cross-tranche scope boundary** — explicit allow/deny path list.
+9. **Hard cap** — phase-specific.
+10. **Output commit message format** — phase-specific.
 
-Each per-agent dispatch prompt carries:
-- The agent's role + scope.
-- Reference to the operational contract (`HARDENING-ORCHESTRATOR.md` for V5/V6; this prompt for research/fold).
-- Reference to `restart/locks/14-LOCKS.md`.
-- The verify-then-patch discipline (for fold agents).
-- The output path + commit message format.
-- The cross-tranche scope boundary.
-- The hard cap.
-- For research agents: the topic anchor + key sources + adversarial-finding obligation.
+The dispatch prompts are NOT pre-written here. The orchestrator-agent composes them at dispatch time, parameterising per agent role + phase + target / topic.
 
-## §11 — Closing posture
+## §11 — LLM-bias / overfitting / hallucination disclosure (for the orchestrator-agent itself)
 
-The greenfield restart's research-fold cycle grounds asserted SOTA citations in primary literature, surfaces any architectural reconsideration the SOTA evidence demands, and verifies the folded corpus through one final hardening cycle. The terminal V6 verdict gates per-tranche full-spec drafting.
+The orchestrator-agent is itself an LLM. The lens-F/G/H pathologies the V5 agents look for are the same pathologies the orchestrator-agent may reproduce in its consolidations. Counter-discipline:
 
-Hereupon Phase 0 (V5 metahardening) dispatches.
+- The Phase 0 consolidation surfaces pathologies the V5 agents found; if the orchestrator-agent finds none (despite the V5 agents finding any), this is a fault, not a clean cohort.
+- The Phase 2 escalation summary preserves adversarial findings verbatim; the orchestrator-agent does not soften, summarise-away, or "synthesise" adversarial findings into cohort agreement.
+- The Phase 4 consolidation reports the V6 verdict as found, including unresolved residue. A "clean READY" verdict with residue is itself a pathology (over-summarisation).
+
+When the orchestrator-agent is itself uncertain (e.g., a sub-agent's verdict is borderline), the consolidation says so explicitly.
+
+## §12 — Closing posture
+
+The greenfield restart's research-fold cycle grounds asserted SOTA citations in primary literature, surfaces architectural reconsideration the SOTA evidence demands, audits the corpus for LLM-authorship pathologies, and verifies the folded corpus through one final hardening cycle. The terminal V6 verdict gates per-tranche full-spec drafting.
+
+Hereupon Phase 0 dispatches.

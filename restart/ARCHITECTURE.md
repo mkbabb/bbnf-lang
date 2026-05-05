@@ -268,9 +268,13 @@ PASS-3 makes incremental parsing opt-in for batch and always-on for LSP
 Public Rust macros:
 
 ```rust
-pointer!("/rules/0/name")
-select!("rule[name='expr'] > alt:nth(0)")
+pointer!(Bbnf => "/rules/0/name")
+select!(Bbnf => "rule[name='expr'] > alt:nth(0)")
 ```
+
+The grammar prefix is the canonical public macro shape. Legacy unqualified path
+examples are migration archaeology; no generic path macro alias survives as a
+public surface.
 
 Public shared concepts:
 
@@ -994,10 +998,10 @@ read `LayoutFacts` instead. Public side tables are:
 The diagnostic codes the codebase commits to are catalogued here. PASS-1
 contributes the lookbehind-width clause (`restart/audit/pass-1-substrate/PASS-1.md:84-121`),
 PASS-2 contributes the codegen and lifetime clauses
-(`restart/audit/pass-2-codegen/PASS-2.md:533-538`), PASS-3 contributes the
+(`restart/audit/pass-2-codegen/PASS-2.md` §8), PASS-3 contributes the
 runtime, host, layout, and pointer clauses
 (`restart/audit/pass-3-runtime/PASS-3.md:352-366`), and Lock 14 contributes
-the metadata/onboarding clauses (`restart/locks/14-LOCKS.md:69-72`). The
+the metadata/onboarding clauses (`restart/locks/14-LOCKS.md:60`). The
 table below is the consolidated catalogue; MASTER-PLAN §24 cookbook table
 references this catalogue rather than re-enumerating codes.
 
@@ -1041,52 +1045,60 @@ and let consumers inspect the producer for the verbatim string.
 ## 8. BBNF Language Surface
 
 The BBNF surface supports the extensions settled in README and PASS-1:
-lookbehind, `@host fn`, multi-function chaining, generics, `@error`, and
-`@layout` (`restart/README.md:121-182`,
-`restart/audit/pass-1-substrate/PASS-1.md:84-121`). It does not contain
+lookbehind, block-bodied `@host fn`, multi-function chaining, generics,
+`@error(recover = ...)`, and `@layout` (`restart/README.md:121-182`,
+`restart/audit/pass-1-substrate/PASS-1.md` §6). It does not contain
 rewrite-mode or grammar-level Unicode class algebra.
 
 ### 8.1 Core Grammar Sketch
 
 ```ebnf
 Grammar       ::= Item*
-Item          ::= HostDecl | RuleDecl | LayoutDecl | ErrorDecl | Annotation
+Item          ::= HostFn | RuleDecl | LayoutDecl | ErrorDecl | Annotation
 
-RuleDecl      ::= Ident GenericParams? TypeAnnotation? "=" Expr ";"
-GenericParams ::= "<" GenericParam ("," GenericParam)* ">"
-GenericParam  ::= Ident BoundList?
-BoundList     ::= ":" Bound ("+" Bound)*
+HostFn        ::= "@host" "fn" Ident GenericParams? "(" ParamList? ")"
+                  "->" Type HostAttrs? Block
+RuleDecl      ::= "rule"? Ident GenericParams? RuleParams? ReturnType?
+                  "=" Expr MapTail? ";"
+LayoutDecl    ::= "@layout" Ident LayoutBody
+ErrorDecl     ::= "@error" Ident ErrorBody
+Annotation    ::= "@" Ident AnnotationBody?
+
+GenericParams ::= "<" Ident ("," Ident)* ">"
+RuleParams    ::= "(" ParamList? ")"
+ParamList     ::= Param ("," Param)*
+Param         ::= Ident ":" Type
+ReturnType    ::= "->" Type
 
 Expr          ::= Alt
 Alt           ::= Seq ("|" Seq)*
 Seq           ::= Prefix*
-Prefix        ::= Lookahead | Lookbehind | Suffix
+Prefix        ::= Lookbehind | Lookahead | Suffix
+Lookbehind    ::= Expr "|<" Expr | Expr "|<!" Expr
 Lookahead     ::= "&" Suffix | "!" Suffix
-Lookbehind    ::= "|<" Suffix | "|<!" Suffix
 Suffix        ::= Primary Quantifier?
 Quantifier    ::= "?" | "*" | "+" | "{" Number ("," Number?)? "}"
-Primary       ::= Literal
-                | Regex
-                | Ref
-                | HostCall
-                | MapExpr
-                | "(" Expr ")"
-
+Primary       ::= Literal | Regex | Ref | Group | HostCall | Closure
+Group         ::= "(" Expr ")"
 Ref           ::= Ident TypeArgs?
 TypeArgs      ::= "<" Type ("," Type)* ">"
-HostCall      ::= "@" Ident "(" HostArgs? ")" Chain*
-Chain         ::= "." Ident "(" HostArgs? ")"
-MapExpr       ::= Expr "=>" TypeExpr
-
-HostDecl      ::= "@host" "fn" Ident GenericParams? "(" ParamList? ")" "->" Type ";"
-LayoutDecl    ::= "@layout" Ident LayoutBody
-ErrorDecl     ::= "@error" Ident ErrorBody
-Annotation    ::= "@" Ident AnnotationBody?
+HostCall      ::= "@" Ident "(" HostArgs? ")"
+Closure       ::= "|" ParamList? "|" Expr
+MapTail       ::= "->" ChainExpr
+ChainExpr     ::= Ident ("->" Ident)*
 Regex         ::= "/" RegexProgram "/"
 ```
 
 `RegexProgram` is parsed by `parse-that/regex`. Unicode classes may exist
 inside that regex syntax, but BBNF itself does not expose a set algebra surface.
+
+This sketch is a synthesis copy of PASS-1 §6. The rule-level chain form is
+`Expr -> f1 -> f2`; a generic rule therefore chains as
+`Object<V> = Expr -> f1 -> f2;`, with `Object<V>` parsed through `Ref` and
+`GenericParams` / `TypeArgs`. Method-chain syntax such as `a.f().g()` is legal
+only inside the block body of `HostFn`. Bodyless host declarations have no
+production. Recovery is owned by `ErrorDecl`: `recover = ...` lives inside
+`ErrorBody`, and standalone recovery directives have no production.
 
 Input-normalization deletions are explicit and named. Every surface listed below
 is forbidden from the BBNF grammar and from any IR variant; the named substrate
@@ -1114,7 +1126,7 @@ Type rules:
 |---|---|
 | Inference is grammar-wide. | Rule references and host calls unify inside `passes::layout` through internal `TypeFacts`; downstream passes consume `LayoutFacts`, never `TypeFacts` directly. |
 | Annotations narrow, not bypass, inferred types. | Contradictions are diagnostics. |
-| Host functions are typed. | `@host fn` declarations and generic primitives share the same checker. |
+| Host functions are typed. | Block-bodied `@host fn` definitions and generic primitives share the same checker. |
 | Chains compose left-to-right. | Output of one host call is input to the next. |
 | Lookbehind must be bounded. | Unbounded lookbehind is rejected before Backend IR. |
 | Layout and error directives are typed side effects. | They produce `LayoutFacts` and `RecoveryFacts`, not ad hoc codegen flags. |
@@ -1125,7 +1137,7 @@ Host functions decompose through:
 
 1. Generic primitives in `host`.
 2. Workspace metadata.
-3. `@host fn` declarations.
+3. Block-bodied `@host fn` definitions.
 
 Per-grammar declaration crates are not a default escape hatch. A declaration
 crate can only be introduced when metadata and `@host fn` cannot represent the
@@ -1203,7 +1215,7 @@ runtime/src/grammars/<grammar>/
 
 The files are template-emitted. They are not hand-written production crates.
 PASS-2 requires this runtime template shape and says generated runtime modules
-are emitted under `runtime/src/grammars/<name>` (`restart/audit/pass-2-codegen/PASS-2.md:98-116`).
+are emitted under `runtime/src/grammars/<name>` (`restart/audit/pass-2-codegen/PASS-2.md` §7).
 
 ## 10. Codegen And Lowerers
 
@@ -1245,7 +1257,7 @@ Gate owners:
 | OpenFrame clone absence | `runtime`, `codegen`, `bbnf-bench`. |
 
 PASS-2 sets a generated LOC budget baseline and allows a +2 percent ceiling
-for emitted runtime source (`restart/audit/pass-2-codegen/PASS-2.md:293-310`).
+for emitted runtime source (`restart/audit/pass-2-codegen/PASS-2.md` §6).
 
 Exact gate rows:
 
@@ -1253,7 +1265,7 @@ Exact gate rows:
 |---|---|---|---|
 | `json/twitter` | sonic-rs 436us, simd-json 424us on M1 Pro. | <= 380us on M1 Pro. | CPU model, OS, compiler flags, input hash, parse mode, competitor version, bbnf commit, warmup, sample policy. |
 | `json/citm` | sonic-rs 854us, simd-json 831us on M1 Pro. | <= 750us on M1 Pro. | CPU model, OS, compiler flags, input hash, selector mode, competitor version, bbnf commit, warmup, sample policy. |
-| `json/canada` | sonic-rs 3.144ms on M1 Pro. | <= 2.8ms on M1 Pro. | CPU model, OS, compiler flags, input hash, array scan profile, competitor version, bbnf commit, warmup, sample policy. |
+| `json/canada` | sonic-rs 3.144ms, simd-json 3.226ms on M1 Pro. | <= 2.8ms on M1 Pro. | CPU model, OS, compiler flags, input hash, array scan profile, competitor version, bbnf commit, warmup, sample policy. |
 | `css/bootstrap` | lightning-css 4.16ms on M1 Pro. | <= 3.0ms on M1 Pro. | CSS fixture hash, layout mode, visitor mode, competitor version, bbnf commit, warmup, sample policy. |
 | `css/animate` | lightning-css 1.97ms on M1 Pro. | <= 1.6ms on M1 Pro. | CSS fixture hash, layout mode, visitor mode, competitor version, bbnf commit, warmup, sample policy. |
 | `simd/structural_scan` | simdjson On-Demand ~7 GB/s on x86 AVX2; ~5 GB/s on M-series NEON. | >= 5 GB/s on M-series, >= 7 GB/s on x86 AVX2; scalar parity hash matches. | ISA, CPU flags, kernel, scalar parity hash, competitor version, bbnf commit, warmup, sample policy. |
@@ -1305,13 +1317,21 @@ git diff -- crates ':!crates/runtime/src/grammars/yaml'
 The last command must show no handwritten crate source changes other than
 generated runtime output under `runtime/src/grammars/yaml`.
 
-### 12.1 Per-Grammar Authority Table
+### 12.1 YAML Onboarding Walkthrough
+
+| Step | Author input | Generated output | Gate |
+|---|---|---|---|
+| Grammar | `grammars/yaml.bbnf` carries yaml rules, any block-bodied `@host fn` definitions, and any `@error(recover = ...)` policy needed by the grammar. | Grammar IR and BIR snapshots for yaml. | `cargo xtask bbnf check yaml` accepts the grammar and rejects standalone recovery directives. |
+| Metadata | One `[workspace.metadata.bbnf.grammars.yaml]` block names `source = "grammars/yaml.bbnf"`, `output_dir = "crates/runtime/src/grammars/yaml"`, `recognizers = "auto"`, `pratt = "auto"`, `simd = "auto"`, `wasm = false`, and `generated_loc_budget = 1.02`. | Template parameters for runtime files, path schema, visitor metadata, host route, diagnostics, and budget sidecars. | Metadata validation rejects manual Rust registry, manual path registry, manual host shim, and declaration-crate onboarding. |
+| Runtime generation | No handwritten Rust input. | `runtime/src/grammars/yaml/{generated.rs,parser.rs,host.rs,view.rs,value.rs,visitor.rs}`, `yaml.path-schema.toml`, diagnostic metadata, and the yaml bench manifest are emitted from grammar + metadata. | `cargo xtask bbnf build yaml` plus `git diff -- crates ':!crates/runtime/src/grammars/yaml'` shows zero generic-crate Rust changes. |
+| Benchmark gate | No `fixtures/yaml/` input during onboarding. | Provisional yaml budget row reports `generated_loc <= 4,000`, regen wall, and bench-manifest metadata; parity fixtures are a later J gate. | `cargo test -p bbnf --test future_grammar_yaml` and `cargo test -p bbnf-language-server yaml_metadata` pass before parity fixtures are admitted. |
+
+### 12.2 Per-Grammar Authority Table
 
 Lock 14 mandates per-X tables for "all nine seed grammars" claims. The
 authoritative 10-row × 9-column matrix below covers the nine extant grammars
-plus the `yaml` onboarding probe. It is fed by PASS-2 §3 runtime emission table
-(`restart/audit/pass-2-codegen/PASS-2.md:461-475`), PASS-2 §6 LOC budget table
-(`restart/audit/pass-2-codegen/PASS-2.md:380-392`), and PASS-3 §6a feeder table
+plus the `yaml` onboarding probe. It is fed by PASS-2 §7 runtime emission table,
+PASS-2 §6 LOC budget table, and PASS-3 §6a feeder table
 (`restart/audit/pass-3-runtime/PASS-3.md:333-344`); architecture is the
 authoritative consumer, the PASS surfaces remain the producer-side reference.
 Every "all extant grammars" or "all nine seed grammars" claim elsewhere in this
@@ -1328,7 +1348,7 @@ document resolves against this table.
 | `google_sheets` | `GoogleSheets` | `GoogleSheetsRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, `host.rs`, layout, error, `PrattSpine` for operator precedence | `GoogleSheetsVisitor`, `GoogleSheetsVisitTypes` | `google_sheets.path-schema.toml` | `fixtures/sheets/manifest.toml` | range/date/array-literal host primitives plus formula host chains | 14,088 → 14,370 | none |
 | `json` | `Json` | `JsonRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, layout, error, `SimdScan` for structural alphabet (twitter/citm/canada hot path) | `JsonVisitor`, `JsonVisitTypes` | `json.path-schema.toml` | `fixtures/json/manifest.toml` | metadata + numeric/string host fns from `host::primitives` | 3,500 → 3,570 | none |
 | `math` | `Math` | `MathRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, layout, error, `PrattSpine` for operator precedence | `MathVisitor`, `MathVisitTypes` | `math.path-schema.toml` | `fixtures/math/manifest.toml` | metadata + numeric host fns from `host::primitives` (Pratt-eligible operator chain only) | 871 → 888 | none |
-| `yaml` (onboarding probe) | `Yaml` | `YamlRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, `host.rs` (if metadata declares host route), layout, error; Pratt/SIMD auto-detected from grammar shape | `YamlVisitor`, `YamlVisitTypes` | `yaml.path-schema.toml` | parity-phase `fixtures/yaml/manifest.toml` (post-onboarding gate, never an onboarding surface) | 0 → ≤ 4,000 (provisional; SYNTHESIS Wave-2 owner) | none (Lock 14 onboarding admits exactly two surfaces: `yaml.bbnf` plus `[workspace.metadata.bbnf.grammars.yaml]`; declaration crate is forbidden at onboarding) |
+| `yaml` (onboarding probe) | `Yaml` | `YamlRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, `host.rs` (if metadata declares host route), layout, error; Pratt/SIMD auto-detected from grammar shape | `YamlVisitor`, `YamlVisitTypes` | `yaml.path-schema.toml` | parity-phase `fixtures/yaml/manifest.toml` (post-onboarding gate, never an onboarding surface) | decomposed via `host::primitives` plus block-bodied `@host fn` chain in the metadata block per `restart/README.md:155`; no Rust per-grammar code emerges from onboarding | 0 → ≤ 4,000 (provisional; SYNTHESIS Wave-2 owner) | none (Lock 14 onboarding admits exactly two surfaces: `yaml.bbnf` plus `[workspace.metadata.bbnf.grammars.yaml]`; declaration crate is forbidden at onboarding) |
 
 Column semantics:
 

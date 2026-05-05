@@ -388,7 +388,7 @@ The **14 locks** at `restart/locks/14-LOCKS.md` are settled and govern the green
 | 6 — xtask emits committed source | Honoured; regen artefacts greppable on disk; no proc-macro façade for codegen output. |
 | 7 — Path crate consolidation | Honoured by `path` + `path-core` + `path-ts` triplet (§2); `runtime/path.rs` retires (per BA W3c carry). |
 | 8 — Surpass SOTA, not AU | Honoured by §9 gate table; every parse-throughput gate cites competitor + dataset + platform. |
-| 9 — Slice-borrow primary; bumpalo + owned escape hatches | Honoured by ParseStream's typed-value-borrow shape (§8); `parse(&'i str)` default; `parse_in(&'i str, &Bump)` opt-in; `parse_owned(&str)` escape. |
+| 9 — Slice-borrow primary; bumpalo + owned escape hatches | Honoured by tape-backed typed-value borrows (§8); `parse(&'i str)` default; `parse_in(&'i str, &Bump)` opt-in; `parse_owned(&str)` escape. |
 | 10 — Pratt + SIMD auto-detected | Honoured by shape miners (§6 Q19); no `@pratt` / `@simd` directives. |
 | 11 — Path-deps for incubating sister crates | Honoured by `egraph`, `csp-solver`, `parse-that` path-deps; publication when API stabilises (per Q3 + Q8). |
 | 12 — ser + gorgeous archive ceremony | **Precondition for execution**; Tranche A.W0 owns it. `crates/ser/` + `crates/gorgeous/` archive at `archive/`; workspace `members` reduced. |
@@ -470,6 +470,6 @@ The legacy plan-set at `docs/tranches/{BA,BB,BC,BD}/` is the **inheritance refer
 
 ## §15 — Closing Posture
 
-Hereupon the greenfield opens. The substrate is the typed-enum + slice-borrow + ParseStream union; the optimization is CSP + e-graph + shape-mining + cost-model with a union-system bridge; the type system is Hindley-Milner + bidirectional + Pierce-Turner-styled; the API is sonic-rs / lightning-css / treesitter familiar with deeper internals; the BBNF extensions are rewrite-mode + lookbehind + Unicode sets + generics + `@host fn` + `@error` + `@layout`; the workspace is 24 crates with the `bbnf-` prefix dropped from internal substrate; the future-grammar onboarding test is two surfaces. The 14 locks govern. The precepts speak.
+Hereupon the greenfield opens. The substrate is the tape + direct-to-struct slice-borrow union; the optimization is CSP + e-graph + shape-mining + cost-model with a union-system bridge; the type system is Hindley-Milner + bidirectional + Pierce-Turner-styled; the API is sonic-rs / lightning-css / treesitter familiar with deeper internals; the BBNF extensions are lookbehind + generics + block-bodied `@host fn` + multi-function chaining + `@error` + `@layout`, with rich Unicode routed through `parse-that/regex`; the workspace is 24 crates with the `bbnf-` prefix dropped from internal substrate; the future-grammar onboarding test is two surfaces. The 14 locks govern. The precepts speak.
 
 The five prompts at `restart/prompts/` dispatch next.

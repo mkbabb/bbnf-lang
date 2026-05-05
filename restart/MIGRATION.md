@@ -215,14 +215,14 @@ before editing files.
 
 | File or family | New location | Bucket | Rationale | Source finding |
 |---|---|---|---|---|
-| `grammar/generated/*.rs` | `runtime/src/grammars/<name>/generated.rs` | GENERATED-REPLACE | New template output from BIR. | PASS-2 runtime template (`restart/audit/pass-2-codegen/PASS-2.md:98-116`). |
+| `grammar/generated/*.rs` | `runtime/src/grammars/<name>/generated.rs` | GENERATED-REPLACE | New template output from BIR. | PASS-2 runtime template (`restart/audit/pass-2-codegen/PASS-2.md` §7). |
 | `grammar/generated/.registry.json` | none | ABROGATE-DELETE | Metadata is source of truth. | README two-surface onboarding (`restart/README.md:11-25`). |
 | `grammar` AST/parser helpers | `grammar/src/*` | ABROGATE-MOVE/KEEP-MODIFY | Grammar crate owns BBNF parsing. | PASS-1 crate tree (`restart/audit/pass-1-substrate/PASS-1.md:46-61`). |
 | `imports`, source maps, spans | `source/src/*` | ABROGATE-MOVE | Shared source substrate. | README pipeline (`restart/README.md:188-207`). |
 | `lower` and normalization | `passes`, `ir`, `codegen` | ABROGATE-REPLACE | Split semantic passes from backend lowering. | Lock 5 (`restart/locks/14-LOCKS.md:42`). |
 | `backend/**` | `codegen/src/*` | ABROGATE-REPLACE | BIR-only lowerers replace grammar walkers. | PASS-2 (`restart/audit/pass-2-codegen/PASS-2.md:5-8`). |
 | `runtime/mod.rs` generic support | `runtime/src/document`, `runtime/src/support` | KEEP-MODIFY | Useful support under tape/direct contract. | PASS-3 runtime (`restart/audit/pass-3-runtime/PASS-3.md:96-135`). |
-| `runtime/<grammar>/**` | `runtime/src/grammars/<name>/**` | GENERATED-REPLACE | Template-emitted per grammar modules. | PASS-2 template schema (`restart/audit/pass-2-codegen/PASS-2.md:98-116`). |
+| `runtime/<grammar>/**` | `runtime/src/grammars/<name>/**` | GENERATED-REPLACE | Template-emitted per grammar modules. | PASS-2 template schema (`restart/audit/pass-2-codegen/PASS-2.md` §7). |
 | `path` executor | `path-core`, `runtime` | ABROGATE-REPLACE | Shared path semantics and runtime view integration. | README path API (`restart/README.md:272-318`). |
 | `css_types.rs` and host shims | `host`, metadata, generated `host.rs` | ABROGATE-REPLACE | Host functions are generic/fenced. | Lock 14 (`restart/locks/14-LOCKS.md:60`). |
 | `generate/serialize` | none | ABROGATE-DELETE | `ser` is archive-only. | MODULES ser archive (`restart/corpora/MODULES.md:165-184`). |
@@ -261,8 +261,8 @@ before editing files.
 | File or family | New location | Bucket | Rationale | Source finding |
 |---|---|---|---|---|
 | Scalar scanner | `simd-scan/scalar` | KEEP-OUTRIGHT | Reference implementation. | MODULES simd-scan (`restart/corpora/MODULES.md:47-69`). |
-| NEON/AVX scanner files | `simd-scan/neon`, `simd-scan/avx2`, `simd-scan/avx512` | KEEP-MODIFY | Wire to `SimdScan` BIR. | PASS-2 SIMD matrix (`restart/audit/pass-2-codegen/PASS-2.md:118-126`). |
-| Dispatch API | `simd-scan/dispatch` | KEEP-MODIFY | Runtime/codegen consumer boundary. | PASS-2 detector commitments (`restart/audit/pass-2-codegen/PASS-2.md:128-135`). |
+| NEON/AVX scanner files | `simd-scan/neon`, `simd-scan/avx2`, `simd-scan/avx512` | KEEP-MODIFY | Wire to `SimdScan` BIR. | PASS-2 SIMD matrix (`restart/audit/pass-2-codegen/PASS-2.md` §3). |
+| Dispatch API | `simd-scan/dispatch` | KEEP-MODIFY | Runtime/codegen consumer boundary. | PASS-2 detector commitments (`restart/audit/pass-2-codegen/PASS-2.md` §3). |
 
 #### `crates/ser` And `crates/gorgeous`
 
@@ -490,7 +490,7 @@ Fate:
 | Tests/fixtures | KEEP-MODIFY |
 
 PASS-2 requires SIMD coverage across scalar, NEON, AVX2, AVX512, and WASM SIMD
-paths (`restart/audit/pass-2-codegen/PASS-2.md:118-126`).
+paths (`restart/audit/pass-2-codegen/PASS-2.md` §3).
 
 ## 10. Archive Crates
 
@@ -512,8 +512,8 @@ sets the disposition.
 ## 11. Generated Code And Runtime Template
 
 PASS-2 sets the runtime template schema and generated output tree
-(`restart/audit/pass-2-codegen/PASS-2.md:98-116`). It also sets generated LOC
-budget tracking and a +2 percent ceiling (`restart/audit/pass-2-codegen/PASS-2.md:293-310`).
+(`restart/audit/pass-2-codegen/PASS-2.md` §7). It also sets generated LOC
+budget tracking and a +2 percent ceiling (`restart/audit/pass-2-codegen/PASS-2.md` §6).
 
 Generated migration:
 
@@ -572,19 +572,19 @@ optional; they are the replacement architecture.
 | `crates/pipeline` | Stage orchestration and artifact verification. | A/F | README pass order (`restart/README.md:188-207`). |
 | `crates/passes` | Type/shape/recognizer/extract/bridge passes. | C/H | PASS-1 commitments (`restart/audit/pass-1-substrate/PASS-1.md:24-42`). |
 | `crates/vm` | Backend IR replay/debug. | E/I | README VM debug/replay (`restart/README.md:344-348`). |
-| `crates/codegen` | BIR-only lowerers and templates. | E/F/H | PASS-2 (`restart/audit/pass-2-codegen/PASS-2.md:80-116`). |
+| `crates/codegen` | BIR-only lowerers and templates. | E/F/H | PASS-2 (`restart/audit/pass-2-codegen/PASS-2.md` §2-§7). |
 | `crates/runtime` | Tape/direct runtime and generated grammar modules. | B/F | Lock 1 (`restart/locks/14-LOCKS.md:34`). |
 | `crates/host` | Generic host primitive/registry system. | D/F | README host decisions (`restart/README.md:160-182`). |
 | `crates/cost-model` | Cost facts, profiles, LOC budgets. | C/H/J | PASS-1 cost model (`restart/audit/pass-1-substrate/PASS-1.md:46-61`). |
 | `crates/path-core` | Shared path semantics. | G | Lock 7 (`restart/locks/14-LOCKS.md:46`). |
-| `crates/parse-that` | Regex/Unicode substrate below BBNF. | D/H | README Unicode routing (`restart/README.md:150-158`). |
+| `crates/parse-that` | Regex/Unicode substrate below BBNF. | D/H | README Unicode routing (`restart/README.md:131-143`). |
 | `crates/test-fixtures` | Shared fixtures and parity matrix. | A/G/J | Inheritance map (`restart/inheritance/INDEX.md:29-40`). |
 
 ## 14. LOC Trajectory
 
 The restart controls generated source because generated code currently
 dominates the workspace. PASS-2 records a generated LOC baseline and a +2
-percent ceiling for emitted runtime source (`restart/audit/pass-2-codegen/PASS-2.md:293-310`).
+percent ceiling for emitted runtime source (`restart/audit/pass-2-codegen/PASS-2.md` §6).
 
 | Phase | Expected movement | Gate |
 |---|---|---|

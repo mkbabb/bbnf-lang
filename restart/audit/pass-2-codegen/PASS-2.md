@@ -29,11 +29,11 @@ Sub-agent dispatch status:
 
 ## §2 Commitments
 
-1. **Backend IR is the PASS-2 boundary.** PASS-1 produces it after parse, validate, type inference, shape mining, e-graph, cost extraction, and lower-to-BIR (`restart/README.md:188-217`). Rust, WASM, and TS-stub lowerers consume it. No lowerer imports Grammar IR.
+1. **Backend IR is the PASS-2 boundary.** PASS-1 produces it after parse, validate, type inference, shape mining, e-graph, cost extraction, and lower-to-BIR (`restart/README.md:188-217`). `passes::extract` is the choice point: it emits selected BIR alternatives plus `CostDecision` and bridge-justification evidence. Rust, WASM, and TS-stub lowerers consume BIR and evidence snapshots; no lowerer imports Grammar IR or replays e-graph/CSP search.
 
-2. **The BIR variant set is 23 nodes.** The BC 22-variant table is kept as the base (`docs/tranches/BC/audit/W0-typed-ir-variant-table.md:28-290`). PASS-2 adds `Lookbehind`, folds multi-function chaining into `HostCall`, and keeps Unicode inside `RegexDfa`.
+2. **The BIR variant set is 23 nodes.** The BC 22-variant table is kept as the base (`docs/tranches/BC/audit/W0-typed-ir-variant-table.md:28-290`). PASS-2 adds `Lookbehind`, folds multi-function chaining into `HostCall`, and keeps Unicode inside the regex-program payload carried by `RegexDfa`. The `RegexDfa` spelling is a compatibility name for the regex payload slot; it does not require full-DFA codegen for every regex.
 
-3. **Tape/direct-to-struct is one materialisation plan.** Every rule has a `TapeShape` and `ValueShape`. Typed documents/views borrow `&'i Tape<'i>` plus node id. This follows Lock 1 (`restart/locks/14-LOCKS.md:34`) and avoids the prior OpenFrame checkpoint clone that dominated samples (`restart/corpora/RESTART-SKETCH.md:154-184`).
+3. **Tape/direct-to-struct is one materialisation plan.** Every rule has a `TapeShape` and `ValueShape`. `TapeShape` owns token kind, span class, payload class, traversal skip policy, and scalar-cache policy. `ValueShape` owns generated field/enum projection over the same tape identity and node id. Typed documents/views borrow `&'i Tape<'i>` plus node id; any scalar cache is declared by one of those shapes, not by a second authoritative tree or parallel substrate. This follows Lock 1 (`restart/locks/14-LOCKS.md:34`) and avoids the prior OpenFrame checkpoint clone that dominated samples (`restart/corpora/RESTART-SKETCH.md:154-184`).
 
 4. **Rust V1 is the primary production lowerer.** The lowerer emits parser functions, TapeBuilder operations, typed views, scanner constants, Pratt tables, host chain calls, diagnostics, and generated registry data from BIR.
 
@@ -51,10 +51,10 @@ Backend IR final variant table:
 
 | # | Variant | Payload | Generation site | Rust lowering | WASM lowering | TS status |
 |---|---|---|---|---|---|---|
-| 1 | `Rule` | name, params, value shape, tape kind | PASS-1 BIR lower | parse fn plus typed view | wasm32 parse export wrapper | scaffold shape |
+| 1 | `Rule` | name, params, `ValueShape`, `TapeShape`, payload policy, traversal policy | PASS-1 BIR lower | parse fn plus typed view | wasm32 parse export wrapper | scaffold shape |
 | 2 | `Seq` | child ids, field map | rule lowering | ordered child calls | same core | scaffold |
-| 3 | `AltDispatch` | dispatch keys, arms | cost model | match/PHF/scan dispatch | same core | scaffold |
-| 4 | `AltSpeculative` | arms, checkpoint policy | cost model | cursor/tape checkpoint | same core | scaffold |
+| 3 | `AltDispatch` | dispatch keys, arms | `passes::extract` using `CostDecision` evidence from `cost-model` | match/PHF/scan dispatch | same core | scaffold |
+| 4 | `AltSpeculative` | arms, checkpoint policy | `passes::extract` using `CostDecision` evidence from `cost-model` | cursor/tape checkpoint | same core | scaffold |
 | 5 | `Repeat` | body, separator, bounds | rule lowering | loop with progress guard | same core | scaffold |
 | 6 | `Optional` | body, absence policy | rule lowering | optional branch | same core | scaffold |
 | 7 | `Ref` | target rule, args | rule lowering | rule call | same core | scaffold |
@@ -62,7 +62,7 @@ Backend IR final variant table:
 | 9 | `Keyword` | keyword set, case policy | keyword detector | branch/PHF | same core | scaffold |
 | 10 | `CharClass` | byte class | rule lowering | predicate | same core | scaffold |
 | 11 | `Scanner` | scan plan | shape miner | scanner callback | scanner callback | scaffold |
-| 12 | `RegexDfa` | compiled regex, Unicode metadata | regex compiler | regex call | wasm-compatible regex call | scaffold |
+| 12 | `RegexDfa` | regex program handle, execution plan, Unicode metadata, verifier contract | regex compiler | regex call or verifier | wasm-compatible regex call or verifier | scaffold |
 | 13 | `Span` | span projection | rule lowering | span value | offset/len | scaffold |
 | 14 | `Layout` | skip policy | `@layout` analysis | layout consume | same core | scaffold |
 
@@ -78,6 +78,8 @@ Layout canon — Lock 2 vocabulary at the BIR boundary: PASS-1's `passes::layout
 | 22 | `ErrorRecovery` | strategy, diagnostic | `@error` analysis | diagnostic/recovery edge | same core | scaffold |
 | 23 | `DebugMarker` | source map marker | debug config | optional metadata | optional metadata | scaffold |
 
+Regex execution-plan note: `RegexDfa` is retained as the 23-node-table spelling so PASS-2 does not re-own the BIR alphabet. Its payload is a regex-program contract: VM, lazy-DFA, full-DFA, literal prefilter, and Unicode-table plans are legal execution choices when `parse-that/regex` proves their size and verifier constraints. Full DFA construction is therefore an implementation plan, not a mandatory lowering for every regex. Regex algorithms are proved against a `regex-automata` oracle lane until bespoke grammar-HIR and tape-offset integration have parity evidence.
+
 Cardinality defence: BC's research anchors put the useful compiler-IR band at roughly 20-30 variants, comparing MLIR `arith` at 60, Cranelift `InstructionData` at 40, rustc HIR `ExprKind` at 35, rustc HIR `ItemKind` at 16, and chalk `TyKind` at 23 (`docs/tranches/BC/audit/research-anchors.md:12-18`, `docs/tranches/BC/audit/W0-typed-ir-variant-table.md:319-329`). PASS-2's 23 variants stay inside that band. swc is kept as backend-separation inheritance rather than a cardinality bound because local README cites swc for WASM/codegen pipeline shape (`restart/README.md:369`); swc compiles JavaScript AST into per-domain enums (`Stmt` / `Expr`) with different cardinality pressure than parser IR (`restart/corpora/SOTA.md:186` — parol's typed-AST cardinality reference is the closest auditable corpus line for the AST-cardinality argument; the swc rustdoc URL citation is retired in favour of corpus path:line discipline).
 
 Payload-refiner contract — PASS-2's role in the BIR contract:
@@ -88,7 +90,7 @@ PASS-2 is **payload refiner, not BIR re-owner**. The variant alphabet, the varia
 |---|---|
 | Payload field widths, alignment, and packing for each variant. | The 23-variant alphabet itself; new variants and retirements return to PASS-1. |
 | Layout-tag specialisation (e.g., `AltDispatch`-vs-`AltSpeculative` selection). | Producer-side semantics (typed grammar IR; e-graph; cost-model trait; CSP solver). |
-| Cost-derived dispatch shape (`match` vs PHF vs scan tree). | Lower-time invariants stated at PASS-1.md:43-53 (no OpenFrame clone stack; regex owns Unicode; auto-detection only). |
+| Cost-derived dispatch shape (`match` vs PHF vs scan tree), including scalarized fast-path score plus objective vector/profile evidence. | Lower-time invariants stated at PASS-1.md:43-53 (no OpenFrame clone stack; regex owns Unicode; auto-detection only). |
 | SIMD-vs-scalar kernel selection from `KernelShape` evidence. | Diagnostic-string surface owned by PASS-1 (§2 diagnostic strings owns `BBNF1004` etc.). |
 | Pratt LUT and operator-spine state machine layout. | Grammar IR variants and side tables; `passes::extract` is the only consumer. |
 | `StructuralAlphabet` constants from BIR `SimdScan` payload. | Backend IR variant ordering and stable id keys. |
@@ -101,10 +103,10 @@ Per-payload-category lowering test gates owned by PASS-2 — every gate referenc
 |---|---|---|
 | Entry/control | `cargo test -p codegen --test entry_lowering` — basic-block parity Rust vs WASM. | PASS-1.md:61 (entry/control row). |
 | Dispatch/speculation | `cargo test -p codegen --test dispatch_lowering` — bounded-rollback proof + jump-table parity. | PASS-1.md:62 (dispatch/speculation row). |
-| Terminal/scanner | `cargo test -p codegen --test scanner_lowering` — slice-compare + regex + `simd-scan` parity. | PASS-1.md:63 (terminal/scanner row). |
-| Pratt/SIMD | `cargo test -p codegen --test pratt_simd_lowering` — Pratt LUT + SIMD-vs-scalar selection. | PASS-1.md:64 (Pratt/SIMD row). |
+| Terminal/scanner | `cargo test -p codegen --test scanner_lowering` — slice-compare + regex + `simd-scan` parity, including SIMD false-positive discard, no false-negative proof, scalar offset-vector equality for exact scans, and verifier-before-tape emission for prefilters. | PASS-1.md:63 (terminal/scanner row). |
+| Pratt/SIMD | `cargo test -p codegen --test pratt_simd_lowering` — Pratt LUT + SIMD-vs-scalar selection with objective profile and target legality evidence. | PASS-1.md:64 (Pratt/SIMD row). |
 | Host/layout/error | `cargo test -p codegen --test host_layout_error_lowering` — `host::call_<name>` dispatch + `@error` recovery shells + WASM host-fn imports. | PASS-1.md:65 (host/layout/error row). |
-| Tape/direct/value | `cargo test -p codegen --test tape_value_lowering` — `TapeEmit` + `DirectBuild` projection + WASM linear-memory parity. | PASS-1.md:66 (tape/direct/value row). |
+| Tape/direct/value | `cargo test -p codegen --test tape_value_lowering` — `TapeEmit` + `DirectBuild` projection over one node identity, payload class, scalar-cache policy, and WASM linear-memory parity. | PASS-1.md:66 (tape/direct/value row). |
 | Debug/path | `cargo test -p codegen --test debug_path_lowering` — source-map sidecar + `DebugMark` cfg-gate + WASM sidecar segment. | PASS-1.md:67 (debug/path row). |
 
 WASM host primitive route: host primitives are a lowerer/runtime ABI concern. PASS-2 emits exported function names, host-call shape, marshalling descriptors, and scalar/SIMD parity evidence for the WASM host ABI receiver; BBNF source keeps the existing `@host fn` body form and gains no primitive annotation or force directive.
@@ -167,7 +169,7 @@ Detection thresholds:
 | Decision | Select when | Reject when | Evidence |
 |---|---|---|---|
 | Pratt | recursive expression family has operator-bearing prefix/infix/postfix alternatives and a total precedence order. | recursion lacks operator partition or width/progress proof. | Lock 10 auto-detects Pratt (`restart/locks/14-LOCKS.md:52`). |
-| SIMD | structural byte alphabet is non-empty, kernel shape is not `Empty`, and cost score beats scalar for expected input length. | alphabet is Unicode-semantic, tiny, or scanner setup cost wins. | `KernelShape` categories exist in `simd-scan` (`crates/simd-scan/src/alphabet.rs:98-125`). |
+| SIMD | structural byte alphabet is non-empty, the scan mode is exact with scalar parity or prefilter with verifier route, target legality holds, and the selected objective profile beats scalar for expected input length. | candidate is illegal for the target, the regex summary cannot expose a safe prefilter, alphabet is Unicode-semantic or tiny, verifier route is missing, or setup/code-size cost dominates runtime gain under the selected objective profile. | `KernelShape` categories exist in `simd-scan` (`crates/simd-scan/src/alphabet.rs:98-125`). |
 | PHF | literal/keyword set is large enough that hash dispatch beats match-tree under cost model. | small sets or prefix-overlap make branch tree cheaper. | current Rust emission already has PHF keyword table path (`crates/core/src/backend/rust/emitter/grammar.rs:155-163`). |
 | Lookbehind | predicate width is fixed or bounded by PASS-1 analysis. | unbounded lookbehind. | lookbehind is grammar-level V1 (`restart/README.md:125-129`). |
 
@@ -175,7 +177,7 @@ Lookbehind co-amendment — codegen-side ratification of the BBNF surface:
 
 PASS-2 ratifies the canonical `|<` grammar-level lookbehind syntax that PASS-1 owns in §6, "BBNF Grammar Formal Specification". Regex-style `(?<=...)` lookbehind stays inside regex literals only; grammar-level lookbehind is `|<` and reaches BIR through the `Lookbehind` variant in the §2 Backend IR final variant table. The codegen-side legality contract is finite-width-only: PASS-1's width analysis annotates the bound; PASS-2 lowering accepts `Bounded(n)` and rejects unbounded predicates at the lowering boundary, before any source emission. The diagnostic surface composes — PASS-1 owns the user-facing code `BBNF1004`, alphabetic alias `BBNF-LOOKBEHIND-WIDTH`, and error kind `LookbehindWidth`; PASS-2 owns the routing diagnostic `BBNF-SEM040` in the §8 diagnostic ledger when an unbounded `Lookbehind` reaches BIR validation. The two diagnostics are produced together: `BBNF1004` reaches the user through the PASS-3 diagnostic surface; `BBNF-SEM040` halts codegen close before any lowerer emits a parser file. Lowering emits a reverse predicate with the bound encoded as a compile-time constant; both Rust V1 and WASM V1 share the BIR payload and the same finite-width invariant from PASS-1's per-backend lowering obligations.
 
-Unified cursor + byte-skip obligation — Lock 3 ratification at the codegen-side: Rust V1 lowerer emits one parse implementation; cursor consultation generates a byte-skip when consult returns `Skip`; the empty-path case (`__EAGER_EMPTY_PATH`) elides cursor calls. The unified path is realized by `Ref` / `Lit` / `RegexDfa` / `Scanner` BIR variants; `PrattSpine` and `SimdScan` carry their own dispatch and elide cursor consultation in the inner loop. WASM V1 honours the same obligation, sharing the BIR payload and the structural snapshot consumed by Rust V1; the cursor-vs-byte-skip decision is a lowering choice, not a substrate split.
+Unified cursor + byte-skip obligation — Lock 3 ratification at the codegen-side: Rust V1 lowerer emits one parse implementation; cursor consultation generates a byte-skip when consult returns `Skip`; the empty-path case (`__EAGER_EMPTY_PATH`) elides cursor calls. The unified path is realized by `Ref`, `Lit`, the `RegexDfa` regex-program payload, and `Scanner` BIR variants; `PrattSpine` and `SimdScan` carry their own dispatch and elide cursor consultation in the inner loop. WASM V1 honours the same obligation, sharing the BIR payload and the structural snapshot consumed by Rust V1; the cursor-vs-byte-skip decision is a lowering choice, not a substrate split.
 
 ## §3 Per-Crate Trees
 
@@ -369,9 +371,11 @@ PASS-2 assumes PASS-1 will provide:
 |---|---|
 | Grammar IR variants and node ids | source-to-BIR traceability |
 | Type layouts and generics | `ValueShape`, host signatures, view fields |
-| Cost model trait and scores | alt dispatch, PHF, SIMD, Pratt choices |
+| Cost model decisions | `CostDecision` records with scalar score, objective vector, selected profile, legality, stable child/e-class/BIR ids, selected alternative, rejected alternatives, and dominated/Pareto evidence. |
+| Opaque regex cost summaries | `RegexCostSummary` evidence for regex paths, consumed without importing regex HIR, NFA, DFA, VM, Unicode, or prefilter internals. |
+| Cost model trait and scores | alt dispatch, PHF, SIMD, Pratt choices, with scalar Cost allowed only as a fast extraction path when the full evidence record survives. |
 | Shape mining outputs | seq/alt/repeat materialisation and scanner plans |
-| E-graph extraction | simplified rule bodies before BIR |
+| E-graph extraction | simplified rule bodies before BIR plus `BridgeJustification` records keyed by stable Grammar IR node ids, e-class ids, CSP variables, and proof refs. |
 | Lookbehind width analysis | bounded `Lookbehind` BIR node |
 | Layout and error annotations | `Layout` and `ErrorRecovery` nodes |
 | Host function inference | `HostCall` chains |
@@ -409,6 +413,8 @@ Generated Rust output starts from PASS-B's 168,750 LOC baseline across 9 grammar
 | total | 168,750 | 172,125 | Budget gate | ≤ 22s aggregate | observed for 9 + provisional for yaml |
 
 Carry pointer: SYNTHESIS Wave-2 carries this table into `restart/MASTER-PLAN.md` and `restart/ARCHITECTURE.md` per HARDENING-CONSOLIDATED §4.24; the architecture-side authoritative copy must remain row-for-row identical, with PASS-2 staying the producer-side reference.
+
+Generic monomorphisation budget gate: PASS-2 emits generic-rule instances only from a finite `(RuleId, TypeArgs)` instance set supplied by PASS-1 validation. The lowerers may not discover or instantiate new generic shapes during emission. `cargo xtask bbnf generated-loc-budget --check` records generated LOC by instance set and fails if a generic-cycle diagnostic or missing finite-instance report reaches codegen close.
 
 Generated files are exempt from the per-file LOC cap but not from this budget. Non-generated files still obey Lock 13's 500 LOC cap (`restart/locks/14-LOCKS.md:58`).
 
@@ -453,12 +459,15 @@ Throughput trajectory — every parse-throughput row names competitor, dataset, 
 | simdjson on-demand `7 GB/s` | structural scan | M-series | ≥ 5 GB/s | data-only `StructuralAlphabet` + NEON kernel parity | kernel parity + index throughput report |
 | simdjson on-demand `7 GB/s` | structural scan | x86 (AVX2/AVX512) | ≥ 7 GB/s | data-only `StructuralAlphabet` + AVX2/AVX512 kernel parity | kernel parity + index throughput report |
 
+Benchmark metadata floor: every PASS-2 benchmark artefact records objective profile, validation mode, source ownership mode, materialisation mode, scalar-cache policy, parse entry point, competitor parse flags, and input hash beside CPU, OS, compiler flags, competitor version, bbnf commit, warmup, and sample policy. `parse(&str)` rows record Rust prevalidation before entry; byte/file parse rows record the bbnf validation path before any `&str`-typed value is exposed. In-situ, destructive, or non-validating competitor modes are not comparable rows unless those modes are named in the metadata.
+
 Mechanism gates — non-throughput rows promoted to mechanism-only proof, distinct from the parse-throughput SOTA gates above:
 
 | Mechanism | PASS-2 obligation | Evidence artefact |
 |---|---|---|
 | OpenFrame deletion | TapeBuilder length checkpoints + BIR builder-frame replace the cloned-frame substrate; the prior `Vec<OpenFrame>::clone` is the deletion target, not a substrate to preserve. | samply on every emitted parser confirms no `Vec<OpenFrame>::clone` symbol. |
 | Pratt auto-detection | Operator-bearing recursive expression families lower to `PrattSpine` LUT and operator-spine state machine. | operator table snapshot + formula fixture under `cargo test -p codegen --test pratt_simd_lowering`. |
+| Regex oracle parity | `RegexDfa` payloads record VM/lazy-DFA/full-DFA/prefilter execution plan and verifier contract; bespoke regex code remains checked against `regex-automata` until parity is proven. | seed regex fixture report for Unicode class algebra, no-capture DFA, lazy-DFA, VM, and prefilter candidate discard. |
 | WASM parity | wasm32 binding path with scalar/SIMD-128 scan parity, sharing the Rust BIR. | JSON smoke + twitter WASM bench handoff to PASS-3 packaging. |
 
 PASS-2 should not claim final perf wins until generated parsers run the corpus, but it defines the only mechanisms by which those gates can be met.
@@ -542,8 +551,8 @@ Diagnostic ledger:
 | `BBNF-CODEGEN033` | runtime template lacks path/visitor/diagnostic metadata. | metadata consumer smoke. | `"runtime template for {grammar} omits {metadata}; PASS-3 consumer cannot bind"` |
 | `BBNF-LIFE009` | emitted owned/borrowed constructor violates lifetime surface. | runtime compile tests. | `"emitted constructor for {rule} returns {actual} but rule annotation {annot} requires {expected}; check @layout(...) hint or grammar -> projection"` |
 | `BBNF-SEM040` | unbounded lookbehind reaches BIR. | BIR validation. | `"lookbehind in rule {rule} reaches BIR with unbounded width; PASS-1 BBNF1004 should have caught upstream"` |
-| `BBNF-OPT001` | optimizer rejects an apparent operator-chain candidate. | cost-model decision. | `"rule {rule} resembles an operator chain (left-recursive with operator-bearing alts at {line}) but {reason}; PrattSpine was not auto-selected; add stable precedence metadata or restructure the rule"` |
-| `BBNF-OPT002` | optimizer rejects an apparent SIMD candidate. | cost-model decision. | `"rule {rule} has structural alphabet {alpha} but kernel-shape evidence is {shape}; falling back to scalar because SIMD cost evidence did not win; metadata may disable unsupported kernels but cannot force SIMD"` |
+| `BBNF-OPT001` | optimizer rejects an apparent operator-chain candidate. | cost-model decision. | `"rule {rule} resembles an operator chain (left-recursive with operator-bearing alts at {line}) but {reason}; objective profile {profile} selected {fallback}; PrattSpine was not auto-selected; add stable precedence metadata or restructure the rule"` |
+| `BBNF-OPT002` | optimizer rejects an apparent SIMD candidate. | cost-model decision. | `"rule {rule} has structural alphabet {alpha} but kernel-shape evidence is {shape}; falling back to scalar or regex verifier-first because SIMD cost or exactness evidence did not win under objective profile {profile}; metadata may disable unsupported kernels but cannot force SIMD"` |
 
 Carry ledger — every deferral carries Receiver, Blocker, and Receiving gate per HARDENING-CONSOLIDATED §4.39:
 
@@ -566,7 +575,7 @@ Carry ledger — every deferral carries Receiver, Blocker, and Receiving gate pe
 4. Build `runtime/src/tape/` and TapeBuilder checkpoints; delete OpenFrame-style runtime builders before migration begins. The OpenFrame substrate has no preserved role in PASS-2 generic runtime/codegen plan text; only the deletion-pathology archaeology survives, and TapeBuilder + BIR builder-frame replaces every checkpoint surface.
 5. Emit generated grammar modules under `runtime/src/grammars/<name>/` from one template.
 6. Split xtask regen and add per-grammar generated LOC budgets.
-7. Wire `simd-scan` through BIR `StructuralAlphabet` constants and parity fixtures.
+7. Wire `simd-scan` through BIR `StructuralAlphabet` constants, exact-scan scalar parity fixtures, and prefilter verifier-before-tape fixtures.
 8. Build Rust V1 lowerer first, then WASM binding lowerer; keep TS scaffold only.
 9. Add conflict guard checks for `ParseStream`, rewrite-mode walker, grammar-level Unicode sets, and default per-grammar declaration crates.
 10. Leave cross-backend 81-cell parity and public package surfaces to PASS-3/BD.

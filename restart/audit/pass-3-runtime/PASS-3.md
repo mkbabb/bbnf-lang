@@ -138,7 +138,7 @@ Generated metadata produced by xtask-emitted descriptors is the only validation 
 |---|---|---|
 | Emitted parse signatures compile under PASS-3 wrappers | `parse`, `parse_in`, `parse_owned` for every extant grammar plus yaml | Generated runtime crate compiles when `Json::parse(&str)`, `Json::parse_in(&str, &Arena)`, and `Json::parse_owned(String)` are called from a PASS-3 consumer smoke. |
 | `DocumentView` metadata feeds visitors and selectors | `DocumentView::root_value`, `DocumentView::diagnostics`, generated `Visitor` trait, `pointer!`, `select!` | Generated `DocumentView::root_value()` projects to the same `ValueRef` index space the visitor walker, `pointer!` runtime plan, and `select!` traversal plan consume. |
-| Materialisation cost tables generated and documented | Per-grammar runtime emission | Codegen emits a `materialisation_cost.toml` (or equivalent generated artefact) with field counts, payload arena bytes, and tape-token width per node kind; the cookbook references it. |
+| Materialisation cost tables generated and documented | Per-grammar runtime emission | Codegen emits a `materialisation_cost.toml` (or equivalent generated artefact) with field counts, payload arena bytes, tape-token width, `TapeShape` scalar-cache policy, string-normalization policy, repeated-access cost class, selected objective profile, scalarized score/objective vector, and domination reason per node kind; the cookbook references it. |
 
 These gates appear as receiver/blocker/receiving-gate rows in §8.
 
@@ -148,9 +148,9 @@ Visitors keep the W5 design: generated `Visitor` traits, `Visit`/walker support,
 
 PASS-3 requires these substrate-visible semantics from PASS-1:
 
-- Stable document/snapshot identity.
+- Snapshot-scoped document identity and `TapeId` identity.
 - Stable node-kind IDs shared with codegen metadata.
-- Compact spans and payload references.
+- Compact spans, payload references, and payload classes.
 - Child/sibling traversal and skip ranges.
 - Recovery/layout/debug flags.
 - Optional trace events for DAP/playground.
@@ -181,7 +181,7 @@ pub struct ValueRef<'doc, 'input, K = AnyKind> {
 }
 ```
 
-This layout is not a PASS-1 mandate; it is a user-surface contract. PASS-1 may pack differently if these semantics remain true. PASS-2 may build direct structs first or tape first per grammar, but the externally visible invariant is stable: every public node has tape identity and every tape node can be projected through `ValueRef`.
+This layout is not a PASS-1 mandate; it is a user-surface contract. PASS-1 may pack differently if these semantics remain true. PASS-2 may build direct structs first or tape first per grammar, but build order is not semantic. The externally visible invariant is stable: every public node has snapshot-scoped tape identity, every tape node can be projected through `ValueRef`, every generated direct field traces to one `(TapeId, node id, payload class)`, and cross-snapshot identity exists only through a `ReparsePlan` reuse map. `TapeShape` declares token kind, span class, payload class, traversal skip policy, scalar-cache policy, and string-normalization policy; `ValueShape` declares generated typed projections over the same node id. Red-like cursor views, direct typed roots, and AST adapters are transient projections over the green-like owning tape; none owns independent parse identity or recovery state.
 
 Debug and DAP must reuse this identity. Existing DAP code already contains sessions, breakpoints, and stepping (`crates/lsp/src/dap/mod.rs:45-83`, `crates/lsp/src/dap/mod.rs:121-143`, `crates/lsp/src/dap/mapping.rs:41-92`), and the playground wasm API already exposes parse/LSP/debug concepts (`playground/src/composables/wasm/index.ts:233-256`, `playground/src/composables/wasm/index.ts:274-322`, `playground/src/composables/wasm/types.ts:166-183`). Restart keeps those user concepts while moving their internals onto tape snapshots. The debug acceptance gate requires every breakpoint, step, hover, and playground trace event to carry `SnapshotId`, `TapeId`, node kind, and source span when the tape node exists. Span-only fallback is allowed only inside a parse-failed region before a stable recovery node exists; the fallback reason is reported on the debug-only channel and never as a user LSP diagnostic.
 
@@ -201,10 +201,21 @@ pub struct DocumentSnapshot {
 }
 
 pub enum ReparsePlan {
-    Reuse { unchanged: Vec<TapeRange> },
-    Reparse { dirty: Vec<TextRange>, anchors: Vec<TapeId> },
+    Reuse {
+        unchanged: Vec<TapeRange>,
+        reuse_map: Vec<(OldTapeId, NewTapeId)>,
+    },
+    Reparse {
+        dirty: Vec<TextRange>,
+        anchors: Vec<TapeId>,
+        reuse_map: Vec<(OldTapeId, NewTapeId)>,
+        fallback_reason: Option<FallbackReason>,
+        invalidated_queries: QueryInvalidationSet,
+    },
 }
 ```
+
+The reuse map is the only cross-snapshot identity bridge. Type-inference, cost-model, and e-graph query caches reuse only through `DocumentSnapshot`, `TapeId` reuse-map entries, and semantic facts; each invalidation records a query key and reason rather than silently surviving a parser edit.
 
 **Incremental recovery worked path.** Given a generated JSON rule with a
 declarative recovery policy:
@@ -221,23 +232,36 @@ and snapshot `S42` for:
 ```
 
 an edit deleting `1` produces dirty range `TextRange(31..32)` inside the
-`member` value. The language server builds
-`ReparsePlan::Reparse { dirty: [31..32], anchors: [orders-array, qty-member] }`
-and invalidates only the enclosing member subtree plus diagnostics whose spans
-intersect the dirty range. The generated parser reaches `@error(recover = ...)`,
-skips to the nearest sync token `}` without leaving the array/object scopes,
-emits `BBNF-RECOVERY001` through `RecoveryFacts`, and inserts a recovered
-member-value node flagged as recovered in the tape. The new snapshot `S43`
-therefore keeps unchanged tape ranges for the `orders` array and `sku` member,
-replaces only the `qty` value subtree, and gives visitors a recovery node that
-`BBNF-VISIT003` can mention if the visitor opted out of `VisitTypes::ERROR`.
+`member` value. The language server builds a `ReparsePlan::Reparse` with
+`dirty: [31..32]`, anchors `[orders-array, qty-member]`, a `reuse_map` for
+proven unchanged tape ranges, and `invalidated_queries` for diagnostics whose
+spans intersect the dirty range. The generated parser reaches
+`@error(recover = ...)`, skips to the nearest sync token `}` without leaving the
+array/object scopes, emits `BBNF-RECOVERY001` through `RecoveryFacts`, and
+inserts a recovered member-value node flagged in tape as
+`RecoveryKind::Substituted`. Recovered tape nodes carry
+`RecoveryKind::{Error, Missing, Substituted}`, diagnostic code, sync token,
+typed placeholder policy, and `VisitTypes::ERROR` behavior. The new snapshot
+`S43` therefore keeps unchanged tape ranges for the `orders` array and `sku`
+member, replaces only the `qty` value subtree, and gives visitors a recovery
+node that `BBNF-VISIT003` can mention if the visitor opted out of
+`VisitTypes::ERROR`.
 
 Fallback path: if the same edit also deletes the closing `}]`, anchor matching
 fails because the sync set cannot re-enter a balanced scope. The server falls
 back to full parse with reason `anchor_miss_unbalanced_scope`, increments the
 `incremental/edit_anchor` fallback ledger for the relevant corpus row, and keeps
 default LSP output silent. With `BBNF_LSP_DEBUG=1`, the debug channel reports
-`S42 -> S43`, the dirty range, the failed anchors, and the fallback reason.
+`S42 -> S43`, the dirty range, the failed anchors, the empty reuse map, and the
+fallback reason.
+
+Yaml syntax-error fallback uses the same contract. During onboarding, a broken
+indentation edit in `yaml.bbnf` still yields a typed `YamlRoot` projection when
+recovery can place `RecoveryKind::Error` or `RecoveryKind::Missing` nodes under
+the snapshot-scoped `TapeId`; if indentation destroys anchors across the edited
+block, the LSP falls back silently, records
+`fallback_reason: yaml_indent_anchor_miss`, and exposes details only through
+`DocumentSnapshot` trace/debug output.
 
 The server may fall back to full parse when anchors fail, but bench/dev output must report fallback rates. Users should see stable diagnostics, not implementation warnings. The language server should consolidate current analysis, LSP, and DAP surfaces, matching archived PASS-C guidance (`restart-archive-2026-05-04/audit/passes/PASS-C.md:90-92`, `restart-archive-2026-05-04/audit/passes/PASS-C.md:158-159`).
 
@@ -416,8 +440,8 @@ PASS-3 owns the user-facing diagnostic strings for runtime, pointer/select, life
 | `BBNF-LIFE002` | `error[BBNF-LIFE002]: arena mismatch; root was parsed in arena #N but projected through arena #M. help: use the same `&Arena` for parse and projection.` | Arena user | "I'm batching parses through one bumpalo." | Two arenas in scope. | Cookbook arena chapter. |
 | `BBNF-LAYOUT001` | `warning[BBNF-LAYOUT001]: @layout directive is unused by generated formatter; rule never reaches a layout-sensitive emit path.` | Grammar author | "@layout always shapes output." | Rule has no emitting use. | Layout cookbook. |
 | `BBNF-LAYOUT002` | `error[BBNF-LAYOUT002]: rule `{rule}` has no resolvable layout; reason: {cause}. help: layout descriptors must derive from a leaf, an explicit `@layout(...)`, or an upstream rule with a known layout.` | Grammar author | "Lowering finds layout from context." | Layout chain underdetermined. | Layout cookbook §unresolved-layout. |
-| `BBNF-OPT001` | `note[BBNF-OPT001]: Pratt was not applied to `{rule}`; reason: {cause}. The grammar still parses; performance fallback uses recursive-descent.` | Grammar author | "Auto-Pratt always fires for operator chains." | Cost model declined. | Cookbook §pratt-detection. |
-| `BBNF-OPT002` | `note[BBNF-OPT002]: SIMD scanner was not selected for `{rule}`; reason: {cause}. The grammar still parses; performance fallback uses scalar scan.` | Grammar author | "SIMD is always faster." | Dispatch cost outweighs win. | Cookbook §simd-detection. |
+| `BBNF-OPT001` | `note[BBNF-OPT001]: Pratt was not applied to `{rule}` under profile `{profile}`; reason: {cause}. The grammar still parses; performance fallback uses recursive-descent with objective-profile evidence.` | Grammar author | "Auto-Pratt always fires for operator chains." | Cost model or objective profile declined. | Cookbook §pratt-detection. |
+| `BBNF-OPT002` | `note[BBNF-OPT002]: SIMD scanner was not selected for `{rule}` under profile `{profile}`; reason: {cause}. Exact SIMD scans must prove scalar parity; prefilter scans must pass `RegexProgram`, DFA/VM, or scalar verifier before tape emission. The grammar still parses; fallback remains exact scalar scan.` | Grammar author | "SIMD is always faster." | Cost, Unicode semantics, scalar parity, or missing verifier route blocked selection. | Cookbook §simd-detection. |
 | `BBNF-GRAMMAR001` | `error[BBNF-GRAMMAR001]: workspace metadata block missing for grammar `{name}`. help: add `[workspace.metadata.bbnf.grammars.{name}]` to your Cargo workspace metadata; the grammar source file alone is not sufficient.` | New-grammar author | "Source file is enough." | Lock 14 requires both surfaces. | Onboarding cookbook §two-surfaces. |
 | `BBNF-POINTER001` | `error[BBNF-POINTER001]: unknown pointer segment `{segment}` in `{pointer_macro_input}`; rule has no field with that name.` | Application author | "Pointers traverse fields by name." | Field name typo or stale. | Pointer cookbook §validation. |
 | `BBNF-POINTER002` | `error[BBNF-POINTER002]: pointer grammar inference failed; help: add an explicit grammar prefix like `pointer!(Json => "/...")`.` | Application author | "Implicit grammar always works." | Two grammars in scope. | Pointer cookbook §explicit-grammar. |
@@ -427,12 +451,15 @@ PASS-3 owns the user-facing diagnostic strings for runtime, pointer/select, life
 | `BBNF-VISIT003` | `warning[BBNF-VISIT003]: recovery nodes skipped by this visitor. help: implement `visit_error` or enable `VisitTypes::ERROR`.` | Visitor author | "Default visitor sees every node." | Recovery nodes opted out by default. | Visitor cookbook §recovery. |
 | `BBNF-RECOVERY001` | `error[BBNF-RECOVERY001]: recovered `{rule}` at {span}; skipped to {sync}. help: supply {expected} before {sync}.` | Grammar author and LSP user | "Recovery keeps the document usable." | The recovered node is real runtime state, not a parser warning. | Recovery cookbook §sync-sets. |
 | `BBNF1004` / `BBNF-LOOKBEHIND-WIDTH` / `LookbehindWidth` | `error[BBNF1004]: lookbehind operator width is unbounded for `{rule}`; help: lookbehinds must be finite-width; use a bounded alternative or move the constraint into a regex with `(?<=...)`.` | Grammar author | "Lookbehind takes any pattern." | Unbounded width. | PASS-1 diagnostic string; Grammar surface spec. |
+| `TypeMismatch` / `BBNF-TYPE001` | `error[BBNF-TYPE001]: value projection `{projection}` expected `{expected}` from {expected_from}, but `{actual}` was synthesized from {actual_from}; ValueShape `{value_shape}` cannot satisfy {check_synth_cause}. help: fix the annotation, host signature, or generated value projection.` | Grammar author and host author | "The generated value shape follows my annotation." | Check/synth, coercion, or value-shape obligation failed. | Host/type cookbook §type-obligations. |
 | `HostSignature` | `error[BBNF-HOST001]: host function `{name}` cannot satisfy signature `{expected}`; argument {index} inferred `{actual}` at {span}.` | Host author | "@host fn body just runs." | Type flow mismatch. | Host cookbook §signatures. |
 | `ChainStep` | `error[BBNF-HOST002]: chain step `{step}` does not accept `{input_type}` from previous step; the chain `-> f1 -> f2` requires `f2` to accept `f1`'s output.` | Host author | "Chains compose." | Step type fault. | Host cookbook §chains. |
 | `WasmHost` | `error[BBNF-HOST003]: host chain `{chain}` cannot lower to WASM; reason: {cause}. The Rust backend continues to compile; add the missing primitive to the H.W3 WASM ABI descriptor or keep the chain Rust-only.` | TS/WASM author | "Hosts work everywhere." | Host primitive missing in WASM ABI. | WASM ABI cookbook; H.W3 host-primitive matrix. |
 | `BBNF-GEN001` / `BBNF-CG001` / `LowererImport` | `error[BBNF-GEN001]: lowerer at `{path}` imports `ir::grammar_ir`; only the BIR producer may consume Grammar IR. help: lower against `ir::backend_ir`.` | Codegen author | "All IR is one IR." | Two-IR contract violation. | Architecture §7. |
 
-These strings are part of the SYNTHESIS-owned diagnostic ledger; PASS-3 commits the text and cookbook receivers, the lowerer-import-deny code is mirrored from PASS-2 ownership, and the layout/lookbehind/host/chain codes are mirrored from PASS-1 ownership. PASS-3 emits the PASS-1-owned lookbehind numeric code `BBNF1004`, alphabetic alias `BBNF-LOOKBEHIND-WIDTH`, and vocabulary kind `LookbehindWidth` as one binding; any `BBNF-LIFE003` compatibility mention is synthesis-ledger residue, not the canonical PASS-3 spelling.
+These strings are part of the SYNTHESIS-owned diagnostic ledger; PASS-3 commits the text and cookbook receivers, the lowerer-import-deny code is mirrored from PASS-2 ownership, and the layout/lookbehind/host/chain/type codes are mirrored from PASS-1 ownership. PASS-3 emits the PASS-1-owned lookbehind numeric code `BBNF1004`, alphabetic alias `BBNF-LOOKBEHIND-WIDTH`, and vocabulary kind `LookbehindWidth` as one binding; any `BBNF-LIFE003` compatibility mention is synthesis-ledger residue, not the canonical PASS-3 spelling. Type diagnostics expose check/synth stage, obligation provenance, and `ValueShape` projection cause to users without exposing `TypeFacts` or a public higher-rank type pass.
+
+Scanner diagnostics follow two runtime rules. In exact mode, a SIMD positive that disagrees with the scalar offset vector is a correctness failure before tape emission. In prefilter mode, a SIMD positive is only a candidate; `RegexProgram`, DFA/VM, or scalar verifier acceptance is required before any tape node is emitted, and rejected candidates remain debug evidence rather than user diagnostics.
 
 **WASM host primitive route.** The runtime/WASM path does not add grammar
 syntax. Grammar authors still use block-bodied `@host fn` definitions,
@@ -446,7 +473,7 @@ numbers until the H owner measures them.
 
 ## §7 Benchmark and SOTA gates
 
-Every throughput SOTA gate that claims external performance names a competitor per Lock 8 (`restart/locks/14-LOCKS.md:48`). The SOTA corpus compares sonic-rs, simdjson/simd-json, lightningcss, and tree-sitter style tradeoffs (`restart/corpora/SOTA.md:12-16`, `restart/corpora/SOTA.md:35-42`, `restart/corpora/SOTA.md:64-77`, `restart/corpora/SOTA.md:103-118`). Non-throughput rows such as incremental fallback and debug trace overhead are report-only measurement gates until bench output records input hash, machine, compiler flags, warmup, and sample count. PASS-3 gates must report parse mode, trace mode, and surface under test.
+Every throughput SOTA gate that claims external performance names a competitor per Lock 8 (`restart/locks/14-LOCKS.md:48`). The SOTA corpus compares sonic-rs, simdjson/simd-json, lightningcss, and tree-sitter style tradeoffs (`restart/corpora/SOTA.md:12-16`, `restart/corpora/SOTA.md:35-42`, `restart/corpora/SOTA.md:64-77`, `restart/corpora/SOTA.md:103-118`). Non-throughput rows such as incremental fallback and debug trace overhead are report-only measurement gates until bench output records input hash, machine, compiler flags, warmup, sample count, validation mode, source ownership mode, direct/tape materialisation mode, scalar-cache policy, string-normalization policy, selected objective profile, trace mode, and surface under test.
 
 | Dataset | Baseline citation | PASS-3 gate |
 | --- | --- | --- |
@@ -456,7 +483,7 @@ Every throughput SOTA gate that claims external performance names a competitor p
 | CSS bootstrap/animate | lightningcss visitor and perf evidence (`restart/corpora/SOTA.md:103-118`, `restart/corpora/SOTA.md:134-136`) | generated visitor pruning and layout metadata |
 | BBNF grammar corpus | restart full-grammar generalization (`restart/locks/14-LOCKS.md:60`) | no per-grammar overfit |
 
-PASS-3 recommends bench reports include: borrowed/arena/owned timings, tape/direct projection timings, `pointer!` and `select!` traversal timings, visitor pruning win/loss, incremental fallback rate, and DAP trace overhead.
+PASS-3 recommends bench reports include: borrowed/arena/owned timings, `parse(&str)` prevalidation versus byte/file validation labels, source ownership mode, tape/direct projection timings, direct/tape materialisation mode, scalar-cache and string-normalization policy, selected objective profile, `pointer!` and `select!` traversal timings, visitor pruning win/loss, incremental fallback rate, and DAP trace overhead.
 
 Exact PASS-3 benchmark rows. Competitor floor + Platform columns inline the per-row attribution mandated by Lock 8 (`restart/locks/14-LOCKS.md:48` and `restart/README.md:328-334`); cross-document carry to SYNTHESIS H/J at §10 remains as insurance for any post-PASS-3 ratification.
 
@@ -489,19 +516,20 @@ Generated API budget. The +2 percent regen ceiling rows below anchor against the
 
 | Contract | Receiver | Blocker | Receiving gate |
 |---|---|---|---|
-| Tape token packing, payload arenas, span widths, child/sibling traversal, recovery/layout/debug flags, and snapshot identity. | PASS-1 / Tranche B | PASS-3 cannot prove cursor, visitor, incremental, or DAP identity. | Runtime identity tests over direct root and `ValueRef`. |
+| Tape token packing, payload arenas, span widths, child/sibling traversal, recovery/layout/debug flags, snapshot-scoped `TapeId`, red-like cursor views, and `ReparsePlan` reuse maps. | PASS-1 / Tranche B | PASS-3 cannot prove cursor, visitor, incremental, or DAP identity. | Runtime identity tests over direct root, `ValueRef`, `pointer!`, `select!`, visitor traversal, and debug trace for the same `(TapeId, node id)`. |
 | Tape as the substrate name; no public `ParseStream`. | PASS-1 / SYNTHESIS | Naming fork leaks into public APIs. | Conflict guard for `ParseStream` in public docs and code. |
 | Typed roots, three parse constructors, `DocumentView`, `ValueRef`, visitors, `VisitTypes`, diagnostic metadata, path schemas, host metadata, and fixture/bench metadata. | PASS-2 / Tranche F | Generated runtime lacks consumer-facing metadata. | PASS-3 consumer smokes from generated runtime. |
-| Consumer acceptance: emitted parse signatures compile under PASS-3 wrappers, `DocumentView` metadata feeds visitors and selectors, materialisation cost tables generated and documented. | PASS-2 / Tranche F + Tranche I | PASS-3 close on prose-only hand-off. | Three executable consumer gates pass on every extant grammar plus yaml. |
+| Consumer acceptance: emitted parse signatures compile under PASS-3 wrappers, `DocumentView` metadata feeds visitors and selectors, materialisation cost tables generated and documented with `TapeShape`, `ValueShape`, scalar-cache policy, string-normalization policy, repeated-access cost, objective vector, selected profile, and domination reason. | PASS-2 / Tranche F + Tranche I | PASS-3 close on prose-only hand-off. | Three executable consumer gates pass on every extant grammar plus yaml. |
 | WASM host primitive ABI descriptor. | PASS-2 / H.W3 + J | Host primitives cannot become new grammar syntax or hand-written packaging glue. | H.W3 records exported function names, host-call shape, marshalling rule, primitive coverage, scalar/SIMD parity, and `BBNF-HOST003` routes missing primitives. |
+| SIMD/DFA scanner verifier contract. | PASS-2 / Tranche F + H.W3 | A regex prefilter candidate could emit tape without semantic acceptance. | Exact scans prove scalar parity; prefilter candidates pass `RegexProgram`, DFA/VM, or scalar verifier before tape emission. |
 | No per-grammar declaration crates, rewrite-mode hooks, or grammar Unicode algebra APIs. | PASS-2 / SYNTHESIS | Generated surfaces reintroduce discarded extension scope. | Negative API and parser fixtures. |
 | Final crate names: `path`, `path-core`, `path-ts`, and `test-fixtures`. | SYNTHESIS / Tranche A | Legacy package names survive into greenfield docs. | Workspace crate-name check. |
 | Hardcoded grammar registry deletion. | SYNTHESIS / Tranche I close gate | Registry survives parallel to metadata. | `rg -n 'GRAMMAR_PATH_REGISTRY\|GrammarMarkerRegistry' crates/` returns zero outside generated data. |
 | CLI/LSP/DAP ownership. | SYNTHESIS / Tranche I | Old PASS-C CLI deferral leaves top-layer gap. | CLI and LSP diagnostics parity test. |
 | Performance rows integrated with PASS-1/PASS-2 outputs. | SYNTHESIS / Tranche H/J | Bench gates become narrative only. | Exact benchmark rows above appear in master plan gates. |
-| Incremental fallback gates by dataset and LSP user-facing silence policy. | PASS-1 / Tranche I | Fallbacks become an unreported workaround. | Dataset-level fallback ledger + LSP policy enforcement test. |
+| Incremental fallback gates by dataset, yaml syntax-error recovery, typed recovery placeholders, and LSP user-facing silence policy. | PASS-1 / Tranche I | Fallbacks become an unreported workaround. | Dataset-level fallback ledger + LSP policy enforcement test with `RecoveryKind` and `fallback_reason` evidence. |
 | Per-grammar feeder rows for typed root, `ValueRef`, runtime files, visitor, path schema, fixture manifest, host route. | SYNTHESIS / Architecture per-X table | All-grammar claims fall to prose. | 10-row table consumed verbatim by Architecture; columns match SYNTHESIS schema. |
-| Compiler diagnostic ledger with committed strings. | SYNTHESIS + cookbook receivers | Diagnostics drift between PASS, cookbook, and runtime. | Every code in §6b appears in cookbook table-of-contents and runtime emit tests. |
+| Compiler diagnostic ledger with committed strings, objective-profile optimizer notes, scanner verifier routing, and `TypeMismatch` / value-shape causes. | SYNTHESIS + cookbook receivers | Diagnostics drift between PASS, cookbook, and runtime. | Every code in §6b appears in cookbook table-of-contents and runtime emit tests without public `TypeFacts` or higher-rank type-pass leakage. |
 
 ## §9 KEEP / REINVENT / DISCARD summary
 

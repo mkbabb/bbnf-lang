@@ -456,7 +456,7 @@ Stub waves:
 | H.W0 | Pratt recognizer facts and BIR `PrattSpine`. | Expression grammar uses auto-detected Pratt. |
 | H.W1 | SIMD recognizer facts and `SimdScan` integration. | Literal/regex scans route through scanner kernels. |
 | H.W2 | AVX2/NEON/scalar dispatch gates. | Platform-specific tests pass on supporting hardware; tests on non-supporting hardware are skipped with a CI-readable skip-marker recording the missing capability (for example `cpu_feature: avx2_unsupported`). |
-| H.W3 | WASM V1 via wasm32 Rust binding. | WASM package parses seed grammar at <= 3x native cost on M1 Pro Safari WASM runtime; metadata records WASM runtime, host browser, and bbnf commit. |
+| H.W3 | WASM V1 via wasm32 Rust binding. | WASM package parses `css/bootstrap` on M1 Pro Safari WASM runtime within `{N}`ms (lightning-css/WASM baseline `{M}`ms on the same fixture; `{N}` and `{M}` are TBD at H.W3 measurement, owner = H.W3 lead, blocker = WASM build of lightning-css available for comparison); metadata records WASM runtime, host browser, lightning-css/WASM version, the bbnf commit, and the fixture hash. The competitor-anchored ratio honours Lock 8 (`restart/locks/14-LOCKS.md:48`); the prior `<= 3x native cost` self-reference is retired. |
 | H.W4 | Early JSON SOTA gates. | `json/twitter` <= 480us, `json/citm` <= 950us, `json/canada` <= 3.5ms on M1 Pro with metadata; final J.W1 thresholds at 380us / 750us / 2.8ms. |
 | H.W5 | Early CSS SOTA gates. | `css/bootstrap` <= 3.8ms, `css/animate` <= 1.9ms on M1 Pro with metadata; final J.W1 thresholds at 3.0ms / 1.6ms. |
 
@@ -521,7 +521,7 @@ Stub waves:
 | J.W0 | Cross-backend parity matrix for Rust, VM, WASM V1. | Parity matrix passes for seed grammars. |
 | J.W1 | Final SOTA gate and benchmark report. | JSON/CSS/SIMD targets met; misses require amendment before close. |
 | J.W2 | Public docs redo. | Docs build and examples run. |
-| J.W3 | Package readiness for public crates: confirm publication-name plan, validate `[workspace.package]` defaults, dry-run `cargo publish` for every public crate, and verify path-dep incubation does not leak to `crates.io`. | `cargo xtask publish --dry-run` passes for `bbnf`, `bbnf-cli`, `bbnf-language-server`, `bbnf-bench`, `path`, `path-core`, `path-ts`, `parse-that`, `egraph`, `egraph-derive`, `csp-solver`; private crates are unpublished. |
+| J.W3 | Package readiness for public crates: confirm publication-name plan, validate `[workspace.package]` defaults, dry-run `cargo publish` for every public crate, and verify path-dep incubation does not leak to `crates.io`. Two gates apply per Lock 11 (`restart/locks/14-LOCKS.md:60`): (i) the **stable surface** (`bbnf`, `bbnf-cli`, `bbnf-language-server`, `bbnf-bench`, `path`, `path-core`, `path-ts`) publishes unconditionally; (ii) the **incubation-cleared sister crates** (`egraph`, `egraph-derive`, `csp-solver`, `parse-that`) publish only after the stability gate clears — API has not changed across the prior tranche, downstream consumers compile against a frozen-version dry-run for one full tranche cycle, and no breaking change is queued. Crates that fail the stability gate carry their dry-run results in the J.W3 report and remain path-deps until the next J cycle. | `cargo xtask publish --dry-run` passes for the stable surface (`bbnf`, `bbnf-cli`, `bbnf-language-server`, `bbnf-bench`, `path`, `path-core`, `path-ts`) plus every incubation-cleared sister crate (`egraph`, `egraph-derive`, `csp-solver`, `parse-that`); incubation-failing sister crates remain path-deps with the failure recorded; private crates are unpublished. |
 | J.W4 | Archive and migration audit. | No stale crates/docs in production workspace. |
 | J.W5 | Restart close report. | All locks, gates, and routed punch-list items recorded. |
 
@@ -729,23 +729,31 @@ that discipline (`restart/README.md:452`). Style follows the local precepts
 
 ## 24. Carry And Friction Ledger
 
-| Item | Receiver | Blocker | Gate |
-|---|---|---|---|
-| Declaration-crate escape valve | A/D | Review form missing reason, scope, owner, or deletion path. | Metadata validator rejects `allow_declaration_crate = true` without full review fields. |
-| Layout lowering | D/F | `@layout` remains parser metadata and does not lower through `LayoutFacts` and BIR. | LayoutFacts test plus BIR `LayoutPush`/`LayoutPop` replay. |
-| Cursor skip | B/H | Runtime cannot prove empty-path and byte-skip behavior. | `__EAGER_EMPTY_PATH` and `CursorDecision::Skip` fixtures. |
-| PASS-3 consumers | F/G/I | Generated runtime omits path, visitor, diagnostics, or host metadata. | `path-core`, visitor, and language-server consumer smokes. |
-| SOTA metadata | H/J | Bench numbers lack machine/input/build metadata. | Benchmark report schema rejects incomplete rows. |
-| yaml onboarding | A/F/G/J | Future grammar requires any manual Rust registry/path/host edit. | yaml source + workspace metadata plus generated runtime only. |
-| Archive closure | A/J | `ser` or `gorgeous` remains in production workspace. | workspace membership check and migration audit. |
-| TS production | G/I/J | TS path emitter or schema produces TS without grammar names in source. | `path-ts` schema dump for the seed set; LSP TS bridge test. |
-| BD parity | F/J | BD-equivalent parity matrix not run for Rust/VM/WASM V1 backends. | `cargo xtask parity --all` matrix passes for nine seed grammars. |
-| PASS-1 reconciliation | C/D | Grammar IR, side tables, or BBNF surface drift between PASS-1 and synthesis. | Architecture §7 schema matches PASS-1 §2 enum; reconciliation noted in close report. |
-| PASS-3 API docs | G/I/J | Public docs for `pointer!`, `select!`, visitor, language-server omit committed string diagnostics. | PASS-3 carry ledger column closes; cookbook pages list every diagnostic code. |
-| Publication readiness | A/J | Crate package names, README, license, dependencies fail dry-run publish. | `cargo xtask publish --dry-run` clean for every public crate. |
-| Fixture handoff | A/G/J | `test-fixtures` lacks parity fixtures or duplicate fixtures live in old crates. | Fixture audit at J.W4; per-grammar fixture manifest column in §12.1 table. |
-| `path-ts` schema | G | TS schema does not derive from the same `path-core` semantics the Rust macro uses. | `path-ts` and `path` consume identical `path-core` AST; schema dump round-trips. |
-| WASM ABI | H/J | WASM exported ABI not specified for V1 binding. | H.W3 records exported function names and host-call shape; J.W3 dry-run publish includes WASM binding. |
+This is the single carry-truth ledger. Synthesis-sourced rows and
+migration-implementation-sourced rows live here together; the `Source` column
+distinguishes them. `restart/MIGRATION.md` §20 cross-references this ledger
+rather than duplicating receivers.
+
+| Item | Receiver | Blocker | Gate | Source |
+|---|---|---|---|---|
+| Declaration-crate escape valve | A/D | Review form missing reason, scope, owner, or deletion path. | Metadata validator rejects `allow_declaration_crate = true` without full review fields. | synthesis + migration |
+| Layout lowering | D/F | `@layout` remains parser metadata and does not lower through `LayoutFacts` and BIR. | LayoutFacts test plus BIR `LayoutPush`/`LayoutPop` replay. | synthesis |
+| Cursor skip | B/H | Runtime cannot prove empty-path and byte-skip behavior. | `__EAGER_EMPTY_PATH` and `CursorDecision::Skip` fixtures. | synthesis + migration |
+| PASS-3 consumers | F/G/I | Generated runtime omits path, visitor, diagnostics, or host metadata. | `path-core`, visitor, and language-server consumer smokes. | synthesis |
+| SOTA metadata | H/J | Bench numbers lack machine/input/build metadata. | Benchmark report schema rejects incomplete rows; benchmark host hardware profiles cite SOTA baselines and record machine metadata. | synthesis + migration |
+| yaml onboarding | A/F/G/J | Future grammar requires any manual Rust registry/path/host edit. | yaml source + workspace metadata plus generated runtime only. | synthesis |
+| Archive closure | A/J | `ser` or `gorgeous` remains in production workspace; archive destination must be outside production workspace. | Workspace membership check and migration audit; `archive/<crate>/` placement verified. | synthesis + migration |
+| TS production | G/I/J | TS path emitter or schema produces TS without grammar names in source. | `path-ts` schema dump for the seed set; LSP TS bridge test. | synthesis |
+| BD parity | F/J | BD-equivalent parity matrix not run for Rust/VM/WASM V1 backends. | `cargo xtask parity --all` matrix passes for nine seed grammars. | synthesis |
+| PASS-1 reconciliation | C/D | Grammar IR, side tables, or BBNF surface drift between PASS-1 and synthesis. | Architecture §7 schema matches PASS-1 §2 enum; reconciliation noted in close report. | synthesis |
+| PASS-3 API docs | G/I/J | Public docs for `pointer!`, `select!`, visitor, language-server omit committed string diagnostics. | PASS-3 carry ledger column closes; cookbook pages list every diagnostic code. | synthesis |
+| Publication readiness | A/J | Crate package names, README, license, dependencies fail dry-run publish. | `cargo xtask publish --dry-run` clean for every public crate. | synthesis |
+| Fixture handoff | A/G/J | `test-fixtures` lacks parity fixtures or duplicate fixtures live in old crates. | Fixture audit at J.W4; per-grammar fixture manifest column in §12.1 table. | synthesis |
+| `path-ts` schema | G | TS schema does not derive from the same `path-core` semantics the Rust macro uses. | `path-ts` and `path` consume identical `path-core` AST; schema dump round-trips. | synthesis |
+| WASM ABI | H/J | WASM exported ABI not specified for V1 binding. | H.W3 records exported function names and host-call shape; J.W3 dry-run publish includes WASM binding. | synthesis + migration |
+| Generated header fields | F | Generated header omits grammar, metadata, or Backend IR hashes. | `cargo xtask lint-generated-headers` rejects missing fields; F.W3 template gate. | migration |
+| `path-ts` package publication timing | J | `path-ts` publication forced before parity gates close. | J.W3 dry-run records `path-ts` only after J.W0 parity matrix passes; otherwise publication slips one J cycle with the failure recorded. | migration |
+| PASS-2 BIR snapshots | E/F | BIR snapshots live outside `ir::backend_ir` or fail to feed codegen import-deny tests. | Snapshots committed under `ir::backend_ir`; `BBNF-GEN001` import-deny gate consumes them at every codegen close. | migration |
 
 Cookbook and migration friction rows. Every row binds a target user, a mental
 model, a confusion point, the artefact that resolves it, and the diagnostic the

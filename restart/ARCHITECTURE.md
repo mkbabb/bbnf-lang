@@ -435,7 +435,7 @@ pipeline/src/
 passes/src/
   lib.rs
   normalize/
-  types/
+  layout/
   shapes/
   recognizers/
   extract/
@@ -789,7 +789,7 @@ The pipeline invariants are:
 | Invariant | Owner |
 |---|---|
 | Source and metadata validation happen before Grammar IR construction. | `grammar`, `pipeline` |
-| Type inference annotates Grammar IR; it does not mutate grammar syntax. | `passes::types` |
+| Type inference annotates Grammar IR; it does not mutate grammar syntax. | `passes::layout` (HM + bidirectional + CSP run as a subroutine inside layout lowering per Lock 2). |
 | Shape mining produces side tables. | `passes::shapes` |
 | Recognizer mining produces side tables and BIR hints. | `passes::recognizers` |
 | Egraph and CSP exchange facts through bridge tables. | `passes::bridge` |
@@ -865,7 +865,7 @@ Grammar IR invariants:
 | No grammar-level rewrite-mode node. | Parser rejects rewrite syntax; IR enum has no variant. |
 | Regex Unicode classes are opaque regex data. | `Regex` stores parsed regex program handles, not BBNF class algebra. |
 | Lookbehind is bounded before Backend IR. | Type/inference pass proves or rejects unbounded lookbehind. |
-| Host calls resolve through generic primitives or declared `@host fn` signatures. | `host::types` and `passes::types`. |
+| Host calls resolve through generic primitives or declared `@host fn` signatures. | `host::types` and `passes::layout` (host signatures unify inside the layout-lowering subroutine per Lock 2). |
 
 ### 7.2 Backend IR
 
@@ -988,6 +988,55 @@ read `LayoutFacts` instead. Public side tables are:
 | `CostFacts` | Cost model. | Backend IR extraction, benchmark report. | Public. |
 | `RecoveryFacts` | Error pass. | `ErrorRecover`, LSP diagnostics. | Public. |
 | `TypeFacts` | HM + bidirectional checker (internal to `passes::layout`). | `passes::layout` only. | Internal subroutine artefact; not exported across pass boundaries. |
+
+### 7.4 Diagnostic Vocabulary
+
+The diagnostic codes the codebase commits to are catalogued here. PASS-1
+contributes the lookbehind-width clause (`restart/audit/pass-1-substrate/PASS-1.md:84-121`),
+PASS-2 contributes the codegen and lifetime clauses
+(`restart/audit/pass-2-codegen/PASS-2.md:533-538`), PASS-3 contributes the
+runtime, host, layout, and pointer clauses
+(`restart/audit/pass-3-runtime/PASS-3.md:352-366`), and Lock 14 contributes
+the metadata/onboarding clauses (`restart/locks/14-LOCKS.md:69-72`). The
+table below is the consolidated catalogue; MASTER-PLAN §24 cookbook table
+references this catalogue rather than re-enumerating codes.
+
+| Code | Site | Meaning |
+|---|---|---|
+| `BBNF-LIFETIME-ESCAPE` (alias `BBNF-LIFE001`) | `bbnf` parse API. | Borrow lifetime exceeds source lifetime; use `parse_owned` or extend the source borrow. |
+| `BBNF-ARENA-MISMATCH` (alias `BBNF-LIFE002`) | `parse_in`. | Caller-provided arena lifetime does not match the parse arena. |
+| `BBNF-LIFE003` | Lookbehind width analysis. | Lookbehind `\|<` width is unbounded; constrain the predicate to a finite width or move the assertion into a regex literal. |
+| `BBNF-LIFE009` | Generated owned/borrowed constructors. | Emitted constructor violates the lifetime surface contract. |
+| `BBNF-VISITOR-MUTATION-OUTSIDE-ENTRY` (alias `BBNF-VISIT002`) | `runtime/visitor`. | Direct field mutation rejected; mutations route through the read-write visitor entry. |
+| `BBNF-VISIT001` | Visitor declaration check. | Visitor declares no kinds matching the grammar; warning only. |
+| `BBNF-VISIT003` | Visitor recovery. | Recovery nodes silently skipped by the visitor; warning. |
+| `BBNF-LAYOUT-CONFLICT` (alias `BBNF-LAYOUT002`) | BIR `LayoutPush`/`LayoutPop`. | Conflicting layout policy. |
+| `BBNF-LAYOUT-UNCLOSED` | BIR `LayoutPop`. | Unclosed layout scope reaches the BIR boundary. |
+| `BBNF-LAYOUT001` | `@layout` lowering. | `@layout` directive is unused by the generated formatter; warning. |
+| `BBNF-LOOKBEHIND-WIDTH` (PASS-1 string `BBNF1004`) | Grammar IR `Lookbehind`. | Unbounded lookbehind reaches Grammar IR; rejected before Backend IR. |
+| `BBNF-PRATT-NOT-APPLIED` (alias `BBNF-OPT001`) | `passes::recognizers`. | Pratt detection ran but rejected the rule; cost model declined. |
+| `BBNF-SIMD-NOT-SELECTED` (alias `BBNF-OPT002`) | `passes::recognizers`. | SIMD detection ran but rejected the rule; dispatch cost outweighs the win. |
+| `BBNF-METADATA-MISSING-GRAMMAR` (alias `BBNF-GRAMMAR001`) | `pipeline::workspace`. | Grammar source declared but no `[workspace.metadata.bbnf.grammars.<name>]` block; Lock 14 requires both surfaces. |
+| `BBNF-GRAMMAR-NAME-IN-GENERIC-CRATE` | Lock 14 lint. | A generic crate hardcodes a grammar name; `cargo xtask lint-no-hardcoded-grammars` enforces. |
+| `BBNF-POINTER-UNKNOWN-SEGMENT` (alias `BBNF-POINTER001`) | `path` macro. | Path segment does not match the grammar schema. |
+| `BBNF-POINTER-GRAMMAR-MISMATCH` (alias `BBNF-POINTER002`) | `path` macro. | Path expression refers to a different grammar than the inferred root. |
+| `BBNF-POINTER003` | `path` macro. | Path terminal type unknown to the macro; regenerate to refresh the schema. |
+| `BBNF-HOST001` | `passes::layout` host signature unification. | Host function body cannot satisfy the inferred signature. |
+| `BBNF-HOST002` | `passes::layout` chain composition. | Chain step does not accept the previous step's output type. |
+| `BBNF-HOST003` | WASM lowerer. | Host chain cannot lower to WASM; primitive missing in WASM ABI. |
+| `BBNF-RECOVERY*` | Error pass. | `@error` directive recovery codes; emitted by `RecoveryFacts` and routed through `ErrorRecover` and LSP diagnostics. |
+| `BBNF-GEN001` (alias `BBNF-CG001`) | Lowerer import-deny check. | Lowerer imports Grammar IR; only the BIR producer pass may consume Grammar IR. |
+| `BBNF-GEN014` | Generated LOC budget. | Generated LOC exceeds the per-grammar or aggregate +2 percent budget. |
+| `BBNF-CODEGEN021` | Regen equality. | BIR snapshot changed without committed generated output. |
+| `BBNF-CODEGEN033` | Runtime template metadata. | Template lacks path, visitor, or diagnostic metadata. |
+| `BBNF-SEM040` | BIR validation. | Unbounded lookbehind reached BIR despite Grammar IR rejection (last-line guard). |
+
+The verbatim diagnostic strings for each code live with the producer:
+`restart/audit/pass-2-codegen/PASS-2.md:533-538` for the codegen and BIR
+codes; `restart/audit/pass-3-runtime/PASS-3.md:352-366` for the runtime,
+host, layout, pointer, and visitor codes. The catalogue here binds
+identifiers and producer sites; downstream cookbooks reference identifiers
+and let consumers inspect the producer for the verbatim string.
 
 ## 8. BBNF Language Surface
 

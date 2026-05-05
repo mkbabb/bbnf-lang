@@ -234,7 +234,7 @@ before editing files.
 |---|---|---|---|---|
 | IR IDs/types | `ir/src/grammar_ir`, `ir/src/backend_ir` | KEEP-MODIFY/REPLACE | Two IRs are final architecture. | README two IRs (`restart/README.md:104-118`). |
 | Strategy registry | none | ABROGATE-DELETE | Hardcoded grammar strategy violates Lock 14. | CENSUS leaks (`restart/corpora/CENSUS.md:103-122`). |
-| Type facts | `passes/src/types`, `ir/src/side_tables` | ABROGATE-MOVE/KEEP-MODIFY | HM + bidirectional + CSP. | README type system (`restart/README.md:258-268`). |
+| Type facts | `passes/src/layout` (subroutine), `ir/src/side_tables` (`LayoutFacts`) | ABROGATE-MOVE/KEEP-MODIFY | HM + bidirectional + CSP run inside layout lowering per Lock 2; `TypeFacts` is internal scratch, `LayoutFacts` is the public side-table. | README type system (`restart/README.md:258-268`); Lock 2 (`restart/locks/14-LOCKS.md:36`). |
 | Shape facts | `passes/src/shapes`, `ir/src/side_tables` | ABROGATE-MOVE/KEEP-MODIFY | Direct/value/path consumers. | PASS-1 side-table contract (`restart/audit/pass-1-substrate/PASS-1.md:24-42`). |
 | Recognizer facts | `passes/src/recognizers` | ABROGATE-MOVE/KEEP-MODIFY | Pratt/SIMD auto-detection. | Lock 10 (`restart/locks/14-LOCKS.md:52`). |
 | VM/debug | `vm` | ABROGATE-MOVE/REPLACE | VM replays BIR, not old IR. | PASS-1 VM scope (`restart/audit/pass-1-substrate/PASS-1.md:46-61`). |
@@ -385,7 +385,7 @@ responsibilities (`restart/corpora/MODULES.md:264-505`).
 | Grammar-like IR types | KEEP-MODIFY | `ir/src/grammar_ir`. |
 | Backend/output IR pieces | ABROGATE-REPLACE | `ir/src/backend_ir` with PASS-2 23 variants. |
 | Strategy registries with grammar names | ABROGATE-DELETE | Metadata-derived profiles and side tables. |
-| Type/checking facts | KEEP-MODIFY/ABROGATE-MOVE | `passes/src/types`, `ir/src/side_tables`. |
+| Type/checking facts | KEEP-MODIFY/ABROGATE-MOVE | `passes/src/layout` (HM + bidirectional + CSP subroutine), `ir/src/side_tables` (`LayoutFacts`). |
 | Shape/mining facts | KEEP-MODIFY/ABROGATE-MOVE | `passes/src/shapes`, `passes/src/recognizers`. |
 | Egraph bridge code | KEEP-MODIFY/ABROGATE-MOVE | `passes/src/bridge`, generic `egraph`. |
 | CSP-facing strategy code | KEEP-MODIFY/ABROGATE-MOVE | `passes/src/extract`, `csp-solver`, `cost-model`. |
@@ -771,19 +771,16 @@ deferred work, and public diagnostics are shared by CLI and LSP.
 
 ## 20. Unresolved Migration Punch List
 
-These items are not open architecture debates. They are implementation details
-that tranche A or later tranches must pin down with code and tests.
-
-| Item | Owner tranche | Constraint |
-|---|---|---|
-| Exact generated header fields | F | Must include grammar, metadata, and Backend IR hashes. |
-| Rare declaration-crate review form | A/D | Must require reason, owner, and deletion path. |
-| `path-ts` package publication timing | J | Must not force TypeScript production before parity gates. |
-| WASM exported ABI details | H | V1 goes through wasm32 Rust binding. |
-| Benchmark host hardware profiles | H/J | Must cite SOTA baselines and record machine metadata. |
-| Archive destination for `ser`/`gorgeous` | A | Must be outside production workspace. |
-| PASS-2 BIR snapshots | E/F | Must live under `ir::backend_ir` and feed codegen import-deny tests. |
-| Lock 3 cursor gates | B/H | Must include `__EAGER_EMPTY_PATH` and `CursorDecision::Skip`. |
+Migration-implementation receivers are tracked at `restart/MASTER-PLAN.md` §24
+(Carry and Friction Ledger) with `Source: migration` or
+`Source: synthesis + migration` tags. The eight migration-sourced items —
+exact generated header fields, declaration-crate review form, `path-ts`
+publication timing, WASM exported ABI, benchmark host hardware profiles,
+archive destination for `ser`/`gorgeous`, PASS-2 BIR snapshots, and Lock 3
+cursor gates — appear in that consolidated ledger; this section retains its
+heading for cross-document anchoring but no longer carries a separate table.
+The single carry-truth principle holds: one ledger, two sources, one set of
+receivers.
 
 ## 21. Migration Close
 

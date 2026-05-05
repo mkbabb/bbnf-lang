@@ -1,0 +1,504 @@
+# Topic 6 - Tape encoding + direct-to-struct union design
+
+## §1 — Settled position in the restart
+
+- Scope note: this artefact covers Topic 6, "Tape encoding + direct-to-struct union design."
+- Contract source: `restart/research/INDEX.md:20-34` requires §1 through §7, path:line restart citations, primary SOTA citations, convergence, divergence, refinements, adversarial findings, and surgery proposals.
+- Topic source: `restart/research/INDEX.md:107-119` binds Topic 6 to Lock 1, README §8 substrate, Architecture §11, Lock 1 reframe, PASS-3 §6 runtime crate tree, and the JSON-parser source set.
+- Adversarial source: `restart/research/INDEX.md:149-153` requires at least one adversarial finding or a clear rationale for an empty §6.
+- Voice source: `restart/research/INDEX.md:155-157` requires calibrated prose, path:line citations, no placeholder wording, no quick solutions, no legacy code uncontested.
+- Style source: `docs/precepts/instructions/STYLE.md:5-16` requires pragmatic, economical, clear writing.
+- Style source: `docs/precepts/instructions/STYLE.md:98-102` rejects unsubstantiated comparison claims and requires evidence when performance claims appear.
+- Lessons source: `docs/precepts/instructions/LESSONS-LEARNED.md:17-26` says substrate changes need same-wave consumers or explicit brittleness windows.
+- Lessons source: `docs/precepts/instructions/LESSONS-LEARNED.md:65-72` says every externally visible side effect has one writer or named arbiter.
+- Lessons source: `docs/precepts/instructions/LESSONS-LEARNED.md:74-74` begins the producer/consumer-gate lesson consumed below.
+- Settled claim 1: "`The greenfield's substrate is a proper tape + direct-to-struct union, called **tape**.`" (`restart/README.md:285-287`)
+- Settled claim 2: "`Tape is:`" a "Contiguous parsed-token stream" and "Typed-value-borrow target" (`restart/README.md:289-292`).
+- Settled claim 3: tape carries "token discriminant", source span, payload offset, and structural pointer (`restart/README.md:294`).
+- Settled claim 4: typed values borrow into tape with `tape: &'i Tape<'i>` and `idx: u32` (`restart/README.md:296-305`).
+- Settled claim 5: materialisation for `as_str()` indexes the tape, slices the source span, and returns `&'i str` (`restart/README.md:308`).
+- Settled claim 6: materialisation for `as_i64()` "does the same plus an integer parse on the slice" (`restart/README.md:308`).
+- Settled claim 7: object and array iteration walks tape tokens until a structural pointer finds the close (`restart/README.md:308`).
+- Settled claim 8: `&'i str` source borrow is primary, tape borrows from the same lifetime, arena parse and owned parse are escape hatches (`restart/README.md:310`).
+- Settled claim 9: PASS-3 specifies tape layout, typed-value-borrow shape, and materialisation cost (`restart/README.md:312`).
+- Settled claim 10: tape lives at `runtime/src/tape/`; generated per-grammar runtime modules borrow into tape via codegen-emitted accessors (`restart/README.md:314`).
+- Settled claim 11: restart wants "No orthogonal codepath; no parallel substrate; no Vec<OpenFrame> ladder" (`restart/README.md:314`).
+- Settled claim 12: restart wants "One representation; one materialisation surface; one Visitor pattern" (`restart/README.md:314`).
+- Settled claim 13: direct typed-property mutation is unsound under slice-borrow, so mutation routes through the visitor (`restart/README.md:316-318`).
+- Settled claim 14: Lock 1 says "Tape is the substrate, properly unioned with direct-to-struct; columnar SoA is dead; orthogonal codepaths and parallel substrates are dead" (`restart/locks/14-LOCKS.md:34`).
+- Settled claim 15: Lock 1 defines tape as "contiguous parsed-token-stream-with-payload-arena" unioned with typed values that borrow `&'i Tape<'i>` plus index (`restart/locks/14-LOCKS.md:34`).
+- Settled claim 16: Lock 1 identifies the prior failure as orthogonal codepaths, type ambivalence, substrate-first/consumer-later, and dormant columnar SoA (`restart/locks/14-LOCKS.md:34`).
+- Settled claim 17: Lock 1 requires same-wave consumer wiring plus the direct-to-struct union (`restart/locks/14-LOCKS.md:34`).
+- Settled claim 18: Architecture's conflict ledger says tape is the substrate and ParseStream is stale as a runtime term (`restart/ARCHITECTURE.md:21-22`).
+- Settled claim 19: Architecture says `runtime` owns tape, direct-to-struct builder support, generated grammar modules, visitors, and document views (`restart/ARCHITECTURE.md:52`).
+- Settled claim 20: Architecture says BIR includes `SpanMark`, `TapeEmit`, `DirectBuild`, `ValueProject`, `PathEval`, and `DebugMark` (`restart/ARCHITECTURE.md:897-902`).
+- Settled claim 21: Architecture says `TapeEmit` appends tape tokens and `DirectBuild` builds a typed direct view that "must share tape spans" (`restart/ARCHITECTURE.md:930-931`).
+- Settled claim 22: Architecture's BIR invariant says "Tape and direct-to-struct are one materialization strategy" and schedules `TapeEmit` and `DirectBuild` together from side tables (`restart/ARCHITECTURE.md:965-970`).
+- Settled claim 23: Architecture says `ShapeFacts` is produced by shape mining and consumed by the direct builder, Value API, and path typing (`restart/ARCHITECTURE.md:985-989`).
+- Settled claim 24: Architecture says tape and direct-to-struct are a single substrate family (`restart/ARCHITECTURE.md:1170-1175`).
+- Settled claim 25: Architecture says `runtime/src/tape` owns token representation, append-only builder, span linkage, borrowed read views, and trace hooks (`restart/ARCHITECTURE.md:1177-1187`).
+- Settled claim 26: Architecture's tape invariants include append-only checkpoints, bounded rollback without OpenFrame stack clone, source-slice borrowing, and direct views pointing into tape (`restart/ARCHITECTURE.md:1189-1196`).
+- Settled claim 27: Architecture says direct builders do not bypass tape and are scheduled with `TapeEmit` and `DirectBuild` from Backend IR (`restart/ARCHITECTURE.md:1198-1201`).
+- Settled claim 28: Architecture says the direct value is a typed view/projection over the same parse event stream (`restart/ARCHITECTURE.md:1200-1203`).
+- Settled claim 29: Architecture says generated per-grammar runtime files live under `runtime/src/grammars/<grammar>/` and are template-emitted (`restart/ARCHITECTURE.md:1204-1218`).
+- Settled claim 30: Architecture performance targets require explicit SOTA gates and include simdjson-class throughput owned by `simd-scan`, `runtime::tape`, and `codegen::simd` (`restart/ARCHITECTURE.md:1239-1257`).
+- Settled claim 31: Architecture exact rows include `json/twitter`, `json/citm`, `json/canada`, and `simd/structural_scan` competitor baselines and metadata requirements (`restart/ARCHITECTURE.md:1262-1271`).
+- Settled claim 32: PASS-2 says "`Tape/direct-to-struct is one materialisation plan`" (`restart/audit/pass-2-codegen/PASS-2.md:36`).
+- Settled claim 33: PASS-2 says every rule has a `TapeShape` and `ValueShape` (`restart/audit/pass-2-codegen/PASS-2.md:36`).
+- Settled claim 34: PASS-2 says typed documents/views borrow `&'i Tape<'i>` plus node id (`restart/audit/pass-2-codegen/PASS-2.md:36`).
+- Settled claim 35: PASS-2 says the Rust lowerer emits parser functions, TapeBuilder operations, typed views, scanner constants, Pratt tables, host chain calls, diagnostics, and generated registry data from BIR (`restart/audit/pass-2-codegen/PASS-2.md:38`).
+- Settled claim 36: PASS-3 says direct structs and tape are not competing products (`restart/audit/pass-3-runtime/PASS-3.md:80`).
+- Settled claim 37: PASS-3 says direct roots are what normal users author against (`restart/audit/pass-3-runtime/PASS-3.md:80`).
+- Settled claim 38: PASS-3 says tape-backed `ValueRef` is shared by `pointer!`, `select!`, visitors, debugger, CLI projections, LSP, and playground inspection (`restart/audit/pass-3-runtime/PASS-3.md:80`).
+- Settled claim 39: PASS-3 says generated metadata is the only validation surface for `pointer!` and `select!` (`restart/audit/pass-3-runtime/PASS-3.md:133`).
+- Settled claim 40: PASS-3 says surfaces cannot close on prose-only handoffs and require executable consumer gates (`restart/audit/pass-3-runtime/PASS-3.md:135-141`).
+- Settled claim 41: PASS-3 requires stable document/snapshot identity, stable node-kind IDs, compact spans and payload refs, child/sibling traversal, recovery/layout/debug flags, and optional trace events (`restart/audit/pass-3-runtime/PASS-3.md:147-156`).
+- Settled claim 42: PASS-3's illustrative `Tape<'input>` stores source, tokens, payload arena, and diagnostics (`restart/audit/pass-3-runtime/PASS-3.md:160-166`).
+- Settled claim 43: PASS-3's illustrative `TapeToken` stores kind, flags, start, end, payload, and sibling_skip (`restart/audit/pass-3-runtime/PASS-3.md:168-175`).
+- Settled claim 44: PASS-3's illustrative `ValueRef` stores `tape`, `index`, and phantom kind (`restart/audit/pass-3-runtime/PASS-3.md:177-181`).
+- Settled claim 45: PASS-3 says the layout is not a PASS-1 mandate, but the semantics are a user-surface contract (`restart/audit/pass-3-runtime/PASS-3.md:184`).
+- Settled claim 46: PASS-3 says PASS-2 may build direct structs first or tape first per grammar, while every public node has tape identity and every tape node can project through `ValueRef` (`restart/audit/pass-3-runtime/PASS-3.md:184`).
+- Settled claim 47: PASS-3 says debug and DAP must reuse tape identity, with every breakpoint, step, hover, and trace carrying `SnapshotId`, `TapeId`, node kind, and source span when a tape node exists (`restart/audit/pass-3-runtime/PASS-3.md:186`).
+- Settled claim 48: PASS-3 crate tree puts `tape/` and `value/` under `runtime/src/{tape,value}/` and generated grammar surfaces outside `bbnf/src/` siblings (`restart/audit/pass-3-runtime/PASS-3.md:255-271`).
+- Settled claim 49: PASS-3 benchmark gates include borrowed parse, tape cursor, direct root, pointer traversal, selector scan, and array-heavy parse (`restart/audit/pass-3-runtime/PASS-3.md:447-459`).
+- Settled claim 50: V4 hardening says "Tape/direct union holds" and no re-draft threshold is met (`restart/audit/hardening/HARDENING-CONSOLIDATED-V4.md:104-112`).
+- Settled claim 51: V5.1 PASS-3 verification says one visible identity is shared by direct roots, tape, `ValueRef`, visitors, debugger, LSP, and playground (`restart/audit/hardening/HARDENING-PASS-3-V5.1.md:43-48`).
+- Operational interpretation: "union" cannot mean two independently authoritative parsed products.
+- Operational interpretation: "union" means the tape is the identity-bearing substrate and direct-to-struct values are generated projections over node ids in that substrate.
+- Operational interpretation: build order is an implementation choice because PASS-3 allows direct-first or tape-first, provided the visible invariant remains every public node has tape identity (`restart/audit/pass-3-runtime/PASS-3.md:184`).
+- Operational interpretation: both representations co-exist at runtime only in the sense that typed views and tape tokens are simultaneously addressable from one parse snapshot.
+- Operational interpretation: one representation materialises to the other only at API boundaries; typed accessors project from tape/source/payload, while `ValueRef` projects from the same node id space.
+- Operational interpretation: scalar caching is allowed only when declared by `TapeShape`/`ValueShape` and owned by the single shape contract.
+- Operational interpretation: a typed field that carries an owned copy of a string would violate the slice-borrow default unless it is in `parse_owned` or a declared escape.
+- Operational interpretation: a typed field that carries a parsed integer can be valid if the tape payload owns that scalar and every projection reads the same payload slot.
+- Operational interpretation: `TapeShape` names the event/token/payload contract; `ValueShape` names the generated Rust surface over it.
+- Operational interpretation: the union boundary is the `(TapeId, node id, kind, span)` tuple, not a free conversion between two trees.
+- Operational interpretation: the prior OpenFrame failure is avoided only if rollback, visitor, path, debug, and direct root all consume the same tape identity.
+- Section result: the restart position is coherent if direct-to-struct is treated as a typed projection and scalar-cache overlay, not as an independently owned DOM.
+
+## §2 — SOTA literature deep-dive
+
+- Source count: 9 verified primary or official sources are used in this section.
+- Provenance gap count: 1 requested comparative study could not be verified from primary sources and is routed to §6.
+- P1: Langdale and Lemire, "Parsing Gigabytes of JSON per Second", arXiv/VLDB, `https://arxiv.org/abs/1902.08318`, HTML verification `https://ar5iv.labs.arxiv.org/html/1902.08318v7`.
+- P1 load-bearing claim: simdjson uses two passes rather than top-down recursive descent (`P1`, HTML lines 77-95).
+- P1 load-bearing claim: stage 1 validates character encoding and identifies node/structural locations into an integer index array (`P1`, lines 81-86).
+- P1 load-bearing claim: stage 2 processes nodes and structural characters, validates strings/numbers/arrays/objects, and writes document order to tape (`P1`, lines 89-112).
+- P1 load-bearing claim: the tape has a word for each node, plus start/end words for objects and arrays (`P1`, lines 93-95).
+- P1 load-bearing claim: braces and brackets are annotated to jump to their matching end without reading content (`P1`, lines 94-105).
+- P1 load-bearing claim: strings are normalized into a secondary string buffer and represented on tape by an offset (`P1`, lines 109-112).
+- P1 design tradeoff: numbers are parsed eagerly into integers or floats during stage 2, which makes numeric access from the tape cheap after parse (`P1`, lines 89-112).
+- P1 design tradeoff: SIMD stage 1 pays uniform scan cost to avoid branch-heavy byte-by-byte parsing (`P1`, lines 79-87).
+- P1 pressure on restart: README's `as_i64()` phrasing cannot be treated as constant-time unless the tape stores parsed numeric payloads.
+- P1 pressure on restart: `TapeShape` must say whether numeric payload is source-span-only or parsed-scalar-backed.
+- P1 pressure on restart: string materialisation must distinguish raw source slice, normalized string, and escaped-string allocation.
+- P2: simdjson official tape documentation, `https://simdjson.org/api/2.0.0/md_doc_tape.html`.
+- P2 load-bearing claim: simdjson parses a JSON document to a tape, an array of 64-bit values in document order (`P2`, lines 6-10).
+- P2 load-bearing claim: tape elements use an 8-bit type code plus a 56-bit payload (`P2`, lines 77-80).
+- P2 design tradeoff: simdjson prefers regular 64-bit tape units over saving memory (`P2`, lines 79-80).
+- P2 load-bearing claim: integers and floats take two 64-bit tape elements and store numeric values literally (`P2`, lines 88-98).
+- P2 load-bearing claim: strings live on a separate string tape with length header and UTF-8 null termination (`P2`, lines 109-113).
+- P2 load-bearing claim: arrays and objects carry forward/backward jump information so the parser can skip subtrees (`P2`, lines 114-133).
+- P2 convergence: restart's `sibling_skip` field is the same class of structural-skip pointer as simdjson's object/array jump payload (`restart/audit/pass-3-runtime/PASS-3.md:168-175`, `P2` lines 114-133).
+- P2 divergence: simdjson tape is an untyped JSON DOM substrate; bbnf wants per-grammar generated `ValueShape` and typed Rust roots.
+- P3: simdjson official On-Demand design and basics, `https://simdjson.org/api/3.0.0/md_doc_ondemand_design.html` and `https://simdjson.org/api/0.8.0/md_doc_ondemand.html`.
+- P3 load-bearing claim: On-Demand skips unused fields and values, then parses a value only when converted to a concrete type (`P3`, design lines 94-95).
+- P3 load-bearing claim: programmer-specified type avoids branch mispredictions around type determination (`P3`, design line 95).
+- P3 load-bearing claim: a document is an iterator over JSON text rather than a fully parsed JSON value (`P3`, basics lines 65-67).
+- P3 load-bearing claim: JSON text and parser must remain alive while the document is in use (`P3`, basics lines 67-72).
+- P3 load-bearing claim: values can only be parsed once in the On-Demand iterator model (`P3`, basics lines 76-78).
+- P3 load-bearing claim: `unescaped_key()` returns a `std::string_view` tied to the parser instance, and some key paths intentionally compare raw bytes (`P3`, design lines 602-604).
+- P3 load-bearing claim: official docs recommend core simdjson when fully validating external inputs and arbitrary navigation matter (`P3`, design lines 702-707).
+- P3 design tradeoff: On-Demand obtains speed from forward-only state and selective conversion.
+- P3 pressure on restart: bbnf cannot import forward-only "parse once" semantics into `ValueRef`, because `pointer!`, `select!`, visitors, debug, LSP, and playground all share repeatable tape identity (`restart/audit/pass-3-runtime/PASS-3.md:80`, `restart/audit/pass-3-runtime/PASS-3.md:186`).
+- P3 convergence: bbnf can import the late conversion idea for scalar/string payloads where the tape node remains stable.
+- P4: Keiser and Lemire, "Validating UTF-8 In Less Than One Instruction Per Byte", arXiv, `https://arxiv.org/abs/2010.03090`, HTML verification `https://ar5iv.labs.arxiv.org/html/2010.03090`.
+- P4 provenance note: the requested "Lemire & Langdale 2020 UTF-8" tuple appears inaccurate for this title; the verified paper is by John Keiser and Daniel Lemire.
+- P4 load-bearing claim: UTF-8 must be validated on ingestion and invalid UTF-8 is a security risk (`P4`, lines 15-18).
+- P4 load-bearing claim: most systems validate UTF-8 through branch-heavy sequences, while SIMD enables faster validation (`P4`, lines 19-25).
+- P4 load-bearing claim: a validator must reject too-long, too-short, overlong, too-large, surrogate, and malformed byte sequences (`P4`, lines 70-95).
+- P4 load-bearing claim: the lookup algorithm validates many bytes at once and carries an error register, avoiding branches until the final check (`P4`, lines 218-225).
+- P4 convergence: a tape scanner that accepts bytes or files should put UTF-8 validation in the scan/ingestion path, not in every `as_str()` call.
+- P4 divergence: `parse(&'i str)` enters after Rust has already accepted UTF-8; byte-oriented parse entry points need the explicit validation gate.
+- P5: sonic-rs official LazyValue docs/source, `https://docs.rs/sonic-rs/latest/src/sonic_rs/lazyvalue/value.rs.html`.
+- P5 load-bearing claim: `LazyValue` wraps unparsed raw JSON text borrowed from the origin JSON (`P5`, lines 96-99).
+- P5 load-bearing claim: examples state selected values are not parsed and raw JSON can be retrieved (`P5`, lines 106-124).
+- P5 load-bearing claim: `LazyValue<'a>` can only be deserialized as borrowed; owned use routes to `OwnedLazyValue` (`P5`, lines 128-131).
+- P5 load-bearing claim: `LazyValue` stores a raw `JsonSlice<'a>` plus an `Inner` state with escape status and an atomic unescaped pointer (`P5`, lines 193-203).
+- P5 load-bearing claim: `as_str()` returns a borrowed subslice for unescaped strings and lazily parses/allocates when escaping requires it (`P5`, lines 360-374).
+- P5 load-bearing claim: numeric access calls `from_str(self.as_raw_str())`, so numeric materialisation is lazy and text-driven (`P5`, lines 352-358).
+- P5 design tradeoff: sonic-rs's lazy representation is raw-slice-based rather than tape-node-based.
+- P5 convergence: restart's slice-borrow and lazy materialisation story matches sonic-rs for strings.
+- P5 divergence: sonic-rs `LazyValue` is not a full tape; bbnf's `ValueRef` must carry node ids, structural traversal, diagnostics, path schema, and visitors.
+- P6: yyjson official data structures docs, `https://ibireme.github.io/yyjson/doc/doxygen/html/data-structures.html`.
+- P6 load-bearing claim: each immutable JSON value is a `yyjson_val` with a 64-bit tag and a union payload (`P6`, lines 26-70).
+- P6 load-bearing claim: low tag bits store type and high tag bits store size (`P6`, lines 69-72).
+- P6 load-bearing claim: an immutable document stores all strings in one contiguous memory area, unescaped in place and null-terminated (`P6`, lines 73-77).
+- P6 load-bearing claim: immutable document values live in another contiguous memory area, and object/array containers store enough information for traversal (`P6`, lines 81-82).
+- P6 load-bearing claim: mutable values add a `next` pointer and object/array children form a circular linked list (`P6`, lines 88-145).
+- P6 load-bearing claim: values share the lifetime of their document and cannot be freed independently (`P6`, lines 152-156).
+- P6 convergence: bbnf's tape lifetime contract matches yyjson's document-owned value lifetime, translated into Rust borrowing.
+- P6 divergence: yyjson separates immutable compact document from mutable linked document; bbnf chooses immutable borrowed parse plus visitor-mediated mutation through snapshot semantics.
+- P7: yyjson official API docs, `https://ibireme.github.io/yyjson/doc/doxygen/html/api.html`.
+- P7 load-bearing claim: yyjson returns immutable documents/values when reading and mutable documents/values when building (`P7`, lines 21-31).
+- P7 load-bearing claim: yyjson read APIs accept UTF-8 data or files and return NULL on invalid input (`P7`, lines 175-185).
+- P7 load-bearing claim: read options allow const input when `YYJSON_READ_INSITU` is absent (`P7`, lines 283-302).
+- P7 load-bearing claim: `YYJSON_READ_INSITU` lets the reader modify and use input data for string values, and the caller must retain padded input until the doc is freed (`P7`, lines 516-542).
+- P7 load-bearing claim: default reading reports invalid UTF-8 and non-standard number/syntax features as errors (`P7`, lines 509-515).
+- P7 load-bearing claim: yyjson performs strict UTF-8 validation by default and warns that invalid Unicode flags can introduce security risks (`P7`, lines 3280-3289).
+- P7 convergence: bbnf's borrowed parse should remain strict by default.
+- P7 divergence: yyjson's in-situ mode is destructive; bbnf's `parse(&'i str)` cannot mutate input.
+- P8: RapidJSON official DOM and in-situ docs, `https://rapidjson.org/md_doc_dom.html`.
+- P8 load-bearing claim: RapidJSON parse flags include in-situ destructive parsing, validation flags, iterative parsing, stop-when-done, full-precision number parsing, comments, trailing commas, and numbers-as-strings (`P8`, lines 126-140).
+- P8 load-bearing claim: by default, same-encoding DOM parsing does not validate encoding unless a flag is used (`P8`, lines 247-253).
+- P8 load-bearing claim: in-situ parsing decodes strings where they are stored, replacing escapes and inserting null terminators (`P8`, lines 188-207).
+- P8 load-bearing claim: in-situ parsing requires mutable `char*` input and leaves DOM strings with lifetimes tied to the input buffer (`P8`, lines 207-237).
+- P8 load-bearing claim: in-situ parsing reduces allocation and copying and can improve cache coherence (`P8`, lines 239-246).
+- P8 divergence: bbnf's primary borrowed parse surface is immutable and lifetime-checked, so RapidJSON in-situ is an opt-in owned/mutable-buffer pattern at most.
+- P8 pressure: direct-to-struct deserialization use cases benefit from in-situ-style string avoidance, but Rust `&str` requires non-destructive slicing.
+- P9: RapidJSON official `GenericValue` and internals docs, `https://rapidjson.org/classrapidjson_1_1_generic_value.html`, `https://rapidjson.org/md_doc_internals.html`.
+- P9 load-bearing claim: `GenericValue` is a variant type supporting JSON value types (`P9`, class lines 193-204).
+- P9 load-bearing claim: constructors distinguish constant strings that are not copied from copy strings that allocate (`P9`, class lines 97-109).
+- P9 load-bearing claim: `Data` is a union containing string, short string, number, object, array, and flags (`P9`, union lines 4-18).
+- P9 load-bearing claim: RapidJSON stores string, object, array, and number payloads in a compact value layout with a 32-bit flags field (`P9`, internals lines 53-110).
+- P9 load-bearing claim: short-string optimization stores short strings inside the `Value` storage and improves memory/cache behavior (`P9`, internals lines 111-121).
+- P9 convergence: bbnf direct values should treat cache size and field locality as first-class cost-model facts.
+- P9 divergence: RapidJSON's untyped variant is user-visible; bbnf's typed roots should expose grammar-derived structs/enums and keep variant detail in `ValueRef`.
+- G1: requested Hubbard et al. 2020 comparative study.
+- G1 provenance result: searches for the exact title, title fragments, author plus title, and local corpus references produced only the research index mention.
+- G1 disposition: do not cite as evidence; route as a provenance gap in §6.
+
+## §3 — Convergence points
+
+- C1: Restart and simdjson converge on tape as a document-order, cache-local structural substrate.
+- C1 restart evidence: "Contiguous parsed-token stream" and SIMD-friendly scan are explicit (`restart/README.md:289-292`).
+- C1 SOTA evidence: simdjson stores nodes in document order in an array of 64-bit tape values (`P2`, lines 6-10).
+- C1 fold consequence: keep the name `tape`; do not revive `ParseStream` for runtime identity.
+- C2: Restart and simdjson converge on skip pointers for containers.
+- C2 restart evidence: PASS-3 `TapeToken` includes `sibling_skip` (`restart/audit/pass-3-runtime/PASS-3.md:168-175`).
+- C2 SOTA evidence: simdjson object/array tape elements carry payloads that skip to matching close (`P2`, lines 114-133).
+- C2 fold consequence: `sibling_skip` or equivalent end pointer must be part of `TapeShape`.
+- C3: Restart and simdjson converge on separating structural scan from expensive scalar/string work.
+- C3 restart evidence: Backend IR separates `SimdScan`, `TapeEmit`, `DirectBuild`, and `ValueProject` (`restart/ARCHITECTURE.md:921-932`).
+- C3 SOTA evidence: simdjson stage 1 identifies structural locations; stage 2 handles strings, numbers, and validation (`P1`, lines 81-112).
+- C3 fold consequence: BIR should keep scan and value projection separate, while scheduling tape/direct together.
+- C4: Restart and sonic-rs converge on borrowed lazy string materialisation.
+- C4 restart evidence: materialisation slices `tape.source[span]` and returns `&'i str` (`restart/README.md:308-310`).
+- C4 SOTA evidence: sonic-rs `LazyValue` stores raw borrowed JSON and returns borrowed string content if no escaping is present (`P5`, lines 193-203 and 360-374).
+- C4 fold consequence: generated `as_str()` should choose a no-escape slice fast path where `TapeShape` marks the string as safe.
+- C5: Restart and sonic-rs converge on owned escape hatches.
+- C5 restart evidence: `parse_owned(input)` deep-copies tape and source (`restart/README.md:310`).
+- C5 SOTA evidence: sonic-rs routes owned lazy values through `OwnedLazyValue` (`P5`, lines 128-131).
+- C5 fold consequence: API docs should keep borrowed parse first and owned parse as retention escape.
+- C6: Restart and yyjson converge on document-owned value lifetimes.
+- C6 restart evidence: `ValueRef` borrows `&'doc Tape<'input>` (`restart/audit/pass-3-runtime/PASS-3.md:177-181`).
+- C6 SOTA evidence: yyjson values share a document lifetime and are freed with the document (`P6`, lines 152-156).
+- C6 fold consequence: `ValueRef` should remain cheap to copy and invalid outside the document snapshot.
+- C7: Restart and yyjson converge on contiguous storage for values/strings.
+- C7 restart evidence: tape includes tokens and payload arena (`restart/audit/pass-3-runtime/PASS-3.md:160-166`).
+- C7 SOTA evidence: yyjson stores strings and values in separate contiguous areas (`P6`, lines 73-82).
+- C7 fold consequence: payload arenas should be explicitly typed: raw spans, normalized strings, parsed numerics, diagnostics.
+- C8: Restart and RapidJSON converge on avoiding string copies where lifetime permits.
+- C8 restart evidence: slice-borrow integration makes `&'i str` the primary lifetime (`restart/README.md:310`).
+- C8 SOTA evidence: RapidJSON distinguishes constant strings from copy strings (`P9`, class lines 97-109).
+- C8 fold consequence: generated direct fields may borrow input spans; copied strings stay in owned parse or normalized payload arena.
+- C9: Restart and RapidJSON converge on the performance value of in-place-like string avoidance, while bbnf keeps Rust immutability.
+- C9 restart evidence: borrowed parse is primary (`restart/audit/pass-3-runtime/PASS-3.md:42-80`).
+- C9 SOTA evidence: RapidJSON in-situ reduces allocation/copy overhead and improves cache coherence (`P8`, lines 239-246).
+- C9 fold consequence: do not mutate borrowed input; borrow slices and write normalized strings only when escape handling requires it.
+- C10: Restart and the UTF-8 paper converge on validating at ingestion.
+- C10 restart evidence: BIR has `SimdScan` and parse entry metadata (`restart/ARCHITECTURE.md:921`, `restart/audit/pass-3-runtime/PASS-3.md:42-80`).
+- C10 SOTA evidence: Keiser-Lemire argue UTF-8 validation is an ingestion obligation and a security concern (`P4`, lines 15-18).
+- C10 fold consequence: byte-input parse constructors must validate before exposing `&str`-typed values.
+- C11: Restart and simdjson On-Demand converge on late scalar conversion where users ask for typed values.
+- C11 restart evidence: materialisation methods include `as_<T>()` and typed-property access (`restart/README.md:274`).
+- C11 SOTA evidence: On-Demand parses values when converted to `double`, `int`, `string`, or `bool` (`P3`, design lines 94-95).
+- C11 fold consequence: `ValueShape` should distinguish eager payload fields from lazy conversion methods.
+- C12: Restart and On-Demand converge on lifetime-coupled parser/document state.
+- C12 restart evidence: source, tape, and typed values share lifetime contracts (`restart/README.md:310`, `restart/audit/pass-3-runtime/PASS-3.md:177-181`).
+- C12 SOTA evidence: simdjson On-Demand requires JSON text and parser to remain alive while the document is used (`P3`, basics lines 67-72).
+- C12 fold consequence: `DocumentView` owns the snapshot, not the individual field projection.
+- C13: Restart and SOTA converge on strict default parsing for public ingestion.
+- C13 restart evidence: PASS-3 benchmark gates are parse-mode explicit and Lock 8 requires competitor baselines (`restart/audit/pass-3-runtime/PASS-3.md:447-467`).
+- C13 SOTA evidence: yyjson default parse rejects invalid UTF-8 and non-standard features (`P7`, lines 509-515 and 3280-3289).
+- C13 fold consequence: non-standard relaxations belong in metadata with diagnostics, not hidden parser defaults.
+- C14: Restart and RapidJSON converge on compact value flags/tags for user-facing projection speed.
+- C14 restart evidence: typed values include kind tags and tape indexes (`restart/README.md:296-305`).
+- C14 SOTA evidence: RapidJSON uses a 32-bit flags field for JSON type and related properties (`P9`, internals lines 105-110).
+- C14 fold consequence: `TapeToken` flags should cover recovery/layout/debug plus value-class fast checks without becoming grammar-specific.
+- C15: Restart and yyjson converge on immutable parse plus separate mutable story.
+- C15 restart evidence: direct typed-property mutation is rejected under slice-borrow and mutation routes through visitor (`restart/README.md:316-318`).
+- C15 SOTA evidence: yyjson has separate immutable and mutable document/value types (`P7`, lines 21-31).
+- C15 fold consequence: `Visitor` should operate as controlled snapshot transformation, not as arbitrary field mutation.
+- C16: Restart and hardening converge on no parallel substrate.
+- C16 restart evidence: Lock 1 bans parallel substrates (`restart/locks/14-LOCKS.md:34`).
+- C16 SOTA evidence: simdjson tape docs expose one tape plus string tape, not independent DOM and tape products (`P2`, lines 6-10 and 109-113).
+- C16 fold consequence: a direct builder can allocate typed views, but it cannot own separate traversal truth.
+
+## §4 — Divergence points
+
+- D1: bbnf diverges from simdjson DOM by making grammar-derived typed roots first-class.
+- D1 restart side: "Direct roots are what normal users author against" (`restart/audit/pass-3-runtime/PASS-3.md:80`).
+- D1 SOTA side: simdjson tape is JSON-generic and typed extraction happens through DOM/On-Demand APIs (`P2`, lines 6-10; `P3`, basics lines 75-80).
+- D1 reason: bbnf is grammar-authoritative across many grammars, not a JSON-only parser.
+- D1 risk: direct roots can become a second product if node identity is optional.
+- D1 guard: every public node must carry tape identity (`restart/audit/pass-3-runtime/PASS-3.md:184`).
+- D2: bbnf diverges from simdjson DOM by preferring lazy scalar materialisation in prose.
+- D2 restart side: `as_i64()` parses from source slice (`restart/README.md:308`).
+- D2 SOTA side: simdjson stores numeric values in tape words after stage 2 (`P1`, lines 89-112; `P2`, lines 88-98).
+- D2 reason: bbnf's multi-grammar typed API can avoid parsing unused scalar fields.
+- D2 risk: repeated `as_i64()` becomes repeated digit parsing unless cached.
+- D2 guard: `TapeShape` must declare whether a numeric node is parsed-once payload, direct slot cache, or source-span-only.
+- D3: bbnf diverges from simdjson On-Demand by requiring repeatable random-ish projection.
+- D3 restart side: `ValueRef` backs path, visitors, debugger, CLI projections, LSP, and playground (`restart/audit/pass-3-runtime/PASS-3.md:80`).
+- D3 SOTA side: On-Demand values can only be parsed once and only one active iteration focus is safe (`P3`, basics lines 76-78; design lines 614-620).
+- D3 reason: bbnf's path/select/debug use cases need stable snapshots and repeated views.
+- D3 risk: adopting On-Demand semantics under the word "lazy" would break `pointer!` and visitor correctness.
+- D3 guard: laziness is payload conversion laziness, not cursor-state laziness.
+- D4: bbnf diverges from sonic-rs by using node ids instead of raw slices as the main identity.
+- D4 restart side: typed values borrow `&'i Tape<'i>` plus index (`restart/README.md:296-305`).
+- D4 SOTA side: sonic-rs `LazyValue` stores raw `JsonSlice<'a>` and escape state (`P5`, lines 193-203).
+- D4 reason: bbnf needs structural traversal, diagnostics, visitors, LSP, path schemas, and grammar kinds.
+- D4 risk: over-copying sonic's raw-slice idiom would lose node identity.
+- D4 guard: raw slice is a payload, not the `ValueRef` identity.
+- D5: bbnf diverges from yyjson's eager immutable document by adding generated typed direct views.
+- D5 restart side: `DirectBuild` builds typed direct view and must share tape spans (`restart/ARCHITECTURE.md:930-931`).
+- D5 SOTA side: yyjson exposes `yyjson_val` and `yyjson_doc` rather than grammar-specific structs (`P6`, lines 26-82).
+- D5 reason: bbnf's codegen can synthesize per-rule structs/enums from grammar shape.
+- D5 risk: generated direct views may exceed cache budgets if every field carries a full value wrapper.
+- D5 guard: generated materialisation cost tables must report field counts, payload bytes, and token width (`restart/audit/pass-3-runtime/PASS-3.md:139-141`).
+- D6: bbnf diverges from yyjson and RapidJSON in-situ by using immutable `&str` borrowed parsing.
+- D6 restart side: `&'i str` source borrow is the primary lifetime (`restart/README.md:310`).
+- D6 SOTA side: yyjson and RapidJSON in-situ modes modify the input buffer and require retaining it (`P7`, lines 516-542; `P8`, lines 188-246).
+- D6 reason: Rust borrowed string input cannot be destructively decoded while soundly returning slices into it.
+- D6 risk: SOTA in-situ benchmarks are not a fair baseline for borrowed immutable parse unless parse mode metadata says so.
+- D6 guard: benchmark reports must state parse mode and source ownership (`restart/audit/pass-3-runtime/PASS-3.md:459-467`).
+- D7: bbnf diverges from RapidJSON by hiding the untyped variant from normal users.
+- D7 restart side: generated typed roots are the default user experience (`restart/audit/pass-3-runtime/PASS-3.md:42-80`).
+- D7 SOTA side: RapidJSON `GenericValue` is the user-facing variant object (`P9`, class lines 193-204).
+- D7 reason: bbnf wants grammar-derived ergonomics and compile-time path typing.
+- D7 risk: exposing `ValueRef` too prominently could collapse the typed API into an untyped DOM.
+- D7 guard: `DocumentView::root_value()` remains advanced tooling surface, while `doc.root()` remains typed.
+- D8: bbnf diverges from RapidJSON's default same-encoding UTF-8 validation policy.
+- D8 restart side: public parse of grammar input should preserve diagnostics and strictness (`restart/audit/pass-3-runtime/PASS-3.md:147-186`).
+- D8 SOTA side: RapidJSON says same-encoding DOM parsing does not validate by default unless a flag is set (`P8`, lines 247-253).
+- D8 reason: bbnf is a parser generator and tooling substrate; accepting invalid input silently poisons LSP/debug spans.
+- D8 risk: performance comparisons against RapidJSON default mode need a validation-mode column.
+- D8 guard: benchmark metadata already asks for parse mode and competitor version; add validation mode.
+- D9: bbnf diverges from simdjson On-Demand's external-input recommendation.
+- D9 restart side: bbnf wants one tape/direct identity for parse, path, visitor, debugger, and LSP (`restart/audit/hardening/HARDENING-PASS-3-V5.1.md:45`).
+- D9 SOTA side: simdjson docs recommend core API over On-Demand when external inputs need full validation and navigation (`P3`, design lines 702-707).
+- D9 reason: bbnf should be safe for external source files, workspace metadata, CLI, and editor input.
+- D9 risk: calling the bbnf surface "On-Demand-like" can imply incomplete validation.
+- D9 guard: call the mechanism "lazy materialisation over validated tape identity."
+- D10: bbnf diverges from all JSON-only sources by requiring `TapeShape` and `ValueShape` for every grammar rule.
+- D10 restart side: PASS-2 says every rule has both shapes (`restart/audit/pass-2-codegen/PASS-2.md:36`).
+- D10 SOTA side: simdjson, sonic-rs, yyjson, and RapidJSON all target JSON value classes rather than arbitrary grammar-derived rule products.
+- D10 reason: bbnf handles CSS, BBNF, Sheets, and future YAML, not only JSON.
+- D10 risk: importing JSON tape layouts too literally would overfit string/number/object/array assumptions.
+- D10 guard: `TapeToken.kind` must be grammar `NodeKindId`, while payload codecs are grammar-neutral.
+
+## §5 — Refinements to fold
+
+- R1 target: `restart/README.md:308`.
+- R1 current text: "`value.as_str()` indexes `tape.tokens[idx]` for the kind, slices `tape.source[span]` for the bytes, returns `&'i str`. Constant-time; cache-coherent. `value.as_i64()` does the same plus an integer parse on the slice."
+- R1 proposed text: "`value.as_str()` indexes `tape.tokens[idx]` for kind/span, returns a borrowed source slice when the token is unescaped, or projects a normalized string from the payload arena when escaping requires it. Kind/span projection is constant-time. Scalar methods such as `as_i64()` are either parsed-scalar payload reads or digit-linear lazy parses, as declared by `TapeShape`."
+- R1 rationale: simdjson stores numeric values as tape payloads (`P2`, lines 88-98), while sonic-rs parses numbers lazily from raw text (`P5`, lines 352-358). The restart text currently conflates these cost classes.
+- R1 fold dependency: §6 A1.
+- R2 target: `restart/README.md:312`.
+- R2 current text: "PASS-3 specifies the tape layout (token-record byte layout; payload arena structure; sib_skip-vs-explicit-end-pointer choice), the typed-value-borrow shape (variant tag size; lifetime parameterisation; index encoding), and the materialisation cost (per-method cycle estimate; per-grammar codegen size projection)."
+- R2 proposed text: "PASS-3 and the BIR fold specify the user-visible tape semantics, then route exact token byte layout, payload arena classes, sibling-skip/end-pointer choice, typed-value borrow fields, and materialisation-cost classes into Tranche B/F implementation gates."
+- R2 rationale: current PASS-3 calls its `Tape` and `TapeToken` model illustrative rather than mandatory (`restart/audit/pass-3-runtime/PASS-3.md:184`).
+- R2 fold dependency: §5 only.
+- R3 target: `restart/audit/pass-2-codegen/PASS-2.md:36`.
+- R3 current text: "Every rule has a `TapeShape` and `ValueShape`. Typed documents/views borrow `&'i Tape<'i>` plus node id."
+- R3 proposed text: "Every rule has a `TapeShape` and `ValueShape`. `TapeShape` owns token kind, span class, payload class, and traversal skip policy. `ValueShape` owns generated field/enum projection over the same node id. Typed documents/views borrow `&'i Tape<'i>` plus node id; any scalar cache must be declared by one of those shapes."
+- R3 rationale: P1/P2 show eager scalar tape payloads; P5 shows lazy raw-slice conversion; the restart must choose per node, not by prose.
+- R3 fold dependency: §6 A1.
+- R4 target: `restart/ARCHITECTURE.md:1198-1203`.
+- R4 current text: "Direct builders do not bypass the tape. They are scheduled with `TapeEmit` and `DirectBuild` from Backend IR and share spans, source slices, and diagnostics. The direct value is a typed view/projection over the same parse event stream."
+- R4 proposed text: "Direct builders do not bypass the tape. They are scheduled with `TapeEmit` and `DirectBuild` from Backend IR and share spans, source slices, diagnostics, node kind, and payload slots. The direct value is a typed view/projection over the same parse event stream; direct scalar fields are caches over declared payload slots, not a second authoritative tree."
+- R4 rationale: Lock 1 bans parallel substrates (`restart/locks/14-LOCKS.md:34`), while RapidJSON/yyjson show compact payload slots can be useful when owned by one document/value representation (`P6`, lines 26-82; `P9`, internals lines 53-121).
+- R4 fold dependency: §6 A2.
+- R5 target: `restart/audit/pass-3-runtime/PASS-3.md:139-141`.
+- R5 current text: codegen emits materialisation cost with "field counts, payload arena bytes, and tape-token width per node kind."
+- R5 proposed text: codegen emits materialisation cost with "field counts, payload arena bytes, tape-token width, scalar-cache policy, string-normalization policy, and repeated-access cost class per node kind."
+- R5 rationale: On-Demand and sonic-rs make late conversion cheap when accessed once and expensive when repeated; bbnf path/visitor/debug workloads need repeated-access accounting (`P3`, basics lines 76-80; `P5`, lines 352-374).
+- R5 fold dependency: §6 A1 and A3.
+- R6 target: `restart/audit/pass-3-runtime/PASS-3.md:184`.
+- R6 current text: "PASS-2 may build direct structs first or tape first per grammar, but the externally visible invariant is stable: every public node has tape identity and every tape node can be projected through `ValueRef`."
+- R6 proposed text: "PASS-2 may build direct structs first or tape first per grammar, but build order is not semantic. The externally visible invariant is stable: every public node has tape identity, every tape node can be projected through `ValueRef`, and every generated direct field can be traced to one `(TapeId, node id, payload class)`."
+- R6 rationale: same-wave consumer wiring from Lock 1 and the lessons file requires producer/consumer closure rather than substrate prose (`restart/locks/14-LOCKS.md:34`, `docs/precepts/instructions/LESSONS-LEARNED.md:17-26`).
+- R6 fold dependency: §6 A2.
+- R7 target: `restart/ARCHITECTURE.md:1264-1271`.
+- R7 current text: benchmark metadata includes CPU, OS, compiler flags, input hash, parse mode, competitor version, bbnf commit, warmup, sample policy.
+- R7 proposed text: add `validation mode`, `materialisation mode`, and `string ownership mode` to JSON rows; add `scalar-cache policy` to direct-root and tape-cursor rows.
+- R7 rationale: RapidJSON default UTF-8 validation and in-situ parse modes differ materially from strict immutable parse (`P8`, lines 126-140 and 247-253).
+- R7 fold dependency: §6 A4.
+- R8 target: `restart/audit/pass-3-runtime/PASS-3.md:459-467`.
+- R8 current text: bench reports include parse mode and surface under test.
+- R8 proposed text: bench reports include parse mode, validation mode, source ownership mode, direct/tape materialisation mode, trace mode, and surface under test.
+- R8 rationale: RapidJSON, yyjson, simdjson DOM, simdjson On-Demand, and sonic-rs lazy values are not comparable without those knobs.
+- R8 fold dependency: §6 A4.
+- R9 target: `restart/ARCHITECTURE.md:1179-1187`.
+- R9 current text: `runtime/src/tape` owns `token`, `builder`, `span`, `view`, and `trace`.
+- R9 proposed text: add `payload` as a named child if exact module count remains within Lock 13: token, builder, span, payload, view, trace.
+- R9 rationale: all SOTA comparators distinguish structural record from payload storage: simdjson main tape/string tape, yyjson value/string pools, RapidJSON string/object/array payloads (`P2`, lines 109-133; `P6`, lines 73-82; `P9`, internals lines 53-121).
+- R9 fold dependency: §5 only.
+- R10 target: `restart/audit/pass-2-codegen/PASS-2.md:52-80`.
+- R10 current text: the BIR table's `Rule` payload says "name, params, value shape, tape kind."
+- R10 proposed text: change to "name, params, `ValueShape`, `TapeShape`, payload policy, traversal policy."
+- R10 rationale: `tape kind` is too thin for string normalization, numeric payload, recovery flags, and skip semantics.
+- R10 fold dependency: §6 A1.
+- R11 target: `restart/research/INDEX.md:119`.
+- R11 current text: "Hubbard, M. et al. (2020). *Parsing Through Other People's Eyes: A Look at JSON Parsing.* — comparative study."
+- R11 proposed text: append "Provenance unverified in Topic 6; Phase 2 must either replace with a verified primary citation or keep it as a research-gap note."
+- R11 rationale: exact-title and local-corpus searches found no primary source. No finding should cite it as evidence.
+- R11 fold dependency: §6 A5.
+- R12 target: `restart/README.md:314`.
+- R12 current text: "One representation; one materialisation surface; one Visitor pattern."
+- R12 proposed text: "One authoritative identity; one materialisation contract; one Visitor pattern."
+- R12 rationale: the current phrase can be misread as denying the co-existence of tape tokens and generated direct projections. Lock 1's intended ban is parallel authority, not projected views.
+- R12 fold dependency: §6 A2.
+
+## §6 — Adversarial findings
+
+- A1 title: scalar materialisation cost is overstated.
+- A1 contradicted lock or claim: README says `as_str()` is "Constant-time" and places `as_i64()` in the same sentence (`restart/README.md:308`).
+- A1 SOTA evidence: simdjson makes numeric access cheap by storing parsed integers/floats in tape words (`P2`, lines 88-98).
+- A1 SOTA evidence: sonic-rs makes numeric access lazy by parsing `as_raw_str()` through `from_str` (`P5`, lines 352-358).
+- A1 pressure: the restart's current wording can make `as_i64()` sound constant-time even when it parses digits from the slice.
+- A1 proposed amendment: split materialisation costs into kind/span, raw string, normalized string, parsed scalar payload, and lazy scalar parse.
+- A1 receiving phase: Phase 2 fold to README, PASS-2 BIR shape text, and PASS-3 materialisation-cost gate.
+- A1 severity: high for benchmark truth; low for Lock 1 architecture.
+- A1 verdict: lock survives, prose and gates need surgery.
+- A2 title: "union" can be misread as two trees.
+- A2 contradicted lock or claim: Lock 1 bans parallel substrates while PASS-2 says every rule has both `TapeShape` and `ValueShape` (`restart/locks/14-LOCKS.md:34`, `restart/audit/pass-2-codegen/PASS-2.md:36`).
+- A2 SOTA evidence: RapidJSON `GenericValue` is a single variant representation with flags and data union, not a separate tape plus DOM (`P9`, class lines 193-204; union lines 4-18).
+- A2 SOTA evidence: yyjson immutable values share a document lifetime and document-owned memory (`P6`, lines 152-156).
+- A2 pressure: if generated direct structs own traversal and payload truth independently, the prior OpenFrame failure recurs under nicer types.
+- A2 proposed amendment: define union as one authoritative `(TapeId, node id, payload class)` identity with typed projections and declared scalar caches.
+- A2 receiving phase: Phase 2 fold to Architecture §9.2 and PASS-3 §4.
+- A2 severity: high for Lock 1.
+- A2 verdict: settled lock is correct; operational definition must be sharper.
+- A3 title: On-Demand forward-only semantics conflict with bbnf tooling.
+- A3 contradicted lock or claim: README references sonic-rs/simdjson idioms and lazy materialisation (`restart/README.md:291-292`, `restart/README.md:308`).
+- A3 SOTA evidence: simdjson On-Demand document is an iterator and values can only be parsed once (`P3`, basics lines 65-78).
+- A3 SOTA evidence: On-Demand docs recommend core API for full validation and navigation over external inputs (`P3`, design lines 702-707).
+- A3 pressure: `pointer!`, `select!`, visitors, debugger, LSP, and playground require stable repeatable projections (`restart/audit/pass-3-runtime/PASS-3.md:80`, `restart/audit/pass-3-runtime/PASS-3.md:186`).
+- A3 proposed amendment: describe bbnf laziness as lazy payload conversion over validated tape identity, not as forward-only On-Demand parsing.
+- A3 receiving phase: Phase 2 fold to README §8 and PASS-3 §4.
+- A3 severity: medium for API semantics.
+- A3 verdict: bbnf can borrow On-Demand's late conversion idea while rejecting its cursor semantics.
+- A4 title: in-situ competitors can make benchmark rows unfair.
+- A4 contradicted lock or claim: Architecture rows compare bbnf parse targets to sonic-rs/simd-json and carry parse-mode metadata, but do not explicitly require validation and source ownership mode (`restart/ARCHITECTURE.md:1264-1271`).
+- A4 SOTA evidence: RapidJSON in-situ mutates input and keeps DOM string pointers tied to the input buffer (`P8`, lines 188-246).
+- A4 SOTA evidence: yyjson in-situ modifies input and requires padded input retention until document free (`P7`, lines 516-542).
+- A4 SOTA evidence: RapidJSON same-encoding DOM parsing does not validate UTF-8 by default unless a flag is used (`P8`, lines 247-253).
+- A4 pressure: bbnf borrowed `&str` parse cannot be compared to destructive in-situ or non-validating modes without a report column.
+- A4 proposed amendment: benchmark metadata must record validation mode, source ownership mode, materialisation mode, and competitor parse flags.
+- A4 receiving phase: Phase 2 fold to Architecture §11 and PASS-3 §7.
+- A4 severity: medium for SOTA evidence integrity.
+- A4 verdict: targets survive; metadata is too weak.
+- A5 title: Hubbard comparative study is a provenance gap.
+- A5 contradicted lock or claim: research index lists Hubbard et al. 2020 as a key source (`restart/research/INDEX.md:119`).
+- A5 evidence: exact-title web search and local `rg` found no primary source beyond the index mention.
+- A5 pressure: citing an unverified study would violate the primary-source requirement (`restart/research/INDEX.md:24`).
+- A5 proposed amendment: replace the index item with a verified DOI/URL or route it as an unverified lead.
+- A5 receiving phase: Phase 2 research-index hygiene.
+- A5 severity: low for architecture, high for citation hygiene.
+- A5 verdict: do not use as evidence in Topic 6.
+- A6 title: UTF-8 validation entry point needs explicit split.
+- A6 contradicted lock or claim: README talks about `parse(&'i str)` and tape borrowing the same lifetime (`restart/README.md:310`), while performance gates include scan throughput (`restart/ARCHITECTURE.md:1271`).
+- A6 SOTA evidence: Keiser-Lemire frame UTF-8 validation as an ingestion obligation (`P4`, lines 15-25).
+- A6 SOTA evidence: yyjson validates UTF-8 strictly by default and warns on invalid-Unicode flags (`P7`, lines 3280-3289).
+- A6 pressure: if bbnf's scanner benchmark starts from bytes, it needs validation; if it starts from `&str`, Rust already performed UTF-8 validation before bbnf sees input.
+- A6 proposed amendment: benchmark and API docs should distinguish `parse(&str)` from byte/file parse entry points.
+- A6 receiving phase: Phase 2 fold to performance metadata and runtime API docs.
+- A6 severity: medium for benchmark interpretation.
+- A6 verdict: lock survives; entry-point wording needs precision.
+
+## §7 — Surgery proposals
+
+- Surgery S1 target: `restart/README.md:308`.
+- Surgery S1 directive: replace the constant-time materialisation sentence with the R1 proposed text from §5.
+- Surgery S1 acceptance gate: `rg -n "Scalar methods|digit-linear|TapeShape|normalized string" restart/README.md`.
+- Surgery S1 acceptance gate: `rg -n "Constant-time; cache-coherent.*as_i64" restart/README.md` returns zero.
+- Surgery S1 dependency: §6 A1.
+- Surgery S2 target: `restart/audit/pass-2-codegen/PASS-2.md:36`.
+- Surgery S2 directive: expand `TapeShape`/`ValueShape` into token kind, span class, payload class, traversal skip policy, generated projection, and scalar-cache declaration.
+- Surgery S2 acceptance gate: `rg -n "payload class|traversal skip policy|scalar cache" restart/audit/pass-2-codegen/PASS-2.md`.
+- Surgery S2 dependency: §6 A1 and A2.
+- Surgery S3 target: `restart/ARCHITECTURE.md:1198-1203`.
+- Surgery S3 directive: state that direct scalar fields are caches over declared payload slots and never a second authoritative tree.
+- Surgery S3 acceptance gate: `rg -n "second authoritative tree|payload slots|same parse event stream" restart/ARCHITECTURE.md`.
+- Surgery S3 dependency: §6 A2.
+- Surgery S4 target: `restart/audit/pass-3-runtime/PASS-3.md:184`.
+- Surgery S4 directive: add the `(TapeId, node id, payload class)` traceability invariant for generated direct fields.
+- Surgery S4 acceptance gate: `rg -n "TapeId, node id, payload class|build order is not semantic" restart/audit/pass-3-runtime/PASS-3.md`.
+- Surgery S4 dependency: §6 A2.
+- Surgery S5 target: `restart/audit/pass-3-runtime/PASS-3.md:139-141`.
+- Surgery S5 directive: add scalar-cache policy, string-normalization policy, and repeated-access cost class to the generated materialisation-cost table requirement.
+- Surgery S5 acceptance gate: `rg -n "scalar-cache policy|string-normalization policy|repeated-access cost" restart/audit/pass-3-runtime/PASS-3.md`.
+- Surgery S5 dependency: §6 A1 and A3.
+- Surgery S6 target: `restart/ARCHITECTURE.md:1264-1271`.
+- Surgery S6 directive: add validation mode, source ownership mode, materialisation mode, and scalar-cache policy to JSON benchmark required metadata.
+- Surgery S6 acceptance gate: `rg -n "validation mode|source ownership mode|materialisation mode|scalar-cache policy" restart/ARCHITECTURE.md`.
+- Surgery S6 dependency: §6 A4 and A6.
+- Surgery S7 target: `restart/audit/pass-3-runtime/PASS-3.md:459-467`.
+- Surgery S7 directive: make PASS-3 bench reports emit parse mode, validation mode, source ownership mode, direct/tape materialisation mode, trace mode, and surface under test.
+- Surgery S7 acceptance gate: `rg -n "validation mode|source ownership mode|direct/tape materialisation mode" restart/audit/pass-3-runtime/PASS-3.md`.
+- Surgery S7 dependency: §6 A4 and A6.
+- Surgery S8 target: `restart/ARCHITECTURE.md:1179-1187`.
+- Surgery S8 directive: add a `payload/` child under `runtime/src/tape/` if Lock 13 child-count remains within bounds, with ownership of scalar payloads, normalized strings, and auxiliary arenas.
+- Surgery S8 acceptance gate: `rg -n "payload/|scalar payloads|normalized strings" restart/ARCHITECTURE.md`.
+- Surgery S8 dependency: §5 R9.
+- Surgery S9 target: `restart/audit/pass-2-codegen/PASS-2.md:52-80`.
+- Surgery S9 directive: change the `Rule` BIR payload row from "value shape, tape kind" to "`ValueShape`, `TapeShape`, payload policy, traversal policy."
+- Surgery S9 acceptance gate: `rg -n "ValueShape.*TapeShape.*payload policy.*traversal policy" restart/audit/pass-2-codegen/PASS-2.md`.
+- Surgery S9 dependency: §6 A1.
+- Surgery S10 target: `restart/README.md:314`.
+- Surgery S10 directive: change "One representation; one materialisation surface" to "One authoritative identity; one materialisation contract."
+- Surgery S10 acceptance gate: `rg -n "One authoritative identity; one materialisation contract" restart/README.md`.
+- Surgery S10 dependency: §6 A2.
+- Surgery S11 target: `restart/research/INDEX.md:119`.
+- Surgery S11 directive: mark the Hubbard comparative study as unverified unless Phase 2 supplies a primary URL/DOI.
+- Surgery S11 acceptance gate: `rg -n "Hubbard.*unverified|Parsing Through Other People's Eyes.*verified" restart/research/INDEX.md`.
+- Surgery S11 dependency: §6 A5.
+- Surgery S12 target: future Tranche B/F implementation gate.
+- Surgery S12 directive: require a generated `materialisation_cost` artefact with node-kind rows for token width, payload class, normalized-string policy, numeric policy, direct-field count, and repeated-access cost.
+- Surgery S12 acceptance gate: generated artefact exists for every seed grammar plus yaml smoke, and `xtask regen --check` fails if any row lacks the required fields.
+- Surgery S12 dependency: §6 A1 and A2.
+- Surgery S13 target: future benchmark report schema.
+- Surgery S13 directive: reject competitor rows missing parse mode, validation mode, source ownership, materialisation mode, input hash, compiler flags, warmup, and sample count.
+- Surgery S13 acceptance gate: benchmark report schema test with a RapidJSON in-situ row missing validation mode fails.
+- Surgery S13 dependency: §6 A4 and A6.
+- Surgery S14 target: future runtime identity tests.
+- Surgery S14 directive: assert that `doc.root()`, `doc.root_value()`, `pointer!`, `select!`, visitor traversal, and debug trace for the same source all report the same `TapeId` and root node id.
+- Surgery S14 acceptance gate: one identity smoke per seed grammar plus yaml smoke.
+- Surgery S14 dependency: §6 A2 and A3.
+- Surgery S15 target: future lazy conversion tests.
+- Surgery S15 directive: add tests for unescaped string borrowed slice, escaped string normalized payload, lazy numeric parse, parsed numeric payload, and repeated `as_i64()` behavior.
+- Surgery S15 acceptance gate: tests prove the declared `TapeShape` cost class matches observed allocation and parse count.
+- Surgery S15 dependency: §6 A1.
+- Surgery S16 target: future byte-input parse API.
+- Surgery S16 directive: document and test that byte/file parse validates UTF-8 before exposing `&str`-typed values, while `parse(&str)` records Rust prevalidation in benchmark metadata.
+- Surgery S16 acceptance gate: invalid UTF-8 byte input reports a diagnostic before any `ValueRef` is exposed.
+- Surgery S16 dependency: §6 A6.
+- Routed residue 1: Hubbard et al. 2020 remains unverified and must not be cited as primary evidence.
+- Routed residue 2: exact token byte layout remains implementation work; this file only binds semantic and evidence constraints.
+- Routed residue 3: direct scalar caching policy belongs to Phase 2 fold and Tranche B/F gates, not to this research file.
+- Routed residue 4: in-situ borrowed parsing is rejected for `parse(&str)`; an owned mutable-buffer fast path would need a separate design note and benchmark label.
+- Routed residue 5: simdjson On-Demand is cited for lazy conversion pressure, not as a wholesale API model.
+- Routed residue 6: sonic-rs is cited for borrowed raw value and lazy escape handling, not as proof that a raw slice is enough for bbnf.
+- Routed residue 7: yyjson is cited for contiguous document-owned value storage, not for its mutable linked-list design as a bbnf default.
+- Routed residue 8: RapidJSON is cited for in-situ and variant layout pressure, not for its validation defaults as a bbnf policy.
+- Routed residue 9: UTF-8 validation belongs to byte/file entry points and scanner benchmarks; `parse(&str)` must record that validation happened before entry.
+- Routed residue 10: Phase 2 should keep all proposed edits surgical; no source file outside the fold targets is implied by this research artefact.
+- Close gate 1: Phase 2 can accept this topic only if it preserves Lock 1's no-parallel-substrate rule.
+- Close gate 2: Phase 2 can accept scalar-cache refinements only with a receiving materialisation-cost test.
+- Close gate 3: Phase 2 can accept benchmark metadata refinements only if existing SOTA rows keep their competitor and platform anchors.
+- Close gate 4: Phase 2 can accept the Hubbard residue only as citation hygiene unless a primary source appears.
+- Close gate 5: Tranche B/F must prove `TapeShape` and `ValueShape` converge on one node id space.
+- Close gate 6: Tranche J docs must explain the union as projection over identity, not as a second DOM.
+- Closing result: Topic 6 supports Lock 1 with amendments. The union is one tape identity plus generated typed projections, with materialisation policy made explicit by `TapeShape` and `ValueShape`.

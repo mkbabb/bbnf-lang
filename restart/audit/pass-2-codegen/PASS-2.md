@@ -65,6 +65,9 @@ Backend IR final variant table:
 | 12 | `RegexDfa` | compiled regex, Unicode metadata | regex compiler | regex call | wasm-compatible regex call | scaffold |
 | 13 | `Span` | span projection | rule lowering | span value | offset/len | scaffold |
 | 14 | `Layout` | skip policy | `@layout` analysis | layout consume | same core | scaffold |
+
+Layout canon — Lock 2 vocabulary at the BIR boundary: PASS-1's `passes::layout` produces the `LayoutFacts` side-table; PASS-2's `Layout` BIR variant consumes it via `LayoutSink`. The producer/side-table/consumer triple is the single source of truth for layout lowering across the BIR boundary; the `@layout` analysis surface mentioned in the variant table feeds `passes::layout`, and the runtime `Layout` lowering at line 459 (per-construct contribution) and the per-grammar `layout source` column at line 475 (runtime emission table) both bind to `LayoutFacts` consumed through `LayoutSink`.
+
 | 15 | `MapExpr` | projection expression | type/e-graph lower | typed conversion | same core | scaffold |
 | 16 | `HostCall` | host chain, generics, error policy | host inference | `host` registry call | primitive or extern import | scaffold |
 | 17 | `FoldResult` | accumulator, fold op | rule lowering | accumulator state | same core | scaffold |
@@ -75,7 +78,7 @@ Backend IR final variant table:
 | 22 | `ErrorRecovery` | strategy, diagnostic | `@error` analysis | diagnostic/recovery edge | same core | scaffold |
 | 23 | `DebugMarker` | source map marker | debug config | optional metadata | optional metadata | scaffold |
 
-Cardinality defence: BC's research anchors put the useful compiler-IR band at roughly 20-30 variants, comparing MLIR `arith` at 60, Cranelift `InstructionData` at 40, rustc HIR `ExprKind` at 35, rustc HIR `ItemKind` at 16, and chalk `TyKind` at 23 (`docs/tranches/BC/audit/research-anchors.md:12-18`, `docs/tranches/BC/audit/W0-typed-ir-variant-table.md:319-329`). PASS-2's 23 variants stay inside that band. swc is kept as backend-separation inheritance rather than a cardinality bound because local README cites swc for WASM/codegen pipeline shape (`restart/README.md:369`), and current rustdoc shows JavaScript AST statement/expression sums with different domain pressure (`https://rustdoc.swc.rs/swc_ecma_ast/enum.Stmt.html`, `https://rustdoc.swc.rs/swc_ecma_ast/enum.Expr.html`).
+Cardinality defence: BC's research anchors put the useful compiler-IR band at roughly 20-30 variants, comparing MLIR `arith` at 60, Cranelift `InstructionData` at 40, rustc HIR `ExprKind` at 35, rustc HIR `ItemKind` at 16, and chalk `TyKind` at 23 (`docs/tranches/BC/audit/research-anchors.md:12-18`, `docs/tranches/BC/audit/W0-typed-ir-variant-table.md:319-329`). PASS-2's 23 variants stay inside that band. swc is kept as backend-separation inheritance rather than a cardinality bound because local README cites swc for WASM/codegen pipeline shape (`restart/README.md:369`); swc compiles JavaScript AST into per-domain enums (`Stmt` / `Expr`) with different cardinality pressure than parser IR (`restart/corpora/SOTA.md:186` — parol's typed-AST cardinality reference is the closest auditable corpus line for the AST-cardinality argument; the swc rustdoc URL citation is retired in favour of corpus path:line discipline).
 
 Payload-refiner contract — PASS-2's role in the BIR contract:
 
@@ -141,6 +144,9 @@ Runtime template parameter schema:
 | `error_policy` | `@error` analysis | diagnostics |
 | `pratt_tables` | Pratt detection | Pratt loop data |
 | `budget` | xtask metadata | LOC gate |
+| `visitor_bitflags` | BIR view shapes | generated `visitor.rs` impl |
+| `bump_arena` | PASS-3 API contract | `parse_in` signature lowering |
+| `incremental_marker` | cost model | optional source-map sidecar |
 
 The parameter set extends the BB cohort template list (`docs/tranches/BB/audit/W2-cohort-template-spec.md:8-22`) and keeps byte-identical regeneration (`docs/tranches/BB/audit/W2-cohort-template-spec.md:40-61`).
 
@@ -166,6 +172,8 @@ Detection thresholds:
 Lookbehind co-amendment — codegen-side ratification of the BBNF surface:
 
 PASS-2 ratifies the canonical `|<` grammar-level lookbehind syntax that PASS-1 owns at the formal-grammar level (HARDENING-CONSOLIDATED §4.7; `restart/audit/hardening/HARDENING-PASS-1.md:183`). Regex-style `(?<=...)` lookbehind stays inside regex literals only; grammar-level lookbehind is `|<` and reaches BIR through the `Lookbehind` variant (#21, line 74). The codegen-side legality contract is finite-width-only: PASS-1's width analysis annotates the bound; PASS-2 lowering accepts `Bounded(n)` and rejects unbounded predicates at the lowering boundary, before any source emission. The diagnostic surface composes — PASS-1 owns the user-facing string `BBNF1004` (PASS-1.md:96, "lookbehind in rule {rule} must have finite maximum width; {expr} is unbounded after {operator}."); PASS-2 owns the routing diagnostic `BBNF-SEM040` (line 478) that fires when an unbounded `Lookbehind` reaches BIR validation. The two diagnostics are produced together: `BBNF1004` reaches the user through the PASS-3 diagnostic surface; `BBNF-SEM040` halts codegen close before any lowerer emits a parser file. Lowering emits a reverse predicate with the bound encoded as a compile-time constant; both Rust V1 and WASM V1 share the BIR payload and the same finite-width invariant (PASS-1.md:64).
+
+Unified cursor + byte-skip obligation — Lock 3 ratification at the codegen-side: Rust V1 lowerer emits one parse implementation; cursor consultation generates a byte-skip when consult returns `Skip`; the empty-path case (`__EAGER_EMPTY_PATH`) elides cursor calls. The unified path is realized by `Ref` / `Lit` / `RegexDfa` / `Scanner` BIR variants; `PrattSpine` and `SimdScan` carry their own dispatch and elide cursor consultation in the inner loop. WASM V1 honours the same obligation, sharing the BIR payload and the structural snapshot consumed by Rust V1; the cursor-vs-byte-skip decision is a lowering choice, not a substrate split.
 
 ## §3 Per-Crate Trees
 
@@ -236,7 +244,10 @@ Import-deny floor:
 Verbatim deny command — the codegen close gate:
 
 ```text
-rg -n "GrammarIR" crates/codegen/src/lower crates/codegen/src/runtime_template
+# scan the whole codegen tree; documentation surface
+# (crates/codegen/src/backend_ir/README.md) is the only
+# legal carrier of the GrammarIR token within this tree.
+rg -n "GrammarIR" crates/codegen/src/
 ```
 
 Expected output: zero matches. Any non-zero result fails codegen close, emits diagnostic `BBNF-GEN001`, and blocks the regen-equality gate (`xtask regen --check`) downstream. The only crate exempt from this deny is `passes` — specifically the BIR producer pass under `passes/extract/` that consumes Grammar IR from the typed/shape-mined/e-graph-extracted upstream and emits Backend IR for `ir::backend_ir`. PASS-1.md:41 names the producer-side exemption: "only the BIR producer pass under `passes` may import Grammar IR; lowerers walk Backend IR alone." `codegen` has no such exemption; every codegen lowerer consumes BIR and never reaches behind it. The gate runs at every PR check, every codegen close, and every regen-equality verification; it is not a one-shot audit.
@@ -372,6 +383,7 @@ Future grammar onboarding smoke:
 | Runtime emission | `runtime/src/grammars/yaml/*` is generated from BIR/runtime template only. |
 | Registry | generated registry sees yaml through metadata, not grammar-name dispatch. |
 | Gate | `cargo xtask bbnf build yaml --check && cargo test -p runtime future_grammar_yaml_runtime`. |
+| Two-surface invariant | `git diff HEAD~1` reveals exactly two added paths: `grammars/yaml.bbnf` and one `[workspace.metadata.bbnf.grammars.yaml]` block in `Cargo.toml`. Verify with `rg 'JsonParser\|CssL4Parser\|BbnfBootstrap\|GoogleSheetsParser' crates/{ir,codegen,runtime,host,passes}/src/` returns zero and `find crates/runtime/src/grammars/yaml -mindepth 1 -maxdepth 1` returns the generated subdir only. |
 
 ## §6 Generated LOC
 
@@ -418,7 +430,7 @@ Regen-cycle wall-time budget. Each row carries a baseline category (`observed` a
 | single grammar regen, css_l4 | ≤ 12s | observed (PASS-B audit) | CSS L4 owns most generated LOC, with 107,138 current generated lines. |
 | BIR snapshot print for all 9 grammars | ≤ 5s | provisional (owner: PASS-2 amendment agent; receiver: SYNTHESIS Wave-2 measurement gate) | snapshots are analysis output, not formatting-heavy source generation; baseline lands when the BIR producer pass is implementable enough to measure. |
 | write phase | content-equality skip preserves mtime | observed (current regen `xtask/src/regen.rs:400-461`) | regen already skips identical writes; mtime preservation gates downstream cargo invalidation. |
-| yaml smoke regen (future grammar) | ≤ 4s | provisional (owner: SYNTHESIS Wave-2; receiver: Tranche A/G/F yaml onboarding gate) | smoke is bounded by the cohort budget; baseline lands at first onboarding execution. |
+| yaml smoke regen (future grammar) | ≤ 4s | provisional (owner: SYNTHESIS Wave-2; receiver: Tranche G yaml onboarding gate at runtime publication) | smoke is bounded by the cohort budget; baseline lands at first onboarding execution. |
 
 ## §7 Perf Gate Trajectory
 
@@ -517,14 +529,16 @@ Wave-by-wave carries:
 
 Diagnostic ledger:
 
-| Code | Trigger | PASS-2 producer |
-|---|---|---|
-| `BBNF-GEN001` | lowerer imports Grammar IR or source AST. | import-deny check. |
-| `BBNF-GEN014` | generated LOC exceeds per-grammar or total budget. | regen budget check. |
-| `BBNF-CODEGEN021` | BIR snapshot changed without committed generated output. | regen equality. |
-| `BBNF-CODEGEN033` | runtime template lacks path/visitor/diagnostic metadata. | metadata consumer smoke. |
-| `BBNF-LIFE009` | emitted owned/borrowed constructor violates lifetime surface. | runtime compile tests. |
-| `BBNF-SEM040` | unbounded lookbehind reaches BIR. | BIR validation. |
+| Code | Trigger | PASS-2 producer | Verbatim string |
+|---|---|---|---|
+| `BBNF-GEN001` | lowerer imports Grammar IR or source AST. | import-deny check. | `"lowerer at {file} imports Grammar IR; codegen consumes Backend IR only"` |
+| `BBNF-GEN014` | generated LOC exceeds per-grammar or total budget. | regen budget check. | `"grammar {name} generated_loc {actual} exceeds budget {max}; ratchet upstream"` |
+| `BBNF-CODEGEN021` | BIR snapshot changed without committed generated output. | regen equality. | `"BIR snapshot for {grammar} drifted; rerun cargo xtask regen --check and commit the diff"` |
+| `BBNF-CODEGEN033` | runtime template lacks path/visitor/diagnostic metadata. | metadata consumer smoke. | `"runtime template for {grammar} omits {metadata}; PASS-3 consumer cannot bind"` |
+| `BBNF-LIFE009` | emitted owned/borrowed constructor violates lifetime surface. | runtime compile tests. | `"emitted constructor for {rule} returns {actual} but rule annotation {annot} requires {expected}; check @layout(...) hint or grammar -> projection"` |
+| `BBNF-SEM040` | unbounded lookbehind reaches BIR. | BIR validation. | `"lookbehind in rule {rule} reaches BIR with unbounded width; PASS-1 BBNF1004 should have caught upstream"` |
+| `BBNF-OPT001` | optimizer rejects an apparent operator-chain candidate. | cost-model decision. | `"rule {rule} resembles an operator chain (left-recursive with operator-bearing alts at {line}) but {reason}; promote to PrattSpine with @pratt or restructure the rule"` |
+| `BBNF-OPT002` | optimizer rejects an apparent SIMD candidate. | cost-model decision. | `"rule {rule} has structural alphabet {alpha} but kernel-shape evidence is {shape}; falling back to scalar; @simd hint may force"` |
 
 Carry ledger — every deferral carries Receiver, Blocker, and Receiving gate per HARDENING-CONSOLIDATED §4.39:
 

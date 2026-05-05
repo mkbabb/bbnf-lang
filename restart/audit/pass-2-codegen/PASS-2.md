@@ -89,7 +89,7 @@ PASS-2 is **payload refiner, not BIR re-owner**. The variant alphabet, the varia
 | Payload field widths, alignment, and packing for each variant. | The 23-variant alphabet itself; new variants and retirements return to PASS-1. |
 | Layout-tag specialisation (e.g., `AltDispatch`-vs-`AltSpeculative` selection). | Producer-side semantics (typed grammar IR; e-graph; cost-model trait; CSP solver). |
 | Cost-derived dispatch shape (`match` vs PHF vs scan tree). | Lower-time invariants stated at PASS-1.md:43-53 (no OpenFrame clone stack; regex owns Unicode; auto-detection only). |
-| SIMD-vs-scalar kernel selection from `KernelShape` evidence. | Diagnostic-string surface owned by PASS-1 (PASS-1.md:92-101 owns `BBNF1004` etc.). |
+| SIMD-vs-scalar kernel selection from `KernelShape` evidence. | Diagnostic-string surface owned by PASS-1 (§2 diagnostic strings owns `BBNF1004` etc.). |
 | Pratt LUT and operator-spine state machine layout. | Grammar IR variants and side tables; `passes::extract` is the only consumer. |
 | `StructuralAlphabet` constants from BIR `SimdScan` payload. | Backend IR variant ordering and stable id keys. |
 | Per-variant span/source-map metadata in payload tail. | Cross-pass hand-off contracts owned by SYNTHESIS. |
@@ -109,7 +109,7 @@ Per-payload-category lowering test gates owned by PASS-2 — every gate referenc
 
 WASM host primitive route: host primitives are a lowerer/runtime ABI concern. PASS-2 emits exported function names, host-call shape, marshalling descriptors, and scalar/SIMD parity evidence for the WASM host ABI receiver; BBNF source keeps the existing `@host fn` body form and gains no primitive annotation or force directive.
 
-The hand-off contract is precise: PASS-1 owns variants + alphabet + invariants + producer-side semantics + diagnostic strings (PASS-1.md:43-53, PASS-1.md:55, PASS-1.md:92-101); PASS-2 owns payload refinement + per-backend lowering obligations + emission tests (this section, the §3 lowerer trees, the §6 generated-LOC budgets); PASS-3 owns tape ABI + visitor + path metadata consumption (§4 hand-off). Cross-pass conflict on a payload returns to SYNTHESIS for reconciliation, not to a unilateral edit on either side.
+The hand-off contract is precise: PASS-1 owns variants + alphabet + invariants + producer-side semantics + diagnostic strings (§2 invariants, variant ownership, and diagnostic strings); PASS-2 owns payload refinement + per-backend lowering obligations + emission tests (this section, the §3 lowerer trees, the §6 generated-LOC budgets); PASS-3 owns tape ABI + visitor + path metadata consumption (§4 hand-off). Cross-pass conflict on a payload returns to SYNTHESIS for reconciliation, not to a unilateral edit on either side.
 
 Emitter public API:
 
@@ -356,7 +356,7 @@ PASS-3 consumer acceptance gates — every contract carries a named verification
 | Document/view metadata feeds visitor + selectors | `cargo test -p runtime --test view_metadata_visitor` plus `cargo test -p path --test view_metadata_selector` — generated `Document` and view structs implement the visitor and selector entry traits with no hand-written impl per grammar. | Metadata-driven visitor/selector wiring fails; PASS-3 hand-writes per-grammar visitor code. |
 | Materialisation cost table is generated and documented | `cargo xtask bbnf cost-table --check` emits `target/codegen/cost-table.md` byte-identical to the committed snapshot at `runtime/src/grammars/<name>/cost.md`. | API docs cannot reproduce the materialisation cost story without prose-only hand-offs. |
 | Path-schema metadata reaches `path` and `path-core` | `cargo test -p path-core --test grammar_schema_load` — every emitted runtime exposes the path schema descriptor consumed by `pointer!` compilation. | Path inference cannot bind grammar segments at compile time. |
-| Diagnostic vocabulary reaches PASS-3 user surface | `cargo test -p bbnf --test diagnostic_vocabulary` — the BIR `ErrorRecovery` and PASS-1 diagnostic strings (`BBNF1004`, `BBNF1201`, `BBNF1302`, `BBNF1401`, `BBNF2103`, `BBNF2104` per PASS-1.md:96-101) round-trip through PASS-3's user-facing error type. | User errors lose codes, spans, or severities at the PASS-2/PASS-3 boundary. |
+| Diagnostic vocabulary reaches PASS-3 user surface | `cargo test -p bbnf --test diagnostic_vocabulary` — the BIR `ErrorRecovery` and PASS-1 diagnostic strings (`BBNF1004`, `BBNF1201`, `BBNF1302`, `BBNF1401`, `BBNF2103`, `BBNF2104` per PASS-1 §2 diagnostic strings) round-trip through PASS-3's user-facing error type. | User errors lose codes, spans, or severities at the PASS-2/PASS-3 boundary. |
 | WASM ABI descriptor compiles under packaging wrapper | `cargo test -p codegen --test wasm_abi_descriptor` — `codegen/lower/wasm/abi.rs` emits a descriptor consumed by the npm/browser packaging surface without runtime trait dispatch. | WASM packaging cannot bind to the emitted ABI; PASS-3 hand-writes glue. |
 
 These gates close the prose-only handoff: PASS-3 cannot accept the contract on prose-only language; every contract is either backed by a named verification command or it is not in the contract. PASS-2 must run all six gates before the codegen close gate at line 232 fires.

@@ -22,7 +22,7 @@ resumed as-is (`restart/inheritance/INDEX.md:1-5`).
 | ParseStream term | Do not rename tape to ParseStream. | `restart/inheritance/INDEX.md:66` and old README remnants that mention ParseStream. | Keep the term `tape`. `ParseStream` only appears today as a `syn` macro parse type, not a runtime concept. |
 | Columnar SoA / parallel substrate | Dead. | Old speculative substrate sketches. | Lock 1 rejects parallel substrates and OpenFrame ladders (`restart/locks/14-LOCKS.md:34`). |
 | Rewrite-mode | Out of the BBNF surface. | ffuzzy transducer/rewrite ideas and stale README line language. | README says rewrite-mode is rejected (`restart/README.md:139-148`); PASS-1 discards it (`restart/audit/pass-1-substrate/PASS-1.md:5-20`). |
-| Unicode class algebra | Deferred to `parse-that/regex`; not a grammar-level BBNF surface. | ffuzzy and stale extension lists that treat class algebra as a grammar feature. | README routes Unicode set work below BBNF (`restart/README.md:150-158`); PASS-1 says no BBNF-level Unicode class algebra (`restart/audit/pass-1-substrate/PASS-1.md:84-121`). |
+| Unicode class algebra | Deferred to `parse-that-regex`; not a grammar-level BBNF surface. | ffuzzy and stale extension lists that treat class algebra as a grammar feature. | README routes Unicode set work below BBNF (`restart/README.md:150-158`); PASS-1 says no BBNF-level Unicode class algebra (`restart/audit/pass-1-substrate/PASS-1.md:84-121`). |
 | Lookbehind | In. | Old rejection of lookbehind. | README accepts lookbehind as a first-class extension (`restart/README.md:121-137`); PASS-1 includes `Lookbehind` in Grammar IR (`restart/audit/pass-1-substrate/PASS-1.md:24-42`). |
 | Per-grammar declaration crates | Not default. A rare escape valve must be explicit and fenced. | Old plans that created declaration crates per grammar. | README says onboarding is `.bbnf` plus workspace metadata, with no Rust crate or match arms (`restart/README.md:11-25`); Lock 14 allows only rare optional declaration crates (`restart/locks/14-LOCKS.md:60`). |
 | Generic grammar code | Mandatory. | Current hardcoded parser registries and grammar-name Rust modules. | CENSUS identifies grammar-name leaks in metadata, registries, path mirrors, and generated shims (`restart/corpora/CENSUS.md:103-122`). Lock 14 rejects generic crates with grammar switches, types, modules, or features (`restart/locks/14-LOCKS.md:60`). |
@@ -846,7 +846,7 @@ Initial variants:
 | `Repeat` | Repetition with min/max and separator metadata. |
 | `Optional` | Optional expression. |
 | `Literal` | Byte/string literal. |
-| `Regex` | Regex expression owned by `parse-that/regex`. |
+| `Regex` | Regex expression owned by `parse-that-regex`. |
 | `Ref` | Rule reference with type arguments. |
 | `Predicate` | Lookahead and grammar predicate forms. |
 | `Lookbehind` | Positive/negative bounded lookbehind. |
@@ -866,7 +866,7 @@ Grammar IR payload and lowering matrix:
 | `Repeat` | Body ID, min/max, separator, greediness. | Nullable body is rejected or guarded. | `RepeatLoop`. |
 | `Optional` | Body ID. | Lowered without changing capture shape. | `OptionalBranch`. |
 | `Literal` | Byte string, case policy, span. | Encoding is known and stable. | `ByteLiteral`, `SimdScan`. |
-| `Regex` | Regex program handle, flags, span. | Regex parsed by `parse-that/regex`. | `RegexProgram`, `SimdScan`. |
+| `Regex` | Regex program handle, flags, span. | Regex parsed by `parse-that-regex`. | `RegexProgram`, `SimdScan`. |
 | `Ref` | Target rule ID, type args, call annotations. | Target resolves after generics instantiate. | `CallRule`. |
 | `Predicate` | Kind and expression ID. | Predicate has no consuming side effects. | `DispatchAlt` hints or guard BIR. |
 | `Lookbehind` | Kind, bounded body ID, width facts. | Width is proven bounded. | `SpeculativeAlt`, guard BIR. |
@@ -1064,6 +1064,85 @@ host, layout, pointer, and visitor codes. The catalogue here binds
 identifiers and producer sites; downstream cookbooks reference identifiers
 and let consumers inspect the producer for the verbatim string.
 
+### 7.5 Backend Trait
+
+Lock 5 commits to per-backend lowerers as the contract boundary
+(`restart/locks/14-LOCKS.md:42`). PASS-1 §2 names the per-backend lowering
+obligations table (`restart/audit/pass-1-substrate/PASS-1.md:61-71`). The
+formal Rust trait that enforces this boundary is the `Backend` trait. V1
+ships `RustBackend: Backend` only; V2 and later add `WasmBackend: Backend`
+and `TsBackend: Backend` without re-architecting BIR or codegen.
+
+The trait surface is:
+
+```rust
+pub trait Backend {
+    type Output;
+    type Error;
+
+    fn lower(
+        &self,
+        bir: &BackendIR,
+        ctx: &LowerContext,
+    ) -> Result<Self::Output, Self::Error>;
+
+    fn emit_runtime_template(
+        &self,
+        grammar: &GrammarMeta,
+    ) -> Result<TemplateOutput, Self::Error>;
+
+    fn emit_value_api(
+        &self,
+        schema: &ValueSchema,
+    ) -> Result<ApiOutput, Self::Error>;
+
+    fn emit_visitor(
+        &self,
+        schema: &VisitorSchema,
+    ) -> Result<VisitorOutput, Self::Error>;
+
+    fn emit_path_schema(
+        &self,
+        schema: &PathSchema,
+    ) -> Result<PathOutput, Self::Error>;
+}
+```
+
+Backend trait obligations:
+
+| Method | Input | V1 RustBackend output | V2 WasmBackend output | V2 TsBackend output |
+|---|---|---|---|---|
+| `lower` | `&BackendIR`, `&LowerContext` | `RustSource` (committed `.rs` artefact tree under `crates/runtime/src/grammars/<g>/`) | `WasmRustSource` (wasm32 lowering of the same `BackendIR`) | `TsSource` (committed `.ts` artefact tree) |
+| `emit_runtime_template` | `&GrammarMeta` | `runtime/src/grammars/<g>/{generated.rs, parser.rs, host.rs, view.rs, value.rs, visitor.rs}` | wasm32-pinned mirror plus exported ABI shell | TS package mirror with TS path schema |
+| `emit_value_api` | `&ValueSchema` | typed `Value` enum + trait impls | wasm32 mirror | TS `Value` namespace + d.ts |
+| `emit_visitor` | `&VisitorSchema` | `Visitor` trait + `VisitTypes` bitflag | wasm32 mirror | TS visitor interface |
+| `emit_path_schema` | `&PathSchema` | `<g>.path-schema.toml` plus typed `pointer!` glue | wasm32 mirror | `<g>.path-schema.toml` plus TS `compilePath` glue |
+
+Backend trait invariants:
+
+| Invariant | Gate |
+|---|---|
+| `Backend::Output` is a typed source artefact, never raw bytes that bypass the committed-source contract. | Lock 6 `xtask` regen equality check; raw byte outputs reject in CI. |
+| Lowerers walk `BackendIR` only. Grammar IR is forbidden inside a `Backend` impl. | `BBNF-GEN001` import-deny lint at `crates/codegen/src/lower/`. |
+| Every grammar in §12.1 lowers through every active `Backend`. V1 has one active `Backend` (`RustBackend`); V2 adds two more without grammar-side changes. | Per-grammar matrix at §12.1 expands columns when a new `Backend` impl lands. |
+| The trait is generic-crate code; no grammar names appear inside any `Backend` impl. | Lock 14 generic-crate audit; `rg -nE 'JsonParser|CssL4Parser|BbnfBootstrap|GoogleSheetsParser' crates/codegen/src/` returns zero. |
+
+The `LowerContext` type carries: target triple (or wasm32-equivalent),
+generated-code budget cursor, grammar metadata reference, side-table
+references (`LayoutFacts`, `ShapeFacts`, `RecognizerFacts`, `CostFacts`,
+`RecoveryFacts`, `BridgeJustification`), and lint-mode toggles. The
+`TemplateOutput`, `ApiOutput`, `VisitorOutput`, and `PathOutput` types
+carry typed file trees with their committed paths and budget metadata,
+not raw strings.
+
+V2 deferral note: when V2 admits `WasmBackend` and `TsBackend`, the BIR
+alphabet does not change (PASS-1 §2 owns the alphabet). The new impls
+implement the trait above; the per-grammar matrix at §12.1 grows columns
+for the new lowering targets; the publish gates at MASTER-PLAN J.W3 and
+Lock 11 grow rows for the new published artefacts. The trait pre-existence
+is the load-bearing piece that makes that V2 expansion mechanical rather
+than architectural.
+
 ## 8. BBNF Language Surface
 
 The BBNF surface supports the extensions settled in README and PASS-1:
@@ -1076,15 +1155,18 @@ rewrite-mode or grammar-level Unicode class algebra.
 
 ```ebnf
 Grammar       ::= Item*
-Item          ::= HostFn | RuleDecl | LayoutDecl | ErrorDecl | Annotation
+Item          ::= ImportDecl | HostFn | RuleDecl | LayoutDecl | ErrorDecl | PrettyDecl | TokenDecl
 
+ImportDecl    ::= "@import" "{" Ident ("," Ident)* "}" "from" StringLit ";"
 HostFn        ::= "@host" "fn" Ident GenericParams? "(" ParamList? ")"
                   "->" Type HostAttrs? Block
 RuleDecl      ::= "rule"? Ident GenericParams? RuleParams? ReturnType?
                   "=" Expr MapTail? ";"
 LayoutDecl    ::= "@layout" Ident LayoutBody
 ErrorDecl     ::= "@error" Ident ErrorBody
-Annotation    ::= "@" Ident AnnotationBody?
+PrettyDecl    ::= "@pretty" Ident PrettyStrategy+ ";"
+PrettyStrategy ::= "compact" | "group" | "indent" | "hardbreak" | "sep" "(" StringLit ")" | "block"
+TokenDecl     ::= "@token" Ident ";"
 
 GenericParams ::= "<" Ident ("," Ident)* ">"
 RuleParams    ::= "(" ParamList? ")"
@@ -1100,19 +1182,22 @@ Lookbehind    ::= Expr "|<" Expr | Expr "|<!" Expr
 Lookahead     ::= "&" Suffix | "!" Suffix
 Suffix        ::= Primary Quantifier?
 Quantifier    ::= "?" | "*" | "+" | "{" Number ("," Number?)? "}"
-Primary       ::= Literal | Regex | Ref | Group | HostCall | Closure
+Primary       ::= Literal | Regex | Ref | Group | HostCall | LambdaExpr
 Group         ::= "(" Expr ")"
 Ref           ::= Ident TypeArgs?
 TypeArgs      ::= "<" Type ("," Type)* ">"
 HostCall      ::= "@" Ident "(" HostArgs? ")"
-Closure       ::= "|" ParamList? "|" Expr
+LambdaExpr    ::= "|" ParamList? "|" (Expr | Block)
 MapTail       ::= "->" ChainExpr
 ChainExpr     ::= Ident ("->" Ident)*
 Regex         ::= "/" RegexProgram "/"
+Type          ::= Ident TypeArgs? | TupleType | RecordType | BorrowType | FnType
+FnType        ::= "fn" "(" (Type ("," Type)*)? ")" "->" Type
 ```
 
-`RegexProgram` is parsed by `parse-that/regex`. Unicode classes may exist
-inside that regex syntax, but BBNF itself does not expose a set algebra surface.
+`RegexProgram` is parsed by `parse-that-regex` (the regex sub-crate of
+`parse-that`). Unicode classes may exist inside that regex syntax, but BBNF
+itself does not expose a set algebra surface.
 
 This sketch is a synthesis copy of PASS-1 §6. The rule-level chain form is
 `Expr -> f1 -> f2`; a generic rule therefore chains as
@@ -1122,6 +1207,33 @@ only inside the block body of `HostFn`. Bodyless host declarations have no
 production. Recovery is owned by `ErrorDecl`: `recover = ...` lives inside
 `ErrorBody`, and standalone recovery directives have no production.
 
+V1 directive canon: the six-directive `Item` production above is the
+complete V1 surface. `@import` carries cross-file grammar composition
+(`grammar/bbnf/bbnf.bbnf:4-5`); `@host fn` carries typed host primitives
+with block-bodied implementations; `@error(recover = ...)` carries
+recovery vocabulary; `@layout` carries layout policies (with `@ws`
+folded into `@layout(ws = ...)`); `@pretty` carries pretty-printing
+strategy with the verbatim vocabulary `compact`, `group`, `indent`,
+`hardbreak`, `sep(...)`, `block` preserved across the 30+ extant grammar
+sites (`grammar/json/json.bbnf:18-20`); `@token` carries atomic-token
+markers binding to the BIR scanner (`grammar/css/pretty.bbnf:17-19`).
+`@debug` is a host primitive, not a directive. The retired catchall
+`Annotation = "@" Ident AnnotationBody?` does not appear in the V1
+production; the `directive-canon` lint at §13.1 rejects every
+`@directive` outside this set, including the explicitly retired
+`@pratt`, `@simd`, `@transducer`, `@rewrite`, `@unicode`, `@ws`,
+standalone `@recover`.
+
+V1 function-value surface: `Type` admits `FnType = "fn" "(" ... ")" "->"
+Type`, making function types first-class. The `Primary` site replaces
+the prior `Closure` non-terminal with `LambdaExpr = "|" ParamList? "|"
+(Expr | Block)`; lambda captures by `&'i Tape<'i>` reference only; the
+`Fn` / `FnMut` / `FnOnce` discrimination Rust exposes is collapsed at
+the BBNF surface; capture-by-move is forbidden in V1. The transducer
+apotheosis follows: `@host fn map<I, O>(f: fn(I) -> O, xs: [I]) -> [O]
+{ ... }` is well-typed without a `@transducer` directive because `f`
+carries a function type and `map` carries a higher-rank scheme.
+
 Input-normalization deletions are explicit and named. Every surface listed below
 is forbidden from the BBNF grammar and from any IR variant; the named substrate
 is the only place the corresponding capability may live.
@@ -1129,8 +1241,8 @@ is the only place the corresponding capability may live.
 | Surface | Status at BBNF level | Routed substrate | Closing gate |
 |---|---|---|---|
 | Rewrite-mode (transducer/rewrite ladders). | Deleted; not parsed, not lowered, not represented in either IR. | None; rewrite-mode does not survive as a feature. | `rg "rewrite-mode\|RewriteMode\|@rewrite"` returns zero outside this deletion table. |
-| Unicode class set algebra (`[[:alpha:]]&&[^a-z]`, `\p{L}--\p{Cyrillic}`). | Deleted from BBNF grammar surface. | `parse-that/regex` HIR may model class algebra inside a regex literal; BBNF never exposes it as productions. | Architecture §8.1 has no `CharClass`/`ClassExpr` production; `parse-that/regex` carries the algebra under HIR. |
-| Grammar-level `(?<= ...)` lookbehind syntax. | Deleted in favor of `|<` and `|<!`. | `parse-that/regex` retains regex-internal `(?<= ...)`; BBNF parser rejects it outside regex literals. | PASS-1 spec uses `|<` only; lookbehind diagnostic carries `BBNF-LOOKBEHIND-WIDTH`. |
+| Unicode class set algebra (`[[:alpha:]]&&[^a-z]`, `\p{L}--\p{Cyrillic}`). | Deleted from BBNF grammar surface. | `parse-that-regex` HIR may model class algebra inside a regex literal; BBNF never exposes it as productions. | Architecture §8.1 has no `CharClass`/`ClassExpr` production; `parse-that-regex` carries the algebra under HIR. |
+| Grammar-level `(?<= ...)` lookbehind syntax. | Deleted in favor of `|<` and `|<!`. | `parse-that-regex` retains regex-internal `(?<= ...)`; BBNF parser rejects it outside regex literals. | PASS-1 spec uses `|<` only; lookbehind diagnostic carries `BBNF-LOOKBEHIND-WIDTH`. |
 | Standalone `@recover` directive. | Folded into `@error(recover = ...)`; not a separate top-level form. | `error` crate keeps the recovery descriptor; grammar parser rejects bare `@recover`. | PASS-3 amendment; no production for `Recover ::= ...` outside `@error` body. |
 | Per-grammar declaration crates. | Not default; allowed only via fenced metadata escape valve. | Workspace `[workspace.metadata.bbnf.grammars.<name>]` plus the §5.6 review form. | Lock 14 lint passes; the §5.6 fence supplies reason/scope/deletion path. |
 
@@ -1158,17 +1270,47 @@ Type rules:
 | Lookbehind must be bounded. | Unbounded lookbehind is rejected before Backend IR. |
 | Layout and error directives are typed side effects. | They produce `LayoutFacts` and `RecoveryFacts`, not ad hoc codegen flags. |
 
-V1 generic rules are parametric HM schemes. No V1 construct introduces GADT
-branch-local type equalities. Higher-rank, existential, indexed, or GADT-like
-grammar types are out of V1 unless a later architecture amendment opens a
-Dunfield-Krishnaswami or OutsideIn-style proof gate with ordered existential
-contexts, principality tracking, decidability, soundness, completeness, and
-explicit annotation rules for non-principal programs.
+V1 generic rules are parametric HM schemes. The V1 type system composes
+HM equality + Algorithm-W principal schemes (Damas-Milner 1982; Pierce
+2002 ch.22) + Pierce-Turner local check/synth (the bidirectional
+expected-type interface above) + DK13 higher-rank algorithmic completeness
+(Dunfield-Krishnaswami 2013; ordered existential contexts, principality
+tracking, decidability, soundness, completeness, explicit annotation
+rules for non-principal programs) + finite first-order unification +
+finite CSP for non-HM choices. Higher-rank polymorphism is therefore a
+V1 surface, not a future amendment. The user mandate's "inference stronger
+than Rust if possible" is honoured by DK13's principality tracking, which
+admits annotation-elidable polymorphism that Rust requires the programmer
+to write out.
+
+GADT/branch-local-equality machinery is internal substrate (CSP solver
+branch-equality propagation feeding `LayoutFacts`); the user-facing GADT
+surface defers to V2 amendment via `BBNF-LOCAL-EQUALITY-ANNOTATION`. Row
+polymorphism is internal too (record-narrowing collapse in `passes::layout`);
+the user-facing row-poly surface defers to a later type-system research
+gate, not to V1.
+
+Function values + types are first-class V1 surface. The `Type`
+non-terminal admits `fn(T) -> U` (PASS-1 §2 grammar amendment); function
+parameters in `@host fn` accept function-typed arguments (the transducer
+apotheosis without a `@transducer` directive). Closure capture is by
+`&'i Tape<'i>` reference only; capture-by-move is forbidden in V1; the
+`Fn` / `FnMut` / `FnOnce` discrimination Rust exposes is collapsed at the
+BBNF surface in V1 — the lifetime-bounded reference closure is the only
+V1 form.
+
+Schema-mining miner: the type system runs telemetry-driven schema
+inference. Most user grammar rules emit `LayoutFacts` and `ShapeFacts`
+without explicit annotations; the miner consumes parsed corpus telemetry,
+proposes candidate shapes, runs them through the HM/CSP/DK13 solver
+chain, and rejects candidates that fail principality or finite-CSP
+legality. The user's mandate "type algebra + telemetry to generate
+semantic schemas without explicit annotations in most cases" lands here.
 
 Record narrowing in V1 is finite generated-shape coercion only: source and
-target shapes must both be known at compile time. Open row polymorphism and
-unbounded structural record subtyping are routed to a later type-system
-research gate, not inferred by the CSP solver.
+target shapes must both be known at compile time. The internal
+row-polymorphism collapse is a `passes::layout` subroutine, never a public
+artefact.
 
 ### 8.3 Host Functions
 
@@ -1269,15 +1411,41 @@ PASS-2 defines the `BackendLowerer` contract and final lowerer ownership
 
 Lowerers:
 
-| Lowerer | V1 contract |
-|---|---|
-| Rust | Primary production lowerer. Emits runtime template, tape/direct builder, host chain calls, visitors, value projections. |
-| WASM | V1 through wasm32 Rust binding and exported API surface. No independent hand emitter. |
-| SIMD | Pattern lowerer fed by recognizer facts and validated `SimdScan` BIR; exact scans need scalar parity, and prefilters need a verifier route before tape emission. |
-| VM | Executable interpreter for debug, replay, and golden equality. |
+| Lowerer | V1 contract | Trait impl |
+|---|---|---|
+| Rust | Primary production lowerer. Emits runtime template, tape/direct builder, host chain calls, visitors, value projections. | `RustBackend: Backend` per §7.5. |
+| SIMD | Pattern lowerer fed by recognizer facts and validated `SimdScan` BIR; exact scans need scalar parity, and prefilters need a verifier route before tape emission. | Co-impl inside `RustBackend` (cfg-gated through `simd-scan`). |
+| VM | Executable interpreter for debug, replay, and golden equality. | Internal evaluator over `BackendIR`; not a public `Backend` impl (replay-only). |
+| WASM | Deferred post-V1; lands as `WasmBackend: Backend` in V2 alongside Lock 11 publication carry. | V2. |
+| TS | Deferred post-V1; lands as `TsBackend: Backend` in V2 alongside the principled TS-native parse+runtime fork. | V2. |
 
 Generated source is committed. Lock 6 rejects a proc-macro facade and requires
 `xtask`-style committed source generation (`restart/locks/14-LOCKS.md:44`).
+
+### 10.1 Rewrite-Budget Categories And Thresholds
+
+The egraph + cost-model bridge (§7.3 `EGraphFacts`, `BridgeJustification`,
+`CostFacts`) rewrites Backend IR plans within a per-category saturation
+budget. Lock 4's per-domain orthogonality (`restart/locks/14-LOCKS.md:40`)
+demands that each rewrite category run inside its own budget pool with
+its own legality-vs-cost discipline. The categories below are the V1
+contract; PASS-2 cost-model ratifies thresholds against SOTA gates.
+
+| Category | Purpose | Budget mode | Threshold (V1) | Owner |
+|---|---|---|---|---|
+| `legality-rewrites` | Mandatory canonicalisations that no plan may skip (e.g., empty-Seq normalisation, nullable-body Repeat rejection, dispatch-key disjointness). | Saturate to fixpoint; failure aborts compile. | unbounded steps; aborts on cycle detection (`debug_assert!` cycle hash). | `passes::normalize`. |
+| `normalization-rewrites` | Optional canonicalisations that simplify lower-time choices (e.g., literal-ordering, alt-flattening, redundant-predicate elision). | Saturate to fixpoint with step budget. | ≤ 1024 steps per `Rule`; halts on first plateau. | `egraph::rewrite` driven by `passes::normalize`. |
+| `cost-driven-rewrites` | Cost-model-led plan selection (e.g., Pratt vs scalar, SIMD vs scalar, dispatch-tree vs jump-table). | Bounded e-graph saturation gated by `CostModel::should_continue`. | ≤ 256 e-class merges per `Rule`; per-grammar override via `[workspace.metadata.bbnf.grammars.<g>.rewrite_budget]`. | `egraph` + `cost-model::frontier`. |
+| `simplification-rewrites` | Post-extraction local simplifications (e.g., dead-`SpanMark` removal, `TapeEmit` coalescing, `DebugMark` elision under non-debug profile). | Single pass over extracted plan. | one pass per `BackendIR` artefact; no fixpoint. | `passes::extract` + `codegen::verify`. |
+
+The thresholds bind to the e-graph saturation budgets owned by the
+`egraph` crate; per-grammar overrides flow through workspace metadata so
+extreme grammars (CSS L4 colour-function chain; Sheets formula Pratt
+spine) admit larger budgets without bloating the default. Threshold
+violations emit `BBNF-OPT001` (`BBNF-PRATT-NOT-APPLIED`) and
+`BBNF-OPT002` (`BBNF-SIMD-NOT-SELECTED`) where applicable; the
+diagnostic identifies which budget pool exhausted and which `CostFacts`
+row the rewrite stalled on.
 
 ## 11. Performance Targets
 
@@ -1386,32 +1554,41 @@ authoritative consumer, the PASS surfaces remain the producer-side reference.
 Every "all extant grammars" or "all nine seed grammars" claim elsewhere in this
 document resolves against this table.
 
-| Grammar | Typed root | `ValueRef` borrow shape | Runtime files emitted | Visitor + `VisitTypes` | Path schema | Fixture manifest | Host route | Generated LOC (current → max) | Declaration-crate status |
-|---|---|---|---|---|---|---|---|---:|---|
-| `bbnf` | `Bbnf` | `BbnfRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, `host.rs`, layout, error, `PrattSpine` LUT | `BbnfVisitor`, `BbnfVisitTypes` | `bbnf.path-schema.toml` | `fixtures/bbnf/manifest.toml` | self-host primitives plus regen utilities; metadata + `@host fn` blocks in `bbnf.bbnf` | 21,503 → 21,933 | none (default; §5.6 fence empty) |
-| `bnf` | `Bnf` | `BnfRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, layout, error | `BnfVisitor`, `BnfVisitTypes` | `bnf.path-schema.toml` | `fixtures/bnf/manifest.toml` | none (pure recogniser; metadata-only host stanza) | 3,290 → 3,356 | none |
-| `csv` | `Csv` | `CsvRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, layout, error, `SimdScan` for delimiter alphabet | `CsvVisitor`, `CsvVisitTypes` | `csv.path-schema.toml` | `fixtures/csv/manifest.toml` | metadata + escape host fns from `host::primitives` | 1,693 → 1,727 | none |
-| `css_l4` | `CssL4` | `CssL4Root` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, `host.rs`, `layout.rs`, error, `SimdScan` for structural alphabet | `CssL4Visitor`, `CssL4VisitTypes` | `css_l4.path-schema.toml` | `fixtures/css/manifest.toml` | colour-function host primitives plus length conversion via `host::primitives`; metadata + `@host fn` blocks | 107,138 → 109,281 | none |
-| `css_pretty` | `CssPretty` | `CssPrettyRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, `layout.rs`, error | `CssPrettyVisitor`, `CssPrettyVisitTypes` | `css_pretty.path-schema.toml` | shares `fixtures/css/` corpus | metadata + format host fns from `host::primitives` | 9,021 → 9,201 | none |
-| `ebnf` | `Ebnf` | `EbnfRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, layout, error | `EbnfVisitor`, `EbnfVisitTypes` | `ebnf.path-schema.toml` | `fixtures/ebnf/manifest.toml` | none (metadata-only host stanza) | 7,646 → 7,799 | none |
-| `google_sheets` | `GoogleSheets` | `GoogleSheetsRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, `host.rs`, layout, error, `PrattSpine` for operator precedence | `GoogleSheetsVisitor`, `GoogleSheetsVisitTypes` | `google_sheets.path-schema.toml` | `fixtures/sheets/manifest.toml` | range/date/array-literal host primitives plus formula host chains | 14,088 → 14,370 | none |
-| `json` | `Json` | `JsonRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, layout, error, `SimdScan` for structural alphabet (twitter/citm/canada hot path) | `JsonVisitor`, `JsonVisitTypes` | `json.path-schema.toml` | `fixtures/json/manifest.toml` | metadata + numeric/string host fns from `host::primitives` | 3,500 → 3,570 | none |
-| `math` | `Math` | `MathRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, layout, error, `PrattSpine` for operator precedence | `MathVisitor`, `MathVisitTypes` | `math.path-schema.toml` | `fixtures/math/manifest.toml` | metadata + numeric host fns from `host::primitives` (Pratt-eligible operator chain only) | 871 → 888 | none |
-| `yaml` (onboarding probe) | `Yaml` | `YamlRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, `host.rs` (if metadata declares host route), layout, error; Pratt/SIMD auto-detected from grammar shape | `YamlVisitor`, `YamlVisitTypes` | `yaml.path-schema.toml` | parity-phase `fixtures/yaml/manifest.toml` (post-onboarding gate, never an onboarding surface) | decomposed via `host::primitives` plus block-bodied `@host fn` chain in the metadata block per `restart/README.md:155`; no Rust per-grammar code emerges from onboarding | 0 → ≤ 4,000 (provisional; SYNTHESIS Wave-2 owner) | none (Lock 14 onboarding admits exactly two surfaces: `yaml.bbnf` plus `[workspace.metadata.bbnf.grammars.yaml]`; declaration crate is forbidden at onboarding) |
+| Grammar | Typed root | `ValueRef` borrow shape | Runtime files emitted | Visitor + `VisitTypes` | Path schema | `path!` macro typing | Regex engine | Fixture manifest | Host route | Generated LOC (current → max) | Declaration-crate status |
+|---|---|---|---|---|---|---|---|---|---|---:|---|
+| `bbnf` | `Bbnf` | `BbnfRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, `host.rs`, layout, error, `PrattSpine` LUT | `BbnfVisitor`, `BbnfVisitTypes` | `bbnf.path-schema.toml` | `path!` typed against `bbnf.path-schema.toml`; `pointer!` retires per Lock 7 + naming-canon lint | `parse-that-regex` (sub-crate of `parse-that`) | `fixtures/bbnf/manifest.toml` | self-host primitives plus regen utilities; metadata + `@host fn` blocks in `bbnf.bbnf` | 21,503 → 21,933 | none (default; §5.6 fence empty) |
+| `bnf` | `Bnf` | `BnfRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, layout, error | `BnfVisitor`, `BnfVisitTypes` | `bnf.path-schema.toml` | `path!` typed against `bnf.path-schema.toml` | `parse-that-regex` | `fixtures/bnf/manifest.toml` | none (pure recogniser; metadata-only host stanza) | 3,290 → 3,356 | none |
+| `csv` | `Csv` | `CsvRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, layout, error, `SimdScan` for delimiter alphabet | `CsvVisitor`, `CsvVisitTypes` | `csv.path-schema.toml` | `path!` typed against `csv.path-schema.toml` | `parse-that-regex` | `fixtures/csv/manifest.toml` | metadata + escape host fns from `host::primitives` | 1,693 → 1,727 | none |
+| `css_l4` | `CssL4` | `CssL4Root` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, `host.rs`, `layout.rs`, error, `SimdScan` for structural alphabet | `CssL4Visitor`, `CssL4VisitTypes` | `css_l4.path-schema.toml` | `path!` typed against `css_l4.path-schema.toml` | `parse-that-regex` | `fixtures/css/manifest.toml` | colour-function host primitives plus length conversion via `host::primitives`; metadata + `@host fn` blocks | 107,138 → 109,281 | none |
+| `css_pretty` | `CssPretty` | `CssPrettyRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, `layout.rs`, error | `CssPrettyVisitor`, `CssPrettyVisitTypes` | `css_pretty.path-schema.toml` | `path!` typed against `css_pretty.path-schema.toml` | `parse-that-regex` | shares `fixtures/css/` corpus | metadata + format host fns from `host::primitives` | 9,021 → 9,201 | none |
+| `ebnf` | `Ebnf` | `EbnfRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, layout, error | `EbnfVisitor`, `EbnfVisitTypes` | `ebnf.path-schema.toml` | `path!` typed against `ebnf.path-schema.toml` | `parse-that-regex` | `fixtures/ebnf/manifest.toml` | none (metadata-only host stanza) | 7,646 → 7,799 | none |
+| `google_sheets` | `GoogleSheets` | `GoogleSheetsRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, `host.rs`, layout, error, `PrattSpine` for operator precedence | `GoogleSheetsVisitor`, `GoogleSheetsVisitTypes` | `google_sheets.path-schema.toml` | `path!` typed against `google_sheets.path-schema.toml` | `parse-that-regex` | `fixtures/sheets/manifest.toml` | range/date/array-literal host primitives plus formula host chains | 14,088 → 14,370 | none |
+| `json` | `Json` | `JsonRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, layout, error, `SimdScan` for structural alphabet (twitter/citm/canada hot path) | `JsonVisitor`, `JsonVisitTypes` | `json.path-schema.toml` | `path!` typed against `json.path-schema.toml` (the canonical SOTA-anchor case) | `parse-that-regex` | `fixtures/json/manifest.toml` | metadata + numeric/string host fns from `host::primitives` | 3,500 → 3,570 | none |
+| `math` | `Math` | `MathRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, layout, error, `PrattSpine` for operator precedence | `MathVisitor`, `MathVisitTypes` | `math.path-schema.toml` | `path!` typed against `math.path-schema.toml` | `parse-that-regex` | `fixtures/math/manifest.toml` | metadata + numeric host fns from `host::primitives` (Pratt-eligible operator chain only) | 871 → 888 | none |
+| `yaml` (onboarding probe) | `Yaml` | `YamlRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, `host.rs` (if metadata declares host route), layout, error; Pratt/SIMD auto-detected from grammar shape | `YamlVisitor`, `YamlVisitTypes` | `yaml.path-schema.toml` | `path!` typed against `yaml.path-schema.toml` (parity-phase only) | `parse-that-regex` | parity-phase `fixtures/yaml/manifest.toml` (post-onboarding gate, never an onboarding surface) | decomposed via `host::primitives` plus block-bodied `@host fn` chain in the metadata block per `restart/README.md:155`; no Rust per-grammar code emerges from onboarding | 0 → ≤ 4,000 (provisional; SYNTHESIS Wave-2 owner) | none (Lock 14 onboarding admits exactly two surfaces: `yaml.bbnf` plus `[workspace.metadata.bbnf.grammars.yaml]`; declaration crate is forbidden at onboarding) |
 
 Column semantics:
 
 | Column | Definition |
 |---|---|
 | Typed root | The generated direct-to-struct type returned by `parse(&'i str)` per PASS-3 §2. |
-| `ValueRef` borrow shape | The untyped tape-cursor view over `&'i Tape<'i>` that backs `pointer!`, `select!`, visitors, and the debugger per Lock 1 and PASS-3 §4. |
+| `ValueRef` borrow shape | The untyped tape-cursor view over `&'i Tape<'i>` that backs `path!`, `select!`, visitors, and the debugger per Lock 1 and PASS-3 §4. The legacy `pointer!` macro retires under the naming-canon lint; the canonical macro is `path!`. |
 | Runtime files emitted | Template-emitted files under `runtime/src/grammars/<name>/`; every cell is generated or data-only, hand-written runtime files are forbidden by Lock 14. |
 | Visitor + `VisitTypes` | The generated `Visitor` trait and its bitflag-pruned visit-type set per PASS-3 §3. |
-| Path schema | The generated path-schema sidecar consumed by `pointer!`/`select!` typing per PASS-3 §3. |
+| Path schema | The generated path-schema sidecar consumed by `path!` / `select!` typing per PASS-3 §3. |
+| `path!` macro typing | The compile-time path-AST typing surface backed by `path-core`. Every grammar's `path!` invocation types against the matching path-schema sidecar; rejects mismatches with `BBNF-POINTER-UNKNOWN-SEGMENT` / `BBNF-POINTER-GRAMMAR-MISMATCH` (legacy code names retained until §7.4 catalogue renames). |
+| Regex engine | Every grammar lowers `Regex` BIR variants through `parse-that-regex` (the regex sub-crate of `parse-that`); the regex-automata oracle role retires per V1-FOLD-CANDIDATES Tier 3 #23. |
 | Fixture manifest | The corpus manifest under `crates/test-fixtures/corpus/`; `yaml` carries a parity-phase manifest only. |
 | Host route | The host-function decomposition source: `@host fn` blocks in the grammar, generic primitives in `host::primitives`, or workspace-metadata directives. Declaration crates are not part of the default host route. |
 | Generated LOC | PASS-2 §6 baselines and +2% ceiling per grammar; LOC excludes `parser.rs` macros and `host.rs` shells per Lock 13's generated-file exemption. |
 | Declaration-crate status | `none` (default; §5.6 fence empty) for every grammar in the seed set. Any future entry must populate the eight-field §5.6 review form. |
+
+V1 trajectory carry: TS and WASM lowering columns are absent from the
+matrix above. They land in V2 alongside `WasmBackend: Backend` and
+`TsBackend: Backend` (§7.5) plus the Lock 11 V2 publication rows
+(`restart/locks/14-LOCKS.md:54`). The V1 `RustBackend` is the sole
+active `Backend` impl; the per-grammar matrix grows columns mechanically
+when a new `Backend` impl lands.
 
 The "Until Wave 3 lands the full matrix" note that previously occupied this
 section retires; the matrix above is the matrix.
@@ -1444,6 +1621,27 @@ Lock 13 exception ledger:
 | Handwritten parser/lowerer/runtime files over 500 LOC. | No. | Split by concern before landing implementation. |
 | More than 10 children in source directory. | Only with tranche-local rationale and lint allowlist. | Temporary migration shape must not become the default. |
 
+### 13.1 Lint Manifest
+
+Lint categories are an architectural contract, not a tooling preference.
+Each lint rejects a specific class of corpus drift; together they form
+the structural fence around the generic-crate vs grammar-named code
+boundary, the directive canon, the regex-engine canon, and the
+per-grammar metadata fence. Each lint binds to either a `cargo clippy`
+extension or a `cargo xtask lint` step.
+
+| Lint category | What it rejects | Bound to | Diagnostic code |
+|---|---|---|---|
+| `directive-canon` | Any `@directive` outside the six V1 directives (`@import`, `@host fn`, `@error`, `@layout`, `@pretty`, `@token`). Retired directives `@pratt`, `@simd`, `@transducer`, `@rewrite`, `@unicode`, standalone `@recover`, and `@ws` (folded into `@layout(ws = ...)`) are explicit reject targets. | `cargo xtask lint --directive-canon` plus `grammar/parse/directives` syntax check. | `BBNF-DIRECTIVE-RETIRED`. |
+| `naming-canon` | `pointer!` macro mentions in greenfield text or new code (the macro is `path!`); `bbnf-path` / `bbnf-path-ts` crate-name references (the canonical names are `path` and `path-ts`); `bbnf-regex` references (the canonical name is `parse-that-regex`). | `cargo xtask lint --naming-canon`. | `BBNF-NAMING-DRIFT`. |
+| `regex-engine-canon` | `regex-automata` import in any V1 active reference (the regex engine is `parse-that-regex`); the corpus removes the regex-automata oracle role per V1-FOLD-CANDIDATES Tier 3 #23. | `cargo xtask lint --regex-engine-canon` plus `Cargo.toml` deny-import gate. | `BBNF-REGEX-ENGINE-DRIFT`. |
+| `per-grammar-fence-canon` | Lock 14 violations: grammar names in generic-crate source, grammar-named modules outside `runtime/src/grammars/<g>/`, per-grammar match arms in `bbnf-ir`/`passes`/`codegen`/`runtime`/`host`/`path`/`path-core`/`egraph`/`csp-solver`/`parse-that`/`parse-that-regex`/`simd-scan`/`analysis`/`lsp`. | `cargo xtask lint-grammar-generalization` (existing) plus `cargo xtask lint --fence-canon`. | `BBNF-GRAMMAR-NAME-IN-GENERIC-CRATE`. |
+
+The lint manifest is part of the architectural contract; lints retire
+only by explicit amendment. Adding a lint requires extending this table
+and the matching `cargo xtask lint` subcommand; removing one requires
+the same.
+
 ## 14. Documentation And Voice
 
 Implementation docs follow the precepts:
@@ -1468,7 +1666,7 @@ The restart architecture is:
    substrate.
 5. BBNF extensions limited to the settled set: lookbehind, `@host fn`,
    chaining, generics, `@error`, and `@layout`.
-6. Rewrite-mode out; Unicode class algebra below BBNF in `parse-that/regex`.
+6. Rewrite-mode out; Unicode class algebra below BBNF in `parse-that-regex`.
 7. Generic host and runtime systems; no per-grammar declaration crates by
    default.
 8. SOTA, generated LOC, tree-shape, and future-grammar tests as hard gates.

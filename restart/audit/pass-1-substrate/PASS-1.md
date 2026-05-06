@@ -172,7 +172,7 @@ Sibling API uniformity floor:
 | Grammar IR variant list and field schema | `ir/grammar_ir/`, `grammar/desugar/`, `passes/normalize/` | parser/desugar does not have stable ids | Architecture §7 table consumed by BIR builder tests |
 | Backend IR variant list and consumer interface | `ir/backend_ir/`, `vm/program/`, `passes/extract/` | lowerers must not own BIR types | PASS-2 BIR import-deny gate |
 | Cost-model trait public API | `cost-model/score/`, `cost-model/frontier/`, `cost-model/solve/`, `cost-model/evidence/`, `passes/extract/` | generated budget, SOTA scores, and dominated alternatives need common evidence | PASS-2 perf/budget table consumes `CostDecision` evidence |
-| E-graph rewrite plug-in registry | `egraph/domains/`, `passes/normalize/`, `parse-that/regex/` | bridge facts need stable e-class names | C.W4 bridge tests |
+| E-graph rewrite plug-in registry | `egraph/domains/`, `passes/normalize/`, `parse-that-regex/` | bridge facts need stable e-class names | C.W4 bridge tests |
 | Host metadata schema | `host/signature/`, `host/metadata/`, `grammar/directives/` | host chains need typed signatures | D.W2 and F.W2 host gates |
 | Tape/direct value contract | PASS-2 runtime template and PASS-3 value API | tape ABI must be named | F.W1 runtime template and G.W2 value API gates |
 
@@ -193,10 +193,14 @@ The canonical grammar surface excludes rewrite-mode and grammar-level Unicode al
 
 ```ebnf
 Grammar        = { Directive | Rule } ;
-Directive      = HostFn | ErrorDecl | LayoutDecl ;
+Directive      = ImportDecl | HostFn | ErrorDecl | LayoutDecl | PrettyDecl | TokenDecl ;
+ImportDecl     = "@import" "{" Ident { "," Ident } "}" "from" StringLit ";" ;
 HostFn         = "@host" "fn" Ident GenericParams? "(" Params? ")" "->" Type HostAttrs? Block ;
-ErrorDecl      = "@error" Ident ErrorBody ;
-LayoutDecl     = "@layout" Ident LayoutBody ;
+ErrorDecl     = "@error" Ident ErrorBody ;
+LayoutDecl    = "@layout" Ident LayoutBody ;
+PrettyDecl    = "@pretty" Ident PrettyStrategy { PrettyStrategy } ";" ;
+PrettyStrategy = "compact" | "group" | "indent" | "hardbreak" | "sep" "(" StringLit ")" | "block" ;
+TokenDecl     = "@token" Ident ";" ;
 Rule           = "rule"? Ident GenericParams? RuleParams? ReturnType? "=" Expr MapTail? ";" ;
 GenericParams  = "<" Ident { "," Ident } ">" ;
 RuleParams     = "(" Params? ")" ;
@@ -211,18 +215,24 @@ Lookbehind     = Expr "|<" Expr | Expr "|<!" Expr ;
 Predicate      = "&" Postfix | "!" Postfix ;
 Postfix        = Primary { "?" | "*" | "+" | RepeatRange } ;
 RepeatRange    = "{" Number ( "," Number? )? "}" ;
-Primary        = Literal | Regex | Ref | Group | HostCall | Closure ;
+Primary        = Literal | Regex | Ref | Group | HostCall | LambdaExpr ;
 Group          = "(" Expr ")" ;
 Ref            = Ident GenericArgs? ;
 HostCall       = "@" Ident "(" Args? ")" ;
-Closure        = "|" Params? "|" Expr ;
+LambdaExpr     = "|" Params? "|" ( Expr | Block ) ;
 MapTail        = "->" ChainExpr ;
 ChainExpr      = Ident { "->" Ident } ;
 Regex          = "/" RegexBody "/" RegexFlags? ;
-Type           = Ident GenericArgs? | TupleType | RecordType | BorrowType ;
+Type           = Ident GenericArgs? | TupleType | RecordType | BorrowType | FnType ;
+FnType         = "fn" "(" TypeList? ")" "->" Type ;
+TypeList       = Type { "," Type } ;
 ```
 
 `HostFn` is block-bodied. The production above carries `Block` as the trailing non-terminal; the declaration-only form `HostFn = ... ";"` is rejected and never appears in BBNF source. The block is the sole owner of host-function semantics: it carries the typed body, the optional method-chain expressions, and the closure captures. Bodyless host declarations do not exist; a `@host fn` without a body is a parse error before validation runs.
+
+V1 BBNF directive set: the six-directive `Directive` production above is the complete V1 surface. `@import` carries cross-file grammar composition and is extant in 22+ grammar files (cite: `grammar/bbnf/bbnf.bbnf:4-5`). `@pretty` carries pretty-printing strategy with the verbatim vocabulary `compact`, `group`, `indent`, `hardbreak`, `sep(...)`, `block` preserved across the 30+ extant sites (cite: `grammar/json/json.bbnf:18-20`). `@token` carries atomic-token markers binding to the BIR scanner (cite: `grammar/css/pretty.bbnf:17-19`). `@ws` folds into `@layout(ws = ...)`; `@debug` is a host primitive routed through the host registry, not a directive; standalone `@recover` retires (folded into `@error(recover = ...)`); `@pratt`, `@simd`, `@transducer`, `@rewrite`, and `@unicode` retire entirely. The `directive-canon` lint at ARCHITECTURE §13.1 enforces this set.
+
+Function values + types: V1 BBNF promotes function values to first-class. `Type` admits `FnType = "fn" "(" TypeList? ")" "->" Type`, so a user may write `@host fn map<I, O>(f: fn(I) -> O, xs: [I]) -> [O] { ... }` without a `@transducer` directive — the transducer apotheosis. `LambdaExpr` replaces the prior `Closure` production at the `Primary` site; the surface form is `|x| body` (or `|x| Block`). Lambda captures by `&'i Tape<'i>` reference only; capture-by-move is a parse error in V1; the `Fn` / `FnMut` / `FnOnce` discrimination Rust exposes is absent at the BBNF surface. The lifetime-bounded reference closure is the only V1 form. Closure-capture-by-move and the `Fn*` trait split defer to V2 amendment.
 
 Regex-style `(?<=...)` belongs only inside regex literals. `RewriteMode` has no production. Unicode class algebra has no BBNF production; regex may accept Unicode class expressions inside `RegexBody`.
 

@@ -13,7 +13,7 @@ This PASS-3 synthesis covers Phase 1 target PASS-3 only: user runtime surfaces, 
 
 PASS-1 and PASS-2 syntheses are not consumed as authority in this Phase 1 parallel run by design. This synthesis read the PASS-1/PASS-2 prompts, README, locks, inheritance index, corpus references, archived plans, BB W4/W5 materials, cookbooks, and current source references, then records assumptions and hand-offs for SYNTHESIS.
 
-Settled authority: tape is the substrate and is properly unioned with direct-to-struct. It must not be renamed to `ParseStream`. Columnar SoA and parallel substrates are dead. BBNF extensions in this PASS are lookbehind, `@host fn`, multi-function chaining, generics, `@error`, and `@layout`; rewrite-mode is out; grammar-level Unicode-class algebra is deferred to parse-that/regex. No per-grammar declaration crates exist by default.
+Settled authority: tape is the substrate and is properly unioned with direct-to-struct. It must not be renamed to `ParseStream`. Columnar SoA and parallel substrates are dead. The post-Phase-7.1 V1 BBNF surface formalises six directives — `@import`, `@host fn`, `@error(recover = ...)`, `@layout`, `@pretty`, `@token` — alongside lookbehind, multi-function chaining, generics, function values + lambda literals (`|x| body`), and closure capture by `&'i Tape<'i>` reference. Rewrite-mode is out; grammar-level Unicode-class algebra is deferred to `parse-that-regex` (the regex sub-crate of `parse-that`). No per-grammar declaration crates exist by default. The Rust path/select macro family is `path!` + `select!` (the `pointer!` spelling retires per audit #3); diagnostic codes carry the `BBNF-PATH-*` prefix.
 
 Conflicts surfaced:
 
@@ -30,7 +30,7 @@ Conflicts surfaced:
 | Parse constructors | `parse`, `parse_in`, and `parse_owned` implement Lock 9 slice-borrow/default plus explicit arena/owned modes (`restart/locks/14-LOCKS.md:50`). | Covers low allocation, batch, and durable use cases. | Owned mode can hide copies. | Bench all modes separately. | KEEP |
 | Tape/direct union | Tape is the single advanced substrate; direct structs remain the ergonomic default (`restart/README.md:285-314`, `restart/locks/14-LOCKS.md:34`). | Unifies path, visitors, debug, LSP, and benchmarks. | Requires careful identity invariants. | Every visible direct node carries tape identity. | REINVENT |
 | `ParseStream` | Stale replacement name in prompts/inheritance. | None under current authority. | Would fork naming and contracts. | Mention only as stale conflict. | DISCARD |
-| Path/select DSL | `pointer!` and `select!` validate against generated metadata and lower to runtime traversal plans. | Strong diagnostics and static typing. | Current registry is overfit. | Replace hardcoded fixtures with metadata. | REINVENT |
+| Path/select DSL | `path!` and `select!` validate against generated metadata and lower to runtime traversal plans. | Strong diagnostics and static typing. | Current registry is overfit. | Replace hardcoded fixtures with metadata. | REINVENT |
 | Visitors | Generated visitors plus `VisitTypes` bitflag pruning are the only mutation channel. | Matches W5 and lightningcss-style traversal. | Large generated APIs need restraint. | Expose simple prelude plus advanced modules. | KEEP |
 | Error/recovery/layout | `@error(recover = ...)` and `@layout` feed generated diagnostics, formatter, and recovery nodes. Legacy `@recover` may parse only as an alias during migration. | Better author control and LSP output. | Can become semantic-action sprawl. | Keep declarative; no rewrite-mode. | KEEP / REINVENT |
 | Incremental parsing | LSP retains range edit application but parse state becomes snapshot-based with reparse plans. | Moves beyond full reparse. | Needs PASS-1 anchors. | Report fallback-to-full-parse rates. | REINVENT |
@@ -74,70 +74,73 @@ pub trait DocumentView<'input> {
     fn source(&self) -> &'input str;
     fn root_value(&self) -> ValueRef<'_, 'input, RootKind>;
     fn diagnostics(&self) -> &[Diagnostic];
+    fn format(&self) -> String;
 }
 ```
 
-Direct structs and tape are not competing products. Direct roots are what normal users author against. Tape-backed `ValueRef` is the shared cursor for `pointer!`, `select!`, visitors, debugger, CLI projections, LSP features, and playground inspection. This resolves the old SOTA recommendation against tape (`restart/corpora/SOTA.md:205-214`) by applying Lock 1 and the current dispatch authority.
+The `format()` method is the public surface of the `@layout`-driven formatter. The engine itself is grammar-emitted: `@layout`, `@pretty`, and `@token` directives produce `LayoutFacts` consumed by per-grammar layout lowering; the public method walks tape identity against those facts and emits source. The legacy `gorgeous` engine is archived per Lock 12 and is not the runtime substrate; `format()` carries no separate engine. Per-grammar pretty options (e.g. `compact`, `group`, `indent`, `hardbreak`, `sep(...)`, `block`) are surfaced through metadata derived from `@pretty`, not through a `PrettyOptions` argument; advanced cases that need custom strategies route through grammar-level `@pretty` rules rather than runtime API knobs.
+
+Direct structs and tape are not competing products. Direct roots are what normal users author against. Tape-backed `ValueRef` is the shared cursor for `path!`, `select!`, visitors, debugger, CLI projections, LSP features, and playground inspection. This resolves the old SOTA recommendation against tape (`restart/corpora/SOTA.md:205-214`) by applying Lock 1 and the current dispatch authority.
 
 ## §3 Path, select, and visitor commitments
 
-`pointer!` and `select!` survive, but their implementation is rebuilt. The current `bbnf-path` code demonstrates the macro direction (`crates/bbnf-path/src/lib.rs:1-22`, `crates/bbnf-path/src/path_macro.rs:146-210`) while also exposing two dead ends: hardcoded grammar marker registries (`crates/bbnf-path/src/registry.rs:80-98`, `crates/bbnf-path/src/registry.rs:125-138`) and placeholder terminal typing (`crates/bbnf-path/src/path_macro.rs:198-199`). The TypeScript mirror duplicates compiler logic because the proc-macro crate cannot be consumed directly (`crates/bbnf-path-ts/src/compile.rs:1-12`, `crates/bbnf-path-ts/src/compile.rs:41-65`). These citations are legacy evidence only; restart package names are `path`, `path-core`, and `path-ts`.
+`path!` and `select!` survive, but their implementation is rebuilt. The current `bbnf-path` code demonstrates the macro direction (`crates/bbnf-path/src/lib.rs:1-22`, `crates/bbnf-path/src/path_macro.rs:146-210`) while also exposing two dead ends: hardcoded grammar marker registries (`crates/bbnf-path/src/registry.rs:80-98`, `crates/bbnf-path/src/registry.rs:125-138`) and placeholder terminal typing (`crates/bbnf-path/src/path_macro.rs:198-199`). The TypeScript mirror duplicates compiler logic because the proc-macro crate cannot be consumed directly (`crates/bbnf-path-ts/src/compile.rs:1-12`, `crates/bbnf-path-ts/src/compile.rs:41-65`). These citations are legacy evidence only; restart package names are `path`, `path-core` (V1 J.W3), with `path-ts` deferred post-V1 alongside the TS-native parse+runtime fork.
 
 PASS-3 commitment:
 
-- `path-core` owns parsing, lowering, validation, diagnostics, metadata schema, and runtime plans.
-- `path` owns Rust proc macros: `pointer!` and `select!`.
-- `path-ts` owns TS template tags and schema bindings.
+- `path-core` owns parsing, lowering, validation, diagnostics, metadata schema, and runtime plans. Compile-time validation against grammar metadata is shared across every macro callsite: `path!(Json, ["a", "b", 0])` and `select!(Css, "...")` both consume the same `path-schema.toml` sidecar.
+- `path` owns Rust proc macros: `path!` and `select!`. The `path!` spelling matches the path-core/path/path-ts crate set per the `vec!`/`Vec` analogy; the legacy `pointer!` spelling retires.
+- `path-ts` defers post-V1. J.W3 ships `path-core` + `path` (Rust) only via the `RustBackend: Backend` impl; the TS template-tag + schema-binding surface lands when `TsBackend: Backend` lands per Lock 5 amendment.
 - Generated grammar metadata replaces fixture registries.
 - Both explicit type suffixes and implicit terminal inference are supported, matching the W5 pointer decision (`docs/tranches/BB/audit/W5-pointer-syntax-decision.md:20-27`, `docs/tranches/BB/audit/W5-pointer-syntax-decision.md:148-156`).
 
-**Pointer/select worked path.** A generated JSON runtime proves both query
+**Path/select worked path.** A generated JSON runtime proves both query
 surfaces against the same `json.path-schema.toml` sidecar:
 
 ```rust
 let doc = Json::parse(source)?;
 let root: ValueRef<'_, '_, JsonRoot> = doc.root_value();
 
-let sku_path = pointer!(Json, ["orders", 0, "sku"]);
+let sku_path = path!(Json, ["orders", 0, "sku"]);
 let sku_query = select!(
     Json,
     "object.member[name='orders'] > array > object.member[name='sku']"
 );
 ```
 
-Compile time: `pointer!` validates the `orders -> [0] -> sku` segment chain
+Compile time: `path!` validates the `orders -> [0] -> sku` segment chain
 against generated JSON metadata and fixes the terminal kind to a string value;
 `select!` validates the structural query against the same node-kind and field
 schema and lowers it to a traversal plan over the `ValueRef` cursor space.
 Runtime: both plans start at `root`, walk tape node ids without re-parsing, and
 return typed `ValueRef` projections over the same snapshot identity that
-visitors, debugger, and LSP reuse. The `pointer!` path yields one
+visitors, debugger, and LSP reuse. The `path!` path yields one
 `ValueRef<_, _, JsonString>`; the `select!` plan yields the matching SKU
 projection set.
 
-Failure path: `pointer!(Json, ["orders", 0, "sku_code"])` emits
-`BBNF-POINTER001` because `sku_code` is not a generated field. An implicit form
-with both `Json` and `Yaml` roots in scope emits `BBNF-POINTER002` until the
+Failure path: `path!(Json, ["orders", 0, "sku_code"])` emits
+`BBNF-PATH001` because `sku_code` is not a generated field. An implicit form
+with both `Json` and `Yaml` roots in scope emits `BBNF-PATH002` until the
 caller supplies the explicit grammar marker. A stale `json.path-schema.toml`
-emits `BBNF-POINTER003` and routes the user to `cargo xtask regen`.
+emits `BBNF-PATH003` and routes the user to `cargo xtask regen`.
 
 **Registry deletion close gate.** Hardcoded grammar marker registries are not a deferral; they are a deletion item. Final close fails unless the following all hold:
 
 ```text
 rg -n 'GRAMMAR_PATH_REGISTRY|GrammarMarkerRegistry|hardcoded_grammar_registry' \
-   crates/path crates/path-core crates/path-ts crates/bbnf crates/codegen \
+   crates/path crates/path-core crates/bbnf crates/codegen \
    crates/runtime crates/ir
 => zero outside generated data
 ```
 
-Generated metadata produced by xtask-emitted descriptors is the only validation surface for `pointer!` and `select!`. Owner: PASS-3 amendment in coordination with SYNTHESIS deletion-gate ledger.
+The `crates/path-ts/` tree is post-V1 deferred per Lock 7 amendment; it does not contribute to the V1 deletion-gate scan. Generated metadata produced by xtask-emitted descriptors is the only validation surface for `path!` and `select!`. Owner: PASS-3 amendment in coordination with SYNTHESIS deletion-gate ledger.
 
 **Consumer acceptance gates.** PASS-3 surfaces are not closeable on prose-only hand-offs from PASS-2. The emission contract from PASS-2 must satisfy three executable consumer gates before PASS-3 closes:
 
 | Consumer gate | Surface under test | Acceptance criterion |
 |---|---|---|
 | Emitted parse signatures compile under PASS-3 wrappers | `parse`, `parse_in`, `parse_owned` for every extant grammar plus yaml | Generated runtime crate compiles when `Json::parse(&str)`, `Json::parse_in(&str, &Arena)`, and `Json::parse_owned(String)` are called from a PASS-3 consumer smoke. |
-| `DocumentView` metadata feeds visitors and selectors | `DocumentView::root_value`, `DocumentView::diagnostics`, generated `Visitor` trait, `pointer!`, `select!` | Generated `DocumentView::root_value()` projects to the same `ValueRef` index space the visitor walker, `pointer!` runtime plan, and `select!` traversal plan consume. |
+| `DocumentView` metadata feeds visitors and selectors | `DocumentView::root_value`, `DocumentView::diagnostics`, `DocumentView::format`, generated `Visitor` trait, `path!`, `select!` | Generated `DocumentView::root_value()` projects to the same `ValueRef` index space the visitor walker, `path!` runtime plan, and `select!` traversal plan consume; `DocumentView::format()` walks `LayoutFacts` against tape identity and emits `@layout`-driven source. |
 | Materialisation cost tables generated and documented | Per-grammar runtime emission | Codegen emits a `materialisation_cost.toml` (or equivalent generated artefact) with field counts, payload arena bytes, tape-token width, `TapeShape` scalar-cache policy, string-normalization policy, repeated-access cost class, selected objective profile, scalarized score/objective vector, and domination reason per node kind; the cookbook references it. |
 
 These gates appear as receiver/blocker/receiving-gate rows in §8.
@@ -183,7 +186,9 @@ pub struct ValueRef<'doc, 'input, K = AnyKind> {
 
 This layout is not a PASS-1 mandate; it is a user-surface contract. PASS-1 may pack differently if these semantics remain true. PASS-2 may build direct structs first or tape first per grammar, but build order is not semantic. The externally visible invariant is stable: every public node has snapshot-scoped tape identity, every tape node can be projected through `ValueRef`, every generated direct field traces to one `(TapeId, node id, payload class)`, and cross-snapshot identity exists only through a `ReparsePlan` reuse map. `TapeShape` declares token kind, span class, payload class, traversal skip policy, scalar-cache policy, and string-normalization policy; `ValueShape` declares generated typed projections over the same node id. Red-like cursor views, direct typed roots, and AST adapters are transient projections over the green-like owning tape; none owns independent parse identity or recovery state.
 
-Debug and DAP must reuse this identity. Existing DAP code already contains sessions, breakpoints, and stepping (`crates/lsp/src/dap/mod.rs:45-83`, `crates/lsp/src/dap/mod.rs:121-143`, `crates/lsp/src/dap/mapping.rs:41-92`), and the playground wasm API already exposes parse/LSP/debug concepts (`playground/src/composables/wasm/index.ts:233-256`, `playground/src/composables/wasm/index.ts:274-322`, `playground/src/composables/wasm/types.ts:166-183`). Restart keeps those user concepts while moving their internals onto tape snapshots. The debug acceptance gate requires every breakpoint, step, hover, and playground trace event to carry `SnapshotId`, `TapeId`, node kind, and source span when the tape node exists. Span-only fallback is allowed only inside a parse-failed region before a stable recovery node exists; the fallback reason is reported on the debug-only channel and never as a user LSP diagnostic.
+Debug and DAP must reuse this identity. Existing DAP code already contains sessions, breakpoints, and stepping (`crates/lsp/src/dap/mod.rs:45-83`, `crates/lsp/src/dap/mod.rs:121-143`, `crates/lsp/src/dap/mapping.rs:41-92`), and the playground wasm API already exposes parse/LSP/debug concepts (`playground/src/composables/wasm/index.ts:233-256`, `playground/src/composables/wasm/index.ts:274-322`, `playground/src/composables/wasm/types.ts:166-183`); the playground wasm citation is legacy artefact, and the V1 surface defers WASM-specific lower-and-bench programme to V2 per Lock 5 amendment. Restart keeps those user concepts while moving their internals onto tape snapshots. The debug acceptance gate requires every breakpoint, step, hover, and playground trace event to carry `SnapshotId`, `TapeId`, node kind, and source span when the tape node exists. Span-only fallback is allowed only inside a parse-failed region before a stable recovery node exists; the fallback reason is reported on the debug-only channel and never as a user LSP diagnostic.
+
+**Closure environment.** BBNF closures (`|x| body`) capture by `&'i Tape<'i>` reference only; closure environment frames are stack-allocated, never heap-escaping. The four committed closure sites — host-chain closure, map closure, predicate closure, recovery closure — each lower to a fixed BIR variant (`HostChain`, `ValueProject`, predicate-bool, `ErrorRecover`) per the Phase-7.1 Lock 4 amendment + ARCH §8.2 type-system commitment. None of the four sites materialises a runtime function-pointer table; each closure is monomorphised at its lambda's allocation site. Closure capture lifetime is bounded by `&'i`, so closures cannot escape the parse scope they were authored in; the lifetime parameter `'i` ties capture identity to tape identity. Function-value broadening beyond the four sites (first-class storage, return-from-rule, parameter-pass outside the host chain) defers to a Lock 1 reuse-map amendment that extends snapshot-scoped identity to closure environments. PASS-3 absorbs the narrow contract today; the broadening contract is a V2 amendment surface.
 
 ## §5 Error recovery, incremental parsing, LSP, and DAP
 
@@ -292,7 +297,7 @@ crates/bbnf/src/
   metadata/
 ```
 
-The public crate carries exactly 8 immediate children — `lib.rs`, `prelude.rs`, `parse/` (entry constructors), `document/` (root + view), `query/` (`pointer!`/`select!` adapters), `visitor/` (generated traits + `VisitTypes` pruning), `diagnostics/` (rendering + categories), and `metadata/` (workspace-metadata access, host route surface, layout descriptors) — per HARDENING-CONSOLIDATED §4.19 and Lock 13's 4-10 child-count rule. The substrate cursor (`tape/`) and the typed-root projection (`value/`) live under `runtime/src/tape/` and `runtime/src/value/` per Lock 1; the aggregator re-exports them through `prelude.rs` rather than carrying duplicate sibling directories. The grammar-specific surface (`Json`, `CssL4`, etc.) is generated under per-grammar runtime crates referenced from `metadata/`, not as a sibling directory in `bbnf/src/`. Host-function bindings, layout lowering hooks, and metadata sidecars all live under `metadata/`.
+The public crate carries exactly 8 immediate children — `lib.rs`, `prelude.rs`, `parse/` (entry constructors), `document/` (root + view), `query/` (`path!`/`select!` adapters), `visitor/` (generated traits + `VisitTypes` pruning), `diagnostics/` (rendering + categories), and `metadata/` (workspace-metadata access, host route surface, layout descriptors) — per HARDENING-CONSOLIDATED §4.19 and Lock 13's 4-10 child-count rule. The substrate cursor (`tape/`) and the typed-root projection (`value/`) live under `runtime/src/tape/` and `runtime/src/value/` per Lock 1; the aggregator re-exports them through `prelude.rs` rather than carrying duplicate sibling directories. The grammar-specific surface (`Json`, `CssL4`, etc.) is generated under per-grammar runtime crates referenced from `metadata/`, not as a sibling directory in `bbnf/src/`. Host-function bindings, layout lowering hooks, and metadata sidecars all live under `metadata/`.
 
 `bbnf-cli`:
 
@@ -357,7 +362,7 @@ benches/
   incremental.rs
 ```
 
-`path-core`, `path`, `path-ts`:
+`path-core`, `path` (V1 J.W3 stable cohort):
 
 ```text
 crates/path-core/src/
@@ -374,11 +379,15 @@ crates/path-core/src/
 
 crates/path/src/
   lib.rs
-  pointer_macro.rs
+  path_macro.rs
   select_macro.rs
   diagnostics.rs
+```
 
-crates/path-ts/src/
+`crates/path-ts/` defers post-V1. The TS template-tag + schema-binding surface (`template_tag.rs`, `schema.rs`, `bindings.rs`) lands when `TsBackend: Backend` lands per Lock 5 amendment; the V1 `RustBackend` impl carries the entire path/select surface that V1 ships. The deferred tree shape:
+
+```text
+crates/path-ts/src/                  (deferred post-V1; TS-native parse+runtime fork)
   lib.rs
   template_tag.rs
   schema.rs
@@ -404,9 +413,9 @@ fixtures/
 
 Fixture directories are data and manifests only. Rust fixture code is grammar-agnostic, preserving Amendment 01 (`restart-archive-2026-05-04/audit/master-plan/AMENDMENT-01-NO-PER-GRAMMAR-CRATES.md:58-62`) and Lock 14 no-overfit pressure (`restart/locks/14-LOCKS.md:60`).
 
-**Fixture separation.** Lock 14 onboarding admits exactly two surfaces: the grammar source file (`yaml.bbnf`) and one workspace-metadata block (`[workspace.metadata.bbnf.grammars.yaml]`). `fixtures/yaml/*` is *not* part of the onboarding allowance. The four `fixtures/<grammar>/` directories above are post-onboarding parity evidence — they appear after a grammar's runtime emission, visitor, `pointer!`/`select!` adapters, and host route are already proven. Adding yaml therefore proceeds in two phases:
+**Fixture separation.** Lock 14 onboarding admits exactly two surfaces: the grammar source file (`yaml.bbnf`) and one workspace-metadata block (`[workspace.metadata.bbnf.grammars.yaml]`). `fixtures/yaml/*` is *not* part of the onboarding allowance. The four `fixtures/<grammar>/` directories above are post-onboarding parity evidence — they appear after a grammar's runtime emission, visitor, `path!`/`select!` adapters, and host route are already proven. Adding yaml therefore proceeds in two phases:
 
-1. **Onboarding phase** — `yaml.bbnf` plus the metadata block. Generated value API, `pointer!`, `select!`, visitor, host route, and bench manifest must all appear from metadata + codegen with zero Rust edits and zero entries under `fixtures/yaml/`.
+1. **Onboarding phase** — `yaml.bbnf` plus the metadata block. Generated value API, `path!`, `select!`, visitor, host route, and bench manifest must all appear from metadata + codegen with zero Rust edits and zero entries under `fixtures/yaml/`.
 2. **Parity phase** (separate gate) — `fixtures/yaml/` data files and a `fixtures/yaml/manifest.toml` may be added later to feed the parity bench cohort. This is a cookbook-level gate, never an onboarding gate.
 
 The grep gate `rg -n 'fixtures/yaml' restart/ARCHITECTURE.md restart/MASTER-PLAN.md restart/audit/pass-*` must return zero hits inside Lock 14 onboarding allowances; matches are confined to parity-phase prose.
@@ -443,9 +452,9 @@ PASS-3 owns the user-facing diagnostic strings for runtime, pointer/select, life
 | `BBNF-OPT001` | `note[BBNF-OPT001]: Pratt was not applied to `{rule}` under profile `{profile}`; reason: {cause}. The grammar still parses; performance fallback uses recursive-descent with objective-profile evidence.` | Grammar author | "Auto-Pratt always fires for operator chains." | Cost model or objective profile declined. | Cookbook §pratt-detection. |
 | `BBNF-OPT002` | `note[BBNF-OPT002]: SIMD scanner was not selected for `{rule}` under profile `{profile}`; reason: {cause}. Exact SIMD scans must prove scalar parity; prefilter scans must pass `RegexProgram`, DFA/VM, or scalar verifier before tape emission. The grammar still parses; fallback remains exact scalar scan.` | Grammar author | "SIMD is always faster." | Cost, Unicode semantics, scalar parity, or missing verifier route blocked selection. | Cookbook §simd-detection. |
 | `BBNF-GRAMMAR001` | `error[BBNF-GRAMMAR001]: workspace metadata block missing for grammar `{name}`. help: add `[workspace.metadata.bbnf.grammars.{name}]` to your Cargo workspace metadata; the grammar source file alone is not sufficient.` | New-grammar author | "Source file is enough." | Lock 14 requires both surfaces. | Onboarding cookbook §two-surfaces. |
-| `BBNF-POINTER001` | `error[BBNF-POINTER001]: unknown pointer segment `{segment}` in `{pointer_macro_input}`; rule has no field with that name.` | Application author | "Pointers traverse fields by name." | Field name typo or stale. | Pointer cookbook §validation. |
-| `BBNF-POINTER002` | `error[BBNF-POINTER002]: pointer grammar inference failed; help: add an explicit grammar prefix like `pointer!(Json => "/...")`.` | Application author | "Implicit grammar always works." | Two grammars in scope. | Pointer cookbook §explicit-grammar. |
-| `BBNF-POINTER003` | `error[BBNF-POINTER003]: terminal type for pointer `{path}` is not yet known to the macro; help: regenerate with `cargo xtask regen` so the schema is in sync.` | Application author | "Macro reads metadata at compile time." | Stale generated schema. | Pointer cookbook §regen. |
+| `BBNF-PATH001` | `error[BBNF-PATH001]: unknown path segment `{segment}` in `{path_macro_input}`; rule has no field with that name.` | Application author | "Paths traverse fields by name." | Field name typo or stale. | Path cookbook §validation. |
+| `BBNF-PATH002` | `error[BBNF-PATH002]: path grammar inference failed; help: add an explicit grammar prefix like `path!(Json => "/...")`.` | Application author | "Implicit grammar always works." | Two grammars in scope. | Path cookbook §explicit-grammar. |
+| `BBNF-PATH003` | `error[BBNF-PATH003]: terminal type for path `{path}` is not yet known to the macro; help: regenerate with `cargo xtask regen` so the schema is in sync.` | Application author | "Macro reads metadata at compile time." | Stale generated schema. | Path cookbook §regen. |
 | `BBNF-VISIT001` | `warning[BBNF-VISIT001]: visitor declares no matching node kinds. help: add the desired kind to `VisitTypes` or remove the visitor.` | Visitor author | "Empty `VisitTypes` walks every node." | Bitflag default vs. declared-kinds intent. | Visitor cookbook §pruning. |
 | `BBNF-VISIT002` | `error[BBNF-VISIT002]: borrowed parse tree cannot be mutated in place. help: use `parse_owned`, `parse_in` with a mutable arena document, or emit an edit plan via the edit builder.` | Visitor author | "Visitors always mutate." | Borrowed root is shared-immutable. | Visitor cookbook §mutation. |
 | `BBNF-VISIT003` | `warning[BBNF-VISIT003]: recovery nodes skipped by this visitor. help: implement `visit_error` or enable `VisitTypes::ERROR`.` | Visitor author | "Default visitor sees every node." | Recovery nodes opted out by default. | Visitor cookbook §recovery. |
@@ -454,22 +463,15 @@ PASS-3 owns the user-facing diagnostic strings for runtime, pointer/select, life
 | `TypeMismatch` / `BBNF-TYPE001` | `error[BBNF-TYPE001]: value projection `{projection}` expected `{expected}` from {expected_from}, but `{actual}` was synthesized from {actual_from}; ValueShape `{value_shape}` cannot satisfy {check_synth_cause}. help: fix the annotation, host signature, or generated value projection.` | Grammar author and host author | "The generated value shape follows my annotation." | Check/synth, coercion, or value-shape obligation failed. | Host/type cookbook §type-obligations. |
 | `HostSignature` | `error[BBNF-HOST001]: host function `{name}` cannot satisfy signature `{expected}`; argument {index} inferred `{actual}` at {span}.` | Host author | "@host fn body just runs." | Type flow mismatch. | Host cookbook §signatures. |
 | `ChainStep` | `error[BBNF-HOST002]: chain step `{step}` does not accept `{input_type}` from previous step; the chain `-> f1 -> f2` requires `f2` to accept `f1`'s output.` | Host author | "Chains compose." | Step type fault. | Host cookbook §chains. |
-| `WasmHost` | `error[BBNF-HOST003]: host chain `{chain}` cannot lower to WASM; reason: {cause}. The Rust backend continues to compile; add the missing primitive to the H.W3 WASM ABI descriptor or keep the chain Rust-only.` | TS/WASM author | "Hosts work everywhere." | Host primitive missing in WASM ABI. | WASM ABI cookbook; H.W3 host-primitive matrix. |
+| `WasmHost` | `error[BBNF-HOST003]: host chain `{chain}` cannot lower to WASM; reason: {cause}. The Rust backend continues to compile; the WASM lower-and-bench programme defers post-V1 alongside the V2 `WasmBackend: Backend` impl per Lock 5 amendment, so keep the chain Rust-only or carry the broadening to V2.` | TS/WASM author | "Hosts work everywhere." | Host primitive missing in WASM ABI; V2 surface deferred. | WASM ABI cookbook (V2); host-primitive matrix routes through `WasmBackend` impl when V2 lands. |
 | `BBNF-GEN001` / `BBNF-CG001` / `LowererImport` | `error[BBNF-GEN001]: lowerer at `{path}` imports `ir::grammar_ir`; only the BIR producer may consume Grammar IR. help: lower against `ir::backend_ir`.` | Codegen author | "All IR is one IR." | Two-IR contract violation. | Architecture §7. |
+| `BBNF-LOCAL-EQUALITY-ANNOTATION` (reserved) | reserved; no V1 emission | Type-system author (V2 surface) | "GADT / branch-local equality annotation is admissible at the BBNF surface." | V1 hides GADT machinery as CSP-substrate per Lock 4 amendment; V2 amendment opens the user-facing annotation surface with this code. | ARCH §8.2 GADT V2 amendment surface. |
 
 These strings are part of the SYNTHESIS-owned diagnostic ledger; PASS-3 commits the text and cookbook receivers, the lowerer-import-deny code is mirrored from PASS-2 ownership, and the layout/lookbehind/host/chain/type codes are mirrored from PASS-1 ownership. PASS-3 emits the PASS-1-owned lookbehind numeric code `BBNF1004`, alphabetic alias `BBNF-LOOKBEHIND-WIDTH`, and vocabulary kind `LookbehindWidth` as one binding; any `BBNF-LIFE003` compatibility mention is synthesis-ledger residue, not the canonical PASS-3 spelling. Type diagnostics expose check/synth stage, obligation provenance, and `ValueShape` projection cause to users without exposing `TypeFacts` or a public higher-rank type pass.
 
 Scanner diagnostics follow two runtime rules. In exact mode, a SIMD positive that disagrees with the scalar offset vector is a correctness failure before tape emission. In prefilter mode, a SIMD positive is only a candidate; `RegexProgram`, DFA/VM, or scalar verifier acceptance is required before any tape node is emitted, and rejected candidates remain debug evidence rather than user diagnostics.
 
-**WASM host primitive route.** The runtime/WASM path does not add grammar
-syntax. Grammar authors still use block-bodied `@host fn` definitions,
-host-chain calls, generic `host::primitives`, and workspace metadata. PASS-2
-lowers that metadata into Backend IR `CallHost`/host-chain records and an H.W3
-WASM ABI descriptor. PASS-3 consumes the descriptor at packaging/runtime
-boundaries: exported function names, host-call shape, argument/result
-marshalling, primitive coverage, and scalar/SIMD parity live in H.W3. A missing
-primitive emits `BBNF-HOST003`; PASS-3 records no `{N}` or `{M}` latency/size
-numbers until the H owner measures them.
+**WASM host primitive route (V2 deferred).** The runtime/WASM path does not add grammar syntax — and the lower-and-bench programme itself defers post-V1 alongside the V2 `WasmBackend: Backend` impl per Lock 5 amendment. Grammar authors still use block-bodied `@host fn` definitions, host-chain calls, generic `host::primitives`, and workspace metadata; V1's `RustBackend` impl carries the entire host-chain surface in Rust. PASS-2 lowers that metadata into Backend IR `CallHost`/host-chain records; the WASM ABI descriptor surface lands when `WasmBackend` lands. The H.W3 / J.W3 WASM measurement rows defer to V2 — V1 SOTA close gates measure the Rust-line only at H.W3, H.W4, and H.W5 per Lock 8 amendment. A missing primitive emits `BBNF-HOST003` reframed for V2 deferral; PASS-3 records no `{N}` or `{M}` latency/size numbers in V1.
 
 ## §7 Benchmark and SOTA gates
 
@@ -478,12 +480,12 @@ Every throughput SOTA gate that claims external performance names a competitor p
 | Dataset | Baseline citation | PASS-3 gate |
 | --- | --- | --- |
 | `twitter.json` | sonic/simd-json fixture references (`restart/corpora/SOTA.md:54-56`) | borrowed parse, tape cursor, direct root |
-| `citm_catalog.json` | sonic/simd-json fixture references (`restart/corpora/SOTA.md:54-56`) | object traversal and `pointer!` |
+| `citm_catalog.json` | sonic/simd-json fixture references (`restart/corpora/SOTA.md:54-56`) | object traversal and `path!` |
 | `canada.json` | sonic/simd-json fixture references (`restart/corpora/SOTA.md:54-56`) | selector scan and array-heavy parse |
 | CSS bootstrap/animate | lightningcss visitor and perf evidence (`restart/corpora/SOTA.md:103-118`, `restart/corpora/SOTA.md:134-136`) | generated visitor pruning and layout metadata |
 | BBNF grammar corpus | restart full-grammar generalization (`restart/locks/14-LOCKS.md:60`) | no per-grammar overfit |
 
-PASS-3 recommends bench reports include: borrowed/arena/owned timings, `parse(&str)` prevalidation versus byte/file validation labels, source ownership mode, tape/direct projection timings, direct/tape materialisation mode, scalar-cache and string-normalization policy, selected objective profile, `pointer!` and `select!` traversal timings, visitor pruning win/loss, incremental fallback rate, and DAP trace overhead.
+PASS-3 recommends bench reports include: borrowed/arena/owned timings, `parse(&str)` prevalidation versus byte/file validation labels, source ownership mode, tape/direct projection timings, direct/tape materialisation mode, scalar-cache and string-normalization policy, selected objective profile, `path!` and `select!` traversal timings, visitor pruning win/loss, incremental fallback rate, and DAP trace overhead.
 
 Exact PASS-3 benchmark rows. Competitor floor + Platform columns inline the per-row attribution mandated by Lock 8 (`restart/locks/14-LOCKS.md:48` and `restart/README.md:328-334`); cross-document carry to SYNTHESIS H/J at §10 remains as insurance for any post-PASS-3 ratification.
 
@@ -491,7 +493,7 @@ Exact PASS-3 benchmark rows. Competitor floor + Platform columns inline the per-
 |---|---|---|---|---|
 | `json/twitter/borrowed` | <= 380us | sonic-rs 436 µs / simd-json 424 µs | M1 Pro | `parse(&str)` plus direct root. |
 | `json/twitter/tape_cursor` | <= borrowed + 10% | (no Lock-8 claim; relative to bbnf borrowed row) | M1 Pro | `ValueRef` cursor projection. |
-| `json/citm/pointer` | <= 750us parse target plus reported selector time | sonic-rs 854 µs / simd-json 831 µs | M1 Pro | `pointer!` object traversal. |
+| `json/citm/path` | <= 750us parse target plus reported selector time | sonic-rs 854 µs / simd-json 831 µs | M1 Pro | `path!` object traversal. |
 | `json/canada/array_scan` | <= 2.8ms | sonic-rs 3.144 ms | M1 Pro | array-heavy parse and selector scan. |
 | `css/bootstrap/visitor` | <= 3.0ms | lightning-css ~4.16 ms | M1 Pro (PASS-3 §9 disclaim re: platform ratification per `restart/README.md:336`) | generated visitor pruning over CSS. |
 | `css/animate/layout` | <= 1.6ms | lightning-css 1.97 ms | M1 Pro (same disclaim as bootstrap row) | layout metadata plus parser surface. |
@@ -516,14 +518,14 @@ Generated API budget. The +2 percent regen ceiling rows below anchor against the
 
 | Contract | Receiver | Blocker | Receiving gate |
 |---|---|---|---|
-| Tape token packing, payload arenas, span widths, child/sibling traversal, recovery/layout/debug flags, snapshot-scoped `TapeId`, red-like cursor views, and `ReparsePlan` reuse maps. | PASS-1 / Tranche B | PASS-3 cannot prove cursor, visitor, incremental, or DAP identity. | Runtime identity tests over direct root, `ValueRef`, `pointer!`, `select!`, visitor traversal, and debug trace for the same `(TapeId, node id)`. |
+| Tape token packing, payload arenas, span widths, child/sibling traversal, recovery/layout/debug flags, snapshot-scoped `TapeId`, red-like cursor views, and `ReparsePlan` reuse maps. | PASS-1 / Tranche B | PASS-3 cannot prove cursor, visitor, incremental, or DAP identity. | Runtime identity tests over direct root, `ValueRef`, `path!`, `select!`, visitor traversal, and debug trace for the same `(TapeId, node id)`. |
 | Tape as the substrate name; no public `ParseStream`. | PASS-1 / SYNTHESIS | Naming fork leaks into public APIs. | Conflict guard for `ParseStream` in public docs and code. |
 | Typed roots, three parse constructors, `DocumentView`, `ValueRef`, visitors, `VisitTypes`, diagnostic metadata, path schemas, host metadata, and fixture/bench metadata. | PASS-2 / Tranche F | Generated runtime lacks consumer-facing metadata. | PASS-3 consumer smokes from generated runtime. |
 | Consumer acceptance: emitted parse signatures compile under PASS-3 wrappers, `DocumentView` metadata feeds visitors and selectors, materialisation cost tables generated and documented with `TapeShape`, `ValueShape`, scalar-cache policy, string-normalization policy, repeated-access cost, objective vector, selected profile, and domination reason. | PASS-2 / Tranche F + Tranche I | PASS-3 close on prose-only hand-off. | Three executable consumer gates pass on every extant grammar plus yaml. |
-| WASM host primitive ABI descriptor. | PASS-2 / H.W3 + J | Host primitives cannot become new grammar syntax or hand-written packaging glue. | H.W3 records exported function names, host-call shape, marshalling rule, primitive coverage, scalar/SIMD parity, and `BBNF-HOST003` routes missing primitives. |
+| WASM host primitive ABI descriptor (V2 deferred). | PASS-2 / V2 `WasmBackend: Backend` impl | Host primitives cannot become new grammar syntax or hand-written packaging glue; V1 ships Rust impl only per Lock 5 amendment. | V2 records exported function names, host-call shape, marshalling rule, primitive coverage, scalar/SIMD parity; V1 emits `BBNF-HOST003` reframed for V2 deferral. |
 | SIMD/DFA scanner verifier contract. | PASS-2 / Tranche F + H.W3 | A regex prefilter candidate could emit tape without semantic acceptance. | Exact scans prove scalar parity; prefilter candidates pass `RegexProgram`, DFA/VM, or scalar verifier before tape emission. |
 | No per-grammar declaration crates, rewrite-mode hooks, or grammar Unicode algebra APIs. | PASS-2 / SYNTHESIS | Generated surfaces reintroduce discarded extension scope. | Negative API and parser fixtures. |
-| Final crate names: `path`, `path-core`, `path-ts`, and `test-fixtures`. | SYNTHESIS / Tranche A | Legacy package names survive into greenfield docs. | Workspace crate-name check. |
+| Final crate names (V1): `path`, `path-core`, and `test-fixtures`. `path-ts` defers post-V1 alongside the TS-native parse+runtime fork per Lock 7 amendment. | SYNTHESIS / Tranche A | Legacy package names survive into greenfield docs. | Workspace crate-name check. |
 | Hardcoded grammar registry deletion. | SYNTHESIS / Tranche I close gate | Registry survives parallel to metadata. | `rg -n 'GRAMMAR_PATH_REGISTRY\|GrammarMarkerRegistry' crates/` returns zero outside generated data. |
 | CLI/LSP/DAP ownership. | SYNTHESIS / Tranche I | Old PASS-C CLI deferral leaves top-layer gap. | CLI and LSP diagnostics parity test. |
 | Performance rows integrated with PASS-1/PASS-2 outputs. | SYNTHESIS / Tranche H/J | Bench gates become narrative only. | Exact benchmark rows above appear in master plan gates. |
@@ -538,8 +540,8 @@ KEEP:
 - `parse`, `parse_in`, `parse_owned`.
 - Typed generated roots and grammar-specific visitors.
 - Untyped `ValueRef`/generic value for tools.
-- `pointer!`, `select!`, explicit and implicit pointer forms.
-- `@host fn`, multi-function chaining, generics, `@error(recover = ...)`, `@layout`.
+- `path!`, `select!`, explicit and implicit path forms.
+- The six V1 directives — `@import`, `@host fn`, `@error(recover = ...)`, `@layout`, `@pretty`, `@token` — alongside lookbehind, multi-function chaining, generics, function values + lambda literals, and closure capture by `&'i`.
 - Consolidated language server with LSP and DAP.
 - Data-only grammar fixtures and competitor-named benches.
 
@@ -569,8 +571,8 @@ DISCARD:
 |---|---|---|---|
 | Stale `ParseStream` and extension clauses in prompt/README/inheritance materials. | SYNTHESIS input-normalization table | Stale text propagates into greenfield docs. | `rg -n 'ParseStream\|rewrite-mode\|Unicode class algebra'` against the SYNTHESIS trio classifies every match as stale-input or deleted surface. |
 | Tape ABI: node IDs, span widths, snapshot IDs, and incremental anchors. | PASS-1 / Tranche B | PASS-3 cursor and visitor identity unproven. | PASS-1 publishes the ABI table; PASS-3 binds against it in identity tests. |
-| Generated metadata schema for paths, visitors, host functions, diagnostics, and fixtures. | PASS-2 / Tranche F | PASS-3 cannot validate `pointer!`/`select!` or visitors at compile time. | Schema is enumerated and PASS-3 macros consume it without fixture registries. |
-| Workspace naming: `path`, `path-core`, `path-ts`, `test-fixtures`. | SYNTHESIS / Tranche A | Prefixed names re-leak into greenfield. | `rg -n 'bbnf-path\|bbnf-test-fixtures' restart/` returns zero outside deletion archaeology. |
+| Generated metadata schema for paths, visitors, host functions, diagnostics, and fixtures. | PASS-2 / Tranche F | PASS-3 cannot validate `path!`/`select!` or visitors at compile time. | Schema is enumerated and PASS-3 macros consume it without fixture registries. |
+| Workspace naming (V1): `path`, `path-core`, `test-fixtures`. `path-ts` defers post-V1 per Lock 7 amendment. | SYNTHESIS / Tranche A | Prefixed names re-leak into greenfield. | `rg -n 'bbnf-path\|bbnf-test-fixtures' restart/` returns zero outside deletion archaeology. |
 | Bench harness target numbers and machine profiles. | SYNTHESIS / Tranche H/J | Bench rows become aspirational. | Master/Architecture inline competitor + dataset + platform + bbnf number for every row. |
 | Rare host adapter escape-valve policy. | SYNTHESIS / Architecture rare-escape form | Per-grammar declaration crates re-enter through naming. | Review form requires reason, scope, owner, why workspace metadata plus `host::primitives` plus block-bodied `@host fn` fail, declaration location, deletion path, reviewer, and receiving gate; Lock 11 incubation remains path-dep sister-crate policy, not a default per-grammar declaration-crate route. |
 | Hardcoded grammar registry deletion. | PASS-3 amendment + SYNTHESIS deletion-gate ledger | Registry survives parallel to metadata route. | `rg` close gate returns zero outside generated data. |

@@ -58,7 +58,7 @@ set below is authoritative for tranche planning and for migration disposition.
 | `runtime` | Internal/public support | Tape, direct-to-struct builder support, generated grammar modules, visitors, document views. | Replaces hand-written per-grammar runtime dirs and OpenFrame-heavy flow. |
 | `host` | Internal | Generic host primitives, `@host fn` registry, host chain typing/runtime dispatch. | Replaces grammar-specific shims such as `css_types.rs` and hardcoded host tables. |
 | `cost-model` | Internal | Cost facts, SOTA profiles, extraction scoring, generated LOC budgets. | PASS-1 keeps a real cost model with SOTA gates (`restart/audit/pass-1-substrate/PASS-1.md:46-61`). |
-| `path` | Public | Rust macro/front-facing path DSL: `pointer!`, `select!`, visitor selectors. | Renames current `bbnf-path`; README requires `path`, `path-core`, `path-ts` (`restart/README.md:47-53`). |
+| `path` | Public | Rust macro/front-facing path DSL: `path!`, `select!`, visitor selectors. | Renames current `bbnf-path`; README requires `path`, `path-core`, `path-ts` (`restart/README.md:47-53`). |
 | `path-core` | Internal/shared | Path parser, typed segments, evaluator core, diagnostics shared by Rust and TS. | Extract from `bbnf-path` and `bbnf-path-ts`. |
 | `path-ts` | Public | TypeScript path package generated over `path-core` semantics. | Renames/splits current `bbnf-path-ts`; Lock 7 names this split (`restart/locks/14-LOCKS.md:46`). |
 | `egraph` | Internal/sister | Equality saturation core and bridge APIs. | Keep and harden current `crates/egraph` (`restart/corpora/MODULES.md:136-162`). |
@@ -274,7 +274,7 @@ PASS-3 makes incremental parsing opt-in for batch and always-on for LSP
 Public Rust macros:
 
 ```rust
-pointer!(Bbnf => "/rules/0/name")
+path!(Bbnf => "/rules/0/name")
 select!(Bbnf => "rule[name='expr'] > alt:nth(0)")
 ```
 
@@ -290,10 +290,10 @@ Public shared concepts:
 | `Segment` | `path-core` | Pointer/select segment. |
 | `CompiledPath` | `path-core` | Validated evaluator plan. |
 | `PathDiagnostic` | `path-core` | Shared diagnostics. |
-| `pointer!`, `select!` | `path` | Rust compile-time syntax. |
+| `path!`, `select!` | `path` | Rust compile-time syntax. |
 | `compilePath`, `select` | `path-ts` | TypeScript API over the same semantics. |
 
-README keeps `pointer!`, `select!`, JSONPath-style selection, and read-write
+README keeps `path!`, `select!`, JSONPath-style selection, and read-write
 visitor mutation in the user surface (`restart/README.md:272-318`).
 
 ### 3.5 Complete Public API Matrix
@@ -319,7 +319,7 @@ are not part of the public contract.
 | `runtime` | Tape/direct document APIs, builders needed by generated code, visitor traits. | Token storage layout and checkpoint internals. |
 | `host` | Host registry, primitive signatures, chain typing, dispatch handles. | Function pointer tables and metadata normalization state. |
 | `cost-model` | `CostDecision` facts, objective profiles, Pareto/frontier reports, SOTA gate schema, generated LOC budget API. | Raw scorer tuning internals, solver adapter scratch state, and platform cache. |
-| `path` | `pointer!`, `select!`, typed path wrappers, visitor selector helpers. | Macro parser scratch AST. |
+| `path` | `path!`, `select!`, typed path wrappers, visitor selector helpers. | Macro parser scratch AST. |
 | `path-core` | Path AST, parser, typed evaluator, diagnostics. | Rust macro glue and TypeScript emitter details. |
 | `path-ts` | TypeScript package generation schema and exported TS API definitions. | Rust path macro internals. |
 | `egraph` | Generic egraph arena, rewrite, extraction, explanation APIs. | BBNF bridge terms. |
@@ -736,11 +736,16 @@ Schema rules:
 Metadata validation errors are normal diagnostics, not panics. They flow
 through `error` so CLI and LSP report the same code for the same bad metadata.
 
-Declaration-crate review form. Per HARDENING-CONSOLIDATED §4.15, every escape
-valve carries the following eight fields. The exception table is empty for the
-nine extant grammars (`bbnf`, `bnf`, `csv`, `css_l4`, `css_pretty`, `ebnf`,
-`google_sheets`, `json`, `math`) and stays empty unless a metadata + `@host fn`
-demonstration of insufficiency lands first.
+### 5.6 Declaration-Crate Fence
+
+Per HARDENING-CONSOLIDATED §4.15, every declaration-crate escape valve
+carries the following eight-field review form. The fence is the
+architectural gate through which the rare `allow_declaration_crate = true`
+exception passes; the metadata validator rejects partial fences. The
+exception table is empty for the nine extant grammars (`bbnf`, `bnf`,
+`csv`, `css_l4`, `css_pretty`, `ebnf`, `google_sheets`, `json`, `math`)
+and stays empty unless a metadata + `@host fn` demonstration of
+insufficiency lands first.
 
 | Field | Required content |
 |---|---|
@@ -932,7 +937,7 @@ Backend IR payload and lowerer matrix:
 | `RepeatLoop` | Body, min/max, exit guard. | Emits loop with progress guard. | Iterates with progress check. | SIMD may accelerate body prefix. |
 | `OptionalBranch` | Body and empty branch shape. | Emits branch. | Runs or skips. | No special handling. |
 | `ByteLiteral` | Bytes, case policy, span. | Emits byte compare. | Consumes on match. | SIMD may widen compare. |
-| `RegexProgram` | Regex program handle and execution plan. | Calls regex verifier. | Executes regex VM, lazy DFA, or full DFA plan. | Unicode stays below BBNF; `regex-automata` remains the oracle lane until parity is proven. |
+| `RegexProgram` | Regex program handle and execution plan. | Calls regex verifier. | Executes regex VM, lazy DFA, or full DFA plan. | Unicode stays below BBNF; `parse-that-regex` carries internal cross-engine parity (VM ↔ lazy DFA ↔ full DFA) per V1-FOLD-CANDIDATES Tier 3 #23, and no external regex oracle is consumed at V1. |
 | `SimdScan` | `SimdScanMode::{Exact, Prefilter}`, needle/class, fallback, verifier route. | Emits dispatch to `simd-scan`. | Exact mode must match scalar offsets; prefilter mode emits candidates only. | Prefilter acceptance routes to `RegexProgram` or scalar verifier before tape emission. |
 | `PrattSpine` | Operators, precedence, associativity, atom rule. | Emits Pratt loop. | Executes Pratt interpreter. | Auto-detected only. |
 | `CallRule` | Callee ID, args, result slot. | Emits function call. | Pushes rule frame. | No special handling. |
@@ -1041,9 +1046,9 @@ references this catalogue rather than re-enumerating codes.
 | `BBNF-SIMD-NOT-SELECTED` (alias `BBNF-OPT002`) | `passes::recognizers`. | SIMD detection ran but rejected the rule; cost, unsupported Unicode semantics, or missing exact/prefilter verifier contract rejected the SIMD path. |
 | `BBNF-METADATA-MISSING-GRAMMAR` (alias `BBNF-GRAMMAR001`) | `pipeline::workspace`. | Grammar source declared but no `[workspace.metadata.bbnf.grammars.<name>]` block; Lock 14 requires both surfaces. |
 | `BBNF-GRAMMAR-NAME-IN-GENERIC-CRATE` | Lock 14 lint. | A generic crate hardcodes a grammar name; `cargo xtask lint-no-hardcoded-grammars` enforces. |
-| `BBNF-POINTER-UNKNOWN-SEGMENT` (alias `BBNF-POINTER001`) | `path` macro. | Path segment does not match the grammar schema. |
-| `BBNF-POINTER-GRAMMAR-MISMATCH` (alias `BBNF-POINTER002`) | `path` macro. | Path expression refers to a different grammar than the inferred root. |
-| `BBNF-POINTER003` | `path` macro. | Path terminal type unknown to the macro; regenerate to refresh the schema. |
+| `BBNF-PATH-UNKNOWN-SEGMENT` (alias `BBNF-PATH001`) | `path` macro. | Path segment does not match the grammar schema. |
+| `BBNF-PATH-GRAMMAR-MISMATCH` (alias `BBNF-PATH002`) | `path` macro. | Path expression refers to a different grammar than the inferred root. |
+| `BBNF-PATH003` | `path` macro. | Path terminal type unknown to the macro; regenerate to refresh the schema. |
 | `BBNF-HOST001` | `passes::layout` host signature unification. | Host function body cannot satisfy the inferred signature. |
 | `BBNF-HOST002` | `passes::layout` chain composition. | Chain step does not accept the previous step's output type. |
 | `BBNF-HOST003` | WASM lowerer. | Host chain cannot lower to WASM; primitive missing in WASM ABI. |
@@ -1116,7 +1121,7 @@ Backend trait obligations:
 | `emit_runtime_template` | `&GrammarMeta` | `runtime/src/grammars/<g>/{generated.rs, parser.rs, host.rs, view.rs, value.rs, visitor.rs}` | wasm32-pinned mirror plus exported ABI shell | TS package mirror with TS path schema |
 | `emit_value_api` | `&ValueSchema` | typed `Value` enum + trait impls | wasm32 mirror | TS `Value` namespace + d.ts |
 | `emit_visitor` | `&VisitorSchema` | `Visitor` trait + `VisitTypes` bitflag | wasm32 mirror | TS visitor interface |
-| `emit_path_schema` | `&PathSchema` | `<g>.path-schema.toml` plus typed `pointer!` glue | wasm32 mirror | `<g>.path-schema.toml` plus TS `compilePath` glue |
+| `emit_path_schema` | `&PathSchema` | `<g>.path-schema.toml` plus typed `path!` glue | wasm32 mirror | `<g>.path-schema.toml` plus TS `compilePath` glue |
 
 Backend trait invariants:
 
@@ -1154,8 +1159,8 @@ rewrite-mode or grammar-level Unicode class algebra.
 ### 8.1 Core Grammar Sketch
 
 ```ebnf
-Grammar       ::= Item*
-Item          ::= ImportDecl | HostFn | RuleDecl | LayoutDecl | ErrorDecl | PrettyDecl | TokenDecl
+Grammar       ::= Directive*
+Directive     ::= ImportDecl | HostFn | RuleDecl | LayoutDecl | ErrorDecl | PrettyDecl | TokenDecl
 
 ImportDecl    ::= "@import" "{" Ident ("," Ident)* "}" "from" StringLit ";"
 HostFn        ::= "@host" "fn" Ident GenericParams? "(" ParamList? ")"
@@ -1207,7 +1212,7 @@ only inside the block body of `HostFn`. Bodyless host declarations have no
 production. Recovery is owned by `ErrorDecl`: `recover = ...` lives inside
 `ErrorBody`, and standalone recovery directives have no production.
 
-V1 directive canon: the six-directive `Item` production above is the
+V1 directive canon: the six-directive `Directive` production above is the
 complete V1 surface. `@import` carries cross-file grammar composition
 (`grammar/bbnf/bbnf.bbnf:4-5`); `@host fn` carries typed host primitives
 with block-bodied implementations; `@error(recover = ...)` carries
@@ -1576,7 +1581,7 @@ Column semantics:
 | Runtime files emitted | Template-emitted files under `runtime/src/grammars/<name>/`; every cell is generated or data-only, hand-written runtime files are forbidden by Lock 14. |
 | Visitor + `VisitTypes` | The generated `Visitor` trait and its bitflag-pruned visit-type set per PASS-3 §3. |
 | Path schema | The generated path-schema sidecar consumed by `path!` / `select!` typing per PASS-3 §3. |
-| `path!` macro typing | The compile-time path-AST typing surface backed by `path-core`. Every grammar's `path!` invocation types against the matching path-schema sidecar; rejects mismatches with `BBNF-POINTER-UNKNOWN-SEGMENT` / `BBNF-POINTER-GRAMMAR-MISMATCH` (legacy code names retained until §7.4 catalogue renames). |
+| `path!` macro typing | The compile-time path-AST typing surface backed by `path-core`. Every grammar's `path!` invocation types against the matching path-schema sidecar; rejects mismatches with `BBNF-PATH-UNKNOWN-SEGMENT` / `BBNF-PATH-GRAMMAR-MISMATCH` per the §7.4 catalogue. |
 | Regex engine | Every grammar lowers `Regex` BIR variants through `parse-that-regex` (the regex sub-crate of `parse-that`); the regex-automata oracle role retires per V1-FOLD-CANDIDATES Tier 3 #23. |
 | Fixture manifest | The corpus manifest under `crates/test-fixtures/corpus/`; `yaml` carries a parity-phase manifest only. |
 | Host route | The host-function decomposition source: `@host fn` blocks in the grammar, generic primitives in `host::primitives`, or workspace-metadata directives. Declaration crates are not part of the default host route. |
@@ -1641,6 +1646,25 @@ The lint manifest is part of the architectural contract; lints retire
 only by explicit amendment. Adding a lint requires extending this table
 and the matching `cargo xtask lint` subcommand; removing one requires
 the same.
+
+### 13.2 Cookbook Page Contract
+
+Every cookbook page consumed by the J.W2 publication gate (see MASTER-PLAN
+§24 friction ledger) follows a uniform four-field contract. The contract
+exists so cookbook pages compose into a single doc-set rather than seven
+varieties; J.W2 rejects pages that omit any field.
+
+| Field | Required content |
+|---|---|
+| Audience + mental model | The named user type (library consumer, grammar author, LSP integrator, parity engineer) plus the one-paragraph mental model the page commits to. The audience field admits exactly the user types enumerated in MASTER-PLAN §24; the mental model field paraphrases no other doc. |
+| Minimum running example | A copy-pasteable Rust snippet (or grammar fragment for grammar-author audiences) that compiles against the V1 `bbnf` crate facade and exercises the surface the page documents. The example anchors against a fixture under `crates/test-fixtures/corpus/`; no inline fixtures. |
+| Diagnostic codes table | Every diagnostic code the documented surface can emit, listed verbatim from the §7.4 catalogue; no ad-hoc rewording. The table cross-references the producer site so the consumer can inspect the verbatim string. |
+| Close-gate command | The `cargo xtask` invocation (or `cargo test -p <crate>` invocation) that proves the example still compiles and emits the documented diagnostics on cookbook regen. Pages without a close-gate command fail J.W2. |
+
+The contract is consumed (not authored) by every page under
+`docs/cookbook/`; J.W2's regen gate verifies field presence by
+template-matching the page front-matter. The contract retires only by
+amendment to this section.
 
 ## 14. Documentation And Voice
 

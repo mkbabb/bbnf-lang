@@ -68,7 +68,7 @@ plumbing are replaced; old archive crates leave the production workspace.
 | `crates/analysis` | ABROGATE-MOVE/REPLACE. | `bbnf-language-server`, `error`, `source`, `grammar`, `pipeline`. |
 | `crates/lsp` | ABROGATE-MOVE/REPLACE. | `bbnf-language-server`. |
 | `crates/bbnf-path` | KEEP-MODIFY/REPLACE. | `path` plus `path-core`. |
-| `crates/bbnf-path-ts` | ABROGATE-MOVE deferred to V2. | TS surface defers post-V1 alongside the V2 `TsBackend: Backend` impl per `restart/ARCHITECTURE.md` §7.5; legacy `crates/bbnf-path-ts` archives at A.W0 alongside `ser`/`gorgeous` and is reconstituted as `path-ts` in V2. The `path-core` extraction (Rust-line) lands in V1 from `crates/bbnf-path`. |
+| `crates/bbnf-path-ts` | ABROGATE-MOVE deferred to V2. | TS surface defers post-V1 alongside the V2 `TsBackend: Backend` impl per `restart/ARCHITECTURE.md` §7.5; the legacy `crates/bbnf-path-ts` source remains in the workspace as a deferred-V2 placeholder (Lock 12 archives only `ser` and `gorgeous` at A.W0) and is reconstituted as `path-ts` in V2. The `path-core` extraction (Rust-line) lands in V1 from `crates/bbnf-path`. |
 | `crates/csp-solver` | KEEP-MODIFY. | `csp-solver`; generic API remains. |
 | `crates/egraph` | KEEP-MODIFY. | `egraph`; bridge logic moves to `passes`. |
 | `crates/egraph-derive` | KEEP-MODIFY. | `egraph-derive`. |

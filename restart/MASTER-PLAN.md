@@ -318,7 +318,7 @@ Stub waves:
 | C.W1 | HM principal-scheme core plus expected-type checking inside `passes::layout`, with first-order equality unification before bounded coercion and finite CSP choices, **DK13 algorithmic completeness for higher-rank polymorphism per Lock 4 amendment**, and **branch-local equality (GADT substrate) hidden behind `BBNF-LOCAL-EQUALITY-ANNOTATION`** until V2 surface admission; `LayoutFacts` is public, while `TypeFacts` and `TypeObligationLog` remain internal. | Host-free seed grammar proves principal schemes under DK13; type-obligation snapshot separates equality, expected, coercion, finite-choice, and instantiation stages; downstream passes read `LayoutFacts`, never `TypeFacts`; the GADT machinery composes through CSP without surface leakage. |
 | C.W2 | ShapeFacts, value-shape mining, **schema-mining miner (telemetry-driven schema inference)** as a sibling miner to `ShapeFacts`, and **internal row polymorphism for record-narrowing collapse** (no surface; the type alphabet remains `Type ::= ... \| RecordType` per PASS-1 §6). | Direct-builder shell contract consumes ShapeFacts in a C fixture and records B integration gaps; the schema miner emits inferred record schemas without explicit annotations for the seed grammars; row polymorphism collapses convergent record narrowings without surface widening. |
 | C.W3 | RecognizerFacts and Pratt/SIMD candidate mining. | Facts feed E-owned BIR snapshots, not placeholder hints. |
-| C.W4 | CSP/egraph bridge tables: stable ID maps, monotone fact exchange, rewrite guard API, rewrite budget policy (consumed from `restart/ARCHITECTURE.md` §10.1 — categories, node/iteration ceilings, fail-closed posture, representative-stability protocol now landed at architecture level per Phase 7.1), representative-stability test, **CHR-improvement layer for host overloads**, **`Backend` trait surface obligations cross-referenced from `restart/ARCHITECTURE.md` §7.5 so the V1 `RustBackend` and V2 `WasmBackend` / `TsBackend` consume identical bridge facts**, and bridge-justification records. | Egraph and CSP exchange facts through bridge API; extraction never reads a stale e-node representative; the rewrite-budget policy is consumed (not authored); CHR-improvement closes host-overload ambiguity at the bridge boundary; the bridge feeds the same alphabet to every active `Backend` impl. |
+| C.W4 | CSP/egraph bridge tables: stable ID maps, monotone fact exchange, rewrite guard API, rewrite budget policy (rewrite-budget categories with node/iteration ceilings landed at `restart/ARCHITECTURE.md` §10.1 per Phase 7.1; the fail-closed posture and representative-stability protocol route to C.W4 implementation rather than authoring at architecture level), representative-stability test, **CHR-improvement layer for host overloads**, **`Backend` trait surface obligations cross-referenced from `restart/ARCHITECTURE.md` §7.5 so the V1 `RustBackend` and V2 `WasmBackend` / `TsBackend` consume identical bridge facts**, and bridge-justification records. | Egraph and CSP exchange facts through bridge API; extraction never reads a stale e-node representative; the rewrite-budget policy is consumed (not authored); CHR-improvement closes host-overload ambiguity at the bridge boundary; the bridge feeds the same alphabet to every active `Backend` impl. |
 | C.W5 | `CostFacts`, `CostDecision` evidence, objective profiles, Pareto/frontier extraction, solver-backed composition skeleton, and bridge-justified legality. | Backend IR builder receives selected alternatives plus evidence for rejected and dominated candidates. |
 
 Hard close:
@@ -768,7 +768,7 @@ rather than duplicating receivers.
 
 | Item | Receiver | Blocker | Gate | Source |
 |---|---|---|---|---|
-| Declaration-crate escape valve | A/D | Review form missing reason, scope, owner, or deletion path. | Metadata validator rejects `allow_declaration_crate = true` without the eight-field review form (template at `restart/ARCHITECTURE.md` §13 appendix — landed Phase 7.1). A.W4 consumes the template; D consumers reference it when the rare escape valve fires. | synthesis + migration |
+| Declaration-crate escape valve | A/D | Review form missing reason, scope, owner, or deletion path. | Metadata validator rejects `allow_declaration_crate = true` without the eight-field review form (template at `restart/ARCHITECTURE.md` §5.6 lines 738-770 — landed Phase 7.1). A.W4 consumes the template; D consumers reference it when the rare escape valve fires. | synthesis + migration |
 | Layout lowering | D/F | `@layout` remains parser metadata and does not lower through `LayoutFacts` and BIR. | LayoutFacts test plus BIR `LayoutPush`/`LayoutPop` replay. | synthesis |
 | Cursor skip | B/H | Runtime cannot prove empty-path and byte-skip behavior. | `__EAGER_EMPTY_PATH` and `CursorDecision::Skip` fixtures. | synthesis + migration |
 | PASS-3 consumers | F/G/I | Generated runtime omits path, visitor, diagnostics, or host metadata. | `path-core`, visitor, and language-server consumer smokes. | synthesis |
@@ -794,8 +794,8 @@ Cookbook and migration friction rows. Every row binds a target user, a mental
 model, a confusion point, the artefact that resolves it, and the diagnostic the
 user sees when they get it wrong. Each cookbook page consumes the page contract
 template (audience + mental model, minimum running example, diagnostic codes
-table, close-gate command) anchored at `restart/ARCHITECTURE.md` §13 appendix
-(landed Phase 7.1) so J.W2 produces uniform pages, not seven varieties.
+table, close-gate command) anchored at `restart/ARCHITECTURE.md` §13.2
+so J.W2 produces uniform pages, not seven varieties.
 
 | Friction | Target user | Mental model | Confusion point | Artefact | Diagnostic |
 |---|---|---|---|---|---|

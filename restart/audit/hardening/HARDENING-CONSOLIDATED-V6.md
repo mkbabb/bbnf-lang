@@ -71,6 +71,59 @@ The count rows are report-local, not normalized to identical table granularity.
 They are useful as a drift signal only: no V6 hardener found a REINVENT,
 DISCARD, amendment-required, or re-draft row.
 
+### §2.1 Research-Agent Issuance And Staggered Fold Recap
+
+Issuance clarification: the committed trail shows one research agent per Index
+topic, eight total, not sixteen-plus independent research-agent files. The
+sixteen-plus coverage exists at source/item level: the eight agents walked 66
+verified primary, canonical, or official source slots, plus separately tracked
+provenance gaps that stayed out of evidence-bearing claims. That is the shape
+required by `restart/research/INDEX.md` §2, which sets a 5-15 primary-source
+floor and ceiling per topic. No Index topic is missing.
+
+| Topic | Research commit | Verified source slots | Direct SOTA question | Fold receivers | V6 disposition |
+|---|---|---:|---|---|---|
+| 1 HM foundations | `62d3ac76` | 9 | Hindley-Milner, Algorithm W, Damas-Milner, and whether the restart conflates HM equality with bidirectional and CSP layers. | PASS-1, SYNTHESIS | CLOSED: HM equality stays foundational and internal `TypeFacts` do not become public architecture. |
+| 2 Bidirectional | `a2b4471e` | 5 | Pierce-Turner local check/synth versus Dunfield-Krishnaswami higher-rank proof discipline. | PASS-1, PASS-3 diagnostics, SYNTHESIS | CLOSED: V1 uses local check/synth and directed subsumption; higher-rank DK machinery remains future proof gate. |
+| 3 CSP/GADTs | `5f313187` | 8 | CSP-backed unification, HM(X), OutsideIn(X), GADT pressure, parametric polymorphism, and generic-rule finiteness. | PASS-1, PASS-2, SYNTHESIS | CLOSED: finite `(RuleId, TypeArgs)` proof and local equality constraints are required before lowerers emit instances. |
+| 4 E-graphs | `4d24cedb` | 10 | Equality saturation, e-graphs, egg/egglog pressure, and bridge-vs-union design. | PASS-1, PASS-2, SYNTHESIS | CLOSED: stable bridge facts and `BridgeJustification` survive; representative leakage and egglog fusion pressure do not rewrite Lock 4/6. |
+| 5 Cost models | `101516fd` | 9 | Pareto extraction, scalarization, SMT/objective evidence, and shared regex/BIR cost-model shape. | PASS-1, PASS-2, PASS-3, SYNTHESIS | CLOSED: `CostDecision` keeps objective vectors, selected/rejected/dominated alternatives, and scalar fast-path evidence. |
+| 6 Tape/direct | `ad3a5e63` | 9 | Tape encoding, direct-to-struct union, simdjson/sonic-rs/yyjson pressure, and one owning identity. | PASS-2, PASS-3, SYNTHESIS | CLOSED: `TapeShape`, `ValueShape`, `ValueRef`, typed roots, and red-like projections ride one snapshot identity. |
+| 7 Green/red incremental | `5e3077a9` | 8 | Green/red trees, incremental parsing, fault tolerance, recovery facts, and LSP fallback. | PASS-1 producer facts, PASS-3, SYNTHESIS | CLOSED: `RecoveryFacts`, `ReparsePlan`, reuse maps, fallback reasons, invalidated queries, and silence policy are receiver-gated. |
+| 8 SIMD/DFA/regex | `5e947540` | 8 | SIMD scanning, DFA construction, bespoke regex HIR, oracle parity, exact scans, and verifier-before-tape prefilters. | PASS-2, PASS-3, SYNTHESIS | CLOSED: `RegexProgram` exact/prefilter modes remain compatibility-routed; no author `@simd` or force directive returns. |
+
+Source-count total: 66 verified source slots across the eight topic agents.
+Known weak or unverified leads are not counted in that 66 and are routed in R1
+instead of used as proof.
+
+The staggered fold path is likewise explicit in the commit trail:
+
+| Stage | Commits | What landed |
+|---|---|---|
+| Phase 0 research orchestration | `9e19df30`, `fb030b3d` | The orchestrator and Index defined the eight topic-agent shape, the per-topic source floor, the fold reports, escalation path, and terminal V6 hardening. |
+| Phase 1 topic research | `62d3ac76`, `a2b4471e`, `5f313187`, `4d24cedb`, `101516fd`, `ad3a5e63`, `5e3077a9`, `5e947540` | Eight topic-level SOTA deep-dives, each mapped to the Index item and source floor. |
+| Phase 2 fold classification | `8829a0b5`, `7064b764`, `048e227e`, `14c8fde1` | Topic outputs were split by receiver: PASS-1 gets Topics 1-3, PASS-2 gets Topics 4-6 and 8, PASS-3 gets Topics 6-8, and SYNTHESIS gets Topics 1-8. |
+| Phase 2 fold amendments | `88d22b78`, `0c72433b`, `d1096c21`, `b04f7ce1`, `00c51814` | Surviving research refinements were folded into PASS-1, PASS-2, PASS-3, Architecture, Migration, and Master Plan. |
+| Phase 3 V6 hardening | `a745f12e`, `5ea41850`, `c5e3aab7`, `4fe06344` | Four target-specific hardeners rechecked the folded surfaces and returned READY. |
+| Phase 4 consolidation | `003a6410` plus this recap | V6 binds the target reports, closes the research-fold topics, and routes bibliography/source hygiene as non-blocking residue. |
+
+Escalation note: no `restart/research/escalation-summary.md` exists because
+the fold-classification reports found zero structural ESCALATE items. The
+absence is intentional under the orchestrator path, not a missing research
+artifact.
+
+Commit-scope note: `88d22b78` has a PASS-1 subject but touched PASS-2, while
+`0c72433b` has a PASS-1 subject and touched PASS-1 plus the synthesis trio.
+This consolidation binds the actual touched receiver surfaces and the later V6
+reports, not only the shorthand commit subjects.
+
+Therefore Hindley-Milner, CSP/GADT, and e-graph coverage are not inferred from
+general prose: they have named topic agents, committed source walkdowns, fold
+receiver commits, V6 target hardening, and this consolidation ledger. If a
+future rerun requires one separate agent per individual source rather than one
+agent per Index topic, that is a different orchestration shape and should be
+recorded as a new prompt before execution.
+
 ## §3 Research-Fold Binding Ledger
 
 | Topic | PASS-1 binding | PASS-2 binding | PASS-3 binding | SYNTHESIS binding | Consolidated result |

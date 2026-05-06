@@ -172,8 +172,8 @@ Residual non-blocking ledger:
 |---:|---|---|---|---|---|
 | R1 | Research-index and bibliography hygiene for weak or role-unclear sources: Hubbard, Almomany, Deb, Yang/egglog, Roc, Ungar/Adams, HelpMate, Hyperscan/Vectorscan, and lock-number drift. | `restart/research/INDEX.md`, closed by R1/R2 follow-up. | Closed; weak leads and lock drift are classified, and provenance gaps stay out of evidence-bearing claims. | `restart/research/INDEX.md` classifies each source as verified primary/local evidence or explicit provenance gap. | No |
 | R2 | README precision for scalar materialisation, one owning identity with red-like projections, snapshot-scoped `TapeId`, and HM/check-synth/CSP wording. | `restart/README.md`, closed by R1/R2 follow-up. | Closed; README wording now matches the V6 target contracts. | README avoids misleading constant-time scalar wording, permits transient projections over one owning identity, names reuse/query invalidation, and decomposes HM/check-synth/finite-CSP prose. | No |
-| R3 | Hardening command-harness precision from older consolidated checklist rows #10 and #16. | Future hardening-harness cleanup or next rerun checklist. | Old commands were case-sensitive or omitted target files; V6 reports used tightened classifications. | Receiver scans include `Receiver|receiver|Blocker|blocker|Receiving gate|receiving gate`; benchmark metadata scans include Architecture and PASS-2 or split PASS-2 metadata floor from Master metadata. | No |
-| R4 | Optional Lock 4 rationale hygiene for egglog-style fusion pressure. | Future lock-rationale or synthesis-hygiene pass if authorized. | V6 finds no structural lock contradiction; current plan records the counterargument and keeps fusion post-V1. | Lock rationale explains why bridge-vs-fusion survives egglog pressure without changing settled Lock 4 semantics. | No |
+| R3 | Hardening command-harness precision from older consolidated checklist rows #10 and #16. | `restart/audit/hardening/HARDENING-CONSOLIDATED.md`, closed by R3/R4 follow-up. | Closed; the copied rerun checklist now uses capitalisation-safe receiver scans and includes Architecture plus PASS-2 for benchmark metadata reruns. | Receiver scans include `Receiver|receiver|Blocker|blocker|Receiving gate|receiving gate`; benchmark metadata scans include Architecture and PASS-2 or split PASS-2 metadata floor from Master metadata. | No |
+| R4 | Optional Lock 4 rationale hygiene for egglog-style fusion pressure. | `restart/locks/14-LOCKS.md`, closed by R3/R4 follow-up. | Closed; Lock 4 now names egglog-style fusion as a known SOTA pressure while preserving per-domain ownership, bridge boundaries, and independent gates. | Lock rationale explains why bridge-vs-fusion survives egglog pressure without changing settled Lock 4 semantics. | No |
 | R5 | Rewrite-budget implementation detail across C.W4/C.W5. | Tranche C/E implementation specs. | V6 synthesis and PASS-2 route the detail, but implementation tests do not exist yet. | Egraph/rewrite-budget tests name categories, node/iteration limits, representative stability, and cost/bridge evidence. | No |
 | R6 | H.W3 WASM latency placeholders `{N}` and `{M}`. | H.W3, then J.W3. | Lightning-css WASM comparison and host/browser measurement have not run. | H.W3 records measured values, host/browser/runtime, fixture hash, ABI matrix, scalar/SIMD parity, and competitor baseline before acceptance. | No |
 | R7 | Full per-wave tranche specifications. | Next drafting phase. | Synthesis intentionally ends at A-J stub/close-gate level. | Detailed tranche specs are drafted from this READY corpus. | No |
@@ -190,6 +190,12 @@ finite CSP choices; replaces representative-leaking bridge prose with stable
 bridge facts and justifications; makes `CostDecision` evidence explicit; states
 one tape identity with direct projections; and keeps SIMD everywhere as an
 eligible generated capability with exact/prefilter verifier gates.
+
+R3/R4 follow-up closure: the subsequent harness/lock hygiene pass corrects the
+older consolidated rerun checklist rows so future receiver and benchmark scans
+match the V6 classifications, and records the egglog-style fusion counterargument
+inside Lock 4 itself. The architecture remains per-domain and bridge-composed;
+the change is evidentiary hygiene, not a semantic rewrite.
 
 ## §6 Verification Evidence
 

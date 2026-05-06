@@ -566,13 +566,13 @@ The follow-up hardening rerun starts with these checks:
 7. `rg -n "GrammarIR" restart/audit/pass-2-codegen/PASS-2.md restart/ARCHITECTURE.md` finds a lowerer import-deny gate.
 8. `rg -n "__EAGER_EMPTY_PATH|CursorDecision::Skip" restart/MASTER-PLAN.md restart/MIGRATION.md` finds explicit Lock 3 gates.
 9. `rg -n "twitter|canada|citm|bootstrap|animate|On-Demand" restart/MASTER-PLAN.md restart/audit/pass-3-runtime/PASS-3.md` finds numeric competitor rows.
-10. `rg -n "receiver|blocker|receiving gate" restart/MIGRATION.md restart/MASTER-PLAN.md restart/audit/pass-*` finds complete carry-ledger columns.
+10. `rg -n "Receiver|receiver|Blocker|blocker|Receiving gate|receiving gate" restart/MIGRATION.md restart/MASTER-PLAN.md restart/audit/pass-*` finds complete carry-ledger columns; case-sensitive reruns must not miss capitalised table headers.
 11. `rg -n "yaml.bbnf|workspace.metadata.bbnf.grammars.yaml" restart/ARCHITECTURE.md restart/MASTER-PLAN.md restart/audit/pass-*` finds the two-surface proof.
 12. `rg -n "generated_loc|regen_wall|xtask" restart/ARCHITECTURE.md restart/MASTER-PLAN.md restart/audit/pass-*` finds per-grammar and per-wave budgets.
 13. `rg -n "BBNF-LIFE|BBNF-LAYOUT|BBNF-OPT|BBNF-GRAMMAR|BBNF-POINTER|lookbehind|HostSignature" restart/ARCHITECTURE.md restart/audit/pass-*` finds committed diagnostic strings.
 14. `rg -n "child count|500 LOC|exception rationale" restart/ARCHITECTURE.md restart/MASTER-PLAN.md` finds the Lock 13 verification table.
 15. `rg -n "declaration-crate review|why metadata|deletion path|reviewer" restart/ARCHITECTURE.md restart/MIGRATION.md` finds the rare escape form.
-16. `rg -n "CPU model|compiler flags|input hash|competitor version|warmup|sample" restart/MASTER-PLAN.md restart/MIGRATION.md` finds benchmark metadata gates.
+16. `rg -n "CPU model|compiler flags|input hash|competitor version|warmup|sample" restart/ARCHITECTURE.md restart/audit/pass-2-codegen/PASS-2.md restart/MASTER-PLAN.md restart/MIGRATION.md` finds benchmark metadata gates; if PASS-2 owns only the metadata floor, MASTER/ARCH must still carry the benchmark gate row.
 
 ### Re-draft threshold
 

@@ -68,7 +68,7 @@ plumbing are replaced; old archive crates leave the production workspace.
 | `crates/analysis` | ABROGATE-MOVE/REPLACE. | `bbnf-language-server`, `error`, `source`, `grammar`, `pipeline`. |
 | `crates/lsp` | ABROGATE-MOVE/REPLACE. | `bbnf-language-server`. |
 | `crates/bbnf-path` | KEEP-MODIFY/REPLACE. | `path` plus `path-core`. |
-| `crates/bbnf-path-ts` | KEEP-MODIFY/REPLACE. | `path-ts` plus `path-core`. |
+| `crates/bbnf-path-ts` | ABROGATE-MOVE deferred to V2. | TS surface defers post-V1 alongside the V2 `TsBackend: Backend` impl per `restart/ARCHITECTURE.md` §7.5; legacy `crates/bbnf-path-ts` archives at A.W0 alongside `ser`/`gorgeous` and is reconstituted as `path-ts` in V2. The `path-core` extraction (Rust-line) lands in V1 from `crates/bbnf-path`. |
 | `crates/csp-solver` | KEEP-MODIFY. | `csp-solver`; generic API remains. |
 | `crates/egraph` | KEEP-MODIFY. | `egraph`; bridge logic moves to `passes`. |
 | `crates/egraph-derive` | KEEP-MODIFY. | `egraph-derive`. |
@@ -503,8 +503,9 @@ such as Hubbard's JSON comparison row, Almomany cost-model wording, the exact
 Deb bibliography variant, Ungar/Adams, and HelpMate remain bibliography
 receivers, not migration evidence.
 Regex and SIMD migration gates therefore compare behavior against verified
-local corpora, PASS contracts, and the `regex-automata` oracle lane rather than
-unverified catalogue leads.
+local corpora, PASS contracts, and `parse-that-regex` internal cross-engine
+parity (NFA vs lazy DFA vs full DFA vs VM) rather than unverified catalogue
+leads.
 
 ## 10. Archive Crates
 
@@ -591,7 +592,7 @@ optional; they are the replacement architecture.
 | `crates/host` | Generic host primitive/registry system. | D/F | README host decisions (`restart/README.md:160-182`). |
 | `crates/cost-model` | `CostDecision` facts, objective profiles, Pareto/frontier evidence, solver-backed extraction adapters, LOC budgets. | C/H/J | PASS-1 cost model (`restart/audit/pass-1-substrate/PASS-1.md:46-61`). |
 | `crates/path-core` | Shared path semantics. | G | Lock 7 (`restart/locks/14-LOCKS.md:46`). |
-| `crates/parse-that` | Regex/Unicode substrate below BBNF, with grammar-owned HIR/verifier integration and `regex-automata` as oracle/reference until bespoke parity is proven. | D/H | README Unicode routing (`restart/README.md:131-143`). |
+| `crates/parse-that` | Parser combinator family below BBNF, paired with the regex sub-crate `crates/parse-that-regex` (renamed from legacy `bbnf-regex` per Lock 11). Grammar-owned HIR/verifier integration; cross-engine parity (NFA, lazy DFA, full DFA, VM) is internal to `parse-that-regex`; no third-party regex oracle is cited. | D/H | README Unicode routing (`restart/README.md:131-143`); Lock 11 (`restart/locks/14-LOCKS.md:54`). |
 | `crates/test-fixtures` | Shared fixtures and parity matrix. | A/G/J | Inheritance map (`restart/inheritance/INDEX.md:29-40`). |
 
 ## 14. LOC Trajectory
@@ -656,7 +657,7 @@ old BA/BB/BC/BD into new tranches A-J (`restart/inheritance/INDEX.md:29-40`).
 | BA | Archive ceremony, god-module pressure, grammar generalization, close discipline. | Old anti-tape scrub and direct-only substrate. |
 | BB | Optimization, Pratt/SIMD, path/visitor pressure, template thinking. | Topic-only waves and any grammar registry carry-forward. |
 | BC | Backend ABI, typed IR, parity pressure. | Emitters walking grammar source and stale IR counts when PASS-2 differs. |
-| BD | Fixture package, cross-backend matrix, publication order. | Premature TypeScript production if not backed by current lowerer contract. |
+| BD | Fixture package, cross-backend matrix on the Rust line, publication order. | Premature TypeScript or WASM production: TS + WASM defer post-V1 as a principled architectural fork; V2 `TsBackend: Backend` and `WasmBackend: Backend` per `restart/ARCHITECTURE.md` §7.5 own the V2 carry. |
 
 `docs/tranches/BA/BA.md` describes BA as a surgical foundation tranche with
 archive and close gates (`docs/tranches/BA/BA.md:5-40`). That discipline is
@@ -677,7 +678,7 @@ dependency, not topic (`docs/precepts/instructions/LESSONS-LEARNED.md:1-34`).
 | E | Backend IR, VM, extraction, lowerer contract. |
 | F | Rust lowerer, runtime template output, regen equality. |
 | G | Path/path-core/path-ts split, visitor, mutation API, future grammar gate. |
-| H | Pratt, verifier-bound exact/prefilter SIMD, regex oracle parity, WASM V1, SOTA early gates. |
+| H | Pratt, verifier-bound exact/prefilter SIMD, `parse-that-regex` internal cross-engine parity, Rust-line SOTA early gates. WASM defers post-V1 alongside the V2 `WasmBackend: Backend` impl per `restart/ARCHITECTURE.md` §7.5. |
 | I | Error recovery, snapshot/reuse-map incremental parsing, language server, playground/debug surfaces. |
 | J | Parity, benchmarks, docs, publication readiness, close. |
 
@@ -791,14 +792,16 @@ deferred work, and public diagnostics are shared by CLI and LSP.
 
 Migration-implementation receivers are tracked at `restart/MASTER-PLAN.md` §24
 (Carry and Friction Ledger) with `Source: migration` or
-`Source: synthesis + migration` tags. The eight migration-sourced items —
-exact generated header fields, declaration-crate review form, `path-ts`
-publication timing, WASM exported ABI, benchmark host hardware profiles,
-archive destination for `ser`/`gorgeous`, PASS-2 BIR snapshots, and Lock 3
-cursor gates — appear in that consolidated ledger; this section retains its
-heading for cross-document anchoring but no longer carries a separate table.
-The single carry-truth principle holds: one ledger, two sources, one set of
-receivers.
+`Source: synthesis + migration` tags. The migration-sourced items — exact
+generated header fields, declaration-crate review form, benchmark host
+hardware profiles, archive destination for `ser`/`gorgeous`, PASS-2 BIR
+snapshots, and Lock 3 cursor gates — appear in that consolidated ledger;
+this section retains its heading for cross-document anchoring but no longer
+carries a separate table. The `path-ts` publication timing and the WASM
+exported ABI defer post-V1 alongside the V2 `TsBackend: Backend` and
+`WasmBackend: Backend` impls per `restart/ARCHITECTURE.md` §7.5; both route
+to V2 amendment and no longer occupy V1 carry rows. The single carry-truth
+principle holds: one ledger, two sources, one set of receivers.
 
 ## 21. Migration Close
 

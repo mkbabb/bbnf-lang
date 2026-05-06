@@ -2,7 +2,7 @@
 
 The bbnf-lang corpus, surveyed across two restart attempts, returns to first principles. The prior `restart/` is archived at `restart-archive-2026-05-04/` (commit history preserved; the audit material survives as a research corpus, not as a plan-set). This README is the new anchor — the synthesis of the user's 35-answer interrogation, the ffuzzy three-primitive insight, the 14 locks (carried forward), and the precepts (`docs/precepts/`, submodule, governs voice and process).
 
-The greenfield mandate is unambiguous: **no quick solutions, no workarounds, no legacy code uncontested, no contrivance, no overfitting.** Architectural transpositions for elegance, simplicity, and performance are mandatory. The user-facing API is familiar (sonic-rs, lightning-css, jq idioms); the internals are the apotheosis (CSP + e-graph + shape mining + cost model + bidirectional inference + grammar-derived everything). The substrate identity is settled. The path forward is five prompts.
+The greenfield mandate is unambiguous: **no quick solutions, no workarounds, no legacy code uncontested, no contrivance, no overfitting.** Architectural transpositions for elegance, simplicity, and performance are mandatory. The user-facing API is familiar (sonic-rs, lightning-css, jq idioms); the internals are the apotheosis (rank-1 HM + local bidirectional checking + finite CSP choices + e-graph rewriting + shape mining + evidence-bearing cost decisions + grammar-derived everything). The substrate identity is settled. The path forward is five prompts.
 
 ---
 
@@ -110,7 +110,7 @@ The full per-crate module structure is the output of **PASS-1 (Substrate)** for 
 | **Grammar IR** | `ir` (with passes operating in `passes`) | ~12-15 | parsed `.bbnf` AST + post-pass annotations (typed, cost-annotated, shape-mined); the optimization domain |
 | **Backend IR** | `ir` | ~22 (per BC.W0 starting point; refines in PASS-1) | the codegen contract; per-backend lowerers consume; uniform across Rust + TS + WASM |
 
-The "optimised IR" of the prior plan is **Grammar IR with extra metadata** — not a third type. The CSP-typed information, the cost annotations, the shape-mining hints, the layout decisions all live as side-tables keyed by Grammar IR node IDs. This is the rust-analyzer / Salsa pattern.
+The "optimised IR" of the prior plan is **Grammar IR with extra metadata** — not a third type. The type/layout facts, finite CSP legality facts, cost annotations, shape-mining hints, and layout decisions all live as side-tables keyed by Grammar IR node IDs. This is the rust-analyzer / Salsa pattern.
 
 **Grammar-derived value type: hybrid (Q10).** Leaf rules become slice/scalar wrappers (`type Identifier<'i> = &'i str`); compound Seq rules become structs (`struct ColorFunction<'i> { name: &'i str, args: Vec<...> }`); Alt rules become enums (`enum CssValue<'i> { Color(Color<'i>), Length(Length<'i>), ... }`); Repeat becomes Vec; Optional becomes Option. Grammar shape dictates which. The codegen synthesises all four typed-record shapes from grammar IR.
 
@@ -158,7 +158,7 @@ Composition is the canonical surface; declaration-crate escape valve (Lock 14) i
 
 ### Multi-function chaining
 
-`-> f1 -> f2 -> f3` chains type projections. Today's BBNF supports terminal-side `-> Type`; the chain extends this with first-class bidirectional inference. The `@host fn` directive's body uses chained applications. Type inference flows through each stage; CSP backs the constraint collection.
+`-> f1 -> f2 -> f3` chains type projections. Today's BBNF supports terminal-side `-> Type`; the chain extends this with first-class bidirectional inference. The `@host fn` directive's body uses chained applications. HM gives each stage its principal type, local check/synth checks adjacent edges, and finite CSP participates only when the edge triggers bounded implementation choices such as overload or materialisation selection.
 
 ```bbnf
 hex_byte = /[0-9a-fA-F]{2}/ -> parse_hex_pair -> u8
@@ -167,7 +167,7 @@ color = "#" (hex_byte hex_byte hex_byte) -> tuple_to_color -> Color
 
 ### Generic rules
 
-`Object<V> = "{" pair<V> ("," pair<V>)* "}"; pair<V> = String ":" V`. Type system carries type variables; CSP propagates; codegen monomorphises per call site (Rust handles natively; WASM via type erasure + dispatch). Grammar-level DRY across grammars sharing structural patterns. Land V1.
+`Object<V> = "{" pair<V> ("," pair<V>)* "}"; pair<V> = String ":" V`. HM carries type variables; codegen monomorphises the finite validated call-site set (Rust handles natively; WASM via type erasure + dispatch). Grammar-level DRY across grammars sharing structural patterns. Land V1.
 
 ### `@error(skip | recover | halt)` directive
 
@@ -185,14 +185,15 @@ Pratt operator chains, SIMD scanner opportunities, PHF keyword sets — all emer
 
 ## §6 — Optimization Apotheosis (Settled Positions Q14-Q19)
 
-The pipeline is **fixed-point co-iteration** with SSA-style discipline. Each phase has explicit input + output IR; each transformation is composable; the egraph is the rewrite substrate; the CSP is the inference substrate; the cost model picks emission shapes.
+The pipeline is **fixed-point co-iteration** with SSA-style discipline. Each phase has explicit input + output IR; each transformation is composable. Hindley-Milner plus local bidirectional checking owns type inference inside layout lowering; the CSP solver owns finite implementation choices and legality checks; the egraph owns rewrite saturation; the cost model selects among legal alternatives with evidence.
 
 ### Pass ordering
 
 ```
 1. Parse           (.bbnf  →  Grammar IR)
 2. Validate        (well-formedness; reachability; cycle classification)
-3. Type inference  (CSP + bidirectional + Hindley-Milner; produces TypedGrammarIR)
+3. Type/layout inference  (rank-1 HM core + Pierce-Turner local check/synth +
+                           finite CSP choices inside layout lowering; produces LayoutFacts)
                        ┌──── fixed-point co-iteration with (2) ────┐
 4. Shape mining    (recogniser miners; identify Pratt operators, SIMD scanners, PHF keywords,
                     error-recovery boundaries, lookbehind window widths)
@@ -200,7 +201,7 @@ The pipeline is **fixed-point co-iteration** with SSA-style discipline. Each pha
                         keyword-set detection, operator-chain detection, repeat-loop hoisting,
                         tail-call elimination, non-progressing-Alt removal)
 6. Cost-model extraction  (e-graph  →  optimal-cost AST per cost model)
-7. Lower to Backend IR   (TypedGrammarIR  →  Backend IR)
+7. Lower to Backend IR   (Grammar IR + side tables  →  Backend IR)
 8. Per-backend lower     (Backend IR  →  Rust source + WASM bytes; TS scope-deferred per Q28
                           but the Backend IR shape supports TS lower without retrofit)
 9. Regen-equality verification  (xtask --check; byte-identical re-emission)
@@ -210,21 +211,22 @@ Type inference (3) and validation (2) co-iterate to fixed-point with SSA-style d
 
 ### Cost model: hybrid
 
-Local costs per construct feed e-graph extraction (per-construct shape selection). Global costs per rule feed the strategy resolver (which rules emit Pratt vs descent). Per-path costs handle Pratt LUT propagation in left-recursive operator chains.
+Local costs per construct feed e-graph extraction (per-construct shape selection). Global costs per rule feed the strategy resolver (which rules emit Pratt vs descent). Per-path costs handle Pratt LUT propagation in left-recursive operator chains. Every selected strategy carries a `CostDecision`: selected alternative, rejected alternatives, dominated alternatives, objective vector, scalarisation profile, target, extraction method, and any solver-backed legality evidence.
 
 ### Cost model integration: trait-based
 
-`Cost` is a trait with `score(&self, ctx: &Context) -> u64` and `branches(&self) -> impl Iterator<Item = (Choice, u64)>`. The parser cost model implements; the regex cost model implements; the comparison logic lives in `cost-model`. Bridging via `Cost` allows the parser to know "this regex scan is X cheap" without knowing regex internals.
+`CostModel` evaluates a typed candidate set and emits `CostDecision`, not only a scalar score. Parser constructs and regex programs implement the same evidence shape with different domain instances; comparison logic lives in `cost-model`. SMT-style solving (Satisfiability Modulo Theories) is an optional composition backend for constrained objective rows, not the default optimizer and not a replacement for e-graph extraction.
 
-### CSP + e-graph bridge (the union system)
+### CSP + e-graph bridge (bridged, not fused)
 
-CSP is the **central inference substrate**. E-graphs are the rewrite + extraction substrate. They compose via an explicit bridge at `passes/csp_egraph_bridge.rs`:
+CSP is the finite-choice and legality substrate. E-graphs are the rewrite + extraction substrate. They compose via an explicit bridge at `passes/csp_egraph_bridge.rs`:
 
-- When the CSP solves a constraint that names an e-class, the e-class is promoted to a CSP value (the e-graph's chosen representative becomes the CSP's value)
-- When the e-graph extracts an optimal AST that references a CSP variable, the CSP's solution is consulted (the constraint propagation feeds the extraction)
-- The bridge maintains a bidirectional name map: CSP variable IDs ↔ e-graph class IDs
+- The bridge maintains stable maps among Grammar IR node IDs, CSP variable IDs, e-class IDs, and extracted node IDs.
+- Egraph and CSP exchange monotone facts through bridge tables; non-monotone CSP search state stays inside `csp-solver`.
+- Rewrite guards can consult solved legality facts, but an e-node representative is never promoted to truth before extraction.
+- `BridgeJustification` records why a rewrite or extraction edge was legal, including egraph explanation refs and CSP explanation refs.
 
-The bridge is real architecture, not a fused type. CSP and e-graph stay separate substrates with explicit interface methods. This is the union system you named at Q18 — bridged, not unioned-as-one-type.
+The bridge is real architecture, not a fused type. CSP, egraph, miners, and cost remain separate substrates with explicit interface methods. egglog-style Datalog/equality-saturation fusion is a known SOTA alternative; V1 keeps bridge tables because bbnf needs separate diagnostic ownership, monotone exchange boundaries, and independent stabilization gates.
 
 ### E-graph rewrites — all 7 categories V1
 
@@ -257,13 +259,15 @@ Mindful of combinatorial argument increase: hints carry weights; cost model damp
 
 ## §7 — Type System
 
-**Hindley-Milner inference + bidirectional check/synth in Pierce-Turner style + CSP-backed unification.** The three are composed, not exclusive — Hindley-Milner is the inference engine; bidirectional check/synth is the algorithmic style at each grammar node; CSP backs the constraint-collection + unification phase. PASS-1's Type System sub-agent does the formal deep dive (rust-analyzer's `chalk`, GHC's `OutsideIn(X)`, Stephen Dolan's algebraic subtyping, Dunfield-Krishnaswami's bidirectional papers, Pierce-Turner's local inference) and commits to the specific algorithm + the formal proof obligations + citations.
+**Rank-1 Hindley-Milner core + Pierce-Turner local check/synth + finite CSP choices.** Hindley-Milner owns principal schemes for ordinary grammar rules, host functions, and V1 generic rules. Pierce-Turner-style bidirectional checking owns local expected-type flow at annotations, host calls, chain edges, and subsumption sites. CSP does not replace unification; it solves bounded choices HM does not model: host overload selection, layout representation, recognizer eligibility, materialisation mode, recovery strategy, backend erasure, and extraction legality.
 
-**Annotation surface: hybrid.** Pure inference is default. First-class explicit annotations welcome where the author wants control (`rule -> u32`, `rule -> Color`, generic-rule type parameters). Multi-function chaining (`-> f1 -> f2 -> f3`) flows types through stages with bidirectional check at each.
+**No V1 GADT or higher-rank surface.** Dunfield-Krishnaswami and OutsideIn(X) remain research warnings, not implementation commitments: if a future language amendment adds indexed, existential, higher-rank, or branch-local equality surfaces, it must reopen the type-system proof. V1 generic rules are rank-1 parametric schemes.
 
-**Generic rules: V1.** `Object<V> = "{" pair<V> ("," pair<V>)* "}"; pair<V> = String ":" V`. CSP propagates type variables; codegen monomorphises per call site (Rust handles natively; WASM via type erasure + dispatch). The expected case for parameterised rules: shared structural patterns across grammars (object, array, key-value pair).
+**Annotation surface: hybrid.** Pure rank-1 inference is default. First-class explicit annotations are welcome where the author wants control (`rule -> u32`, `rule -> Color`, generic-rule type parameters). Multi-function chaining (`-> f1 -> f2 -> f3`) flows types through stages with a bidirectional check at each adjacent edge.
 
-**Subtyping: full Hindley-Milner with subsumption.** CSP relaxes constraints; coercion is a constraint relaxation. Numeric coercion (`i32 → i64 → f64`); lifetime coercion (`&'i str → Cow<'i, str> → String`); typed-record narrowing (a struct with optional fields can subsume a struct with fewer fields). No informal coercion tower bolted on.
+**Generic rules: V1.** `Object<V> = "{" pair<V> ("," pair<V>)* "}"; pair<V> = String ":" V`. HM carries the type variable and codegen monomorphises the finite validated call-site set (Rust handles natively; WASM via type erasure + dispatch). CSP participates only when the generic instance interacts with finite choices such as host overloads, layout, materialisation, recognizer eligibility, backend erasure, or extraction legality.
+
+**Subtyping and coercion: directed checking edges.** Numeric coercion (`i32 → i64 → f64`), lifetime coercion (`&'i str → Cow<'i, str> → String`), and typed-record narrowing are explicit solver candidates at check/synth transition sites. They are not global HM rules and not vague CSP relaxation. A failed edge reports the expected type, actual type, registered coercion candidates, and source span.
 
 **Lookbehind types.** The `|<` operator's left operand is a *constraint* on context, not a *capture* of value. The right operand carries the value. Type system tracks this asymmetry: `("s" |< "ch") -> "k"` has the type of `"ch" -> "k"` (the lookbehind context contributes nothing to the value but everything to the constraint).
 
@@ -305,13 +309,13 @@ struct JsonValue<'i> {
 }
 ```
 
-Materialisation: `value.as_str()` indexes `tape.tokens[idx]` for the kind, slices `tape.source[span]` for the bytes, returns `&'i str`. Constant-time; cache-coherent. `value.as_i64()` does the same plus an integer parse on the slice. Object/array iteration walks `tape.tokens[idx..]` until the structural pointer's matching close.
+Materialisation: `value.as_str()` indexes `tape.tokens[idx]` for kind/span, returns a borrowed source slice when the token is unescaped, or projects a normalized string from the payload arena when escaping requires it. Kind/span projection is constant-time. Scalar methods such as `as_i64()` are either parsed-scalar payload reads or digit-linear lazy parses, as declared by `TapeShape`. Object/array iteration walks `tape.tokens[idx..]` until the traversal policy's matching close.
 
 Slice-borrow integration: `&'i str` source borrow is the primary lifetime; tape borrows from the same `'i`. Bumpalo opt-in via `parse_in(input, &bump)` returns `JsonValue<'arena, 'i>` where `'arena: 'i`. Owned escape via `parse_owned(input)` deep-copies tape + source.
 
-PASS-3 specifies the tape layout (token-record byte layout; payload arena structure; sib_skip-vs-explicit-end-pointer choice), the typed-value-borrow shape (variant tag size; lifetime parameterisation; index encoding), and the materialisation cost (per-method cycle estimate; per-grammar codegen size projection).
+PASS-3 and the BIR fold specify the user-visible tape semantics, then route exact token byte layout, payload arena classes, sibling-skip/end-pointer choice, typed-value borrow fields, and materialisation-cost classes into Tranche B/F implementation gates. Every rule has a `TapeShape` and `ValueShape`: `TapeShape` owns token kind, span class, payload class, and traversal skip policy; `ValueShape` owns generated field/enum projection over the same node id. Any scalar cache must be declared by one of those shapes.
 
-**This time it lands.** The convergent pivot at Tranche F retires OpenFrame across all 9 grammars in a single architectural movement; the tape lives at `runtime/src/tape/`; per-grammar runtime modules at `runtime/src/grammars/<name>/` borrow into tape via the codegen-emitted accessors. No orthogonal codepath; no parallel substrate; no Vec<OpenFrame> ladder. One representation; one materialisation surface; one Visitor pattern.
+**This time it lands.** The convergent pivot at Tranche F retires OpenFrame across all 9 grammars in a single architectural movement; the tape lives at `runtime/src/tape/`; per-grammar runtime modules at `runtime/src/grammars/<name>/` borrow into tape via the codegen-emitted accessors. No orthogonal codepath; no parallel substrate; no Vec<OpenFrame> ladder. One authoritative identity; one materialisation contract; one Visitor pattern. Direct structs and red-like views may coexist with tape tokens, but every public node traces to one `(TapeId, node id, payload class)`.
 
 ### Mutation: read-write visitor only (Q27)
 
@@ -337,7 +341,7 @@ Direct typed-property mutation is unsound under slice-borrow (mutation invalidat
 
 ### SIMD: first-class everywhere (Q29)
 
-ARM NEON (M1/M2/M3), x86 AVX2 + AVX-512, WASM-SIMD (wasm-simd128), portable scalar fallback. PASS-2 specifies the per-kernel SIMD coverage matrix.
+ARM NEON (M1/M2/M3), x86 AVX2 + AVX-512, WASM-SIMD (wasm-simd128), portable scalar fallback. Every eligible recognizer receives SIMD consideration; PASS-2 specifies the per-kernel SIMD coverage matrix. Exact SIMD scans must match scalar offsets. Prefilter SIMD scans emit candidates only, and `RegexProgram` or the scalar verifier accepts the candidate before tape emission. Grammar authors may disable an unsafe or unwanted recognizer through metadata, but they do not force SIMD with syntax.
 
 ### Incremental parsing
 
@@ -351,7 +355,7 @@ The VM (kept per Q7) is the debug + replay runtime: incremental edits replay thr
 
 ## §10 — SOTA Synthesis
 
-**All 16 projects deep-dive.** Per Q31. Each contributes specific architectural insight; each gets cited in PASS-1/2/3 sub-agent research-anchor docs; each lands an absorbed substrate in a named crate.
+**All 16 project influences deep-dive.** Per Q31. This table is an influence catalogue, not the research-agent count: the Wave 5 research fold used eight topic agents, each with verified primary-source slots. Each project below contributes specific architectural insight; evidence-bearing claims still follow the source classification in `restart/research/INDEX.md`.
 
 | Project | Idea adopted | Crate that absorbs |
 |---|---|---|
@@ -364,7 +368,7 @@ The VM (kept per Q7) is the debug + replay runtime: incremental edits replay thr
 | **logos** | fast lexer-generator codegen idioms; SIMD-aware lexer specialisation | `simd-scan` + `codegen/rust` |
 | **regex-automata** | DFA / NFA / hybrid regex engines; the de-facto Rust regex library | `parse-that/regex` (eventual fold) |
 | **egg** | e-graph substrate; Language derive (subsumes the new-IR-node ffuzzy initially proposed) | `egraph` (sister crate; egg-inspired or egg-based) |
-| **z3** | SMT/CSP propagation reference (AC-3, GAC, conflict-driven backtracking) | `csp-solver` |
+| **z3** | SMT reference for constrained legality and objective checks; finite CSP propagation reference (AC-3, GAC, conflict-driven backtracking) | `csp-solver` + `cost-model` |
 | **lalrpop** | LALR codegen idioms; type-driven parser tables (reference; bbnf is not LALR-bound) | `codegen` (reference for table-driven emit) |
 | **swc** | hand-written-parser-class iteration speed; NAPI bindings; transformer/codegen separation | `codegen/wasm` (WASM compilation pipeline) |
 | **pest** | PEG parser-generator surface (derive-macro UX) | `codegen/rust` (derive-macro UX patterns) |
@@ -383,7 +387,7 @@ The **14 locks** at `restart/locks/14-LOCKS.md` are settled and govern the green
 | 1 — Tape + columnar dead | **Reframed.** Tape is the substrate of the greenfield, properly implemented (per §8). The lock retired the *prior failed implementation* — orthogonal codepaths, OpenFrame parallel substrate, type ambivalence, the Vec<OpenFrame>::clone 86.07% pathology. The greenfield's tape is unioned with direct-to-struct (no parallel substrate); columnar SoA stays buried (AV.04 archaeology). The lock's spirit (no parallel-substrate failure) honours; the lock's letter (don't use the name "tape") is amended — tape is the right name for the right insight when implemented properly. |
 | 2 — Layout-lowering canon | Honoured at `passes/layout/`; `TypeDesc`/`StructLayout`/`TypeMap` aliases retire workspace-wide. |
 | 3 — Cursor + byte-skip unified | Honoured at `runtime/parse/`; one parse implementation; eager fast-path elides cursor consultation. |
-| 4 — Per-domain orthogonal optimisation | Honoured by `passes` composing `egraph` + `csp-solver` + `cost-model` by output-piping; no fused hypergraph. The CSP↔egraph union (§6) is bridged, not fused. |
+| 4 — Per-domain orthogonal optimisation | Honoured by `passes` composing `egraph` + `csp-solver` + `cost-model` by output-piping; no fused hypergraph. The CSP↔egraph relation (§6) is bridged, not fused; bridge tables carry stable IDs, monotone facts, and justifications rather than e-node representatives as truth. |
 | 5 — IR + per-backend lower | Honoured by Backend IR (§4); `codegen/{rust,wasm}/` lowers from Backend IR; TS deferred per Q28. |
 | 6 — xtask emits committed source | Honoured; regen artefacts greppable on disk; no proc-macro façade for codegen output. |
 | 7 — Path crate consolidation | Honoured by `path` + `path-core` + `path-ts` triplet (§2); `runtime/path.rs` retires (per BA W3c carry). |
@@ -470,6 +474,6 @@ The legacy plan-set at `docs/tranches/{BA,BB,BC,BD}/` is the **inheritance refer
 
 ## §15 — Closing Posture
 
-Hereupon the greenfield opens. The substrate is the tape + direct-to-struct slice-borrow union; the optimization is CSP + e-graph + shape-mining + cost-model with a union-system bridge; the type system is Hindley-Milner + bidirectional + Pierce-Turner-styled; the API is sonic-rs / lightning-css / treesitter familiar with deeper internals; the BBNF extensions are lookbehind + generics + block-bodied `@host fn` + multi-function chaining + `@error` + `@layout`, with rich Unicode routed through `parse-that/regex`; the workspace is 24 crates with the `bbnf-` prefix dropped from internal substrate; the future-grammar onboarding test is two surfaces. The 14 locks govern. The precepts speak.
+Hereupon the greenfield opens. The substrate is tape identity plus direct-to-struct projections over one slice-borrow contract; the optimization is e-graph rewriting, finite CSP legality, shape mining, and evidence-bearing cost decisions with a bridged-not-fused fact exchange; the type system is rank-1 Hindley-Milner plus Pierce-Turner local check/synth and directed subsumption edges; the API is sonic-rs / lightning-css / treesitter familiar with deeper internals; the BBNF extensions are lookbehind + generics + block-bodied `@host fn` + multi-function chaining + `@error` + `@layout`, with rich Unicode routed through `parse-that/regex`; the workspace is 24 crates with the `bbnf-` prefix dropped from internal substrate; the future-grammar onboarding test is two surfaces. The 14 locks govern. The precepts speak.
 
 The five prompts at `restart/prompts/` dispatch next.

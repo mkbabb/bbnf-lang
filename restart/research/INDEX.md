@@ -33,11 +33,30 @@ Every `restart/research/<topic>.md` carries §1-§7:
 
 §7 — **Surgery proposals.** Concrete edits Phase 2 would land if the orchestrator approves. Each proposal: target file:line / surgery directive (verbatim text or surgical description) / acceptance gate / dependency on §5 vs §6.
 
+## §2.1 — Source classification and current lock hygiene
+
+The catalogue below governs which research leads may support evidence-bearing
+fold claims. Topic source lists remain dispatch prompts; the topic artefacts are
+the authority for verified sources. Role-unclear or unverified leads stay out of
+proof language until a primary paper, official documentation page, canonical
+repository, or benchmark report is cited.
+
+| Topic | Verified source slots | Provenance / role hygiene | Current lock binding |
+|---|---:|---|---|
+| 1 HM foundations | 9 | Primary/canonical sources support rank-1 HM principal schemes, Algorithm W lineage, implementation references, and diagnostics. | Lock 2 for layout/type boundary; Lock 4 for keeping type/CSP/egraph domains separated. |
+| 2 Bidirectional | 5 | Roc is verified as modern constraint/unification implementation evidence, not as Pierce-Turner or Dunfield-Krishnaswami proof. Ramsey and Herbelin/Lemay are provenance gaps unless primary source text is verified. | Lock 2 and Lock 4. |
+| 3 CSP / parametric generics | 8 | The verified Stuckey/GADT pressure source is Sulzmann/Schrijvers/Stuckey 2008 on Herbrand constraint abduction; the combined Schrijvers/Stuckey ADT-reconstruction citation is not used as evidence. GADT-like or higher-rank surfaces are not folded into V1. | Lock 2, Lock 4, and Lock 14. |
+| 4 Egraphs | 10 | The verified egglog source is Zhang et al. 2023, *Better Together: Unifying Datalog and Equality Saturation*; the older "Yang et al. 2024" title is a provenance gap. egglog is a fusion counterargument, not a V1 adoption. | Lock 4. |
+| 5 Cost models | 9 | Almomany and exact Deb 2014 remain provenance gaps. Pareto/frontier and solver-backed claims must use verified cost/extraction, LLVM/Cranelift, Z3, or multi-objective sources from the topic artefact. | Lock 4 and Lock 8. |
+| 6 Tape/direct | 9 | Hubbard comparative-study wording remains a provenance gap unless a primary URL/DOI is supplied. simdjson, sonic-rs, yyjson, RapidJSON, and UTF-8 validation sources carry the evidence. | Lock 1 and Lock 8. |
+| 7 Green/red incremental | 8 | Ungar/Adams and HelpMate remain optional provenance gaps for this research slot. rowan, rust-analyzer, Wagner/Graham, tree-sitter, and Salsa carry the evidence. | Lock 1 and Lock 14. |
+| 8 SIMD/DFA/regex | 8 | Vectorscan is verified as official source evidence for production SIMD regex lineage. Hyperscan may be cited only when primary source/docs are verified in the consuming artefact. | Lock 1, Lock 8, and Lock 10. |
+
 ## §3 — The eight topics
 
 ### Topic 1 — Type system foundations: HM + algorithm W + Damas-Milner
 
-**Anchor locks**: Lock 4 (HM + bidirectional + Pierce-Turner + CSP-backed).
+**Anchor locks**: Lock 2 (layout/type boundary) + Lock 4 (separate type, CSP, egraph, miner, and cost domains).
 **Anchor sections**: `restart/README.md` §7; `restart/ARCHITECTURE.md` §8; `restart/audit/pass-1-substrate/PASS-1.md` §3 (HostFn + chain typing).
 **Engagement question**: does the restart correctly position HM + algorithm W as the *foundation* on which bidirectional + Pierce-Turner build, or does it conflate the layers? Does the restart's "HM + bidirectional + Pierce-Turner + CSP-backed" stack survive when the four are decomposed?
 **Key sources**:
@@ -51,40 +70,41 @@ Every `restart/research/<topic>.md` carries §1-§7:
 
 ### Topic 2 — Bidirectional + Pierce-Turner + Dunfield-Krishnaswami
 
-**Anchor locks**: Lock 4.
+**Anchor locks**: Lock 2 + Lock 4.
 **Anchor sections**: same as Topic 1; PASS-1 §3 chain-step type-flow rule.
 **Engagement question**: is "bidirectional" in the restart used in the Pierce-Turner sense (synthesise + check modes; subtyping subsumption) or the Dunfield-Krishnaswami sense (algorithmic completeness for higher-rank polymorphism)? Or both? When the restart says "Pierce-Turner-style" what does it commit to?
 **Key sources**:
 - Pierce, B. C. & Turner, D. N. (1998). *Local Type Inference.* TOPLAS — the foundational bidirectional paper.
 - Dunfield, J. & Krishnaswami, N. R. (2013). *Complete and Easy Bidirectional Typechecking for Higher-Rank Polymorphism.* ICFP.
 - Dunfield, J. & Krishnaswami, N. (2019). *Sound and Complete Bidirectional Typechecking for Higher-Rank Polymorphism with Existentials and Indexed Types.* PACMPL.
-- Norman Ramsey's bidirectional implementation in *Programming Languages: Build, Prove, and Compare* (chapter on Hindley-Milner with subtyping).
+- Norman Ramsey's bidirectional implementation in *Programming Languages: Build, Prove, and Compare* (optional only; provenance gap unless primary implementation text is verified).
 - The Idris 2 elaborator (`src/Core/Unify.idr`) — bidirectional + dependent-type integration.
-- Roc's type checker (Rust source, `crates/compiler/load_internal/src/file.rs` and friends) — modern Rust-implemented bidirectional with type aliases + records.
-- Hugo Herbelin & Stéphanie Lemay's bidirectional subtype coercion notes — applicable if bbnf's "subtyping with subsumption" engages coercion.
+- Roc's type checker (Rust source, `crates/compiler/load_internal/src/file.rs` and friends) — modern Rust constraint/unification implementation evidence; not Pierce-Turner or Dunfield-Krishnaswami proof.
+- Hugo Herbelin & Stéphanie Lemay's bidirectional subtype coercion notes — optional only; provenance gap unless primary source text is verified.
 
-### Topic 3 — CSP-backed unification + GADTs + parametric polymorphism + generic rules
+### Topic 3 — CSP-backed finite choices + parametric polymorphism + generic rules
 
-**Anchor locks**: Lock 4 + Lock 10 (BBNF V1 generics: `Object<V>`).
+**Anchor locks**: Lock 2 + Lock 4 + Lock 14.
 **Anchor sections**: `restart/ARCHITECTURE.md` §8; PASS-1 §3 generic-rule typing; `restart/README.md` §5 BBNF extensions (generics).
-**Engagement question**: the restart commits to "CSP-backed unification" alongside HM + bidirectional. Does this mean (a) constraint-based HM (HM(X) Pottier-Rémy), (b) GADT-style local-equality constraint solving (Vytiniotis et al. OutsideIn(X)), or (c) something orthogonal that uses bbnf's CSP solver? When generic rules `Object<V>` are introduced, what does CSP-backed do that HM alone cannot?
+**Engagement question**: the restart commits to CSP alongside HM + bidirectional. Does this mean (a) constraint-based HM (HM(X) Pottier-Rémy), (b) GADT-style local-equality pressure that V1 rejects, or (c) an orthogonal finite-domain CSP solver for host, layout, backend, recognizer, materialisation, recovery, and extraction choices? When generic rules `Object<V>` are introduced, what does CSP do that HM alone cannot?
 **Key sources**:
 - Pottier, F. & Rémy, D. (2005). *The Essence of ML Type Inference.* (Chapter from *Advanced Topics in Types and Programming Languages*) — HM(X) constraint framework.
-- Vytiniotis, D., Peyton Jones, S., Schrijvers, T., Sulzmann, M. (2011). *OutsideIn(X): Modular type inference with local assumptions.* JFP — the authoritative GADT-aware HM extension.
-- Schrijvers, T. & Stuckey, P. (2008). *Polymorphic algebraic data type reconstruction.* ICLP — CSP-style.
+- Vytiniotis, D., Peyton Jones, S., Schrijvers, T., Sulzmann, M. (2011). *OutsideIn(X): Modular type inference with local assumptions.* JFP — adversarial GADT/local-equality pressure; not a V1 implementation commitment.
+- Sulzmann, M., Schrijvers, T., Stuckey, P. (2008). *Type inference for GADTs via Herbrand constraint abduction.* KU Leuven CW 507 — CSP-adjacent GADT inference pressure.
+- Schrijvers, T. & Bruynooghe, M. (2006). *Polymorphic algebraic data type reconstruction.* PPDP — ADT reconstruction pressure, not GADT local-equality solving.
 - The GHC type checker (`compiler/typecheck/`) — production-grade OutsideIn(X) implementation.
 - Cardelli, L. & Wegner, P. (1985). *On Understanding Types, Data Abstraction, and Polymorphism.* Computing Surveys — for the parametric/ad-hoc polymorphism distinction.
 - Sulzmann, M., Duck, G. J., Peyton Jones, S., Stuckey, P. J. (2007). *Understanding functional dependencies via Constraint Handling Rules.* JFP.
 
 ### Topic 4 — E-graphs + equality saturation + bridge-vs-union design
 
-**Anchor locks**: Lock 6 (e-graph rewrites; 7 categories V1).
+**Anchor locks**: Lock 4.
 **Anchor sections**: `restart/README.md` §6 optimization apotheosis; `restart/ARCHITECTURE.md` §10; `restart/MASTER-PLAN.md` D-tranche optimization rows.
 **Engagement question**: the restart commits to "CSP + e-graph (bridged, not unioned) + shape mining + cost-model trait shared with regex". Why bridged? What does the bridge look like operationally? Has anyone in literature done the bridge before, and what did they learn?
 **Key sources**:
 - Tate, R., Stepp, M., Tatlock, Z., Lerner, S. (2009). *Equality Saturation: A New Approach to Optimization.* POPL — the original.
 - Willsey, M., Nandi, C., Wang, Y. R., Flatt, O., Tatlock, Z., Panchekha, P. (2021). *egg: Fast and Extensible Equality Saturation.* PACMPL — the foundational modern Rust implementation.
-- Yang, Y. R., et al. (2024). *egglog: Equality Saturation Meets Datalog.* — for the saturation-as-datalog framing.
+- Zhang, Y., et al. (2023). *Better Together: Unifying Datalog and Equality Saturation.* PLDI — canonical egglog source for the saturation-as-datalog framing. "Yang et al. 2024 / egglog" remains a provenance-gap shorthand, not evidence wording.
 - Flatt, O., Coward, S., Willsey, M., Tatlock, Z., Panchekha, P. (2022). *Small Proofs from Congruence Closure.* FMCAD.
 - The egg crate documentation and case studies (`docs.rs/egg`).
 - The Cranelift mid-end (post-2023) — production e-graph optimization in a JIT compiler.
@@ -92,17 +112,17 @@ Every `restart/research/<topic>.md` carries §1-§7:
 
 ### Topic 5 — Cost models + Pareto extraction + SMT-backed cost composition
 
-**Anchor locks**: Lock 6 + Lock 7 (cost models; cost-model trait shared with regex).
+**Anchor locks**: Lock 4 + Lock 8.
 **Anchor sections**: same as Topic 4; specifically MASTER-PLAN's D/E/F tranches that consume cost decisions.
 **Engagement question**: the restart commits to "cost-model trait shared with regex". What does "shared" mean operationally — same trait, different instances? One cost function across both BIR and regex? When the trait is a single Rust trait, what's the shared shape?
 **Key sources**:
 - Wang, Y. R., et al. (2020). *Spores: Sum-Product Optimization via Relational Equality Saturation for Large Scale Linear Algebra.* — for cost-aware extraction.
 - The egg analysis trait (`Analysis<L>`) source code + tests.
 - Meurer, A., et al. (2017). *SymPy: symbolic computing in Python.* — for symbolic-cost composition.
-- Almomany, A., et al. (2014). *Cost-aware code motion in Java.* — early dynamic cost-model literature.
+- Almomany, A., et al. (2014). *Cost-aware code motion in Java.* — provenance gap unless primary source is verified; not fold evidence.
 - The LLVM cost model (`CodeMetrics.cpp`) — production cost decisions, for contrast.
 - The Cranelift cost model (post-egg integration) — Rust-native cost decisions.
-- Multi-objective optimisation literature: Deb (2014) *Multi-Objective Optimization Using Evolutionary Algorithms* — for Pareto-frontier framing.
+- Multi-objective optimisation literature: use verified Deb/KanGAL or equivalent primary-source material for Pareto/frontier framing; exact "Deb 2014" remains a provenance gap unless verified.
 
 ### Topic 6 — Tape encoding + direct-to-struct union design
 
@@ -116,7 +136,7 @@ Every `restart/research/<topic>.md` carries §1-§7:
 - The yyjson source (`ibireme/yyjson`) — comparable C reference.
 - The rapidjson source (`Tencent/rapidjson`) — earlier reference design.
 - Rapidjson's *In-situ Parsing* technical note — for direct-to-struct comparison.
-- Hubbard, M. et al. (2020). *Parsing Through Other People's Eyes: A Look at JSON Parsing.* — comparative study.
+- Hubbard, M. et al. (2020). *Parsing Through Other People's Eyes: A Look at JSON Parsing.* — provenance gap unless primary source is verified; do not use as evidence.
 
 ### Topic 7 — Green/red trees + incremental parsing + fault tolerance
 
@@ -126,15 +146,15 @@ Every `restart/research/<topic>.md` carries §1-§7:
 **Key sources**:
 - The rowan crate documentation + source (`rust-analyzer/rowan`).
 - Rust-analyzer architecture documentation (`rust-analyzer/docs/dev/architecture.md`).
-- Ungar, D. & Adams, S. R. (1994). *Eliminating Data Fetch Stalls on Pipelined Architectures.* — for cache-aware tree traversal (relevant to tape's locality story).
-- Brand, M., et al. (2003). *The HelpMate Parsing Framework.* — early incremental parsing.
+- Ungar, D. & Adams, S. R. (1994). *Eliminating Data Fetch Stalls on Pipelined Architectures.* — optional cache-locality lead only; provenance gap for this fold unless directly verified.
+- Brand, M., et al. (2003). *The HelpMate Parsing Framework.* — optional early incremental-parsing lead only; provenance gap unless primary source is verified.
 - Wagner, T. A. & Graham, S. L. (1998). *Efficient and Flexible Incremental Parsing.* TOPLAS — the seminal incremental-parsing paper.
 - The treesitter parsing algorithm paper (Brand & Visser-style; see Treesitter docs).
 - The Salsa crate (rust-analyzer's incremental computation framework) — for query-based incremental.
 
 ### Topic 8 — SIMD scanning + DFA construction + bespoke regex HIR
 
-**Anchor locks**: Lock 1 (SIMD scanners are part of the substrate); bbnf-regex (the dedicated crate).
+**Anchor locks**: Lock 1 + Lock 8 + Lock 10.
 **Anchor sections**: `restart/README.md` §6 + §8; `restart/ARCHITECTURE.md` §10 + bbnf-regex sections; PASS-2 SIMD/Pratt detection rows.
 **Engagement question**: the restart commits to a bespoke `parse-that` regex with NFA→DFA construction + DFA codegen in bbnf, replacing the regex crate. What does this buy over `regex-automata`? When the SIMD scanner matches something the DFA doesn't, what's the contract? Does the restart's "SIMD-first" posture survive when bbnf-regex carries cases the SIMD path cannot accelerate?
 **Key sources**:
@@ -143,7 +163,7 @@ Every `restart/research/<topic>.md` carries §1-§7:
 - Langdale, G. & Lemire, D. (2019). *Parsing Gigabytes of JSON per Second.* VLDB — covers the SIMD scan kernel design.
 - Owens, S. (2009). *Regular-expression derivatives reexamined.* JFP.
 - The `regex-automata` crate (BurntSushi) source + documentation.
-- The vectorscan source (Intel's hyperscan fork) — production SIMD regex.
+- The Vectorscan source (Intel Hyperscan fork) — verified official-source evidence for production SIMD regex lineage; cite Hyperscan itself only from verified primary docs/source.
 - The logos crate (Maciej Hirsz) — Rust-native lexer DSL with tight code generation.
 
 ## §4 — Adversarial-finding obligation

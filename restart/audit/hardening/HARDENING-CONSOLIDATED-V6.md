@@ -170,8 +170,8 @@ Residual non-blocking ledger:
 
 | # | Residue | Receiver | Blocker | Acceptance gate | Blocking? |
 |---:|---|---|---|---|---|
-| R1 | Research-index and bibliography hygiene for weak or role-unclear sources: Hubbard, Almomany, Deb, Yang/egglog, Roc, Ungar/Adams, HelpMate, Hyperscan/Vectorscan, and lock-number drift. | Future research-index cleanup. | Several topic reports preserved provenance gaps but the V6 targets do not cite those gaps as evidence. | `restart/research/INDEX.md` classifies each source as verified primary/local evidence or explicit provenance gap. | No |
-| R2 | README precision for scalar materialisation, one owning identity with red-like projections, snapshot-scoped `TapeId`, and HM/check-synth/CSP wording. | Future README cleanup. | V6 write scopes were hardening reports, not README edits; PASS-3 and SYNTHESIS already carry precise target contracts. | README avoids misleading constant-time scalar wording, permits transient projections over one owning identity, names reuse/query invalidation, and decomposes HM/check-synth/finite-CSP prose. | No |
+| R1 | Research-index and bibliography hygiene for weak or role-unclear sources: Hubbard, Almomany, Deb, Yang/egglog, Roc, Ungar/Adams, HelpMate, Hyperscan/Vectorscan, and lock-number drift. | `restart/research/INDEX.md`, closed by R1/R2 follow-up. | Closed; weak leads and lock drift are classified, and provenance gaps stay out of evidence-bearing claims. | `restart/research/INDEX.md` classifies each source as verified primary/local evidence or explicit provenance gap. | No |
+| R2 | README precision for scalar materialisation, one owning identity with red-like projections, snapshot-scoped `TapeId`, and HM/check-synth/CSP wording. | `restart/README.md`, closed by R1/R2 follow-up. | Closed; README wording now matches the V6 target contracts. | README avoids misleading constant-time scalar wording, permits transient projections over one owning identity, names reuse/query invalidation, and decomposes HM/check-synth/finite-CSP prose. | No |
 | R3 | Hardening command-harness precision from older consolidated checklist rows #10 and #16. | Future hardening-harness cleanup or next rerun checklist. | Old commands were case-sensitive or omitted target files; V6 reports used tightened classifications. | Receiver scans include `Receiver|receiver|Blocker|blocker|Receiving gate|receiving gate`; benchmark metadata scans include Architecture and PASS-2 or split PASS-2 metadata floor from Master metadata. | No |
 | R4 | Optional Lock 4 rationale hygiene for egglog-style fusion pressure. | Future lock-rationale or synthesis-hygiene pass if authorized. | V6 finds no structural lock contradiction; current plan records the counterargument and keeps fusion post-V1. | Lock rationale explains why bridge-vs-fusion survives egglog pressure without changing settled Lock 4 semantics. | No |
 | R5 | Rewrite-budget implementation detail across C.W4/C.W5. | Tranche C/E implementation specs. | V6 synthesis and PASS-2 route the detail, but implementation tests do not exist yet. | Egraph/rewrite-budget tests name categories, node/iteration limits, representative stability, and cost/bridge evidence. | No |
@@ -180,6 +180,16 @@ Residual non-blocking ledger:
 
 The residual ledger is not an amendment queue for V6. It is a routing ledger so
 the next phase does not confuse hygiene with readiness.
+
+R1/R2 follow-up closure: the subsequent R1/R2 documentation pass closes the
+research-index/source-classification and README-precision residue. The Index now
+classifies weak or role-unclear sources, records current lock bindings, and
+keeps GADT-like and higher-rank surfaces out of V1. The README now names the
+actual V1 type system as rank-1 HM plus Pierce-Turner local check/synth and
+finite CSP choices; replaces representative-leaking bridge prose with stable
+bridge facts and justifications; makes `CostDecision` evidence explicit; states
+one tape identity with direct projections; and keeps SIMD everywhere as an
+eligible generated capability with exact/prefilter verifier gates.
 
 ## §6 Verification Evidence
 

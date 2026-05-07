@@ -1,6 +1,6 @@
-# AMENDMENT DISPATCH — Four-Wave Surgical Reconciliation (Greenfield Restart)
+# AMENDMENT DISPATCH — Surgical Reconciliation Cycles (Greenfield Restart)
 
-You are the amendment-dispatch orchestrator. The four-target hardening returned AMENDMENT-REQUIRED at `restart/audit/hardening/HARDENING-CONSOLIDATED.md`; the four reviewers (A consolidation-fidelity, B architectural-integrity, C Lock-14-greenfield, D executability) returned narrow-scope amendments. You sequence the amendment work across four waves, dispatch the appropriate agent(s) per wave, and trigger the hardening rerun. After rerun returns READY, the user advances to per-tranche full-spec drafting.
+You are the amendment-dispatch sub-orchestrator. When a hardening cycle returns AMENDMENT-REQUIRED or SIMPLIFY-AVAILABLE (per `restart/prompts/HARDENING-ORCHESTRATOR.md`), this sub-orchestrator sequences the amendment work across waves, dispatches the appropriate agent(s) per wave, and triggers the hardening rerun. After rerun returns READY, the user advances to per-tranche full-spec drafting.
 
 You are not a hardening agent. You are not an amendment agent. You orchestrate amendment + rerun.
 
@@ -8,21 +8,17 @@ You are not a hardening agent. You are not an amendment agent. You orchestrate a
 
 1. `/Users/mkbabb/Programming/bbnf-lang/restart/README.md` — gestalt anchor; settled positions
 2. `/Users/mkbabb/Programming/bbnf-lang/restart/locks/14-LOCKS.md`
-3. `/Users/mkbabb/Programming/bbnf-lang/restart/prompts/HARDENING.md` + `HARDENING-ORCHESTRATOR.md` — for rerun reference
-4. `/Users/mkbabb/Programming/bbnf-lang/docs/precepts/instructions/STYLE.md` + `LESSONS-LEARNED.md`
-5. `/Users/mkbabb/Programming/bbnf-lang/restart/audit/hardening/HARDENING-CONSOLIDATED.md` (619 lines) — the 47-item punch list + routing matrix + gate rerun checklist
-6. `/Users/mkbabb/Programming/bbnf-lang/restart/audit/hardening/REVIEW-A-CONSOLIDATION-FIDELITY.md` — consolidation drift findings
-7. `/Users/mkbabb/Programming/bbnf-lang/restart/audit/hardening/REVIEW-B-ARCHITECTURAL-INTEGRITY.md` — three named architectural faults
-8. `/Users/mkbabb/Programming/bbnf-lang/restart/audit/hardening/REVIEW-C-LOCK-14-GREENFIELD.md` — two narrow Lock-14 additions
-9. `/Users/mkbabb/Programming/bbnf-lang/restart/audit/hardening/REVIEW-D-PUNCH-LIST-EXECUTABILITY.md` — four-wave plan + pre-fill discipline + routing repairs
-10. `/Users/mkbabb/Programming/bbnf-lang/restart/ARCHITECTURE.md` (1259 lines) — primary amendment surface
-11. `/Users/mkbabb/Programming/bbnf-lang/restart/MASTER-PLAN.md` (727 lines) — primary amendment surface
-12. `/Users/mkbabb/Programming/bbnf-lang/restart/MIGRATION.md` (740 lines) — primary amendment surface
-13. `/Users/mkbabb/Programming/bbnf-lang/restart/audit/pass-{1-substrate,2-codegen,3-runtime}/PASS-{1,2,3}.md` — secondary amendment surfaces
+3. `/Users/mkbabb/Programming/bbnf-lang/restart/prompts/ORCHESTRATOR.md` — main entry; phase-identification + hardening-cycle naming canon
+4. `/Users/mkbabb/Programming/bbnf-lang/restart/prompts/HARDENING.md` + `HARDENING-ORCHESTRATOR.md` — for rerun reference
+5. `/Users/mkbabb/Programming/bbnf-lang/docs/precepts/instructions/STYLE.md` + `LESSONS-LEARNED.md`
+6. `/Users/mkbabb/Programming/bbnf-lang/restart/audit/hardening/HARDENING-CONSOLIDATED-V{N}.md` — the cycle's consolidated punch list + routing matrix that triggers this dispatch
+7. The reviewer cohort reports for the cycle, if any (e.g., `REVIEW-A-*`, `REVIEW-B-*`, `REVIEW-C-*`, `REVIEW-D-*`)
+8. `/Users/mkbabb/Programming/bbnf-lang/restart/ARCHITECTURE.md` + `MASTER-PLAN.md` + `MIGRATION.md` — primary amendment surfaces
+9. `/Users/mkbabb/Programming/bbnf-lang/restart/audit/pass-{1-substrate,2-codegen,3-runtime}/PASS-{1,2,3}.md` — secondary amendment surfaces
 
 ## §1 — Verify-Then-Patch Discipline (the central rule)
 
-Reviewer D surfaced this. Seven punch-list items have **substantial pre-existing surgery already landed in the SYNTHESIS trio**: items 15, 21, 29, 30, 31, 40, 41, 44. The naive amendment dispatch would re-author them — wasting 4-6 hours and risking regressions from re-write churn.
+Punch-list items frequently land partial pre-fills from earlier amendment cycles or from pre-emptive SYNTHESIS surgery. The naive amendment dispatch would re-author them — wasting hours and risking regressions from re-write churn.
 
 The amendment-dispatch contract for every agent: **verify, then patch the delta.** The dispatch prompt for each amendment agent must include:
 
@@ -32,50 +28,105 @@ The amendment-dispatch contract for every agent: **verify, then patch the delta.
 - The delta-patch language: "if the surgery is partial: patch only the missing portion; cite path:line of what survives"
 - The full-author language: "if the surgery is absent: author per the punch-list directive verbatim"
 
-Pre-fill items expected (cite Reviewer D §8.3):
-
-| Item | Likely pre-fill state | Verification command |
-|---|---|---|
-| 15 (declaration-crate fence) | partial: ARCHITECTURE §5.6 has 5 fields (need 8); PASS-1 §2 has 6 (need 8) | `rg -n 'declaration_crate' restart/ARCHITECTURE.md restart/audit/pass-1-substrate/PASS-1.md` |
-| 21 (Lock 13 verification table) | likely full | `rg -n 'child count\|500 LOC' restart/ARCHITECTURE.md restart/MASTER-PLAN.md` |
-| 29 (SOTA table) | likely partial | `rg -n 'twitter\|canada\|citm\|bootstrap\|animate' restart/MASTER-PLAN.md` |
-| 30 (delete final SOTA escape) | full per Reviewer C ("final SOTA escape closed") | `rg -n 'or formally routed\|may be missed' restart/MASTER-PLAN.md` returns 0 |
-| 31 (early H thresholds) | likely partial | `rg -n 'H\.W3\|H\.W4\|H\.W5' restart/MASTER-PLAN.md` |
-| 40 (B/C sequencing repair) | full per Reviewer C ("C.W2 ShapeFacts fixture" + B integration gap recording) | `rg -n 'ShapeFacts\|integration gap' restart/MASTER-PLAN.md` |
-| 41 (C/E/H consumer repair) | full per Reviewer C ("C.W3 RecognizerFacts feed E-owned BIR snapshots not placeholder hints" + "C.W5 CostFacts feed E.W1 Backend IR builder") | `rg -n 'RecognizerFacts\|CostFacts\|E\.W1' restart/MASTER-PLAN.md` |
-| 44 (archive citation correction) | full ("per Lock 12") | `rg -n 'per Lock 12\|per Lock 10' restart/MASTER-PLAN.md` (Lock 12 should hit; Lock 10 should not at archive) |
-
-The amendment dispatch fails if these pre-fills are re-authored. Verify; patch the delta; commit a verification-only stub for full pre-fills.
+Pre-fill items expected per cycle: enumerated in the cycle's `HARDENING-CONSOLIDATED-V{N}.md` consolidation; reviewer cohorts (when commissioned) name pre-fills explicitly. Amendment dispatch fails if pre-fills are re-authored. Verify; patch the delta; commit a verification-only stub for full pre-fills.
 
 ## §2 — Reviewer Reconciliation Directives
 
-Where reviewers disagreed, the amendment dispatch carries the reconciliation:
+Where reviewer reports disagree on the same item, the amendment dispatch carries the reconciliation:
 
-### B vs C on sequencing (#40 + #41)
+- The dispatch prompt names which reviewer's reading is canonical, with rationale (typically: the reader of the most recent post-amendment snapshot wins; the reader of an earlier snapshot loses).
+- The dispatch prompt names which reviewer's surgery is most surgical (typically: patch-delta over re-author; verify-only-stub over patch-delta where the pre-fill is full).
+- The dispatch prompt routes mis-routed items to the actual surface (e.g., a `#12 fixture separation` item that cites ARCHITECTURE but actually lives in PASS-3 routes to PASS-3 with the original surgery directive).
 
-Reviewer B says NOT absorbed. Reviewer C says ABSORBED. Reviewer D's pre-fill table says ABSORBED.
+Co-routed items (where the primary edit is in one surface and a secondary cite-update is in another) split: the primary surface owns the surgery; the secondary surface gets a co-routed amendment to update its references.
 
-**Reconciliation: C and D are correct.** The sequencing absorption is in MASTER-PLAN. Reviewer B audited an earlier-state snapshot OR was reading PASS-2/PASS-3 (which legitimately don't carry MASTER-PLAN's sequencing). Amendment Wave 2 verifies the existing absorption + cleans residue text only.
+Citation-precision drift across reviewer reports (e.g., citations 4-15 lines off the exact content row) is non-blocking; it folds into the verification rerun rather than triggering a separate amendment.
 
-### Reviewer A's citation-precision drift
+## §3 — Wave Schematic
 
-Six punch-list items carry citations 4-15 lines off exact content rows (lane-verdict footers, not content rows). Non-blocking. **Optional citation-precision pass during Wave 4 hardening rerun.** Not a separate amendment.
+A typical amendment cycle has waves X.1, X.2, ..., X.N structured per the verify-then-patch discipline of §1; per-cycle wave content varies with the punch list. The first amendment cycle (V1, May 2026) had four waves; subsequent cycles (Phase 7.5, Phase 7.5A/B, Phase 8.4) had two-three waves; future cycles instantiate this schematic.
 
-### Reviewer D's hard mis-routing (#12)
+Each wave is one of:
 
-Punch #12 (fixture separation) cites `ARCHITECTURE.md:1132-1138/1151-1162`. Reviewer D found this range is the SOTA gate / Generated LOC budget block, not the fixture allowance. The actual fixture surface lives at `PASS-3.md:272-289` (four-fixture-dir sketch).
+- **Parallel-agent dispatch** — when the wave's items distribute across non-overlapping write paths (e.g., separate PASS files; separate SYNTHESIS sub-files)
+- **Serial dispatch** — when the wave's items share write paths (e.g., PASS-1 + PASS-2 both editing Backend IR ownership; sequential to prevent merge churn)
+- **Single-agent dispatch** — when the wave's items concentrate in one surface
 
-**Reconciliation: re-route #12 to PASS-3, not ARCHITECTURE.** Wave 2 dispatches against PASS-3's fixture surface.
+Each wave carries:
 
-### Reviewer D's soft mis-routings (#6, #9)
+| Field | Content |
+|---|---|
+| Wave number | `X.Y` per the cycle-naming canon |
+| Agent role | e.g., "PASS-1 amendment agent" / "SYNTHESIS amendment agent" |
+| Target surface | path:line of the file(s) the agent edits |
+| Per-item table | item # / source punch-list directive / target file:line / surgery type (full-author / patch-delta / verify-only-stub) / pre-fill verification command / acceptance gate |
+| Pre-fill verification step | as Step 1: read the named amendment surface; classify each item; commit the classification before any edits |
+| Reconciliation directive | for items where reviewer cohorts disagreed |
+| Hard cap | per-agent (typically 60-90 min) |
+| Cross-tranche scope boundary | touch ONLY the named amendment surface |
+| Output commit message format | `docs(restart/{audit/pass-N or trio}): wave-{X.Y} amendment — {scope}` |
 
-#6 (block-bodied @host fn) and #9 (recovery directive) are co-routed — both carry SYNTHESIS implications + the primary edit is in PASS-1 / PASS-3 respectively.
+Closure: a wave closes when its agent(s) commit their amendment(s). The next wave dispatches when the prior wave's commits land.
 
-**Reconciliation: PASS-1/PASS-3 owns the primary edit; SYNTHESIS gets a co-routed amendment to update its references.**
+After all waves close, the cycle dispatches a **hardening rerun** (V{N}.{N+1}) per `restart/prompts/HARDENING-ORCHESTRATOR.md`. The rerun verifies the amendments survive the lens audit; if READY, the user advances; if AMENDMENT-REQUIRED-RERUN, this sub-orchestrator dispatches a narrow-scope follow-up amendment for the residual punch list, then re-runs the hardening cycle.
 
-## §3 — Four-Wave Amendment Plan
+If the rerun returns RE-DRAFT, escalate to user — does not happen autonomously per the consolidated re-draft thresholds.
 
-Per Reviewer D §7. Each wave is a parallel-agent dispatch (where targets don't share write paths) or a serial dispatch (where they do).
+## §4 — Per-Wave Dispatch Prompts
+
+You compose per-wave dispatch prompts at dispatch time. Each prompt carries:
+
+1. **The wave number + agent role**
+2. **The verify-then-patch discipline** verbatim from §1 above
+3. **The reviewer-reconciliation directives** verbatim from §2 above (only those relevant to this wave's items)
+4. **The per-item table** for this agent (per §3 above)
+5. **The pre-fill verification step** as Step 1
+6. **The voice + discipline locks** per `restart/README.md` §13
+7. **The hard cap** (typically 60-90 min per amendment agent; 90 min for the rerun hardening orchestrator)
+8. **The cross-tranche scope boundary**
+9. **The output commit message format**
+
+The dispatch prompts are NOT pre-written here. You compose at dispatch time, parameterising for the specific wave + agent + items.
+
+## §5 — Pre-Fill Discipline Examples
+
+For each pre-fill item, the dispatch prompt includes:
+
+```
+Item {N} ({short name}):
+  Source: HARDENING-CONSOLIDATED-V{cycle}.md punch #{N}
+  Source surgery: {verbatim from punch list}
+  Pre-fill verification command:
+    {grep / rg invocation}
+  Expected pre-fill state: {what the verification command should return if the surgery already landed}
+  Surgery type: {VERIFY-ONLY-STUB / PATCH-DELTA / FULL-AUTHOR}
+  Acceptance gate: {what the agent's output must demonstrate}
+```
+
+The amendment-dispatch contract is rich enough to prevent re-authoring + tight enough to leave no surgery undone.
+
+## §6 — Acceptance Gate Per Wave
+
+Each wave closes when:
+
+- Its agent(s) commit autonomously per their dispatch prompts
+- The acceptance gate per item passes (verification command returns the expected post-amendment state)
+
+The cycle's overall close is the hardening rerun's READY verdict (or SIMPLIFY-AVAILABLE-with-no-fold-pending, depending on the rerun's lens scope).
+
+## §7 — Closing Posture
+
+You orchestrate amendment waves; you do not author amendments yourself. Each wave's dispatch prompt carries the verify-then-patch discipline + the reviewer-reconciliation directives + the per-item routing. The pre-fills are verified, not re-authored. The hardening reruns at the cycle's terminal wave against the amended surface; the rerun's READY verdict gates per-tranche full-spec drafting (or the next cycle, if a follow-up amendment cycle is named).
+
+The 14 locks are settled. The precepts are settled. The greenfield mandate is settled. Amendment is surgical reconciliation, not relitigation.
+
+Hereupon the cycle's first wave dispatches.
+
+---
+
+## §A — Historical: V1 four-wave amendment cycle (May 2026)
+
+The first amendment cycle (V1) ran four waves against the V1-hardening cohort; the following preserves the verbatim per-wave dispatch table for archaeological reference. Future cycles instantiate the §3 schematic — they do not duplicate this content.
 
 ### Wave 1 — Foundations (~3-4 hr; serial)
 
@@ -136,76 +187,3 @@ Wave 4 closes when `HARDENING-CONSOLIDATED-V2.md` (or the rerun's analog) commit
 If Wave 4 returns AMENDMENT-REQUIRED-RERUN, the orchestrator dispatches a narrow-scope amendment for the residual punch list, then re-runs Wave 4. If the residual is small (<5 items), this collapses to a single-agent fix-and-rerun cycle.
 
 If Wave 4 returns RE-DRAFT, escalate to user — does not happen autonomously per the consolidated §5 re-draft thresholds (none currently met).
-
-## §4 — Per-Wave Dispatch Prompts
-
-You compose per-wave dispatch prompts at dispatch time. Each prompt carries:
-
-1. **The wave number + agent role** (e.g., "Wave 2 — PASS-3 amendment agent")
-2. **The verify-then-patch discipline** verbatim from §1 above
-3. **The reviewer-reconciliation directives** verbatim from §2 above (only those relevant to this wave's items)
-4. **The per-item table** for this agent: item # / source punch-list directive / target file:line / surgery type (full-author / patch-delta / verify-only-stub) / pre-fill verification command / acceptance gate
-5. **The pre-fill verification step** as Step 1: read the named amendment surface; classify each item as full-author / patch-delta / verify-only-stub; commit the classification before any edits
-6. **The voice + discipline locks** per `restart/README.md` §13
-7. **The hard cap** (Wave 1: 60 min per agent; Wave 2: 75 min per parallel agent; Wave 3: 60 min single agent; Wave 4: 90 min single hardening orchestrator)
-8. **The cross-tranche scope boundary** (touch ONLY the named amendment surface; do NOT modify other restart subdirs, locks, prompts)
-9. **The output commit message format** (`docs(restart/{audit/pass-N or trio}): wave-{N} amendment — {scope}`)
-
-The dispatch prompts are NOT pre-written here. You compose at dispatch time, parameterising for the specific wave + agent + items.
-
-## §5 — Pre-Fill Discipline Examples
-
-For each pre-fill item, the dispatch prompt includes:
-
-```
-Item 40 (B/C sequencing repair):
-  Source: HARDENING-CONSOLIDATED.md punch #40
-  Source surgery: "Move ShapeFacts before B.W3, split B.W3 into shell plus C-owned materialization, or change C.W2's consumer away from B direct builder."
-  Pre-fill verification command:
-    rg -n 'ShapeFacts|integration gap' restart/MASTER-PLAN.md
-  Expected pre-fill state (per Reviewer C): MASTER-PLAN already carries
-    "C.W2 ShapeFacts fixture in C with explicit B integration gap recording"
-  Surgery type: VERIFY-ONLY-STUB
-  Acceptance gate: rg returns ≥1 match; commit a one-line verification stub
-    in PASS-amendment notes; DO NOT re-author MASTER-PLAN sequencing.
-```
-
-```
-Item 11 (yaml two-surface proof):
-  Source: HARDENING-CONSOLIDATED.md punch #11
-  Source surgery: "Add a yaml.bbnf onboarding test that permits exactly a
-    grammar source file and one [workspace.metadata.bbnf.grammars.yaml] block."
-  Pre-fill verification command:
-    rg -n 'yaml.bbnf|workspace.metadata.bbnf.grammars.yaml' restart/ARCHITECTURE.md restart/MASTER-PLAN.md
-  Expected pre-fill state (per Reviewer C): MASTER-PLAN.md §11/§12/§24 +
-    ARCHITECTURE §12 + MIGRATION §19.6 carry the proof; G.W4 has the gate
-  Per-Reviewer-C residue: ARCHITECTURE §1170-1186 carries "fixtures/yaml/*"
-    allowance; this is the post-amendment residue per HARDENING punch #12
-  Surgery type: PATCH-DELTA
-  Surgery: Remove "fixtures/yaml/*" from ARCHITECTURE §1170-1186 onboarding
-    allowance; preserve the yaml proof itself
-  Acceptance gate: rg -n 'fixtures/yaml/\*' restart/ARCHITECTURE.md returns 0
-    in onboarding-allowance section; rg -n 'workspace.metadata.bbnf.grammars.yaml'
-    still returns ≥1 in proof section
-```
-
-The amendment-dispatch contract is rich enough to prevent re-authoring + tight enough to leave no surgery undone.
-
-## §6 — Acceptance Gate Per Wave
-
-| Wave | Closes when | Verification |
-|---|---|---|
-| 1 | PASS-1 + PASS-2 amendments commit | `git log --oneline | head -5` shows two PASS amendment commits; rg verification of BIR ownership move |
-| 2 | All 4 parallel amendments commit | 4 commits in `git log`; rg verification of every Wave 2 punch-list item's acceptance gate |
-| 3 | SYNTHESIS amendment for Reviewer-C additions + Reviewer-B reconciliations commits | rg verification of the 10×9 table + 8-field fence + canonical `bbnf/src/` layout |
-| 4 | `HARDENING-CONSOLIDATED-V2.md` commits with verdict READY | rerun verdict not AMENDMENT-REQUIRED, not RE-DRAFT |
-
-## §7 — Closing Posture
-
-You orchestrate four waves; you do not author amendments yourself. Each wave's dispatch prompt carries the verify-then-patch discipline + the reviewer-reconciliation directives + the per-item routing. The pre-fills are verified, not re-authored. The hardening reruns at Wave 4 against the amended trio + amended PASS syntheses; the rerun's READY verdict gates per-tranche full-spec drafting.
-
-Total estimated wall-time: 6.5-9 hours across four waves with per-wave parallelism. Single-agent equivalent: 13-19 hours. Mean dispatch confidence per Reviewer D: 83%.
-
-The 14 locks are settled. The precepts are settled. The 35-answer interrogation is settled. The greenfield mandate is settled. Amendment is surgical reconciliation, not relitigation.
-
-Hereupon Wave 1 dispatches.

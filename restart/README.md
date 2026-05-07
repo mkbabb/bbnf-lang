@@ -401,51 +401,30 @@ The **14 locks** at `restart/locks/14-LOCKS.md` are settled and govern the green
 
 ---
 
-## §12 — Process & Execution (Settled Positions Q34-Q35)
+## §12 — Process & Execution
 
-**Restart-of-restart sequencing: archive first (Q34 lean i).** Done — prior `restart/` is archived at `restart-archive-2026-05-04/` (commit history preserved); this `restart/` starts clean.
+**Restart-of-restart sequencing: archive first.** Done — prior `restart/` is archived at `restart-archive-2026-05-04/` (commit history preserved); this `restart/` starts clean.
 
-**Prompt-suite shape: layer-based (Q35 lean layer-based).** Five prompts:
+**Prompt-suite shape: main entry + sub-orchestrators + per-target spec.** Five prompts:
 
-| Prompt | Path | Layer | Owns |
-|---|---|---|---|
-| PASS-1 | `restart/prompts/PASS-1-SUBSTRATE.md` | bottom | source / grammar / IR / passes / vm / host / cost-model / egraph / csp-solver / type system / BBNF extensions / error vocabulary |
-| PASS-2 | `restart/prompts/PASS-2-CODEGEN.md` | middle | codegen / runtime / runtime-template / per-backend lowerers (Rust + WASM) / generated-output regen / SIMD scanner kernels / Pratt + SIMD auto-detection / cost-model integration |
-| PASS-3 | `restart/prompts/PASS-3-RUNTIME.md` | top | bbnf aggregator / value API / path + select DSLs / visitor surface / tape + direct-to-struct union / lazy materialisation / error recovery / incremental parsing / LSP / CLI / fixtures / playground / docs |
-| SYNTHESIS | `restart/prompts/SYNTHESIS.md` | meta | consolidates 3 PASS outputs into ARCHITECTURE.md + MIGRATION.md + the master plan |
-| HARDENING | `restart/prompts/HARDENING.md` | gate | per-target nine-lane audit; Pro/Con/Explication/Challenge per-item discipline; KEEP/REINVENT/DISCARD verdicts |
-| HARDENING-ORCHESTRATOR | `restart/prompts/HARDENING-ORCHESTRATOR.md` | pipeline | **the entry-point prompt**. Coordinates six phases: dispatches three PASS orchestrators in parallel (Phase 1); dispatches SYNTHESIS (Phase 2); dispatches four hardening agents in parallel (Phase 3); consolidates the four hardening reports into a single readiness verdict (Phase 6). Each dispatched PASS orchestrator internally dispatches its six sub-agents per the PASS-N contract. Total fan-out at peak: 3 PASS orchestrators × 6 sub-agents + 4 hardeners = 22 concurrent agents. Idempotent: every phase checks artefact existence and skips completed phases; safe to re-invoke after interruption. |
+| Prompt | Path | Role |
+|---|---|---|
+| ORCHESTRATOR | `restart/prompts/ORCHESTRATOR.md` | main entry; phase-identification protocol; phase-type fan-out; hardening-cycle naming canon |
+| HARDENING-ORCHESTRATOR | `restart/prompts/HARDENING-ORCHESTRATOR.md` | sub-orchestrator for hardening cycles V1 through V8+; coordinates four parallel hardener agents and the consolidation |
+| RESEARCH-FOLD-ORCHESTRATOR | `restart/prompts/RESEARCH-FOLD-ORCHESTRATOR.md` | sub-orchestrator for research deep-dives + fold cycles |
+| AMENDMENT-DISPATCH | `restart/prompts/AMENDMENT-DISPATCH.md` | sub-orchestrator for verify-then-patch amendment cycles after AMENDMENT-REQUIRED / SIMPLIFY-AVAILABLE verdicts |
+| HARDENING | `restart/prompts/HARDENING.md` | per-target audit specification; lens contract (lenses A-K post-Phase-8.1); load-bearing input to every HARDENING-ORCHESTRATOR dispatch |
 
-**No Stage-2 hardening. No Stage-3 meta-review. One round.** The three prior stages were a contrivance; the user has flagged this. One PASS suite, one synthesis, one hardening orchestrated across four targets, then tranches.
+**Cold-start reading order.** Any cold-start agent reads in sequence:
 
-### Pipeline shape
+1. `restart/HANDOFF.md` — orientation; current verdict; next move
+2. `restart/prompts/ORCHESTRATOR.md` — phase-identification + dispatch protocol
+3. `restart/README.md` — gestalt + 14 locks anchor
+4. `restart/locks/14-LOCKS.md` — settled commitments
+5. `restart/audit/hardening/HARDENING-CONSOLIDATED-V{N}.md` (most recent) — operating verdict
+6. `docs/precepts/instructions/STYLE.md` + `LESSONS-LEARNED.md` + `CONSUMING.md`
 
-Invoke `restart/prompts/HARDENING-ORCHESTRATOR.md`. The orchestrator dispatches sub-agents across phases:
-
-```
-Phase 1: dispatch 3 PASS orchestrators in parallel
-         each PASS orchestrator dispatches its own 6 sub-agents internally
-         total: 3 × (1 + 6) = 21 agents in flight
-         all PASS syntheses commit before Phase 2 enters
-
-Phase 2: dispatch 1 SYNTHESIS agent
-         consumes 3 PASS outputs; produces ARCHITECTURE.md + MIGRATION.md + MASTER-PLAN.md
-         commit before Phase 3 enters
-
-Phase 3: dispatch 4 hardening agents in parallel
-         targets: PASS-1, PASS-2, PASS-3, MASTER-PLAN-trio
-         each runs the nine-lane audit per HARDENING.md contract
-         all four commits before Phase 6 enters
-
-Phase 6: orchestrator's own synthesis
-         consolidates four hardening reports
-         produces HARDENING-CONSOLIDATED.md
-         single readiness verdict gates per-tranche full-spec drafting
-```
-
-The orchestrator's idempotency check at the entry of every phase makes the pipeline safe to re-invoke after interruption — completed phases skip; partial phases re-dispatch their outstanding work.
-
-Total wall (under good fan-out): ~6-7 hours from Phase 1 dispatch to Phase 6 commit.
+The PASS dispatch prompts that produced the V1 trio (`PASS-1-SUBSTRATE.md`, `PASS-2-CODEGEN.md`, `PASS-3-RUNTIME.md`, `SYNTHESIS.md`) and the original combined hardening orchestrator retired at Phase 8.0; the PASS syntheses live at `restart/audit/pass-{1,2,3}-*/PASS-{1,2,3}.md`, the SYNTHESIS trio lives at `restart/{ARCHITECTURE,MIGRATION,MASTER-PLAN}.md`, and the orchestrator surface restructured into the five prompts above at Phase 8.1.
 
 After hardening returns *ready*, full-spec tranche drafting begins. **Not before.** Tranches are layer-aligned: tranches earning each layer's milestones land in dependency order. The fresh tranche set begins at letter A; the prior BA-BD plan-set survives at `docs/tranches/{BA,BB,BC,BD}/` as inheritance reference, archived to `docs/tranches/archive/legacy-Y-BD/` at Tranche-A.W0 execution time per Pass-C's ratification.
 

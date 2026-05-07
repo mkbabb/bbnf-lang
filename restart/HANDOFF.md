@@ -19,7 +19,7 @@ bbnf is a **meta-grammar**: it generates parsers for extant target languages (Ru
 Read in order:
 
 1. `restart/README.md` — gestalt synthesis. The architectural commitments, the BBNF extensions, the optimization apotheosis, the type system, the value API, the SOTA synthesis, the 14 locks, the process.
-2. `restart/locks/14-LOCKS.md` — the 14 architectural commitments. Locks 4/5/6/7/8/10/12 amended at Phase 7.1; Lock 4 carries DK13 fold + GADT hidden substrate + closure-by-`&'i`; Lock 5 deferred TS+WASM post-V1 (Backend trait at ARCH §7.5 enables seamless V2 addition).
+2. `restart/locks/14-LOCKS.md` — the 14 architectural commitments. Locks 4/5/6/7/8/10/12 amended at Phase 7.1; Lock 4 carries DK13 fold + GADT V1 user-facing surface (post-Phase-8.3.1) + closure-by-`&'i`; Lock 5 deferred TS+WASM post-V1 (Backend trait at ARCH §7.5 enables seamless V2 addition).
 3. `docs/precepts/instructions/STYLE.md` — voice + discipline (governs all writing).
 4. `docs/precepts/instructions/LESSONS-LEARNED.md` — failure-mode anatomy (governs all decisions).
 
@@ -44,14 +44,16 @@ Total amendment commits: ~70+ across the cycle. Hardening cycles V1→V7.1 cumul
 
 ## §3 — Current state
 
-**Verdict: V7.1 READY.** Latest hardening verdict commit is the V7.1 consolidation at `restart/audit/hardening/HARDENING-CONSOLIDATED-V7.1.md`. The corpus is one phase from per-tranche full-spec drafting (Wave 9+).
+**Current operating verdict: `restart/audit/hardening/HARDENING-CONSOLIDATED-V8.md` (SIMPLIFY-AVAILABLE; Phase 8.4 simplification fold pending).** Phase 8.3.1 corpus cleanup (this phase) lands the user's adjudications on the 8 corpus-audit questions before Phase 8.4 dispatches.
 
-**Phase 8 (simplification audit) is the next phase before Wave 9.** The user mandated lenses I (contrivance / over-engineering), J (host-language leverage), K (meta-grammar discipline) — these surface architectural complexity that exceeds the meta-grammar mandate. Phase 8 audits the V7.1-READY corpus for SIMPLIFY candidates and folds them; the simpler corpus then enters Wave 9.
+**Verdict ledger.** V7.1 READY survived V8 lens scrutiny across all four targets (PASS-1 / PASS-2 / PASS-3 / MASTER-PLAN trio); the V8 cohort surfaced 41 simplification candidates distributed across 5 tiers (α architectural cardinality / β diagnostic vocab / γ host-leverage / δ meta-grammar deferrals / ε hygiene). None invalidates V7.1; all are surface trims, host-leverage delegations, or aspirational deferrals routed to tranche bodies. Phase 8.4 folds the candidates; Phase 8.5 V8.1 verifies; per-tranche full-spec drafting (Wave 9+) unblocks at V8.1 READY.
+
+**Phase 8 — simplification axis.** The user mandated lenses I (contrivance / over-engineering), J (host-language leverage), K (meta-grammar discipline) — these surface architectural complexity that exceeds the meta-grammar mandate. Phase 8 audits the V7.1-READY corpus for SIMPLIFY candidates and folds them; the simpler corpus then enters Wave 9.
 
 **What has settled** (do not relitigate):
 - 14 architectural locks (post-Phase-7.1 amendments).
 - 35-question architectural interrogation.
-- 10 user adjudications of V1-fold candidates (DK13 fold; GADT hidden; closure-by-`&'i`; `@pretty` verbatim vocabulary; TS+WASM deferred V2; parse-that-regex naming; D wave growth).
+- 10 user adjudications of V1-fold candidates (DK13 fold; GADT V1 user-facing surface per Phase-8.3.1; CHR-improvement V1 fold per Phase-8.3.1; closure-by-`&'i`; `@pretty` verbatim vocabulary; TS+WASM deferred V2; parse-that-regex naming; D wave growth).
 - 30 V1 fold candidates absorbed (Tier 1 architecture-nailing; Tier 2 surface coherence; Tier 3 sibling-crate hygiene; Tier 4 architectural prerequisites).
 - 8 lock amendments (Locks 4/5/6/7/8/10/12 + 3 NEW: Backend trait, egraph decoupling, 6-directive grammar).
 - Backend trait at ARCH §7.5 (V1 RustBackend; V2 WasmBackend + TsBackend).
@@ -120,7 +122,7 @@ For per-target verification (post-fold; pre-tranche):
 
 ```bash
 # Lock 4 amendment landed
-rg -n 'DK13|Dunfield|higher-rank|GADT.*hidden|closure.*&.i' restart/locks/14-LOCKS.md
+rg -n 'DK13|Dunfield|higher-rank|GADT user-facing surface lands V1|closure.*&.i' restart/locks/14-LOCKS.md
 
 # 6-directive grammar
 rg -n 'ImportDecl.*HostFn.*PrettyDecl' restart/audit/pass-1-substrate/PASS-1.md restart/ARCHITECTURE.md
@@ -141,15 +143,19 @@ rg -n 'regex-automata|bbnf-regex' restart/ # only deletion archaeology
 
 ## §7 — Next move
 
-**Phase 8 simplification audit cycle**, then **Wave 9 per-tranche full-spec drafting**.
+**Phase 8 simplification cycle**, then **Wave 9 per-tranche full-spec drafting**.
 
-Phase 8 sub-phases:
-- 8.0 — Prune (this commit) + HANDOFF rewrite (this file).
-- 8.1 — Restructure prompts to single ORCHESTRATOR.md entry with encapsulated sub-orchestrators; add lenses I/J/K to HARDENING.md.
-- 8.2 — V8 simplification audit (4 parallel hardener agents with Lens I/J/K mandate).
-- 8.3 — V8 consolidation.
-- 8.4 — Simplification fold (conditional; 4 parallel agents if V8 surfaces material items).
-- 8.5 — V8.1 verification rerun.
+Phase 8 sub-phases — current status:
+
+| Phase | Status | Commit | Sub-orchestrator |
+|---|---|---|---|
+| 8.0 — Prune + HANDOFF rewrite | DONE | `94873cf0` | (direct edit) |
+| 8.1 — Restructure prompts + add lenses I/J/K | DONE | `bc31560c` | (direct edit) |
+| 8.2 — V8 simplification audit | DONE | `624b5af2` / `597ac678` / `cd6c2b4c` / `25addd94` | HARDENING-ORCHESTRATOR |
+| 8.3 — V8 consolidation | DONE | `28987de4` | HARDENING-ORCHESTRATOR |
+| 8.3.1 — Corpus cleanup | (THIS PHASE) | (commit upon completion) | (direct edit) |
+| 8.4 — Simplification fold | PENDING | — | AMENDMENT-DISPATCH |
+| 8.5 — V8.1 verification rerun | PENDING | — | HARDENING-ORCHESTRATOR |
 
 After Phase 8.5 READY: **Wave 9** dispatches 10 parallel per-tranche full-spec agents (one per tranche A-J; ~3,000-5,000 lines per tranche).
 

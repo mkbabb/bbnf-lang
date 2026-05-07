@@ -81,7 +81,7 @@ Where the eight audits disagreed on disposition, the user-mandate-aware reconcil
 | 22 | **simd-scan dep audit** — proc-macro2/syn/quote triplet not justified by current public surface | #4 | `crates/simd-scan/Cargo.toml` | 0 (audit only) |
 | 23 | **regex-automata oracle citations removed** — 5+ load-bearing references in MASTER-PLAN, ARCHITECTURE, MIGRATION amend to "parse-that internal cross-engine parity" | #4, #6, user mandate | corpus-wide | 30 |
 | 24 | **CHR-improvement layer for host overloads** (audit #1 §2.12) | #1 | csp-solver + `passes/types/` | 200-400 |
-| 25 | **Function composition library** (F6 — no syntax; library-only) + partial application via closure-wrap (F7) | #2 | host primitive library | 100 |
+| 25 | **Function composition library** (F6 — no syntax; library-only) + partial application via closure-wrap (F7) — **RETIRED Phase 8.3.1**: function-value surface absorbs every composition use case via inline `|x| g(f(x))`; no library is added | #2 | (none — retired) | 0 |
 
 **Tier 3 total**: ~530-730 LOC.
 

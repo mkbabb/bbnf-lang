@@ -1054,7 +1054,7 @@ references this catalogue rather than re-enumerating codes.
 | `BBNF-HOST003` | WASM lowerer. | Host chain cannot lower to WASM; primitive missing in WASM ABI. |
 | `BBNF-SUBSUMPTION-EDGE` | `passes::layout` coercion check. | A chain, annotation, host call, or generated-shape projection needs a coercion, but no registered bounded coercion rule exists at that checking edge. |
 | `BBNF-GENERIC-CYCLE` | `passes::layout` generic instantiation. | Generic rule monomorphisation would produce an unbounded `(RuleId, TypeArgs)` instance set; add a return annotation, break the recursive type argument, or route through a concrete rule. |
-| `BBNF-LOCAL-EQUALITY-ANNOTATION` | Future indexed/GADT-like extension gate. | A branch-local type equality lacks a principal inferred type; add an explicit return annotation or keep the extension closed. |
+| `BBNF-LOCAL-EQUALITY-ANNOTATION` | `passes::layout` GADT branch-local-equality check. | A match-arm refinement annotation (`Pattern @ where T = U`) is missing or ill-typed; OutsideIn(X)-style implication constraints could not solve the wanted equality from the givens. |
 | `BBNF-RECOVERY*` | Error pass. | `@error` directive recovery codes; emitted by `RecoveryFacts` and routed through `ErrorRecover` and LSP diagnostics. |
 | `BBNF-GEN001` (alias `BBNF-CG001`) | Lowerer import-deny check. | Lowerer imports Grammar IR; only the BIR producer pass may consume Grammar IR. |
 | `BBNF-GEN014` | Generated LOC budget. | Generated LOC exceeds the per-grammar or aggregate +2 percent budget. |
@@ -1288,12 +1288,17 @@ than Rust if possible" is honoured by DK13's principality tracking, which
 admits annotation-elidable polymorphism that Rust requires the programmer
 to write out.
 
-GADT/branch-local-equality machinery is internal substrate (CSP solver
-branch-equality propagation feeding `LayoutFacts`); the user-facing GADT
-surface defers to V2 amendment via `BBNF-LOCAL-EQUALITY-ANNOTATION`. Row
-polymorphism is internal too (record-narrowing collapse in `passes::layout`);
-the user-facing row-poly surface defers to a later type-system research
-gate, not to V1.
+GADT branch-local-equality refinements are V1 user-facing surface:
+match-arm patterns admit refinement annotations (`Pattern @ where T = U ->
+Block` per §8.1 grammar production), and OutsideIn(X)-style implication
+constraints solved at `passes::types` propagate the local equalities
+through to `LayoutFacts`. The CSP solver carries `Implication { givens,
+wanted }` constraints as the substrate for branch-local equality; the
+`BBNF-LOCAL-EQUALITY-ANNOTATION` diagnostic emits when a match-arm
+refinement annotation is missing or ill-typed (annotation rules per the
+PASS-1 §6b diagnostic ledger). Row polymorphism remains internal
+(record-narrowing collapse in `passes::layout`); the user-facing row-poly
+surface defers to a later type-system research gate, not to V1.
 
 Function values + types are first-class V1 surface. The `Type`
 non-terminal admits `fn(T) -> U` (PASS-1 §2 grammar amendment); function

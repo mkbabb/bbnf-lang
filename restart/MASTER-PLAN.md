@@ -30,8 +30,10 @@ ParseStream mentions against the README and locks
 The central compiler move is two IRs plus side tables. Grammar IR is semantic;
 Backend IR is executable and is the only lowerer input. README requires two
 IRs (`restart/README.md:104-118`), and Lock 5 rejects emitters walking grammar
-directly (`restart/locks/14-LOCKS.md:42`). PASS-2 supplies the final 23-variant
-Backend IR contract (`restart/audit/pass-2-codegen/PASS-2.md:52-76`).
+directly (`restart/locks/14-LOCKS.md:42`). PASS-2 supplies the Backend IR
+payload contract (`restart/audit/pass-2-codegen/PASS-2.md:52-76`); the
+post-Phase-8.4 fold lands the 20-variant alphabet (19 semantic variants plus
+`Return`) per ARCH §7.2.
 
 The central language move is a constrained BBNF extension set. Lookbehind,
 `@host fn`, multi-function chaining, generics, `@error`, and `@layout` are in.
@@ -140,6 +142,17 @@ amendment (`restart/locks/14-LOCKS.md:48`). WASM SOTA measurements defer
 post-V1 alongside the V2 `WasmBackend: Backend` impl per `restart/ARCHITECTURE.md`
 §7.5; no measurement-pending WASM anchor lands in V1.
 
+SOTA-parity is the meta-grammar correctness floor: a bbnf-generated parser
+that lands within the competitor envelope (e.g., `json/twitter` ≤ 480us at
+H.W3 against sonic-rs 436us) demonstrates V1 correctness regardless of
+SOTA-beat status. SOTA-beat is the audacious target the user mandate
+anchors against (`json/twitter` ≤ 380us at J.W1, surpassing sonic-rs);
+the H tranche body owns the cost-driven rewrites + SIMD-recogniser tuning
+that closes the parity-to-beat delta. If H.W3/H.W4 measurements land at
+parity but not beat, J.W1 close gates record the parity-not-beat outcome
+and route SOTA-beat work to the H tranche body for further iteration; V1
+correctness does not gate on SOTA-beat.
+
 Benchmark reproducibility schema. Every benchmark row at H.W3, H.W4, and J.W1
 must serialise the following metadata; rows missing any field fail the gate.
 
@@ -168,7 +181,7 @@ limits parallel work to disjoint paths and clear ownership
 | B | Runtime Substrate | 5 | Tape/direct `DocumentView` works for one generated grammar shell. |
 | C | IR And Optimization Core | 6 | Grammar IR, side tables, CSP/egraph/cost bridge produce Backend IR facts. |
 | D | BBNF Extension Surface | 6 | Settled extensions parse/typecheck; rewrite-mode rejected; function values + lambdas + match + tuple lower at D.W5. |
-| E | Backend IR And VM | 5 | 23-variant Backend IR validates and VM replays all variants. |
+| E | Backend IR And VM | 5 | 20-variant Backend IR validates and VM replays all variants (post-Phase-8.4 fold per ARCH §7.2). |
 | F | Rust Lowerer And Runtime Template | 6 | Rust lowerer emits equal generated runtime for seed grammars. |
 | G | Path, Value, Visitor | 5 | `path!`, `select!`, visitor mutation, and future grammar gate pass. |
 | H | Pratt, SIMD | 5 | Auto-detected Pratt/SIMD pass early SOTA gates on the Rust line. WASM defers post-V1 via `WasmBackend: Backend` per `restart/ARCHITECTURE.md` §7.5. |
@@ -351,7 +364,7 @@ Stub waves:
 | D.W0 | Lookbehind parser, bounds checker, Grammar IR node. | Bounded positive/negative lookbehind tests. |
 | D.W1 | Generic rules, annotations, scheme instantiation, finite monomorphisation-set evidence, generic-cycle diagnostics, and **the V1 type alphabet `Type ::= Ident GenericArgs? \| TupleType \| RecordType \| BorrowType \| FnType` per Lock 10 amendment** (function types `fn(T) -> U` first-class in the `Type` non-terminal). | Generic seed grammar typechecks; generated instance-set report is finite; function types unify under DK13 without higher-rank surface leakage. |
 | D.W2 | Block-bodied `@host fn` definitions and host primitive registry. | Host call compiles without declaration crate. |
-| D.W3 | Multi-function chaining type/runtime contract, including left-to-right expected-argument obligations, bounded coercion-site fixtures, and first-mismatch diagnostics. | Chain result feeds a later parser expression; a negative chain fixture fails at the first mismatching step with `BBNF-HOST002` or `BBNF-SUBSUMPTION-EDGE`. |
+| D.W3 | Multi-function chaining type/runtime contract, including left-to-right expected-argument obligations, bounded coercion-site fixtures, and first-mismatch diagnostics. | Chain result feeds a later parser expression; a negative chain fixture fails at the first mismatching step with `BBNF-CHAIN-STEP` or `BBNF-SUBSUMPTION-EDGE`. |
 | D.W4 | `@error`, `@layout`, regex Unicode routing, rewrite rejection. | Rewrite syntax fails; regex Unicode stays in `parse-that-regex`. |
 | D.W5 | Function values + lambda literals (`\|x\| body`) + closure capture by `&'i` reference + match expression + tuple expression/pattern lowering, including function-typed parameters in `@host fn` (the transducer apotheosis without `@directive`) and the closure environment frame at the BIR boundary. | Function-typed `@host fn` parameter compiles; closure environment lowers through the same BIR alphabet as block-bodied `@host fn`; match/tuple typecheck under DK13; the V1 BBNF surface admits `Type ::= ... \| FnType` per Lock 10 amendment without DK13 surface leakage. |
 
@@ -769,7 +782,7 @@ rather than duplicating receivers.
 | Item | Receiver | Blocker | Gate | Source |
 |---|---|---|---|---|
 | Declaration-crate escape valve | A/D | Review form missing reason, scope, owner, or deletion path. | Metadata validator rejects `allow_declaration_crate = true` without the eight-field review form (template at `restart/ARCHITECTURE.md` §5.6 lines 738-770 — landed Phase 7.1). A.W4 consumes the template; D consumers reference it when the rare escape valve fires. | synthesis + migration |
-| Layout lowering | D/F | `@layout` remains parser metadata and does not lower through `LayoutFacts` and BIR. | LayoutFacts test plus BIR `LayoutPush`/`LayoutPop` replay. | synthesis |
+| Layout lowering | D/F | `@layout` remains parser metadata and does not lower through `LayoutFacts` and BIR. | LayoutFacts test plus BIR `LayoutScope` (`Push`/`Pop`) replay. | synthesis |
 | Cursor skip | B/H | Runtime cannot prove empty-path and byte-skip behavior. | `__EAGER_EMPTY_PATH` and `CursorDecision::Skip` fixtures. | synthesis + migration |
 | PASS-3 consumers | F/G/I | Generated runtime omits path, visitor, diagnostics, or host metadata. | `path-core`, visitor, and language-server consumer smokes. | synthesis |
 | SOTA metadata | H/J | Bench numbers lack machine/input/build metadata. | Benchmark report schema rejects incomplete rows; benchmark host hardware profiles cite SOTA baselines and record machine metadata. | synthesis + migration |
@@ -788,7 +801,8 @@ rather than duplicating receivers.
 | WASM ABI | V2 amendment | WASM defers post-V1 alongside the V2 `WasmBackend: Backend` impl per `restart/ARCHITECTURE.md` §7.5. V1 carries no WASM ABI row; the WASM lower-and-bench programme awaits V2. | V2 amendment opens with `WasmBackend: Backend`; the V2 record carries exported function names, host-call shape, marshalling rule, primitive coverage, and scalar/SIMD parity. | synthesis + migration |
 | Generated header fields | F | Generated header omits grammar, metadata, or Backend IR hashes. | `cargo xtask lint-generated-headers` rejects missing fields; F.W3 template gate. | migration |
 | `path-ts` package publication timing | V2 amendment | `path-ts` defers post-V1; V1 J.W3 publishes Rust-line only per Lock 11 amendment. | V2 amendment owns `path-ts` publication when the V2 `TsBackend: Backend` impl per ARCH §7.5 lands; V2 J.W3 dry-run records `path-ts` only after V2 parity matrix passes. | migration |
-| PASS-2 BIR snapshots | E/F | BIR snapshots live outside `ir::backend_ir` or fail to feed codegen import-deny tests. | Snapshots committed under `ir::backend_ir`; `BBNF-GEN001` import-deny gate consumes them at every codegen close. | migration |
+| PASS-2 BIR snapshots | E/F | BIR snapshots live outside `ir::backend_ir` or fail to feed codegen import-deny tests. | Snapshots committed under `ir::backend_ir`; `BBNF-CODEGEN-IMPORT-DENY` import-deny gate consumes them at every codegen close. | migration |
+| Cross-host metadata carrier | A or J body | Cargo.toml's `[workspace.metadata.bbnf]` block is V1 Rust-line; the schema content is host-agnostic but the carrier is Rust-specific. Tranche-body work promotes the schema content to a language-neutral sidecar (e.g., `bbnf.toml`) so future TS / WASM onboarding does not re-invent the carrier. The schema fields lock at V1; the carrier-promotion work happens at A.W4 (sidecar emission alongside the metadata validator) or J body (publication-readiness sidecar finalisation). | A or J body close gate verifies sidecar round-trip equality with the Cargo.toml block; cross-host consumers (`tower-lsp` / wasm-pack / npm scripts) read the same schema content from the sidecar. | synthesis |
 
 Cookbook and migration friction rows. Every row binds a target user, a mental
 model, a confusion point, the artefact that resolves it, and the diagnostic the
@@ -802,7 +816,7 @@ so J.W2 produces uniform pages, not seven varieties.
 | `path!` and `select!` | Library consumer building queries against generated documents. | A path expression is checked against the grammar's path schema at compile time; canonical Rust spelling uses an explicit grammar prefix such as `path!(Json => "/...")` and `select!(Json => "...")`; the bracket form `path!(Json, ["a", "b", 0])` is equivalent. The macros land at G.W1 per Phase 7.1 grammar amendments (PASS-1 §6, ARCH §8). | "Why does my path not compile when the JSON looks fine?" | Cookbook page `cookbook/path-dsl.md` plus `path-core` schema dump. | `BBNF-PATH-UNKNOWN-SEGMENT` and `BBNF-PATH-GRAMMAR-MISMATCH`. |
 | Lifetime constructors | Library consumer choosing between `parse`, `parse_in`, `parse_owned`. | `parse` borrows; `parse_in` borrows into a caller arena; `parse_owned` allocates a self-contained document. | "Why does my borrow live longer than the source?" | Cookbook page `cookbook/parse-lifetimes.md` plus `runtime` API doc. | `BBNF-LIFETIME-ESCAPE` and `BBNF-ARENA-MISMATCH`. |
 | Visitor mutation | Library consumer mutating documents through the visitor. | Mutation goes through the read-write visitor only; direct field writes are forbidden. | "Why does the borrow checker reject my edit?" | Cookbook page `cookbook/visitor-mutation.md` plus PASS-3 visitor contract. | `BBNF-VISITOR-MUTATION-OUTSIDE-ENTRY`. |
-| Layout errors | Grammar author writing layout-bearing rules. | `@layout` lowers through `LayoutFacts` and BIR `LayoutPush`/`LayoutPop`; conflicts are typed errors. | "Why does the layout not nest the way I expected?" | Cookbook page `cookbook/layout.md`. | `BBNF-LAYOUT-CONFLICT` and `BBNF-LAYOUT-UNCLOSED`. |
+| Layout errors | Grammar author writing layout-bearing rules. | `@layout` lowers through `LayoutFacts` and BIR `LayoutScope` (`Push`/`Pop`); conflicts are typed errors. | "Why does the layout not nest the way I expected?" | Cookbook page `cookbook/layout.md`. | `BBNF-LAYOUT-CONFLICT` and `BBNF-LAYOUT-UNCLOSED`. |
 | Pratt/SIMD decisions | Grammar author wondering why a recognizer was or was not applied. | Pratt and SIMD are auto-detected from grammar shape; metadata can disable but not force. | "Why did Pratt not apply to my expression rule?" | Cookbook page `cookbook/recognizers.md` plus `cargo xtask explain-recognizer`. | `BBNF-PRATT-NOT-APPLIED` and `BBNF-SIMD-NOT-SELECTED`. |
 | Crate split migration | Migrating from old workspace shape. | Old `bbnf-path*` and `core` are split into unprefixed crates. | "Where did `bbnf-path` go?" | Cookbook page `cookbook/migration-crate-split.md` plus MIGRATION.md §3.1. | None; this is documentation friction, not a runtime diagnostic. |
 | Adding yaml | Grammar author adding a new grammar. | Two surfaces only: `grammars/yaml.bbnf` plus `[workspace.metadata.bbnf.grammars.yaml]`; generated runtime/path/visitor/host outputs and the bench manifest are derivatives. | "Where do I register yaml in Rust?" | Cookbook page `cookbook/add-grammar.md` plus Architecture §12.1 walkthrough and future-grammar test. | `BBNF-METADATA-MISSING-GRAMMAR` and `BBNF-GRAMMAR-NAME-IN-GENERIC-CRATE`. |

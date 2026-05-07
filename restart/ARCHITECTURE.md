@@ -338,7 +338,7 @@ are not part of the public contract.
 | Host shim file | `css_types.rs` as a generic dependency. | `@host fn` plus `host::registry`. |
 | Strategy registry | `PRODUCTION_MANIFEST_TABLE` or `bbnf-strategy`. | Workspace metadata and recognizer facts. |
 | Path mirror | Hardcoded TS path registry per grammar. | `path-core` schema emitted from shape facts. |
-| Backend syntax | Lowerer peeking at `GrammarIr::Alt`. | `BackendIr::DispatchAlt` or `BackendIr::SpeculativeAlt`. |
+| Backend syntax | Lowerer peeking at `GrammarIr::Alt`. | `BackendIr::Alt` (`mode: Dispatch | Speculative`). |
 
 These rules are direct consequences of Lock 14 and the current generalization
 audit (`restart/locks/14-LOCKS.md:60`, `restart/corpora/CENSUS.md:103-122`).
@@ -736,6 +736,14 @@ Schema rules:
 Metadata validation errors are normal diagnostics, not panics. They flow
 through `error` so CLI and LSP report the same code for the same bad metadata.
 
+The metadata schema content above is host-agnostic; the V1 carrier is
+Cargo.toml's `[workspace.metadata.bbnf]` block because Rust-line onboarding
+is the V1 surface. The cross-host metadata-carrier work (a language-neutral
+sidecar so future TS/WASM consumers do not re-invent the carrier) routes
+to MASTER-PLAN §24 carry as tranche-body work, not a V2 amendment; the
+schema fields above lock in at V1 regardless of which carrier file
+delivers them.
+
 ### 5.6 Declaration-Crate Fence
 
 Per HARDENING-CONSOLIDATED §4.15, every declaration-crate escape valve
@@ -867,17 +875,17 @@ Grammar IR payload and lowering matrix:
 |---|---|---|---|
 | `Rule` | Name, generics, signature, body ID, annotations. | Rule is typechecked and metadata-resolved. | `Entry`, `CallRule`. |
 | `Seq` | Ordered expression IDs. | Empty sequence is normalized before BIR. | `Seq`. |
-| `Alt` | Alternative IDs plus dispatch hints. | Byte-disjoint alts are marked before extraction. | `DispatchAlt`, `SpeculativeAlt`. |
+| `Alt` | Alternative IDs plus dispatch hints. | Byte-disjoint alts are marked before extraction. | `Alt` (`mode: Dispatch | Speculative`). |
 | `Repeat` | Body ID, min/max, separator, greediness. | Nullable body is rejected or guarded. | `RepeatLoop`. |
 | `Optional` | Body ID. | Lowered without changing capture shape. | `OptionalBranch`. |
 | `Literal` | Byte string, case policy, span. | Encoding is known and stable. | `ByteLiteral`, `SimdScan`. |
 | `Regex` | Regex program handle, flags, span. | Regex parsed by `parse-that-regex`. | `RegexProgram`, `SimdScan`. |
 | `Ref` | Target rule ID, type args, call annotations. | Target resolves after generics instantiate. | `CallRule`. |
-| `Predicate` | Kind and expression ID. | Predicate has no consuming side effects. | `DispatchAlt` hints or guard BIR. |
-| `Lookbehind` | Kind, bounded body ID, width facts. | Width is proven bounded. | `SpeculativeAlt`, guard BIR. |
+| `Predicate` | Kind and expression ID. | Predicate has no consuming side effects. | `Alt` (`Dispatch`) hints or guard BIR. |
+| `Lookbehind` | Kind, bounded body ID, width facts. | Width is proven bounded. | `Alt` (`Speculative`), guard BIR. |
 | `Map` | Source expression, target type/value expression. | Output type agrees with shape facts. | `ValueProject`, `DirectBuild`. |
-| `HostCall` | Function ID, args, chain segment IDs. | Host signature and chain types compose. | `CallHost`, `HostChain`. |
-| `LayoutDirective` | Policy ID, body/span. | Policy is scoped. | `LayoutPush`, `LayoutPop`. |
+| `HostCall` | Function ID, args, chain segment IDs. | Host signature and chain types compose. | `CallHost` (chain lowers as `Seq` of `CallHost`). |
+| `LayoutDirective` | Policy ID, body/span. | Policy is scoped. | `LayoutScope` (`kind: Push | Pop`). |
 | `ErrorDirective` | Recovery code, sync rules, body/span. | Recovery code is registered. | `ErrorRecover`. |
 | `Annotation` | Key/value typed metadata. | Annotation key is known or fenced. | Side tables and diagnostics. |
 
@@ -894,14 +902,19 @@ Grammar IR invariants:
 ### 7.2 Backend IR
 
 Backend IR is executable and lowerer-facing. PASS-2 makes it the single backend
-contract and supplies the final 23-variant shape (`restart/audit/pass-2-codegen/PASS-2.md:52-76`).
+contract; the post-Phase-8.4 fold consolidates three semantically-redundant
+pairs from the original 22-variant alphabet (`restart/audit/pass-2-codegen/PASS-2.md:52-76`)
+into the 20-variant shape below — `LayoutScope { kind: Push | Pop }`,
+`Alt { mode: Dispatch | Speculative }`, and `CallHost` (multi-function host
+chains express as `Seq` of `CallHost`, no separate `HostChain` variant). The
+discriminator field carries every distinction the prior pair carried, with no
+loss of lowering distinct-ness.
 
 | Variant | Purpose |
 |---|---|
 | `Entry` | Backend function entrypoint. |
 | `Seq` | Lowered ordered execution. |
-| `DispatchAlt` | Predictive alternative dispatch. |
-| `SpeculativeAlt` | Alternative with checkpoint/rollback. |
+| `Alt` | Predictive or speculative alternative dispatch (`mode: Dispatch | Speculative`); `Speculative` carries checkpoint/rollback. |
 | `RepeatLoop` | Lowered repetition. |
 | `OptionalBranch` | Lowered optional branch. |
 | `ByteLiteral` | Byte/string literal check. |
@@ -909,10 +922,8 @@ contract and supplies the final 23-variant shape (`restart/audit/pass-2-codegen/
 | `SimdScan` | SIMD scanner operation. |
 | `PrattSpine` | Pratt parser spine. |
 | `CallRule` | Rule call. |
-| `CallHost` | Single host call. |
-| `HostChain` | Multi-function host chain. |
-| `LayoutPush` | Enter layout policy. |
-| `LayoutPop` | Exit layout policy. |
+| `CallHost` | Host call; multi-function chains express as `Seq` of `CallHost`. |
+| `LayoutScope` | Enter or exit layout policy (`kind: Push | Pop`). |
 | `ErrorRecover` | Recovery site. |
 | `SpanMark` | Span/tape marker. |
 | `TapeEmit` | Emit tape token/event. |
@@ -922,9 +933,11 @@ contract and supplies the final 23-variant shape (`restart/audit/pass-2-codegen/
 | `DebugMark` | VM/debug trace marker. |
 | `Return` | Backend return from entry/rule. |
 
-If an implementation keeps PASS-1's 22-variant table without `Return`, it must
-prove equivalent control-flow closure before codegen. The architecture default
-is PASS-2's final 23-variant table.
+The 20-variant shape preserves the `Return` row PASS-2 added on top of the
+original PASS-1 22-variant table; the three pair collapses (Layout, Alt,
+host-call) net the alphabet to 19 semantic variants plus `Return`. PASS-1
+retains the alphabet ownership; PASS-2 ratifies the variant payload tables;
+the snapshot tests at `ir::backend_ir` consume the post-fold shape.
 
 Backend IR payload and lowerer matrix:
 
@@ -932,8 +945,7 @@ Backend IR payload and lowerer matrix:
 |---|---|---|---|---|
 | `Entry` | Symbol, input mode, output mode, body block. | Emits public/internal function. | Starts frame. | Exported only through WASM facade. |
 | `Seq` | Ordered BIR node IDs. | Emits straight-line control flow. | Runs children in order. | No special handling. |
-| `DispatchAlt` | Discriminator facts, alt targets. | Emits match/table dispatch. | Chooses deterministic alt. | SIMD may feed discriminator. |
-| `SpeculativeAlt` | Alt targets, checkpoint policy. | Emits bounded checkpoint/rollback. | Saves and restores frame. | Must not clone OpenFrame stacks. |
+| `Alt` | `mode: Dispatch | Speculative`; discriminator facts (Dispatch) or checkpoint policy (Speculative); alt targets. | Emits match/table dispatch (Dispatch) or bounded checkpoint/rollback (Speculative). | Chooses deterministic alt (Dispatch) or saves and restores frame (Speculative). | SIMD may feed Dispatch discriminator; Speculative must not clone parallel-substrate stacks. |
 | `RepeatLoop` | Body, min/max, exit guard. | Emits loop with progress guard. | Iterates with progress check. | SIMD may accelerate body prefix. |
 | `OptionalBranch` | Body and empty branch shape. | Emits branch. | Runs or skips. | No special handling. |
 | `ByteLiteral` | Bytes, case policy, span. | Emits byte compare. | Consumes on match. | SIMD may widen compare. |
@@ -941,10 +953,8 @@ Backend IR payload and lowerer matrix:
 | `SimdScan` | `SimdScanMode::{Exact, Prefilter}`, needle/class, fallback, verifier route. | Emits dispatch to `simd-scan`. | Exact mode must match scalar offsets; prefilter mode emits candidates only. | Prefilter acceptance routes to `RegexProgram` or scalar verifier before tape emission. |
 | `PrattSpine` | Operators, precedence, associativity, atom rule. | Emits Pratt loop. | Executes Pratt interpreter. | Auto-detected only. |
 | `CallRule` | Callee ID, args, result slot. | Emits function call. | Pushes rule frame. | No special handling. |
-| `CallHost` | Host function ID, args, result slot. | Emits registry dispatch. | Calls host shim. | WASM requires ABI-safe wrapper. |
-| `HostChain` | Ordered host call IDs. | Emits typed chain. | Runs chain left-to-right. | ABI-safe at boundary only. |
-| `LayoutPush` | Layout policy ID. | Emits scoped policy push. | Pushes layout state. | No special handling. |
-| `LayoutPop` | Layout policy ID. | Emits scoped pop. | Pops layout state. | No special handling. |
+| `CallHost` | Host function ID, args, result slot. | Emits registry dispatch. | Calls host shim. | WASM requires ABI-safe wrapper; multi-function chains lower as `Seq` of `CallHost`. |
+| `LayoutScope` | `kind: Push | Pop`; layout policy ID. | Emits scoped policy push (Push) or pop (Pop). | Pushes or pops layout state. | No special handling. |
 | `ErrorRecover` | Recovery code, sync set, resume target. | Emits diagnostic and recovery path. | Records diagnostic and resumes. | LSP consumes same code. |
 | `SpanMark` | Start/end marker kind. | Emits span capture. | Records mark. | No special handling. |
 | `TapeEmit` | Token/event kind, span/value refs. | Appends tape token. | Appends reference token. | No special handling. |
@@ -960,8 +970,8 @@ Example source-to-BIR coverage:
 |---|---|---|
 | `Entry` | `json = value;` | Grammar entry metadata selects exported entry. |
 | `Seq` | `"a" "b"` | Ordered expression. |
-| `DispatchAlt` | `"true" | "false" | "null"` | Byte-disjoint alternatives. |
-| `SpeculativeAlt` | `ident | keyword` when prefix overlaps. | Requires checkpoint. |
+| `Alt` (Dispatch) | `"true" | "false" | "null"` | Byte-disjoint alternatives. |
+| `Alt` (Speculative) | `ident | keyword` when prefix overlaps. | Requires checkpoint. |
 | `RepeatLoop` | `digit+` | Progress guard required. |
 | `OptionalBranch` | `sign? number` | Empty branch keeps shape. |
 | `ByteLiteral` | `"{"` | Byte literal. |
@@ -969,10 +979,9 @@ Example source-to-BIR coverage:
 | `SimdScan` | Long literal set, exact structural alphabet, or regex prefilter. | Exact scans require scalar parity; prefilters require verifier acceptance before tape emission. |
 | `PrattSpine` | Expression grammar with precedence pattern. | Auto-detected, no directive. |
 | `CallRule` | `value` inside another rule. | Rule reference. |
-| `CallHost` | `@trim(text)` | Single host call. |
-| `HostChain` | `@decode(x).normalize().intern()` | Chain semantics. |
-| `LayoutPush` | `@layout indent { ... }` | Scoped policy. |
-| `LayoutPop` | End of layout body. | Compiler-generated pair. |
+| `CallHost` | `@trim(text)` (single call); `@decode(x).normalize().intern()` (chain lowers as `Seq` of `CallHost`). | Chain semantics: each step's output unifies with the next step's input. |
+| `LayoutScope` (Push) | `@layout indent { ... }` (entry). | Scoped policy push. |
+| `LayoutScope` (Pop) | End of layout body. | Compiler-generated pair. |
 | `ErrorRecover` | `@error missing_semicolon { ... }` | Recovery site. |
 | `SpanMark` | Any captured rule. | Compiler-generated span boundaries. |
 | `TapeEmit` | Any token/node event. | Compiler-generated. |
@@ -1006,7 +1015,7 @@ tables and internal fact logs are:
 
 | Table | Producer | Consumer | Visibility |
 |---|---|---|---|
-| `LayoutFacts` | `passes::layout` (folds HM + bidirectional + CSP into layout decisions). | Backend IR builder (`LayoutPush`, `LayoutPop`), host registry, diagnostics. | Public. |
+| `LayoutFacts` | `passes::layout` (folds HM + bidirectional + CSP into layout decisions). | Backend IR builder (`LayoutScope`), host registry, diagnostics. | Public. |
 | `ShapeFacts` | Shape mining. | Direct builder, Value API, path typing. | Public. |
 | `RecognizerFacts` | Recognizer mining. | BIR builder, SIMD/Pratt lowerers. | Public. |
 | `EGraphFacts` | Egraph bridge. | Cost extraction. | Public; keys stable e-class/node facts, not chosen representatives. |
@@ -1029,38 +1038,47 @@ the metadata/onboarding clauses (`restart/locks/14-LOCKS.md:60`). The
 table below is the consolidated catalogue; MASTER-PLAN §24 cookbook table
 references this catalogue rather than re-enumerating codes.
 
+Phase 8.4 retires the numeric alias system. The catalogue carries
+human-readable codes only; the prior numeric aliases (`BBNF-LIFE001`,
+`BBNF-LIFE002`, `BBNF-VISIT002`, `BBNF-LAYOUT002`, `BBNF-OPT001`,
+`BBNF-OPT002`, `BBNF-PATH001`, `BBNF-PATH002`, `BBNF-GRAMMAR001`,
+`BBNF-CG001`) and pure-numeric codes (`BBNF-LIFE003` through `BBNF-SEM040`)
+fold into mnemonic names. CLI, LSP, and cookbook surfaces consume the
+human-readable form; numeric aliases were LLM-trained-distribution
+artefacts that double-tracked an 11-row catalogue for no compression
+gain.
+
 | Code | Site | Meaning |
 |---|---|---|
-| `BBNF-LIFETIME-ESCAPE` (alias `BBNF-LIFE001`) | `bbnf` parse API. | Borrow lifetime exceeds source lifetime; use `parse_owned` or extend the source borrow. |
-| `BBNF-ARENA-MISMATCH` (alias `BBNF-LIFE002`) | `parse_in`. | Caller-provided arena lifetime does not match the parse arena. |
-| `BBNF-LIFE003` | Lookbehind width analysis. | Lookbehind `\|<` width is unbounded; constrain the predicate to a finite width or move the assertion into a regex literal. |
-| `BBNF-LIFE009` | Generated owned/borrowed constructors. | Emitted constructor violates the lifetime surface contract. |
-| `BBNF-VISITOR-MUTATION-OUTSIDE-ENTRY` (alias `BBNF-VISIT002`) | `runtime/visitor`. | Direct field mutation rejected; mutations route through the read-write visitor entry. |
-| `BBNF-VISIT001` | Visitor declaration check. | Visitor declares no kinds matching the grammar; warning only. |
-| `BBNF-VISIT003` | Visitor recovery. | Recovery nodes silently skipped by the visitor; warning. |
-| `BBNF-LAYOUT-CONFLICT` (alias `BBNF-LAYOUT002`) | BIR `LayoutPush`/`LayoutPop`. | Conflicting layout policy. |
-| `BBNF-LAYOUT-UNCLOSED` | BIR `LayoutPop`. | Unclosed layout scope reaches the BIR boundary. |
-| `BBNF-LAYOUT001` | `@layout` lowering. | `@layout` directive is unused by the generated formatter; warning. |
-| `BBNF-LOOKBEHIND-WIDTH` (PASS-1 string `BBNF1004`) | Grammar IR `Lookbehind`. | Unbounded lookbehind reaches Grammar IR; rejected before Backend IR. |
-| `BBNF-PRATT-NOT-APPLIED` (alias `BBNF-OPT001`) | `passes::recognizers`. | Pratt detection ran but rejected the rule; cost model declined. |
-| `BBNF-SIMD-NOT-SELECTED` (alias `BBNF-OPT002`) | `passes::recognizers`. | SIMD detection ran but rejected the rule; cost, unsupported Unicode semantics, or missing exact/prefilter verifier contract rejected the SIMD path. |
-| `BBNF-METADATA-MISSING-GRAMMAR` (alias `BBNF-GRAMMAR001`) | `pipeline::workspace`. | Grammar source declared but no `[workspace.metadata.bbnf.grammars.<name>]` block; Lock 14 requires both surfaces. |
+| `BBNF-LIFETIME-ESCAPE` | `bbnf` parse API. | Borrow lifetime exceeds source lifetime; use `parse_owned` or extend the source borrow. |
+| `BBNF-ARENA-MISMATCH` | `parse_in`. | Caller-provided arena lifetime does not match the parse arena. |
+| `BBNF-LOOKBEHIND-WIDTH` | Grammar IR `Lookbehind`; lookbehind width analysis. | Lookbehind `\|<` width is unbounded; constrain the predicate to a finite width or move the assertion into a regex literal. Also rejects unbounded lookbehind reaching Grammar IR before Backend IR. |
+| `BBNF-LIFETIME-CONSTRUCTOR` | Generated owned/borrowed constructors. | Emitted constructor violates the lifetime surface contract. |
+| `BBNF-VISITOR-MUTATION-OUTSIDE-ENTRY` | `runtime/visitor`. | Direct field mutation rejected; mutations route through the read-write visitor entry. |
+| `BBNF-VISITOR-NO-MATCHING-KINDS` | Visitor declaration check. | Visitor declares no kinds matching the grammar; warning only. |
+| `BBNF-VISITOR-RECOVERY-SKIP` | Visitor recovery. | Recovery nodes silently skipped by the visitor; warning. |
+| `BBNF-LAYOUT-CONFLICT` | BIR `LayoutScope`. | Conflicting layout policy. |
+| `BBNF-LAYOUT-UNCLOSED` | BIR `LayoutScope` (`Pop`). | Unclosed layout scope reaches the BIR boundary. |
+| `BBNF-LAYOUT-UNUSED` | `@layout` lowering. | `@layout` directive is unused by the generated formatter; warning. |
+| `BBNF-PRATT-NOT-APPLIED` | `passes::recognizers`. | Pratt detection ran but rejected the rule; cost model declined. |
+| `BBNF-SIMD-NOT-SELECTED` | `passes::recognizers`. | SIMD detection ran but rejected the rule; cost, unsupported Unicode semantics, or missing exact/prefilter verifier contract rejected the SIMD path. |
+| `BBNF-METADATA-MISSING-GRAMMAR` | `pipeline::workspace`. | Grammar source declared but no `[workspace.metadata.bbnf.grammars.<name>]` block; Lock 14 requires both surfaces. |
 | `BBNF-GRAMMAR-NAME-IN-GENERIC-CRATE` | Lock 14 lint. | A generic crate hardcodes a grammar name; `cargo xtask lint-no-hardcoded-grammars` enforces. |
-| `BBNF-PATH-UNKNOWN-SEGMENT` (alias `BBNF-PATH001`) | `path` macro. | Path segment does not match the grammar schema. |
-| `BBNF-PATH-GRAMMAR-MISMATCH` (alias `BBNF-PATH002`) | `path` macro. | Path expression refers to a different grammar than the inferred root. |
-| `BBNF-PATH003` | `path` macro. | Path terminal type unknown to the macro; regenerate to refresh the schema. |
-| `BBNF-HOST001` | `passes::layout` host signature unification. | Host function body cannot satisfy the inferred signature. |
-| `BBNF-HOST002` | `passes::layout` chain composition. | Chain step does not accept the previous step's output type. |
-| `BBNF-HOST003` | WASM lowerer. | Host chain cannot lower to WASM; primitive missing in WASM ABI. |
+| `BBNF-PATH-UNKNOWN-SEGMENT` | `path` macro. | Path segment does not match the grammar schema. |
+| `BBNF-PATH-GRAMMAR-MISMATCH` | `path` macro. | Path expression refers to a different grammar than the inferred root. |
+| `BBNF-PATH-UNKNOWN-TERMINAL` | `path` macro. | Path terminal type unknown to the macro; regenerate to refresh the schema. |
+| `BBNF-HOST-SIGNATURE-MISMATCH` | `passes::layout` host signature unification. | Host function body cannot satisfy the inferred signature. |
+| `BBNF-CHAIN-STEP` | `passes::layout` chain composition. | Chain step does not accept the previous step's output type. |
+| `BBNF-HOST-WASM-PRIMITIVE-MISSING` | WASM lowerer. | Host chain cannot lower to WASM; primitive missing in WASM ABI. |
 | `BBNF-SUBSUMPTION-EDGE` | `passes::layout` coercion check. | A chain, annotation, host call, or generated-shape projection needs a coercion, but no registered bounded coercion rule exists at that checking edge. |
 | `BBNF-GENERIC-CYCLE` | `passes::layout` generic instantiation. | Generic rule monomorphisation would produce an unbounded `(RuleId, TypeArgs)` instance set; add a return annotation, break the recursive type argument, or route through a concrete rule. |
 | `BBNF-LOCAL-EQUALITY-ANNOTATION` | `passes::layout` GADT branch-local-equality check. | A match-arm refinement annotation (`Pattern @ where T = U`) is missing or ill-typed; OutsideIn(X)-style implication constraints could not solve the wanted equality from the givens. |
 | `BBNF-RECOVERY*` | Error pass. | `@error` directive recovery codes; emitted by `RecoveryFacts` and routed through `ErrorRecover` and LSP diagnostics. |
-| `BBNF-GEN001` (alias `BBNF-CG001`) | Lowerer import-deny check. | Lowerer imports Grammar IR; only the BIR producer pass may consume Grammar IR. |
-| `BBNF-GEN014` | Generated LOC budget. | Generated LOC exceeds the per-grammar or aggregate +2 percent budget. |
-| `BBNF-CODEGEN021` | Regen equality. | BIR snapshot changed without committed generated output. |
-| `BBNF-CODEGEN033` | Runtime template metadata. | Template lacks path, visitor, or diagnostic metadata. |
-| `BBNF-SEM040` | BIR validation. | Unbounded lookbehind reached BIR despite Grammar IR rejection (last-line guard). |
+| `BBNF-CODEGEN-IMPORT-DENY` | Lowerer import-deny check. | Lowerer imports Grammar IR; only the BIR producer pass may consume Grammar IR. |
+| `BBNF-CODEGEN-LOC-BUDGET` | Generated LOC budget. | Generated LOC exceeds the per-grammar or aggregate +2 percent budget. |
+| `BBNF-CODEGEN-REGEN-EQUALITY` | Regen equality. | BIR snapshot changed without committed generated output. |
+| `BBNF-CODEGEN-TEMPLATE-METADATA` | Runtime template metadata. | Template lacks path, visitor, or diagnostic metadata. |
+| `BBNF-BIR-LOOKBEHIND-GUARD` | BIR validation. | Unbounded lookbehind reached BIR despite Grammar IR rejection (last-line guard). |
 
 The verbatim diagnostic strings for each code live with the producer:
 `restart/audit/pass-2-codegen/PASS-2.md:533-538` for the codegen and BIR
@@ -1091,54 +1109,42 @@ pub trait Backend {
         ctx: &LowerContext,
     ) -> Result<Self::Output, Self::Error>;
 
-    fn emit_runtime_template(
+    fn emit_artefacts(
         &self,
         grammar: &GrammarMeta,
-    ) -> Result<TemplateOutput, Self::Error>;
-
-    fn emit_value_api(
-        &self,
-        schema: &ValueSchema,
-    ) -> Result<ApiOutput, Self::Error>;
-
-    fn emit_visitor(
-        &self,
-        schema: &VisitorSchema,
-    ) -> Result<VisitorOutput, Self::Error>;
-
-    fn emit_path_schema(
-        &self,
-        schema: &PathSchema,
-    ) -> Result<PathOutput, Self::Error>;
+        schemas: &SchemaSet,
+    ) -> Result<ArtefactSet, Self::Error>;
 }
 ```
+
+The two-method surface is deliberate. The four artefacts (runtime template, value API, visitor, path schema) are co-emitted from a single `(grammar, schemas)` input; per-method dispatch was contrivance because no V1 or V2 caller emits one artefact without the others. `SchemaSet` bundles the value, visitor, and path schemas as one struct; `ArtefactSet` bundles the typed file trees for the four artefacts. The four artefact files remain distinct on disk under `runtime/src/grammars/<g>/`.
 
 Backend trait obligations:
 
 | Method | Input | V1 RustBackend output | V2 WasmBackend output | V2 TsBackend output |
 |---|---|---|---|---|
 | `lower` | `&BackendIR`, `&LowerContext` | `RustSource` (committed `.rs` artefact tree under `crates/runtime/src/grammars/<g>/`) | `WasmRustSource` (wasm32 lowering of the same `BackendIR`) | `TsSource` (committed `.ts` artefact tree) |
-| `emit_runtime_template` | `&GrammarMeta` | `runtime/src/grammars/<g>/{generated.rs, parser.rs, host.rs, view.rs, value.rs, visitor.rs}` | wasm32-pinned mirror plus exported ABI shell | TS package mirror with TS path schema |
-| `emit_value_api` | `&ValueSchema` | typed `Value` enum + trait impls | wasm32 mirror | TS `Value` namespace + d.ts |
-| `emit_visitor` | `&VisitorSchema` | `Visitor` trait + `VisitTypes` bitflag | wasm32 mirror | TS visitor interface |
-| `emit_path_schema` | `&PathSchema` | `<g>.path-schema.toml` plus typed `path!` glue | wasm32 mirror | `<g>.path-schema.toml` plus TS `compilePath` glue |
+| `emit_artefacts` | `&GrammarMeta`, `&SchemaSet` | `ArtefactSet` bundling `runtime/src/grammars/<g>/{generated.rs, parser.rs, host.rs, view.rs, value.rs, visitor.rs}` + typed `Value` enum + `Visitor` trait + `VisitTypes` bitflag + `<g>.path-schema.toml` + typed `path!` glue | `ArtefactSet` wasm32-pinned mirror plus exported ABI shell | `ArtefactSet` TS package mirror with TS `Value` namespace + d.ts + visitor interface + `<g>.path-schema.toml` + TS `compilePath` glue |
 
 Backend trait invariants:
 
 | Invariant | Gate |
 |---|---|
 | `Backend::Output` is a typed source artefact, never raw bytes that bypass the committed-source contract. | Lock 6 `xtask` regen equality check; raw byte outputs reject in CI. |
-| Lowerers walk `BackendIR` only. Grammar IR is forbidden inside a `Backend` impl. | `BBNF-GEN001` import-deny lint at `crates/codegen/src/lower/`. |
+| Lowerers walk `BackendIR` only. Grammar IR is forbidden inside a `Backend` impl. | `BBNF-CODEGEN-IMPORT-DENY` lint at `crates/codegen/src/lower/`. |
 | Every grammar in §12.1 lowers through every active `Backend`. V1 has one active `Backend` (`RustBackend`); V2 adds two more without grammar-side changes. | Per-grammar matrix at §12.1 expands columns when a new `Backend` impl lands. |
 | The trait is generic-crate code; no grammar names appear inside any `Backend` impl. | Lock 14 generic-crate audit; `rg -nE 'JsonParser|CssL4Parser|BbnfBootstrap|GoogleSheetsParser' crates/codegen/src/` returns zero. |
 
 The `LowerContext` type carries: target triple (or wasm32-equivalent),
-generated-code budget cursor, grammar metadata reference, side-table
-references (`LayoutFacts`, `ShapeFacts`, `RecognizerFacts`, `CostFacts`,
-`RecoveryFacts`, `BridgeJustification`), and lint-mode toggles. The
-`TemplateOutput`, `ApiOutput`, `VisitorOutput`, and `PathOutput` types
-carry typed file trees with their committed paths and budget metadata,
-not raw strings.
+generated-code budget cursor, grammar metadata reference, a `&SideTables`
+reference whose definition lives at §7.3 (one struct over `LayoutFacts`,
+`ShapeFacts`, `RecognizerFacts`, `CostFacts`, `RecoveryFacts`,
+`BridgeJustification`), and lint-mode toggles. The `ArtefactSet` type
+carries typed file trees with their committed paths and budget metadata,
+not raw strings; the four artefact families (runtime template, typed
+value API, visitor, path schema) are routed through one struct so the
+trait surface stays clean while per-artefact emission policy lives inside
+the `Backend` impl body.
 
 V2 deferral note: when V2 admits `WasmBackend` and `TsBackend`, the BIR
 alphabet does not change (PASS-1 §2 owns the alphabet). The new impls
@@ -1276,17 +1282,25 @@ Type rules:
 | Layout and error directives are typed side effects. | They produce `LayoutFacts` and `RecoveryFacts`, not ad hoc codegen flags. |
 
 V1 generic rules are parametric HM schemes. The V1 type system composes
-HM equality + Algorithm-W principal schemes (Damas-Milner 1982; Pierce
-2002 ch.22) + Pierce-Turner local check/synth (the bidirectional
+five named mechanisms: HM-equality (Algorithm-W; Damas-Milner 1982;
+Pierce 2002 ch.22) + Pierce-Turner local check/synth (the bidirectional
 expected-type interface above) + DK13 higher-rank algorithmic completeness
 (Dunfield-Krishnaswami 2013; ordered existential contexts, principality
 tracking, decidability, soundness, completeness, explicit annotation
-rules for non-principal programs) + finite first-order unification +
-finite CSP for non-HM choices. Higher-rank polymorphism is therefore a
-V1 surface, not a future amendment. The user mandate's "inference stronger
-than Rust if possible" is honoured by DK13's principality tracking, which
-admits annotation-elidable polymorphism that Rust requires the programmer
-to write out.
+rules for non-principal programs) + finite CSP for non-HM choices +
+GADT branch-local-equality refinement (Phase 8.3.1 V1 fold; OutsideIn(X)
+implication constraints discharged at `passes::types` and propagated to
+`LayoutFacts`). HM-equality, Algorithm-W, and first-order unification are
+one algorithm — Damas-Milner principal-scheme inference with first-order
+unifier — presented as one named mechanism rather than three. CHR-style
+improvement is a constraint-emission helper inside `csp-solver` (Phase
+8.3.1 V1 fold; not a separate type-system layer); the helper closes
+host-overload ambiguity at the bridge boundary by materialising the
+finite improvement constraints the CSP solver consumes. Higher-rank
+polymorphism is therefore a V1 surface, not a future amendment. The
+user mandate's "inference stronger than Rust if possible" is honoured by
+DK13's principality tracking, which admits annotation-elidable
+polymorphism that Rust requires the programmer to write out.
 
 GADT branch-local-equality refinements are V1 user-facing surface:
 match-arm patterns admit refinement annotations (`Pattern @ where T = U ->
@@ -1344,7 +1358,7 @@ language.
 
 | Form | Captures | Type rule | Runtime rule |
 |---|---|---|---|
-| Host chain closure | Previous host result and explicit args only. | Output of segment N unifies with input of segment N+1. | Lowered to `HostChain`. |
+| Host chain closure | Previous host result and explicit args only. | Output of segment N unifies with input of segment N+1. | Lowered to `Seq` of `CallHost`. |
 | Map closure | Matched value, named captures, explicit annotations. | Map result unifies with rule output shape. | Lowered to `ValueProject` and/or `DirectBuild`. |
 | Predicate closure | Read-only parser state and explicit expression. | Must return boolean-like predicate type. | No tape/direct side effects. |
 | Recovery closure | Diagnostic context and sync facts. | Must produce registered recovery code or hint. | Lowered to `ErrorRecover`. |
@@ -1438,24 +1452,33 @@ The egraph + cost-model bridge (§7.3 `EGraphFacts`, `BridgeJustification`,
 `CostFacts`) rewrites Backend IR plans within a per-category saturation
 budget. Lock 4's per-domain orthogonality (`restart/locks/14-LOCKS.md:40`)
 demands that each rewrite category run inside its own budget pool with
-its own legality-vs-cost discipline. The categories below are the V1
-contract; PASS-2 cost-model ratifies thresholds against SOTA gates.
+its own legality-vs-cost discipline. The post-Phase-8.4 fold lands three
+categories — `legality-rewrites` and `normalization-rewrites` are
+LOAD-BEARING for V1 meta-grammar correctness; `cost-driven-rewrites` is
+ASPIRATIONAL for V1 SOTA throughput at the H tranche body. The prior
+fourth category, `simplification-rewrites`, folds into `codegen::verify`
+at F.W3 (one-pass dead-mark elision belongs alongside regen-equality, not
+as an e-graph budget pool).
 
-| Category | Purpose | Budget mode | Threshold (V1) | Owner |
-|---|---|---|---|---|
-| `legality-rewrites` | Mandatory canonicalisations that no plan may skip (e.g., empty-Seq normalisation, nullable-body Repeat rejection, dispatch-key disjointness). | Saturate to fixpoint; failure aborts compile. | unbounded steps; aborts on cycle detection (`debug_assert!` cycle hash). | `passes::normalize`. |
-| `normalization-rewrites` | Optional canonicalisations that simplify lower-time choices (e.g., literal-ordering, alt-flattening, redundant-predicate elision). | Saturate to fixpoint with step budget. | ≤ 1024 steps per `Rule`; halts on first plateau. | `egraph::rewrite` driven by `passes::normalize`. |
-| `cost-driven-rewrites` | Cost-model-led plan selection (e.g., Pratt vs scalar, SIMD vs scalar, dispatch-tree vs jump-table). | Bounded e-graph saturation gated by `CostModel::should_continue`. | ≤ 256 e-class merges per `Rule`; per-grammar override via `[workspace.metadata.bbnf.grammars.<g>.rewrite_budget]`. | `egraph` + `cost-model::frontier`. |
-| `simplification-rewrites` | Post-extraction local simplifications (e.g., dead-`SpanMark` removal, `TapeEmit` coalescing, `DebugMark` elision under non-debug profile). | Single pass over extracted plan. | one pass per `BackendIR` artefact; no fixpoint. | `passes::extract` + `codegen::verify`. |
+| Category | Purpose | Budget mode | Threshold (V1) | V1 classification | Owner |
+|---|---|---|---|---|---|
+| `legality-rewrites` | Mandatory canonicalisations that no plan may skip (e.g., empty-Seq normalisation, nullable-body Repeat rejection, dispatch-key disjointness). | Saturate to fixpoint; failure aborts compile. | unbounded steps; aborts on cycle detection (`debug_assert!` cycle hash). | LOAD-BEARING (correctness). | `passes::normalize`. |
+| `normalization-rewrites` | Optional canonicalisations that simplify lower-time choices (e.g., literal-ordering, alt-flattening, redundant-predicate elision). | Saturate to fixpoint with step budget. | ≤ 1024 steps per `Rule`; halts on first plateau. | LOAD-BEARING (correctness-adjacent). | `egraph::rewrite` driven by `passes::normalize`. |
+| `cost-driven-rewrites` | Cost-model-led plan selection (e.g., Pratt vs scalar, SIMD vs scalar, dispatch-tree vs jump-table). | Bounded e-graph saturation gated by `CostModel::should_continue`. | ≤ 256 e-class merges per `Rule`; per-grammar override via `[workspace.metadata.bbnf.grammars.<g>.rewrite_budget]`. | ASPIRATIONAL (throughput-bound; H tranche body). | `egraph` + `cost-model::frontier`. |
+
+Post-extraction local simplifications (dead-`SpanMark` removal, `TapeEmit`
+coalescing, `DebugMark` elision under non-debug profile) run inside
+`codegen::verify` as a single pass over the extracted plan, with no
+fixpoint and no e-graph need; F.W3 absorbs the simplification step
+alongside regen-equality.
 
 The thresholds bind to the e-graph saturation budgets owned by the
 `egraph` crate; per-grammar overrides flow through workspace metadata so
 extreme grammars (CSS L4 colour-function chain; Sheets formula Pratt
 spine) admit larger budgets without bloating the default. Threshold
-violations emit `BBNF-OPT001` (`BBNF-PRATT-NOT-APPLIED`) and
-`BBNF-OPT002` (`BBNF-SIMD-NOT-SELECTED`) where applicable; the
-diagnostic identifies which budget pool exhausted and which `CostFacts`
-row the rewrite stalled on.
+violations emit `BBNF-PRATT-NOT-APPLIED` and `BBNF-SIMD-NOT-SELECTED`
+where applicable; the diagnostic identifies which budget pool exhausted
+and which `CostFacts` row the rewrite stalled on.
 
 ## 11. Performance Targets
 

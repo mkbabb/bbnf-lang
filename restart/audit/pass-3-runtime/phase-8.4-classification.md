@@ -1,0 +1,70 @@
+# Phase 8.4 Classification — PASS-3 simplification fold per V8 ledger
+
+This file records the verify-then-patch classification for the Phase 8.4
+PASS-3 simplification-fold cycle dispatched after V8 PASS-3 returned
+SIMPLIFY-AVAILABLE at `cd6c2b4c` (HARDENING-PASS-3-V8.md, 11 punch items)
+and the four-target cohort consolidator returned SIMPLIFY-AVAILABLE at
+`28987de4` (HARDENING-CONSOLIDATED-V8.md, 41 cohort candidates across tiers
+α / β / γ / δ / ε). Phase 8.3.1 user-adjudicated corpus cleanup landed at
+`a74cdc52` (incl. GADT V1 user-facing surface fold; `BBNF-LOCAL-EQUALITY-
+ANNOTATION` row already V1-emitted at PASS-3 §6b post-Phase-8.3.1).
+
+Phase 8.4 routes the cohort's 41 simplification candidates across four
+parallel fold agents on non-overlapping write surfaces; this classification
+covers the PASS-3 fold scope only. Write surface is restricted to
+`restart/audit/pass-3-runtime/PASS-3.md` per the Phase 8.4 dispatch §5
+cross-tranche lock. Out-of-scope routing surfaces below.
+
+## In-scope items (PASS-3 fold)
+
+| Item | V8 tier | V8 source | Surgery directive | Current PASS-3.md state | Classification | Surgery to land |
+|---|---|---|---|---|---|---|
+| β1 — retire diagnostic numeric alias system | β diagnostic vocab | CONSOLIDATED-V8 §3 β1; PASS-3-V8 §8 row 3; MASTER-PLAN-V8 P4 | Drop pure-numeric `BBNF*NNNN` aliases at §6b dual-namespace rows; keep human-readable `BBNF-<KIND>NNN` codes only. The dual-namespace was numeric-+-alphabetic (`BBNF1004` paired with `BBNF-LOOKBEHIND-WIDTH`); the alphabetic single-namespace stands; the numeric prefix retires. | §6b row at `:462` carries triple-namespace `BBNF1004` / `BBNF-LOOKBEHIND-WIDTH` / `LookbehindWidth`. §6b post-table prose at `:470` reaffirms the triple binding ("PASS-3 emits the PASS-1-owned lookbehind numeric code `BBNF1004`, alphabetic alias `BBNF-LOOKBEHIND-WIDTH`, and vocabulary kind `LookbehindWidth` as one binding"). | patch-delta | Drop the `BBNF1004` numeric leading column at `:462`; rewrite the row's verbatim string to lead with `BBNF-LOOKBEHIND-WIDTH`; rewrite the `:470` prose to retire the numeric-alias clause and frame the binding as "alphabetic code + vocabulary kind". |
+| β2 — confirm `BBNF-LOCAL-EQUALITY-ANNOTATION` row is emitted-not-reserved | β diagnostic vocab | CONSOLIDATED-V8 §3 β2 / Phase 8.3.1 GADT V1 fold | Per Phase 8.3.1, GADT user-facing surface lands V1 (Lock 4 amendment); the row's verbatim string at `:468` already reads as an emitted V1 diagnostic ("match arm at {span} introduces branch-local type equality... add or correct the refinement annotation `Pattern @ where T = U`"). Confirm phrasing; re-cite Lock 4 amendment + ARCH §8.2 GADT V1 surface in §6b post-table prose so the row's V1-emitted status is unambiguous. | `:468` row already verbatim-emits per Phase 8.3.1; `:470` post-table prose does not yet name the row's V1-emitted status. | patch-delta | Append one sentence to the `:470` post-table paragraph confirming `BBNF-LOCAL-EQUALITY-ANNOTATION` is V1-emitted (Phase 8.3.1 / Lock 4 amendment) and routes through OutsideIn(X) discharge per ARCH §8.2 GADT V1 surface; reservation phrasing retires. |
+| γ3 — diagnostic infra: bind to `thiserror` + `miette` | γ host-leverage | CONSOLIDATED-V8 §3 γ3; PASS-3-V8 §8 row 9 (J6) | Annotate `crates/bbnf/src/diagnostics/` (§6 bbnf crate tree) as the rendering layer where verbatim `BBNF-*` strings become `#[error]` attributes on a `thiserror::Error` enum and cookbook receivers become `miette::Diagnostic::url` impls. The §6b ledger structure stays (codes + verbatim text + target user + mental model + confusion point + artefact); the rendering layer is host-provided. | §6 bbnf-tree narrative at `:300` lists `diagnostics/` as "rendering + categories" without naming the host facility. §6b post-table prose at `:470` does not name the runtime rendering layer. | patch-delta | Extend the `:300` `diagnostics/` parenthetical to read "rendering + categories; verbatim strings of §6b lower to `thiserror::Error` derives and `miette::Diagnostic` rendering, no bbnf-invented diagnostic struct"; append one sentence to `:470` confirming the host-leverage binding. |
+| γ4 — visitor: leverage `syn::visit` precedent | γ host-leverage | CONSOLIDATED-V8 §3 γ4; PASS-3-V8 §8 row 6 (J2) | Annotate the §3 visitor commitment so the generated `Visitor` trait shape and method-naming convention (`visit_object`, `visit_member`, etc.) explicitly mirror `syn::visit::Visit` / `VisitMut`; `VisitTypes` bitflag pruning stays bbnf-specific (the mask is grammar-derived). The cookbook receiver gains familiarity, loses none of the metadata-driven pruning. | §3 visitor paragraph at `:148` cites the W5 design + cookbook receivers but does not name the `syn::visit` precedent. | patch-delta | Append one sentence to `:148` annotating the `syn::visit::Visit` / `VisitMut` precedent for trait shape + method naming; reaffirm `VisitTypes` bitflag pruning as bbnf-specific. |
+| γ5 — LSP scaffolding: bind to `tower-lsp` | γ host-leverage | CONSOLIDATED-V8 §3 γ5; PASS-3-V8 §8 row 7 (J4) | Annotate §6 `bbnf-language-server` tree's `lsp/server.rs` and `lsp/protocol.rs` as a thin `tower-lsp` adapter over the bbnf-specific `analysis/` + `incremental/` content. The protocol scaffolding is host-provided; the bbnf-specific surface is what `analysis/` and `incremental/` express. | §6 bbnf-language-server tree at `:336-337` lists `lsp/server.rs` + `lsp/protocol.rs` without naming the host facility. | patch-delta | Append one sentence after the §6 bbnf-language-server tree (at `:342` or trailing the `workspace/metadata.rs` line) annotating `lsp/*` as a thin `tower-lsp` adapter; reaffirm `analysis/` + `incremental/` as the bbnf-specific surfaces. |
+| γ6 — DAP scaffolding: bind to `dap-types` | γ host-leverage | CONSOLIDATED-V8 §3 γ6; PASS-3-V8 §8 row 7 (J4) | Same pattern — annotate `dap/server.rs`, `dap/session.rs`, `dap/mapping.rs` as a thin `dap-types` (or `debug-adapter-protocol` crate) adapter; the bbnf-specific work is the snapshot-identity binding through tape source spans. | `:338-340` lists DAP files without naming the host facility. | patch-delta | Same trailing sentence in §6 covers `dap/*` as a thin `dap-types` adapter. (One sentence covers γ5 + γ6 jointly to avoid redundant prose.) |
+| γ7 — incremental parse: cite `salsa` as design language | γ host-leverage | CONSOLIDATED-V8 §3 γ7; PASS-3-V8 §8 row 8 (J5) | Annotate the §5 `ReparsePlan` introduction at `:198-221` so the design-language references salsa's revisions/queries/invalidation vocabulary; tree-sitter's incremental parse informs the reuse-map computation. The runtime mechanism is bbnf-built (per-tape-range reuse, not salsa-query memoization); the design language is borrowed. | §5 narrative at `:197-198` says "useful entry shape, not the final incremental parse design"; the salsa precedent is not named; tree-sitter is not named at the reuse-map level. | patch-delta | Append one sentence to the §5 prose between `:223` (after the reuse-map paragraph) explicitly citing salsa as the design language for query/invalidation vocabulary and tree-sitter as the precedent for tape-range reuse computation; reaffirm bbnf-built runtime mechanism. |
+| δ5 — DAP integration body routes to tranche I body | δ meta-grammar deferral | CONSOLIDATED-V8 §3 δ5; PASS-3-V8 §8 row 10 (K2) | Mark `dap/server.rs`, `dap/session.rs`, `dap/mapping.rs`, and `commands/debug.rs` as V1 surface, tranche I body deliverable. NOT V2. The binding contracts (snapshot identity, source spans) are V1 LOAD-BEARING; the protocol implementation is body work. Add carry-row to §8 with Receiver = SYNTHESIS / Tranche I body, Blocker = DAP downstream of LSP IDE integration, Receiving gate = DAP `bbnf-language-server` server starts under VSCode + emits one breakpoint event over a JSON parse — promotion-test, not landing-test. | §8 cross-pass hand-offs ledger at `:530` carries one row "CLI/LSP/DAP ownership" with Receiver = "SYNTHESIS / Tranche I" — already routes to tranche I, but the row does not separate the V1-binding-contract from the I-body deliverable, and does not name the breakpoint promotion gate. | patch-delta | Refine the `:530` row to separate the V1 binding contract (snapshot identity, tape source spans — V1 LOAD-BEARING) from the I-body deliverable (DAP server, session, mapping, CLI debug command — tranche I body); add the breakpoint promotion-test as the receiving gate. |
+| δ6 — LSP completion / semantic-tokens / imports body routes to tranche I body | δ meta-grammar deferral | CONSOLIDATED-V8 §3 δ6; PASS-3-V8 §8 row 11 (K3) | Mark LSP completion + semantic tokens + imports + incremental anchors + reparse plan as V1 surface, tranche I body deliverable. NOT V2. V1 entry surface is server + diagnostics + hover + definitions + stub for completion / semantic-tokens. Add explicit body-deliverable carry to §8 (or extend the existing CLI/LSP/DAP row). | §8 row at `:530` covers "CLI/LSP/DAP ownership" but does not enumerate the V1-entry vs. I-body split for LSP. §6 narrative at `:336-342` lists 13 LSP files without ranking V1-entry vs. I-body. | patch-delta | Same `:530` row extension covers LSP body deferral; append a clause naming the V1-entry surface (server + diagnostics + hover + definitions) and the I-body deliverable (completion + semantic-tokens + imports + incremental anchors + reparse-plan body). |
+| δ7 — incremental + reuse-map cookbook body routes to tranche I/J body | δ meta-grammar deferral | CONSOLIDATED-V8 §3 δ7; PASS-3-V8 §8 row 11 (K4 + K6 + K7) | Mark reuse-map semantics + cookbook content as V1 surface, tranche I/J body deliverable. NOT V2. V1 ships full-reparse on each edit + diagnostic emission + URL stubs; tranche I body delivers reuse-map computation + `(OldTapeId, NewTapeId)` pair semantics + edit-anchor algorithm; tranche J body delivers cookbook chapter content. | §8 carry-rows at `:532` and `:580` cover "incremental fallback gates by dataset" + "diagnostic ledger committed strings" but do not separate cookbook URL stubs (V1 LOAD-BEARING) from cookbook chapter content (J body). | patch-delta | Refine the `:532` row to name "tranche I body" as the receiver for reuse-map semantics + edit-anchor computation; refine the `:580` row to separate V1 URL-stub LOAD-BEARING from J-body cookbook chapter content. |
+
+## Out-of-scope routing
+
+The Phase 8.4 cohort distributes 41 candidates across four agents; PASS-3
+fold's scope is the 10 items above. The remainder route as follows:
+
+| Tier | Item | Routing |
+|---|---|---|
+| α | α1 Backend trait 5→2 method count + α7 BackendLowerer single-impl clarification | Phase 8.4 PASS-2 fold + SYNTHESIS Architecture amendment (Agent B + Agent D); ARCH §7.5 + PASS-2 §A surfaces |
+| α | α2 Type-system stack 7→5 mechanisms | SYNTHESIS Architecture amendment (Agent D); ARCH §8.2 surface |
+| α | α3 BIR alphabet 22→19 + α4 Map+HostCall merge + α6 Three-path generic validation 3→2 | Phase 8.4 PASS-1 fold (Agent A); PASS-1 §3 + §6 grammar + ARCH §7.1 / §7.2 surfaces |
+| α | α5 Rewrite-budget 4→3 | SYNTHESIS Architecture amendment (Agent D); ARCH §10.1 surface |
+| β | β1 PASS-1 + PASS-2 + ARCH §7.4 ledger surfaces | Phase 8.4 PASS-1 + PASS-2 + SYNTHESIS folds (Agent A + B + D); cross-coordinated single editorial decision, multiple write surfaces |
+| β | β3 OpenFrame-clone perf gate rename | Phase 8.4 SYNTHESIS fold (Agent D); MASTER-PLAN + PASS-2 surfaces |
+| γ | γ1 Closure-by-`&'i` borrow-checker leverage + γ2 Match exhaustiveness leverage + γ8 Generic monomorphisation leverage + γ9 Function-arrow-unification leverage | Phase 8.4 PASS-1 + PASS-2 folds (Agent A + B); PASS-1 §3 / PASS-2 §B surfaces |
+| γ | γ10 Cargo.toml workspace metadata cross-host | V2 carry only (MASTER-PLAN §24 amendment surface) |
+| δ | δ1 DK13 rank-N body + δ2 Schema-mining miner telemetry + δ3 CHR-improvement body + δ4 GADT V2 amendment | Phase 8.4 PASS-1 fold (Agent A); routes to D body / V2 amendment |
+| δ | δ8 SOTA-throughput body + δ9 Function composition library + δ10 CHR-improvement V2 carry | Phase 8.4 SYNTHESIS fold (Agent D); MASTER-PLAN §24 surface |
+| ε | ε1-ε5 hygiene + carry additions | Phase 8.4 PASS-2 + SYNTHESIS folds (Agent B + D) |
+
+## Routing summary
+
+| Surgery class | Items |
+|---|---|
+| patch-delta | β1, β2, γ3, γ4, γ5, γ6, γ7, δ5, δ6, δ7 |
+| out-of-scope | tier α (architectural cardinality), β1 cross-doc spans, β3, γ1/γ2/γ8/γ9/γ10, δ1-δ4 + δ8-δ10, ε1-ε5 |
+
+## Acceptance gates carried into the amendment commit
+
+- β1 closed: `rg -n 'BBNF1004' restart/audit/pass-3-runtime/PASS-3.md` returns zero (numeric alias retired); `rg -n 'BBNF-LOOKBEHIND-WIDTH' restart/audit/pass-3-runtime/PASS-3.md` returns positive (alphabetic single-namespace stands).
+- β2 closed: `rg -n 'BBNF-LOCAL-EQUALITY-ANNOTATION' restart/audit/pass-3-runtime/PASS-3.md` returns positive (V1-emitted phrasing); `rg -n 'reserved.*BBNF-LOCAL|reserved for V2' restart/audit/pass-3-runtime/PASS-3.md` returns zero.
+- γ3 / γ4 / γ5 / γ6 / γ7 closed: `rg -n 'thiserror|miette|tower-lsp|dap-types|syn::visit|salsa' restart/audit/pass-3-runtime/PASS-3.md` returns positive on each token (host-leverage delegations cited).
+- δ5 / δ6 / δ7 closed: `rg -n 'tranche I body|tranche I/J body|I.W' restart/audit/pass-3-runtime/PASS-3.md` returns positive (tranche-body routing); `rg -n 'V2 amendment|V2 deferral|deferred to V2' restart/audit/pass-3-runtime/PASS-3.md` returns zero (Tier δ does not collapse to V2 deferral language for these three items).
+- Substance unchanged: every existing PASS-3 §2 / §3 / §5 / §6 / §6b / §8 sentence retains its prior wording where unmodified; surgeries are additive sentences + targeted in-place rewrites at the §6b numeric-alias row + the §8 carry-row refinements.
+- Voice unchanged: calibrated, citation-laden, no metalanguage, no V2 deferral language for tranche-body items.
+
+The amendment commit lands these surgeries verbatim against PASS-3.md; this
+classification file is preserved as evidence that V8 baseline + Phase 8.3.1
+GADT V1 fold were inspected before the Phase 8.4 PASS-3 simplification fold.

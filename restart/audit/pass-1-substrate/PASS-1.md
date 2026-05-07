@@ -324,3 +324,27 @@ The independent-proceed wording is retired: any prior text framing PASS-2 and PA
 No legacy closure code is inherited by default. The closure beta-reduction implementation cited in §6 is research signal: it documents prior failure modes and ratifies the compile-time-only beta-reduction rule, but the greenfield reuse path is a fresh spec plus a verification gate, not a port. Greenfield grammar/closure work begins from the §6 closure-semantics rule and the BBNF formal grammar; the existing module is contestable until ratified.
 
 OpenFrame substrate is deletion-path archaeology. The §2 Backend IR ownership table forbids clone-stack OpenFrames and the §2 builder-frame replacement names the positive surface (generated BIR builder frames keyed by `RuleId`/`NodeId` plus `TapeBuilder` checkpoints). No public substrate API and no generic runtime crate carries an `OpenFrame` type after restart.
+
+## §11 Phase 8.4 Simplification Fold Ledger
+
+Phase 8.4 absorbs the V8 simplification candidates routed to PASS-1 per `restart/audit/hardening/HARDENING-CONSOLIDATED-V8.md` §3 and `restart/audit/hardening/HARDENING-PASS-1-V8.md` §7. Classification follows the verify-then-patch discipline — full-author surfaces a fresh paragraph, patch-delta amends an extant clause in place, verify-only-stub records that the amendment lands elsewhere with PASS-1 cross-references intact.
+
+| V8 # | Tier | Surface | Classification | Disposition |
+|---|---|---|---|---|
+| α3 | architectural cardinality | `§2:41` BIR variant inventory; ARCH §7.2 owns the alphabet | verify-only-stub | PASS-2 + SYNTHESIS author the 22 → 19 reduction; PASS-1 §2 cross-references the post-fold variant set without re-stating it |
+| α4 | architectural cardinality | `§2:24, 35, 129` Grammar-IR `Map` + `HostCall` merge into one `Call` variant with `kind: Map \| Host` discriminator | patch-delta | §2 grammar-production line + schema-floor row collapse; §3 multi-function chain semantics simplifies; §6 grammar production unchanged at the surface |
+| α6 | architectural cardinality | `§3:81` three-path generic-cycle validation collapses to two-path (annotation OR rejection); structural-decreasing-argument detector retires from V1 | patch-delta | §3 generic-rule typing clause amends in place; `BBNF-GENERIC-CYCLE` diagnostic message at §6b stays |
+| β1 | diagnostic vocabulary | `§6b:107-122, §3:154, §6:257, §6:259` retire `BBNF1004` / `BBNF1201` / `BBNF1302` / `BBNF1401` / `BBNF2103` / `BBNF2104` numeric aliases; keep human-readable codes only | patch-delta | §6b ledger collapses to single-namespace alphabetic codes; `error/codes/` rationale at §3 simplifies; lookbehind clause at §6 cites `BBNF-LOOKBEHIND-WIDTH` only; chain-step clause at §6 cites `BBNF-CHAIN-STEP` only |
+| γ1 | host-language leverage | `§3:75` closure-capture-by-`&'i` rule | patch-delta | rustc's borrow checker is the V1 Rust correctness gate; bbnf parse-time check is the better-error UX layer; PASS-1 reframes without reinvention |
+| γ2 | host-language leverage | `§3:77, §6b BBNF-PATTERN-NONEXHAUSTIVE` match exhaustiveness | patch-delta | rustc's exhaustiveness check on generated source is the correctness gate; bbnf's `BBNF-PATTERN-NONEXHAUSTIVE` localises the diagnostic against grammar-aware variant names |
+| γ3 | host-language leverage | `§6b:107` diagnostic ledger introduction | patch-delta | bbnf binds `thiserror` for derive-side enum + `miette` for rendering; bbnf's diagnostic strings become inputs to those crates rather than bbnf-invented machinery |
+| γ8 | host-language leverage | `§3:81` generic-rule monomorphisation | patch-delta | rustc monomorphises generated `fn parse_<rule><Args>` impls; bbnf's `(RuleId, TypeArgs)` validation surfaces as a better-error ahead of rustc's `recursion_limit` exhaustion |
+| γ9 | host-language leverage | `§3:75` `FnType` first-order unification | patch-delta | rustc's HM unification on the generated source is the correctness gate; bbnf's pre-emission unification localises diagnostics |
+| δ1 | tranche-body routing | `§3:73, 81` DK13 rank-N body | patch-delta | rank-1 inference is V1; rank-N body lands at tranche D (D.W3 / D.W6 per MASTER-PLAN); the V1 surface accepts explicit `forall` annotations now |
+| δ2 | tranche-body routing | `§3:79` schema-mining miner telemetry | patch-delta | named-schema synthesis through HM is V1; telemetry-driven refinement lands at tranche D body |
+| δ-residue | tranche-body routing | `§6:251, 253` closure capture-by-move + `Fn*` trait split + or-patterns + match guards | patch-delta | retire residual "defer to V2 amendment" phrasing in favour of tranche-body routing; the V1 surface admits `&'i` capture only and the extension surface lands at tranche D body |
+| ε4 | hygiene | `§3` e-graph rewrite-category cardinality | verify-only-stub | ARCH §10 owns the cardinality citation; PASS-1 cites without restating |
+
+The §3 type-system algorithm sentence lands a per-layer V1-active vs substrate-only legibility table per V8 candidate I-1 that consolidates the seven-layer prose into a tighter form; this is patch-delta to §3 line 73 and runs alongside the host-leverage reframings.
+
+Phase 8.4 absorbs every PASS-1-routed candidate without retracting a lock; the simplifications honour the grammar-authoritative + meta-grammar discipline and route every aspirational item through a named tranche-body receiver.

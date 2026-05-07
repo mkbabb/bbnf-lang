@@ -43,6 +43,15 @@ Every claim, gate, decision, surgery, verdict, and proposal in the target carrie
 
 Verdicts: **KEEP** (pros outweigh cons; challenge defeated) / **REINVENT** (pros real but current shape carries surplus con; redesign named) / **DISCARD** (cons outweigh pros; challenge wins; replacement named).
 
+**V8+ adds three simplification verdicts** (per Lens I/J/K):
+- **SIMPLIFY** (Lens I) — apparatus drops without loss; cite what is removed and what is kept.
+- **CONSOLIDATE** (Lens I) — merge with adjacent facility; cite the merge target.
+- **LEVERAGE** (Lens J) — delegate to host language; cite the host facility.
+- **HYBRID** (Lens J) — delegate where possible; bbnf-author the remainder; cite both.
+- **LOAD-BEARING** (Lens K) — V1 mandatory for meta-grammar correctness; cannot defer.
+- **ASPIRATIONAL** (Lens K) — V1 surface; tranche-deferrable body; cite tranche receiver.
+- **SPECULATIVE** (Lens K) — V2+; cite the V2 amendment receiver.
+
 A target where every item lands KEEP without challenge is fault — the audit failed to challenge. A healthy target has mixed verdicts (60-80% KEEP fraction) with steelmanned challenges. KEEP-without-challenge in the per-item table is per-row fault.
 
 ## Lanes
@@ -103,6 +112,88 @@ The user-stated discipline:
 - **Architectural transpositions** for elegance / simplicity / performance are mandatory
 
 For each violation: surface + surgery.
+
+### Lens F — LLM bias (V5+ cycles only; 8-lens spec)
+
+Surface and challenge each pathology class:
+- **Hedging where commitment is needed** — "may", "should", "consider", "potentially" in clauses that ought to be settled commitments.
+- **Reference-stuffing** — citing N SOTA projects without integrating their lessons; long lists where one or two would integrate better.
+- **Pseudo-precise numerics** — exact numbers without provenance, without measurement, without owner. Acceptable when scoped to a tranche gate; fault when free-floating.
+- **Unfalsifiable claims** — "idiomatic", "elegant", "sensible", "production-ready" used as primary justification rather than as decoration on top of mechanical evidence.
+- **Apologising / softening** — "we hereby" instead of "we", "hereupon" used purely ornamentally rather than to carry temporal logic.
+- **Verbal complexity hiding semantic ambiguity** — long sentences that can be parsed two ways; nominalisations where verbs commit.
+- **Buzzword reliance** — "zero-cost", "monomorphic", "type-driven", "SIMD-first", "first-class" without naming the actual mechanism.
+- **Confident generality** — "the latest standard" / "the most modern" / "the canonical" used without naming the specific version, paper, or commit.
+
+For each instance: cite path:line + the pathology subclass + the rewrite that closes it. The lens does not penalize ornamental archaic diction (it is the user's deliberate voice per `restart/README.md` §13) but does penalize ornament substituted for commitment.
+
+### Lens G — Overfitting (V5+ cycles only)
+
+The architecture may be over-fit to the LLM's training distribution or to conversation-prompt history rather than to bbnf's actual constraints. Pathologies:
+- **SOTA-only justification** — architectural choices defended only by "SOTA does it this way".
+- **Pattern-lift wholesale** — "we'll do what egg does" / "we'll do what rust-analyzer does" without sensitivity to where bbnf's design problem differs.
+- **Missing alternative-considered text** — when only one design is described in detail and rejected alternatives are absent.
+- **Mimetic convergence with a specific SOTA project** — surface where convergence is principled (the design problem genuinely matches) versus mimetic (the LLM defaulted to a familiar shape).
+- **Constraint inheritance from training corpus** — assumptions imported from common architectures that may not hold for bbnf.
+
+For each instance: cite the architectural decision + the lifted/inherited assumption + the bbnf-specific reason (or counter-reason) for adopting it.
+
+### Lens H — Hallucination + provenance gaps (V5+ cycles only)
+
+Pathologies:
+- **Non-existent papers / codebases** — citations the LLM may have confabulated.
+- **Wrong-line citations** — `path:line` references that don't carry the claimed content.
+- **Benchmark numbers without provenance** — performance claims that lack `restart/corpora/SOTA.md` or equivalent corpus citation.
+- **Assertions about external systems unverified** — claims about specific implementation details require source citation.
+- **Derived claims from unstated premises** — chains of reasoning where a step depends on an unstated assumption.
+
+For each instance: cite path:line + the unverified claim + the proposed verification (cite a source, mark TBD, or remove).
+
+### Lens I — Contrivance / over-engineering (V8+ cycles only)
+
+bbnf is a meta-grammar that targets extant languages. Architectural facilities that exceed the meta-grammar mandate are contrivance. Surface:
+- **Speculative generality** — trait surfaces, type parameters, or extension points that admit hypothetical impls without V1 use. (Counter-example: the Backend trait passes — V1 RustBackend; V2 WasmBackend/TsBackend named, deferred — load-bearing because deferral is an actual user-adjudicated commitment.)
+- **Cardinality bloat** — variant counts (BIR variants, lock counts, directive counts, diagnostic-code counts) that exceed what the load-bearing use cases require. Audit each for distinct lowering / distinct semantics; flag semantically redundant variants.
+- **Premature optimization** — cost-model decisions, e-graph rewrite categories, profile-guided specializations baked at a layer where measurement should drive. Flag where the architecture commits to mechanism before it has measurement.
+- **Double-tracking** — two facilities that solve the same problem (e.g., separate Pratt detection + cost-model decision; both arrived at by SIMD detection). Flag where consolidation collapses without loss.
+- **Unused parameter axes** — type parameters, lifetime parameters, generic constraints that admit values not load-bearing for V1.
+- **Apparatus chains** — multi-pass machinery where a single pass would suffice (e.g., 7 e-graph rewrite categories — does each load-bear, or are some ceremony?).
+
+For each instance: cite path:line + propose simplification + name what is lost (often: nothing). Verdict: SIMPLIFY (drop the apparatus), CONSOLIDATE (merge with adjacent facility), or KEEP (load-bearing under steelman).
+
+### Lens J — Host-language leverage (V8+ cycles only)
+
+bbnf targets Rust V1 (and WASM + TS deferred V2); the host languages already provide rich facilities. Audit places where the architecture reinvents what the host already provides cleanly:
+- **Memory management** — Rust's borrow checker + lifetime system handles closure-capture lifetimes, arena-bounded references, no-clone discipline. WASM's linear memory handles allocation differently. TS's GC handles it transparently. Flag where bbnf invents its own lifetime story when host-language story suffices.
+- **Generics + monomorphisation** — Rust monomorphises; TS erases; WASM has no generic surface. Flag where the architecture commits to a strategy that is a Rust default (or a TS default, or a WASM constraint) rather than an architectural choice.
+- **Type checking** — host languages already type-check. bbnf type-checks at codegen; host language type-checks at compile. Flag where the two overlap (redundant work) or fail to compose (gap).
+- **Concurrency / async** — host languages have established models. Flag where bbnf proposes its own.
+- **Pattern matching** — Rust has match; TS has switch + destructuring; WASM has nothing built-in. Flag where bbnf's match expressions in `@host fn` body fail to leverage host-match.
+- **Standard library parity** — Rust's `std::iter`, TS's array methods, WASM's lack thereof. Flag where bbnf invents iterator abstractions instead of leveraging host iterators.
+- **Diagnostic / error infrastructure** — Rust's `thiserror` / `anyhow`, TS's Error subclasses. Flag where bbnf invents its own error machinery.
+
+For each instance: cite path:line + propose host-leverage + name the consequence for the other host languages (the pattern often differs across hosts; flag where the cross-host story diverges). Verdict: LEVERAGE (delegate to host), HYBRID (delegate where possible; bbnf-author the remainder), or KEEP (architectural reason to not leverage; load-bearing under steelman).
+
+### Lens K — Meta-grammar discipline (V8+ cycles only)
+
+bbnf is a meta-grammar that generates parsers for extant target languages. It is not itself a runtime; it generates code that runs in a host runtime. Audit architectural complexity that exceeds this mandate:
+- **Generating a language vs generating parsers** — the distinction matters. The current architecture sometimes blurs them. Flag where bbnf invents semantic apparatus that belongs in the target language, not the meta-grammar.
+- **Self-hosting** — bbnf's own grammar is bbnf-generated. Necessary discipline; KEEP. But: does self-hosting require apparatus beyond what target-grammar generation requires? Flag where self-hosting drives complexity that target-grammar use cases do not require.
+- **Runtime complexity** — visitors, paths, format() — runtime conveniences for users of generated parsers. Flag where some are V1-mandatory but could land V2 without architectural cost (e.g., format() is V1; debugger DAP integration is V2 — verify the boundary holds).
+- **Optimization complexity** — CSP + e-graph + cost models. Flag where the full apparatus is required only for the SOTA-throughput aspiration (Lock 8) rather than meta-grammar correctness. The optimization apparatus may be deferrable to specific tranches.
+- **Telemetry-driven schema** — the user mandate. Audit whether the schema-mining miner load-bears, or whether HM-derived schema is sufficient for V1. Surface the actual telemetry signal source.
+
+For each instance: cite path:line + classify (load-bearing for meta-grammar correctness / aspirational for Lock 8 / speculative beyond meta-grammar) + propose the V1 boundary. Verdict: LOAD-BEARING (V1; cannot defer), ASPIRATIONAL (V1 surface; tranche-deferrable for body), or SPECULATIVE (V2+).
+
+### Cycle-specific lens application
+
+| Cycle | Lenses applied | Source |
+|---|---|---|
+| V1-V4 | Lanes 1-9 (standard 9-lane audit) | This prompt §Lanes |
+| V5-V7 | Lanes 1-9 + Lens F + Lens G + Lens H | This prompt §Lens F + §Lens G + §Lens H |
+| V8+ | Lanes 1-9 + Lens F + Lens G + Lens H + Lens I + Lens J + Lens K | All of the above |
+
+The hardening orchestrator (`HARDENING-ORCHESTRATOR.md`) selects the lens set per cycle.
 
 ## Output Contract
 

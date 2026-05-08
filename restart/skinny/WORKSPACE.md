@@ -1,0 +1,613 @@
+# Skinny Spec — Workspace + LOC Budget
+
+## 0. Purpose And Boundary
+
+This document specifies the workspace shape and LOC budget for the **JSON skinny**: a focused subset of the V1 architecture sufficient to validate the SOTA-viability premise before tranches A-J commit. The skinny exists to take *one* grammar (JSON) end-to-end through compiler -> codegen -> runtime -> bench, measure against `sonic-rs` / `simd-json`, and update SOTA-beat probabilities with measurement-grounded evidence.
+
+The skinny is buildable in 2-4 weeks of focused work or it is not skinny. This file binds:
+
+- The crate set (10 crates, no more).
+- Per-crate LOC budgets (handwritten only; generated under `runtime/src/grammars/json/` is excepted from per-file caps but tracked under a separate generated-budget row).
+- The workspace TOML.
+- The directory layout.
+- The build-and-test commands.
+- The `xtask` runner that replaces a full `bbnf-cli`.
+- The stub policy for skipped V1 crates.
+- The migration parity matrix mapping skinny crates to V1 destinations.
+- The build-time targets and the dev-iteration discipline.
+- The explicit list of what the skinny omits and the impact of each omission on the SOTA-viability test.
+
+Not in this file: substrate internals (`SUBSTRATE.md`), compiler pipeline internals (`COMPILER.md`), bench thresholds and reproducibility schema (`BENCH.md`).
+
+## 1. Skinny Crate Set
+
+Exactly ten crates plus `xtask`. The list is closed. Adding another crate is a scope amendment, not a workspace change.
+
+| # | Crate | Status | Role in skinny |
+|---|---|---|---|
+| 1 | `bbnf` | partial | Public facade. `Grammar` trait, borrowed `parse`, `parse_in`, and a cold `parse_owned` wrapper for JSON only. No LSP types; no `path` re-exports; minimal `Diagnostic`. |
+| 2 | `grammar` | partial | BBNF parser sufficient for `grammars/json.bbnf`. Subset of the six-directive surface: only `@import` (and trivially `@token`); the main JSON grammar is host-fn-free by deliberate skinny deviation; no `@error(recover)`, no `@layout`, no `@pretty`. Metadata schema validation. |
+| 3 | `ir` | partial | Grammar IR + Backend IR variants JSON exercises. Minimal pretty-printer. ID arenas. Validate. |
+| 4 | `passes` | partial | `normalize`, `layout/types` (HM-only — no DK13, no GADT, no OutsideIn), minimal `shapes`, inlined recognizer-curation; bridge stubs only. Heaviest skinny crate by LOC because three would-be-separate concerns share it. |
+| 5 | `codegen` | partial | `lower::bir` + `rust` backend. Templates for the JSON runtime. No `simd_cfg` directive emission; `simd-scan` dispatch is unconditional with scalar fallback wired in. No WASM, no TS. |
+| 6 | `runtime` | partial | `tape`, `document`, `builder`, minimal `visitor`. The generated JSON parser lands at `runtime/src/grammars/json/`. |
+| 7 | `parse-that-regex` | partial | Basic regex sufficient for JSON's string-escape and number scanners. No Unicode class algebra. Subset HIR; NFA / DFA / VM; literal helpers. |
+| 8 | `simd-scan` | full | Carry-over from extant `crates/simd-scan` (2,607 LOC observed; budget allows ~3,500 with minor expansion for the tape integration contract). NEON + scalar are mandatory; AVX2 stays available; AVX512 / WASM kernels are dead code in the skinny. |
+| 9 | `bbnf-bench` | partial | Criterion harness, reproducibility schema emitter, parity matrix runner, and the ≤500 LOC Track 2 handwritten substrate probe. Owned by BENCH.md; this slice budgets its LOC only. |
+| 10 | `test-fixtures` | partial | JSON corpora (`twitter`, `citm`, `canada`, plus malformed minicorpus) + manifest. |
+|  + | `xtask` | dev | Tiny binary (~250 LOC) replacing `bbnf-cli` for the skinny: `regen-json`, `check-json`, `lint-loc`, `bench-json`. |
+
+### 1.1 V1 Crates Skipped In The Skinny
+
+| Skipped V1 crate | Skinny disposition | Rationale |
+|---|---|---|
+| `bbnf-cli` | Replaced by `cargo test` and `xtask`. | Full CLI argument parsing, command discovery, workspace traversal, debug subcommands are scope creep for a JSON-only skinny. |
+| `bbnf-language-server` | Skipped entirely. | LSP / DAP / incremental parse cannot influence the SOTA-beat measurement. Carried into V1 at tranche I. |
+| `vm` | Skipped entirely. | The VM is a debug-replay validator for BIR. The skinny validates BIR by running the Rust lowerer's output against the test-fixtures corpus directly. Carried into V1 at tranche E. |
+| `host` | Inlined as a 50-LOC private module in `bbnf::host_stubs`. | The main JSON grammar has no `@host fn` calls. BENCH.md still emits a one-host-fn probe to bound the `CallHost` registry cost before the skinny claims the cut is FAITHFUL. |
+| `cost-model` | Skipped entirely. | The skinny's optimization choices are statically wired in `passes` (use SIMD scan for JSON structural; use simple recursive descent for value parse). BENCH.md bounds this cut with alternate-plan probes; a probe win routes to V1 H.W2/H.W3 rather than being called free. |
+| `egraph` + `egraph-derive` | Skipped entirely. | No e-graph rewrites in the skinny; `passes::normalize` is plain. |
+| `csp-solver` | Skipped entirely. | HM-only inference does not need a CSP. JSON's grammar is monomorphic. |
+| `parse-that` | Skipped (legacy combinator core). | Not needed for JSON. The regex sub-crate (`parse-that-regex`) suffices. |
+| `path` / `path-core` / `path-ts` | Skipped entirely. | Path DSL is irrelevant to the SOTA-beat test. JSON access in benches uses the generated `Document` view directly. |
+| `error` | Inlined as a 100-LOC private module in `bbnf::diagnostic`. | Diagnostics in the skinny are simple `(span, code, message)`. The full `error` crate exists in V1 to share this between `bbnf` and the LSP; the skinny has no LSP. |
+| `source` | Inlined as a 150-LOC private module in `passes::source_stub`. | Span + file ID + slice loader; no rope, no include graph (JSON imports nothing), no snapshots. |
+| `pipeline` | Inlined as a 200-LOC orchestrator in `xtask::regen` + `bbnf::compile`. | The pipeline crate carries cache keys, scheduler topology, and stage DAGs in V1. The skinny pipeline is linear and compile-time fixed: `parse -> validate -> infer -> mine -> lower -> emit`. No caching. |
+
+The skinny's compatibility shims (`source_stub`, `host_stubs`, `diagnostic`) are intentionally named with a `_stub` or domain-suffix to make their migration to dedicated crates mechanical when the skinny graduates.
+
+## 2. Per-Crate LOC Budget
+
+The handwritten LOC budget for the skinny is **31,400 LOC** across ten crates. Generated output (`runtime/src/grammars/json/**/*.rs`) is budgeted separately at **≤ 4,000 LOC** for JSON, matching PASS-2's KEEP-MODIFY observation that the current `core/src/grammar/generated/json.rs` lands at 3,500 LOC plus 2 percent (`restart/audit/pass-2-codegen/PASS-2.md:432`).
+
+| Crate | Skinny LOC | Skinny subset rationale | Full V1 estimate (these crates) |
+|---|---:|---|---:|
+| `bbnf` | 600 | Facade with `Grammar` trait, borrowed `parse`, `parse_in`, cold `parse_owned` wrapper outside the SOTA path, inlined `Diagnostic` (~100 LOC) and `host_stubs` (~50 LOC). No `path` re-export. No metadata-only-change cache. | 1,500 |
+| `grammar` | 3,500 | BBNF parser sufficient for `json.bbnf`, AST, validate, `metadata` schema with one grammar entry, bootstrap parse path. `@import` honored; the other five directives parse to a no-op trapdoor that errors with `BBNF-DIRECTIVE-NOT-IN-SKINNY`. | 10,000 |
+| `ir` | 2,500 | Grammar IR variants JSON uses (`Seq`, `Alt`, `Repeat`, `Optional`, `Terminal`, `RegexProgram`, `RuleRef`); BIR variants the codegen consumes (`Match`, `Alt { mode }`, `Loop`, `CallRule`, `RegexProgram`, `SimdScan`, `Return`); IDs; validate; pretty. No `LayoutScope`, no `CallHost`, no Pratt nodes. | 8,000 |
+| `passes` | 6,000 | `normalize/` (~1,000), `layout/types/` (HM-only) (~2,500), `shapes/` minimal (~800), inlined recognizer-curation under `recognizers/` (~1,200), `bridge/` stubs (~200), `source_stub/` (~150), test plumbing (~150). Heaviest skinny crate; this is the contradiction-flagged row — see §2.1. | 25,000 |
+| `codegen` | 4,500 | `lower/` (~1,500), `rust/` backend (~2,000), `templates/json` (~700), `verify/` regen-equality (~300). No `wasm/`, no `simd/` directive emission (always-on dispatch in `runtime`), no Pratt templates. | 12,000 |
+| `runtime` | 4,000 | `tape/` (~1,500), `document/` (~800), `builder/` (~600), `visitor/` minimal (~400), `support/` (~300), `grammars/json/` skeleton (~400, plus the generated body which is not handwritten). | 8,000 |
+| `parse-that-regex` | 4,000 | `regex/hir` subset (~1,000), `regex/nfa` (~1,000), `regex/dfa` (~1,000), `regex/vm` (~700), `literal/` (~300). No `unicode/` algebra, no lazy-DFA cache policy. | 10,000 |
+| `simd-scan` | 3,500 | Carry over current 2,607 LOC unchanged plus ~900 LOC for the tape-integration contract (`StructuralAlphabet` constants emitted by `codegen`, dispatch handle wired through `runtime`). | 3,500 |
+| `bbnf-bench` | 2,000 | Criterion harness (~600), reproducibility schema serializer (~300), parity matrix runner (~300), masking probes (~200), Track 2 handwritten parser (≤500). Exact internal split owned by BENCH.md. | 4,000 |
+| `test-fixtures` | 800 | JSON corpora pointers + checksums (~200), parity matrix manifest (~300), corpus loader (~300). Twitter / citm / canada are not committed as binary; they are downloaded by the loader and checksummed against the manifest. | 1,500 |
+| **Skinny total (handwritten)** | **31,400** | | **~83,500** |
+| Generated `runtime/src/grammars/json/` | ≤ 4,000 | PASS-2 baseline + 2 percent (`PASS-2.md:432`). Tracked separately; not counted in handwritten LOC. | ≤ 4,000 |
+| `xtask` (dev) | ~250 | Minimal subcommand binary; not counted in skinny crate LOC. | (no V1 equivalent — replaced by `bbnf-cli`) |
+
+### 2.1 The `passes` Contradiction
+
+`passes` carries 6,000 LOC in the skinny because three V1-separate concerns (HM type inference, shape mining, recognizer curation) live there together, and the V1 budget for `passes` is 25,000 LOC. The 6,000-LOC skinny budget is achievable if and only if:
+
+1. **HM-only.** No DK13 algorithmic completeness, no GADT pattern refinements, no OutsideIn implication constraints. Plain Hindley-Milner with let-polymorphism. JSON's grammar is monomorphic; this is sufficient.
+2. **One-shot recognizer curation.** No e-graph rewrites; no CSP narrowing; no cost-model selection. A hand-written rule decides "use SIMD scan for JSON structural; use the regex VM for string escapes" and lowers it directly.
+3. **Shapes are observational, not optimizing.** `shapes/` produces side tables consumed by `codegen::lower` only; it does not feed back into `passes::layout`.
+
+If any of these three constraints is relaxed, the 6,000 LOC budget cannot hold and the skinny scope itself is wrong. **Flag this as a contradiction signal**: a `passes` budget overrun is evidence that the SOTA-viability test cannot run cheaply and the V1 spec needs partial implementation to validate the SOTA-beat claim.
+
+## 3. Workspace `Cargo.toml`
+
+```toml
+[workspace]
+resolver = "2"
+members = [
+  "crates/bbnf",
+  "crates/grammar",
+  "crates/ir",
+  "crates/passes",
+  "crates/codegen",
+  "crates/runtime",
+  "crates/parse-that-regex",
+  "crates/simd-scan",
+  "crates/bbnf-bench",
+  "crates/test-fixtures",
+  "xtask",
+]
+
+[workspace.package]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/mkbabb/bbnf-lang"
+rust-version = "1.78"
+
+[workspace.dependencies]
+# Skinny-internal path dependencies. Names mirror the V1 published-name
+# convention so the skinny -> V1 graduation does not rename consumers.
+bbnf            = { path = "crates/bbnf" }
+bbnf-grammar    = { path = "crates/grammar",         package = "grammar" }
+bbnf-ir         = { path = "crates/ir",              package = "ir" }
+bbnf-passes     = { path = "crates/passes",          package = "passes" }
+bbnf-codegen    = { path = "crates/codegen",         package = "codegen" }
+bbnf-runtime    = { path = "crates/runtime",         package = "runtime" }
+bbnf-regex      = { path = "crates/parse-that-regex", package = "parse-that-regex" }
+bbnf-simd-scan  = { path = "crates/simd-scan",       package = "simd-scan" }
+bbnf-bench      = { path = "crates/bbnf-bench" }
+bbnf-fixtures   = { path = "crates/test-fixtures",   package = "test-fixtures" }
+
+# Third-party.
+criterion       = { version = "0.5", features = ["html_reports"] }
+serde           = { version = "1", features = ["derive"] }
+serde_json      = "1"
+sha2            = "0.10"
+toml            = "0.8"
+anyhow          = "1"
+thiserror       = "1"
+
+[workspace.metadata.bbnf]
+generated_root = "crates/runtime/src/grammars"
+fixture_root   = "crates/test-fixtures/corpus"
+profile        = "balanced"
+host_registry  = "skinny-none"
+
+[workspace.metadata.bbnf.recognizers]
+pratt           = "off"
+simd            = "json-structural-always"
+literal_trie    = "off"
+regex_prefilter = "json-regex-only"
+
+[workspace.metadata.bbnf.host_fns]
+default_registry    = "host::primitives"
+allow_unregistered  = false
+
+[workspace.metadata.bbnf.grammars.json]
+source       = "grammars/json.bbnf"
+package_name = "json"
+features     = []
+output_dir   = "crates/runtime/src/grammars/json"
+
+[workspace.metadata.bbnf.grammars.json.runtime]
+mode             = "tape-direct"
+document_view    = true
+owned_document   = false  # borrowed SOTA path; parse_owned is a cold facade wrapper.
+
+[workspace.metadata.bbnf.grammars.json.host]
+registry                 = "skinny-none"
+allow_declaration_crate  = false
+declaration_crate_reason = ""
+
+[workspace.metadata.bbnf.grammars.json.optimization]
+profile          = "balanced"
+recognizers      = "skinny-json-curated"
+pratt            = "off"
+simd             = "json-structural-always"
+layout           = "hm-only"
+regex_prefilter  = "json-regex-only"
+
+[workspace.metadata.bbnf.grammars.json.codegen]
+rust                  = true
+wasm                  = false
+generated_loc_budget  = 1.02   # PASS-2.md:432 (json baseline 3,500; +2%).
+
+[workspace.metadata.bbnf.grammars.json.fixtures]
+valid    = ["crates/test-fixtures/corpus/json/valid"]
+invalid  = ["crates/test-fixtures/corpus/json/invalid"]
+perf     = ["crates/test-fixtures/corpus/json/perf"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Profiles. The skinny carries three: dev (fast iteration), release (bench
+# inheritance baseline), bench (samply-resolvable publish-grade numerics).
+# More profiles are V1 territory; the skinny does not need ax-iter / bench-iter
+# / profiling-prep splits because there is no LTO-vs-no-LTO trade-off study
+# inside the skinny window.
+# ─────────────────────────────────────────────────────────────────────────────
+
+[profile.dev]
+opt-level     = 0
+debug         = "line-tables-only"
+incremental   = true
+codegen-units = 16
+
+[profile.release]
+opt-level         = 3
+lto               = "thin"
+codegen-units     = 1
+debug             = true   # samply-symbol-resolution rule: DWARF survives.
+strip             = false
+split-debuginfo   = "packed"
+
+[profile.bench]
+inherits          = "release"
+opt-level         = 3
+lto               = "thin"
+codegen-units     = 1
+debug             = true   # Required for samply / instruments symbol
+                           # resolution. Per the user's
+                           # samply-symbol-resolution rule, samply is run
+                           # interactively (`samply record <bin>`); no
+                           # `--save-only` because lazy symbol resolution
+                           # depends on debug=true + DWARF that survives
+                           # the link step.
+strip             = false
+split-debuginfo   = "packed"
+```
+
+### 3.1 Profile Discipline
+
+The skinny's `release` and `bench` profiles both set `debug = true` and `strip = false` so that `samply record target/bench/deps/json_parity-*` resolves frame symbols correctly. This is non-negotiable per the user's `samply-symbol-resolution` rule: stripped binaries produce address-only stacks that hide whatever pathology the SOTA-beat measurement is supposed to surface (the prior 86.07 percent `Vec<OpenFrame>::clone` pathology cited at Lock 1 was only diagnosable because DWARF survived).
+
+`thin` LTO (not `fat`) is intentional: the skinny budget cannot absorb the multi-minute fat-LTO link cost on every iteration. If the parity rows land within the SOTA-beat envelope under `thin` LTO, fat-LTO is not the determining factor; if they do not, the V1 plan owns the fat-LTO study.
+
+`codegen-units = 16` for `dev` keeps the dev-build incremental fast (no proc-macro hell, no fat link). The user's `build-infra-first` rule applies: dev iteration speed beats marginal release-time gains.
+
+## 4. Directory Layout
+
+Each crate honors Lock 13's 4-10 immediate child-count rule under `src/`. Any directory with fewer than 4 or more than 10 children is a fault.
+
+### 4.1 `crates/bbnf/`
+
+```text
+bbnf/src/
+  lib.rs
+  prelude.rs
+  parse/                   # parse, parse_in, cold parse_owned entry points.
+  document/                # re-exports of runtime::document::Document.
+  diagnostic/              # inlined Diagnostic { span, code, message }.
+  metadata/                # workspace.metadata.bbnf reader.
+  host_stubs/              # 50-LOC stub for runtime/codegen import compatibility.
+```
+
+Six children. Within Lock 13.
+
+### 4.2 `crates/grammar/`
+
+```text
+grammar/src/
+  lib.rs
+  ast/                     # BBNF AST types.
+  parse/                   # bootstrap parser.
+  validate/                # semantic validation; rejects non-skinny directives.
+  metadata/                # workspace.metadata.bbnf schema validator.
+  bootstrap/               # bootstrap entrypoints used by xtask.
+```
+
+Five children.
+
+### 4.3 `crates/ir/`
+
+```text
+ir/src/
+  lib.rs
+  grammar_ir/              # subset variants for JSON.
+  backend_ir/              # subset BIR alphabet.
+  side_tables/             # Layout, Shape, Recognizer.
+  validate/
+  pretty/
+```
+
+Five children.
+
+### 4.4 `crates/passes/`
+
+```text
+passes/src/
+  lib.rs
+  normalize/               # alpha-rename, dead-rule elim.
+  layout/                  # HM-only inference + layout lowering.
+    types/                 # Algorithm W; V1 wraps this as a layout subroutine.
+  shapes/                  # observational shape mining.
+  recognizers/             # inlined recognizer curation (SIMD-scan + regex).
+  bridge/                  # stubs; populated only enough to compile.
+  source_stub/             # 150-LOC source-file/span shim.
+```
+
+Six children. The `bridge/` directory is intentionally vestigial in the skinny; it exists so the V1 `passes::bridge` import path is reserved.
+
+### 4.5 `crates/codegen/`
+
+```text
+codegen/src/
+  lib.rs
+  lower/                   # BIR -> RustModule.
+  rust/                    # Rust source emission.
+  templates/               # JSON-runtime template strings.
+  verify/                  # content-equality regen check.
+```
+
+Four children. Under Lock 13.
+
+### 4.6 `crates/runtime/`
+
+```text
+runtime/src/
+  lib.rs
+  tape/                    # Tape, ValueRef, payload arena (SUBSTRATE.md owns details).
+  document/                # DocumentView, generic root projection.
+  builder/                 # TapeBuilder + checkpoint primitives.
+  visitor/                 # minimal visitor.
+  support/                 # span -> bytes, slice loaders.
+  grammars/                # generated subdirs only.
+    json/                  # generated; not handwritten.
+```
+
+Six children. `grammars/` is generated and exempt from the per-file 500 LOC cap (Lock 13).
+
+### 4.7 `crates/parse-that-regex/`
+
+The natural `regex/{hir,nfa,dfa,vm}` nesting gives only 3 children at the `src/` level (`lib.rs`, `regex/`, `literal/`). Lock 13 demands 4-10. Resolution: promote the regex sub-trees to top-level siblings:
+
+```text
+parse-that-regex/src/
+  lib.rs
+  hir/
+  nfa/
+  dfa/
+  vm/
+  literal/
+```
+
+Six children. Within Lock 13. The V1 `parse-that` carries `unicode/` and `prefilter/` siblings as well; the skinny omits both.
+
+### 4.8 `crates/simd-scan/`
+
+```text
+simd-scan/src/
+  lib.rs
+  scalar/
+  neon/
+  avx2/
+  avx512/                  # dead code in the skinny; carried for parity.
+  wasm/                    # dead code in the skinny; carried for parity.
+  dispatch/
+```
+
+Seven children. Carried verbatim from extant `crates/simd-scan/`. The dead-code arches still compile because their cargo-cfg gates remain stable; the JSON skinny exercises only `scalar/`, `neon/` (M1 Pro), and `avx2/` (x86 build host).
+
+### 4.9 `crates/bbnf-bench/`
+
+```text
+bbnf-bench/src/
+  lib.rs
+  fixtures/                # corpus loader + checksum.
+  metadata/                # reproducibility-schema emitter.
+  parity/                  # token stream + canonical-output oracle.
+  gates/                   # SOTA gate runner.
+  report/                  # RESULTS.md renderer.
+  track2/                  # handwritten substrate ceiling probe, ≤ 500 LOC.
+```
+
+Seven children. Internal layout owned by BENCH.md.
+
+### 4.10 `crates/test-fixtures/`
+
+```text
+test-fixtures/src/
+  lib.rs
+  corpus/                  # corpus manifest + checksum loader.
+  matrix/                  # parity matrix.
+  generated/               # generated fixture references.
+```
+
+Four children. Within Lock 13.
+
+### 4.11 `xtask/`
+
+```text
+xtask/src/
+  main.rs                  # ~250 LOC; subcommand dispatch + regen + check + LOC + bench.
+```
+
+Single-file binary; not subject to Lock 13's directory rule because the dev tool is not a public crate.
+
+## 5. Build And Test Commands
+
+Each command below is copy-pasteable from the workspace root. All commands are sandbox-safe (read or build only); none depend on network access except `xtask download-fixtures`.
+
+```bash
+# 1. Workspace check (no link).
+cargo check --workspace --all-targets
+
+# 2. Workspace build (release).
+cargo build --workspace --release
+
+# 3. Workspace tests (incremental dev; fast feedback loop).
+cargo test --workspace
+
+# 4. Regen the JSON generated runtime; fail if content differs after regen.
+cargo xtask regen-json
+
+# 5. Regen-equality check (no write; fail if regen would diverge).
+cargo xtask check-json
+
+# 6. Run the JSON bench dispatch (criterion; emits HTML reports + JSON manifest).
+cargo bench -p bbnf-bench --bench json_parity --bench simd_scan -- --save-baseline skinny
+
+# 7. LOC guard for handwritten + generated skinny budgets.
+cargo xtask lint-loc
+
+# 8. ASAN run on JSON corpora (catches tape-arena UB before SOTA-beat noise hides it).
+RUSTFLAGS="-Z sanitizer=address" \
+  cargo +nightly test --workspace --target x86_64-apple-darwin
+
+# 9. UBSAN run.
+RUSTFLAGS="-Z sanitizer=undefined" \
+  cargo +nightly test --workspace --target x86_64-apple-darwin
+
+# 10. Samply profiling capture for the JSON parser hot loop.
+#    --release inherits the bench profile via --profile=bench.
+#    Per the user's samply-symbol-resolution rule:
+#    - debug = true must hold in the profile (it does, see §3).
+#    - Use interactive `samply record`; do NOT use `--save-only` — lazy
+#      symbol resolution depends on debug DWARF surviving the link step
+#      and being looked up at view time.
+cargo build --profile=bench -p bbnf-bench --bench json_parity
+samply record \
+  ./target/bench/deps/json_parity-* \
+  --bench --profile-time 30 \
+  twitter
+
+# 11. Build-time guard: clean release build under 90s on M1 Pro.
+cargo clean
+time cargo build --workspace --release    # expect <= 90s.
+```
+
+The build-time target at command 10 is the iteration discipline floor. A clean release build that takes longer than 90 seconds breaks the 2-4-week skinny window: a developer running the SOTA-beat loop will recompile under `--release` repeatedly to chase samply pathologies, and a 3-minute clean-build penalty multiplied across iterations dominates the calendar. Per the user's `build-infra-first` rule, dev-loop speed is paid up front.
+
+If the 90-second target is not met:
+
+| Cause | Surgery |
+|---|---|
+| `passes` proc-macros over-instantiate. | Push to runtime function calls; no proc-macros in the skinny. |
+| `parse-that-regex` builds a full DFA at compile time. | Defer DFA construction to `OnceCell<Lazy>` at runtime. |
+| Generic monomorphization explosion in `runtime`. | Erase one or two generic parameters via dyn-dispatch on cold paths. |
+| `simd-scan`'s extant `wasm/` or `avx512/` modules drag in heavy intrinsics. | Cargo-cfg gate them off for the skinny build host. |
+
+## 6. The `xtask` Runner
+
+The skinny ships one `xtask` binary at `xtask/src/main.rs`. The full `bbnf-cli` is overkill: command discovery, multi-grammar workspace traversal, debug subcommands, output formatting, and the playground/DAP/LSP bridge are unbuildable in the skinny window and irrelevant to the SOTA-beat measurement.
+
+```rust
+// xtask/src/main.rs (sketch; full source ~250 LOC).
+
+fn main() -> anyhow::Result<()> {
+    let mut args = std::env::args().skip(1);
+    let subcommand = args.next().context("usage: xtask <subcommand>")?;
+    match subcommand.as_str() {
+        "regen-json"  => regen::run(/*check_only=*/ false),
+        "check-json"  => regen::run(/*check_only=*/ true),
+        "lint-loc"    => loc::run(),
+        "bench-json"  => bench::run(),
+        other => anyhow::bail!("unknown xtask subcommand: {other}"),
+    }
+}
+
+mod regen {
+    // Reads workspace.metadata.bbnf, locates grammars/json.bbnf,
+    // invokes grammar::parse -> passes::pipeline -> codegen::emit,
+    // writes generated runtime under runtime/src/grammars/json/,
+    // skipping content-identical writes (mtime preservation).
+}
+
+mod bench {
+    // Wraps `cargo bench -p bbnf-bench --bench json_parity --bench simd_scan`
+    // and then invokes the gate that renders restart/skinny/RESULTS.md.
+}
+
+mod loc {
+    // Enforces the ≤4,000 generated JSON LOC budget and the ≤500 LOC Track 2
+    // handwritten probe budget before bench results can authorize dispatch.
+}
+```
+
+The xtask runner is dev-only and does not appear in the public crate set. Its ~250 LOC is not counted in the skinny's 31,400 LOC handwritten budget.
+
+## 7. Stub Policy For Skipped Crates
+
+Each skipped V1 crate is replaced in the skinny by either a deleted dependency, an inlined module, or a no-op shim. The shim discipline is:
+
+| V1 crate | Skinny shim | Location | LOC |
+|---|---|---|---|
+| `error` | `Diagnostic { span: Span, code: &'static str, message: String }`. | `crates/bbnf/src/diagnostic/` | ~100 |
+| `source` | `Source { id: SourceId, bytes: Arc<[u8]>, name: String }`, `Span { start, end, source: SourceId }`. | `crates/passes/src/source_stub/` | ~150 |
+| `host` | Empty `HostRegistry` + `HostFnId(u32)` placeholder. Main JSON grammar has no `@host fn`; BENCH.md's one-host-fn probe is the only skinny `CallHost` measurement. | `crates/bbnf/src/host_stubs/` | ~50 |
+| `pipeline` | Linear orchestrator function `compile_grammar(metadata) -> Result<RustModule>`. | `crates/bbnf/src/parse/pipeline.rs` + `xtask/src/main.rs::regen` | ~200 |
+| `cost-model` | Pre-selected optimization choices wired into `passes::recognizers::json_curate()` and bounded by BENCH.md alternate-plan probes. | `crates/passes/src/recognizers/` | (counted in passes) |
+| `vm` | None. BIR is validated by Rust-lowerer output running against fixtures. | — | 0 |
+| `bbnf-cli` | `xtask` subcommands. | `xtask/src/main.rs` | ~250 |
+| `bbnf-language-server` | None. | — | 0 |
+| `egraph` / `egraph-derive` / `csp-solver` | None; `passes` does not import. | — | 0 |
+| `parse-that` | None; `parse-that-regex` is the only mined sister. | — | 0 |
+| `path` / `path-core` / `path-ts` | None; benches use `Document` views directly. | — | 0 |
+
+Total inlined-shim LOC: ~500. These are counted within their host crate's budget (`bbnf` carries 150 LOC of shims; `passes` carries 150 LOC of shims).
+
+The shim discipline rule: when a shim grows past 500 LOC, it has earned its own crate. At that point the skinny is no longer skinny and the V1 graduation is what's needed.
+
+## 8. Migration Parity
+
+The skinny graduates to V1 by mechanical moves, not re-architecture. Every skinny crate has a clear V1 destination:
+
+| Skinny crate | V1 destination | Mining or fresh |
+|---|---|---|
+| `bbnf` | `bbnf` | Mostly fresh (~600 LOC); migration: extract `diagnostic` into `error`, `host_stubs` into `host`, `metadata` reader stays. |
+| `grammar` | `grammar` | Fresh write of bootstrap parser + AST. Mine concept from current `crates/core/src/imports/` and the bootstrap in `crates/bootstrap/`. |
+| `ir` | `ir` | KEEP-MODIFY of extant `crates/ir/`: the IR ID arenas and validate scaffolding are mined; the variant set is rewritten to match ARCH §7 (subset for skinny, full for V1). |
+| `passes` | `passes` (split into `passes::layout`, `passes::shapes`, `passes::recognizers`, `passes::bridge`) | Fresh HM in `layout/types`. Skinny `passes::source_stub/` migrates to `source` crate. Skinny `passes::recognizers/` mines `crates/simd-scan/` integration patterns; the inlined cost-model heuristic moves to `cost-model`. DK13/GADT/CSP add siblings around `layout/types::algorithm_w` rather than rewriting it. |
+| `codegen` | `codegen` | Fresh write per Lock 5 (lowerers consume BIR, not Grammar IR). Mine current Rust emission idioms from `crates/core/src/backend/` *as reference only* — the per-grammar walker pattern is a deletion target, not a migration source. |
+| `runtime` | `runtime` | Tape internals are fresh per Lock 1. `runtime/src/grammars/json/` migrates verbatim (it is generated). Mine the current `crates/core/src/runtime/` for visitor patterns; reject the OpenFrame clone substrate. |
+| `parse-that-regex` | `parse-that` (with `parse-that-regex` as its regex sub-crate per Lock 11 amendment) | Fresh write of regex HIR / NFA / DFA / VM. Mine current `regex` family approach as reference. |
+| `simd-scan` | `simd-scan` | KEEP-OUTRIGHT verbatim from extant `crates/simd-scan/` (2,607 LOC observed). The skinny adds the tape-integration contract (~900 LOC); the V1 keeps it. |
+| `bbnf-bench` | `bbnf-bench` | Skinny is a subset; V1 grows to cover the full SOTA matrix. |
+| `test-fixtures` | `test-fixtures` | Skinny is JSON-only; V1 grows to nine grammars. |
+
+Per the user's `kiss-perf-bias` rule, the smallest set of changes that achieves the goal is preferred. The skinny mines `crates/simd-scan/`, `crates/csp-solver/` ABI shapes (only relevant for the V1 graduation; not used in the skinny itself), and `crates/ir/`'s ID-arena scaffolding. Everything else is fresh because the V1 architecture's IR boundary (Lock 5) and tape substrate (Lock 1) are mechanism-incompatible with the current `crates/core/` walker pattern; mining those would import the failure modes.
+
+### 8.1 Mechanical Closure Of Skinny Deviations
+
+| Deviation | Skinny shape | V1 closure | Estimated closure cost |
+|---|---|---|---:|
+| HM hierarchy inversion | `layout/types::algorithm_w` is called as the skinny top-level type pass. | V1 wraps it as a subroutine under `passes::layout`; DK13/GADT/CSP siblings consume the same facts. | 150-300 LOC wrapper; no Algorithm-W rewrite. |
+| Host-fn-free JSON | Main JSON grammar emits direct string/number span handling. | Add `@host fn` decode-string route and registry dispatch alongside the direct helper; BENCH.md one-host-fn probe bounds throughput. | 150-250 LOC. |
+| `parse-that-regex` directory promotion | `hir/`, `nfa/`, `dfa/`, `vm/`, `literal/` are top-level siblings. | V1 inherits the shape and adds `unicode/` / `prefilter/` siblings. | 0-100 LOC movement. |
+| HM-only `passes` constraint | DK13/GADT/CSP absent. | Add passes under `layout/` and keep `layout/types::algorithm_w` intact. | 1,500-3,000 LOC additive. |
+| `wasm = false` metadata | Rust backend only. | V2 flips/adds backend metadata when `WasmBackend: Backend` exists. | 50-100 LOC schema extension. |
+
+## 9. Build-Time Targets
+
+Per-profile build-time targets on M1 Pro (clean):
+
+| Profile | Target | Rationale |
+|---|---:|---|
+| `dev` (incremental, post-touch on one crate) | ≤ 5 s | Iteration speed for `cargo test -p passes`. |
+| `dev` (clean, all crates) | ≤ 30 s | First-time onboarding cost. |
+| `release` (clean, all crates) | ≤ 90 s | The bench-prep iteration ceiling. |
+| `bench` (clean, `bbnf-bench` only) | ≤ 60 s | SOTA-beat iteration ceiling. |
+| `bench` + samply capture (one corpus run) | ≤ 60 s wall | Combined: prep + capture. |
+
+The 90-second clean-release target is the binding ceiling. Three discipline rules support it:
+
+1. **No proc-macro codegen** (Lock 6): generated parsers are committed Rust source, not proc-macro expansion. The skinny's `codegen` emits `runtime/src/grammars/json/generated.rs` once per `xtask regen-json`; the rust compiler reads it as ordinary source.
+2. **`codegen-units = 16` for dev**: parallel codegen at the cost of marginal release-quality optimization that doesn't matter in dev.
+3. **`thin` LTO not `fat` LTO** for both `release` and `bench`: the skinny does not run a fat-LTO comparison study; if the parity rows fail under thin LTO, the V1 plan owns the fat-LTO escalation.
+
+The dev-iteration loop is:
+
+```text
+edit -> cargo check -> cargo test -p <crate> -> cargo bench -p bbnf-bench --bench json_parity -- --quick
+```
+
+Each step is sub-30s on M1 Pro after the clean build. A loop iteration (edit + check + test + quick-bench) is sub-2-minutes; a SOTA-beat sample (edit + bench + samply) is sub-5-minutes. This is the iteration cadence the 2-4-week skinny window assumes.
+
+## 10. What The Skinny Omits
+
+The skinny explicitly omits the following V1 mechanisms. Each omission's impact on the SOTA-viability test is recorded so the prior-validation update can weigh whether the JSON measurement actually carries to the full V1 SOTA-beat probability.
+
+| Omitted mechanism | Skinny scope reason | Impact on SOTA-viability test |
+|---|---|---|
+| Per-grammar declaration crates (Lock 14 escape valve) | Main JSON grammar has no `@host fn`; declaration crates are V1's rare-exception form. | Low JSON impact only if BENCH.md's one-host-fn probe keeps `CallHost` dispatch within 2 percent of the direct path. Otherwise the host cut is MASKING. |
+| LSP / DAP / incremental parse | Editor surfaces don't influence parse throughput. | Zero impact on SOTA-beat. |
+| GADT / DK13 / OutsideIn / CSP type-system | JSON's grammar is monomorphic; HM-only suffices. | Risk: V1 grammars (CSS L4, Sheets) carry generics + GADTs; the JSON SOTA-beat number does not validate that the type system layer adds zero perf cost. The BENCH agent must mark the JSON number as a *necessary but insufficient* SOTA-viability signal. |
+| Cost-model + e-graph + CSP optimization graph | Skinny pre-selects optimization choices for JSON. | Risk: V1 optimization mining might shift parse plans away from skinny's hand-tuned baseline. Mitigation: BENCH.md's alternate-plan probes bound whether the canonical plan is hiding a missing cost-model win; a probe win routes to H.W2/H.W3 instead of being called free. |
+| Pratt auto-detection | JSON has no operator precedence. | Zero impact on JSON; risk for CSS / math grammars is V1-territory. |
+| SIMD auto-detection | Skinny pre-wires SIMD for JSON structural. | Zero impact: the V1 auto-detector would also choose SIMD for JSON. |
+| WASM / TS backends | V2 territory per Lock 5 amendment. | Zero impact on V1 SOTA-beat (V1 is Rust-line only per `restart/MASTER-PLAN.md:140-143`). |
+| Path / select macros | Bench harness reads `Document` views directly. | Zero impact on parse-throughput SOTA gate; visitor/access throughput is a different gate. |
+| Host fns + chains | Main JSON grammar has none. | JSON-FAITHFUL only after the one-host-fn probe passes; CSS / Sheets carry host calls and the V1 must measure their cost separately. |
+| Recovery / `@error` directives | Skinny tests on valid + minimally malformed corpus only. | Zero impact on twitter / citm / canada SOTA rows; recovery is its own gate (tranche I). |
+| Multiple grammars | Skinny is JSON-only. | Risk: SIMD-beat for JSON does not imply SIMD-beat for CSS L4 (107K generated LOC, 14-variant OpenFrame relics in current code). The V1 H tranche owns the per-grammar SOTA-beat closure. |
+| `egraph-derive` / proc-macro infrastructure | Not invoked in skinny. | Zero impact. |
+| Workspace metadata cross-grammar coherence | One grammar entry only. | Zero impact for JSON. |
+| Generated LOC budget enforcement at scale | One generated tree (`json/`); `xtask lint-loc` gates ≤4,000 JSON generated LOC and ≤500 Track 2 LOC. | Risk: V1's nine-grammar generated-LOC ceiling (172,125 LOC per `PASS-2.md:435`) is not exercised. The skinny prevents local JSON bloat but still routes nine-grammar scale to F.W3. |
+
+The skinny's SOTA-viability claim is: **if the JSON skinny lands within or beats the sonic-rs / simd-json envelope on twitter, citm, canada with the V1 substrate (tape + direct-to-struct), then the V1 architectural premise is validated for JSON-class grammars.** The claim does not extend to CSS, Sheets, or BBNF-self.
+
+## 11. Closure And Open Contradictions
+
+The skinny is buildable in 2-4 weeks at 31,400 handwritten LOC plus ≤ 4,000 generated LOC if and only if:
+
+1. The `passes` HM-only constraint holds (§2.1).
+2. The 90-second clean release-build target holds (§9).
+3. The xtask runner stays small while adding `lint-loc` (§6).
+4. No new crate is added (§1).
+5. The shim discipline holds: each inlined shim stays under 500 LOC and migrates mechanically to its V1 crate (§7).
+6. BENCH.md's host-call and alternate-plan probes pass, or RESULTS marks the relevant cut MASKING and blocks a full SK-READY verdict.
+7. Conditional bench outcomes are non-green; only an unconditional GO authorizes dispatch.
+
+Open contradictions flagged for the synthesis pass:
+
+- **`passes` budget vs scope.** The 6,000 LOC budget assumes HM-only, observational-shapes-only, hand-curated-recognizers. If the SOTA-beat measurement requires e-graph rewrites or CSP narrowing in `passes`, the skinny scope is wrong. **No surgery; flag as the binding constraint.**
+- **`parse-that-regex` directory layout.** The natural `regex/{hir,nfa,dfa,vm}` nesting violates Lock 13's 4-10 immediate-children rule at the `src/` level. The skinny resolves by promoting to top-level siblings (§4.7); the V1 inherits the same shape.
+- **`workspace.metadata.bbnf.grammars.json.codegen.wasm = false`** is the only metadata field the V1 schema validator might reject because Lock 5 amendment says `wasm = true` is invalid in V1. `wasm = false` is fine; the skinny is consistent with V1 semantics.
+- **Bench competitor crates** (`sonic-rs`, `simd-json`) are dev-dependencies of `bbnf-bench`. They are not workspace.dependencies. Owned by BENCH.md.
+
+The skinny exists to validate; if it falsifies, the V1 plan adjusts. If it validates, tranche A.W0 begins with the skinny crates already in place and `cargo build --workspace --release` already passing on the V1 superset.

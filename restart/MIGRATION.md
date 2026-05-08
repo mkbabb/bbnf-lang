@@ -123,7 +123,7 @@ when tranche A starts.
 | `crates/analysis` | yes | Grammar-specific assumptions. | ~4. | none (ABROGATE-DELETE). | A. |
 | `crates/bbnf-path` | yes | Macro entrypoint. | ~1. | `path/src/macro_impl/`. | G. |
 | `crates/bbnf-path` | yes | Parser/evaluator logic. | ~2. | `path-core/src/parse/`, `path-core/src/eval/`. | G. |
-| `crates/bbnf-path-ts` | yes | TS emitter/schema. | ~3. | `path-ts/src/schema/`, `path-ts/src/emit/`. | G. |
+| `crates/bbnf-path-ts` | yes | TS emitter/schema. | ~3. | V2 `path-ts/src/schema/`, `path-ts/src/emit/`. | V2. |
 | `crates/bbnf-path-ts` | yes | Hardcoded grammar registries. | ~1. | none (ABROGATE-DELETE). | A/G. |
 | `crates/bbnf-path-ts` | yes | Fixture duplicates. | ~2. | `test-fixtures/`. | A. |
 | `crates/bootstrap` | yes | IR dump/debug commands. | ~2. | `bbnf-cli/debug/`, `vm/debug/`. | E. |
@@ -199,7 +199,7 @@ before editing files.
 
 | File or family | New location | Bucket | Rationale | Source finding |
 |---|---|---|---|---|
-| TS emitter/schema | `path-ts/src/schema`, `path-ts/src/emit` | KEEP-MODIFY | Keep TS surface, consume shared semantics. | Lock 7 (`restart/locks/14-LOCKS.md:46`). |
+| TS emitter/schema | V2 `path-ts/src/schema`, V2 `path-ts/src/emit` | KEEP-MODIFY-DEFER | Keep TS surface as V2 work, consuming shared semantics after `TsBackend: Backend` lands. | Lock 7 + Lock 5 (`restart/locks/14-LOCKS.md:42`, `restart/locks/14-LOCKS.md:46`). |
 | Hardcoded grammar registries | none | ABROGATE-DELETE | Generic path package cannot name grammars. | CENSUS path leaks (`restart/corpora/CENSUS.md:103-122`). |
 | Fixture duplicates | `test-fixtures` | ABROGATE-MOVE | Shared parity fixture ownership. | BD inheritance via index (`restart/inheritance/INDEX.md:29-40`). |
 
@@ -383,7 +383,7 @@ responsibilities (`restart/corpora/MODULES.md:264-505`).
 | Current area | Fate | Replacement |
 |---|---|---|
 | Grammar-like IR types | KEEP-MODIFY | `ir/src/grammar_ir`. |
-| Backend/output IR pieces | ABROGATE-REPLACE | `ir/src/backend_ir` with PASS-2 23 variants. |
+| Backend/output IR pieces | ABROGATE-REPLACE | `ir/src/backend_ir` with 20 variants (19 semantic variants plus `Return`) per ARCH §7.2. |
 | Strategy registries with grammar names | ABROGATE-DELETE | Metadata-derived profiles and side tables. |
 | Type/checking facts | KEEP-MODIFY/ABROGATE-MOVE | `passes/src/layout` (HM + bidirectional + CSP subroutine), `ir/src/side_tables` (`LayoutFacts`). |
 | Shape/mining facts | KEEP-MODIFY/ABROGATE-MOVE | `passes/src/shapes`, `passes/src/recognizers`. |
@@ -426,8 +426,9 @@ cargo test -p bbnf-language-server diagnostics incremental
 
 ## 8. Path Crates Disposition
 
-Lock 7 consolidates old path crates into `path`, `path-core`, and `path-ts`
-(`restart/locks/14-LOCKS.md:46`). The module corpus already identifies
+Lock 7 consolidates old path crates into `path` and `path-core` on the V1
+Rust line, with `path-ts` deferred to V2 (`restart/locks/14-LOCKS.md:46`).
+The module corpus already identifies
 duplication and registry problems in the current path crates
 (`restart/corpora/MODULES.md:232-260`).
 
@@ -435,14 +436,14 @@ duplication and registry problems in the current path crates
 |---|---|---|
 | Rust macro parser | KEEP-MODIFY | `path/src/macro_impl` plus shared parser in `path-core`. |
 | Shared path AST/evaluator ideas | KEEP-MODIFY | `path-core/src/ast`, `path-core/src/eval`. |
-| TypeScript hardcoded registry/docs | ABROGATE-REPLACE | `path-ts` generated schema from `path-core` facts. |
+| TypeScript hardcoded registry/docs | ABROGATE-REPLACE | V2 `path-ts` generated schema from `path-core` facts. |
 | Grammar-specific path mirrors | ABROGATE-DELETE | Runtime views and generated metadata. |
 | Fixture duplicates | ABROGATE-MOVE | `test-fixtures`. |
 
 Gate:
 
 ```sh
-rg "json|css_l4|css_pretty|google_sheets|math" crates/path crates/path-core crates/path-ts
+rg "json|css_l4|css_pretty|google_sheets|math" crates/path crates/path-core
 ```
 
 Path crates may use fixture names in tests, but not production registries.
@@ -677,7 +678,7 @@ dependency, not topic (`docs/precepts/instructions/LESSONS-LEARNED.md:1-34`).
 | D | BBNF extension parser/typing for lookbehind, rank-1 generics, host definitions/chains, bounded coercion sites, error/layout; regex Unicode below BBNF. |
 | E | Backend IR, VM, extraction, lowerer contract. |
 | F | Rust lowerer, runtime template output, regen equality. |
-| G | Path/path-core/path-ts split, visitor, mutation API, future grammar gate. |
+| G | Path/path-core Rust-line split, visitor, mutation API, future grammar gate; `path-ts` defers to V2 with `TsBackend`. |
 | H | Pratt, verifier-bound exact/prefilter SIMD, `parse-that-regex` internal cross-engine parity, Rust-line SOTA early gates. WASM defers post-V1 alongside the V2 `WasmBackend: Backend` impl per `restart/ARCHITECTURE.md` §7.5. |
 | I | Error recovery, snapshot/reuse-map incremental parsing, language server, playground/debug surfaces. |
 | J | Parity, benchmarks, docs, publication readiness, close. |

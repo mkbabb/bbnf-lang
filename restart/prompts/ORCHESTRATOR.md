@@ -43,13 +43,13 @@ Each phase type maps to one sub-orchestrator. The sub-orchestrator owns its own 
 | Phase | Status | Sub-orchestrator | Owner |
 |---|---|---|---|
 | 8.0 — Prune + HANDOFF rewrite | DONE (commit `94873cf0`) | (direct edit; no sub-orchestrator) | orchestrator-agent |
-| 8.1 — Restructure prompts + add lenses I/J/K | IN-PROGRESS | (direct edit; no sub-orchestrator) | orchestrator-agent |
-| 8.2 — V8 simplification audit (4 parallel) | PENDING | `HARDENING-ORCHESTRATOR.md` (per Phase-3 dispatch pattern) | dispatched hardener cohort |
-| 8.3 — V8 consolidation | PENDING | `HARDENING-ORCHESTRATOR.md` (per Phase-6 consolidation pattern) | orchestrator-agent |
-| 8.4 — Simplification fold (conditional) | PENDING | `AMENDMENT-DISPATCH.md` (conditional; only if V8 surfaces material items) | dispatched fold cohort |
-| 8.5 — V8.1 verification rerun | PENDING | `HARDENING-ORCHESTRATOR.md` (single-target rerun) | dispatched verification agent |
+| 8.1 — Restructure prompts + add lenses I/J/K | DONE (commit `bc31560c`) | (direct edit; no sub-orchestrator) | orchestrator-agent |
+| 8.2 — V8 simplification audit (4 parallel) | DONE (`624b5af2` / `597ac678` / `cd6c2b4c` / `25addd94`) | `HARDENING-ORCHESTRATOR.md` (per Phase-3 dispatch pattern) | dispatched hardener cohort |
+| 8.3 — V8 consolidation | DONE (`28987de4`) | `HARDENING-ORCHESTRATOR.md` (per Phase-6 consolidation pattern) | orchestrator-agent |
+| 8.4 — Simplification fold | DONE (`4c69b848` / `23311ff8` / `831b2f90` / `1a75ea53` / `85187a74` / `bd213632` / `c72318cd` / `e5cb1e4b`) | `AMENDMENT-DISPATCH.md` | dispatched fold cohort |
+| 8.5 — V8.1 verification rerun | DONE (`277910df` / `fe36af42` / `7d8f03ea` / `0374d7ef` / `af3d1a73`) | `HARDENING-ORCHESTRATOR.md` | dispatched verification cohort + orchestrator-agent |
 
-After Phase 8.5 returns READY: per-tranche full-spec drafting (Wave 9+) unblocks.
+After Phase 8.5 returned READY-WITH-NARROW-RESIDUE, the user-directed V9 hardening cycle became the pre-Wave-9 gate. V9.1 now returns READY after narrow verification amendments; Wave 9 per-tranche full-spec drafting is the active next phase.
 
 ## §5 — Hardening-cycle naming canon
 
@@ -65,8 +65,9 @@ Across the cycle V1 through V8+, the hardening cohort's verdicts are named:
 | V6 | V5 | Research-fold verification (Phase 5+ pipeline) | `HARDENING-CONSOLIDATED-V6.md` |
 | V7 | V6 | Phase 7 fold verification (V1-FOLD-CANDIDATES absorption) | `HARDENING-CONSOLIDATED-V7.md` + `V7.1.md` |
 | **V8** | **V7.1** | **Simplification audit (lenses I/J/K + extant A-H)** | `HARDENING-CONSOLIDATED-V8.md` + `V8.1.md` (if needed) |
+| **V9** | **V8.1** | **Independent Codex hardening before Wave 9 (full lens set A-K)** | `HARDENING-CONSOLIDATED-V9.md` + `V9.1.md` (if needed) |
 
-Future cycles (V9+) follow the same pattern. Each cycle's lens set is documented in `HARDENING.md`.
+Future cycles (V10+) follow the same pattern. Each cycle's lens set is documented in `HARDENING.md`.
 
 ## §6 — Lens registry (full set; the audit specification)
 

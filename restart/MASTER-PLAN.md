@@ -48,7 +48,7 @@ not exposed as grammar-level syntax (`restart/README.md:121-182`,
 | Tape/direct substrate | KEEP/REINVENT around tape plus direct views. | Tranche B owns runtime substrate and generated view shell. |
 | ParseStream rename | DISCARD. | No tranche may introduce ParseStream as runtime term. |
 | Grammar IR | REINVENT as semantic IR. | Tranche C owns Grammar IR and validation gates. |
-| Backend IR | KEEP concept, REINVENT exact contract around 23 variants. | Tranche E owns BIR, VM, and lowerer boundary. |
+| Backend IR | KEEP concept, REINVENT exact contract around the 20-variant shape (19 semantic variants plus `Return`). | Tranche E owns BIR, VM, and lowerer boundary. |
 | Optimized IR | DISCARD as third IR; keep side tables. | Tranche C/E own side-table producers and consumers. |
 | CSP/egraph bridge | KEEP as bridged crates. | Tranche C owns bridge facts and extraction. |
 | Cost model | KEEP. | Tranche C/H/J own scoring, SOTA profiles, and budgets. |
@@ -186,7 +186,7 @@ limits parallel work to disjoint paths and clear ownership
 | G | Path, Value, Visitor | 5 | `path!`, `select!`, visitor mutation, and future grammar gate pass. |
 | H | Pratt, SIMD | 5 | Auto-detected Pratt/SIMD pass early SOTA gates on the Rust line. WASM defers post-V1 via `WasmBackend: Backend` per `restart/ARCHITECTURE.md` §7.5. |
 | I | Recovery, Incremental, LSP | 5 | LSP incremental parse and recovery diagnostics work on seed grammars. |
-| J | Parity, Docs, Publication Close | 6 | Cross-backend parity, SOTA, docs, and publication readiness pass. |
+| J | Parity, Docs, Publication Close | 6 | Rust/VM parity, SOTA, docs, and publication readiness pass; WASM/TS parity defers to V2 backends. |
 
 The counts are planning stubs. Full wave docs are not part of Phase 2.
 
@@ -219,7 +219,7 @@ implementation dispatch after capacity is known.
 | E | Backend IR, VM, lowerer trait. | Lowerer that imports Grammar IR as emitter input. |
 | F | Rust generated runtime for seed grammars. | Proc-macro codegen facade or unbudgeted generated churn. |
 | G | Path/value/visitor APIs and future grammar gate. | Hardcoded path registry by grammar name. |
-| H | Auto Pratt/SIMD on the Rust line. | `@pratt` or `@simd` grammar directives; WASM V1 (defers post-V1 alongside V2 `WasmBackend: Backend`). |
+| H | Auto Pratt/SIMD on the Rust line. | `@pratt` or `@simd` grammar directives; WASM lower-and-bench work defers post-V1 alongside V2 `WasmBackend: Backend`. |
 | I | Recovery/incremental/LSP. | LSP-only parser semantics. |
 | J | Parity, SOTA, docs, publish dry run. | New architecture decisions without routed amendment. |
 
@@ -388,7 +388,7 @@ Inheritance:
 
 | Source | Use |
 |---|---|
-| PASS-2 BIR table. | 23 variants (`restart/audit/pass-2-codegen/PASS-2.md:52-76`). |
+| PASS-2 BIR table. | 20-variant shape (19 semantic variants plus `Return`) per ARCH §7.2 and PASS-2 payload-refiner mapping. |
 | Lock 5. | Lowerers consume BIR, not Grammar IR (`restart/locks/14-LOCKS.md:42`). |
 | BC backend ABI inheritance. | Parity and typed boundary discipline. |
 
@@ -501,7 +501,7 @@ Stub waves:
 | H.W4 | Early CSS SOTA gates. | `css/bootstrap` <= 3.8ms, `css/animate` <= 1.9ms on M1 Pro with metadata; final J.W1 thresholds at 3.0ms / 1.6ms. |
 
 The wave count drops from six to five with the WASM defer. The prior H.W3
-(WASM V1 via wasm32 Rust binding) and its WASM host-primitive ABI matrix
+(wasm32 Rust binding path) and its WASM host-primitive ABI matrix
 route to the V2 `WasmBackend: Backend` programme per ARCH §7.5 and §7.5
 table; no measurement-pending WASM anchor lands in V1.
 
@@ -564,7 +564,7 @@ Stub waves:
 
 | Wave | Scope | Consumer gate |
 |---|---|---|
-| J.W0 | Cross-backend parity matrix for Rust, VM, WASM V1. | Parity matrix passes for seed grammars. |
+| J.W0 | Rust/VM parity matrix for the V1 line; WASM/TS parity defers to V2 backend impls. | Rust/VM parity matrix passes for seed grammars; V2 carries cross-backend parity after `WasmBackend` / `TsBackend` registration. |
 | J.W1 | Final SOTA gate and benchmark report. | JSON/CSS/SIMD targets met; misses require amendment before close. |
 | J.W2 | Public docs redo. | Docs build and examples run. |
 | J.W3 | Package readiness for public crates: confirm publication-name plan, validate `[workspace.package]` defaults, dry-run `cargo publish` for every public crate, and verify path-dep incubation does not leak to `crates.io`. Two gates apply per Lock 11 (`restart/locks/14-LOCKS.md:54`): (i) the **stable surface** (`bbnf`, `bbnf-cli`, `bbnf-language-server`, `bbnf-bench`, `path`, `path-core`, `parse-that-regex`) publishes unconditionally at J.W3; (ii) the **incubation-cleared sister crates** (`egraph`, `egraph-derive`, `csp-solver`, `parse-that`) publish at J.W3 only after the 2-tranche stability gate clears — API has not changed across two consecutive prior tranche closes, downstream consumers compile against a frozen-version dry-run, and no breaking change is queued. Crates that fail the stability gate carry their dry-run results in the J.W3 report and remain path-deps until the next J cycle. `path-ts` defers post-V1 alongside the principled TS-native parse+runtime fork; the V2 `TsBackend: Backend` impl per `restart/ARCHITECTURE.md` §7.5 publishes `path-ts` in V2. | `cargo xtask publish --dry-run` passes for the stable surface (`bbnf`, `bbnf-cli`, `bbnf-language-server`, `bbnf-bench`, `path`, `path-core`, `parse-that-regex`) plus every incubation-cleared sister crate (`egraph`, `egraph-derive`, `csp-solver`, `parse-that`); incubation-failing sister crates remain path-deps with the failure recorded; `path-ts` is not in V1 publish scope; private crates are unpublished. |
@@ -820,7 +820,7 @@ so J.W2 produces uniform pages, not seven varieties.
 | Pratt/SIMD decisions | Grammar author wondering why a recognizer was or was not applied. | Pratt and SIMD are auto-detected from grammar shape; metadata can disable but not force. | "Why did Pratt not apply to my expression rule?" | Cookbook page `cookbook/recognizers.md` plus `cargo xtask explain-recognizer`. | `BBNF-PRATT-NOT-APPLIED` and `BBNF-SIMD-NOT-SELECTED`. |
 | Crate split migration | Migrating from old workspace shape. | Old `bbnf-path*` and `core` are split into unprefixed crates. | "Where did `bbnf-path` go?" | Cookbook page `cookbook/migration-crate-split.md` plus MIGRATION.md §3.1. | None; this is documentation friction, not a runtime diagnostic. |
 | Adding yaml | Grammar author adding a new grammar. | Two surfaces only: `grammars/yaml.bbnf` plus `[workspace.metadata.bbnf.grammars.yaml]`; generated runtime/path/visitor/host outputs and the bench manifest are derivatives. | "Where do I register yaml in Rust?" | Cookbook page `cookbook/add-grammar.md` plus Architecture §12.1 walkthrough and future-grammar test. | `BBNF-METADATA-MISSING-GRAMMAR` and `BBNF-GRAMMAR-NAME-IN-GENERIC-CRATE`. |
-| yaml syntax error | Grammar author editing a new yaml grammar under LSP. | The grammar remains admitted while a sample edit is malformed; typed recovery is carried by `DocumentSnapshot`, `TapeId` reuse maps, and recovery facts over the same tape/direct identity. | "Why did the LSP keep a typed `YamlRoot` when indentation is broken?" | Recovery cookbook plus `DocumentSnapshot` trace and `incremental/edit_anchor` ledger. | `BBNF-RECOVERY001` plus debug-only fallback reason when anchors fail. |
+| yaml syntax error | Grammar author editing a new yaml grammar under LSP. | The grammar remains admitted while a sample edit is malformed; typed recovery is carried by `DocumentSnapshot`, `TapeId` reuse maps, and recovery facts over the same tape/direct identity. | "Why did the LSP keep a typed `YamlRoot` when indentation is broken?" | Recovery cookbook plus `DocumentSnapshot` trace and `incremental/edit_anchor` ledger. | `BBNF-RECOVERY*` plus debug-only fallback reason when anchors fail. |
 | `format()` public method | Library consumer pretty-printing a parsed document. | Every generated runtime exposes `format()` on `DocumentView` and on `OwnedDocument`; dispatch is metadata-driven, reading `@layout` + `@pretty` directives produced by the grammar; the call site authors no formatting policy. | "How do I customise the output? Where does the indent setting live?" | Cookbook page `cookbook/format.md` plus the per-grammar `@pretty` strategy vocabulary (`compact`, `group`, `indent`, `hardbreak`, `sep`, `block`) authored at grammar-source time. | None; formatting is total over admitted documents. Authoring a `@pretty` strategy that disagrees with `@layout` raises `BBNF-LAYOUT-CONFLICT` at grammar-compile time, never at `format()` call time. |
 
 ## 25. Implementation Order
@@ -872,7 +872,7 @@ Phase 8.4 absorbs the V8 simplification candidates routed to the MASTER-PLAN tri
 | α3 | architectural cardinality | `ARCH §7.2:894-984` BIR alphabet 22 → 19; three semantically-redundant pair collapses — `(LayoutPush, LayoutPop) → LayoutScope { kind }`, `(DispatchAlt, SpeculativeAlt) → Alt { mode }`, `(CallHost, HostChain) → CallHost` (chain expresses as `Seq` of `CallHost`) | patch-delta | variant table + payload table + example table collapse; PASS-2 fold carries the per-variant prose |
 | α5 | architectural cardinality | `ARCH §10.1:1444-1449` rewrite-budget 4 → 3 categories; fold `simplification-rewrites` into `codegen::verify` (no e-graph need; one-pass dead-mark elision belongs alongside regen-equality at F.W3); add LOAD-BEARING vs ASPIRATIONAL labels per Lens K | patch-delta | §10.1 budget table loses the fourth row; following paragraph reframes thresholds as three-category contract |
 | β1 | diagnostic vocabulary | `ARCH §7.4:1032-1063` retire numeric alias system (`BBNF-LIFE001`, `BBNF-LIFE002`, `BBNF-VISIT002`, `BBNF-LAYOUT002`, `BBNF-OPT001`, `BBNF-OPT002`, `BBNF-PATH001`, `BBNF-PATH002`, `BBNF-GRAMMAR001`, `BBNF-CG001`); pure-numeric codes (`BBNF-LIFE003`, `BBNF-LIFE009`, `BBNF-VISIT001`, `BBNF-VISIT003`, `BBNF-LAYOUT001`, `BBNF-PATH003`, `BBNF-HOST001`, `BBNF-HOST002`, `BBNF-HOST003`, `BBNF-GEN014`, `BBNF-CODEGEN021`, `BBNF-CODEGEN033`, `BBNF-SEM040`) get human-readable replacements | patch-delta | catalogue table edits; cookbook references at §24 already use human-readable forms; §10.1 paragraph that emits OPT001/002 cites human-readable codes |
-| γ10 | host-language leverage | `ARCH §5:604-665` Cargo.toml workspace metadata cross-host carrier; V1 carrier remains Cargo.toml; sidecar promotion documented in MASTER-PLAN §24 carry routed to tranche A or J body, not V2 amendment | patch-delta | one-line note at §5; new MASTER-PLAN §24 carry row routes the cross-host metadata-carrier work to tranche-body |
+| γ10 | host-language leverage | `ARCH §5:739-745` Cargo.toml workspace metadata cross-host carrier; V1 carrier remains Cargo.toml; sidecar promotion documented in MASTER-PLAN §24 carry routed to tranche A or J body, not V2 amendment | patch-delta | one-line note at §5; new MASTER-PLAN §24 carry row routes the cross-host metadata-carrier work to tranche-body |
 | δ8 | tranche-body routing | `MASTER-PLAN §4:131-141` SOTA gates; SOTA-parity is correctness floor (V1 close at J.W1); SOTA-beat is audacious aspirational at tranche-H body | patch-delta | one-sentence cite below the SOTA-row table at §4 distinguishes parity-floor from beat-aspiration; H tranche §13 wave routing already binds H.W3/H.W4 early gates and J.W1 final gates |
 | δ9 | RETIRED Phase 8.3.1 | function composition library V2 amendment | verify-only-stub | Phase 8.3.1 Q3 user adjudication DELETED the library entirely; V1 function-value surface absorbs every composition use case via inline closure expression; trio carries no V2 row |
 | δ10 | RETIRED Phase 8.3.1 | CHR-improvement layer V2 amendment | verify-only-stub | Phase 8.3.1 Q2 user adjudication FOLDED CHR-improvement into V1 csp-solver as constraint-emission helper; trio carries no V2 row; α2 above amends §8.2 to reflect the V1 fold |

@@ -54,13 +54,13 @@ set below is authoritative for tranche planning and for migration disposition.
 | `ir` | Internal | Grammar IR, Backend IR, side-table schemas, validation invariants. | Reinvented around two IRs; current `crates/ir` is mined (`restart/corpora/MODULES.md:264-505`). |
 | `passes` | Internal | Type inference, shape mining, recognizer mining, normalization, egraph/CSP bridge, extraction. | Current `ir` passes and `core` lowerers split by responsibility. |
 | `vm` | Internal | Backend IR interpreter, debug/replay, trace events, golden execution. | Current VM-ish code plus PASS-1 VM scope. |
-| `codegen` | Internal | Lowerers and emitters for Rust, WASM V1, SIMD patterns, template rendering, regen equality. | Replaces current core backend walker; PASS-2 makes BIR-only lowerers mandatory (`restart/audit/pass-2-codegen/PASS-2.md:5-8`). |
+| `codegen` | Internal | Lowerers and emitters for Rust V1, deferred V2 backend proofs, SIMD patterns, template rendering, regen equality. | Replaces current core backend walker; PASS-2 makes BIR-only lowerers mandatory (`restart/audit/pass-2-codegen/PASS-2.md:5-8`). |
 | `runtime` | Internal/public support | Tape, direct-to-struct builder support, generated grammar modules, visitors, document views. | Replaces hand-written per-grammar runtime dirs and OpenFrame-heavy flow. |
 | `host` | Internal | Generic host primitives, `@host fn` registry, host chain typing/runtime dispatch. | Replaces grammar-specific shims such as `css_types.rs` and hardcoded host tables. |
 | `cost-model` | Internal | Cost facts, SOTA profiles, extraction scoring, generated LOC budgets. | PASS-1 keeps a real cost model with SOTA gates (`restart/audit/pass-1-substrate/PASS-1.md:46-61`). |
 | `path` | Public | Rust macro/front-facing path DSL: `path!`, `select!`, visitor selectors. | Renames current `bbnf-path`; README requires `path`, `path-core`, `path-ts` (`restart/README.md:47-53`). |
 | `path-core` | Internal/shared | Path parser, typed segments, evaluator core, diagnostics shared by Rust and TS. | Extract from `bbnf-path` and `bbnf-path-ts`. |
-| `path-ts` | Public | TypeScript path package generated over `path-core` semantics. | Renames/splits current `bbnf-path-ts`; Lock 7 names this split (`restart/locks/14-LOCKS.md:46`). |
+| `path-ts` | V2 deferred | TypeScript path package generated over `path-core` semantics after `TsBackend: Backend` lands. | Legacy `bbnf-path-ts` is deferred; Lock 7 names the split and Lock 5 keeps TS post-V1 (`restart/locks/14-LOCKS.md:42`, `restart/locks/14-LOCKS.md:46`). |
 | `egraph` | Internal/sister | Equality saturation core and bridge APIs. | Keep and harden current `crates/egraph` (`restart/corpora/MODULES.md:136-162`). |
 | `egraph-derive` | Internal/sister | Derive support for egraph term declarations. | Keep with `egraph` (`restart/corpora/MODULES.md:136-162`). |
 | `csp-solver` | Internal/sister | Generic CSP solver used by type inference, layout choices, and extraction facts. | Keep and harden current generic solver (`restart/corpora/MODULES.md:73-132`). |
@@ -153,7 +153,7 @@ path
   -> runtime
   -> error
 
-path-ts
+path-ts (V2)
   -> path-core
 
 vm
@@ -178,7 +178,7 @@ The edge rules are:
 | `runtime` never depends on `codegen`. | Code generation emits files into `runtime/src/grammars/<name>/`; runtime remains buildable without codegen at library use time. |
 | `codegen` never reads Grammar IR directly for emitter logic. | Lowerers consume Backend IR and side tables, honoring Lock 5 (`restart/locks/14-LOCKS.md:42`). |
 | `parse-that` has no `bbnf` dependency. | Unicode-class algebra remains regex-layer machinery, not grammar-level BBNF syntax. |
-| `path-ts` consumes shared semantics, not Rust macro internals. | `path-core` is the single semantics owner, matching the path split in Lock 7 (`restart/locks/14-LOCKS.md:46`). |
+| V2 `path-ts` consumes shared semantics, not Rust macro internals. | `path-core` is the single semantics owner, matching the path split in Lock 7 (`restart/locks/14-LOCKS.md:46`). |
 | `egraph` and `csp-solver` remain generic. | They can be published or path-dep incubated without grammar concepts (`restart/locks/14-LOCKS.md:52-56`). |
 
 ## 3. Public API Surfaces
@@ -214,6 +214,13 @@ PASS-3 sets the user runtime API around `parse`, `parse_in`, `parse_owned`, and
 slice-borrow primary, `parse_in` is arena-aware, and `parse_owned` owns input
 bytes for longer-lived documents. Lock 9 confirms this API family
 (`restart/locks/14-LOCKS.md:50`).
+
+This API family is the V1 Rust-line surface. V2 `WasmBackend` and `TsBackend`
+may expose host-idiomatic allocation and GC forms without changing Backend IR:
+WASM may shape entrypoints around linear-memory handles, while TS may return
+GC-managed document objects. The shared contract remains grammar source +
+workspace metadata + Backend IR; host entrypoint spelling is a backend API
+choice, not a grammar-surface change.
 
 Public exports:
 
@@ -291,7 +298,7 @@ Public shared concepts:
 | `CompiledPath` | `path-core` | Validated evaluator plan. |
 | `PathDiagnostic` | `path-core` | Shared diagnostics. |
 | `path!`, `select!` | `path` | Rust compile-time syntax. |
-| `compilePath`, `select` | `path-ts` | TypeScript API over the same semantics. |
+| `compilePath`, `select` | `path-ts` (V2) | TypeScript API over the same semantics after `TsBackend: Backend` lands. |
 
 README keeps `path!`, `select!`, JSONPath-style selection, and read-write
 visitor mutation in the user surface (`restart/README.md:272-318`).
@@ -321,7 +328,7 @@ are not part of the public contract.
 | `cost-model` | `CostDecision` facts, objective profiles, Pareto/frontier reports, SOTA gate schema, generated LOC budget API. | Raw scorer tuning internals, solver adapter scratch state, and platform cache. |
 | `path` | `path!`, `select!`, typed path wrappers, visitor selector helpers. | Macro parser scratch AST. |
 | `path-core` | Path AST, parser, typed evaluator, diagnostics. | Rust macro glue and TypeScript emitter details. |
-| `path-ts` | TypeScript package generation schema and exported TS API definitions. | Rust path macro internals. |
+| `path-ts` (V2) | TypeScript package generation schema and exported TS API definitions after `TsBackend: Backend` lands. | Rust path macro internals. |
 | `egraph` | Generic egraph arena, rewrite, extraction, explanation APIs. | BBNF bridge terms. |
 | `egraph-derive` | Derive macro entrypoints for generic egraph terms. | Expansion scratch state. |
 | `csp-solver` | Generic variables, domains, constraints, solver, explanations. | BBNF-specific fact conversion. |
@@ -517,12 +524,6 @@ path/src/
   typed/
   visitor/
 
-path-ts/src/
-  lib.rs
-  schema/
-  emit/
-  tests/
-
 egraph/src/
   lib.rs
   arena/
@@ -593,7 +594,7 @@ and the 500 LOC handwritten file ceiling, generated files excepted
 | `cost-model` | Scorer coefficients before profile publication, raw sample cache. | Profiles and gate reports are stable. |
 | `path` | Macro parser scratch tokens and hygiene helpers. | Users get macros and typed expressions. |
 | `path-core` | Parser state machine and evaluator stack representation. | Path AST, diagnostics, and compiled plans are stable. |
-| `path-ts` | Emitter templates and package staging directories. | TS API and schema are stable. |
+| `path-ts` (V2) | Emitter templates and package staging directories. | TS API and schema are stable after `TsBackend: Backend` lands. |
 | `egraph` | Arena compaction state and extraction work queues. | Generic API remains clean. |
 | `egraph-derive` | Token expansion scratch modules. | Macro output is the visible contract. |
 | `csp-solver` | Propagation queue internals and search heuristics. | Solver inputs, outputs, and explanations are stable. |
@@ -640,7 +641,6 @@ members = [
   "crates/cost-model",
   "crates/path",
   "crates/path-core",
-  "crates/path-ts",
   "crates/egraph",
   "crates/egraph-derive",
   "crates/csp-solver",
@@ -730,7 +730,7 @@ Schema rules:
 | Metadata may not name Rust parser types, generated modules, or builder structs. | `pipeline::workspace` rejects Rust-looking paths and known old strategy keys. |
 | `allow_declaration_crate = true` requires an explicit reason and review gate. | Lock 14 makes declaration crates rare escape valves (`restart/locks/14-LOCKS.md:60`). |
 | `pratt`, `simd`, and recognizers default to `auto`. | Lock 10 says Pratt and SIMD are auto-detected, not directives (`restart/locks/14-LOCKS.md:52`). |
-| `wasm = true` selects the WASM V1 lowerer. | PASS-2 defines WASM V1 as a wasm32 Rust binding path, not a separate hand emitter (`restart/audit/pass-2-codegen/PASS-2.md:32-49`). |
+| `wasm = true` is invalid in V1 metadata and routes to the V2 `WasmBackend: Backend` receiver. | V1 ships `RustBackend` only; WASM lower-and-bench waits for the V2 backend impl (`restart/locks/14-LOCKS.md:42`, `restart/ARCHITECTURE.md:1095-1097`). |
 | Adding a grammar must not touch Rust source. | The future grammar test in this document makes that a hard gate. |
 
 Metadata validation errors are normal diagnostics, not panics. They flow
@@ -863,8 +863,7 @@ Initial variants:
 | `Ref` | Rule reference with type arguments. |
 | `Predicate` | Lookahead and grammar predicate forms. |
 | `Lookbehind` | Positive/negative bounded lookbehind. |
-| `Map` | Semantic mapping expression. |
-| `HostCall` | `@host fn` call or chain segment. |
+| `Call` (`kind: Map | Host`) | Semantic mapping expression or `@host fn` call/chain segment; the discriminator preserves syntactic origin. |
 | `LayoutDirective` | `@layout` policy. |
 | `ErrorDirective` | `@error` recovery vocabulary hook. |
 | `Annotation` | Explicit type, cost, profile, or docs annotation. |
@@ -883,8 +882,7 @@ Grammar IR payload and lowering matrix:
 | `Ref` | Target rule ID, type args, call annotations. | Target resolves after generics instantiate. | `CallRule`. |
 | `Predicate` | Kind and expression ID. | Predicate has no consuming side effects. | `Alt` (`Dispatch`) hints or guard BIR. |
 | `Lookbehind` | Kind, bounded body ID, width facts. | Width is proven bounded. | `Alt` (`Speculative`), guard BIR. |
-| `Map` | Source expression, target type/value expression. | Output type agrees with shape facts. | `ValueProject`, `DirectBuild`. |
-| `HostCall` | Function ID, args, chain segment IDs. | Host signature and chain types compose. | `CallHost` (chain lowers as `Seq` of `CallHost`). |
+| `Call` (`kind: Map | Host`) | Source expression or function ID, args, chain segment IDs, expected type. | Output type agrees with shape facts; host signatures and chain types compose. | `ValueProject`, `DirectBuild`, `CallHost` (chain lowers as `Seq` of `CallHost`). |
 | `LayoutDirective` | Policy ID, body/span. | Policy is scoped. | `LayoutScope` (`kind: Push | Pop`). |
 | `ErrorDirective` | Recovery code, sync rules, body/span. | Recovery code is registered. | `ErrorRecover`. |
 | `Annotation` | Key/value typed metadata. | Annotation key is known or fenced. | Side tables and diagnostics. |
@@ -1082,8 +1080,8 @@ gain.
 
 The verbatim diagnostic strings for each code live with the producer:
 `restart/audit/pass-2-codegen/PASS-2.md:533-538` for the codegen and BIR
-codes; `restart/audit/pass-3-runtime/PASS-3.md:352-366` for the runtime,
-host, layout, pointer, and visitor codes. The catalogue here binds
+codes; `restart/audit/pass-3-runtime/PASS-3.md:452-472` for the runtime,
+host, layout, path, and visitor codes. The catalogue here binds
 identifiers and producer sites; downstream cookbooks reference identifiers
 and let consumers inspect the producer for the verbatim string.
 
@@ -1165,8 +1163,8 @@ rewrite-mode or grammar-level Unicode class algebra.
 ### 8.1 Core Grammar Sketch
 
 ```ebnf
-Grammar       ::= Directive*
-Directive     ::= ImportDecl | HostFn | RuleDecl | LayoutDecl | ErrorDecl | PrettyDecl | TokenDecl
+Grammar       ::= (Directive | RuleDecl)*
+Directive     ::= ImportDecl | HostFn | LayoutDecl | ErrorDecl | PrettyDecl | TokenDecl
 
 ImportDecl    ::= "@import" "{" Ident ("," Ident)* "}" "from" StringLit ";"
 HostFn        ::= "@host" "fn" Ident GenericParams? "(" ParamList? ")"
@@ -1219,7 +1217,7 @@ production. Recovery is owned by `ErrorDecl`: `recover = ...` lives inside
 `ErrorBody`, and standalone recovery directives have no production.
 
 V1 directive canon: the six-directive `Directive` production above is the
-complete V1 surface. `@import` carries cross-file grammar composition
+complete V1 surface; `RuleDecl` is a grammar member, not a directive. `@import` carries cross-file grammar composition
 (`grammar/bbnf/bbnf.bbnf:4-5`); `@host fn` carries typed host primitives
 with block-bodied implementations; `@error(recover = ...)` carries
 recovery vocabulary; `@layout` carries layout policies (with `@ws`
@@ -1400,7 +1398,7 @@ Tape invariants:
 | Rollback is bounded and does not clone OpenFrame stacks. | Perf tests and code review. |
 | Tokens borrow source slices where possible, and payload policy declares when normalized strings or parsed scalars live in the payload arena. | Slice-borrow API tests plus materialisation-cost artefact. |
 | Direct views can point into tape. | `DocumentView` tests. |
-| Every public node has one `(TapeId, node id, payload class)` identity. | Runtime identity smoke for document root, `ValueRef`, pointer/select, visitor, and debug trace. |
+| Every public node has one `(TapeId, node id, payload class)` identity. | Runtime identity smoke for document root, `ValueRef`, path/select, visitor, and debug trace. |
 
 ### 9.2 Direct-To-Struct Union
 
@@ -1498,7 +1496,7 @@ Gate owners:
 | CSS bootstrap/animate | `bbnf-bench`, `runtime`, `passes::recognizers`, `codegen::rust`. |
 | simdjson-class throughput | `simd-scan`, `runtime::tape`, `codegen::simd`. |
 | Generated LOC budget | `cost-model::loc_budget`, `codegen::verify`. |
-| OpenFrame clone absence | `runtime`, `codegen`, `bbnf-bench`. |
+| Parallel-substrate clone absence | `runtime`, `codegen`, `bbnf-bench`. |
 
 PASS-2 sets a generated LOC budget baseline and allows a +2 percent ceiling
 for emitted runtime source (`restart/audit/pass-2-codegen/PASS-2.md` §6).

@@ -32,7 +32,7 @@ Balanced split, granular where befitting, terse where befitting. **The `bbnf-` p
 
 | Crate | Role | Prefix | Publication |
 |---|---|---|---|
-| `bbnf` | user-facing aggregator (re-exports Parser, Value, Document, Visitor, pointer!, select!) | yes | crates.io |
+| `bbnf` | user-facing aggregator (re-exports Parser, Value, Document, Visitor, path!, select!) | yes | crates.io |
 | `bbnf-cli` | user-facing CLI tool | yes | crates.io |
 | `bbnf-language-server` | LSP (consolidates analysis + lsp) | yes | crates.io |
 | `bbnf-bench` | vitest-style bench harness | yes | crates.io |
@@ -43,13 +43,13 @@ Balanced split, granular where befitting, terse where befitting. **The `bbnf-` p
 | `ir` | Grammar IR + Backend IR types (no passes) | no | workspace-internal |
 | `passes` | every transformation pass (consumes/produces IR) | no | workspace-internal |
 | `vm` | bytecode VM (kept per Q7; CSP/egraph rule oracle + debug runtime) | no | workspace-internal |
-| `codegen` | per-backend lowerers (Rust + WASM; TS deferred per Q28) | no | workspace-internal |
+| `codegen` | per-backend lowerers (Rust V1; WASM + TS through V2 Backend impls) | no | workspace-internal |
 | `runtime` | runtime substrate + per-grammar template-emitted subdirs | no | workspace-internal |
 | `host` | host-fn dispatch + generic primitive library (`prims` as module) | no | workspace-internal |
 | `cost-model` | Cost trait + per-construct/per-rule/per-path costs | no | workspace-internal |
-| `path` | Rust `pointer!` + `select!` proc-macro shells | no | crates.io (with bbnf) |
+| `path` | Rust `path!` + `select!` proc-macro shells | no | crates.io (with bbnf) |
 | `path-core` | shared path-AST + lex + lower + validate + runtime | no | crates.io (with bbnf) |
-| `path-ts` | TS proc-macro / cdylib (deferred per Q28) | no | deferred |
+| `path-ts` | TS path package (deferred to V2 `TsBackend`) | no | deferred |
 | `egraph` | e-graph rewrite substrate (publication candidate) | no | crates.io |
 | `egraph-derive` | e-graph derive macro | no | crates.io |
 | `csp-solver` | CSP propagation substrate (publication candidate) | no | crates.io |
@@ -108,7 +108,7 @@ The full per-crate module structure is the output of **PASS-1 (Substrate)** for 
 | IR | Owner crate | Variant count | Role |
 |---|---|---:|---|
 | **Grammar IR** | `ir` (with passes operating in `passes`) | ~12-15 | parsed `.bbnf` AST + post-pass annotations (typed, cost-annotated, shape-mined); the optimization domain |
-| **Backend IR** | `ir` | ~22 (per BC.W0 starting point; refines in PASS-1) | the codegen contract; per-backend lowerers consume; uniform across Rust + TS + WASM |
+| **Backend IR** | `ir` | 20 (19 semantic variants plus `Return`, post-Phase-8.4 fold) | the codegen contract; per-backend lowerers consume; V1 Rust active, V2 TS/WASM ready without BIR retrofit |
 
 The "optimised IR" of the prior plan is **Grammar IR with extra metadata** — not a third type. The type/layout facts, finite CSP legality facts, cost annotations, shape-mining hints, and layout decisions all live as side-tables keyed by Grammar IR node IDs. This is the rust-analyzer / Salsa pattern.
 
@@ -167,7 +167,7 @@ color = "#" (hex_byte hex_byte hex_byte) -> tuple_to_color -> Color
 
 ### Generic rules
 
-`Object<V> = "{" pair<V> ("," pair<V>)* "}"; pair<V> = String ":" V`. HM carries type variables; codegen monomorphises the finite validated call-site set (Rust handles natively; WASM via type erasure + dispatch). Grammar-level DRY across grammars sharing structural patterns. Land V1.
+`Object<V> = "{" pair<V> ("," pair<V>)* "}"; pair<V> = String ":" V`. HM carries type variables; codegen monomorphises the finite validated call-site set on the Rust V1 line; V2 WASM lowering handles equivalent generic structure through type erasure + dispatch. Grammar-level DRY across grammars sharing structural patterns. Land V1.
 
 ### `@error(skip | recover | halt)` directive
 
@@ -261,11 +261,11 @@ Mindful of combinatorial argument increase: hints carry weights; cost model damp
 
 **Rank-1 Hindley-Milner core + Pierce-Turner local check/synth + finite CSP choices.** Hindley-Milner owns principal schemes for ordinary grammar rules, host functions, and V1 generic rules. Pierce-Turner-style bidirectional checking owns local expected-type flow at annotations, host calls, chain edges, and subsumption sites. CSP does not replace unification; it solves bounded choices HM does not model: host overload selection, layout representation, recognizer eligibility, materialisation mode, recovery strategy, backend erasure, and extraction legality.
 
-**No V1 GADT or higher-rank surface.** Dunfield-Krishnaswami and OutsideIn(X) remain research warnings, not implementation commitments: if a future language amendment adds indexed, existential, higher-rank, or branch-local equality surfaces, it must reopen the type-system proof. V1 generic rules are rank-1 parametric schemes.
+**GADT and higher-rank surface: V1, fenced.** Dunfield-Krishnaswami algorithmic completeness and OutsideIn(X)-style implication constraints are V1 commitments where explicit annotations make the program principal. Rank-1 remains the default inferred mode; explicit `forall` annotations and branch-local-equality refinements (`Pattern @ where T = U`) land in V1 and route their body work through tranche D close gates. Missing or ill-typed refinement annotations emit `BBNF-LOCAL-EQUALITY-ANNOTATION`.
 
 **Annotation surface: hybrid.** Pure rank-1 inference is default. First-class explicit annotations are welcome where the author wants control (`rule -> u32`, `rule -> Color`, generic-rule type parameters). Multi-function chaining (`-> f1 -> f2 -> f3`) flows types through stages with a bidirectional check at each adjacent edge.
 
-**Generic rules: V1.** `Object<V> = "{" pair<V> ("," pair<V>)* "}"; pair<V> = String ":" V`. HM carries the type variable and codegen monomorphises the finite validated call-site set (Rust handles natively; WASM via type erasure + dispatch). CSP participates only when the generic instance interacts with finite choices such as host overloads, layout, materialisation, recognizer eligibility, backend erasure, or extraction legality.
+**Generic rules: V1.** `Object<V> = "{" pair<V> ("," pair<V>)* "}"; pair<V> = String ":" V`. HM carries the type variable and codegen monomorphises the finite validated call-site set on the Rust V1 line; V2 WASM lowering handles equivalent generic structure through type erasure + dispatch. CSP participates only when the generic instance interacts with finite choices such as host overloads, layout, materialisation, recognizer eligibility, backend erasure, or extraction legality.
 
 **Subtyping and coercion: directed checking edges.** Numeric coercion (`i32 → i64 → f64`), lifetime coercion (`&'i str → Cow<'i, str> → String`), and typed-record narrowing are explicit solver candidates at check/synth transition sites. They are not global HM rules and not vague CSP relaxation. A failed edge reports the expected type, actual type, registered coercion candidates, and source span.
 
@@ -281,10 +281,10 @@ Mindful of combinatorial argument increase: hints carry weights; cost model damp
 
 | Macro | Style | Use case |
 |---|---|---|
-| `pointer!(Json, ["a", "b", 0])` | sonic-rs idiom | compile-time key/index path; typed terminal; random access |
+| `path!(Json, ["a", "b", 0])` | sonic-rs idiom | compile-time key/index path; typed terminal; random access |
 | `select!(Css, "rule > declaration[property=color]")` | XPath/CSS-selector idiom | tree pattern matching; runtime; bitflag-pruned subtree traversal |
 
-Both compile-time (both are proc-macros). Both grammar-derived (read the per-grammar registry that codegen emits). One substrate (`path-core` carries the path AST + lex/lower/validate); two surfaces (`path` ships the proc-macros for both `pointer!` and `select!`).
+Both compile-time (both are proc-macros). Both grammar-derived (read the per-grammar registry that codegen emits). One substrate (`path-core` carries the path AST + lex/lower/validate); two surfaces (`path` ships the proc-macros for both `path!` and `select!`).
 
 ### Lazy materialisation: tape + direct-to-struct UNION
 
@@ -325,7 +325,7 @@ Direct typed-property mutation is unsound under slice-borrow (mutation invalidat
 
 ## §9 — Performance & Backends
 
-**Backend agnostic in design; Rust + WASM in scope; TS scope-deferred per Q28 but the Backend IR shape supports TS lower without retrofit when scope opens.** The gate: beat the competitor set per dataset:
+**Backend agnostic in design; V1 measures the Rust line, while WASM and TS defer to V2 `WasmBackend: Backend` / `TsBackend: Backend` without BIR retrofit.** The gate: beat the competitor set per dataset:
 
 | Workload | Competitor floor | bbnf target |
 |---|---|---|
@@ -360,13 +360,13 @@ The VM (kept per Q7) is the debug + replay runtime: incremental edits replay thr
 | Project | Idea adopted | Crate that absorbs |
 |---|---|---|
 | **simdjson** | contiguous tape (token stream + payload arena); two-pass parse (structural scan + materialisation); on-demand API; SIMD escape-handling primitives | `runtime/tape` + `host/prims` + `simd-scan` |
-| **sonic-rs** | LazyValue<'a> idiom; pointer! macro; serde-derive-style typed access; on-demand JSON API | `runtime` + `path` + `path-core` |
+| **sonic-rs** | LazyValue<'a> idiom; compile-time path macro idiom; serde-derive-style typed access; on-demand JSON API | `runtime` + `path` + `path-core` |
 | **lightning-css** | Visitor + VisitTypes bitflag; per-record `visit_<Name>`; read-write traversal; CSS selector DSL | `runtime` + `path` |
 | **treesitter** | error recovery via MISSING/ERROR nodes; lossless concrete syntax tree; external scanners (escape valve for grammars exceeding BBNF expressiveness); query DSL (folded into `select!`); incremental parsing | `runtime` (CST + recovery) + `bbnf-language-server` (incremental); query DSL into `path` |
 | **rust-analyzer** | Salsa-style incremental computation (lazy, memoized, on-demand); ungrammar declarative grammars; rowan-style lossless trees; `chalk_ir` for type-system reference | `passes` (Salsa-style); `ir` (rowan-inspired lossless representation); `passes/types` (chalk-inspired) |
 | **chumsky** | typed parser combinators (types-out-the-back guide types-in-the-front); Pratt parsing reference; error recovery patterns | `passes/types` (bidirectional inference reference) |
 | **logos** | fast lexer-generator codegen idioms; SIMD-aware lexer specialisation | `simd-scan` + `codegen/rust` |
-| **regex-automata** | DFA / NFA / hybrid regex engines; the de-facto Rust regex library | `parse-that/regex` (eventual fold) |
+| **regex-automata** | DFA / NFA / hybrid regex-engine research pressure only; no oracle role survives V1 | deletion archaeology; `parse-that-regex` owns internal VM/lazy-DFA/full-DFA parity |
 | **egg** | e-graph substrate; Language derive (subsumes the new-IR-node ffuzzy initially proposed) | `egraph` (sister crate; egg-inspired or egg-based) |
 | **z3** | SMT reference for constrained legality and objective checks; finite CSP propagation reference (AC-3, GAC, conflict-driven backtracking) | `csp-solver` + `cost-model` |
 | **lalrpop** | LALR codegen idioms; type-driven parser tables (reference; bbnf is not LALR-bound) | `codegen` (reference for table-driven emit) |
@@ -388,9 +388,9 @@ The **14 locks** at `restart/locks/14-LOCKS.md` are settled and govern the green
 | 2 — Layout-lowering canon | Honoured at `passes/layout/`; `TypeDesc`/`StructLayout`/`TypeMap` aliases retire workspace-wide. |
 | 3 — Cursor + byte-skip unified | Honoured at `runtime/parse/`; one parse implementation; eager fast-path elides cursor consultation. |
 | 4 — Per-domain orthogonal optimisation | Honoured by `passes` composing `egraph` + `csp-solver` + `cost-model` by output-piping; no fused hypergraph. The CSP↔egraph relation (§6) is bridged, not fused; bridge tables carry stable IDs, monotone facts, and justifications rather than e-node representatives as truth. |
-| 5 — IR + per-backend lower | Honoured by Backend IR (§4); `codegen/{rust,wasm}/` lowers from Backend IR; TS deferred per Q28. |
+| 5 — IR + per-backend lower | Honoured by Backend IR (§4); `codegen/rust/` lowers from Backend IR in V1; WASM/TS defer to V2 Backend impls. |
 | 6 — xtask emits committed source | Honoured; regen artefacts greppable on disk; no proc-macro façade for codegen output. |
-| 7 — Path crate consolidation | Honoured by `path` + `path-core` + `path-ts` triplet (§2); `runtime/path.rs` retires (per BA W3c carry). |
+| 7 — Path crate consolidation | Honoured by `path` + `path-core` on the V1 Rust line, with `path-ts` deferred to V2 (§2); `runtime/path.rs` retires (per BA W3c carry). |
 | 8 — Surpass SOTA, not AU | Honoured by §9 gate table; every parse-throughput gate cites competitor + dataset + platform. |
 | 9 — Slice-borrow primary; bumpalo + owned escape hatches | Honoured by tape-backed typed-value borrows (§8); `parse(&'i str)` default; `parse_in(&'i str, &Bump)` opt-in; `parse_owned(&str)` escape. |
 | 10 — Pratt + SIMD auto-detected | Honoured by shape miners (§6 Q19); no `@pratt` / `@simd` directives. |

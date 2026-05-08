@@ -1,7 +1,7 @@
 # Handoff — bbnf-lang Greenfield Restart
 
 Date: 2026-05-07
-Status: V7.1 READY; per-tranche full-spec drafting (Wave 9+) unblocked; Wave 8 simplification audit pending.
+Status: V9.1 READY after narrow verification amendments; Wave 9 per-tranche drafting unblocked.
 Audience: the next agent or human picking up this work.
 
 This document is the single source of truth for orienting cold. Read it end-to-end before reading anything else; it tells you what the project is, where the work has been, where it is now, and what the next move is. Every claim cites a path so you can verify.
@@ -44,9 +44,9 @@ Total amendment commits: ~70+ across the cycle. Hardening cycles V1→V7.1 cumul
 
 ## §3 — Current state
 
-**Current operating verdict: `restart/audit/hardening/HARDENING-CONSOLIDATED-V8.md` (SIMPLIFY-AVAILABLE; Phase 8.4 simplification fold pending).** Phase 8.3.1 corpus cleanup (this phase) lands the user's adjudications on the 8 corpus-audit questions before Phase 8.4 dispatches.
+**Current operating verdict: `restart/audit/hardening/HARDENING-CONSOLIDATED-V9.1.md` (READY after narrow verification amendments).** The V9.1 cohort verified the V9 amendments against PASS-1 / PASS-2 / PASS-3 / MASTER-PLAN trio, surfaced only wording and citation residue, and this consolidation applied the narrow fixes.
 
-**Verdict ledger.** V7.1 READY survived V8 lens scrutiny across all four targets (PASS-1 / PASS-2 / PASS-3 / MASTER-PLAN trio); the V8 cohort surfaced 41 simplification candidates distributed across 5 tiers (α architectural cardinality / β diagnostic vocab / γ host-leverage / δ meta-grammar deferrals / ε hygiene). None invalidates V7.1; all are surface trims, host-leverage delegations, or aspirational deferrals routed to tranche bodies. Phase 8.4 folds the candidates; Phase 8.5 V8.1 verifies; per-tranche full-spec drafting (Wave 9+) unblocks at V8.1 READY.
+**Verdict ledger.** V8.1 returned READY-WITH-NARROW-RESIDUE at `restart/audit/hardening/HARDENING-CONSOLIDATED-V8.1.md`: 3 of 4 target reports READY, PASS-3 AMENDMENT-REQUIRED-NARROW, 2 PASS-3 narrow residues, and 5 non-blocking trio residues. V9 re-found those residues and surfaced a larger but still surgical coherence set: V1 Rust-only vs V2 TS/WASM drift, BIR count drift, diagnostic mnemonic drift, retired prompt citations, ARCH directive grammar drift, Grammar IR `Call` drift, and HANDOFF/ORCHESTRATOR state drift. V9.1 verified those amendments, found only narrow wording/citation residue, applied it, and returns READY.
 
 **Phase 8 — simplification axis.** The user mandated lenses I (contrivance / over-engineering), J (host-language leverage), K (meta-grammar discipline) — these surface architectural complexity that exceeds the meta-grammar mandate. Phase 8 audits the V7.1-READY corpus for SIMPLIFY candidates and folds them; the simpler corpus then enters Wave 9.
 
@@ -62,7 +62,7 @@ Total amendment commits: ~70+ across the cycle. Hardening cycles V1→V7.1 cumul
 - `parse-that-regex` (renamed from `bbnf-regex`; canonical published name).
 - `regex-automata` retired (parse-that-regex carries internal cross-engine parity).
 
-**Open residue (1 non-blocking)**: `BBNF-PATTERN-NONEXHAUSTIVE` enumeration in ARCH §7.4 catalogue — rolls forward to whichever tranche-D spec wave first authors match-expression exhaustiveness. Friction-class only.
+**Open residue (friction-class)**: `BBNF-PATTERN-NONEXHAUSTIVE` enumeration in ARCH §7.4 remains a tranche-D diagnostic-specialization carry. It does not block Wave 9.
 
 ---
 
@@ -94,7 +94,9 @@ Mid-cycle classification ledgers retired at Phase 8.0: 9 wave/phase classificati
 | `restart/inheritance/INDEX.md` | Live | BA-BD legacy survival map. |
 | `restart/audit/pass-{1,2,3}-*/PASS-{1,2,3}.md` | Live | Per-pass synthesis (post-Phase-7.2 fold). |
 | `restart/audit/pass-*/agent-{1-6}-*.md` | Reference | Sub-agent reports from Wave 1 PASS dispatch. |
-| `restart/audit/hardening/HARDENING-CONSOLIDATED-V7.1.md` | Live | Terminal verdict (READY). |
+| `restart/audit/hardening/HARDENING-CONSOLIDATED-V9.1.md` | Live | Current Codex verdict (READY after narrow verification amendments). |
+| `restart/audit/hardening/HARDENING-CONSOLIDATED-V9.md` | Reference | Codex V9 verdict (AMENDMENT-REQUIRED-NARROW; amendments applied before V9.1). |
+| `restart/audit/hardening/HARDENING-CONSOLIDATED-V8.1.md` | Reference | Phase 8 terminal verdict (READY-WITH-NARROW-RESIDUE). |
 | `restart/audit/hardening/HARDENING-{CONSOLIDATED,PASS-*,MASTER-PLAN,SYNTHESIS}-V{1..7}.md` | Reference | Sealed cycle history. |
 | `restart/audit/hardening/REVIEW-{A,B,C,D}-*.md` | Reference | V1 reviewer reports. |
 | `restart/research/INDEX.md` | Live | Research catalogue (8 topics). |
@@ -143,7 +145,7 @@ rg -n 'regex-automata|bbnf-regex' restart/ # only deletion archaeology
 
 ## §7 — Next move
 
-**Phase 8 simplification cycle**, then **Wave 9 per-tranche full-spec drafting**.
+**Wave 9 per-tranche full-spec drafting**.
 
 Phase 8 sub-phases — current status:
 
@@ -153,11 +155,19 @@ Phase 8 sub-phases — current status:
 | 8.1 — Restructure prompts + add lenses I/J/K | DONE | `bc31560c` | (direct edit) |
 | 8.2 — V8 simplification audit | DONE | `624b5af2` / `597ac678` / `cd6c2b4c` / `25addd94` | HARDENING-ORCHESTRATOR |
 | 8.3 — V8 consolidation | DONE | `28987de4` | HARDENING-ORCHESTRATOR |
-| 8.3.1 — Corpus cleanup | (THIS PHASE) | (commit upon completion) | (direct edit) |
-| 8.4 — Simplification fold | PENDING | — | AMENDMENT-DISPATCH |
-| 8.5 — V8.1 verification rerun | PENDING | — | HARDENING-ORCHESTRATOR |
+| 8.3.1 — Corpus cleanup | DONE | `2145577c` / `a74cdc52` | (direct edit) |
+| 8.4 — Simplification fold | DONE | `4c69b848` / `23311ff8` / `831b2f90` / `1a75ea53` / `85187a74` / `bd213632` / `c72318cd` / `e5cb1e4b` | AMENDMENT-DISPATCH |
+| 8.5 — V8.1 verification rerun | DONE | `277910df` / `fe36af42` / `7d8f03ea` / `0374d7ef` / `af3d1a73` | HARDENING-ORCHESTRATOR |
 
-After Phase 8.5 READY: **Wave 9** dispatches 10 parallel per-tranche full-spec agents (one per tranche A-J; ~3,000-5,000 lines per tranche).
+Codex V9 status:
+
+| Phase | Status | Artefacts | Next gate |
+|---|---|---|---|
+| V9 hardening dispatch | DONE | `restart/audit/hardening/HARDENING-{PASS-1,PASS-2,PASS-3,MASTER-PLAN}-V9.md` | consolidated at V9 |
+| V9 consolidation + amendment | DONE | `restart/audit/hardening/HARDENING-CONSOLIDATED-V9.md` + live corpus edits | V9.1 verification |
+| V9.1 verification + narrow amendment | DONE (this pass) | `restart/audit/hardening/HARDENING-{PASS-1,PASS-2,PASS-3,MASTER-PLAN}-V9.1.md` + `HARDENING-CONSOLIDATED-V9.1.md` | Wave 9 dispatch |
+
+After V9.1 READY: **Wave 9** dispatches 10 parallel per-tranche full-spec agents (one per tranche A-J; ~3,000-5,000 lines per tranche).
 
 ---
 
@@ -169,8 +179,8 @@ Per `restart/README.md` §13. Calibrated, direct prose. Archaic-permissive (here
 
 ## §9 — Closing posture
 
-Hereupon the next move is Phase 8 dispatch. The simplification audit is the last greenfield-discipline pass before per-tranche full-spec drafting. Lenses I (contrivance), J (host-language leverage), K (meta-grammar discipline) surface what V1-V7 punch-list cycles structurally missed. The architecture has been hardened seven times; it can be hardened many more times. The orchestrator structure permits any phase to re-execute without contract drift.
+Hereupon the next move is Wave 9 per-tranche full-spec drafting. Phase 8 closed at V8.1 with READY-WITH-NARROW-RESIDUE; Codex V9 applied its amendment set; V9.1 verified and cleaned the remaining wording/citation residue. Lenses I (contrivance), J (host-language leverage), K (meta-grammar discipline) remain part of the full A-K lens set for any later hardening cycle. The architecture has been hardened through V9.1; it can be hardened many more times. The orchestrator structure permits any phase to re-execute without contract drift.
 
 The 14 locks govern. The precepts speak. The greenfield holds.
 
-Read `restart/prompts/ORCHESTRATOR.md` (Phase 8.1 lands it) end-to-end. Then verify the most recent commit is post-V7.1. Then dispatch Phase 8 per the orchestrator's phase table.
+Read `restart/prompts/ORCHESTRATOR.md` end-to-end. Then dispatch Wave 9 per-tranche full-spec drafting from the V9.1 READY corpus.

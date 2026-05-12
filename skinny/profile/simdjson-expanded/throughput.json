@@ -1,0 +1,276 @@
+[
+  {
+    "corpus": "apache_builds",
+    "build": "inlined",
+    "iters_target": 450000,
+    "size_bytes": 127275,
+    "path": "/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/apache_builds.json",
+    "iters": 450000,
+    "secs": 12.724,
+    "mibs": 4292.9,
+    "cycles_per_byte": 0.7775638927082651
+  },
+  {
+    "corpus": "apache_builds",
+    "build": "noinline",
+    "iters_target": 55000,
+    "size_bytes": 127275,
+    "path": "/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/apache_builds.json",
+    "iters": 55000,
+    "secs": 29.071,
+    "mibs": 229.6,
+    "cycles_per_byte": 14.535240442134961
+  },
+  {
+    "corpus": "github_events",
+    "build": "inlined",
+    "iters_target": 900000,
+    "size_bytes": 65132,
+    "path": "/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/github_events.json",
+    "iters": 900000,
+    "secs": 11.831,
+    "mibs": 4725.3,
+    "cycles_per_byte": 0.7064030652282203
+  },
+  {
+    "corpus": "github_events",
+    "build": "noinline",
+    "iters_target": 115000,
+    "size_bytes": 65132,
+    "path": "/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/github_events.json",
+    "iters": 115000,
+    "secs": 27.472,
+    "mibs": 260.0,
+    "cycles_per_byte": 12.837074676443022
+  },
+  {
+    "corpus": "update_center",
+    "build": "inlined",
+    "iters_target": 120000,
+    "size_bytes": 533178,
+    "path": "/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/update-center.json",
+    "iters": 120000,
+    "secs": 16.732,
+    "mibs": 3646.7,
+    "cycles_per_byte": 0.9152978304931311
+  },
+  {
+    "corpus": "update_center",
+    "build": "noinline",
+    "iters_target": 15000,
+    "size_bytes": 533178,
+    "path": "/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/update-center.json",
+    "iters": 15000,
+    "secs": 30.303,
+    "mibs": 251.7,
+    "cycles_per_byte": 13.261424889999212
+  },
+  {
+    "corpus": "mesh",
+    "build": "inlined",
+    "iters_target": 70000,
+    "size_bytes": 723597,
+    "path": "/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/mesh.json",
+    "iters": 70000,
+    "secs": 43.044,
+    "mibs": 1122.2,
+    "cycles_per_byte": 2.974307522004652
+  },
+  {
+    "corpus": "mesh",
+    "build": "noinline",
+    "iters_target": 9000,
+    "size_bytes": 723597,
+    "path": "/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/mesh.json",
+    "iters": 9000,
+    "secs": 30.306,
+    "mibs": 204.9,
+    "cycles_per_byte": 16.287611290078132
+  },
+  {
+    "corpus": "random",
+    "build": "inlined",
+    "iters_target": 120000,
+    "size_bytes": 510476,
+    "path": "/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/random.json",
+    "iters": 120000,
+    "secs": 23.747,
+    "mibs": 2460.1,
+    "cycles_per_byte": 1.3568137059006364
+  },
+  {
+    "corpus": "random",
+    "build": "noinline",
+    "iters_target": 16000,
+    "size_bytes": 510476,
+    "path": "/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/random.json",
+    "iters": 16000,
+    "secs": 62.038,
+    "mibs": 125.6,
+    "cycles_per_byte": 26.584623958814905
+  },
+  {
+    "corpus": "distinct_values",
+    "build": "inlined",
+    "iters_target": 450000,
+    "size_bytes": 153630,
+    "path": "/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/distinct_values.json",
+    "iters": 450000,
+    "secs": 24.233,
+    "mibs": 2720.7,
+    "cycles_per_byte": 1.226836483036444
+  },
+  {
+    "corpus": "distinct_values",
+    "build": "noinline",
+    "iters_target": 55000,
+    "size_bytes": 153630,
+    "path": "/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/distinct_values.json",
+    "iters": 55000,
+    "secs": 37.389,
+    "mibs": 215.5,
+    "cycles_per_byte": 15.48720952938879
+  },
+  {
+    "corpus": "unicode_basic",
+    "build": "inlined",
+    "iters_target": 70000,
+    "size_bytes": 1048586,
+    "path": "/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_basic.json",
+    "iters": 70000,
+    "secs": 36.08,
+    "mibs": 1940.1,
+    "cycles_per_byte": 1.7204120596689256
+  },
+  {
+    "corpus": "unicode_basic",
+    "build": "noinline",
+    "iters_target": 8000,
+    "size_bytes": 1048586,
+    "path": "/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_basic.json",
+    "iters": 8000,
+    "secs": 64.359,
+    "mibs": 124.3,
+    "cycles_per_byte": 26.852411247146158
+  },
+  {
+    "corpus": "unicode_escapes",
+    "build": "inlined",
+    "iters_target": 70000,
+    "size_bytes": 1050797,
+    "path": "/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_escapes.json",
+    "iters": 70000,
+    "secs": 104.404,
+    "mibs": 671.9,
+    "cycles_per_byte": 4.967848214260224
+  },
+  {
+    "corpus": "unicode_escapes",
+    "build": "noinline",
+    "iters_target": 8000,
+    "size_bytes": 1050797,
+    "path": "/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_escapes.json",
+    "iters": 8000,
+    "secs": 55.267,
+    "mibs": 145.1,
+    "cycles_per_byte": 23.010450638896
+  },
+  {
+    "corpus": "unicode_mixed",
+    "build": "inlined",
+    "iters_target": 70000,
+    "size_bytes": 1053086,
+    "path": "/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_mixed.json",
+    "iters": 70000,
+    "secs": 44.849,
+    "mibs": 1567.5,
+    "cycles_per_byte": 2.1294082344651812
+  },
+  {
+    "corpus": "unicode_mixed",
+    "build": "noinline",
+    "iters_target": 8000,
+    "size_bytes": 1053086,
+    "path": "/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_mixed.json",
+    "iters": 8000,
+    "secs": 50.833,
+    "mibs": 158.1,
+    "cycles_per_byte": 21.118348833808444
+  },
+  {
+    "corpus": "y_string_unicode",
+    "build": "inlined",
+    "iters_target": 900000,
+    "size_bytes": 35601,
+    "path": "/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/y_string_unicode.json",
+    "iters": 900000,
+    "secs": 18.812,
+    "mibs": 1624.3,
+    "cycles_per_byte": 2.0549360348804186
+  },
+  {
+    "corpus": "y_string_unicode",
+    "build": "noinline",
+    "iters_target": 140000,
+    "size_bytes": 35601,
+    "path": "/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/y_string_unicode.json",
+    "iters": 140000,
+    "secs": 39.414,
+    "mibs": 120.6,
+    "cycles_per_byte": 27.677593326030166
+  },
+  {
+    "corpus": "twitter",
+    "build": "inlined",
+    "iters": 150000,
+    "size_bytes": 631514,
+    "secs": 30.91,
+    "mibs": 2922.7,
+    "cycles_per_byte": 1.1420702206654696
+  },
+  {
+    "corpus": "twitter",
+    "build": "noinline",
+    "iters": 12000,
+    "size_bytes": 631514,
+    "secs": 36.02,
+    "mibs": 200.6,
+    "cycles_per_byte": 16.635946840977926
+  },
+  {
+    "corpus": "citm",
+    "build": "inlined",
+    "iters": 60000,
+    "size_bytes": 1727204,
+    "secs": 23.15,
+    "mibs": 4269.9,
+    "cycles_per_byte": 0.7818512848897214
+  },
+  {
+    "corpus": "citm",
+    "build": "noinline",
+    "iters": 6000,
+    "size_bytes": 1727204,
+    "secs": 41.54,
+    "mibs": 237.9,
+    "cycles_per_byte": 14.02941787227604
+  },
+  {
+    "corpus": "canada",
+    "build": "inlined",
+    "iters": 12500,
+    "size_bytes": 2251051,
+    "secs": 19.59,
+    "mibs": 1369.7,
+    "cycles_per_byte": 2.436728443735837
+  },
+  {
+    "corpus": "canada",
+    "build": "noinline",
+    "iters": 4000,
+    "size_bytes": 2251051,
+    "secs": 72.85,
+    "mibs": 117.9,
+    "cycles_per_byte": 28.317328216908454
+  }
+]

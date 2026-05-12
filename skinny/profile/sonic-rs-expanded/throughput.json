@@ -1,0 +1,230 @@
+{
+  "inlined": {
+    "value": {
+      "twitter": {
+        "mbps": 2437.9,
+        "iters": 8000,
+        "wall_s": 2.0723,
+        "bytes": 631514
+      },
+      "citm": {
+        "mbps": 3530.2,
+        "iters": 3000,
+        "wall_s": 1.4678,
+        "bytes": 1727204
+      },
+      "canada": {
+        "mbps": 1807.3,
+        "iters": 2500,
+        "wall_s": 3.1139,
+        "bytes": 2251051
+      },
+      "apache_builds": {
+        "mbps": 2008.9,
+        "iters": 40000,
+        "wall_s": 2.5342,
+        "bytes": 127275
+      },
+      "github_events": {
+        "mbps": 2892.8,
+        "iters": 80000,
+        "wall_s": 1.8012,
+        "bytes": 65132
+      },
+      "update_center": {
+        "mbps": 2750.4,
+        "iters": 10000,
+        "wall_s": 1.9385,
+        "bytes": 533178
+      },
+      "mesh": {
+        "mbps": 1028.6,
+        "iters": 2000,
+        "wall_s": 1.4069,
+        "bytes": 723597
+      },
+      "unicode_mixed": {
+        "mbps": 1349.8,
+        "iters": 1500,
+        "wall_s": 1.1703,
+        "bytes": 1053086
+      },
+      "unicode_escapes": {
+        "mbps": 1839.3,
+        "iters": 1500,
+        "wall_s": 0.8569,
+        "bytes": 1050797
+      }
+    },
+    "lazy": {
+      "twitter": {
+        "mbps": 1718.0,
+        "iters": 40000,
+        "wall_s": 14.7033,
+        "bytes": 631514
+      },
+      "citm": {
+        "mbps": 2658.2,
+        "iters": 15000,
+        "wall_s": 9.7465,
+        "bytes": 1727204
+      },
+      "canada": {
+        "mbps": 1541.5,
+        "iters": 15000,
+        "wall_s": 21.9041,
+        "bytes": 2251051
+      },
+      "apache_builds": {
+        "mbps": 1303.8,
+        "iters": 200000,
+        "wall_s": 19.5238,
+        "bytes": 127275
+      },
+      "github_events": {
+        "mbps": 1804.4,
+        "iters": 400000,
+        "wall_s": 14.4383,
+        "bytes": 65132
+      },
+      "update_center": {
+        "mbps": 1557.8,
+        "iters": 50000,
+        "wall_s": 17.113,
+        "bytes": 533178
+      },
+      "mesh": {
+        "mbps": 768.6,
+        "iters": 8000,
+        "wall_s": 7.5316,
+        "bytes": 723597
+      },
+      "unicode_mixed": {
+        "mbps": 837.6,
+        "iters": 4000,
+        "wall_s": 5.029,
+        "bytes": 1053086
+      },
+      "unicode_escapes": {
+        "mbps": 364.1,
+        "iters": 4000,
+        "wall_s": 11.5453,
+        "bytes": 1050797
+      }
+    }
+  },
+  "noinline": {
+    "value": {
+      "twitter": {
+        "mbps": 1685.5,
+        "iters": 2666,
+        "wall_s": 0.9989,
+        "bytes": 631514
+      },
+      "citm": {
+        "mbps": 2415.9,
+        "iters": 1000,
+        "wall_s": 0.7149,
+        "bytes": 1727204
+      },
+      "canada": {
+        "mbps": 1508.5,
+        "iters": 833,
+        "wall_s": 1.2431,
+        "bytes": 2251051
+      },
+      "apache_builds": {
+        "mbps": 1136.2,
+        "iters": 13333,
+        "wall_s": 1.4935,
+        "bytes": 127275
+      },
+      "github_events": {
+        "mbps": 1493.5,
+        "iters": 26666,
+        "wall_s": 1.1629,
+        "bytes": 65132
+      },
+      "update_center": {
+        "mbps": 1997.5,
+        "iters": 3333,
+        "wall_s": 0.8897,
+        "bytes": 533178
+      },
+      "mesh": {
+        "mbps": 651.2,
+        "iters": 666,
+        "wall_s": 0.7401,
+        "bytes": 723597
+      },
+      "unicode_mixed": {
+        "mbps": 1096.7,
+        "iters": 500,
+        "wall_s": 0.4801,
+        "bytes": 1053086
+      },
+      "unicode_escapes": {
+        "mbps": 1916.5,
+        "iters": 500,
+        "wall_s": 0.2742,
+        "bytes": 1050797
+      }
+    },
+    "lazy": {
+      "twitter": {
+        "mbps": 1394.9,
+        "iters": 13333,
+        "wall_s": 6.0361,
+        "bytes": 631514
+      },
+      "citm": {
+        "mbps": 1951.9,
+        "iters": 5000,
+        "wall_s": 4.4243,
+        "bytes": 1727204
+      },
+      "canada": {
+        "mbps": 929.5,
+        "iters": 5000,
+        "wall_s": 12.1088,
+        "bytes": 2251051
+      },
+      "apache_builds": {
+        "mbps": 954.6,
+        "iters": 66666,
+        "wall_s": 8.8881,
+        "bytes": 127275
+      },
+      "github_events": {
+        "mbps": 1312.2,
+        "iters": 133333,
+        "wall_s": 6.6179,
+        "bytes": 65132
+      },
+      "update_center": {
+        "mbps": 1340.4,
+        "iters": 16666,
+        "wall_s": 6.6295,
+        "bytes": 533178
+      },
+      "mesh": {
+        "mbps": 584.4,
+        "iters": 2666,
+        "wall_s": 3.3012,
+        "bytes": 723597
+      },
+      "unicode_mixed": {
+        "mbps": 791.6,
+        "iters": 1500,
+        "wall_s": 1.9955,
+        "bytes": 1053086
+      },
+      "unicode_escapes": {
+        "mbps": 406.4,
+        "iters": 1500,
+        "wall_s": 3.8788,
+        "bytes": 1050797
+      }
+    }
+  }
+}

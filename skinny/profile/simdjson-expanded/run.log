@@ -1,0 +1,136 @@
+=== 15:03:32 apache_builds :: inlined (450000 iters) ===
+loaded 127275 bytes from /Users/mkbabb/Programming/bbnf-lang/skinny/test_data/apache_builds.json
+iters=450000 bytes=57273750000 secs=12.724 throughput=4292.9 MiB/s
+Stopping profile.
+=== 15:03:45 apache_builds :: noinline (55000 iters) ===
+loaded 127275 bytes from /Users/mkbabb/Programming/bbnf-lang/skinny/test_data/apache_builds.json
+iters=55000 bytes=7000125000 secs=29.071 throughput=229.6 MiB/s
+Stopping profile.
+=== 15:04:14 github_events :: inlined (900000 iters) ===
+loaded 65132 bytes from /Users/mkbabb/Programming/bbnf-lang/skinny/test_data/github_events.json
+iters=900000 bytes=58618800000 secs=11.831 throughput=4725.3 MiB/s
+Stopping profile.
+=== 15:04:27 github_events :: noinline (115000 iters) ===
+loaded 65132 bytes from /Users/mkbabb/Programming/bbnf-lang/skinny/test_data/github_events.json
+iters=115000 bytes=7490180000 secs=27.472 throughput=260.0 MiB/s
+All tasks terminated.
+=== 15:04:55 update_center :: inlined (120000 iters) ===
+loaded 533178 bytes from /Users/mkbabb/Programming/bbnf-lang/skinny/test_data/update-center.json
+iters=120000 bytes=63981360000 secs=16.732 throughput=3646.7 MiB/s
+Stopping profile.
+=== 15:05:12 update_center :: noinline (15000 iters) ===
+loaded 533178 bytes from /Users/mkbabb/Programming/bbnf-lang/skinny/test_data/update-center.json
+iters=15000 bytes=7997670000 secs=30.303 throughput=251.7 MiB/s
+All tasks terminated.
+=== 15:05:44 mesh :: inlined (70000 iters) ===
+loaded 723597 bytes from /Users/mkbabb/Programming/bbnf-lang/skinny/test_data/mesh.json
+iters=70000 bytes=50651790000 secs=43.044 throughput=1122.2 MiB/s
+Stopping profile.
+=== 15:06:27 mesh :: noinline (9000 iters) ===
+loaded 723597 bytes from /Users/mkbabb/Programming/bbnf-lang/skinny/test_data/mesh.json
+iters=9000 bytes=6512373000 secs=30.306 throughput=204.9 MiB/s
+All tasks terminated.
+=== 15:06:58 random :: inlined (120000 iters) ===
+loaded 510476 bytes from /Users/mkbabb/Programming/bbnf-lang/skinny/test_data/random.json
+iters=120000 bytes=61257120000 secs=23.747 throughput=2460.1 MiB/s
+Stopping profile.
+=== 15:07:23 random :: noinline (16000 iters) ===
+loaded 510476 bytes from /Users/mkbabb/Programming/bbnf-lang/skinny/test_data/random.json
+iters=16000 bytes=8167616000 secs=62.038 throughput=125.6 MiB/s
+Stopping profile.
+=== 15:08:25 distinct_values :: inlined (450000 iters) ===
+loaded 153630 bytes from /Users/mkbabb/Programming/bbnf-lang/skinny/test_data/distinct_values.json
+iters=450000 bytes=69133500000 secs=24.233 throughput=2720.7 MiB/s
+All tasks terminated.
+=== 15:08:50 distinct_values :: noinline (55000 iters) ===
+loaded 153630 bytes from /Users/mkbabb/Programming/bbnf-lang/skinny/test_data/distinct_values.json
+iters=55000 bytes=8449650000 secs=37.389 throughput=215.5 MiB/s
+=== 15:09:28 unicode_basic :: inlined (70000 iters) ===
+loaded 1048586 bytes from /Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_basic.json
+iters=70000 bytes=73401020000 secs=36.080 throughput=1940.1 MiB/s
+Stopping profile.
+=== 15:10:04 unicode_basic :: noinline (8000 iters) ===
+loaded 1048586 bytes from /Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_basic.json
+iters=8000 bytes=8388688000 secs=64.359 throughput=124.3 MiB/s
+All tasks terminated.
+=== 15:11:10 unicode_escapes :: inlined (70000 iters) ===
+loaded 1050797 bytes from /Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_escapes.json
+iters=70000 bytes=73555790000 secs=104.404 throughput=671.9 MiB/s
+All tasks terminated.
+=== 15:12:55 unicode_escapes :: noinline (8000 iters) ===
+loaded 1050797 bytes from /Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_escapes.json
+iters=8000 bytes=8406376000 secs=55.267 throughput=145.1 MiB/s
+Stopping profile.
+=== 15:13:51 unicode_mixed :: inlined (70000 iters) ===
+loaded 1053086 bytes from /Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_mixed.json
+iters=70000 bytes=73716020000 secs=44.849 throughput=1567.5 MiB/s
+Stopping profile.
+=== 15:14:36 unicode_mixed :: noinline (8000 iters) ===
+loaded 1053086 bytes from /Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_mixed.json
+iters=8000 bytes=8424688000 secs=50.833 throughput=158.1 MiB/s
+Stopping profile.
+=== 15:15:28 y_string_unicode :: inlined (900000 iters) ===
+loaded 35601 bytes from /Users/mkbabb/Programming/bbnf-lang/skinny/test_data/y_string_unicode.json
+iters=900000 bytes=32040900000 secs=18.812 throughput=1624.3 MiB/s
+Stopping profile.
+=== 15:15:47 y_string_unicode :: noinline (140000 iters) ===
+loaded 35601 bytes from /Users/mkbabb/Programming/bbnf-lang/skinny/test_data/y_string_unicode.json
+iters=140000 bytes=4984140000 secs=39.414 throughput=120.6 MiB/s
+All tasks terminated.
+=== DONE 15:16:28 ===
+apache_builds.inlined.profile.json.gz
+apache_builds.inlined.profile.json.syms.json
+apache_builds.noinline.profile.json.gz
+apache_builds.noinline.profile.json.syms.json
+canada.inlined.profile.json.gz
+canada.inlined.profile.json.syms.json
+canada.noinline.profile.json.gz
+canada.noinline.profile.json.syms.json
+citm.inlined.profile.json.gz
+citm.inlined.profile.json.syms.json
+citm.noinline.profile.json.gz
+citm.noinline.profile.json.syms.json
+distinct_values.inlined.profile.json.gz
+distinct_values.inlined.profile.json.syms.json
+github_events.inlined.profile.json.gz
+github_events.inlined.profile.json.syms.json
+github_events.noinline.profile.json.gz
+github_events.noinline.profile.json.syms.json
+mesh.inlined.profile.json.gz
+mesh.inlined.profile.json.syms.json
+mesh.noinline.profile.json.gz
+mesh.noinline.profile.json.syms.json
+random.inlined.profile.json.gz
+random.inlined.profile.json.syms.json
+random.noinline.profile.json.gz
+random.noinline.profile.json.syms.json
+run.log
+throughput.json
+twitter.inlined.profile.json.gz
+twitter.inlined.profile.json.syms.json
+twitter.noinline.profile.json.gz
+twitter.noinline.profile.json.syms.json
+unicode_basic.inlined.profile.json.gz
+unicode_basic.inlined.profile.json.syms.json
+unicode_basic.noinline.profile.json.gz
+unicode_basic.noinline.profile.json.syms.json
+unicode_escapes.inlined.profile.json.gz
+unicode_escapes.inlined.profile.json.syms.json
+unicode_escapes.noinline.profile.json.gz
+unicode_escapes.noinline.profile.json.syms.json
+unicode_mixed.inlined.profile.json.gz
+unicode_mixed.inlined.profile.json.syms.json
+unicode_mixed.noinline.profile.json.gz
+unicode_mixed.noinline.profile.json.syms.json
+update_center.inlined.profile.json.gz
+update_center.inlined.profile.json.syms.json
+update_center.noinline.profile.json.gz
+update_center.noinline.profile.json.syms.json
+y_string_unicode.inlined.profile.json.gz
+y_string_unicode.inlined.profile.json.syms.json
+y_string_unicode.noinline.profile.json.gz
+y_string_unicode.noinline.profile.json.syms.json
+=== fixup distinct_values.noinline ===
+loaded 153630 bytes from /Users/mkbabb/Programming/bbnf-lang/skinny/test_data/distinct_values.json
+iters=55000 bytes=8449650000 secs=31.588 throughput=255.1 MiB/s
+All tasks terminated.

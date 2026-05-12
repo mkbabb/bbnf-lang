@@ -1,7 +1,7 @@
 # Handoff — bbnf-lang Greenfield Restart
 
-Date: 2026-05-07
-Status: V9.1 READY after narrow verification amendments; Wave 9 per-tranche drafting unblocked.
+Date: 2026-05-12
+Status: V9.2 AMENDMENT-REQUIRED-NARROW (CONDITIONAL) — Lock 1 lazy-tape amendment staged for post-implementation commit; skinny v2 lazy-mode implementation pending; SK-V2 closed at amendment level.
 Audience: the next agent or human picking up this work.
 
 This document is the single source of truth for orienting cold. Read it end-to-end before reading anything else; it tells you what the project is, where the work has been, where it is now, and what the next move is. Every claim cites a path so you can verify.
@@ -19,7 +19,7 @@ bbnf is a **meta-grammar**: it generates parsers for extant target languages (Ru
 Read in order:
 
 1. `restart/README.md` — gestalt synthesis. The architectural commitments, the BBNF extensions, the optimization apotheosis, the type system, the value API, the SOTA synthesis, the 14 locks, the process.
-2. `restart/locks/14-LOCKS.md` — the 14 architectural commitments. Locks 4/5/6/7/8/10/12 amended at Phase 7.1; Lock 4 carries DK13 fold + GADT V1 user-facing surface (post-Phase-8.3.1) + closure-by-`&'i`; Lock 5 deferred TS+WASM post-V1 (Backend trait at ARCH §7.5 enables seamless V2 addition).
+2. `restart/locks/14-LOCKS.md` — the 14 architectural commitments. Lock 1 carries a CONDITIONAL 2026-05-12 amendment (dual-mode `tape_mode ∈ {"eager", "lazy"}`); the amendment text is drafted at `restart/skinny/audit/LAZY-TAPE-DESIGN.md` §4.1 but is not committed until skinny v2 lazy-mode implementation re-benches at outcome A/B/C.
 3. `docs/precepts/instructions/STYLE.md` — voice + discipline (governs all writing).
 4. `docs/precepts/instructions/LESSONS-LEARNED.md` — failure-mode anatomy (governs all decisions).
 
@@ -27,89 +27,118 @@ Read in order:
 
 ## §2 — Where the work has been
 
-Single-round greenfield restart began 2026-05-04 after a compounded-contrivance archive of the prior restart. Multiple waves landed:
+Single-round greenfield restart began 2026-05-04 after a compounded-contrivance archive of the prior restart. Waves landed through V9.2:
 
 | Wave | Phases | Outcome |
 |---|---|---|
-| 1 | PASS-1/2/3 dispatch + SYNTHESIS trio | Three pass syntheses + ARCHITECTURE/MIGRATION/MASTER-PLAN trio. |
-| 2 | V1 hardening + V2 hardening + reviewer cohort (A/B/C/D) | 14 cross-target conflicts surfaced. |
-| 3 | Reviewer reconciliation + amendment-dispatch | V3 hardening (4-parallel independent) surfaced 24 cross-document items V2 missed. |
-| 4 | Wave 4.1 narrow-amendment + V4 hardening | V4 cohort READY (99% KEEP). |
-| 5 | Research-fold pipeline (8 SOTA topic deep-dives) + V5 metahardening (8 lenses) + V6 hardening | V6 READY; research grounded in primary literature. |
-| 7 | V1-FOLD-CANDIDATES synthesis + Phase 7.1 lock + ARCH amendments + Phase 7.2 4-parallel surface fold + V7 hardening + Phase 7.5 narrow-amendment + V7.1 verification | **V7.1 READY.** |
+| 1-7 | PASS-1/2/3 dispatch + SYNTHESIS trio + V1-V7.1 hardening | V7.1 READY (99% KEEP fraction) |
+| 8 | Lenses I/J/K simplification audit + V8/V8.1 cycles | READY-WITH-NARROW-RESIDUE |
+| Codex V9 | V9 + V9.1 verification + corpus amendments | V9.1 READY after narrow amendments |
+| **Skinny SK-V1** | Five-quadrant skinny implementation spec + SK-V1 audit | SK-AMENDMENT-REQUIRED-NARROW; 20-item C1-C20 cross-quadrant punch list |
+| **Skinny implementation + user iteration** | User landed runnable prototype at `skinny/`; 19-item REDRESS; two false routes (dispatch-table-as-canonical; 12-byte token) measured and rejected; outcome G three times running | Empirical ceiling at ~12.5K Mbps T1 vs sonic-rs ~21K Mbps |
+| **SK-V2 audit + amendment cohort** | 5-target SK-V2 audit + 6th-agent LAZY-TAPE-DESIGN proposal + 5 SK-V2 amendment agents applied 72/73 text-propagation items | SK-V2 closed at amendment level; skinny corpus text-clean |
+| **V9.2 V1-corpus audit** | 4-target V9.2 hardening cohort audited LAZY-TAPE-DESIGN.md against V1 PASS-1/2/3 + MASTER-PLAN trio | AMENDMENT-REQUIRED-NARROW (CONDITIONAL); ~22 deduplicated cross-quadrant punch items; Lock 1 amendment text drafted |
 
-Total amendment commits: ~70+ across the cycle. Hardening cycles V1→V7.1 cumulative KEEP fraction climbed from 46% (V1) to 99% (V7.1).
+Cumulative commit count: ~80+ across all cycles.
 
 ---
 
-## §3 — Current state
+## §3 — Current state (post-V9.2; pre-implementation)
 
-**Current operating verdict: `restart/audit/hardening/HARDENING-CONSOLIDATED-V9.1.md` (READY after narrow verification amendments).** The V9.1 cohort verified the V9 amendments against PASS-1 / PASS-2 / PASS-3 / MASTER-PLAN trio, surfaced only wording and citation residue, and this consolidation applied the narrow fixes.
+**Current operating verdict: `restart/audit/hardening/HARDENING-CONSOLIDATED-V9.2.md` (AMENDMENT-REQUIRED-NARROW, CONDITIONAL).** V9.2 audited the lazy-tape Lock 1 amendment proposal against the V1 corpus; all 4 targets returned AMENDMENT-REQUIRED-NARROW; ~22 surgical edits staged for post-implementation conditional commit.
 
-**Verdict ledger.** V8.1 returned READY-WITH-NARROW-RESIDUE at `restart/audit/hardening/HARDENING-CONSOLIDATED-V8.1.md`: 3 of 4 target reports READY, PASS-3 AMENDMENT-REQUIRED-NARROW, 2 PASS-3 narrow residues, and 5 non-blocking trio residues. V9 re-found those residues and surfaced a larger but still surgical coherence set: V1 Rust-only vs V2 TS/WASM drift, BIR count drift, diagnostic mnemonic drift, retired prompt citations, ARCH directive grammar drift, Grammar IR `Call` drift, and HANDOFF/ORCHESTRATOR state drift. V9.1 verified those amendments, found only narrow wording/citation residue, applied it, and returns READY.
+**The conditional staging protocol** (V9.2 CONSOLIDATED §5):
 
-**Phase 8 — simplification axis.** The user mandated lenses I (contrivance / over-engineering), J (host-language leverage), K (meta-grammar discipline) — these surface architectural complexity that exceeds the meta-grammar mandate. Phase 8 audits the V7.1-READY corpus for SIMPLIFY candidates and folds them; the simpler corpus then enters Wave 9.
+- **Wave 1 (now, pre-implementation)**: V9.2 punch list is drafted and ratified but **not committed to the V1 corpus**. Audit reports land as historical record.
+- **Wave 2 (post-implementation, after measurement)**:
+  - **If outcome A/B/C** (T1 ≥ 14K Mbps on twitter): commits V9.2 punch list to V1 corpus verbatim; Lock 1 lands at `14-LOCKS.md:34`; ARCH §7.2/§9.1/§3.1/§5/§12.2 land; MASTER-PLAN §4/§7/§11/§14 land; MIGRATION §17 lands; PASS-1/2/3 punch items land; **V9.3 verification cycle dispatches.**
+  - **If outcome G** (T1 < 13K Mbps): discards V9.2 punch list; trio reverts to eager-only canonical; SOTA-beat routes to V1 H tranche body as ASPIRATIONAL.
+
+**Empirical diagnosis (load-bearing)** (from `skinny/RESULTS.md` and `skinny/REDRESS.md`):
+
+| Corpus | T1 Mbps | T2 Mbps | sonic-rs Mbps | T1/sonic | Outcome |
+|---|---:|---:|---:|---:|---|
+| twitter | 12470 | 10063 | 18440 | 67.6% | G/NO-GO |
+| citm | 12246 | 11547 | 23075 | 53.1% | G/NO-GO |
+| canada | 8895 | 8177 | 12021 | 74.0% | G/NO-GO |
+
+**What three iterations conclusively closed**:
+- T1 ≈ T2 (1.005-1.055 ratio): codegen is NOT the bottleneck.
+- Structural scan well above floor (66565 Mbps vs 40000 floor): scan is NOT the bottleneck.
+- `alternate_dispatch_table_plan`: INVALIDATED — REDRESS item 17 (duplicate probe; real function-pointer table regressed; canonical Rust `match` is load-bearing).
+- 12-byte skipless token: INVALIDATED — REDRESS item 18 (mixed parse results; canonical stays 16-byte aligned).
+- Host-call dispatch overhead: PASS (~0.7 ns/call ≤ 50 ns target).
+- Host-call eager string decode: MASKING signal (64.9-83% T1 ratio). **V1 JSON must keep lazy string decode**.
+- Substrate materialisation is the bottleneck — per-token write bandwidth at ~16 bytes/token across 40K-167K offsets per corpus.
+
+**The remaining honest route**: lazy-offset tape (the structural index IS the tape; node kind computed from `source[offsets[cursor]]`; no separate token stream). Proposal at `restart/skinny/audit/LAZY-TAPE-DESIGN.md` (~860 lines). Lock 1 amendment text preserves spirit (no parallel substrate; no OpenFrame clone) verbatim while admitting per-grammar `tape_mode` materialization.
 
 **What has settled** (do not relitigate):
-- 14 architectural locks (post-Phase-7.1 amendments).
+- 14 architectural locks (post-Phase-7.1 amendments + conditional Lock 1 2026-05-12 amendment).
 - 35-question architectural interrogation.
-- 10 user adjudications of V1-fold candidates (DK13 fold; GADT V1 user-facing surface per Phase-8.3.1; CHR-improvement V1 fold per Phase-8.3.1; closure-by-`&'i`; `@pretty` verbatim vocabulary; TS+WASM deferred V2; parse-that-regex naming; D wave growth).
-- 30 V1 fold candidates absorbed (Tier 1 architecture-nailing; Tier 2 surface coherence; Tier 3 sibling-crate hygiene; Tier 4 architectural prerequisites).
-- 8 lock amendments (Locks 4/5/6/7/8/10/12 + 3 NEW: Backend trait, egraph decoupling, 6-directive grammar).
-- Backend trait at ARCH §7.5 (V1 RustBackend; V2 WasmBackend + TsBackend).
-- 6-directive grammar: `@import`, `@host fn`, `@error(recover)`, `@layout`, `@pretty`, `@token`. Retired: `@pratt`, `@simd`, `@transducer`, `@rewrite`, `@unicode`, `@debug` (host primitive), `@recover` standalone, `@ws` (folds into `@layout`).
-- `path!` macro (renamed from `pointer!`; ~58 sites).
-- `parse-that-regex` (renamed from `bbnf-regex`; canonical published name).
-- `regex-automata` retired (parse-that-regex carries internal cross-engine parity).
-
-**Open residue (friction-class)**: `BBNF-PATTERN-NONEXHAUSTIVE` enumeration in ARCH §7.4 remains a tranche-D diagnostic-specialization carry. It does not block Wave 9.
+- Backend trait at ARCH §7.5 (V1 RustBackend; V2 WasmBackend + TsBackend deferred).
+- 6-directive grammar: `@import`, `@host fn`, `@error(recover)`, `@layout`, `@pretty`, `@token`.
+- `path!` macro canonical; `parse-that-regex` canonical; `regex-automata` retired.
+- The skinny exists; its purpose is prior-validation of substrate viability.
+- Eager-tape substrate has a structural ceiling at ~1.6× sonic-rs time on JSON (3-iteration empirical conclusion).
 
 ---
 
-## §4 — Prompt structure (post-Phase-8.0 prune)
+## §4 — Prompt structure
 
-Five prompts at `restart/prompts/`:
+Six prompts at `restart/prompts/` + `restart/skinny/HARDENING.md`:
 
-1. `ORCHESTRATOR.md` (NEW Phase 8.1) — main entry; fans out to encapsulated sub-orchestrators per phase type. Single source of truth for phase dispatch.
-2. `HARDENING-ORCHESTRATOR.md` — dispatches hardening cycles (V1 through V8+); orchestrates per-target hardener agents + consolidation.
-3. `RESEARCH-FOLD-ORCHESTRATOR.md` — dispatches research deep-dives + fold cycles (Phase 5+).
-4. `AMENDMENT-DISPATCH.md` — dispatches verify-then-patch amendment cycles (Wave 4.1, Phase 7.5, etc).
-5. `HARDENING.md` — per-target audit specification (the contract each hardening agent reads). Phase 8.1 adds lenses I/J/K.
-
-Stale dispatch prompts retired at Phase 8.0: `PASS-1-SUBSTRATE.md`, `PASS-2-CODEGEN.md`, `PASS-3-RUNTIME.md`, `SYNTHESIS.md`. The PASS syntheses + SYNTHESIS trio are committed at `restart/audit/pass-{1,2,3}-*/PASS-{1,2,3}.md` + `restart/{ARCHITECTURE,MIGRATION,MASTER-PLAN}.md`; their dispatch prompts have served their purpose.
-
-Mid-cycle classification ledgers retired at Phase 8.0: 9 wave/phase classification artefacts in `restart/audit/pass-{1,2,3}-*/` plus `restart/research/PHASE-7.2-SYNTHESIS-CLASSIFICATION.md`. The amendment commits absorbed them; commit messages preserve audit trail.
+1. `prompts/ORCHESTRATOR.md` — main entry; fans out to encapsulated sub-orchestrators per phase type.
+2. `prompts/HARDENING-ORCHESTRATOR.md` — dispatches hardening cycles (V1 through V9.x).
+3. `prompts/RESEARCH-FOLD-ORCHESTRATOR.md` — research deep-dives + fold cycles.
+4. `prompts/AMENDMENT-DISPATCH.md` — verify-then-patch amendment cycles.
+5. `prompts/HARDENING.md` — per-target audit specification (lenses A-K).
+6. `skinny/HARDENING.md` — skinny per-target audit specification (lenses A-K + L premise fidelity + M falsifiability + N graduation mechanicality; SK cycle namespace).
 
 ---
 
-## §5 — File map
+## §5 — File map (post-V9.2)
 
 | Path | Status | Purpose |
 |---|---|---|
 | `restart/README.md` | Live | Gestalt anchor; 14 locks; SOTA synthesis. |
-| `restart/ARCHITECTURE.md` | Live (98K) | Executable architectural spec; Backend trait at §7.5; type system at §8; Directive production at §8.1. |
-| `restart/MASTER-PLAN.md` | Live (62K) | Tranche A-J; carry ledger §24; cookbook §25. |
-| `restart/MIGRATION.md` | Live (50K) | Per-file disposition for legacy code. |
-| `restart/locks/14-LOCKS.md` | Live | 14 architectural commitments (post-Phase-7.1 amended). |
-| `restart/inheritance/INDEX.md` | Live | BA-BD legacy survival map. |
-| `restart/audit/pass-{1,2,3}-*/PASS-{1,2,3}.md` | Live | Per-pass synthesis (post-Phase-7.2 fold). |
-| `restart/audit/pass-*/agent-{1-6}-*.md` | Reference | Sub-agent reports from Wave 1 PASS dispatch. |
-| `restart/audit/hardening/HARDENING-CONSOLIDATED-V9.1.md` | Live | Current Codex verdict (READY after narrow verification amendments). |
-| `restart/audit/hardening/HARDENING-CONSOLIDATED-V9.md` | Reference | Codex V9 verdict (AMENDMENT-REQUIRED-NARROW; amendments applied before V9.1). |
-| `restart/audit/hardening/HARDENING-CONSOLIDATED-V8.1.md` | Reference | Phase 8 terminal verdict (READY-WITH-NARROW-RESIDUE). |
-| `restart/audit/hardening/HARDENING-{CONSOLIDATED,PASS-*,MASTER-PLAN,SYNTHESIS}-V{1..7}.md` | Reference | Sealed cycle history. |
-| `restart/audit/hardening/REVIEW-{A,B,C,D}-*.md` | Reference | V1 reviewer reports. |
-| `restart/research/INDEX.md` | Live | Research catalogue (8 topics). |
-| `restart/research/topic-{1..8}-*.md` | Reference | SOTA deep-dives (~5,800 lines). |
-| `restart/research/fold-{pass-1,pass-2,pass-3,synthesis}.md` | Reference | Phase 5 fold records. |
-| `restart/research/deferral-audit-{1..8}-*.md` | Reference | Phase 7 inputs. |
-| `restart/research/V1-FOLD-CANDIDATES.md` | Live | Phase 7 contract; 30-item synthesis. |
-| `restart/corpora/{CENSUS,MODULES,RESTART-SKETCH,SOTA}.md` | Reference | Frozen 2026-05-03 snapshots. |
-| `restart-archive-2026-05-04/` | Sealed | Prior restart's archived corpus; research signal only. |
+| `restart/ARCHITECTURE.md` | Live | Executable architectural spec; carries user iteration amendments at §1433 area pending Wave-2 conditional Lock 1 amendment. |
+| `restart/MASTER-PLAN.md` | Live | Tranche A-J; SOTA close gates. |
+| `restart/MIGRATION.md` | Live | Per-file disposition. |
+| `restart/locks/14-LOCKS.md` | Live (Lock 1 amendment pending Wave 2) | 14 architectural commitments. |
+| `restart/audit/hardening/HARDENING-CONSOLIDATED-V9.2.md` | Live | Current verdict: AMENDMENT-REQUIRED-NARROW (CONDITIONAL). |
+| `restart/audit/hardening/HARDENING-{PASS-1,PASS-2,PASS-3,MASTER-PLAN}-V9.2.md` | Live | V9.2 per-target absorption audits of lazy-tape proposal. |
+| `restart/audit/hardening/HARDENING-CONSOLIDATED-V9.1.md` | Reference | Prior V9.1 READY verdict. |
+| `restart/skinny/{INDEX,SUBSTRATE,COMPILER,BENCH,WORKSPACE,HARDENING}.md` | Live (post-SK-V2 amendments) | Skinny spec corpus. |
+| `restart/skinny/audit/HARDENING-{SUBSTRATE,COMPILER,BENCH,WORKSPACE,INDEX,CONSOLIDATED}-SK-V2.md` | Live | SK-V2 cohort audit reports. |
+| `restart/skinny/audit/LAZY-TAPE-DESIGN.md` | Live | Lock 1 amendment proposal (845 lines); architectural design for dual-mode tape. |
+| `restart/skinny/audit/HARDENING-*-SK-V1.md` | Reference | SK-V1 cycle history. |
+| `skinny/` | Live | Runnable JSON skinny prototype workspace (Cargo + crates + grammars + xtask + bench harness); contains RESULTS.md + REDRESS.md empirical evidence. |
 
 ---
 
-## §6 — Verification rituals
+## §6 — Next move
+
+**Skinny v2 lazy-mode implementation** per `restart/skinny/audit/LAZY-TAPE-DESIGN.md` §10:
+
+1. `skinny/crates/runtime/src/tape/` — add `offsets.rs` + `assembler.rs` (~+400 LOC); preserve eager-mode `token.rs` + `builder.rs` for non-JSON grammars.
+2. `skinny/crates/codegen/src/lower/rust.rs` — mode-branching emit (~+100 LOC).
+3. `skinny/crates/runtime/src/grammars/json/view.rs` — lazy-mode kind discriminator `fn kind_at_cursor(...)` template (~+200 LOC).
+4. `skinny/crates/runtime/src/grammars/json/generated.rs` — shrinks under lazy mode (~-150 LOC).
+5. `skinny/grammars/json.bbnf` workspace metadata: set `[workspace.metadata.bbnf.grammars.json.runtime] tape_mode = "lazy"`.
+6. **Re-bench**: `cargo run -p xtask -- bench-json` against twitter / citm / canada.
+7. Classify outcome per BENCH §6 matrix.
+
+| Outcome | Action |
+|---|---|
+| A/B/C (T1 ≥ 14K Mbps twitter) | Apply V9.2 punch list to V1 corpus verbatim; Lock 1 amendment lands; dispatch V9.3 verification cycle. |
+| G (T1 < 13K Mbps twitter) | Discard V9.2 punch list; revert to eager-only canonical; SOTA-BEAT routes to H tranche body as ASPIRATIONAL. |
+
+Expected wall: 1-2 weeks of focused implementation + 1 day re-bench + 1 day conditional Wave-2 commit cycle.
+
+---
+
+## §7 — Verification rituals
 
 Before any phase dispatch:
 
@@ -118,56 +147,27 @@ git log --oneline -10
 git status --short
 ```
 
-Commit head should be `aaeab682` (V7.1 verification) or later. Working tree should be clean.
-
-For per-target verification (post-fold; pre-tranche):
+Commit head should reflect V9.2 cohort closure. For per-target verification:
 
 ```bash
-# Lock 4 amendment landed
-rg -n 'DK13|Dunfield|higher-rank|GADT user-facing surface lands V1|closure.*&.i' restart/locks/14-LOCKS.md
+# V9.2 audit reports landed
+ls restart/audit/hardening/HARDENING-*-V9.2.md
+cat restart/audit/hardening/HARDENING-CONSOLIDATED-V9.2.md | head -50
 
-# 6-directive grammar
-rg -n 'ImportDecl.*HostFn.*PrettyDecl' restart/audit/pass-1-substrate/PASS-1.md restart/ARCHITECTURE.md
+# Skinny corpus post-SK-V2 state
+wc -l restart/skinny/*.md
+grep -l "BEAT_BOUND\|FAITHFUL\|MASKING\|MECHANICAL" restart/skinny/*.md
 
-# Backend trait at ARCH §7.5
-rg -nC2 '7\.5 Backend|trait Backend|RustBackend.*Backend' restart/ARCHITECTURE.md
+# Lazy-tape proposal
+wc -l restart/skinny/audit/LAZY-TAPE-DESIGN.md  # ~845 lines
 
-# path! macro canonical (pointer! retired except deletion archaeology)
-rg -n 'path!' restart/audit/pass-3-runtime/PASS-3.md restart/MASTER-PLAN.md
-rg -n 'pointer!' restart/ # only deletion archaeology
+# Skinny prototype + bench results
+cat skinny/RESULTS.md  # outcome G three times running
+cat skinny/REDRESS.md | head -50
 
-# parse-that-regex canonical
-rg -n 'parse-that-regex' restart/
-rg -n 'regex-automata|bbnf-regex' restart/ # only deletion archaeology
+# Lock 1 NOT YET AMENDED (conditional pending re-bench)
+rg -n 'tape_mode|lazy-mode' restart/locks/14-LOCKS.md  # should return zero
 ```
-
----
-
-## §7 — Next move
-
-**Wave 9 per-tranche full-spec drafting**.
-
-Phase 8 sub-phases — current status:
-
-| Phase | Status | Commit | Sub-orchestrator |
-|---|---|---|---|
-| 8.0 — Prune + HANDOFF rewrite | DONE | `94873cf0` | (direct edit) |
-| 8.1 — Restructure prompts + add lenses I/J/K | DONE | `bc31560c` | (direct edit) |
-| 8.2 — V8 simplification audit | DONE | `624b5af2` / `597ac678` / `cd6c2b4c` / `25addd94` | HARDENING-ORCHESTRATOR |
-| 8.3 — V8 consolidation | DONE | `28987de4` | HARDENING-ORCHESTRATOR |
-| 8.3.1 — Corpus cleanup | DONE | `2145577c` / `a74cdc52` | (direct edit) |
-| 8.4 — Simplification fold | DONE | `4c69b848` / `23311ff8` / `831b2f90` / `1a75ea53` / `85187a74` / `bd213632` / `c72318cd` / `e5cb1e4b` | AMENDMENT-DISPATCH |
-| 8.5 — V8.1 verification rerun | DONE | `277910df` / `fe36af42` / `7d8f03ea` / `0374d7ef` / `af3d1a73` | HARDENING-ORCHESTRATOR |
-
-Codex V9 status:
-
-| Phase | Status | Artefacts | Next gate |
-|---|---|---|---|
-| V9 hardening dispatch | DONE | `restart/audit/hardening/HARDENING-{PASS-1,PASS-2,PASS-3,MASTER-PLAN}-V9.md` | consolidated at V9 |
-| V9 consolidation + amendment | DONE | `restart/audit/hardening/HARDENING-CONSOLIDATED-V9.md` + live corpus edits | V9.1 verification |
-| V9.1 verification + narrow amendment | DONE (this pass) | `restart/audit/hardening/HARDENING-{PASS-1,PASS-2,PASS-3,MASTER-PLAN}-V9.1.md` + `HARDENING-CONSOLIDATED-V9.1.md` | Wave 9 dispatch |
-
-After V9.1 READY: **Wave 9** dispatches 10 parallel per-tranche full-spec agents (one per tranche A-J; ~3,000-5,000 lines per tranche).
 
 ---
 
@@ -179,8 +179,8 @@ Per `restart/README.md` §13. Calibrated, direct prose. Archaic-permissive (here
 
 ## §9 — Closing posture
 
-Hereupon the next move is Wave 9 per-tranche full-spec drafting. Phase 8 closed at V8.1 with READY-WITH-NARROW-RESIDUE; Codex V9 applied its amendment set; V9.1 verified and cleaned the remaining wording/citation residue. Lenses I (contrivance), J (host-language leverage), K (meta-grammar discipline) remain part of the full A-K lens set for any later hardening cycle. The architecture has been hardened through V9.1; it can be hardened many more times. The orchestrator structure permits any phase to re-execute without contract drift.
+Hereupon the next move is skinny v2 lazy-mode implementation against `LAZY-TAPE-DESIGN.md`. The V9.2 cohort has staged the V1 corpus amendments conditionally; they commit only if the re-bench validates the architectural premise. If outcome G repeats, the eager-only canonical survives and SOTA-BEAT becomes ASPIRATIONAL.
 
-The 14 locks govern. The precepts speak. The greenfield holds.
+The 14 locks govern. The precepts speak. The greenfield holds. The empirical falsifier has fired honestly three times.
 
-Read `restart/prompts/ORCHESTRATOR.md` end-to-end. Then dispatch Wave 9 per-tranche full-spec drafting from the V9.1 READY corpus.
+Read `restart/prompts/ORCHESTRATOR.md` end-to-end. Then dispatch the skinny v2 lazy-mode implementation per `restart/skinny/audit/LAZY-TAPE-DESIGN.md` §10.

@@ -999,6 +999,14 @@ Backend IR invariants:
 | SIMD and Pratt are mined, not syntax-directed. | `passes::recognizers` owns detection. |
 | VM can replay all BIR variants. | `vm::replay` golden tests. |
 
+`SimdScan` has two runtime products. `StructuralIndex` is the exact structural
+offset stream used for structural-scan gates. Grammar-specific parse indexes,
+such as JSON's parse index, may add parser columns when the full parse row
+recovers the extra cost. JSON skinny measured and rejected a duplicate
+structural-byte column; the parser reads `input[offset]` instead and keeps only
+string escape/control side columns. The structural-only gate must not
+accidentally pay for parser-only columns.
+
 ### 7.3 Side Tables
 
 The optimized IR is not a third core IR. README says optimized IR is side-table
@@ -1408,6 +1416,26 @@ kind, and payload slots. The direct value is a typed view/projection over the
 same parse event stream; direct scalar fields are caches over declared payload
 slots, never a second authoritative tree.
 
+The owning shape is document-first: a generated root owns or is paired with a
+sealed `Tape<'input>` snapshot, and `ValueRef`/typed projections borrow that
+tape. A root over a borrowed parser-state tape is not the committed runtime
+shape.
+
+Runtime SOTA gates must publish a token-economy artifact alongside throughput:
+token count, logical tape bytes, allocated tape bytes, tape bytes per input
+byte for both, payload bytes, pair-token count, open/close token counts,
+scalar-token count, and skip-count/skip-class counts. If structural scan and
+zero-arena gates pass while parse Mbps misses the competitor envelope,
+close-token emission, pair-token emission, skip patching, allocation capacity,
+and tape sealing are sanctioned perturbation candidates. JSON skinny adopted
+close-token elision and private-Vec semantic sealing after before/after bench
+rows; pair-token fusion measured as token-count-positive but throughput-negative
+and is not canonical. A 12-byte skipless-token perturbation reduced logical
+tape bytes but produced mixed throughput (twitter regression, citm gain, canada
+noise) and is also not canonical. These remain Lock 1 substrate choices and
+require before/after bench rows rather than a second tree or hidden side
+substrate.
+
 Generated per-grammar runtime lives under:
 
 ```text
@@ -1482,9 +1510,9 @@ and which `CostFacts` row the rewrite stalled on.
 
 SOTA gates are explicit restart requirements. README names the target family:
 twitter <= 380 us, canada <= 2.8 ms, citm <= 750 us, CSS bootstrap <= 3 ms,
-animate <= 1.6 ms, and simdjson on-demand 7 GB/s-class x86 targets
+animate <= 1.6 ms, and simdjson on-demand 56000 Mbps-class x86 targets
 (`restart/README.md:322-340`). Lock 8 lists competitor anchors: simdjson OD
-7 GB/s, sonic-rs M1 twitter 436 us, and lightning-css Bootstrap 4.16 ms
+56000 Mbps, sonic-rs M1 twitter 436 us, and lightning-css Bootstrap 4.16 ms
 (`restart/locks/14-LOCKS.md:48`). SOTA.md records the supporting competitor
 benchmarks (`restart/corpora/SOTA.md:50-89`, `restart/corpora/SOTA.md:130-136`).
 
@@ -1516,7 +1544,7 @@ Exact gate rows:
 | `json/canada` | sonic-rs 3.144ms, simd-json 3.226ms on M1 Pro. | <= 2.8ms on M1 Pro. | CPU model, OS, compiler flags, input hash, array scan profile, competitor version, bbnf commit, warmup, sample policy. |
 | `css/bootstrap` | lightning-css 4.16ms on M1 Pro. | <= 3.0ms on M1 Pro. | CSS fixture hash, layout mode, visitor mode, competitor version, bbnf commit, warmup, sample policy. |
 | `css/animate` | lightning-css 1.97ms on M1 Pro. | <= 1.6ms on M1 Pro. | CSS fixture hash, layout mode, visitor mode, competitor version, bbnf commit, warmup, sample policy. |
-| `simd/structural_scan` | simdjson On-Demand ~7 GB/s on x86 AVX2; ~5 GB/s on M-series NEON. | >= 5 GB/s on M-series, >= 7 GB/s on x86 AVX2; scalar parity hash matches. | ISA, CPU flags, kernel, scalar parity hash, competitor version, bbnf commit, warmup, sample policy. |
+| `simd/structural_scan` | simdjson On-Demand ~56000 Mbps on x86 AVX2; ~40000 Mbps on M-series NEON. | >= 40000 Mbps on M-series, >= 56000 Mbps on x86 AVX2; scalar parity hash matches. | ISA, CPU flags, kernel, scalar parity hash, competitor version, bbnf commit, warmup, sample policy. |
 
 Generated LOC budget rows:
 
@@ -1587,23 +1615,23 @@ document resolves against this table.
 
 | Grammar | Typed root | `ValueRef` borrow shape | Runtime files emitted | Visitor + `VisitTypes` | Path schema | `path!` macro typing | Regex engine | Fixture manifest | Host route | Generated LOC (current → max) | Declaration-crate status |
 |---|---|---|---|---|---|---|---|---|---|---:|---|
-| `bbnf` | `Bbnf` | `BbnfRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, `host.rs`, layout, error, `PrattSpine` LUT | `BbnfVisitor`, `BbnfVisitTypes` | `bbnf.path-schema.toml` | `path!` typed against `bbnf.path-schema.toml`; `pointer!` retires per Lock 7 + naming-canon lint | `parse-that-regex` (sub-crate of `parse-that`) | `fixtures/bbnf/manifest.toml` | self-host primitives plus regen utilities; metadata + `@host fn` blocks in `bbnf.bbnf` | 21,503 → 21,933 | none (default; §5.6 fence empty) |
-| `bnf` | `Bnf` | `BnfRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, layout, error | `BnfVisitor`, `BnfVisitTypes` | `bnf.path-schema.toml` | `path!` typed against `bnf.path-schema.toml` | `parse-that-regex` | `fixtures/bnf/manifest.toml` | none (pure recogniser; metadata-only host stanza) | 3,290 → 3,356 | none |
-| `csv` | `Csv` | `CsvRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, layout, error, `SimdScan` for delimiter alphabet | `CsvVisitor`, `CsvVisitTypes` | `csv.path-schema.toml` | `path!` typed against `csv.path-schema.toml` | `parse-that-regex` | `fixtures/csv/manifest.toml` | metadata + escape host fns from `host::primitives` | 1,693 → 1,727 | none |
-| `css_l4` | `CssL4` | `CssL4Root` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, `host.rs`, `layout.rs`, error, `SimdScan` for structural alphabet | `CssL4Visitor`, `CssL4VisitTypes` | `css_l4.path-schema.toml` | `path!` typed against `css_l4.path-schema.toml` | `parse-that-regex` | `fixtures/css/manifest.toml` | colour-function host primitives plus length conversion via `host::primitives`; metadata + `@host fn` blocks | 107,138 → 109,281 | none |
-| `css_pretty` | `CssPretty` | `CssPrettyRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, `layout.rs`, error | `CssPrettyVisitor`, `CssPrettyVisitTypes` | `css_pretty.path-schema.toml` | `path!` typed against `css_pretty.path-schema.toml` | `parse-that-regex` | shares `fixtures/css/` corpus | metadata + format host fns from `host::primitives` | 9,021 → 9,201 | none |
-| `ebnf` | `Ebnf` | `EbnfRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, layout, error | `EbnfVisitor`, `EbnfVisitTypes` | `ebnf.path-schema.toml` | `path!` typed against `ebnf.path-schema.toml` | `parse-that-regex` | `fixtures/ebnf/manifest.toml` | none (metadata-only host stanza) | 7,646 → 7,799 | none |
-| `google_sheets` | `GoogleSheets` | `GoogleSheetsRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, `host.rs`, layout, error, `PrattSpine` for operator precedence | `GoogleSheetsVisitor`, `GoogleSheetsVisitTypes` | `google_sheets.path-schema.toml` | `path!` typed against `google_sheets.path-schema.toml` | `parse-that-regex` | `fixtures/sheets/manifest.toml` | range/date/array-literal host primitives plus formula host chains | 14,088 → 14,370 | none |
-| `json` | `Json` | `JsonRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, layout, error, `SimdScan` for structural alphabet (twitter/citm/canada hot path) | `JsonVisitor`, `JsonVisitTypes` | `json.path-schema.toml` | `path!` typed against `json.path-schema.toml` (the canonical SOTA-anchor case) | `parse-that-regex` | `fixtures/json/manifest.toml` | metadata + numeric/string host fns from `host::primitives` | 3,500 → 3,570 | none |
-| `math` | `Math` | `MathRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, layout, error, `PrattSpine` for operator precedence | `MathVisitor`, `MathVisitTypes` | `math.path-schema.toml` | `path!` typed against `math.path-schema.toml` | `parse-that-regex` | `fixtures/math/manifest.toml` | metadata + numeric host fns from `host::primitives` (Pratt-eligible operator chain only) | 871 → 888 | none |
-| `yaml` (onboarding probe) | `Yaml` | `YamlRoot` over `&'i Tape<'i>` | `generated.rs`, `parser.rs`, `host.rs` (if metadata declares host route), layout, error; Pratt/SIMD auto-detected from grammar shape | `YamlVisitor`, `YamlVisitTypes` | `yaml.path-schema.toml` | `path!` typed against `yaml.path-schema.toml` (parity-phase only) | `parse-that-regex` | parity-phase `fixtures/yaml/manifest.toml` (post-onboarding gate, never an onboarding surface) | decomposed via `host::primitives` plus block-bodied `@host fn` chain in the metadata block per `restart/README.md:155`; no Rust per-grammar code emerges from onboarding | 0 → ≤ 4,000 (provisional; SYNTHESIS Wave-2 owner) | none (Lock 14 onboarding admits exactly two surfaces: `yaml.bbnf` plus `[workspace.metadata.bbnf.grammars.yaml]`; declaration crate is forbidden at onboarding) |
+| `bbnf` | `Bbnf` | `BbnfRoot` owns sealed `Tape<'i>` | `generated.rs`, `parser.rs`, `host.rs`, layout, error, `PrattSpine` LUT | `BbnfVisitor`, `BbnfVisitTypes` | `bbnf.path-schema.toml` | `path!` typed against `bbnf.path-schema.toml`; `pointer!` retires per Lock 7 + naming-canon lint | `parse-that-regex` (sub-crate of `parse-that`) | `fixtures/bbnf/manifest.toml` | self-host primitives plus regen utilities; metadata + `@host fn` blocks in `bbnf.bbnf` | 21,503 → 21,933 | none (default; §5.6 fence empty) |
+| `bnf` | `Bnf` | `BnfRoot` owns sealed `Tape<'i>` | `generated.rs`, `parser.rs`, layout, error | `BnfVisitor`, `BnfVisitTypes` | `bnf.path-schema.toml` | `path!` typed against `bnf.path-schema.toml` | `parse-that-regex` | `fixtures/bnf/manifest.toml` | none (pure recogniser; metadata-only host stanza) | 3,290 → 3,356 | none |
+| `csv` | `Csv` | `CsvRoot` owns sealed `Tape<'i>` | `generated.rs`, `parser.rs`, layout, error, `SimdScan` for delimiter alphabet | `CsvVisitor`, `CsvVisitTypes` | `csv.path-schema.toml` | `path!` typed against `csv.path-schema.toml` | `parse-that-regex` | `fixtures/csv/manifest.toml` | metadata + escape host fns from `host::primitives` | 1,693 → 1,727 | none |
+| `css_l4` | `CssL4` | `CssL4Root` owns sealed `Tape<'i>` | `generated.rs`, `parser.rs`, `host.rs`, `layout.rs`, error, `SimdScan` for structural alphabet | `CssL4Visitor`, `CssL4VisitTypes` | `css_l4.path-schema.toml` | `path!` typed against `css_l4.path-schema.toml` | `parse-that-regex` | `fixtures/css/manifest.toml` | colour-function host primitives plus length conversion via `host::primitives`; metadata + `@host fn` blocks | 107,138 → 109,281 | none |
+| `css_pretty` | `CssPretty` | `CssPrettyRoot` owns sealed `Tape<'i>` | `generated.rs`, `parser.rs`, `layout.rs`, error | `CssPrettyVisitor`, `CssPrettyVisitTypes` | `css_pretty.path-schema.toml` | `path!` typed against `css_pretty.path-schema.toml` | `parse-that-regex` | shares `fixtures/css/` corpus | metadata + format host fns from `host::primitives` | 9,021 → 9,201 | none |
+| `ebnf` | `Ebnf` | `EbnfRoot` owns sealed `Tape<'i>` | `generated.rs`, `parser.rs`, layout, error | `EbnfVisitor`, `EbnfVisitTypes` | `ebnf.path-schema.toml` | `path!` typed against `ebnf.path-schema.toml` | `parse-that-regex` | `fixtures/ebnf/manifest.toml` | none (metadata-only host stanza) | 7,646 → 7,799 | none |
+| `google_sheets` | `GoogleSheets` | `GoogleSheetsRoot` owns sealed `Tape<'i>` | `generated.rs`, `parser.rs`, `host.rs`, layout, error, `PrattSpine` for operator precedence | `GoogleSheetsVisitor`, `GoogleSheetsVisitTypes` | `google_sheets.path-schema.toml` | `path!` typed against `google_sheets.path-schema.toml` | `parse-that-regex` | `fixtures/sheets/manifest.toml` | range/date/array-literal host primitives plus formula host chains | 14,088 → 14,370 | none |
+| `json` | `Json` | `JsonRoot` owns sealed `Tape<'i>` | `generated.rs`, `parser.rs`, layout, error, `SimdScan` for structural alphabet (twitter/citm/canada hot path) | `JsonVisitor`, `JsonVisitTypes` | `json.path-schema.toml` | `path!` typed against `json.path-schema.toml` (the canonical SOTA-anchor case) | `parse-that-regex` | `fixtures/json/manifest.toml` | metadata + numeric/string host fns from `host::primitives` | 3,500 → 3,570 | none |
+| `math` | `Math` | `MathRoot` owns sealed `Tape<'i>` | `generated.rs`, `parser.rs`, layout, error, `PrattSpine` for operator precedence | `MathVisitor`, `MathVisitTypes` | `math.path-schema.toml` | `path!` typed against `math.path-schema.toml` | `parse-that-regex` | `fixtures/math/manifest.toml` | metadata + numeric host fns from `host::primitives` (Pratt-eligible operator chain only) | 871 → 888 | none |
+| `yaml` (onboarding probe) | `Yaml` | `YamlRoot` owns sealed `Tape<'i>` | `generated.rs`, `parser.rs`, `host.rs` (if metadata declares host route), layout, error; Pratt/SIMD auto-detected from grammar shape | `YamlVisitor`, `YamlVisitTypes` | `yaml.path-schema.toml` | `path!` typed against `yaml.path-schema.toml` (parity-phase only) | `parse-that-regex` | parity-phase `fixtures/yaml/manifest.toml` (post-onboarding gate, never an onboarding surface) | decomposed via `host::primitives` plus block-bodied `@host fn` chain in the metadata block per `restart/README.md:155`; no Rust per-grammar code emerges from onboarding | 0 → ≤ 4,000 (provisional; SYNTHESIS Wave-2 owner) | none (Lock 14 onboarding admits exactly two surfaces: `yaml.bbnf` plus `[workspace.metadata.bbnf.grammars.yaml]`; declaration crate is forbidden at onboarding) |
 
 Column semantics:
 
 | Column | Definition |
 |---|---|
 | Typed root | The generated direct-to-struct type returned by `parse(&'i str)` per PASS-3 §2. |
-| `ValueRef` borrow shape | The untyped tape-cursor view over `&'i Tape<'i>` that backs `path!`, `select!`, visitors, and the debugger per Lock 1 and PASS-3 §4. The legacy `pointer!` macro retires under the naming-canon lint; the canonical macro is `path!`. |
+| `ValueRef` borrow shape | The generated root/document owns a sealed `Tape<'i>` snapshot; `ValueRef<'doc, 'i, K>` is the untyped tape-cursor view borrowing that document tape. It backs `path!`, `select!`, visitors, and the debugger per Lock 1 and PASS-3 §4. The legacy `pointer!` macro retires under the naming-canon lint; the canonical macro is `path!`. |
 | Runtime files emitted | Template-emitted files under `runtime/src/grammars/<name>/`; every cell is generated or data-only, hand-written runtime files are forbidden by Lock 14. |
 | Visitor + `VisitTypes` | The generated `Visitor` trait and its bitflag-pruned visit-type set per PASS-3 §3. |
 | Path schema | The generated path-schema sidecar consumed by `path!` / `select!` typing per PASS-3 §3. |

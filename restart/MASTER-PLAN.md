@@ -135,7 +135,7 @@ in `restart/corpora/SOTA.md:50-89` and `restart/corpora/SOTA.md:130-136`.
 | `json/canada` | sonic-rs 3.144ms; simd-json 3.226ms (`restart/corpora/SOTA.md:56`). | <= 2.8ms. | M1 Pro macOS, native Rust release with `target-cpu=native`. | H.W3, J.W1. |
 | `css/bootstrap` | lightning-css 4.16ms. | <= 3.0ms. | M1 Pro macOS, native Rust release with `target-cpu=native`. | H.W4, J.W1. |
 | `css/animate` | lightning-css 1.97ms. | <= 1.6ms. | M1 Pro macOS, native Rust release with `target-cpu=native`. | H.W4, J.W1. |
-| `simd/structural_scan` | simdjson On-Demand ~7 GB/s on x86 AVX2; ~5 GB/s on M-series NEON. | >= 5 GB/s on M-series, >= 7 GB/s on x86 AVX2; scalar parity hash matches. | M1 Pro macOS NEON and x86_64 AVX2 build host. | H.W1/H.W3, J.W1. |
+| `simd/structural_scan` | simdjson On-Demand ~56000 Mbps on x86 AVX2; ~40000 Mbps on M-series NEON. | >= 40000 Mbps on M-series, >= 56000 Mbps on x86 AVX2; scalar parity hash matches. | M1 Pro macOS NEON and x86_64 AVX2 build host. | H.W1/H.W3, J.W1. |
 
 The SOTA close gates measure the Rust line only at H.W1/H.W3/H.W4 per Lock 8
 amendment (`restart/locks/14-LOCKS.md:48`). WASM SOTA measurements defer

@@ -930,14 +930,21 @@ loss of lowering distinct-ness.
 | `PathEval` | Path-evaluator hook. |
 | `DebugMark` | VM/debug trace marker. |
 | `Return` | Backend return from entry/rule. |
-| `CursorDispatch` | Dispatch on the byte at `source[offsets[*cursor]]`; advances cursor through structural-offset array. Lowers to the SOTA-class typed-parse hub primitive (`parse_value`-shape rules). Co-exists with `Alt { mode: Dispatch }` — the alt-byte-position dispatch — under per-grammar `backend_shape` metadata (`"structural-index"` ≡ `CursorDispatch`; `"eager-tape"` ≡ `Alt { Dispatch }`); see `restart/skinny/audit/SOTA-BEAT-DESIGN.md` §4 + §2026-05-12 amendment. |
 
-The post-2026-05-12 shape preserves the `Return` row PASS-2 added on top of the
+The 20-variant shape preserves the `Return` row PASS-2 added on top of the
 original PASS-1 22-variant table; the three pair collapses (Layout, Alt,
-host-call) net the alphabet to 19 semantic variants plus `Return`, and the
-`CursorDispatch` addition lands the alphabet at 21 variants. PASS-1 retains
-the alphabet ownership; PASS-2 ratifies the variant payload tables; the
-snapshot tests at `ir::backend_ir` consume the post-fold + post-amendment shape.
+host-call) net the alphabet to 19 semantic variants plus `Return`. PASS-1
+retains the alphabet ownership; PASS-2 ratifies the variant payload tables;
+the snapshot tests at `ir::backend_ir` consume the post-fold shape.
+
+**2026-05-12 lowering amendment** (no IR addition): `Alt { mode: Dispatch }`
+lowers to one of two access patterns per `LayoutFacts.backend_shape[rule_id]`
+(see §7.3): `source[pos]` for `EagerTape` (the prior canonical), or
+`source[offsets[*cursor as usize] as usize]` for `StructuralIndex` (the
+SOTA-class typed-parse template per `restart/skinny/audit/SOTA-BEAT-DESIGN.md`
+§2). The variant payload is unchanged; only the lowerer emits differently.
+`backend_shape` is cost-model-derived from Grammar IR facts per Lock 10
+auto-detection — no user-visible directive.
 
 Backend IR payload and lowerer matrix:
 
@@ -963,7 +970,6 @@ Backend IR payload and lowerer matrix:
 | `PathEval` | Compiled path ID, input view. | Calls `path-core` evaluator. | Evaluates path. | TS uses same schema. |
 | `DebugMark` | Event label, node ID, span. | Emits trace hook if enabled. | Emits trace event. | Debug-only in WASM unless enabled. |
 | `Return` | Return value/control mode. | Emits return. | Pops frame. | WASM maps to ABI return. |
-| `CursorDispatch` | `arms: Vec<(DispatchByteSet, BirId)>`, `fallthrough: BirId`. Generated lowerer emits `match source[offsets[*cursor as usize] as usize] { ... }` then arm bodies; no `skip_ws`, no raw `peek`, no source-position advancement at dispatch. Cursor advances through the offset array via `*cursor += 1` per consumed structural unit. | Emits the cursor-walk dispatch primitive; jump-table density tuned per Lock 10 cost model. | Executes structural-index walk; reads `source[offsets[cursor]]` for kind classification. | The arm-density signal feeds SIMD primitive selection in `bbnf-simd` (Lock 16 allowlist). |
 
 Example source-to-BIR coverage:
 
@@ -991,7 +997,6 @@ Example source-to-BIR coverage:
 | `PathEval` | Generated visitor/path hook. | Path crate consumer. |
 | `DebugMark` | Debug profile enabled. | VM/replay consumer. |
 | `Return` | End of rule entry. | Compiler-generated. |
-| `CursorDispatch` | `parse_value` in JSON; `parse_declaration` first-byte dispatch in CSS L4; `parse_expression` first-byte dispatch in BBNF-self. Compiler-generated from `Alt { Dispatch }` Grammar IR when `[workspace.metadata.bbnf.grammars.<name>.runtime] backend_shape = "structural-index"`. | Per-grammar metadata selects between `CursorDispatch` (structural-index-driven, SOTA-class) and `Alt { Dispatch }` (eager-tape, recovery/layout-bearing). |
 
 Backend IR invariants:
 
@@ -1025,7 +1030,7 @@ tables and internal fact logs are:
 
 | Table | Producer | Consumer | Visibility |
 |---|---|---|---|
-| `LayoutFacts` | `passes::layout` (folds HM + bidirectional + CSP into layout decisions). | Backend IR builder (`LayoutScope`), host registry, diagnostics. | Public. |
+| `LayoutFacts` | `passes::layout` (folds HM + bidirectional + CSP into layout decisions); `passes::recognizers` extends with `backend_shape: HashMap<RuleId, BackendShape>` and `hot_call_graph: HashMap<RuleId, HotPathFact>` per Lock 10 + Lock 15. | Backend IR builder (`LayoutScope`), rust template lowerer (per-rule access-pattern + force-inline emission), host registry, diagnostics. | Public. |
 | `ShapeFacts` | Shape mining. | Direct builder, Value API, path typing. | Public. |
 | `RecognizerFacts` | Recognizer mining. | BIR builder, SIMD/Pratt lowerers. | Public. |
 | `EGraphFacts` | Egraph bridge. | Cost extraction. | Public; keys stable e-class/node facts, not chosen representatives. |
@@ -1035,6 +1040,38 @@ tables and internal fact logs are:
 | `RecoveryFacts` | Error pass. | `ErrorRecover`, LSP diagnostics. | Public. |
 | `TypeFacts` | HM + bidirectional checker (internal to `passes::layout`). | `passes::layout` only. | Internal subroutine artefact; not exported across pass boundaries. |
 | `TypeObligationLog` | HM equality, expected checking, coercion, and finite-choice stages inside `passes::layout`. | Diagnostics until layout/recovery facts are emitted. | Internal diagnostic evidence only. |
+
+**`LayoutFacts.backend_shape` field (2026-05-12 extension per Lock 10 + Lock 15 + SOTA-BEAT-DESIGN.md §2)**:
+
+```rust
+pub enum BackendShape {
+    /// Default. Alt { Dispatch } lowers reading source[pos] (eager byte position).
+    /// Selected for rules whose body or transitive uses include @error(recover),
+    /// @host fn decoded-at-parse, @layout scope, or whose first-set has overlap
+    /// (the latter forces Alt { Speculative }, not Alt { Dispatch }).
+    EagerTape,
+    /// Alt { Dispatch } lowers reading source[offsets[*cursor as usize] as usize]
+    /// (structural-index walk). Selected for rules with byte-finite disjoint
+    /// first-sets, no payload-bearing tokens, no layout scope. Codegen template
+    /// additionally emits #[inline(always)] on Grammar IR's hot-path rules
+    /// (via LayoutFacts.hot_call_graph) per Lock 15.
+    StructuralIndex,
+    /// AVX-512 VBMI2 collapsed-stage backend (asmjson-class 9-state FSM with
+    /// PC-as-state direct threading via r10 asm!; Lock 16 admissibility under
+    /// "asmjson r10-direct-threading"). Selected when target features include
+    /// avx512vbmi2 AND the rule is a hub with ≥4 byte-disjoint arms AND no
+    /// recovery/layout/host-decode body. Per-grammar opt-in via CPUID, not directive.
+    CollapsedStage,
+}
+```
+
+Cost-model derivation algorithm at `passes::recognizers::derive_backend_shape(grammar_ir, rule_id) -> BackendShape` (no new directives; all inputs are existing Grammar IR facts):
+1. If transitive uses include any `ErrorDirective` ⇒ `EagerTape`
+2. Else if rule body contains `Call { kind: Host }` decoded-at-parse ⇒ `EagerTape`
+3. Else if rule body contains `LayoutDirective` ⇒ `EagerTape`
+4. Else if rule's `Alt` first-set has overlap (per existing `passes::recognizers` first-set computation) ⇒ `EagerTape` (lowers `Alt` as `Speculative`, not `Dispatch`)
+5. Else if target features admit AND rule is hub with ≥ 4 byte-disjoint arms ⇒ `CollapsedStage`
+6. Else ⇒ `StructuralIndex`
 
 ### 7.4 Diagnostic Vocabulary
 
@@ -1089,6 +1126,11 @@ gain.
 | `BBNF-CODEGEN-REGEN-EQUALITY` | Regen equality. | BIR snapshot changed without committed generated output. |
 | `BBNF-CODEGEN-TEMPLATE-METADATA` | Runtime template metadata. | Template lacks path, visitor, or diagnostic metadata. |
 | `BBNF-BIR-LOOKBEHIND-GUARD` | BIR validation. | Unbounded lookbehind reached BIR despite Grammar IR rejection (last-line guard). |
+| `BBNF-BACKEND-SHAPE-INCONSISTENT` | `passes::recognizers::derive_backend_shape` (Lock 10 + Lock 15). | Cost-model output cannot resolve a coherent `LayoutFacts.backend_shape` for the rule (e.g., transitive uses simultaneously include `@error(recover)` AND target-feature `avx512vbmi2` admits `CollapsedStage` — the recovery path forces `EagerTape`, blocking the optimisation). Emitted with the conflicting factors named; cookbook entry advises whether to relax the directive or accept the fallback shape. |
+| `BBNF-FORCE-INLINE-MISSED` | Lock 15 verification at `cargo asm` post-build. | A rule mined as hot-path in `LayoutFacts.hot_call_graph` is generated without `#[inline(always)]` in the emitted source; either the codegen template branch is wrong or the cost-model threshold is mis-tuned. |
+| `BBNF-ICACHE-BUDGET-EXCEEDED` | Lock 15 verification at post-LTO `cargo asm` size pass. | The fused hot function (e.g., `parse_value` after LTO) exceeds the per-grammar i-cache budget (default ~20 KiB per yyjson reference). Either reduce hot-path size via per-rule extraction or accept the budget-overrun warning with measurement justification. |
+| `BBNF-UTF8-INVALID-AT-PARSE` | Scan stage UTF-8 validation per Lock 9 + the corpora-correctness gap finding 2026-05-12. | Source bytes fail UTF-8 validation at scan time (via `simdutf8::basic::from_utf8`). Parse rejects at scan boundary; view layer never observes invalid bytes. Replaces the prior view-time `from_utf8().expect()` panic path. |
+| `BBNF-UNICODE-NONCHAR-CODEPOINT` | String-decode `\uXXXX` resolution. | Non-character codepoint (`U+FDD0..U+FDEF`, `U+nFFFE`, `U+nFFFF` for `n` in 0..=0x10) decoded in a JSON string. Per RFC 8259, these are valid; the prior `char::from_u32` rejection at `parse-that-regex/src/lib.rs:352` was over-strict. Warning, not error; admit by default. |
 
 The verbatim diagnostic strings for each code live with the producer:
 `restart/audit/pass-2-codegen/PASS-2.md:533-538` for the codegen and BIR

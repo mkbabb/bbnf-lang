@@ -24,7 +24,13 @@ fn main() {
         .cloned()
         .unwrap_or_else(|| "twitter".to_string());
 
-    let path = locate_fixture(&corpus);
+    // If corpus is an absolute or relative path containing '/' or ending in
+    // ".json", treat it as a literal path; otherwise look it up by name.
+    let path = if corpus.contains('/') || corpus.ends_with(".json") {
+        PathBuf::from(&corpus)
+    } else {
+        locate_fixture(&corpus)
+    };
     eprintln!("profile-lazy: corpus={corpus} path={path:?} iters={iters}");
 
     let bytes = std::fs::read(&path).expect("failed to read fixture");

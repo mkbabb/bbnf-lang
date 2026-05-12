@@ -1,0 +1,5 @@
+profile-lazy: corpus=test_data/canada.json path="test_data/canada.json" iters=1332
+profile-lazy: fixture size = 2251051 bytes
+profile-lazy: starting timed loop
+profile-lazy: 1332 iters in 5.17s -> 4640 Mbps (offset cksum 297366336)
+All tasks terminated.

@@ -1357,6 +1357,7 @@ dependencies = [
  "anyhow",
  "codegen",
  "runtime",
+ "serde_json",
  "test-fixtures",
  "toml",
 ]

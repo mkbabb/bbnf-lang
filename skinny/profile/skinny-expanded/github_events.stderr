@@ -1,0 +1,5 @@
+profile-lazy: corpus=test_data/github_events.json path="test_data/github_events.json" iters=46060
+profile-lazy: fixture size = 65132 bytes
+profile-lazy: starting timed loop
+profile-lazy: 46060 iters in 3.25s -> 7378 Mbps (offset cksum 203447020)
+All tasks terminated.

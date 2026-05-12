@@ -1,0 +1,5 @@
+profile-lazy: corpus=test_data/gsoc-2018.json path="test_data/gsoc-2018.json" iters=901
+profile-lazy: fixture size = 3327831 bytes
+profile-lazy: starting timed loop
+profile-lazy: 901 iters in 2.52s -> 9516 Mbps (offset cksum 68333642)
+Stopping profile.

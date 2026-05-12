@@ -930,12 +930,14 @@ loss of lowering distinct-ness.
 | `PathEval` | Path-evaluator hook. |
 | `DebugMark` | VM/debug trace marker. |
 | `Return` | Backend return from entry/rule. |
+| `CursorDispatch` | Dispatch on the byte at `source[offsets[*cursor]]`; advances cursor through structural-offset array. Lowers to the SOTA-class typed-parse hub primitive (`parse_value`-shape rules). Co-exists with `Alt { mode: Dispatch }` — the alt-byte-position dispatch — under per-grammar `backend_shape` metadata (`"structural-index"` ≡ `CursorDispatch`; `"eager-tape"` ≡ `Alt { Dispatch }`); see `restart/skinny/audit/SOTA-BEAT-DESIGN.md` §4 + §2026-05-12 amendment. |
 
-The 20-variant shape preserves the `Return` row PASS-2 added on top of the
+The post-2026-05-12 shape preserves the `Return` row PASS-2 added on top of the
 original PASS-1 22-variant table; the three pair collapses (Layout, Alt,
-host-call) net the alphabet to 19 semantic variants plus `Return`. PASS-1
-retains the alphabet ownership; PASS-2 ratifies the variant payload tables;
-the snapshot tests at `ir::backend_ir` consume the post-fold shape.
+host-call) net the alphabet to 19 semantic variants plus `Return`, and the
+`CursorDispatch` addition lands the alphabet at 21 variants. PASS-1 retains
+the alphabet ownership; PASS-2 ratifies the variant payload tables; the
+snapshot tests at `ir::backend_ir` consume the post-fold + post-amendment shape.
 
 Backend IR payload and lowerer matrix:
 
@@ -961,6 +963,7 @@ Backend IR payload and lowerer matrix:
 | `PathEval` | Compiled path ID, input view. | Calls `path-core` evaluator. | Evaluates path. | TS uses same schema. |
 | `DebugMark` | Event label, node ID, span. | Emits trace hook if enabled. | Emits trace event. | Debug-only in WASM unless enabled. |
 | `Return` | Return value/control mode. | Emits return. | Pops frame. | WASM maps to ABI return. |
+| `CursorDispatch` | `arms: Vec<(DispatchByteSet, BirId)>`, `fallthrough: BirId`. Generated lowerer emits `match source[offsets[*cursor as usize] as usize] { ... }` then arm bodies; no `skip_ws`, no raw `peek`, no source-position advancement at dispatch. Cursor advances through the offset array via `*cursor += 1` per consumed structural unit. | Emits the cursor-walk dispatch primitive; jump-table density tuned per Lock 10 cost model. | Executes structural-index walk; reads `source[offsets[cursor]]` for kind classification. | The arm-density signal feeds SIMD primitive selection in `bbnf-simd` (Lock 16 allowlist). |
 
 Example source-to-BIR coverage:
 
@@ -988,6 +991,7 @@ Example source-to-BIR coverage:
 | `PathEval` | Generated visitor/path hook. | Path crate consumer. |
 | `DebugMark` | Debug profile enabled. | VM/replay consumer. |
 | `Return` | End of rule entry. | Compiler-generated. |
+| `CursorDispatch` | `parse_value` in JSON; `parse_declaration` first-byte dispatch in CSS L4; `parse_expression` first-byte dispatch in BBNF-self. Compiler-generated from `Alt { Dispatch }` Grammar IR when `[workspace.metadata.bbnf.grammars.<name>.runtime] backend_shape = "structural-index"`. | Per-grammar metadata selects between `CursorDispatch` (structural-index-driven, SOTA-class) and `Alt { Dispatch }` (eager-tape, recovery/layout-bearing). |
 
 Backend IR invariants:
 

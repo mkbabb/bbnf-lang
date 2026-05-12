@@ -240,7 +240,117 @@ The full V1 Backend IR has 20 variants (ARCH §7.2). JSON exercises 14.
 | `PathEval` | Skinny does not link `path-core`. | None for SOTA. Path queries are a PASS-3 surface. |
 | `DebugMark` | Skinny disables the debug profile. | None. |
 
-### 3.3 BIR construction discipline
+### 3.3 New BIR variant — `CursorDispatch`
+
+The structural-index-driven typed-parse template (`SUBSTRATE.md` §1.6; `SOTA-BEAT-DESIGN.md` §2 + §4) requires one additive BIR variant: `CursorDispatch`. This lowers to the dispatch primitive of a typed-parse hub (`parse_value` in JSON, `parse_declaration` in CSS L4, `parse_expression` in BBNF-self).
+
+```rust
+pub enum BirNode {
+    // ... existing variants
+    CursorDispatch {
+        /// Each arm matches one dispatch byte (or byte set) at the current cursor position
+        /// in the structural-offset array. The lowerer emits:
+        ///   match source[offsets[*cursor as usize] as usize] { ... }
+        /// followed by per-arm body emission; no skip_ws, no raw peek, no byte-position advancement.
+        arms: Vec<(DispatchByteSet, BirId)>,
+        /// Default arm; lowered as the match-arm `_ => fallthrough_body`.
+        fallthrough: BirId,
+    },
+}
+```
+
+The shape miner (Lock 10) detects this pattern from grammar shape — any `Alt { mode: Dispatch }` whose body is `[ws] (first_set_byte → branch | ...) [ws]` lowers to `CursorDispatch` when `[workspace.metadata.bbnf.grammars.<name>.runtime] backend_shape = "structural-index"` is set. The pre-existing `Alt { mode: Dispatch }` retains the eager-byte-position dispatch shape for grammars with `backend_shape = "eager-tape"` (recovery, layout, or `@host fn`-decoded-at-parse-time grammars).
+
+`CursorDispatch` is the canonical 15th BIR variant the skinny exercises (post-amendment count: 15 of 21 V1 BIR variants).
+
+### 3.4 Structural-index-driven generation contract (normative)
+
+Generated parser bodies, when `backend_shape = "structural-index"` is selected for the grammar, **must** honour these primitives. The contract is normative because the codegen template inversion is load-bearing for SOTA-BEAT (`SUBSTRATE.md` §1.6; cycle-budget evidence at `skinny/profile/simdjson-v2/PROFILE-REPORT.md` showing stage2 visit functions never re-scan source). Generated bodies that re-scan source bytes for whitespace or value boundaries are faults regardless of throughput outcome — the audit gate at `BENCH.md` §6 outcome class `G-fusion-quality` fires when comparator-anchored hot-leaf-count exceeds the structural-shape threshold.
+
+**Primitive 1 — `parse_value` shape**. The typed dispatch hub reads exactly one byte per dispatch via `source[offsets[*cursor as usize] as usize]`. No `skip_ws`, no raw `peek`, no `pos` advancement against source. Cursor advances through the offset array via `*cursor += 1` per consumed structural unit.
+
+```rust
+fn parse_value<'i>(
+    source: &'i [u8],
+    offsets: &[u32],
+    flags: &[u8],
+    cursor: &mut u32,
+    arena: &Arena,
+) -> Result<JsonValue<'i>, ParseError> {
+    let b = source[offsets[*cursor as usize] as usize];
+    match b {
+        b'{' => parse_object(source, offsets, flags, cursor, arena),
+        b'[' => parse_array(source, offsets, flags, cursor, arena),
+        b'"' => parse_string(source, offsets, flags, cursor, arena),
+        b'-' | b'0'..=b'9' => parse_number(source, offsets, cursor, arena),
+        b't' | b'f' | b'n' => parse_literal(source, offsets, cursor),
+        _ => Err(ParseError::Unexpected(b)),
+    }
+}
+```
+
+**Primitive 2 — Container body shape**. `parse_object` and `parse_array` consume the open via `*cursor += 1`, then loop. The loop terminator checks `source[offsets[*cursor]]` against the close byte; the separator between elements is consumed via `*cursor += 1` (no re-validation; the scan already verified the separator).
+
+```rust
+fn parse_object<'i>(source: &'i [u8], offsets: &[u32], flags: &[u8],
+                   cursor: &mut u32, arena: &Arena) -> Result<JsonObject<'i>, ParseError> {
+    *cursor += 1;  // consume '{'
+    let start = *cursor;
+    loop {
+        let b = source[offsets[*cursor as usize] as usize];
+        if b == b'}' { *cursor += 1; break; }
+        parse_pair(source, offsets, flags, cursor, arena)?;
+        let next = source[offsets[*cursor as usize] as usize];
+        if next == b',' { *cursor += 1; continue; }
+        if next == b'}' { *cursor += 1; break; }
+        return Err(ParseError::Unexpected(next));
+    }
+    Ok(JsonObject { /* ... start..*cursor span ... */ })
+}
+```
+
+**Primitive 3 — String primitive shape with `HasEsc` flag**. The scan emits a per-string `HasEsc` bit in the `flags` array; the generated parser borrows the string body directly when the flag is clear.
+
+```rust
+fn parse_string<'i>(source: &'i [u8], offsets: &[u32], flags: &[u8],
+                   cursor: &mut u32, arena: &Arena) -> Result<JsonString<'i>, ParseError> {
+    let start_off = offsets[*cursor as usize];     // position of opening quote
+    let has_esc = flags[*cursor as usize] & FLAG_HAS_ESC != 0;
+    *cursor += 1;
+    let end_off = offsets[*cursor as usize];        // position of closing quote
+    *cursor += 1;
+    let body = &source[(start_off as usize + 1)..(end_off as usize)];
+    if !has_esc {
+        Ok(JsonString::Borrowed(unsafe { std::str::from_utf8_unchecked(body) }))
+    } else {
+        Ok(JsonString::Decoded(decode_escapes(body, arena)?))
+    }
+}
+```
+
+**Primitive 4 — Number primitive shape**. The number primitive uses the offset delta to bound the digit span; no per-byte cursor walk during structural parse.
+
+```rust
+fn parse_number<'i>(source: &'i [u8], offsets: &[u32],
+                   cursor: &mut u32, arena: &Arena) -> Result<JsonNumber<'i>, ParseError> {
+    let start = offsets[*cursor as usize] as usize;
+    *cursor += 1;
+    let end = offsets[*cursor as usize] as usize;
+    Ok(JsonNumber::lazy_borrow(&source[start..end]))
+}
+```
+
+**Primitive 5 — Dispatch density / jump-table emission**. Each `CursorDispatch` BIR node lowers with arm-density tuning to encourage LLVM to emit a jump table. The stable-Rust shape uses `core::hint::likely` on hot arms (per density measured by the cost model); the nightly shape may use `asm!` with an indirect-branch through `&[unsafe extern "C" fn]` (per `pluggable-components` memory). The function-pointer dispatch table previously rejected at `REDRESS-17` is *not* the same primitive; that was call-site indirection (every dispatch invokes through a function pointer), while this is jump-table dispatch with inlined targets.
+
+**Primitive 6 — Drop bypass via `set_len(0)`**. When `Tape<'input>` drops and the parser's running `any_string_has_escape` summary is false, the tape's offset Vec invokes `set_len(0)` before drop so the allocator frees in one call without per-element Drop iteration (`SOTA-BEAT-DESIGN.md` §4.4; asmjson technique #6). Bypass is unconditional for u32 offsets (no Drop impl); conditional for owned-decoded strings only.
+
+**Audit invariants**:
+- No `skip_ws` call site survives in generated `parse_*` bodies when `backend_shape = "structural-index"`.
+- No `peek` against source bytes survives in dispatch positions; only at offset-pointed positions inside `parse_string` and `parse_number`.
+- The cycle-per-byte gate (`BENCH.md` §7.9) is comparator-anchored: skinny twitter c/B ≤ 1.5 × simdjson twitter c/B (the simdjson floor at its algorithm is ~1.142 c/B per `simdjson-v2/PROFILE-REPORT.md`).
+- Hot-leaf count gate (`BENCH.md` §6 outcome class `G-fusion-quality`): comparator-anchored count ≤ 3 leaves at ≥10% self-time (comparators: sonic-rs = 1, simdjson = 2).
+
+### 3.5 BIR construction discipline
 
 The skinny ratifies ARCH §7.2 invariants:
 

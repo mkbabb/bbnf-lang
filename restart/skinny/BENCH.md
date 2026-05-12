@@ -633,7 +633,8 @@ Notation:
 | **F-positive — Codegen matches hand on borderline-weak substrate** | S × 1.05 < Track 2 ≤ S × 1.10 | ≤ Track 2 × 1.05 | CONDITIONAL — substrate warning, codegen positive | Dispatch A/workspace-only and tranche B substrate work; pre-allocate +1 wave to H.W1 (SIMD scan tuning). The codegen ratio is a *positive* finding (the generator is competitive with hand-coded). The Lock 1 reopen is precautionary, not driven by codegen evidence. SOTA-beat probability < 30% before substrate fix. |
 | **F-noise — Borderline-weak substrate, codegen indistinguishable from hand within bench noise** | S × 1.05 < Track 2 ≤ S × 1.10 | Track 2 × 1.05 < Track 1 ≤ Track 2 × 1.10 | CONDITIONAL — substrate warning | Same dispatch posture as F-positive; the codegen ratio falls within the Track 1 95% CI upper bound's overlap of Track 2 × 1.05 — unclassifiable as positive or gap. Re-run on bare-metal before committing to dispatch posture. |
 | **F-codegen-gap — Borderline-weak substrate, codegen overhead atop weak substrate** | S × 1.05 < Track 2 ≤ S × 1.10 | > Track 2 × 1.10 | CONDITIONAL — substrate warning + codegen gap | Same substrate posture as F-positive (Lock 1 reopen precautionary; +1 wave to H.W1) PLUS codegen attention: pre-allocate +1 wave to F (Rust lowerer) since the generator is widening the gap relative to hand. SOTA-beat probability < 30%. |
-| **G — Substrate failure** (collapsed prior G + H) | > S × 1.10 | any | NO-GO — substrate redesign | Block tranche B dispatch. Reopen Lock 1 (Tape/direct substrate) amendment. Re-run skinny after substrate revision before any A-J dispatch. (Track 1 ratio is informational only when Track 2 is a gap — the codegen rides the failed substrate; no separate "both fail" outcome.) |
+| **G — Substrate failure** (collapsed prior G + H) | > S × 1.10 | any | NO-GO — substrate redesign | Block tranche B dispatch. Reopen Lock 1 (Tape/direct substrate) amendment. Re-run skinny after substrate revision before any A-J dispatch. (Track 1 ratio is informational only when Track 2 is a gap — the codegen rides the failed substrate; no separate "both fail" outcome.) **Disposition note (2026-05-12):** four substrate-amendment routes (dispatch-table REDRESS-17, 12-byte token REDRESS-18, pair-token fusion REDRESS-16, lazy-offset tape REDRESS-20) have been measured-and-rejected at outcome G; further outcome-G classifications should first verify against `G-fusion-quality` (below) before reopening Lock 1, since the empirical attribution post-six-agent comparative-profile cohort points to codegen template shape rather than substrate. |
+| **G-fusion-quality — Fusion-quality codegen gap** (new 2026-05-12) | ≤ S × 1.10 (substrate within parity envelope) | hot-leaf count ≥ 5 at ≥10% self-time AND comparator-anchored hot-leaf count ≤ 2 | NO-GO — codegen template inversion required | The substrate is within the parity envelope but the generated parser carries structural overhead the comparator does not. Do **not** reopen Lock 1; the architectural lever is the codegen template shape per `restart/skinny/audit/SOTA-BEAT-DESIGN.md` §2 (structural-index-driven typed parse) + §3 (per-target SIMD primitive layer). Comparator anchors: sonic-rs = 1 hot leaf (`skinny/profile/sonic-rs-v2/PROFILE-REPORT.md` §(d)), simdjson = 2 hot leaves (`skinny/profile/simdjson-v2/PROFILE-REPORT.md` §(a)). Dispatch the SOTA-BEAT implementation packet against the skinny workspace; do not amend Lock 1. |
 | **I — Parity oracle fail** | n/a | n/a | NO-GO — correctness fail | Block tranche dispatch. Track 1 and Track 2 disagree on materialised output for at least one fixture; codegen is incorrect. Investigate divergence before any further bench claims. |
 | **J — Reproducibility schema fail** | n/a | n/a | INVALID — re-run | Bench row missing required schema fields or schema_version mismatch; classification unsafe. Re-instrument and re-run. |
 | **K — SIMD parity hash fail** | n/a | n/a | NO-GO — correctness fail | The structural-scan SIMD path produces offsets disagreeing with scalar on **any** corpus (twitter / citm / canada); substrate is silently corrupt. Block all dispatch until SIMD codepath fixed. |
@@ -1142,6 +1143,61 @@ pass/inconclusive disposition is reproducible from the recorded
 This probe is *report-only*; it does not gate the matrix. The skinny's
 SOTA premise is the warm-cache contest sonic-rs and simd-json compete in.
 Cold-cache is recorded for V1 J.W1 to consume.
+
+### 7.9 Comparative-profile primitive (samply hot-leaf + cycle-per-byte attribution)
+
+Every full bench run produces a comparative samply profile against sonic-rs and simdjson on the same three corpora; the output lives at `skinny/profile/skinny-v{N}/`, `skinny/profile/sonic-rs-v{N}/`, `skinny/profile/simdjson-v{N}/`. This primitive is load-bearing post-2026-05-12: the six-agent comparative cohort showed that **wall-clock throughput alone does not distinguish substrate ceiling from codegen template shape**. The hot-leaf-count gate at §6 outcome class `G-fusion-quality` requires comparator-anchored measurement.
+
+**Methodology (load-bearing; reproducible)**:
+
+- samply ≥ 0.13 with `--save-only --unstable-presymbolicate -o <file>.json.gz`.
+- 1 kHz sampling rate; ≥ 30 s of bench-loop CPU per corpus.
+- `[profile.release]` carries `debug = true` per `feedback_samply_symbols` (Lock 15).
+- Symbol resolution via per-lib `symbol_table` (rva, size) binary-search; do NOT trust funcTable.name strings (they mix inline-frame caller attribution).
+- Rust demangling via `rustfilt`; C++ via `c++filt` + `addr2line`.
+- Comparators built with two profiles each: **inlined** (canonical wall-clock) and **noinline** (leaf-level technique attribution). The inlined build classifies fusion quality; the noinline build classifies per-primitive cycle budget.
+
+**Required artefact set per bench run**:
+
+| Path | Content | Purpose |
+|---|---|---|
+| `skinny/profile/skinny-v{N}/{corpus}.profile.json.gz` + `.syms.json` | Skinny samply profile per corpus | Self-attribution |
+| `skinny/profile/sonic-rs-v{N}/{corpus}.{inlined,noinline}.profile.json.gz` + `.syms.json` | sonic-rs samply profile per corpus, both builds | Comparator anchor; per-technique cycle budget |
+| `skinny/profile/simdjson-v{N}/{corpus}.{inlined,noinline}.profile.json.gz` + `.syms.json` | simdjson samply profile per corpus, both builds | Stage1/stage2 architectural-shape verification |
+| `skinny/profile/skinny-v{N}/PROFILE-REPORT.md` | Skinny report with sections (a)-(f) | Self-classification per §7.9 contract below |
+| `skinny/profile/sonic-rs-v{N}/PROFILE-REPORT.md` + `noinline.patch` | sonic-rs report + the patch flipping `#[inline(always)]` → `#[inline(never)]` on the SIMD inner kernel | Reproducible noinline build |
+| `skinny/profile/simdjson-v{N}/PROFILE-REPORT.md` | simdjson report with stage1/stage2 sub-decomposition | Architectural-shape verification |
+| `skinny/profile/COMPARISON-v{N}.md` | Cross-parser hot-leaf table + cycle-per-byte table | Gate evaluation |
+
+**Required report sections per PROFILE-REPORT.md**:
+
+(a) Per-corpus top 15 hot functions by self-time.
+(b) Per-corpus top 15 hot functions by inclusive-time.
+(c) Function-class attribution. Classes: `parse_driver` / `structural_scan_simd` / `whitespace_skip_simd` / `string_simd` / `number_simd` / `utf8_validation` / `tape_assembly` / `view_materialization` / `allocation` / `memmove_memcmp` / `other`. Percentages per class per corpus.
+(d) Hot-leaf count metric: count of distinct symbols at ≥ 10% self-time per corpus. **Comparator anchors: sonic-rs = 1, simdjson = 2**. Skinny gate: ≤ 3 hot leaves at ≥10% on twitter (SOTA-BEAT validation); ≤ 4 at ≥10% (Phase 1 validation only).
+(e) Methodology section: samply version, sampling rate, iter counts per corpus, build flags. Reproducible.
+(f) Per-corpus single-sentence honest take.
+
+**Cycle-per-byte gate (comparator-anchored)**:
+
+Wall-clock Mbps depends on host clock speed and drifts across dev hardware (M1 Pro vs M5 Max vs Zen 4 vs Intel). The cycle-per-byte (c/B) metric is host-clock-invariant: `c/B = ns_per_byte × clock_freq_GHz`. Comparator anchors on twitter (verified at `skinny/profile/simdjson-v2/PROFILE-REPORT.md` §(d) + `skinny/profile/sonic-rs-v2/PROFILE-REPORT.md` §(f)):
+
+- simdjson: 1.142 c/B total (stage1 0.629 + stage2 0.377 + outlined 0.131); **floor at simdjson's algorithm ≈ 0.4-0.5 c/B**.
+- sonic-rs LazyValue path (the 18552 Mbps reference): ~1.5 c/B inferred from 2.32 GB/s ÷ 4 GHz Apple-Silicon mean clock.
+- Skinny current (lazy-mode at outcome G): ~2.5 c/B inferred from 1.47 GB/s ÷ 4 GHz.
+
+| Gate | Twitter c/B | Comparator interpretation |
+|---|---|---|
+| Phase 1 validation | ≤ 1.9 c/B | within 1.65× simdjson floor |
+| Phase 2 SOTA-BEAT sonic-rs | ≤ 1.4 c/B | within 1.22× simdjson floor |
+| Phase 3 SOTA-BEAT simdjson on x86_64 AVX-512 | ≤ 0.9 c/B | below simdjson floor on platform with VBMI2 |
+| Phase 4 asmjson-class | ≤ 0.45 c/B | parity with asmjson 10.93 GiB/s on Zen 4 |
+
+The cycle-per-byte gate fires alongside the Mbps gate and the hot-leaf-count gate. A passing Mbps gate with a failing c/B gate (which can happen on faster hardware) is a *valid* result for the host environment but does **not** discharge the architectural target — the parser carries structural inefficiency masked by raw clock speed. A passing c/B gate with a failing Mbps gate suggests host hardware below the published-benchmark host class; document and continue.
+
+**Per-host disposition**:
+
+The skinny gates run on **arm64 Apple Silicon as the primary host** (M-series; M1 Pro is the README-pinned target, but M3/M4/M5 hosts produce comparable c/B on this architecture). The x86_64 measurements run on the secondary CI host when the AVX-512 VBMI2 path is implemented (Phase 3); the AVX-2 fallback runs on any commodity x86_64 host. SWAR scalar fallback (`bbnf-simd/scalar/`) ships parity tests but is not on the gate path.
 
 ---
 

@@ -1,8 +1,10 @@
 # Lazy-Tape Substrate Redesign — Amendment Proposal
 
+> **[SUPERSEDED — 2026-05-12]** This proposal was implemented per §10 (~860 LOC across `skinny/crates/runtime/src/tape/{offsets,assembler}.rs` + `codegen/src/lower/rust.rs` + `grammars/json/view.rs`) and re-benched at outcome G on all three corpora (twitter T1 = 11780 Mbps, citm 9286, canada 7334; `skinny/RESULTS.md:5-7`). Materialisation bytes fell 67% (canada eager 2.68 MB → lazy 0.89 MB offsets) yet throughput did not validate. The architectural claim is refuted; substrate is not the bottleneck. The surviving lever is the **structural-index-driven typed-parse template** captured at `restart/skinny/audit/SOTA-BEAT-DESIGN.md`; six-agent comparative-profile cohort (samply + asm + sonic-rs no-LTO + simdjson stage1/stage2 + DAVID/asmjson research + handwritten ASM catalog + SIMD intrinsics catalog) verified the codegen template shape, not substrate representation, as the load-bearing change. This document is preserved verbatim as the historical record of the four-perturbation substrate-amendment search and the conditional staging protocol that surfaced the empirical refutation honestly. Lock 1 stands unamended; the V9.2 conditional punch list at `restart/audit/hardening/HARDENING-CONSOLIDATED-V9.2.md` §16 is discarded per `HARDENING-MASTER-PLAN-V9.2.md` §18 outcome-G clause.
+
 **Audience.** Skinny v2 + V1 Lock 1 amendment surface. Citable, surgical, with verbatim before/after spec edits where appropriate. Produced after three iterations of empirical evidence on the eager-tape substrate; this document does NOT relitigate microarchitectural perturbations already measured and rejected.
 
-**Status.** Design proposal. Implementation gated on cohort verdict + user approval. Falsifiable at the same bench harness; if outcome G repeats post-implementation, the lazy-tape claim is refuted.
+**Status.** SUPERSEDED. Original design-proposal status preserved below for the audit trail.
 
 ---
 

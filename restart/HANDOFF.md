@@ -1,7 +1,7 @@
 # Handoff — bbnf-lang Greenfield Restart
 
-Date: 2026-05-12 (post-V9.2-refutation + six-agent comparative-profile cohort + grand-synthesis spec amendment)
-Status: **V9.3-PENDING — SOTA-BEAT-DESIGN ratified; implementation packet ready for dispatch.**
+Date: 2026-05-12 (post-V9.3 corpus-expansion + dav1d/asm-monolith lift + yyjson lever discovery + contrivance redress)
+Status: **V9.4-READY — multi-wave implementation packet at `IMPLEMENTATION-PACKET-V2.md` ready for dispatch.**
 Audience: the next agent or human picking up this work.
 
 This document is the single source of truth for orienting cold. Read it end-to-end before reading anything else; it tells you what the project is, where the work has been, where it is now, and what the next move is. Every claim cites a path so you can verify.
@@ -10,7 +10,7 @@ This document is the single source of truth for orienting cold. Read it end-to-e
 
 ## §1 — What this project is
 
-bbnf-lang is a **grammar-driven, multi-backend parser generator** producing SOTA-class typed parsers from `.bbnf` grammar files. The user-facing API is familiar (sonic-rs lazy-value idioms; lightning-css visitor idioms; jq-style path access); the internals are the apotheosis (CSP-backed bidirectional type system; e-graph-driven rewrite engine; shape miner that auto-detects Pratt and SIMD opportunities; cost model unified across the parser and the regex engine; IR + per-backend lowerer).
+bbnf-lang is a **grammar-driven, multi-backend parser generator** producing SOTA-class typed parsers from `.bbnf` grammar files. The user-facing API is familiar (sonic-rs lazy-value idioms; lightning-css visitor idioms; jq-style path access); the internals are the apotheosis (CSP-backed bidirectional type system; e-graph-driven rewrite engine; shape miner that auto-detects Pratt, SIMD, and **backend shape** opportunities; cost model unified across the parser and the regex engine; IR + per-backend lowerer).
 
 The anthem: **everything is grammar-derived.** Every grammar plugs into the fleet via two declarative surfaces — (a) a grammar source file `<name>.bbnf` and (b) a workspace metadata block `[workspace.metadata.bbnf.grammars.<name>]` in the root `Cargo.toml`. Adding a 10th grammar requires nothing else: no new crate, no per-grammar match arm in any generic crate, no per-grammar hand-written runtime module. This is Lock 14 — full grammar generalisation; zero overfitting — and it is the single most consequential discipline of the restart.
 
@@ -19,71 +19,81 @@ bbnf is a **meta-grammar**: it generates parsers for extant target languages (Ru
 Read in order:
 
 1. `restart/README.md` — gestalt synthesis. The architectural commitments, the BBNF extensions, the optimization apotheosis, the type system, the value API, the SOTA synthesis, the 16 locks, the process.
-2. `restart/locks/14-LOCKS.md` — the sixteen architectural commitments (Locks 1-14 original; Locks 15-16 land 2026-05-12 per the grand-synthesis spec amendment).
-3. `restart/skinny/audit/SOTA-BEAT-DESIGN.md` — the empirical synthesis + three-phase plan + per-target SIMD primitive selection. **Read this third; it is the executable architectural target post-V9.2.**
-4. `docs/precepts/instructions/STYLE.md` — voice + discipline (governs all writing).
-5. `docs/precepts/instructions/LESSONS-LEARNED.md` — failure-mode anatomy (governs all decisions).
+2. `restart/locks/14-LOCKS.md` — the sixteen architectural commitments. Locks 1-14 original; Locks 15 (build-profile + force-inline + i-cache budget) and 16 (SIMD/ASM admissibility allowlist + abstract primitive lifts from dav1d/ffmpeg) land 2026-05-12.
+3. `restart/skinny/audit/SOTA-BEAT-DESIGN.md` — empirical synthesis + five-phase plan + per-target SIMD primitive selection. **Read this third; it is the executable architectural target.**
+4. `restart/skinny/audit/IMPLEMENTATION-PACKET-V2.md` — five-wave implementation packet with falsifiability gates, force-inline discipline, asm-visible cleanup items, corpus expansion verification.
+5. `docs/precepts/instructions/STYLE.md` — voice + discipline (governs all writing).
+6. `docs/precepts/instructions/LESSONS-LEARNED.md` — failure-mode anatomy (governs all decisions).
 
 ---
 
 ## §2 — Where the work has been
 
-Single-round greenfield restart began 2026-05-04 after a compounded-contrivance archive of the prior restart. Waves landed through V9.2 + six-agent comparative-profile cohort:
+Single-round greenfield restart began 2026-05-04 after a compounded-contrivance archive of the prior restart. Waves landed through V9.4:
 
 | Wave | Phases | Outcome |
 |---|---|---|
 | 1-7 | PASS-1/2/3 dispatch + SYNTHESIS trio + V1-V7.1 hardening | V7.1 READY (99% KEEP fraction) |
 | 8 | Lenses I/J/K simplification audit + V8/V8.1 cycles | READY-WITH-NARROW-RESIDUE |
-| Codex V9 | V9 + V9.1 verification + corpus amendments | V9.1 READY after narrow amendments |
-| **Skinny SK-V1** | Five-quadrant skinny implementation spec + SK-V1 audit | SK-AMENDMENT-REQUIRED-NARROW; 20-item C1-C20 cross-quadrant punch list |
-| **Skinny implementation + user iteration** | User landed runnable prototype at `skinny/`; REDRESS items 1-19; three false routes (dispatch-table REDRESS-17, 12-byte token REDRESS-18, pair-token fusion REDRESS-16) measured-and-rejected; outcome G three times | Empirical eager-tape ceiling at ~12.5K Mbps T1 vs sonic-rs ~21K Mbps reference |
-| **SK-V2 audit + amendment cohort** | 5-target SK-V2 audit + 6th-agent LAZY-TAPE-DESIGN proposal + 5 amendment agents applied 72/73 text-propagation items | SK-V2 closed at amendment level |
-| **V9.2 V1-corpus audit** | 4-target V9.2 hardening cohort audited LAZY-TAPE-DESIGN.md against V1 PASS-1/2/3 + MASTER-PLAN trio | AMENDMENT-REQUIRED-NARROW (CONDITIONAL); ~22 deduplicated cross-quadrant punch items; Lock 1 amendment text drafted but conditional |
-| **Skinny v2 lazy-mode implementation** | User implemented lazy-offset tape per `LAZY-TAPE-DESIGN.md` §10 (~860 LOC); re-benched | **REFUTED at outcome G** (twitter T1 = 11780 Mbps < 13K threshold; `skinny/RESULTS.md:5-7`); materialisation bytes fell 67% but throughput did not validate |
-| **Six-agent comparative-profile cohort 2026-05-12** | Three samply profiles (skinny lazy-mode + sonic-rs no-LTO + simdjson stage1/stage2) + DAVID/asmjson research + handwritten ASM catalog + SIMD intrinsics catalog beyond sonic-rs | Architectural lever identified: codegen template shape (structural-index-driven typed parse), not substrate representation. `restart/skinny/audit/SOTA-BEAT-DESIGN.md` synthesises. |
-| **Grand-synthesis spec amendment 2026-05-12** | New `SOTA-BEAT-DESIGN.md` master document + Lock 15 (build-profile discipline) + Lock 16 (SIMD/ASM admissibility allowlist) + SUBSTRATE.md §1.5→REFUTED + §1.6 structural-index-driven canonical + COMPILER.md §3.3 `CursorDispatch` BIR + §3.4 normative codegen contract + BENCH.md §6 `G-fusion-quality` outcome class + §7.9 comparative-profile primitive + ARCH §7.2 `CursorDispatch` BIR variant + MASTER-PLAN §13 H tranche converted concrete + §13.1 admissible SIMD primitives table | **V9.3-PENDING — implementation packet ready** |
+| Codex V9 | V9 + V9.1 verification + corpus amendments | V9.1 READY |
+| Skinny SK-V1 | Five-quadrant skinny implementation spec + SK-V1 audit | SK-AMENDMENT-REQUIRED-NARROW |
+| Skinny implementation + user iteration | Runnable prototype at `skinny/`; three false routes (dispatch-table, 12-byte token, pair-fusion) measured-and-rejected | Empirical eager-tape ceiling |
+| SK-V2 audit + amendment cohort | 5-target SK-V2 + 6th-agent LAZY-TAPE-DESIGN proposal + 5 amendment agents | SK-V2 closed at amendment level |
+| V9.2 V1-corpus audit | 4-target V9.2 hardening against LAZY-TAPE-DESIGN proposal | AMENDMENT-REQUIRED-NARROW (CONDITIONAL) |
+| Skinny v2 lazy-mode implementation | Lazy-offset tape per `LAZY-TAPE-DESIGN.md` §10 (~860 LOC); re-benched | **REFUTED at outcome G**; lazy-tape Lock 1 amendment discarded |
+| V9.3 six-agent comparative-profile cohort 2026-05-12 | samply skinny + sonic-rs + simdjson; asm dump; DAVID/asmjson research; handwritten ASM catalog; SIMD intrinsics catalog | Architectural lever identified: codegen template shape, not substrate |
+| **V9.4 grand-synthesis cohort 2026-05-12** | **6 research agents** (dav1d/ffmpeg/VLC ASM lift, deadweight-intrinsic re-examination, tape-union design, JSON corpora + Unicode torture tests, parse-that audit, greater-arch generalization) + **6 profile agents** (skinny expanded 14-corpus, sonic-rs expanded 9-corpus × Value/LazyValue × inlined/noinline, simdjson expanded 13-corpus stage-decomposition, yyjson 7-corpus no-SIMD reference, RapidJSON + serde_json floor, cargo-asm string/Unicode paths) | **V9.4 READY** — comprehensive spec amendment landed without new directives, without new BIR variants, without contrivances |
 
-Cumulative commit count: ~90+ across all cycles.
+Cumulative commit count: ~95+ across all cycles.
 
 ---
 
-## §3 — Current state (post-grand-synthesis amendment; pre-implementation)
+## §3 — Current state (post-V9.4 grand synthesis)
 
-**Current operating verdict: `restart/skinny/audit/SOTA-BEAT-DESIGN.md` (ACTIVE proposal).** The V9.2 lazy-tape Lock 1 amendment is **discarded** per the V9.2 conditional staging protocol's outcome-G clause (`HARDENING-MASTER-PLAN-V9.2.md` §18). Lock 1 stands verbatim. Two new locks land (Lock 15 build-profile discipline; Lock 16 SIMD/ASM admissibility allowlist).
+**Current operating verdict: `restart/skinny/audit/SOTA-BEAT-DESIGN.md` + `restart/skinny/audit/IMPLEMENTATION-PACKET-V2.md` (ready for dispatch).** Lock 1 stands verbatim (with one-sentence clarification appended for the tape-union per task #100). Locks 15 + 16 carry their 2026-05-12 amendments (Lock 15: LTO + force-inline + i-cache ≤20 KiB; Lock 16: extended SIMD allowlist with abstract primitive lifts from dav1d/ffmpeg). No new BBNF directives. No new BIR variants. `LayoutFacts.backend_shape` is the cost-model-derived per-rule decision (auto-detect per Lock 10 mandate); the codegen lowerer at `crates/codegen/src/lower/rust.rs` emits different access patterns for `Alt { Dispatch }` based on this fact.
 
-**Empirical diagnosis (load-bearing; cross-comparison cycle budget verified)** (cite: `skinny/profile/{PROFILE-REPORT,ASM-REPORT,sonic-rs-v2/PROFILE-REPORT,simdjson-v2/PROFILE-REPORT}.md`):
+**Empirical diagnosis (DOM-class comparison on M5 Max twitter; cycles/byte at 3.5 GHz)**:
 
-| Parser | Twitter c/B | Wall-clock Mbps | Hot-leaf count | Architectural shape |
-|---|---:|---:|---:|---|
-| simdjson DOM | 1.142 | ~24500 (3.06 GB/s) | 2 | Stage1 writes structural index; stage2 reads `tape[i]` and dispatches; **never re-scans source for whitespace/delimiters** |
-| sonic-rs LazyValue (the 18552 Mbps anchor) | ~1.5 | 18552 (2.32 GB/s) | n/a (LazyValue path; reference) | Direct-to-struct; SIMD primitives + prefix-XOR via CLMUL |
-| sonic-rs typed-Value DOM (measured M5 Max) | ~1.5 | 2782 (0.35 GB/s) | **1** | LTO + codegen-units=1 fuses entire SIMD kernel into `parse_object`/`parse_array` |
-| **Skinny lazy-mode (current; outcome G)** | **~2.5** | **11780 (1.47 GB/s)** | **5+** | Sidecar SIMD scan + recursive descent that ignores the index and re-scans bytes via `skip_ws`+`peek` |
-| asmjson DOM (Zen 4 AVX-512BW; published) | ~0.4 | 10930 MiB/s ≈ 87K Mbps | (collapsed-stage; 1 fused) | 9-state FSM with PC-as-state direct threading; classifier IS the parser |
-
-**Architectural verdict**: the substrate is not the bottleneck (four perturbation routes measured-and-rejected). The codegen template shape is. Our `parse_value` ignores the structural index it computes; the comparative profiles verify that simdjson stage2 reads `&buf[*(next_structural++)]` and never re-scans source bytes outside `parse_string`/`parse_number` primitives. The architectural lever is the **structural-index-driven typed-parse template** (`SOTA-BEAT-DESIGN.md` §2).
-
-**Unit calibration (load-bearing)**: "Mbps" in skinny benchmarks is **megabits per second** (formula `bytes × 8000 / ns` at `skinny/crates/bbnf-bench/src/report.rs:192`). The 7K Mbps gap to sonic-rs LazyValue (18552 Mbps) = 875 MB/s; the 13K Mbps gap to simdjson DOM = 1.6 GB/s. T_README target = 380 µs ≈ 13.3K Mbps. The cycle-per-byte (c/B) gate is host-clock-invariant and comparator-anchored per `BENCH.md` §7.9.
-
-**Two-target SOTA-BEAT** (per user mandate 2026-05-12):
-
-| Target | Anchor | Required closure | Mechanism |
+| Parser | c/B | MiB/s | Lever |
 |---|---:|---:|---|
-| Sonic-rs LazyValue | 18552 Mbps twitter | ≥ 17000 Mbps (5% margin) | Phase 1 (NEON intrinsic upgrade `bbnf-simd/aarch64/`) + Phase 2 (structural-index-driven codegen template `BirNode::CursorDispatch`) |
-| Simdjson DOM | ~24500 Mbps twitter | ≥ 25000 Mbps | Phase 3 (x86_64 AVX-512 VBMI2 backend `bbnf-simd/x86_64/avx512_vbmi2/`: `_mm512_mask_compressstoreu_epi8` + `_mm512_ternarylogic_epi64` + `vpermi2b`) |
+| **yyjson** | **0.91** | **3687** | No SIMD; force-inline everywhere; ~18 KiB hot function i-cache resident; single-pass forward `read_num` |
+| **simdjson DOM** | 1.142 | 2923 | Two-stage SIMD (stage1 structural index + stage2 typed-tape walk); NEON `tbl` classifier + UTF-8 validate concurrent with stage1 |
+| **sonic-rs Value-DOM** | ~2.3 | 2438 | LTO fusion + NEON StringBlock + CLMUL prefix-XOR (LazyValue path slower per sonic-rs-expanded; ref 18552 Mbps is a different from_str-with-field-elision path) |
+| **bbnf-skinny (current; `lto=thin` regression)** | 5.07 | 658 (= 5521 Mbps) | sidecar scan + recursive descent re-scanning bytes; three-Vec parallel-buffer pathology |
+| **RapidJSON floor** | 7.30 | 479 | textbook recursive descent + memmove |
+| **serde_json floor** | 7.80 | 449 | textbook RD + BTreeMap + Value enum allocations |
 
-Beat-both on x86_64 hardware requires Phase 1 + 2 + 3; beat-sonic-rs alone on arm64 host requires Phase 1 + 2. Phase 4 (collapsed-stage asmjson-class AVX-512 backend) is aspirational at ~50K Mbps target; not on the V1 close gate.
+**Closure cost**: 5.6× cycle reduction to beat yyjson on twitter; 4.4× to beat simdjson DOM; 2.2× to beat sonic-rs Value-DOM. Levers stack independently and are falsifiable per phase per `SOTA-BEAT-DESIGN.md` §6.
+
+**Critical findings from the V9.4 cohort** (load-bearing for the spec):
+
+1. **dav1d ASM monolith pattern lift**: `x86inc.asm` vendored into `crates/bbnf-simd/ext/x86/`; `<family>[16]_<isa>.{asm|S}` directory cohesion; nasm-rs for x86 + cc-rs for arm64. The msac entropy decoder's `cnt/buf/end` cross-chunk refill is the one transferable algorithmic insight beyond simdjson/sonic-rs/yyjson. Source: `skinny/profile/.../dav1d-research` (cohort task #98).
+
+2. **Deadweight-intrinsic re-examination** identified 5 Lock 16 additions: GFNI `vgf2p8affineqb` (2× over PSHUFB classifier on x86_64), arm64 `STNP` non-temporal pair-store (3-8% cold-cache gain on tape), arm64 `PRFM PLDL2STRM` ahead-of-cursor prefetch, `ahash` crate for `path!` dict lookups, SVE2 `svmatch_u8` (cloud-arm64 only). AMX/SME/AVX-IFMA/MOVDIR64B/BITALG reconfirmed EXCLUDE. Source: cohort task #99.
+
+3. **Tape ∪ structural-projection union** (load-bearing CLARIFICATION not amendment): the current skinny carries THREE parallel Vec<u32> (`ParserState.structural_offsets` + `TapeAssembler.offsets` + `Tape.offsets`); only simdjson among five comparators keeps two buffers post-parse; asmjson/yyjson/RapidJSON/sonic-rs-LazyValue all use one. Lock 1 verbatim never required two; the implementation drifted. Migration: delete `ParserState.structural_offsets` + dead `TapeBuilder` (eager-era) + dead `TapeToken`/PAYLOAD_CLASS; fold three `Box<[u32]>` into one + packed `flags: Box<[u8]>`. Net −180 LOC delete + 30 LOC fold + 20 LOC write-through. Source: cohort task #100.
+
+4. **JSON corpus expansion 3 → 14 corpora + 2 UTF-8 correctness gaps**: corpus expansion at BENCH.md §3.1 (twitter + citm + canada + apache_builds + github_events + update_center + mesh + random + gsoc-2018 + marine_ik + instruments + numbers + unicode_mixed + unicode_escapes; 95-file JSONTestSuite conformance bundle); two correctness gaps in current skinny require fixes: `view.rs:203, 229` panics on invalid UTF-8 (move validation to scan stage via `simdutf8` wrap), `parse-that-regex/src/lib.rs:352` over-rejects non-character codepoints (admit per RFC 8259). Source: cohort task #101.
+
+5. **parse-that gap closure**: new `parse-that/{string,float,unicode,integration}/` submodules; `simd-scan` → `bbnf-simd` rename + de-JSON refactor (current skinny `simd-scan` carries `scan_json_*` symbols violating Lock 14). ~700 LOC packet. Source: cohort task #102.
+
+6. **Greater-arch generalization**: per-grammar `LayoutFacts.backend_shape` matrix — JSON pure `structural-index`; CSS L4 hybrid (hubs `structural-index`, `value` layer `eager-tape` for recovery); BBNF-self hybrid + auto-detected `PrattSpine`; Sheets hybrid + `PrattSpine`. Cost-model auto-derives; **no `@runtime` directive needed**. New `DispatchByteSet` payload extends the existing `Alt { Dispatch }` payload (not a new variant) to admit prefix-DFA discriminators for multi-byte tokens (CSS `@-rules`, Sheets `LET(`/`LAMBDA(`). Source: cohort task #103.
+
+7. **yyjson lever discovery**: yyjson beats simdjson on twitter (3687 vs 2923 MiB/s) **without SIMD** via `always_inline` everywhere + ~18 KiB hot function fitting in i-cache + single-pass forward `read_num`. Lock 15 extension: codegen template emits `#[inline(always)]` on hot-path rules (cost-model-derived from `LayoutFacts.hot_call_graph`); target ≤ 20 KiB post-LTO. Source: cohort task #88 (yyjson agent).
+
+8. **simdjson escape-pathology**: simdjson's textbook stage1-dominant signature inverts on escape-heavy corpora — `unicode_escapes` at 4.97 c/B is 2× worse than canada (2.44) and 6.3× worse than github_events (0.71). The escape-pathology affects ALL parsers (sonic-rs LazyValue collapses to 364 Mbps); corpus expansion is the empirical guard. Source: cohort task #90 + #89.
+
+9. **asm-string-unicode findings**: skinny's `parse_string` no-escape happy path is ~110 instructions vs sonic-rs's ~22 (5× heavier due to triple-walk on `structural_offsets`); `parse_value` dispatch is 7-way `cmp/b.eq` cascade (should be jump table; `at_cursor` already emits one); `unescape_json_string` has 8 redundant allocator call sites (single grow-trampoline closes this); `read_hex_unit` is wrong inline boundary. Source: cohort `skinny/profile/asm-string-unicode/`.
 
 **What has settled** (do not relitigate):
-- 16 architectural locks post-2026-05-12 (Locks 1-14 + Locks 15-16 grand-synthesis additions).
-- 35-question architectural interrogation.
-- Backend trait at ARCH §7.5 (V1 RustBackend; V2 WasmBackend + TsBackend deferred).
-- 6-directive grammar: `@import`, `@host fn`, `@error(recover)`, `@layout`, `@pretty`, `@token`.
-- `path!` macro canonical; `parse-that-regex` canonical; `regex-automata` retired.
-- The skinny exists; its purpose is prior-validation of substrate viability — that purpose is **discharged** with the structural-index-driven design surviving and the lazy-tape design refuted.
-- Eager-tape `Tape<'input>` substrate is the V1 canonical (Lock 1 verbatim; no amendment).
-- Four substrate-amendment routes measured-and-rejected: dispatch-table, 12-byte skipless token, pair-token fusion, lazy-offset tape.
-- `Mbps` unit = megabits per second per the bench formula.
+- 16 architectural locks post-2026-05-12 (Locks 1-14 + Locks 15-16).
+- `LayoutFacts.backend_shape` cost-model derivation per Lock 10 auto-detect (no new directive).
+- 20-variant BIR alphabet (no new variant; `Alt { Dispatch }` lowers to multiple access patterns).
+- Tape ∪ structural-projection union as Lock 1 clarification (not amendment); three-Vec pathology deletion mechanical.
+- Six-agent comparative-profile cohort + six-agent V9.4 research cohort empirically anchored.
+- Eager-tape `Tape<'input>` substrate is V1 canonical (Lock 1 verbatim + 2026-05-12 clarification).
+- Four substrate-amendment routes measured-and-rejected: dispatch-table, 12-byte token, pair-fusion, lazy-offset.
+- Mbps unit calibration: skinny formula `bytes * 8000 / ns` = megabits/s; multiply by 0.119 to get MiB/s for cross-parser comparison.
 
 ---
 
@@ -91,106 +101,112 @@ Beat-both on x86_64 hardware requires Phase 1 + 2 + 3; beat-sonic-rs alone on ar
 
 Six prompts at `restart/prompts/` + `restart/skinny/HARDENING.md`:
 
-1. `prompts/ORCHESTRATOR.md` — main entry; fans out to encapsulated sub-orchestrators per phase type.
-2. `prompts/HARDENING-ORCHESTRATOR.md` — dispatches hardening cycles (V1 through V9.x).
+1. `prompts/ORCHESTRATOR.md` — main entry; fans out to sub-orchestrators.
+2. `prompts/HARDENING-ORCHESTRATOR.md` — dispatches hardening cycles.
 3. `prompts/RESEARCH-FOLD-ORCHESTRATOR.md` — research deep-dives + fold cycles.
 4. `prompts/AMENDMENT-DISPATCH.md` — verify-then-patch amendment cycles.
 5. `prompts/HARDENING.md` — per-target audit specification (lenses A-K).
-6. `skinny/HARDENING.md` — skinny per-target audit specification (lenses A-K + L premise fidelity + M falsifiability + N graduation mechanicality; SK cycle namespace).
+6. `skinny/HARDENING.md` — skinny audit specification (A-K + L + M + N; SK cycle namespace).
 
 ---
 
-## §5 — File map (post-grand-synthesis amendment)
+## §5 — File map (post-V9.4)
 
 | Path | Status | Purpose |
 |---|---|---|
-| `restart/README.md` | Live | Gestalt anchor; 14 locks; SOTA synthesis. README header references 16 locks pending the README amendment pass. |
-| `restart/ARCHITECTURE.md` | Live (post-2026-05-12) | Executable architectural spec; §7.2 BIR alphabet carries `CursorDispatch` (21-variant shape). |
-| `restart/MASTER-PLAN.md` | Live (post-2026-05-12) | Tranche A-J; §13 Tranche H converted from aspirational to concrete with H.W1-H.W6 waves; §13.1 admissible SIMD primitives allowlist. |
+| `restart/README.md` | Live | Gestalt anchor; 14 locks (pre-amendment); README amendment pass pending. |
+| `restart/ARCHITECTURE.md` | Live (post-2026-05-12) | §7.2 20-variant BIR alphabet preserved; §7.2 lowering amendment note; §7.3 `LayoutFacts.backend_shape` field + derivation algorithm; §7.4 5 new diagnostic codes. |
+| `restart/MASTER-PLAN.md` | Live (post-2026-05-12) | §13 Tranche H concrete with 7 waves; §13.1 admissible SIMD primitives allowlist (Lock 16 verbatim). |
 | `restart/MIGRATION.md` | Live | Per-file disposition. |
-| `restart/locks/14-LOCKS.md` | Live (Locks 15-16 added 2026-05-12) | Sixteen architectural commitments. |
-| `restart/skinny/audit/SOTA-BEAT-DESIGN.md` | **Active proposal** | Empirical synthesis + three-phase plan + per-target SIMD primitive selection + falsifiability gates + implementation sequence. Reads as the executable target. |
-| `restart/skinny/audit/LAZY-TAPE-DESIGN.md` | **SUPERSEDED** | Historical record of the lazy-tape amendment; refuted at outcome G; preserved for audit trail. |
-| `restart/audit/hardening/HARDENING-CONSOLIDATED-V9.2.md` | Live (DISCARDED at Wave 2 outcome G) | V9.2 conditional staging punch list; outcome-G clause fires; trio reverts to eager-only Lock 1 canonical. |
-| `restart/skinny/{INDEX,SUBSTRATE,COMPILER,BENCH,WORKSPACE,HARDENING}.md` | Live (post-2026-05-12) | Skinny spec corpus; deviation ledger carries 5 new rows post-refutation; §1.6 + §3.3 + §3.4 + §6 + §7.9 land. |
-| `restart/skinny/audit/HARDENING-{SUBSTRATE,COMPILER,BENCH,WORKSPACE,INDEX,CONSOLIDATED}-SK-V2.md` | Live | SK-V2 cohort audit reports. |
-| `restart/skinny/audit/HARDENING-*-SK-V1.md` | Reference | SK-V1 cycle history. |
-| `skinny/` | Live | Runnable JSON skinny prototype workspace (Cargo + crates + grammars + xtask + bench harness); contains RESULTS.md + REDRESS.md empirical evidence; profile artefacts at `skinny/profile/`. |
-| `skinny/profile/{PROFILE-REPORT,ASM-REPORT,sonic-rs-v2/PROFILE-REPORT,simdjson-v2/PROFILE-REPORT}.md` | Live | Six-agent comparative-profile cohort outputs 2026-05-12. |
+| `restart/locks/14-LOCKS.md` | Live (Locks 15-16 added + extended 2026-05-12) | Sixteen architectural commitments. |
+| `restart/skinny/audit/SOTA-BEAT-DESIGN.md` | **Active proposal** | Empirical synthesis + five-phase plan + per-target SIMD primitive selection + falsifiability gates + abstract dav1d primitive lifts; rewritten 2026-05-12 to remove BIR-variant contrivances. |
+| `restart/skinny/audit/IMPLEMENTATION-PACKET-V2.md` | **Active dispatch packet** | Five-wave implementation with falsifiability gates + force-inline discipline + corpus expansion + UTF-8 correctness fixes; supersedes V1 packet. |
+| `restart/skinny/audit/LAZY-TAPE-DESIGN.md` | **SUPERSEDED** | Historical record; refuted at outcome G; preserved for audit. |
+| `restart/audit/hardening/HARDENING-CONSOLIDATED-V9.2.md` | Live (DISCARDED at outcome G) | V9.2 conditional staging punch list. |
+| `restart/skinny/{INDEX,SUBSTRATE,COMPILER,BENCH,WORKSPACE,HARDENING}.md` | Live (post-2026-05-12) | INDEX: 5 new deviation rows. SUBSTRATE: §1.5 union clarification + §1.6 structural-index-driven canonical. COMPILER: §3.3 lowering contract (no new BIR). BENCH: §3.1 14-corpus expansion + §7.9 UTF-8 correctness gates + §7.10 comparative-profile primitive. |
+| `skinny/` | Live | Runnable JSON skinny prototype workspace; lazy-mode implementation committed; profile artefacts. |
+| `skinny/profile/{skinny-expanded,sonic-rs-expanded,simdjson-expanded,yyjson,rapidjson,serde_json,asm-string-unicode}/PROFILE-REPORT.md` | Live | V9.4 comparative-profile cohort outputs. |
 
 ---
 
 ## §6 — Next move
 
-**Phase 1 + Phase 2 implementation against the skinny workspace** per `restart/skinny/audit/SOTA-BEAT-DESIGN.md` §7. The detailed implementation packet (`IMPLEMENTATION-PACKET-SOTA-BEAT.md` at `restart/skinny/audit/`, forthcoming under separate dispatch) carries the verbatim edicts in execution order. Headline steps:
+**Dispatch `restart/skinny/audit/IMPLEMENTATION-PACKET-V2.md` as five waves**:
 
-1. **Step 0 Lock 15 enforcement** (~5 LOC, 2 min): `skinny/Cargo.toml [profile.release] lto=true codegen-units=1 panic="abort" debug=true`. Re-bench baseline first; record delta in `RESULTS.md` under "build-profile-only".
-2. **Step 1 micro-cleanups** (~8 LOC, 10 min): pre-size offset Vec at `input.len()/4`; delete `TapeAssembler::finish` shrink-to-fit pair (two `__rust_realloc` per parse, zero benefit).
-3. **Step 2 inline + fuse** (~25 LOC, 20 min): `#[inline(always)]` on `JsonNodeKind::at_cursor`; verify byte→kind dispatch fuses with iterator `next` in `cargo asm`.
-4. **Step 3 Phase 1 NEON intrinsic upgrade** (~70 LOC, 4-6 hr): new `crates/bbnf-simd/` crate; `aarch64/` submodule with `vqtbl4q_u8` classifier, `vshrn_n_u16`+`vsri`+`zip1` Validark movemask, `vld1q_u8_x4` quad-load. Exhaustive 256-byte parity tests.
-5. **Step 4 Phase 2 codegen template inversion** (~50 LOC IR + 350 LOC codegen + 80 LOC HasEsc + 20 LOC drop bypass, 2-3 days): `BirNode::CursorDispatch` variant; rust template generator rewrite at `crates/codegen/src/lower/rust.rs`; HasEsc flag at scan time + lazy borrow in `parse_string`; set_len(0) drop bypass.
-6. **Step 5 comparative re-profile** (~1 hr): produce `skinny/profile/skinny-v3-implemented/`; compute hot-leaf count + class attribution + cycle-per-byte; write `skinny/profile/COMPARISON-v3.md` against `sonic-rs-v2` + `simdjson-v2`.
-7. **Step 6 Phase 3 AVX-512 VBMI2 conditional** (~200 LOC, x86_64 only): `bbnf-simd/x86_64/avx512_vbmi2/`.
-8. **Step 7 Phase 4 collapsed-stage backend conditional** (~600 LOC, x86_64 AVX-512BW only; aspirational): `crates/runtime/src/backends/collapsed_stage_avx512/`.
+| Wave | Phase | LOC budget | Cap | Twitter gate (M5 Max DOM-class) | Beats |
+|---|---|---:|---|---|---|
+| **Wave 1** | Phase 0 (Lock 15 enforcement: `lto=fat` + force-inline + tape-union migration) | ~255 net delta (−180 delete + 75 add + 5 Cargo.toml) | 4 hr | T1 ≥ 950 MiB/s; ≤ 4 hot leaves; c/B ≤ 3.5 | catches lto=thin regression; yyjson lever (force-inline) |
+| **Wave 2** | Phase 1 (`bbnf-simd/aarch64/`: NEON intrinsic upgrade + abstract dav1d primitive lifts) | ~150 | 8 hr | T1 ≥ 1330 MiB/s; ≤ 3 hot leaves; c/B ≤ 2.5 | approaches sonic-rs Value-DOM |
+| **Wave 3** | Phase 2 (`LayoutFacts.backend_shape` cost-model + `Alt { Dispatch }` two-access-pattern lowerer + corpus expansion + UTF-8 correctness gates) | ~470 + corpus + ~80 fix | 3 days | T1 ≥ 2375 MiB/s; ≤ 2 hot leaves; c/B ≤ 1.4 | **SOTA-BEAT sonic-rs Value-DOM 2438 MiB/s**; approaches simdjson 1.142 c/B |
+| **Wave 4** | Phase 3 (`bbnf-simd/x86_64/avx512_vbmi2/`: VBMI2 + GFNI; conditional on hardware) | ~200 | 1-2 days | T1 ≥ 3325 MiB/s on x86_64; ≤ 2 hot leaves; c/B ≤ 1.0 | **SOTA-BEAT simdjson DOM 2923 MiB/s on Intel/Zen** |
+| **Wave 5** | Phase 4 (collapsed-stage AVX-512BW backend with PC-as-state `r10` direct threading) | ~600 | 3-5 days | T1 ≥ 7400 MiB/s on x86_64; 1 hot leaf; c/B ≤ 0.45 | **asmjson 10.93 GiB/s parity territory** |
+
+Expected total wall: Waves 1-3 ~1 week (Phase 0 + Phase 1 + Phase 2; closes SOTA-BEAT on arm64 host); Waves 4-5 ~1 week on x86_64 hardware (Phases 3 + 4; closes simdjson + asmjson territory).
 
 | Outcome | Action |
 |---|---|
-| Steps 0-3 land Phase 1 gate (T1 ≥ 14K Mbps twitter) | Phase 1 validates; proceed to Step 4 |
-| Steps 0-4 land Phase 2 gate (T1 ≥ 17K Mbps twitter; ≤ 3 hot leaves; ≤ 1.4 c/B) | **SOTA-BEAT sonic-rs achieved on arm64 host**; proceed to Step 5 comparative re-profile; document V1 SOTA-BEAT verdict |
-| Step 4 misses Phase 2 gate (T1 < 14K Mbps) | Re-profile and re-attribute; **do not amend Lock 1**; the architectural inversion is the lever, not the substrate |
-| Steps 0-6 land Phase 3 gate (T1 ≥ 25K Mbps on x86_64 AVX-512 VBMI2) | **SOTA-BEAT simdjson achieved on x86_64**; both-target close documented |
-
-Expected wall: Steps 0-3 ~1 day; Step 4 ~2-3 days; Step 5 ~1 day; Steps 6-7 conditional and parallelizable on x86_64 hardware availability.
+| Waves 1-3 land all three gates on arm64 | **SOTA-BEAT sonic-rs achieved**; document V1 SOTA-BEAT verdict; proceed to Wave 4 conditional dispatch |
+| Wave 3 misses gate (T1 < 2375 MiB/s on twitter, c/B > 1.4) | Re-profile + re-attribute per `feedback_no_workarounds`; do NOT amend Lock 1; substrate is bounded by 4-perturbation rejection cluster |
+| Waves 1-4 land x86_64 gates | **SOTA-BEAT simdjson achieved on Intel/Zen**; both-target close documented |
+| Wave 5 lands asmjson-parity gate | **>SOTA achieved on x86_64**; aspirational close documented |
 
 ---
 
 ## §7 — Verification rituals
 
-Before any phase dispatch:
+Before any wave dispatch:
 
 ```bash
 git log --oneline -10
 git status --short
 ```
 
-Commit head should reflect the grand-synthesis spec amendment. For per-target verification:
+Commit head should reflect the V9.4 grand-synthesis amendment. Per-target verification:
 
 ```bash
-# Grand-synthesis amendments landed
+# V9.4 amendments landed
 head -30 restart/skinny/audit/SOTA-BEAT-DESIGN.md
-grep -c "^15\.\|^16\." restart/locks/14-LOCKS.md  # should return at least 2 (Locks 15, 16)
-grep "G-fusion-quality" restart/skinny/BENCH.md   # should return one match
+head -30 restart/skinny/audit/IMPLEMENTATION-PACKET-V2.md
+grep -c "^15\.\|^16\." restart/locks/14-LOCKS.md  # ≥ 2 (Locks 15, 16)
+grep -E "BBNF-BACKEND-SHAPE-INCONSISTENT|BBNF-FORCE-INLINE-MISSED|BBNF-ICACHE-BUDGET-EXCEEDED|BBNF-UTF8-INVALID-AT-PARSE|BBNF-UNICODE-NONCHAR-CODEPOINT" restart/ARCHITECTURE.md | wc -l  # 5
 
-# Lazy-tape design SUPERSEDED
-head -5 restart/skinny/audit/LAZY-TAPE-DESIGN.md  # should carry [SUPERSEDED — 2026-05-12]
+# Tape-union clarification + LayoutFacts.backend_shape
+grep -A 5 "backend_shape" restart/ARCHITECTURE.md | head -25
+grep -A 3 "tape ≡ structural projection union" restart/skinny/SUBSTRATE.md | head -10
 
-# V9.2 punch list discarded per outcome-G clause
-grep -n "DISCARDED\|outcome G" restart/HANDOFF.md  # this file confirms
+# Corpus expansion + correctness gates
+grep -c "twitterescaped\|unicode_mixed\|unicode_escapes\|marine_ik" restart/skinny/BENCH.md  # ≥ 4
+grep "Gate [1-4]" restart/skinny/BENCH.md | head -8
 
-# Skinny corpus + bench results + profile artefacts
-cat skinny/RESULTS.md     # outcome G on all three corpora
-ls skinny/profile/        # PROFILE-REPORT.md + ASM-REPORT.md + sonic-rs-v2/ + simdjson-v2/
-ls skinny/profile/sonic-rs-v2/    # PROFILE-REPORT.md + 12 profile artefacts + noinline.patch + throughput.json
-ls skinny/profile/simdjson-v2/    # PROFILE-REPORT.md + 12 profile artefacts
+# Profile cohort artefacts present
+ls skinny/profile/{skinny-expanded,sonic-rs-expanded,simdjson-expanded,yyjson,rapidjson,serde_json,asm-string-unicode}/
 
-# Lock 1 NOT AMENDED (V9.2 conditional discarded)
-rg -n 'tape_mode|lazy-mode' restart/locks/14-LOCKS.md  # should return zero matches
+# Lock 1 NOT amended (verbatim)
+rg -n 'tape_mode|lazy-mode|dual-mode' restart/locks/14-LOCKS.md  # 0 matches
+# Lock 1 clarification (one-sentence append)
+rg -n 'structural projection IS the tape' restart/skinny/SUBSTRATE.md  # ≥ 1
+```
 
-# Locks 15 + 16 landed
-rg -n 'lto = true|codegen-units' restart/locks/14-LOCKS.md          # Lock 15 evidence
-rg -n 'admissibility allowlist|vqtbl4q_u8|vpcompressb' restart/locks/14-LOCKS.md  # Lock 16 evidence
+Per-corpus reproduction:
+
+```bash
+cd /Users/mkbabb/Programming/bbnf-lang/skinny
+cargo build --release -v 2>&1 | grep -E '\-C lto=fat' | wc -l  # ≥ 1 per workspace member
+cargo run -p xtask --release -- bench-json
+cargo run -p xtask --release -- check-conformance
+samply record --save-only --unstable-presymbolicate -o /tmp/skinny-twitter.json.gz -- ./target/release/profile-lazy twitter
 ```
 
 ---
 
 ## §8 — Voice + discipline locks
 
-Per `restart/README.md` §13. Calibrated, direct prose. Archaic-permissive (hereupon, therein, thereof). No metalanguage; never cite "the prompt said" or "the user asked". Path:line citations on every concrete claim. Per-X tables for "all grammars" / "all backends" / "all topics" claims. Receiver / blocker / receiving-gate triple on every carry. No quick solutions. No legacy code uncontested. Lock 14 is the binding generalisation discipline — full grammar generalisation; zero overfitting. Lock 15 + Lock 16 are the new 2026-05-12 disciplines for build-profile fusion + SIMD/ASM admissibility.
+Per `restart/README.md` §13. Calibrated, direct prose. Archaic-permissive (hereupon, therein, thereof). No metalanguage; never cite "the prompt said" or "the user asked". Path:line citations on every concrete claim. Per-X tables for "all grammars" / "all backends" / "all topics" claims. Receiver / blocker / receiving-gate triple on every carry. **No quick solutions. No legacy code uncontested. No contrivances. No new directives. No new BIR variants. No deferrals.** Lock 14 is the binding generalisation discipline — full grammar generalisation; zero overfitting. Lock 15 + Lock 16 are the 2026-05-12 disciplines for build-profile fusion + SIMD/ASM admissibility.
 
 ---
 
 ## §9 — Closing posture
 
-Hereupon the next move is Phase 1 + Phase 2 implementation against the skinny workspace per `SOTA-BEAT-DESIGN.md` §7. The lazy-tape route is closed (refuted at outcome G); the structural-index-driven codegen template is the surviving architectural lever (per `skinny/profile/simdjson-v2/PROFILE-REPORT.md` architectural verification + `skinny/profile/sonic-rs-v2/PROFILE-REPORT.md` fusion-quality evidence). The 16 locks govern. The precepts speak. The greenfield holds. The two-target SOTA-BEAT (sonic-rs LazyValue + simdjson DOM) is achievable in arm64 + x86_64 phases per the grand-synthesis spec.
+Hereupon the next move is dispatching `IMPLEMENTATION-PACKET-V2.md` Wave 1 against `skinny/`. Lazy-tape route is closed (refuted at outcome G); structural-index-driven codegen template is the surviving architectural lever (per `skinny/profile/simdjson-v2/PROFILE-REPORT.md` architectural verification + `skinny/profile/sonic-rs-v2/PROFILE-REPORT.md` fusion-quality evidence + `skinny/profile/yyjson/PROFILE-REPORT.md` no-SIMD force-inline lever). The 16 locks govern. The precepts speak. The greenfield holds. The two-target SOTA-BEAT (sonic-rs Value-DOM + simdjson DOM + asmjson aspirational) is achievable in arm64 + x86_64 phases per the grand-synthesis spec, with the cost-model auto-deriving per-rule `backend_shape` from existing Grammar IR facts.
 
-Read `restart/skinny/audit/SOTA-BEAT-DESIGN.md` end-to-end. Then dispatch the implementation packet against the skinny workspace.
+Read `restart/skinny/audit/SOTA-BEAT-DESIGN.md` end-to-end. Then read `restart/skinny/audit/IMPLEMENTATION-PACKET-V2.md` end-to-end. Then dispatch Wave 1.

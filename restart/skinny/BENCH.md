@@ -53,8 +53,9 @@ Public surface:
 pub fn parse<'i>(input: &'i str) -> Result<JsonRoot<'i>, ParseError<'i>>;
 ```
 
-`JsonRoot<'i>` is a typed root over `&'i Tape<'i>` per
-`restart/ARCHITECTURE.md:1597`. The generated parser consumes `runtime::tape`
+`JsonRoot<'i>` owns a sealed `JsonDocument<'i>` / `Tape<'i>` snapshot and
+typed `ValueRef` projections borrow that tape per `restart/ARCHITECTURE.md:1597`.
+The generated parser consumes `runtime::tape`
 and `simd-scan` exactly as the hand-coded substrate parser does. No bypass,
 no shortcuts, no per-grammar Rust outside `crates/runtime/src/grammars/json/`.
 
@@ -79,7 +80,10 @@ short it is.
 Track 2 is the *hand-coded* JSON parser using the SAME `runtime::tape` runtime
 and the SAME `simd-scan` structural-scan dispatcher that Track 1's generator
 emits against. The author is allowed to use every substrate API the codegen
-emits, but no codegen runs.
+emits, but no codegen runs. Substrate access is via `TapeBuilder<'a>` per
+`SUBSTRATE.md` §8 — the named-inversion API contract that V1 graduation
+closes (per `INDEX.md` deviation ledger row 6); the skinny consumes the
+inverted contract directly and the graduation is mechanical.
 
 Public surface — identical shape to Track 1:
 
@@ -168,9 +172,9 @@ APIs used:
 
 The threshold matrix uses `sonic_rs_anchor`; the checked row is a parity and
 debugging row. We deliberately do NOT use `sonic_rs::LazyValue` as the
-threshold anchor; the bbnf generated parser builds a typed root over the tape,
-so a lazy-value-only comparison would not bind the same materialisation
-contract.
+threshold anchor; the bbnf generated parser builds a typed root with typed
+projections borrowing the sealed tape, so a lazy-value-only comparison would not
+bind the same materialisation contract.
 
 Why sonic-rs is the primary competitor on twitter / citm / canada: SOTA.md
 shows sonic-rs is the JSON Rust line leader on M1 Pro with 436 µs / 854 µs /
@@ -242,12 +246,13 @@ that against (sonic-rs 436 µs, simd-json 424 µs, serde_json 831 µs) and knows
 | sonic-rs | `sonic-rs` | `=0.5` | `anchor` + `checked` wrapper rows | eager-typed |
 | simd-json | `simd-json` | `=0.13` | `to_borrowed_value` + `to_owned_value` | borrowed + owned |
 | serde_json | `serde_json` | `=1.0.117` | `from_slice::<Value>` | eager-owned |
-| Track 2 (bbnf hand) | (workspace) | (commit) | `parse(&str)` | typed root over Tape |
-| Track 1 (bbnf gen) | (workspace) | (commit) | `parse(&str)` | typed root over Tape |
+| Track 2 (bbnf hand) | (workspace) | (commit) | `parse(&str)` | typed root owning sealed Tape |
+| Track 1 (bbnf gen) | (workspace) | (commit) | `parse(&str)` | typed root owning sealed Tape |
 
-A note on materialisation match: bbnf's `JsonRoot<'i>` over `&Tape<'i>` is
-neither sonic-rs's eager-typed `Value` nor simd-json's `BorrowedValue`. The
-honest framing: bbnf builds a tape and typed root, but JSON scalar
+A note on materialisation match: bbnf's `JsonRoot<'i>` owns the sealed tape and
+returns typed projections over it. That is neither sonic-rs's eager-typed
+`Value` nor simd-json's `BorrowedValue`. The honest framing: bbnf builds a tape
+and typed root, but JSON scalar
 materialisation remains lazy and the payload arena must report zero writes
 on the hot path. We benchmark it head-to-head with sonic-rs and simd-json
 in-run anchors and report the materialisation mode per row; `S` is the
@@ -329,6 +334,15 @@ Beat vs parity per `restart/MASTER-PLAN.md:145-154`: parity demonstrates V1
 correctness; beat is the user-mandated stretch target. The skinny matrix in
 §6 binds outcomes to both.
 
+Note: the per-corpus sonic-rs / simd-json times in the table above are
+illustrative anchors against the M1 Pro baseline; the gate computes `S`
+from in-run measurements per §6 notation, never from this static table.
+`skinny/RESULTS.md` currently records sonic-rs at 18,440 / 23,075 / 12,021
+Mbps across twitter / citm / canada, which differ from the static anchors
+by 14-40% in either direction (run conditions per metadata schema §5.1).
+The static table is preserved for historical anchoring and reader context;
+the in-run minimum binds the verdict.
+
 ### 3.4 The parity oracle
 
 For every fixture and every iteration, the harness checks Track 1 and Track 2
@@ -369,11 +383,11 @@ canonical float repr, escape-pair normalisation). It exists once in
 ## §4 The structural-scan microbenchmark
 
 Separate from the end-to-end parse bench. Measures `simd-scan`'s structural-
-index throughput in GB/s on twitter.json bytes. Targets per
+index throughput in Mbps on the JSON corpus bytes. Targets per
 `restart/ARCHITECTURE.md:1519`:
 
-- ≥ 5 GB/s on M-series NEON
-- ≥ 7 GB/s on x86 AVX2
+- ≥ 40000 Mbps on M-series NEON
+- ≥ 56000 Mbps on x86 AVX2
 
 ### 4.1 What it measures
 
@@ -382,9 +396,9 @@ identifies pseudo-structural characters (`{ } [ ] : , "`), maintains the
 quote-state bitmap, and emits the index of every structural offset. This is
 simdjson's Stage 1; bbnf's `simd-scan` provides the equivalent.
 
-Microbench input: `twitter.json` raw bytes. Output: a `Vec<u32>` of
-structural offsets. We measure the scan time, the input byte count, and
-divide. GB/s = bytes_processed / wall_time.
+Microbench input: raw fixture bytes. Output: a `Vec<u32>` of structural
+offsets. We measure the scan time, the input byte count, and divide.
+Mbps = bytes_processed * 8000 / wall_time_ns.
 
 ### 4.2 Scalar parity hash — per-corpus, not just twitter
 
@@ -415,8 +429,8 @@ corpus FAILS the gate regardless of throughput.
 
 | ISA | Floor | Anchor |
 |---|---|---|
-| M-series NEON | ≥ 5 GB/s | simdjson OD on Apple Silicon |
-| x86 AVX2 | ≥ 7 GB/s | simdjson OD on Intel Skylake |
+| M-series NEON | ≥ 40000 Mbps | simdjson OD on Apple Silicon |
+| x86 AVX2 | ≥ 56000 Mbps | simdjson OD on Intel Skylake |
 
 Below floor → NO-GO at substrate level even if Track 2 parse is fast (because
 the substrate floor is what holds at scale; a parse that hits parity on
@@ -425,7 +439,7 @@ twitter but cannot scale to canada-size or bigger inputs is a false signal).
 ### 4.4 Microbench harness (lives at `crates/bbnf-bench/benches/simd_scan.rs`)
 
 Sketch — per-corpus parity check + throughput rows for each fixture so
-the GB/s floor is verified at the input size that exercises the kernel
+the Mbps floor is verified at the input size that exercises the kernel
 hardest (canada at 2.2 MB):
 
 ```rust
@@ -464,12 +478,12 @@ fn bench_structural_scan(c: &mut Criterion) {
 }
 ```
 
-The GB/s floor is gated against the **canada** row (largest input;
+The Mbps floor is gated against the **canada** row (largest input;
 worst-case kernel load). twitter and citm rows are recorded for cross-
 input variance reporting but the floor binds at canada.
 
-Criterion's `Throughput::Bytes` automatically reports GB/s in the output.
-Post-bench parser (§8.2) extracts the GB/s figure and gates against the floor.
+Criterion's `Throughput::Bytes` may report bytes/s in its native output.
+The gate converts elapsed time to Mbps and gates against the Mbps floor.
 
 ---
 
@@ -513,7 +527,7 @@ missing FAILS the gate. Source: `restart/MASTER-PLAN.md:159-168` and
 | Payload allocations | payload arena allocation counter for bbnf rows; competitors record `n/a` | `0` |
 | Scalar parity hash (simd rows; per-corpus) | blake3 of offsets, keyed by corpus | `{twitter:<digest>, citm:<digest>, canada:<digest>}` |
 | Peak RSS (bytes) | `getrusage(RUSAGE_SELF).ru_maxrss` post-bench, scaled by platform unit | `42_336_256` |
-| Cold-cache mode | `warm` / `cold_clflush` / `cold_l1_evict` | `warm` |
+| Cold-cache mode | `warm` / `aarch64_dc_civac` / `aarch64_clear_cache_fallback` / `x86_64_clflush_stride64` / `x86_64_clflushopt_stride64` | `warm` |
 
 A row missing any field is INVALID and removed from the dataset before the
 threshold matrix runs.
@@ -617,12 +631,13 @@ Notation:
 | **D — Substrate parity, codegen gap** | ≤ S × 1.05 | > Track 2 × 1.15 and ≤ Track 2 × 1.50 | GO with codegen focus | Dispatch tranches A-J. Tranche F (Rust lowerer) and tranche H absorb extra iteration; pre-allocate +1 wave to F. |
 | **E — Substrate parity, codegen failure** | ≤ S × 1.05 | > Track 2 × 1.50 | CONDITIONAL — codegen hold | Allow only A-prep work that does not commit the Rust-lowering shape. Hold F until codegen prototype lands a < 1.20× ratio. Reopen Lock 5 if F retry fails. |
 | **F-positive — Codegen matches hand on borderline-weak substrate** | S × 1.05 < Track 2 ≤ S × 1.10 | ≤ Track 2 × 1.05 | CONDITIONAL — substrate warning, codegen positive | Dispatch A/workspace-only and tranche B substrate work; pre-allocate +1 wave to H.W1 (SIMD scan tuning). The codegen ratio is a *positive* finding (the generator is competitive with hand-coded). The Lock 1 reopen is precautionary, not driven by codegen evidence. SOTA-beat probability < 30% before substrate fix. |
-| **F-noise — Borderline-weak substrate, codegen indistinguishable from hand within bench noise** | S × 1.05 < Track 2 ≤ S × 1.10 | Track 2 × 1.05 < Track 1 ≤ Track 2 × 1.10 | CONDITIONAL — substrate warning | Same dispatch posture as F-positive; the codegen ratio is within noise (criterion `noise_threshold(0.02)` plus 5% headroom) and unclassifiable as positive or gap. Re-run on bare-metal before committing to dispatch posture. |
+| **F-noise — Borderline-weak substrate, codegen indistinguishable from hand within bench noise** | S × 1.05 < Track 2 ≤ S × 1.10 | Track 2 × 1.05 < Track 1 ≤ Track 2 × 1.10 | CONDITIONAL — substrate warning | Same dispatch posture as F-positive; the codegen ratio falls within the Track 1 95% CI upper bound's overlap of Track 2 × 1.05 — unclassifiable as positive or gap. Re-run on bare-metal before committing to dispatch posture. |
+| **F-codegen-gap — Borderline-weak substrate, codegen overhead atop weak substrate** | S × 1.05 < Track 2 ≤ S × 1.10 | > Track 2 × 1.10 | CONDITIONAL — substrate warning + codegen gap | Same substrate posture as F-positive (Lock 1 reopen precautionary; +1 wave to H.W1) PLUS codegen attention: pre-allocate +1 wave to F (Rust lowerer) since the generator is widening the gap relative to hand. SOTA-beat probability < 30%. |
 | **G — Substrate failure** (collapsed prior G + H) | > S × 1.10 | any | NO-GO — substrate redesign | Block tranche B dispatch. Reopen Lock 1 (Tape/direct substrate) amendment. Re-run skinny after substrate revision before any A-J dispatch. (Track 1 ratio is informational only when Track 2 is a gap — the codegen rides the failed substrate; no separate "both fail" outcome.) |
 | **I — Parity oracle fail** | n/a | n/a | NO-GO — correctness fail | Block tranche dispatch. Track 1 and Track 2 disagree on materialised output for at least one fixture; codegen is incorrect. Investigate divergence before any further bench claims. |
 | **J — Reproducibility schema fail** | n/a | n/a | INVALID — re-run | Bench row missing required schema fields or schema_version mismatch; classification unsafe. Re-instrument and re-run. |
 | **K — SIMD parity hash fail** | n/a | n/a | NO-GO — correctness fail | The structural-scan SIMD path produces offsets disagreeing with scalar on **any** corpus (twitter / citm / canada); substrate is silently corrupt. Block all dispatch until SIMD codepath fixed. |
-| **L — SIMD throughput fail** | n/a | n/a | NO-GO — SIMD floor fail | Structural scan on **canada** (largest input; binding row) below floor (5 GB/s NEON / 7 GB/s AVX2). Even if Track 2 parse hits parity, the substrate ceiling will fail at scale. Block dispatch until the SIMD floor is restored, then re-run the full matrix. |
+| **L — SIMD throughput fail** | n/a | n/a | NO-GO — SIMD floor fail | Structural scan on **canada** (largest input; binding row) below floor (40000 Mbps NEON / 56000 Mbps AVX2). Even if Track 2 parse hits parity, the substrate ceiling will fail at scale. Block dispatch until the SIMD floor is restored, then re-run the full matrix. |
 | **M — Memory residency fail** | n/a | n/a | NO-GO — peak RSS exceeds floor | Track 2 (or Track 1) peak RSS > 3 × the fastest competitor's peak RSS on canada. Substrate that hits SOTA-class throughput at 3× memory is not viable for concurrent-parse workloads (web servers, batch ingestion). Block dispatch until substrate memory profile is fixed. The 3× multiplier is the V1 J.W1 J-side floor projected back to skinny gate; a tighter ratio is encouraged but not required. |
 
 ### 6.2 Reading the matrix
@@ -657,7 +672,7 @@ The classifier fires in this order; the first matching outcome wins:
 4. L (SIMD throughput fail on canada) — substrate floor.
 5. M (peak RSS > 3 × competitor) — substrate viability.
 6. G (Track 2 > S × 1.10) — substrate gap.
-7. F-positive / F-noise (Track 2 ∈ (S × 1.05, S × 1.10]) — substrate warning, by Track 1 sub-band.
+7. F-positive / F-noise / F-codegen-gap (Track 2 ∈ (S × 1.05, S × 1.10]) — substrate warning, by Track 1 sub-band: F-positive when Track 1 ≤ Track 2 × 1.05; F-noise when the Track 1 95% CI upper bound overlaps Track 2 × 1.05 (and Track 1 ≤ Track 2 × 1.10); F-codegen-gap when Track 1 > Track 2 × 1.10.
 8. E (Track 2 ≤ S × 1.05, Track 1 > Track 2 × 1.50) — codegen failure.
 9. D (Track 2 ≤ S × 1.05, Track 1 ∈ (Track 2 × 1.15, Track 2 × 1.50]) — codegen gap.
 10. C (Track 2 ≤ S × 1.05, Track 1 ≤ Track 2 × 1.15) — parity acceptable.
@@ -672,9 +687,9 @@ not viable); codegen issues only matter when the substrate floor is met.
 
 The user instruction was to "not assume that any of these other libs have
 'magic' SIMD facilities" — but the matrix MUST still call NO-GO honestly.
-Outcomes G and H exist precisely because the bench is the arbiter, not the
-plan. If the substrate genuinely fails the SOTA gate, the matrix says so;
-the spec does not bias toward GO.
+Outcomes G / I / J / K / L / M exist precisely because the bench is the
+arbiter, not the plan. If the substrate genuinely fails the SOTA gate, the
+matrix says so; the spec does not bias toward GO.
 
 That said: outcome G blocks tranche B and full A-J dispatch, but does not
 forbid workspace-only prep that cannot commit substrate APIs. The user gets a
@@ -757,9 +772,9 @@ crates/bbnf-bench/benches/json_parity.rs
   group: json/probes/<corpus>
     bench: host_call_dispatch_overhead   # per-call microbench, isolated
     bench: host_call_eager_decode        # gross-time JSON variant
-    bench: alternate_scalar_plan         # confirmatory
-    bench: alternate_dispatch_table_plan # confirmatory
-    bench: alternate_pext_mask_plan      # x86_64 only; plausibly-better
+    bench: alternate_scalar_plan         # confirmatory (the active alternate)
+    bench: alternate_dispatch_table_plan # INVALID post-iteration; see §7.8.2 + skinny/REDRESS.md item 17
+    bench: alternate_pext_mask_plan      # x86_64 only; unimplemented in skinny (V1 H.W2 owns)
     bench: cold_first_parse              # report-only; cache-flushed
 
 crates/bbnf-bench/benches/simd_scan.rs (separate file, separate harness)
@@ -831,8 +846,8 @@ acknowledged so that the parse function signature remains `Result<T, E>`.
 g.throughput(Throughput::Bytes(input.len() as u64));
 ```
 
-Criterion reports both elapsed time AND GB/s automatically; both go to the
-JSON report.
+Criterion records elapsed time; the gate converts every parse and scan row to
+Mbps for the JSON report.
 
 ### 7.5 Output sinks
 
@@ -981,84 +996,148 @@ Question: how much does `CallHost` registry dispatch cost per invocation,
 in isolation from the work being dispatched? Implementation: a
 microbench that calls a no-op host function `N` times via the registry,
 and `N` times via direct call; reports `(registry_time - direct_time) / N`
-as ns/call. Threshold: ≤ 50 ns/call on M1 Pro (one virtual call + table
-lookup is canonically ~10-30 ns; 50 is generous). Pass: probe ≤ 50 ns/call.
-Fail: probe > 50 ns/call, RESULTS marks dispatch overhead as MASKING and
-notes that V1 grammars with many `@host fn` calls per parse will pay more
-than the skinny measures.
+as ns/call. Threshold: ≤ 50 ns/call on M1 Pro. Rationale for the
+threshold: a worst-case un-inlined virtual call on M1 Pro is ~5-10 ns
+plus a registry hash-map lookup at ~20-40 ns, for a worst-case envelope of
+~30-50 ns. The measured prototype reports ~0.7 ns/call (skinny/RESULTS.md
+masking-probes table) — the registry call site inlines on release, so the
+dispatch collapses to roughly a single load + indirect branch and the
+threshold holds with three orders of magnitude headroom. The 50 ns ceiling
+leaves room for V1 grammars where the registry path is not inlined. Pass:
+probe ≤ 50 ns/call. Fail: probe > 50 ns/call, RESULTS marks dispatch
+overhead as MASKING and notes that V1 grammars with many `@host fn` calls
+per parse will pay more than the skinny measures.
 
 **Probe B — `host_call_eager_decode`** (gross-time variant, JSON-shaped).
 Question: when the V1 grammar's eager string decode runs through the
 registry, how does end-to-end parse time compare? Implementation: a
 JSON variant that emits `CallHost decode_string_to_arena` for every
-string token at parse time, identical to V1 grammar shape. Threshold:
-ratio against Track 1 declared explicitly per corpus; expected delta
-**5-15% on twitter** (string-heavy, 700+ string fields, 5% escape density),
-**3-8% on citm** (key-value heavy but mostly short strings), **< 2% on
-canada** (numeric, few strings). Pass: probe within the per-corpus
-expected band. Fail: probe **outside** the expected band — high or low.
-A high outlier means eager decode costs more than expected on that
-corpus and V1 SOTA probability drops; a low outlier means the eager-
-decode work was elided (compiler optimised it away because the result
-went unused) and the probe is invalid as written. RESULTS records pass /
-fail with explicit ratio for each corpus.
+string token at parse time, identical to V1 grammar shape. Threshold: the
+gate fires a MASKING signal when the eager-decode row exceeds Track 1's
+gross time by a per-corpus envelope: **> 1.15× T1 on twitter** (string-heavy,
+700+ string fields, 5% escape density), **> 1.08× T1 on citm** (key-value
+heavy but mostly short strings), **> 1.02× T1 on canada** (numeric, few
+strings). These thresholds replace an earlier predictive-band rationale
+(prior expectations of 5-15% / 3-8% / < 2% deltas) that the iteration
+empirically refuted — the measured prototype reports gross-time penalties
+of 1.74× / 1.30× / 1.22× across twitter / citm / canada
+(`skinny/RESULTS.md` masking-probes rows; the row is correctly classified
+as MASKING by the gate).
 
-#### 7.8.2 Alternate-plan probes — explicitly confirmatory
+The thresholds are now disposition rules, not predictions: any eager-decode
+row beyond the envelope marks the parse-time eager-decode work as MASKING
+for the substrate; below the envelope, the row is reported but does not
+fire a MASKING signal. A low outlier still warrants inspection (the work
+may have been elided by the compiler), and the gate records the explicit
+ratio for each corpus.
 
-The alternate-plan probes bound the missing cost-driven rewrite axis. They
-are **confirmatory, not adversarial**: they verify the canonical structural-
-index + alt-dispatch plan is not dominated by other plausible plans within
-the implementation envelope. They cannot establish that no plan elsewhere
-in the cost-model space would be faster — that is what V1 H tranche owns.
+Premise commitment (post-iteration): V1 JSON must keep string decode lazy
+in the substrate / view layer. The eager-decode rows in `skinny/RESULTS.md`
+show 22-74% gross-time penalty across the three corpora; that magnitude
+of SOTA hit is severe enough that "accept the SOTA hit" is no longer a
+viable alternative. The isolated `host_call_dispatch_overhead` row owns
+registry dispatch cost; this Probe B row owns the eager-decode-work cost
+and the disjunction is closed by measurement, not preference.
 
-Three alternates:
+#### 7.8.2 Alternate-plan probes — confirmatory only (post-iteration)
 
-| Alternate | Mechanism | Question answered |
-|---|---|---|
-| `alternate_scalar_plan` | Pure scalar recursive descent; no SIMD scan; byte-by-byte alt dispatch. | Confirms SIMD adds value on JSON. Expected: substantially slower than canonical. |
-| `alternate_dispatch_table_plan` | SIMD scan; alt dispatch via a 256-entry direct-jump table instead of match-arm. | Confirms LLVM's match-arm codegen on byte-disjoint alts is ≈ direct table. Expected: within 2-5% of canonical. |
-| `alternate_pext_mask_plan` | x86_64 only; uses BMI2 PEXT to extract structural-bit masks instead of structural index of offsets. | Tests a *plausibly-better* shape that the V1 cost model might select on Intel. Expected: comparable to canonical or up to 10% faster on x86 AVX2-class hardware; may be slower on M1 Pro NEON (PEXT not available). |
+The alternate-plan probes bound the missing cost-driven rewrite axis.
+**Post-iteration framing**: confirmatory only — the scalar plan passes;
+the dispatch-table alternate was empirically invalidated (the SK prototype's
+first row duplicated canonical Track 1, and a real 256-entry function-pointer
+table regressed, so canonical lowering remains the Rust `match`); the PEXT
+mask alternate defers to V1 H.W2 absent a skinny-side implementation. The
+SK-V1 framing of "confirmatory + one plausibly-better candidate" is partly
+refuted by the iteration record (`skinny/REDRESS.md` item 17): the
+plausibly-better candidates that supported that framing either rejected
+themselves on measurement (dispatch table) or are unimplemented (PEXT).
+
+The probes verify that the canonical structural-index + alt-dispatch plan
+is not dominated by the one alternate that retains empirical traction
+(scalar) within the implementation envelope. They cannot establish that no
+plan elsewhere in the cost-model space would be faster — that is what V1 H
+tranche owns.
+
+Three alternates, with the dispatch-table row INVALID post-iteration and
+the PEXT row unimplemented in the skinny:
+
+| Alternate | Mechanism | Status (post-iteration) | Question answered |
+|---|---|---|---|
+| `alternate_scalar_plan` | Pure scalar recursive descent; no SIMD scan; byte-by-byte alt dispatch. | Active; passes confirmatory (canonical wins by 38-52% across three corpora per `skinny/RESULTS.md`). | Confirms SIMD adds value on JSON. |
+| `alternate_dispatch_table_plan` | SIMD scan; alt dispatch via a 256-entry direct table instead of match-arm. | **INVALID** per `skinny/REDRESS.md` item 17 — the SK prototype's first row duplicated canonical Track 1 (probe was a no-op duplicate); a real 256-entry function-pointer table was then implemented and regressed against canonical. Canonical Rust `match` is the load-bearing dispatch; LLVM owns the branch-table lowering for byte-disjoint alts. | (No question remains open at the skinny scope.) |
+| `alternate_pext_mask_plan` | x86_64 only; uses BMI2 PEXT to extract structural-bit masks instead of structural index of offsets. | Not implemented in the skinny; reported as `missing` in `skinny/RESULTS.md`. Deferred to V1 H.W2 — the skinny is silent on this axis. | (Would test a different cost-model selection on Intel; not a skinny conclusion.) |
 
 Probe verdicts:
 
-- **Confirmatory pass:** `canonical ≤ alternate_scalar_plan` AND
-  `canonical ≤ alternate_dispatch_table_plan × 1.02` AND
-  (`alternate_pext_mask_plan ≤ canonical × 1.05` on x86_64, or row reports
-  N/A on aarch64). The canonical plan is not dominated within the
-  implementation envelope; cost-driven-rewrites cut is FAITHFUL.
-- **Cost-model masking signal:** any alternate ≤ canonical × 0.95
-  on any corpus. RESULTS marks the cut as MASKING and routes a cost-model
-  recovery lever to V1 H.W2/H.W3.
-- **Inverted dominance:** `alternate_pext_mask_plan` < canonical × 0.90
-  on x86_64. The cost model would clearly select PEXT on Intel; the
-  skinny's hand-curated canonical plan is pessimal there, but the SOTA
-  conclusion on M1 Pro stands. RESULTS notes the cross-platform plan
-  divergence as a tranche-H input.
+- **Confirmatory pass:** `canonical ≤ alternate_scalar_plan`. The canonical
+  plan is not dominated by the scalar alternate within the implementation
+  envelope; cost-driven-rewrites cut is FAITHFUL on the scalar axis. The
+  dispatch-table axis has no skinny-side question post-invalidation; the
+  PEXT axis defers to V1 H.W2.
+- **Invalid probe:** any alternate-plan row that calls the canonical parser, or
+  cannot prove a distinct implementation, reports `INVALID` and is excluded
+  from MASKING / FAITHFUL classification. The `alternate_dispatch_table_plan`
+  row is recorded as `INVALID duplicate-probe disabled; real function-pointer
+  table regressed` in `skinny/RESULTS.md` and the gate honours that label
+  without re-classifying.
+- **Cost-model masking signal:** the scalar alternate ≤ canonical × 0.95
+  on any corpus would fire MASKING for the scalar axis and route a
+  cost-model recovery lever to V1 H.W2 / H.W3. The current measurement
+  does not fire this signal.
 
 The probes are **not** e-graph outputs and do not validate the cost-model
 machinery itself; they validate that the canonical plan is not
-self-defeating. Calling them "adversarial" overstates them; calling them
-"confirmatory with one plausibly-better candidate" is honest.
+self-defeating against the alternate that the skinny retains an active
+implementation for. Calling the probes "adversarial" overstates them;
+calling them "confirmatory only" is honest after the dispatch-table
+invalidation.
 
 #### 7.8.3 Cold-cache first-parse probe (per-corpus)
 
 `json/probes/<corpus>/cold_first_parse` measures parse latency on a cold
 L1 + L2 + L3 cache. Implementation: each iteration uses
 `criterion::Bencher::iter_custom` with explicit cache eviction between
-iterations (allocate and touch a buffer ≥ L3 cache size, then drop;
-on macOS `std::hint::black_box` the buffer through `core::arch::aarch64::__dsb`
-or x86_64 `_mm_clflush` over the corpus bytes). Question: how much does
-warm-cache benchmarking flatter the result? Many production workloads
-(web servers, CLI tools, batch ingestion) parse one document per
-request — first-byte latency matters, not steady-state.
+iterations. The eviction primitive is platform-specific:
+
+- **aarch64 (M1 Pro reference)**: a `dc civac` ("data cache clean and
+  invalidate by virtual address to point of coherency") loop walks the
+  corpus bytes plus the parser's hot-data regions (tape buffer, structural
+  index buffer) at 64-byte cache-line granularity, followed by a `dsb ish`
+  data-synchronisation barrier and `isb` instruction-synchronisation
+  barrier. As a portable fallback, `libc::__clear_cache(start, end)` over
+  the same ranges combined with allocating + touching a buffer ≥ L3 cache
+  size induces L1 + L2 + L3 pressure.
+- **x86_64**: a `_mm_clflush` (or `_mm_clflushopt`) loop walks the corpus
+  bytes and parser hot-data regions at 64-byte stride
+  (`for addr in (start..end).step_by(64) { _mm_clflush(addr) }`), followed
+  by `_mm_mfence` to retire the flushes before the timed region begins.
+
+Qualifier: TLB and branch-predictor state are not cooled by this probe;
+the cold / warm ratio reported here is the dCache + iCache delta only.
+The cold cost of TLB fills and branch-predictor priming flows into the
+warm baseline once the dispatch table has been touched a few thousand
+times during criterion's warmup phase, so the reported ratio under-counts
+true first-request latency. The metadata field `cold_cache_mode` records which
+primitive ran (`aarch64_dc_civac`, `aarch64_clear_cache_fallback`,
+`x86_64_clflush_stride64`, or `x86_64_clflushopt_stride64`) so the row's
+disposition is reproducible across platforms.
+
+Question: how much does warm-cache benchmarking flatter the result? Many
+production workloads (web servers, CLI tools, batch ingestion) parse one
+document per request — first-byte latency matters, not steady-state.
 
 Threshold: `cold_first_parse_us ≤ track1_generated_us × 2.0` per corpus.
 Cold parses up to 2× warm parse is expected (instruction cache misses,
 branch predictor unprimed, cold dispatch table). > 2× indicates a
 substrate that performs only when warm; documented as a substrate
-sensitivity finding routed to V1 J.W1 close gate. < 1.2× is suspicious —
-likely the cache eviction did not actually cool the relevant lines;
-RESULTS notes the row as inconclusive rather than passing.
+sensitivity finding routed to V1 J.W1 close gate. < 1.2× is the
+inconclusive band: either the dCache + iCache eviction did not actually
+cool the relevant lines on the host CPU model, or the workload is
+instruction-cache-dominated and the natural cold / warm ratio is
+legitimately near 1.0×. The gate emits an `INCONCLUSIVE` disposition on
+the cold-cache row in this case (distinct from `PASS`); the row's
+pass/inconclusive disposition is reproducible from the recorded
+`cold_cache_mode` metadata.
 
 This probe is *report-only*; it does not gate the matrix. The skinny's
 SOTA premise is the warm-cache contest sonic-rs and simd-json compete in.
@@ -1141,35 +1220,27 @@ CI green requires exit 0. Conditional outcomes are intentionally non-green:
 they produce RESULTS.md and a precise action, but they do not authorize skinny
 dispatch.
 
-### 8.3 CI runner discount
+### 8.3 CI bench is advisory non-gating; local bench is authoritative
 
 CI runners are typically slower than local M1 Pro by 1.3-1.7× depending on
-runner generation and contention. The skinny gates against the CI-discounted
-threshold matrix when running on CI; the local-run threshold is the
-authoritative one. Discount factors:
+runner generation and contention. Rather than maintain a per-runner discount
+table that the gate must read and apply, the skinny adopts a simpler
+discipline: **CI bench is advisory non-gating; the local bench on the
+reference platform is authoritative**. CI exists to detect regressions in
+the harness itself (build green, fixtures load, the matrix evaluator runs
+without panic, RESULTS.md renders) and to surface gross throughput
+collapses; it does NOT decide tranche dispatch. Any NO-GO requires a local
+re-run on the reference M1 Pro before the verdict is final, and any GO
+requires a corresponding local-bench artefact in the audit trail.
 
-| Runner | JSON parse discount | Reasoning |
-|---|---|---|
-| GitHub Actions `macos-14` (Apple Silicon) | × 1.15 | virtualisation + shared host noise |
-| GitHub Actions `ubuntu-latest` (x86_64) | × 1.40 | shared cores, variable boost |
-| Self-hosted bare metal | × 1.00 | (gold standard) |
+CI is configured to report classification on its own measurements but to
+exit success regardless of throughput verdict (parity / schema / SIMD-hash
+correctness gates still hard-fail in CI). Local runs hard-fail on NO-GO
+per §8.2 exit codes. This removes ~50 LOC of per-runner discount apparatus
+from `gate.rs` and keeps the authoritative gate co-located with the
+reference platform where the threshold matrix was calibrated.
 
-Discount is applied to the threshold, not the measured time; a CI-measured
-twitter Track 2 of 480 µs against a discounted threshold of (424 × 0.95 ×
-1.15 = 463 µs) is a fail by ~17 µs — not a gold-case scenario, requires
-a local re-run before NO-GO is final.
-
-The discount table is committed at `crates/bbnf-bench/runners.toml` and
-read by the gate. The runner detector reads `RUNNER_OS` /
-`GITHUB_ACTIONS` / `BBNF_BENCH_RUNNER` env vars.
-
-### 8.4 Local override
-
-A developer can run the bench locally with `BBNF_BENCH_RUNNER=local` to get
-authoritative thresholds bypassing the discount. CI sets the discount
-automatically; local devs default to local.
-
-### 8.5 GitHub Actions workflow sketch
+### 8.4 GitHub Actions workflow sketch
 
 `.github/workflows/skinny-bench.yml`:
 
@@ -1188,7 +1259,7 @@ jobs:
       - run: |
           RUSTFLAGS="-C target-cpu=native" \
             cargo bench --bench json_parity --bench simd_scan -p bbnf-bench
-      - run: cargo run -p bbnf-bench --bin gate
+      - run: cargo run -p bbnf-bench --bin gate -- --advisory  # CI is advisory non-gating per §8.3; correctness gates still hard-fail
       - uses: actions/upload-artifact@v4
         with:
           name: criterion-report
@@ -1196,7 +1267,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: results
-          path: restart/skinny/RESULTS.md
+          path: skinny/RESULTS.md
 ```
 
 The workflow is named `skinny-bench` not `bench` so it does not collide
@@ -1278,8 +1349,9 @@ for a candidate rule) defers to H.W2. Impact: the skinny does not validate
 the cost-model dispatch logic; that is a V1 H tranche question. JSON's hot
 path uses SIMD scan unconditionally on x86_64 / aarch64 in skinny;
 auto-detection is bypassed by hardcoding the strategy in the skinny
-codegen path. The alternate-plan probe (§7.8) bounds only the JSON cost-plan
-cut; it does not validate the full V1 recognizer miner.
+codegen path. The alternate-plan probes (§7.8.2) bound only the JSON cost-plan
+cut on the axes the skinny retains an active implementation for (scalar);
+they do not validate the full V1 recognizer miner.
 
 ### 9.6 Memory residency floor (now a hard gate; outcome M)
 
@@ -1294,6 +1366,17 @@ deliberately trades parse time for memory, and a tape + direct substrate
 should land within 2× sonic-rs at the architectural shape, with 3× as a
 soft floor.
 
+Forward-projection (post-iteration, now empirically computable from
+`skinny/RESULTS.md` materialisation rows): canada tape lands at ~2.68 MB
+logical / 3.57 MB allocated (167,196 tokens × 16 bytes/token plus
+private-`Vec` slack); the typed root at ~3-5 MB; payload arena writes
+and allocations are zero on the hot path. Total skinny canada peak ~5.7-8.6
+MB versus sonic-rs canada peak ~5-7 MB (community-anchored lazy
+materialisation) — the substrate operates at ~1.1-1.4× sonic-rs canada
+peak. The 3× outcome M floor leaves ~2× headroom against the measured
+substrate profile; the gate is a safety net for substrate-shape drift,
+not a primary close-row gate.
+
 V1 J.W1 retains the strict gate (≤ 1.5× competitor); skinny gates at the
 generous 3× floor as a substrate viability signal, not a closing-row gate.
 This is the redress of the prior "memory is not skinny's question"
@@ -1302,7 +1385,7 @@ substrate is not viable.
 
 ### 9.7 No multi-core / parallel parse bench
 
-NDJSON multithreaded (simdjson 3.5 GB/s) is not a V1 target. Skinny
+NDJSON multithreaded (simdjson 28000 Mbps) is not a V1 target. Skinny
 single-threaded only. No omission impact: V1 is single-threaded parse.
 
 ### 9.8 No diagnostic / error-path bench
@@ -1318,7 +1401,7 @@ skinny measures parse-to-typed-root. The path query API is V1 G-owned.
 
 ---
 
-## §10 Verdict-writing template — `restart/skinny/RESULTS.md`
+## §10 Verdict-writing template — `skinny/RESULTS.md`
 
 After the bench runs, the gate (§8.2) renders a results document. This
 document is the single arbitration record the user reads to decide
@@ -1344,13 +1427,13 @@ verdict: <single-sentence outcome>
 
 ## Outcome classification
 
-Outcome ID: <A|B|C|D|E|F|G|H|I|J|K|L>
+Outcome ID: <A|B|C|D|E|F-positive|F-noise|F-codegen-gap|G|I|J|K|L|M>
 
 Per-corpus outcomes:
 - twitter: <ID>
 - citm: <ID>
 - canada: <ID>
-- structural_scan: <pass|fail with GB/s>
+- structural_scan: <pass|fail with Mbps>
 
 Overall: worst-case across corpora = <ID>.
 
@@ -1372,19 +1455,20 @@ Overall: worst-case across corpora = <ID>.
 
 ### twitter.json (size <bytes>, sha256 <digest>)
 
-| Bench | Median (µs) | 95% CI | GB/s | vs sonic-rs |
-|---|---|---|---|---|
-| Track 1 (generated) | <m> | [<lo>, <hi>] | <gb> | <ratio>x |
-| Track 2 (hand-coded) | <m> | [<lo>, <hi>] | <gb> | <ratio>x |
-| sonic-rs anchor | <m> | [<lo>, <hi>] | <gb> | 1.00x |
-| sonic-rs checked | <m> | [<lo>, <hi>] | <gb> | <ratio>x |
-| simd-json borrowed | <m> | [<lo>, <hi>] | <gb> | <ratio>x |
-| simd-json owned | <m> | [<lo>, <hi>] | <gb> | <ratio>x |
-| serde_json | <m> | [<lo>, <hi>] | <gb> | <ratio>x |
+| Bench | Median (us) | 95% CI | Mbps | vs sonic-rs |
+|---|---|---|---:|---:|
+| Track 1 (generated) | <m> | [<lo>, <hi>] | <mbps> | <ratio>x |
+| Track 2 (hand-coded) | <m> | [<lo>, <hi>] | <mbps> | <ratio>x |
+| sonic-rs anchor | <m> | [<lo>, <hi>] | <mbps> | 1.00x |
+| sonic-rs checked | <m> | [<lo>, <hi>] | <mbps> | <ratio>x |
+| simd-json borrowed | <m> | [<lo>, <hi>] | <mbps> | <ratio>x |
+| simd-json owned | <m> | [<lo>, <hi>] | <mbps> | <ratio>x |
+| serde_json | <m> | [<lo>, <hi>] | <mbps> | <ratio>x |
 
 Codegen overhead (T1/T2): <ratio>x
 Substrate ceiling (T2/S): <ratio>x
 Payload arena writes/allocations: Track 1 <w>/<a>, Track 2 <w>/<a> (must all be 0)
+Tape materialization: Track 1 <tokens> tokens, <logical_bytes> logical tape bytes (<x>x input), <allocated_bytes> allocated tape bytes (<y>x input), <payload_bytes> payload bytes; pairs <n>, opens <n>, closes <n>, scalars <n>, sibling-skips <n>
 Beat target (≤ 380 µs): <met|missed>
 Parity floor (≤ 480 µs): <met|missed>
 
@@ -1396,40 +1480,40 @@ Outcome: <ID>
 ### canada.json (size <bytes>, sha256 <digest>)
 [same schema]
 
-### simd/structural_scan (twitter.json, sha256 <digest>)
+### simd/structural_scan (canada.json, sha256 <digest>)
 
-| Bench | GB/s | Floor | Pass |
+| Bench | Mbps | Floor | Pass |
 |---|---|---|---|
-| simd | <gb> | 5 (NEON) / 7 (AVX2) | <yes|no> |
-| scalar | <gb> | (parity) | <yes|no> |
+| simd | <mbps> | 40000 (NEON) / 56000 (AVX2) | <yes|no> |
+| scalar | <mbps> | (parity) | <yes|no> |
 | Parity hash match | <yes|no> | required | <pass|fail> |
 
 ## Masking probes
 
 ### Host-call probes (per §7.8.1)
 
-| Probe | Result | Threshold | Pass |
+| Probe | Result | Threshold | Signal |
 |---|---:|---|---|
-| host_call_dispatch_overhead (ns/call) | <ns> | ≤ 50 ns/call | <yes|no> |
-| host_call_eager_decode twitter | <ratio>x vs T1 | 1.05-1.15 expected | <yes|no> |
-| host_call_eager_decode citm | <ratio>x vs T1 | 1.03-1.08 expected | <yes|no> |
-| host_call_eager_decode canada | <ratio>x vs T1 | < 1.02 expected | <yes|no> |
+| host_call_dispatch_overhead (ns/call) | <ns> | ≤ 50 ns/call | <PASS \| MASKING> |
+| host_call_eager_decode twitter | <ratio>x vs T1 | > 1.15× T1 fires MASKING | <reported \| MASKING> |
+| host_call_eager_decode citm | <ratio>x vs T1 | > 1.08× T1 fires MASKING | <reported \| MASKING> |
+| host_call_eager_decode canada | <ratio>x vs T1 | > 1.02× T1 fires MASKING | <reported \| MASKING> |
 
-### Alternate-plan probes — confirmatory (per §7.8.2)
+### Alternate-plan probes — confirmatory only (per §7.8.2)
 
-| Probe | Corpus | Result | Confirmation |
+| Probe | Corpus | Result | Disposition |
 |---|---|---:|---|
 | alternate_scalar_plan | <corpus> | <ratio>x vs canonical | canonical ≤ alternate (SIMD adds value) |
-| alternate_dispatch_table_plan | <corpus> | <ratio>x vs canonical | canonical ≤ alternate × 1.02 |
-| alternate_pext_mask_plan (x86_64 only) | <corpus> | <ratio>x vs canonical | alternate ≤ canonical × 1.05 (or N/A on aarch64) |
+| alternate_dispatch_table_plan | <corpus> | INVALID | INVALID per `skinny/REDRESS.md` item 17 — duplicate-probe disabled; real function-pointer table regressed; canonical Rust `match` is the load-bearing dispatch |
+| alternate_pext_mask_plan (x86_64 only) | <corpus> | <missing \| ratio>x vs canonical | missing in skinny; V1 H.W2 owns |
 
 ### Cold-cache probe (report-only; per §7.8.3)
 
-| Probe | Corpus | Cold (µs) | Warm (µs) | Cold/Warm | Sensitivity |
+| Probe | Corpus | Cold (us) | Warm (us) | Cold/Warm | Disposition |
 |---|---|---:|---:|---:|---|
-| cold_first_parse | twitter | <us> | <us> | <ratio>x | < 2.0× expected |
-| cold_first_parse | citm | <us> | <us> | <ratio>x | < 2.0× expected |
-| cold_first_parse | canada | <us> | <us> | <ratio>x | < 2.0× expected |
+| cold_first_parse | twitter | <us> | <us> | <ratio>x | <PASS \| INCONCLUSIVE \| FAIL> (< 1.2× INCONCLUSIVE; 1.2-2.0× PASS; > 2.0× FAIL) |
+| cold_first_parse | citm | <us> | <us> | <ratio>x | <PASS \| INCONCLUSIVE \| FAIL> |
+| cold_first_parse | canada | <us> | <us> | <ratio>x | <PASS \| INCONCLUSIVE \| FAIL> |
 
 ### CSS prior probe (per §9.1; report-only if implemented)
 
@@ -1464,7 +1548,8 @@ READY-verdict default; the skinny is the evidence event.
 | D | 0.70-0.85 | 0.20-0.40 | Codegen gap; F absorbs |
 | E | 0.50-0.70 | 0.10-0.30 | Conditional; F held |
 | F-positive | 0.50-0.70 | < 0.30 | Substrate borderline-weak; codegen positive (generator competitive with hand) |
-| F-noise | 0.40-0.60 | < 0.30 | Substrate borderline-weak; codegen indistinguishable from hand within bench noise |
+| F-noise | 0.40-0.60 | < 0.30 | Substrate borderline-weak; codegen indistinguishable from hand within Track 1 95% CI overlap of Track 2 × 1.05 |
+| F-codegen-gap | 0.35-0.55 | < 0.25 | Substrate borderline-weak; codegen widens the gap (Track 1 > Track 2 × 1.10); requires +1 wave to F alongside the substrate +1 wave to H.W1 |
 | G | < 0.30 | < 0.05 | Substrate failure (collapsed prior G + H) |
 | I | n/a | n/a | Correctness fail; rerun |
 | J | n/a | n/a | Schema fail; rerun |
@@ -1475,11 +1560,22 @@ READY-verdict default; the skinny is the evidence event.
 The user can re-anchor the prior elsewhere, but the skinny supplies the
 evidence in a form that the prior consumes.
 
+Note (post-iteration): a prior version of this section carried a row for
+"`alternate_pext_mask_plan` < canonical × 0.90 on x86_64 → cross-platform
+plan divergence". The alternate-plan probes at §7.8.2 do not currently
+bound cross-platform plan divergence: the dispatch-table candidate is
+INVALID per `skinny/REDRESS.md` item 17, and the PEXT-mask candidate is
+unimplemented in the skinny (V1 H.W2 owns). The skinny is silent on
+cross-platform plan divergence; no probability-mapping row applies, and
+the residual question routes to V1 H.W2 input rather than a skinny
+probability update.
+
 ### 10.4 Where RESULTS.md lives
 
-`restart/skinny/RESULTS.md`. The gate writes (overwrites) it on every run.
-The historical results live in `target/criterion/` archived per-run; the
-canonical RESULTS.md is the latest.
+`skinny/RESULTS.md` in the prototype workspace. The gate writes (overwrites)
+it on every run. The historical results live in `skinny/target/criterion/`
+archived per-run; the canonical RESULTS.md is the latest. The spec authority
+remains under `restart/skinny/`.
 
 ### 10.5 Reading order
 
@@ -1561,7 +1657,6 @@ crates/bbnf-bench/
   benches/
     json_parity.rs
     simd_scan.rs
-  runners.toml         # CI discount factors
 ```
 
 ### 11.1 LOC budget for `bbnf-bench`
@@ -1570,13 +1665,13 @@ The skinny LOC ceiling for `crates/bbnf-bench/` is set in WORKSPACE.md.
 Indicative budget:
 
 - `fixtures.rs`: ≤ 120 LOC
-- `metadata.rs`: ≤ 250 LOC (schema_version + per-corpus parity + RSS + cold_cache_mode add fields)
+- `metadata.rs`: ≤ 280 LOC (schema_version + per-corpus parity + RSS + cold_cache_mode add fields)
 - `parity.rs`: ≤ 100 LOC
-- `gate.rs`: ≤ 350 LOC (matrix expansion: F-split, G-collapse, M-add, BEAT_BOUND classifier)
+- `gate.rs`: ≤ 400 LOC (matrix expansion: F-split, G-collapse, M-add, BEAT_BOUND classifier; CI-advisory collapse reclaims ~50 LOC from prior runner-discount apparatus per §8.3)
 - `bin/gate.rs`: ≤ 60 LOC
 - `track2/json/` (Lock 13 split if needed): handwritten JSON parser, measurement-driven LOC; no constraint cap. Each file ≤ 500 LOC per Lock 13.
 - `track2/css_prior.rs` (optional CSS prior probe per §9.1): ≤ 600 LOC, file split allowed.
-- `benches/json_parity.rs`: ≤ 250 LOC (probe additions: dispatch, eager_decode, pext, cold_first_parse)
+- `benches/json_parity.rs`: ≤ 250 LOC (probe additions: distinct dispatch if available, eager_decode, pext, cold_first_parse)
 - `benches/simd_scan.rs`: ≤ 150 LOC (per-corpus parity)
 
 Total: target ≤ ~2,200 LOC. Track 2's measurement-driven LOC is the
@@ -1622,8 +1717,8 @@ diverge from the reference run.
 
 **Mitigation:** the gate reads `RUSTFLAGS` from metadata. If `target-cpu`
 is anything other than `native` (or the platform-native equivalent
-`apple-m1` / `skylake-avx512` / etc., enumerated in `runners.toml`),
-classification emits a CONDITIONAL flag.
+`apple-m1` / `skylake-avx512` / etc.), classification emits a
+CONDITIONAL flag.
 
 ### 12.4 Criterion noise threshold drift
 
@@ -1704,8 +1799,8 @@ PASS-3 §7 names the rows `json/twitter/borrowed`, `json/twitter/tape_cursor`
 them `json/twitter` flat (`restart/ARCHITECTURE.md:1514`). The skinny uses
 the flat ARCHITECTURE convention because skinny only measures one
 materialisation profile (typed root). The PASS-3 sub-rows split borrowed
-vs tape_cursor; the skinny's `parse(&str)` returns a typed root over the
-tape, which is structurally the borrowed row. The naming difference is
+vs tape_cursor; the skinny's `parse(&str)` returns a typed root owning the
+sealed tape, with borrowed `ValueRef` projections. The naming difference is
 documented; classification is unambiguous.
 
 ### 13.5 V1 H.W3 vs J.W1 ownership of SOTA close
@@ -1745,7 +1840,7 @@ RUSTFLAGS="-C target-cpu=native" \
 cargo run --release -p bbnf-bench --bin gate
 
 # Read the verdict.
-head -1 restart/skinny/RESULTS.md
+head -1 skinny/RESULTS.md
 ```
 
 ---
@@ -1755,18 +1850,18 @@ head -1 restart/skinny/RESULTS.md
 | Question | Answered | Method |
 |---|---|---|
 | Does the substrate reach SOTA-class throughput on JSON? | yes | Track 2 vs sonic-rs / simd-json (BEAT_BOUND-anchored outcome A) |
-| Does the codegen path preserve the substrate's throughput? | yes | Track 1 vs Track 2 ratio (F-positive vs F-noise sub-band) |
+| Does the codegen path preserve the substrate's throughput? | yes | Track 1 vs Track 2 ratio (F-positive / F-noise / F-codegen-gap sub-bands when substrate is borderline-weak; A / B / C / D / E when substrate is at parity) |
 | Does the SIMD scan match its scalar reference on every corpus? | yes | per-corpus parity hash equality (twitter / citm / canada) |
-| Does the SIMD scan reach simdjson-class GB/s on the largest input? | yes | structural_scan microbench gated on canada row |
+| Does the SIMD scan reach simdjson-class Mbps on the largest input? | yes | structural_scan microbench gated on canada row |
 | Are bench results reproducible? | yes | reproducibility schema enforcement + `schema_version` field |
 | Is Track 1 byte-equal to Track 2 on output? | yes | parity oracle |
-| Is the host-fn-free skinny grammar masking V1 dispatch cost? | yes | two probes — per-call dispatch overhead + gross-time eager-decode variant |
-| Is the single-plan extraction masking cost-model wins? | confirmatory | three probes including a plausibly-better PEXT-mask alternate on x86_64 |
+| Is the host-fn-free skinny grammar masking V1 dispatch cost? | yes | two probes — per-call dispatch overhead (`host_call_dispatch_overhead`) PASSES at < 1 ns/call; gross-time eager-decode variant (`host_call_eager_decode`) FIRES MASKING per §7.8.1 envelopes, forcing V1 JSON to keep decode lazy |
+| Is the single-plan extraction masking cost-model wins? | confirmatory only | scalar alternate passes (canonical wins); dispatch-table alternate INVALID per `skinny/REDRESS.md` item 17 (real function-pointer table regressed; canonical Rust `match` is load-bearing); PEXT-mask alternate unimplemented in skinny — defers to V1 H.W2 |
 | Is cold-cache parse latency acceptable? | report-only | cold_first_parse probe per corpus |
 | Is the substrate viable for concurrent-parse workloads? | yes | peak RSS gated at outcome M (≤ 3× competitor on canada) |
 | Does the substrate generalise beyond JSON? | report-only | optional CSS prior probe at bootstrap.css |
 | Are CSS SOTA gates cleared? | NO (defers to V1 H.W4) | CSS prior probe is a substrate-generality signal, not a CSS SOTA verdict |
-| Is incremental parsing performance acceptable? | NO (defers to V1 I) | n/a — `Box<[T]>` sealing precludes; documented in INDEX.md deviation ledger |
+| Is incremental parsing performance acceptable? | NO (defers to V1 I) | n/a — committed tape is private and immutable; mutable reuse belongs to the V1 I `TapeBuilder` path documented in INDEX.md deviation ledger |
 | Is generated JSON LOC inside budget? | yes | `xtask lint-loc` / gate metadata; V1 nine-grammar scale defers to F.W3 |
 | Is WASM lower path measured? | NO (defers to V2) | n/a — see §9.4 |
 | Is the build PGO-tuned? | NO (out-of-the-box LTO release for both bbnf and competitors) | recorded as `pgo_mode: "none"`; J.W1 may re-run with PGO |

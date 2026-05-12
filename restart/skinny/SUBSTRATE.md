@@ -4,7 +4,9 @@
 
 The skinny exists to validate the V1 SOTA-viability claim against ONE grammar end-to-end before tranches A-J commit. This document specifies the substrate slice — the runtime layer that codegen lowers to and the bench measures against.
 
-The substrate is **grammar-neutral**: every type, layout decision, and arena policy here is the same shape the full V1 will ship for CSS, BBNF, Sheets, and the rest. The skinny exercises only the JSON cell of that shape. If JSON cannot reach SOTA-parity through this substrate, that is strong negative evidence for JSON-class tape/SIMD throughput; if JSON does reach parity, the substrate-side risk for JSON-class grammars collapses. CSS layout, Sheets Pratt/host chains, and other non-JSON mechanisms still close under their V1 gates.
+The substrate is **grammar-neutral**: every type, layout decision, and arena policy here is the same shape the full V1 will ship for CSS, BBNF, Sheets, and the rest. The skinny exercises only the JSON cell of that shape. CSS layout, Sheets Pratt/host chains, and other non-JSON mechanisms still close under their V1 gates.
+
+**Iteration evidence — premise resolved.** The substrate has been measured against the SOTA gate; `skinny/RESULTS.md` records outcome G / NO-GO at Track 1 12470/12246/8895 Mbps (twitter/citm_catalog/canada) against sonic-rs 18440/23075/12021 Mbps — Track 1 lands at 53-74% of competitor across the three corpora. The substrate cut is therefore **FAITHFUL-with-known-ceiling**: the test ran honestly; the eager 16-byte tape's per-token materialization cost is the measured bottleneck. Four structural perturbations of the eager tape have been measured and rejected (close-token elision adopted per `skinny/REDRESS.md` item 13; pair-token fusion rejected per item 16; dispatch-table alternate rejected per item 17; 12-byte skipless token rejected per item 18). The remaining honest structural amendment is the **lazy-offset tape** (§1.5 amendment surface). The substrate-side risk for JSON-class grammars is therefore now: lazy-offset amendment landed and re-measured, or eager-tape ceiling accepted as V1's JSON SOTA-PARITY (rather than BEAT) commitment.
 
 Source authority (verbatim citations, not paraphrase):
 
@@ -15,7 +17,7 @@ Source authority (verbatim citations, not paraphrase):
 - `restart/audit/pass-2-codegen/PASS-2.md` §2 commitment 3 — TapeShape + ValueShape are one materialisation plan.
 - `restart/locks/14-LOCKS.md` Lock 1 (line 34) — tape is THE substrate; no parallel substrate; no OpenFrame clone.
 - `restart/locks/14-LOCKS.md` Lock 8 (line 48) — sonic-rs / simdjson / lightning-css anchors.
-- `restart/ARCHITECTURE.md` §11 row `simd/structural_scan` (line 1519) — ≥7 GB/s AVX2, ≥5 GB/s NEON, scalar parity hash mandatory.
+- `restart/ARCHITECTURE.md` §11 row `simd/structural_scan` (line 1519) — ≥56000 Mbps AVX2, ≥40000 Mbps NEON, scalar parity hash mandatory.
 
 The full-V1 spec PASS-3 §4 admits its layout is **illustrative, not mandatory** ("This layout is not a PASS-1 mandate; it is a user-surface contract. PASS-1 may pack differently if these semantics remain true." — `PASS-3.md:187`). The skinny pins one packing and measures it. If the bench fails parity, the packing is the variable to perturb, not the contract.
 
@@ -32,40 +34,50 @@ pub struct TapeToken {
     /// `NodeKind` enum at codegen time).
     pub kind: NodeKindId,        // u16 — 65 535 kinds is far above
                                  //       any realistic grammar
-    pub flags: TokenFlags,       // u16 bitfield: PAYLOAD_CLASS (4 bits),
-                                 //               HAS_SCALAR_CACHE (1),
-                                 //               STRING_NEEDS_UNESCAPE (1),
-                                 //               STRING_BORROWS_SOURCE (1),
-                                 //               IS_STRUCTURAL_OPEN (1),
-                                 //               IS_STRUCTURAL_CLOSE (1),
-                                 //               RECOVERY_KIND (2),
-                                 //               reserved (5)
+    pub flags: TokenFlags,       // u16 bitfield (bit layout):
+                                 //   bits 0..=3  PAYLOAD_CLASS         (4)
+                                 //   bit  4      HAS_SCALAR_CACHE      (1)
+                                 //   bit  5      PAYLOAD_NEEDS_NORMALIZE (1)
+                                 //   bit  6      PAYLOAD_BORROWS_SOURCE  (1)
+                                 //   bit  7      IS_STRUCTURAL_OPEN    (1)
+                                 //   bit  8      IS_STRUCTURAL_CLOSE   (1; reserved
+                                 //                 for grammars/recovery that emit
+                                 //                 explicit close tokens; JSON
+                                 //                 skinny emits zero close tokens)
+                                 //   bits 9..=15 reserved              (7)
     pub start: u32,              // source byte offset (input length
                                  //                     ≤ 2³² for V1 hot path)
     pub end: u32,                // source byte offset (exclusive)
     pub payload_or_skip: u32,    // discriminated by flags.PAYLOAD_CLASS:
-                                 //   - INLINE_BOOL_NULL: ignored (zero)
-                                 //   - INLINE_NUMBER_FAST: nothing
+                                 //   - INLINE_BOOL_NULL:    ignored (zero)
+                                 //   - INLINE_NUMBER_FAST:  nothing
                                  //     (number recovered from start..end)
-                                 //   - ARENA_OFFSET: byte offset into
-                                 //     PayloadArena
+                                 //   - INLINE_STRING_BORROW: nothing
+                                 //     (string slice = source[start..end];
+                                 //      PAYLOAD_BORROWS_SOURCE / 
+                                 //      PAYLOAD_NEEDS_NORMALIZE annotate)
+                                 //   - ARENA_OFFSET:        byte offset into
+                                 //                          PayloadArena
                                  //   - SIBLING_SKIP for container nodes:
-                                 //     count of token slots to skip to
-                                 //     reach next sibling
+                                 //                          count of token slots
+                                 //                          to skip to reach
+                                 //                          next sibling
 }
 ```
+
+The `PAYLOAD_CLASS` 4-bit field enumerates: `INLINE_BOOL_NULL` (0), `INLINE_NUMBER_FAST` (1), `INLINE_STRING_BORROW` (2), `ARENA_OFFSET` (3), `SIBLING_SKIP` (4); values 5..=15 are reserved for V1 grammars. `RECOVERY_KIND` is **not** present in the skinny TokenFlags (recovery is omitted per §7); the 2 bits the SK-V1 draft reserved for it are folded into the `reserved (7)` tail and remain available for V1 grammars that need explicit recovery state. Flag names are grammar-neutral (`PAYLOAD_*`, not `STRING_*`): the same flags annotate CSS function-call arguments, BBNF terminal payloads, and Sheets formula tokens.
 
 Fields total: 2 + 2 + 4 + 4 + 4 = 16 bytes. `#[repr(C, align(16))]` so a 64-byte cache line holds exactly four tokens with no straddle on x86 / ARM. AVX2 may load eight tokens (128 bytes) with two aligned 32-byte loads.
 
 `payload_or_skip` is the load-bearing union slot. PASS-3 §4 carries `payload: u32` and `sibling_skip: u32` as separate fields — but for the JSON skinny we collapse them, because:
 
 - Scalar tokens (`JsonString`, `JsonNumber`, `JsonBool`, `JsonNull`) need the payload pointer; they do not need a sibling-skip (they have no children).
-- Container open tokens (`JsonObjectOpen`, `JsonArrayOpen`) need the sibling-skip to allow O(1) traversal past the subtree; they do not need a payload pointer (the close-token carries the span).
+- Container open tokens (`JsonObjectOpen`, `JsonArrayOpen`) need the sibling-skip to allow O(1) traversal past the subtree; they do not need a payload pointer. JSON skinny uses close-token elision: the open token's `end` is patched to the close delimiter's exclusive offset and `payload_or_skip` carries the subtree skip.
 - `flags.PAYLOAD_CLASS` discriminates.
 
 If the bench shows the union encoding is the bottleneck, splitting back to 24 bytes is a one-commit perturbation; carrying both eagerly costs a cache line per token-pair. The full V1 may refine this; the skinny commits to 16 bytes because the SOTA target lives or dies by token-cache density.
 
-`NodeKindId` is `u16` (a transparent newtype) and is grammar-derived but the type itself lives in `runtime/src/tape/`. The mapping `JsonObjectOpen → 0u16`, `JsonObjectClose → 1u16`, etc., is generated per grammar; the substrate never sees the names.
+`NodeKindId` is `u16` (a transparent newtype) and is grammar-derived but the type itself lives in `runtime/src/tape/`. The mapping `JsonObjectOpen → 0u16`, `JsonObjectClose → 1u16`, etc., is generated per grammar; the substrate never sees the names. JSON close kinds remain reserved in the generated kind table for diagnostics/recovery and V1 grammars that need explicit close events, but the SOTA JSON tape emits zero close tokens.
 
 ### 1.2 `Tape<'input>` — owning token stream + payload arena
 
@@ -75,11 +87,10 @@ pub struct Tape<'input> {
     /// `&[u8]` here even though the public Grammar API may take `&str`.
     source: &'input [u8],
 
-    /// Tape token stream, append-only after commit. Box<[T]>, not Vec<T>,
-    /// because the parser writes once and then the tape is read-only.
-    /// Sealing as `Box<[_]>` removes the `len/cap` divergence and
-    /// improves codegen for traversal.
-    tokens: Box<[TapeToken]>,
+    /// Tape token stream, append-only inside TapeBuilder and private
+    /// after commit. Vec<T> avoids the parse-boundary shrink/copy cost;
+    /// the public read API exposes only &[TapeToken].
+    tokens: Vec<TapeToken>,
 
     /// Payload arena; see §2.
     payloads: PayloadArena,
@@ -96,7 +107,7 @@ pub struct TapeId(pub u64);
 
 JSON skinny does **not** carry `Box<[Diagnostic]>` on `Tape`; recovery is omitted (§7), so diagnostics for the SOTA hot path are zero-length. If the bench harness needs to surface a parse error, that is a `Result<Self::View<'a>, ParseError>` at the `Grammar::parse` boundary, not a tape field.
 
-**Sealing trade-off (incremental deviation).** `tokens: Box<[TapeToken]>` produces tighter codegen for traversal and removes the `len/cap` divergence — measurable on the SOTA gate. It also precludes append-after-parse, which the V1 I tranche's incremental reuse map (`ReparsePlan` per ARCH §3.3) requires. The graduation path is not "rewrite the substrate" — it is a typed handoff: the skinny's `Tape<'input>` becomes the *committed-snapshot* projection of a V1 `TapeBuilder<'input>` whose internal storage is `Vec<TapeToken>` (or chunked); the snapshot view re-seals as `Box<[T]>` for the read path. Lens N classification: **MECHANICAL with named inversion** — the inversion is "skinny seals at parse boundary; V1 seals at snapshot boundary," and the read-side type-shape (`&Tape<'input>`, `ValueRef<_, _, K>`) does not change. Tracked in `INDEX.md` deviation ledger.
+**Sealing trade-off (incremental deviation).** The initial skinny pinned `Box<[TapeToken]>` to remove `len/cap` divergence. Measurement (`skinny/REDRESS.md` item 15) showed that `Vec::into_boxed_slice()` adds a parse-boundary shrink/copy after over-reserving from the structural index. The canonical skinny therefore uses a private `Vec<TapeToken>` inside the finished `Tape`: semantic sealing is enforced by type privacy, and the public read API remains `&[TapeToken]`. The bench reports both logical tape bytes and allocated tape bytes so this throughput win does not hide memory residency (`skinny/RESULTS.md` "Notes": twitter 649680 logical / 1064272 allocated = 1.03× / 1.69× input; citm_catalog 1432272 / 2351040 = 0.83× / 1.36×; canada 2675136 / 3572160 = 1.19× / 1.59×). V1 graduation remains mechanical: the committed snapshot can stay private-Vec, become chunked, or re-seal to `Box<[T]>` at a non-hot snapshot boundary without changing `ValueRef` or typed projections.
 
 ### 1.3 `ValueRef<'doc, 'input, K>` — typed cursor over tape
 
@@ -114,26 +125,28 @@ pub struct ValueRef<'doc, 'input: 'doc, K = AnyKind> {
 
 The lifetime parameters `'doc` and `'input` are **the discriminant** of the slice-borrow / arena / owned forms (Lock 9, `restart/locks/14-LOCKS.md:50`). For the skinny:
 
-- `parse(&'a [u8]) -> Result<Self::View<'a>, _>` collapses to `'doc = 'input = 'a`.
-- `parse_in(&'a [u8], &'a Arena) -> Result<Self::View<'a>, _>` keeps them collapsed; the `Arena` only widens the payload arena's backing storage.
-- `parse_owned` lives behind an `OwnedDocument` wrapper that self-references. The skinny facade may expose `parse_owned` only as a cold wrapper over `parse`; the SOTA rows measure `parse(&str)` with UTF-8 prevalidation outside the timed region and do not treat owned form as implemented hot-path substrate.
+- `parse<'i>(input: &'i str) -> Result<JsonDocument<'i>, ParseError>` collapses to `'doc = 'input = 'i`. The public Grammar API takes `&str` (UTF-8 prevalidation outside the timed region per Lock 9); the substrate operates on the underlying byte slice internally.
+- `parse_in<'i>(input: &'i str, arena: &'i Arena) -> Result<JsonDocument<'i>, ParseError>` keeps them collapsed; the `Arena` only widens the payload arena's backing storage.
+- `parse_owned` lives behind an `OwnedDocument` wrapper that self-references (V1 receiver: `runtime/src/owned/`). The skinny facade may expose `parse_owned` only as a cold wrapper over `parse`; the SOTA rows measure `parse(&str)` and do not treat owned form as implemented hot-path substrate.
 
 `PhantomData<fn() -> K>` (rather than `PhantomData<K>`) keeps `ValueRef` `Copy`/`Send`/`Sync` regardless of `K`'s auto-trait posture. The kind tag never holds data.
 
 Kind families for JSON:
 
 ```rust
-pub enum AnyKind {}      // erased
-pub enum JsonRoot {}
-pub enum JsonValue {}
-pub enum JsonObject {}
-pub enum JsonArray {}
-pub enum JsonString {}
-pub enum JsonNumber {}
-pub enum JsonBool {}
-pub enum JsonNull {}
-pub enum JsonMember {}   // a (key, value) pair token
+pub enum AnyKind {}            // erased
+pub enum JsonRootKind {}
+pub enum JsonValueKind {}
+pub enum JsonObjectKind {}
+pub enum JsonArrayKind {}
+pub enum JsonStringKind {}
+pub enum JsonNumberKind {}
+pub enum JsonBoolKind {}
+pub enum JsonNullKind {}
+pub enum JsonMemberKind {}     // a (key, value) pair token
 ```
+
+The `*Kind` suffix disambiguates these uninhabited markers from the typed-view structs at §4.1 (`JsonRoot<'doc, 'input>`, `JsonObject<'doc, 'input>`, …). The marker enums constrain the `K` type parameter on `ValueRef<_, _, K>`; the typed-view structs are thin wrappers around `ValueRef<_, _, *Kind>`.
 
 These are all uninhabited; they are markers that constrain the methods exposed on `ValueRef<_, _, K>` and direct the codegen-emitted `JsonObject::get`, `JsonArray::iter`, `JsonString::as_str`, `JsonNumber::as_f64` projections.
 
@@ -153,16 +166,36 @@ pub struct JsonDocument<'input> {
 }
 
 impl<'input> DocumentView<'input> for JsonDocument<'input> {
-    type Root = ValueRef<'input, 'input, JsonRoot>;
+    // The public `root_value()` returns the typed-view `JsonRoot<'input, 'input>`
+    // from §4.1 by wrapping the raw cursor. Internal projection uses the
+    // `JsonRootKind` marker so the type parameter on `ValueRef` is constrained.
+    type Root = JsonRoot<'input, 'input>;
     fn root_value(&'input self) -> Self::Root {
-        ValueRef { tape: &self.tape, index: 0, _kind: PhantomData, _input: PhantomData }
+        JsonRoot {
+            cursor: ValueRef {
+                tape: &self.tape,
+                index: 0,
+                _kind: PhantomData,
+                _input: PhantomData,
+            },
+        }
     }
     fn tape_id(&self) -> TapeId { self.tape.id }
     fn source(&'input self) -> &'input [u8] { self.tape.source }
 }
 ```
 
-`'doc` and `'input` are deliberately unified at the `JsonDocument` level. Callers that must outlive the input bytes use the cold `OwnedDocument` wrapper; it is outside the measured SOTA path.
+`'doc` and `'input` are deliberately unified at the `JsonDocument` level. Callers that must outlive the input bytes use the cold `OwnedDocument` wrapper (V1 receiver: `crates/runtime/src/owned/`); it is outside the measured SOTA path.
+
+**Return-type settlement.** `Json::parse(&'i str) -> Result<JsonDocument<'i>, ParseError>` is the public return type; `JsonDocument` owns the sealed `Tape<'input>`. Callers obtain the root projection through `document.root_value() -> JsonRoot<'i, 'i>` (see §4.1). The `JsonRoot<'doc, 'input>` typed view at §4.1 is the second-tier surface, never the parse-API return type. The kind-marker enum at §1.3 is named `JsonRootKind` (uninhabited); the typed cursor at §4.1 retains the name `JsonRoot<'doc, 'input>`; the two identifiers no longer overload.
+
+### 1.5 Lazy-offset tape amendment surface
+
+After the iteration's four structural perturbations of the eager tape (close-token elision adopted per `skinny/REDRESS.md` item 13; pair-token fusion rejected per item 16; dispatch-table rejected per item 17; 12-byte skipless rejected per item 18), the remaining honest substrate move is the **lazy-offset tape**: `TapeToken` collapses to `(kind, flags)` and `start` / `end` / `skip` lazily project from a side table of structural offsets at traversal time, rather than being patched eagerly at parse time.
+
+Lens N classification: **ADDITIVE-MECHANICAL**. Lazy-offset ships as `LazyTape<'input>` alongside the eager `Tape<'input>`; per-grammar metadata (`TapeMode: Eager | Lazy`, V1 admit surface at Lock 1) selects which substrate the parser emits against. The `ValueRef<'doc, 'input, K>` cursor type and its `.start()` / `.end()` accessors are unchanged because they go through trait projection (eager: read from token field; lazy: index into side table). V1-closure cost: ~400-800 LOC additive (new struct + builder + projection trait impl), zero rewrite of `Tape` / `ValueRef` / typed views, zero break of `(TapeId, index)` identity invariant. Bench-condition for graduation: lazy-offset must beat eager Mbps on twitter/citm_catalog/canada by ≥10% on a future SK-V3 bench row; if it fails to beat, the eager-tape ceiling is accepted and JSON ships at V1 as SOTA-PARITY (not BEAT).
+
+This is the architecturally-required substrate amendment surface; the other items in §10 are open-questions orthogonal to the current NO-GO. INDEX deviation ledger records this as the lazy-tape Lock 1 amendment route (see `restart/audit/LAZY-TAPE-DESIGN.md` for the full design proposal).
 
 ---
 
@@ -175,8 +208,8 @@ The payload arena's job is to hold scalar payloads that **cannot** be recovered 
 | `null` | Inline. Payload class = `INLINE_BOOL_NULL`. `payload_or_skip` is unused. | Zero data; recovering it costs a kind check. |
 | `true` / `false` | Inline. Payload class = `INLINE_BOOL_NULL`. | One bit of state encoded in `kind` itself (`JsonTrue` vs `JsonFalse` are distinct kinds). |
 | Numbers (no escapes by definition; no normalisation needed) | **Lazy.** Payload class = `INLINE_NUMBER_FAST`. The tape token records `(start, end)`; the f64 / i64 is parsed only on `JsonNumber::as_f64()` / `as_i64()`. | Eager parse forces a `strtod`-class call per number on the hot path; sonic-rs and simdjson both lazy-parse. The bench measures structure-parse throughput; number materialisation is amortised across consumers. |
-| Strings, escape-free (the common case) | **Borrow source slice.** Payload class = `INLINE_STRING_BORROW`. `flags.STRING_BORROWS_SOURCE = 1`. The tape token's `start`/`end` cover the bytes between (but not including) the surrounding `"`. | Zero copy. `JsonString::as_str()` returns `&'input str` reconstituted from `source[start..end]`. |
-| Strings with escapes (`\n`, `ÿ`, etc.) | **Lazy unescape.** Payload class = `INLINE_STRING_BORROW`, `flags.STRING_NEEDS_UNESCAPE = 1`. The borrowed slice still spans the raw escape sequence. `JsonString::as_str()` returns `Cow<'input, str>`; the unescape lazily allocates only on the unescape path. | Eager unescape allocates for every string, even ones never read. The lightning-css model (`Cow`) is the V1 default per Lock 9. |
+| Strings, escape-free (the common case) | **Borrow source slice.** Payload class = `INLINE_STRING_BORROW`. `flags.PAYLOAD_BORROWS_SOURCE = 1`. The tape token's `start`/`end` cover the bytes between (but not including) the surrounding `"`. | Zero copy. `JsonString::as_str()` returns `&'input str` reconstituted from `source[start..end]`. |
+| Strings with escapes (`\n`, `ÿ`, etc.) | **Lazy unescape.** Payload class = `INLINE_STRING_BORROW`, `flags.PAYLOAD_NEEDS_NORMALIZE = 1`. The borrowed slice still spans the raw escape sequence. `JsonString::as_str()` returns `Cow<'input, str>`; the unescape lazily allocates only on the unescape path. | Eager unescape allocates for every string, even ones never read. The lightning-css model (`Cow`) is the V1 default per Lock 9. |
 | Strings the user takes an owned copy of via `JsonString::to_string()` | Heap allocate at the call site. | Not the hot path; user opt-in. |
 
 **Arena structure** for the skinny:
@@ -207,14 +240,30 @@ impl PayloadArena {
     }
 
     #[cfg(any(test, feature = "bench-counters"))]
-    pub fn write_count(&self) -> u32 { self.writes }
+    pub fn write_count(&self) -> u64 { self.writes as u64 }
 
     #[cfg(any(test, feature = "bench-counters"))]
-    pub fn allocation_count(&self) -> u32 { self.allocations }
+    pub fn allocation_count(&self) -> u64 { self.allocations as u64 }
+}
+
+impl<'input> Tape<'input> {
+    /// Bench-only: total payload-arena writes recorded during parse.
+    /// Zero for the JSON hot path; falsifies the zero-arena pillar if non-zero.
+    #[cfg(any(test, feature = "bench-counters"))]
+    pub fn payload_arena_writes(&self) -> u64 { self.payloads.write_count() }
+
+    /// Bench-only: total payload-arena allocations recorded during parse.
+    /// Zero for the JSON hot path.
+    #[cfg(any(test, feature = "bench-counters"))]
+    pub fn payload_arena_allocations(&self) -> u64 { self.payloads.allocation_count() }
 }
 ```
 
-The skinny commits to **zero arena allocations and zero arena writes on the JSON hot path.** Every scalar lives inline (booleans/null) or as a borrowed source slice (numbers, strings). The arena is present because the substrate is grammar-neutral and other grammars (e.g. CSS L4 colour-function intermediates) require it; for JSON it stays empty. BENCH must assert `PayloadArena::write_count() == 0` and `PayloadArena::allocation_count() == 0` for Track 1 and Track 2 on twitter/citm/canada under the bench-counters feature. If the bench shows arena cache pressure on the empty path, the field becomes `Option<Box<PayloadArena>>` behind a feature gate.
+These two `Tape<'input>` accessors are the surface BENCH §3.4 calls. The `PayloadArena` methods remain crate-private hooks; the `Tape` methods are the public falsifiability gate per Lock 1.
+
+The skinny commits to **zero arena allocations and zero arena writes on the JSON hot path.** Every scalar lives inline (booleans/null) or as a borrowed source slice (numbers, strings). The arena is present because the substrate is grammar-neutral and other grammars (e.g. CSS L4 colour-function intermediates) require it; for JSON it stays empty. BENCH must assert `Tape::payload_arena_writes() == 0` and `Tape::payload_arena_allocations() == 0` for Track 1 and Track 2 on twitter/citm_catalog/canada under the bench-counters feature.
+
+Iteration evidence confirms zero pressure: `skinny/RESULTS.md` "Notes" reports `Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations` across all three corpora; the `Option<Box<PayloadArena>>` conditional is therefore dormant and remains a V1-deferred gate that only reactivates if a future grammar perturbs the empty-path assumption. The host-fn-free posture is FAITHFUL-conditional on V1 keeping `JsonString::as_str()` lazy per `skinny/REDRESS.md` item 19: if V1 emits a parse-time `decode_json_string_to_arena` host call, the zero-arena claim breaks and the cut becomes MASKING (eager-decode probe lands at 57.6% / 77.2% / 81.9% of Track 1 across twitter/citm_catalog/canada per RESULTS.md).
 
 Lifetime relationship: `PayloadArena` is owned by `Tape<'input>`. Anything stashed in it lives at least `'doc`. The skinny never stashes anything that depends on `'input`, so it does not need an arena-lifetime parameter.
 
@@ -222,7 +271,12 @@ Lifetime relationship: `PayloadArena` is owned by `Tape<'input>`. Anything stash
 
 ## 3. SIMD scan integration contract
 
-The structural alphabet for JSON is the eight bytes `{ } [ ] : , "` plus whitespace `space \t \n \r`. The simd-scan pass produces an offset stream identifying every structural byte in one pass over the input.
+The exact structural alphabet for JSON is the seven punctuation bytes `{ } [ ] : ,` plus quote `"`. Layout whitespace (`space \t \n \r`) is a skip class consumed by parser boundary loops, not a structural token emitted into the parser index. The implementation exposes two SIMD products:
+
+- `StructuralIndex`: the bench/floor product, carrying exact structural offsets for the punctuation/quote alphabet only.
+- `JsonParseIndex`: the parser product, carrying structural offsets plus string escape/control candidate columns. It deliberately does not carry whitespace bytes or a duplicate structural-byte column; both variants were measured as extra parser-index work that the hot path did not recover.
+
+The structural-only scanner may take a no-quotes fast path: if a SIMD stripe is outside a string and contains no quote bytes, it classifies punctuation structurals without paying escape/parity bookkeeping. This preserves exactness because string state cannot change inside such a stripe.
 
 ### 3.1 The dispatch table
 
@@ -259,14 +313,10 @@ pub struct StructuralOffsets {
     /// Pre-allocated to `input.len() / 8` (empirical density bound for
     /// twitter/citm/canada).
     offsets: Vec<u32>,
-    /// Parallel byte stream — the structural byte at each offset, used
-    /// for fast kind dispatch in the tape builder without re-reading the
-    /// input.
-    bytes: Vec<u8>,
 }
 ```
 
-Two parallel arrays so the tape builder can do a single dispatch on `bytes[i]` to choose between `JsonObjectOpen`, `JsonArrayClose`, etc., and only then index into `input` for the offset.
+One offsets array is the canonical feed. The parser reads `input[offset]` when it needs the structural byte; carrying a parallel byte vector measured as throughput-negative because it adds one write and one extra read stream per structural. `JsonParseIndex` extends the offsets array with string escape and string control candidate arrays for string validation. `StructuralIndex` remains the lean scan floor; `JsonParseIndex` is allowed to be heavier only where the full parse row recovers that cost.
 
 ### 3.3 Prefilter vs verifier route
 
@@ -276,7 +326,7 @@ JSON's structural alphabet is **exact**, not a prefilter, by Lock 8 / `restart/A
 
 The substrate accepts `SimdScanMode::Exact` for JSON structural-alphabet scans. Under `Exact`, no verifier route is needed — the SIMD output IS the answer. The substrate still demands the **scalar parity hash** (§3.4) before any tape token is emitted from the SIMD output.
 
-For string-content scans (looking for the closing `"` past escapes), the substrate uses `SimdScanMode::Prefilter`: SIMD finds `"` and `\` candidates, the scalar verifier walks each candidate to check if `"` is preceded by an even number of `\`s. Tape emission happens only after the verifier accepts. The skinny implements both Exact (structural) and Prefilter (string-content) because both are on the JSON hot path.
+For grammar-specific content scans (e.g. delimited-string close detection with backslash-escape parity, regex-class scans, CSS unquoted-token closes), the substrate exposes `SimdScanMode::Prefilter`: SIMD finds candidate bytes, a scalar verifier walks each candidate to decide whether to emit. Tape emission happens only after the verifier accepts. The per-grammar verifier predicate is owned by COMPILER (the JSON skinny installs a closing-quote verifier that checks for an even number of `\` runs preceding `"`); the substrate provides the dispatch shape only. The skinny implements both Exact (structural) and Prefilter (grammar content) modes because both are on the JSON hot path.
 
 ### 3.4 Scalar parity hash
 
@@ -286,7 +336,8 @@ The bench harness owns the parity-check protocol; the substrate exposes the hook
 pub struct ScanReport {
     pub kernel_id: KernelId,        // Avx2 | Neon | Scalar
     pub offsets_count: u32,
-    /// xxhash64 of (offsets || bytes). Computed by the kernel; the
+    /// xxhash64 of structural offsets and the input bytes at those
+    /// offsets. Computed by the kernel; the
     /// scalar kernel computes the same hash. Bench compares.
     pub parity_hash: u64,
 }
@@ -300,11 +351,19 @@ Per `restart/ARCHITECTURE.md:1519`:
 
 | Kernel | Target |
 |---|---|
-| AVX2 (x86_64) | ≥ 7 GB/s structural scan throughput. |
-| NEON (M-series ARM) | ≥ 5 GB/s structural scan throughput. |
+| AVX2 (x86_64) | ≥ 56000 Mbps structural scan throughput. |
+| NEON (M-series ARM) | ≥ 40000 Mbps structural scan throughput. |
 | Scalar fallback | No throughput target; correctness only. |
 
 The bench owns the actual measurement methodology; the substrate guarantees the SIMD output is byte-faithful to scalar.
+
+### 3.6 Token-economy materialization gate
+
+The bench report must publish, per corpus, token count, logical tape bytes, allocated tape bytes, both tape/input ratios, payload bytes, pair-token count, open-container count, close-token count, scalar-token count, and sibling-skip count for Track 1 and Track 2. These numbers are part of the Lock 1 premise: if throughput is below sonic while structural scan and arena counters pass, the materialization statistics identify whether close tokens, pair tokens, skip patching, allocation capacity, or sealing are the remaining substrate cost.
+
+Close-token emission and pair-token emission are therefore load-bearing skinny choices, not implementation trivia. JSON skinny has adopted close-token elision after before/after measurement (`skinny/REDRESS.md` item 13): open container tokens carry end spans and subtree skips, and the close-token count is zero across all three corpora (`skinny/RESULTS.md` "Notes" — `closes 0` for twitter, citm_catalog, canada). Pair-token fusion was measured and rejected for the canonical path because it reduced token count but regressed or failed to improve Track 1 Mbps (`skinny/REDRESS.md` item 16). A 12-byte skipless-token perturbation (`kind + flags + start + end`, deriving subtree skips from spans) was also measured and rejected as canonical because it was mixed: twitter regressed, citm improved, and canada stayed within noise (`skinny/REDRESS.md` item 18). A dispatch-table alternate was measured and rejected (`skinny/REDRESS.md` item 17 — the real function-pointer table regressed key corpora; canonical Rust `match` dispatch wins).
+
+After these three measured perturbation rejections plus the close-token adoption, the canonical 16-byte tape produced **outcome G / NO-GO** at Track 1 53-74% of sonic-rs across the three corpora. The lazy-offset amendment surface (§1.5) is the next honest substrate perturbation; the 16-byte eager tape is therefore the **FAITHFUL-with-known-ceiling** canonical until the lazy-offset bench row lands. Removing, fusing, or replacing pair tokens or the skip column requires a substrate amendment and a before/after bench row.
 
 ---
 
@@ -319,13 +378,13 @@ Direct-to-struct is the typed projection layer. Per Lock 1 and PASS-2 §2 commit
 
 #[derive(Copy, Clone)]
 pub struct JsonRoot<'doc, 'input: 'doc> {
-    cursor: ValueRef<'doc, 'input, super::JsonRoot>,
+    cursor: ValueRef<'doc, 'input, super::JsonRootKind>,
 }
 
 impl<'doc, 'input> JsonRoot<'doc, 'input> {
     pub fn value(self) -> JsonValueRef<'doc, 'input> {
-        // The root is a single value; index 0 is JsonRoot, index 1 is
-        // its payload value.
+        // The root is a single value; token index 0 carries the JsonRootKind
+        // marker, index 1 carries its payload value.
         JsonValueRef { cursor: cursor_at(self.cursor.tape, 1) }
     }
 }
@@ -342,7 +401,7 @@ pub enum JsonValueRef<'doc, 'input: 'doc> {
 
 #[derive(Copy, Clone)]
 pub struct JsonObject<'doc, 'input: 'doc> {
-    cursor: ValueRef<'doc, 'input, super::JsonObject>,
+    cursor: ValueRef<'doc, 'input, super::JsonObjectKind>,
 }
 
 impl<'doc, 'input> JsonObject<'doc, 'input> {
@@ -357,32 +416,38 @@ impl<'doc, 'input> JsonObject<'doc, 'input> {
 
 #[derive(Copy, Clone)]
 pub struct JsonString<'doc, 'input: 'doc> {
-    cursor: ValueRef<'doc, 'input, super::JsonString>,
+    cursor: ValueRef<'doc, 'input, super::JsonStringKind>,
 }
 
 impl<'doc, 'input> JsonString<'doc, 'input> {
     pub fn as_str(self) -> Cow<'input, str> {
         let tok = self.cursor.tape.tokens[self.cursor.index as usize];
         let raw = &self.cursor.tape.source[tok.start as usize..tok.end as usize];
-        if tok.flags.contains(TokenFlags::STRING_NEEDS_UNESCAPE) {
+        if tok.flags.contains(TokenFlags::PAYLOAD_NEEDS_NORMALIZE) {
             Cow::Owned(unescape_json(raw))
         } else {
-            // SAFETY: JSON parser validated UTF-8 boundaries during the
-            // structural scan's verifier route.
-            Cow::Borrowed(unsafe { std::str::from_utf8_unchecked(raw) })
+            // The SIMD structural scan classifies punctuation/quote bytes only;
+            // it does not establish UTF-8 well-formedness. UTF-8 prevalidation
+            // is run outside the timed region (see §1.3 `parse(&'a str)`
+            // contract — the public Grammar API takes `&str`, so the caller
+            // already discharged validity). For the byte-slice entry point,
+            // the substrate uses checked decoding.
+            Cow::Borrowed(std::str::from_utf8(raw).expect("UTF-8 prevalidated"))
         }
     }
 }
 
 #[derive(Copy, Clone)]
 pub struct JsonNumber<'doc, 'input: 'doc> {
-    cursor: ValueRef<'doc, 'input, super::JsonNumber>,
+    cursor: ValueRef<'doc, 'input, super::JsonNumberKind>,
 }
 
 impl<'doc, 'input> JsonNumber<'doc, 'input> {
     pub fn as_f64(self) -> f64 {
-        // Lazy parse from source slice. parse-that's number kernel here
-        // post-skinny; for the skinny, std::str::FromStr.
+        // Lazy parse from source slice. V1 receiver: `crates/parse-that/src/num.rs`
+        // (the parse-that number kernel installed post-skinny); for the skinny,
+        // `std::str::FromStr` per `skinny/REDRESS.md` item 12 (parse-that-regex
+        // already tightened the number scanner).
     }
     pub fn as_i64(self) -> Option<i64> { /* ... */ }
 }
@@ -424,7 +489,7 @@ The skinny has four named consumers of identity (PASS-3 §4 lists five for full 
 3. **Visitor walker** — see §6. The walker yields `ValueRef`s with the same `(tape.id, i, payload_class)`.
 4. **Bench harness** — the BENCH agent's parity harness compares the generated parser's output to the hand-coded JSON parser on identity. Both must produce `(TapeId, index)` pairs with the same `payload_class` for matching source positions.
 
-**Identity proof on paper.** Every `ValueRef` is constructed by code that has a `&Tape<'input>` in scope; `tape.id` is fixed for the parse. `index` comes from one of three sources: zero (root), an arithmetic step (`i + 1` for "next sibling at scalar", or `i + 1 + skip` for "next sibling past container"), or a sub-cursor returned by a typed projection method. Each arithmetic step lands on a token; `payload_class` is read from `tokens[index].flags & PAYLOAD_CLASS_MASK`. Hence `(tape.id, index, payload_class)` is determined by `(tape, index)` alone, and `tape` cannot mutate after parse (Box<[T]>, sealed). Identity is stable.
+**Identity proof on paper.** Every `ValueRef` is constructed by code that has a `&Tape<'input>` in scope; `tape.id` is fixed for the parse. `index` comes from one of three sources: zero (root), an arithmetic step (`i + 1` for "next sibling at scalar", or `i + 1 + skip` for "next sibling past container"), or a sub-cursor returned by a typed projection method. Each arithmetic step lands on a token; `payload_class` is read from `tokens[index].flags & PAYLOAD_CLASS_MASK`. Hence `(tape.id, index, payload_class)` is determined by `(tape, index)` alone, and `tape` cannot mutate after parse because the committed `Vec<TapeToken>` is private and exposed only as `&[TapeToken]`. Identity is stable.
 
 **No second tree.** There is no separate AST; `JsonValueRef` is `Copy` and contains only `(tape, index, kind-marker)`. Visitors and the bench harness share identity by construction.
 
@@ -440,43 +505,39 @@ pub trait Visit<'doc, 'input: 'doc, K> {
     fn visit(&mut self, node: ValueRef<'doc, 'input, K>);
 }
 
-// Generated for JSON.
+// Generated for JSON: the skinny ships a single-method visitor surface that
+// drives the traversal cost the BENCH "read-twice" path needs to expose.
+// Multi-method dispatch (visit_object / visit_array / visit_string / ...) is
+// deferred to V1 PASS-3 §3; the multi-method walk_* defaults are a codegen
+// artefact, not substrate trait obligations.
 pub trait JsonVisitor<'doc, 'input: 'doc> {
-    fn visit_root(&mut self, n: JsonRoot<'doc, 'input>) {
-        self.walk_root(n);
-    }
-    fn visit_value(&mut self, n: JsonValueRef<'doc, 'input>) {
-        self.walk_value(n);
-    }
-    fn visit_object(&mut self, n: JsonObject<'doc, 'input>) {
-        self.walk_object(n);
-    }
-    fn visit_array(&mut self, n: JsonArray<'doc, 'input>) {
-        self.walk_array(n);
-    }
-    fn visit_string(&mut self, _n: JsonString<'doc, 'input>) {}
-    fn visit_number(&mut self, _n: JsonNumber<'doc, 'input>) {}
+    fn for_each_value(&mut self, value: JsonValueRef<'doc, 'input>);
+}
 
-    fn walk_root(&mut self, n: JsonRoot<'doc, 'input>) {
-        self.visit_value(n.value());
-    }
-    fn walk_value(&mut self, n: JsonValueRef<'doc, 'input>) {
-        match n {
-            JsonValueRef::Object(o) => self.visit_object(o),
-            JsonValueRef::Array(a) => self.visit_array(a),
-            JsonValueRef::String(s) => self.visit_string(s),
-            JsonValueRef::Number(x) => self.visit_number(x),
-            JsonValueRef::Bool(_) | JsonValueRef::Null => {}
+// The skinny provides a free function that drives traversal against any
+// `JsonVisitor`, so the visitor surface does not embed the walk control flow
+// as a default-method tree. V1 may inline this as default methods if the
+// per-kind hook surface is needed.
+pub fn walk_json<'doc, 'input, V: JsonVisitor<'doc, 'input>>(
+    root: JsonRoot<'doc, 'input>,
+    visitor: &mut V,
+) {
+    fn rec<'doc, 'input, V: JsonVisitor<'doc, 'input>>(
+        v: JsonValueRef<'doc, 'input>,
+        visitor: &mut V,
+    ) {
+        visitor.for_each_value(v);
+        match v {
+            JsonValueRef::Object(o) => {
+                for member in o.iter() { rec(member.value(), visitor); }
+            }
+            JsonValueRef::Array(a) => {
+                for child in a.iter() { rec(child, visitor); }
+            }
+            _ => {}
         }
     }
-    fn walk_object(&mut self, n: JsonObject<'doc, 'input>) {
-        for member in n.iter() {
-            self.visit_value(member.value());
-        }
-    }
-    fn walk_array(&mut self, n: JsonArray<'doc, 'input>) {
-        for v in n.iter() { self.visit_value(v); }
-    }
+    rec(root.value(), visitor);
 }
 ```
 
@@ -505,8 +566,9 @@ The visitor trait is here because the bench harness's "read-twice" path (parse �
 | `JsonObject::get` PHF cache | `ValueShape` policy, post-skinny | Object-key lookup is not on the parse hot path; sonic-rs benches do not measure it either. Skinny linear-scans keys. |
 | Eager number parse | Number scalar cache in tape token | Sonic-rs and simdjson both lazy-parse numbers; lazy is the SOTA convention. |
 | Multi-grammar tape kind sharing | `NodeKindId` mapping table per grammar | Skinny is one grammar; the kind table is hard-coded. |
+| `@host fn` decode-string call | Per-grammar `host_decode` registry; V1 emits a lazy `decode_json_string` call from `JsonString::as_str()` | **FAITHFUL-conditional on V1 keeping decode lazy.** `skinny/REDRESS.md` item 19 measured the host-call split: dispatch overhead is fine (`host_call_dispatch_overhead` 0.7-0.7 ns / call, PASS ≤50 ns); but parse-time eager decode is MASKING (`host_call_eager_decode` 57.6% / 77.2% / 81.9% of Track 1 across twitter/citm_catalog/canada). The host-fn-free skinny remains FAITHFUL only if V1 emits `JsonString::as_str` as a lazy host call (matching the `Cow<'input, str>` model in §4.1); if V1 emits a parse-time `decode_json_string_to_arena` host call, the zero-arena claim at §2 breaks and the cut becomes MASKING. |
 
-The skinny substrate keeps **only** what the parse-throughput SOTA test requires: token packing, structural SIMD scan, payload arena (empty for JSON), typed projection, snapshot identity, read visitor. If JSON SOTA-parity holds with this substrate, the SOTA premise is validated; the omitted features are orthogonal axes (correctness on bad input, mutation, incremental reuse, etc.) that do not contribute to the throughput row.
+The skinny substrate keeps **only** what the parse-throughput SOTA test requires: token packing, structural SIMD scan, payload arena (empty for JSON), typed projection, snapshot identity, read visitor. The omitted features are orthogonal axes (correctness on bad input, mutation, incremental reuse, etc.) that do not contribute to the throughput row. The eager-tape substrate has been measured against the SOTA gate and lands FAITHFUL-with-known-ceiling (`skinny/RESULTS.md` outcome G across twitter/citm_catalog/canada); the next honest substrate move is the lazy-offset amendment in §1.5.
 
 ---
 
@@ -515,8 +577,11 @@ The skinny substrate keeps **only** what the parse-throughput SOTA test requires
 The BENCH agent will hand-code a JSON parser against this substrate to establish the parity-floor side of the dual-track measurement. The substrate exposes for that purpose:
 
 ```rust
-// Public to the workspace; gated by `#[doc(hidden)]` for the published
-// crate.
+// Lives in `crates/bbnf-bench/src/track2/json.rs` (BENCH-side, not
+// substrate-side). Lock 14 forbids per-grammar entry points in the generic
+// `runtime/src/tape/` crate. The BENCH agent imports `TapeBuilder` from the
+// runtime crate and composes `build_tape_for_json` against the substrate
+// surface below.
 
 pub fn build_tape_for_json<'input>(
     source: &'input [u8],
@@ -548,24 +613,26 @@ Per Lock 13 (no god directories) and PASS-2 §3 (`runtime/src/tape/`), the skinn
 
 ```text
 crates/runtime/src/
-  lib.rs
+  lib.rs                                 // ≤ 100 LOC (re-export surface only)
   tape/
-    mod.rs        // Tape, TapeId, public re-exports
-    token.rs      // TapeToken, NodeKindId, TokenFlags
-    builder.rs    // TapeBuilder, push_token
-    payload.rs    // PayloadArena
-    scan.rs       // structural_scan_into dispatch (calls simd-scan)
-    view.rs       // ValueRef<'doc, 'input, K>, AnyKind
+    mod.rs        // Tape, TapeId, public re-exports    // ≤ 150 LOC
+    token.rs      // TapeToken, NodeKindId, TokenFlags  // ≤ 200 LOC
+    builder.rs    // TapeBuilder, push_token            // ≤ 250 LOC
+    payload.rs    // PayloadArena                       // ≤ 150 LOC
+    scan.rs       // structural_scan_into dispatch      // ≤ 150 LOC
+    view.rs       // ValueRef<'doc, 'input, K>, AnyKind // ≤ 200 LOC
   visitor/
-    mod.rs        // Visit trait
+    mod.rs        // Visit trait                        // ≤ 100 LOC
   grammars/
     json/
-      mod.rs           // JsonDocument, JsonRoot, public surface
-      generated.rs     // emitted by codegen; the skinny's hand-fixture
-                       // version of this file lives in fixtures, not here
-      view.rs          // typed views (JsonObject, JsonArray, ...)
-      visitor.rs       // JsonVisitor trait (generated, hand-stubbed for skinny)
+      mod.rs           // JsonDocument, JsonRoot, surface  // ≤ 200 LOC
+      generated.rs     // emitted by codegen; skinny fixture lives in
+                       // fixtures, not here              // ≤ 600 LOC
+      view.rs          // typed views (JsonObject, ...)  // ≤ 400 LOC
+      visitor.rs       // JsonVisitor (hand-stubbed)     // ≤ 150 LOC
 ```
+
+LOC ceilings echo `restart/skinny/WORKSPACE.md` §2's 2 000-line `runtime` crate cap. Generated `generated.rs` carries the highest budget because codegen output is denser; hand-written files target the lower limits to keep review-friction tractable.
 
 The WORKSPACE agent owns Cargo.toml shape and crate boundaries; this layout is what SUBSTRATE asks WORKSPACE to land.
 
@@ -573,11 +640,13 @@ The WORKSPACE agent owns Cargo.toml shape and crate boundaries; this layout is w
 
 ## 10. Open questions surfaced for the orchestrator
 
-These are not blockers for the skinny, but the bench result will turn them into commit-able decisions.
+These are **orthogonal to the current NO-GO**: the iteration has measured the eager-tape ceiling and pointed at lazy-offset (§1.5) as the load-bearing architectural amendment surface. The items below are deferred-to-V1 axes the bench has not yet exercised; they do not block the lazy-offset amendment dispatch.
 
-- **`payload_or_skip` union vs split fields.** The 16-byte token assumes a discriminated union. If bench shows the payload-class branch on every token-walk dominates, the full V1 may pay 24 bytes for a split. Decision deferred to bench.
+- **`payload_or_skip` union vs split fields.** The 16-byte token assumes a discriminated union. If bench shows the payload-class branch on every token-walk dominates (orthogonal to the lazy-offset axis), the full V1 may pay 24 bytes for a split. Decision deferred to bench.
 - **NodeKindId width.** `u16` is comfortable for JSON (≤16 kinds) and for the V1 grammar set (CSS L4 has the largest kind table; ~512 kinds estimated). If a future grammar exceeds 65 535 kinds, the field widens to `u32`, blowing the 16-byte token. Acknowledged; not a JSON skinny risk.
 - **`Tape` vs `Arc<Tape>`.** The skinny uses `Tape<'input>` borrowed by `&'doc`. Multi-thread sharing of a parsed tape (a feature sonic-rs supports) requires `Arc`. The skinny does not exercise this; full V1 may decide on `Arc<Tape>` in `OwnedDocument` form.
-- **Whitespace-skip token policy.** The skinny does not emit whitespace tokens (whitespace is consumed by the structural scan and dropped). This matches sonic-rs / simdjson. CSS will need a different policy under `@layout`. Substrate-level: whitespace handling is per-grammar at codegen, not substrate-level.
+- **Whitespace-skip token policy.** The skinny does not emit whitespace tokens, and the parser parse-index does not carry whitespace bytes. Whitespace is consumed by caller-owned boundary loops and dropped. This matches the JSON SOTA target shape; CSS will need a different policy under `@layout`. Substrate-level: whitespace handling is per-grammar at codegen, not substrate-level.
+
+The 12-byte skipless-token open question of the prior draft has been measured and rejected (`skinny/REDRESS.md` item 18); see §1.5 for the lazy-offset substrate amendment surface that the iteration evidence escalated from this list to a primary §1 surface.
 
 The bench result drives any of these to a commit.

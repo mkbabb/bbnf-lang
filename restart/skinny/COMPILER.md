@@ -67,6 +67,8 @@ object = "{" ws members "}" ;
 json   = ws value ws ;
 ```
 
+The grammar keeps `value = ws (...) ws` as the semantic source shape. Codegen is stricter: emitted `parse_value` consumes leading whitespace only, and callers consume trailing whitespace at root, separator, closer, and EOF boundaries. This preserves the grammar language while avoiding repeated trailing layout scans inside nested JSON values. A whitespace-bearing parse-index variant was measured and rejected for the skinny because it materially regressed throughput.
+
 Differences from the committed `grammar/json/json.bbnf` and why:
 
 | Difference | Reason |
@@ -101,10 +103,24 @@ path and removes the `@host fn` surface entirely. Rationale:
    microbench (`host_call_dispatch_overhead`) measuring `CallHost` indirection
    in isolation against direct calls (target: ≤ 50 ns/call), and (b) a
    gross-time eager-decode JSON variant (`host_call_eager_decode`) that
-   forces parse-time string decoding through the V1-shaped registry path
-   (expected delta on twitter: 5-15% from eager-decode work, not from
-   dispatch overhead). The two probes test two different masking modes;
-   neither uses a single 2% threshold.
+   forces parse-time string decoding through the V1-shaped registry path.
+   The two probes test two different masking modes; neither uses a single
+   2% threshold.
+   **Empirical finding (per `skinny/RESULTS.md`, M1 Pro):** the two probes
+   split the disposition cleanly. Probe (a) returns 0.71–0.73 ns/call across
+   all three corpora — PASS at the ≤ 50 ns target; dispatch overhead is not
+   masking. Probe (b) returns 57.6% T1 ratio on twitter, 77.2% on
+   citm_catalog, and 81.9% on canada — that is, eager parse-time string
+   decode costs 18–42% of total parse time, materially exceeding any
+   single-digit-percent expectation and registering as a MASKING signal on
+   every corpus. The empirical disposition is therefore: the host-fn-free
+   cut is FAITHFUL **only** if V1 JSON keeps string decoding lazy in the
+   substrate/view path (SUBSTRATE §2 + Lock 9 `Cow<'input, str>` model
+   commit this). A V1 grammar that decodes every string at parse time must
+   treat this as a measured MASKING signal and lower the JSON SOTA
+   probability accordingly. Earlier predictive language anticipating a
+   5–15% delta is preserved here only as history; the measurement is
+   load-bearing.
 2. Removing host functions removes the entire `host::types`, host overload
    selection CSP path, and `CallHost` lowering. Three crates (`host`,
    `csp-solver`, the `host-overload` improvement bridge) become unreachable.
@@ -116,6 +132,16 @@ typecheck against the skinny compiler. That is acceptable only because the
 SOTA test parses structural shape and validates regex spans; scalar values are
 materialised lazily by SUBSTRATE accessors. The bench-counters feature must
 show zero payload-arena writes for Track 1 and Track 2.
+
+The skinny's meta-grammar surface is therefore a strict subset of the V1
+BBNF directive vocabulary: the skinny recognises only the six directives
+its `grammar` partial parser needs to round-trip `grammars/json.bbnf` (none
+of which are present in the skinny JSON grammar text), and the parser is
+required to reject any other directive with the diagnostic
+`BBNF-DIRECTIVE-NOT-IN-SKINNY` at §5.2. Closure to the full V1 BBNF
+meta-grammar is mechanical: the V1 graduation reinstates `@host`, `@layout`,
+`@error`, `@pretty`, and the lookbehind/predicate constructors on the same
+Grammar IR backbone; no skinny surface needs to be unbuilt.
 
 ---
 
@@ -144,7 +170,7 @@ The full V1 Grammar IR has 14 variants (ARCH §7.1). JSON exercises 9.
 | `Predicate` | JSON has no `&` / `!` lookahead. | None. SOTA throughput is unaffected by predicate machinery. |
 | `Lookbehind` | JSON has no `\|<` / `\|<!` lookbehind. | None. |
 | `Call` (`kind: Map`) | Skinny grammar drops `-> f64`, `-> true`, etc. | Slight: the typed `Json` root exposes raw spans and lazy accessors instead of pre-decoded scalars. Scalar decode runs at access time, not at parse time. SOTA latency is the parse phase, so the move from parse-time to access-time scalar decode is recorded as a favorable skinny deviation. |
-| `Call` (`kind: Host`) | Skinny is host-fn-free. | Potentially masking until BENCH's one-host-fn JSON variant proves the `CallHost` registry path stays within 2% median of the direct SUBSTRATE path on all three corpora. |
+| `Call` (`kind: Host`) | Skinny is host-fn-free. | Empirically split on M1 Pro per `skinny/RESULTS.md`: BENCH §7.8 carries two probes — `host_call_dispatch_overhead` (returns 0.71–0.73 ns/call across all three corpora, PASS) and `host_call_eager_decode` (returns 57.6/77.2/81.9% T1 ratio on twitter/citm/canada, MASKING). The dispatch-overhead cut is FAITHFUL; the eager-decode cut is MASKING and constrains V1 JSON to keep string decoding lazy in the substrate/view path (Lock 9 `Cow<'input, str>`). |
 | `LayoutDirective` | Whitespace is desugared to an explicit `ws` rule. | Slight increase in BIR size (every whitespace site becomes a `CallRule(ws)`). The whitespace rule itself lowers to a tight scalar loop, so the runtime cost is the same as `@layout(ws = ...)`. SOTA neutral. |
 | `ErrorDirective` | JSON has no `@error` recovery. | None. SOTA is measured on valid input; recovery is irrelevant. |
 
@@ -198,7 +224,7 @@ The full V1 Backend IR has 20 variants (ARCH §7.2). JSON exercises 14.
 | `CallRule` | every `Ref`. | Regular function call. JSON has 14 rule defs and ~35 `CallRule` sites. |
 | `SpanMark` | every captured rule (compiler-generated). | Start + end span pairs for `value`, `string`, `number`, `array`, `object`, `pair`. Used by `JsonRoot` view to expose source slices. |
 | `TapeEmit` | every node + token event (compiler-generated). | The tape carries `(NodeKind, span, payload_slot?)`. JSON node kinds: `Object`, `Array`, `Pair`, `String`, `Number`, `Bool(true)`, `Bool(false)`, `Null`, `Member`, `Element`. |
-| `DirectBuild` | every typed-view rule (compiler-generated). | Builds the typed `JsonValue<'i>` enum + `JsonObject<'i>` / `JsonArray<'i>` + `JsonString<'i>` view. Co-scheduled with `TapeEmit` per ARCH §7.2 invariant 2. |
+| `DirectBuild` | every typed-view rule (compiler-generated). | Builds the typed projection surface: `JsonValue<'i>` enum + `JsonObject<'i>` / `JsonArray<'i>` + `JsonString<'i>` views that borrow the sealed tape. It is not an eager parallel owned struct tree. Co-scheduled with `TapeEmit` per ARCH §7.2 invariant 2. |
 | `ValueProject` | the `Json::value(self) -> JsonValue<'i>` projection. | Single projection from `JsonRoot<'i>` to its top-level value; called by user code, not by the parser body. |
 | `Return` | end of every rule body. | Compiler-generated. |
 
@@ -208,7 +234,7 @@ The full V1 Backend IR has 20 variants (ARCH §7.2). JSON exercises 14.
 |---|---|---|
 | `Alt { mode: Speculative }` | JSON has zero non-disjoint alts. | None. The full V1 `Alt` payload still carries a `mode: Dispatch \| Speculative` discriminator; the skinny extractor always picks `Dispatch`. |
 | `PrattSpine` | JSON has no operator precedence. | None. |
-| `CallHost` | Skinny is host-fn-free. | Not emitted in the main skinny parser. BENCH still emits a one-host-fn measurement variant so the direct-call cut is quantified before RESULTS can claim FAITHFUL. |
+| `CallHost` | Skinny is host-fn-free. | Not emitted in the main skinny parser. BENCH emits **two** measurement probes (`host_call_dispatch_overhead` and `host_call_eager_decode`) per §1.3 + BENCH §7.8.1; the empirical disposition on M1 Pro per `skinny/RESULTS.md` is dispatch-overhead FAITHFUL (0.71–0.73 ns/call), eager-decode MASKING (57.6/77.2/81.9% T1 ratio across twitter/citm/canada). The cut is FAITHFUL only under the V1 lazy-decode constraint (Lock 9). |
 | `LayoutScope` | Whitespace desugared to a `ws` rule. | None for throughput. The desugar has the same emitted code shape as a layout policy push/pop because `LayoutScope` lowers to identical scanner state. |
 | `ErrorRecover` | JSON has no `@error`. | None. SOTA inputs are valid; recovery is unmeasured. |
 | `PathEval` | Skinny does not link `path-core`. | None for SOTA. Path queries are a PASS-3 surface. |
@@ -224,7 +250,7 @@ The skinny ratifies ARCH §7.2 invariants:
 | Tape and direct-to-struct are one materialization strategy. | `TapeEmit` and `DirectBuild` are scheduled together by `passes::extract` (skinny version: a fixed-shape extraction with no choices). |
 | OpenFrame clone stacks are absent. | Skinny uses a single arena; speculative alts are absent for JSON, so checkpoint/rollback is dead code. |
 | SIMD is mined, not syntax-directed. | Skinny replaces the miner with a hand-curated recognizer (§5) that nominates the structural-alphabet `SimdScan` site. |
-| VM can replay all BIR variants. | **Not enforced in the skinny.** The `vm` crate is stubbed; no replay invariant. |
+| VM can replay all BIR variants. | **Not enforced in the skinny.** The `vm` crate is stubbed; no replay invariant. V1 receiver: Tranche I (VM replay + golden trace gate restored when the `vm` crate lands). |
 
 ---
 
@@ -243,7 +269,7 @@ scheme instantiation. Nothing else.
 | First-order unifier | Robinson-style `unify(t1, t2) -> Result<Substitution, TypeError>`. Occurs-check on. ~150 LOC. |
 | Scheme generalization | At rule definition: `generalize(t, env) -> Scheme` over free type variables not bound in env. JSON rules are monomorphic so generalization always returns a closed scheme. |
 | Scheme instantiation | At every `Ref` site: `instantiate(scheme) -> Type` with fresh type vars per quantifier. JSON schemes have zero quantifiers, so instantiation is identity. |
-| `TypeFacts` output | `HashMap<RuleId, Type>` plus `HashMap<NodeId, Type>` for body expressions. Internal to `passes::types`. |
+| `TypeFacts` output | `HashMap<RuleId, Type>` plus `HashMap<NodeId, Type>` for body expressions. Internal to `passes::layout::types`. |
 | `TypeObligationLog` | `Vec<TypeObligation>` for diagnostics; carries source span, expected-from, actual-from, solver-stage. Skinny uses this only to format errors; no obligation discharge logic (no coercions in skinny). |
 
 ### 4.2 What the skinny HM checker does **not** do, and why JSON does not need it
@@ -251,7 +277,7 @@ scheme instantiation. Nothing else.
 | Mechanism | Why skipped | Why JSON does not need it |
 |---|---|---|
 | **DK13 higher-rank algorithmic completeness** | Adds ordered existential contexts, principality tracking, decidability/soundness/completeness proofs, explicit annotation rules for non-principal programs. | JSON has zero higher-rank types. Every JSON rule infers a closed monomorphic type. No `forall` quantifier survives generalization. This cut is JSON-FAITHFUL; CSS L4, Sheets, and BBNF-self remain V1 caveats where generic/host-chain shape can load-bear. |
-| **Pierce-Turner bidirectional check/synth** | Requires the synth/check distinction at every node, expected-type propagation through annotations and chain steps. | JSON has zero explicit annotations and zero chain steps. Every node synthesises. The check direction has no callers in JSON. The skinny's HM is pure synth. |
+| **Pierce-Turner bidirectional check/synth** | Requires the synth/check distinction at every node, expected-type propagation through annotations and chain steps. | JSON has zero explicit annotations and zero chain steps. Every node synthesises. The check direction has no callers in JSON. The skinny's HM is pure synth. This cut is JSON-FAITHFUL; CSS L4 and Sheets carry explicit type annotations and host-chain steps where bidirectional check direction load-bears, so the V1 grammar set restores Pierce-Turner before those grammars dispatch. |
 | **Bounded coercion obligations** | Numeric widening, lifetime-owned escalation, generated-record shape narrowing, host-improvement rules. | JSON in the skinny exposes raw spans + arena handles; no scalar widening at parse time. No record narrowing because no `@host fn` returns a narrowed shape. The skinny's `TypeObligationLog` carries only equality failures. |
 | **Finite-choice CSP** | Resolves host overload selection, layout representation, materialization mode, recognizer eligibility, recovery strategy, backend erasure, extraction legality. | JSON is host-fn-free (no host overload). Layout is pass-through (no layout choice). Materialization is fixed at tape-direct (no choice). Recognizer is hand-curated (no eligibility CSP). Recovery is absent. Backend is `RustBackend` only. Extraction is single-plan. **Every CSP axis has zero choice for JSON.** |
 | **GADT branch-local equality** | Match-arm refinements, OutsideIn(X) implication constraints, `Implication { givens, wanted }` propagation. | JSON has zero match arms. The skinny grammar uses no `Pattern @ where T = U -> Block` form. This cut is JSON-FAITHFUL; BBNF-self and future typed host-chain grammars remain the V1 caveat. |
@@ -368,7 +394,7 @@ DK13 is in or out.
 
 ## 5. Pipeline Subset
 
-The full V1 pipeline (ARCH §6) is 13 phases. The skinny runs 8.
+The full V1 pipeline (ARCH §6) is 13 phases. The skinny runs 9 (the source-load step plus the eight transitions enumerated in §5.1).
 
 ### 5.1 Skinny pipeline
 
@@ -389,7 +415,7 @@ source load
 | Phase | Skinny implementation | Output |
 |---|---|---|
 | **source load** | Read `grammars/json.bbnf` from disk; record source hash. | `Source { path, bytes, hash }`. |
-| **BBNF parse** | Use the skinny `grammar` crate's partial parser for the §1.1 JSON subset. It parses the six-directive vocabulary enough to reject non-skinny directives with `BBNF-DIRECTIVE-NOT-IN-SKINNY`, but it does not depend on the skipped `parse-that` crate or the full self-host path. | `GrammarIr`. |
+| **BBNF parse** | Use the skinny `grammar` crate's partial parser for the §1.1 JSON subset. It parses the six-directive vocabulary enough to reject non-skinny directives with the verbatim diagnostic `BBNF-DIRECTIVE-NOT-IN-SKINNY: '<directive>' is reserved for V1 closure and is not parsed by the skinny grammar surface`, but it does not depend on the skipped `parse-that` crate or the full self-host path. The diagnostic carries the offending directive name, the source span, and a fixed error code (`E-SKINNY-DIRECTIVE`) so the regen-equality gate at §6.4 can distinguish "directive rejection" from "syntax error" in CI. | `GrammarIr`. |
 | **semantic validation** | The 3 checks at §2.3. | `ValidationReport`; halts compile on failure. |
 | **HM inference** | Algorithm-W as in §4. Runs as a top-level pass (not a `passes::layout` subroutine in the skinny — the layout pass is trivial pass-through). | `TypeFacts`. |
 | **minimal shape mining (hand-curated)** | A 80-line hand-written `ShapeFacts` table for JSON. Names every typed view: `JsonRoot`, `JsonValue`, `JsonObject`, `JsonArray`, `JsonString`, `JsonNumber`, `JsonBool`, `JsonNull`, `JsonPair`. Replaces the V1 schema-mining miner (telemetry-driven; no telemetry in the skinny). | `ShapeFacts`. |
@@ -402,8 +428,8 @@ source load
 
 | Phase | Skipped because | Impact on SOTA test |
 |---|---|---|
-| **recognizer mining** | Replaced by a hand-curated structural-alphabet recognizer for JSON. | JSON-FAITHFUL only after BENCH's alternate-plan stub confirms the hand-curated structural plan beats the scalar recursive-descent fallback and stays within the expected dispatch-table envelope. For grammars beyond JSON the miner becomes load-bearing. |
-| **egraph rewrite** | No rewrites in the skinny — pick canonical plan. | Potentially masking until bounded. ARCH §10.1 classifies `cost-driven-rewrites` as ASPIRATIONAL for V1 SOTA; the skinny tests that classification by measuring the canonical plan against a non-egraph alternate-plan stub (structural-index vs scalar, dispatch table vs direct `match`). |
+| **recognizer mining** | Replaced by a hand-curated structural-alphabet recognizer for JSON. | Empirically FAITHFUL on M1 Pro per `skinny/RESULTS.md`: the canonical hand-curated structural plan wins against `alternate_scalar_plan` by 38–52% across all three corpora (twitter 48.3%, citm 61.8%, canada 47.9% of canonical T1). The dispatch-table envelope probe was retired per REDRESS item 17 (duplicate probe; the real function-pointer table regressed) and is no longer a confirmatory bound; cross-platform PEXT divergence remains an unobserved tranche-H carry. For grammars beyond JSON the miner becomes load-bearing. |
+| **egraph rewrite** | No rewrites in the skinny — pick canonical plan. | Empirically FAITHFUL on M1 Pro per `skinny/RESULTS.md` within the implemented alternate-plan envelope. ARCH §10.1 classifies `cost-driven-rewrites` as ASPIRATIONAL for V1 SOTA; the skinny ratifies that classification — the canonical plan wins against `alternate_scalar_plan` by 38–52% across all three corpora (twitter, citm, canada). The dispatch-table alternate was invalidated as a duplicate probe per REDRESS item 17; cross-platform PEXT remains a tranche-H carry. No inverted dominance observed; cost-driven-rewrite is not a recovery lever within the measured envelope. |
 | **CSP extraction** | Trivial single-plan choice. No host overload, no layout choice, no materialisation choice, no recognizer eligibility, no recovery, no backend erasure, no extraction legality. | None for JSON. Every CSP axis has zero choice (§4.2). |
 | **cost extraction** | Constant-cost extraction. | JSON has one production plan in the skinny, but BENCH still bounds the missing cost axis with the alternate-plan stub before claiming the cut is FAITHFUL. |
 | **VM replay** | No `vm` crate. | None for SOTA. VM is a debug/replay artefact, not a perf path. |
@@ -438,6 +464,14 @@ hand-written nomination function for JSON. **For grammars beyond JSON the
 skinny does not run** — the recognizer is JSON-specific and carries a deletion
 gate.
 
+This is an explicit Lock 14 waiver for the skinny: Lock 14 requires recognizer
+nominations to be grammar-shape derived (no per-grammar hand-curated
+fixtures); the skinny's `recognizers/skinny_json.rs` violates that contract
+under the skinny-only fixture rubric. The waiver is bounded: the V1 graduation
+gate is the deletion of this module the moment `passes::recognizers` can
+nominate the same site from grammar shape, and the test for "same site" is the
+regen-equality + BIR-snapshot pair at §6.4.
+
 ### 5.5 Hand-curated shapes
 
 ```rust
@@ -465,6 +499,13 @@ pub fn shapes_for_json() -> ShapeFacts {
 `TapeSlice<'i, T>` and `Span<'i>` are SUBSTRATE-owned contracts. String and
 number decoded values are accessor results, not parse-time fields.
 
+The hand-curated `shapes_for_json()` table is the second explicit Lock 14
+waiver in the skinny: Lock 14 requires shape facts to come from the
+schema-mining miner, not per-grammar fixtures. The skinny waives this on the
+same bounded terms as §5.4 — the fixture is JSON-only, carries a deletion
+gate at V1 graduation, and is replaced by the telemetry-driven miner the
+moment the miner can reproduce the table from grammar + corpus signal.
+
 ---
 
 ## 6. `codegen::rust` Path
@@ -478,16 +519,16 @@ per emitted file. The lowerer is BIR-only (Lock 5; ARCH §10).
 |---|---|---|
 | `Entry { symbol, body }` | `pub fn parse_<name><'i>(input: &'i str) -> Result<<Root><'i>, ParseError> { let mut state = ParserState::new(input); <body>; Ok(state.finish()) }` | Public entry; one per grammar. |
 | `Seq { children }` | `<child_1>; <child_2>; ...` | Sequential lowered statements. |
-| `Alt { mode: Dispatch, branches }` | `match state.peek_byte() { b'{' => <branch_object>, b'[' => <branch_array>, b'"' => <branch_string>, b'-' \| b'0'..=b'9' => <branch_number>, b't' \| b'f' => <branch_bool>, b'n' => <branch_null>, _ => return Err(ParseError::ExpectedValue), }` | Byte-table dispatch. The dispatch table is built at codegen time from the alt's first-byte set. |
+| `Alt { mode: Dispatch, branches }` | `match state.peek_byte() { b'{' => <branch_object>, b'[' => <branch_array>, b'"' => <branch_string>, b'-' \| b'0'..=b'9' => <branch_number>, b't' \| b'f' => <branch_bool>, b'n' => <branch_null>, _ => return Err(ParseError::ExpectedValue), }` | Predictive byte dispatch through Rust `match`. LLVM owns branch-table/jump-table lowering. A function-pointer 256-entry dispatch table is not canonical; the prototype measured it as a regression and marks the old duplicate probe invalid. |
 | `RepeatLoop { body, min: 0, max: None }` | `loop { let cp = state.checkpoint(); match <body> { Ok(()) => continue, Err(_) => { state.restore(cp); break; } } }` | Progress guard via checkpoint compare. |
 | `OptionalBranch { body }` | `let cp = state.checkpoint(); if let Err(_) = <body> { state.restore(cp); }` | Empty branch keeps shape (typed as `Option<T>` in the view). |
 | `ByteLiteral { bytes }` | For short literals: `state.expect_bytes(b"<literal>")?;`. For 4-byte literals (`null`, `true`): `state.expect_u32_le(<u32_packed>)?;`. For 5-byte (`false`): `state.expect_bytes_5(b"false")?;`. | Aligned compares for the keyword literals. |
 | `RegexProgram { plan: LazyDfa, span_kind }` | `let span = state.match_regex_lazy_dfa(&REGEX_<id>)?;` | The compiled regex is a `static REGEX_<id>: LazyRegex = LazyRegex::new(<pattern>);` initialised once. |
-| `SimdScan { mode: Exact, alphabet, verifier }` | `let scan = simd_scan::structural_index_exact(input, &STRUCTURAL_ALPHABET_<id>); state.attach_index(scan);` | Emitted once, before the `Entry` body. The structural index is a `Vec<u32>` of byte offsets matching any of the alphabet bytes, with scalar parity hash available to BENCH. The runtime consumes it through `Tape<'i>::dispatch_offset()`. SUBSTRATE owns the kernel; the lowerer emits the dispatch site only. |
+| `SimdScan { mode: Exact, alphabet, verifier }` | `let scan = runtime::tape::scan_parse_index(input.as_bytes()); state.attach_index(scan);` | Emitted once, before the `Entry` body. For parser code this is `JsonParseIndex`: structural offsets plus string escape/control candidate arrays. The structural-only `StructuralIndex` is still the scan-floor bench product. SUBSTRATE owns both products; the lowerer emits the dispatch site only. |
 | `CallRule { callee, result_slot }` | `let <slot> = parse_<callee>(state)?;` | Generated rule functions are colocated in `parser.rs`. |
 | `SpanMark { kind: Start }` / `End` | `let __start = state.position();` / `let __span = Span::new(__start, state.position());` | Compiler-generated. |
 | `TapeEmit { kind, span, payload? }` | `state.tape.emit(NodeKind::<kind>, __span, <payload_slot>);` | Append-only tape write. SUBSTRATE owns `Tape::emit`. |
-| `DirectBuild { shape, fields }` | `Json<Shape> { <field_1>: <slot_1>, ... }` | Builds the typed view; cursors point into the tape. Scalar accessors parse or unescape lazily. |
+| `DirectBuild { shape, fields }` | `Json<Shape> { <field_1>: <slot_1>, ... }` | Builds the typed projection view; cursors point into the sealed tape. Scalar accessors parse or unescape lazily. |
 | `ValueProject { from, projection }` | `JsonValue::project(<from>, <projection>)` | Single projection helper for the typed root. |
 | `Return { value }` | `Ok(<value>)` | Compiler-generated. |
 
@@ -548,11 +589,11 @@ pub struct ParserState<'i> {
     input: &'i [u8],
     cursor: usize,
     tape: Tape<'i>,
-    scan: Option<StructuralIndex>,
+    scan: Option<JsonParseIndex>,
 }
 ```
 
-`Tape<'i>`, `StructuralIndex`, `simd_scan::structural_index_exact`, and
+`Tape<'i>`, `JsonParseIndex`, `runtime::tape::scan_parse_index`, and
 `JsonRoot<'i>` are SUBSTRATE / external contracts. The compiler emits the
 calling shape; SUBSTRATE provides the implementations.
 
@@ -571,13 +612,20 @@ The skinny also commits a BIR snapshot under
 `crates/ir/tests/snapshots/json.bir.snap` so a BIR-shape change is detected
 even when emitted Rust differs only in formatting.
 
+The regen-equality + BIR-snapshot pair is the binary falsifier surface the
+skinny inherits from ARCH §7.4 (diagnostic vocabulary + golden-trace
+discipline); ARCH §7.4 names regen-equality as the codegen falsifier and
+BIR-snapshot as the pre-codegen shape falsifier. The skinny implements both
+as committed-byte gates so any compiler-side drift fails CI before
+substrate or BENCH artefacts run.
+
 ---
 
 ## 7. What's Stubbed In The Skinny
 
 | V1 crate | Skinny status | Per-skip impact on SOTA measurement |
 |---|---|---|
-| `cost-model` | **Stubbed.** The skinny treats every BIR construction as constant-cost. No `CostFacts`, no `CostDecision`, no scalar score, no Pareto frontier. | Potentially masking until BENCH's alternate-plan stub bounds the tail. If the canonical plan misses SOTA while the alternate stub succeeds, the cost-model/cost-driven-rewrite axis is a recovery lever and RESULTS must say so. |
+| `cost-model` | **Stubbed.** The skinny treats every BIR construction as constant-cost. No `CostFacts`, no `CostDecision`, no scalar score, no Pareto frontier. | Empirically FAITHFUL on M1 Pro per `skinny/RESULTS.md` within the implemented alternate-plan envelope. The canonical plan dominates `alternate_scalar_plan` by 38–52% across all three corpora; no inverted dominance observed; the cost-model axis is not a recovery lever within the measured envelope. RESULTS records NO-GO outcome G (canonical misses sonic-rs SOTA at 53–74% T1), but the miss is a substrate-side ceiling — not a cost-model masking signal. Duplicate probes (REDRESS item 17) are invalid, not masking evidence; cross-platform PEXT remains a tranche-H carry. |
 | `egraph` | **Stubbed.** No e-class, no rewrite, no saturation, no fixpoint. ARCH §10.1 `legality-rewrites` and `normalization-rewrites` (LOAD-BEARING for V1 correctness) are inlined as pre-extraction passes in `passes::normalize`; `cost-driven-rewrites` (ASPIRATIONAL for V1 SOTA) is dropped. | JSON's canonical plan is identifiable at extraction without rewrite search, but BENCH must bound that assumption with the non-egraph alternate-plan stub before calling the cut FAITHFUL. |
 | `csp-solver` | **Stubbed.** No constraint store, no propagation, no improvement, no Implication discharge. | None for JSON. Every CSP axis has zero choice on JSON (§4.2). |
 | `vm` | **Stubbed.** No interpreter, no replay, no debug trace. | None for SOTA. VM is a debug/test artefact. The skinny does not have the `vm::replay` golden gate. |
@@ -686,7 +734,7 @@ the skinny adapts that pattern to JSON to delete the `host` and
 | Grammar IR variants reachable | 14 | 9 |
 | BIR variants reachable | 20 | 14 |
 | Type system mechanisms | 5 (HM + bidirectional + DK13 + CSP + GADT) | 1 (HM) |
-| Pipeline phases | 13 | 8 |
+| Pipeline phases | 13 | 9 |
 | Compiler crates | ~24 (full) | ~5 (compiler slice) |
 | Emitted Rust LOC for JSON | 3,500–3,570 | ~1,185 |
 | HM checker LOC | ~3,500 | ~660 |
@@ -699,7 +747,8 @@ the skinny adapts that pattern to JSON to delete the `host` and
 
 The skinny's architectural premise: **if JSON SOTA falls out of the skinny
 substrate + extraction shape (single plan, no rewrites, hand-curated
-recognizer, host-fn-free) after the host-call and alternate-plan probes pass,
+recognizer, host-fn-free) after the host-call and alternate-plan probes produce
+non-masking results,
 the V1 spec's elaborate machinery — DK13, GADT, CSP, e-graph, cost-model,
 miner — is evidence-backed as tail-of-distribution correctness/coverage
 machinery rather than load-bearing for JSON throughput. If JSON SOTA misses,

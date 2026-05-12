@@ -189,21 +189,32 @@ impl<'input> DocumentView<'input> for JsonDocument<'input> {
 
 **Return-type settlement.** `Json::parse(&'i str) -> Result<JsonDocument<'i>, ParseError>` is the public return type; `JsonDocument` owns the sealed `Tape<'input>`. Callers obtain the root projection through `document.root_value() -> JsonRoot<'i, 'i>` (see §4.1). The `JsonRoot<'doc, 'input>` typed view at §4.1 is the second-tier surface, never the parse-API return type. The kind-marker enum at §1.3 is named `JsonRootKind` (uninhabited); the typed cursor at §4.1 retains the name `JsonRoot<'doc, 'input>`; the two identifiers no longer overload.
 
-### 1.5 Lazy-offset tape — measured and refuted
+### 1.5 The tape ≡ structural projection union (canonical)
 
-The lazy-offset tape was implemented per `restart/skinny/audit/LAZY-TAPE-DESIGN.md` §10 (~860 LOC; see `skinny/REDRESS.md` item 20) and re-benched at outcome G across all three corpora: twitter T1 = 11780 Mbps (below the 13K Mbps refutation threshold), citm T1 = 9286 Mbps, canada T1 = 7334 Mbps (`skinny/RESULTS.md:5-7`). Materialisation bytes fell sharply (canada eager 2.68 MB → lazy 0.89 MB offsets; -67%) yet throughput did not validate. The substrate ceiling was not the bottleneck; the codegen template shape was.
+The lazy-offset tape implementation per `restart/skinny/audit/LAZY-TAPE-DESIGN.md` §10 (~860 LOC; `skinny/REDRESS.md` item 20) re-benched at outcome G on all three baseline corpora and on the expanded 14-corpus set: twitter T1 5521-11780 Mbps depending on build profile (`skinny/RESULTS.md`, `skinny/profile/skinny-expanded/PROFILE-REPORT.md`), citm 8947 Mbps, canada 4640 Mbps. Materialisation bytes fell sharply (canada eager 2.68 MB → lazy 0.89 MB offsets; -67%) yet throughput did not validate against yyjson (3687 MiB/s twitter; 0.91 c/B) or simdjson DOM (2923 MiB/s; 1.142 c/B). The substrate ceiling is not the bottleneck; the codegen template shape is. Four substrate-shape perturbations are now measured-and-rejected (dispatch-table REDRESS-17, 12-byte skipless token REDRESS-18, pair-token fusion REDRESS-16, lazy-offset tape REDRESS-20); the search space is empirically bounded.
 
-Per the six-agent comparative-profile cohort (samply + asm + sonic-rs no-LTO + simdjson stage1/stage2 + DAVID/asmjson research + SIMD intrinsics catalog; outputs at `skinny/profile/`), the architectural lever is **structural-index-driven typed parse** (§1.6). The lazy-offset tape design at `restart/skinny/audit/LAZY-TAPE-DESIGN.md` is archived; the canonical substrate remains eager Lock 1 verbatim. The Lock 1 amendment proposed at `restart/audit/hardening/HARDENING-CONSOLIDATED-V9.2.md` §16 is discarded per the conditional staging protocol (`HARDENING-MASTER-PLAN-V9.2.md` §18 outcome-G clause).
+The 2026-05-12 tape-union research agent (`/Users/mkbabb/Programming/bbnf-lang/skinny/profile/...` cite-chain) returned the load-bearing clarification: **the structural projection IS the tape's storage; there has never been a separate "tape" buffer the parser writes to after consuming the scan output.** Of the five comparator parsers studied (simdjson, asmjson, sonic-rs LazyValue, yyjson, RapidJSON), only simdjson keeps two buffers post-parse (`structural_indexes` on `dom_parser_implementation` plus `tape` on `document`). asmjson, yyjson, RapidJSON, and sonic-rs's LazyValue path all emit directly into the parse-time-output buffer; the LazyValue path emits nothing because the slice IS the projection.
 
-Four substrate routes are now measured-and-rejected and recorded in the INDEX deviation ledger: dispatch-table (REDRESS-17), 12-byte skipless token (REDRESS-18), pair-token fusion (REDRESS-16), lazy-offset tape (REDRESS-20). Lens N classification: **ANTI-MECHANICAL** under the refutation; the design composed cleanly with the locks but the empirical claim failed.
+The current skinny implementation carries **three** parallel offset buffers at runtime: `ParserState.structural_offsets` (scan-emitted; lifetime: parse), `TapeAssembler.offsets` (codegen-copied; lifetime: parse), `Tape.offsets` (sealed; lifetime: post-parse). This was an implementation drift, not a Lock 1 defect. Lock 1's verbatim text never required two buffers; the lazy-mode implementation already realised the union but the codegen kept a sidecar `structural_offsets` on `ParserState` alongside `tape.offsets`. The empirical refutation surfaced a residual implementation artefact, not a Lock 1 defect.
 
-### 1.6 Structural-index-driven typed-parse template (canonical)
+Lock 1 stands. The clarification appends to the existing 2026-05-04 reframe: *"the structural projection IS the tape, not a sidecar to it; no parallel offset stream."* The substrate-side migration is mechanical:
 
-The surviving architectural lever, per `restart/skinny/audit/SOTA-BEAT-DESIGN.md`, is not a substrate amendment but a **codegen template inversion**: generated parsers consume the structural-offset stream directly, never re-scanning source bytes for whitespace or value boundaries. The substrate is Lock 1 verbatim (eager `Tape<'input>` owning offsets + payload arena + flags); the change is what the emitted `parse_*` functions do with that substrate.
+- `Tape<'input>` already holds `offsets: Box<[u32]>` + `flags: Box<[u8]>` (currently `string_escape_offsets` + `string_control_offsets` — fold the three Box<[u32]> sidecars into one + one packed `flags: Box<[u8]>` byte-per-offset).
+- `ParserState.structural_offsets` — DELETE; scan emits through `TapeBuilder` (renamed from `TapeAssembler`) which is a thin facade over `Tape::offsets` during construction.
+- `TapeBuilder` (the OLD eager `Vec<TapeToken>` carrier at `tape/mod.rs:223-292`) — DELETE; dead code from the eager era.
+- `TapeToken`, `NodeKindId`, `TokenFlags` PAYLOAD_CLASS constants — DELETE; unused after eager-path retirement.
 
-Empirical anchor (verified at `skinny/profile/simdjson-v2/PROFILE-REPORT.md`): simdjson's `json_iterator::advance()` is `&buf[*(next_structural++)]` — a single u32-indexed pointer add per dispatch; whitespace and structural delimiters are never re-scanned in stage2; only `parse_string` and `parse_number` re-touch source bytes for the primitive's own content. Sonic-rs achieves the equivalent fusion via `lto = true codegen-units = 1` (`sonic-rs-v2/PROFILE-REPORT.md` hot-leaf count = 1). Our current skinny `parse_value` ignores the structural index it computes and re-scans bytes via `skip_ws`+`peek`, carrying 5+ hot leaves at the same wall-clock as comparators carrying 1-2.
+Net LOC delta: ~−180 LOC delete + ~30 LOC flags fold + ~20 LOC write-through scan emit. One eliminated Vec<u32>-sized allocation per parse; one eliminated `Vec::into_boxed_slice` shrink-copy.
 
-The codegen contract is normative; see `COMPILER.md` §3.5 for the template body. The substrate-side requirement is one additive field on `ValueRef`:
+The architectural lever is now the **structural-index-driven lowering pattern** (§1.6) operating on this unified tape, plus the **Lock 15 force-inline + i-cache residency discipline** (yyjson lever: 0.91 c/B without SIMD via `always_inline` + ~18 KiB hot function), plus the **bbnf-simd primitive layer with abstract-primitive lifts from dav1d/ffmpeg** (Lock 16 admissibility allowlist).
+
+### 1.6 Structural-index-driven typed-parse template (canonical lowering pattern)
+
+The surviving architectural lever, per `restart/skinny/audit/SOTA-BEAT-DESIGN.md`, is a **codegen template inversion** — a lowering pattern, not a new BIR variant or directive. Generated parsers consume the structural-offset stream directly, never re-scanning source bytes for whitespace or value boundaries. The substrate is Lock 1 verbatim (eager `Tape<'input>` owning offsets + payload arena + flags); the change is what the emitted `parse_*` functions do with that substrate.
+
+Empirical anchor (verified at `skinny/profile/simdjson-v2/PROFILE-REPORT.md`): simdjson's `json_iterator::advance()` is `&buf[*(next_structural++)]` — a single u32-indexed pointer add per dispatch; whitespace and structural delimiters are never re-scanned in stage2; only `parse_string` and `parse_number` re-touch source bytes for the primitive's own content. Sonic-rs achieves the equivalent fusion via `lto = true codegen-units = 1` (`sonic-rs-v2/PROFILE-REPORT.md` hot-leaf count = 1 across every corpus × path). yyjson beats simdjson on twitter (3687 vs 2923 MiB/s, 0.91 vs 1.142 c/B) **without any SIMD** by force-inlining everything into one ~18 KiB hot function (`skinny/profile/yyjson/PROFILE-REPORT.md`). Our current skinny `parse_value` ignores the structural index it computes and re-scans bytes via `skip_ws`+`peek`, carrying 5+ hot leaves at the same wall-clock as comparators carrying 1-2.
+
+The codegen contract is normative; see `COMPILER.md` §3.3 for the lowering pattern. The substrate-side requirement is one additive field on `ValueRef`:
 
 ```rust
 pub struct ValueRef<'doc, 'input, K> {
@@ -213,18 +224,24 @@ pub struct ValueRef<'doc, 'input, K> {
 }
 ```
 
-`(TapeId, cursor, kind_at_cursor)` is the canonical identity tuple; `kind_at_cursor` derives from `source[offsets[cursor]]` for one-byte-decidable grammars (JSON, CSS L4 selectors, BBNF-self top-level dispatch). The `(TapeId, token_index, payload_class)` identity from §5 carries forward as the eager-only identity for grammars with stored payload classes (recovery-bearing, layout-bearing, or `@host fn`-decoded-at-parse-time grammars). Per-grammar metadata selects which identity tuple is canonical:
+`(TapeId, cursor, kind_at_cursor)` is the canonical identity tuple; `kind_at_cursor` derives from `source[offsets[cursor]]` for one-byte-decidable grammars (JSON, CSS L4 selectors, BBNF-self top-level dispatch). The `(TapeId, token_index, payload_class)` identity from §5 carries forward as the eager-only identity for grammars with stored payload classes (recovery-bearing, layout-bearing, or `@host fn`-decoded-at-parse-time grammars). **The per-rule shape selection is cost-model-derived** — no user-visible directive, no workspace metadata declaration, no `@runtime` directive. Per Lock 10 auto-detect mandate:
 
-```toml
-[workspace.metadata.bbnf.grammars.json.runtime]
-backend_shape = "structural-index"   # default for SOTA-class grammars
-backend_shape = "eager-tape"          # for grammars with recovery / layout / payload-class needs
-backend_shape = "collapsed-stage"     # x86_64 AVX-512 VBMI2 only; Phase 3 — see SOTA-BEAT-DESIGN.md §5
+```rust
+LayoutFacts.backend_shape[rule_id]: BackendShape  // see ARCH §7.3
+// derivation: passes::recognizers mines first-set disjointness, @error(recover)
+// presence, @host fn parse-time-decoded presence, @layout scope presence;
+// emits EagerTape / StructuralIndex / CollapsedStage automatically.
 ```
 
-Lens N classification: **ADDITIVE-MECHANICAL**. The substrate gains one field on `ValueRef`; `Tape` is unchanged; `DocumentView` is unchanged; the payload arena is unchanged. The codegen template generator gains a new BIR variant (`CursorDispatch`); the rust lowerer emits the cursor-walk shape. V1 closure cost: ~470 LOC across `bbnf-codegen` (~400 LOC template + 50 LOC BIR + 20 LOC view) plus ~70 LOC NEON intrinsic upgrade in the new `bbnf-simd` primitive crate; see `SOTA-BEAT-DESIGN.md` §7 for the execution sequence.
+Lens N classification: **ADDITIVE-MECHANICAL**. The substrate gains one field on `ValueRef`; `Tape` is unchanged; `DocumentView` is unchanged; the payload arena is unchanged. The BIR alphabet is unchanged (20 variants); the lowerer at `crates/codegen/src/lower/rust.rs` reads `LayoutFacts.backend_shape[rule_id]` and emits one of two access patterns for the existing `Alt { mode: Dispatch }` variant. V1 closure cost: ~470 LOC across `bbnf-codegen` (~400 LOC template-emission branches + 50 LOC `derive_backend_shape` + 20 LOC view) plus ~70 LOC NEON intrinsic upgrade in the new `bbnf-simd` primitive crate; see `SOTA-BEAT-DESIGN.md` §7 + `restart/skinny/audit/IMPLEMENTATION-PACKET-V2.md` for the execution sequence.
 
-The SOTA-BEAT route is Phase 1 (NEON intrinsic upgrade) + Phase 2 (structural-index-driven codegen template); falsifiability gates at `SOTA-BEAT-DESIGN.md` §6. The Phase 3 x86_64 AVX-512 VBMI2 path (`vpcompressb` one-shot index emission + `vpternlogd` mask fusion) and the optional Phase 4 collapsed-stage backend (asmjson-class 9-state FSM with PC-as-state direct threading) extend the same substrate; no further Lock 1 amendment.
+The SOTA-BEAT route stacks four levers, each falsifiable independently:
+1. **Lock 15 enforcement** (`lto=fat` + force-inline hot leaves + ~20 KiB i-cache budget): catches the `lto=thin` regression and applies the yyjson lever; closes ~30-40% of the gap.
+2. **Phase 1 NEON intrinsic upgrade** (`vqtbl4q_u8` + Validark `vshrn_n_u16` movemask + `vld1q_u8_x4` quad-load + `vextq_u8` cross-chunk byte-shift + `udot` for digit-block MAC): ~70-150 LOC in `bbnf-simd/aarch64/`; closes scan stage from ~2.08 c/B to ~0.9 c/B.
+3. **Phase 2 structural-index-driven lowering** (`LayoutFacts.backend_shape` cost-model + `Alt { Dispatch }` two-access-pattern lowerer + HasEsc flag + lazy borrow + set_len(0) drop bypass): ~470 LOC; closes parse_value + consume_structural + parse_string from ~2.6 c/B to ~0.5 c/B.
+4. **Phase 3 x86_64 AVX-512 VBMI2 backend + Phase 4 collapsed-stage backend** (cost-model auto-selects `CollapsedStage` when target features include `avx512vbmi2`): ~600-800 LOC; closes to asmjson-class on x86_64 hardware.
+
+All four extend the same substrate; no Lock 1 amendment is needed. The four-perturbation substrate-rejection cluster (REDRESS 16/17/18/20) empirically bounds the substrate-amendment search space.
 
 ---
 

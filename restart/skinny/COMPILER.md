@@ -240,32 +240,9 @@ The full V1 Backend IR has 20 variants (ARCH §7.2). JSON exercises 14.
 | `PathEval` | Skinny does not link `path-core`. | None for SOTA. Path queries are a PASS-3 surface. |
 | `DebugMark` | Skinny disables the debug profile. | None. |
 
-### 3.3 New BIR variant — `CursorDispatch`
+### 3.3 Structural-index-driven generation contract (normative; lowering-only)
 
-The structural-index-driven typed-parse template (`SUBSTRATE.md` §1.6; `SOTA-BEAT-DESIGN.md` §2 + §4) requires one additive BIR variant: `CursorDispatch`. This lowers to the dispatch primitive of a typed-parse hub (`parse_value` in JSON, `parse_declaration` in CSS L4, `parse_expression` in BBNF-self).
-
-```rust
-pub enum BirNode {
-    // ... existing variants
-    CursorDispatch {
-        /// Each arm matches one dispatch byte (or byte set) at the current cursor position
-        /// in the structural-offset array. The lowerer emits:
-        ///   match source[offsets[*cursor as usize] as usize] { ... }
-        /// followed by per-arm body emission; no skip_ws, no raw peek, no byte-position advancement.
-        arms: Vec<(DispatchByteSet, BirId)>,
-        /// Default arm; lowered as the match-arm `_ => fallthrough_body`.
-        fallthrough: BirId,
-    },
-}
-```
-
-The shape miner (Lock 10) detects this pattern from grammar shape — any `Alt { mode: Dispatch }` whose body is `[ws] (first_set_byte → branch | ...) [ws]` lowers to `CursorDispatch` when `[workspace.metadata.bbnf.grammars.<name>.runtime] backend_shape = "structural-index"` is set. The pre-existing `Alt { mode: Dispatch }` retains the eager-byte-position dispatch shape for grammars with `backend_shape = "eager-tape"` (recovery, layout, or `@host fn`-decoded-at-parse-time grammars).
-
-`CursorDispatch` is the canonical 15th BIR variant the skinny exercises (post-amendment count: 15 of 21 V1 BIR variants).
-
-### 3.4 Structural-index-driven generation contract (normative)
-
-Generated parser bodies, when `backend_shape = "structural-index"` is selected for the grammar, **must** honour these primitives. The contract is normative because the codegen template inversion is load-bearing for SOTA-BEAT (`SUBSTRATE.md` §1.6; cycle-budget evidence at `skinny/profile/simdjson-v2/PROFILE-REPORT.md` showing stage2 visit functions never re-scan source). Generated bodies that re-scan source bytes for whitespace or value boundaries are faults regardless of throughput outcome — the audit gate at `BENCH.md` §6 outcome class `G-fusion-quality` fires when comparator-anchored hot-leaf-count exceeds the structural-shape threshold.
+Generated parser bodies, when `LayoutFacts.backend_shape[rule_id] = StructuralIndex` is derived by the cost model (per Lock 10 auto-detect; from existing Grammar IR facts: first-set disjointness, no `@error(recover)`, no `@host fn` parse-time-decoded, no `@layout` scope), **must** honour these primitives. No new BIR variant; no user-visible directive; the lowering pattern lives entirely in `crates/codegen/src/lower/rust.rs`'s emission of `Alt { mode: Dispatch }`. The contract is normative because the codegen template inversion is load-bearing for SOTA-BEAT (`SUBSTRATE.md` §1.6; cycle-budget evidence at `skinny/profile/simdjson-v2/PROFILE-REPORT.md` showing stage2 visit functions never re-scan source; yyjson at 0.91 c/B twitter beats simdjson 1.142 without SIMD by fusing scan + dispatch via `always_inline`). Generated bodies that re-scan source bytes for whitespace or value boundaries are faults regardless of throughput outcome — the audit gate at `BENCH.md` §6 outcome class `G-fusion-quality` fires when comparator-anchored hot-leaf-count exceeds the structural-shape threshold.
 
 **Primitive 1 — `parse_value` shape**. The typed dispatch hub reads exactly one byte per dispatch via `source[offsets[*cursor as usize] as usize]`. No `skip_ws`, no raw `peek`, no `pos` advancement against source. Cursor advances through the offset array via `*cursor += 1` per consumed structural unit.
 
@@ -350,7 +327,7 @@ fn parse_number<'i>(source: &'i [u8], offsets: &[u32],
 - The cycle-per-byte gate (`BENCH.md` §7.9) is comparator-anchored: skinny twitter c/B ≤ 1.5 × simdjson twitter c/B (the simdjson floor at its algorithm is ~1.142 c/B per `simdjson-v2/PROFILE-REPORT.md`).
 - Hot-leaf count gate (`BENCH.md` §6 outcome class `G-fusion-quality`): comparator-anchored count ≤ 3 leaves at ≥10% self-time (comparators: sonic-rs = 1, simdjson = 2).
 
-### 3.5 BIR construction discipline
+### 3.4 BIR construction discipline
 
 The skinny ratifies ARCH §7.2 invariants:
 

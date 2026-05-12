@@ -95,19 +95,26 @@ crates/bbnf-simd/
 
 ### §3.2. arm64 NEON primary path (M-series Apple Silicon — the host)
 
-This is the gating implementation; M-series is the dev box and the SOTA-BEAT gate runs here. The intrinsic catalog (Lock 16 allowlist; sources tracked in `restart/audit/RESEARCH-SIMD-INTRINSICS.md`):
+This is the gating implementation; M-series is the dev box and the SOTA-BEAT gate runs here. The intrinsic catalog (Lock 16 allowlist; per the 2026-05-12 dav1d/ffmpeg/VLC ASM monolith research, the byte-classification + cross-lane permute + multiply-accumulate primitives that translate from dav1d kernel patterns to byte-stream JSON parsing):
 
-| Primitive | Intrinsic | Source citation | Replaces |
-|---|---|---|---|
-| 4-table 64-byte structural+whitespace+escape classify | `vqtbl4q_u8` | Lemire 2019 "Arbitrary byte-to-byte maps using ARM NEON" | sonic-rs's 1-table `vqtbl1q_u8` (saves ~16 c/64B per intrinsics agent) |
-| Interleaved-vector movemask | `vld4q_u8` + `vshrn_n_u16` + `vsriq_n_u8` + `vzip1q_u8` | validark.dev/posts/interleaved-vectors-on-arm/ (Validark 2024) | sonic-rs's AND-OR tree (4× faster bitmap synthesis) |
-| Quad-load 64 bytes | `vld1q_u8_x4` | Arm A64 ISA | 4× separate `vld1q_u8` (frees 2 load-ports on M-series) |
-| Branchless mask select | `vbslq_u8` | Arm A64 ISA | conditional emit/branch (used in `string_block.rs`) |
-| Byte popcount | `vcntq_u8` + `vaddvq_u8` | Arm A64 ISA | scalar `count_ones()` (saves GPR round-trip) |
+| Primitive | Intrinsic | Source citation | Replaces | Abstract primitive (generalizes to ANY grammar) |
+|---|---|---|---|---|
+| 4-table 64-byte structural+whitespace+escape classify | `vqtbl4q_u8` | Lemire 2019 "Arbitrary byte-to-byte maps using ARM NEON" | sonic-rs's 1-table `vqtbl1q_u8` (saves ~16 c/64B per intrinsics agent) | Chunk-parallel byte classification with per-grammar alphabet LUT |
+| Interleaved-vector movemask | `vld4q_u8` + `vshrn_n_u16` + `vsriq_n_u8` + `vzip1q_u8` | validark.dev/posts/interleaved-vectors-on-arm/ (Validark 2024) | sonic-rs's AND-OR tree (4× faster bitmap synthesis) | Mask reduction from N-byte chunks to 64-bit bitmap |
+| Quad-load 64 bytes | `vld1q_u8_x4` | Arm A64 ISA | 4× separate `vld1q_u8` (frees 2 load-ports on M-series) | Single-instruction wide load |
+| Cross-lane byte-shift extract | `vextq_u8` | Arm A64 ISA; **dav1d filter-overlap lineage** (loop-filter kernels heavily use this) | explicit prev-byte copy + shift | **1D sliding-window byte context** — cross-chunk quote-state, brace-depth carry, comment-state, RCDATA-state. Applies to ANY grammar with stateful chunk-spanning tokens (XML, YAML, SQL, Markdown). |
+| 4-byte multiply-accumulate | `udot` / `sdot` | Arm A64 ISA Armv8.2-A; **dav1d FIR-filter MAC lineage** | scalar digit-block accumulation | **Multiply-accumulate over byte windows** — digit-block parsing (JSON `number`, CSS `<number>`, TOML/INI/SQL integer literals, Sheets formulas, BBNF `digit`). Applies to ANY grammar's number primitive. |
+| Saturating add/sub | `vqaddq_u8` / `vqsubq_u8` | Arm A64 ISA | branch-on-overflow | **Branchless overflow-clamped accumulation** — i64 fast-path with deferred-decode flag set on overflow. Applies to ANY grammar's number primitive. |
+| Branchless mask select | `vbslq_u8` | Arm A64 ISA | conditional emit/branch (used in `string_block.rs`) | Branchless predicate select |
+| Byte popcount | `vcntq_u8` + `vaddvq_u8` | Arm A64 ISA | scalar `count_ones()` (saves GPR round-trip) | Chunk-level "any-true" / first-true reduction (any grammar's whitespace-skip optimization for whitespace-empty chunks) |
+| Non-temporal pair-store | `STNP` (asm!) | kernel `clear_page` lineage; `feedback_no_polling_loops` not applicable here | normal cached store (write-allocate pollutes L1) | Tape-stream write-only: prevents L1/L2 eviction of input on inputs > L1 (3-8% cold-cache gain). |
+| Streaming prefetch | `PRFM PLDL2STRM` (asm!) | Arm A64 ISA | generic `prefetch_read_data` | Tape walker (consumer) prefetch ahead-of-cursor for sequential offset stream. |
 
-The classifier kernel composes (1) + (3) into a single 64-byte block consumption per loop iteration. Quote/escape detection uses (1) + (4) with the `HasEsc` flag emitted into the parallel `flags` array. Movemask synthesis uses (2).
+**Abstract primitive philosophy**: dav1d's pixel-arithmetic kernels (motion compensation, IDCT, loop filter, film grain — T14-T17 of the catalog at `skinny/profile/asm-string-unicode/`'s referenced dav1d-research) do NOT translate to JSON. But the *primitive operations* underneath them DO translate. The per-grammar selection is cost-model-derived from Grammar IR — alphabet size (≤16: `vqtbl1q_u8`; ≤64: `vqtbl4q_u8`; >64: SWAR or AVX-512 `vpermi2b`), number-token presence (triggers `udot`/`sdot`), string-token presence (triggers `vbslq_u8` + StringBlock), chunk-spanning-token presence (triggers `vextq_u8`). **No grammar-specific code in any generic crate** — Lock 14 verbatim.
 
-Projected impact (intrinsics agent + cycle-budget math): scan stage budget falls from current ~0.9 c/B to ~0.55 c/B (approaching simdjson's 0.629 c/B stage1 baseline). Twitter T1 lifts from 11780 → ~15400 Mbps. This alone validates the Phase 1 gate (≥14K Mbps).
+The classifier kernel composes (1) + (3) into a single 64-byte block consumption per loop iteration. Quote/escape detection uses (1) + (7) with the `HasEsc` flag emitted into the parallel `flags` array. Movemask synthesis uses (2). Cross-chunk state uses (4). Number-block MAC uses (5)+(6).
+
+Projected impact (intrinsics agent + cycle-budget math, M5 Max): scan stage budget falls from current ~2.08 c/B (skinny twitter 41% of 5.07) to ~0.9 c/B (approaching yyjson's no-SIMD 0.91 c/B equivalent). Combined with Lock 15 fusion (Phase 0) + Phase 2 codegen template, total c/B falls 5.07 → ~1.4 c/B; closes to within yyjson parity.
 
 ### §3.3. x86_64 AVX-512 VBMI2 secondary path (Ice Lake+ / Zen 4+)
 
@@ -140,28 +147,39 @@ swar_8byte.rs:
 
 This is the *correctness floor* — every grammar must parse correctly on every host even when no SIMD primitive is available. Throughput on twitter: ~3 GB/s projected (asmjson SWAR hits 7 GB/s on heavier hardware; M-series scalar limited to ~3.5 GHz integer pipeline width).
 
-## §4. Codegen template contract
+## §4. Codegen template contract (lowering pattern; no new BIR variant)
 
-The IR-side change is one new `BIR` variant; the codegen-side change is the template generator rewrite in `crates/codegen/src/lower/rust.rs`.
+**2026-05-12 amendment: no new construct.** The earlier draft proposed a `BirNode::CursorDispatch` variant. That was a contrivance per the user's "no new directives, no contrivances" constraint. The clean design is: the existing `Alt { mode: Dispatch }` BIR variant lowers to two access patterns based on `LayoutFacts.backend_shape[rule_id]` (cost-model-derived per Lock 10 auto-detect; see ARCH §7.3). Same BIR; two lowerings. No alphabet change.
 
-### §4.1. BIR variant
+### §4.1. Lowering matrix (one BIR variant, three access patterns)
 
 ```rust
-pub enum BirNode {
-    // ... existing variants
-    /// Dispatch on the byte at the current cursor position in the structural-offset array.
-    /// `arms` covers all dispatch bytes; `fallthrough` is the default (error) branch.
-    /// Generated lowerer emits: `match source[offsets[*cursor as usize] as usize] { ... }`.
-    /// No skip_ws, no peek, no raw byte-position advancement.
-    CursorDispatch {
-        arms: Vec<(DispatchByte, BirId)>,
-        fallthrough: BirId,
-    },
-    // ... existing variants
+// At crates/codegen/src/lower/rust.rs, when lowering Alt { mode: Dispatch }:
+match layout_facts.backend_shape[rule_id] {
+    BackendShape::EagerTape => {
+        // emit: match source[pos] { byte_a => arm_a, byte_b => arm_b, _ => fallthrough }
+        //       pos += consumed_bytes
+        // Selected when: rule body or transitive uses include @error(recover) / @host fn
+        //                parse-time-decoded / @layout scope, OR first-set has overlap.
+    }
+    BackendShape::StructuralIndex => {
+        // emit: match source[offsets[*cursor as usize] as usize] {
+        //           byte_a => arm_a, byte_b => arm_b, _ => fallthrough
+        //       }
+        //       *cursor += 1
+        // Selected when: byte-finite disjoint first-set; no payload-bearing tokens;
+        //                no layout scope.
+    }
+    BackendShape::CollapsedStage => {
+        // emit: asmjson-class AVX-512 VBMI2 9-state FSM with PC-as-state direct
+        //       threading via r10 (Lock 16 "asmjson r10-direct-threading" admissibility).
+        // Selected when: target_features.has("avx512vbmi2") AND rule is hub with ≥4
+        //                byte-disjoint arms AND no recovery/layout/host-decode body.
+    }
 }
 ```
 
-The `CursorDispatch` variant is the codegen primitive corresponding to a typed-parse hub (e.g., `parse_value` in JSON, `parse_declaration` in CSS, `parse_expression` in BBNF-self). The shape miner (Lock 10) detects this pattern from grammar shape — any rule whose body is `[ws] (first_set_byte_a → branch_a | first_set_byte_b → branch_b | ...) [ws]` lowers to `CursorDispatch` when the structural-index-driven mode is selected for the grammar.
+The shape miner (Lock 10) detects hub candidacy and feeds `derive_backend_shape` per ARCH §7.3. No user-visible directive; no per-rule grammar annotation; per Lock 10 auto-detect mandate.
 
 ### §4.2. Generated parser body shape
 
@@ -176,7 +194,7 @@ Per-rule emission contract:
 | Number primitive | `loop digit-by-digit → SWAR or scalar accumulate` | `start = offsets[cursor] → cursor++ → end = offsets[cursor] → parse_digits(source[start..end])` |
 | Literal (true/false/null) | `expect 4-byte memcmp` | `cursor++; verify source[offsets[cursor-1]..offsets[cursor-1]+4]` |
 
-The dispatch arms within each `CursorDispatch` should compile to a jump table; cost-model heuristic in `crates/codegen/` emits arm density to give LLVM the strongest hint. Per `feedback_pluggable_components`: the dispatch-shape strategy is pluggable (match-density-tuned vs explicit jump table via `asm!` indirect branch on nightly). The function-pointer dispatch table previously rejected at REDRESS-17 is *not* the same; that was call-site indirection. This is jump-table dispatch with inlined targets.
+The dispatch arms within each `Alt { Dispatch }` lowered as `StructuralIndex` should compile to a jump table; cost-model heuristic in `crates/codegen/` emits arm density to give LLVM the strongest hint. Per `feedback_pluggable_components`: the dispatch-shape strategy is pluggable (match-density-tuned vs explicit jump table via `asm!` indirect branch on nightly). The function-pointer dispatch table previously rejected at REDRESS-17 is *not* the same; that was call-site indirection. This is jump-table dispatch with inlined targets.
 
 ### §4.3. HasEsc flag at scan time
 
@@ -263,19 +281,33 @@ Each phase carries an empirical gate; failure to land the gate routes back to re
 
 | Phase | LOC budget | Twitter T1 gate | Hot-leaf count gate | Twitter c/B gate | Cite |
 |---|---:|---|---|---|---|
-| Phase 0 (build profile + micro-cleanups) | ~15 | T1 ≥ 12K Mbps (delta from baseline) | n/a | n/a | Lock 15 enforcement |
-| Phase 1 (NEON intrinsic upgrade in `bbnf-simd/aarch64/`) | ~70 | **T1 ≥ 14K Mbps (validation)** | ≤ 4 hot leaves | ≤ 1.9 c/B | §3.2 |
-| Phase 2 (structural-index-driven codegen template; `BirNode::CursorDispatch`) | ~400 | **T1 ≥ 17K Mbps (SOTA-BEAT sonic-rs LazyValue)** | ≤ 3 hot leaves | ≤ 1.4 c/B | §4 |
-| Phase 3 (AVX-512 VBMI2 backend + collapsed-stage option) | ~600 | T1 ≥ 25K Mbps on x86_64 AVX-512 hardware (BEAT simdjson) | ≤ 2 hot leaves on x86_64 | ≤ 0.9 c/B on x86_64 | §3.3 + §5 |
-| Aspirational Phase 4 (collapsed-stage AVX-512BW asmjson-class) | ~800 | T1 ≥ 50K Mbps on x86_64 (asmjson parity) | 1 hot leaf | ≤ 0.45 c/B | §5 |
+| Phase 0 (Lock 15 enforcement: `lto=fat` + force-inline + ≤20 KiB i-cache budget) | ~15 LOC + Cargo.toml | T1 ≥ 950 MiB/s (catches `lto=thin` regression; yyjson lever) | ≤ 4 hot leaves | ≤ 3.5 c/B | Lock 15 enforcement; `skinny/profile/yyjson/PROFILE-REPORT.md` |
+| Phase 1 (arm64 NEON intrinsic upgrade `bbnf-simd/aarch64/`: `vqtbl4q_u8` + Validark `vshrn` movemask + `vld1q_u8_x4` + `vextq_u8` cross-chunk + `udot`/`sdot` for digit-block MAC) | ~150 LOC | **T1 ≥ 1330 MiB/s (validation; closes to sonic-rs ~2.3 c/B)** | ≤ 3 hot leaves | ≤ 2.5 c/B | §3.2 |
+| Phase 2 (`LayoutFacts.backend_shape` cost-model + `Alt { Dispatch }` two-access-pattern lowerer + HasEsc flag + lazy borrow + set_len(0) drop bypass; lowering pattern only, no new BIR variant) | ~470 LOC | **T1 ≥ 2375 MiB/s (SOTA-BEAT sonic-rs Value-DOM 2438 MiB/s; approaches simdjson 1.142 c/B)** | ≤ 2 hot leaves | ≤ 1.4 c/B | §4 |
+| Phase 3 (AVX-512 VBMI2 backend; GFNI `vgf2p8affineqb` classifier) | ~200 | T1 ≥ 3325 MiB/s on x86_64 AVX-512 hardware (BEAT simdjson DOM 2923 MiB/s) | ≤ 2 hot leaves on x86_64 | ≤ 1.0 c/B on x86_64 | §3.3 + §5 |
+| Phase 4 (collapsed-stage AVX-512BW backend; auto-selected via CPUID, not opt-in) | ~600 | T1 ≥ 7400 MiB/s on x86_64 (asmjson 10.93 GiB/s parity territory) | 1 hot leaf | ≤ 0.45 c/B | §5 |
 
-The cycle-per-byte gate is the load-bearing comparator-anchored metric; wall-clock Mbps depends on host clock speed and can drift across dev hardware (M1 Pro vs M5 Max vs Zen 4). The hot-leaf-count gate enforces fusion-quality parity with sonic-rs (1-2 leaves) and simdjson (2 leaves) — a parser carrying 5+ leaves at the same wall-clock is structurally bolted-on, regardless of throughput.
+Comparator anchors on M5 Max twitter DOM-class (verified at `skinny/profile/{yyjson,simdjson-expanded,sonic-rs-expanded,skinny-expanded}/PROFILE-REPORT.md`):
+
+| Parser | Twitter c/B | Twitter MiB/s |
+|---|---:|---:|
+| **yyjson** (no SIMD; force-inline + ~18 KiB hot function) | 0.91 | 3687 |
+| **simdjson DOM** | 1.142 | 2923 |
+| **sonic-rs Value-DOM** | ~2.3 | 2438 |
+| **skinny current** (lto=thin regression) | 5.07 | 658 |
+| **RapidJSON floor** | 7.30 | 479 |
+| **serde_json floor** | 7.80 | 449 |
+
+The cycle-per-byte gate is the host-clock-invariant metric. The hot-leaf-count gate enforces fusion-quality parity with comparators (yyjson 1 leaf; sonic-rs Value-DOM 1-2; simdjson 2). A parser carrying 5+ leaves at the same wall-clock is structurally bolted-on, regardless of throughput.
+
+**Per-corpus generalization gates** (no overfit to twitter): for each Phase, the gate must hold on `unicode_escapes.json` within 2× of twitter c/B (the escape-pathology bound; simdjson's 4.97 c/B on unicode_escapes vs 1.14 on twitter is the upper-bound ratio our parser must not exceed). JSONTestSuite conformance bundle (95 `y_string_*` files) must exit 0 with zero `BBNF-UTF8-INVALID-AT-PARSE` panics per BENCH §7.9 Gate 1. Float-bit-exact parity must hold on canada/numbers/mesh/marine_ik per BENCH §7.9 Gate 4.
 
 Each gate falsifies a distinct architectural claim:
-- Phase 1 falsifies "the NEON scan kernel is already at ceiling."
-- Phase 2 falsifies "the recursive-descent driver is unavoidable."
-- Phase 3 falsifies "AVX-512 VBMI2 buys nothing simdjson doesn't already exploit."
-- Phase 4 falsifies "asmjson's collapsed-stage architecture is not portable to a meta-grammar."
+- **Phase 0** falsifies "build profile cannot meaningfully affect throughput" (yyjson 0.91 c/B without SIMD proves force-inline + i-cache residency alone closes 30-40% of the gap).
+- **Phase 1** falsifies "NEON intrinsic upgrades are second-order" (Lemire 2019 `vqtbl4q_u8` + Validark 2024 movemask measured 4-16 c/64B savings).
+- **Phase 2** falsifies "the recursive-descent driver is unavoidable" (simdjson stage2 `&buf[*(next_structural++)]` proves typed dispatch reads source only at primitive boundaries).
+- **Phase 3** falsifies "AVX-512 VBMI2 buys nothing simdjson doesn't already exploit" (`icelake/simd.h:157` explicitly leaves `vpcompressb` unused; GFNI `vgf2p8affineqb` 2× over PSHUFB is genuinely unused in JSON literature).
+- **Phase 4** falsifies "asmjson's collapsed-stage architecture is not portable to a meta-grammar" (encodable as `LayoutFacts.backend_shape = CollapsedStage` cost-model emission; arity is grammar-derived from rule first-set).
 
 ## §7. Implementation sequence
 

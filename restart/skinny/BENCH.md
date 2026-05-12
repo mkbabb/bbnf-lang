@@ -266,13 +266,35 @@ Skinny uses the canonical sonic-rs / simdjson trio: twitter, citm_catalog,
 canada. These three span small/medium/large and payload-rich/structural/
 array-of-numbers — the orthogonal axes that stress the substrate differently.
 
-### 3.1 Corpus inventory
+### 3.1 Corpus inventory (expanded 2026-05-12 from 3 to 14 corpora)
 
-| Corpus | Purpose | Bytes (approx) | Hot path |
-|---|---|---|---|
-| `twitter.json` | small, payload-rich | ~616 KB | string-heavy object/array nesting, UTF-8 |
-| `citm_catalog.json` | medium, structural | ~1.7 MB | deep object trees, key-value heavy |
-| `canada.json` | large, array-of-numbers | ~2.2 MB | float-array dispatch, GeoJSON-style |
+The original three-corpus set (twitter / citm / canada) is the simdjson-community canonical anchor but overfits the bench to (a) string-heavy + light-Unicode, (b) deep-object + light-numerics, (c) float-dense. The expanded set adds escape-density, full-Unicode, structural-stress, object-key-dispatch, and adversarial corpora; corpus-shape diversity is the empirical guard against per-corpus overfit (per `skinny/profile/skinny-expanded/PROFILE-REPORT.md` — the 14-corpus profile reveals that marine_ik is the worst-Mbps corpus, not canada; skinny is NOT float-overfit).
+
+| Corpus | Purpose | Bytes (approx) | Hot path | Source |
+|---|---|---|---|---|
+| `twitter.json` | small, payload-rich | ~616 KB | string-heavy object/array nesting, light Unicode | simdjson-data |
+| `citm_catalog.json` | medium, structural | ~1.7 MB | deep object trees, key-value heavy | simdjson-data |
+| `canada.json` | large, array-of-numbers | ~2.2 MB | float-array dispatch, GeoJSON-style | simdjson-data |
+| `apache_builds.json` | object-heavy build metadata | ~127 KB | object-key dispatch, light Unicode | simdjson-data |
+| `github_events.json` | mixed event stream | ~65 KB | object + array, ASCII text | simdjson-data |
+| `update-center.json` | nested config | ~533 KB | deep nesting, repeated keys | simdjson-data |
+| `mesh.json` | wide arrays + floats | ~724 KB | 3D mesh data, float-array dispatch | simdjson-data |
+| `random.json` | uniform structure stress | ~510 KB | random object/array distribution | simdjson-data |
+| `gsoc-2018.json` | medium object | ~3.3 MB | structured GSoC application records | simdjson-data |
+| `marine_ik.json` | deep animation rig | ~3.0 MB | deeply-nested object hierarchy, **worst-Mbps corpus per skinny-expanded profile** | simdjson-data |
+| `instruments.json` | medium structured | ~220 KB | object-keyed instrument catalog | simdjson-data |
+| `numbers.json` | numeric edge stress | ~150 KB | float / int / NaN edge cases | simdjson-data |
+| `unicode_mixed.json` | UTF-8 stress | ~1.05 MB | ASCII + Latin-1 + BMP CJK + emoji + escapes; raw multibyte UTF-8 | synthesized + sonic-rs testdata `string_unicode.json` lineage |
+| `unicode_escapes.json` | escape-density stress | ~1.05 MB | control + escape-heavy, ASCII-encoded with `\uXXXX` + surrogate pairs; **anomaly corpus: sonic-rs LazyValue collapses to 364 Mbps here (5× worse than its Value-DOM)** | synthesized + sonic-rs testdata `string_escaped.json` lineage |
+
+**Per-corpus profile evidence**: `skinny/profile/skinny-expanded/PROFILE-REPORT.md` (14-corpus skinny baseline), `skinny/profile/sonic-rs-expanded/PROFILE-REPORT.md` (9-corpus sonic-rs Value-DOM + LazyValue × inlined + noinline = 36 measurements), `skinny/profile/simdjson-expanded/` (expanded corpora; stage1/stage2 sub-decomposition per corpus), `skinny/profile/yyjson/PROFILE-REPORT.md` (7-corpus yyjson reference; the no-SIMD SOTA-class anchor at 3687 MiB/s twitter / 0.91 c/B), `skinny/profile/rapidjson/PROFILE-REPORT.md` + `skinny/profile/serde_json/PROFILE-REPORT.md` (floor comparators; 449-805 MiB/s range = the textbook recursive-descent ceiling without SIMD/LTO).
+
+**JSONTestSuite conformance bundle** (separate from throughput corpora): 95 `y_string_*` + 95 `y_structure_*` files at `/tmp/jsontestsuite-research/JSONTestSuite/test_parsing/` exercise parse-time correctness (UTF-8 validity, surrogate-pair handling, non-character codepoints, overlong sequences). Bench harness opens these in conformance mode (parse-only, no throughput); failures count toward the `BBNF-UTF8-INVALID-AT-PARSE` and `BBNF-UNICODE-NONCHAR-CODEPOINT` diagnostic gates per ARCH §7.4.
+
+**Synthesized adversarial corpora** (reproducible from seed via `xtask/src/bin/corpus_gen.rs`):
+- `gen/deep_nest_1024.json` — 1024-deep `[[…]]` for structural recursion stress
+- `gen/wide_object_10k.json` — 10K distinct keys for object-dispatch stress
+- `gen/unicode_planes_all.json` — every Unicode plane (BMP + supplementary + emoji); 1/2/3/4-byte UTF-8 mix
 
 ### 3.2 Corpus sourcing
 
@@ -1144,7 +1166,25 @@ This probe is *report-only*; it does not gate the matrix. The skinny's
 SOTA premise is the warm-cache contest sonic-rs and simd-json compete in.
 Cold-cache is recorded for V1 J.W1 to consume.
 
-### 7.9 Comparative-profile primitive (samply hot-leaf + cycle-per-byte attribution)
+### 7.9 Correctness gates (Lock 9 + JSONTestSuite conformance + UTF-8 validation)
+
+The 2026-05-12 corpus expansion + asm-string-unicode + skinny-expanded agents surfaced two correctness gaps that must be closed before any SOTA-BEAT throughput claim is honest:
+
+**Gate 1 — UTF-8 validation at scan stage, not view time**. The current skinny binary panics on `i_string_invalid_utf-8.json`, `i_string_overlong_sequence_2_bytes.json`, `i_string_truncated-utf-8.json`, `i_string_iso_latin_1.json` (raw 0xE9) because `view.rs:203, 229` does `std::str::from_utf8(...).expect("parser input is UTF-8")` while the scan emits no UTF-8 validation pass (`simd-scan/src/lib.rs:196-241`). The fix lands at scan stage via the `simdutf8` crate (Keiser-Lemire 2020 "Validating UTF-8 In Less Than One Instruction Per Byte"; admissible per Lock 16 algorithm-class citation). Per `skinny/profile/skinny-expanded/PROFILE-REPORT.md`, UTF-8 validation is **0.00% self-time** on every current corpus — moving it to scan stage costs nothing measurable but closes the correctness gap. Per `skinny/profile/simdjson-expanded/PROFILE-REPORT.md`, simdjson's scan-time UTF-8 validation costs 0-35% depending on multibyte density; on pure-ASCII corpora the validator's overhead is ≤ 2% of total cycles.
+
+Verification: `cargo run --release --bin parity_oracle -- jsontestsuite/test_parsing/` must exit 0 with `i_string_*` files producing `BBNF-UTF8-INVALID-AT-PARSE` diagnostic (not panic).
+
+**Gate 2 — Non-character codepoints admit per RFC 8259**. The current skinny `parse-that-regex/src/lib.rs:352` uses `char::from_u32` which rejects non-characters (`U+FDD0..U+FDEF`, `U+nFFFE`, `U+nFFFF` for `n` in `0..=0x10`) and surrogate-pair-only codepoints. JSONTestSuite marks `y_string_unicode_U+10FFFE_nonchar.json` as `y_` (must accept). The fix is `char::from_u32` → manual codepoint construction admitting non-characters; emits `BBNF-UNICODE-NONCHAR-CODEPOINT` as a warning (not error) per RFC 8259.
+
+Verification: `y_string_unicode*.json` files at `/tmp/jsontestsuite-research/JSONTestSuite/test_parsing/` must parse-OK + view-as-`&str`-or-`Cow` OK + emit zero errors (warnings admissible).
+
+**Gate 3 — Surrogate-pair handling correctness**. Per skinny's current `parse-that-regex/src/lib.rs:324-347` strict surrogate-pair handling is correct and matches simdjson/yyjson semantics; verified by JSONTestSuite `y_string_accepted_surrogate_pair.json` (`["𐐷"]` → U+10437 𐐷) decoding correctly. Per the simdjson-expanded profile, surrogate-pair decode (`handle_unicode_codepoint`) is 0% on every real-world corpus — only fires on synthesized escape-heavy corpora. **No change required; keep strict.**
+
+**Gate 4 — Float-bit-exact parity** (for canada, numbers, mesh, marine_ik corpora): `JsonNumber::as_f64()` must produce bit-exact match against sonic-rs (Eisel-Lemire) and serde_json (lexical-core) on every canonical number-bearing corpus. Last-bit ULP discrepancy is a hard parse-time failure under skinny. Current skinny uses `std::str::parse::<f64>` which is correct for normal IEEE-754 but loses ULP precision on subnormals; spec carries this gate to enforce the Eisel-Lemire wrap landing per `parse-that/float/eisel_lemire.rs` (wraps `fast-float2` crate per Lock 11 + Lock 16 algorithm-class citation).
+
+**Conformance bundle test** lives at `skinny/crates/test-fixtures/corpus/jsontestsuite_y_pack/` (95 files; ~140 KB total); `cargo run -p xtask -- check-conformance` exits 0 only when all 95 parse-OK.
+
+### 7.10 Comparative-profile primitive (samply hot-leaf + cycle-per-byte attribution)
 
 Every full bench run produces a comparative samply profile against sonic-rs and simdjson on the same three corpora; the output lives at `skinny/profile/skinny-v{N}/`, `skinny/profile/sonic-rs-v{N}/`, `skinny/profile/simdjson-v{N}/`. This primitive is load-bearing post-2026-05-12: the six-agent comparative cohort showed that **wall-clock throughput alone does not distinguish substrate ceiling from codegen template shape**. The hot-leaf-count gate at §6 outcome class `G-fusion-quality` requires comparator-anchored measurement.
 
@@ -1164,7 +1204,7 @@ Every full bench run produces a comparative samply profile against sonic-rs and 
 | `skinny/profile/skinny-v{N}/{corpus}.profile.json.gz` + `.syms.json` | Skinny samply profile per corpus | Self-attribution |
 | `skinny/profile/sonic-rs-v{N}/{corpus}.{inlined,noinline}.profile.json.gz` + `.syms.json` | sonic-rs samply profile per corpus, both builds | Comparator anchor; per-technique cycle budget |
 | `skinny/profile/simdjson-v{N}/{corpus}.{inlined,noinline}.profile.json.gz` + `.syms.json` | simdjson samply profile per corpus, both builds | Stage1/stage2 architectural-shape verification |
-| `skinny/profile/skinny-v{N}/PROFILE-REPORT.md` | Skinny report with sections (a)-(f) | Self-classification per §7.9 contract below |
+| `skinny/profile/skinny-v{N}/PROFILE-REPORT.md` | Skinny report with sections (a)-(f) | Self-classification per §7.10 contract below |
 | `skinny/profile/sonic-rs-v{N}/PROFILE-REPORT.md` + `noinline.patch` | sonic-rs report + the patch flipping `#[inline(always)]` → `#[inline(never)]` on the SIMD inner kernel | Reproducible noinline build |
 | `skinny/profile/simdjson-v{N}/PROFILE-REPORT.md` | simdjson report with stage1/stage2 sub-decomposition | Architectural-shape verification |
 | `skinny/profile/COMPARISON-v{N}.md` | Cross-parser hot-leaf table + cycle-per-byte table | Gate evaluation |

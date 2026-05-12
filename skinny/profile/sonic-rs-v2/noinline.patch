@@ -1,0 +1,472 @@
+diff --git a/src/parser.rs b/src/parser.rs
+index 0350b86..27195f9 100644
+--- a/src/parser.rs
++++ b/src/parser.rs
+@@ -107,7 +107,7 @@ pub(crate) fn as_str(data: &[u8]) -> &str {
+ 
+ macro_rules! impl_get_escaped_branchless {
+     ($name:ident, $ty:ty, $even_bits:expr) => {
+-        #[inline(always)]
++        #[inline(never)]
+         fn $name(prev_escaped: &mut $ty, backslash: $ty) -> $ty {
+             const EVEN_BITS: $ty = $even_bits;
+             let backslash = backslash & (!*prev_escaped);
+@@ -141,7 +141,7 @@ macro_rules! check_visit {
+     };
+ }
+ 
+-#[inline(always)]
++#[inline(never)]
+ pub(crate) fn is_whitespace(ch: u8) -> bool {
+     // NOTE: the compiler not optimize as lookup, so we hard code here.
+     const SPACE_MASK: u64 = (1u64 << b' ') | (1u64 << b'\r') | (1u64 << b'\n') | (1u64 << b'\t');
+@@ -149,7 +149,7 @@ pub(crate) fn is_whitespace(ch: u8) -> bool {
+         .is_some_and(|v| v & SPACE_MASK != 0)
+ }
+ 
+-#[inline(always)]
++#[inline(never)]
+ fn get_string_bits(data: &[u8; 64], prev_instring: &mut u64, prev_escaped: &mut u64) -> u64 {
+     let v = unsafe { u8x64::from_slice_unaligned_unchecked(data) };
+ 
+@@ -167,7 +167,7 @@ fn get_string_bits(data: &[u8; 64], prev_instring: &mut u64, prev_escaped: &mut
+     in_string
+ }
+ 
+-#[inline(always)]
++#[inline(never)]
+ fn skip_container_loop(
+     input: &[u8; 64],        /* a 64-bytes slice from json */
+     prev_instring: &mut u64, /* the bitmap of last string */
+@@ -260,7 +260,7 @@ where
+         self
+     }
+ 
+-    #[inline(always)]
++    #[inline(never)]
+     fn error_index(&self) -> usize {
+         // when parsing strings , we need record the error position.
+         // it must be smaller than reader.index().
+@@ -297,7 +297,7 @@ where
+         }
+     }
+ 
+-    #[inline(always)]
++    #[inline(never)]
+     pub fn parse_number(&mut self, first: u8) -> Result<ParserNumber> {
+         let reader = &mut self.read;
+         let neg = first == b'-';
+@@ -308,7 +308,7 @@ where
+         ret.map_err(|err| self.error(err.into()))
+     }
+ 
+-    #[inline(always)]
++    #[inline(never)]
+     pub fn parse_float32(&mut self, first: u8) -> Result<f32> {
+         let reader = &mut self.read;
+         let neg = first == b'-';
+@@ -321,7 +321,7 @@ where
+ 
+     /// Unchecked number parsing — requires padded buffer (PaddedSliceRead).
+     /// Uses the full padded buffer (including padding) so unchecked access is safe.
+-    #[inline(always)]
++    #[inline(never)]
+     pub fn parse_number_unchecked(&mut self, first: u8) -> Result<ParserNumber> {
+         let reader = &mut self.read;
+         let neg = first == b'-';
+@@ -336,7 +336,7 @@ where
+     /// Parse a JSON string and visit it.
+     /// When `strbuf` is Some, copies into the buffer (owned, calls visit_str).
+     /// When `strbuf` is None, parses inplace zero-copy (calls visit_borrowed_str).
+-    #[inline(always)]
++    #[inline(never)]
+     fn parse_string_visit<V>(&mut self, vis: &mut V, strbuf: Option<&mut Vec<u8>>) -> Result<()>
+     where
+         V: JsonVisitor<'de>,
+@@ -367,7 +367,7 @@ where
+     /// Only called when strbuf=None (padded reader path). PaddedSliceRead has 64 bytes
+     /// of zero-padding beyond valid JSON, so scanning 24 bytes ahead is always safe.
+     /// Padding bytes (0x00) are < 0x20 and will bail to parse_string_visit.
+-    #[inline(always)]
++    #[inline(never)]
+     fn parse_key_scalar<V>(&mut self, vis: &mut V) -> Result<()>
+     where
+         V: JsonVisitor<'de>,
+@@ -394,7 +394,7 @@ where
+     }
+ 
+     /// Parse a number. When `inplace` is true, visits as borrowed raw number.
+-    #[inline(always)]
++    #[inline(never)]
+     fn parse_number_visit<V>(&mut self, first: u8, vis: &mut V, inplace: bool) -> Result<()>
+     where
+         V: JsonVisitor<'de>,
+@@ -530,7 +530,7 @@ where
+     /// Dispatch value parsing based on the peeked byte.
+     /// When `strbuf` is None, strings are parsed inplace (zero-copy borrowed).
+     /// When `strbuf` is Some, strings are parsed into the buffer (owned copy).
+-    #[inline(always)]
++    #[inline(never)]
+     fn dispatch_value<V>(
+         &mut self,
+         ch: Option<u8>,
+@@ -550,7 +550,7 @@ where
+         }
+     }
+ 
+-    #[inline(always)]
++    #[inline(never)]
+     fn parse_literal_visit<V>(&mut self, first: u8, vis: &mut V) -> Result<()>
+     where
+         V: JsonVisitor<'de>,
+@@ -638,7 +638,7 @@ where
+         }))
+     }
+ 
+-    #[inline(always)]
++    #[inline(never)]
+     pub(crate) fn match_literal(&mut self, literal: &'static str) -> Result<bool> {
+         if let Some(chunk) = self.read.next_n(literal.len()) {
+             if chunk != literal.as_bytes() {
+@@ -651,7 +651,7 @@ where
+         }
+     }
+ 
+-    #[inline(always)]
++    #[inline(never)]
+     pub(crate) fn get_owned_lazyvalue(&mut self, strict: bool) -> Result<OwnedLazyValue> {
+         let c = self.skip_space();
+         let start = match c {
+@@ -684,7 +684,7 @@ where
+         Ok(OwnedLazyValue::new(raw.into(), HasEsc::Possible))
+     }
+ 
+-    #[inline(always)]
++    #[inline(never)]
+     fn parse_faststr(&mut self, strbuf: &mut Vec<u8>) -> Result<FastStr> {
+         match self.parse_str(strbuf)? {
+             Reference::Borrowed(s) => {
+@@ -694,7 +694,7 @@ where
+         }
+     }
+ 
+-    #[inline(always)]
++    #[inline(never)]
+     pub(crate) fn load_owned_lazyvalue(&mut self, strbuf: &mut Vec<u8>) -> Result<OwnedLazyValue> {
+         match self.skip_space() {
+             Some(c @ b'-' | c @ b'0'..=b'9') => {
+@@ -756,7 +756,7 @@ where
+         }
+     }
+ 
+-    #[inline(always)]
++    #[inline(never)]
+     pub(crate) fn parse_dom<V>(
+         &mut self,
+         vis: &mut V,
+@@ -771,7 +771,7 @@ where
+         check_visit!(self, vis.visit_dom_end())
+     }
+ 
+-    #[inline(always)]
++    #[inline(never)]
+     pub fn parse_str<'own>(&mut self, buf: &'own mut Vec<u8>) -> Result<Reference<'de, 'own, str>> {
+         match self.parse_string_raw(buf) {
+             Ok(ParsedSlice::Copied(buf)) => {
+@@ -975,7 +975,7 @@ where
+         perr!(self, EofWhileParsing)
+     }
+ 
+-    #[inline(always)]
++    #[inline(never)]
+     // parse_string_raw maybe borrowed, maybe copied into buf(buf will be clear at first).
+     pub(crate) fn parse_string_raw<'own>(
+         &mut self,
+@@ -1041,7 +1041,7 @@ where
+         perr!(self, EofWhileParsing)
+     }
+ 
+-    #[inline(always)]
++    #[inline(never)]
+     fn get_next_token<const N: usize>(&mut self, tokens: [u8; N], advance: usize) -> Option<u8> {
+         let r = &mut self.read;
+         const LANS: usize = u8x32::LANES;
+@@ -1075,7 +1075,7 @@ where
+ 
+     // skip_string skips a JSON string, and return the later parts after closed quote, and the
+     // escaped status. skip_string always start with the quote marks.
+-    #[inline(always)]
++    #[inline(never)]
+     unsafe fn skip_string_unchecked(&mut self) -> Result<ParseStatus> {
+         const LANS: usize = u8x32::LANES;
+         let r = &mut self.read;
+@@ -1149,7 +1149,7 @@ where
+     }
+ 
+     // skip_string skips a JSON string with validation.
+-    #[inline(always)]
++    #[inline(never)]
+     fn skip_string(&mut self) -> Result<ParseStatus> {
+         const LANS: usize = u8x32::LANES;
+ 
+@@ -1196,7 +1196,7 @@ where
+     }
+ 
+     // parse the Colon :
+-    #[inline(always)]
++    #[inline(never)]
+     pub(crate) fn parse_object_clo(&mut self) -> Result<()> {
+         if let Some(ch) = self.read.peek() {
+             // fast path for compact json
+@@ -1216,7 +1216,7 @@ where
+     }
+ 
+     // parse the Colon :
+-    #[inline(always)]
++    #[inline(never)]
+     pub(crate) fn parse_array_end(&mut self) -> Result<()> {
+         match self.skip_space() {
+             Some(b']') => Ok(()),
+@@ -1225,7 +1225,7 @@ where
+         }
+     }
+ 
+-    #[inline(always)]
++    #[inline(never)]
+     fn skip_object(&mut self) -> Result<()> {
+         match self.skip_space() {
+             Some(b'}') => return Ok(()),
+@@ -1251,7 +1251,7 @@ where
+         }
+     }
+ 
+-    #[inline(always)]
++    #[inline(never)]
+     fn skip_array(&mut self) -> Result<()> {
+         match self.skip_space_peek() {
+             Some(b']') => {
+@@ -1274,7 +1274,7 @@ where
+     }
+ 
+     /// skip_container skip a object or array, and retu
+-    #[inline(always)]
++    #[inline(never)]
+     fn skip_container(&mut self, left: u8, right: u8) -> Result<()> {
+         let mut prev_instring = 0;
+         let mut prev_escaped = 0;
+@@ -1321,7 +1321,7 @@ where
+         perr!(self, EofWhileParsing)
+     }
+ 
+-    #[inline(always)]
++    #[inline(never)]
+     pub fn skip_space(&mut self) -> Option<u8> {
+         let reader = &mut self.read;
+         // fast path 1: for nospace or single space
+@@ -1381,14 +1381,14 @@ where
+         None
+     }
+ 
+-    #[inline(always)]
++    #[inline(never)]
+     pub fn skip_space_peek(&mut self) -> Option<u8> {
+         let ret = self.skip_space()?;
+         self.read.backward(1);
+         Some(ret)
+     }
+ 
+-    #[inline(always)]
++    #[inline(never)]
+     pub fn parse_literal(&mut self, literal: &str) -> Result<()> {
+         let reader = &mut self.read;
+         if let Some(chunk) = reader.next_n(literal.len()) {
+@@ -1402,13 +1402,13 @@ where
+         }
+     }
+ 
+-    #[inline(always)]
++    #[inline(never)]
+     fn skip_number_unsafe(&mut self) -> Result<()> {
+         let _ = self.get_next_token([b']', b'}', b','], 0);
+         Ok(())
+     }
+ 
+-    #[inline(always)]
++    #[inline(never)]
+     fn skip_exponent(&mut self) -> Result<()> {
+         if let Some(ch) = self.read.peek() {
+             if ch == b'-' || ch == b'+' {
+@@ -1423,7 +1423,7 @@ where
+         Ok(())
+     }
+ 
+-    #[inline(always)]
++    #[inline(never)]
+     fn skip_single_digit(&mut self) -> Result<u8> {
+         if let Some(ch) = self.read.next() {
+             if !ch.is_ascii_digit() {
+@@ -1436,7 +1436,7 @@ where
+         }
+     }
+ 
+-    #[inline(always)]
++    #[inline(never)]
+     pub fn skip_number(&mut self, first: u8) -> Result<&'de str> {
+         let start = self.read.index() - 1;
+         self.do_skip_number(first)?;
+@@ -1444,7 +1444,7 @@ where
+         Ok(as_str(self.read.slice_unchecked(start, end)))
+     }
+ 
+-    #[inline(always)]
++    #[inline(never)]
+     pub(crate) fn do_skip_number(&mut self, mut first: u8) -> Result<()> {
+         // check eof after the sign
+         if first == b'-' {
+@@ -1599,7 +1599,7 @@ where
+         Ok((slice, status))
+     }
+ 
+-    #[inline(always)]
++    #[inline(never)]
+     pub(crate) fn parse_trailing(&mut self) -> Result<()> {
+         // check exceed
+         let exceed = self.read.index() > self.read.as_u8_slice().len();
+diff --git a/src/util/arch/aarch64.rs b/src/util/arch/aarch64.rs
+index 7ea63f5..608c584 100644
+--- a/src/util/arch/aarch64.rs
++++ b/src/util/arch/aarch64.rs
+@@ -19,6 +19,7 @@ use std::arch::aarch64::*;
+ 
+ // Not use PMULL instructions, but it is apparently slow.
+ // This is copied from simdjson.
++#[inline(never)]
+ pub unsafe fn prefix_xor(bitmask: u64) -> u64 {
+     let mut bitmask = bitmask;
+     bitmask ^= bitmask << 1;
+@@ -45,10 +46,10 @@ pub unsafe fn prefix_xor(bitmask: u64) -> u64 {
+ // just for minification (or just to identify the structural characters),
+ // there is a small untaken optimization opportunity here. We deliberately
+ // do not pick it up.
+-#[inline(always)]
++#[inline(never)]
+ pub unsafe fn get_nonspace_bits(data: &[u8; 64]) -> u64 {
+     // return super::fallback::get_nonspace_bits(data);
+-    #[inline(always)]
++    #[inline(never)]
+     unsafe fn chunk_nonspace_bits(input: uint8x16_t) -> uint8x16_t {
+         const LOW_TAB: uint8x16_t =
+             unsafe { std::mem::transmute([16u8, 0, 0, 0, 0, 0, 0, 0, 0, 8, 12, 1, 2, 9, 0, 0]) };
+diff --git a/src/util/string.rs b/src/util/string.rs
+index 06caa1d..55474ba 100644
+--- a/src/util/string.rs
++++ b/src/util/string.rs
+@@ -17,7 +17,7 @@ use crate::{
+     util::unicode::handle_unicode_codepoint_mut,
+ };
+ 
+-#[inline(always)]
++#[inline(never)]
+ pub unsafe fn str_from_raw_parts<'a>(ptr: *const u8, len: usize) -> &'a str {
+     from_utf8_unchecked(from_raw_parts(ptr, len))
+ }
+@@ -46,7 +46,7 @@ pub(crate) struct StringBlock<B: BitMask> {
+ impl StringBlock<u32> {
+     pub(crate) const LANES: usize = 32;
+ 
+-    #[inline]
++    #[inline(never)]
+     pub fn new(v: &u8x32) -> Self {
+         Self {
+             bs_bits: (v.eq(&u8x32::splat(b'\\'))).bitmask(),
+@@ -60,7 +60,7 @@ impl StringBlock<u32> {
+ impl StringBlock<NeonBits> {
+     pub(crate) const LANES: usize = 16;
+ 
+-    #[inline]
++    #[inline(never)]
+     pub fn new(v: &u8x16) -> Self {
+         Self {
+             bs_bits: (v.eq(&u8x16::splat(b'\\'))).bitmask(),
+@@ -71,38 +71,38 @@ impl StringBlock<NeonBits> {
+ }
+ 
+ impl<B: BitMask> StringBlock<B> {
+-    #[inline(always)]
++    #[inline(never)]
+     pub fn has_unescaped(&self) -> bool {
+         self.unescaped_bits.before(&self.quote_bits)
+     }
+ 
+-    #[inline(always)]
++    #[inline(never)]
+     pub fn has_quote_first(&self) -> bool {
+         self.quote_bits.before(&self.bs_bits) && !self.has_unescaped()
+     }
+ 
+-    #[inline(always)]
++    #[inline(never)]
+     pub fn has_backslash(&self) -> bool {
+         self.bs_bits.before(&self.quote_bits)
+     }
+ 
+-    #[inline(always)]
++    #[inline(never)]
+     pub fn quote_index(&self) -> usize {
+         self.quote_bits.first_offset()
+     }
+ 
+-    #[inline(always)]
++    #[inline(never)]
+     pub fn bs_index(&self) -> usize {
+         self.bs_bits.first_offset()
+     }
+ 
+-    #[inline(always)]
++    #[inline(never)]
+     pub fn unescaped_index(&self) -> usize {
+         self.unescaped_bits.first_offset()
+     }
+ }
+ 
+-#[inline(always)]
++#[inline(never)]
+ pub(crate) unsafe fn load<V: Simd>(ptr: *const u8) -> V {
+     let chunk = from_raw_parts(ptr, V::LANES);
+     V::from_slice_unaligned_unchecked(chunk)
+@@ -111,7 +111,7 @@ pub(crate) unsafe fn load<V: Simd>(ptr: *const u8) -> V {
+ /// Return the size of the actual parsed string, `repr` means repr invalid UTF16 surrogate with
+ /// `\uFFFD`
+ /// TODO: fix me, there are repeat codes!!!
+-#[inline(always)]
++#[inline(never)]
+ pub(crate) unsafe fn parse_string_inplace(
+     src: &mut *mut u8,
+     repr: bool,
+@@ -502,7 +502,7 @@ static QUOTE_ESC: [[u8; 8]; 256] = {
+ };
+ 
+ // only check the src length.
+-#[inline(always)]
++#[inline(never)]
+ unsafe fn escape_unchecked(src: &mut *const u8, nb: &mut usize, dst: &mut *mut u8) {
+     debug_assert!(*nb >= 1);
+     loop {
+@@ -532,7 +532,7 @@ unsafe fn escape_unchecked(src: &mut *const u8, nb: &mut usize, dst: &mut *mut u
+     }
+ }
+ 
+-#[inline(always)]
++#[inline(never)]
+ fn check_cross_page(ptr: *const u8, step: usize) -> bool {
+     #[cfg(any(target_os = "linux", target_os = "macos"))]
+     {
+@@ -548,7 +548,7 @@ fn check_cross_page(ptr: *const u8, step: usize) -> bool {
+     }
+ }
+ 
+-#[inline(always)]
++#[inline(never)]
+ pub fn format_string(value: &str, dst: &mut [MaybeUninit<u8>], need_quote: bool) -> usize {
+     assert!(dst.len() >= value.len() * 6 + 32 + 3);
+ 

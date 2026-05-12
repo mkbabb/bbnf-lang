@@ -1,0 +1,19 @@
+{
+  "inlined": {
+    "twitter": {"iters": 10000, "wall_s": 2.27, "bytes": 631514, "mbps": 2782},
+    "citm":    {"iters": 5000,  "wall_s": 3.02, "bytes": 1727204, "mbps": 2860},
+    "canada":  {"iters": 2000,  "wall_s": 3.11, "bytes": 2251051, "mbps": 1447}
+  },
+  "noinline": {
+    "twitter": {"iters": 10000, "wall_s": 7.20, "bytes": 631514, "mbps": 877},
+    "citm":    {"iters": 5000,  "wall_s": 9.64, "bytes": 1727204, "mbps": 896},
+    "canada":  {"iters": 2000,  "wall_s": 6.55, "bytes": 2251051, "mbps": 687}
+  },
+  "host": "Apple M5 Max (arm64, NEON)",
+  "driver": "perf_parse: sonic_rs::from_slice::<Value> DOM loop with black_box, core-pinned, /usr/bin/time -p real seconds, no samply attached",
+  "build": {
+    "inlined": "[profile.release] lto=true codegen-units=1 debug=true opt-level=3",
+    "noinline": "Same profile + noinline.patch: #[inline(always)] -> #[inline(never)] on parser kernel + string SIMD + NEON intrinsics (src/parser.rs, src/util/string.rs, src/util/arch/aarch64.rs)"
+  },
+  "note": "perf_parse uses Value typed-DOM. Reference bbnf-bench T1=11780 / sonic-rs SOTA=18552 uses LazyValue or struct-typed deserialize with tighter loop. Profile shape is unaffected — same parser kernel is exercised."
+}

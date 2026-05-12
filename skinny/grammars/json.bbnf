@@ -1,0 +1,18 @@
+null   = "null" ;
+bool   = "true" | "false" ;
+
+number = /-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/ ;
+string = /"(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4}))*"/ ;
+ws     = /[ \t\n\r]*/ ;
+
+comma  = "," ws ;
+colon  = ":" ws ;
+
+value  = ws (object | array | string | number | bool | null) ws ;
+pair   = string ws colon value ;
+member = pair (comma pair)* ;
+members = member? ;
+elements = (value (comma value)*)? ;
+array  = "[" ws elements "]" ;
+object = "{" ws members "}" ;
+json   = ws value ws ;

@@ -1,0 +1,231 @@
+use crate::gate::{Outcome, Verdict};
+use serde::{Deserialize, Serialize};
+use std::fs;
+use std::io;
+use std::path::Path;
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct Report {
+    pub title: String,
+    pub rows: Vec<ReportRow>,
+    pub probe_rows: Vec<ProbeReportRow>,
+    pub notes: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ReportRow {
+    pub corpus: String,
+    pub outcome_id: String,
+    pub verdict: String,
+    pub bytes: u64,
+    pub track1_mbps: Option<f64>,
+    pub track2_mbps: Option<f64>,
+    pub sonic_mbps: Option<f64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ProbeReportRow {
+    pub corpus: String,
+    pub probe: String,
+    pub mbps: Option<f64>,
+    pub ns_per_iter: Option<f64>,
+    pub vs_track1: Option<f64>,
+    pub signal: String,
+}
+
+impl Report {
+    pub fn new(title: impl Into<String>) -> Self {
+        Self {
+            title: title.into(),
+            rows: Vec::new(),
+            probe_rows: Vec::new(),
+            notes: Vec::new(),
+        }
+    }
+
+    pub fn push_row(
+        &mut self,
+        corpus: impl Into<String>,
+        outcome: Outcome,
+        bytes: u64,
+        track1_ns: Option<f64>,
+        track2_ns: Option<f64>,
+        sonic_ns: Option<f64>,
+    ) {
+        self.rows.push(ReportRow {
+            corpus: corpus.into(),
+            outcome_id: outcome.id().to_string(),
+            verdict: verdict_label(outcome.verdict()).to_string(),
+            bytes,
+            track1_mbps: throughput_mbps(bytes, track1_ns),
+            track2_mbps: throughput_mbps(bytes, track2_ns),
+            sonic_mbps: throughput_mbps(bytes, sonic_ns),
+        });
+    }
+
+    pub fn push_probe_row(
+        &mut self,
+        corpus: impl Into<String>,
+        probe: impl Into<String>,
+        bytes: u64,
+        probe_ns: Option<f64>,
+        track1_ns: Option<f64>,
+        signal: impl Into<String>,
+    ) {
+        self.probe_rows.push(ProbeReportRow {
+            corpus: corpus.into(),
+            probe: probe.into(),
+            mbps: throughput_mbps(bytes, probe_ns),
+            ns_per_iter: probe_ns,
+            vs_track1: ratio_to_track1(probe_ns, track1_ns),
+            signal: signal.into(),
+        });
+    }
+
+    pub fn render_markdown(&self) -> String {
+        let mut out = String::new();
+        out.push_str("# ");
+        out.push_str(&self.title);
+        out.push_str("\n\n");
+        out.push_str("| Corpus | Outcome | Verdict | Track 1 Mbps | Track 2 Mbps | sonic-rs Mbps | Track 1 / sonic | Track 2 / sonic |\n");
+        out.push_str("|---|---:|---|---:|---:|---:|---:|---:|\n");
+        for row in &self.rows {
+            out.push_str(&format!(
+                "| {} | {} | {} | {} | {} | {} | {} | {} |\n",
+                row.corpus,
+                row.outcome_id,
+                row.verdict,
+                format_optional(row.track1_mbps),
+                format_optional(row.track2_mbps),
+                format_optional(row.sonic_mbps),
+                format_ratio(row.track1_mbps, row.sonic_mbps),
+                format_ratio(row.track2_mbps, row.sonic_mbps)
+            ));
+        }
+        if !self.probe_rows.is_empty() {
+            out.push_str("\n## Masking Probes\n\n");
+            out.push_str("| Corpus | Probe | Mbps | ns/iter | vs Track 1 | Signal |\n");
+            out.push_str("|---|---|---:|---:|---:|---|\n");
+            for row in &self.probe_rows {
+                out.push_str(&format!(
+                    "| {} | {} | {} | {} | {} | {} |\n",
+                    row.corpus,
+                    row.probe,
+                    format_optional(row.mbps),
+                    format_optional_precise(row.ns_per_iter),
+                    format_ratio(row.mbps, track1_mbps_from_ratio(row.mbps, row.vs_track1)),
+                    row.signal
+                ));
+            }
+        }
+        if !self.notes.is_empty() {
+            out.push_str("\n## Notes\n\n");
+            for note in &self.notes {
+                out.push_str("- ");
+                out.push_str(note);
+                out.push('\n');
+            }
+        }
+        out
+    }
+
+    pub fn write_markdown(&self, path: &Path) -> io::Result<()> {
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        fs::write(path, self.render_markdown())
+    }
+}
+
+fn verdict_label(verdict: Verdict) -> &'static str {
+    match verdict {
+        Verdict::Go => "GO",
+        Verdict::GoWithFocus => "GO with focus",
+        Verdict::Conditional => "CONDITIONAL",
+        Verdict::Invalid => "INVALID",
+        Verdict::NoGo => "NO-GO",
+    }
+}
+
+fn format_optional(value: Option<f64>) -> String {
+    value
+        .map(|value| format!("{value:.0}"))
+        .unwrap_or_else(|| "n/a".to_string())
+}
+
+fn format_optional_precise(value: Option<f64>) -> String {
+    value
+        .map(|value| format!("{value:.2}"))
+        .unwrap_or_else(|| "n/a".to_string())
+}
+
+fn format_ratio(numerator: Option<f64>, denominator: Option<f64>) -> String {
+    match (numerator, denominator) {
+        (Some(numerator), Some(denominator)) if denominator > 0.0 => {
+            format!("{:.1}%", numerator / denominator * 100.0)
+        }
+        _ => "n/a".to_string(),
+    }
+}
+
+fn ratio_to_track1(probe_ns: Option<f64>, track1_ns: Option<f64>) -> Option<f64> {
+    match (probe_ns, track1_ns) {
+        (Some(probe_ns), Some(track1_ns)) if probe_ns > 0.0 && track1_ns > 0.0 => {
+            Some(track1_ns / probe_ns)
+        }
+        _ => None,
+    }
+}
+
+fn track1_mbps_from_ratio(probe_mbps: Option<f64>, ratio: Option<f64>) -> Option<f64> {
+    match (probe_mbps, ratio) {
+        (Some(mbps), Some(ratio)) if ratio > 0.0 => Some(mbps / ratio),
+        _ => None,
+    }
+}
+
+fn throughput_mbps(bytes: u64, ns: Option<f64>) -> Option<f64> {
+    if bytes == 0 {
+        return None;
+    }
+    ns.filter(|ns| *ns > 0.0 && ns.is_finite())
+        .map(|ns| bytes as f64 * 8_000.0 / ns)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn renders_report_skeleton_table() {
+        let mut report = Report::new("Skinny JSON Bench");
+        report.push_row(
+            "twitter",
+            Outcome::ABeatAndParity,
+            631_515,
+            Some(390_000.0),
+            Some(360_000.0),
+            Some(424_000.0),
+        );
+        let markdown = report.render_markdown();
+        assert!(markdown.contains("Track 1 Mbps"));
+        assert!(markdown.contains("| twitter | A | GO | 12954 | 14034 | 11915 | 108.7% | 117.8% |"));
+    }
+
+    #[test]
+    fn renders_probe_rows() {
+        let mut report = Report::new("Skinny JSON Bench");
+        report.push_probe_row(
+            "twitter",
+            "host_call_eager_decode",
+            631_515,
+            Some(430_000.0),
+            Some(390_000.0),
+            "PASS",
+        );
+        let markdown = report.render_markdown();
+        assert!(markdown.contains("## Masking Probes"));
+        assert!(markdown
+            .contains("| twitter | host_call_eager_decode | 11749 | 430000.00 | 90.7% | PASS |"));
+    }
+}

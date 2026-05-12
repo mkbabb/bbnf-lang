@@ -1,0 +1,17 @@
+[fixtures.twitter]
+path = "twitter.json"
+size_bytes = 631515
+sha256 = "30721e496a8d73cfc50658923c34eb2c0fbe15ee6835005e43ee624d8dedf200"
+source_url = "https://raw.githubusercontent.com/simdjson/simdjson-data/master/jsonexamples/twitter.json"
+
+[fixtures.citm_catalog]
+path = "citm_catalog.json"
+size_bytes = 1727204
+sha256 = "a73e7a883f6ea8de113dff59702975e60119b4b58d451d518a929f31c92e2059"
+source_url = "https://raw.githubusercontent.com/simdjson/simdjson-data/master/jsonexamples/citm_catalog.json"
+
+[fixtures.canada]
+path = "canada.json"
+size_bytes = 2251051
+sha256 = "f83b3b354030d5dd58740c68ac4fecef64cb730a0d12a90362a7f23077f50d78"
+source_url = "https://raw.githubusercontent.com/simdjson/simdjson-data/master/jsonexamples/canada.json"

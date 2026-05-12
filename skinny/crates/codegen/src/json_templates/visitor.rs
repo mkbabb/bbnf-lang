@@ -1,0 +1,38 @@
+use super::value::JsonValue;
+use super::view::{JsonArray, JsonBool, JsonNull, JsonNumber, JsonObject, JsonPair, JsonString};
+
+pub trait JsonVisitor {
+    fn visit_value(&mut self, _value: &JsonValue<'_, '_>) {}
+    fn visit_object(&mut self, _object: &JsonObject<'_, '_>) {}
+    fn visit_array(&mut self, _array: &JsonArray<'_, '_>) {}
+    fn visit_pair(&mut self, _pair: &JsonPair<'_, '_>) {}
+    fn visit_string(&mut self, _string: &JsonString<'_, '_>) {}
+    fn visit_number(&mut self, _number: &JsonNumber<'_, '_>) {}
+    fn visit_bool(&mut self, _value: &JsonBool<'_, '_>) {}
+    fn visit_null(&mut self, _value: &JsonNull<'_, '_>) {}
+}
+
+pub(crate) fn walk_value<V: JsonVisitor>(value: &JsonValue<'_, '_>, visitor: &mut V) {
+    visitor.visit_value(value);
+    match value {
+        JsonValue::Object(object) => {
+            visitor.visit_object(object);
+            for pair in object.pairs() {
+                visitor.visit_pair(&pair);
+                visitor.visit_string(&pair.key());
+                let child = pair.value();
+                walk_value(&child, visitor);
+            }
+        }
+        JsonValue::Array(array) => {
+            visitor.visit_array(array);
+            for child in array.values() {
+                walk_value(&child, visitor);
+            }
+        }
+        JsonValue::String(string) => visitor.visit_string(string),
+        JsonValue::Number(number) => visitor.visit_number(number),
+        JsonValue::Bool(value) => visitor.visit_bool(value),
+        JsonValue::Null(value) => visitor.visit_null(value),
+    }
+}

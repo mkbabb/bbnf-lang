@@ -1,6 +1,6 @@
 # Skinny Redress: Mbps, Tape Materialization, and Spec Amendments
 
-Date: 2026-05-09.
+Date: 2026-05-12.
 
 This note records the implemented redress after the skinny prototype was brought
 closer to the restart skinny/full contracts. The measured findings are now also
@@ -15,20 +15,20 @@ fastest competitor row.
 
 | Corpus | Track 1 Mbps | Track 2 Mbps | sonic-rs Mbps | Track 1 / sonic | Track 2 / sonic |
 |---|---:|---:|---:|---:|---:|
-| twitter | 12515 | 12090 | 21234 | 58.9% | 56.9% |
-| citm_catalog | 12988 | 12312 | 23238 | 55.9% | 53.0% |
-| canada | 8951 | 8910 | 13915 | 64.3% | 64.0% |
+| twitter | 11780 | 10770 | 18552 | 63.5% | 58.1% |
+| citm_catalog | 9286 | 10277 | 21285 | 43.6% | 48.3% |
+| canada | 7334 | 7701 | 11624 | 63.1% | 66.2% |
 
 Structural scan is not the current blocker: the `canada` structural-only scan
-reports 66565 Mbps against a 40000 Mbps floor.
+reports 48362 Mbps against a 40000 Mbps floor.
 
-Tape materialization is now reported per corpus:
+Lazy tape materialization is now reported per corpus:
 
-| Corpus | Tokens | Logical tape bytes | Allocated tape bytes | Pair tokens | Opens | Closes | Scalars | Sibling-skips |
+| Corpus | Offsets | Logical offset bytes | Allocated offset bytes | Opens | Closes | String quotes | Numbers | Literals |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| twitter | 40605 | 649680 | 1064272 | 13345 | 2314 | 0 | 24945 | 15660 |
-| citm_catalog | 89517 | 1432272 | 2351040 | 25869 | 21388 | 0 | 42259 | 47258 |
-| canada | 167196 | 2675136 | 3572160 | 8 | 56049 | 0 | 111138 | 56058 |
+| twitter | 47672 | 190688 | 190688 | 2314 | 2314 | 36198 | 2109 | 4737 |
+| citm_catalog | 111639 | 446556 | 446556 | 21388 | 21388 | 53208 | 14392 | 1263 |
+| canada | 223248 | 892992 | 892992 | 56049 | 56049 | 24 | 111126 | 0 |
 
 ## Implemented Redress
 
@@ -53,8 +53,8 @@ Tape materialization is now reported per corpus:
    Generated Track 1 uses `runtime::tape::scan_parse_index` in
    `runtime/src/grammars/json/generated.rs`. Hand-coded Track 2 uses the same
    runtime call in `bbnf-bench/src/track2/json.rs`. Both transfer the vectors by
-   `into_parts`, reserve tape capacity from the structural count, and then emit
-   through the same `TapeBuilder`.
+   `into_parts`, reserve offset capacity from the structural count, and then
+   seal through the same `TapeAssembler`.
 
 4. Parser whitespace materialization was corrected.
 
@@ -66,10 +66,11 @@ Tape materialization is now reported per corpus:
 
 5. Tape/direct-to-struct remains one substrate.
 
-   The direct view layer is a typed projection over `TapeToken` and `ValueRef`,
-   not a parallel struct tree. Object/array/pair/string/number/bool/null
-   wrappers point back into the tape; strings and numbers remain borrowed spans
-   with lazy materialization.
+   The direct view layer is a typed projection over sealed tape offsets and
+   `ValueRef`, not a parallel struct tree. Object/array/pair/string/number/
+   bool/null wrappers point back into the tape; strings and numbers remain
+   borrowed spans with lazy materialization. The eager `TapeToken` shape remains
+   present for non-JSON mode boundaries.
 
 6. Payload arena remains cold on JSON.
 
@@ -95,11 +96,10 @@ Tape materialization is now reported per corpus:
 
 9. Tape materialization is now a report artifact.
 
-   `bbnf-bench::materialization` derives token economy from the sealed
-   `JsonRoot` tape after parsing. The gate publishes token count, logical tape
-   bytes, allocated tape bytes, both tape/input ratios, payload bytes,
-   pair/open/close/scalar counts, and sibling-skip counts. This does not
-   perturb the hot path.
+   `bbnf-bench::materialization` derives offset economy from the sealed
+   `JsonRoot` tape after parsing. The gate publishes offset count, logical
+   offset bytes, allocated offset bytes, both offset/input ratios, payload
+   bytes, and node-kind counts. This does not perturb the hot path.
 
 10. Masking probes are now a report artifact.
 
@@ -129,25 +129,22 @@ Tape materialization is now reported per corpus:
 
 13. Close-token elision is now canonical for JSON.
 
-   Container open tokens carry both the close-delimiter span end and the subtree
-   skip. JSON still reserves close node kinds for diagnostics/recovery and V1
-   grammars that need explicit close events, but the JSON SOTA tape emits zero
-   close tokens. The materialization rows now show `closes 0` for all corpora.
+   This was the last accepted eager-token perturbation before lazy mode. JSON
+   now stores close offsets in the lazy tape because direct views need container
+   boundaries, but it still emits no `TapeToken` close stream on the JSON path.
 
 14. The parser-grade structural byte vector was removed.
 
    The parse index now carries offsets plus string escape/control candidates.
    `consume_structural` and string-close validation read the structural byte
-   from `input[offset]`. Targeted track benches improved materially; the final
-   full bench reports 12515 / 12090 Mbps on twitter, 12988 / 12312 Mbps on
-   citm_catalog, and 8951 / 8910 Mbps on canada.
+   from `input[offset]`. Targeted eager-track benches improved materially; the
+   final lazy full bench is recorded in `RESULTS.md`.
 
 15. Tape sealing is private-Vec semantic sealing.
 
-   The finished `Tape` owns a private `Vec<TapeToken>` and exposes only
-   immutable slices. This avoids a parse-boundary `Vec::into_boxed_slice`
-   shrink/copy while preserving the direct-to-tape view contract. The gate now
-   reports allocated tape bytes so the extra capacity is visible.
+   This remains the eager-mode sealing record. JSON lazy mode now seals offsets
+   into `Box<[u32]>`; allocated offset bytes equal logical offset bytes in the
+   current report.
 
 16. Pair-token fusion was measured and rejected.
 
@@ -186,16 +183,26 @@ Tape materialization is now reported per corpus:
    parse-time `decode_json_string_to_arena` grammar needs an explicit SOTA
    concession or a lazy lowering amendment.
 
+20. Lazy-offset tape was implemented and measured as NO-GO.
+
+   JSON Track 1 and Track 2 now seal a lazy offset tape through
+   `TapeAssembler`: no `TapeToken` stream is emitted on the JSON path, the
+   public tape stores u32 offsets plus string escape/control candidates, and
+   direct views compute node kind from `source[offsets[cursor]]`. Separators
+   are grammar-verified but not stored. This cuts canada materialization from
+   2.68 MB logical eager tape to 0.89 MB logical offsets, but the full gate
+   still returns outcome G: twitter Track 1 is 11780 Mbps, below the <13000
+   Mbps refutation line and below the >=14000 Mbps validation line. Lazy mode
+   therefore does not validate the Lock 1 amendment on this run.
+
 ## Sonic Closeness
 
 The parser now works as the tape/direct hybrid the spec requires, but it is not
-yet sonic-class. The generated parser is close to Track 2, so the codegen
-overhead is not the dominant failure. The dominant failure is substrate
-materialization cost: the current tape emits root, open container, close
-container spans through open-token patching, pair tokens, scalar tokens, skip
-patches, and a private `Vec<TapeToken>` tape with visible spare capacity.
-Sonic's anchor is materializing a different value shape with less per-node tape
-bookkeeping.
+sonic-class. The lazy-offset implementation proves the gap is not solved by
+removing the 16-byte token stream alone: JSON now writes only a sealed u32
+offset tape, with zero payload arena writes, yet the full gate remains outcome
+G. Sonic's anchor is still materializing and validating a different value shape
+with less parser-control overhead and less typed-view bookkeeping.
 
 The largest code win already landed was removing redundant whitespace scans:
 large-corpus Track 1 improved by roughly 26-34% when that change first landed.
@@ -212,7 +219,8 @@ Dropping the skip column to make a 12-byte token was also measured and rejected
 as canonical: it saved memory but did not produce a clean parse-throughput win.
 The host-call probe now gives a separate warning: dispatch overhead is fine,
 but eager parse-time string decode is too expensive to hide behind the
-host-fn-free cut.
+host-fn-free cut. Lazy-offset tape then cut materialization bytes but did not
+clear the validation threshold.
 
 ## Skinny Spec Amendments Folded
 
@@ -399,11 +407,14 @@ host-fn-free cut.
   bytes but did not cleanly improve parse Mbps.
 - Host-call dispatch overhead passes, but eager parse-time string decode is now
   documented as a MASKING signal for V1 JSON unless decode stays lazy.
+- Lazy-offset JSON tape was implemented and measured; it reduces logical tape
+  bytes but still returns outcome G against the same gate.
 - Skinny and full specs now use the prototype workspace result path
   `skinny/RESULTS.md` for the runnable prototype, with `restart/skinny/` kept
   as spec authority.
-- The remaining NO-GO is documented as a substrate/tape materialization gap, not
-  a codegen gap and not a structural scan floor failure.
+- The remaining NO-GO is documented as parser/substrate control-flow cost after
+  lazy offset materialization, not a codegen gap and not a structural scan floor
+  failure.
 
 ## Remaining Prototype Gaps
 
@@ -419,7 +430,7 @@ host-fn-free cut.
 
 1. Add an external peak-RSS sampler to the compact gate so private-Vec capacity
    and parse-index side vectors are adjudicated against the memory floor.
-2. Measure a token-capacity estimator or chunked `TapeBuilder` that reduces
-   allocated tape bytes without reintroducing parse-boundary shrink/copy.
-3. Attack the remaining substrate gap in parser control flow and token emission;
-   pair-token fusion is not the current winning route.
+2. Profile the lazy Track 1 hot path directly; the byte-write hypothesis has
+   now been tested and did not validate.
+3. If another architecture is pursued, it must target parser-control overhead
+   or fused scanner/verifier work rather than eager-token width.

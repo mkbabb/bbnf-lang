@@ -10,3 +10,17 @@ rust-version.workspace = true
 anyhow.workspace = true
 codegen.workspace = true
 toml.workspace = true
+
+[[bin]]
+name = "profile-lazy"
+path = "src/bin/profile_lazy.rs"
+
+[[bin]]
+name = "xtask"
+path = "src/main.rs"
+
+[dependencies.runtime]
+path = "../crates/runtime"
+
+[dependencies.test-fixtures]
+path = "../crates/test-fixtures"

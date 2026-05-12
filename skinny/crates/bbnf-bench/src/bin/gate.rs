@@ -154,8 +154,8 @@ fn materialization_note(input: &str, corpus: &str) -> Option<String> {
         Some(track1.summary(corpus))
     } else {
         Some(format!(
-            "{corpus} tape materialization diverged: Track 1 {} tokens / {} bytes, Track 2 {} tokens / {} bytes.",
-            track1.token_count, track1.tape_bytes, track2.token_count, track2.tape_bytes
+            "{corpus} lazy tape materialization diverged: Track 1 {} offsets / {} bytes, Track 2 {} offsets / {} bytes.",
+            track1.offset_count, track1.offset_bytes, track2.offset_count, track2.offset_bytes
         ))
     }
 }

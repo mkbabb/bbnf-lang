@@ -1,5 +1,5 @@
 use crate::track2::json;
-use runtime::grammars::json::{JsonRoot, JsonToken};
+use runtime::grammars::json::JsonRoot;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Token {
@@ -12,8 +12,8 @@ pub struct Token {
 pub enum ParityError {
     #[error("track parse failed: {0}")]
     Parse(String),
-    #[error("token stream divergence")]
-    TokenStream,
+    #[error("offset stream divergence")]
+    OffsetStream,
     #[error("canonical serialization divergence: track1={track1}, track2={track2}")]
     Serialization { track1: String, track2: String },
     #[error("payload counters diverged from zero: writes={writes}, allocations={allocations}")]
@@ -24,10 +24,11 @@ pub fn assert_parity(input: &str) -> Result<(), ParityError> {
     let track1 = parse_track1(input)?;
     let track2 = json::parse(input).map_err(|error| ParityError::Parse(error.to_string()))?;
 
-    let stream1 = token_stream_from_root(&track1);
-    let stream2 = token_stream_from_root(&track2);
-    if stream1 != stream2 {
-        return Err(ParityError::TokenStream);
+    if track1.tape().offsets() != track2.tape().offsets()
+        || track1.tape().string_escape_offsets() != track2.tape().string_escape_offsets()
+        || track1.tape().string_control_offsets() != track2.tape().string_control_offsets()
+    {
+        return Err(ParityError::OffsetStream);
     }
 
     let track1_writes = track1.tape().payloads().write_count() as u64;
@@ -65,19 +66,17 @@ pub fn serialize_canonical(input: &str) -> Result<String, ParityError> {
 }
 
 pub fn token_stream_from_root(root: &JsonRoot<'_>) -> Vec<Token> {
-    root.token_stream().map(token_from_runtime).collect()
+    root.token_stream()
+        .map(|token| Token {
+            kind: token.kind.name().to_string(),
+            span: token.start as usize..token.end as usize,
+            payload_class: token.flags.payload_class(),
+        })
+        .collect()
 }
 
 fn parse_track1<'i>(input: &'i str) -> Result<JsonRoot<'i>, ParityError> {
     runtime::generated_json::parse(input).map_err(|error| ParityError::Parse(error.to_string()))
-}
-
-fn token_from_runtime(token: JsonToken) -> Token {
-    Token {
-        kind: token.kind.name().to_string(),
-        span: token.start as usize..token.end as usize,
-        payload_class: token.flags.payload_class(),
-    }
 }
 
 #[cfg(test)]
@@ -93,13 +92,9 @@ mod tests {
     }
 
     #[test]
-    fn token_stream_tracks_spans_and_payload_classes() {
+    fn offset_stream_tracks_verified_source_events() {
         let root = runtime::generated_json::parse(r#"{"a":[1,true]}"#).unwrap();
-        let tokens = token_stream_from_root(&root);
-        assert_eq!(tokens[0].kind, "Root");
-        assert_eq!(tokens[2].kind, "Pair");
-        assert_eq!(tokens[3].kind, "String");
-        assert_eq!(tokens[3].span, 2..3);
+        assert_eq!(root.tape().offsets(), &[0, 1, 3, 5, 6, 8, 12, 13]);
     }
 
     #[test]

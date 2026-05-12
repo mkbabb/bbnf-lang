@@ -60,6 +60,9 @@ rust = true
 wasm = false
 generated_loc_budget = 4000
 
+[workspace.metadata.bbnf.grammars.json.runtime]
+tape_mode = "lazy"
+
 [profile.dev]
 opt-level = 0
 debug = "line-tables-only"

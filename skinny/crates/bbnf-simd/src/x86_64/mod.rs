@@ -1,4 +1,5 @@
 pub mod avx2;
+pub mod byte_class_from_eq_set_64;
 pub mod avx512_bitalg;
 pub mod avx512_gfni;
 pub mod avx512_kmask;

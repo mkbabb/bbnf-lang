@@ -1,4 +1,6 @@
 #[cfg(target_arch = "aarch64")]
+pub mod byte_class_from_eq_set_64;
+#[cfg(target_arch = "aarch64")]
 pub mod byte_context;
 #[cfg(target_arch = "aarch64")]
 pub mod cache_hints;

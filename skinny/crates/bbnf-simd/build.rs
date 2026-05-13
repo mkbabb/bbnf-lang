@@ -27,6 +27,7 @@ fn main() {
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=ext/x86/x86inc.asm");
     println!("cargo:rerun-if-changed=ext/x86/x86util.asm");
+    println!("cargo:rerun-if-changed=ext/x86/bbnf.asm");
     println!("cargo:rerun-if-env-changed=BBNF_SIMD_DISABLE_ASM");
 
     if env::var_os("BBNF_SIMD_DISABLE_ASM").is_some() {

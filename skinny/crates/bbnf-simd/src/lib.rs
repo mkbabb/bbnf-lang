@@ -186,6 +186,25 @@ pub fn scan_scalar(input: &[u8], alphabet: &StructuralAlphabet) -> StructuralInd
     }
 }
 
+#[inline(always)]
+pub fn match_json_tiny_plain_string(input: &[u8], offset: usize) -> Option<usize> {
+    match_json_tiny_plain_string_scalar(input, offset)
+}
+
+#[inline(always)]
+pub fn match_json_tiny_plain_string_scalar(input: &[u8], offset: usize) -> Option<usize> {
+    let mut cursor = offset + 1;
+    let limit = (cursor + 8).min(input.len());
+    while cursor < limit {
+        match input[cursor] {
+            b'"' => return Some(cursor + 1),
+            b'\\' | 0x00..=0x1f => return None,
+            _ => cursor += 1,
+        }
+    }
+    None
+}
+
 pub fn scalar_parity_report(input: &[u8], alphabet: &StructuralAlphabet) -> ScalarParityReport {
     let positions = scalar_positions(input, alphabet);
     ScalarParityReport {
@@ -389,10 +408,56 @@ fn compact_mask(input: &[u8], base: usize, mask: u64, positions: &mut Vec<u32>) 
     }
 }
 
+#[inline]
+fn resolve_json_string_masks_64(
+    quotes: u64,
+    backslashes: u64,
+    controls: u64,
+    mut in_string: bool,
+    escaped_carry: bool,
+) -> (u64, u64, u64, u64, bool, bool) {
+    let mut escaped = in_string && escaped_carry;
+    let mut real_quotes = 0u64;
+    let mut string_body = 0u64;
+    let mut escape_starts = 0u64;
+    let mut control_hits = 0u64;
+
+    for index in 0..64 {
+        let bit = 1u64 << index;
+        if in_string {
+            string_body |= bit;
+            if escaped {
+                escaped = false;
+                continue;
+            }
+            if backslashes & bit != 0 {
+                escape_starts |= bit;
+                escaped = true;
+                continue;
+            }
+            if quotes & bit != 0 {
+                real_quotes |= bit;
+                string_body &= !bit;
+                in_string = false;
+                continue;
+            }
+            if controls & bit != 0 {
+                control_hits |= bit;
+            }
+        } else if quotes & bit != 0 {
+            real_quotes |= bit;
+            in_string = true;
+        }
+    }
+
+    (real_quotes, string_body, escape_starts, control_hits, in_string, escaped)
+}
+
 #[cfg(target_arch = "aarch64")]
 mod neon {
     use super::{
-        compact_mask, escape_mask_64, prefix_xor_64, scan_json_tail, scan_json_tail_parse,
+        compact_mask, escape_mask_64, prefix_xor_64, resolve_json_string_masks_64, scan_json_tail,
+        scan_json_tail_parse,
     };
     use core::arch::aarch64::*;
 
@@ -412,11 +477,35 @@ mod neon {
                 } else {
                     let backslashes = backslash_stripe(input.as_ptr().add(cursor));
                     let (escaped, new_bs_carry) = escape_mask_64(backslashes, bs_carry);
-                    bs_carry = new_bs_carry;
-                    let real_quotes = quotes & !escaped;
-                    let prefix = prefix_xor_64(real_quotes, in_string);
-                    in_string = ((prefix >> 63) & 1) == 1;
-                    let string_body = prefix ^ real_quotes;
+                    let real_quotes_fast = quotes & !escaped;
+                    let prefix = prefix_xor_64(real_quotes_fast, in_string);
+                    let string_body_fast = prefix ^ real_quotes_fast;
+                    let escaped_quotes = quotes & escaped;
+                    let carry_is_in_string =
+                        !new_bs_carry || (string_body_fast & (1u64 << 63)) != 0;
+                    let fast_path_is_strict =
+                        (escaped_quotes & !string_body_fast) == 0 && carry_is_in_string;
+                    let (real_quotes, string_body, next_in_string, next_bs_carry) =
+                        if fast_path_is_strict {
+                            (
+                                real_quotes_fast,
+                                string_body_fast,
+                                ((prefix >> 63) & 1) == 1,
+                                new_bs_carry,
+                            )
+                        } else {
+                            let (real_quotes, string_body, _, _, next_in_string, next_escaped) =
+                                resolve_json_string_masks_64(
+                                    quotes,
+                                    backslashes,
+                                    0,
+                                    in_string,
+                                    bs_carry,
+                                );
+                            (real_quotes, string_body, next_in_string, next_escaped)
+                        };
+                    in_string = next_in_string;
+                    bs_carry = next_bs_carry && in_string;
                     (punctuation & !string_body) | real_quotes
                 };
                 if emit != 0 {
@@ -443,20 +532,43 @@ mod neon {
                 let (punctuation, quotes, backslashes, controls) =
                     classify_parse_stripe(input.as_ptr().add(cursor));
                 let (escaped, new_bs_carry) = escape_mask_64(backslashes, bs_carry);
-                bs_carry = new_bs_carry;
-                let real_quotes = quotes & !escaped;
-                let prefix = prefix_xor_64(real_quotes, in_string);
-                in_string = ((prefix >> 63) & 1) == 1;
-                let string_body = prefix ^ real_quotes;
+                let real_quotes_fast = quotes & !escaped;
+                let prefix = prefix_xor_64(real_quotes_fast, in_string);
+                let string_body_fast = prefix ^ real_quotes_fast;
+                let escaped_quotes = quotes & escaped;
+                let carry_is_in_string = !new_bs_carry || (string_body_fast & (1u64 << 63)) != 0;
+                let carry_continues = bs_carry && (backslashes & 1) != 0;
+                let fast_path_is_strict = (escaped_quotes & !string_body_fast) == 0
+                    && carry_is_in_string
+                    && !carry_continues;
+                let (
+                    real_quotes,
+                    string_body,
+                    escape_starts,
+                    control_bytes,
+                    next_in_string,
+                    next_bs_carry,
+                ) = if fast_path_is_strict {
+                    (
+                        real_quotes_fast,
+                        string_body_fast,
+                        backslashes & string_body_fast & !escaped,
+                        controls & string_body_fast & !escaped,
+                        ((prefix >> 63) & 1) == 1,
+                        new_bs_carry,
+                    )
+                } else {
+                    resolve_json_string_masks_64(quotes, backslashes, controls, in_string, bs_carry)
+                };
+                in_string = next_in_string;
+                bs_carry = next_bs_carry && in_string;
                 let emit = (punctuation & !string_body) | real_quotes;
                 if emit != 0 {
                     compact_mask(input, cursor, emit, &mut positions);
                 }
-                let escapes = backslashes & string_body;
-                if escapes != 0 {
-                    compact_mask(input, cursor, escapes, &mut string_escapes);
+                if escape_starts != 0 {
+                    compact_mask(input, cursor, escape_starts, &mut string_escapes);
                 }
-                let control_bytes = controls & string_body;
                 if control_bytes != 0 {
                     compact_mask(input, cursor, control_bytes, &mut string_controls);
                 }
@@ -570,5 +682,28 @@ mod neon {
             let hi = vaddv_u8(vget_high_u8(bits)) as u16;
             lo | (hi << 8)
         }
+    }
+}
+
+// ============================================================================
+// BYTE_CLASS_FROM_EQ_SET_64 — first reference primitive
+// Contract documented in ext/x86/bbnf.asm; scalar reference is the executable
+// specification per the checkasm admission gate (Lock 16).
+// ============================================================================
+
+pub mod prim {
+    /// Returns a 64-bit mask where bit i is set iff src[i] ∈ set.
+    /// set must have len() ≤ 8.
+    #[inline]
+    pub fn byte_class_from_eq_set_64(src: &[u8; 64], set: &[u8]) -> u64 {
+        debug_assert!(set.len() <= 8);
+        #[cfg(all(target_arch = "x86_64", target_feature = "avx512bw"))]
+        unsafe {
+            return crate::x86_64::byte_class_from_eq_set_64::byte_class_from_eq_set_64(src, set);
+        }
+        #[cfg(target_arch = "aarch64")]
+        return crate::aarch64::byte_class_from_eq_set_64::byte_class_from_eq_set_64_neon(src, set);
+        #[allow(unreachable_code)]
+        crate::scalar::byte_class_from_eq_set_64::byte_class_from_eq_set_64_scalar(src, set)
     }
 }

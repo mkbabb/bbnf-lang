@@ -3,6 +3,13 @@
 Date: 2026-05-03
 Scope: Establish ground truth for direct-to-struct typed-record emission, path APIs, value APIs, and the pure-naming question for the grammar to typed-record step. Targets: sonic-rs, simdjson, simd-json (Rust port), lightningcss, serde_json, pest, nom, chumsky, parol.
 
+2026-05-12 amendment: the skinny expanded gate adds native reference planes for
+yyjson and asmjson. These do not replace the Rust in-process sonic-rs /
+simd-json gate, but they bind the SOTA-BEAT target: yyjson proves the scalar
+i-cache-resident DOM ceiling, while asmjson proves the AVX-512 assembly ceiling
+on x86_64. Strictness and workload plane must be reported before comparing
+numbers.
+
 ---
 
 ## 1. Cross-Comparison Matrix
@@ -18,6 +25,8 @@ Scope: Establish ground truth for direct-to-struct typed-record emission, path A
 | nom             | Combinator output type (no derive) | Eager (composed)    | Zero-copy slices            | Trait dispatch                 | n/a                            | n/a                                |
 | chumsky         | `.map()` composition (no derive)   | Eager (composed)    | Zero-copy slices            | GAT-driven optimizer           | n/a                            | 533 MB/s parse, 797 MB/s check     |
 | parol           | **Auto-generated typed AST**       | Eager               | `Box` for recursion         | Generated LL(k)/LALR(1)        | n/a                            | n/a                                |
+| yyjson          | Hand-written C DOM                 | Eager DOM           | Compact mutable/immutable doc| Branch-friendly scalar C       | JSON Pointer / patch / merge   | 1.72 GB/s twitter on EC2; 2.39 GB/s on A14; local skinny profiles higher on M5 Max |
+| asmjson         | Hand-written Rust + x86 ASM        | DOM or SAX sink     | Flat tape / sink            | AVX-512BW assembly or SWAR      | `DomRef` cursor                | 10.93 GiB/s DOM, 10.78 GiB/s SAX on synthetic string arrays |
 
 ---
 
@@ -91,6 +100,52 @@ Scope: Establish ground truth for direct-to-struct typed-record emission, path A
 ### 2.3 simd-json-rs (Rust port)
 
 - The link `SunDoge/simd-json` 404s. The canonical Rust port is `simd-lite/simd-json`. Architecture mirrors simdjson C++ Stage 1 + Stage 2 tape. Tape-then-typed: more allocation than sonic-rs, hence sonic-rs's deserialization edge in the M1 Pro table (similar within margin for parse-to-DOM, but sonic-rs wins on parse-to-struct).
+
+### 2.3.1 yyjson (native reference plane — scalar i-cache-resident DOM ceiling)
+
+- **Source root:** [ibireme/yyjson](https://github.com/ibireme/yyjson) — single header + single C source; doc/DataStructure.md describes the immutable + mutable doc shapes.
+
+- **Typed value derivation.** Hand-written C DOM. No SIMD. Strict RFC 8259 by default; bumpalo-equivalent doc allocator.
+
+- **Materialization.** Eager DOM into a compact arena; readers expose pointer-light iteration. Optional fast-path string copy when escapes are absent.
+
+- **Memory model.** Single-allocation "immutable doc" or per-node "mutable doc"; pointer cells include kind tag in low bits.
+
+- **Dispatch.** Branch-friendly scalar C. Every hot function carries `static inline` plus PGO-style hot/cold annotations. Entire hot parser is ~18 KiB i-cache-resident — the empirical proof that LTO + force-inline + i-cache budget (Lock 15) closes 30–40% of the SOTA gap without any SIMD primitive.
+
+- **Throughput.** Published: 1.72 GB/s twitter on EC2; 2.39 GB/s on A14. **Local M5 Max DOM-class native sidecar** (`skinny/profile/native-sidecars/PROFILE-REPORT.md`): twitter 3687 MiB/s @ 0.91 c/B, citm 2498 MiB/s, canada 1550 MiB/s; one hot leaf `yyjson_read_opts` accounts for 93–97% of samply self-time across seven measured corpora.
+
+- **SOTA-BEAT relevance.** yyjson is the arm64 ceiling for any parser that refuses to ship SIMD. The Lock 15 force-inline + i-cache budget gate is calibrated against yyjson's empirical envelope. The Class A NEON kernel + typed event cursor land V1 past yyjson on object-shaped corpora while staying within its hot-leaf-count and c/B envelope on scalar-dominated rows.
+
+### 2.3.2 asmjson (native reference plane — x86_64 AVX-512 architectural ceiling)
+
+- **Source root:** [docs.rs/asmjson](https://docs.rs/asmjson/latest/asmjson/) (experimental); the publicly-visible architecture is documented in its `dev.md` and the `parse_json_zmm_sax.S` corpus.
+
+- **Typed value derivation.** Hand-written Rust + x86 ASM. DOM mode emits flat tape; SAX mode emits direct sink with no retained doc.
+
+- **Materialization.** Two-plane: DOM (10.93 GiB/s on synthetic string arrays) or SAX (10.78 GiB/s); strictness is experimental and must be reported separately from yyjson/simdjson when comparing.
+
+- **Memory model.** Flat tape or sink-only; no per-node arena.
+
+- **Dispatch.** AVX-512BW assembly inner loop; 9-state FSM with PC-as-state via `r10` indirect jump; tzcnt-driven seek; msac-style EOB-pad; SWAR fallback at ~7 GiB/s on commodity hosts. Per Wave 1 instruction-footprint inspection, asmjson uses only `vpcmpeqb`, `kmovq`, `vpcmpub`, `korq`, `vmovdqu8`, and `tzcnt` across its 2641-line .S corpus — **zero** `vpternlogq`, `vpclmulqdq`, `vpcompressb`, `vgf2p8affineqb`, `vpermb`, `vpermt2b`, `vpmadd52`, `vpopcntb`. Number tokens dispatch out to a Rust `JsonWriter` vtable; no number parse in asm.
+
+- **Throughput.** Published: 10.93 GiB/s DOM, 10.78 GiB/s SAX on synthetic string arrays (Zen 4, AVX-512). This is the architectural ceiling for x86_64; not arm64-reachable.
+
+- **SOTA-BEAT relevance.** asmjson is the architectural model for the H.W5 collapsed-stage backend: adopt the 9-state FSM + PC-as-state + tzcnt-driven seek verbatim, and add esoteric AVX-512 primitives (k-mask arithmetic, VPCLMULQDQ-512, AVX-IFMA, VNNI, BITALG, GFNI) strictly on top per Lock 16. Each esoteric row in MASTER-PLAN.md §13.1 names what asmjson does today + what the primitive replaces it with. Cycle-budget math projects ~14.0 GiB/s twitter on Zen 4 (~1.28× asmjson).
+
+### 2.4 M5 Max DOM-class anchors (binding bench target)
+
+Per `skinny/profile/native-sidecars/PROFILE-REPORT.md` (macOS 26.4.1, Apple M5 Max arm64, P-core ~3.5 GHz; envelope 1 GiB/s = 3.34 c/B):
+
+| Library | twitter MiB/s | c/B | Hot-leaf count | Strictness |
+|---|---:|---:|---:|---|
+| yyjson (no SIMD; force-inline + ~18 KiB hot function) | 3687 | 0.91 | 1 (`yyjson_read_opts`) | strict RFC 8259 |
+| simdjson C++ DOM | 2923 | 1.142 | 2 | strict |
+| sonic-rs Value-DOM | 2438 | ~2.3 | 1–2 | strict |
+| skinny v3 (current) | 2631 | ~5.07 (twitter), ~2.5–3.5 GiB/s envelope on DOM-class | 2 fat leaves | strict |
+| asmjson (Zen 4 AVX-512 anchor; x86_64-only) | 11192 (10.93 GiB/s) | ~0.36 | 1 | experimental — must report separately |
+
+skinny v3 already leads on **citm** (3571 MiB/s, +43% vs yyjson), **canada** (1675 MiB/s, +8% vs yyjson), **mesh** (1194 MiB/s, +6% vs simdjson DOM), and **unicode_mixed** (1719 MiB/s, +10% vs simdjson DOM). Open misses (per `skinny/RESULTS.md` expanded gate): `github_events`, `update_center`, `random`, `unicode_escapes`, `y_string_unicode` — closed by the H.W1/H.W2 typed-event-cursor and Class A/B NEON kernel sequence per MASTER-PLAN §13. The asmjson row is cross-architecture; on x86_64 H.W5 carries the strict additions on top of asmjson's architecture.
 
 ### 2.4 lightningcss
 

@@ -46,7 +46,7 @@ planning counts, not a promise that line counts survive exactly.
 
 | Fate | Files | Main owners | Net effect |
 |---|---:|---|---|
-| KEEP-OUTRIGHT | 121 | `simd-scan`, generic pieces of `csp-solver`, generic pieces of `egraph`, fixtures/tests that remain useful. | Keeps proven generic code. |
+| KEEP-OUTRIGHT | 121 | `bbnf-simd` (renamed from legacy `simd-scan`; primitive boundary per Lock 14 + Lock 16), generic pieces of `csp-solver`, generic pieces of `egraph`, fixtures/tests that remain useful. | Keeps proven generic code. |
 | KEEP-MODIFY | 224 | `ir` concepts, analysis diagnostics, path parser pieces, CSP/egraph integrations, selected runtime helpers. | Updates ownership and contracts. |
 | ABROGATE-MOVE | 96 | Source/span/import modules, VM utilities, LSP document logic, CLI/debug helpers. | Moves to new crate tree. |
 | ABROGATE-REPLACE | 315 | `core` backend walkers, old lowering, current runtime strategy, path registries, grammar-specific shims. | Rebuilds around Backend IR and tape/direct. |
@@ -72,7 +72,7 @@ plumbing are replaced; old archive crates leave the production workspace.
 | `crates/csp-solver` | KEEP-MODIFY. | `csp-solver`; generic API remains. |
 | `crates/egraph` | KEEP-MODIFY. | `egraph`; bridge logic moves to `passes`. |
 | `crates/egraph-derive` | KEEP-MODIFY. | `egraph-derive`. |
-| `crates/simd-scan` | KEEP-OUTRIGHT/KEEP-MODIFY. | `simd-scan`. |
+| `crates/simd-scan` → **`crates/bbnf-simd`** | KEEP-OUTRIGHT/KEEP-MODIFY (rename per Lock 14 + Lock 16; primitive boundary, no JSON-specific code). | `bbnf-simd`. |
 | `crates/bootstrap` | ABROGATE-REPLACE. | `bbnf-cli`, `pipeline`, bootstrap fixtures. |
 | `crates/ser` | ARCHIVE. | `restart-archive`/legacy reference only. |
 | `crates/gorgeous` | ARCHIVE. | `restart-archive`/legacy reference only. |
@@ -101,7 +101,7 @@ working target for tranche A.
 | `crates/ir` | 224 | 51,957 | Mine and reorganize into IR/passes/vm/cost. |
 | `crates/lsp` | 13 | 4,123 | Consolidate into `bbnf-language-server`. |
 | `crates/ser` | 5 | 530 | Archive. |
-| `crates/simd-scan` | 15 | 3,389 | Keep and wire to BIR. |
+| `crates/simd-scan` → **`crates/bbnf-simd`** | 15 | 3,389 | Keep and wire to BIR; rename to `bbnf-simd` per Lock 14/16 (grammar-neutral primitive boundary). |
 | Total | 834 | 330,212 | Live file count target; LOC includes generated code. |
 
 The exact current LOC total is not a planning invariant because generated files
@@ -155,8 +155,8 @@ when tranche A starts.
 | `crates/lsp` | yes | LSP protocol server. | ~6. | `bbnf-language-server/protocol/`. | I. |
 | `crates/lsp` | yes | Diagnostics bridge. | ~4. | `bbnf-language-server/diagnostics/`. | I. |
 | `crates/lsp` | yes | Incremental parser glue. | ~3. | `bbnf-language-server/document/`, `pipeline/`. | I. |
-| `crates/simd-scan` | partly | Generic core retained. | ~13. | `simd-scan/`. | A/H. |
-| `crates/simd-scan` | partly | BBNF-specific recognizer wiring. | ~2. | `passes/src/recognizers/`. | C/H. |
+| `crates/simd-scan` → `crates/bbnf-simd` | partly | Generic core retained; grammar-neutral primitive boundary per Lock 14 + Lock 16 (zero JSON-specific code). | ~13. | `bbnf-simd/`. | A/H. |
+| `crates/simd-scan` → `crates/bbnf-simd` | partly | BBNF-specific recognizer wiring. | ~2. | `passes/src/recognizers/`. | C/H. |
 | `crates/gorgeous` | no | Whole crate ARCHIVE. | 17. | `restart-archive`/legacy reference only. | A. |
 | `crates/ser` | no | Whole crate ARCHIVE. | 5. | `restart-archive`/legacy reference only. | A. |
 
@@ -256,13 +256,17 @@ before editing files.
 | Derive macro | `egraph-derive` | KEEP-MODIFY | Keep with egraph. | MODULES egraph derive (`restart/corpora/MODULES.md:136-162`). |
 | BBNF terms/adapters | `passes/src/bridge` | ABROGATE-MOVE | Generic crate stays grammar-neutral. | Lock 14 (`restart/locks/14-LOCKS.md:60`). |
 
-#### `crates/simd-scan`
+#### `crates/simd-scan` → `crates/bbnf-simd` (rename per Lock 14 + Lock 16)
+
+The crate renames to `bbnf-simd` because it is the grammar-neutral primitive boundary: scalar reference + per-target NEON / AVX-2 / AVX-512 kernels + dispatch API. Per Lock 14, the crate carries zero JSON-specific code (no `match grammar { Json => ... }` arms, no grammar-named modules); per Lock 16, every `core::arch::*` use-site and every `asm!` block traces to a citation in the allowlist. Grammar IR feeds rule facts (alphabet, first-set, chunk-spanning tokens) and the cost model selects which primitive to call; the primitive itself names neither the grammar nor the parser.
 
 | File or family | New location | Bucket | Rationale | Source finding |
 |---|---|---|---|---|
-| Scalar scanner | `simd-scan/scalar` | KEEP-OUTRIGHT | Reference implementation. | MODULES simd-scan (`restart/corpora/MODULES.md:47-69`). |
-| NEON/AVX scanner files | `simd-scan/neon`, `simd-scan/avx2`, `simd-scan/avx512` | KEEP-MODIFY | Wire to `SimdScan` BIR. | PASS-2 SIMD matrix (`restart/audit/pass-2-codegen/PASS-2.md` §3). |
-| Dispatch API | `simd-scan/dispatch` | KEEP-MODIFY | Runtime/codegen consumer boundary. | PASS-2 detector commitments (`restart/audit/pass-2-codegen/PASS-2.md` §3). |
+| Scalar scanner | `bbnf-simd/scalar` | KEEP-OUTRIGHT | Reference implementation; SWAR fallback at ~7 GB/s. | MODULES simd-scan (`restart/corpora/MODULES.md:47-69`). |
+| NEON kernels | `bbnf-simd/aarch64/` (`classify_tbl4.rs`, `movemask.rs`, `string_block.rs`, **Class A `match_tiny_plain_string`**, **Class B TBL-driven `\uXXXX` hex decode**, **LD4-interleaved classifier**, **BCAX/EOR3 ternary**, **svmatch_u8 emulation**) | KEEP-MODIFY | Wire to `SimdScan` BIR + Lock 16 admissibility allowlist; Class A/B kernels close the two pathology classes from Wave 2 Agent 2. | PASS-2 SIMD matrix; `MASTER-PLAN.md` §13.1 + Lock 16. |
+| AVX-2 / AVX-512 kernels | `bbnf-simd/x86_64/{avx2,avx512_vbmi2,avx512_ifma,avx512_vnni,avx512_bitalg,avx512_gfni,avx512_clmul,avx512_kmask}/` | KEEP-MODIFY | Wire to `SimdScan` BIR; strict-additions-on-top-of-asmjson stack per H.W5. | PASS-2; `MASTER-PLAN.md` §13.1 esoteric AVX-512 rows. |
+| Dispatch API | `bbnf-simd/dispatch` | KEEP-MODIFY | Runtime/codegen consumer boundary; CPUID at parser construction. | PASS-2 detector commitments; H.W0 packet. |
+| Differential parity harness | `bbnf-simd/tests/checkasm_parity.rs` | KEEP-MODIFY | Admission gate: `BBNF_SIMD_STRICT=1 cargo test -p bbnf-simd --release --test checkasm_parity` returns zero divergences before any bench claim. | SK-V3 packet §2 (P0.2 escape_mask_64 fix). |
 
 #### `crates/ser` And `crates/gorgeous`
 
@@ -482,10 +486,15 @@ Fate:
 | Derive macro | KEEP-MODIFY |
 | BBNF bridge terms | ABROGATE-MOVE to `passes::bridge` |
 
-### 9.3 `simd-scan`
+### 9.3 `simd-scan` → `bbnf-simd`
 
 The corpus marks `simd-scan` clean and KEEP-AS-IS, while noting the NEON
 intrinsics file as split-exempt in the old audit (`restart/corpora/MODULES.md:47-69`).
+The crate renames to `bbnf-simd` per Lock 14 + Lock 16: it is the grammar-neutral
+SIMD/ASM primitive boundary, carries the V1 allowlist of admissible primitives
+with citation per entry, and serves any grammar (not only JSON) whose recognizer
+facts request scan/classify/match work. JSON corpus-parity tests are bench
+fixtures, not crate code.
 
 Fate:
 

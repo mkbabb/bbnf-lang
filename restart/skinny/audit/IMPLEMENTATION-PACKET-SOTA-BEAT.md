@@ -1,15 +1,23 @@
 # IMPLEMENTATION-PACKET-SOTA-BEAT — Skinny v3 Structural-Index-Driven Codegen + SIMD Primitive Layer
 
-Status: READY for dispatch.
+Status: HISTORICAL / SUPERSEDED BY SK-V3 expanded-gate packet.
 Audience: implementation agent dispatched against `/Users/mkbabb/Programming/bbnf-lang/skinny/`.
 Anchor spec: `restart/skinny/audit/SOTA-BEAT-DESIGN.md` (read end-to-end before dispatch).
 Empirical anchor: `skinny/profile/{PROFILE-REPORT,ASM-REPORT,sonic-rs-v2/PROFILE-REPORT,simdjson-v2/PROFILE-REPORT}.md`.
+
+> **SK-V3 note.** This packet was written against an intermediate baseline.
+> The current measured authority is `skinny/RESULTS.md`: the historical triad
+> passes, but the expanded corpus is overall G / NoGo. Lazy-offset tape is part
+> of the accepted substrate. The sidecar structural-index typed-parser prepass,
+> NEON no-escape matcher, separator elision, generic SWAR whitespace skipper,
+> 12-byte/width churn, and dispatch-table/function-pointer alternates remain
+> rejected unless a future before/after bench overturns `skinny/REDRESS.md`.
 
 This packet carries verbatim edicts in execution order. Each step is independently measurable; commit after each. Boundary: implementation lives entirely under `skinny/`; no `restart/` files modified during execution (spec amendments are upstream and pre-ratified per the grand-synthesis 2026-05-12 pass).
 
 ## §0. Pre-flight
 
-1. **Baseline bench**: `cd /Users/mkbabb/Programming/bbnf-lang/skinny && cargo run -p xtask -- bench-json` — record outcome G (twitter T1 ≈ 11780 Mbps expected). Snapshot `skinny/RESULTS.md` content. The bench tool writes to `skinny/RESULTS.md` per its current shape; preserve the pre-Phase-0 row for delta computation.
+1. **Baseline bench**: this historical packet predates the expanded gate. Current superseding baseline is `skinny/RESULTS.md`: historical triad passes; expanded corpus is overall G / NoGo. The SK-V3 packet owns current implementation.
 
 2. **Falsifiability gates** (`BENCH.md` §6 + §7.9; SOTA-BEAT-DESIGN.md §6):
 
@@ -57,7 +65,7 @@ grep -E "twitter|citm|canada" /tmp/skinny-bench-step0.log
 ## §2. Step 1 — Pre-size offset Vec + delete shrink-to-fit pair
 
 **Effort**: ~8 LOC, 10 min.
-**Reference**: `skinny/profile/ASM-REPORT.md` §3 `TapeAssembler::finish` 2× `__rust_realloc` finding; ASM agent suspicious-functions #2 (`simd_scan::scan_json_parse_index` calls `grow_one`+`__rust_alloc`+`__rust_dealloc` in inner loop).
+**Reference**: `skinny/profile/ASM-REPORT.md` §3 `TapeAssembler::finish` 2× `__rust_realloc` finding; ASM agent suspicious-functions #2 (parser scan/index growth called `grow_one`+`__rust_alloc`+`__rust_dealloc` in inner loop before the `bbnf-simd` migration).
 
 **Edits**:
 
@@ -470,7 +478,7 @@ Write `skinny/profile/COMPARISON-v3.md` (new file) with the cross-parser hot-lea
 | simdjson DOM | 1.142 | 2 | ~24500 | `simdjson-v2/PROFILE-REPORT.md` |
 | sonic-rs LazyValue | ~1.5 | 1 | 18552 | `sonic-rs-v2/PROFILE-REPORT.md` (reference) |
 | **skinny-v3-implemented** | _measured_ | _measured_ | _measured_ | this run |
-| skinny pre-Phase-1+2 | ~2.5 | 5+ | 11780 | `PROFILE-REPORT.md` (baseline) |
+| skinny historical triad | current profiling pending | current profiling pending | 21552 | `skinny/RESULTS.md` triad pass; expanded corpus is G / NoGo |
 
 **Commit**: `docs(skinny/profile): comparative re-profile post-Phase-1+2; SOTA-BEAT-status documented`.
 

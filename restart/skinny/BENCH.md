@@ -5,7 +5,7 @@ This document is one of four quadrants of the skinny implementation spec for
 SOTA-viability claim — before tranches A-J commit. Sister quadrants:
 
 - `restart/skinny/SUBSTRATE.md` — `Tape`, `ValueRef`, `DocumentView`, payload
-  arena, `simd-scan` integration contract.
+  arena, `bbnf-simd` integration contract.
 - `restart/skinny/COMPILER.md` — Grammar IR subset, BIR subset, HM-only type
   checker, `codegen::rust` path.
 - `restart/skinny/WORKSPACE.md` — Cargo workspace, member list, per-crate LOC
@@ -56,7 +56,7 @@ pub fn parse<'i>(input: &'i str) -> Result<JsonRoot<'i>, ParseError<'i>>;
 `JsonRoot<'i>` owns a sealed `JsonDocument<'i>` / `Tape<'i>` snapshot and
 typed `ValueRef` projections borrow that tape per `restart/ARCHITECTURE.md:1597`.
 The generated parser consumes `runtime::tape`
-and `simd-scan` exactly as the hand-coded substrate parser does. No bypass,
+and `bbnf-simd` exactly as the hand-coded substrate parser does. No bypass,
 no shortcuts, no per-grammar Rust outside `crates/runtime/src/grammars/json/`.
 
 ### 1.2 Track 2 — Hand-coded substrate parser (the substrate ceiling probe)
@@ -65,7 +65,7 @@ Produced by:
 
 ```
 crates/bbnf-bench/src/track2/json.rs (handwritten Rust; the author writes
-  calls into runtime::tape and simd-scan directly, expressing the JSON
+  calls into runtime::tape and `bbnf-simd` directly, expressing the JSON
   grammar as direct Rust against the same APIs codegen will emit)
 ```
 
@@ -78,7 +78,7 @@ correspondence checklist that gates on what Track 2 *calls*, not how
 short it is.
 
 Track 2 is the *hand-coded* JSON parser using the SAME `runtime::tape` runtime
-and the SAME `simd-scan` structural-scan dispatcher that Track 1's generator
+and the SAME `bbnf-simd` structural-scan dispatcher that Track 1's generator
 emits against. The author is allowed to use every substrate API the codegen
 emits, but no codegen runs. Substrate access is via `TapeBuilder<'a>` per
 `SUBSTRATE.md` §8 — the named-inversion API contract that V1 graduation
@@ -102,7 +102,7 @@ across tracks for every fixture (see §3.4 parity oracle).
 | Invariant | Track 1 (generated) | Track 2 (hand-coded) |
 |---|---|---|
 | `runtime::tape` substrate | identical | identical |
-| `simd-scan` structural scan | identical | identical |
+| `bbnf-simd` structural scan | identical | identical |
 | payload arena layout | identical | identical |
 | `ValueRef` / `DocumentView` shape | identical | identical |
 | `parse(&str) -> Result<JsonRoot<'i>, ParseError>` shape | identical | identical |
@@ -143,10 +143,18 @@ A code review checklist sits in §10.6 to guard against Track 2 cheating.
 
 ---
 
-## §2 Three competitor baselines
+## §2 Comparator baselines and workload planes
 
-The competitor set is fixed by Lock 8 (`restart/locks/14-LOCKS.md:48`).
-Skinny pins the JSON-line subset only.
+The competitor set is fixed by Lock 8 (`restart/locks/14-LOCKS.md:48`) and
+extended by the 2026-05-12 SOTA-BEAT research packet. Skinny pins the JSON-line
+subset only, but reports two planes:
+
+- **Rust in-process plane**: sonic-rs, simd-json, serde_json, Track 1, Track 2.
+  These rows classify the skinny gate because they share one Rust harness.
+- **Native SOTA reference plane**: yyjson, simdjson C++, and asmjson. These rows
+  are not mixed into the Rust harness timing, but they bind the SOTA-BEAT target
+  and profile shape: cycles/byte, hot-leaf count, materialization mode, strict
+  versus permissive validation, and SIMD/ASM primitive class.
 
 ### 2.1 sonic-rs (lazy materialisation)
 
@@ -228,6 +236,27 @@ point. If bbnf's substrate ceiling is, say, 480 µs on twitter, the user reads
 that against (sonic-rs 436 µs, simd-json 424 µs, serde_json 831 µs) and knows
 "we are SIMD-class, slightly behind sonic-rs, well ahead of serde_json."
 
+### 2.4 yyjson (native DOM, no-SIMD i-cache reference)
+
+yyjson is a native C comparator, not a Rust harness row. It is retained because
+the expanded profiles show a useful ceiling for scalar eager DOM: dense inline
+code, low branch count, and an ~18 KiB hot parser can beat SIMD-heavy Rust rows
+on some corpora. The skinny uses yyjson as a code-shape and i-cache reference:
+hot function size, cycles/byte, and parse-only DOM throughput. It must not be
+treated as proof that BBNF should build an eager JSON-only DOM; the general
+architecture remains tape/direct union.
+
+### 2.5 asmjson (native AVX-512 assembly, strictness-separated reference)
+
+asmjson is the native SOTA target on x86_64 AVX-512-class hardware. It is not
+available on the Apple Silicon host and must be reported in a strictness plane:
+permissive rows cannot be compared against BBNF strict JSON correctness rows.
+The transferable findings are grammar-neutral primitive shape: fused byte-class
+masks, direct-threaded state dispatch, mask-held parser state, branchless offset
+or event emission, and scalar/SWAR fallback. These findings feed Lock 16 and the
+global `BackendShape::CollapsedStage`; they do not authorize JSON-specific code
+in generic crates.
+
 ### 2.4 What is NOT in the competitor set for skinny
 
 - **simdjson C++:** out of scope for a Rust harness. C++ FFI introduces
@@ -243,9 +272,12 @@ that against (sonic-rs 436 µs, simd-json 424 µs, serde_json 831 µs) and knows
 
 | Competitor | Crate | Version pin | API | Materialisation |
 |---|---|---|---|---|
-| sonic-rs | `sonic-rs` | `=0.5` | `anchor` + `checked` wrapper rows | eager-typed |
+| sonic-rs | `sonic-rs` | `=0.5` | `anchor` + `checked` wrapper rows | eager-typed / lazy raw-slice modes recorded |
 | simd-json | `simd-json` | `=0.13` | `to_borrowed_value` + `to_owned_value` | borrowed + owned |
 | serde_json | `serde_json` | `=1.0.117` | `from_slice::<Value>` | eager-owned |
+| yyjson | native sidecar | commit + compiler recorded | parse DOM / read API sidecar | eager DOM |
+| simdjson C++ | native sidecar | commit + compiler recorded | DOM + On-Demand sidecar | DOM tape / structural-index On-Demand |
+| asmjson | native sidecar | commit + compiler recorded | strict/permissive sidecar | AVX-512 native DOM |
 | Track 2 (bbnf hand) | (workspace) | (commit) | `parse(&str)` | typed root owning sealed Tape |
 | Track 1 (bbnf gen) | (workspace) | (commit) | `parse(&str)` | typed root owning sealed Tape |
 
@@ -260,15 +292,21 @@ minimum of the anchor rows, not a stale static table value.
 
 ---
 
-## §3 Three corpora
+## §3 Corpus tiers
 
-Skinny uses the canonical sonic-rs / simdjson trio: twitter, citm_catalog,
-canada. These three span small/medium/large and payload-rich/structural/
-array-of-numbers — the orthogonal axes that stress the substrate differently.
+Skinny records two corpus tiers:
 
-### 3.1 Corpus inventory (expanded 2026-05-12 from 3 to 14 corpora)
+- **Historical triad**: twitter, citm_catalog, canada. This tier validates the
+  tape/direct substrate against the canonical sonic-rs / simdjson community
+  set. It passed after lazy-offset tape and local hot-path specialization.
+- **Expanded SOTA-BEAT gate**: the full throughput corpus below. This tier is
+  the current dispatch arbiter. `skinny/RESULTS.md` records overall **G / NoGo**
+  because `github_events`, `update_center`, `random`, `unicode_escapes`, and
+  `y_string_unicode` miss the S anchor.
 
-The original three-corpus set (twitter / citm / canada) is the simdjson-community canonical anchor but overfits the bench to (a) string-heavy + light-Unicode, (b) deep-object + light-numerics, (c) float-dense. The expanded set adds escape-density, full-Unicode, structural-stress, object-key-dispatch, and adversarial corpora; corpus-shape diversity is the empirical guard against per-corpus overfit (per `skinny/profile/skinny-expanded/PROFILE-REPORT.md` — the 14-corpus profile reveals that marine_ik is the worst-Mbps corpus, not canada; skinny is NOT float-overfit).
+### 3.1 Corpus inventory (canonical 17-corpus expansion; 2026-05-12)
+
+The original three-corpus set (twitter / citm / canada) is the simdjson-community canonical anchor but overfits the bench to (a) string-heavy + light-Unicode, (b) deep-object + light-numerics, (c) float-dense. The expanded set adds escape-density, full-Unicode, structural-stress, object-key-dispatch, and adversarial corpora; corpus-shape diversity is the empirical guard against per-corpus overfit (per `skinny/profile/skinny-expanded/PROFILE-REPORT.md` — the 14-corpus profile reveals that marine_ik is the worst-Mbps corpus, not canada; skinny is NOT float-overfit). The 17-row inventory below is the canonical throughput-corpus bench surface; this aligns with `restart/skinny/audit/GRAND-SYNTHESIS-SOTA-BEAT-SK-V3.md` §1 (the V3 authority's expanded SOTA-BEAT corpus). The 14-corpus profile at `skinny/profile/skinny-expanded/` is the historical sub-sample (pre-Wave-2 expansion); the bench harness now reports all 17 rows.
 
 | Corpus | Purpose | Bytes (approx) | Hot path | Source |
 |---|---|---|---|---|
@@ -286,8 +324,11 @@ The original three-corpus set (twitter / citm / canada) is the simdjson-communit
 | `numbers.json` | numeric edge stress | ~150 KB | float / int / NaN edge cases | simdjson-data |
 | `unicode_mixed.json` | UTF-8 stress | ~1.05 MB | ASCII + Latin-1 + BMP CJK + emoji + escapes; raw multibyte UTF-8 | synthesized + sonic-rs testdata `string_unicode.json` lineage |
 | `unicode_escapes.json` | escape-density stress | ~1.05 MB | control + escape-heavy, ASCII-encoded with `\uXXXX` + surrogate pairs; **anomaly corpus: sonic-rs LazyValue collapses to 364 Mbps here (5× worse than its Value-DOM)** | synthesized + sonic-rs testdata `string_escaped.json` lineage |
+| `unicode_basic.json` | raw UTF-8 baseline | ~1.05 MB | plain multibyte strings without escape density | synthesized |
+| `distinct_values.json` | value-shape spread | ~70 KB | many distinct scalar/object/array shapes | synthesized |
+| `y_string_unicode.json` | conformance-throughput bridge | ~140 KB | JSONTestSuite string correctness shape under timed parse | JSONTestSuite-derived |
 
-**Per-corpus profile evidence**: `skinny/profile/skinny-expanded/PROFILE-REPORT.md` (14-corpus skinny baseline), `skinny/profile/sonic-rs-expanded/PROFILE-REPORT.md` (9-corpus sonic-rs Value-DOM + LazyValue × inlined + noinline = 36 measurements), `skinny/profile/simdjson-expanded/` (expanded corpora; stage1/stage2 sub-decomposition per corpus), `skinny/profile/yyjson/PROFILE-REPORT.md` (7-corpus yyjson reference; the no-SIMD SOTA-class anchor at 3687 MiB/s twitter / 0.91 c/B), `skinny/profile/rapidjson/PROFILE-REPORT.md` + `skinny/profile/serde_json/PROFILE-REPORT.md` (floor comparators; 449-805 MiB/s range = the textbook recursive-descent ceiling without SIMD/LTO).
+**Per-corpus profile evidence**: `skinny/profile/skinny-expanded/PROFILE-REPORT.md` (expanded skinny baseline), `skinny/profile/sonic-rs-expanded/PROFILE-REPORT.md` (sonic-rs Value-DOM + LazyValue × inlined + noinline measurements), `skinny/profile/simdjson-expanded/` (expanded corpora; stage1/stage2 sub-decomposition per corpus), `skinny/profile/yyjson/PROFILE-REPORT.md` (yyjson reference; the no-SIMD SOTA-class anchor at 3687 MiB/s twitter / 0.91 c/B), `skinny/profile/rapidjson/PROFILE-REPORT.md` + `skinny/profile/serde_json/PROFILE-REPORT.md` (floor comparators; 449-805 MiB/s range = the recursive-descent ceiling without SIMD/LTO).
 
 **JSONTestSuite conformance bundle** (separate from throughput corpora): 95 `y_string_*` + 95 `y_structure_*` files at `/tmp/jsontestsuite-research/JSONTestSuite/test_parsing/` exercise parse-time correctness (UTF-8 validity, surrogate-pair handling, non-character codepoints, overlong sequences). Bench harness opens these in conformance mode (parse-only, no throughput); failures count toward the `BBNF-UTF8-INVALID-AT-PARSE` and `BBNF-UNICODE-NONCHAR-CODEPOINT` diagnostic gates per ARCH §7.4.
 
@@ -404,7 +445,7 @@ canonical float repr, escape-pair normalisation). It exists once in
 
 ## §4 The structural-scan microbenchmark
 
-Separate from the end-to-end parse bench. Measures `simd-scan`'s structural-
+Separate from the end-to-end parse bench. Measures `bbnf-simd`'s structural-
 index throughput in Mbps on the JSON corpus bytes. Targets per
 `restart/ARCHITECTURE.md:1519`:
 
@@ -416,7 +457,7 @@ index throughput in Mbps on the JSON corpus bytes. Targets per
 The structural index pass: the bit-parallel SIMD scan over input bytes that
 identifies pseudo-structural characters (`{ } [ ] : , "`), maintains the
 quote-state bitmap, and emits the index of every structural offset. This is
-simdjson's Stage 1; bbnf's `simd-scan` provides the equivalent.
+simdjson's Stage 1; bbnf's `bbnf-simd` provides the equivalent.
 
 Microbench input: raw fixture bytes. Output: a `Vec<u32>` of structural
 offsets. We measure the scan time, the input byte count, and divide.
@@ -434,8 +475,8 @@ past a twitter-only check.
 
 ```rust
 for fixture in [&twitter_bytes, &citm_bytes, &canada_bytes] {
-    let simd_offsets = simd_scan::structural_index_simd(fixture);
-    let scalar_offsets = simd_scan::structural_index_scalar(fixture);
+    let simd_offsets = bbnf_simd::scan_json_structurals(fixture);
+    let scalar_offsets = bbnf_simd::scalar::scan_json_structurals(fixture);
     let simd_hash = blake3::hash(bytemuck::cast_slice(&simd_offsets));
     let scalar_hash = blake3::hash(bytemuck::cast_slice(&scalar_offsets));
     assert_eq!(simd_hash, scalar_hash,
@@ -477,8 +518,8 @@ fn bench_structural_scan(c: &mut Criterion) {
     // Per-corpus parity check (out of timed region; a mismatch on any
     // corpus FAILS the gate regardless of throughput).
     for (name, bytes) in &fixtures {
-        let simd = simd_scan::structural_index_simd(bytes);
-        let scalar = simd_scan::structural_index_scalar(bytes);
+        let simd = bbnf_simd::scan_json_structurals(bytes);
+        let scalar = bbnf_simd::scalar::scan_json_structurals(bytes);
         assert_eq!(
             blake3::hash(bytemuck::cast_slice(&simd)),
             blake3::hash(bytemuck::cast_slice(&scalar)),
@@ -490,10 +531,10 @@ fn bench_structural_scan(c: &mut Criterion) {
     for (name, bytes) in &fixtures {
         g.throughput(Throughput::Bytes(bytes.len() as u64));
         g.bench_function(format!("{name}/simd"), |b| {
-            b.iter(|| simd_scan::structural_index_simd(black_box(bytes)));
+            b.iter(|| bbnf_simd::scan_json_structurals(black_box(bytes)));
         });
         g.bench_function(format!("{name}/scalar"), |b| {
-            b.iter(|| simd_scan::structural_index_scalar(black_box(bytes)));
+            b.iter(|| bbnf_simd::scalar::scan_json_structurals(black_box(bytes)));
         });
     }
     g.finish();
@@ -655,27 +696,58 @@ Notation:
 | **F-positive — Codegen matches hand on borderline-weak substrate** | S × 1.05 < Track 2 ≤ S × 1.10 | ≤ Track 2 × 1.05 | CONDITIONAL — substrate warning, codegen positive | Dispatch A/workspace-only and tranche B substrate work; pre-allocate +1 wave to H.W1 (SIMD scan tuning). The codegen ratio is a *positive* finding (the generator is competitive with hand-coded). The Lock 1 reopen is precautionary, not driven by codegen evidence. SOTA-beat probability < 30% before substrate fix. |
 | **F-noise — Borderline-weak substrate, codegen indistinguishable from hand within bench noise** | S × 1.05 < Track 2 ≤ S × 1.10 | Track 2 × 1.05 < Track 1 ≤ Track 2 × 1.10 | CONDITIONAL — substrate warning | Same dispatch posture as F-positive; the codegen ratio falls within the Track 1 95% CI upper bound's overlap of Track 2 × 1.05 — unclassifiable as positive or gap. Re-run on bare-metal before committing to dispatch posture. |
 | **F-codegen-gap — Borderline-weak substrate, codegen overhead atop weak substrate** | S × 1.05 < Track 2 ≤ S × 1.10 | > Track 2 × 1.10 | CONDITIONAL — substrate warning + codegen gap | Same substrate posture as F-positive (Lock 1 reopen precautionary; +1 wave to H.W1) PLUS codegen attention: pre-allocate +1 wave to F (Rust lowerer) since the generator is widening the gap relative to hand. SOTA-beat probability < 30%. |
-| **G — Substrate failure** (collapsed prior G + H) | > S × 1.10 | any | NO-GO — substrate redesign | Block tranche B dispatch. Reopen Lock 1 (Tape/direct substrate) amendment. Re-run skinny after substrate revision before any A-J dispatch. (Track 1 ratio is informational only when Track 2 is a gap — the codegen rides the failed substrate; no separate "both fail" outcome.) **Disposition note (2026-05-12):** four substrate-amendment routes (dispatch-table REDRESS-17, 12-byte token REDRESS-18, pair-token fusion REDRESS-16, lazy-offset tape REDRESS-20) have been measured-and-rejected at outcome G; further outcome-G classifications should first verify against `G-fusion-quality` (below) before reopening Lock 1, since the empirical attribution post-six-agent comparative-profile cohort points to codegen template shape rather than substrate. |
-| **G-fusion-quality — Fusion-quality codegen gap** (new 2026-05-12) | ≤ S × 1.10 (substrate within parity envelope) | hot-leaf count ≥ 5 at ≥10% self-time AND comparator-anchored hot-leaf count ≤ 2 | NO-GO — codegen template inversion required | The substrate is within the parity envelope but the generated parser carries structural overhead the comparator does not. Do **not** reopen Lock 1; the architectural lever is the codegen template shape per `restart/skinny/audit/SOTA-BEAT-DESIGN.md` §2 (structural-index-driven typed parse) + §3 (per-target SIMD primitive layer). Comparator anchors: sonic-rs = 1 hot leaf (`skinny/profile/sonic-rs-v2/PROFILE-REPORT.md` §(d)), simdjson = 2 hot leaves (`skinny/profile/simdjson-v2/PROFILE-REPORT.md` §(a)). Dispatch the SOTA-BEAT implementation packet against the skinny workspace; do not amend Lock 1. |
+| **G — Substrate failure** (collapsed prior G + H) | > S × 1.10 | any | NO-GO — substrate redesign or materialization-plan change | Block tranche B dispatch. Reopen the Lock 1 amendment surface only after checking whether the miss is a retained-substrate problem or an implementation-plan problem. (Track 1 ratio is informational only when Track 2 is a gap — the codegen rides the failed substrate; no separate "both fail" outcome.) **Disposition note (2026-05-12):** eager-token alternates (dispatch-table REDRESS-17, 12-byte token REDRESS-18, pair-token fusion REDRESS-16) were measured-and-rejected. Lazy-offset tape plus local hot-path specialization cleared the historical triad, but the expanded corpus is now overall G / NoGo. Future outcome-G classifications first run the workload split in §6.6 and the profile packet in §10.8; Lock 1 is amended only if `OffsetTape`, `EventTape`, `SinkOnly`, and `CollapsedStage` are all insufficient for the rule class. |
+| **G-fusion-quality — Event-cursor / fusion-quality gap** (new 2026-05-12) | ≤ S × 1.10 (substrate within parity envelope) | hot-leaf count ≥ 5 at ≥10% self-time AND comparator-anchored hot-leaf count ≤ 2 | NO-GO — typed-event cursor or primitive fusion required | The substrate is within the parity envelope but the generated parser carries dispatch, cursor, string, or number overhead the comparator does not. Do **not** reopen Lock 1. The architectural lever is the typed event cursor over the tape projection plus grammar-neutral primitive fusion: `bbnf-simd::{ByteClassPlan, KernelSet}`, `parse-that/string`, `parse-that/unicode`, and `parse-that/number`. Comparator anchors: sonic-rs = 1 hot leaf (`skinny/profile/sonic-rs-v2/PROFILE-REPORT.md` §(d)), simdjson = 2 hot leaves (`skinny/profile/simdjson-v2/PROFILE-REPORT.md` §(a)), yyjson ≈ one i-cache-resident scalar parse driver. Dispatch the SOTA-BEAT implementation packet against the skinny workspace; no new directive and no parallel substrate. **Two-pathology-class taxonomy (Wave 2 Agent 2 finding, 2026-05-12)**: the current G/NoGo corpus splits into two diagnostic sub-classes within `G-fusion-quality`, each prescriptive of a distinct NEON kernel fix — see §6.1.1 below. |
 | **I — Parity oracle fail** | n/a | n/a | NO-GO — correctness fail | Block tranche dispatch. Track 1 and Track 2 disagree on materialised output for at least one fixture; codegen is incorrect. Investigate divergence before any further bench claims. |
 | **J — Reproducibility schema fail** | n/a | n/a | INVALID — re-run | Bench row missing required schema fields or schema_version mismatch; classification unsafe. Re-instrument and re-run. |
 | **K — SIMD parity hash fail** | n/a | n/a | NO-GO — correctness fail | The structural-scan SIMD path produces offsets disagreeing with scalar on **any** corpus (twitter / citm / canada); substrate is silently corrupt. Block all dispatch until SIMD codepath fixed. |
 | **L — SIMD throughput fail** | n/a | n/a | NO-GO — SIMD floor fail | Structural scan on **canada** (largest input; binding row) below floor (40000 Mbps NEON / 56000 Mbps AVX2). Even if Track 2 parse hits parity, the substrate ceiling will fail at scale. Block dispatch until the SIMD floor is restored, then re-run the full matrix. |
 | **M — Memory residency fail** | n/a | n/a | NO-GO — peak RSS exceeds floor | Track 2 (or Track 1) peak RSS > 3 × the fastest competitor's peak RSS on canada. Substrate that hits SOTA-class throughput at 3× memory is not viable for concurrent-parse workloads (web servers, batch ingestion). Block dispatch until substrate memory profile is fixed. The 3× multiplier is the V1 J.W1 J-side floor projected back to skinny gate; a tighter ratio is encouraged but not required. |
 
+### 6.1.1 G-fusion-quality two-pathology-class taxonomy (Wave 2 Agent 2 finding)
+
+The current expanded-gate misses split into two diagnostic pathology classes within `G-fusion-quality`. Each class prescribes a distinct NEON kernel fix; the classes are diagnostic sub-classes of the broader `G-fusion-quality` outcome and route to the SOTA-BEAT implementation packet (`restart/skinny/audit/SOTA-BEAT-DESIGN.md` §6 falsifiability matrix) without reopening Lock 1.
+
+| Pathology class | Symptom | Affected corpora | Prescribed kernel | Falsifier |
+|---|---|---|---|---|
+| **`tiny_string_loop`** | Throughput collapses on object-key-dispatch + short-string corpora because the structural-scan SIMD inner loop pays per-chunk fixed cost not amortised by tiny strings. Hot-leaf count ≥ 5 with `match_json_string` / `scan_inside_string` dominating. | `github_events`, `update_center`, `apache_builds`, `instruments` | NEON LD4-interleaved 4-channel classifier (Lock 16 row, Validark 2024) + `vbcaxq_u8` ternary bitwise reduction (Lock 16 row, ARMv8.2-A SHA3); compress fixed-cost preamble into the per-chunk pipeline. | Kernel lands; corpora cross S anchor. Falsified if the kernel lands but the corpora still miss S — routes to `EventTape` materialization probe per ARCH §7.3. |
+| **`hex_decode`** | Throughput collapses on escape-density + Unicode-escape corpora because `\uXXXX` hex decode runs scalar per-codepoint. Hot-leaf count ≥ 5 with `decode_escapes` / `handle_unicode_codepoint` / `from_u32` dominating. | `unicode_escapes`, `y_string_unicode`, `random` (escape-heavy paths) | NEON `vqtbl4q_u8` 64-byte hex-nibble lookup (Lock 16 row, Lemire 2019) + `vshrn_n_u16` movemask compaction for escape-byte locations + branchless surrogate-pair recombination. | Kernel lands; corpora cross S anchor. Falsified if the kernel lands but the corpora still miss S — routes to lazy-borrow `HasEsc` flag re-derivation per `COMPILER.md` §3.3 Primitive 3. |
+
+Both pathology classes share the comparator-anchored hot-leaf count threshold (≥ 5 at ≥ 10% self-time while sonic-rs = 1 and simdjson = 2). The `G-fusion-quality` classifier emits the pathology-class label as a diagnostic field on the bench row; CI consumes both the outcome and the sub-class.
+
+### 6.1.2 M5 Max DOM-class anchors (Wave 2 re-baselined; 2026-05-12)
+
+The Wave 2 re-baseline pass re-anchored DOM-class throughputs on M5 Max. The numbers below are the binding `S` candidates per corpus and are used when the in-run anchor measurement falls within their 95% CI. They are not a substitute for the in-run anchor; they are the cross-run sanity floor.
+
+| Corpus | M5 Max DOM-class throughput (Mbps) | Source |
+|---|---:|---|
+| `twitter` | 22071 | Wave 2 re-baseline; sonic-rs Value-DOM |
+| `citm_catalog` | 29959 | Wave 2 re-baseline; sonic-rs Value-DOM |
+| `canada` | 14051 | Wave 2 re-baseline; sonic-rs Value-DOM |
+| `github_events` | 20709 | Wave 2 re-baseline; sonic-rs Value-DOM |
+| `update-center` | 18538 | Wave 2 re-baseline; sonic-rs Value-DOM |
+| `random` | 12373 | Wave 2 re-baseline; sonic-rs Value-DOM |
+| `unicode_escapes` | 17079 | Wave 2 re-baseline; sonic-rs Value-DOM |
+| `y_string_unicode` | 11120 | Wave 2 re-baseline; sonic-rs Value-DOM |
+
+Cross-reference: `restart/skinny/audit/SOTA-BEAT-DESIGN.md` §6 (falsifiability matrix) carries the per-class pathology falsifier rows; failed kernels route to materialization-plan probes at §7.8.2 alongside `alternate_event_cursor_plan` / `alternate_capacity_plan` / `alternate_primitive_kernel_plan`.
+
 ### 6.2 Reading the matrix
 
-The matrix is decided per-corpus. The classifier checks correctness/schema/
+The matrix is decided per corpus. The classifier checks correctness/schema/
 floor rows first (I, J, K, L, M), then throughput rows. The verdict for the
-skinny is the WORST outcome across the three corpora plus the structural-scan
-microbench, the memory floor, and the masking probes in §7.8.
+historical triad is reported separately from the expanded SOTA-BEAT gate. The
+dispatch verdict for skinny is the WORST outcome across the expanded throughput
+corpus plus the structural-scan microbench, the memory floor, and the masking
+probes in §7.8.
 Examples:
 
 - All three corpora outcome A, structural scan ≥ floor, memory within
   3 × competitor → outcome A overall.
 - twitter outcome A, citm outcome C, canada outcome D → outcome D overall
   (the worst).
-- canada outcome G → outcome G overall, no matter what twitter / citm say.
+- canada or any expanded blocker outcome G → expanded gate outcome G overall,
+  no matter what twitter / citm say.
 - Parity oracle fail anywhere → outcome I, blocking everything.
 - Peak RSS > 3 × fastest competitor on canada → outcome M, blocking
   regardless of throughput.
@@ -705,6 +777,35 @@ The classifier fires in this order; the first matching outcome wins:
 The order is deliberate: correctness/floor failures dominate; substrate
 gaps dominate codegen issues (a fast generator on a broken substrate is
 not viable); codegen issues only matter when the substrate floor is met.
+
+**Measured gate split (2026-05-12).** `skinny/RESULTS.md` records two facts
+that must stay visible. The historical triad passes: twitter is C / GO at
+Track 1 21552 Mbps, Track 2 18833 Mbps, sonic-rs 19062 Mbps; citm_catalog and
+canada are A / GO. The expanded throughput corpus is overall **G / NoGo**:
+`github_events`, `update_center`, `random`, `unicode_escapes`, and
+`y_string_unicode` miss the S anchor. Structural-only canada remains above the
+40000 Mbps floor. Accepted implementation wins are lazy offset tape, sparse
+flags, direct spare-capacity offset writes, cold errors, SWAR digit and
+plain-string runs, fused comma/close delimiter consumption, newline-indent
+space-run skipping, `parse_value_at`, short plain-string fast path, and Track 2
+inline parity. Rejected routes remain rejected: eager-token revival, sidecar
+structural-index typed-parser prepass, NEON no-escape string matcher, separator
+elision, generic SWAR whitespace skipper, 12-byte/width churn, and
+dispatch-table/function-pointer alternates.
+
+### 6.2.2 Workload split for current NO-GO rows
+
+Every expanded-gate rerun reports these workload modes per corpus:
+
+| Workload | What it proves | Required rows |
+|---|---|---|
+| `parse_only` | raw parser/tape/direct ceiling | Track 1, Track 2, sonic-rs, simd-json, serde_json |
+| `parse_full_traversal` | all strings/numbers/arrays touched, exposing lazy work | Track 1, sonic-rs Value-DOM, simdjson DOM, yyjson sidecar |
+| `path_lookup` | cursor/direct projection and key lookup cost | Track 1 path, sonic-rs pointer/LazyValue, simdjson On-Demand pointer |
+| `direct_to_struct` | BBNF typed emission premise | Track 1 generated direct view, Track 2 hand direct view, sonic-rs serde struct |
+| `unicode_string_float` | string decode, UTF-8, escapes, number materialization | `unicode_*`, `numbers`, `canada`, JSONTestSuite-derived rows |
+| `memory` | retained substrate cost | peak RSS, offset/event counts, payload bytes, allocations |
+| `cycles_per_byte` | native SOTA comparability | samply or perf c/B for hot rows |
 
 ### 6.3 Honest accounting
 
@@ -905,7 +1006,7 @@ path = "benches/simd_scan.rs"
 
 [dependencies]
 runtime = { path = "../runtime" }
-simd-scan = { path = "../simd-scan" }
+bbnf-simd = { path = "../bbnf-simd" }
 blake3 = "1"
 sha2 = "0.10"
 toml = "0.8"
@@ -1062,24 +1163,22 @@ viable alternative. The isolated `host_call_dispatch_overhead` row owns
 registry dispatch cost; this Probe B row owns the eager-decode-work cost
 and the disjunction is closed by measurement, not preference.
 
-#### 7.8.2 Alternate-plan probes — confirmatory only (post-iteration)
+#### 7.8.2 Alternate-plan probes — measured plan space (post-expanded gate)
 
 The alternate-plan probes bound the missing cost-driven rewrite axis.
-**Post-iteration framing**: confirmatory only — the scalar plan passes;
-the dispatch-table alternate was empirically invalidated (the SK prototype's
-first row duplicated canonical Track 1, and a real 256-entry function-pointer
-table regressed, so canonical lowering remains the Rust `match`); the PEXT
-mask alternate defers to V1 H.W2 absent a skinny-side implementation. The
-SK-V1 framing of "confirmatory + one plausibly-better candidate" is partly
-refuted by the iteration record (`skinny/REDRESS.md` item 17): the
-plausibly-better candidates that supported that framing either rejected
-themselves on measurement (dispatch table) or are unimplemented (PEXT).
+**Post-expanded framing**: scalar remains confirmatory; the dispatch-table
+alternate was empirically invalidated (the SK prototype's first row duplicated
+canonical Track 1, and a real 256-entry function-pointer table regressed); the
+PEXT mask alternate remains an x86-only research row. The expanded G / NoGo
+means this section is no longer allowed to claim the cost-model axis is
+orthogonal. It must also carry materialization-plan, event-cursor, primitive,
+and capacity-policy probes before a SOTA-BEAT claim is FAITHFUL.
 
-The probes verify that the canonical structural-index + alt-dispatch plan
-is not dominated by the one alternate that retains empirical traction
-(scalar) within the implementation envelope. They cannot establish that no
-plan elsewhere in the cost-model space would be faster — that is what V1 H
-tranche owns.
+The probes verify that the canonical typed-event + alt-dispatch plan is not
+dominated by named alternates within the implementation envelope. They cannot
+establish that no plan elsewhere in the cost-model space would be faster; a
+probe win emits `BBNF-COST-PLAN-NOT-CANONICAL` and routes to H.W3/H.W4 rather
+than being folded into a vague tuning bucket.
 
 Three alternates, with the dispatch-table row INVALID post-iteration and
 the PEXT row unimplemented in the skinny:
@@ -1089,6 +1188,9 @@ the PEXT row unimplemented in the skinny:
 | `alternate_scalar_plan` | Pure scalar recursive descent; no SIMD scan; byte-by-byte alt dispatch. | Active; passes confirmatory (canonical wins by 38-52% across three corpora per `skinny/RESULTS.md`). | Confirms SIMD adds value on JSON. |
 | `alternate_dispatch_table_plan` | SIMD scan; alt dispatch via a 256-entry direct table instead of match-arm. | **INVALID** per `skinny/REDRESS.md` item 17 — the SK prototype's first row duplicated canonical Track 1 (probe was a no-op duplicate); a real 256-entry function-pointer table was then implemented and regressed against canonical. Canonical Rust `match` is the load-bearing dispatch; LLVM owns the branch-table lowering for byte-disjoint alts. | (No question remains open at the skinny scope.) |
 | `alternate_pext_mask_plan` | x86_64 only; uses BMI2 PEXT to extract structural-bit masks instead of structural index of offsets. | Not implemented in the skinny; reported as `missing` in `skinny/RESULTS.md`. Deferred to V1 H.W2 — the skinny is silent on this axis. | (Would test a different cost-model selection on Intel; not a skinny conclusion.) |
+| `alternate_event_cursor_plan` | Generated parser consumes `Tape::offsets` through a typed cursor instead of source-byte `cursor` + `skip_ws`/`peek`. | Required for SK-V3. Fresh samply profiles show `parse_value_at` dominates `random` and `unicode_escapes`; this row must exist before the expanded gate can close. | Tests whether the current G rows are codegen/substrate-consumption overhead rather than primitive limits. |
+| `alternate_capacity_plan` | Capacity policy variants for offset and sparse-flag vectors: sampled capacity, exact prepass, reserve-at-growth, and corpus-shape heuristics. | Required for SK-V3 because `update-center` samples show sparse-flag capacity and allocation growth in top leaves. | Tests whether builder allocation policy is a hidden SOTA gap. |
+| `alternate_primitive_kernel_plan` | Scalar/SWAR/NEON/x86 kernel selection for string, Unicode, whitespace, digit, and byte-class primitives. | Required for SK-V3; kernel choice is grammar-neutral and belongs in `bbnf-simd`/`parse-that`, not generated JSON code. | Tests whether the current plan overfits to one JSON hot path and misses other grammar token classes. |
 
 Probe verdicts:
 
@@ -1170,7 +1272,7 @@ Cold-cache is recorded for V1 J.W1 to consume.
 
 The 2026-05-12 corpus expansion + asm-string-unicode + skinny-expanded agents surfaced two correctness gaps that must be closed before any SOTA-BEAT throughput claim is honest:
 
-**Gate 1 — UTF-8 validation at scan stage, not view time**. The current skinny binary panics on `i_string_invalid_utf-8.json`, `i_string_overlong_sequence_2_bytes.json`, `i_string_truncated-utf-8.json`, `i_string_iso_latin_1.json` (raw 0xE9) because `view.rs:203, 229` does `std::str::from_utf8(...).expect("parser input is UTF-8")` while the scan emits no UTF-8 validation pass (`simd-scan/src/lib.rs:196-241`). The fix lands at scan stage via the `simdutf8` crate (Keiser-Lemire 2020 "Validating UTF-8 In Less Than One Instruction Per Byte"; admissible per Lock 16 algorithm-class citation). Per `skinny/profile/skinny-expanded/PROFILE-REPORT.md`, UTF-8 validation is **0.00% self-time** on every current corpus — moving it to scan stage costs nothing measurable but closes the correctness gap. Per `skinny/profile/simdjson-expanded/PROFILE-REPORT.md`, simdjson's scan-time UTF-8 validation costs 0-35% depending on multibyte density; on pure-ASCII corpora the validator's overhead is ≤ 2% of total cycles.
+**Gate 1 — UTF-8 validation at scan stage, not view time**. The current skinny binary panics on `i_string_invalid_utf-8.json`, `i_string_overlong_sequence_2_bytes.json`, `i_string_truncated-utf-8.json`, `i_string_iso_latin_1.json` (raw 0xE9) because `view.rs:203, 229` does `std::str::from_utf8(...).expect("parser input is UTF-8")` while the scan emits no UTF-8 validation pass. The fix lands at scan stage inside the `bbnf-simd` boundary via the `simdutf8` crate (Keiser-Lemire 2020 "Validating UTF-8 In Less Than One Instruction Per Byte"; admissible per Lock 16 algorithm-class citation). Per `skinny/profile/skinny-expanded/PROFILE-REPORT.md`, UTF-8 validation is **0.00% self-time** on every current corpus — moving it to scan stage costs nothing measurable but closes the correctness gap. Per `skinny/profile/simdjson-expanded/PROFILE-REPORT.md`, simdjson's scan-time UTF-8 validation costs 0-35% depending on multibyte density; on pure-ASCII corpora the validator's overhead is ≤ 2% of total cycles.
 
 Verification: `cargo run --release --bin parity_oracle -- jsontestsuite/test_parsing/` must exit 0 with `i_string_*` files producing `BBNF-UTF8-INVALID-AT-PARSE` diagnostic (not panic).
 
@@ -1224,7 +1326,7 @@ Wall-clock Mbps depends on host clock speed and drifts across dev hardware (M1 P
 
 - simdjson: 1.142 c/B total (stage1 0.629 + stage2 0.377 + outlined 0.131); **floor at simdjson's algorithm ≈ 0.4-0.5 c/B**.
 - sonic-rs LazyValue path (the 18552 Mbps reference): ~1.5 c/B inferred from 2.32 GB/s ÷ 4 GHz Apple-Silicon mean clock.
-- Skinny current (lazy-mode at outcome G): ~2.5 c/B inferred from 1.47 GB/s ÷ 4 GHz.
+- Skinny final gate (twitter Track 1 21552 Mbps): ~1.30 c/B inferred from ~2.57 GiB/s ÷ 3.5 GHz.
 
 | Gate | Twitter c/B | Comparator interpretation |
 |---|---|---|
@@ -1387,7 +1489,7 @@ sharpens the SOTA-viability conclusion:
 `json/probes/css_prior/bootstrap` parses `bootstrap.css` (canonical
 ~143 KB CSS3 fixture used by lightning-css) using a hand-coded
 substrate-only walker — no codegen, no full BBNF compile, no Grammar IR.
-The walker uses the *same* `runtime::tape` + `simd-scan` substrate the
+The walker uses the *same* `runtime::tape` + `bbnf-simd` substrate the
 JSON skinny uses. Question: does the substrate generalise to a non-JSON
 structurally-different grammar without degrading throughput by an order
 of magnitude?
@@ -1698,7 +1800,7 @@ Track 1; the bench results are gated on the signature. The checklist:
 Track 2 substrate-API correspondence checklist
 - [ ] Track 2 calls runtime::tape APIs only (no separate buffer struct,
       no shadow tape implementation, no parallel arena).
-- [ ] Track 2 calls simd-scan structural_index (no inline byte loop that
+- [ ] Track 2 calls `bbnf-simd` byte-class / typed-event APIs (no inline byte loop that
       duplicates structural-scan logic).
 - [ ] Track 2 records raw scalar spans and leaves the payload arena empty on
       the JSON hot path, matching the generated parser (zero arena writes
@@ -1734,7 +1836,7 @@ canonical list; this section names only the bench-relevant crates):
 | `crates/bbnf-bench/` | this document | Criterion harness, fixtures loader, parity oracle, gate binary, metadata writer, Track 2 hand-coded probe |
 | `crates/runtime/` (Tape) | SUBSTRATE.md | Shared substrate; bench is an external consumer |
 | `crates/runtime/src/grammars/json/` | COMPILER.md | Generated from `grammars/json.bbnf`; emits `parse(&str) -> Result<JsonRoot, ParseError>` |
-| `crates/simd-scan/` | SUBSTRATE.md | Structural scan dispatcher; bench microbenches it |
+| `crates/bbnf-simd/` | SUBSTRATE.md | Structural scan dispatcher; bench microbenches it |
 
 `crates/bbnf-bench/` source layout:
 
@@ -1761,16 +1863,16 @@ The skinny LOC ceiling for `crates/bbnf-bench/` is set in WORKSPACE.md.
 Indicative budget:
 
 - `fixtures.rs`: ≤ 120 LOC
-- `metadata.rs`: ≤ 280 LOC (schema_version + per-corpus parity + RSS + cold_cache_mode add fields)
+- `metadata.rs`: ≤ 330 LOC (schema_version + per-corpus parity + RSS + cold_cache_mode add fields)
 - `parity.rs`: ≤ 100 LOC
-- `gate.rs`: ≤ 400 LOC (matrix expansion: F-split, G-collapse, M-add, BEAT_BOUND classifier; CI-advisory collapse reclaims ~50 LOC from prior runner-discount apparatus per §8.3)
-- `bin/gate.rs`: ≤ 60 LOC
+- `gate.rs`: ≤ 430 LOC (matrix expansion: F-split, G-collapse, M-add, BEAT_BOUND classifier; CI-advisory collapse reclaims ~50 LOC from prior runner-discount apparatus per §8.3)
+- `bin/gate.rs`: ≤ 220 LOC (renders fastest-anchor `S`, subprocess RSS probes, persisted SIMD parity metadata, masking probes)
 - `track2/json/` (Lock 13 split if needed): handwritten JSON parser, measurement-driven LOC; no constraint cap. Each file ≤ 500 LOC per Lock 13.
 - `track2/css_prior.rs` (optional CSS prior probe per §9.1): ≤ 600 LOC, file split allowed.
 - `benches/json_parity.rs`: ≤ 250 LOC (probe additions: distinct dispatch if available, eager_decode, pext, cold_first_parse)
 - `benches/simd_scan.rs`: ≤ 150 LOC (per-corpus parity)
 
-Total: target ≤ ~2,200 LOC. Track 2's measurement-driven LOC is the
+Total: target ≤ ~2,400 LOC. Track 2's measurement-driven LOC is the
 largest variable; reference-class hand-coded JSON parsers using
 substrate APIs land at 800-1,500 LOC. The earlier 500 LOC ceiling on
 Track 2 was constraint-driven and risked either a substrate-API thin
@@ -1847,7 +1949,7 @@ through codegen will not have access to that hand-rolled buffer.
 **Mitigation:** §10.6 review checklist + signature. Track 2 source under
 ≤ 500 LOC keeps it review-tractable. CI runs a structural test
 (`crates/bbnf-bench/tests/track2_uses_substrate.rs`) that greps Track 2
-source for `runtime::tape::` and `simd_scan::` import statements and
+source for `runtime::tape::` and `bbnf_simd::` import statements and
 fails if either is missing; greps for `Vec<u8>` allocation outside of
 documented points and warns. It also asserts the source path is
 `crates/bbnf-bench/src/track2/json.rs`, so no shadow hand-coded runtime crate

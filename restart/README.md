@@ -1,6 +1,6 @@
 # Restart — Greenfield Re-architecture (2026-05-04)
 
-The bbnf-lang corpus, surveyed across two restart attempts, returns to first principles. The prior `restart/` is archived at `restart-archive-2026-05-04/` (commit history preserved; the audit material survives as a research corpus, not as a plan-set). This README is the new anchor — the synthesis of the user's 35-answer interrogation, the ffuzzy three-primitive insight, the 14 locks (carried forward), and the precepts (`docs/precepts/`, submodule, governs voice and process).
+The bbnf-lang corpus, surveyed across two restart attempts, returns to first principles. The prior `restart/` is archived at `restart-archive-2026-05-04/` (commit history preserved; the audit material survives as a research corpus, not as a plan-set). This README is the new anchor — the synthesis of the user's 35-answer interrogation, the ffuzzy three-primitive insight, the 16 locks (carried forward), and the precepts (`docs/precepts/`, submodule, governs voice and process).
 
 The greenfield mandate is unambiguous: **no quick solutions, no workarounds, no legacy code uncontested, no contrivance, no overfitting.** Architectural transpositions for elegance, simplicity, and performance are mandatory. The user-facing API is familiar (sonic-rs, lightning-css, jq idioms); the internals are the apotheosis (rank-1 HM + local bidirectional checking + finite CSP choices + e-graph rewriting + shape mining + evidence-bearing cost decisions + grammar-derived everything). The substrate identity is settled. The path forward is five prompts.
 
@@ -14,7 +14,7 @@ The grammar source file (`<name>.bbnf`) plus the workspace metadata block (`[wor
 
 What is *not* grammar-derived is small and explicit:
 
-- The 14 locks themselves
+- The 16 locks themselves
 - Workspace metadata schema (the TOML grammar that declares grammars)
 - Generic primitives (`parse_int_radix`, `parse_hex_pair`, `cow_unescape`, `regex_captures`, `parse_enum<T>`, `slice_borrow`, …)
 - The host-fn dispatch mechanism
@@ -380,7 +380,7 @@ The VM (kept per Q7) is the debug + replay runtime: incremental edits replay thr
 
 ## §11 — Locks Carried Forward
 
-The **14 locks** at `restart/locks/14-LOCKS.md` are settled and govern the greenfield. Particular emphasis under the new gestalt:
+The **16 locks** at `restart/locks/14-LOCKS.md` are settled and govern the greenfield. Particular emphasis under the new gestalt:
 
 | Lock | Greenfield posture |
 |---|---|
@@ -398,6 +398,8 @@ The **14 locks** at `restart/locks/14-LOCKS.md` are settled and govern the green
 | 12 — ser + gorgeous archive ceremony | **Precondition for execution**; Tranche A.W0 owns it. `crates/ser/` + `crates/gorgeous/` archive at `archive/`; workspace `members` reduced. |
 | 13 — No god directories; cohesive encapsulation | Honoured by every crate's `src/` tree (PASS-1/2/3 specify); 4-10 children per dir; no >500 LOC outside `generated/`. |
 | 14 — Full grammar generalisation; zero overfitting | Honoured by §1 anthem + §2 workspace shape + §5 BBNF extensions (host-fn in metadata or `@host fn` directive; no `crates/<grammar>/` declaration crates by default). The future-grammar onboarding test for `yaml.bbnf` is the verification gate. |
+| 15 — Build-profile + fusion + i-cache discipline | **Lands 2026-05-12 after V9.2 lazy-tape refutation + six-agent comparative-profile cohort.** Every generated runtime crate ships `[profile.release] lto=fat codegen-units=1 panic="abort" debug=true`; force-inline on Grammar IR's mined hot call-graph (`LayoutFacts.hot_call_graph`); target hot-function size ≤ 20 KiB post-LTO (yyjson reference ~18 KiB; current JSON 7,304-byte sub-budget). Diagnostics: `BBNF-FORCE-INLINE-MISSED`, `BBNF-ICACHE-BUDGET-EXCEEDED`. |
+| 16 — SIMD/ASM admissibility allowlist + abstract primitive lifts | **Lands 2026-05-12.** Admissible primitives are an explicit allowlist with per-row citation (Lemire, Validark, Mula, Sneller, Travis Downs, dav1d/ffmpeg/VLC lineage). arm64 NEON: `vqtbl4q_u8`, interleaved movemask, `vld1q_u8_x4`, LD4-interleaved classifier, BCAX/EOR3 ternary, svmatch_u8 emulation. x86_64 AVX-512: `_mm512_mask_compressstoreu_epi8`, ternary mask fusion, `vpermi2b`, `_mm512_alignr_epi8`, k-mask arithmetic family, VPCLMULQDQ-512, AVX-IFMA, VNNI, BITALG, GFNI. Handwritten `asm!` admissible only when the equivalent intrinsic is absent from `core::arch::*`. |
 
 ---
 
@@ -419,7 +421,7 @@ The **14 locks** at `restart/locks/14-LOCKS.md` are settled and govern the green
 
 1. `restart/HANDOFF.md` — orientation; current verdict; next move
 2. `restart/prompts/ORCHESTRATOR.md` — phase-identification + dispatch protocol
-3. `restart/README.md` — gestalt + 14 locks anchor
+3. `restart/README.md` — gestalt + 16 locks anchor
 4. `restart/locks/14-LOCKS.md` — settled commitments
 5. `restart/audit/hardening/HARDENING-CONSOLIDATED-V{N}.md` (most recent) — operating verdict
 6. `docs/precepts/instructions/STYLE.md` + `LESSONS-LEARNED.md` + `CONSUMING.md`
@@ -441,7 +443,7 @@ Per `docs/precepts/instructions/STYLE.md`. Calibrated, trenchant, archaic-permis
 This README synthesizes:
 - 35-question interrogation (`restart-archive-2026-05-04/INTERROGATION-2026-05-04.md`); user answers ratified
 - The ffuzzy three-primitive insight (`docs/ffuzzy.md`)
-- The 14 locks (`restart/locks/14-LOCKS.md`)
+- The 16 locks (`restart/locks/14-LOCKS.md`)
 - The precepts (`docs/precepts/`, submodule, STYLE + LESSONS-LEARNED + ORCHESTRATION + tranche/{SPEC, START, RESEARCH, CHALLENGE, WAVE_SPEC, AGENT_DISPATCH_TEMPLATE, DOC_UPDATE_WAVE})
 - The corpus carried forward at `restart/corpora/` (CENSUS, MODULES, RESTART-SKETCH, SOTA, plus the prior Phase-3 8-lane audit syntheses preserved in archive)
 
@@ -453,6 +455,6 @@ The legacy plan-set at `docs/tranches/{BA,BB,BC,BD}/` is the **inheritance refer
 
 ## §15 — Closing Posture
 
-Hereupon the greenfield opens. The substrate is tape identity plus direct-to-struct projections over one slice-borrow contract; the optimization is e-graph rewriting, finite CSP legality, shape mining, and evidence-bearing cost decisions with a bridged-not-fused fact exchange; the type system is rank-1 Hindley-Milner plus Pierce-Turner local check/synth and directed subsumption edges; the API is sonic-rs / lightning-css / treesitter familiar with deeper internals; the BBNF extensions are lookbehind + generics + block-bodied `@host fn` + multi-function chaining + `@error` + `@layout`, with rich Unicode routed through `parse-that/regex`; the workspace is 24 crates with the `bbnf-` prefix dropped from internal substrate; the future-grammar onboarding test is two surfaces. The 14 locks govern. The precepts speak.
+Hereupon the greenfield opens. The substrate is tape identity plus direct-to-struct projections over one slice-borrow contract; the optimization is e-graph rewriting, finite CSP legality, shape mining, and evidence-bearing cost decisions with a bridged-not-fused fact exchange; the type system is rank-1 Hindley-Milner plus Pierce-Turner local check/synth and directed subsumption edges; the API is sonic-rs / lightning-css / treesitter familiar with deeper internals; the BBNF extensions are lookbehind + generics + block-bodied `@host fn` + multi-function chaining + `@error` + `@layout`, with rich Unicode routed through `parse-that/regex`; the workspace is 24 crates with the `bbnf-` prefix dropped from internal substrate; the future-grammar onboarding test is two surfaces. The 16 locks govern. The precepts speak.
 
 The five prompts at `restart/prompts/` dispatch next.

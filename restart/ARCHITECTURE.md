@@ -65,7 +65,7 @@ set below is authoritative for tranche planning and for migration disposition.
 | `egraph-derive` | Internal/sister | Derive support for egraph term declarations. | Keep with `egraph` (`restart/corpora/MODULES.md:136-162`). |
 | `csp-solver` | Internal/sister | Generic CSP solver used by type inference, layout choices, and extraction facts. | Keep and harden current generic solver (`restart/corpora/MODULES.md:73-132`). |
 | `parse-that` | Internal/sister | Regex and parser substrate utilities, including Unicode-class implementation below BBNF. | New extraction target for regex support. |
-| `simd-scan` | Internal/sister | SIMD scanner kernels for AVX2, AVX512, NEON, WASM SIMD, and scalar fallback. | Keep current clean crate (`restart/corpora/MODULES.md:47-69`). |
+| `bbnf-simd` | Internal/sister | SIMD scanner kernels for AVX2, AVX512, NEON, WASM SIMD, and scalar fallback. | Keep current clean crate (`restart/corpora/MODULES.md:47-69`). |
 | `test-fixtures` | Internal/dev | Shared fixtures, parity matrix, generated snapshots, perf corpora. | New crate from legacy fixture work and BD fixture specs. |
 
 Crates not in this list do not survive as production crates. `ser` and
@@ -131,7 +131,7 @@ passes
   -> csp-solver
   -> cost-model
   -> parse-that
-  -> simd-scan
+  -> bbnf-simd
   -> error
 
 codegen
@@ -139,7 +139,7 @@ codegen
   -> host
   -> runtime
   -> cost-model
-  -> simd-scan
+  -> bbnf-simd
   -> error
 
 runtime
@@ -333,7 +333,7 @@ are not part of the public contract.
 | `egraph-derive` | Derive macro entrypoints for generic egraph terms. | Expansion scratch state. |
 | `csp-solver` | Generic variables, domains, constraints, solver, explanations. | BBNF-specific fact conversion. |
 | `parse-that` | Regex HIR/program APIs, NFA/DFA/VM execution plans, prefilter contracts, literal helpers, Unicode data wrappers. | BBNF grammar parser state. |
-| `simd-scan` | Scanner traits, scalar/NEON/AVX dispatch handles, feature detection. | Intrinsic-specific loop bodies not needed by callers. |
+| `bbnf-simd` | Scanner traits, scalar/NEON/AVX dispatch handles, feature detection. | Intrinsic-specific loop bodies not needed by callers. |
 | `test-fixtures` | Fixture manifest, corpus loader, parity matrix schema. | Local fixture generation scratch files. |
 
 ### 3.6 API Leakage Rules
@@ -552,7 +552,7 @@ parse-that/src/
   unicode/
   literal/
 
-simd-scan/src/
+bbnf-simd/src/
   lib.rs
   scalar/
   neon/
@@ -599,7 +599,7 @@ and the 500 LOC handwritten file ceiling, generated files excepted
 | `egraph-derive` | Token expansion scratch modules. | Macro output is the visible contract. |
 | `csp-solver` | Propagation queue internals and search heuristics. | Solver inputs, outputs, and explanations are stable. |
 | `parse-that` | Unicode table generation scratch data, HIR simplification caches, NFA/DFA builder state, lazy-DFA cache policy, and SIMD prefilter plans. | Regex program APIs and verifier contracts are stable. |
-| `simd-scan` | Intrinsic loop bodies and dispatch probe cache. | Scanner trait and dispatch handle are stable. |
+| `bbnf-simd` | Intrinsic loop bodies and dispatch probe cache. | Scanner trait and dispatch handle are stable. |
 | `test-fixtures` | Local fixture generation scratch state. | Fixture manifests and corpus loaders are stable. |
 
 ## 5. Cargo And Workspace Metadata
@@ -645,7 +645,7 @@ members = [
   "crates/egraph-derive",
   "crates/csp-solver",
   "crates/parse-that",
-  "crates/simd-scan",
+  "crates/bbnf-simd",
   "crates/test-fixtures",
   "xtask",
 ]
@@ -762,7 +762,7 @@ insufficiency lands first.
 | Why metadata fails | Specific demonstration that `[workspace.metadata.bbnf.grammars.<name>]` cannot describe the boundary. Cite metadata schema lines that would have to grow and explain why the growth contaminates the generic schema. |
 | Why `@host fn` fails | Specific demonstration that a block-bodied `@host fn` decomposing into `host::primitives` cannot express the boundary. Cite the generic primitive set considered and the gap that survives. |
 | Declaration location | Explicit path, normally `runtime/src/grammars/<name>/decl/` (sub-module of the per-grammar generated runtime). The declaration crate may not live at a workspace-level path that pollutes generic crate graphs. |
-| No generic import | Proof that no generic crate (`bbnf`, `pipeline`, `passes`, `ir`, `codegen`, `runtime`, `host`, `path`, `path-core`, `egraph`, `csp-solver`, `parse-that`, `simd-scan`) imports the per-grammar declaration crate. The proof is a `rg` command in the review record. |
+| No generic import | Proof that no generic crate (`bbnf`, `pipeline`, `passes`, `ir`, `codegen`, `runtime`, `host`, `path`, `path-core`, `egraph`, `csp-solver`, `parse-that`, `bbnf-simd`) imports the per-grammar declaration crate. The proof is a `rg` command in the review record. |
 | Deletion path | Explicit named condition that retires the declaration crate (e.g., "deletes when `host::primitives::<name>` lands and the per-grammar trait moves to BBNF metadata"). The deletion path must terminate; "indefinite" is rejected. |
 | Reviewer | Named human (architecture owner) plus the receiving tranche gate where the exception is reviewed (e.g., A.W4 metadata-schema gate, J.W2 close gate). The reviewer is distinct from the owner. |
 
@@ -938,13 +938,14 @@ retains the alphabet ownership; PASS-2 ratifies the variant payload tables;
 the snapshot tests at `ir::backend_ir` consume the post-fold shape.
 
 **2026-05-12 lowering amendment** (no IR addition): `Alt { mode: Dispatch }`
-lowers to one of two access patterns per `LayoutFacts.backend_shape[rule_id]`
-(see §7.3): `source[pos]` for `EagerTape` (the prior canonical), or
-`source[offsets[*cursor as usize] as usize]` for `StructuralIndex` (the
-SOTA-class typed-parse template per `restart/skinny/audit/SOTA-BEAT-DESIGN.md`
-§2). The variant payload is unchanged; only the lowerer emits differently.
-`backend_shape` is cost-model-derived from Grammar IR facts per Lock 10
-auto-detection — no user-visible directive.
+lowers through a materialization plan per `LayoutFacts.backend_shape[rule_id]`
+(see §7.3). The access pattern may be byte-position (`EagerTape`), typed-event
+cursor over retained offsets (`OffsetTape`), typed-event cursor over retained
+event cells (`EventTape`), direct sink with no retained document (`SinkOnly`),
+or collapsed mask-state walk (`CollapsedStage`). The variant payload is
+unchanged; only the lowerer emits differently. `backend_shape` is
+cost-model-derived from Grammar IR facts per Lock 10 auto-detection, never a
+user-visible directive.
 
 Backend IR payload and lowerer matrix:
 
@@ -957,7 +958,7 @@ Backend IR payload and lowerer matrix:
 | `OptionalBranch` | Body and empty branch shape. | Emits branch. | Runs or skips. | No special handling. |
 | `ByteLiteral` | Bytes, case policy, span. | Emits byte compare. | Consumes on match. | SIMD may widen compare. |
 | `RegexProgram` | Regex program handle and execution plan. | Calls regex verifier. | Executes regex VM, lazy DFA, or full DFA plan. | Unicode stays below BBNF; `parse-that-regex` carries internal cross-engine parity (VM ↔ lazy DFA ↔ full DFA) per V1-FOLD-CANDIDATES Tier 3 #23, and no external regex oracle is consumed at V1. |
-| `SimdScan` | `SimdScanMode::{Exact, Prefilter}`, needle/class, fallback, verifier route. | Emits dispatch to `simd-scan`. | Exact mode must match scalar offsets; prefilter mode emits candidates only. | Prefilter acceptance routes to `RegexProgram` or scalar verifier before tape emission. |
+| `SimdScan` | `SimdScanMode::{Exact, Prefilter}`, needle/class, fallback, verifier route. | Emits dispatch to `bbnf-simd`. | Exact mode must match scalar offsets; prefilter mode emits candidates only. | Prefilter acceptance routes to `RegexProgram` or scalar verifier before tape/event emission. |
 | `PrattSpine` | Operators, precedence, associativity, atom rule. | Emits Pratt loop. | Executes Pratt interpreter. | Auto-detected only. |
 | `CallRule` | Callee ID, args, result slot. | Emits function call. | Pushes rule frame. | No special handling. |
 | `CallHost` | Host function ID, args, result slot. | Emits registry dispatch. | Calls host shim. | WASM requires ABI-safe wrapper; multi-function chains lower as `Seq` of `CallHost`. |
@@ -1008,13 +1009,13 @@ Backend IR invariants:
 | SIMD and Pratt are mined, not syntax-directed. | `passes::recognizers` owns detection. |
 | VM can replay all BIR variants. | `vm::replay` golden tests. |
 
-`SimdScan` has two runtime products. `StructuralIndex` is the exact structural
-offset stream used for structural-scan gates. Grammar-specific parse indexes,
-such as JSON's parse index, may add parser columns when the full parse row
-recovers the extra cost. JSON skinny measured and rejected a duplicate
-structural-byte column; the parser reads `input[offset]` instead and keeps only
-string escape/control side columns. The structural-only gate must not
-accidentally pay for parser-only columns.
+`SimdScan` has two runtime products. A transient **mask stream** feeds typed
+events during parse; an optional retained tape stores offsets, event cells, or
+direct payload facts after parse. Grammar-specific parse indexes, such as JSON's
+escape/control flags, may add columns only when the full parse row recovers the
+extra cost. The structural-only gate must not accidentally pay for parser-only
+columns. The mask stream itself is never a second substrate; if retained, it is
+the tape projection.
 
 ### 7.3 Side Tables
 
@@ -1041,7 +1042,7 @@ tables and internal fact logs are:
 | `TypeFacts` | HM + bidirectional checker (internal to `passes::layout`). | `passes::layout` only. | Internal subroutine artefact; not exported across pass boundaries. |
 | `TypeObligationLog` | HM equality, expected checking, coercion, and finite-choice stages inside `passes::layout`. | Diagnostics until layout/recovery facts are emitted. | Internal diagnostic evidence only. |
 
-**`LayoutFacts.backend_shape` field (2026-05-12 extension per Lock 10 + Lock 15 + SOTA-BEAT-DESIGN.md §2)**:
+**`LayoutFacts.backend_shape` field (2026-05-12 extension per Lock 1 union clause + Lock 10 cost-model auto-detect + Lock 15 fusion discipline + Lock 16 admissibility allowlist + SOTA-BEAT SK-V3 research)**. Per Lock 1: tape and direct-to-struct are one union; a SIMD mask stream is a transient producer; if structural offsets are retained, the structural projection IS the tape (no second sidecar). The five `BackendShape` variants below are the five ways the substrate may project for a given rule — `EagerTape` / `OffsetTape` / `EventTape` retain a queryable document, `SinkOnly` does not, `CollapsedStage` fuses mask-state and emission for AVX-512-class hardware. The cost model picks per-rule; no BBNF directive carries the choice.
 
 ```rust
 pub enum BackendShape {
@@ -1050,17 +1051,22 @@ pub enum BackendShape {
     /// @host fn decoded-at-parse, @layout scope, or whose first-set has overlap
     /// (the latter forces Alt { Speculative }, not Alt { Dispatch }).
     EagerTape,
-    /// Alt { Dispatch } lowers reading source[offsets[*cursor as usize] as usize]
-    /// (structural-index walk). Selected for rules with byte-finite disjoint
-    /// first-sets, no payload-bearing tokens, no layout scope. Codegen template
-    /// additionally emits #[inline(always)] on Grammar IR's hot-path rules
-    /// (via LayoutFacts.hot_call_graph) per Lock 15.
-    StructuralIndex,
-    /// AVX-512 VBMI2 collapsed-stage backend (asmjson-class 9-state FSM with
-    /// PC-as-state direct threading via r10 asm!; Lock 16 admissibility under
-    /// "asmjson r10-direct-threading"). Selected when target features include
-    /// avx512vbmi2 AND the rule is a hub with ≥4 byte-disjoint arms AND no
-    /// recovery/layout/host-decode body. Per-grammar opt-in via CPUID, not directive.
+    /// Retained offset tape: Alt { Dispatch } reads source[offsets[cursor]] and
+    /// advances a typed event cursor. Selected for rules with byte-finite
+    /// disjoint first-sets and lazy scalar spans.
+    OffsetTape,
+    /// Retained event tape: cursor indexes compact event cells with stored
+    /// payload classes or recovery/layout side facts.
+    EventTape,
+    /// Direct-to-struct sink: parser emits typed fields and retains no
+    /// queryable document identity. Selected only when the API shape does not
+    /// require path/value traversal after parse.
+    SinkOnly,
+    /// AVX-512-class collapsed-stage backend (asmjson-class FSM with
+    /// mask-held parser state; Lock 16 admissibility under collapsed-stage
+    /// dispatch). Selected when target features and grammar facts admit a
+    /// strict single-pass mask/state walk. Per-grammar opt-in via CPUID/cost
+    /// model, not directive.
     CollapsedStage,
 }
 ```
@@ -1070,8 +1076,10 @@ Cost-model derivation algorithm at `passes::recognizers::derive_backend_shape(gr
 2. Else if rule body contains `Call { kind: Host }` decoded-at-parse ⇒ `EagerTape`
 3. Else if rule body contains `LayoutDirective` ⇒ `EagerTape`
 4. Else if rule's `Alt` first-set has overlap (per existing `passes::recognizers` first-set computation) ⇒ `EagerTape` (lowers `Alt` as `Speculative`, not `Dispatch`)
-5. Else if target features admit AND rule is hub with ≥ 4 byte-disjoint arms ⇒ `CollapsedStage`
-6. Else ⇒ `StructuralIndex`
+5. Else if the public output mode is direct-only and no post-parse path/value traversal is required ⇒ `SinkOnly`
+6. Else if target features admit AND rule is a hub with ≥ 4 byte-disjoint arms ⇒ `CollapsedStage`
+7. Else if payload/recovery/layout side facts must be retained per cursor ⇒ `EventTape`
+8. Else ⇒ `OffsetTape`
 
 ### 7.4 Diagnostic Vocabulary
 
@@ -1109,6 +1117,11 @@ gain.
 | `BBNF-LAYOUT-UNUSED` | `@layout` lowering. | `@layout` directive is unused by the generated formatter; warning. |
 | `BBNF-PRATT-NOT-APPLIED` | `passes::recognizers`. | Pratt detection ran but rejected the rule; cost model declined. |
 | `BBNF-SIMD-NOT-SELECTED` | `passes::recognizers`. | SIMD detection ran but rejected the rule; cost, unsupported Unicode semantics, or missing exact/prefilter verifier contract rejected the SIMD path. |
+| `BBNF-COST-PLAN-NOT-CANONICAL` | `cost-model` / `codegen::verify`. | A measured alternate materialization, dispatch, primitive, or capacity plan dominates the current canonical plan; generated output must switch plans or record a rejected-with-evidence reason. |
+| `BBNF-UTF8-INVALID-AT-PARSE` | `runtime` byte entrypoint / `bbnf-simd` validation. | Invalid UTF-8 reached a public view or string accessor instead of failing at parse/scan boundary. |
+| `BBNF-UNICODE-NONCHAR-CODEPOINT` | `parse-that/unicode`. | Unicode escape decoding rejected a Unicode scalar value solely because it is a noncharacter; RFC 8259 JSON accepts such scalar values. |
+| `BBNF-FORCE-INLINE-MISSED` | `codegen::verify`. | A rule mined as hot by `LayoutFacts.hot_call_graph` did not receive the required generated inline attribute or failed the post-LTO hot-leaf gate. |
+| `BBNF-ICACHE-BUDGET-EXCEEDED` | `codegen::verify` / bench profile. | The fused hot parse driver exceeds the configured hot-function size budget after LTO. |
 | `BBNF-METADATA-MISSING-GRAMMAR` | `pipeline::workspace`. | Grammar source declared but no `[workspace.metadata.bbnf.grammars.<name>]` block; Lock 14 requires both surfaces. |
 | `BBNF-GRAMMAR-NAME-IN-GENERIC-CRATE` | Lock 14 lint. | A generic crate hardcodes a grammar name; `cargo xtask lint-no-hardcoded-grammars` enforces. |
 | `BBNF-PATH-UNKNOWN-SEGMENT` | `path` macro. | Path segment does not match the grammar schema. |
@@ -1467,6 +1480,23 @@ sealed `Tape<'input>` snapshot, and `ValueRef`/typed projections borrow that
 tape. A root over a borrowed parser-state tape is not the committed runtime
 shape.
 
+The runtime materialization model is:
+
+```text
+byte input
+  -> mask stream
+  -> typed event cursor
+  -> { OffsetTape | EventTape | SinkOnly | CollapsedStage }
+  -> DocumentView / direct typed output
+```
+
+The mask stream is a transient producer. It may be scanned by SIMD or scalar
+kernels, but it is not a retained substrate. The typed event cursor is the
+shared read/write abstraction: it walks offsets, event cells, or collapsed
+state transitions and emits either a sealed tape or direct typed fields. Retained
+document identity is `(TapeId, cursor, event_kind_or_payload_class)`. `SinkOnly`
+has no document identity because no queryable document remains after parse.
+
 Runtime SOTA gates must publish a token-economy artifact alongside throughput:
 token count, logical tape bytes, allocated tape bytes, tape bytes per input
 byte for both, payload bytes, pair-token count, open/close token counts,
@@ -1510,7 +1540,7 @@ Lowerers:
 | Lowerer | V1 contract | Trait impl |
 |---|---|---|
 | Rust | Primary production lowerer. Emits runtime template, tape/direct builder, host chain calls, visitors, value projections. | `RustBackend: Backend` per §7.5. |
-| SIMD | Pattern lowerer fed by recognizer facts and validated `SimdScan` BIR; exact scans need scalar parity, and prefilters need a verifier route before tape emission. | Co-impl inside `RustBackend` (cfg-gated through `simd-scan`). |
+| SIMD | Pattern lowerer fed by recognizer facts and validated `SimdScan` BIR; exact scans need scalar parity, and prefilters need a verifier route before tape emission. | Co-impl inside `RustBackend` (cfg-gated through `bbnf-simd`). |
 | VM | Executable interpreter for debug, replay, and golden equality. | Internal evaluator over `BackendIR`; not a public `Backend` impl (replay-only). |
 | WASM | Deferred post-V1; lands as `WasmBackend: Backend` in V2 alongside Lock 11 publication carry. | V2. |
 | TS | Deferred post-V1; lands as `TsBackend: Backend` in V2 alongside the principled TS-native parse+runtime fork. | V2. |
@@ -1566,9 +1596,9 @@ Gate owners:
 
 | Gate | Owner |
 |---|---|
-| JSON twitter/citm/canada | `bbnf-bench`, `cost-model`, `runtime`, `simd-scan`. |
+| JSON twitter/citm/canada | `bbnf-bench`, `cost-model`, `runtime`, `bbnf-simd`. |
 | CSS bootstrap/animate | `bbnf-bench`, `runtime`, `passes::recognizers`, `codegen::rust`. |
-| simdjson-class throughput | `simd-scan`, `runtime::tape`, `codegen::simd`. |
+| simdjson-class throughput | `bbnf-simd`, `runtime::tape`, `codegen::simd`. |
 | Generated LOC budget | `cost-model::loc_budget`, `codegen::verify`. |
 | Parallel-substrate clone absence | `runtime`, `codegen`, `bbnf-bench`. |
 
@@ -1740,7 +1770,7 @@ extension or a `cargo xtask lint` step.
 | `directive-canon` | Any `@directive` outside the six V1 directives (`@import`, `@host fn`, `@error`, `@layout`, `@pretty`, `@token`). Retired directives `@pratt`, `@simd`, `@transducer`, `@rewrite`, `@unicode`, standalone `@recover`, and `@ws` (folded into `@layout(ws = ...)`) are explicit reject targets. | `cargo xtask lint --directive-canon` plus `grammar/parse/directives` syntax check. | `BBNF-DIRECTIVE-RETIRED`. |
 | `naming-canon` | `pointer!` macro mentions in greenfield text or new code (the macro is `path!`); `bbnf-path` / `bbnf-path-ts` crate-name references (the canonical names are `path` and `path-ts`); `bbnf-regex` references (the canonical name is `parse-that-regex`). | `cargo xtask lint --naming-canon`. | `BBNF-NAMING-DRIFT`. |
 | `regex-engine-canon` | `regex-automata` import in any V1 active reference (the regex engine is `parse-that-regex`); the corpus removes the regex-automata oracle role per V1-FOLD-CANDIDATES Tier 3 #23. | `cargo xtask lint --regex-engine-canon` plus `Cargo.toml` deny-import gate. | `BBNF-REGEX-ENGINE-DRIFT`. |
-| `per-grammar-fence-canon` | Lock 14 violations: grammar names in generic-crate source, grammar-named modules outside `runtime/src/grammars/<g>/`, per-grammar match arms in `bbnf-ir`/`passes`/`codegen`/`runtime`/`host`/`path`/`path-core`/`egraph`/`csp-solver`/`parse-that`/`parse-that-regex`/`simd-scan`/`analysis`/`lsp`. | `cargo xtask lint-grammar-generalization` (existing) plus `cargo xtask lint --fence-canon`. | `BBNF-GRAMMAR-NAME-IN-GENERIC-CRATE`. |
+| `per-grammar-fence-canon` | Lock 14 violations: grammar names in generic-crate source, grammar-named modules outside `runtime/src/grammars/<g>/`, per-grammar match arms in `bbnf-ir`/`passes`/`codegen`/`runtime`/`host`/`path`/`path-core`/`egraph`/`csp-solver`/`parse-that`/`parse-that-regex`/`bbnf-simd`/`analysis`/`lsp`. | `cargo xtask lint-grammar-generalization` (existing) plus `cargo xtask lint --fence-canon`. | `BBNF-GRAMMAR-NAME-IN-GENERIC-CRATE`. |
 
 The lint manifest is part of the architectural contract; lints retire
 only by explicit amendment. Adding a lint requires extending this table

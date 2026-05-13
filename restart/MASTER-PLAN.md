@@ -80,7 +80,7 @@ rule (`restart/README.md:29-60`).
 | Compiler substrate | `error`, `source`, `grammar`, `ir`, `passes`, `pipeline`, `vm`. |
 | Backend/runtime | `codegen`, `runtime`, `host`, `cost-model`. |
 | Path | `path`, `path-core` (V1 Rust line); `path-ts` defers post-V1 per Lock 7/11 amendments and the V2 `TsBackend: Backend` per ARCH §7.5. |
-| Sister crates | `egraph`, `egraph-derive`, `csp-solver`, `parse-that`, `simd-scan`. |
+| Sister crates | `egraph`, `egraph-derive`, `csp-solver`, `parse-that`, `bbnf-simd`. |
 | Dev/test | `test-fixtures`. |
 
 The old workspace crates map to this set according to `restart/MIGRATION.md`.
@@ -130,30 +130,31 @@ in `restart/corpora/SOTA.md:50-89` and `restart/corpora/SOTA.md:130-136`.
 
 | Row | Competitor baseline | bbnf target | Platform | Owner |
 |---|---|---|---|---|
-| `json/twitter` | sonic-rs 436us; simd-json 424us. | <= 380us. | M1 Pro macOS, native Rust release with `target-cpu=native`. | H.W3, J.W1. |
-| `json/citm` | sonic-rs 854us; simd-json 831us. | <= 750us. | M1 Pro macOS, native Rust release with `target-cpu=native`. | H.W3, J.W1. |
-| `json/canada` | sonic-rs 3.144ms; simd-json 3.226ms (`restart/corpora/SOTA.md:56`). | <= 2.8ms. | M1 Pro macOS, native Rust release with `target-cpu=native`. | H.W3, J.W1. |
-| `css/bootstrap` | lightning-css 4.16ms. | <= 3.0ms. | M1 Pro macOS, native Rust release with `target-cpu=native`. | H.W4, J.W1. |
-| `css/animate` | lightning-css 1.97ms. | <= 1.6ms. | M1 Pro macOS, native Rust release with `target-cpu=native`. | H.W4, J.W1. |
-| `simd/structural_scan` | simdjson On-Demand ~56000 Mbps on x86 AVX2; ~40000 Mbps on M-series NEON. | >= 40000 Mbps on M-series, >= 56000 Mbps on x86 AVX2; scalar parity hash matches. | M1 Pro macOS NEON and x86_64 AVX2 build host. | H.W1/H.W3, J.W1. |
+| `json/twitter` | sonic-rs 436us; simd-json 424us; M5 Max DOM-class anchors yyjson 3687 MiB/s / simdjson 2923 / sonic-rs Value-DOM 2438 (`restart/corpora/SOTA.md` §2.4). | <= 380us on M1 Pro; close to sonic-rs Value-DOM (2438 MiB/s) on M5 Max DOM-class. | M1 Pro macOS / M5 Max macOS, native Rust release with `target-cpu=native`. | H.W1/H.W2, J.W1. |
+| `json/citm` | sonic-rs 854us; simd-json 831us. | <= 750us on M1 Pro; ≥ yyjson 2498 MiB/s on M5 Max (skinny v3 already at 3571). | M1 Pro / M5 Max macOS, native Rust release with `target-cpu=native`. | H.W1/H.W2, J.W1. |
+| `json/canada` | sonic-rs 3.144ms; simd-json 3.226ms (`restart/corpora/SOTA.md:56`). | <= 2.8ms on M1 Pro; ≥ yyjson 1550 MiB/s on M5 Max (skinny v3 already at 1675). | M1 Pro / M5 Max macOS, native Rust release with `target-cpu=native`. | H.W1/H.W3, J.W1. |
+| `json/random` + `json/unicode_escapes` + `json/update-center` + `json/github_events` + `json/y_string_unicode` (expanded SOTA-BEAT gate) | sonic-rs / simdjson per-corpus M5 Max anchors at `skinny/profile/native-sidecars/`. | `parse_value_at` < 20% self-time on every row; outcome-G eliminated. | M5 Max macOS arm64 NEON. | H.W1 (typed event cursor) + H.W2 (Class A/B NEON), J.W1. |
+| `css/bootstrap` | lightning-css 4.16ms. | <= 3.0ms. | M1 Pro macOS, native Rust release with `target-cpu=native`. | H.W6, J.W1. |
+| `css/animate` | lightning-css 1.97ms. | <= 1.6ms. | M1 Pro macOS, native Rust release with `target-cpu=native`. | H.W6, J.W1. |
+| `simd/structural_scan` | simdjson On-Demand ~56000 Mbps on x86 AVX2; ~40000 Mbps on M-series NEON. | >= 40000 Mbps on M-series, >= 56000 Mbps on x86 AVX2; scalar parity hash matches. | M1 Pro macOS NEON and x86_64 AVX2 build host. | H.W2/H.W5, J.W1. |
 
-The SOTA close gates measure the Rust line only at H.W1/H.W3/H.W4 per Lock 8
-amendment (`restart/locks/14-LOCKS.md:48`). WASM SOTA measurements defer
-post-V1 alongside the V2 `WasmBackend: Backend` impl per `restart/ARCHITECTURE.md`
-§7.5; no measurement-pending WASM anchor lands in V1.
+The SOTA close gates measure the Rust line only at H.W1/H.W2/H.W4/H.W5/H.W6
+per Lock 8 amendment (`restart/locks/14-LOCKS.md:48`). WASM SOTA measurements
+defer post-V1 alongside the V2 `WasmBackend: Backend` impl per
+`restart/ARCHITECTURE.md` §7.5; no measurement-pending WASM anchor lands in V1.
 
 SOTA-parity is the meta-grammar correctness floor: a bbnf-generated parser
 that lands within the competitor envelope (e.g., `json/twitter` ≤ 480us at
-H.W3 against sonic-rs 436us) demonstrates V1 correctness regardless of
+H.W2 against sonic-rs 436us) demonstrates V1 correctness regardless of
 SOTA-beat status. SOTA-beat is the audacious target the user mandate
 anchors against (`json/twitter` ≤ 380us at J.W1, surpassing sonic-rs);
 the H tranche body owns the cost-driven rewrites + SIMD-recogniser tuning
-that closes the parity-to-beat delta. If H.W3/H.W4 measurements land at
-parity but not beat, J.W1 close gates record the parity-not-beat outcome
+that closes the parity-to-beat delta. If H.W1/H.W2/H.W3 measurements land
+at parity but not beat, J.W1 close gates record the parity-not-beat outcome
 and route SOTA-beat work to the H tranche body for further iteration; V1
 correctness does not gate on SOTA-beat.
 
-Benchmark reproducibility schema. Every benchmark row at H.W3, H.W4, and J.W1
+Benchmark reproducibility schema. Every benchmark row at H.W1/H.W2/H.W4 and J.W1
 must serialise the following metadata; rows missing any field fail the gate.
 
 | Field | Source |
@@ -260,7 +261,7 @@ Stub waves:
 | Wave | Scope | Consumer gate |
 |---|---|---|
 | A.W0 | Branch/tag preflight, archive `ser` and `gorgeous`, remove them from workspace. | `cargo metadata` succeeds without archive crates; `git rev-parse pre-restart-2026-05-04` resolves; greenfield branch exists. |
-| A.W1 | Create the V1 crate skeletons with Lock 13 tree shape; bind crate package names per Architecture §1 (unprefixed internal crates: `path`, `path-core`, `test-fixtures`, `passes`, `simd-scan`, `egraph`, `csp-solver`, `parse-that-regex`; user-facing crates retain `bbnf-` prefix). `path-ts` defers post-V1 alongside the V2 `TsBackend: Backend` impl per `restart/ARCHITECTURE.md` §7.5. | `cargo check --workspace` reaches expected stubs; `rg "bbnf-path\|bbnf-test-fixtures"` returns zero hits in workspace member declarations; `path-ts` does not appear as a V1 workspace member. |
+| A.W1 | Create the V1 crate skeletons with Lock 13 tree shape; bind crate package names per Architecture §1 (unprefixed internal crates: `path`, `path-core`, `test-fixtures`, `passes`, `bbnf-simd`, `egraph`, `csp-solver`, `parse-that-regex`; user-facing crates retain `bbnf-` prefix). `path-ts` defers post-V1 alongside the V2 `TsBackend: Backend` impl per `restart/ARCHITECTURE.md` §7.5. | `cargo check --workspace` reaches expected stubs; `rg "bbnf-path\|bbnf-test-fixtures"` returns zero hits in workspace member declarations; `path-ts` does not appear as a V1 workspace member. |
 | A.W2 | Replace root metadata schema. | Metadata validation accepts current nine grammars. |
 | A.W3 | Add source/error/grammar minimal APIs. | `grammar` can parse a seed `.bbnf` into AST. |
 | A.W4 | Add generalization and tree-shape lint gates; consume the lint manifest contract at `restart/ARCHITECTURE.md` §13.1 (lint name, pattern set, allowlist syntax, exit semantics, owning tranche — landed Phase 7.1). | No hardcoded grammar dispatch in generic crates; `cargo xtask lint-grammar-generalization` consumes the contract, never authors it. |
@@ -475,9 +476,9 @@ cargo test -p runtime visitor
 cargo test -p test-fixtures future_grammar_yaml
 ```
 
-## 13. Tranche H - Pratt, SIMD, structural-index-driven codegen
+## 13. Tranche H - Pratt, SIMD, typed-event codegen
 
-Goal: activate performance recognizers + structural-index-driven codegen template + per-target SIMD primitive layer (`bbnf-simd`) on the Rust line; close the SOTA-BEAT gates against sonic-rs LazyValue (2.32 GB/s twitter) and simdjson DOM (3.0 GB/s twitter) on the **arm64 Apple Silicon primary host**, then on **x86_64 AVX-512 VBMI2 secondary host** under conditional Phase 3 dispatch.
+Goal: activate performance recognizers + typed-event codegen template + per-target SIMD/ASM primitive layer (`bbnf-simd`) on the Rust line; close the expanded skinny SOTA-BEAT gate against sonic-rs, simd-json, yyjson, simdjson C++, and asmjson reference planes. The primary close is **arm64 Apple Silicon**. x86_64 AVX-512 closes as a secondary hardware gate with strict/permissive comparator rows separated.
 
 The H tranche post-2026-05-12 is no longer "aspirational" per Lock 8's earlier framing. It is a concrete engineering target with empirical attribution (`restart/skinny/audit/SOTA-BEAT-DESIGN.md` §1) and three measurable gates: (a) twitter Mbps wall-clock, (b) hot-leaf count vs comparator, (c) cycle-per-byte vs simdjson floor.
 
@@ -485,28 +486,29 @@ Inheritance:
 
 | Source | Use |
 |---|---|
-| Lock 10. | Pratt and SIMD are auto-detected (`restart/locks/14-LOCKS.md:52`); the cost model selects per-grammar `backend_shape ∈ {structural-index, eager-tape, collapsed-stage}`. |
+| Lock 10. | Pratt and SIMD are auto-detected (`restart/locks/14-LOCKS.md:52`); the cost model selects per-grammar `backend_shape ∈ {EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage}`. |
 | Lock 15. | Build-profile discipline (`lto=true codegen-units=1 panic="abort" debug=true`) — co-load-bearing with the codegen template inversion. |
 | Lock 16. | SIMD/ASM admissibility allowlist (§4 below carries the verbatim allowlist). |
 | Lock 5. | V1 ships `RustBackend: Backend` only via `restart/ARCHITECTURE.md` §7.5; WASM defers post-V1 as `WasmBackend: Backend`. |
 | Lock 8. | V1 SOTA close gates measure the Rust line only; WASM SOTA defers post-V1 (`restart/locks/14-LOCKS.md:48`). |
 | PASS-2 detector and SIMD coverage. | Detection thresholds and scalar/NEON/AVX2/AVX512 coverage (`restart/audit/pass-2-codegen/PASS-2.md` §3). |
 | SOTA corpus + comparative profile baseline. | JSON/CSS competitor baselines (`restart/corpora/SOTA.md:50-89`, `restart/corpora/SOTA.md:130-136`); six-agent comparative-profile cohort outputs at `skinny/profile/{sonic-rs-v2,simdjson-v2}/PROFILE-REPORT.md` (post-2026-05-12). |
-| SOTA-BEAT design. | `restart/skinny/audit/SOTA-BEAT-DESIGN.md` — empirical synthesis + three-phase plan + per-target SIMD primitive selection. |
+| SOTA-BEAT design. | `restart/skinny/audit/GRAND-SYNTHESIS-SOTA-BEAT-SK-V3.md` + `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md` — expanded-gate synthesis + concrete implementation packet. |
 
-Waves (host-arch primary; arm64 Apple Silicon first, then x86_64):
+Waves (host-arch primary; arm64 Apple Silicon first, then x86_64). The SK-V3 implementation packet (`restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md`) binds the wave routing below; the expanded SOTA-BEAT corpus from `restart/skinny/BENCH.md` §3 is the binding gate, not the historical triad. Per-wave M5 Max anchors derive from `skinny/profile/native-sidecars/PROFILE-REPORT.md`:
 
 | Wave | Scope | Consumer gate |
 |---|---|---|
-| H.W0 | Pratt recognizer facts and BIR `PrattSpine`. | Expression grammar uses auto-detected Pratt. |
-| H.W1 (Lock 15 enforcement) | Workspace-wide `[profile.release] lto=true codegen-units=1 panic="abort" debug=true`; `bbnf-simd` crate scaffold (per-target submodule layout per `SOTA-BEAT-DESIGN.md` §3.1); CPUID dispatch at parser construction. | Sonic-rs-shape hot-leaf count: every generated runtime crate's `cargo build --release` produces a fully-fused parse driver (≤ 2 hot leaves at samply ≥10% on twitter parity bench). |
-| H.W2 (Phase 1 — arm64 NEON primary path) | `bbnf-simd/aarch64/`: `vqtbl4q_u8` 4-table classifier (`classify_tbl4.rs`); `vshrn_n_u16` + `vsri` + `zip1` Validark movemask (`movemask.rs`); `vld1q_u8_x4` quad-load; NEON StringBlock with HasEsc flag emission (`string_block.rs`); exhaustive 256-byte-value parity tests against scalar reference. | arm64 NEON structural scan ≥ 40000 Mbps floor preserved; **twitter T1 ≥ 14000 Mbps (Phase 1 validation gate)**; cycle-per-byte ≤ 1.9 c/B on twitter. |
-| H.W3 (Phase 2 — structural-index-driven lowering for `Alt { Dispatch }`) | Cost model in `passes::recognizers` derives `LayoutFacts.backend_shape[rule_id]` from existing Grammar IR facts (first-set disjointness, `@error(recover)` presence, `@host fn` parse-time-decoded presence, `@layout` scope presence) per Lock 10 auto-detection mandate; lowerer at `crates/codegen/src/lower/rust.rs` emits `match source[offsets[*cursor]]` instead of `match source[pos]` for `Alt { Dispatch }` rules where `backend_shape = StructuralIndex`. HasEsc flag at scan time + lazy borrow in `parse_string`; set_len(0) drop bypass; jump-table dispatch via `core::hint::likely` on stable. No new BIR variant; no new BBNF directive. **DOM-class SOTA-BEAT primary gates measure here against yyjson DOM (3687 MiB/s twitter on M5 Max) and simdjson DOM (2923 MiB/s twitter).** | **Twitter T1 ≥ 2200 MiB/s (SOTA-BEAT sonic-rs Value-DOM 2438 anchor; closes the 2.2× DOM-class skinny gap)**; hot-leaf count ≤ 3 at samply ≥10%; cycle-per-byte ≤ 1.4 c/B on twitter. |
-| H.W4 (Phase 3 — x86_64 AVX-512 VBMI2 path; conditional) | `bbnf-simd/x86_64/avx512_vbmi2/`: `_mm512_mask_compressstoreu_epi8` one-shot offset emission (`compress.rs`); `_mm512_ternarylogic_epi64` 3-mask fusion (`mask_fuse.rs`); `vpermi2b` 128-byte classify (`classify.rs`); `_mm512_alignr_epi8` cross-window carry (`carry.rs`); BMI2 `_pdep_u64` AVX-2 fallback (`bmi2_emit.rs`); CPUID dispatch routes via `dispatch.rs`. | **x86_64 AVX-512 VBMI2 host twitter T1 ≥ 25000 Mbps (SOTA-BEAT simdjson DOM 24500 Mbps anchor)**; hot-leaf count ≤ 2 on twitter (Ice Lake / Zen 4+); cycle-per-byte ≤ 0.9 c/B on twitter. Conditional on AVX-512 VBMI2 hardware availability in CI; scalar SWAR fallback (`bbnf-simd/scalar/swar_8byte.rs`) ships parity tests on every commit. |
-| H.W5 (Phase 4 — collapsed-stage AVX-512 backend) | `crates/runtime/src/backends/collapsed_stage_avx512/`: 9-state explicit FSM (V/O/K/D/C/S/F/R/A) with PC-as-state direct threading via `r10`; `asm!`-driven (Lock 16 admissibility under "asmjson r10-direct-threading"); cost-model selects when `LayoutFacts.backend_shape = CollapsedStage` (auto-derived: target features include `avx512vbmi2` AND rule is hub with ≥4 byte-disjoint arms AND no recovery/layout/host-decode body); no opt-in directive, no feature flag gating selection beyond CPUID. | **Twitter T1 ≥ 5500 MiB/s on x86_64 AVX-512 VBMI2 (asmjson 10.93 GiB/s parity anchor)**; cycle-per-byte ≤ 0.45 c/B. |
+| H.W0 (preflight + Plan D capacity + escape_mask_64 fix) | Lock 15 enforcement (`[profile.release] lto=fat codegen-units=1 panic="abort" debug=true`); Plan D `Vec::with_capacity(256)` + geometric grow adopted as production default per Wave 2 Agent 6 evidence (deletes sampled and sparse-flag capacity helpers); `escape_mask_64` NEON correctness bug fix per Wave 2 Agent 5 evidence (xorshift adversarial repro `0xCAFEF00DBAADF00D`); `bbnf-simd` crate scaffold (per-target submodule layout per `SOTA-BEAT-DESIGN.md` §3.1); CPUID dispatch at parser construction. | `BBNF_SIMD_STRICT=1 cargo test -p bbnf-simd --release --test checkasm_parity` zero divergences; Plan D matches the cross-corpus throughput table at SK-V3 packet §4 (+4.8% random, +10.2% github_events, 23–64% capacity reclamation); release-build invocation confirms `-C lto=fat` + `codegen-units=1`. |
+| H.W1 (typed event cursor over tape projection — load-bearing) | Cost model in `passes::recognizers` derives `LayoutFacts.backend_shape[rule_id]` from existing Grammar IR facts (first-set disjointness, output mode, recovery, host decode, layout scope) per Lock 10 auto-detection mandate. Lowerer at `crates/codegen/src/lower/rust.rs` emits typed `EventCursor` consumption for `OffsetTape`/`EventTape` rules (`event.byte()` instead of `source[pos]`); direct field writes for `SinkOnly`; byte-position fallback for `EagerTape`. Whitespace boundary handling moves into the event cursor (no per-function `skip_ws`). String/number primitive source reads remain inside `parse-that/string` and `parse-that/number` as the only legal source-byte rescans. No new BIR variant; no new BBNF directive. | `parse_value_at` falls below 20% self-time on all five failing corpora (`random`, `unicode_escapes`, `update-center`, `github_events`, `y_string_unicode`), or the wave records the exact remaining leaf that replaced it; Class A corpora cross 96.6% of sonic-rs Value-DOM 2438 MiB/s on M5 Max DOM-class; `random` and `unicode_escapes` lose `parse_value_at` as the dominant samply leaf. |
+| H.W2 (bbnf-simd kernel contract — host-aarch64 first; two pathology-class fix kernels) | `bbnf-simd/aarch64/`: `vqtbl4q_u8` 4-table classifier; `vshrn_n_u16` + `vsri` + `zip1` interleaved movemask; `vld1q_u8_x4` quad-load; cross-chunk `vextq_u8`; **Class A NEON `match_tiny_plain_string` 16-byte class check** (per Wave 2 Agent 2 — replaces `generated.rs:161–172` scalar 8-byte loop whose hot body is the `cmp #0x22 / #0x5c / #0x20 / b.hs` cascade — single source edit lands both inlined key/value call sites at PCs `0x2734`/`0x3158`); **Class B NEON TBL-driven `\uXXXX` hex decode** (replaces the scalar `sub/sub/sub/csel` cluster in `unescape_json_string` with `vqtbl1q_u8` 16-byte LUT; 3 ops/nibble vs 11). PASS-2 differential parity via `bbnf-simd/tests/checkasm_parity.rs` is the admission gate. | Class A closes `random` / `update-center` / `github_events` (~50–60% throughput gain on bulk object-shaped corpora); Class B closes `unicode_escapes` / `y_string_unicode` (2–3× speedup; `unicode_escapes` within 5% of simdjson C++ 672 MiB/s M5 Max); arm64 NEON structural scan ≥ 40000 Mbps floor preserved; admission gate `BBNF_SIMD_STRICT=1 cargo test -p bbnf-simd --release --test checkasm_parity` zero divergences. |
+| H.W3 (parse-that primitive closure — string, Unicode, number) | `parse-that/string` (`StringMode { StrictJson, GrammarString, ByteString }` + `StringMatch { raw_start, raw_end, flags }`; flags `HAS_ESC | HAS_CONTROL | HAS_NON_ASCII | NEEDS_DECODE | UTF8_VALIDATED`); `parse-that/unicode` owns hex unit read, surrogate pair validation, UTF-8 encode, RFC 8259 noncharacter acceptance; `parse-that/number` owns raw span scan, digit-block SWAR baseline, `materialize_f64`/`materialize_i64`/`materialize_u64`, exact tests for `-0`, subnormals, overflow, `2^53`, exponent boundaries. `parse_bytes` validates UTF-8 once at scan boundary before any view is exposed; `parse(&str)` does no duplicate validation. No view accessor panics on invalid input. | JSONTestSuite string pack passes; `unicode_*`, `numbers`, `canada`, `mesh`, and `marine_ik` pass parse-only, full-traversal, and materialize-all-number/string rows; full-traversal rows reported alongside parse-only rows. |
+| H.W4 (workload gates + direct-to-struct proof + 5-shape backend_shape per-rule selection) | `bbnf-bench` adds the workload matrix from SK-V3 packet §7: `parse_only`, `parse_full_traversal`, `path_lookup`, `direct_to_struct`, `unicode_string_float`, `memory`, `cycles_per_byte`. Cost-model `derive_backend_shape` exercises all five `BackendShape` variants across the expanded corpora; direct-to-struct view path proves `SinkOnly` lowering against sonic-rs serde struct. | Expanded corpus has no outcome-G rows; no correctness/schema rows fail; 5-shape per-rule selection emits to `LayoutFacts.backend_shape` with `BBNF-BACKEND-SHAPE-INCONSISTENT` covering rejected configurations; Track 1 ≥ S on the expanded corpus. |
+| H.W5 (x86_64 AVX-512 esoterica path — strict additions on asmjson architecture) | `bbnf-simd/x86_64/`: AVX2/BMI2 floor (`_mm256_shuffle_epi8`, `_mm_clmulepi64_si128`, `_pdep_u64`/`_pext_u64` probes); AVX-512BW strict path (k-mask byte classes, ternary mask fusion, strict quote/escape/control validation); VBMI/VBMI2 (`_mm512_mask_compressstoreu_epi8`, `_mm512_alignr_epi8`); k-mask arithmetic family (`_kandn_mask64`, `_kxor_mask64`, `_kxnor_mask64`, `_kshiftrq`, `_ktestq`); VPCLMULQDQ-512; AVX-IFMA (`vpmadd52luq`/`vpmadd52huq`); VNNI (`vpdpbusd`); BITALG (`vpshufbitqmb` + `vpopcntb`); GFNI (`vgf2p8affineqb`). Collapsed-stage backend at `crates/runtime/src/backends/collapsed_stage/`: state machine over mask stream emitting typed events or direct sink; selected by cost model and CPUID, not by directive. asmjson architecture verbatim (9-state FSM + PC-as-state via `r10` indirect jump + tzcnt-driven seek + msac-style EOB-pad) plus strict-additions-on-top per Lock 16. | x86_64 host rows beat simdjson DOM 2923 MiB/s twitter and yyjson 3687 MiB/s twitter on strict parse-only; asmjson Zen 4 10.93 GiB/s comparison reported only on equivalent hardware with strictness/permissive planes split; cycle-per-byte target ≤ 0.45 c/B on AVX-512 host. |
 | H.W6 | Early CSS SOTA gates. | `css/bootstrap` ≤ 3.0ms, `css/animate` ≤ 1.6ms on M1 Pro with metadata. |
+| H.W7 | Pratt recognizer facts and BIR `PrattSpine`. | Expression grammar uses auto-detected Pratt. |
 
-The structural-index-driven codegen template at H.W3 is **the** load-bearing architectural change for SOTA-BEAT on arm64 (the host); the AVX-512 VBMI2 path at H.W4 is **the** route past simdjson on x86_64 hardware. The collapsed-stage asmjson-class backend at H.W5 is aspirational and not on the V1 close gate; it lands behind a feature gate as a parallel emitter when H.W4 measurement validates the AVX-512 path. The prior six-wave shape's WASM-binding wave routes to V2 per Lock 8.
+The typed event cursor at H.W1 is the load-bearing architectural change for the current arm64 expanded-gate miss; H.W2's Class A/B kernels close the two distinct pathology classes diagnosed by Wave 2 Agent 2 (`profile/wave2-asm/PROFILE-REPORT.md`). The x86_64 route past simdjson, yyjson, and asmjson uses the same cost model but different kernels; collapsed-stage is selected by grammar facts and CPUID when it beats retained tape under strict correctness. Per-wave M5 Max DOM-class throughput anchors (twitter, hardware envelope 3.34 c/B per GiB/s @ 3.5 GHz): yyjson 3687 MiB/s (no SIMD, 0.91 c/B), simdjson 2923 MiB/s (1.142 c/B), sonic-rs Value-DOM 2438 MiB/s, current skinny v3 ~2.5–3.5 GiB/s on DOM-class corpora. The prior WASM-binding wave routes to V2 per Lock 8.
 
 ### §13.1 Admissible SIMD primitives (Lock 16 allowlist, verbatim)
 
@@ -514,22 +516,31 @@ Each row carries citation + architecture + replaces. Hand-tuned undocumented int
 
 **arm64 NEON** (`bbnf-simd/aarch64/`):
 
-| Primitive | Intrinsic | Citation | Replaces / enables |
-|---|---|---|---|
-| 4-table 64-byte classify | `vqtbl4q_u8` | Lemire 2019 "Arbitrary byte-to-byte maps using ARM NEON" | sonic-rs's 1-table `vqtbl1q_u8`; saves ~16 c/64B per intrinsics agent quantification |
-| Interleaved-vector movemask | `vld4q_u8` + `vshrn_n_u16` + `vsriq_n_u8` + `vzip1q_u8` | validark.dev/posts/interleaved-vectors-on-arm/ (Validark 2024) | sonic-rs's AND-OR tree; 4× faster bitmap synthesis |
-| Quad-load 64 bytes | `vld1q_u8_x4` | Arm A64 ISA | 4× separate `vld1q_u8`; frees 2 M-series load-ports |
-| Branchless mask select | `vbslq_u8` | Arm A64 ISA | conditional emit/branch in `string_block.rs` |
-| Byte popcount | `vcntq_u8` + `vaddvq_u8` | Arm A64 ISA | scalar `count_ones()`; saves GPR round-trip |
+| Primitive | Intrinsic | Citation | Replaces / enables | asmjson doesn't use |
+|---|---|---|---|---|
+| 4-table 64-byte classify | `vqtbl4q_u8` | Lemire 2019 "Arbitrary byte-to-byte maps using ARM NEON" | sonic-rs's 1-table `vqtbl1q_u8`; saves ~16 c/64B per intrinsics agent quantification | arm64-only; asmjson is AVX-512 only |
+| Interleaved-vector movemask | `vld4q_u8` + `vshrn_n_u16` + `vsriq_n_u8` + `vzip1q_u8` | validark.dev/posts/interleaved-vectors-on-arm/ (Validark 2024) | sonic-rs's AND-OR tree; 4× faster bitmap synthesis | arm64-only |
+| Quad-load 64 bytes | `vld1q_u8_x4` | Arm A64 ISA | 4× separate `vld1q_u8`; frees 2 M-series load-ports | arm64-only |
+| Branchless mask select | `vbslq_u8` | Arm A64 ISA | conditional emit/branch in `string_block.rs` | arm64-only |
+| Byte popcount | `vcntq_u8` + `vaddvq_u8` | Arm A64 ISA | scalar `count_ones()`; saves GPR round-trip | arm64-only |
+| **LD4-interleaved 4-channel classifier** (NEW 2026-05-12; Wave 1 NEON research) | `vld4q_u8` + per-channel `vqtbl1q_u8` + `vshrn`/`vsri`/`zip1` | validark.dev/posts/interleaved-vectors-on-arm/; simdjson PR #2333 | parallel-channel byte classification; ~10% drop in simdjson stage1 c/B on Apple arm64 (M5 Max-specific lever) | AVX-512 only; lever unreachable for asmjson |
+| **NEON ternary bitwise BCAX/EOR3** (NEW 2026-05-12; ARMv8.2-A SHA3 extension) | `vbcaxq_u8` (Bit-Clear-And-XOR), `veor3q_u8` (3-way XOR) | Arm Architecture Reference Manual ARMv8.2-A SHA3 | equivalent to AVX-512 `vpternlogq` on arm64; collapses `bic + eor` 2-op into 1-op; ~12–18% inner-loop op-count reduction; on every M1+ and Neoverse-V1/V2 | sonic-rs does NOT use; arm64-only |
+| **NEON set-membership (svmatch_u8 emulation)** (NEW 2026-05-12) | `vceqq_u8` + `vorrq_u8` reduction tree | Lemire 2026 "The fastest way to match characters on ARM processors" | portable equivalent of SVE2 `svmatch_u8` against 16-byte alphabet; same source ships M5 Max NEON and dispatches to native MATCH on SVE2 hosts (Graviton4) | arm64-only |
 
-**x86_64 AVX-512 VBMI2** (`bbnf-simd/x86_64/avx512_vbmi2/`; Ice Lake+ / Zen 4+):
+**x86_64 AVX-512 VBMI2** (`bbnf-simd/x86_64/avx512_vbmi2/`; Ice Lake+ / Zen 4+). Per Wave 1 Agent 1 + Agent 3 evidence, asmjson's actual instruction footprint is minimal — only `vpcmpeqb`, `kmovq`, `vpcmpub`, `korq`, `vmovdqu8`, `tzcnt`; **zero** `vpternlogq`, `vpclmulqdq`, `vpcompressb`, `vgf2p8affineqb`, `vpermb`, `vpermt2b`, `vpmadd52`, `vpopcntb`. Esoterica below are the route to outclass asmjson with strict architectural additions on top:
 
-| Primitive | Intrinsic | Citation | Replaces / enables |
-|---|---|---|---|
-| One-shot structural-offset emission | `_mm512_mask_compressstoreu_epi8` | felixcloutier VPCOMPRESSB; Lemire 2022 "Parsing JSON faster with AVX-512"; simdjson `icelake/simd.h:157` **explicitly leaves this unused for portability** | tzcnt + blsr scalar loop (~25 c/64B saved) |
-| 3-mask boolean fusion | `_mm512_ternarylogic_epi64` | WikiChip AVX-512F; Sneller "Branchless Code With AVX-512" | (in-string ∧ ¬escaped) ∧ structural in 1 µop |
-| 128-byte byte-shuffle classify | `vpermi2b` | WikiChip AVX-512_VBMI | 2× `vpshufb` lane-restricted lookups |
-| Cross-window quote-state carry | `_mm512_alignr_epi8` | felixcloutier | explicit prev-bit propagation |
+| Primitive | Intrinsic | Citation | Replaces / enables | asmjson uses? |
+|---|---|---|---|---|
+| One-shot structural-offset emission | `_mm512_mask_compressstoreu_epi8` | felixcloutier VPCOMPRESSB; Lemire 2022 "Parsing JSON faster with AVX-512"; simdjson `icelake/simd.h:157` **explicitly leaves this unused for portability** | tzcnt + blsr scalar loop (~25 c/64B saved) | No — uses tzcnt-driven seek |
+| 3-mask boolean fusion | `_mm512_ternarylogic_epi64` | WikiChip AVX-512F; Sneller "Branchless Code With AVX-512" | (in-string ∧ ¬escaped) ∧ structural in 1 µop | No — uses separate `vpand`/`vpor` |
+| 128-byte byte-shuffle classify | `vpermi2b` | WikiChip AVX-512_VBMI | 2× `vpshufb` lane-restricted lookups; supports alphabet >7-byte first-set | No — limited to 16-byte alphabet |
+| Cross-window quote-state carry | `_mm512_alignr_epi8` | felixcloutier | explicit prev-bit propagation | Used (shift-register pattern) |
+| **k-mask arithmetic family** (NEW 2026-05-12) | `_kandn_mask64`, `_kxor_mask64`, `_kxnor_mask64`, `_kshiftrq`, `_ktestq` | Travis Downs kreg-facts blog (2019/2020); AVX-512F base | keep classifier masks in k0..k7 across state transitions; spill only on EOB | No — uses only `korq` + `kmovq`; ~4 store+load eliminated per chunk |
+| **VPCLMULQDQ at 512-bit lane** (NEW 2026-05-12; Ice Lake+, Zen 3+) | `_mm512_clmulepi64_epi128` | WikiChip VPCLMULQDQ; BranchFree.org "Quote pairs with PCLMULQDQ" (2019); Linux kernel CRC-32C 45–60 GB/s with this primitive | simdjson prefix-XOR string-bitmap primitive at 4× width vs 128-bit `_mm_clmulepi64_si128` | No — uses cmp+branch on backslash per byte; no prefix-XOR primitive |
+| **AVX-IFMA `vpmadd52luq`/`vpmadd52huq`** (NEW 2026-05-12; Sapphire Rapids+, Zen 4+) | `_mm512_madd52lo_epu64`, `_mm512_madd52hi_epu64` | WikiChip AVX-512_IFMA; Lemire 2024 Sapphire Rapids vs Zen 4 JSON | Eisel-Lemire mantissa multiplication for `parse_number`; mantissa-mul stays in vector lanes, returns f64 directly; ~3× on canada/mesh/marine_ik/numbers | No — dispatches number tokens to a Rust `JsonWriter` vtable (no number parse in asm) |
+| **AVX-512 VNNI `vpdpbusd`** (NEW 2026-05-12; Cascade Lake+, Zen 4+) | `_mm512_dpbusd_epi32` | Lemire 2023 "Parsing integers quickly with AVX-512" | byte×byte→i32 dot product, 4 bytes per int32 lane; 16-digit chunk → 4 lanes of `(d3*1000 + d2*100 + d1*10 + d0)` via one dot product | No — no number parse in asm |
+| **AVX-512 BITALG `vpshufbitqmb` + `vpopcntb`** (NEW 2026-05-12; Ice Lake+, Zen 4+) | `_mm512_bitshuffle_epi64_mask`, `_mm512_popcnt_epi8` | WikiChip AVX-512_BITALG | bit-gather 8 selected bits per 64-bit lane into k-mask (inverse of `vpcompressb`); per-byte popcount; per-state classification becomes data, not code | No — uses per-byte cmp + branch trees |
+| **AVX-512 GFNI** (NEW 2026-05-12; Ice Lake+, Zen 4+) | `_mm512_gf2p8affine_epi64_epi8` | Wojciech Mula 2018-2024; Intel GFNI Technology Guide 2018 | arbitrary 8-bit affine transformation in 1 µop; 2× over `vpshufb`; single-op character classification for any grammar's structural-byte classify | No — uses per-state `vpcmpeqb` against literal byte sets |
 
 **x86_64 AVX-2 + BMI2** (`bbnf-simd/x86_64/avx2/`; Haswell+ / Zen 1+):
 
@@ -558,8 +569,8 @@ Hard close:
 
 ```sh
 cargo test -p passes recognizers
-cargo test -p simd-scan
-cargo test -p simd-scan exact_prefilter_parity
+cargo test -p bbnf-simd
+cargo test -p bbnf-simd exact_prefilter_parity
 cargo test -p parse-that-regex cross_engine_parity
 cargo bench -p bbnf-bench --bench sota_json
 cargo bench -p bbnf-bench --bench sota_css
@@ -718,8 +729,9 @@ Generated source is a tracked product, not incidental output.
 | F.W3 | Template headers and equality land. | Budget gate becomes required; per-grammar runtime LOC must be in PASS-2 baseline +/- 2 percent; xtask wall under 60s. |
 | F.W4 | Generated LOC budget tooling. | `cargo xtask generated-loc-budget` returns under +2 percent across the seed set; wall under 60s. |
 | F.W5 | Current nine seed grammars regenerate. | +2 percent ceiling enforced for every grammar; wall under 90s. |
-| H.W3 | Early JSON SOTA gates run with SIMD-target output. | SIMD-attributed LOC reported by target (AVX2/NEON/scalar); JSON SOTA delta numeric; wall under 120s. |
-| H.W4 | Early CSS SOTA gates. | CSS visitor/path additions reported separately under PASS-3 generated visitor LOC budget; wall under 120s. |
+| H.W1/H.W2 | Early JSON SOTA gates run with SIMD-target output (typed event cursor + Class A/B NEON kernels). | SIMD-attributed LOC reported by target (AVX2/NEON/scalar); JSON SOTA delta numeric; wall under 120s. |
+| H.W5 | x86_64 AVX-512 esoterica path; collapsed-stage backend. | AVX-512 SIMD-attributed LOC reported alongside arm64 NEON; strict/permissive comparator planes split. |
+| H.W6 | Early CSS SOTA gates. | CSS visitor/path additions reported separately under PASS-3 generated visitor LOC budget; wall under 120s. |
 | J | Final release artifacts regenerate from clean checkout. | Budget and equality are release gates; wall under 180s end-to-end including parity matrix. |
 
 PASS-2 is the authority for the +2 percent generated LOC ceiling
@@ -783,10 +795,12 @@ ledger.
 | Generated grammar/runtime files (`runtime/src/grammars/<name>/generated.rs`). | Not bound by 4-10. | LOC excepted; budget rows in §20 govern. | Lock 6 requires committed generation; LOC ceiling is the +2 percent budget. | `cargo xtask generated-loc-budget --max-growth 1.02`. |
 | Generated data tables (Pratt, SIMD, scanner). | Not bound. | Excepted with header metadata. | Data products carry source metadata and stable headers, not LOC ceilings. | `cargo xtask lint-generated-headers`. |
 | Proc-macro roots (`*-derive`, `path/src/macro_impl`). | 4-10. | 500 LOC handwritten ceiling. | None; proc-macro roots follow the handwritten rule. | `cargo xtask lint-tree` and `cargo xtask lint-loc`. |
-| SIMD intrinsic files (`simd-scan/src/avx2.rs`, `neon.rs`). | 4-10 in parent dir. | 500 LOC ceiling unless the file is single-target intrinsics. | Single-target intrinsic files carry a tranche-local LOC exception. | `cargo xtask lint-loc --simd-exception`. |
+| SIMD intrinsic files (`bbnf-simd/src/avx2.rs`, `neon.rs`). | 4-10 in parent dir. | 500 LOC ceiling unless the file is single-target intrinsics. | Single-target intrinsic files carry a tranche-local LOC exception. | `cargo xtask lint-loc --simd-exception`. |
 
-The lock table in README marks all 14 locks as restart inputs
-(`restart/README.md:377-397`).
+The lock table in README marks all 16 locks as restart inputs
+(`restart/README.md:377-397`). Locks 15 + 16 (build-profile discipline + SIMD/ASM
+admissibility allowlist) land 2026-05-12 after the V9.2 lazy-tape refutation
+and the six-agent comparative-profile cohort.
 
 ## 22. Documentation Plan
 
@@ -922,7 +936,7 @@ Phase 8.4 absorbs the V8 simplification candidates routed to the MASTER-PLAN tri
 | α5 | architectural cardinality | `ARCH §10.1:1444-1449` rewrite-budget 4 → 3 categories; fold `simplification-rewrites` into `codegen::verify` (no e-graph need; one-pass dead-mark elision belongs alongside regen-equality at F.W3); add LOAD-BEARING vs ASPIRATIONAL labels per Lens K | patch-delta | §10.1 budget table loses the fourth row; following paragraph reframes thresholds as three-category contract |
 | β1 | diagnostic vocabulary | `ARCH §7.4:1032-1063` retire numeric alias system (`BBNF-LIFE001`, `BBNF-LIFE002`, `BBNF-VISIT002`, `BBNF-LAYOUT002`, `BBNF-OPT001`, `BBNF-OPT002`, `BBNF-PATH001`, `BBNF-PATH002`, `BBNF-GRAMMAR001`, `BBNF-CG001`); pure-numeric codes (`BBNF-LIFE003`, `BBNF-LIFE009`, `BBNF-VISIT001`, `BBNF-VISIT003`, `BBNF-LAYOUT001`, `BBNF-PATH003`, `BBNF-HOST001`, `BBNF-HOST002`, `BBNF-HOST003`, `BBNF-GEN014`, `BBNF-CODEGEN021`, `BBNF-CODEGEN033`, `BBNF-SEM040`) get human-readable replacements | patch-delta | catalogue table edits; cookbook references at §24 already use human-readable forms; §10.1 paragraph that emits OPT001/002 cites human-readable codes |
 | γ10 | host-language leverage | `ARCH §5:739-745` Cargo.toml workspace metadata cross-host carrier; V1 carrier remains Cargo.toml; sidecar promotion documented in MASTER-PLAN §24 carry routed to tranche A or J body, not V2 amendment | patch-delta | one-line note at §5; new MASTER-PLAN §24 carry row routes the cross-host metadata-carrier work to tranche-body |
-| δ8 | tranche-body routing | `MASTER-PLAN §4:131-141` SOTA gates; SOTA-parity is correctness floor (V1 close at J.W1); SOTA-beat is audacious aspirational at tranche-H body | patch-delta | one-sentence cite below the SOTA-row table at §4 distinguishes parity-floor from beat-aspiration; H tranche §13 wave routing already binds H.W3/H.W4 early gates and J.W1 final gates |
+| δ8 | tranche-body routing | `MASTER-PLAN §4:131-141` SOTA gates; SOTA-parity is correctness floor (V1 close at J.W1); SOTA-beat is audacious aspirational at tranche-H body | patch-delta | one-sentence cite below the SOTA-row table at §4 distinguishes parity-floor from beat-aspiration; H tranche §13 wave routing (SK-V3 re-routed) binds H.W1 (typed event cursor) / H.W2 (Class A/B NEON) early gates and J.W1 final gates |
 | δ9 | RETIRED Phase 8.3.1 | function composition library V2 amendment | verify-only-stub | Phase 8.3.1 Q3 user adjudication DELETED the library entirely; V1 function-value surface absorbs every composition use case via inline closure expression; trio carries no V2 row |
 | δ10 | RETIRED Phase 8.3.1 | CHR-improvement layer V2 amendment | verify-only-stub | Phase 8.3.1 Q2 user adjudication FOLDED CHR-improvement into V1 csp-solver as constraint-emission helper; trio carries no V2 row; α2 above amends §8.2 to reflect the V1 fold |
 | ε5 | hygiene | `MASTER-PLAN §24:769-791` carry ledger sweep; no V2 amendment row remains for V1-folded items; ASPIRATIONAL items route to tranche bodies (H body for SOTA-beat, D body for DK13 rank-N + schema-miner telemetry, I body for DAP/LSP/incremental + reuse-map cookbook) | patch-delta | §24 surveys for stale "V2 amendment" rows and re-routes; the three surviving V2-amendment rows (TS production, `path-ts` schema, WASM ABI, `path-ts` package publication timing) all bind to live V2 backends per Lock 5 + Lock 11, not retired V1-folds |

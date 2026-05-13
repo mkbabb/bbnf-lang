@@ -1,9 +1,15 @@
 # IMPLEMENTATION-PACKET-V2 — Multi-Wave SOTA-BEAT Implementation
 
-Status: READY for dispatch as multi-wave sequence.
+Status: HISTORICAL / SUPERSEDED BY SK-V3 expanded-gate packet.
 Supersedes: `restart/skinny/audit/IMPLEMENTATION-PACKET-SOTA-BEAT.md` (V1 packet predated the 2026-05-12 corpus-expansion + dav1d/ASM lift + yyjson force-inline lever + tape-union clarification; V2 carries all of these without contrivances).
 Anchor spec: `restart/skinny/audit/SOTA-BEAT-DESIGN.md` (post-2026-05-12-amendments).
 Empirical anchors: `skinny/profile/{skinny-expanded,sonic-rs-expanded,simdjson-expanded,yyjson,rapidjson,serde_json,asm-string-unicode}/PROFILE-REPORT.md`.
+
+> **SK-V3 note.** This packet describes the pre-expanded-gate multi-wave plan.
+> The current measured authority is `skinny/RESULTS.md`: the historical triad
+> passes, but the expanded corpus is overall G / NoGo. Keep this packet as
+> historical SOTA-BEAT research and do not use it to override
+> `IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md`.
 
 This packet carries verbatim implementation edicts as five waves, each independently measurable, each committable as one or more atomic commits. Boundary discipline: implementation lives entirely under `skinny/`; no `restart/` files modified during execution. The user has explicitly mandated **no contrivances, no new directives, no deferrals**.
 
@@ -13,8 +19,8 @@ This packet carries verbatim implementation edicts as five waves, each independe
    - yyjson: 0.91 c/B = 3687 MiB/s (no SIMD; force-inline lever)
    - simdjson DOM: 1.142 c/B = 2923 MiB/s (two-stage SIMD)
    - sonic-rs Value-DOM: ~2.3 c/B = 2438 MiB/s (LTO fusion + NEON StringBlock)
-   - **skinny current**: 5.07 c/B = 658 MiB/s (= 5521 Mbps per skinny formula `bytes*8000/ns`)
-   - **Closure required**: 5.6× cycle reduction to beat yyjson; 4.4× to beat simdjson; 2.2× to beat sonic-rs Value-DOM.
+   - **skinny current**: historical triad passes; expanded corpus is overall G / NoGo.
+   - **Closure note**: this packet is historical. SK-V3 owns typed-event cursor and expanded-gate close.
 
 2. **Memory disciplines (binding per `~/.claude/projects/.../memory/`)**:
    - `feedback_no_inline_tests`: all tests in `tests/` directory, never `#[cfg(test)]` in `src/`.
@@ -133,7 +139,7 @@ samply record --save-only --unstable-presymbolicate -o /tmp/wave1-twitter.json.g
 
 **Effort**: ~150 LOC + tests. **Cap**: 8 hours.
 
-**Goal**: New `crates/bbnf-simd/` crate replacing the JSON-overfit `crates/simd-scan/`. Per-target NEON kernels for byte classification, movemask, quad-load, cross-chunk byte-shift, digit-block MAC.
+**Goal**: `crates/bbnf-simd/` replaces the old JSON-overfit scanner surface. Per-target NEON kernels for byte classification, movemask, quad-load, cross-chunk byte-shift, digit-block MAC.
 
 ### §2.1. Crate scaffold
 
@@ -197,12 +203,12 @@ pub trait SimdScannerHook {
 ### §2.4. Verification
 
 ```bash
-cargo test -p bbnf-simd --release       # parity tests on all 14 corpora
+cargo test -p bbnf-simd --release       # parity tests on expanded corpus
 cargo run -p xtask --release -- bench-json
 samply record --save-only -o /tmp/wave2-twitter.json.gz -- ./target/release/profile-lazy twitter
 ```
 
-**Wave 2 gate**: twitter T1 ≥ 1330 MiB/s; hot-leaf count ≤ 3; c/B ≤ 2.5; **parity tests pass on all 14 corpora + 95 JSONTestSuite y_string conformance tests**.
+**Wave 2 measured status**: implemented dependency replacement; parity tests cover byte/corpus cases under `crates/bbnf-simd/tests/`. The original Wave 2 re-bench landed at outcome G with twitter Track 1 14810 Mbps and canada structural-only scan 62362 Mbps. That is now historical: local hot-path work passed the triad, but the expanded corpus remains G / NoGo. Do not route back to the old scanner surface, tape-width work, or the rejected sidecar structural-index typed-parser prepass without a new before/after bench row.
 
 **Commits** (one per atomic step):
 - `feat(bbnf-simd): crate scaffold with per-target submodules + vendored x86inc.asm`
@@ -240,7 +246,7 @@ Edit `skinny/crates/codegen/src/lower/rust.rs` `lower_alt_dispatch` function. Re
 
 Per `SOTA-BEAT-DESIGN.md` §4.3 + §4.4. ~100 LOC.
 
-### §3.4. Corpus expansion to 14 corpora
+### §3.4. Corpus expansion
 
 Per BENCH.md §3.1 (post-amendment). Download missing corpora + synthesize unicode_mixed + unicode_escapes per `xtask/src/bin/corpus_gen.rs`. Per `skinny/crates/test-fixtures/corpus/json/manifest.toml`.
 
@@ -260,7 +266,7 @@ cargo run -p xtask --release -- check-conformance   # 95 JSONTestSuite y_string 
 samply record --save-only -o /tmp/wave3-twitter.json.gz -- ./target/release/profile-lazy twitter
 ```
 
-**Wave 3 gate**: twitter T1 ≥ 2375 MiB/s (BEAT sonic-rs Value-DOM 2438 MiB/s); hot-leaf count ≤ 2; c/B ≤ 1.4; **all 14 corpora pass parity**; **95/95 JSONTestSuite y_string tests pass**; **float-bit-exact parity on canada/numbers/mesh/marine_ik**.
+**Wave 3 gate**: superseded by SK-V3 expanded-gate workload matrix. The old twitter-only gate is insufficient.
 
 **Commits**:
 - `feat(passes/recognizers): derive_backend_shape cost-model for LayoutFacts (Lock 10 auto-detect; no new directive)`

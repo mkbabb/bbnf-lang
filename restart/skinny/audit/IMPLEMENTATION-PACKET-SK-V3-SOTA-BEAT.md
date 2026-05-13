@@ -6,8 +6,9 @@ Authority: `restart/skinny/audit/GRAND-SYNTHESIS-SOTA-BEAT-SK-V3.md`
 
 ## 0. Close condition
 
-The packet is complete only when the expanded skinny gate is above SOTA within
-the skinny bounds:
+The expanded corpus close is satisfied on the M5 Max host (arm64) without
+any `CollapsedStage` participation. The packet is complete when the
+expanded skinny gate is above SOTA within the skinny bounds:
 
 ```sh
 cargo run -p xtask --release -- check-conformance
@@ -25,7 +26,9 @@ Required report:
   top cluster;
 - string/Unicode and number materialization gates pass;
 - native sidecar rows report yyjson, simdjson C++, and asmjson where the host
-  hardware can run them, with strictness plane recorded.
+  hardware can run them, with strictness plane recorded — **these are
+  comparator-only**; the SK-V3 close does not require BBNF-generated
+  `CollapsedStage` code on x86_64.
 
 ## 1. Non-negotiables
 
@@ -37,6 +40,8 @@ Required report:
 | No JSON-specific generic crate code | Lock 14 lint stays green; grammar names appear only in generated/runtime grammar modules or bench fixture names. |
 | Scalar reference per primitive | `cargo test -p bbnf-simd --release`; primitive parity tests run before throughput claims. |
 | Profiles are first-class | every SOTA claim has samply/perf profile paths and c/B. |
+| **Phase 4 (`CollapsedStage`) is NOT part of the SK-V3 close** | The SK-V3 close requires the expanded SOTA-BEAT gate on M5 Max (arm64); it does not require any x86_64 path. If Zen 4 silicon access does not materialise within the SK-V3 cap, Phase 4 (Wave 6b in this packet) is deferred to a successor tranche with its own plan document, **NOT** folded into a successor wave of SK-V3. This guards against the AW-V auto-derive failure-mode recurrence (`docs/tranches/meta-audit/archaeology/era-V-dta-psi-rut.md:187-188`). Per the V9.5 PSI excavation cohort (2026-05-13): codegen-emitted Rust automaton is the proximate cause of the prior 1000-commit failure; LLVM cannot compile-away the dispatch overhead the way it does for recursive descent. `CollapsedStage` as Rust codegen is structurally that same failure shape. The shape is preserved in the taxonomy (cost model can derive it) but its dispatch is gated by NASM authoring + Zen 4 silicon + per-grammar parity harness. |
+| **Wave 3 substrate ships with same-wave consumer** | Per `LESSONS-LEARNED.md:17-26` (2026-04-29 canonical rule). Every wave exit cites a samply leaf at a consumer fn with ≥X% self-time; wave exit blocks if no consumer cite. |
 
 ## 2. Wave 0: authority and profiling preflight
 
@@ -458,22 +463,116 @@ cargo run -p xtask --release -- gate-json
 Pass condition: expanded corpus has no G rows and no correctness/schema rows
 fail.
 
-## 8. Wave 6: x86_64 strict SOTA path
+## 8. Wave 6: x86_64 strict SOTA path (split into 6a + 6b post-V9.5-excavation)
+
+Per the V9.5 PSI excavation cohort (2026-05-13), this wave splits into two
+sub-waves with distinct admission criteria. Wave 6a is unconditional once
+x86_64 dev access exists; Wave 6b is deferred to a successor tranche.
+
+### 8.0 Why the split
+
+The asmjson reference (`10.93 GiB/s` Zen 4 AVX-512 DOM) is built from
+**hand-written NASM** implementing a 9-state DPDA (per FSM-correctness
+audit §d: not a pure FSM — carries `frames_buf[MAX_JSON_DEPTH=64]` +
+`open_buf[64]` as a hardware-bounded explicit stack; the 9 states are the
+finite-control fragment only). Its complete AVX-512 footprint is 10×
+`vpcmpeqb` + 10× `kmovq` + 2× `vpcmpub` + 6× `korq` + 2× `vmovdqu8` + 18×
+`tzcnt` per chunk. That is the **entire** instruction inventory of the
+published SOTA number.
+
+The user's load-bearing context (2026-05-13): "The automaton overhead that
+we implemented directly in Rust not ASM had far too much overhead that the
+LLVM optimizer could not compile away — though our recursive descent likely
+compiled into an automaton directly, a direct approach with Rust just did
+not work." This is the 1000-commit Era V failure mode the V9.5 excavation
+surfaced. Codegen-emitted Rust DPDA is structurally that same failure
+shape. The two routes that make `CollapsedStage` materially different from
+PSI/DTA: (1) hand-written NASM kernel in `bbnf-simd/x86_64/*.asm` (the
+asmjson route — major engineering commitment); (2) drop `CollapsedStage`
+from this packet and consume the AVX-512 esoterica as primitives inside
+`OffsetTape` recursive descent.
+
+This packet adopts the second route for the SK-V3 close (Wave 6a) and
+defers the first to a successor tranche (Wave 6b).
+
+### 8a. Wave 6a — AVX-512 primitive admission (unconditional, consumed by OffsetTape)
 
 Owner paths:
+- `skinny/crates/bbnf-simd/src/x86_64/avx512_{gfni,kmask,vpclmul,bitalg,vnni}/`
+- `skinny/crates/bbnf-simd/src/x86_64/avx_ifma/`
+- `skinny/crates/bbnf-simd/src/x86_64/avx2/` (BMI2 + CLMUL128 fallback)
 
-- `skinny/crates/bbnf-simd/src/x86_64/`
-- `skinny/crates/runtime/src/backends/collapsed_stage/`
-- `skinny/crates/bbnf-bench/native/` or sidecar harness
+Tasks:
 
-Framing: **asmjson does not use esoterica.** Its 10.93 GiB/s Zen 4 AVX-512 DOM
-anchor is built entirely from a 9-state FSM + PC-as-state via `r10` indirect
-jump + `tzcnt`-driven seek + msac-style EOB-pad. The complete AVX-512
-footprint is 6× `vpcmpeqb` + 10× `kmovq` + 2× `vpcmpub` + 6× `korq` + 2×
-`vmovdqu8` + 18× `tzcnt` per chunk. That is the **entire** instruction
-inventory of the published SOTA number. The implication for SK-V3: we adopt
-that architecture verbatim and then stack esoterica strictly on top to
-outclass it.
+1. Land each Lock 16 AVX-512 primitive as a **standalone `bbnf-simd` kernel**
+   with scalar reference + checkasm parity, **not as a component of
+   `CollapsedStage`**:
+   - `vgf2p8affineqb` (GFNI) — replaces 6× `vpcmpeqb` byte-class compare
+   - `_kandn_mask64` / `_kxor_mask64` / `_kxnor_mask64` (k-mask family) —
+     keeps masks in `k0..k7` across state hops; saves 4 store+load/chunk
+   - `_mm512_clmulepi64_epi128` at 512-bit lane (VPCLMULQDQ) — 4× simdjson's
+     128-bit prefix-XOR
+   - `vpmadd52luq` / `vpmadd52huq` (AVX-IFMA) — Eisel-Lemire mantissa
+   - `vpdpbusd` (VNNI) — digit-block byte×byte→i32 dot-product
+   - `vpshufbitqmb` / `vpopcntb` (BITALG) — multi-class classify in 1 µop
+2. Consume primitives from the existing `OffsetTape` lowering pattern on
+   x86_64 dispatch hubs. **The existing structural-index-driven codegen
+   template already has the access pattern**; the primitives accelerate
+   the underlying scan and string/number primitives.
+3. CPUID dispatch in `bbnf-simd::select_classifier()` selects per-host.
+4. AVX-2 + BMI2 fallback (`_mm256_shuffle_epi8`, `_pdep_u64`, `_pext_u64`,
+   `_mm_clmulepi64_si128`) for non-VBMI2 hosts.
+
+Exit gate:
+
+```sh
+BBNF_SIMD_STRICT=1 cargo test -p bbnf-simd --release --target x86_64-apple-darwin
+cargo test -p bbnf-simd --release --target x86_64-unknown-linux-gnu  # CI
+cargo run -p xtask --release -- bench-json --native-sidecars
+```
+
+Pass condition: each primitive has scalar reference + checkasm parity returning
+0 divergences; x86_64 throughput row in `bench-json --native-sidecars` reports
+improvement vs Wave 1+2 x86_64 baseline.
+
+**No `CollapsedStage` admission required for Wave 6a.** The primitives are
+useful for `OffsetTape` on x86_64 regardless of whether the FSM backend
+ever ships.
+
+### 8b. Wave 6b — `CollapsedStage` backend (DEFERRED to successor tranche)
+
+**Status: DEFERRED to a successor tranche with its own plan document.**
+
+Hard preconditions (all four must hold concurrently before any Wave 6b dispatch):
+
+1. **Zen 4 silicon access** for empirical Phase 4 gate measurement
+   (twitter T1 ≥ 7400 MiB/s, hot-leaf count = 1, c/B ≤ 0.45).
+2. **Differential parity harness for FSM codegen** lands at
+   `skinny/crates/runtime/tests/fsm_codegen_parity.rs` (analogue to
+   `bbnf-simd/tests/checkasm_parity.rs`): runs cost-model-derived FSM
+   bytecode/asm against a hand-written reference (asmjson on Zen 4) and
+   returns 0 divergences across alignment sweep × random-input × ISA
+   tier.
+3. **`derive_backend_shape` firing matrix audit** records per-grammar
+   shape selection across JSON, CSS L4, BBNF-self, Sheets, CSV, EBNF,
+   BNF, math. If `CollapsedStage` fires only on JSON, the per-grammar
+   god-module signature (Lock 14) routes to an explicit amendment OR
+   the JSON-only scope is recorded as accepted in a new INDEX deviation
+   ledger row.
+4. **Implementation language declared**: if Wave 6b proceeds, the
+   `CollapsedStage` kernel is hand-written NASM in
+   `skinny/crates/bbnf-simd/src/x86_64/avx512_vbmi2/collapsed_stage.asm`
+   compiled via the `nasm-rs` build script already scaffolded in Wave 3;
+   **NOT Rust codegen-emitted**. This guards against the codegen-
+   emitted-FSM concern (`/tmp/skv3-psi-diff-audit.md` §d). Rust-codegen
+   `CollapsedStage` is a non-starter per the V9.5 excavation: the prior
+   1000-commit DTA/PSI failure was specifically that LLVM cannot compile
+   away the dispatch overhead of a Rust-implemented automaton, while
+   recursive descent in Rust compiles into an implicit automaton.
+
+If any precondition is unmet at SK-V3 cap, Wave 6b is dropped from this
+packet and rescheduled in a successor tranche. The successor tranche
+ships its own plan document with explicit precondition resolution.
 
 ### Implementation step 1 — adopt asmjson architecture verbatim
 

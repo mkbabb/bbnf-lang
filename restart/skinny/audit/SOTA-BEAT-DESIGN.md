@@ -274,7 +274,11 @@ backend_shape = "collapsed-stage"  # default = "structural-index"; "eager-tape" 
 target_features = ["avx512vbmi2"]  # required for collapsed-stage
 ```
 
-### §5.1. 9-state FSM and PC-as-state
+### §5.1. 9-state DPDA: 9-state finite control + direct-threaded dispatch via `r10` + hardware-bounded explicit stack (`open_buf[MAX_JSON_DEPTH=64]`) for container nesting
+
+**Naming clarification (V9.5 PSI excavation, 2026-05-13)**: prior framing as "9-state FSM" was technically the finite-control fragment only. The asmjson reference (verified via direct WebFetch of `src/lib.rs`) carries `MAX_JSON_DEPTH = 64`, `frames_buf[]`, `open_buf[]`, `FrameKind { Object, Array }` — the bracket stack is load-bearing for nesting. Per the FSM-correctness audit at `/tmp/fsm-correctness-audit.md` §d, asmjson is a **Deterministic Pushdown Automaton (DPDA)**: finite-control 9 states + hardware-bounded explicit stack. A pure FSM cannot parse context-free grammars with nesting; any "FSM-shaped codegen" worth shipping is necessarily a DPDA. Codegen-emitted DPDA derivation from Grammar IR must derive the per-grammar stack discipline (bracket-pair set, depth bound, open-token validation) from Grammar IR facts — a derivation not yet audited for state-explosion bounds and the load-bearing residual risk per §5 below.
+
+**V9.5 dispatch posture (per `IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md` Wave 6b, 2026-05-13)**: `CollapsedStage` as Rust codegen is rejected as the 1000-commit Era V failure mode in canonical form. The user's load-bearing observation: Rust-implemented automaton overhead exceeded what LLVM could compile away, while Rust-implemented recursive descent compiles into an implicit automaton via LLVM's optimizer. `CollapsedStage` implementation is either hand-written NASM in `bbnf-simd/x86_64/avx512_vbmi2/collapsed_stage.asm` only, or `CollapsedStage` is dropped from SK-V3 entirely and the Lock 16 AVX-512 esoterica primitives land inside `OffsetTape` recursive descent. See `IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md` §8a + §8b.
 
 Per asmjson dev.md §1-39 and parse_json_zmm_sax.S analysis (DAVID research agent):
 

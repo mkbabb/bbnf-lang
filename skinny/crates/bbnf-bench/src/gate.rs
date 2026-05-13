@@ -88,6 +88,16 @@ pub fn validate_schema(rows: &[RowMetadata]) -> bool {
             TrackTag::Track1Generated | TrackTag::Track2Handcoded => {
                 row.arena_writes == Some(0) && row.payload_allocations == Some(0)
             }
+            TrackTag::Competitor => {
+                row.competitor_crate
+                    .as_deref()
+                    .is_some_and(|value| !value.is_empty())
+                    && row
+                        .competitor_version
+                        .as_deref()
+                        .is_some_and(|value| !value.is_empty())
+            }
+            TrackTag::SimdScan => row.has_scalar_parity_hash(),
             _ => true,
         })
 }
@@ -238,5 +248,42 @@ mod tests {
         input.fastest_competitor_peak_rss = Some(100);
         input.bbnf_peak_rss = Some(301);
         assert_eq!(classify(&input), Outcome::MMemoryResidencyFail);
+    }
+
+    #[test]
+    fn simd_json_can_be_fastest_anchor() {
+        let mut input = base();
+        input.sonic_rs_anchor_ns = Some(500.0);
+        input.simd_json_borrowed_ns = Some(300.0);
+        input.simd_json_owned_ns = Some(420.0);
+        input.readme_target_ns = f64::INFINITY;
+        input.track2_ns = 284.0;
+        input.track1_ns = 312.0;
+        assert_eq!(classify(&input), Outcome::ABeatAndParity);
+    }
+
+    #[test]
+    fn schema_rejects_simd_scan_without_hash() {
+        let host = crate::metadata::HostFacts {
+            cpu_model: "cpu".into(),
+            cpu_arch: "arch".into(),
+            os_kernel: "os".into(),
+            rustflags: String::new(),
+            target_cpu: "default".into(),
+            bbnf_commit: "commit".into(),
+        };
+        let mut row = RowMetadata::from_bench(
+            &host,
+            crate::metadata::BenchFacts::simd_scan(
+                "other",
+                "a".repeat(64),
+                12,
+                "hash".into(),
+                5.0,
+                100,
+            ),
+        );
+        row.scalar_parity_hash_twitter = None;
+        assert!(!validate_schema(&[row]));
     }
 }

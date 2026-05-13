@@ -77,6 +77,10 @@ pub struct BenchFacts {
     pub host_call_mode: String,
     pub arena_writes: Option<u64>,
     pub payload_allocations: Option<u64>,
+    pub scalar_parity_hash_twitter: Option<String>,
+    pub scalar_parity_hash_citm: Option<String>,
+    pub scalar_parity_hash_canada: Option<String>,
+    pub peak_rss_bytes: Option<u64>,
     pub measurement_time_s: f64,
     pub sample_size: u32,
 }
@@ -121,6 +125,10 @@ impl BenchFacts {
             host_call_mode: "none".to_string(),
             arena_writes: Some(arena_writes),
             payload_allocations: Some(payload_allocations),
+            scalar_parity_hash_twitter: None,
+            scalar_parity_hash_citm: None,
+            scalar_parity_hash_canada: None,
+            peak_rss_bytes: current_peak_rss_bytes(),
             measurement_time_s,
             sample_size,
         }
@@ -148,6 +156,46 @@ impl BenchFacts {
             host_call_mode: "none".to_string(),
             arena_writes: None,
             payload_allocations: None,
+            scalar_parity_hash_twitter: None,
+            scalar_parity_hash_citm: None,
+            scalar_parity_hash_canada: None,
+            peak_rss_bytes: current_peak_rss_bytes(),
+            measurement_time_s,
+            sample_size,
+        }
+    }
+
+    pub fn simd_scan(
+        fixture_name: &str,
+        input_sha256: String,
+        input_bytes: u64,
+        scalar_parity_hash: String,
+        measurement_time_s: f64,
+        sample_size: u32,
+    ) -> Self {
+        let (twitter, citm, canada) = match fixture_name {
+            "twitter" => (Some(scalar_parity_hash), None, None),
+            "citm_catalog" => (None, Some(scalar_parity_hash), None),
+            "canada" => (None, None, Some(scalar_parity_hash)),
+            _ => (Some(scalar_parity_hash), None, None),
+        };
+        Self {
+            input_sha256,
+            input_bytes,
+            competitor_crate: None,
+            competitor_version: None,
+            track: TrackTag::SimdScan,
+            materialisation: "structural_offsets".to_string(),
+            parse_mode: "simd_scan".to_string(),
+            source_ownership: "borrowed".to_string(),
+            plan_variant: format!("{:?}", bbnf_simd::active_backend()),
+            host_call_mode: "none".to_string(),
+            arena_writes: None,
+            payload_allocations: None,
+            scalar_parity_hash_twitter: twitter,
+            scalar_parity_hash_citm: citm,
+            scalar_parity_hash_canada: canada,
+            peak_rss_bytes: current_peak_rss_bytes(),
             measurement_time_s,
             sample_size,
         }
@@ -185,10 +233,10 @@ impl RowMetadata {
             host_call_mode: facts.host_call_mode,
             arena_writes: facts.arena_writes,
             payload_allocations: facts.payload_allocations,
-            scalar_parity_hash_twitter: None,
-            scalar_parity_hash_citm: None,
-            scalar_parity_hash_canada: None,
-            peak_rss_bytes: None,
+            scalar_parity_hash_twitter: facts.scalar_parity_hash_twitter,
+            scalar_parity_hash_citm: facts.scalar_parity_hash_citm,
+            scalar_parity_hash_canada: facts.scalar_parity_hash_canada,
+            peak_rss_bytes: facts.peak_rss_bytes,
             cold_cache_mode: "warm".to_string(),
         }
     }
@@ -226,7 +274,46 @@ impl RowMetadata {
             && !self.plan_variant.is_empty()
             && !self.host_call_mode.is_empty()
             && !self.cold_cache_mode.is_empty()
+            && (self.track != TrackTag::Competitor
+                || (self
+                    .competitor_crate
+                    .as_deref()
+                    .is_some_and(|value| !value.is_empty())
+                    && self
+                        .competitor_version
+                        .as_deref()
+                        .is_some_and(|value| !value.is_empty())))
+            && (self.track != TrackTag::SimdScan || self.has_scalar_parity_hash())
     }
+
+    pub fn has_scalar_parity_hash(&self) -> bool {
+        [
+            &self.scalar_parity_hash_twitter,
+            &self.scalar_parity_hash_citm,
+            &self.scalar_parity_hash_canada,
+        ]
+        .into_iter()
+        .flatten()
+        .any(|hash| !hash.is_empty())
+    }
+}
+
+pub fn current_peak_rss_bytes() -> Option<u64> {
+    let mut usage = std::mem::MaybeUninit::<libc::rusage>::uninit();
+    let rc = unsafe { libc::getrusage(libc::RUSAGE_SELF, usage.as_mut_ptr()) };
+    if rc != 0 {
+        return None;
+    }
+    let maxrss = unsafe { usage.assume_init().ru_maxrss };
+    if maxrss <= 0 {
+        return None;
+    }
+    let bytes = if cfg!(target_os = "macos") {
+        maxrss as u64
+    } else {
+        maxrss as u64 * 1024
+    };
+    Some(bytes)
 }
 
 fn parse_target_cpu(rustflags: &str) -> Option<String> {

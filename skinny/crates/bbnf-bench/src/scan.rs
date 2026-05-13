@@ -1,13 +1,13 @@
 pub fn structural_offsets_scalar(bytes: &[u8]) -> Vec<u32> {
-    simd_scan::scan_scalar(bytes, &simd_scan::JSON_STRUCTURAL).into_positions()
+    bbnf_simd::scan_scalar(bytes, &bbnf_simd::JSON_STRUCTURAL).into_positions()
 }
 
 pub fn structural_offsets_simd(bytes: &[u8]) -> Vec<u32> {
-    simd_scan::scan_json_structurals(bytes).into_positions()
+    bbnf_simd::scan_json_structurals(bytes).into_positions()
 }
 
 pub fn parity_hash(bytes: &[u8]) -> String {
-    let report = simd_scan::scalar_parity_report(bytes, &simd_scan::JSON_STRUCTURAL);
+    let report = bbnf_simd::scalar_parity_report(bytes, &bbnf_simd::JSON_STRUCTURAL);
     blake3::hash(&report.hash).to_hex().to_string()
 }
 

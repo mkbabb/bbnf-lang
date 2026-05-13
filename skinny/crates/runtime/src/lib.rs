@@ -9,7 +9,7 @@ pub mod grammars {
 
 #[cfg(test)]
 mod tests {
-    use crate::grammars::json::{parse, JsonNodeKind, JsonValue};
+    use crate::grammars::json::{parse, parse_bytes, JsonNodeKind, JsonValue};
 
     #[test]
     fn parses_and_projects_json() {
@@ -56,11 +56,14 @@ mod tests {
             r#"{"a":}"#,
             r#"{"a" 1}"#,
             r#""bad\uZZZZ""#,
+            r#""bad\uD800""#,
+            r#""bad\uDD1E""#,
             "01",
             "true false",
         ] {
             assert!(parse(invalid).is_err(), "{invalid}");
         }
+        assert!(parse_bytes(b"[\"\xC3\x28\"]").is_err());
     }
 
     #[test]
@@ -70,5 +73,29 @@ mod tests {
             root.to_canonical_string(),
             r#"{"a":"x\ny","b":[false,null]}"#
         );
+    }
+
+    #[test]
+    fn float_materialization_matches_serde_bits() {
+        for literal in [
+            "-0",
+            "5e-324",
+            "2.2250738585072014e-308",
+            "1.7976931348623157e308",
+            "43.474709000000125",
+            "6.02214076e23",
+        ] {
+            let root = parse(literal).unwrap();
+            let JsonValue::Number(number) = root.value() else {
+                panic!("expected number");
+            };
+            let skinny = number.as_f64().unwrap().to_bits();
+            let serde = serde_json::from_str::<serde_json::Number>(literal)
+                .unwrap()
+                .as_f64()
+                .unwrap()
+                .to_bits();
+            assert_eq!(skinny, serde, "{literal}");
+        }
     }
 }

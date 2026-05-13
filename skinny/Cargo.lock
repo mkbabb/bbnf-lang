@@ -81,9 +81,11 @@ dependencies = [
 name = "bbnf-bench"
 version = "0.1.0"
 dependencies = [
+ "bbnf-simd",
  "blake3",
  "bytemuck",
  "criterion",
+ "libc",
  "mimalloc",
  "parse-that-regex",
  "runtime",
@@ -91,11 +93,21 @@ dependencies = [
  "serde_json",
  "sha2",
  "simd-json",
- "simd-scan",
  "sonic-rs",
  "test-fixtures",
  "thiserror 1.0.69",
  "toml",
+]
+
+[[package]]
+name = "bbnf-simd"
+version = "0.1.0"
+dependencies = [
+ "blake3",
+ "cc",
+ "libc",
+ "nasm-rs",
+ "test-fixtures",
 ]
 
 [[package]]
@@ -626,6 +638,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "log"
+version = "0.4.29"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5e5032e24019045c762d3c0f28f5b6b8bbf38563a65908389bf7978758920897"
+
+[[package]]
 name = "memchr"
 version = "2.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -661,6 +679,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "nasm-rs"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "706bf8a5e8c8ddb99128c3291d31bd21f4bcde17f0f4c20ec678d85c74faa149"
+dependencies = [
+ "log",
+]
+
+[[package]]
 name = "num-traits"
 version = "0.2.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -685,6 +712,7 @@ checksum = "d6790f58c7ff633d8771f42965289203411a5e5c68388703c06e14f24770b41e"
 name = "parse-that-regex"
 version = "0.1.0"
 dependencies = [
+ "bbnf-simd",
  "thiserror 1.0.69",
 ]
 
@@ -892,9 +920,10 @@ dependencies = [
 name = "runtime"
 version = "0.1.0"
 dependencies = [
+ "bbnf-simd",
+ "mimalloc",
  "parse-that-regex",
  "serde_json",
- "simd-scan",
  "thiserror 1.0.69",
 ]
 
@@ -1003,13 +1032,6 @@ dependencies = [
  "serde_json",
  "simdutf8",
  "value-trait",
-]
-
-[[package]]
-name = "simd-scan"
-version = "0.1.0"
-dependencies = [
- "blake3",
 ]
 
 [[package]]

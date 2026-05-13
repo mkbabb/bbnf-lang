@@ -85,7 +85,7 @@ fn mod_rs() -> String {
         pub mod view;
         pub mod visitor;
 
-        pub use parser::{parse, RECOGNIZER_COUNT};
+        pub use parser::{parse, parse_bytes, RECOGNIZER_COUNT};
         pub use value::{JsonNodeKind, JsonToken, JsonValue, ParseError, ParseErrorKind};
         pub use view::{
             JsonArray, JsonBool, JsonDocument, JsonNull, JsonNumber, JsonObject, JsonPair,

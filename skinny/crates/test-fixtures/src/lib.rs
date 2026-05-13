@@ -4,17 +4,41 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-pub const CANONICAL_JSON_FIXTURES: [&str; 3] = ["twitter", "citm_catalog", "canada"];
+pub const CANONICAL_JSON_FIXTURES: [&str; 17] = [
+    "twitter",
+    "citm_catalog",
+    "canada",
+    "apache_builds",
+    "github_events",
+    "update_center",
+    "mesh",
+    "random",
+    "gsoc-2018",
+    "marine_ik",
+    "instruments",
+    "numbers",
+    "unicode_mixed",
+    "unicode_escapes",
+    "unicode_basic",
+    "distinct_values",
+    "y_string_unicode",
+];
 
 const EMBEDDED_VALID: &[(&str, &str)] = &[
     ("mini_object", r#"{"b":2,"a":[true,null,"x"]}"#),
     ("mini_numbers", r#"[0,-1,3.25,6.02e23]"#),
     ("mini_nested", r#"{"outer":{"inner":[{"ok":false}]}}"#),
+    ("noncharacter_escape", r#""\uDBFF\uDFFE""#),
 ];
 
-const EMBEDDED_INVALID: &[(&str, &str)] = &[
-    ("bad_trailing_comma", r#"{"a":1,}"#),
-    ("bad_unclosed_array", r#"[1,2,3"#),
+const EMBEDDED_INVALID: &[(&str, &[u8])] = &[
+    ("bad_trailing_comma", br#"{"a":1,}"#),
+    ("bad_unclosed_array", br#"[1,2,3"#),
+    ("bad_invalid_utf8", b"[\"\xC3\x28\"]"),
+    ("bad_latin1", b"[\"\xE9\"]"),
+    ("bad_truncated_utf8", b"[\"\xE2\x82\"]"),
+    ("bad_lone_high_surrogate", br#"["\uD800"]"#),
+    ("bad_lone_low_surrogate", br#"["\uDD1E"]"#),
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -118,7 +142,7 @@ pub fn embedded_valid_json() -> Vec<JsonFixture> {
 pub fn embedded_invalid_json() -> Vec<JsonFixture> {
     EMBEDDED_INVALID
         .iter()
-        .map(|(name, text)| embedded_fixture(name, FixtureKind::Invalid, text))
+        .map(|(name, bytes)| embedded_bytes_fixture(name, FixtureKind::Invalid, bytes))
         .collect()
 }
 
@@ -193,11 +217,15 @@ pub fn sha256_hex(bytes: &[u8]) -> String {
 }
 
 fn embedded_fixture(name: &str, kind: FixtureKind, text: &str) -> JsonFixture {
+    embedded_bytes_fixture(name, kind, text.as_bytes())
+}
+
+fn embedded_bytes_fixture(name: &str, kind: FixtureKind, bytes: &[u8]) -> JsonFixture {
     JsonFixture {
         name: name.to_string(),
         kind,
-        bytes: text.as_bytes().to_vec(),
-        sha256: sha256_hex(text.as_bytes()),
+        bytes: bytes.to_vec(),
+        sha256: sha256_hex(bytes),
         path: None,
         source_url: None,
         provenance: FixtureProvenance::Embedded,

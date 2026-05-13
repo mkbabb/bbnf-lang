@@ -17,6 +17,10 @@ name = "profile-lazy"
 path = "src/bin/profile_lazy.rs"
 
 [[bin]]
+name = "capacity-probe"
+path = "src/bin/capacity_probe.rs"
+
+[[bin]]
 name = "parity-oracle"
 path = "src/bin/parity_oracle.rs"
 

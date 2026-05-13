@@ -1,9 +1,9 @@
 use parse_that_regex::{
-    match_json_number, match_json_string, skip_json_whitespace, RegexErrorKind,
+    match_json_number_from_first, match_json_string_at_quote, skip_json_whitespace, RegexErrorKind,
 };
 use runtime::{
     grammars::json::{JsonRoot, ParseError, ParseErrorKind},
-    tape::TapeAssembler,
+    tape::{OffsetFlags, TapeBuilder},
 };
 
 pub fn parse<'i>(input: &'i str) -> Result<JsonRoot<'i>, ParseError<'i>> {
@@ -14,65 +14,58 @@ struct Parser<'i> {
     input: &'i str,
     bytes: &'i [u8],
     cursor: usize,
-    structural_offsets: Vec<u32>,
-    structural_cursor: usize,
-    string_escape_offsets: Vec<u32>,
-    string_escape_cursor: usize,
-    string_control_offsets: Vec<u32>,
-    string_control_cursor: usize,
-    tape: TapeAssembler<'i>,
+    tape: TapeBuilder<'i>,
 }
 
 impl<'i> Parser<'i> {
+    #[inline(always)]
     fn new(input: &'i str) -> Self {
-        let scan = runtime::tape::scan_parse_index(input.as_bytes());
-        let (structural_offsets, string_escape_offsets, string_control_offsets) = scan.into_parts();
-        let capacity = structural_offsets.len() + (structural_offsets.len() / 3) + 8;
-        let tape = TapeAssembler::new(input.as_bytes(), capacity);
+        let capacity = TapeBuilder::json_structural_capacity(input.as_bytes());
         Self {
             input,
             bytes: input.as_bytes(),
             cursor: 0,
-            structural_offsets,
-            structural_cursor: 0,
-            string_escape_offsets,
-            string_escape_cursor: 0,
-            string_control_offsets,
-            string_control_cursor: 0,
-            tape,
+            tape: TapeBuilder::new(input.as_bytes(), capacity),
         }
     }
 
+    #[inline(always)]
     fn parse(mut self) -> Result<JsonRoot<'i>, ParseError<'i>> {
-        self.skip_ws();
         self.parse_value()?;
         self.skip_ws();
         if self.cursor != self.bytes.len() {
             return Err(self.error(ParseErrorKind::TrailingCharacters));
         }
-        Ok(JsonRoot::from_tape(
-            self.input,
-            self.tape
-                .finish(self.string_escape_offsets, self.string_control_offsets),
-        ))
+        Ok(JsonRoot::from_tape(self.input, self.tape.finish()))
     }
 
+    #[inline(always)]
     fn parse_value(&mut self) -> Result<(), ParseError<'i>> {
         self.skip_ws();
-        match self.peek() {
-            Some(b'{') => self.parse_object(),
-            Some(b'[') => self.parse_array(),
-            Some(b'"') => self.parse_string(),
-            Some(b'-' | b'0'..=b'9') => self.parse_number(),
-            Some(b't') => self.parse_literal(b"true"),
-            Some(b'f') => self.parse_literal(b"false"),
-            Some(b'n') => self.parse_literal(b"null"),
+        self.parse_value_at()
+    }
+
+    #[inline(always)]
+    fn parse_value_at(&mut self) -> Result<(), ParseError<'i>> {
+        if self.cursor >= self.bytes.len() {
+            return Err(self.error(ParseErrorKind::ExpectedValue));
+        }
+        let byte = unsafe { *self.bytes.get_unchecked(self.cursor) };
+        match byte {
+            b'{' => self.parse_object(),
+            b'[' => self.parse_array(),
+            b'"' => self.parse_string(),
+            b'-' | b'0'..=b'9' => self.parse_number(byte),
+            b't' => self.parse_literal(b"true"),
+            b'f' => self.parse_literal(b"false"),
+            b'n' => self.parse_literal(b"null"),
             _ => Err(self.error(ParseErrorKind::ExpectedValue)),
         }
     }
 
+    #[inline(always)]
     fn parse_object(&mut self) -> Result<(), ParseError<'i>> {
-        if !self.consume_structural(b'{') {
+        if self.consume_structural(b'{').is_none() {
             return Err(self.error(ParseErrorKind::ExpectedValue));
         }
         self.skip_ws();
@@ -82,33 +75,62 @@ impl<'i> Parser<'i> {
         }
 
         loop {
-            if self.peek() != Some(b'"') {
-                return Err(self.error(ParseErrorKind::ExpectedObjectKeyOrEnd));
-            }
             self.parse_pair()?;
-            self.skip_ws();
-            if self.consume(b',') {
-                self.skip_ws();
+            if self.consume_container_next(b'}', ParseErrorKind::ExpectedCommaOrObjectEnd)? {
                 continue;
             }
-            if self.consume(b'}') {
-                return Ok(());
-            }
-            return Err(self.error(ParseErrorKind::ExpectedCommaOrObjectEnd));
+            return Ok(());
         }
     }
 
+    #[inline(always)]
     fn parse_pair(&mut self) -> Result<(), ParseError<'i>> {
-        self.parse_string()?;
-        self.skip_ws();
-        if !self.consume(b':') {
+        self.parse_key_colon()?;
+        self.parse_value_at()
+    }
+
+    #[inline(always)]
+    fn parse_key_colon(&mut self) -> Result<(), ParseError<'i>> {
+        let start = self.cursor;
+        let Some(open_cursor) = self.consume_quote_at_cursor() else {
+            return Err(self.error(ParseErrorKind::ExpectedValue));
+        };
+        if let Some(raw_end) = match_tiny_plain_string(self.bytes, start) {
+            self.cursor = raw_end;
+        } else {
+            let span =
+                match_json_string_at_quote(self.bytes, start).map_err(|error| ParseError {
+                    input: self.input,
+                    offset: error.offset,
+                    kind: match error.kind {
+                        RegexErrorKind::ExpectedString => ParseErrorKind::ExpectedValue,
+                        _ => ParseErrorKind::InvalidString,
+                    },
+                })?;
+            if span.needs_unescape {
+                self.tape
+                    .patch_flags(open_cursor, OffsetFlags::NONE.with(OffsetFlags::HAS_ESC));
+            }
+            self.cursor = span.raw_end;
+        }
+
+        let colon = if self.cursor < self.bytes.len()
+            && unsafe { *self.bytes.get_unchecked(self.cursor) } == b':'
+        {
+            self.cursor
+        } else {
+            skip_json_whitespace(self.bytes, self.cursor)
+        };
+        if colon >= self.bytes.len() || unsafe { *self.bytes.get_unchecked(colon) } != b':' {
             return Err(self.error(ParseErrorKind::ExpectedColon));
         }
-        self.parse_value()
+        self.cursor = skip_json_whitespace(self.bytes, colon + 1);
+        Ok(())
     }
 
+    #[inline(always)]
     fn parse_array(&mut self) -> Result<(), ParseError<'i>> {
-        if !self.consume_structural(b'[') {
+        if self.consume_structural(b'[').is_none() {
             return Err(self.error(ParseErrorKind::ExpectedValue));
         }
         self.skip_ws();
@@ -118,83 +140,50 @@ impl<'i> Parser<'i> {
         }
 
         loop {
-            if self.peek() == Some(b']') {
-                return Err(self.error(ParseErrorKind::ExpectedArrayValueOrEnd));
-            }
-            self.parse_value()?;
-            self.skip_ws();
-            if self.consume(b',') {
-                self.skip_ws();
+            self.parse_value_at()?;
+            if self.consume_container_next(b']', ParseErrorKind::ExpectedCommaOrArrayEnd)? {
                 continue;
             }
-            if self.consume(b']') {
-                return Ok(());
-            }
-            return Err(self.error(ParseErrorKind::ExpectedCommaOrArrayEnd));
+            return Ok(());
         }
     }
 
+    #[inline(always)]
     fn parse_string(&mut self) -> Result<(), ParseError<'i>> {
         let start = self.cursor;
-        if !self.consume_structural(b'"') {
+        let Some(open_cursor) = self.consume_quote_at_cursor() else {
             return Err(self.error(ParseErrorKind::ExpectedValue));
-        }
-        self.sync_structural();
-        let Some(&close_offset) = self.structural_offsets.get(self.structural_cursor) else {
-            return Err(self.error(ParseErrorKind::InvalidString));
         };
-        let close = close_offset as usize;
-        if self.bytes.get(close) != Some(&b'"') {
-            return Err(self.error(ParseErrorKind::InvalidString));
+        if let Some(raw_end) = match_tiny_plain_string(self.bytes, start) {
+            self.cursor = raw_end;
+            return Ok(());
         }
-        self.structural_cursor += 1;
-        self.tape.push_offset(close);
-        self.cursor = close + 1;
-
-        let content_start = start + 1;
-        let content_end = close;
-        if contains_indexed_offset(
-            &self.string_control_offsets,
-            &mut self.string_control_cursor,
-            content_start,
-            content_end,
-        ) {
-            return Err(ParseError {
-                input: self.input,
-                offset: self.string_control_offsets[self.string_control_cursor] as usize,
-                kind: ParseErrorKind::InvalidString,
-            });
+        let span = match_json_string_at_quote(self.bytes, start).map_err(|error| ParseError {
+            input: self.input,
+            offset: error.offset,
+            kind: match error.kind {
+                RegexErrorKind::ExpectedString => ParseErrorKind::ExpectedValue,
+                _ => ParseErrorKind::InvalidString,
+            },
+        })?;
+        if span.needs_unescape {
+            self.tape
+                .patch_flags(open_cursor, OffsetFlags::NONE.with(OffsetFlags::HAS_ESC));
         }
-        let needs_unescape = contains_indexed_offset(
-            &self.string_escape_offsets,
-            &mut self.string_escape_cursor,
-            content_start,
-            content_end,
-        );
-        if needs_unescape {
-            let span = match_json_string(self.bytes, start).map_err(|error| ParseError {
-                input: self.input,
-                offset: error.offset,
-                kind: match error.kind {
-                    RegexErrorKind::ExpectedString => ParseErrorKind::ExpectedValue,
-                    _ => ParseErrorKind::InvalidString,
-                },
-            })?;
-            if span.raw_end != self.cursor {
-                return Err(self.error(ParseErrorKind::InvalidString));
-            }
-        }
+        self.cursor = span.raw_end;
         Ok(())
     }
 
-    fn parse_number(&mut self) -> Result<(), ParseError<'i>> {
-        let number = match_json_number(self.bytes, self.cursor)
+    #[inline(always)]
+    fn parse_number(&mut self, first: u8) -> Result<(), ParseError<'i>> {
+        let number = match_json_number_from_first(self.bytes, self.cursor, first)
             .ok_or_else(|| self.error(ParseErrorKind::InvalidNumber))?;
-        self.tape.push_offset(number.start);
+        self.tape.push_plain_offset(number.start);
         self.cursor = number.end;
         Ok(())
     }
 
+    #[inline(always)]
     fn parse_literal(&mut self, literal: &'static [u8]) -> Result<(), ParseError<'i>> {
         let start = self.cursor;
         if self.bytes.get(start..start + literal.len()) != Some(literal) {
@@ -202,18 +191,50 @@ impl<'i> Parser<'i> {
                 std::str::from_utf8(literal).expect("literal is UTF-8"),
             )));
         }
-        self.tape.push_offset(start);
+        self.tape.push_plain_offset(start);
         self.cursor += literal.len();
         Ok(())
     }
 
+    #[inline(always)]
     fn skip_ws(&mut self) {
         self.cursor = skip_json_whitespace(self.bytes, self.cursor);
     }
 
+    #[inline(always)]
+    fn consume_delimiter(&mut self, byte: u8) -> bool {
+        let offset = if self.cursor < self.bytes.len()
+            && unsafe { *self.bytes.get_unchecked(self.cursor) } == byte
+        {
+            self.cursor
+        } else {
+            skip_json_whitespace(self.bytes, self.cursor)
+        };
+        if offset >= self.bytes.len() || unsafe { *self.bytes.get_unchecked(offset) } != byte {
+            return false;
+        }
+        self.cursor = offset + 1;
+        true
+    }
+
+    #[inline(always)]
+    fn consume_quote_at_cursor(&mut self) -> Option<u32> {
+        let offset = self.cursor;
+        if offset >= self.bytes.len() || unsafe { *self.bytes.get_unchecked(offset) } != b'"' {
+            return None;
+        }
+        let cursor = self.tape.push_plain_offset(offset);
+        self.cursor = offset + 1;
+        Some(cursor)
+    }
+
+    #[inline(always)]
     fn consume(&mut self, byte: u8) -> bool {
+        if matches!(byte, b':' | b',') {
+            return self.consume_delimiter(byte);
+        }
         if matches!(byte, b'{' | b'}' | b'[' | b']' | b':' | b',' | b'"') {
-            return self.consume_structural(byte);
+            return self.consume_structural(byte).is_some();
         }
         if self.peek() == Some(byte) {
             self.cursor += 1;
@@ -223,59 +244,88 @@ impl<'i> Parser<'i> {
         }
     }
 
-    fn consume_structural(&mut self, byte: u8) -> bool {
-        self.sync_structural();
-        let Some(&offset) = self.structural_offsets.get(self.structural_cursor) else {
-            return false;
-        };
-        let offset = offset as usize;
-        if self.cursor != offset && skip_json_whitespace(self.bytes, self.cursor) != offset {
-            return false;
-        }
-        if self.bytes.get(offset) != Some(&byte) {
-            return false;
-        }
-        self.structural_cursor += 1;
-        if !matches!(byte, b':' | b',') {
-            self.tape.push_offset(offset);
-        }
-        self.cursor = offset + 1;
-        true
-    }
-
-    fn sync_structural(&mut self) {
-        while self
-            .structural_offsets
-            .get(self.structural_cursor)
-            .is_some_and(|offset| (*offset as usize) < self.cursor)
+    #[inline(always)]
+    fn consume_structural(&mut self, byte: u8) -> Option<u32> {
+        let offset = if self.cursor < self.bytes.len()
+            && unsafe { *self.bytes.get_unchecked(self.cursor) } == byte
         {
-            self.structural_cursor += 1;
+            self.cursor
+        } else {
+            skip_json_whitespace(self.bytes, self.cursor)
+        };
+        if offset >= self.bytes.len() || unsafe { *self.bytes.get_unchecked(offset) } != byte {
+            return None;
         }
+        let cursor = self.tape.push_plain_offset(offset);
+        self.cursor = offset + 1;
+        Some(cursor)
     }
 
+    #[inline(always)]
+    fn consume_container_next(
+        &mut self,
+        close: u8,
+        error_kind: ParseErrorKind,
+    ) -> Result<bool, ParseError<'i>> {
+        let current = if self.cursor < self.bytes.len() {
+            Some(unsafe { *self.bytes.get_unchecked(self.cursor) })
+        } else {
+            None
+        };
+        let offset = if current == Some(b',') || current == Some(close) {
+            self.cursor
+        } else {
+            skip_json_whitespace(self.bytes, self.cursor)
+        };
+        if offset >= self.bytes.len() {
+            return Err(self.error(error_kind));
+        }
+        let byte = unsafe { *self.bytes.get_unchecked(offset) };
+        if byte == b',' {
+            self.cursor = skip_json_whitespace(self.bytes, offset + 1);
+            return Ok(true);
+        }
+        if byte == close {
+            self.tape.push_plain_offset(offset);
+            self.cursor = offset + 1;
+            return Ok(false);
+        }
+        Err(self.error(error_kind))
+    }
+
+    #[inline(always)]
     fn peek(&self) -> Option<u8> {
         self.bytes.get(self.cursor).copied()
     }
 
+    #[inline(always)]
     fn error(&self, kind: ParseErrorKind) -> ParseError<'i> {
-        ParseError {
-            input: self.input,
-            offset: self.cursor,
-            kind,
-        }
+        cold_error(self.input, self.cursor, kind)
     }
 }
 
-fn contains_indexed_offset(offsets: &[u32], cursor: &mut usize, start: usize, end: usize) -> bool {
-    while offsets
-        .get(*cursor)
-        .is_some_and(|offset| (*offset as usize) < start)
-    {
-        *cursor += 1;
+#[inline(always)]
+fn match_tiny_plain_string(input: &[u8], offset: usize) -> Option<usize> {
+    let mut cursor = offset + 1;
+    let limit = (cursor + 8).min(input.len());
+    while cursor < limit {
+        match input[cursor] {
+            b'"' => return Some(cursor + 1),
+            b'\\' | 0x00..=0x1f => return None,
+            _ => cursor += 1,
+        }
     }
-    offsets
-        .get(*cursor)
-        .is_some_and(|offset| (*offset as usize) < end)
+    None
+}
+
+#[cold]
+#[inline(never)]
+fn cold_error<'i>(input: &'i str, offset: usize, kind: ParseErrorKind) -> ParseError<'i> {
+    ParseError {
+        input,
+        offset,
+        kind,
+    }
 }
 
 #[cfg(test)]

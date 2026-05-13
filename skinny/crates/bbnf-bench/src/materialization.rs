@@ -5,6 +5,7 @@ pub struct MaterializationStats {
     pub input_bytes: usize,
     pub offset_count: usize,
     pub offset_bytes: usize,
+    pub flag_bytes: usize,
     pub offset_capacity_bytes: usize,
     pub payload_bytes: usize,
     pub object_open_offsets: usize,
@@ -22,6 +23,7 @@ impl MaterializationStats {
             input_bytes: root.source().len(),
             offset_count: root.tape().offsets().len(),
             offset_bytes: root.tape().offset_bytes(),
+            flag_bytes: root.tape().flag_bytes(),
             offset_capacity_bytes: root.tape().offset_capacity_bytes(),
             payload_bytes: root.tape().payloads().len(),
             object_open_offsets: 0,
@@ -69,12 +71,21 @@ impl MaterializationStats {
         }
     }
 
+    pub fn logical_tape_bytes_per_input_byte(&self) -> f64 {
+        if self.input_bytes == 0 {
+            0.0
+        } else {
+            (self.offset_bytes + self.flag_bytes) as f64 / self.input_bytes as f64
+        }
+    }
+
     pub fn summary(&self, corpus: &str) -> String {
         format!(
-            "{corpus} lazy tape materialization: {} offsets, {} logical offset bytes ({:.2}x input), {} allocated offset bytes ({:.2}x input), {} payload bytes; object opens {}, array opens {}, closes {}, string quotes {}, numbers {}, literals {}, separators {}.",
+            "{corpus} lazy tape materialization: {} offsets, {} logical offset bytes + {} sparse flag bytes ({:.2}x input), {} allocated tape bytes ({:.2}x input), {} payload bytes; object opens {}, array opens {}, closes {}, string quotes {}, numbers {}, literals {}, separators {}.",
             self.offset_count,
             self.offset_bytes,
-            self.offset_bytes_per_input_byte(),
+            self.flag_bytes,
+            self.logical_tape_bytes_per_input_byte(),
             self.offset_capacity_bytes,
             self.offset_capacity_bytes_per_input_byte(),
             self.payload_bytes,
@@ -113,6 +124,7 @@ mod tests {
         assert_eq!(stats.literal_offsets, 2);
         assert_eq!(stats.payload_bytes, 0);
         assert_eq!(stats.offset_bytes, stats.offset_count * 4);
-        assert_eq!(stats.offset_capacity_bytes, stats.offset_bytes);
+        assert_eq!(stats.flag_bytes, 0);
+        assert!(stats.offset_capacity_bytes >= stats.offset_bytes + stats.flag_bytes);
     }
 }

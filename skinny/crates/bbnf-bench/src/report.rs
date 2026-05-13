@@ -21,6 +21,10 @@ pub struct ReportRow {
     pub track1_mbps: Option<f64>,
     pub track2_mbps: Option<f64>,
     pub sonic_mbps: Option<f64>,
+    pub simd_json_borrowed_mbps: Option<f64>,
+    pub simd_json_owned_mbps: Option<f64>,
+    pub fastest_anchor: Option<String>,
+    pub fastest_anchor_mbps: Option<f64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -51,6 +55,10 @@ impl Report {
         track1_ns: Option<f64>,
         track2_ns: Option<f64>,
         sonic_ns: Option<f64>,
+        simd_json_borrowed_ns: Option<f64>,
+        simd_json_owned_ns: Option<f64>,
+        fastest_anchor: Option<impl Into<String>>,
+        fastest_anchor_ns: Option<f64>,
     ) {
         self.rows.push(ReportRow {
             corpus: corpus.into(),
@@ -60,6 +68,10 @@ impl Report {
             track1_mbps: throughput_mbps(bytes, track1_ns),
             track2_mbps: throughput_mbps(bytes, track2_ns),
             sonic_mbps: throughput_mbps(bytes, sonic_ns),
+            simd_json_borrowed_mbps: throughput_mbps(bytes, simd_json_borrowed_ns),
+            simd_json_owned_mbps: throughput_mbps(bytes, simd_json_owned_ns),
+            fastest_anchor: fastest_anchor.map(Into::into),
+            fastest_anchor_mbps: throughput_mbps(bytes, fastest_anchor_ns),
         });
     }
 
@@ -87,19 +99,23 @@ impl Report {
         out.push_str("# ");
         out.push_str(&self.title);
         out.push_str("\n\n");
-        out.push_str("| Corpus | Outcome | Verdict | Track 1 Mbps | Track 2 Mbps | sonic-rs Mbps | Track 1 / sonic | Track 2 / sonic |\n");
-        out.push_str("|---|---:|---|---:|---:|---:|---:|---:|\n");
+        out.push_str("| Corpus | Outcome | Verdict | Track 1 Mbps | Track 2 Mbps | sonic-rs Mbps | simd-json borrowed Mbps | simd-json owned Mbps | S anchor | S Mbps | Track 1 / S | Track 2 / S |\n");
+        out.push_str("|---|---:|---|---:|---:|---:|---:|---:|---|---:|---:|---:|\n");
         for row in &self.rows {
             out.push_str(&format!(
-                "| {} | {} | {} | {} | {} | {} | {} | {} |\n",
+                "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |\n",
                 row.corpus,
                 row.outcome_id,
                 row.verdict,
                 format_optional(row.track1_mbps),
                 format_optional(row.track2_mbps),
                 format_optional(row.sonic_mbps),
-                format_ratio(row.track1_mbps, row.sonic_mbps),
-                format_ratio(row.track2_mbps, row.sonic_mbps)
+                format_optional(row.simd_json_borrowed_mbps),
+                format_optional(row.simd_json_owned_mbps),
+                row.fastest_anchor.as_deref().unwrap_or("n/a"),
+                format_optional(row.fastest_anchor_mbps),
+                format_ratio(row.track1_mbps, row.fastest_anchor_mbps),
+                format_ratio(row.track2_mbps, row.fastest_anchor_mbps)
             ));
         }
         if !self.probe_rows.is_empty() {
@@ -206,10 +222,14 @@ mod tests {
             Some(390_000.0),
             Some(360_000.0),
             Some(424_000.0),
+            Some(424_000.0),
+            Some(500_000.0),
+            Some("simd-json borrowed"),
+            Some(424_000.0),
         );
         let markdown = report.render_markdown();
         assert!(markdown.contains("Track 1 Mbps"));
-        assert!(markdown.contains("| twitter | A | GO | 12954 | 14034 | 11915 | 108.7% | 117.8% |"));
+        assert!(markdown.contains("| twitter | A | GO | 12954 | 14034 | 11915 | 11915 | 10104 | simd-json borrowed | 11915 | 108.7% | 117.8% |"));
     }
 
     #[test]

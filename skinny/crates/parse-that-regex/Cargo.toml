@@ -7,4 +7,5 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+bbnf-simd.workspace = true
 thiserror.workspace = true

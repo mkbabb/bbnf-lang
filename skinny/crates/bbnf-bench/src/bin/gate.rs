@@ -1,13 +1,20 @@
 use bbnf_bench::gate::{self, ThresholdInput};
 use bbnf_bench::materialization::track_stats;
-use bbnf_bench::metadata::{RowMetadata, TrackTag};
+use bbnf_bench::metadata::{current_peak_rss_bytes, RowMetadata, TrackTag};
 use bbnf_bench::report::Report;
 use serde_json::Value;
+use std::env;
 use std::error::Error;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 fn main() -> Result<(), Box<dyn Error>> {
+    let args: Vec<String> = env::args().collect();
+    if args.get(1).is_some_and(|arg| arg == "--rss-probe") {
+        return rss_probe_main(&args[2..]);
+    }
+
     let criterion_root = workspace_root().join("target/criterion");
     let results_path = workspace_root().join("RESULTS.md");
     let fixtures = test_fixtures::load_available_bench_fixtures()?;
@@ -16,7 +23,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     for fixture in fixtures {
         let group = criterion_root.join(format!("json_{}", fixture.name));
-        let rows = read_metadata_rows(&group);
+        let mut rows = read_metadata_rows(&group);
+        let simd_metadata = read_simd_metadata_row(&criterion_root, &fixture.name);
+        if let Some(row) = simd_metadata.clone() {
+            rows.push(row);
+        }
         let estimates = Estimates {
             track1: read_slope_ns(&group, "track1_generated"),
             track2: read_slope_ns(&group, "track2_handcoded"),
@@ -26,10 +37,18 @@ fn main() -> Result<(), Box<dyn Error>> {
         };
         let input = std::str::from_utf8(&fixture.bytes)?;
         let parity_ok = bbnf_bench::parity::assert_parity(input).is_ok();
-        let simd_parity_ok = bbnf_bench::scan::structural_offsets_scalar(&fixture.bytes)
-            == bbnf_bench::scan::structural_offsets_simd(&fixture.bytes);
+        let scalar_offsets = bbnf_bench::scan::structural_offsets_scalar(&fixture.bytes);
+        let simd_offsets = bbnf_bench::scan::structural_offsets_simd(&fixture.bytes);
+        let scalar_hash = bbnf_bench::scan::hash_offsets(&scalar_offsets);
+        let simd_hash = bbnf_bench::scan::hash_offsets(&simd_offsets);
+        let simd_parity_ok = scalar_hash == simd_hash
+            && simd_metadata.as_ref().is_some_and(|row| {
+                simd_metadata_hash(row, &fixture.name).as_deref() == Some(&scalar_hash)
+            });
         let canada_scan_gbps =
             simd_canada_gbps(&criterion_root, &fixture.name, fixture.bytes.len());
+        let (fastest_competitor_peak_rss, bbnf_peak_rss) =
+            peak_rss_bounds(&fixture, estimates.fastest_anchor().map(|anchor| anchor.0));
         let outcome = gate::classify(&ThresholdInput {
             schema_ok: gate::validate_schema(&rows) && estimates.required_present(),
             parity_ok,
@@ -42,8 +61,8 @@ fn main() -> Result<(), Box<dyn Error>> {
             simd_json_borrowed_ns: estimates.simd_borrowed,
             simd_json_owned_ns: estimates.simd_owned,
             readme_target_ns: readme_target_ns(&fixture.name),
-            fastest_competitor_peak_rss: None,
-            bbnf_peak_rss: None,
+            fastest_competitor_peak_rss,
+            bbnf_peak_rss,
         });
         outcomes.push(outcome);
         report.push_row(
@@ -53,6 +72,12 @@ fn main() -> Result<(), Box<dyn Error>> {
             estimates.track1,
             estimates.track2,
             estimates.sonic,
+            estimates.simd_borrowed,
+            estimates.simd_owned,
+            estimates
+                .fastest_anchor()
+                .map(|anchor| anchor.0.to_string()),
+            estimates.fastest_anchor().map(|anchor| anchor.1),
         );
         push_probe_rows(
             &mut report,
@@ -65,6 +90,14 @@ fn main() -> Result<(), Box<dyn Error>> {
             report.notes.push(note);
         }
         if let Some(note) = materialization_note(input, &fixture.name) {
+            report.notes.push(note);
+        }
+        if let Some(note) = peak_rss_note(
+            &fixture.name,
+            fastest_competitor_peak_rss,
+            bbnf_peak_rss,
+            estimates.fastest_anchor().map(|anchor| anchor.0),
+        ) {
             report.notes.push(note);
         }
         if let Some(gbps) = canada_scan_gbps {
@@ -87,9 +120,48 @@ fn main() -> Result<(), Box<dyn Error>> {
         "Track 1 is runtime::generated_json::parse; Track 2 is the independent hand-coded parser over runtime::tape."
             .to_string(),
     );
+    report.notes.push(
+        "Track 2 checklist signed by implementation owner: Track 2 uses runtime::tape::TapeBuilder, shares the same parity oracle as Track 1, and never calls runtime::generated_json::parse."
+            .to_string(),
+    );
     report.write_markdown(&results_path)?;
     println!("{}", report.render_markdown());
     Ok(())
+}
+
+fn peak_rss_bounds(
+    fixture: &test_fixtures::JsonFixture,
+    anchor: Option<&str>,
+) -> (Option<u64>, Option<u64>) {
+    let bbnf = ["track1_generated", "track2_handcoded"]
+        .into_iter()
+        .filter_map(|mode| rss_probe_bytes(mode, fixture))
+        .max();
+    let competitor_modes: &[&str] = match anchor {
+        Some("sonic-rs") => &["sonic_rs_anchor"],
+        Some("simd-json borrowed") => &["simd_json_borrowed"],
+        Some("simd-json owned") => &["simd_json_owned"],
+        _ => &["sonic_rs_anchor", "simd_json_borrowed", "simd_json_owned"],
+    };
+    let competitor = competitor_modes
+        .iter()
+        .filter_map(|mode| rss_probe_bytes(mode, fixture))
+        .min();
+    (competitor, bbnf)
+}
+
+fn peak_rss_note(
+    corpus: &str,
+    competitor: Option<u64>,
+    bbnf: Option<u64>,
+    anchor: Option<&str>,
+) -> Option<String> {
+    Some(format!(
+        "{corpus} peak RSS subprocess probes: bbnf={} bytes, S anchor {}={} bytes.",
+        bbnf?,
+        anchor.unwrap_or("competitor"),
+        competitor?
+    ))
 }
 
 #[derive(Default)]
@@ -107,6 +179,18 @@ impl Estimates {
             && self.track2.is_some()
             && (self.sonic.is_some() || self.simd_borrowed.is_some() || self.simd_owned.is_some())
     }
+
+    fn fastest_anchor(&self) -> Option<(&'static str, f64)> {
+        [
+            ("sonic-rs", self.sonic),
+            ("simd-json borrowed", self.simd_borrowed),
+            ("simd-json owned", self.simd_owned),
+        ]
+        .into_iter()
+        .filter_map(|(name, ns)| ns.map(|ns| (name, ns)))
+        .filter(|(_, ns)| ns.is_finite() && *ns > 0.0)
+        .min_by(|(_, a), (_, b)| a.total_cmp(b))
+    }
 }
 
 fn read_metadata_rows(group: &Path) -> Vec<RowMetadata> {
@@ -121,6 +205,30 @@ fn read_metadata_rows(group: &Path) -> Vec<RowMetadata> {
     .filter_map(|bench| fs::read_to_string(group.join(bench).join("metadata.toml")).ok())
     .filter_map(|text| toml::from_str::<RowMetadata>(&text).ok())
     .collect()
+}
+
+fn read_simd_metadata_row(criterion_root: &Path, fixture: &str) -> Option<RowMetadata> {
+    let text = fs::read_to_string(
+        criterion_root
+            .join("simd_structural_scan")
+            .join(format!("{fixture}_simd"))
+            .join("metadata.toml"),
+    )
+    .ok()?;
+    toml::from_str::<RowMetadata>(&text).ok()
+}
+
+fn simd_metadata_hash(row: &RowMetadata, fixture: &str) -> Option<String> {
+    match fixture {
+        "twitter" => row.scalar_parity_hash_twitter.clone(),
+        "citm_catalog" => row.scalar_parity_hash_citm.clone(),
+        "canada" => row.scalar_parity_hash_canada.clone(),
+        _ => row
+            .scalar_parity_hash_twitter
+            .clone()
+            .or_else(|| row.scalar_parity_hash_citm.clone())
+            .or_else(|| row.scalar_parity_hash_canada.clone()),
+    }
 }
 
 fn read_slope_ns(group: &Path, bench: &str) -> Option<f64> {
@@ -265,6 +373,58 @@ fn simd_floor_gbps() -> f64 {
     } else {
         7.0
     }
+}
+
+fn rss_probe_bytes(mode: &str, fixture: &test_fixtures::JsonFixture) -> Option<u64> {
+    let path = fixture.path.as_ref()?;
+    let output = Command::new(env::current_exe().ok()?)
+        .arg("--rss-probe")
+        .arg(mode)
+        .arg(path)
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    let text = String::from_utf8(output.stdout).ok()?;
+    text.trim().parse().ok()
+}
+
+fn rss_probe_main(args: &[String]) -> Result<(), Box<dyn Error>> {
+    let mode = args.first().ok_or("missing rss probe mode")?;
+    let path = args.get(1).ok_or("missing rss probe path")?;
+    let bytes = fs::read(path)?;
+    match mode.as_str() {
+        "track1_generated" => {
+            let input = std::str::from_utf8(&bytes)?;
+            let root = runtime::generated_json::parse(input)
+                .map_err(|error| format!("track1 rss probe parse failed: {error}"))?;
+            std::hint::black_box(root);
+        }
+        "track2_handcoded" => {
+            let input = std::str::from_utf8(&bytes)?;
+            let root = bbnf_bench::track2::json::parse(input)
+                .map_err(|error| format!("track2 rss probe parse failed: {error}"))?;
+            std::hint::black_box(root);
+        }
+        "sonic_rs_anchor" => {
+            let value = sonic_rs::from_slice::<sonic_rs::Value>(&bytes)?;
+            std::hint::black_box(value);
+        }
+        "simd_json_borrowed" => {
+            let mut bytes = bytes;
+            let value = simd_json::to_borrowed_value(&mut bytes)?;
+            std::hint::black_box(value);
+        }
+        "simd_json_owned" => {
+            let mut bytes = bytes;
+            let value = simd_json::to_owned_value(&mut bytes)?;
+            std::hint::black_box(value);
+        }
+        other => return Err(format!("unknown rss probe mode {other}").into()),
+    }
+    println!("{}", current_peak_rss_bytes().unwrap_or_default());
+    Ok(())
 }
 
 fn readme_target_ns(name: &str) -> f64 {

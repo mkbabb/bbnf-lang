@@ -7,23 +7,24 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+bbnf-simd.workspace = true
 blake3.workspace = true
 bytemuck.workspace = true
+libc.workspace = true
 mimalloc.workspace = true
 parse-that-regex.workspace = true
 runtime = { workspace = true, features = ["bench-counters"] }
 serde.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
-simd-scan.workspace = true
+simd-json = { version = "=0.13.11", default-features = false, features = ["serde_impl"] }
+sonic-rs = { version = "=0.5.8", default-features = false, features = ["sort_keys", "utf8_lossy"] }
 test-fixtures.workspace = true
 thiserror.workspace = true
 toml.workspace = true
 
 [dev-dependencies]
 criterion.workspace = true
-simd-json = { version = "=0.13.11", default-features = false, features = ["serde_impl"] }
-sonic-rs = { version = "=0.5.8", default-features = false, features = ["sort_keys", "utf8_lossy"] }
 
 [[bench]]
 name = "json_parity"

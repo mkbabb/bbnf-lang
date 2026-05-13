@@ -1,32 +1,113 @@
 use anyhow::{bail, Context, Result};
-use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
 fn main() -> Result<()> {
     let mut args = std::env::args().skip(1);
     let Some(command) = args.next() else {
-        print_help();
-        bail!("missing xtask command");
+        bail!("usage: cargo xtask <regen-json|check-json|check-conformance|lint-loc|bench-json|gate-json>");
     };
 
     let root = workspace_root()?;
     match command.as_str() {
         "regen-json" => regen_json(&root),
         "check-json" => check_json(&root),
+        "check-conformance" => check_conformance(),
         "lint-loc" => lint_loc(&root),
         "bench-json" => bench_json(&root, args.collect()),
         "gate-json" => gate_json(&root),
         "help" | "--help" | "-h" => {
-            print_help();
+            eprintln!("usage: cargo xtask <regen-json|check-json|check-conformance|lint-loc|bench-json|gate-json>");
             Ok(())
         }
         other => bail!("unknown xtask command `{other}`"),
     }
 }
 
-fn print_help() {
-    eprintln!("usage: cargo xtask <regen-json|check-json|lint-loc|bench-json|gate-json>");
+fn check_conformance() -> Result<()> {
+    let suite = test_fixtures::load_json_suite()?;
+    let mut failures = Vec::new();
+    let mut valid_count = 0usize;
+    let mut invalid_count = 0usize;
+
+    for fixture in suite
+        .embedded_valid
+        .iter()
+        .chain(suite.corpus.iter().filter_map(|status| match status {
+            test_fixtures::FixtureStatus::Available(fixture) => Some(fixture),
+            test_fixtures::FixtureStatus::Unavailable(_) => None,
+        }))
+    {
+        valid_count += 1;
+        let skinny = runtime::generated_json::parse_bytes(&fixture.bytes);
+        let serde = serde_json::from_slice::<serde_json::Value>(&fixture.bytes);
+        if skinny.is_err() || serde.is_err() {
+            failures.push(format!(
+                "valid fixture {} failed: skinny={:?} serde={:?}",
+                fixture.name,
+                skinny.err().map(|error| error.to_string()),
+                serde.err().map(|error| error.to_string())
+            ));
+            continue;
+        }
+        check_float_bits(&fixture.name, skinny.unwrap().value(), &mut failures);
+    }
+
+    for fixture in suite.embedded_invalid {
+        invalid_count += 1;
+        let skinny_ok = runtime::generated_json::parse_bytes(&fixture.bytes).is_ok();
+        let serde_ok = serde_json::from_slice::<serde_json::Value>(&fixture.bytes).is_ok();
+        if skinny_ok {
+            failures.push(format!(
+                "invalid fixture {} accepted: skinny_ok={skinny_ok} serde_ok={serde_ok}",
+                fixture.name
+            ));
+        }
+    }
+
+    println!(
+        "conformance: {valid_count} valid fixtures accepted; {invalid_count} invalid fixtures rejected"
+    );
+    if failures.is_empty() {
+        Ok(())
+    } else {
+        bail!("{}", failures.join("; "))
+    }
+}
+
+fn check_float_bits(
+    name: &str,
+    value: runtime::generated_json::JsonValue<'_, '_>,
+    failures: &mut Vec<String>,
+) {
+    match value {
+        runtime::generated_json::JsonValue::Object(object) => {
+            for pair in object.pairs() {
+                check_float_bits(name, pair.value(), failures);
+            }
+        }
+        runtime::generated_json::JsonValue::Array(array) => {
+            for value in array.values() {
+                check_float_bits(name, value, failures);
+            }
+        }
+        runtime::generated_json::JsonValue::Number(number) => {
+            let raw = number.raw();
+            if raw.contains('.') || raw.contains('e') || raw.contains('E') || raw == "-0" {
+                let skinny = number.as_f64().map(f64::to_bits);
+                let serde = serde_json::from_str::<serde_json::Number>(raw)
+                    .ok()
+                    .and_then(|number| number.as_f64())
+                    .map(f64::to_bits);
+                if skinny != serde {
+                    failures.push(format!(
+                        "float bit mismatch in {name}: literal={raw} skinny={skinny:?} serde={serde:?}"
+                    ));
+                }
+            }
+        }
+        _ => {}
+    }
 }
 
 fn regen_json(root: &Path) -> Result<()> {
@@ -53,10 +134,10 @@ fn lint_loc(root: &Path) -> Result<()> {
         ("crates/codegen", 4500),
         ("crates/runtime", 4000),
         ("crates/parse-that-regex", 4000),
-        ("crates/simd-scan", 3500),
-        ("crates/bbnf-bench", 2000),
+        ("crates/bbnf-simd", 3500),
+        ("crates/bbnf-bench", 2400),
         ("crates/test-fixtures", 800),
-        ("xtask", 350),
+        ("xtask", 500),
     ];
     let mut failures = Vec::new();
     for (path, budget) in budgets {
@@ -196,20 +277,4 @@ fn has_skinny_workspace_metadata(manifest: &toml::Value) -> bool {
         .and_then(|bbnf| bbnf.get("grammars"))
         .and_then(|grammars| grammars.get("json"))
         .is_some()
-}
-
-#[allow(dead_code)]
-fn metadata_table(manifest: &toml::Value) -> BTreeMap<String, String> {
-    manifest
-        .get("workspace")
-        .and_then(|workspace| workspace.get("metadata"))
-        .and_then(|metadata| metadata.get("bbnf"))
-        .and_then(|bbnf| bbnf.as_table())
-        .map(|table| {
-            table
-                .iter()
-                .map(|(key, value)| (key.clone(), value.to_string()))
-                .collect()
-        })
-        .unwrap_or_default()
 }

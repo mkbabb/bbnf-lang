@@ -25,8 +25,8 @@ pub fn assert_parity(input: &str) -> Result<(), ParityError> {
     let track2 = json::parse(input).map_err(|error| ParityError::Parse(error.to_string()))?;
 
     if track1.tape().offsets() != track2.tape().offsets()
-        || track1.tape().string_escape_offsets() != track2.tape().string_escape_offsets()
-        || track1.tape().string_control_offsets() != track2.tape().string_control_offsets()
+        || track1.tape().flag_cursors() != track2.tape().flag_cursors()
+        || track1.tape().flag_values() != track2.tape().flag_values()
     {
         return Err(ParityError::OffsetStream);
     }
@@ -70,7 +70,7 @@ pub fn token_stream_from_root(root: &JsonRoot<'_>) -> Vec<Token> {
         .map(|token| Token {
             kind: token.kind.name().to_string(),
             span: token.start as usize..token.end as usize,
-            payload_class: token.flags.payload_class(),
+            payload_class: token.payload_class,
         })
         .collect()
 }
@@ -94,7 +94,7 @@ mod tests {
     #[test]
     fn offset_stream_tracks_verified_source_events() {
         let root = runtime::generated_json::parse(r#"{"a":[1,true]}"#).unwrap();
-        assert_eq!(root.tape().offsets(), &[0, 1, 3, 5, 6, 8, 12, 13]);
+        assert_eq!(root.tape().offsets(), &[0, 1, 5, 6, 8, 12, 13]);
     }
 
     #[test]

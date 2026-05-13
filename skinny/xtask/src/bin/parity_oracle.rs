@@ -21,7 +21,10 @@ fn main() {
     println!("corpus,size_bytes,skinny_ok,serde_ok,structural_match,note");
     for path_arg in &args[1..] {
         let path = Path::new(path_arg);
-        let name = path.file_name().and_then(|n| n.to_str()).unwrap_or(path_arg);
+        let name = path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or(path_arg);
         let bytes = match std::fs::read(path) {
             Ok(b) => b,
             Err(e) => {
@@ -60,10 +63,7 @@ fn main() {
             if sk_counts == sj_counts {
                 match_ok = true;
             } else {
-                note = format!(
-                    "count_mismatch sk={:?} sj={:?}",
-                    sk_counts, sj_counts
-                );
+                note = format!("count_mismatch sk={:?} sj={:?}", sk_counts, sj_counts);
             }
         } else if !skinny_ok {
             note = format!("skinny_err: {}", skinny_result.err().unwrap());

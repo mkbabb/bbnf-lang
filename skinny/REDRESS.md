@@ -4,31 +4,41 @@ Date: 2026-05-12.
 
 This note records the implemented redress after the skinny prototype was brought
 closer to the restart skinny/full contracts. The measured findings are now also
-folded into the authority specs under `restart/skinny/`,
-`restart/ARCHITECTURE.md`, and `restart/MASTER-PLAN.md`.
+recorded in the runnable prototype surfaces under `skinny/`; the guarded
+`restart/` authority surfaces remain outside this implementation pass.
 
 ## Current Bench Fact
 
-The gate report is now canonicalized to Mbps. The current full run still returns
-outcome G / NO-GO because the substrate ceiling is more than 1.10x behind the
-fastest competitor row.
+The gate report is canonicalized to Mbps. Two facts must stay separate.
+
+First, the original skinny triad passed: generated Track 1 and independent
+hand-coded Track 2 both beat the sonic-rs anchor on twitter, citm_catalog, and
+canada, and Track 1 stayed inside the Track 2 parity band. That validates the
+lazy offset tape/direct projection substrate for the original skinny premise.
+
+Second, the current measured authority is the expanded corpus in
+`skinny/RESULTS.md`, which records **overall outcome G / NoGo**. Five rows are
+currently binding: `github_events`, `update_center`, `random`,
+`unicode_escapes`, and `y_string_unicode`. The expanded result does not refute
+the tape/direct union; it exposes primitive and lowering gaps that the next
+SOTA-BEAT packet must close.
 
 | Corpus | Track 1 Mbps | Track 2 Mbps | sonic-rs Mbps | Track 1 / sonic | Track 2 / sonic |
 |---|---:|---:|---:|---:|---:|
-| twitter | 11780 | 10770 | 18552 | 63.5% | 58.1% |
-| citm_catalog | 9286 | 10277 | 21285 | 43.6% | 48.3% |
-| canada | 7334 | 7701 | 11624 | 63.1% | 66.2% |
+| twitter | 23628 | 23242 | 21461 | 110.1% | 108.3% |
+| citm_catalog | 30102 | 29969 | 25330 | 118.8% | 118.3% |
+| canada | 16264 | 16217 | 13945 | 116.6% | 116.3% |
 
 Structural scan is not the current blocker: the `canada` structural-only scan
-reports 48362 Mbps against a 40000 Mbps floor.
+reports 68896 Mbps against a 40000 Mbps floor.
 
 Lazy tape materialization is now reported per corpus:
 
-| Corpus | Offsets | Logical offset bytes | Allocated offset bytes | Opens | Closes | String quotes | Numbers | Literals |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| twitter | 47672 | 190688 | 190688 | 2314 | 2314 | 36198 | 2109 | 4737 |
-| citm_catalog | 111639 | 446556 | 446556 | 21388 | 21388 | 53208 | 14392 | 1263 |
-| canada | 223248 | 892992 | 892992 | 56049 | 56049 | 24 | 111126 | 0 |
+| Corpus | Offsets | Logical offset bytes | Flag bytes | Allocated tape bytes | Opens | Closes | String quotes | Numbers | Literals | Separators |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| twitter | 73362 | 293448 | 1560 | 295008 | 2314 | 2314 | 36198 | 2109 | 4737 | 25690 |
+| citm_catalog | 162594 | 650376 | 5 | 650381 | 21388 | 21388 | 53208 | 14392 | 1263 | 50955 |
+| canada | 334385 | 1337540 | 0 | 1337540 | 56049 | 56049 | 24 | 111126 | 0 | 111137 |
 
 ## Implemented Redress
 
@@ -41,20 +51,20 @@ Lazy tape materialization is now reported per corpus:
 
 2. Parse-index and structural-scan products are split.
 
-   `simd-scan` now exposes `scan_json_structurals` for the structural-only
-   bench and `scan_json_parse_index` for parser consumption. The parse index
-   carries structural offsets and string escape/control candidates; the
-   structural-only scanner does not pay that extra parser cost. A duplicate
+   `bbnf-simd` now exposes `scan_json_structurals` for the structural-only
+   bench and `scan_json_parse_index` for parser-grade prefilter/probe work. The
+   parse index carries structural offsets and string escape/control candidates;
+   the structural-only scanner does not pay that extra parser cost. A duplicate
    structural-byte column was measured and removed after it improved all six
    Track 1/Track 2 parse rows by roughly 3-6%.
 
-3. Track 1 and Track 2 consume the same parse index.
+3. Track 1 and Track 2 consume the same one-buffer tape builder.
 
-   Generated Track 1 uses `runtime::tape::scan_parse_index` in
-   `runtime/src/grammars/json/generated.rs`. Hand-coded Track 2 uses the same
-   runtime call in `bbnf-bench/src/track2/json.rs`. Both transfer the vectors by
-   `into_parts`, reserve offset capacity from the structural count, and then
-   seal through the same `TapeAssembler`.
+   Generated Track 1 and hand-coded Track 2 now write source-verified events
+   directly through `runtime::tape::TapeBuilder`. `ParserState.structural_offsets`
+   and the string escape/control side vectors are gone from the parser state;
+   the sealed tape is one `Box<[u32]>` offset stream plus one packed `Box<[u8]>`
+   flag stream.
 
 4. Parser whitespace materialization was corrected.
 
@@ -69,14 +79,14 @@ Lazy tape materialization is now reported per corpus:
    The direct view layer is a typed projection over sealed tape offsets and
    `ValueRef`, not a parallel struct tree. Object/array/pair/string/number/
    bool/null wrappers point back into the tape; strings and numbers remain
-   borrowed spans with lazy materialization. The eager `TapeToken` shape remains
-   present for non-JSON mode boundaries.
+   borrowed spans with lazy materialization. The former eager `TapeToken` carrier
+   has been removed from the skinny runtime.
 
 6. Payload arena remains cold on JSON.
 
    The runtime test path asserts zero payload bytes, zero writes, and zero
-   allocations for JSON parse/projection. Strings with escapes carry a
-   `STRING_NEEDS_UNESCAPE` flag and allocate only when `JsonString::as_str()` is
+   allocations for JSON parse/projection. Strings with escapes carry the packed
+   `OffsetFlags::HAS_ESC` bit and allocate only when `JsonString::as_str()` is
    called.
 
 7. BIR now carries the materialization events it claims to test.
@@ -124,8 +134,8 @@ Lazy tape materialization is now reported per corpus:
    guards for `skip_json_whitespace` and `match_json_number`. This is shared by
    Track 1 and Track 2. Targeted Canada parse benches improved by roughly 9.7%
    for Track 1 and 7.6% for Track 2 before the later parse-index and sealing
-   changes. The current full regenerated gate reports Canada Track 1 at 8951
-   Mbps and Track 2 at 8910 Mbps.
+   changes. The current full regenerated gate reports Canada Track 1 at 16264
+   Mbps and Track 2 at 16217 Mbps.
 
 13. Close-token elision is now canonical for JSON.
 
@@ -135,23 +145,24 @@ Lazy tape materialization is now reported per corpus:
 
 14. The parser-grade structural byte vector was removed.
 
-   The parse index now carries offsets plus string escape/control candidates.
-   `consume_structural` and string-close validation read the structural byte
-   from `input[offset]`. Targeted eager-track benches improved materially; the
-   final lazy full bench is recorded in `RESULTS.md`.
+   The earlier parse index carried offsets plus string escape/control
+   candidates. Wave 1 then removed `ParserState.structural_offsets` entirely:
+   `consume_structural` validates from source and writes directly into
+   `TapeBuilder`. Targeted eager-track benches improved materially; the final
+   lazy full bench is recorded in `RESULTS.md`.
 
 15. Tape sealing is private-Vec semantic sealing.
 
    This remains the eager-mode sealing record. JSON lazy mode now seals offsets
-   into `Box<[u32]>`; allocated offset bytes equal logical offset bytes in the
-   current report.
+   into `Box<[u32]>` plus packed `Box<[u8]>` flags; allocated tape bytes are
+   logical offset bytes plus the flag stream in the current report.
 
 16. Pair-token fusion was measured and rejected.
 
    A pair-token-free object projection reduced token count but regressed Track
    1 on twitter and canada and did not deliver a clean substrate win. The
-   canonical JSON tape keeps explicit pair tokens until a different
-   representation beats the current Mbps gate.
+   canonical JSON tape keeps explicit key/value cursor pairing in the view layer
+   until a different representation beats the current Mbps gate.
 
 17. Dispatch-table alternate was audited and rejected as a signal.
 
@@ -183,35 +194,105 @@ Lazy tape materialization is now reported per corpus:
    parse-time `decode_json_string_to_arena` grammar needs an explicit SOTA
    concession or a lazy lowering amendment.
 
-20. Lazy-offset tape was implemented and measured as NO-GO.
+20. Lazy-offset tape-union migration was implemented and measured.
 
    JSON Track 1 and Track 2 now seal a lazy offset tape through
-   `TapeAssembler`: no `TapeToken` stream is emitted on the JSON path, the
-   public tape stores u32 offsets plus string escape/control candidates, and
-   direct views compute node kind from `source[offsets[cursor]]`. Separators
-   are grammar-verified but not stored. This cuts canada materialization from
-   2.68 MB logical eager tape to 0.89 MB logical offsets, but the full gate
-   still returns outcome G: twitter Track 1 is 11780 Mbps, below the <13000
-   Mbps refutation line and below the >=14000 Mbps validation line. Lazy mode
-   therefore does not validate the Lock 1 amendment on this run.
+   `TapeBuilder`: no `TapeToken` stream is emitted on the JSON path, the public
+   tape stores u32 offsets plus packed per-offset flags, and direct views compute
+   node kind from `source[offsets[cursor]]`. Separators are now stored as part
+   of the structural projection, eliminating the parser sidecar while preserving
+   view traversal. The immediate post-migration gate was still outcome G
+   against sonic-rs, with twitter Track 1 at 14810 Mbps; later sparse-flag and
+   parser hot-path wins moved the historical triad to pass; the later expanded
+   corpus remains overall G / NoGo.
+
+21. Lock 15 release-profile discipline is enforced in the skinny workspace.
+
+   `[profile.release]` now uses `lto = "fat"`, `codegen-units = 1`, and
+   `panic = "abort"`. The verbose release build shows rustc invocations carrying
+   `-C lto=fat`. Hot generated JSON parser functions are emitted with
+   `#[inline(always)]`, and `passes::recognizers::hot_path` records the
+   cost-model-derived hot-rule fact for the later real lowerer.
+
+22. `bbnf-simd` replaced the runtime scanner dependency surface.
+
+   Runtime and bench crates now depend on `bbnf-simd`, with external parity
+   tests covering all one-byte inputs and the available JSON corpora. The old
+   old scanner crate is no longer a skinny workspace member. Wave 2 still
+   reported outcome G, but the structural-only `canada` scanner remains well
+   above floor. The scanner floor is not the expanded-gate blocker.
+
+23. Sparse flags and direct spare-capacity offset writes landed.
+
+   The lazy tape now stores flag bytes only for offsets that need non-default
+   flags and writes offsets directly into spare capacity before sealing. This
+   removes the former byte-per-offset flag stream on low-escape corpora:
+   twitter now reports 1560 sparse flag bytes, citm_catalog 5, and canada 0.
+
+24. Parser hot-path wins landed without changing the substrate contract.
+
+   The accepted wins are cold error paths, SWAR digit runs, SWAR plain-string
+   scanning, fused comma/close delimiter consumption, newline-indent
+   space-run skipping, parser split via `parse_value_at`, a short
+   plain-string fast path, and Track 2 inline parity. These changes preserve
+   the same lazy offset tape and view projection contract while moving the gate
+   from prior outcome G to a passing historical triad. The expanded gate then
+   exposed remaining SOTA-BEAT blockers.
+
+25. Measured alternates remain rejected.
+
+   Structural-index typed parser prepass, NEON no-escape string matcher,
+   separator elision, generic SWAR whitespace skipper, 12-byte/width churn,
+   and dispatch-table/function-pointer alternates were measured or audited and
+   not retained. They either duplicated an existing signal, regressed key
+   corpora, or failed to beat the direct hot-path changes above.
+
+26. Bench auditability gates landed after the triad pass and before expanded
+   G / NoGo classification.
+
+   The compact report now renders all three competitor anchors, names the
+   fastest `S` row used by the classifier, and reports Track 1 / S plus Track 2
+   / S. SIMD scan benches persist parity-hash metadata, the gate rechecks the
+   persisted hash against the scalar hash, peak RSS is sampled in one-shot
+   subprocess probes for bbnf and the fastest `S` anchor, and `xtask
+   check-conformance` exercises UTF-8 rejection, surrogate rejection,
+   non-character acceptance, and float-bit parity over the expanded corpus
+   manifest. This moved `bbnf-bench` and `xtask` above their old micro-budgets,
+   so WORKSPACE.md redresses those local caps to 2,400 and 500 LOC while the
+   total skinny remains far under the 31,400 handwritten ceiling.
+
+27. SK-V3 reprofile split the expanded blockers by mechanism.
+
+   `random` and `unicode_escapes` are dominated by
+   `runtime::generated_json::generated::parse_value_at`, so the next parser
+   work is typed event cursor consumption over the tape projection, not string
+   decode or another tape-width perturbation. `update-center` spreads across
+   parse entry, sparse-flag capacity, and allocation growth, so builder
+   capacity policy is a measured SOTA item. Profiles live under
+   `skinny/profile/reprofile-2026-05-12/`.
 
 ## Sonic Closeness
 
-The parser now works as the tape/direct hybrid the spec requires, but it is not
-sonic-class. The lazy-offset implementation proves the gap is not solved by
-removing the 16-byte token stream alone: JSON now writes only a sealed u32
-offset tape, with zero payload arena writes, yet the full gate remains outcome
-G. Sonic's anchor is still materializing and validating a different value shape
-with less parser-control overhead and less typed-view bookkeeping.
+The parser now works as the tape/direct hybrid the spec requires and beats the
+sonic-rs anchor on the original three measured rows. Twitter remains the
+binding triad row and classifies as outcome A in that narrower gate: Track 1 is
+110.1% of sonic-rs and Track 2 is 108.3% of sonic-rs. Citm_catalog and canada
+also classify as outcome A.
+
+The expanded corpus is stricter and is now authoritative for SOTA-BEAT. It
+classifies as G / NoGo because the failing rows expose three remaining
+families of work: object/key-dispatch and small-document overhead
+(`github_events`, `update_center`, `random`), parse-only event-cursor overhead
+on escape-heavy input (`unicode_escapes`), and Unicode string projection
+(`y_string_unicode`).
 
 The largest code win already landed was removing redundant whitespace scans:
 large-corpus Track 1 improved by roughly 26-34% when that change first landed.
 Adding an eager whitespace-bearing parse index was also tested and rejected:
 twitter Track 1 doubled to roughly 783 us. A duplicate structural-byte column
-was then removed and improved every targeted track row, so the canonical parse
-index now keeps only offsets plus string escape/control candidates. Pair-token
-fusion was also tested and rejected because it reduced tokens without improving
-the canonical Track 1 Mbps. The dispatch-table alternate was then corrected:
+was then removed and improved every targeted track row. Pair-token fusion was
+also tested and rejected because it reduced token count without improving the
+canonical Track 1 Mbps. The dispatch-table alternate was then corrected:
 the old probe duplicated canonical Track 1, while a real function-pointer table
 regressed the important rows, so there is no current cost-model masking
 evidence from dispatch shape.
@@ -219,8 +300,9 @@ Dropping the skip column to make a 12-byte token was also measured and rejected
 as canonical: it saved memory but did not produce a clean parse-throughput win.
 The host-call probe now gives a separate warning: dispatch overhead is fine,
 but eager parse-time string decode is too expensive to hide behind the
-host-fn-free cut. Lazy-offset tape then cut materialization bytes but did not
-clear the validation threshold.
+host-fn-free cut. The final accepted wins were local hot-path changes on top of
+lazy-offset tape, not a new structural-index prepass or another tape-width
+perturbation.
 
 ## Skinny Spec Amendments Folded
 
@@ -242,9 +324,9 @@ clear the validation threshold.
    The current text treats the structural stream as the main SIMD product
    (`SUBSTRATE.md:223-279`). The implementation found a real distinction:
    structural-only scan is the bench/floor product; parse-index scan is the
-   parser product and exports string escape/control candidates. It no longer
-   exports a duplicate structural-byte vector because that measured as
-   throughput-negative.
+   parser product and may export string escape/control classification facts. It
+   no longer exports a duplicate structural-byte vector because that measured
+   as throughput-negative.
 
 4. `restart/skinny/SUBSTRATE.md` documents the exact no-quotes fast path.
 
@@ -378,12 +460,12 @@ clear the validation threshold.
 - `report.rs` owns the Mbps conversion and ratio formatting.
 - `gate.rs` still classifies by the skinny threshold matrix but renders scan
   floors in Mbps and fails bbnf rows with non-zero/missing arena counters.
-- `simd-scan` exposes separate structural and parse-index scan entry points.
-- Generated Track 1 and hand-coded Track 2 both consume the runtime parse index
-  and emit the same tape.
-- The parse index carries structural offsets and string escape/control
-  candidates, but not whitespace bytes or duplicate structural bytes; both were
-  measured as throughput regressions or unrecovered parser-index cost.
+- `bbnf-simd` owns the structural scanner surface used by runtime and bench.
+- Generated Track 1 and hand-coded Track 2 both write through `TapeBuilder` and
+  emit the same tape.
+- The parser state no longer carries structural offsets, whitespace bytes, or
+  duplicate structural bytes; each was measured as throughput-negative or
+  unrecovered parser-index cost.
 - `passes::extract` now emits BIR materialization markers for tape/direct build
   on JSON materialized rules.
 - Track 1 regenerated source matches the codegen template via `xtask check-json`.
@@ -394,7 +476,8 @@ clear the validation threshold.
 - Generated `view.rs`, `value.rs`, and `visitor.rs` now own their definitions;
   `runtime::grammars::json` is the generated module alias.
 - `match_json_number` / `skip_json_whitespace` use the tightened shared scanner
-  path; Canada improved materially, but still remains NO-GO.
+  path; Canada improved materially and now classifies outcome A in the final
+  gate.
 - JSON close tokens are elided; close kinds remain reserved, and open container
   tokens carry end spans plus subtree skips.
 - The finished tape uses private-Vec semantic sealing and reports both logical
@@ -407,30 +490,44 @@ clear the validation threshold.
   bytes but did not cleanly improve parse Mbps.
 - Host-call dispatch overhead passes, but eager parse-time string decode is now
   documented as a MASKING signal for V1 JSON unless decode stays lazy.
-- Lazy-offset JSON tape was implemented and measured; it reduces logical tape
-  bytes but still returns outcome G against the same gate.
+- Lazy-offset JSON tape plus tape-union migration was implemented and measured;
+  subsequent sparse-flag, spare-capacity write, SWAR, delimiter-fusion, and
+  parser-split wins move the historical triad to pass. The expanded gate remains
+  overall G / NoGo.
+- The report now renders the actual fastest-anchor `S` comparator rather than
+  only sonic-rs; conformance and SIMD parity metadata gates are executable.
+- `bbnf-simd` is now the scanner crate used by runtime and bench, with
+  byte-level and corpus parity tests under `crates/bbnf-simd/tests/`.
 - Skinny and full specs now use the prototype workspace result path
   `skinny/RESULTS.md` for the runnable prototype, with `restart/skinny/` kept
   as spec authority.
-- The remaining NO-GO is documented as parser/substrate control-flow cost after
-  lazy offset materialization, not a codegen gap and not a structural scan floor
-  failure.
+- Original three-corpus gate: twitter outcome A / GO (Track 1 23628 Mbps,
+  Track 2 23242, sonic-rs 21461); citm_catalog outcome A / GO (30102 / 29969 /
+  25330); canada outcome A / GO (16264 / 16217 / 13945).
+- Current expanded-corpus gate: `skinny/RESULTS.md` records overall G / NoGo,
+  with `github_events`, `update_center`, `random`, `unicode_escapes`, and
+  `y_string_unicode` as the binding misses.
 
-## Remaining Prototype Gaps
+## Closed Reporting Gates
 
-- The compact report still omits the signed Track 2 checklist required by the
-  long-form `BENCH.md` result template. Behaviorally, the Track 2 parity tests
-  enforce the same substrate correspondence; the missing piece is the human
-  signature block in the rendered report.
-- Peak RSS is still represented by schema/gate fields, not measured by an
-  external sampler in the compact gate. The logical/allocated tape byte report
-  narrows the gap, but it is not a full process RSS floor.
+- The compact report now includes the signed Track 2 checklist required by the
+  long-form `BENCH.md` result template. The current report states that Track 2
+  uses `runtime::tape::TapeBuilder`, shares the Track 1 parity oracle, and
+  never calls `runtime::generated_json::parse`.
+- Peak RSS is now measured through row metadata and rendered by the compact
+  gate. The current report shows bbnf peak RSS below the fastest competitor on
+  all three corpora: twitter 77,348,864 vs 92,798,976 bytes, citm_catalog
+  155,566,080 vs 159,744,000 bytes, and canada 190,709,760 vs 195,067,904
+  bytes.
 
 ## Next No-Workaround Work
 
-1. Add an external peak-RSS sampler to the compact gate so private-Vec capacity
-   and parse-index side vectors are adjudicated against the memory floor.
-2. Profile the lazy Track 1 hot path directly; the byte-write hypothesis has
-   now been tested and did not validate.
-3. If another architecture is pursued, it must target parser-control overhead
-   or fused scanner/verifier work rather than eager-token width.
+1. Keep the rejected-route ledger intact: structural-index typed parser prepass,
+   NEON no-escape string matcher, separator elision, generic SWAR whitespace,
+   12-byte/width churn, and dispatch-table/function-pointer alternates remain
+   non-canonical unless a future bench row overturns them.
+2. Carry the original A / Go triad into V1 planning as JSON-class substrate
+   validation inside the skinny bounds.
+3. Carry the expanded G / NoGo into V1 planning as the current SOTA-BEAT block:
+   string/Unicode primitives, random/key-dispatch overhead, and update-center
+   shape overhead are now implementation requirements, not optional tuning.

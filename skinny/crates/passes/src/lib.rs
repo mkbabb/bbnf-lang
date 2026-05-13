@@ -47,16 +47,18 @@ pub struct LayoutFacts {
     pub rule_types: HashMap<ir::RuleId, Type>,
     pub node_types: HashMap<ExprId, Type>,
     pub layout_policies: HashMap<String, String>,
+    pub hot_call_graph: HashMap<ir::RuleId, recognizers::hot_path::HotPathFact>,
 }
 
 pub mod layout {
     use super::*;
 
-    pub fn run(_grammar: &GrammarIr, type_facts: types::TypeFacts) -> LayoutFacts {
+    pub fn run(grammar: &GrammarIr, type_facts: types::TypeFacts) -> LayoutFacts {
         LayoutFacts {
             rule_types: type_facts.rule_types,
             node_types: type_facts.node_types,
             layout_policies: HashMap::new(),
+            hot_call_graph: recognizers::hot_path::derive_hot_path(grammar, None),
         }
     }
 
@@ -233,6 +235,96 @@ pub mod recognizers {
             alphabet: StructuralAlphabet::json(),
             site: SimdSite::PreEntry,
         }]
+    }
+
+    pub mod hot_path {
+        use super::*;
+
+        #[derive(Clone, Debug, PartialEq, Eq)]
+        pub struct HotPathFact {
+            pub force_inline: bool,
+            pub max_inline_size_hint: usize,
+        }
+
+        #[derive(Clone, Debug, Default, PartialEq, Eq)]
+        pub struct PriorBenchProfile {
+            pub hot_rule_names: Vec<String>,
+        }
+
+        pub fn derive_hot_path(
+            grammar_ir: &GrammarIr,
+            profile_hints: Option<&PriorBenchProfile>,
+        ) -> HashMap<ir::RuleId, HotPathFact> {
+            let entry = grammar_ir
+                .rule_by_name("json")
+                .or_else(|| grammar_ir.rule_by_name("parse_value"))
+                .or_else(|| grammar_ir.rules.first());
+            let mut hot = HashMap::new();
+            if let Some(rule) = entry {
+                mark_transitive(grammar_ir, rule.id, 0, &mut hot);
+            }
+            if let Some(profile) = profile_hints {
+                for name in &profile.hot_rule_names {
+                    if let Some(rule) = grammar_ir.rule_by_name(name) {
+                        hot.insert(rule.id, hot_fact());
+                    }
+                }
+            }
+            hot
+        }
+
+        fn mark_transitive(
+            grammar_ir: &GrammarIr,
+            rule_id: ir::RuleId,
+            depth: usize,
+            hot: &mut HashMap<ir::RuleId, HotPathFact>,
+        ) {
+            if depth > 5 || hot.insert(rule_id, hot_fact()).is_some() {
+                return;
+            }
+            let Some(rule) = grammar_ir.rule(rule_id) else {
+                return;
+            };
+            mark_expr(grammar_ir, rule.body, depth, hot);
+        }
+
+        fn mark_expr(
+            grammar_ir: &GrammarIr,
+            expr_id: ExprId,
+            depth: usize,
+            hot: &mut HashMap<ir::RuleId, HotPathFact>,
+        ) {
+            match &grammar_ir.expr(expr_id).kind {
+                ExprKind::Seq(children) => {
+                    for child in children {
+                        mark_expr(grammar_ir, *child, depth, hot);
+                    }
+                }
+                ExprKind::Alt { branches, .. } => {
+                    for branch in branches {
+                        mark_expr(grammar_ir, *branch, depth, hot);
+                    }
+                }
+                ExprKind::Repeat { body, .. } | ExprKind::Optional(body) => {
+                    mark_expr(grammar_ir, *body, depth, hot);
+                }
+                ExprKind::Ref {
+                    target: Some(target),
+                    ..
+                } => mark_transitive(grammar_ir, *target, depth + 1, hot),
+                ExprKind::Literal { .. }
+                | ExprKind::Regex { .. }
+                | ExprKind::Ref { target: None, .. }
+                | ExprKind::Annotation { .. } => {}
+            }
+        }
+
+        fn hot_fact() -> HotPathFact {
+            HotPathFact {
+                force_inline: true,
+                max_inline_size_hint: 20 * 1024,
+            }
+        }
     }
 }
 

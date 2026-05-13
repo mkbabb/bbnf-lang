@@ -15,3 +15,87 @@ path = "canada.json"
 size_bytes = 2251051
 sha256 = "f83b3b354030d5dd58740c68ac4fecef64cb730a0d12a90362a7f23077f50d78"
 source_url = "https://raw.githubusercontent.com/simdjson/simdjson-data/master/jsonexamples/canada.json"
+
+[fixtures.apache_builds]
+path = "../../../../test_data/apache_builds.json"
+size_bytes = 127275
+sha256 = "f8e3422ac7d3c3550674afcb37e979e4e9bbeccffdb66933423495d55b6f5c74"
+source_url = "https://github.com/simdjson/simdjson-data"
+
+[fixtures.github_events]
+path = "../../../../test_data/github_events.json"
+size_bytes = 65132
+sha256 = "c9eebb2cf2d46649059e9d48700919bacb3e8e0fb58452065a1a9de7778fd22e"
+source_url = "https://github.com/simdjson/simdjson-data"
+
+[fixtures.update_center]
+path = "../../../../test_data/update-center.json"
+size_bytes = 533178
+sha256 = "e7b6a037bfdb5abdf122fa3445ddfacea78522a23df31c4799884c4ebf4c01fa"
+source_url = "https://github.com/simdjson/simdjson-data"
+
+[fixtures.mesh]
+path = "../../../../test_data/mesh.json"
+size_bytes = 723597
+sha256 = "45bc8bf429340a874a7af8ea7056d60497402f80f55dba1e6ecc4ca8f1e46aff"
+source_url = "https://github.com/simdjson/simdjson-data"
+
+[fixtures.random]
+path = "../../../../test_data/random.json"
+size_bytes = 510476
+sha256 = "61a3544f2bc987b7378c66a9025b1f23eb5456d4f0443595c06d6fc20f3b0a68"
+source_url = "https://github.com/simdjson/simdjson-data"
+
+[fixtures.gsoc-2018]
+path = "../../../../test_data/gsoc-2018.json"
+size_bytes = 3327831
+sha256 = "72f1ef4898d88049da856c2ab8f4ec3e2c968ce209b2bbfd16cef842eb2e185f"
+source_url = "https://github.com/simdjson/simdjson-data"
+
+[fixtures.marine_ik]
+path = "../../../../test_data/marine_ik.json"
+size_bytes = 2983466
+sha256 = "61590a397542ae274ccd8a47ba9f64e7c9216a223a5e7e702dea5b2375411d62"
+source_url = "https://github.com/simdjson/simdjson-data"
+
+[fixtures.instruments]
+path = "../../../../test_data/instruments.json"
+size_bytes = 220346
+sha256 = "f3069235d4e2695d36c0c7735a435a7abb279fc4d64bbcf4ed9f888b8da1fdb9"
+source_url = "https://github.com/simdjson/simdjson-data"
+
+[fixtures.numbers]
+path = "../../../../test_data/numbers.json"
+size_bytes = 150124
+sha256 = "82e9ddfe00963110ed8a0704e7df4d1ad1af9c0f336d1b24431ebc63cf430a2b"
+source_url = "https://github.com/simdjson/simdjson-data"
+
+[fixtures.unicode_mixed]
+path = "../../../../test_data/unicode_mixed.json"
+size_bytes = 1053086
+sha256 = "aec597c8dddeec6a3915c17e7ba36b43994b40a74dd58c421e17ba299f777f40"
+source_url = "skinny/test_data/_gen_unicode.py"
+
+[fixtures.unicode_escapes]
+path = "../../../../test_data/unicode_escapes.json"
+size_bytes = 1050797
+sha256 = "45f2abf7ca9deed1983ef51a92ac263ab6383909b78b2075ca6c21ea6407747c"
+source_url = "skinny/test_data/_gen_unicode.py"
+
+[fixtures.unicode_basic]
+path = "../../../../test_data/unicode_basic.json"
+size_bytes = 1048586
+sha256 = "0952e0c999672a30817debdb8e6afce6206b3bf361f82644d1e3d01f2963795a"
+source_url = "skinny/test_data/_gen_unicode.py"
+
+[fixtures.distinct_values]
+path = "../../../../test_data/distinct_values.json"
+size_bytes = 153630
+sha256 = "653dc57128185eb128d3568b4190b7aa6f65c102ed6ce6abae88d482ec0970e7"
+source_url = "https://github.com/simdjson/simdjson-data"
+
+[fixtures.y_string_unicode]
+path = "../../../../test_data/y_string_unicode.json"
+size_bytes = 35601
+sha256 = "f294861884d59ffa5ac0e994758813e40a30c0c496a99bc40cec9d87b6f5c6bc"
+source_url = "JSONTestSuite-style unicode string fixture"

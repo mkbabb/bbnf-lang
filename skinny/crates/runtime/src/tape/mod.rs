@@ -4,97 +4,32 @@ mod offsets;
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use simd_scan::{scan_json_parse_index, scan_json_structurals, JsonParseIndex, StructuralIndex};
+use bbnf_simd::{scan_json_parse_index, scan_json_structurals, JsonParseIndex, StructuralIndex};
 
-pub use assembler::TapeAssembler;
-pub use offsets::{contains_offset_in_range, OffsetTapeStats};
+pub use assembler::{CapacityPlan, TapeBuilder};
+pub use offsets::OffsetTapeStats;
 
 static NEXT_TAPE_ID: AtomicU64 = AtomicU64::new(1);
 
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-#[repr(transparent)]
-pub struct NodeKindId(pub u16);
-
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Default)]
 #[repr(transparent)]
-pub struct TokenFlags(pub u16);
+pub struct OffsetFlags(pub u8);
 
-impl TokenFlags {
-    pub const PAYLOAD_CLASS_MASK: u16 = 0x000f;
-    pub const INLINE_BOOL_NULL: u16 = 0;
-    pub const INLINE_NUMBER_FAST: u16 = 1;
-    pub const INLINE_STRING_BORROW: u16 = 2;
-    pub const ARENA_OFFSET: u16 = 3;
-    pub const SIBLING_SKIP: u16 = 4;
+impl OffsetFlags {
+    pub const NONE: Self = Self(0);
+    pub const HAS_ESC: u8 = 0x01;
+    pub const HAS_CONTROL: u8 = 0x02;
 
-    pub const HAS_SCALAR_CACHE: u16 = 1 << 4;
-    pub const STRING_NEEDS_UNESCAPE: u16 = 1 << 5;
-    pub const STRING_BORROWS_SOURCE: u16 = 1 << 6;
-    pub const IS_STRUCTURAL_OPEN: u16 = 1 << 7;
-    pub const IS_STRUCTURAL_CLOSE: u16 = 1 << 8;
-    pub const RECOVERY_KIND_SHIFT: u16 = 9;
-    pub const RECOVERY_KIND_MASK: u16 = 0b11 << Self::RECOVERY_KIND_SHIFT;
-
-    pub const fn new(payload_class: u16) -> Self {
-        Self(payload_class & Self::PAYLOAD_CLASS_MASK)
-    }
-
-    pub const fn with(self, bit: u16) -> Self {
+    pub const fn with(self, bit: u8) -> Self {
         Self(self.0 | bit)
     }
 
-    pub const fn payload_class(self) -> u16 {
-        self.0 & Self::PAYLOAD_CLASS_MASK
-    }
-
-    pub const fn contains(self, bit: u16) -> bool {
+    pub const fn contains(self, bit: u8) -> bool {
         self.0 & bit != 0
     }
 
-    pub const fn bits(self) -> u16 {
+    pub const fn bits(self) -> u8 {
         self.0
-    }
-}
-
-#[repr(C, align(16))]
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
-pub struct TapeToken {
-    pub kind: NodeKindId,
-    pub flags: TokenFlags,
-    pub start: u32,
-    pub end: u32,
-    pub payload_or_skip: u32,
-}
-
-impl TapeToken {
-    pub fn new(
-        kind: NodeKindId,
-        flags: TokenFlags,
-        start: usize,
-        end: usize,
-        payload_or_skip: u32,
-    ) -> Self {
-        Self {
-            kind,
-            flags,
-            start: checked_u32(start),
-            end: checked_u32(end),
-            payload_or_skip,
-        }
-    }
-
-    #[inline]
-    pub fn span(&self) -> std::ops::Range<usize> {
-        self.start as usize..self.end as usize
-    }
-
-    #[inline]
-    pub fn subtree_skip(&self) -> usize {
-        if self.flags.payload_class() == TokenFlags::SIBLING_SKIP {
-            self.payload_or_skip as usize
-        } else {
-            1
-        }
     }
 }
 
@@ -156,9 +91,9 @@ pub struct TapeId(pub u64);
 
 pub struct Tape<'input> {
     source: &'input [u8],
-    offsets: Box<[u32]>,
-    string_escape_offsets: Box<[u32]>,
-    string_control_offsets: Box<[u32]>,
+    offsets: Vec<u32>,
+    flag_cursors: Vec<u32>,
+    flag_values: Vec<u8>,
     payloads: PayloadArena,
     id: TapeId,
 }
@@ -167,15 +102,16 @@ impl<'input> Tape<'input> {
     pub(crate) fn from_offsets(
         source: &'input [u8],
         offsets: Vec<u32>,
-        string_escape_offsets: Vec<u32>,
-        string_control_offsets: Vec<u32>,
+        flag_cursors: Vec<u32>,
+        flag_values: Vec<u8>,
         payloads: PayloadArena,
     ) -> Self {
+        debug_assert_eq!(flag_cursors.len(), flag_values.len());
         Self {
             source,
-            offsets: offsets.into_boxed_slice(),
-            string_escape_offsets: string_escape_offsets.into_boxed_slice(),
-            string_control_offsets: string_control_offsets.into_boxed_slice(),
+            offsets,
+            flag_cursors,
+            flag_values,
             payloads,
             id: TapeId(NEXT_TAPE_ID.fetch_add(1, Ordering::Relaxed)),
         }
@@ -189,12 +125,12 @@ impl<'input> Tape<'input> {
         &self.offsets
     }
 
-    pub fn string_escape_offsets(&self) -> &[u32] {
-        &self.string_escape_offsets
+    pub fn flag_cursors(&self) -> &[u32] {
+        &self.flag_cursors
     }
 
-    pub fn string_control_offsets(&self) -> &[u32] {
-        &self.string_control_offsets
+    pub fn flag_values(&self) -> &[u8] {
+        &self.flag_values
     }
 
     pub fn offset_at(&self, cursor: u32) -> Option<usize> {
@@ -203,12 +139,26 @@ impl<'input> Tape<'input> {
             .map(|offset| *offset as usize)
     }
 
+    pub fn flags_at(&self, cursor: u32) -> Option<OffsetFlags> {
+        self.flag_cursors
+            .binary_search(&cursor)
+            .ok()
+            .and_then(|index| self.flag_values.get(index).copied())
+            .map(OffsetFlags)
+    }
+
     pub fn offset_bytes(&self) -> usize {
         self.offsets.len() * std::mem::size_of::<u32>()
     }
 
+    pub fn flag_bytes(&self) -> usize {
+        self.flag_cursors.len() * std::mem::size_of::<u32>() + self.flag_values.len()
+    }
+
     pub fn offset_capacity_bytes(&self) -> usize {
-        self.offset_bytes()
+        self.offsets.capacity() * std::mem::size_of::<u32>()
+            + self.flag_cursors.capacity() * std::mem::size_of::<u32>()
+            + self.flag_values.capacity()
     }
 
     pub fn payloads(&self) -> &PayloadArena {
@@ -217,77 +167,6 @@ impl<'input> Tape<'input> {
 
     pub fn id(&self) -> TapeId {
         self.id
-    }
-}
-
-pub struct TapeBuilder<'input> {
-    source: &'input [u8],
-    tokens: Vec<TapeToken>,
-    payloads: PayloadArena,
-}
-
-impl<'input> TapeBuilder<'input> {
-    pub fn new(source: &'input [u8]) -> Self {
-        Self {
-            source,
-            tokens: Vec::new(),
-            payloads: PayloadArena::empty(),
-        }
-    }
-
-    pub fn with_capacity(source: &'input [u8], token_capacity: usize) -> Self {
-        Self {
-            source,
-            tokens: Vec::with_capacity(token_capacity),
-            payloads: PayloadArena::empty(),
-        }
-    }
-
-    pub fn reserve_tokens(&mut self, additional: usize) {
-        self.tokens.reserve(additional);
-    }
-
-    pub fn emit(
-        &mut self,
-        kind: NodeKindId,
-        flags: TokenFlags,
-        start: usize,
-        end: usize,
-        payload_or_skip: u32,
-    ) -> u32 {
-        let index = checked_u32(self.tokens.len());
-        self.tokens
-            .push(TapeToken::new(kind, flags, start, end, payload_or_skip));
-        index
-    }
-
-    pub fn patch_end(&mut self, index: u32, end: usize) {
-        self.tokens[index as usize].end = checked_u32(end);
-    }
-
-    pub fn patch_skip_to_current_len(&mut self, index: u32) {
-        let skip = self.tokens.len() - index as usize;
-        self.tokens[index as usize].payload_or_skip = checked_u32(skip);
-    }
-
-    pub fn patch_skip(&mut self, index: u32, skip: usize) {
-        self.tokens[index as usize].payload_or_skip = checked_u32(skip);
-    }
-
-    pub fn token(&self, index: u32) -> &TapeToken {
-        &self.tokens[index as usize]
-    }
-
-    pub fn token_count(&self) -> usize {
-        self.tokens.len()
-    }
-
-    pub fn payloads(&self) -> &PayloadArena {
-        &self.payloads
-    }
-
-    pub fn source(&self) -> &'input [u8] {
-        self.source
     }
 }
 
@@ -357,16 +236,6 @@ pub fn scan_parse_index(source: &[u8]) -> JsonParseIndex {
 }
 
 pub(crate) fn checked_u32(value: usize) -> u32 {
-    u32::try_from(value).expect("skinny hot path supports inputs up to u32::MAX bytes")
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn tape_token_is_sixteen_bytes_for_eager_mode() {
-        assert_eq!(std::mem::size_of::<TapeToken>(), 16);
-        assert_eq!(std::mem::align_of::<TapeToken>(), 16);
-    }
+    debug_assert!(u32::try_from(value).is_ok());
+    value as u32
 }

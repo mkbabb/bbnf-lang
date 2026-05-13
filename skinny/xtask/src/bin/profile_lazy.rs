@@ -15,10 +15,7 @@ use std::time::Instant;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let iters: usize = args
-        .get(1)
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(60_000);
+    let iters: usize = args.get(1).and_then(|s| s.parse().ok()).unwrap_or(60_000);
     let corpus = args
         .get(2)
         .cloned()
@@ -47,8 +44,8 @@ fn main() {
     let start = Instant::now();
     let mut total_offsets: u64 = 0;
     for _ in 0..iters {
-        let root = runtime::generated_json::parse(std::hint::black_box(input))
-            .expect("parse failed");
+        let root =
+            runtime::generated_json::parse(std::hint::black_box(input)).expect("parse failed");
         total_offsets = total_offsets.wrapping_add(root.tape().offsets().len() as u64);
         std::hint::black_box(root);
     }
@@ -64,25 +61,18 @@ fn main() {
 }
 
 fn locate_fixture(name: &str) -> PathBuf {
-    // Walk up from CARGO_MANIFEST_DIR to skinny root.
     let manifest = env::var("CARGO_MANIFEST_DIR")
         .map(PathBuf::from)
         .unwrap_or_else(|_| env::current_dir().unwrap());
-    let mut dir = manifest.as_path();
-    loop {
-        let candidate = dir.join("crates/test-fixtures/corpus/json").join(format!("{name}.json"));
+    for dir in manifest.ancestors() {
+        let candidate = dir
+            .join("crates/test-fixtures/corpus/json")
+            .join(format!("{name}.json"));
         if candidate.exists() {
             return candidate;
         }
-        match dir.parent() {
-            Some(p) => dir = p,
-            None => break,
-        }
     }
-    // Fallback: cwd-relative
-    let cwd_candidate = PathBuf::from(format!(
-        "crates/test-fixtures/corpus/json/{name}.json"
-    ));
+    let cwd_candidate = PathBuf::from(format!("crates/test-fixtures/corpus/json/{name}.json"));
     if cwd_candidate.exists() {
         return cwd_candidate;
     }

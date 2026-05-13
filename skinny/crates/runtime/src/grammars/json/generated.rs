@@ -3,7 +3,8 @@ use super::parser::ParserState;
 use super::value::{JsonNodeKind, ParseError, ParseErrorKind};
 use crate::tape::OffsetFlags;
 use parse_that_regex::{
-    match_json_number_from_first, match_json_string_at_quote, skip_json_whitespace, RegexErrorKind,
+    match_json_number_from_first, match_json_string_at_quote, skip_json_whitespace,
+    JsonNumberMatch, JsonStringMatch, RegexErrorKind,
 };
 
 const STRUCTURAL_ALPHABET_JSON: &[u8] = b"{}[],:\"";
@@ -31,12 +32,19 @@ fn parse_value<'i>(state: &mut ParserState<'i>) -> Result<(), ParseError<'i>> {
     parse_value_at(state)
 }
 
-#[inline(always)]
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 fn parse_value_at<'i>(state: &mut ParserState<'i>) -> Result<(), ParseError<'i>> {
     if state.cursor >= state.bytes.len() {
         return Err(error(state, ParseErrorKind::ExpectedValue));
     }
     let byte = unsafe { *state.bytes.get_unchecked(state.cursor) };
+    dispatch_value(state, byte)
+}
+
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
+fn dispatch_value<'i>(state: &mut ParserState<'i>, byte: u8) -> Result<(), ParseError<'i>> {
     match byte {
         b'{' => parse_object(state),
         b'[' => parse_array(state),
@@ -49,7 +57,8 @@ fn parse_value_at<'i>(state: &mut ParserState<'i>) -> Result<(), ParseError<'i>>
     }
 }
 
-#[inline(always)]
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 fn parse_object<'i>(state: &mut ParserState<'i>) -> Result<(), ParseError<'i>> {
     if consume_structural(state, b'{').is_none() {
         return Err(error(state, ParseErrorKind::ExpectedValue));
@@ -69,13 +78,15 @@ fn parse_object<'i>(state: &mut ParserState<'i>) -> Result<(), ParseError<'i>> {
     }
 }
 
-#[inline(always)]
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 fn parse_pair<'i>(state: &mut ParserState<'i>) -> Result<(), ParseError<'i>> {
     parse_key_colon(state)?;
     parse_value_at(state)
 }
 
-#[inline(always)]
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 fn parse_key_colon<'i>(state: &mut ParserState<'i>) -> Result<(), ParseError<'i>> {
     let start = state.cursor;
     let Some(open_cursor) = consume_quote_at_cursor(state) else {
@@ -84,14 +95,7 @@ fn parse_key_colon<'i>(state: &mut ParserState<'i>) -> Result<(), ParseError<'i>
     if let Some(raw_end) = match_tiny_plain_string(state.bytes, start) {
         state.cursor = raw_end;
     } else {
-        let span = match_json_string_at_quote(state.bytes, start).map_err(|err| ParseError {
-            input: state.input,
-            offset: err.offset,
-            kind: match err.kind {
-                RegexErrorKind::ExpectedString => ParseErrorKind::ExpectedValue,
-                _ => ParseErrorKind::InvalidString,
-            },
-        })?;
+        let span = match_string_at_quote(state, start)?;
         if span.needs_unescape {
             state.patch_flags(open_cursor, OffsetFlags::NONE.with(OffsetFlags::HAS_ESC));
         }
@@ -112,7 +116,8 @@ fn parse_key_colon<'i>(state: &mut ParserState<'i>) -> Result<(), ParseError<'i>
     Ok(())
 }
 
-#[inline(always)]
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 fn parse_array<'i>(state: &mut ParserState<'i>) -> Result<(), ParseError<'i>> {
     if consume_structural(state, b'[').is_none() {
         return Err(error(state, ParseErrorKind::ExpectedValue));
@@ -132,7 +137,8 @@ fn parse_array<'i>(state: &mut ParserState<'i>) -> Result<(), ParseError<'i>> {
     }
 }
 
-#[inline(always)]
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 fn parse_string<'i>(state: &mut ParserState<'i>) -> Result<(), ParseError<'i>> {
     let start = state.cursor;
     let Some(open_cursor) = consume_quote_at_cursor(state) else {
@@ -142,14 +148,7 @@ fn parse_string<'i>(state: &mut ParserState<'i>) -> Result<(), ParseError<'i>> {
         state.cursor = raw_end;
         return Ok(());
     }
-    let span = match_json_string_at_quote(state.bytes, start).map_err(|err| ParseError {
-        input: state.input,
-        offset: err.offset,
-        kind: match err.kind {
-            RegexErrorKind::ExpectedString => ParseErrorKind::ExpectedValue,
-            _ => ParseErrorKind::InvalidString,
-        },
-    })?;
+    let span = match_string_at_quote(state, start)?;
     if span.needs_unescape {
         state.patch_flags(open_cursor, OffsetFlags::NONE.with(OffsetFlags::HAS_ESC));
     }
@@ -157,7 +156,8 @@ fn parse_string<'i>(state: &mut ParserState<'i>) -> Result<(), ParseError<'i>> {
     Ok(())
 }
 
-#[inline(always)]
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 fn match_tiny_plain_string(input: &[u8], offset: usize) -> Option<usize> {
     let mut cursor = offset + 1;
     let limit = (cursor + 8).min(input.len());
@@ -171,16 +171,40 @@ fn match_tiny_plain_string(input: &[u8], offset: usize) -> Option<usize> {
     None
 }
 
-#[inline(always)]
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
+fn match_string_at_quote<'i>(
+    state: &ParserState<'i>,
+    start: usize,
+) -> Result<JsonStringMatch, ParseError<'i>> {
+    match_json_string_at_quote(state.bytes, start).map_err(|err| ParseError {
+        input: state.input,
+        offset: err.offset,
+        kind: match err.kind {
+            RegexErrorKind::ExpectedString => ParseErrorKind::ExpectedValue,
+            _ => ParseErrorKind::InvalidString,
+        },
+    })
+}
+
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 fn parse_number<'i>(state: &mut ParserState<'i>, first: u8) -> Result<(), ParseError<'i>> {
-    let number = match_json_number_from_first(state.bytes, state.cursor, first)
+    let number = match_number_at_digit(state.bytes, state.cursor, first)
         .ok_or_else(|| error(state, ParseErrorKind::InvalidNumber))?;
     state.emit_plain_offset(number.start);
     state.cursor = number.end;
     Ok(())
 }
 
-#[inline(always)]
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
+fn match_number_at_digit(input: &[u8], cursor: usize, first: u8) -> Option<JsonNumberMatch> {
+    match_json_number_from_first(input, cursor, first)
+}
+
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 fn parse_literal<'i>(
     state: &mut ParserState<'i>,
     literal: &'static [u8],
@@ -200,12 +224,14 @@ fn parse_literal<'i>(
     Ok(())
 }
 
-#[inline(always)]
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 fn skip_ws(state: &mut ParserState<'_>) {
     state.cursor = skip_json_whitespace(state.bytes, state.cursor);
 }
 
-#[inline(always)]
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 fn consume_delimiter(state: &mut ParserState<'_>, byte: u8) -> bool {
     let offset = if state.cursor < state.bytes.len()
         && unsafe { *state.bytes.get_unchecked(state.cursor) } == byte
@@ -221,7 +247,8 @@ fn consume_delimiter(state: &mut ParserState<'_>, byte: u8) -> bool {
     true
 }
 
-#[inline(always)]
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 fn consume_quote_at_cursor(state: &mut ParserState<'_>) -> Option<u32> {
     let offset = state.cursor;
     if offset >= state.bytes.len() || unsafe { *state.bytes.get_unchecked(offset) } != b'"' {
@@ -232,7 +259,8 @@ fn consume_quote_at_cursor(state: &mut ParserState<'_>) -> Option<u32> {
     Some(cursor)
 }
 
-#[inline(always)]
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 fn consume(state: &mut ParserState<'_>, byte: u8) -> bool {
     if matches!(byte, b':' | b',') {
         return consume_delimiter(state, byte);
@@ -248,7 +276,8 @@ fn consume(state: &mut ParserState<'_>, byte: u8) -> bool {
     }
 }
 
-#[inline(always)]
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 fn consume_structural(state: &mut ParserState<'_>, byte: u8) -> Option<u32> {
     let offset = if state.cursor < state.bytes.len()
         && unsafe { *state.bytes.get_unchecked(state.cursor) } == byte
@@ -265,7 +294,8 @@ fn consume_structural(state: &mut ParserState<'_>, byte: u8) -> Option<u32> {
     Some(cursor)
 }
 
-#[inline(always)]
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 fn consume_container_next<'i>(
     state: &mut ParserState<'i>,
     close: u8,

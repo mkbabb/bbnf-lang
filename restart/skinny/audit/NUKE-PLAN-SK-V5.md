@@ -10,6 +10,27 @@ the verification command after removal, and the wave that executes the
 deletion. Execution batches in Wave 4 (per IMPLEMENTATION-PACKET-SK-V5)
 so all related changes land in one commit.
 
+## Wave 0 Decision Ledger
+
+Wave 0 records disposition only; it does not delete files whose consumers
+have not landed yet.
+
+| Item | Decision | Execution wave | Verification command |
+|---|---|---:|---|
+| `generated_eventcursor.rs` | NUKE; measured parallel prepass regression | 4 | `rg "eventcursor\|generated_eventcursor\|EventCursor\|ParseIndexCursor" skinny/` |
+| Bench-private `SinkParser` | REWIRE then NUKE after generated `SinkOnly` exists | 2 | `samply ... profile_direct ... track1` shows generated runtime |
+| `crates/simd-scan/` | NUKE fossil crate | 4 | `rg -l "simd-scan\|simd_scan" skinny/` |
+| `eventcursor` feature | NUKE with generated EventCursor | 4 | `cargo build --workspace --all-features && rg "eventcursor" skinny/` |
+| `ParseIndexCursor` / `scan_parse_index` | NUKE if unused after eventcursor removal | 4 | `rg "ParseIndexCursor|scan_parse_index" skinny/` |
+| `wave2_bench.rs` example | NUKE if present | 4 | `cargo build --workspace --examples` |
+| `bbnf-simd` JSON god-module | SPLIT/MOVE, not raw delete | 4 | Lock 14 grep in §14 |
+| JSON hardcoded scalar references | PARAMETERIZE alphabet | 4 | `rg "b'\\{' \| b'\\}' \| b'\\['" skinny/crates/bbnf-simd/` |
+| `JsonStringMatch` / `JsonNumberMatch` names | ALIAS/MOVE during string-number work | 3/4 | `rg "JsonStringMatch|JsonNumberMatch" skinny/crates/parse-that-regex/` |
+| `include_str!` decorative codegen | REPLACE with real lowerer | 1 | `cargo run -p xtask --release -- gen --check` |
+| hardcoded JSON in `passes` | GENERALIZE over grammar facts | 1 | `rg '"object"\|"array"\|"pair"\|"string"\|"number"\|"bool"\|"null"' skinny/crates/passes/src/` |
+| `parse_integer_digest` | MOVE before SinkParser nuke | 2 | `rg "parse_integer_digest|parse_integer" skinny/crates/` |
+| AVX-IFMA "Wave 6" message | FIX documentation drift now | 0 | `rg 'Wave 6: vpmadd52' skinny/crates/bbnf-simd/src/x86_64/avx_ifma/mantissa.rs` returns zero |
+
 ## 1. Refuted Parallel Prepass — `generated_eventcursor.rs`
 
 **Path**: `skinny/crates/runtime/src/grammars/json/generated_eventcursor.rs`

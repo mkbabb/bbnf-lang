@@ -34,5 +34,5 @@ pub fn mul52_low_scalar(mantissa: u64, power_of_ten: u64) -> u64 {
 #[cfg(all(target_arch = "x86_64", target_feature = "avxifma"))]
 #[inline]
 pub unsafe fn mul52_low_ifma(_mantissa: [u64; 4], _power_of_ten: [u64; 4]) -> [u64; 4] {
-    unimplemented!("Wave 6: vpmadd52luq 4-lane Eisel-Lemire mantissa multiply");
+    unimplemented!("H.W5/SK-V5 Wave 5: vpmadd52luq 4-lane Eisel-Lemire mantissa multiply");
 }

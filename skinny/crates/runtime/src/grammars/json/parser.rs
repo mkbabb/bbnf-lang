@@ -38,12 +38,14 @@ impl<'i> ParserState<'i> {
         JsonRoot::from_tape(self.input, tape)
     }
 
-    #[inline(always)]
+    #[cfg_attr(feature = "parse-attribution", inline(never))]
+    #[cfg_attr(not(feature = "parse-attribution"), inline(always))]
     pub fn emit_plain_offset(&mut self, offset: usize) -> u32 {
         self.tape.push_plain_offset(offset)
     }
 
-    #[inline(always)]
+    #[cfg_attr(feature = "parse-attribution", inline(never))]
+    #[cfg_attr(not(feature = "parse-attribution"), inline(always))]
     pub fn patch_flags(&mut self, cursor: u32, flags: OffsetFlags) {
         self.tape.patch_flags(cursor, flags);
     }

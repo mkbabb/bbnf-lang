@@ -739,6 +739,24 @@ perturbation.
   gate. The current report shows bbnf peak RSS below the fastest competitor on
   the historical triad: twitter 3,424,256 vs 4,898,816 bytes, citm_catalog
   4,718,592 vs 7,733,248 bytes, and canada 5,750,784 vs 11,337,728 bytes.
+- SK-V5 Wave 0 adds strictness disclosure to the compact result schema:
+  `Strictness`, `parse_utf8`, `escape_complete`, `Output plane`, and
+  `flaw_probe`. The current bbnf rows are marked `deferred /
+  view-boundary / yes` rather than scan-boundary strict; this is the B3
+  honesty correction and prevents permissive/deferred parse rows from being
+  read as strict-vs-strict wins.
+- SK-V5 Wave 0 adds the `runtime/parse-attribution` feature. Default builds
+  keep Lock 15 force-inline behavior; attribution builds no-inline the seven
+  profile boundaries documented in `restart/skinny/COMPILER.md` §6.5:
+  `dispatch_value`, whitespace boundary, container open/close, string
+  primitive entry, number primitive entry, literal verification, and tape
+  emit/advance. This closes the cohort B1 complaint that `parse_value_at`
+  collapsed all hot leaves into one symbol.
+- SK-V5 Wave 0 records nuke decisions only. Deletions remain routed to their
+  owner waves: generated EventCursor, `eventcursor`, `simd-scan`, and
+  ParseIndexCursor die in Wave 4; the bench-private `SinkParser` and misplaced
+  integer materializer die in Wave 2 after generated `SinkOnly` exists; the
+  JSON hardcoded SIMD scalar references are split in Wave 4.
 
 ## Next No-Workaround Work
 

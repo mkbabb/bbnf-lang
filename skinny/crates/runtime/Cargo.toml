@@ -22,6 +22,7 @@ path = "examples/wave2_bench.rs"
 [features]
 default = []
 bench-counters = []
+parse-attribution = []
 # SK-V3 Wave 2 prototype: mask-driven parse_value_at with NEON-precomputed
 # whitespace + value-byte bitmaps and a 256-byte CLASS_LUT jump table.
 eventcursor = []

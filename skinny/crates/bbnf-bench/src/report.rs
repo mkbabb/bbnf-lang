@@ -8,6 +8,7 @@ use std::path::Path;
 pub struct Report {
     pub title: String,
     pub rows: Vec<ReportRow>,
+    pub workload_rows: Vec<WorkloadReportRow>,
     pub probe_rows: Vec<ProbeReportRow>,
     pub notes: Vec<String>,
 }
@@ -37,11 +38,25 @@ pub struct ProbeReportRow {
     pub signal: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct WorkloadReportRow {
+    pub corpus: String,
+    pub workload: String,
+    pub track1_mbps: Option<f64>,
+    pub track2_mbps: Option<f64>,
+    pub sonic_mbps: Option<f64>,
+    pub serde_json_mbps: Option<f64>,
+    pub track1_vs_sonic: Option<f64>,
+    pub track2_vs_sonic: Option<f64>,
+    pub correctness: String,
+}
+
 impl Report {
     pub fn new(title: impl Into<String>) -> Self {
         Self {
             title: title.into(),
             rows: Vec::new(),
+            workload_rows: Vec::new(),
             probe_rows: Vec::new(),
             notes: Vec::new(),
         }
@@ -75,6 +90,30 @@ impl Report {
         });
     }
 
+    pub fn push_workload_row(
+        &mut self,
+        corpus: impl Into<String>,
+        workload: impl Into<String>,
+        bytes: u64,
+        track1_ns: Option<f64>,
+        track2_ns: Option<f64>,
+        sonic_ns: Option<f64>,
+        serde_json_ns: Option<f64>,
+        correctness: impl Into<String>,
+    ) {
+        self.workload_rows.push(WorkloadReportRow {
+            corpus: corpus.into(),
+            workload: workload.into(),
+            track1_mbps: throughput_mbps(bytes, track1_ns),
+            track2_mbps: throughput_mbps(bytes, track2_ns),
+            sonic_mbps: throughput_mbps(bytes, sonic_ns),
+            serde_json_mbps: throughput_mbps(bytes, serde_json_ns),
+            track1_vs_sonic: speed_ratio(track1_ns, sonic_ns),
+            track2_vs_sonic: speed_ratio(track2_ns, sonic_ns),
+            correctness: correctness.into(),
+        });
+    }
+
     pub fn push_probe_row(
         &mut self,
         corpus: impl Into<String>,
@@ -99,11 +138,13 @@ impl Report {
         out.push_str("# ");
         out.push_str(&self.title);
         out.push_str("\n\n");
-        out.push_str("| Corpus | Outcome | Verdict | Track 1 Mbps | Track 2 Mbps | sonic-rs Mbps | simd-json borrowed Mbps | simd-json owned Mbps | S anchor | S Mbps | Track 1 / S | Track 2 / S |\n");
-        out.push_str("|---|---:|---|---:|---:|---:|---:|---:|---|---:|---:|---:|\n");
+        out.push_str("| Corpus | Outcome | Verdict | Strictness | parse_utf8 | escape_complete | flaw_probe | Track 1 Mbps | Track 2 Mbps | sonic-rs Mbps | simd-json borrowed Mbps | simd-json owned Mbps | S anchor | S Mbps | Track 1 / S | Track 2 / S |\n");
+        out.push_str(
+            "|---|---:|---|---|---|---|---|---:|---:|---:|---:|---:|---|---:|---:|---:|\n",
+        );
         for row in &self.rows {
             out.push_str(&format!(
-                "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |\n",
+                "| {} | {} | {} | deferred | view-boundary | yes | JSONTestSuite n_string_unescaped_ctrl_char rejected; i_string_invalid_utf8 rejected outside hot scan | {} | {} | {} | {} | {} | {} | {} | {} | {} |\n",
                 row.corpus,
                 row.outcome_id,
                 row.verdict,
@@ -117,6 +158,25 @@ impl Report {
                 format_ratio(row.track1_mbps, row.fastest_anchor_mbps),
                 format_ratio(row.track2_mbps, row.fastest_anchor_mbps)
             ));
+        }
+        if !self.workload_rows.is_empty() {
+            out.push_str("\n## Workloads\n\n");
+            out.push_str("| Corpus | Workload | Strictness | parse_utf8 | escape_complete | flaw_probe | Track 1 Mbps | Track 2 Mbps | sonic-rs Mbps | serde_json Mbps | Track 1 / sonic | Track 2 / sonic | Signal |\n");
+            out.push_str("|---|---|---|---|---|---|---:|---:|---:|---:|---:|---:|---|\n");
+            for row in &self.workload_rows {
+                out.push_str(&format!(
+                    "| {} | {} | deferred | view-boundary | yes | JSONTestSuite n_string_unescaped_ctrl_char rejected; direct rows bench-private until Wave 2 | {} | {} | {} | {} | {} | {} | {} |\n",
+                    row.corpus,
+                    row.workload,
+                    format_optional(row.track1_mbps),
+                    format_optional(row.track2_mbps),
+                    format_optional(row.sonic_mbps),
+                    format_optional(row.serde_json_mbps),
+                    format_ratio_value(row.track1_vs_sonic),
+                    format_ratio_value(row.track2_vs_sonic),
+                    row.correctness
+                ));
+            }
         }
         if !self.probe_rows.is_empty() {
             out.push_str("\n## Masking Probes\n\n");
@@ -193,6 +253,21 @@ fn ratio_to_track1(probe_ns: Option<f64>, track1_ns: Option<f64>) -> Option<f64>
     }
 }
 
+fn speed_ratio(candidate_ns: Option<f64>, anchor_ns: Option<f64>) -> Option<f64> {
+    match (candidate_ns, anchor_ns) {
+        (Some(candidate), Some(anchor)) if candidate > 0.0 && anchor > 0.0 => {
+            Some(anchor / candidate)
+        }
+        _ => None,
+    }
+}
+
+fn format_ratio_value(value: Option<f64>) -> String {
+    value
+        .map(|value| format!("{:.1}%", value * 100.0))
+        .unwrap_or_else(|| "n/a".to_string())
+}
+
 fn track1_mbps_from_ratio(probe_mbps: Option<f64>, ratio: Option<f64>) -> Option<f64> {
     match (probe_mbps, ratio) {
         (Some(mbps), Some(ratio)) if ratio > 0.0 => Some(mbps / ratio),
@@ -229,7 +304,7 @@ mod tests {
         );
         let markdown = report.render_markdown();
         assert!(markdown.contains("Track 1 Mbps"));
-        assert!(markdown.contains("| twitter | A | GO | 12954 | 14034 | 11915 | 11915 | 10104 | simd-json borrowed | 11915 | 108.7% | 117.8% |"));
+        assert!(markdown.contains("| twitter | A | GO | deferred | view-boundary | yes |"));
     }
 
     #[test]

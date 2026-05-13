@@ -278,7 +278,9 @@ target_features = ["avx512vbmi2"]  # required for collapsed-stage
 
 **Naming clarification (V9.5 PSI excavation, 2026-05-13)**: prior framing as "9-state FSM" was technically the finite-control fragment only. The asmjson reference (verified via direct WebFetch of `src/lib.rs`) carries `MAX_JSON_DEPTH = 64`, `frames_buf[]`, `open_buf[]`, `FrameKind { Object, Array }` — the bracket stack is load-bearing for nesting. Per the FSM-correctness audit at `/tmp/fsm-correctness-audit.md` §d, asmjson is a **Deterministic Pushdown Automaton (DPDA)**: finite-control 9 states + hardware-bounded explicit stack. A pure FSM cannot parse context-free grammars with nesting; any "FSM-shaped codegen" worth shipping is necessarily a DPDA. Codegen-emitted DPDA derivation from Grammar IR must derive the per-grammar stack discipline (bracket-pair set, depth bound, open-token validation) from Grammar IR facts — a derivation not yet audited for state-explosion bounds and the load-bearing residual risk per §5 below.
 
-**V9.5 dispatch posture (per `IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md` Wave 6b, 2026-05-13)**: `CollapsedStage` as Rust codegen is rejected as the 1000-commit Era V failure mode in canonical form. The user's load-bearing observation: Rust-implemented automaton overhead exceeded what LLVM could compile away, while Rust-implemented recursive descent compiles into an implicit automaton via LLVM's optimizer. `CollapsedStage` implementation is either hand-written NASM in `bbnf-simd/x86_64/avx512_vbmi2/collapsed_stage.asm` only, or `CollapsedStage` is dropped from SK-V3 entirely and the Lock 16 AVX-512 esoterica primitives land inside `OffsetTape` recursive descent. See `IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md` §8a + §8b.
+**V9.5 dispatch posture**: `CollapsedStage` as Rust codegen is rejected as the 1000-commit Era V failure mode in canonical form. The load-bearing observation (`LESSONS-LEARNED.md:17-26`): Rust-emitted explicit automaton overhead exceeds what LLVM can compile away, while Rust recursive descent compiles into an implicit automaton via the optimiser's call-stack-as-parse-state lowering. The four non-PSI shapes (`EagerTape`, `OffsetTape`, `EventTape`, `SinkOnly`) are materially different from `CollapsedStage` for precisely this reason: their parse state lives on the LLVM-managed call stack, not in a runtime-managed state-target table.
+
+`CollapsedStage` is therefore admissible only via hand-authored NASM riding the two-layer reusable vocabulary established in §5.2. The admissibility predicate has two conjuncts: (a) the `ext/x86/bbnf.asm` primitive vocabulary is complete and `checkasm_parity` is green for the target ISA, AND (b) a per-grammar `.asm` source has been committed for the grammar × ISA pair under examination. If either conjunct fails for a given grammar × ISA, the cost model falls back to `OffsetTape` (Rust recursive descent over the offset stream, with the Lock 16 NEON / AVX-512 esoterica primitives still callable at hot inner loops via FFI shims). The fallback is recoverable; the diagnostic that names the condition is `BBNF-COLLAPSEDSTAGE-NOT-VIABLE`.
 
 Per asmjson dev.md §1-39 and parse_json_zmm_sax.S analysis (DAVID research agent):
 
@@ -286,7 +288,47 @@ State alphabet: V (value), O (object body), K (key expected), D (colon expected)
 
 Each state has its own classifier mask set (e.g., state V wants `,]` for done, S wants `"\`). State transitions happen by jumping to the state's entry label after each chunk's classification, with `r10` holding the next-state target across chunk-refetch boundaries. No state-variable memory traffic; the program counter *is* the state.
 
-### §5.2. Classifier kernel per chunk
+### §5.2. Two-layer reusable vocabulary (dav1d / asmjson pattern)
+
+The hand-authored ASM surface is structured as four layers; the lower two are grammar-neutral and shared across every grammar the cost model assigns to `CollapsedStage`, the upper two carry the per-grammar variation as data rather than code. The structure mirrors dav1d's split between `x86inc.asm` (ABI macros), `x86util.asm` (cross-pixel-format primitive macros), and the per-pixel-format kernel sources that compose those primitives. asmjson reimplements the ABI layer locally inside its 2,641-LOC monolith; the design here vendors dav1d's already-hardened ABI layer and adds one grammar-primitive layer on top, leaving roughly half the bytes of asmjson to author.
+
+**Layer 0 — ABI and ISA-multiplexing macros (vendored).** `skinny/crates/bbnf-simd/ext/x86/x86inc.asm:1-1978` carries dav1d's `INIT_XMM` / `INIT_YMM` / `INIT_ZMM` register-width selectors, the `cglobal` / `cextern` ABI declarations, `WIN64_SPILL_XMM` for the Windows xmm6-15 callee-saved convention, and the SSE / AVX / AVX-512 instruction-encoding multiplexer that lets one `.asm` source compile across the three vector widths with no source duplication. BSD-2 license, attribution in `ext/x86/LICENSE-VENDOR`. No edits to this file; it is read-only vendor surface.
+
+**Layer 1 — grammar-neutral primitive macros (to be authored).** A new source `skinny/crates/bbnf-simd/ext/x86/bbnf.asm` carrying nine grammar-neutral macros, sized at roughly 600 LOC. The primitives are the analog of dav1d's `x86util.asm`: each is a named macro with one ISA body per supported width, callable by per-grammar kernel sources without recompilation. The nine primitives:
+
+- `BYTE_CLASS_FROM_TABLE_64` — consume 64 input bytes and a 256-byte classifier table, produce a 64-bit k-mask with one bit set per byte whose class is non-zero. NEON body: four `vqtbl4q_u8` against a 64-byte LUT (the alphabet fits per Lock 16 row "arm64 NEON byte classify"). AVX-2 body: four `vpshufb` against a 32-byte half-LUT with high-nibble fold. AVX-512 body: single-pass `vpermb` for arbitrary 64-byte LUT, or `vgf2p8affineqb` (GFNI, single µop) when the class set is encodable as an 8×8 GF(2) affine matrix — the asmjson-class structural set `{}[],:` falls in the affine-encodable subset per the Lock 16 GFNI admissibility row.
+- `BYTE_CLASS_FROM_EQ_SET_64` — consume 64 input bytes and `k` byte constants, produce a k-mask with one bit set per byte equal to any constant. This is asmjson's actual primitive shape: the AVX-512 body is the `k`-way `vpcmpeqb` plus `korq` reduction (precisely the 10× `vpcmpeqb` + 6× `korq` instruction histogram observed in `parse_json_zmm_dom.S`). NEON body: per-constant `vceqq_u8` followed by `vorrq_u8` reduction; admissible under Lock 16 "NEON set-membership" (SVE2 `svmatch_u8` analog).
+- `BITMAP_PREFIX_XOR_64` — consume a 64-bit bitmap of quote positions, produce a 64-bit bitmap of in-string regions via simdjson's carry-aware prefix-XOR construction. AVX-512 body: `vpclmulqdq` at 512-bit lane width (Lock 16 admissibility "AVX-512 VPCLMULQDQ"). NEON body: scalar carry chain (NEON has no PMULL64-over-bitmap analog that beats `clmul + eor` scalar at this width).
+- `BITMAP_NEXT_SET_BIT` — locate the index of the next set bit in a 64-bit bitmap. x86 body: `tzcnt` (matches the 18× `tzcnt` site count in asmjson). aarch64 body: `vshrn_n_u16` movemask narrow plus `clz` on the bit-reversed scalar (per the Validark 2024 interleaved-movemask construction already in Lock 16).
+- `BULK_EMIT_COMPRESSED` — given a 64-byte input and a 64-bit selection mask, emit the selected bytes contiguously to a destination cursor. x86 body: VBMI2 `vpcompressb {k1}` plus `vmovdqu8` store. NEON body: `vextq_u8` chain over the eight-of-sixteen subset followed by `vld1q`/`vst1q` writeback (the NEON port is materially slower than VBMI2; the macro abstracts the cost so per-grammar kernels do not hard-code the gap).
+- `EOB_PAD_CLAMP` — asmjson's msac-style end-of-buffer discipline: over-allocate the input by one vector width, mask-zero the tail bytes past true input length so the classifier kernels see zeros (which lie outside every grammar's interesting-byte set) without scalar tail logic. x86 body: `vmovdqu8 {k1}{z}` zero-masked load. NEON body: `vandq_u8` with a tail-length-derived predicate vector.
+- `FSM_DISPATCH_THREADED` — the `CollapsedStage`-only primitive. Implements `jmp [r10 + state*8]` against a per-grammar state-target table co-located in a `.data` section with the kernel. r10 carries the next-state-table base across chunk boundaries; per-state code paths each end with `mov r10, target_table_state_X; jmp BITMAP_NEXT_SET_BIT_continue`. This is the asmjson `parse_json_zmm_dom.S` PC-as-state architecture, distilled to a macro the per-grammar kernel can invoke without re-authoring the threading discipline.
+- `FRAME_PUSH_BOUNDED` / `FRAME_POP_BOUNDED` — the bracket-stack discipline for DPDA-class grammars. asmjson's `MAX_JSON_DEPTH=64` carries `frames_buf[64]` and `open_buf[64]`; the macros encode the bounded-depth check, the open-token push, and the close-token pop with mismatch detection. Per-grammar kernels supply the bracket-pair set and the depth bound as macro arguments; the macros emit identical fault-on-overflow / fault-on-mismatch sequences regardless of grammar.
+
+**Layer 2 — codegen bifurcation.** The cost model classifies each grammar into one of five `BackendShape` values (Lock 1 substrate union: `EagerTape`, `OffsetTape`, `EventTape`, `SinkOnly`, `CollapsedStage`). The four non-PSI shapes lower to Rust recursive descent that calls Layer-1 primitives via FFI shims at the hot inner loops — the parse state lives on the LLVM-managed call stack, the SIMD classification work happens inside the primitive bodies, and LLVM's optimiser fuses the call-stack-as-parse-state lowering through the recursive-descent driver in the same way that lets yyjson's force-inlined hot function fit in 18 KiB. `CollapsedStage` is the only shape that *also* requires the codegen to emit a per-grammar `.asm` source: a small kernel that supplies the classifier `.data` table, the state-transition `.data` table, the bracket-pair constants, and a thin entry/exit sequence that composes the Layer-1 macros into the grammar's specific 9-state-class DPDA. The per-grammar kernel is small precisely because every interesting primitive is already in `ext/x86/bbnf.asm`; the per-grammar variation is data (tables) plus a short composition (macro invocations), not new instruction-level code.
+
+**Layer 3 — checkasm differential parity (admission gate).** Every primitive in `ext/x86/bbnf.asm` ships with a scalar Rust reference implementation in `bbnf-simd::scalar::*` and a differential parity closure in `skinny/crates/bbnf-simd/tests/checkasm_parity.rs`. The Rust scalar reference *is* the executable specification — when the FFmpeg-discipline harness (randomised identical src0/src1 buffers, byte-equality between `call_ref` and `call_new`, alignment sweep 0..15, stack-clobber canary, SIGSEGV/SIGBUS/SIGILL guard) reports divergence, the primitive does not enter the codegen template. The harness has already earned its keep: the `escape_mask_64` NEON state-handoff bug (xorshift seed `0xCAFEF00DBAADF00D`, reported in `CHECKASM-REPORT.md` §d) was a chunk-boundary lookahead miscount that scalar review missed and the differential harness caught on first invocation. No primitive ships marketed as Lock-16 admissible until checkasm is green in strict mode (`BBNF_SIMD_STRICT=1`).
+
+### §5.3. Generalization across arbitrary grammars
+
+The primitives in Layer 1 are grammar-neutral by construction: each consumes 64 input bytes plus a parameter (a classifier table, a constant set, a bitmap) and produces a bitmap, a count, or an emitted byte range. Nothing inside `ext/x86/bbnf.asm` mentions a JSON-specific byte, a CSS-specific keyword, a BBNF-self-specific operator, or a Sheets-specific formula token. Per-grammar variation lives entirely in two `.data` sections that the codegen emits alongside the per-grammar kernel: a 256-byte classifier table (input byte → class) and a state-transition table (current state × input class → next state, sized `9 × |class_set|` for asmjson-shape DPDAs and grammar-derived for others).
+
+This is the same factoring that lets dav1d share `x86util.asm` plus `filmgrain_common.asm` across every pixel format while the per-pixel-format motion-compensation kernels live in separate sources whose differences are constant tables and macro composition order, not new instructions. The executable spine — register conventions, prefetch discipline, mask-fusion sequences, k-mask retention across state transitions, EOB padding — is identical across JSON, CSS L4, BBNF-self, and Sheets. The per-grammar bytes are the contents of two `.data` sections.
+
+Lock 14 (zero overfitting) is preserved unconditionally: no grammar-specific instruction lives in any generic crate. `ext/x86/x86inc.asm` is dav1d-vendored and grammar-agnostic by origin; `ext/x86/bbnf.asm` is grammar-neutral by macro-API discipline; the per-grammar kernel sources are codegen-emitted from Grammar IR via the same `LayoutFacts.backend_shape` derivation that selects between the five `BackendShape` values for every other lowering decision. The cost model decides which grammars receive a `CollapsedStage` kernel and which receive `OffsetTape` recursive descent; the audit surface for "is this grammar overfit" is the codegen-emitted `.data` table plus the macro composition list — both fall out mechanically from Grammar IR facts (alphabet, first-set partitions, bracket pairs, depth bound).
+
+### §5.4. Size budget
+
+The hand-authored ASM line count is bounded by the layer structure:
+
+- Layer 0: `ext/x86/x86inc.asm` — 1,978 LOC, vendored from dav1d, BSD-2. Already in tree at `skinny/crates/bbnf-simd/ext/x86/x86inc.asm`. Zero authoring cost.
+- Layer 1: `ext/x86/bbnf.asm` macro layer — ≈ 600 LOC. Nine primitive macros plus shared register conventions, label discipline, and `.data` section helpers.
+- Layer 1: per-ISA primitive bodies — ≈ 800 LOC. Nine primitives × three ISAs (AVX-2, AVX-512, NEON) × roughly 30 LOC per body, with `BITMAP_PREFIX_XOR_64` and `BULK_EMIT_COMPRESSED` carrying the largest NEON bodies due to the absence of direct VPCLMULQDQ / VBMI2 analogs.
+- Layer 2: per-grammar `CollapsedStage` `.asm` files — small, codegen-emitted, dominated by `.data` (classifier table + state-transition table) plus a macro composition sequence on the order of 100 LOC per grammar × ISA pair.
+
+Total hand-authored ASM: ≈ 1,400 LOC across the macro layer and the per-ISA primitive bodies. Compare asmjson's 2,641-LOC AVX-512 monolith, which reimplements the ABI macro discipline locally and inlines every primitive at each call site — the dav1d vendor + macro-factor saves roughly half the bytes while admitting the same primitives plus the Lock 16 esoterica additions (GFNI, VPCLMULQDQ-512, AVX-IFMA, VNNI, BITALG) that asmjson does not exploit.
+
+### §5.5. Classifier kernel per chunk
 
 ```asm
 ; Apple Silicon analog: load 64 bytes via vld1q_u8_x4, classify via 4× vqtbl4q_u8,
@@ -302,7 +344,7 @@ korq            k5, k5, k4               ; full delimiter mask
 ; downstream: vpcompressb of indices via mask k5, single-store to offset array
 ```
 
-### §5.3. Dispatch table return + runtime selection
+### §5.6. Dispatch table return + runtime selection
 
 Per asmjson `src/lib.rs`:
 
@@ -321,7 +363,7 @@ pub fn build_parser(grammar: &str) -> Box<dyn TypedParser> {
 
 The selection happens once per parser construction; per-parse-call dispatch is inlined.
 
-### §5.4. Projected impact
+### §5.7. Projected impact
 
 Twitter on Zen 4 AVX-512 VBMI2:
 

@@ -30,6 +30,12 @@ Required report:
   comparator-only**; the SK-V3 close does not require BBNF-generated
   `CollapsedStage` code on x86_64.
 
+The §8a primitive layer is part of the SK-V3 close — the same primitives are
+consumed from `OffsetTape` on M5 Max NEON (`BYTE_CLASS_FROM_EQ_SET_64` closes
+Class A; `BYTE_CLASS_FROM_TABLE_64` closes Class B; cf. SOTA-BEAT-DESIGN §5.2
+two-layer reusable vocabulary, §5.3 grammar-neutrality). §8b `CollapsedStage`
+remains a successor-tranche dispatch even after Zen 4 silicon access lands.
+
 ## 1. Non-negotiables
 
 | Rule | Gate |
@@ -497,7 +503,21 @@ defers the first to a successor tranche (Wave 6b).
 
 ### 8a. Wave 6a — AVX-512 primitive admission (unconditional, consumed by OffsetTape)
 
+§8a admits the **bbnf.asm Layer 1 vocabulary itself** (SOTA-BEAT-DESIGN §5.2
+two-layer reusable vocabulary): a grammar-neutral primitive set vendored at
+`skinny/crates/bbnf-simd/ext/x86/bbnf.asm` riding the BSD-2 `x86inc.asm` macro
+substrate at `skinny/crates/bbnf-simd/ext/x86/x86inc.asm`. The vocabulary is
+consumed from **any** of `EagerTape`, `OffsetTape`, `EventTape`, `SinkOnly`
+via thin Rust FFI shims (SOTA-BEAT-DESIGN §5.3 grammar-neutrality). The
+primitive layer ships independent of `CollapsedStage` admission; §8b
+`CollapsedStage` admission, which **consumes** the same primitives plus a
+per-grammar `.asm` wrapper, is gated separately. Hence §8a is the foundation
+for both routes: OffsetTape on M5 Max NEON closes Class A / Class B today;
+the same primitive vocabulary is reused unmodified when §8b lands.
+
 Owner paths:
+- `skinny/crates/bbnf-simd/ext/x86/bbnf.asm` (9 grammar-neutral primitives)
+- `skinny/crates/bbnf-simd/ext/x86/x86inc.asm` (vendored BSD-2 macro substrate)
 - `skinny/crates/bbnf-simd/src/x86_64/avx512_{gfni,kmask,vpclmul,bitalg,vnni}/`
 - `skinny/crates/bbnf-simd/src/x86_64/avx_ifma/`
 - `skinny/crates/bbnf-simd/src/x86_64/avx2/` (BMI2 + CLMUL128 fallback)
@@ -569,10 +589,48 @@ Hard preconditions (all four must hold concurrently before any Wave 6b dispatch)
    1000-commit DTA/PSI failure was specifically that LLVM cannot compile
    away the dispatch overhead of a Rust-implemented automaton, while
    recursive descent in Rust compiles into an implicit automaton.
+5. **Primitive vocabulary complete on the target ISA**: the grammar-neutral
+   primitive set in `skinny/crates/bbnf-simd/ext/x86/bbnf.asm` is complete
+   and `checkasm_parity`-passing for the target ISA (`avx2` / `avx512` /
+   `neon` as applicable; SOTA-BEAT-DESIGN §5.2 two-layer reusable
+   vocabulary, §5.4 size budget). The 9 primitives are:
+   `BYTE_CLASS_FROM_TABLE_64`, `BYTE_CLASS_FROM_EQ_SET_64`,
+   `BITMAP_PREFIX_XOR_64`, `BITMAP_NEXT_SET_BIT`, `BULK_EMIT_COMPRESSED`,
+   `EOB_PAD_CLAMP`, `FSM_DISPATCH_THREADED`, `FRAME_PUSH_BOUNDED`,
+   `FRAME_POP_BOUNDED`. Each ships with a Rust scalar reference (the
+   executable specification per SOTA-BEAT-DESIGN §5.2 Layer 3) and a
+   `checkasm` differential test in `skinny/crates/bbnf-simd/tests/`.
+
+The clause **"no Rust-codegen-emitted `CollapsedStage` will be admitted"**
+stays in force. `CollapsedStage`'s lowering output is a triple
+(`rust_caller_shim`, `per_grammar_asm_kernel_file`,
+`per_grammar_data_section`). The dispatch spine is shared via
+`FSM_DISPATCH_THREADED` from `ext/x86/bbnf.asm` (SOTA-BEAT-DESIGN §5.3
+grammar-neutrality). The per-grammar variation lives entirely in the
+`.data` section emitted by codegen (classifier LUT + state-transition
+LUT). This makes per-grammar `CollapsedStage` authoring tractable:
+~150 LOC of grammar-specific `.asm` wrapper per grammar × ISA pair,
+calling the shared macros (SOTA-BEAT-DESIGN §5.4 size budget).
 
 If any precondition is unmet at SK-V3 cap, Wave 6b is dropped from this
 packet and rescheduled in a successor tranche. The successor tranche
 ships its own plan document with explicit precondition resolution.
+
+### 8b.1. Diagnostic — `BBNF-COLLAPSEDSTAGE-NOT-VIABLE`
+
+Wired into `derive_backend_shape` output (cf. precondition 3 firing matrix
+audit).
+
+| Field | Value |
+|---|---|
+| **Trigger** | The cost model selects `CollapsedStage` for a rule, but either (a) the primitive vocabulary in `ext/x86/bbnf.asm` is incomplete on the target ISA, **or** (b) no per-grammar `.asm` author has been declared for that grammar × ISA pair. |
+| **Recovery** | Fall back to `OffsetTape` (recursive descent over the structural index) on that rule. |
+| **Surface** | Silent at runtime; surfaces in the compile-time diagnostics report. |
+| **Severity** | warning (not error) — the grammar still compiles. |
+
+Citation: SOTA-BEAT-DESIGN §5.1 admissibility predicate (two conjuncts:
+primitive vocabulary green ∧ per-grammar `.asm` committed); §5.2 two-layer
+reusable vocabulary; §5.3 grammar-neutrality; §5.4 size budget.
 
 ### Implementation step 1 — adopt asmjson architecture verbatim
 

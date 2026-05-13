@@ -1,0 +1,7 @@
+mode,corpus,bytes,iters,median_ns,mean_ns,mbps_median,mbps_mean
+eventcursor,random,510476,3494,398834,413191,1280,1235
+eventcursor,unicode_escapes,1050797,2008,602541,625725,1744,1679
+eventcursor,update-center,533178,3675,341958,352270,1559,1514
+eventcursor,twitter,631515,3821,287875,296043,2194,2133
+eventcursor,citm_catalog,1727204,1720,667375,685726,2588,2519
+eventcursor,canada,2251051,899,1616750,1657788,1392,1358

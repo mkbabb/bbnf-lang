@@ -1,0 +1,7 @@
+mode,corpus,bytes,iters,median_ns,mean_ns,mbps_median,mbps_mean
+baseline,random,510476,4498,311125,324746,1641,1572
+baseline,unicode_escapes,1050797,2497,538750,559912,1950,1877
+baseline,update-center,533178,5303,214875,220550,2481,2417
+baseline,twitter,631515,5759,200375,205062,3152,3080
+baseline,citm_catalog,1727204,2995,468625,482274,3686,3581
+baseline,canada,2251051,1372,1049250,1076531,2145,2091

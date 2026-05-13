@@ -1,0 +1,17 @@
+corpus             plan                   Mbps    src_KiB      offsets      cap_bytes   maxrss_KiB
+update-center      A:sampled             19746        520        35281         357404         2832
+update-center      B:exact                8010        520        35281         387544         2832
+update-center      C:simd                10884        520        35281         363000         3504
+update-center      D:grow                16429        520        35281         264064         3664
+random             A:sampled             12185        498        49011         340348         3664
+random             B:exact                6941        498        49011         472112         3664
+random             C:simd                 8420        498        49011         460112         3936
+random             D:grow                12764        498        49011         262144         3936
+unicode_escapes    A:sampled             15559       1026        11274         207864         4080
+unicode_escapes    B:exact                7038       1026        11274         272547         4112
+unicode_escapes    C:simd                11545       1026        11274         202977         4160
+unicode_escapes    D:grow                13024       1026        11274          75776         4272
+github_events      A:sampled             19915         63         2526          43497         4304
+github_events      B:exact                8467         63         2526          28745         4304
+github_events      C:simd                15563         63         2526          25317         4336
+github_events      D:grow                21948         63         2526          16429         4336

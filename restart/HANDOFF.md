@@ -1,10 +1,12 @@
 # Handoff — bbnf-lang Greenfield Restart
 
-Date: 2026-05-13 (post-SK-V3 direct-sink reassay + spec reconciliation)
-Status: **SK-V3 NOT READY — current authority is `skinny/RESULTS.md`: parse/tape hard rows remain on `twitter`, `random`, `unicode_mixed`, and `unicode_basic`; direct-to-struct correctness is green, direct throughput passes 6 of 17 rows and fails 11, so the full gate is `N-direct / NoGo`.**
+Date: 2026-05-13 (post-SK-V5 audit cohort + spec materialization)
+Status: **SK-V5 SPEC MATERIALIZED — READY FOR IMPLEMENTATION DISPATCH. Current measured authority is `skinny/RESULTS.md`: full gate `N-direct / NoGo`; 4 parse-G rows (`twitter` 78%, `random` 51%, `unicode_mixed` 47%, `unicode_basic` 49% of sonic-rs); 11 of 17 direct rows N-direct (numbers 33%, canada 41%, mesh 52%, unicode_mixed 50%, unicode_escapes 50%, unicode_basic 69%, random 73%, gsoc 67%, marine_ik 73%, y_string_unicode 66%, twitter 85%); strictness column not yet disclosed. SK-V5 audit cohort (15 reports, 5,559 LOC) + 4 master synthesis docs landed. The implementation packet is dispatch-ready.**
 Audience: the next agent or human picking up this work.
 
-This document is the single source of truth for orienting cold. Read it end-to-end before reading anything else; it tells you what the project is, where the work has been, where it is now, where the M5 Max comparator landscape sits, how the SK-V3 substrate generalises across the V1 grammar fleet, and what the next move is. Every claim cites a path so you can verify.
+This document is the single source of truth for orienting cold. Read it end-to-end before reading anything else; it tells you what the project is, where the work has been, where it is now, where the M5 Max comparator landscape sits, how the SK-V5 substrate generalises across the V1 grammar fleet, and what the next move is. Every claim cites a path so you can verify.
+
+**Reading order for the next implementation agent**: `restart/skinny/audit/GRAND-SYNTHESIS-SK-V5.md` (the why; 417 LOC) → `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md` (the what + when; 771 LOC across 7 waves) → `restart/skinny/audit/NUKE-PLAN-SK-V5.md` (the removals; 476 LOC across 16 surgical sections) → `restart/skinny/audit/HANDOFF-SK-V5.md` (the packet-internal entry/exit gates + dispatch posture; 211 LOC). The 15 cohort reports under `restart/skinny/audit/SK-V5-COHORT/` (A1-A6 + B1-B3 deep research/profile reports + D1-D6 novelty-challenge reports) are the research authority behind those four docs.
 
 ---
 
@@ -20,15 +22,20 @@ Read in order:
 
 1. `restart/README.md` — gestalt synthesis. The architectural commitments, the BBNF extensions, the optimization apotheosis, the type system, the value API, the SOTA synthesis, the 16 locks, the process.
 2. `restart/locks/14-LOCKS.md` — the sixteen architectural commitments. Locks 1-14 original; Lock 15 (build-profile + force-inline + i-cache budget) lands and extends 2026-05-12; Lock 16 (SIMD/ASM admissibility allowlist + abstract primitive lifts from dav1d/ffmpeg) lands 2026-05-12 and extends the same day with the post-Wave-1 5-pack of AVX-512 esoterica (k-mask arithmetic family, VPCLMULQDQ at 512-bit, AVX-IFMA `vpmadd52`, AVX-512 VNNI `vpdpbusd`, AVX-512 BITALG `vpshufbitqmb` + `vpopcntb`) and 3-pack of M5 Max NEON esoterica (LD4-interleaved 4-channel classifier, NEON ternary bitwise `BCAX`/`EOR3`, NEON port of SVE2 `svmatch_u8`).
-3. `restart/skinny/audit/ASMJSON-DAV1D-GRAND-SYNTHESIS-SK-V4.md` — SK-V4 authority for the asmjson/dav1d reassay, current `N-direct` blocker, validated/invalidated plan items, and grammar-general substrate correction.
-4. `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md` — current receiver packet; closes generated `SinkOnly`, exact materializers, parse hot-hub attribution, same-wave primitive consumption, and conditional x86 `CollapsedStage`.
-5. `restart/skinny/audit/GRAND-SYNTHESIS-SOTA-BEAT-SK-V3.md` — V3 authority for expanded-gate redress; consolidates the 6-research + 6-profile Wave 1 cohort.
-6. `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md` — superseded-but-useful V3 dispatch packet; carries Waves 0-6 with explicit preflight fix items (Plan D adoption + `escape_mask_64` NEON correctness fix).
-7. `skinny/RESULTS.md` — current measured skinny gate: original triad passes; expanded parse has four G rows; direct workload is correctness-green but `N-direct / NoGo`.
-8. `skinny/REDRESS.md` — accepted wins and rejected-route ledger.
-9. `restart/skinny/{INDEX,SUBSTRATE,COMPILER,BENCH,WORKSPACE}.md` — live skinny/V1 amendment surfaces.
-10. `docs/precepts/instructions/STYLE.md` — voice + discipline (governs all writing).
-11. `docs/precepts/instructions/LESSONS-LEARNED.md` — failure-mode anatomy (governs all decisions).
+3. `restart/skinny/audit/GRAND-SYNTHESIS-SK-V5.md` — **SK-V5 current authority**; 417 LOC; the corrected diagnosis (Class A `match_tiny_plain_string` wrong-layer; actual fix is NEON UTF-8 codepoint pipeline at `parse-that-regex/src/lib.rs:331-339`), the number-lever vendor-and-wire path, the bench-private dishonesty, the codegen-decorative finding, and the 5-shape BackendShape absent-in-Rust verdict.
+4. `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md` — **SK-V5 dispatch packet**; 771 LOC; Waves 0-7 with concrete owner paths, exit gates per wave, and the Close Condition.
+5. `restart/skinny/audit/NUKE-PLAN-SK-V5.md` — **SK-V5 removals authority**; 476 LOC; 16 sections of surgical removals (bench-private SinkParser, `let _ = backend;` codegen-decorative line, hardcoded `shapes_for_json` selector, `simd-scan/` fossil, `generated_eventcursor.rs`, etc.).
+6. `restart/skinny/audit/HANDOFF-SK-V5.md` — **packet-internal handoff** for the implementation agent; 211 LOC; per-wave entry gates, exit gates, dispatch posture, and the final Close Condition.
+7. `restart/skinny/audit/SK-V5-COHORT/` — 15 cohort reports (5,559 LOC): A1 comparative, A2 dav1d-process, A3 parse-that-gaps, A4 tape-union-audit, A5 grammar-generalization, A6 research-ledger, B1 parse-attribution, B2 direct-attribution, B3 native-sidecars, D1 eisel-novelty, D2 utf8-novelty, D3 derive-shape-novelty, D4 simd-split-novelty, D5 sinkonly-novelty, D6 class-ab-novelty.
+8. `restart/skinny/audit/ASMJSON-DAV1D-GRAND-SYNTHESIS-SK-V4.md` — historical SK-V4 authority; superseded by SK-V5 but useful for the asmjson/dav1d reassay framing.
+9. `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md` — historical SK-V4 receiver packet; the SK-V4 Class A diagnosis was empirically falsified by SK-V5 cohort D6 + B1; the Wave 1 owner path `codegen/src/lower/` cited there does not exist on disk and is created in SK-V5 Wave 1.
+10. `restart/skinny/audit/GRAND-SYNTHESIS-SOTA-BEAT-SK-V3.md` — historical SK-V3 authority for expanded-gate redress; consolidates the 6-research + 6-profile Wave 1 cohort.
+11. `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md` — historical SK-V3 dispatch packet; carries Waves 0-6 with explicit preflight fix items (Plan D adoption + `escape_mask_64` NEON correctness fix).
+12. `skinny/RESULTS.md` — current measured skinny gate: original triad passes; expanded parse has four G rows; direct workload is correctness-green but `N-direct / NoGo`; strictness column not yet disclosed.
+13. `skinny/REDRESS.md` — accepted wins and rejected-route ledger; entries 301-313 are the load-bearing record that Class A `match_tiny_plain_string` was wired and reverted (~25% twitter regression).
+14. `restart/skinny/{INDEX,SUBSTRATE,COMPILER,BENCH,WORKSPACE}.md` — live skinny/V1 amendment surfaces.
+15. `docs/precepts/instructions/STYLE.md` — voice + discipline (governs all writing).
+16. `docs/precepts/instructions/LESSONS-LEARNED.md` — failure-mode anatomy (governs all decisions).
 
 ---
 
@@ -52,20 +59,33 @@ Single-round greenfield restart began 2026-05-04 after a compounded-contrivance 
 | V9.4 grand-synthesis cohort 2026-05-12 | 6 research agents (dav1d/ffmpeg/VLC ASM lift, deadweight-intrinsic re-examination, tape-union design, JSON corpora + Unicode torture tests, parse-that audit, greater-arch generalization) + 6 profile agents (skinny expanded 14-corpus, sonic-rs expanded 9-corpus × Value/LazyValue × inlined/noinline, simdjson expanded 13-corpus stage-decomposition, yyjson 7-corpus no-SIMD reference, RapidJSON + serde_json floor, cargo-asm string/Unicode paths) | V9.4 READY — comprehensive spec amendment landed without new directives, without new BIR variants, without contrivances |
 | **SK-V3 Wave 1 research cohort (2026-05-12 morning, 6 agents)** | (a) asmjson deep dive — only 6× `vpcmpeqb` + 10× `kmovq` + 2× `vpcmpub` + 6× `korq` + 2× `vmovdqu8` + 18× `tzcnt`; no esoterica in the asmjson kernel itself; (b) dav1d/FFmpeg ASM patterns — `x86inc.asm` macro corpus vendored at `crates/bbnf-simd/ext/x86/`; per-target file naming `<family>[16]_<isa>.{asm\|S}`; nasm-rs + cc-rs build wiring; msac cross-chunk refill is the one transferable algorithmic insight beyond simdjson/sonic-rs/yyjson; (c) AVX-512 esoterica beyond catalog — 5-pack added to Lock 16 (k-mask arithmetic family, VPCLMULQDQ at 512-bit lane, AVX-IFMA `vpmadd52luq`/`vpmadd52huq`, AVX-512 VNNI `vpdpbusd`, AVX-512 BITALG `vpshufbitqmb` + `vpopcntb`); each citation-anchored, each strictly additive on top of the asmjson architecture; (d) M5 Max NEON + Apple esoterica — 3-pack added to Lock 16 (LD4-interleaved 4-channel classifier per Validark 2024, NEON ternary bitwise `BCAX`/`EOR3` per ARMv8.2-A SHA3, NEON port of SVE2 `svmatch_u8` per Lemire 2026); AMX/SME explicitly REJECTED (matrix-domain, not byte-class); (e) `parse_value_at` structural analysis — codegen ignores `BackendIr` and emits source-byte cursor regardless of `LayoutFacts.backend_shape`; the lowerer-side gap is the SOTA-BEAT lever; (f) 5-shape `BackendShape` concretization — `EagerTape`/`OffsetTape`/`EventTape`/`SinkOnly`/`CollapsedStage` with 8-step derivation algorithm at `passes::recognizers::derive_backend_shape` (no new directives; all inputs are existing Grammar IR facts). | SK-V3 grand synthesis at `restart/skinny/audit/GRAND-SYNTHESIS-SOTA-BEAT-SK-V3.md`; dispatch packet at `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md`. |
 | **SK-V3 Wave 2 profiling cohort (2026-05-12 evening, 6 agents)** | (a) native sidecars (`skinny/profile/native-sidecars/`) — skinny v3 ALREADY beats yyjson + simdjson C++ on 4 of 17 corpora on M5 Max: citm +43% vs yyjson, canada +22% vs simdjson, mesh +6% vs simdjson, unicode_mixed +10% vs simdjson; (b) multi-corpus asm pathology (`skinny/profile/wave2-asm/`) — two-pathology-class diagnosis: `tiny_string_loop` dominates github_events/update-center/random (~32% self-time in `match_tiny_plain_string` scalar loop at PCs `0x2734`/`0x3158`); `hex_decode` dominates unicode_escapes/y_string_unicode (~70% self-time in inlined `unescape_json_string` hex normalisation); no single fix closes all five; (c) PMU profile (`skinny/profile/wave2-pmu/`) — `parse_value_at` is a single 7304-byte hot function (RVA `0x2460..0x40e8`, 1826 mnemonics) under workspace `lto=thin codegen-units=1 debug=true` — i-cache budget per Lock 15 is already met; the `match_tiny_plain_string` scalar loop is duplicated at PCs `0x2734` (key) and `0x3158` (value) via inliner duplication, which is the intended LTO-fat shape; (d) checkasm harness (`skinny/crates/bbnf-simd/CHECKASM-REPORT.md`) — caught `escape_mask_64` NEON correctness bug on first run; minimal adversarial repro `xorshift seed 0xCAFEF00DBAADF00D, iter 0, 128-byte JSON-pool buffer`; root cause is state-handoff confusion between `escape_mask_64`'s `new_carry` and `scan_json_tail`'s `escaped` arg; (e) capacity-plan probes (`skinny/profile/wave2-capacity/CAPACITY-REPORT.md`) — Plan D (`Vec::with_capacity(256)` + geometric grow) wins +4.8% on `random`, +10.2% on `github_events`, with 23-64% capacity reclamation; sampled heuristic over-reserves by 2.53× and is overfit to `update-center`'s 4 KiB prefix; Plan D lands at 1.87×; pre-scan cost (1.4% self-time on Plan A) disappears; (f) eventcursor prototype (`skinny/profile/wave2-prototype/`) — refuted: 0.18-0.22 c/B projection regressed 22-37% across six corpora at the implementation level; the prototype path duplicates whitespace-bitmap allocation before parse without proportionate hot-loop savings. | Wave 2 re-baselines `skinny/RESULTS.md`; Plan D promoted to production default at packet §4 P0.1; `escape_mask_64` fix blocks all SOTA-BEAT bench claims per packet §4 P0.2. |
+| **SK-V5 audit cohort (2026-05-13, 15 agents)** | 9 deep cohort reports (A1 comparative, A2 dav1d-process, A3 parse-that-gaps, A4 tape-union-audit, A5 grammar-generalization, A6 research-ledger, B1 parse-attribution, B2 direct-attribution, B3 native-sidecars) + 6 novelty-challenge reports (D1 eisel-novelty, D2 utf8-novelty, D3 derive-shape-novelty, D4 simd-split-novelty, D5 sinkonly-novelty, D6 class-ab-novelty). 5,559 LOC under `restart/skinny/audit/SK-V5-COHORT/`. Findings: (a) the SK-V4 Class A `match_tiny_plain_string` diagnosis is empirically wrong (D6 traced REDRESS.md:301-313 — was wired, regressed twitter ~25%, reverted); (b) the actual hot kernel boundary is `validate_utf8_codepoint` at 25-40% of `parse_value_at` self-time, reached via `skip_json_string_plain`'s NEON 16-byte block returning early on every byte ≥ 0x80 (B1+B2+A3); (c) Eisel-Lemire is implemented in production at `/Users/mkbabb/Programming/parse-that/rust/parse_that/src/parsers/eisel_lemire/` and is vendorable into skinny `parse-that-regex/src/number/` — closes numbers/canada/mesh/marine_ik (D1); (d) Track 1 ≡ Track 2 ≡ bench-private `sink_only_digest` at `bbnf-bench/src/direct_struct.rs:150-156` — the bench measures itself, not the language (B2 + D5); (e) codegen is decorative: `crates/codegen/src/lib.rs:111-117` discards `&BackendIr` (`let _ = backend;`) and `include_str!`s static templates — SK-V4 Wave 1 owner path `codegen/src/lower/` does not exist on disk (D5 + D3); (f) 5-shape BackendShape Rust state is zero hits in `skinny/crates/`; `passes::compile()` at lines 28-29 hardcodes `shapes_for_json()` regardless of input grammar — Lock 14 `BBNF-GRAMMAR-NAME-IN-GENERIC-CRATE` violation (D3 + A5); (g) strictness plane undisclosed in RESULTS.md — bbnf-skinny T1 parse is DEFERRED on UTF-8 validation; some rows compare strict-bbnf to permissive-asmjson without flagging (B3); (h) 8 of 9 `bbnf.asm` Layer-1 macros are contract-only with no bodies (D4); (i) the fossil `skinny/crates/simd-scan/` (584 LOC, near-verbatim duplicate of `bbnf-simd/lib.rs:13-100`) is not in `skinny/Cargo.toml` members but still on disk. | SK-V5 grand synthesis at `restart/skinny/audit/GRAND-SYNTHESIS-SK-V5.md` (417 LOC); dispatch packet at `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md` (771 LOC, 7 waves); nuke plan at `restart/skinny/audit/NUKE-PLAN-SK-V5.md` (476 LOC, 16 sections); packet-internal handoff at `restart/skinny/audit/HANDOFF-SK-V5.md` (211 LOC). Status: **SPEC MATERIALIZED. READY FOR IMPLEMENTATION DISPATCH.** |
 
 Cumulative commit count: ~95+ across all cycles.
 
 ---
 
-## §3 — Current state (post-Wave 2 re-baselines)
+## §3 — Current state (post-SK-V5 audit cohort)
 
-**Current operating verdict: `skinny/RESULTS.md` is the measured authority for the runnable skinny.** It records full-gate **`N-direct / NoGo`**. The original triad still passes and remains valid substrate evidence. The expanded parse/tape plane has four hard G rows — `twitter`, `random`, `unicode_mixed`, and `unicode_basic`. The direct workload is correctness-green (`track1=track2=serde` plus sonic shape parity), but only six direct rows pass the 1.10 sonic-rs time slack (`citm_catalog`, `apache_builds`, `github_events`, `update_center`, `instruments`, `distinct_values`); the remaining 11 rows are the binding direct-typed-emission block.
+**Current operating verdict: `skinny/RESULTS.md` is the measured authority for the runnable skinny.** It records full-gate **`N-direct / NoGo`**. The original triad still passes and remains valid substrate evidence. The expanded parse/tape plane has four hard G rows — `twitter` 78% of sonic-rs, `random` 51%, `unicode_mixed` 47%, `unicode_basic` 49%. The direct workload is correctness-green (`track1=track2=serde` plus sonic shape parity), but only six direct rows pass the 1.10 sonic-rs time slack (`citm_catalog`, `apache_builds`, `github_events`, `update_center`, `instruments`, `distinct_values`); the remaining 11 rows are the binding direct-typed-emission block (numbers 33%, canada 41%, mesh 52%, unicode_mixed 50%, unicode_escapes 50%, unicode_basic 69%, random 73%, gsoc 67%, marine_ik 73%, y_string_unicode 66%, twitter 85%). The strictness column is not yet disclosed; B3 flagged this as Wave 0 work, not a Wave 5 deliverable.
 
-Lock 1 stands verbatim with the tape-union clarification: the structural projection is the tape, not a sidecar. Locks 15 + 16 carry their 2026-05-12 amendments AND the Wave 1 strict additions (5-pack AVX-512 + 3-pack NEON). No new BBNF directives. No new BIR variants.
+Lock 1 stands verbatim with the tape-union clarification: the structural projection is the tape, not a sidecar. Locks 15 + 16 carry their 2026-05-12 amendments AND the Wave 1 strict additions (5-pack AVX-512 + 3-pack NEON). No new BBNF directives. No new BIR variants. SK-V5 is **implementation packet for prior-declared work**, not a fresh design authority — the architecture was declared at `restart/MASTER-PLAN.md` §13 (commit `8fa51245`) and in SK-V4 packet (commit `1519cf16`); SK-V5 fills in the Rust state.
 
-The SK-V3 close criterion is the expanded SOTA-BEAT gate, not the historical triad. The packet §2 close report shape is fixed and named.
+The SK-V5 close criterion is the expanded SOTA-BEAT gate, not the historical triad. The close condition is fixed in §6 below and at `HANDOFF-SK-V5.md` lines 132-147.
 
-**Critical findings from the Wave 2 cohort** (load-bearing for the spec, all measured 2026-05-12 evening):
+**What SK-V5 established (the five corrected diagnoses, all empirical):**
+
+1. **Class A `match_tiny_plain_string` is wrong-layer.** Previously wired, regressed twitter ~25%, reverted per `skinny/REDRESS.md:301-313`. The kernel is parity-green and grammar-generic but targets the 8-byte scalar early-out at `bbnf-simd/src/lib.rs:195`, which B1's PC attribution invalidated empirically: `tiny_plain_string_scalar` is at most 7.9% of `parse_value_at` self-time on `random`. The actual parse-G fix is the NEON UTF-8 codepoint pipeline at `parse-that-regex/src/lib.rs:331-339`: fold UTF-8 validation INTO the NEON 16-byte string-body scan, eliminating both the early-exit and the scalar fall-through to `parse-that-regex/src/lib.rs:637-706`. All four parse-G rows share this pathology at four intensity levels (twitter 64%, random 65%, unicode_mixed 92%, unicode_basic 79% of `parse_value_at` self-time in string handling).
+
+2. **Number lever is vendor-and-wire, not research.** Eisel-Lemire is fully implemented, bit-parity-tested, and consumed in production at `/Users/mkbabb/Programming/parse-that/rust/parse_that/src/parsers/eisel_lemire/`; `mod.rs:147` exposes `compute_f64(i64, u64, bool) -> Option<f64>` with full Clinger fast-path + Eisel-Lemire slow path + ambiguous-rounding `None` sentinel. Vendor into skinny `parse-that-regex/src/number/`. The integer materializer is real and correct but misplaced at `skinny/crates/bbnf-bench/src/direct_struct.rs:501-528` (`parse_integer_digest` with proper `i64::MIN` handling); move to `parse-that-regex/src/number/integer.rs`. This closes the numbers/canada/mesh/marine_ik direct rows (D1).
+
+3. **Bench-private SinkParser dishonesty.** Both `track1_digest` and `track2_digest` in `bbnf-bench/src/direct_struct.rs:150-156` call the same `sink_only_digest` — a hand-written recursive-descent `SinkParser` over `&[u8]` + cursor that never touches `Tape` or generated code. The bench measures itself, not the language. Every primitive landed while this bench is on the gate is credited to the bench, not the language. Nuke after generated `SinkOnly` from `BIR DirectBuild` lands (D5 + B2).
+
+4. **Codegen is decorative.** `crates/codegen/src/lib.rs:111-117` literally writes `let _ = backend;` then `include_str!`s static JSON templates — `&BackendIr` is discarded. The BIR build itself (`extract::single_plan`) walks the grammar honestly and produces real `BackendIr` with 15 rules; only the Rust emission step is a no-op pass-through. The SK-V4 Wave 1 owner path `codegen/src/lower/` **does not exist on disk** — SK-V5 Wave 1 creates it (D5).
+
+5. **5-shape BackendShape Rust state is absent.** Zero hits in `skinny/crates/` (only matches are in `bbnf-simd/ext/x86/bbnf.asm` comments). `derive_backend_shape` declared in `ARCHITECTURE.md:1075-1083` as an 8-step algorithm has no Rust symbol. `LayoutFacts.backend_shape` is absent from `passes/src/lib.rs:46-51`. `passes::compile()` at lines 28-29 hardcodes `shapes_for_json()` regardless of input grammar — a Lock 14 `BBNF-GRAMMAR-NAME-IN-GENERIC-CRATE` violation. SK-V5 Wave 1 lands the BackendShape enum + `LayoutFacts.backend_shape` field + `derive_backend_shape` function + `codegen/src/lower/` hierarchy (D3 + A5).
+
+**Historical findings from the Wave 2 cohort** (still load-bearing for the spec, all measured 2026-05-12 evening; preserved here since they predate SK-V5 but remain materially correct):
 
 1. **Plan D (grow-only capacity) wins on the cross-corpus probe.** Plan A (sampled heuristic) is overfit to `update-center`'s 4 KiB prefix and over-reserves by 2.53×; Plan D's geometric grow lands at 1.87×, beats Plan A by +4.8% on `random` and +10.2% on `github_events`, and eliminates the 1.4% pre-scan self-time. Promotion is the SK-V3 §4 P0.1 preflight. Source: `skinny/profile/wave2-capacity/CAPACITY-REPORT.md` §3.
 
@@ -186,27 +206,58 @@ The 8-step derivation algorithm at `passes::recognizers::derive_backend_shape(gr
 
 ---
 
-## §6 — Next move
+## §6 — Wave dispatch posture (SK-V5)
 
-The dispatch order is now **SK-V4 IMPLEMENTATION-PACKET Waves 0-5 in
+The dispatch order is now **SK-V5 IMPLEMENTATION-PACKET Waves 0-7 in
 sequence**, as named at
-`restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md`. The SK-V3
-packet remains historical context; it is no longer the receiver packet.
+`restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md`. The SK-V4 packet
+remains historical context; SK-V4's Class A diagnosis was empirically
+falsified by SK-V5 cohort D6 + B1 and the SK-V4 Wave 1 owner path
+`codegen/src/lower/` does not exist on disk. SK-V3 remains historical
+context. The SK-V5 packet-internal handoff at
+`restart/skinny/audit/HANDOFF-SK-V5.md` carries per-wave entry/exit gates;
+this section is the V1-level summary.
 
-| Step | Wave | Owner | Gate | Source |
-|---|---|---|---|---|
-| 1 | Wave 0 | `skinny/RESULTS.md`, `skinny/profile/reassay-skv4-2026-05-13/` | full gate re-assayed; no-inline/PC-level profile mode exists for `parse_value_at`; current split remains explicit | SK-V4 packet §2 |
-| 2 | Wave 1 | `codegen`, `runtime::grammars::json`, `bbnf-bench` | direct Track 1 calls generated runtime `SinkOnly`; bench-private parser is not Track 1; correctness stays `track1=track2=serde` | SK-V4 packet §3 |
-| 3 | Wave 2 | `parse-that`, `bbnf-simd`, JSON runtime direct paths | exact float/string/Unicode materializers close direct red rows or name exact residual blockers | SK-V4 packet §4 |
-| 4 | Wave 3 | `runtime::tape`, generated parser templates, lowerer | `parse_value_at` no longer hides current parse-G rows; `EventCursor` lands only if PC-level attribution proves source-byte dispatch is the cost | SK-V4 packet §5 |
-| 5 | Wave 4 | `bbnf-simd` scalar/aarch64/x86 + checkasm tests | every admitted primitive has scalar/checkasm parity and a same-wave generated/runtime consumer | SK-V4 packet §6 |
-| 6 | Wave 5 | `bbnf-bench`, `skinny/RESULTS.md`, sidecar profiles | no parse G rows and no `N-direct`; strict comparator planes recorded | SK-V4 packet §7 |
-| 7 | Wave 6 (conditional x86) | `ext/x86/bbnf.asm`, x86_64 primitive bodies, per-grammar NASM wrappers | `CollapsedStage` beats asmjson only on equivalent x86 hardware; otherwise `BBNF-COLLAPSEDSTAGE-NOT-VIABLE` fallback is the correct result | SK-V4 packet §8 |
+| Step | Wave | Scope | Owner paths | Exit gate | Source |
+|---|---|---|---|---|---|
+| 1 | Wave 0 | Strictness columns + diagnostic infra + nuke decisions | `skinny/RESULTS.md`, `runtime/Cargo.toml`, `runtime/src/grammars/json/generated.rs`, `NUKE-PLAN-SK-V5.md` | Strictness disclosed honestly; `parse-attribution` feature build green; nuke targets enumerated | SK-V5 packet §2 |
+| 2 | Wave 1 | Substrate authoring: BackendShape enum + LayoutFacts.backend_shape field + derive_backend_shape + codegen/src/lower/ hierarchy | `ir/src/`, `passes/src/`, `codegen/src/lib.rs`, `codegen/src/lower/` | Substrate plumbing complete; codegen no longer discards `&BackendIr`; regression-free transition | SK-V5 packet §3 |
+| 3 | Wave 2 | Number lever + generated SinkOnly + bench rewire + bench-private SinkParser nuke | `parse-that-regex/src/number/`, `codegen/src/lower/sink_only.rs`, `runtime/src/grammars/json/sink.rs`, `bbnf-bench/src/direct_struct.rs` | numbers/canada/mesh/marine_ik direct rows cross 1.10× sonic-rs slack; Track 1 calls generated runtime; Track 2 is structurally different | SK-V5 packet §4 |
+| 4 | Wave 3 | UTF-8 fusion + Class B `_x4` batched + utf8_block module | `parse-that-regex/src/lib.rs:331-339`, `parse-that-regex/src/unicode/`, `bbnf-simd/src/aarch64/utf8/`, `bbnf-simd/src/aarch64/unescape_uxxxx.rs` | 4 parse-G rows close; string-bound direct rows lift | SK-V5 packet §5 |
+| 5 | Wave 4 | Lock 14 remediation + working-tree nukes | `bbnf-simd/src/lib.rs`, `bbnf-simd/src/aarch64/*`, `bbnf-simd/src/x86_64/*`, `runtime/grammars/json/`, `simd-scan/`, `runtime/.../generated_eventcursor.rs`, `runtime/Cargo.toml` | Lock 14 audit clean; 7 grammar-neutral split items land | SK-V5 packet §6 |
+| 6 | Wave 5 | Remaining 8 `bbnf.asm` primitive bodies + checkasm hardening + runtime dispatch table | `bbnf-simd/src/x86_64/<prim>.asm`, `bbnf-simd/src/aarch64/<prim>.rs`, `bbnf-simd/src/scalar/<prim>.rs`, `bbnf-simd/tests/`, `bbnf-simd/src/dispatch.rs` | Per-primitive scalar reference + checkasm parity green; all 8 primitives have generated/runtime consumer | SK-V5 packet §7 |
+| 7 | Wave 6 | Strict workload matrix | `bbnf-bench/`, `RESULTS.md`, `restart/skinny/BENCH.md` | 17 corpora × 7 workloads × N sidecars with strictness disclosed; no parse-G, no N-direct | SK-V5 packet §8 |
+| 8 | Wave 7 (optional) | x86 CollapsedStage successor | `bbnf-simd/src/x86_64/*.asm`, `runtime/grammars/json/json_collapsed.asm`, `codegen/src/grammars/json/tables.rs` | Gated on Zen 4 silicon + NASM author + checkasm-green Layer 1; otherwise `BBNF-COLLAPSEDSTAGE-NOT-VIABLE` fallback | SK-V5 packet §9 |
 
-**Implementation discipline**: dispatch order is sequential until Wave 4, where
-primitive bodies may split by target only if each one has a same-wave consumer.
-The x86 asmjson-beat path is conditional and cannot be used to close the M5 Max
-SK-V4 gate.
+**Implementation discipline**: dispatch order is sequential. After Wave 3,
+the M5 Max close condition is met (parse-G + N-direct both gone). Waves
+4-6 are durability work on top of a measured win. Wave 7 is the x86
+asmjson-beat successor — conditional on Zen 4 silicon access AND
+declared NASM author AND checkasm-green Layer 1; it cannot be used to
+close the M5 Max SK-V5 gate.
+
+---
+
+## §6a — Close condition (SK-V5)
+
+Per `HANDOFF-SK-V5.md` lines 132-147 the SK-V5 close requires ALL of:
+
+1. `skinny/RESULTS.md` has zero parse-G rows.
+2. `skinny/RESULTS.md` has zero N-direct rows.
+3. Strictness column disclosed honestly on every row (`Strictness | parse_utf8 | escape_complete | flaw_probe`).
+4. Track 1 calls generated runtime (verified via `samply` symbol path; not `sink_only_digest`).
+5. Track 2 is structurally different from Track 1 (different symbol path; not the same SinkParser).
+6. `parse_value_at` no longer collapses to one symbol; PC-level attribution under the `parse-attribution` feature explains any remaining gap.
+7. `cargo run -p xtask --release -- primitive-checkasm` passes including register-clobber detection.
+8. Lock 1 + Lock 14 audit clean (manual grep + cohort verification; no grammar names in generic crates).
+9. Sidecar comparator table records sonic-rs `Value` / typed direct, simdjson C++ DOM / On Demand, yyjson inlined DOM, asmjson SWAR strict/permissive, serde_json — all with API and output plane named.
+
+SK-V5 does NOT promise beating asmjson on x86 AVX-512 hardware; that is
+Wave 7, gated separately. SK-V5 does NOT introduce new directives, new
+BIR variants, new locks, or new substrates. SK-V5 does NOT promise CSS L4
+/ Sheets / BBNF-self closure; Wave 4 ensures generic crates STAY generic
+so those grammars can land in subsequent tranches without further
+architectural debt.
 
 ---
 
@@ -219,14 +270,24 @@ git log --oneline -10
 git status --short
 ```
 
-Commit head should reflect the SK-V3 grand synthesis amendment and the Wave 2 cohort artefacts. Per-target verification:
+Commit head should reflect the SK-V5 audit cohort + master synthesis docs. Per-target verification:
 
 ```bash
-# Wave 1 + Wave 2 cohort artefacts present
+# SK-V5 authority docs in place (the receiver packet)
+head -30 restart/skinny/audit/GRAND-SYNTHESIS-SK-V5.md
+head -30 restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md
+head -30 restart/skinny/audit/NUKE-PLAN-SK-V5.md
+head -30 restart/skinny/audit/HANDOFF-SK-V5.md
+
+# SK-V5 cohort artefacts present (15 reports)
+ls restart/skinny/audit/SK-V5-COHORT/ | wc -l  # 15
+ls restart/skinny/audit/SK-V5-COHORT/skv5-{A1,A2,A3,A4,A5,A6,B1,B2,B3,D1,D2,D3,D4,D5,D6}-*.md
+
+# Wave 1 + Wave 2 historical cohort artefacts present
 ls skinny/profile/{native-sidecars,wave2-asm,wave2-pmu,wave2-capacity,wave2-prototype}/PROFILE-REPORT.md
 ls skinny/profile/native-sidecars/{yyjson,simdjson-cpp,asmjson}/
 
-# SK-V4 authority docs in place
+# SK-V4 historical authority docs still present
 head -30 restart/skinny/audit/ASMJSON-DAV1D-GRAND-SYNTHESIS-SK-V4.md
 head -30 restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md
 
@@ -258,6 +319,19 @@ rg -n 'structural projection IS the tape' restart/skinny/SUBSTRATE.md  # ≥ 1
 BBNF_SIMD_STRICT=1 cargo test -p bbnf-simd --release --test checkasm_parity  # zero divergences
 cargo run -p xtask --release -- bench-json --capacity-plan D --corpus update-center
 cargo build --release -v 2>&1 | grep -E -- '-C lto=(fat|true)|-C codegen-units=1' | wc -l  # ≥ 1 per member
+
+# SK-V5 corrected-diagnosis verification (the five empirical findings)
+# (1) Class A kernel was wired and reverted — REDRESS lines 301-313
+sed -n '301,313p' skinny/REDRESS.md
+# (2) Eisel-Lemire production source vendorable
+ls /Users/mkbabb/Programming/parse-that/rust/parse_that/src/parsers/eisel_lemire/mod.rs
+# (3) Bench-private dishonesty — both tracks call sink_only_digest
+grep -n 'sink_only_digest' skinny/crates/bbnf-bench/src/direct_struct.rs
+# (4) Codegen is decorative — `let _ = backend;`
+grep -n 'let _ = backend' skinny/crates/codegen/src/lib.rs
+# (5) BackendShape Rust state absent
+grep -rn 'BackendShape\b' skinny/crates/ | grep -v '\.asm'  # zero Rust hits expected
+grep -n 'shapes_for_json' skinny/crates/passes/src/lib.rs  # hardcoded selector
 ```
 
 Per-corpus reproduction:
@@ -284,8 +358,10 @@ Per `restart/README.md` §13. Calibrated, direct prose. Archaic-permissive (here
 
 ## §9 — Closing posture
 
-Hereupon the SK-V3 grand synthesis is historical, not sufficient for dispatch. The skinny JSON triad is green; the current expanded parse plane has four G rows (`twitter`, `random`, `unicode_mixed`, `unicode_basic`), and the direct workload is `N-direct / NoGo` with 6 of 17 rows passing and 11 failing. The next close is generated `SinkOnly` typed emission plus exact float/string/Unicode materialization, alongside event-cursor consumption for the four parse rows. Plan D and the admitted NEON primitives remain useful, but they do not by themselves close the gate.
+Hereupon the SK-V3 and SK-V4 grand syntheses are historical, not sufficient for dispatch. The SK-V5 cohort (15 reports + 4 master synthesis docs) is the receiver authority. The skinny JSON triad is green; the current expanded parse plane has four G rows (`twitter` 78%, `random` 51%, `unicode_mixed` 47%, `unicode_basic` 49% of sonic-rs), and the direct workload is `N-direct / NoGo` with 6 of 17 rows passing and 11 failing. The next close is the SK-V5 Wave 0-3 sequence: strictness + diagnostic infra (Wave 0) → substrate authoring with BackendShape + LayoutFacts.backend_shape + derive_backend_shape + `codegen/src/lower/` (Wave 1) → number lever + generated SinkOnly + bench rewire (Wave 2) → NEON UTF-8 codepoint pipeline at `parse-that-regex/src/lib.rs:331-339` + Class B `_x4` batched (Wave 3). After Wave 3 the M5 Max close condition is met; Waves 4-6 are durability work on top of a measured win; Wave 7 is the optional x86 asmjson-beat successor.
 
 Skinny v3 ALREADY wins on 4 of 17 corpora vs simdjson C++ / yyjson on M5 Max (citm, canada, mesh, unicode_mixed) — measured, not projected. The AVX-512 esoterica stack landed at Lock 16 as **strict additions on top of the asmjson architecture** for the >SOTA path on x86_64: 5-pack (k-mask arithmetic family, VPCLMULQDQ at 512-bit lane, AVX-IFMA `vpmadd52`, AVX-512 VNNI `vpdpbusd`, AVX-512 BITALG `vpshufbitqmb`+`vpopcntb`) + 3-pack M5 Max NEON (LD4-interleaved, BCAX/EOR3, NEON-port `svmatch_u8`). All citation-anchored. All conditional on hardware. None violates Lock 14.
 
-The 16 locks govern. The 5-shape `BackendShape` generalises across JSON/CSS L4/BBNF-self/Sheets without per-grammar code in any generic crate. V1 planning should carry the triad pass as substrate evidence, the four-row parse G set plus `N-direct / NoGo` as the current implementation block, and the per-grammar `BackendShape` matrix as the lowerer-template contract.
+The 16 locks govern. The 5-shape `BackendShape` generalises across JSON/CSS L4/BBNF-self/Sheets without per-grammar code in any generic crate; SK-V5 Wave 1 lands the Rust state that materializes that generalisation (`BackendShape` enum + `LayoutFacts.backend_shape` field + `derive_backend_shape` function + `codegen/src/lower/` hierarchy). V1 planning should carry the triad pass as substrate evidence, the four-row parse G set plus `N-direct / NoGo` as the current implementation block, the per-grammar `BackendShape` matrix as the lowerer-template contract, and `HANDOFF-SK-V5.md` lines 132-147 as the binding close condition.
+
+**Dispatch Wave 0.**

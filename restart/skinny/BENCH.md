@@ -597,6 +597,47 @@ missing FAILS the gate. Source: `restart/MASTER-PLAN.md:159-168` and
 A row missing any field is INVALID and removed from the dataset before the
 threshold matrix runs.
 
+### 5.1.1 Strictness disclosure columns (SK-V5 Wave 0 deliverable)
+
+Per `restart/skinny/audit/SK-V5-COHORT/skv5-B3-native-sidecars.md` and
+`restart/skinny/audit/GRAND-SYNTHESIS-SK-V5.md` §4, the current
+`skinny/RESULTS.md` reads the N-direct verdict as a pure throughput delta
+against sonic-rs / simdjson / yyjson / asmjson. It is partly a contract delta:
+asmjson SWAR is permissive (accepts `0x00..0x1F` as whitespace, passes
+unescaped controls inside string bodies); bbnf Track 1 parse is deferred on
+UTF-8 validation at the scan stage (strict only at view materialization);
+RapidJSON default flags do not validate UTF-8. Comparing strict-bbnf to
+permissive-asmjson without disclosure misreads the gate. Four additional
+columns are required on every bench row so the existing rows can be honestly
+compared. Authority: `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md`
+§2.2.
+
+| Column | Domain | Meaning |
+|---|---|---|
+| `Strictness` | `strict` / `permissive` / `deferred` | RFC 8259 conformance plane the parser commits to on the timed path |
+| `parse_utf8` | `scan-boundary` / `view-boundary` / `none` | where UTF-8 well-formedness is validated relative to the parse boundary |
+| `escape_complete` | `yes` / `no` | does the parser fully scan strings for unescaped controls (`0x00..0x1F` inside string bodies) per RFC 8259 §7? |
+| `flaw_probe` | one-line text | summary of where the parser diverges from strict RFC 8259, citing a JSONTestSuite test ID where applicable; empty when fully strict |
+
+Per-parser baseline values populated at row emission time:
+
+| Parser | Strictness | parse_utf8 | escape_complete | flaw_probe |
+|---|---|---|---|---|
+| bbnf Track 1 (generated) | `strict` | `view-boundary` | `yes` | deferred for parse-only because UTF-8 fall-through is scalar and shape-dependent; mark honestly per row when scan-stage validator is bypassed |
+| sonic-rs | `strict` | `scan-boundary` | `yes` | (empty) |
+| simdjson C++ | `strict` | `scan-boundary` | `yes` | (empty) |
+| yyjson default | `strict` | `scan-boundary` | `yes` | (empty) |
+| asmjson SWAR | `permissive` | `none` | `no` | accepts 0x00..0x1F as whitespace; passes unescaped controls inside strings |
+| RapidJSON default | `permissive` | `none` | `no` | default flags skip UTF-8 validation; controls pass inside strings |
+| serde_json | `strict` | `scan-boundary` | `yes` | (empty) |
+
+The four columns are emitted by the `Sidecar` trait in
+`bbnf-bench/src/lib.rs` and propagate through every native sidecar row.
+Missing values FAIL the schema gate at §5.3 the same way any required field
+does. Outcome classification at §6 reads these columns as advisory context;
+strictness-disjoint comparisons cannot ratify a `BEAT` claim, only a
+`PARITY-PLUS-CONTRACT-DELTA` annotation.
+
 ### 5.2 Capture mechanism
 
 `crates/bbnf-bench/src/metadata.rs`:

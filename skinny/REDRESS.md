@@ -366,6 +366,129 @@ Lazy tape materialization is now reported per corpus:
    `BBNF-BUDGET-CLIFF` when `bbnf-bench` enters the documented 3250-3300 LOC
    warning band; the current crate is 3278/3300 LOC, so the warning is live.
 
+33. SK-V5 Wave 3: Class A `match_tiny_plain_string` NEON wiring is INVALIDATED
+    as the parse-G fix; the corrected parse-G target is the NEON UTF-8
+    codepoint pipeline.
+
+   The aarch64 kernel at `crates/bbnf-simd/src/aarch64/match_tiny_plain_string.rs`
+   is parity-green and grammar-generic, but cohort attribution shows it targets
+   the wrong boundary. The active call site is the 8-byte scalar early-out layer
+   at `crates/bbnf-simd/src/lib.rs:195`, not the actual hot kernel surfaced by
+   B1 attribution. The earlier wiring of the 16-byte tiny-string helper into
+   Track 1/Track 2 already regressed `twitter` ~25% (entry 28 above), and the
+   refined cohort reading explains why: the kernel-versus-call-site mismatch
+   means the Class A primitive cannot land the parse-G fix even when its
+   checkasm parity is clean. The kernel stays in tree as a parity-green,
+   grammar-generic primitive available to future grammars that genuinely
+   address the 8-byte early-out layer (CSV-shape or other narrow-scan
+   grammars); it is not the SK-V5 parse-G fix and Track 1/Track 2 remain on
+   the 8-byte scalar tiny recognizer. The corrected parse-G fix is the NEON
+   UTF-8 codepoint pipeline at `crates/parse-that-regex/src/lib.rs:331-339`,
+   scheduled as Wave 3 of `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md`.
+   Cohort cites: `restart/skinny/audit/SK-V5-COHORT/skv5-D6-class-ab-novelty.md`
+   and `restart/skinny/audit/SK-V5-COHORT/skv5-B1-parse-attribution.md`. This
+   refines the diagnosis recorded in entry 28; the kernel admission stands, the
+   active-dispatch verdict stands, and the parse-G attribution moves to the
+   UTF-8 codepoint pipeline.
+
+34. SK-V5 Wave 2: bench-private `SinkParser` dishonesty IDENTIFIED in
+    direct-to-struct attribution. Status: PENDING.
+
+   `crates/bbnf-bench/src/direct_struct.rs:150-156` shows `track1_digest` and
+   `track2_digest` both call the same `sink_only_digest`. That digest is a
+   hand-rolled recursive-descent SinkParser over `&[u8]` plus a cursor; it
+   never touches `runtime::tape::Tape` and never enters generated codegen
+   output. The current direct-to-struct gate therefore measures the same
+   private parser twice and reports the result as Track 1 versus Track 2.
+   The 6-of-17 sink-only passing rows recorded in entry 30 and the
+   33-124% sonic-rs ratios summarized under Sonic Closeness are throughput
+   for that bench-private parser, not for generated Track 1 over the canonical
+   substrate. Status is PENDING Wave 2 of
+   `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md`: generate `SinkOnly`
+   from BIR `DirectBuild`, rewire `bbnf-bench` Track 1 to call the generated
+   runtime entry, delete the private `SinkParser`, and reshape Track 2 into a
+   structurally different hand-coded path so the dual-track ratio reports
+   substrate-versus-generator the way the contract intends. Cohort cites:
+   `restart/skinny/audit/SK-V5-COHORT/skv5-B2-direct-attribution.md` and
+   `restart/skinny/audit/SK-V5-COHORT/skv5-D5-sinkonly-novelty.md`.
+
+35. SK-V5 Wave 1: codegen `lib.rs:111-117` decorative pass-through IDENTIFIED.
+    Status: PENDING.
+
+   `crates/codegen/src/lib.rs:111-117` literally writes `let _ = backend;` and
+   then `include_str!`s `templates/json/parser.rs` and
+   `templates/json/generated.rs` verbatim into the output. The BIR → Rust text
+   step is a no-op pass-through that discards the `backend` argument and
+   ignores every BIR fact the upstream extract pass attached to the plan. The
+   BIR build itself in `passes::extract::single_plan` is honest and continues
+   to attach `SpanMark`, `TapeEmit`, `DirectBuild`, and `Return` events to
+   JSON materialized rules; the dishonesty is strictly the last text-emission
+   step. Status is PENDING Wave 1 of
+   `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md`: introduce a
+   `BackendShape` enum, attach it to `LayoutFacts.backend_shape` via a
+   `derive_backend_shape` pass, stand up a real `codegen/src/lower/` hierarchy
+   that walks the BIR, and replace the `lib.rs:111-117` pass-through with the
+   shape-driven emitter. Cohort cites:
+   `restart/skinny/audit/SK-V5-COHORT/skv5-D3-derive-shape-novelty.md` and
+   `restart/skinny/audit/SK-V5-COHORT/skv5-D5-sinkonly-novelty.md`.
+
+36. SK-V5 Wave 4: JSON-hardcoded scalar references in `bbnf-simd` IDENTIFIED
+    as Lock 14 violation. Status: PENDING.
+
+   Four separate `classify_block_scalar` functions hardcode the seven JSON
+   structural characters in their bodies:
+   `crates/bbnf-simd/src/x86_64/avx2/classify.rs:31`,
+   `crates/bbnf-simd/src/x86_64/avx512_vbmi2/classify.rs:28`,
+   `crates/bbnf-simd/src/x86_64/avx512_gfni/classify_affine.rs:31`, and
+   `crates/bbnf-simd/src/x86_64/avx512_bitalg/multiclass.rs:30`. The aarch64
+   side bakes the same set into a TBL4 LUT at
+   `crates/bbnf-simd/src/aarch64/classify_tbl4.rs:65-71`. This is a Lock 14
+   violation: a primitive library that the spec requires to be grammar-neutral
+   instead carries the JSON alphabet directly in its `.text` and `.rodata`.
+   Status is PENDING Wave 4 of
+   `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md`: parameterise each
+   classifier on the alphabet, move JSON-specific data tables out of
+   `bbnf-simd` into codegen-emitted `.data`, and admit the result through a
+   Lock 14 remediation gate. Cohort cite:
+   `restart/skinny/audit/SK-V5-COHORT/skv5-D4-simd-split-novelty.md`.
+
+37. SK-V5 Wave 4: `bbnf-simd/src/lib.rs` JSON god-module status IDENTIFIED.
+    Status: PENDING.
+
+   `crates/bbnf-simd/src/lib.rs` is 716 LOC and concentrates JSON-specific
+   surfaces that the two-layer vocabulary plan requires to be lifted into
+   grammar-neutral primitives: a `JSON_STRUCTURAL` constant, an
+   `is_json_punctuation` helper, `scan_json_tail`, a `JsonParseIndex` alias,
+   and `resolve_json_string_masks_64`. Inside the same file a 230-LOC
+   `mod neon` block at lines 463-693 contains 6× `vceqq_u8` JSON-punctuation
+   fan-in at lines 642-647 and again at lines 665-670.
+   `restart/skinny/MIGRATION.md:259-269` declares the split-by-primitive
+   intent, and commit `9eef728c` lifted only 1 of the 9 declared primitives
+   (`BYTE_CLASS_FROM_EQ_SET_64`); the other 8 remain inside the god module.
+   Status is PENDING Wave 4 of
+   `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md`: complete the
+   primitive-by-primitive split into Layer 1 `bbnf.asm` modules and reduce
+   `lib.rs` to a vocabulary index. Cohort cites:
+   `restart/skinny/audit/SK-V5-COHORT/skv5-D4-simd-split-novelty.md` and
+   `restart/skinny/audit/SK-V5-COHORT/skv5-A5-grammar-generalization.md`.
+
+38. SK-V5 Wave 4: `crates/simd-scan/` fossil status IDENTIFIED. Status:
+    PENDING deletion.
+
+   `crates/simd-scan/` is a 584-LOC near-verbatim duplicate of
+   `crates/bbnf-simd/src/lib.rs:13-100`. It is not in
+   `skinny/Cargo.toml` `workspace.members`, it is not in
+   `skinny/Cargo.toml` `workspace.dependencies`, and zero crates depend on
+   it; the `simd_scan` token in `crates/bbnf-bench/Cargo.toml:34` is a
+   criterion `[[bench]]` target name, not a crate dependency. Carrying a
+   detached duplicate of the structural scanner alongside the canonical
+   `bbnf-simd` surface violates the single-crate substrate boundary recorded
+   in entry 22 and adds drift risk for every future SIMD change. Status is
+   PENDING Wave 4 of
+   `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md`: delete
+   `crates/simd-scan/` outright. Cohort cite:
+   `restart/skinny/audit/SK-V5-COHORT/skv5-D4-simd-split-novelty.md`.
+
 ## Sonic Closeness
 
 The parser works as the tape/direct hybrid the spec requires, but the current

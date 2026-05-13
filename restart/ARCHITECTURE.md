@@ -939,10 +939,12 @@ the snapshot tests at `ir::backend_ir` consume the post-fold shape.
 
 **2026-05-12 lowering amendment** (no IR addition): `Alt { mode: Dispatch }`
 lowers through a materialization plan per `LayoutFacts.backend_shape[rule_id]`
-(see §7.3). The access pattern may be byte-position (`EagerTape`), typed-event
-cursor over retained offsets (`OffsetTape`), typed-event cursor over retained
-event cells (`EventTape`), direct sink with no retained document (`SinkOnly`),
-or collapsed mask-state walk (`CollapsedStage`). The variant payload is
+(see §7.3 for the spec; §7.4 for the Rust implementation status — Wave 1 of
+SK-V5 lands the enum, the field, and the per-shape lowerer). The access
+pattern may be byte-position (`EagerTape`), typed-event cursor over retained
+offsets (`OffsetTape`), typed-event cursor over retained event cells
+(`EventTape`), direct sink with no retained document (`SinkOnly`), or
+collapsed mask-state walk (`CollapsedStage`). The variant payload is
 unchanged; only the lowerer emits differently. `backend_shape` is
 cost-model-derived from Grammar IR facts per Lock 10 auto-detection, never a
 user-visible directive.
@@ -1092,9 +1094,21 @@ Per-shape lowering output. Each `BackendShape` value resolves to a concrete arte
 | `SinkOnly` | (rust_recursive_descent_body — direct typed-field writes during parse, no retained queryable document, no post-parse generic view walk; optional primitive FFI shim calls) |
 | `CollapsedStage` | (rust_caller_shim — `parse_value` entry point that prepares the input buffer per the Lock 16 `EOB_PAD_CLAMP` discipline and invokes the kernel; asm_kernel_file — per-grammar hand-authored file at `skinny/crates/bbnf-simd/src/x86_64/{grammar}_collapsed.asm`; data_section — codegen-emitted `.data` section co-located in the same file, carrying the 256-byte classifier LUT, the state-transition LUT, and the accept/reject decision table) |
 
-The bifurcation is load-bearing for LLVM compatibility. Recursive-descent Rust compiles to an implicit automaton through LLVM's optimiser — the call-stack-as-parse-state lowering fuses with force-inlined hot leaves under Lock 15's `lto = "fat"` + `codegen-units = 1` + ~20 KiB hot-function ceiling, and yyjson's reference C body demonstrates the same shape stays in i-cache. Codegen-emitted *explicit* Rust automatons do not survive this lowering: LLVM cannot fold an indirect-dispatch state walk back into PC-as-state form, and the overhead asmjson eliminates via `jmp [r10 + state*8]` reappears as branch-misprediction taxa in any LLVM-emitted equivalent. The lone exception — `CollapsedStage` — therefore consumes hand-written NASM where direct control over generated-code addresses is available (asmjson's PC-as-state pattern; Lock 16's `FSM_DISPATCH_THREADED` primitive in `skinny/crates/bbnf-simd/ext/x86/bbnf.asm`). All four other shapes stay in LLVM's territory and consume Layer-1 primitives from the same `ext/x86/bbnf.asm` vocabulary only at scan-shaped inner loops where the primitive's grammar-neutral signature (`BYTE_CLASS_FROM_TABLE_64`, `BYTE_CLASS_FROM_EQ_SET_64`, `BITMAP_PREFIX_XOR_64`, `BITMAP_NEXT_SET_BIT`, `BULK_EMIT_COMPRESSED`, `EOB_PAD_CLAMP`, `FRAME_PUSH_BOUNDED`, `FRAME_POP_BOUNDED`) admits a direct FFI binding. The two-layer reusable vocabulary — Layer 0 vendored from dav1d at `skinny/crates/bbnf-simd/ext/x86/x86inc.asm` (1,978 LOC, BSD-2), Layer 1 grammar-neutral macros at `skinny/crates/bbnf-simd/ext/x86/bbnf.asm` — is the dav1d / asmjson factoring elaborated at `restart/skinny/audit/SOTA-BEAT-DESIGN.md` §5.2; Lock 1 governs the substrate union that admits all five shapes, Lock 14 governs the zero-grammar-overfitting discipline that keeps `bbnf.asm` grammar-neutral, Lock 15 governs the i-cache residency budget that bounds the recursive-descent shapes, and Lock 16 governs the admissibility allowlist that bounds the primitive vocabulary. The same-wave-consumer rule at `docs/precepts/instructions/LESSONS-LEARNED.md:17-26` constrains admission: a `CollapsedStage` lowering target lands only when a per-grammar kernel author is in flight (no substrate-without-consumer); a primitive lands in `bbnf.asm` only when at least one shape consumes it through codegen at the same wave.
+The bifurcation is load-bearing for LLVM compatibility. Recursive-descent Rust compiles to an implicit automaton through LLVM's optimiser — the call-stack-as-parse-state lowering fuses with force-inlined hot leaves under Lock 15's `lto = "fat"` + `codegen-units = 1` + ~20 KiB hot-function ceiling, and yyjson's reference C body demonstrates the same shape stays in i-cache. Codegen-emitted *explicit* Rust automatons do not survive this lowering: LLVM cannot fold an indirect-dispatch state walk back into PC-as-state form, and the overhead asmjson eliminates via `jmp [r10 + state*8]` reappears as branch-misprediction taxa in any LLVM-emitted equivalent. The lone exception — `CollapsedStage` — therefore consumes hand-written NASM where direct control over generated-code addresses is available (asmjson's PC-as-state pattern; Lock 16's `FSM_DISPATCH_THREADED` primitive in `skinny/crates/bbnf-simd/ext/x86/bbnf.asm`). All four other shapes stay in LLVM's territory and consume Layer-1 primitives from the same `ext/x86/bbnf.asm` vocabulary only at scan-shaped inner loops where the primitive's grammar-neutral signature (`BYTE_CLASS_FROM_TABLE_64`, `BYTE_CLASS_FROM_EQ_SET_64`, `BITMAP_PREFIX_XOR_64`, `BITMAP_NEXT_SET_BIT`, `BULK_EMIT_COMPRESSED`, `EOB_PAD_CLAMP`, `FRAME_PUSH_BOUNDED`, `FRAME_POP_BOUNDED`) admits a direct FFI binding. The Rust per-shape lowerer that consumes those FFI shims is the `codegen/src/lower/rust.rs` module (to be created in SK-V5 Wave 1; not present on disk as of 2026-05-13 per `restart/skinny/audit/SK-V5-COHORT/skv5-D3-derive-shape-novelty.md` §5). The two-layer reusable vocabulary — Layer 0 vendored from dav1d at `skinny/crates/bbnf-simd/ext/x86/x86inc.asm` (1,978 LOC, BSD-2), Layer 1 grammar-neutral macros at `skinny/crates/bbnf-simd/ext/x86/bbnf.asm` — is the dav1d / asmjson factoring elaborated at `restart/skinny/audit/SOTA-BEAT-DESIGN.md` §5.2; Lock 1 governs the substrate union that admits all five shapes, Lock 14 governs the zero-grammar-overfitting discipline that keeps `bbnf.asm` grammar-neutral, Lock 15 governs the i-cache residency budget that bounds the recursive-descent shapes, and Lock 16 governs the admissibility allowlist that bounds the primitive vocabulary. The same-wave-consumer rule at `docs/precepts/instructions/LESSONS-LEARNED.md:17-26` constrains admission: a `CollapsedStage` lowering target lands only when a per-grammar kernel author is in flight (no substrate-without-consumer); a primitive lands in `bbnf.asm` only when at least one shape consumes it through codegen at the same wave.
 
-### 7.4 Diagnostic Vocabulary
+### 7.4 SK-V5 Implementation Status
+
+The §7.3 surfaces — the `BackendShape` enum, the `derive_backend_shape` algorithm, and the `LayoutFacts.backend_shape: HashMap<RuleId, BackendShape>` field — are spec-declared and Rust-undeclared as of 2026-05-13. The audit verdict is at `restart/skinny/audit/SK-V5-COHORT/skv5-D3-derive-shape-novelty.md` §3: `grep -rn "BackendShape" skinny/crates/` returns zero hits in any Rust source; `passes/src/lib.rs:46-51` defines `LayoutFacts { rule_types, node_types, layout_policies, hot_call_graph }` with no `backend_shape` field; no Rust symbol named `derive_backend_shape`, `derive_shape`, or `shape_for_rule` exists in `passes::recognizers`. MASTER-PLAN §13 H.W1 / H.W4 scope the authoring work but no commit has yet landed it; `restart/skinny/audit/GRAND-SYNTHESIS-SK-V5.md` Wave 1 carries the implementation packet.
+
+The codegen text-emission step is decorative pass-through. `codegen/src/lib.rs:111-117` defines `parser_rs(backend: &BackendIr) -> String` and `generated_rs(backend: &BackendIr) -> String` whose bodies are `let _ = backend; include_str!("json_templates/parser.rs").to_string()` (and the `generated.rs` companion). The `let _ = backend` is a literal lint-silencer; the `BackendIr` argument is never read, never branched on, and never lowered to Rust tokens. The "generated" Rust files are compile-time embeds of hand-written templates at `skinny/crates/codegen/src/json_templates/{parser,generated}.rs`. The BIR construction itself is non-decorative — `extract::single_plan` at `passes/src/lib.rs:334-365` walks the grammar honestly, projects `materialize_rule` per rule, and emits a `BackendIr` whose `recognizers` / `rules` / `shape_facts` payloads round-trip the determinism tests at `codegen/src/lib.rs:160-189`. Only the BIR → Rust source step is a noop.
+
+`passes::compile` at `passes/src/lib.rs:24-36` is grammar-blind in two places that the §7.3 contract requires it not to be. The shape-mining call at `passes/src/lib.rs:28` is the literal `shapes::shapes_for_json()` regardless of input grammar; the recognizer-mining call at `passes/src/lib.rs:29` is `recognizers::nominate_json(&_grammar)` whose `_grammar` parameter is unused (`passes/src/lib.rs:232-238` returns a single hardcoded `SimdScan` over the JSON structural alphabet). The downstream `materialization_for_rule` helper at `passes/src/lib.rs:423-434` matches on the literal rule-name strings `"object"`, `"array"`, `"pair"`, `"string"`, `"number"`, `"bool"`, `"null"`. Each is a `BBNF-GRAMMAR-NAME-IN-GENERIC-CRATE` Lock 14 violation that `cargo xtask lint-no-hardcoded-grammars` would surface if run against `passes`; the lint is catalogued at `restart/locks/14-LOCKS.md:60` and the diagnostic row sits at §7.5 of this document.
+
+The remediation is SK-V5 Wave 1 of `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md`. Wave 1 authors: the `BackendShape` enum in the `ir` crate mirroring `ARCHITECTURE.md:1048-1072`; the `backend_shape: HashMap<RuleId, BackendShape>` field on `LayoutFacts` at `passes/src/lib.rs:46-51`; the `passes::recognizers::derive_backend_shape(grammar_ir, rule_id) -> BackendShape` function per the 8-step priority algorithm at `ARCHITECTURE.md:1075-1083`; the `codegen/src/lower/` directory hierarchy with `rust.rs` per-shape emission for `Alt { mode: Dispatch }` (replacing the `include_str!` pass-through in `parser_rs` / `generated_rs`); and the `BBNF-BACKEND-SHAPE-INCONSISTENT` / `BBNF-COLLAPSEDSTAGE-NOT-VIABLE` producer wired into `derive_backend_shape` per the diagnostic rows at §7.5. After Wave 1 closes, §7.3's algorithm is the Rust algorithm; this §7.4 status note collapses to a single sentence pointing at the implementing commit range.
+
+The pre-existing `ShapeFacts` at `ir/src/lib.rs:436-467` is not the spec's `BackendShape` selector and remains untouched by SK-V5. It is a typed-view shape catalogue — a `Vec<Shape>` whose `Shape::{Struct, Enum}` variants carry named Rust types (`JsonRoot { value: JsonValue<'i> }`, etc.) consumed by the `view.rs` direct-builder emission and by the `Value` API. The spec's `LayoutFacts.backend_shape: HashMap<RuleId, BackendShape>` is a per-rule lowering-mode selector that names a generation strategy for `Alt { mode: Dispatch }`. Same surface noun, distinct concerns; both side tables remain, side by side, after Wave 1.
+
+### 7.5 Diagnostic Vocabulary
 
 The diagnostic codes the codebase commits to are catalogued here. PASS-1
 contributes the lookbehind-width clause (`restart/audit/pass-1-substrate/PASS-1.md:84-121`),
@@ -1166,7 +1180,7 @@ host, layout, path, and visitor codes. The catalogue here binds
 identifiers and producer sites; downstream cookbooks reference identifiers
 and let consumers inspect the producer for the verbatim string.
 
-### 7.5 Backend Trait
+### 7.6 Backend Trait
 
 Lock 5 commits to per-backend lowerers as the contract boundary
 (`restart/locks/14-LOCKS.md:42`). PASS-1 §2 names the per-backend lowering
@@ -1568,7 +1582,7 @@ Lowerers:
 
 | Lowerer | V1 contract | Trait impl |
 |---|---|---|
-| Rust | Primary production lowerer. Emits runtime template, tape/direct builder, host chain calls, visitors, value projections. | `RustBackend: Backend` per §7.5. |
+| Rust | Primary production lowerer. Emits runtime template, tape/direct builder, host chain calls, visitors, value projections. | `RustBackend: Backend` per §7.6. |
 | SIMD | Pattern lowerer fed by recognizer facts and validated `SimdScan` BIR; exact scans need scalar parity, and prefilters need a verifier route before tape emission. | Co-impl inside `RustBackend` (cfg-gated through `bbnf-simd`). |
 | VM | Executable interpreter for debug, replay, and golden equality. | Internal evaluator over `BackendIR`; not a public `Backend` impl (replay-only). |
 | WASM | Deferred post-V1; lands as `WasmBackend: Backend` in V2 alongside Lock 11 publication carry. | V2. |
@@ -1740,7 +1754,7 @@ Column semantics:
 | Runtime files emitted | Template-emitted files under `runtime/src/grammars/<name>/`; every cell is generated or data-only, hand-written runtime files are forbidden by Lock 14. |
 | Visitor + `VisitTypes` | The generated `Visitor` trait and its bitflag-pruned visit-type set per PASS-3 §3. |
 | Path schema | The generated path-schema sidecar consumed by `path!` / `select!` typing per PASS-3 §3. |
-| `path!` macro typing | The compile-time path-AST typing surface backed by `path-core`. Every grammar's `path!` invocation types against the matching path-schema sidecar; rejects mismatches with `BBNF-PATH-UNKNOWN-SEGMENT` / `BBNF-PATH-GRAMMAR-MISMATCH` per the §7.4 catalogue. |
+| `path!` macro typing | The compile-time path-AST typing surface backed by `path-core`. Every grammar's `path!` invocation types against the matching path-schema sidecar; rejects mismatches with `BBNF-PATH-UNKNOWN-SEGMENT` / `BBNF-PATH-GRAMMAR-MISMATCH` per the §7.5 catalogue. |
 | Regex engine | Every grammar lowers `Regex` BIR variants through `parse-that-regex` (the regex sub-crate of `parse-that`); the regex-automata oracle role retires per V1-FOLD-CANDIDATES Tier 3 #23. |
 | Fixture manifest | The corpus manifest under `crates/test-fixtures/corpus/`; `yaml` carries a parity-phase manifest only. |
 | Host route | The host-function decomposition source: `@host fn` blocks in the grammar, generic primitives in `host::primitives`, or workspace-metadata directives. Declaration crates are not part of the default host route. |
@@ -1749,7 +1763,7 @@ Column semantics:
 
 V1 trajectory carry: TS and WASM lowering columns are absent from the
 matrix above. They land in V2 alongside `WasmBackend: Backend` and
-`TsBackend: Backend` (§7.5) plus the Lock 11 V2 publication rows
+`TsBackend: Backend` (§7.6) plus the Lock 11 V2 publication rows
 (`restart/locks/14-LOCKS.md:54`). The V1 `RustBackend` is the sole
 active `Backend` impl; the per-grammar matrix grows columns mechanically
 when a new `Backend` impl lands.
@@ -1817,7 +1831,7 @@ varieties; J.W2 rejects pages that omit any field.
 |---|---|
 | Audience + mental model | The named user type (library consumer, grammar author, LSP integrator, parity engineer) plus the one-paragraph mental model the page commits to. The audience field admits exactly the user types enumerated in MASTER-PLAN §24; the mental model field paraphrases no other doc. |
 | Minimum running example | A copy-pasteable Rust snippet (or grammar fragment for grammar-author audiences) that compiles against the V1 `bbnf` crate facade and exercises the surface the page documents. The example anchors against a fixture under `crates/test-fixtures/corpus/`; no inline fixtures. |
-| Diagnostic codes table | Every diagnostic code the documented surface can emit, listed verbatim from the §7.4 catalogue; no ad-hoc rewording. The table cross-references the producer site so the consumer can inspect the verbatim string. |
+| Diagnostic codes table | Every diagnostic code the documented surface can emit, listed verbatim from the §7.5 catalogue; no ad-hoc rewording. The table cross-references the producer site so the consumer can inspect the verbatim string. |
 | Close-gate command | The `cargo xtask` invocation (or `cargo test -p <crate>` invocation) that proves the example still compiles and emits the documented diagnostics on cookbook regen. Pages without a close-gate command fail J.W2. |
 
 The contract is consumed (not authored) by every page under

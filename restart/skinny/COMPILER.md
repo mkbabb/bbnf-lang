@@ -718,6 +718,72 @@ BIR-snapshot as the pre-codegen shape falsifier. The skinny implements both
 as committed-byte gates so any compiler-side drift fails CI before
 substrate or BENCH artefacts run.
 
+### 6.5 `parse-attribution` feature flag (SK-V5 Wave 0)
+
+The codegen template emits `#[inline(always)]` on every generated kernel
+helper by default — this is the Lock 15 force-inline discipline required for
+the i-cache-resident hot function the yyjson profile evidenced. Force-inline
+is correct for production builds but obliterates symbol-level samply
+attribution: every kernel boundary collapses into one outer parse symbol, and
+cohort-B-style profile reports cannot name the hot leaf. SK-V5 cohort B1
+(`restart/skinny/audit/SK-V5-COHORT/skv5-B1-parse-attribution.md`) named this
+dishonesty: the gate authority's profile rows attribute the whole hot path to
+`parse_value_at` without PC-level decomposition.
+
+The remediation is a `parse-attribution` Cargo feature on
+`skinny/crates/runtime/Cargo.toml`. When off (the production / SOTA bench
+default) every kernel helper keeps `#[inline(always)]`. When on (the
+attribution-profile build) the same helpers carry `#[inline(never)]` so the
+boundary survives codegen and samply can name it. The codegen template emits
+the attribute via paired `#[cfg_attr]`:
+
+```rust
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
+fn dispatch_value(...) -> ... { /* ... */ }
+```
+
+Seven named kernel boundaries in
+`skinny/crates/runtime/src/grammars/json/generated.rs` carry this gating:
+
+1. `dispatch_value` — the source-byte → handler match (the `parse_value`
+   typed dispatch hub from §3.3 Primitive 1).
+2. `skip_whitespace_boundary` — whitespace consumption on cursor advance,
+   distinct from the structural-scan whitespace skip that lives in
+   `bbnf-simd`.
+3. `open_object` / `close_object` / `open_array` / `close_array` — the four
+   container-boundary helpers (`*cursor += 1` plus invariant checks; the
+   close helpers also seal the typed view span).
+4. `match_string_at_quote` entry — the string primitive entry from §3.3
+   Primitive 3; the `HasEsc` flag branch and the escape decoder are interior
+   to this boundary and remain force-inlined.
+5. `match_number_at_digit` entry — the number primitive entry from §3.3
+   Primitive 4; the digit-span / float-decode interior remains force-inlined.
+6. `verify_literal_true` / `verify_literal_false` / `verify_literal_null` —
+   the three keyword-literal verifiers (4-byte / 5-byte / 4-byte aligned
+   compares per §6.1 `ByteLiteral` lowering).
+7. `tape_emit_token` / `tape_advance_cursor` — the two tape-write boundaries
+   that compose every `TapeEmit` BIR lowering; PC-level attribution against
+   tape writes is the only way to separate scanner-emitted offsets from
+   codegen-emitted offsets per the tape-union audit.
+
+Build the attribution profile via `cargo build --release -p xtask --bin
+profile-lazy --features runtime/parse-attribution`. The feature lives on the
+runtime crate (not on bench or codegen) so any consumer — the bench harness,
+the xtask profiler, an external profile target — can opt into named hot
+leaves without changing source. The Lock 15 i-cache budget at `ARCH §7.4`
+re-binds on the default build (`parse-attribution` off); the budget is
+intentionally not enforced on the attribution build because `#[inline(never)]`
+explodes hot-function size by design.
+
+Falsifier: cohort-B attribution runs with the feature on must yield named
+hot leaves at ≥5% self-time matching the seven boundaries above. A run that
+still collapses to one fused symbol means the codegen template did not emit
+the paired `cfg_attr` and the feature is a no-op; that is a regen-equality
+fail at §6.4.
+
+Authority: `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md` §2.3.
+
 ---
 
 ## 7. What's Stubbed In The Skinny

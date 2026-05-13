@@ -1,7 +1,7 @@
 # Grand synthesis SOTA-BEAT SK-V3
 
-Date: 2026-05-12  
-Status: live authority for expanded-gate redress  
+Date: 2026-05-12
+Status: historical SK-V3 synthesis; superseded for measured gate state by `skinny/RESULTS.md` and `skinny/REDRESS.md`
 Receiver: `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md`
 
 ## 1. Measured authority
@@ -11,10 +11,12 @@ Receiver: `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md`
 | Tier | Verdict | Meaning |
 |---|---|---|
 | Historical triad: twitter / citm_catalog / canada | Passes | Lazy-offset tape plus local hot-path specialization validates the tape/direct union for JSON-class corpora. |
-| Expanded SOTA-BEAT corpus | **G / NoGo** | `github_events`, `update_center`, `random`, `unicode_escapes`, and `y_string_unicode` miss the S anchor. |
+| Expanded parse/tape corpus | **G / NoGo rows remain** | Current hard rows are `twitter`, `random`, `unicode_mixed`, and `unicode_basic`; `github_events` is A / GO and `update_center`, `unicode_escapes`, and `y_string_unicode` are C / GO in the current report. |
+| Direct-to-struct workload | **N-direct / NoGo** | Correctness is green; 6 of 17 rows pass the sonic-rs direct slack and 11 remain throughput-red. |
 
 The triad pass is real substrate evidence. It is not the dispatch verdict for
-SOTA-BEAT. The expanded gate is the binding implementation target.
+SOTA-BEAT. The expanded parse gate plus the direct workload are the binding
+implementation targets.
 
 Fresh reprofile pass, all run with `samply record --save-only
 --unstable-presymbolicate -r 1000`:
@@ -201,7 +203,7 @@ Updated surfaces:
 | `restart/skinny/BENCH.md` | Expanded corpus is binding; native yyjson/asmjson sidecar planes added; workload split added. |
 | `restart/skinny/SUBSTRATE.md` | Lazy-offset triad pass preserved; typed event cursor over tape projection becomes canonical lowering target. |
 | `restart/skinny/COMPILER.md` | Cost-model omission reclassified as MASKING for SOTA-BEAT; plan probes required. |
-| `restart/skinny/INDEX.md` | SIMD layer necessary but not sufficient; expanded G / NoGo remains visible. |
+| `restart/skinny/INDEX.md` | SIMD layer necessary but not sufficient; current expanded parse G rows and `N-direct / NoGo` remain visible. |
 | `restart/skinny/WORKSPACE.md` | `bbnf-simd` is scanner and byte-primitive boundary; expanded gate blocks dispatch. |
 | `restart/ARCHITECTURE.md` | `BackendShape` becomes materialization-plan enum: `EagerTape`, `OffsetTape`, `EventTape`, `SinkOnly`, `CollapsedStage`. |
 | `restart/MASTER-PLAN.md` | Tranche H becomes typed-event/SIMD/primitive close, host-aarch64 first and x86 strict plane second. |

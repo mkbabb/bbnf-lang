@@ -1,7 +1,7 @@
 # Handoff — bbnf-lang Greenfield Restart
 
-Date: 2026-05-12 (post-SK-V3 grand synthesis + Wave 1 cohort + Wave 2 cohort)
-Status: **SK-V3 READY — three corpora remain at G / NoGo on the expanded skinny gate (`random`, `unicode_escapes`, `y_string_unicode`); two NEON kernels + Plan D + an `escape_mask_64` correctness fix close them.**
+Date: 2026-05-13 (post-SK-V3 direct-sink reassay + spec reconciliation)
+Status: **SK-V3 NOT READY — current authority is `skinny/RESULTS.md`: parse/tape hard rows remain on `twitter`, `random`, `unicode_mixed`, and `unicode_basic`; direct-to-struct correctness is green, direct throughput passes 6 of 17 rows and fails 11, so the full gate is `N-direct / NoGo`.**
 Audience: the next agent or human picking up this work.
 
 This document is the single source of truth for orienting cold. Read it end-to-end before reading anything else; it tells you what the project is, where the work has been, where it is now, where the M5 Max comparator landscape sits, how the SK-V3 substrate generalises across the V1 grammar fleet, and what the next move is. Every claim cites a path so you can verify.
@@ -20,13 +20,15 @@ Read in order:
 
 1. `restart/README.md` — gestalt synthesis. The architectural commitments, the BBNF extensions, the optimization apotheosis, the type system, the value API, the SOTA synthesis, the 16 locks, the process.
 2. `restart/locks/14-LOCKS.md` — the sixteen architectural commitments. Locks 1-14 original; Lock 15 (build-profile + force-inline + i-cache budget) lands and extends 2026-05-12; Lock 16 (SIMD/ASM admissibility allowlist + abstract primitive lifts from dav1d/ffmpeg) lands 2026-05-12 and extends the same day with the post-Wave-1 5-pack of AVX-512 esoterica (k-mask arithmetic family, VPCLMULQDQ at 512-bit, AVX-IFMA `vpmadd52`, AVX-512 VNNI `vpdpbusd`, AVX-512 BITALG `vpshufbitqmb` + `vpopcntb`) and 3-pack of M5 Max NEON esoterica (LD4-interleaved 4-channel classifier, NEON ternary bitwise `BCAX`/`EOR3`, NEON port of SVE2 `svmatch_u8`).
-3. `restart/skinny/audit/GRAND-SYNTHESIS-SOTA-BEAT-SK-V3.md` — V3 authority for expanded-gate redress; consolidates the 6-research + 6-profile Wave 1 cohort.
-4. `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md` — V3 dispatch packet; carries Waves 0-6 with explicit preflight fix items (Plan D adoption + `escape_mask_64` NEON correctness fix).
-5. `skinny/RESULTS.md` — current measured skinny gate (post-Wave 2 re-baselines): original triad passes; expanded corpus is overall G / NoGo on five rows.
-6. `skinny/REDRESS.md` — accepted wins and rejected-route ledger.
-7. `restart/skinny/{INDEX,SUBSTRATE,COMPILER,BENCH,WORKSPACE}.md` — live skinny/V1 amendment surfaces.
-8. `docs/precepts/instructions/STYLE.md` — voice + discipline (governs all writing).
-9. `docs/precepts/instructions/LESSONS-LEARNED.md` — failure-mode anatomy (governs all decisions).
+3. `restart/skinny/audit/ASMJSON-DAV1D-GRAND-SYNTHESIS-SK-V4.md` — SK-V4 authority for the asmjson/dav1d reassay, current `N-direct` blocker, validated/invalidated plan items, and grammar-general substrate correction.
+4. `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md` — current receiver packet; closes generated `SinkOnly`, exact materializers, parse hot-hub attribution, same-wave primitive consumption, and conditional x86 `CollapsedStage`.
+5. `restart/skinny/audit/GRAND-SYNTHESIS-SOTA-BEAT-SK-V3.md` — V3 authority for expanded-gate redress; consolidates the 6-research + 6-profile Wave 1 cohort.
+6. `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md` — superseded-but-useful V3 dispatch packet; carries Waves 0-6 with explicit preflight fix items (Plan D adoption + `escape_mask_64` NEON correctness fix).
+7. `skinny/RESULTS.md` — current measured skinny gate: original triad passes; expanded parse has four G rows; direct workload is correctness-green but `N-direct / NoGo`.
+8. `skinny/REDRESS.md` — accepted wins and rejected-route ledger.
+9. `restart/skinny/{INDEX,SUBSTRATE,COMPILER,BENCH,WORKSPACE}.md` — live skinny/V1 amendment surfaces.
+10. `docs/precepts/instructions/STYLE.md` — voice + discipline (governs all writing).
+11. `docs/precepts/instructions/LESSONS-LEARNED.md` — failure-mode anatomy (governs all decisions).
 
 ---
 
@@ -45,7 +47,7 @@ Single-round greenfield restart began 2026-05-04 after a compounded-contrivance 
 | V9.2 V1-corpus audit | 4-target V9.2 hardening against LAZY-TAPE-DESIGN proposal | AMENDMENT-REQUIRED-NARROW (CONDITIONAL) |
 | Skinny v2 lazy-mode implementation | Lazy-offset tape per `LAZY-TAPE-DESIGN.md` §10 (~860 LOC); re-benched | Intermediate outcome G; not final disposition |
 | Skinny triad gate | Lazy-offset tape plus sparse flags, direct spare-capacity offset writes, cold errors, SWAR digit/plain-string runs, delimiter fusion, newline-indent space skipper, `parse_value_at`, short plain-string fast path, Track 2 inline parity | Original twitter / citm_catalog / canada gate passed; substrate/direct projection validated for the narrow skinny triad |
-| Skinny expanded gate | The same implementation measured across 17 rows, including Unicode and shape-stress corpora | **Overall outcome G / NoGo**; misses were `github_events`, `update_center`, `random`, `unicode_escapes`, `y_string_unicode` |
+| Skinny expanded gate | The same implementation measured across 17 rows, including Unicode and shape-stress corpora | Parse/tape G rows are now `twitter`, `random`, `unicode_mixed`, `unicode_basic`; overall gate is `N-direct / NoGo` because direct throughput is red on 11 rows |
 | V9.3 six-agent comparative-profile cohort 2026-05-12 | samply skinny + sonic-rs + simdjson; asm dump; DAVID/asmjson research; handwritten ASM catalog; SIMD intrinsics catalog | Architectural lever identified: codegen template shape, not substrate |
 | V9.4 grand-synthesis cohort 2026-05-12 | 6 research agents (dav1d/ffmpeg/VLC ASM lift, deadweight-intrinsic re-examination, tape-union design, JSON corpora + Unicode torture tests, parse-that audit, greater-arch generalization) + 6 profile agents (skinny expanded 14-corpus, sonic-rs expanded 9-corpus × Value/LazyValue × inlined/noinline, simdjson expanded 13-corpus stage-decomposition, yyjson 7-corpus no-SIMD reference, RapidJSON + serde_json floor, cargo-asm string/Unicode paths) | V9.4 READY — comprehensive spec amendment landed without new directives, without new BIR variants, without contrivances |
 | **SK-V3 Wave 1 research cohort (2026-05-12 morning, 6 agents)** | (a) asmjson deep dive — only 6× `vpcmpeqb` + 10× `kmovq` + 2× `vpcmpub` + 6× `korq` + 2× `vmovdqu8` + 18× `tzcnt`; no esoterica in the asmjson kernel itself; (b) dav1d/FFmpeg ASM patterns — `x86inc.asm` macro corpus vendored at `crates/bbnf-simd/ext/x86/`; per-target file naming `<family>[16]_<isa>.{asm\|S}`; nasm-rs + cc-rs build wiring; msac cross-chunk refill is the one transferable algorithmic insight beyond simdjson/sonic-rs/yyjson; (c) AVX-512 esoterica beyond catalog — 5-pack added to Lock 16 (k-mask arithmetic family, VPCLMULQDQ at 512-bit lane, AVX-IFMA `vpmadd52luq`/`vpmadd52huq`, AVX-512 VNNI `vpdpbusd`, AVX-512 BITALG `vpshufbitqmb` + `vpopcntb`); each citation-anchored, each strictly additive on top of the asmjson architecture; (d) M5 Max NEON + Apple esoterica — 3-pack added to Lock 16 (LD4-interleaved 4-channel classifier per Validark 2024, NEON ternary bitwise `BCAX`/`EOR3` per ARMv8.2-A SHA3, NEON port of SVE2 `svmatch_u8` per Lemire 2026); AMX/SME explicitly REJECTED (matrix-domain, not byte-class); (e) `parse_value_at` structural analysis — codegen ignores `BackendIr` and emits source-byte cursor regardless of `LayoutFacts.backend_shape`; the lowerer-side gap is the SOTA-BEAT lever; (f) 5-shape `BackendShape` concretization — `EagerTape`/`OffsetTape`/`EventTape`/`SinkOnly`/`CollapsedStage` with 8-step derivation algorithm at `passes::recognizers::derive_backend_shape` (no new directives; all inputs are existing Grammar IR facts). | SK-V3 grand synthesis at `restart/skinny/audit/GRAND-SYNTHESIS-SOTA-BEAT-SK-V3.md`; dispatch packet at `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md`. |
@@ -57,7 +59,7 @@ Cumulative commit count: ~95+ across all cycles.
 
 ## §3 — Current state (post-Wave 2 re-baselines)
 
-**Current operating verdict: `skinny/RESULTS.md` is the measured authority for the runnable skinny.** It records expanded-corpus overall outcome G / NoGo. The original triad still passes; the expanded gate now has **three rows at G / NoGo** after Wave 2 re-baselines — `random` (80.9% of S), `unicode_escapes` (27.6% of S), and `y_string_unicode` (54.4% of S). `github_events` (96.6% of S) is within the gate-threshold band but the dispatch reads it as G / NoGo because of strict-≥ semantics; `update_center` (90.7% of S) sits in the same band. Both close mechanically when the same two NEON kernels land — they are the same `tiny_string_loop` pathology Wave 2 Agent 2 diagnosed.
+**Current operating verdict: `skinny/RESULTS.md` is the measured authority for the runnable skinny.** It records full-gate **`N-direct / NoGo`**. The original triad still passes and remains valid substrate evidence. The expanded parse/tape plane has four hard G rows — `twitter`, `random`, `unicode_mixed`, and `unicode_basic`. The direct workload is correctness-green (`track1=track2=serde` plus sonic shape parity), but only six direct rows pass the 1.10 sonic-rs time slack (`citm_catalog`, `apache_builds`, `github_events`, `update_center`, `instruments`, `distinct_values`); the remaining 11 rows are the binding direct-typed-emission block.
 
 Lock 1 stands verbatim with the tape-union clarification: the structural projection is the tape, not a sidecar. Locks 15 + 16 carry their 2026-05-12 amendments AND the Wave 1 strict additions (5-pack AVX-512 + 3-pack NEON). No new BBNF directives. No new BIR variants.
 
@@ -71,7 +73,7 @@ The SK-V3 close criterion is the expanded SOTA-BEAT gate, not the historical tri
 
 3. **i-cache budget per Lock 15 is already met.** `parse_value_at` is a single 7304-byte (~7.1 KiB) hot function under workspace `lto=thin codegen-units=1 debug=true` — well within the Lock 15 ~20 KiB ceiling. The `match_tiny_plain_string` scalar loop duplication at PCs `0x2734` and `0x3158` is intended LTO-fat shape and precondition for the single-source NEON kernel to land both call sites at once. Source: `skinny/profile/wave2-asm/PROFILE-REPORT.md` Appendix C + `skinny/profile/wave2-pmu/PMU-REPORT.md` §1.
 
-4. **Two pathology classes, two NEON kernels, two named source-bands close the gate.** `tiny_string_loop` at PCs `0x2734`/`0x3158` (source lines `generated.rs:161-172`) on github_events/update-center/random closes with a NEON quote/escape scan replacing the byte-cmp cascade. `hex_decode` at PCs `0x06b8`/`0x089c` (source lines `generated.rs:78-113` + `unescape_json_string`) on unicode_escapes/y_string_unicode closes with a dedicated NEON `\uXXXX` decoder + force-inline-cold. Source: `skinny/profile/wave2-asm/PROFILE-REPORT.md` §c-e.
+4. **The Wave 2 pathology classes remain diagnostic, not sufficient.** The Class A tiny-string and Class B `\uXXXX` kernels have strict checkasm coverage, but the current gate proves primitive admission is not enough: parser wiring/event-cursor consumption still leaves four parse G rows, and generated `SinkOnly` exact float/string/Unicode materialization is now the direct blocker. Source: `skinny/RESULTS.md`, `skinny/profile/direct-sink-2026-05-12/PROFILE-REPORT.md`, and `restart/skinny/audit/SOTA-BEAT-DESIGN.md` §1.
 
 5. **Eventcursor prototype refuted at the V9.4 baseline.** A mask-driven whitespace LUT prototype on top of an unchanged `parse_value_at` is +40% instructions and +35% branch instructions in the hot function. The eventcursor lift is real, but it must land **as a lowerer-template change** that consumes the existing tape projection, not as a sidecar mask producer in front of unchanged source-byte dispatch. Source: `skinny/profile/wave2-prototype/PROTOTYPE-REPORT.md` §verdict.
 
@@ -83,7 +85,7 @@ The SK-V3 close criterion is the expanded SOTA-BEAT gate, not the historical tri
 - 20-variant BIR alphabet (no new variant; `Alt { Dispatch }` lowers to multiple access patterns).
 - Tape ∪ structural-projection union as Lock 1 clarification (not amendment).
 - 12-agent comparative-profile cohort (V9.4 6+6) + 12-agent SK-V3 cohort (Wave 1 6 + Wave 2 6) empirically anchored.
-- Lazy-offset tape with sparse flags is the measured JSON skinny substrate for the historical triad; expanded SOTA-BEAT remains blocked on three rows.
+- Lazy-offset tape with sparse flags is the measured JSON skinny substrate for the historical triad; expanded SOTA-BEAT remains blocked on four parse rows plus `N-direct`.
 - Rejected routes remain non-canonical: dispatch-table/function-pointer alternates, 12-byte/width churn, pair-fusion, structural-index typed-parser prepass, NEON no-escape matcher, separator elision, generic SWAR whitespace skipper, sidecar mask-producer prototypes, Plan A sampled-heuristic capacity, Plan B exact-pre-scan, Plan C oneshot-SIMD pre-scan.
 - Mbps unit calibration: skinny formula `bytes * 8000 / ns` = megabits/s; multiply by 0.119 to get MiB/s for cross-parser comparison.
 
@@ -93,7 +95,7 @@ The SK-V3 close criterion is the expanded SOTA-BEAT gate, not the historical tri
 
 Throughput is **MiB/s** (binary mebibytes/sec). Conversion: `skinny Mbps × 0.1192 = MiB/s`. All measurements 2026-05-12 unless noted. Source: `skinny/profile/native-sidecars/PROFILE-REPORT.md` §a.
 
-| Corpus | skinny v3 (MiB/s) | yyjson (MiB/s) | simdjson C++ (MiB/s) | sonic-rs (MiB/s) | asmjson SWAR (M5 Max native, MiB/s) | asmjson Zen 4 AVX-512 anchor (MiB/s) | skinny verdict |
+| Corpus | skinny v3 (MiB/s) | yyjson (MiB/s) | simdjson C++ (MiB/s) | sonic-rs (MiB/s) | asmjson SWAR (M5 Max native, MiB/s) | asmjson Zen 4 AVX-512 anchor (MiB/s) | sidecar comparator posture |
 | :--- | ---: | ---: | ---: | ---: | ---: | ---: | :---: |
 | twitter          | **2631** | 3687 | 2923 | 2415 | 3315† | 11192‡ | A / GO |
 | citm             | **3571** | 2498 | 4270 | — | 2447† | 11192‡ | A / GO |
@@ -116,6 +118,11 @@ Throughput is **MiB/s** (binary mebibytes/sec). Conversion: `skinny Mbps × 0.11
 † asmjson M5 Max native SWAR measured against asmjson-shipped synthetic corpora (`string_array`/`string_object`/`mixed`), not the 14-corpus skinny set; rows shown are nearest-shape analogues. The AVX-512 path does not compile on M5 Max. Source: `skinny/profile/native-sidecars/asmjson/NOTE.md`.
 
 ‡ asmjson published anchor 10.93 GiB/s = 11192 MiB/s on Zen 4 AVX-512 DOM; cross-architecture target, not an M5 Max measurement. Source: `https://docs.rs/asmjson/`.
+
+The final column is the sidecar profile posture recorded in that comparator
+pass, not the current `skinny/RESULTS.md` gate verdict. Current authority is
+still §3: parse-G rows are `twitter`, `random`, `unicode_mixed`, and
+`unicode_basic`, and the full gate is `N-direct / NoGo`.
 
 **Bold cells are corpora where skinny v3 leads the comparator. Skinny v3 already wins on 4 of 17 corpora against simdjson C++ / yyjson on M5 Max** — citm (+43% vs yyjson), canada (+22% vs simdjson + 8% vs yyjson), mesh (+6% vs simdjson), unicode_mixed (+10% vs simdjson). On twitter, skinny is +9% vs sonic-rs and −10% vs simdjson C++; the remaining gap to simdjson on twitter is the cost of staying in safe Rust with lazy-decode shape.
 
@@ -181,19 +188,25 @@ The 8-step derivation algorithm at `passes::recognizers::derive_backend_shape(gr
 
 ## §6 — Next move
 
-The dispatch order is **SK-V3 IMPLEMENTATION-PACKET Waves 0-2 in sequence**, as named at `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md`:
+The dispatch order is now **SK-V4 IMPLEMENTATION-PACKET Waves 0-5 in
+sequence**, as named at
+`restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md`. The SK-V3
+packet remains historical context; it is no longer the receiver packet.
 
 | Step | Wave | Owner | Gate | Source |
 |---|---|---|---|---|
-| 1 | Wave 0 P0.2 | `crates/bbnf-simd/src/lib.rs` + `runtime/src/grammars/json/parser.rs` | `BBNF_SIMD_STRICT=1 cargo test -p bbnf-simd --release --test checkasm_parity` returns zero divergences on the `xorshift seed 0xCAFEF00DBAADF00D` adversarial repro | Packet §2 P0.2; `bbnf-simd/CHECKASM-REPORT.md` §d |
-| 2 | Wave 0 P0.1 | `runtime/src/tape/assembler.rs` + `runtime/src/tape/mod.rs` + `runtime/src/grammars/json/parser.rs` | Plan D adopted as `CapacityPlan::GrowOnly` default; sampled heuristic deleted next tranche; env selector behind `cfg(feature = "wave2-probe")` for one tranche so rejected routes can be re-derived; `skinny/REDRESS.md` records plans A/B/C rejections | Packet §2 P0.1; `wave2-capacity/CAPACITY-REPORT.md` §3 |
-| 3 | Wave 0 P0.3 | (no-op confirmation) | `cargo build --release -v 2>&1 \| grep -E -- '-C lto=(fat\|true)\|-C codegen-units=1'` ≥ 1 per workspace member; `parse_value_at` post-LTO function size ≤ Lock 15 ~20 KiB ceiling (current measurement: 7304 bytes = 7.1 KiB) | Packet §2 P0.3; `wave2-pmu/PMU-REPORT.md` §1 |
-| 4 | Wave 1 (Phase 1 — NEON `tiny_string_loop` kernel) | `crates/bbnf-simd/src/aarch64/string_scan.rs` + lowerer emission for `OffsetTape` string rules | `random` MiB/s ≥ S anchor; `github_events` MiB/s ≥ S anchor; `update_center` MiB/s ≥ S anchor; the `match_tiny_plain_string` PCs `0x2734`/`0x3158` drop out of the top-10 samply leaderboard | Packet §3 Wave 1; `wave2-asm/PROFILE-REPORT.md` §c-e Fix 1+3 |
-| 5 | Wave 2 (Phase 1 — NEON `\uXXXX` decoder + force-inline-cold) | `crates/bbnf-simd/src/aarch64/hex_decode.rs` + `crates/parse-that-regex/src/unicode/` + cold-path `#[inline(never)]` on `unescape_json_string` | `unicode_escapes` MiB/s ≥ 0.9 × simdjson C++ row (smallest absolute gap on a G / NO-GO corpus at 587 vs 672 MiB/s); `y_string_unicode` MiB/s ≥ S anchor; `hex_decode` PCs `0x06b8`/`0x089c` drop out of the top-10 leaderboard | Packet §3 Wave 1 Fix 4; `wave2-asm/PROFILE-REPORT.md` §c-e Fix 4 |
+| 1 | Wave 0 | `skinny/RESULTS.md`, `skinny/profile/reassay-skv4-2026-05-13/` | full gate re-assayed; no-inline/PC-level profile mode exists for `parse_value_at`; current split remains explicit | SK-V4 packet §2 |
+| 2 | Wave 1 | `codegen`, `runtime::grammars::json`, `bbnf-bench` | direct Track 1 calls generated runtime `SinkOnly`; bench-private parser is not Track 1; correctness stays `track1=track2=serde` | SK-V4 packet §3 |
+| 3 | Wave 2 | `parse-that`, `bbnf-simd`, JSON runtime direct paths | exact float/string/Unicode materializers close direct red rows or name exact residual blockers | SK-V4 packet §4 |
+| 4 | Wave 3 | `runtime::tape`, generated parser templates, lowerer | `parse_value_at` no longer hides current parse-G rows; `EventCursor` lands only if PC-level attribution proves source-byte dispatch is the cost | SK-V4 packet §5 |
+| 5 | Wave 4 | `bbnf-simd` scalar/aarch64/x86 + checkasm tests | every admitted primitive has scalar/checkasm parity and a same-wave generated/runtime consumer | SK-V4 packet §6 |
+| 6 | Wave 5 | `bbnf-bench`, `skinny/RESULTS.md`, sidecar profiles | no parse G rows and no `N-direct`; strict comparator planes recorded | SK-V4 packet §7 |
+| 7 | Wave 6 (conditional x86) | `ext/x86/bbnf.asm`, x86_64 primitive bodies, per-grammar NASM wrappers | `CollapsedStage` beats asmjson only on equivalent x86 hardware; otherwise `BBNF-COLLAPSEDSTAGE-NOT-VIABLE` fallback is the correct result | SK-V4 packet §8 |
 
-The SK-V3 packet's later waves (Wave 3 `bbnf-simd` kernel contract, Wave 4 `parse-that` primitive closure, Wave 5 workload gates, Wave 6 x86_64 strict path) carry the V1 generalization but do **not** block the expanded skinny gate. Wave 6 (x86_64 AVX-512 esoterica) is **conditional on hardware**: the Lock 16 5-pack lands when the target host carries AVX-512BW + VBMI2 + IFMA + VNNI + BITALG + GFNI; on M5 Max it is dormant.
-
-**Implementation discipline**: dispatch order is sequential. Plan D adoption is mechanical and lands first; `escape_mask_64` fix is the gate keeper for any SOTA-BEAT bench claim. The two NEON kernels can be dispatched in parallel because they live in separate primitive-crate submodules (`aarch64/string_scan.rs` vs `aarch64/hex_decode.rs`) and consume separate corpus cohorts.
+**Implementation discipline**: dispatch order is sequential until Wave 4, where
+primitive bodies may split by target only if each one has a same-wave consumer.
+The x86 asmjson-beat path is conditional and cannot be used to close the M5 Max
+SK-V4 gate.
 
 ---
 
@@ -213,7 +226,11 @@ Commit head should reflect the SK-V3 grand synthesis amendment and the Wave 2 co
 ls skinny/profile/{native-sidecars,wave2-asm,wave2-pmu,wave2-capacity,wave2-prototype}/PROFILE-REPORT.md
 ls skinny/profile/native-sidecars/{yyjson,simdjson-cpp,asmjson}/
 
-# SK-V3 authority docs in place
+# SK-V4 authority docs in place
+head -30 restart/skinny/audit/ASMJSON-DAV1D-GRAND-SYNTHESIS-SK-V4.md
+head -30 restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md
+
+# SK-V3 historical authority docs still present
 head -30 restart/skinny/audit/GRAND-SYNTHESIS-SOTA-BEAT-SK-V3.md
 head -30 restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md
 
@@ -267,8 +284,8 @@ Per `restart/README.md` §13. Calibrated, direct prose. Archaic-permissive (here
 
 ## §9 — Closing posture
 
-Hereupon the SK-V3 grand synthesis closes. The skinny JSON triad is green; the expanded skinny gate stands at **three corpora at G / NoGo** — `random`, `unicode_escapes`, `y_string_unicode` — plus two corpora (`github_events`, `update_center`) in the within-band miss zone. Two NEON kernels close them: a `tiny_string_loop` quote/escape scan replacing the byte-cmp cascade at PCs `0x2734`/`0x3158`, and a `\uXXXX` hex decoder + force-inline-cold replacing the inlined scalar normalisation at PCs `0x06b8`/`0x089c`. Plan D adoption is mechanical preflight; `escape_mask_64` fix is the gate keeper.
+Hereupon the SK-V3 grand synthesis is historical, not sufficient for dispatch. The skinny JSON triad is green; the current expanded parse plane has four G rows (`twitter`, `random`, `unicode_mixed`, `unicode_basic`), and the direct workload is `N-direct / NoGo` with 6 of 17 rows passing and 11 failing. The next close is generated `SinkOnly` typed emission plus exact float/string/Unicode materialization, alongside event-cursor consumption for the four parse rows. Plan D and the admitted NEON primitives remain useful, but they do not by themselves close the gate.
 
 Skinny v3 ALREADY wins on 4 of 17 corpora vs simdjson C++ / yyjson on M5 Max (citm, canada, mesh, unicode_mixed) — measured, not projected. The AVX-512 esoterica stack landed at Lock 16 as **strict additions on top of the asmjson architecture** for the >SOTA path on x86_64: 5-pack (k-mask arithmetic family, VPCLMULQDQ at 512-bit lane, AVX-IFMA `vpmadd52`, AVX-512 VNNI `vpdpbusd`, AVX-512 BITALG `vpshufbitqmb`+`vpopcntb`) + 3-pack M5 Max NEON (LD4-interleaved, BCAX/EOR3, NEON-port `svmatch_u8`). All citation-anchored. All conditional on hardware. None violates Lock 14.
 
-The 16 locks govern. The 5-shape `BackendShape` generalises across JSON/CSS L4/BBNF-self/Sheets without per-grammar code in any generic crate. V1 planning should carry the triad pass as substrate evidence, the three-row G / NoGo as the current implementation block, and the per-grammar `BackendShape` matrix as the lowerer-template contract.
+The 16 locks govern. The 5-shape `BackendShape` generalises across JSON/CSS L4/BBNF-self/Sheets without per-grammar code in any generic crate. V1 planning should carry the triad pass as substrate evidence, the four-row parse G set plus `N-direct / NoGo` as the current implementation block, and the per-grammar `BackendShape` matrix as the lowerer-template contract.

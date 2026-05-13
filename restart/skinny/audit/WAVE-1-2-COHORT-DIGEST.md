@@ -193,13 +193,14 @@ its FSM (`restart/skinny/audit/SOTA-BEAT-DESIGN.md` §3.3 and §5;
 | BITALG `vpopcntb` + `vpshufbitqmb` | scalar histogram for multi-class classify | one-instruction "where in the alphabet" answer |
 
 Combined projected throughput on Zen 4: **~14 GiB/s = 1.28× asmjson
-10.93 GiB/s**.  This stack is conditional on Wave 5 (collapsed-stage
-backend) landing the 9-state FSM with PC-as-state direct threading
-(`restart/skinny/audit/IMPLEMENTATION-PACKET-V2.md` §5).  The cost
-model in `skinny/crates/passes/src/recognizers/backend_shape.rs`
-selects `CollapsedStage` only when CPUID reports `avx512vbmi2` AND
-the grammar hub has ≥ 4 byte-disjoint arms — so the esoterica stack
-is auto-enabled, not directive-driven.
+10.93 GiB/s**. This is a successor-tranche target, not an SK-V3 close
+condition. The stack is conditional on a per-grammar `CollapsedStage`
+authoring wave landing a 9-state DPDA finite-control fragment, bounded
+explicit stack, and PC-as-state direct threading under NASM plus
+checkasm. The cost model selects `CollapsedStage` only when CPUID,
+grammar facts, a committed `.asm` author, and parity harness all exist;
+otherwise it emits `BBNF-COLLAPSEDSTAGE-NOT-VIABLE` and falls back to
+`OffsetTape`.
 
 The M5 Max NEON parallel additions (Wave 1 Agent 4) are LD4-interleaved
 4-channel classify, BCAX/EOR3 ternary fusion, NEON `svmatch_u8`

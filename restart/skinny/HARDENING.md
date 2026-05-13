@@ -55,7 +55,7 @@ The skinny audit applies **Lenses A-K from `restart/prompts/HARDENING.md` plus L
 
 | Lens family | Source | Adapted for skinny? |
 |---|---|---|
-| Lanes 1-9 (lock adherence, sequencing, cohesion, SOTA, grammar-authoritative, generated-LOC, friction, carry, greenfield) | V1 `HARDENING.md` §Lanes | Lane 2 (sequencing) is N/A — skinny is single-wave. Lane 4 (SOTA) sharpens — it is THE load-bearing lens here. Lane 6 (LOC budget) sharpens — the 31,400 LOC ceiling is binding. Lane 8 (carry) sharpens — every skinny omission must name V1 receiver. |
+| Lanes 1-9 (lock adherence, sequencing, cohesion, SOTA, grammar-authoritative, generated-LOC, friction, carry, greenfield) | V1 `HARDENING.md` §Lanes | Lane 2 (sequencing) is N/A — skinny is single-wave. Lane 4 (SOTA) sharpens — it is THE load-bearing lens here. Lane 6 (LOC budget) sharpens — the WORKSPACE.md handwritten LOC ceiling is binding (32,000 after SK-V3 BENCH-side redress). Lane 8 (carry) sharpens — every skinny omission must name V1 receiver. |
 | F (LLM bias) | V1 `HARDENING.md` §Lens F | Identical. |
 | G (overfitting) | V1 `HARDENING.md` §Lens G | Sharpens — does the skinny over-fit to JSON in ways CSS/Sheets won't tolerate? |
 | H (hallucination + provenance) | V1 `HARDENING.md` §Lens H | Identical. |

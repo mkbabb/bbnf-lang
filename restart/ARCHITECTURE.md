@@ -1060,7 +1060,8 @@ pub enum BackendShape {
     EventTape,
     /// Direct-to-struct sink: parser emits typed fields and retains no
     /// queryable document identity. Selected only when the API shape does not
-    /// require path/value traversal after parse.
+    /// require path/value traversal after parse. This is the SOTA direct
+    /// emission shape; a retained-tape view walk is only a correctness proof.
     SinkOnly,
     /// AVX-512-class collapsed-stage backend (asmjson-class FSM with
     /// mask-held parser state; Lock 16 admissibility under collapsed-stage
@@ -1088,7 +1089,7 @@ Per-shape lowering output. Each `BackendShape` value resolves to a concrete arte
 | `EagerTape` | (rust_recursive_descent_body — eager `source[pos]` reads, `Alt { Speculative }` dispatch; optional primitive FFI shim calls when scan-only sub-rules admit a Layer-1 primitive per Lock 16) |
 | `OffsetTape` | (rust_recursive_descent_body — `EventCursor` over retained structural offsets, `Alt { Dispatch }` against `event.byte()`; optional primitive FFI shim calls) |
 | `EventTape` | (rust_recursive_descent_body — `EventCursor` over compact event cells carrying payload/recovery/layout side facts; optional primitive FFI shim calls) |
-| `SinkOnly` | (rust_recursive_descent_body — direct typed-field writes, no retained queryable document; optional primitive FFI shim calls) |
+| `SinkOnly` | (rust_recursive_descent_body — direct typed-field writes during parse, no retained queryable document, no post-parse generic view walk; optional primitive FFI shim calls) |
 | `CollapsedStage` | (rust_caller_shim — `parse_value` entry point that prepares the input buffer per the Lock 16 `EOB_PAD_CLAMP` discipline and invokes the kernel; asm_kernel_file — per-grammar hand-authored file at `skinny/crates/bbnf-simd/src/x86_64/{grammar}_collapsed.asm`; data_section — codegen-emitted `.data` section co-located in the same file, carrying the 256-byte classifier LUT, the state-transition LUT, and the accept/reject decision table) |
 
 The bifurcation is load-bearing for LLVM compatibility. Recursive-descent Rust compiles to an implicit automaton through LLVM's optimiser — the call-stack-as-parse-state lowering fuses with force-inlined hot leaves under Lock 15's `lto = "fat"` + `codegen-units = 1` + ~20 KiB hot-function ceiling, and yyjson's reference C body demonstrates the same shape stays in i-cache. Codegen-emitted *explicit* Rust automatons do not survive this lowering: LLVM cannot fold an indirect-dispatch state walk back into PC-as-state form, and the overhead asmjson eliminates via `jmp [r10 + state*8]` reappears as branch-misprediction taxa in any LLVM-emitted equivalent. The lone exception — `CollapsedStage` — therefore consumes hand-written NASM where direct control over generated-code addresses is available (asmjson's PC-as-state pattern; Lock 16's `FSM_DISPATCH_THREADED` primitive in `skinny/crates/bbnf-simd/ext/x86/bbnf.asm`). All four other shapes stay in LLVM's territory and consume Layer-1 primitives from the same `ext/x86/bbnf.asm` vocabulary only at scan-shaped inner loops where the primitive's grammar-neutral signature (`BYTE_CLASS_FROM_TABLE_64`, `BYTE_CLASS_FROM_EQ_SET_64`, `BITMAP_PREFIX_XOR_64`, `BITMAP_NEXT_SET_BIT`, `BULK_EMIT_COMPRESSED`, `EOB_PAD_CLAMP`, `FRAME_PUSH_BOUNDED`, `FRAME_POP_BOUNDED`) admits a direct FFI binding. The two-layer reusable vocabulary — Layer 0 vendored from dav1d at `skinny/crates/bbnf-simd/ext/x86/x86inc.asm` (1,978 LOC, BSD-2), Layer 1 grammar-neutral macros at `skinny/crates/bbnf-simd/ext/x86/bbnf.asm` — is the dav1d / asmjson factoring elaborated at `restart/skinny/audit/SOTA-BEAT-DESIGN.md` §5.2; Lock 1 governs the substrate union that admits all five shapes, Lock 14 governs the zero-grammar-overfitting discipline that keeps `bbnf.asm` grammar-neutral, Lock 15 governs the i-cache residency budget that bounds the recursive-descent shapes, and Lock 16 governs the admissibility allowlist that bounds the primitive vocabulary. The same-wave-consumer rule at `docs/precepts/instructions/LESSONS-LEARNED.md:17-26` constrains admission: a `CollapsedStage` lowering target lands only when a per-grammar kernel author is in flight (no substrate-without-consumer); a primitive lands in `bbnf.asm` only when at least one shape consumes it through codegen at the same wave.
@@ -1152,6 +1153,7 @@ gain.
 | `BBNF-CODEGEN-TEMPLATE-METADATA` | Runtime template metadata. | Template lacks path, visitor, or diagnostic metadata. |
 | `BBNF-BIR-LOOKBEHIND-GUARD` | BIR validation. | Unbounded lookbehind reached BIR despite Grammar IR rejection (last-line guard). |
 | `BBNF-BACKEND-SHAPE-INCONSISTENT` | `passes::recognizers::derive_backend_shape` (Lock 10 + Lock 15). | Cost-model output cannot resolve a coherent `LayoutFacts.backend_shape` for the rule (e.g., transitive uses simultaneously include `@error(recover)` AND target-feature `avx512vbmi2` admits `CollapsedStage` — the recovery path forces `EagerTape`, blocking the optimisation). Emitted with the conflicting factors named; cookbook entry advises whether to relax the directive or accept the fallback shape. |
+| `BBNF-COLLAPSEDSTAGE-NOT-VIABLE` | `passes::recognizers::derive_backend_shape` / `codegen::verify`. | Cost model would select `CollapsedStage`, but the target lacks a green Layer-1 primitive vocabulary, a committed per-grammar `.asm` author, target silicon, or a grammar-specific parity harness. Recovery is automatic fallback to `OffsetTape`; the warning records the missing grammar × ISA pair. |
 | `BBNF-FORCE-INLINE-MISSED` | Lock 15 verification at `cargo asm` post-build. | A rule mined as hot-path in `LayoutFacts.hot_call_graph` is generated without `#[inline(always)]` in the emitted source; either the codegen template branch is wrong or the cost-model threshold is mis-tuned. |
 | `BBNF-ICACHE-BUDGET-EXCEEDED` | Lock 15 verification at post-LTO `cargo asm` size pass. | The fused hot function (e.g., `parse_value` after LTO) exceeds the per-grammar i-cache budget (default ~20 KiB per yyjson reference). Either reduce hot-path size via per-rule extraction or accept the budget-overrun warning with measurement justification. |
 | `BBNF-UTF8-INVALID-AT-PARSE` | Scan stage UTF-8 validation per Lock 9 + the corpora-correctness gap finding 2026-05-12. | Source bytes fail UTF-8 validation at scan time (via `simdutf8::basic::from_utf8`). Parse rejects at scan boundary; view layer never observes invalid bytes. Replaces the prior view-time `from_utf8().expect()` panic path. |
@@ -1481,16 +1483,31 @@ Tape invariants:
 
 ### 9.2 Direct-To-Struct Union
 
-Direct builders do not bypass the tape. They are scheduled with `TapeEmit` and
-`DirectBuild` from Backend IR and share spans, source slices, diagnostics, node
-kind, and payload slots. The direct value is a typed view/projection over the
-same parse event stream; direct scalar fields are caches over declared payload
-slots, never a second authoritative tree.
+Direct builders do not bypass the substrate event stream. Retained direct
+views are projections over sealed tape; `SinkOnly` direct outputs are
+projections over the same accepted event stream with no sealed tape. Both
+lower from `TapeEmit` / `DirectBuild` scheduling and share validation, spans,
+source slices, diagnostics, node kind, and payload policy. Direct scalar fields
+are caches over declared payload slots or generated sink fields, never a
+second authoritative tree.
 
-The owning shape is document-first: a generated root owns or is paired with a
-sealed `Tape<'input>` snapshot, and `ValueRef`/typed projections borrow that
-tape. A root over a borrowed parser-state tape is not the committed runtime
-shape.
+The SK-V3 direct workload adds one binding SOTA caveat: a direct typed view over
+retained tape proves correctness, not throughput. For public APIs that do not
+require path/value traversal after parse, `LayoutFacts.backend_shape` must
+select `SinkOnly` and lower `DirectBuild` to typed-field writes during parsing.
+The first skinny sink-only digest parser closes the retained-view penalty but
+still misses sonic-rs direct on 11 of 17 rows after duplicate UTF-8 validation
+was removed and scanner-owned integer classification landed; direct SOTA
+therefore also depends on exact float/string/Unicode materialization
+primitives inside the sink.
+The retained view-walk digest remains a parity oracle and regression check; it
+is not a SOTA-class direct-to-struct close.
+
+The owning shape splits by materialization. Retained APIs are document-first:
+a generated root owns or is paired with a sealed `Tape<'input>` snapshot, and
+`ValueRef`/typed projections borrow that tape. A root over a borrowed
+parser-state tape is not the committed runtime shape. `SinkOnly` APIs retain
+no document identity after parse; only the typed output remains.
 
 The runtime materialization model is:
 

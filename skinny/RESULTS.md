@@ -1,201 +1,219 @@
 # Skinny JSON Bench Results
 
-Authority note, 2026-05-12: this file is the current measured gate. The
-original twitter / citm_catalog / canada skinny triad passed after the lazy
-offset tape and local hot-path work, but the expanded corpus below is binding
-for SOTA-BEAT dispatch. Its current aggregate verdict is **G / NoGo** because
-`github_events`, `update_center`, `random`, `unicode_escapes`, and
-`y_string_unicode` miss the S anchor. Treat the triad pass as substrate
-validation; treat this expanded result as the current implementation target.
-
-SK-V3 reprofile note, 2026-05-12: fresh samply rows for three expanded
-blockers live under `skinny/profile/reprofile-2026-05-12/`. `random` and
-`unicode_escapes` are dominated by `runtime::generated_json::generated::parse_value_at`;
-`update-center` spreads across parse entry, sparse-flag capacity, and allocation
-growth. The next redress target is typed event cursor consumption plus capacity
-policy, not another eager-token or tape-width perturbation.
-
 | Corpus | Outcome | Verdict | Track 1 Mbps | Track 2 Mbps | sonic-rs Mbps | simd-json borrowed Mbps | simd-json owned Mbps | S anchor | S Mbps | Track 1 / S | Track 2 / S |
 |---|---:|---|---:|---:|---:|---:|---:|---|---:|---:|---:|
-| twitter | A | GO | 22071 | 22058 | 20251 | 13708 | 11557 | sonic-rs | 20251 | 109.0% | 108.9% |
-| citm_catalog | A | GO | 29959 | 26018 | 13388 | 11869 | 11626 | sonic-rs | 13388 | 223.8% | 194.3% |
-| canada | A | GO | 14051 | 13960 | 12107 | 5127 | 4761 | sonic-rs | 12107 | 116.1% | 115.3% |
-| apache_builds | A | GO | 15515 | 13441 | 11765 | 12056 | 7416 | simd-json borrowed | 12056 | 128.7% | 111.5% |
-| github_events | G | NO-GO | 19017 | 16515 | 19678 | 13954 | 10550 | sonic-rs | 19678 | 96.6% | 83.9% |
-| update_center | G | NO-GO | 14789 | 13270 | 16299 | 8753 | 5628 | sonic-rs | 16299 | 90.7% | 81.4% |
-| mesh | A | GO | 10019 | 10731 | 9447 | 5429 | 5159 | sonic-rs | 9447 | 106.1% | 113.6% |
-| random | G | NO-GO | 9370 | 8821 | 11586 | 6054 | 4480 | sonic-rs | 11586 | 80.9% | 76.1% |
-| gsoc-2018 | C | GO | 29535 | 29365 | 29771 | 14476 | 10851 | sonic-rs | 29771 | 99.2% | 98.6% |
-| marine_ik | A | GO | 9026 | 9102 | 7490 | 4700 | 4562 | sonic-rs | 7490 | 120.5% | 121.5% |
-| instruments | A | GO | 16109 | 15931 | 15134 | 8263 | 9279 | sonic-rs | 15134 | 106.4% | 105.3% |
-| numbers | A | GO | 16292 | 14778 | 12673 | 8555 | 8306 | sonic-rs | 12673 | 128.6% | 116.6% |
-| unicode_mixed | C | GO | 14422 | 13687 | 14107 | 8185 | 7344 | sonic-rs | 14107 | 102.2% | 97.0% |
-| unicode_escapes | G | NO-GO | 4928 | 4883 | 17854 | 4440 | 4253 | sonic-rs | 17854 | 27.6% | 27.3% |
-| unicode_basic | C | GO | 14520 | 14398 | 14850 | 7893 | 6573 | sonic-rs | 14850 | 97.8% | 97.0% |
-| distinct_values | C | GO | 16165 | 16985 | 16642 | 11327 | 8086 | sonic-rs | 16642 | 97.1% | 102.1% |
-| y_string_unicode | G | NO-GO | 7257 | 7451 | 13343 | 6044 | 5061 | sonic-rs | 13343 | 54.4% | 55.8% |
+| twitter | G | NO-GO | 16294 | 16068 | 20810 | 14352 | 12042 | sonic-rs | 20810 | 78.3% | 77.2% |
+| citm_catalog | A | GO | 29185 | 29401 | 24910 | 16149 | 14498 | sonic-rs | 24910 | 117.2% | 118.0% |
+| canada | A | GO | 16975 | 16675 | 12658 | 5546 | 5750 | sonic-rs | 12658 | 134.1% | 131.7% |
+| apache_builds | A | GO | 17734 | 18012 | 16206 | 14783 | 11199 | sonic-rs | 16206 | 109.4% | 111.1% |
+| github_events | A | GO | 25332 | 25794 | 22182 | 16580 | 12838 | sonic-rs | 22182 | 114.2% | 116.3% |
+| update_center | C | GO | 18204 | 17491 | 18019 | 9457 | 7254 | sonic-rs | 18019 | 101.0% | 97.1% |
+| mesh | A | GO | 13308 | 13351 | 11837 | 7209 | 7059 | sonic-rs | 11837 | 112.4% | 112.8% |
+| random | G | NO-GO | 7770 | 7677 | 15370 | 9142 | 5631 | sonic-rs | 15370 | 50.6% | 49.9% |
+| gsoc-2018 | A | GO | 47481 | 45829 | 43207 | 21038 | 18671 | sonic-rs | 43207 | 109.9% | 106.1% |
+| marine_ik | A | GO | 13240 | 12551 | 10064 | 7020 | 6843 | sonic-rs | 10064 | 131.6% | 124.7% |
+| instruments | C | GO | 19946 | 19989 | 19737 | 12643 | 10731 | sonic-rs | 19737 | 101.1% | 101.3% |
+| numbers | A | GO | 19195 | 19050 | 13567 | 8977 | 9133 | sonic-rs | 13567 | 141.5% | 140.4% |
+| unicode_mixed | G | NO-GO | 7384 | 7300 | 15892 | 7685 | 6505 | sonic-rs | 15892 | 46.5% | 45.9% |
+| unicode_escapes | C | GO | 13945 | 15580 | 16048 | 4128 | 4292 | sonic-rs | 16048 | 86.9% | 97.1% |
+| unicode_basic | G | NO-GO | 6561 | 6889 | 13304 | 7257 | 5729 | sonic-rs | 13304 | 49.3% | 51.8% |
+| distinct_values | C | GO | 16241 | 16634 | 16259 | 12099 | 9196 | sonic-rs | 16259 | 99.9% | 102.3% |
+| y_string_unicode | C | GO | 13109 | 13871 | 13673 | 6319 | 5277 | sonic-rs | 13673 | 95.9% | 101.5% |
+
+## Workloads
+
+| Corpus | Workload | Track 1 Mbps | Track 2 Mbps | sonic-rs Mbps | serde_json Mbps | Track 1 / sonic | Track 2 / sonic | Signal |
+|---|---|---:|---:|---:|---:|---:|---:|---|
+| twitter | direct_to_struct | 9849 | 9814 | 11604 | 8506 | 84.9% | 84.6% | NO-GO sink_only throughput > sonic-rs * 1.10 ns slack; correctness PASS; Track 1 9849, Track 2 9814, sonic 11604 Mbps |
+| citm_catalog | direct_to_struct | 25291 | 25345 | 21615 | 14067 | 117.0% | 117.3% | PASS sink_only track1=track2=serde; sonic shape parity; throughput within gate |
+| canada | direct_to_struct | 5105 | 5099 | 12512 | 8012 | 40.8% | 40.8% | NO-GO sink_only throughput > sonic-rs * 1.10 ns slack; correctness PASS; Track 1 5105, Track 2 5099, sonic 12512 Mbps |
+| apache_builds | direct_to_struct | 11083 | 11141 | 10051 | 7617 | 110.3% | 110.8% | PASS sink_only track1=track2=serde; sonic shape parity; throughput within gate |
+| github_events | direct_to_struct | 10595 | 10625 | 10825 | 8427 | 97.9% | 98.1% | PASS sink_only track1=track2=serde; sonic shape parity; throughput within gate |
+| update_center | direct_to_struct | 9140 | 9187 | 9179 | 6718 | 99.6% | 100.1% | PASS sink_only track1=track2=serde; sonic shape parity; throughput within gate |
+| mesh | direct_to_struct | 4987 | 5003 | 9606 | 7909 | 51.9% | 52.1% | NO-GO sink_only throughput > sonic-rs * 1.10 ns slack; correctness PASS; Track 1 4987, Track 2 5003, sonic 9606 Mbps |
+| random | direct_to_struct | 6676 | 6667 | 9157 | 6212 | 72.9% | 72.8% | NO-GO sink_only throughput > sonic-rs * 1.10 ns slack; correctness PASS; Track 1 6676, Track 2 6667, sonic 9157 Mbps |
+| gsoc-2018 | direct_to_struct | 5724 | 5744 | 8516 | 7757 | 67.2% | 67.5% | NO-GO sink_only throughput > sonic-rs * 1.10 ns slack; correctness PASS; Track 1 5724, Track 2 5744, sonic 8516 Mbps |
+| marine_ik | direct_to_struct | 6458 | 6429 | 8799 | 7606 | 73.4% | 73.1% | NO-GO sink_only throughput > sonic-rs * 1.10 ns slack; correctness PASS; Track 1 6458, Track 2 6429, sonic 8799 Mbps |
+| instruments | direct_to_struct | 15877 | 16054 | 12974 | 9809 | 122.4% | 123.7% | PASS sink_only track1=track2=serde; sonic shape parity; throughput within gate |
+| numbers | direct_to_struct | 4301 | 4317 | 12974 | 8759 | 33.1% | 33.3% | NO-GO sink_only throughput > sonic-rs * 1.10 ns slack; correctness PASS; Track 1 4301, Track 2 4317, sonic 12974 Mbps |
+| unicode_mixed | direct_to_struct | 3197 | 3199 | 6406 | 3747 | 49.9% | 49.9% | NO-GO sink_only throughput > sonic-rs * 1.10 ns slack; correctness PASS; Track 1 3197, Track 2 3199, sonic 6406 Mbps |
+| unicode_escapes | direct_to_struct | 4574 | 4576 | 9072 | 4336 | 50.4% | 50.4% | NO-GO sink_only throughput > sonic-rs * 1.10 ns slack; correctness PASS; Track 1 4574, Track 2 4576, sonic 9072 Mbps |
+| unicode_basic | direct_to_struct | 4856 | 4859 | 7092 | 4947 | 68.5% | 68.5% | NO-GO sink_only throughput > sonic-rs * 1.10 ns slack; correctness PASS; Track 1 4856, Track 2 4859, sonic 7092 Mbps |
+| distinct_values | direct_to_struct | 12370 | 12461 | 11677 | 7552 | 105.9% | 106.7% | PASS sink_only track1=track2=serde; sonic shape parity; throughput within gate |
+| y_string_unicode | direct_to_struct | 5620 | 5671 | 8547 | 7172 | 65.8% | 66.4% | NO-GO sink_only throughput > sonic-rs * 1.10 ns slack; correctness PASS; Track 1 5620, Track 2 5671, sonic 8547 Mbps |
 
 ## Masking Probes
 
 | Corpus | Probe | Mbps | ns/iter | vs Track 1 | Signal |
 |---|---|---:|---:|---:|---|
-| twitter | host_call_dispatch_overhead | n/a | 0.74 | n/a | PASS <=50ns |
-| twitter | host_call_eager_decode | 4960 | 1018493.71 | 22.5% | MASKING >1.15x T1 |
-| twitter | alternate_scalar_plan | 6849 | 737609.39 | 31.0% | reported |
+| twitter | host_call_dispatch_overhead | n/a | 0.69 | n/a | PASS <=50ns |
+| twitter | host_call_eager_decode | 4445 | 1136560.36 | 27.3% | MASKING >1.15x T1 |
+| twitter | alternate_scalar_plan | 6685 | 755784.28 | 41.0% | reported |
 | twitter | alternate_dispatch_table_plan | n/a | n/a | n/a | INVALID duplicate-probe disabled; real function-pointer table regressed |
 | twitter | alternate_pext_mask_plan | n/a | n/a | n/a | missing |
-| twitter | cold_first_parse | 18354 | 275255.31 | 83.2% | PASS <=2.00x T1 |
-| citm_catalog | host_call_dispatch_overhead | n/a | 0.77 | n/a | PASS <=50ns |
-| citm_catalog | host_call_eager_decode | 6504 | 2124479.91 | 21.7% | MASKING >1.08x T1 |
-| citm_catalog | alternate_scalar_plan | 6906 | 2000814.84 | 23.1% | reported |
+| twitter | cold_first_parse | 13680 | 369298.68 | 84.0% | PASS <=2.00x T1 |
+| citm_catalog | host_call_dispatch_overhead | n/a | 0.71 | n/a | PASS <=50ns |
+| citm_catalog | host_call_eager_decode | 7669 | 1801700.42 | 26.3% | MASKING >1.08x T1 |
+| citm_catalog | alternate_scalar_plan | 7428 | 1860236.09 | 25.5% | reported |
 | citm_catalog | alternate_dispatch_table_plan | n/a | n/a | n/a | INVALID duplicate-probe disabled; real function-pointer table regressed |
 | citm_catalog | alternate_pext_mask_plan | n/a | n/a | n/a | missing |
-| citm_catalog | cold_first_parse | 25525 | 541342.24 | 85.2% | PASS <=2.00x T1 |
+| citm_catalog | cold_first_parse | 26944 | 512831.82 | 92.3% | PASS <=2.00x T1 |
 | canada | host_call_dispatch_overhead | n/a | 0.76 | n/a | PASS <=50ns |
-| canada | host_call_eager_decode | 2586 | 6964477.14 | 18.4% | MASKING >1.02x T1 |
-| canada | alternate_scalar_plan | 3508 | 5133496.03 | 25.0% | reported |
+| canada | host_call_eager_decode | 3979 | 4526041.97 | 23.4% | MASKING >1.02x T1 |
+| canada | alternate_scalar_plan | 4422 | 4072752.66 | 26.0% | reported |
 | canada | alternate_dispatch_table_plan | n/a | n/a | n/a | INVALID duplicate-probe disabled; real function-pointer table regressed |
 | canada | alternate_pext_mask_plan | n/a | n/a | n/a | missing |
-| canada | cold_first_parse | 12291 | 1465113.55 | 87.5% | PASS <=2.00x T1 |
-| apache_builds | host_call_dispatch_overhead | n/a | 0.96 | n/a | PASS <=50ns |
-| apache_builds | host_call_eager_decode | 5219 | 195109.21 | 33.6% | MASKING >1.10x T1 |
-| apache_builds | alternate_scalar_plan | 5425 | 187681.76 | 35.0% | reported |
+| canada | cold_first_parse | 14460 | 1245359.64 | 85.2% | PASS <=2.00x T1 |
+| apache_builds | host_call_dispatch_overhead | n/a | 0.66 | n/a | PASS <=50ns |
+| apache_builds | host_call_eager_decode | 6563 | 155142.72 | 37.0% | MASKING >1.10x T1 |
+| apache_builds | alternate_scalar_plan | 6136 | 165935.23 | 34.6% | reported |
 | apache_builds | alternate_dispatch_table_plan | n/a | n/a | n/a | INVALID duplicate-probe disabled; real function-pointer table regressed |
 | apache_builds | alternate_pext_mask_plan | n/a | n/a | n/a | missing |
-| apache_builds | cold_first_parse | 14329 | 71056.90 | 92.4% | PASS <=2.00x T1 |
-| github_events | host_call_dispatch_overhead | n/a | 0.73 | n/a | PASS <=50ns |
-| github_events | host_call_eager_decode | 5650 | 92218.06 | 29.7% | MASKING >1.10x T1 |
-| github_events | alternate_scalar_plan | 5867 | 88810.49 | 30.9% | reported |
+| apache_builds | cold_first_parse | 18086 | 56298.03 | 102.0% | PASS <=2.00x T1 |
+| github_events | host_call_dispatch_overhead | n/a | 0.72 | n/a | PASS <=50ns |
+| github_events | host_call_eager_decode | 7113 | 73252.66 | 28.1% | MASKING >1.10x T1 |
+| github_events | alternate_scalar_plan | 7736 | 67350.67 | 30.5% | reported |
 | github_events | alternate_dispatch_table_plan | n/a | n/a | n/a | INVALID duplicate-probe disabled; real function-pointer table regressed |
 | github_events | alternate_pext_mask_plan | n/a | n/a | n/a | missing |
-| github_events | cold_first_parse | 17058 | 30546.17 | 89.7% | PASS <=2.00x T1 |
-| update_center | host_call_dispatch_overhead | n/a | 0.81 | n/a | PASS <=50ns |
-| update_center | host_call_eager_decode | 3217 | 1325866.31 | 21.8% | MASKING >1.10x T1 |
-| update_center | alternate_scalar_plan | 3478 | 1226359.39 | 23.5% | reported |
+| github_events | cold_first_parse | 24288 | 21452.97 | 95.9% | PASS <=2.00x T1 |
+| update_center | host_call_dispatch_overhead | n/a | 0.70 | n/a | PASS <=50ns |
+| update_center | host_call_eager_decode | 4370 | 976010.30 | 24.0% | MASKING >1.10x T1 |
+| update_center | alternate_scalar_plan | 4491 | 949874.99 | 24.7% | reported |
 | update_center | alternate_dispatch_table_plan | n/a | n/a | n/a | INVALID duplicate-probe disabled; real function-pointer table regressed |
 | update_center | alternate_pext_mask_plan | n/a | n/a | n/a | missing |
-| update_center | cold_first_parse | 13634 | 312847.61 | 92.2% | PASS <=2.00x T1 |
-| mesh | host_call_dispatch_overhead | n/a | 0.87 | n/a | PASS <=50ns |
-| mesh | host_call_eager_decode | 3762 | 1538847.16 | 37.5% | MASKING >1.10x T1 |
-| mesh | alternate_scalar_plan | 3796 | 1525045.48 | 37.9% | reported |
+| update_center | cold_first_parse | 18434 | 231389.55 | 101.3% | PASS <=2.00x T1 |
+| mesh | host_call_dispatch_overhead | n/a | 0.68 | n/a | PASS <=50ns |
+| mesh | host_call_eager_decode | 5276 | 1097192.32 | 39.6% | MASKING >1.10x T1 |
+| mesh | alternate_scalar_plan | 4403 | 1314636.96 | 33.1% | reported |
 | mesh | alternate_dispatch_table_plan | n/a | n/a | n/a | INVALID duplicate-probe disabled; real function-pointer table regressed |
 | mesh | alternate_pext_mask_plan | n/a | n/a | n/a | missing |
-| mesh | cold_first_parse | 9091 | 636745.51 | 90.7% | PASS <=2.00x T1 |
-| random | host_call_dispatch_overhead | n/a | 0.85 | n/a | PASS <=50ns |
-| random | host_call_eager_decode | 2448 | 1668381.49 | 26.1% | MASKING >1.10x T1 |
-| random | alternate_scalar_plan | 2606 | 1566860.19 | 27.8% | reported |
+| mesh | cold_first_parse | 12916 | 448171.68 | 97.1% | PASS <=2.00x T1 |
+| random | host_call_dispatch_overhead | n/a | 0.70 | n/a | PASS <=50ns |
+| random | host_call_eager_decode | 2821 | 1447900.56 | 36.3% | MASKING >1.10x T1 |
+| random | alternate_scalar_plan | 3670 | 1112864.84 | 47.2% | reported |
 | random | alternate_dispatch_table_plan | n/a | n/a | n/a | INVALID duplicate-probe disabled; real function-pointer table regressed |
 | random | alternate_pext_mask_plan | n/a | n/a | n/a | missing |
-| random | cold_first_parse | 6893 | 592468.55 | 73.6% | PASS <=2.00x T1 |
-| gsoc-2018 | host_call_dispatch_overhead | n/a | 0.85 | n/a | PASS <=50ns |
-| gsoc-2018 | host_call_eager_decode | 5885 | 4523492.84 | 19.9% | MASKING >1.10x T1 |
-| gsoc-2018 | alternate_scalar_plan | 10713 | 2485121.25 | 36.3% | reported |
+| random | cold_first_parse | 6945 | 587988.99 | 89.4% | PASS <=2.00x T1 |
+| gsoc-2018 | host_call_dispatch_overhead | n/a | 0.67 | n/a | PASS <=50ns |
+| gsoc-2018 | host_call_eager_decode | 8515 | 3126694.04 | 17.9% | MASKING >1.10x T1 |
+| gsoc-2018 | alternate_scalar_plan | 18545 | 1435550.72 | 39.1% | reported |
 | gsoc-2018 | alternate_dispatch_table_plan | n/a | n/a | n/a | INVALID duplicate-probe disabled; real function-pointer table regressed |
 | gsoc-2018 | alternate_pext_mask_plan | n/a | n/a | n/a | missing |
-| gsoc-2018 | cold_first_parse | 27372 | 972634.55 | 92.7% | PASS <=2.00x T1 |
-| marine_ik | host_call_dispatch_overhead | n/a | 0.80 | n/a | PASS <=50ns |
-| marine_ik | host_call_eager_decode | 1599 | 14923572.39 | 17.7% | MASKING >1.10x T1 |
-| marine_ik | alternate_scalar_plan | 2725 | 8757968.33 | 30.2% | reported |
+| gsoc-2018 | cold_first_parse | 49308 | 539930.19 | 103.8% | PASS <=2.00x T1 |
+| marine_ik | host_call_dispatch_overhead | n/a | 0.67 | n/a | PASS <=50ns |
+| marine_ik | host_call_eager_decode | 2539 | 9401881.73 | 19.2% | MASKING >1.10x T1 |
+| marine_ik | alternate_scalar_plan | 3993 | 5977914.31 | 30.2% | reported |
 | marine_ik | alternate_dispatch_table_plan | n/a | n/a | n/a | INVALID duplicate-probe disabled; real function-pointer table regressed |
 | marine_ik | alternate_pext_mask_plan | n/a | n/a | n/a | missing |
-| marine_ik | cold_first_parse | 9084 | 2627357.33 | 100.6% | PASS <=2.00x T1 |
-| instruments | host_call_dispatch_overhead | n/a | 0.69 | n/a | PASS <=50ns |
-| instruments | host_call_eager_decode | 5684 | 310128.95 | 35.3% | MASKING >1.10x T1 |
-| instruments | alternate_scalar_plan | 5059 | 348428.18 | 31.4% | reported |
+| marine_ik | cold_first_parse | 12764 | 1869949.79 | 96.4% | PASS <=2.00x T1 |
+| instruments | host_call_dispatch_overhead | n/a | 0.62 | n/a | PASS <=50ns |
+| instruments | host_call_eager_decode | 6389 | 275920.28 | 32.0% | MASKING >1.10x T1 |
+| instruments | alternate_scalar_plan | 5233 | 336834.64 | 26.2% | reported |
 | instruments | alternate_dispatch_table_plan | n/a | n/a | n/a | INVALID duplicate-probe disabled; real function-pointer table regressed |
 | instruments | alternate_pext_mask_plan | n/a | n/a | n/a | missing |
-| instruments | cold_first_parse | 18796 | 93786.62 | 116.7% | PASS <=2.00x T1 |
-| numbers | host_call_dispatch_overhead | n/a | 0.70 | n/a | PASS <=50ns |
-| numbers | host_call_eager_decode | 8548 | 140502.41 | 52.5% | MASKING >1.10x T1 |
-| numbers | alternate_scalar_plan | 5845 | 205475.24 | 35.9% | reported |
+| instruments | cold_first_parse | 19210 | 91761.90 | 96.3% | PASS <=2.00x T1 |
+| numbers | host_call_dispatch_overhead | n/a | 0.65 | n/a | PASS <=50ns |
+| numbers | host_call_eager_decode | 8975 | 133810.28 | 46.8% | MASKING >1.10x T1 |
+| numbers | alternate_scalar_plan | 5924 | 202724.58 | 30.9% | reported |
 | numbers | alternate_dispatch_table_plan | n/a | n/a | n/a | INVALID duplicate-probe disabled; real function-pointer table regressed |
 | numbers | alternate_pext_mask_plan | n/a | n/a | n/a | missing |
-| numbers | cold_first_parse | 15736 | 76319.85 | 96.6% | PASS <=2.00x T1 |
-| unicode_mixed | host_call_dispatch_overhead | n/a | 0.73 | n/a | PASS <=50ns |
-| unicode_mixed | host_call_eager_decode | 3420 | 2463498.08 | 23.7% | MASKING >1.10x T1 |
-| unicode_mixed | alternate_scalar_plan | 4444 | 1895534.59 | 30.8% | reported |
+| numbers | cold_first_parse | 17757 | 67636.06 | 92.5% | PASS <=2.00x T1 |
+| unicode_mixed | host_call_dispatch_overhead | n/a | 0.70 | n/a | PASS <=50ns |
+| unicode_mixed | host_call_eager_decode | 2062 | 4085686.57 | 27.9% | MASKING >1.10x T1 |
+| unicode_mixed | alternate_scalar_plan | 4026 | 2092781.75 | 54.5% | reported |
 | unicode_mixed | alternate_dispatch_table_plan | n/a | n/a | n/a | INVALID duplicate-probe disabled; real function-pointer table regressed |
 | unicode_mixed | alternate_pext_mask_plan | n/a | n/a | n/a | missing |
-| unicode_mixed | cold_first_parse | 9408 | 895503.41 | 65.2% | PASS <=2.00x T1 |
-| unicode_escapes | host_call_dispatch_overhead | n/a | 0.70 | n/a | PASS <=50ns |
-| unicode_escapes | host_call_eager_decode | 2388 | 3519771.87 | 48.5% | MASKING >1.10x T1 |
-| unicode_escapes | alternate_scalar_plan | 5194 | 1618527.36 | 105.4% | reported |
+| unicode_mixed | cold_first_parse | 4933 | 1707859.15 | 66.8% | PASS <=2.00x T1 |
+| unicode_escapes | host_call_dispatch_overhead | n/a | 0.72 | n/a | PASS <=50ns |
+| unicode_escapes | host_call_eager_decode | 3736 | 2250173.07 | 26.8% | MASKING >1.10x T1 |
+| unicode_escapes | alternate_scalar_plan | 4587 | 1832478.95 | 32.9% | reported |
 | unicode_escapes | alternate_dispatch_table_plan | n/a | n/a | n/a | INVALID duplicate-probe disabled; real function-pointer table regressed |
 | unicode_escapes | alternate_pext_mask_plan | n/a | n/a | n/a | missing |
-| unicode_escapes | cold_first_parse | 4942 | 1700905.12 | 100.3% | PASS <=2.00x T1 |
-| unicode_basic | host_call_dispatch_overhead | n/a | 0.71 | n/a | PASS <=50ns |
-| unicode_basic | host_call_eager_decode | 4019 | 2087282.62 | 27.7% | MASKING >1.10x T1 |
-| unicode_basic | alternate_scalar_plan | 3733 | 2247435.23 | 25.7% | reported |
+| unicode_escapes | cold_first_parse | 14574 | 576823.49 | 104.5% | PASS <=2.00x T1 |
+| unicode_basic | host_call_dispatch_overhead | n/a | 0.70 | n/a | PASS <=50ns |
+| unicode_basic | host_call_eager_decode | 2616 | 3206930.18 | 39.9% | MASKING >1.10x T1 |
+| unicode_basic | alternate_scalar_plan | 4253 | 1972482.28 | 64.8% | reported |
 | unicode_basic | alternate_dispatch_table_plan | n/a | n/a | n/a | INVALID duplicate-probe disabled; real function-pointer table regressed |
 | unicode_basic | alternate_pext_mask_plan | n/a | n/a | n/a | missing |
-| unicode_basic | cold_first_parse | 8905 | 941980.44 | 61.3% | PASS <=2.00x T1 |
-| distinct_values | host_call_dispatch_overhead | n/a | 0.69 | n/a | PASS <=50ns |
-| distinct_values | host_call_eager_decode | 5740 | 214127.15 | 35.5% | MASKING >1.10x T1 |
-| distinct_values | alternate_scalar_plan | 4158 | 295598.61 | 25.7% | reported |
+| unicode_basic | cold_first_parse | 5641 | 1487007.06 | 86.0% | PASS <=2.00x T1 |
+| distinct_values | host_call_dispatch_overhead | n/a | 0.59 | n/a | PASS <=50ns |
+| distinct_values | host_call_eager_decode | 5162 | 238086.91 | 31.8% | MASKING >1.10x T1 |
+| distinct_values | alternate_scalar_plan | 4340 | 283203.57 | 26.7% | reported |
 | distinct_values | alternate_dispatch_table_plan | n/a | n/a | n/a | INVALID duplicate-probe disabled; real function-pointer table regressed |
 | distinct_values | alternate_pext_mask_plan | n/a | n/a | n/a | missing |
-| distinct_values | cold_first_parse | 15939 | 77110.71 | 98.6% | PASS <=2.00x T1 |
-| y_string_unicode | host_call_dispatch_overhead | n/a | 0.71 | n/a | PASS <=50ns |
-| y_string_unicode | host_call_eager_decode | 2651 | 107420.43 | 36.5% | MASKING >1.10x T1 |
-| y_string_unicode | alternate_scalar_plan | 4932 | 57748.43 | 68.0% | reported |
+| distinct_values | cold_first_parse | 16028 | 76682.70 | 98.7% | PASS <=2.00x T1 |
+| y_string_unicode | host_call_dispatch_overhead | n/a | 0.65 | n/a | PASS <=50ns |
+| y_string_unicode | host_call_eager_decode | 2597 | 109655.40 | 19.8% | MASKING >1.10x T1 |
+| y_string_unicode | alternate_scalar_plan | 6074 | 46888.54 | 46.3% | reported |
 | y_string_unicode | alternate_dispatch_table_plan | n/a | n/a | n/a | INVALID duplicate-probe disabled; real function-pointer table regressed |
 | y_string_unicode | alternate_pext_mask_plan | n/a | n/a | n/a | missing |
-| y_string_unicode | cold_first_parse | 6487 | 43906.69 | 89.4% | PASS <=2.00x T1 |
+| y_string_unicode | cold_first_parse | 11543 | 24673.76 | 88.1% | PASS <=2.00x T1 |
 
 ## Notes
 
+- twitter direct-to-struct gate: NO-GO. Track 1 9849 Mbps, Track 2 9814 Mbps, sonic-rs 11604 Mbps; Track 1 and Track 2 must be within 1.10x sonic-rs time.
 - twitter payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
-- twitter lazy tape materialization: 73362 offsets, 293448 logical offset bytes + 1560 sparse flag bytes (0.47x input), 295008 allocated tape bytes (0.47x input), 0 payload bytes; object opens 1264, array opens 1050, closes 2314, string quotes 36198, numbers 2109, literals 4737, separators 25690.
-- twitter peak RSS subprocess probes: bbnf=3244032 bytes, S anchor sonic-rs=4800512 bytes.
+- twitter lazy tape materialization: 29573 offsets, 118292 logical offset bytes + 1560 sparse flag bytes (0.19x input), 133632 allocated tape bytes (0.21x input), 0 payload bytes; object opens 1264, array opens 1050, closes 2314, string quotes 18099, numbers 2109, literals 4737, separators 0.
+- twitter peak RSS subprocess probes: bbnf=3637248 bytes, S anchor sonic-rs=4898816 bytes.
 - citm_catalog payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
-- citm_catalog lazy tape materialization: 162594 offsets, 650376 logical offset bytes + 5 sparse flag bytes (0.38x input), 650381 allocated tape bytes (0.38x input), 0 payload bytes; object opens 10937, array opens 10451, closes 21388, string quotes 53208, numbers 14392, literals 1263, separators 50955.
-- citm_catalog peak RSS subprocess probes: bbnf=4702208 bytes, S anchor sonic-rs=7618560 bytes.
+- citm_catalog lazy tape materialization: 85035 offsets, 340140 logical offset bytes + 5 sparse flag bytes (0.20x input), 524312 allocated tape bytes (0.30x input), 0 payload bytes; object opens 10937, array opens 10451, closes 21388, string quotes 26604, numbers 14392, literals 1263, separators 0.
+- citm_catalog peak RSS subprocess probes: bbnf=4882432 bytes, S anchor sonic-rs=7733248 bytes.
+- canada direct-to-struct gate: NO-GO. Track 1 5105 Mbps, Track 2 5099 Mbps, sonic-rs 12512 Mbps; Track 1 and Track 2 must be within 1.10x sonic-rs time.
 - canada payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
-- canada lazy tape materialization: 334385 offsets, 1337540 logical offset bytes + 0 sparse flag bytes (0.59x input), 1337540 allocated tape bytes (0.59x input), 0 payload bytes; object opens 4, array opens 56045, closes 56049, string quotes 24, numbers 111126, literals 0, separators 111137.
-- canada peak RSS subprocess probes: bbnf=5914624 bytes, S anchor sonic-rs=11206656 bytes.
-- canada structural scan: 66957 Mbps; floor is 40000 Mbps.
+- canada lazy tape materialization: 223236 offsets, 892944 logical offset bytes + 0 sparse flag bytes (0.40x input), 1048576 allocated tape bytes (0.47x input), 0 payload bytes; object opens 4, array opens 56045, closes 56049, string quotes 12, numbers 111126, literals 0, separators 0.
+- canada peak RSS subprocess probes: bbnf=5881856 bytes, S anchor sonic-rs=11354112 bytes.
+- canada structural scan: 69075 Mbps; floor is 40000 Mbps.
 - apache_builds payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
-- apache_builds lazy tape materialization: 17653 offsets, 70612 logical offset bytes + 5 sparse flag bytes (0.55x input), 70617 allocated tape bytes (0.55x input), 0 payload bytes; object opens 884, array opens 3, closes 887, string quotes 10578, numbers 2, literals 3, separators 5296.
-- apache_builds peak RSS subprocess probes: bbnf=2473984 bytes, S anchor simd-json borrowed=3080192 bytes.
+- apache_builds lazy tape materialization: 7068 offsets, 28272 logical offset bytes + 5 sparse flag bytes (0.22x input), 33308 allocated tape bytes (0.26x input), 0 payload bytes; object opens 884, array opens 3, closes 887, string quotes 5289, numbers 2, literals 3, separators 0.
+- apache_builds peak RSS subprocess probes: bbnf=2818048 bytes, S anchor sonic-rs=3080192 bytes.
 - github_events payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
-- github_events lazy tape materialization: 6547 offsets, 26188 logical offset bytes + 25 sparse flag bytes (0.40x input), 26213 allocated tape bytes (0.40x input), 0 payload bytes; object opens 180, array opens 19, closes 199, string quotes 3782, numbers 149, literals 88, separators 2130.
-- github_events peak RSS subprocess probes: bbnf=2375680 bytes, S anchor sonic-rs=2916352 bytes.
+- github_events lazy tape materialization: 2526 offsets, 10104 logical offset bytes + 25 sparse flag bytes (0.16x input), 16429 allocated tape bytes (0.25x input), 0 payload bytes; object opens 180, array opens 19, closes 199, string quotes 1891, numbers 149, literals 88, separators 0.
+- github_events peak RSS subprocess probes: bbnf=2785280 bytes, S anchor sonic-rs=3063808 bytes.
 - update_center payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
-- update_center lazy tape materialization: 90648 offsets, 362592 logical offset bytes + 1045 sparse flag bytes (0.68x input), 363637 allocated tape bytes (0.68x input), 0 payload bytes; object opens 1896, array opens 1937, closes 3833, string quotes 54458, numbers 0, literals 386, separators 28138.
-- update_center peak RSS subprocess probes: bbnf=3194880 bytes, S anchor sonic-rs=4358144 bytes.
+- update_center lazy tape materialization: 35281 offsets, 141124 logical offset bytes + 1045 sparse flag bytes (0.27x input), 264064 allocated tape bytes (0.50x input), 0 payload bytes; object opens 1896, array opens 1937, closes 3833, string quotes 27229, numbers 0, literals 386, separators 0.
+- update_center peak RSS subprocess probes: bbnf=3440640 bytes, S anchor sonic-rs=4505600 bytes.
+- mesh direct-to-struct gate: NO-GO. Track 1 4987 Mbps, Track 2 5003 Mbps, sonic-rs 9606 Mbps; Track 1 and Track 2 must be within 1.10x sonic-rs time.
 - mesh payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
-- mesh lazy tape materialization: 153285 offsets, 613140 logical offset bytes + 0 sparse flag bytes (0.85x input), 613140 allocated tape bytes (0.85x input), 0 payload bytes; object opens 3, array opens 3610, closes 3613, string quotes 22, numbers 73013, literals 0, separators 73024.
-- mesh peak RSS subprocess probes: bbnf=3620864 bytes, S anchor sonic-rs=6012928 bytes.
+- mesh lazy tape materialization: 80250 offsets, 321000 logical offset bytes + 0 sparse flag bytes (0.44x input), 524288 allocated tape bytes (0.72x input), 0 payload bytes; object opens 3, array opens 3610, closes 3613, string quotes 11, numbers 73013, literals 0, separators 0.
+- mesh peak RSS subprocess probes: bbnf=3686400 bytes, S anchor sonic-rs=6127616 bytes.
+- random direct-to-struct gate: NO-GO. Track 1 6676 Mbps, Track 2 6667 Mbps, sonic-rs 9157 Mbps; Track 1 and Track 2 must be within 1.10x sonic-rs time.
 - random payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
-- random lazy tape materialization: 121022 offsets, 484088 logical offset bytes + 0 sparse flag bytes (0.95x input), 484088 allocated tape bytes (0.95x input), 0 payload bytes; object opens 4001, array opens 1001, closes 5002, string quotes 66010, numbers 5002, literals 1000, separators 39006.
-- random peak RSS subprocess probes: bbnf=3293184 bytes, S anchor sonic-rs=4587520 bytes.
+- random lazy tape materialization: 49011 offsets, 196044 logical offset bytes + 0 sparse flag bytes (0.38x input), 262144 allocated tape bytes (0.51x input), 0 payload bytes; object opens 4001, array opens 1001, closes 5002, string quotes 33005, numbers 5002, literals 1000, separators 0.
+- random peak RSS subprocess probes: bbnf=3407872 bytes, S anchor sonic-rs=4734976 bytes.
+- gsoc-2018 direct-to-struct gate: NO-GO. Track 1 5724 Mbps, Track 2 5744 Mbps, sonic-rs 8516 Mbps; Track 1 and Track 2 must be within 1.10x sonic-rs time.
 - gsoc-2018 payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
-- gsoc-2018 lazy tape materialization: 109969 offsets, 439876 logical offset bytes + 8545 sparse flag bytes (0.13x input), 448421 allocated tape bytes (0.13x input), 0 payload bytes; object opens 3793, array opens 0, closes 3793, string quotes 68256, numbers 0, literals 0, separators 34127.
-- gsoc-2018 peak RSS subprocess probes: bbnf=6537216 bytes, S anchor sonic-rs=10027008 bytes.
+- gsoc-2018 lazy tape materialization: 41714 offsets, 166856 logical offset bytes + 8545 sparse flag bytes (0.05x input), 272384 allocated tape bytes (0.08x input), 0 payload bytes; object opens 3793, array opens 0, closes 3793, string quotes 34128, numbers 0, literals 0, separators 0.
+- gsoc-2018 peak RSS subprocess probes: bbnf=6242304 bytes, S anchor sonic-rs=10158080 bytes.
+- marine_ik direct-to-struct gate: NO-GO. Track 1 6458 Mbps, Track 2 6429 Mbps, sonic-rs 8799 Mbps; Track 1 and Track 2 must be within 1.10x sonic-rs time.
 - marine_ik payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
-- marine_ik lazy tape materialization: 681280 offsets, 2725120 logical offset bytes + 0 sparse flag bytes (0.91x input), 2725120 allocated tape bytes (0.91x input), 0 payload bytes; object opens 9680, array opens 28377, closes 38057, string quotes 76536, numbers 245175, literals 6, separators 283449.
-- marine_ik peak RSS subprocess probes: bbnf=10076160 bytes, S anchor sonic-rs=16089088 bytes.
+- marine_ik lazy tape materialization: 359563 offsets, 1438252 logical offset bytes + 0 sparse flag bytes (0.48x input), 2097152 allocated tape bytes (0.70x input), 0 payload bytes; object opens 9680, array opens 28377, closes 38057, string quotes 38268, numbers 245175, literals 6, separators 0.
+- marine_ik peak RSS subprocess probes: bbnf=7274496 bytes, S anchor sonic-rs=16187392 bytes.
 - instruments payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
-- instruments lazy tape materialization: 34062 offsets, 136248 logical offset bytes + 0 sparse flag bytes (0.62x input), 136248 allocated tape bytes (0.62x input), 0 payload bytes; object opens 1012, array opens 194, closes 1206, string quotes 13778, numbers 4935, literals 557, separators 12380.
-- instruments peak RSS subprocess probes: bbnf=2654208 bytes, S anchor sonic-rs=3473408 bytes.
+- instruments lazy tape materialization: 14793 offsets, 59172 logical offset bytes + 0 sparse flag bytes (0.27x input), 65536 allocated tape bytes (0.30x input), 0 payload bytes; object opens 1012, array opens 194, closes 1206, string quotes 6889, numbers 4935, literals 557, separators 0.
+- instruments peak RSS subprocess probes: bbnf=2981888 bytes, S anchor sonic-rs=3571712 bytes.
+- numbers direct-to-struct gate: NO-GO. Track 1 4301 Mbps, Track 2 4317 Mbps, sonic-rs 12974 Mbps; Track 1 and Track 2 must be within 1.10x sonic-rs time.
 - numbers payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
-- numbers lazy tape materialization: 20003 offsets, 80012 logical offset bytes + 0 sparse flag bytes (0.53x input), 80012 allocated tape bytes (0.53x input), 0 payload bytes; object opens 0, array opens 1, closes 1, string quotes 0, numbers 10001, literals 0, separators 10000.
-- numbers peak RSS subprocess probes: bbnf=2506752 bytes, S anchor sonic-rs=3080192 bytes.
+- numbers lazy tape materialization: 10003 offsets, 40012 logical offset bytes + 0 sparse flag bytes (0.27x input), 65536 allocated tape bytes (0.44x input), 0 payload bytes; object opens 0, array opens 1, closes 1, string quotes 0, numbers 10001, literals 0, separators 0.
+- numbers peak RSS subprocess probes: bbnf=2703360 bytes, S anchor sonic-rs=3194880 bytes.
+- unicode_mixed direct-to-struct gate: NO-GO. Track 1 3197 Mbps, Track 2 3199 Mbps, sonic-rs 6406 Mbps; Track 1 and Track 2 must be within 1.10x sonic-rs time.
 - unicode_mixed payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
-- unicode_mixed lazy tape materialization: 100482 offsets, 401928 logical offset bytes + 9795 sparse flag bytes (0.39x input), 411723 allocated tape bytes (0.39x input), 0 payload bytes; object opens 4187, array opens 2, closes 4189, string quotes 50242, numbers 8371, literals 0, separators 33491.
-- unicode_mixed peak RSS subprocess probes: bbnf=3751936 bytes, S anchor sonic-rs=5505024 bytes.
+- unicode_mixed lazy tape materialization: 41870 offsets, 167480 logical offset bytes + 9795 sparse flag bytes (0.17x input), 272384 allocated tape bytes (0.26x input), 0 payload bytes; object opens 4187, array opens 2, closes 4189, string quotes 25121, numbers 8371, literals 0, separators 0.
+- unicode_mixed peak RSS subprocess probes: bbnf=3964928 bytes, S anchor sonic-rs=5619712 bytes.
+- unicode_escapes direct-to-struct gate: NO-GO. Track 1 4574 Mbps, Track 2 4576 Mbps, sonic-rs 9072 Mbps; Track 1 and Track 2 must be within 1.10x sonic-rs time.
 - unicode_escapes payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
-- unicode_escapes lazy tape materialization: 24423 offsets, 97692 logical offset bytes + 9385 sparse flag bytes (0.10x input), 107077 allocated tape bytes (0.10x input), 0 payload bytes; object opens 1879, array opens 1, closes 1880, string quotes 11272, numbers 1877, literals 1, separators 7513.
-- unicode_escapes peak RSS subprocess probes: bbnf=3440640 bytes, S anchor sonic-rs=4997120 bytes.
+- unicode_escapes lazy tape materialization: 11274 offsets, 45096 logical offset bytes + 9385 sparse flag bytes (0.05x input), 75776 allocated tape bytes (0.07x input), 0 payload bytes; object opens 1879, array opens 1, closes 1880, string quotes 5636, numbers 1877, literals 1, separators 0.
+- unicode_escapes peak RSS subprocess probes: bbnf=3833856 bytes, S anchor sonic-rs=5128192 bytes.
+- unicode_basic direct-to-struct gate: NO-GO. Track 1 4856 Mbps, Track 2 4859 Mbps, sonic-rs 7092 Mbps; Track 1 and Track 2 must be within 1.10x sonic-rs time.
 - unicode_basic payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
-- unicode_basic lazy tape materialization: 218843 offsets, 875372 logical offset bytes + 0 sparse flag bytes (0.83x input), 875372 allocated tape bytes (0.83x input), 0 payload bytes; object opens 5759, array opens 5760, closes 11519, string quotes 115180, numbers 11518, literals 0, separators 69107.
-- unicode_basic peak RSS subprocess probes: bbnf=4227072 bytes, S anchor sonic-rs=6307840 bytes.
+- unicode_basic lazy tape materialization: 92146 offsets, 368584 logical offset bytes + 0 sparse flag bytes (0.35x input), 524288 allocated tape bytes (0.50x input), 0 payload bytes; object opens 5759, array opens 5760, closes 11519, string quotes 57590, numbers 11518, literals 0, separators 0.
+- unicode_basic peak RSS subprocess probes: bbnf=4063232 bytes, S anchor sonic-rs=6455296 bytes.
 - distinct_values payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
-- distinct_values lazy tape materialization: 31149 offsets, 124596 logical offset bytes + 0 sparse flag bytes (0.81x input), 124596 allocated tape bytes (0.81x input), 0 payload bytes; object opens 440, array opens 1, closes 441, string quotes 19592, numbers 440, literals 0, separators 10235.
-- distinct_values peak RSS subprocess probes: bbnf=2555904 bytes, S anchor sonic-rs=3063808 bytes.
+- distinct_values lazy tape materialization: 11118 offsets, 44472 logical offset bytes + 0 sparse flag bytes (0.29x input), 65536 allocated tape bytes (0.43x input), 0 payload bytes; object opens 440, array opens 1, closes 441, string quotes 9796, numbers 440, literals 0, separators 0.
+- distinct_values peak RSS subprocess probes: bbnf=2785280 bytes, S anchor sonic-rs=3194880 bytes.
+- y_string_unicode direct-to-struct gate: NO-GO. Track 1 5620 Mbps, Track 2 5671 Mbps, sonic-rs 8547 Mbps; Track 1 and Track 2 must be within 1.10x sonic-rs time.
 - y_string_unicode payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
-- y_string_unicode lazy tape materialization: 6601 offsets, 26404 logical offset bytes + 9000 sparse flag bytes (0.99x input), 35404 allocated tape bytes (0.99x input), 0 payload bytes; object opens 0, array opens 1, closes 1, string quotes 4400, numbers 0, literals 0, separators 2199.
-- y_string_unicode peak RSS subprocess probes: bbnf=2375680 bytes, S anchor sonic-rs=2588672 bytes.
-- Overall outcome G / NoGo.
+- y_string_unicode lazy tape materialization: 2202 offsets, 8808 logical offset bytes + 9000 sparse flag bytes (0.50x input), 26624 allocated tape bytes (0.75x input), 0 payload bytes; object opens 0, array opens 1, closes 1, string quotes 2200, numbers 0, literals 0, separators 0.
+- y_string_unicode peak RSS subprocess probes: bbnf=2686976 bytes, S anchor sonic-rs=2703360 bytes.
+- Overall outcome N-direct / NoGo.
 - Track 1 is runtime::generated_json::parse; Track 2 is the independent hand-coded parser over runtime::tape.
 - Track 2 checklist signed by implementation owner: Track 2 uses runtime::tape::TapeBuilder, shares the same parity oracle as Track 1, and never calls runtime::generated_json::parse.

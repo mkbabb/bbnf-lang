@@ -25,13 +25,16 @@ The on-disk skinny prototype has iterated against this spec; the accepted and
 rejected implementation decisions are recorded in `skinny/REDRESS.md`. The
 load-bearing measurement findings:
 
-- **`bbnf-bench` cap was redressed to 2,400 LOC after the final auditability gates landed**: `xtask lint-loc` now carries the fastest-anchor `S` report columns, subprocess RSS probes, persisted SIMD parity metadata, and masking probes inside the bench crate. The total prototype still sits far below the 31,400 handwritten ceiling; the old 2,000 crate-local cap was too narrow for the full BENCH.md §7.9/§8.2 reporting contract. Track 2 remains gated by substrate-API correspondence (per BENCH.md §10.6), not by an LOC cap.
-- **Original triad passed; expanded corpus is G / NoGo** (per
-  `skinny/RESULTS.md`): twitter / citm_catalog / canada validate the lazy
-  tape/direct substrate, while the expanded corpus currently misses S on
-  `github_events`, `update_center`, `random`, `unicode_escapes`, and
-  `y_string_unicode`. Codegen remains empirically separable from substrate; the
-  current block is primitive/lowering coverage across the expanded corpus.
+- **`bbnf-bench` cap was redressed to 3,300 LOC after the final auditability gates and direct-to-struct workload landed**: `xtask lint-loc` now carries the fastest-anchor `S` report columns, subprocess RSS probes, persisted SIMD parity metadata, masking probes, and direct-to-struct rows inside the bench crate. The crate-local cap moved because the BENCH.md §7.9/§8.2 reporting contract plus the SK-V3 direct projection proof are now gate surfaces, not optional reports. The old 2,000/2,400 caps were too narrow for the full proof. Track 2 remains gated by substrate-API correspondence (per BENCH.md §10.6), not by an LOC cap. The total handwritten skinny envelope is redressed to 32,000 LOC.
+- **Original triad passed; expanded parse corpus still has G rows; overall gate
+  is N-direct / NoGo** (per `skinny/RESULTS.md`): the lazy tape/direct
+  substrate validates on many shapes, while the expanded parse corpus currently
+  misses S on `twitter`, `random`, `unicode_mixed`, and `unicode_basic`.
+  Direct-to-struct correctness is green. Sink-only direct throughput now passes
+  6 of 17 rows after the UTF-validation and integer-classification redress, but
+  11 rows still miss sonic-rs direct. Codegen remains empirically separable
+  from substrate; the current blocks are event-cursor/string/Unicode lowering
+  coverage plus exact float/string/Unicode materialization inside typed sinks.
 - **Rejected routes remain recorded** (Lane 9 greenfield discipline): pair-token fusion (REDRESS §16), function-pointer dispatch table (REDRESS §17), 12-byte skipless token (REDRESS §18), structural-index typed parser prepass, NEON no-escape string matcher, separator elision, generic SWAR whitespace skipper, and width churn (REDRESS §25). The accepted path is lazy-offset tape with sparse flags, direct spare-capacity offset writes, SWAR digit/plain-string runs, delimiter fusion, `parse_value_at`, short plain-string fast path, cold errors, and Track 2 inline parity.
 - **The host-call probe split (REDRESS §19)** disposes single-probe / 2-percent-threshold phrasing throughout this file: dispatch overhead passes (≤50ns); eager-decode bands MASK at 57.6%/77.2%/81.9% of Track 1 ns across corpora. The host-fn-free skinny is FAITHFUL only for a V1 path that keeps string decode lazy.
 
@@ -51,9 +54,9 @@ Exactly ten crates plus `xtask`. The list is closed. Adding another crate is a s
 | 6 | `runtime` | partial | `tape`, `document`, `builder`, minimal `visitor`. The generated JSON parser lands at `runtime/src/grammars/json/`. |
 | 7 | `parse-that-regex` | partial | Basic regex sufficient for JSON's string-escape and number scanners. No Unicode class algebra. Subset HIR; NFA / DFA / VM; literal helpers. |
 | 8 | `bbnf-simd` | full | Replacement scanner crate for runtime and bench. NEON + scalar are mandatory; AVX2 stays available; AVX512/VBMI2 and handwritten ASM are host-target work under Lock 16, not a separate scanner crate. |
-| 9 | `bbnf-bench` | partial | Criterion harness, reproducibility schema emitter, parity matrix runner, and the Track 2 handwritten substrate probe (substrate-API correspondence per BENCH.md §10.6; measured against `runtime::tape::*` + `bbnf_simd::*` calls). Owned by BENCH.md; this slice budgets its LOC only. |
+| 9 | `bbnf-bench` | partial | Criterion harness, reproducibility schema emitter, parity matrix runner, independent oracles, sidecar comparators, and the Track 2 handwritten substrate/direct probes (substrate-API correspondence per BENCH.md §10.6; measured against `runtime::tape::*`, runtime event/sink traits, and `bbnf_simd::*` calls). It must not own the Track 1 `SinkOnly` implementation; Track 1 direct is generated runtime/codegen in SK-V4. Owned by BENCH.md; this slice budgets its LOC only. |
 | 10 | `test-fixtures` | partial | JSON corpora (`twitter`, `citm`, `canada`, plus malformed minicorpus) + manifest. |
-|  + | `xtask` | dev | Tiny binary (≤500 LOC) replacing `bbnf-cli` for the skinny: `regen-json`, `check-json`, `check-conformance`, `lint-loc`, `bench-json`, `gate-json`. |
+|  + | `xtask` | dev | Tiny binary (≤650 LOC) replacing `bbnf-cli` for the skinny: `regen-json`, `check-json`, `check-conformance`, `lint-loc`, `bench-json`, `gate-json`, `primitive-checkasm`. |
 
 ### 1.1 V1 Crates Skipped In The Skinny
 
@@ -76,7 +79,7 @@ The skinny's compatibility shims (`source_stub`, `host_stubs`, `diagnostic`) are
 
 ## 2. Per-Crate LOC Budget
 
-The handwritten LOC budget for the skinny is **31,400 LOC** across ten crates. Generated output (`runtime/src/grammars/json/**/*.rs`) is budgeted separately at **≤ 4,000 LOC** for JSON, matching PASS-2's KEEP-MODIFY observation that the current `core/src/grammar/generated/json.rs` lands at 3,500 LOC plus 2 percent (`restart/audit/pass-2-codegen/PASS-2.md:432`).
+The handwritten LOC budget for the skinny is **32,000 LOC** across ten crates. Generated output (`runtime/src/grammars/json/**/*.rs`) is budgeted separately at **≤ 4,000 LOC** for JSON, matching PASS-2's KEEP-MODIFY observation that the current `core/src/grammar/generated/json.rs` lands at 3,500 LOC plus 2 percent (`restart/audit/pass-2-codegen/PASS-2.md:432`). The delta from the original 31,400 ceiling is a BENCH-side redress: direct-to-struct proof rows and primitive admission reporting became mandatory falsifiability gates during SK-V3.
 
 | Crate | Skinny LOC | Skinny subset rationale | Full V1 estimate (these crates) |
 |---|---:|---|---:|
@@ -88,11 +91,11 @@ The handwritten LOC budget for the skinny is **31,400 LOC** across ten crates. G
 | `runtime` | 4,000 | `tape/` (~1,500), `document/` (~800), `builder/` (~600), `visitor/` minimal (~400), `support/` (~300), `grammars/json/` skeleton (~400, plus the generated body which is not handwritten). | 8,000 |
 | `parse-that-regex` | 4,000 | `regex/hir` subset (~1,000), `regex/nfa` (~1,000), `regex/dfa` (~1,000), `regex/vm` (~700), `literal/` (~300). No `unicode/` algebra, no lazy-DFA cache policy. | 10,000 |
 | `bbnf-simd` | 3,500 | Structural scanner and per-target primitive layer used by runtime and bench; carries scalar/SWAR, aarch64, x86_64 AVX2/VBMI2, and ASM-admissible host paths under Lock 16. | 3,500 |
-| `bbnf-bench` | 2,400 | Criterion harness, reproducibility schema serializer, parity matrix runner, materialization report, scan report, masking probes, fastest-anchor `S` rendering, subprocess RSS probes, persisted SIMD parity metadata, and Track 2 handwritten parser (~262 LOC; substrate-API correspondence per BENCH.md §10.6). The 2026-05-12 full auditability gates made the old 2,000 cap too narrow while total skinny LOC stayed far under 31,400. CSS prior probe deferred. Exact internal split owned by BENCH.md. | 4,000 |
+| `bbnf-bench` | 3,300 | Criterion harness, reproducibility schema serializer, parity matrix runner, materialization report, scan report, masking probes, fastest-anchor `S` rendering, subprocess RSS probes, persisted SIMD parity metadata, direct-to-struct workload proof, sidecar comparator reports, and Track 2 handwritten parser/sink probes (substrate-API correspondence per BENCH.md §10.6). The 2026-05-12 full auditability gates plus SK-V3 direct projection proof made the old 2,000/2,400 caps too narrow. SK-V4 moves Track 1 direct into generated runtime/codegen `SinkOnly`; `bbnf-bench` owns measurement and independent oracles only. CSS prior probe remains deferred. Exact internal split owned by BENCH.md. | 4,000 |
 | `test-fixtures` | 800 | JSON corpora pointers + checksums (~200), parity matrix manifest (~300), corpus loader (~300). Twitter / citm / canada are not committed as binary; they are downloaded by the loader and checksummed against the manifest. | 1,500 |
-| **Skinny total (handwritten)** | **31,400** | | **~83,500** |
+| **Skinny total (handwritten)** | **32,000** | | **~83,500** |
 | Generated `runtime/src/grammars/json/` | ≤ 4,000 | PASS-2 baseline + 2 percent (`PASS-2.md:432`). Tracked separately; not counted in handwritten LOC. | ≤ 4,000 |
-| `xtask` (dev) | ≤ 500 | Minimal subcommand binary for `regen-json`, `check-json`, `check-conformance`, `lint-loc`, `bench-json`, and `gate-json`; not counted in skinny crate LOC. | (no V1 equivalent — replaced by `bbnf-cli`) |
+| `xtask` (dev) | ≤ 650 | Minimal subcommand binary for `regen-json`, `check-json`, `check-conformance`, `lint-loc`, `bench-json`, `gate-json`, and `primitive-checkasm`; not counted in skinny crate LOC. | (no V1 equivalent — replaced by `bbnf-cli`) |
 
 ### 2.1 The `passes` Contradiction
 
@@ -412,7 +415,7 @@ bbnf-bench/src/
   parity/                  # token stream + canonical-output oracle.
   gates/                   # SOTA gate runner.
   report/                  # RESULTS.md renderer.
-  track2/                  # handwritten substrate ceiling probe, ≤ 500 LOC.
+  track2/                  # handwritten substrate ceiling probe; correspondence-gated.
 ```
 
 Seven children. Internal layout owned by BENCH.md.
@@ -433,7 +436,7 @@ Four children. Within Lock 13.
 
 ```text
 xtask/src/
-  main.rs                  # ≤500 LOC; subcommand dispatch + regen + check + conformance + LOC + bench.
+  main.rs                  # ≤650 LOC; dispatch + regen + checks + LOC + bench + checkasm.
 ```
 
 Single-file binary; not subject to Lock 13's directory rule because the dev tool is not a public crate.
@@ -508,7 +511,7 @@ If the 90-second target is not met:
 The skinny ships one `xtask` binary at `xtask/src/main.rs`. The full `bbnf-cli` is overkill: command discovery, multi-grammar workspace traversal, debug subcommands, output formatting, and the playground/DAP/LSP bridge are unbuildable in the skinny window and irrelevant to the SOTA-beat measurement.
 
 ```rust
-// xtask/src/main.rs (sketch; full source ≤500 LOC).
+// xtask/src/main.rs (sketch; full source ≤650 LOC).
 
 fn main() -> anyhow::Result<()> {
     let mut args = std::env::args().skip(1);
@@ -535,20 +538,20 @@ mod bench {
 }
 
 mod loc {
-    // Enforces the ≤4,000 generated JSON LOC budget and the ≤2,400 LOC
+    // Enforces the ≤4,000 generated JSON LOC budget and the ≤3,300 LOC
     // `bbnf-bench` aggregate budget before bench results can authorize
     // dispatch. The Track 2 probe is no longer LOC-capped: it is gated by
     // substrate-API correspondence (must `use` `runtime::tape::*` +
     // `bbnf_simd::*` directly per BENCH.md §10.6). Track 2 measured at
-    // ~343 LOC post-iteration; the cap is informational, not binding.
-    // Budget-cliff diagnostic: when `bbnf-bench` LOC is in [2350, 2400],
+    // ~318 LOC post-iteration; the cap is informational, not binding.
+    // Budget-cliff diagnostic: when `bbnf-bench` LOC is in [3250, 3300],
     // emit a yellow warning naming the cliff before pass; when over, emit
     // BBNF-BUDGET-CLIFF naming the post-iteration headroom is exhausted
     // and pointing implementers at the SK-V2 surgery options.
 }
 ```
 
-The xtask runner is dev-only and does not appear in the public crate set. Its ≤500 LOC is not counted in the skinny's 31,400 LOC handwritten budget.
+The xtask runner is dev-only and does not appear in the public crate set. Its ≤650 LOC is not counted in the skinny's 32,000 LOC handwritten budget.
 
 ## 7. Stub Policy For Skipped Crates
 
@@ -562,7 +565,7 @@ Each skipped V1 crate is replaced in the skinny by either a deleted dependency, 
 | `pipeline` | Linear orchestrator function `compile_grammar(metadata) -> Result<RustModule>`. | `xtask/src/main.rs::regen` (regen path) + `bbnf-bench/src/probes.rs` (bench harness path); no `bbnf::compile` public facade until V1 graduation. | ~200 |
 | `cost-model` | Pre-selected optimization choices wired into `passes::recognizers::json_curate()` and bounded by BENCH.md alternate-plan probes. | `crates/passes/src/recognizers/` | (counted in passes) |
 | `vm` | None. BIR is validated by Rust-lowerer output running against fixtures. | — | 0 |
-| `bbnf-cli` | `xtask` subcommands. | `xtask/src/main.rs` | ≤500 |
+| `bbnf-cli` | `xtask` subcommands. | `xtask/src/main.rs` | ≤650 |
 | `bbnf-language-server` | None. | — | 0 |
 | `egraph` / `egraph-derive` / `csp-solver` | None; `passes` does not import. | — | 0 |
 | `parse-that` | None; `parse-that-regex` is the only mined sister. | — | 0 |
@@ -647,16 +650,16 @@ The skinny explicitly omits the following V1 mechanisms. Each omission's impact 
 | Recovery / `@error` directives | Skinny tests on valid + minimally malformed corpus only. | Zero impact on twitter / citm / canada SOTA rows; recovery is its own gate (tranche I). |
 | Multiple grammars | Skinny is JSON-only. | Risk: SIMD-beat for JSON does not imply SIMD-beat for CSS L4 (107K generated LOC, 14-variant OpenFrame relics in current code). The V1 H tranche owns the per-grammar SOTA-beat closure. |
 | CSS prior probe | Spec'd as anti-overfit lever in BENCH.md §9.1 / §11.1; deferred from skinny prototype (no `track2/css_prior.rs` on disk). | Risk: JSON-only result without the CSS prior probe does not bound substrate viability for non-JSON grammars; the only structural anti-overfit measurement the spec proposed is not executed. Mitigation: route the anti-overfit lever to V1 H tranche per multi-grammar V1-closure. |
-| Lazy-offset tape route | Measured canonical JSON substrate for the historical triad (REDRESS §20-§25). The expanded gate is overall G / NoGo, with misses concentrated in event-cursor dispatch, capacity/allocation policy, and string/Unicode-shaped rows. | Risk: V1 may overgeneralize the triad result to grammars with recovery, layout, eager host materialization, or different token alphabets. Mitigation: keep grammar-specific materialization gates and require before/after bench proof for rejected alternates. |
+| Lazy-offset tape route | Measured canonical JSON substrate for the historical triad (REDRESS §20-§25). The expanded parse gate still has G rows, and the full gate is N-direct / NoGo; misses concentrate in event-cursor dispatch, string/Unicode-shaped rows, and exact float/string/Unicode materialization inside typed sinks. | Risk: V1 may overgeneralize the triad result to grammars with recovery, layout, eager host materialization, or different token alphabets. Mitigation: keep grammar-specific materialization gates and require before/after bench proof for rejected alternates. |
 | `egraph-derive` / proc-macro infrastructure | Not invoked in skinny. | Zero impact. |
 | Workspace metadata cross-grammar coherence | One grammar entry only. | Zero impact for JSON. |
-| Generated LOC budget enforcement at scale | One generated tree (`json/`); `xtask lint-loc` gates ≤4,000 JSON generated LOC and ≤2,400 `bbnf-bench` aggregate LOC (Track 2 gated by substrate-API correspondence per BENCH.md §10.6, not by an LOC cap; measured at ~262 LOC). | Risk: V1's nine-grammar generated-LOC ceiling (172,125 LOC per `PASS-2.md:435`) is not exercised. The skinny prevents local JSON bloat but still routes nine-grammar scale to F.W3. |
+| Generated LOC budget enforcement at scale | One generated tree (`json/`); `xtask lint-loc` gates ≤4,000 JSON generated LOC and ≤3,300 `bbnf-bench` aggregate LOC (Track 2 gated by substrate-API correspondence per BENCH.md §10.6, not by an LOC cap; measured at ~318 LOC). | Risk: V1's nine-grammar generated-LOC ceiling (172,125 LOC per `PASS-2.md:435`) is not exercised. The skinny prevents local JSON bloat but still routes nine-grammar scale to F.W3. |
 
 The skinny's SOTA-viability claim is: **if the JSON skinny lands within or beats the sonic-rs / simd-json envelope on twitter, citm, canada with the V1 substrate (tape + direct-to-struct), then the V1 architectural premise is validated for JSON-class grammars.** The claim does not extend to CSS, Sheets, or BBNF-self.
 
 ## 11. Closure And Open Contradictions
 
-The skinny is buildable in 2-4 weeks at 31,400 handwritten LOC plus ≤ 4,000 generated LOC if and only if:
+The skinny is buildable in 2-4 weeks at 32,000 handwritten LOC plus ≤ 4,000 generated LOC if and only if:
 
 1. The `passes` HM-only constraint holds (§2.1).
 2. The 90-second clean release-build target holds (§9).
@@ -666,7 +669,7 @@ The skinny is buildable in 2-4 weeks at 31,400 handwritten LOC plus ≤ 4,000 ge
 6. BENCH.md's host-call and alternate-plan probes pass, or RESULTS marks the relevant cut MASKING and blocks a full SK-READY verdict.
 7. Conditional bench outcomes are non-green; only an unconditional GO authorizes dispatch.
 8. The cross-quadrant deviation ledger (INDEX §"Open contradictions" + WORKSPACE §8.1) stays consistent: every skinny deviation appears in both ledgers with the same row, the same V1 closure cost, and the same MECHANICAL / MASKING-CANDIDATE / DEFERRED-MASKING-CANDIDATE classification.
-9. The empirical LOC headroom is read as V1-destination-shape headroom, not as scope-wrong evidence: the on-disk skinny prototype remains far under the 31,400 ceiling. `bbnf-bench` is the binding ceiling and now carries a 2,400 LOC cap because the final auditability gates (`S` anchor rendering, subprocess RSS, persisted SIMD parity metadata, conformance hooks) are BENCH-owned, not optional reporting flourishes. Every other crate carries V1-destination headroom.
+9. The empirical LOC headroom is read as V1-destination-shape headroom, not as scope-wrong evidence: the on-disk skinny prototype remains far under the 32,000 ceiling. `bbnf-bench` is the binding ceiling and now carries a 3,300 LOC cap because the final auditability gates (`S` anchor rendering, subprocess RSS, persisted SIMD parity metadata, conformance hooks, direct-to-struct workload rows) are BENCH-owned, not optional reporting flourishes. Every other crate carries V1-destination headroom.
 10. The CSS prior probe deferral (per §10) is discharged at V1 H tranche by the multi-grammar anti-overfit measurement; the JSON SOTA-beat number does not extend to non-JSON grammars without it.
 
 Open contradictions flagged for the synthesis pass:

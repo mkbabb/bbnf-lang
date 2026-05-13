@@ -9,36 +9,62 @@ recorded in the runnable prototype surfaces under `skinny/`; the guarded
 
 ## Current Bench Fact
 
-The gate report is canonicalized to Mbps. Two facts must stay separate.
+The gate report is canonicalized to Mbps. The current measured authority is
+`skinny/RESULTS.md`, regenerated after the SK-V3 Wave 0/1 implementation pass
+and the direct-to-struct workload gate. It records **overall outcome
+N-direct / NoGo**.
 
-First, the original skinny triad passed: generated Track 1 and independent
-hand-coded Track 2 both beat the sonic-rs anchor on twitter, citm_catalog, and
-canada, and Track 1 stayed inside the Track 2 parity band. That validates the
-lazy offset tape/direct projection substrate for the original skinny premise.
+Two blockers must stay separate:
 
-Second, the current measured authority is the expanded corpus in
-`skinny/RESULTS.md`, which records **overall outcome G / NoGo**. Five rows are
-currently binding: `github_events`, `update_center`, `random`,
-`unicode_escapes`, and `y_string_unicode`. The expanded result does not refute
-the tape/direct union; it exposes primitive and lowering gaps that the next
-SOTA-BEAT packet must close.
+1. The parse/tape plane still has hard G rows: `twitter`, `random`,
+   `unicode_mixed`, and `unicode_basic`. Track 1 and Track 2 move together on
+   those rows, so the miss is substrate/runtime shape rather than generator
+   overhead alone.
+2. The direct-to-struct workload is correctness-green
+   (`track1=track2=serde; sonic shape parity`) and now uses a sink-only digest
+   parser for the timed BBNF rows, with the retained-tape view walk kept as an
+   untimed parity oracle. The sink-only move roughly doubled/tripled direct
+   throughput. After the duplicate UTF-8 validation cut and scanner-owned
+   integer classification, 6 of 17 direct rows now pass; 11 remain
+   throughput-red against the sonic-rs direct baseline.
+
+The earlier original-triad pass remains useful historical evidence, but it is
+not the current close condition. The full 17-fixture gate plus
+`direct_to_struct` is now the binding authority.
 
 | Corpus | Track 1 Mbps | Track 2 Mbps | sonic-rs Mbps | Track 1 / sonic | Track 2 / sonic |
 |---|---:|---:|---:|---:|---:|
-| twitter | 23628 | 23242 | 21461 | 110.1% | 108.3% |
-| citm_catalog | 30102 | 29969 | 25330 | 118.8% | 118.3% |
-| canada | 16264 | 16217 | 13945 | 116.6% | 116.3% |
+| twitter | 16294 | 16068 | 20810 | 78.3% | 77.2% |
+| citm_catalog | 29185 | 29401 | 24910 | 117.2% | 118.0% |
+| canada | 16975 | 16675 | 12658 | 134.1% | 131.7% |
+| github_events | 25332 | 25794 | 22182 | 114.2% | 116.3% |
+| random | 7770 | 7677 | 15370 | 50.6% | 49.9% |
+| unicode_mixed | 7384 | 7300 | 15892 | 46.5% | 45.9% |
+| unicode_basic | 6561 | 6889 | 13304 | 49.3% | 51.8% |
+| y_string_unicode | 13109 | 13871 | 13673 | 95.9% | 101.5% |
 
 Structural scan is not the current blocker: the `canada` structural-only scan
-reports 68896 Mbps against a 40000 Mbps floor.
+reports 69075 Mbps against a 40000 Mbps floor.
+
+Direct-to-struct is now the binding workload blocker:
+
+| Corpus | Track 1 direct Mbps | Track 2 direct Mbps | sonic-rs direct Mbps | Track 1 / sonic direct |
+|---|---:|---:|---:|---:|
+| twitter | 7606 | 7607 | 11587 | 65.6% |
+| citm_catalog | 19277 | 19370 | 21716 | 88.8% |
+| canada | 5476 | 5472 | 12549 | 43.6% |
+| apache_builds | 9853 | 9835 | 10192 | 96.7% |
+| random | 5310 | 5321 | 9164 | 57.9% |
+| unicode_mixed | 2744 | 2721 | 6421 | 42.7% |
+| unicode_basic | 3770 | 3787 | 7078 | 53.3% |
 
 Lazy tape materialization is now reported per corpus:
 
-| Corpus | Offsets | Logical offset bytes | Flag bytes | Allocated tape bytes | Opens | Closes | String quotes | Numbers | Literals | Separators |
+| Corpus | Offsets | Logical offset bytes | Flag bytes | Allocated tape bytes | Object opens | Array opens | Closes | String quotes | Numbers | Literals |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| twitter | 73362 | 293448 | 1560 | 295008 | 2314 | 2314 | 36198 | 2109 | 4737 | 25690 |
-| citm_catalog | 162594 | 650376 | 5 | 650381 | 21388 | 21388 | 53208 | 14392 | 1263 | 50955 |
-| canada | 334385 | 1337540 | 0 | 1337540 | 56049 | 56049 | 24 | 111126 | 0 | 111137 |
+| twitter | 29573 | 118292 | 1560 | 133632 | 1264 | 1050 | 2314 | 18099 | 2109 | 4737 |
+| citm_catalog | 85035 | 340140 | 5 | 524312 | 10937 | 10451 | 21388 | 26604 | 14392 | 1263 |
+| canada | 223236 | 892944 | 0 | 1048576 | 4 | 56045 | 56049 | 12 | 111126 | 0 |
 
 ## Implemented Redress
 
@@ -204,7 +230,7 @@ Lazy tape materialization is now reported per corpus:
    view traversal. The immediate post-migration gate was still outcome G
    against sonic-rs, with twitter Track 1 at 14810 Mbps; later sparse-flag and
    parser hot-path wins moved the historical triad to pass; the later expanded
-   corpus remains overall G / NoGo.
+   corpus has current parse G rows, and the full gate is `N-direct / NoGo`.
 
 21. Lock 15 release-profile discipline is enforced in the skinny workspace.
 
@@ -248,7 +274,7 @@ Lazy tape materialization is now reported per corpus:
    corpora, or failed to beat the direct hot-path changes above.
 
 26. Bench auditability gates landed after the triad pass and before expanded
-   G / NoGo classification.
+   parse-G and `N-direct / NoGo` classification.
 
    The compact report now renders all three competitor anchors, names the
    fastest `S` row used by the classifier, and reports Track 1 / S plus Track 2
@@ -258,8 +284,9 @@ Lazy tape materialization is now reported per corpus:
    check-conformance` exercises UTF-8 rejection, surrogate rejection,
    non-character acceptance, and float-bit parity over the expanded corpus
    manifest. This moved `bbnf-bench` and `xtask` above their old micro-budgets,
-   so WORKSPACE.md redresses those local caps to 2,400 and 500 LOC while the
-   total skinny remains far under the 31,400 handwritten ceiling.
+   so WORKSPACE.md redresses those local caps to 3,300 and 650 LOC after the
+   direct-to-struct proof and `primitive-checkasm` became mandatory gate
+   surfaces. The total skinny handwritten envelope is redressed to 32,000 LOC.
 
 27. SK-V3 reprofile split the expanded blockers by mechanism.
 
@@ -271,20 +298,91 @@ Lazy tape materialization is now reported per corpus:
    capacity policy is a measured SOTA item. Profiles live under
    `skinny/profile/reprofile-2026-05-12/`.
 
+28. SK-V3 Wave 0/1 closed SIMD parity and admitted the host aarch64 primitive
+    kernels, but rejected active 16-byte tiny-string dispatch.
+
+   Plan D (`GrowOnly`) is now the production capacity default. Strict
+   `bbnf-simd` checkasm parity passes, including the adversarial
+   `escape_mask_64` handoff sweep and the new aarch64 Class A/Class B
+   primitive admission tests. The generic TBL tiny-string kernel and the
+   TBL-driven `\uXXXX` decoder are implemented and parity-checked. When the
+   16-byte tiny-string helper was routed into Track 1/Track 2, Criterion showed
+   a real `twitter` regression of roughly 25% on both tracks, so the active
+   parser remains on the 8-byte scalar tiny recognizer. Fresh profiles under
+   `skinny/profile/reprofile-sk-v3-wave1/` show `parse_value_at` still
+   dominating `random`, `unicode_escapes`, and `update-center`.
+
+29. HEAD vocabulary state after `74406332` and `9eef728c`.
+
+   The restart docs now canonize the two-layer primitive vocabulary: Layer 0 is
+   the vendored macro substrate and Layer 1 is grammar-neutral `bbnf.asm`.
+   HEAD contains the `bbnf.asm` skeleton plus the first end-to-end
+   `BYTE_CLASS_FROM_EQ_SET_64` scalar/aarch64/x86/checkasm path. That is an
+   admission and vocabulary milestone, not a SOTA-BEAT verdict change: the
+   parse/tape plane still has G rows and the next measured target is
+   `parse_value_at` / event-cursor consumption.
+
+30. Direct-to-struct is now a throughput gate, not just a correctness proof.
+
+   `bbnf-bench` records Track 1 sink-only direct, Track 2 sink-only direct,
+   sonic-rs direct serde, and serde_json direct serde rows for every fixture.
+   The old retained-tape view walk remains in `assert_direct_struct_parity` as
+   an untimed parity oracle. Correctness passes by exact sink/view/serde digest
+   equality and sonic-rs shape parity. Timed sink-only throughput improves
+   materially over the view-walk digest. After the duplicate UTF-8 validation
+   cut and `JsonNumberMatch::is_integer`, 6 of 17 rows pass the current
+   `1.10` time slack (`citm_catalog`, `apache_builds`, `github_events`,
+   `update_center`, `instruments`, and `distinct_values`); 11 remain
+   NO-GO, concentrated in numeric, Unicode, and dense retained-sink shapes.
+   The gate therefore appends outcome
+   `N-direct / NoGo` when either bbnf direct track is slower than
+   `sonic-rs * 1.10` in time.
+
+31. Direct sink profiling moved the next blocker from view traversal to
+    materialization leaves.
+
+   `crates/bbnf-bench/src/bin/profile_direct.rs` records focused direct-sink
+   profiles for Track 1, Track 2, sonic-rs, and serde baselines. The first
+   samply pass on `twitter`, `numbers`, and `unicode_mixed` is summarized in
+   `skinny/profile/direct-sink-2026-05-12/PROFILE-REPORT.md`; it showed
+   duplicate UTF-8 validation, string/unescape loops, and exact number
+   materialization as the hot leaves. The implemented redress removes the
+   duplicate UTF-8 validation after `match_json_string_at_quote` has already
+   validated the span, and moves integer/non-integer classification into
+   `parse_that_regex::JsonNumberMatch` so integral spans do not pay a second
+   scan. A direct `raw.parse::<f64>()` fast path was tested and rejected on
+   parity: `canada` exposed float-shape mismatch against the serde oracle. The
+   remaining direct work is therefore exact float materialization and
+   Unicode/string decode quality inside `SinkOnly`, not another retained-view
+   rewrite.
+
+32. Gate status and budget-cliff handling are executable, not prose-only.
+
+   `crates/bbnf-bench/src/bin/gate.rs` now exits from the worst measured
+   verdict after writing `skinny/RESULTS.md`: local `xtask gate-json` hard-fails
+   on `N-direct / NoGo`, while the explicit `--advisory` mode keeps CI
+   throughput rows report-only and still hard-fails schema, parity, and SIMD
+   parity correctness blockers. `xtask lint-loc` now emits
+   `BBNF-BUDGET-CLIFF` when `bbnf-bench` enters the documented 3250-3300 LOC
+   warning band; the current crate is 3278/3300 LOC, so the warning is live.
+
 ## Sonic Closeness
 
-The parser now works as the tape/direct hybrid the spec requires and beats the
-sonic-rs anchor on the original three measured rows. Twitter remains the
-binding triad row and classifies as outcome A in that narrower gate: Track 1 is
-110.1% of sonic-rs and Track 2 is 108.3% of sonic-rs. Citm_catalog and canada
-also classify as outcome A.
+The parser works as the tape/direct hybrid the spec requires, but the current
+full gate is not SOTA-close enough to dispatch. The expanded corpus is now the
+authority for SOTA-BEAT: `twitter`, `random`, `unicode_mixed`, and
+`unicode_basic` classify as G / NoGo; `unicode_escapes`,
+`y_string_unicode`, `update_center`, `instruments`, and `distinct_values`
+classify as C / GO; the remaining rows classify as A / GO. The common parse
+blocker is still `parse_value_at`-heavy descent and string/Unicode projection,
+not tape payload writes.
 
-The expanded corpus is stricter and is now authoritative for SOTA-BEAT. It
-classifies as G / NoGo because the failing rows expose three remaining
-families of work: object/key-dispatch and small-document overhead
-(`github_events`, `update_center`, `random`), parse-only event-cursor overhead
-on escape-heavy input (`unicode_escapes`), and Unicode string projection
-(`y_string_unicode`).
+Direct-to-struct remains explicitly classified after the sink-only rewrite.
+The workload now proves typed sink correctness, not merely view projection, and
+it moved Track 1 direct to roughly 33-124% of sonic-rs direct throughput across
+the corpus. That is a major closure of the prior view-walk gap but still not
+SOTA-BEAT: six rows now pass the 1.10 time slack, while
+numeric/Unicode-heavy rows and several dense sink rows remain far behind.
 
 The largest code win already landed was removing redundant whitespace scans:
 large-corpus Track 1 improved by roughly 26-34% when that change first landed.
@@ -492,8 +590,8 @@ perturbation.
   documented as a MASKING signal for V1 JSON unless decode stays lazy.
 - Lazy-offset JSON tape plus tape-union migration was implemented and measured;
   subsequent sparse-flag, spare-capacity write, SWAR, delimiter-fusion, and
-  parser-split wins move the historical triad to pass. The expanded gate remains
-  overall G / NoGo.
+  parser-split wins move the historical triad to pass. The current parse gate
+  still has four G rows and the full gate is `N-direct / NoGo`.
 - The report now renders the actual fastest-anchor `S` comparator rather than
   only sonic-rs; conformance and SIMD parity metadata gates are executable.
 - `bbnf-simd` is now the scanner crate used by runtime and bench, with
@@ -501,12 +599,12 @@ perturbation.
 - Skinny and full specs now use the prototype workspace result path
   `skinny/RESULTS.md` for the runnable prototype, with `restart/skinny/` kept
   as spec authority.
-- Original three-corpus gate: twitter outcome A / GO (Track 1 23628 Mbps,
-  Track 2 23242, sonic-rs 21461); citm_catalog outcome A / GO (30102 / 29969 /
-  25330); canada outcome A / GO (16264 / 16217 / 13945).
-- Current expanded-corpus gate: `skinny/RESULTS.md` records overall G / NoGo,
-  with `github_events`, `update_center`, `random`, `unicode_escapes`, and
-  `y_string_unicode` as the binding misses.
+- Current expanded-corpus parse gate: `skinny/RESULTS.md` records G / NoGo
+  rows for `twitter`, `random`, `unicode_mixed`, and `unicode_basic`.
+- Current direct-to-struct workload gate: correctness passes, and sink-only
+  direct throughput now passes 6 of 17 rows after the UTF-validation and
+  integer-classification redress; 11 rows remain NO-GO against sonic-rs direct,
+  so the overall gate reports `N-direct / NoGo`.
 
 ## Closed Reporting Gates
 
@@ -516,9 +614,8 @@ perturbation.
   never calls `runtime::generated_json::parse`.
 - Peak RSS is now measured through row metadata and rendered by the compact
   gate. The current report shows bbnf peak RSS below the fastest competitor on
-  all three corpora: twitter 77,348,864 vs 92,798,976 bytes, citm_catalog
-  155,566,080 vs 159,744,000 bytes, and canada 190,709,760 vs 195,067,904
-  bytes.
+  the historical triad: twitter 3,424,256 vs 4,898,816 bytes, citm_catalog
+  4,718,592 vs 7,733,248 bytes, and canada 5,750,784 vs 11,337,728 bytes.
 
 ## Next No-Workaround Work
 
@@ -526,8 +623,17 @@ perturbation.
    NEON no-escape string matcher, separator elision, generic SWAR whitespace,
    12-byte/width churn, and dispatch-table/function-pointer alternates remain
    non-canonical unless a future bench row overturns them.
-2. Carry the original A / Go triad into V1 planning as JSON-class substrate
-   validation inside the skinny bounds.
-3. Carry the expanded G / NoGo into V1 planning as the current SOTA-BEAT block:
-   string/Unicode primitives, random/key-dispatch overhead, and update-center
-   shape overhead are now implementation requirements, not optional tuning.
+2. Carry the current G rows into V1 planning as the parse/tape SOTA-BEAT block:
+   `parse_value_at` descent, random/key-dispatch overhead, and string/Unicode
+   projection are now implementation requirements, not optional tuning.
+3. Carry `N-direct / NoGo` into V1 planning as a separate typed-emission block:
+   sink-only direct parsing closed much of the view-walk gap, but the remaining
+   11 failing rows require exact float, string, and Unicode materialization
+   work inside generated `SinkOnly`.
+4. Carry the SK-V4 asmjson/dav1d reassay into V1 planning as an architecture
+   correction, not a new directive: the substrate boundary is now the typed
+   event stream, retained tape and direct `SinkOnly` are two materializations
+   of that stream, and `CollapsedStage` is a conditional x86 per-grammar NASM
+   authoring route guarded by `BBNF-COLLAPSEDSTAGE-NOT-VIABLE`. The current
+   receiver packet is
+   `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md`.

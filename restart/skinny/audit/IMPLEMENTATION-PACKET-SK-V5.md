@@ -403,6 +403,16 @@ cursor. The admissible implementation makes structural projection the single
 parse substrate: scanner-to-tape/event write-through consumed by generated
 lowering, or same-loop mask consumption inside `SinkOnly` / `CollapsedStage`.
 
+Post-redress update 5: an exact decoded-string stats sink was measured and
+rejected in `skinny/REDRESS.md` item 54. It kept the admitted source hooks and
+preserved exact digest semantics, but the two-pass decoded-length + decoded
+hash computation regressed generated Track 1 on escape-heavy direct rows:
+`unicode_mixed` about 3428 Mbps, `unicode_escapes` about 2385 Mbps, and
+`y_string_unicode` about 3301 Mbps. Do not implement the direct close as
+another sink-local exact-stats helper. The admissible close is a one-pass
+parse-that primitive or same-loop SinkOnly/CollapsedStage materializer that
+decodes, validates, and emits sink/hash facts together.
+
 ### 4.6 Bench rewire + bench-private nuke
 
 `bbnf-bench/src/direct_struct.rs`: delete `SinkParser`, `track1_digest`,
@@ -769,8 +779,8 @@ The wave order prioritises measurable corpus moves:
   residuals.
 - Wave 3 removes duplicate UTF-8 validation and lifts string-bound rows;
   generated source hooks are admitted, while a no-allocation decoded-string
-  visitor consumer is rejected by measurement. It does not close the parse-G
-  or direct Unicode/string gates.
+  visitor consumer and a later exact decoded-stats sink are rejected by
+  measurement. It does not close the parse-G or direct Unicode/string gates.
 - Wave 4 nukes the Lock 14 / Lock 1 residue so generic crates pass
   audit (no JSON code in `bbnf-simd` / `parse-that-regex` /
   `codegen/lower`).

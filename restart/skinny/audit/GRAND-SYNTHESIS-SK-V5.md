@@ -250,6 +250,13 @@ scan beside source-byte recursive descent and regressed the retained triad to
 the parser"; it is "make the tape/event projection the parser substrate" or
 consume masks in the same `SinkOnly` / `CollapsedStage` loop.
 
+The direct string line has the same narrowing pattern. Item 49 rejects a
+generic no-allocation decoded visitor, and item 54 rejects an exact
+decoded-length/hash helper at the sink: both were correctness-green and both
+regressed escaped-string direct rows. The corrected close is not "remove the
+String allocation somewhere"; it is "fuse decode, validation, and sink/hash
+materialization in one parse-that/SinkOnly loop."
+
 The storage substrate itself (`Tape<'input>` + `TapeBuilder` + `ValueRef`)
 holds cleanly with zero type-ambivalence and zero columnar / PayloadStream
 residue. The skinny line has zero OpenFrame residue (`grep -rn
@@ -382,8 +389,8 @@ diagnosis and the verified novelty pattern. The path is:
   body + NEON surrogate-pair join. Post-assay correction: this removed
   duplicate UTF-8 validation and lifted affected rows; generated string source
   hooks are admitted, while the attempted no-allocation decoded visitor route
-  is rejected by measurement. Parse-G and direct string/Unicode gates remain
-  open.
+  and the later exact decoded-stats sink are rejected by measurement. Parse-G
+  and direct string/Unicode gates remain open.
 - **Wave 4** (Lock 14 remediation): split `bbnf-simd/src/lib.rs`
   god-module into per-primitive grammar-neutral modules; remove the 7
   hardcoded JSON punctuation char-lists from the 4 scalar-reference

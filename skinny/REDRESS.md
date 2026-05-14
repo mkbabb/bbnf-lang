@@ -786,6 +786,39 @@ Lazy tape materialization is now reported per corpus:
    the same loop. A `ParserState`-owned structural cursor over source bytes is
    non-canonical unless a future before/after row overturns this measurement.
 
+54. SK-V5 exact decoded-string stats sink is REJECTED.
+
+   A narrower direct-string attempt kept the admitted `JsonSink::*_source`
+   seam but replaced escaped-string allocation in `JsonDigestSink` with an
+   exact decoded-length plus exact `hash_bytes` computation. The helper reused
+   parse-that Unicode escape validation, computed decoded length in one pass,
+   streamed decoded bytes into a chunked hasher in a second pass, and preserved
+   byte-for-byte digest parity with the allocating baseline. `cargo fmt`,
+   targeted `parse-that-regex`, `bbnf-bench`, `runtime`, and `codegen` tests,
+   `xtask check-json`, and `xtask check-conformance` were green under
+   `CARGO_TARGET_DIR=/tmp/skv5-string-stats-target`.
+
+   The focused direct workload rejected the shape. Versus the current RESULTS
+   baseline, ordinary and numeric rows stayed within noise or slightly
+   improved (`numbers` Track 1/Track 2/sonic-rs: about 12446 / 12267 / 12886
+   Mbps; `unicode_basic`: about 5539 / 5167 / 9682 Mbps), but escaped-string
+   rows regressed precisely where the route needed to close the gap:
+   `unicode_mixed` Track 1/Track 2/sonic-rs landed around 3428 / 4187 / 11268
+   Mbps, `unicode_escapes` around 2385 / 5117 / 14442 Mbps, and
+   `y_string_unicode` around 3301 / 4327 / 9029 Mbps. Track 2 stayed near its
+   prior allocation baseline on the same rows, so the regression is not a
+   corpus or comparator problem; the generated Track 1 sink paid the exact
+   two-pass stats cost on escape-heavy strings.
+
+   The slice was reverted before commit. The source-hook seam remains
+   canonical, but sink-local exact stats are not the direct-string close. The
+   admissible route is a one-pass fused parse-that string primitive that
+   decodes, validates, and emits sink/hash materialization in the same loop, or
+   same-loop `SinkOnly` / `CollapsedStage` consumption where decoded string
+   facts are produced as part of the grammar event stream. Allocation removal
+   alone does not count as progress unless the affected direct rows cross the
+   sonic-rs 1.10x slack.
+
 ## Sonic Closeness
 
 The parser works as the tape/direct hybrid the spec requires, but the current
@@ -804,8 +837,11 @@ right symbol paths but did not close the SOTA gap: the latest full run reports
 only one direct row (`numbers`) within the 1.10 sonic-rs time slack. Generated
 source hooks now preserve raw string spans to the sink boundary, but the first
 no-allocation decoded-string consumer regressed and was rejected. The residual
-therefore remains dense typed-sink emission, fused decoded-string delivery,
-exact float/string/Unicode materialization, and event-stream consumption.
+therefore remains dense typed-sink emission, one-pass fused decoded-string
+delivery, exact float/string/Unicode materialization, and event-stream
+consumption. A later exact decoded-stats sink also regressed escape-heavy
+direct rows and is rejected in item 54, so another sink-local two-pass helper
+does not count as the close.
 Parse-time retained projection side tables were also measured and rejected in
 item 50, the byte-class whitespace cursor was rejected in item 51, and the
 parser-local structural-mask cursor was rejected in item 53. View facts must be

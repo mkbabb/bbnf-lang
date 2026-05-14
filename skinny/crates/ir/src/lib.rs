@@ -331,6 +331,15 @@ pub struct BackendIr {
     pub shape_facts: ShapeFacts,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum BackendShape {
+    EagerTape,
+    OffsetTape,
+    EventTape,
+    SinkOnly,
+    CollapsedStage,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct BackendRule {
     pub name: String,

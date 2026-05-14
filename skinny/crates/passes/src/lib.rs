@@ -1,10 +1,12 @@
 use ir::{
-    BackendExpr, BackendIr, BackendRule, ExprId, ExprKind, GrammarIr, Recognizer, ShapeFacts,
-    SimdMode, SimdSite, SourceSpan, SpanKind, SpanMarkKind, StructuralAlphabet, TapeKind,
-    ValidationError,
+    BackendExpr, BackendIr, BackendRule, BackendShape, ExprId, ExprKind, GrammarIr, Recognizer,
+    ShapeFacts, SimdMode, SimdSite, SourceSpan, SpanKind, SpanMarkKind, StructuralAlphabet,
+    TapeKind, ValidationError,
 };
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use thiserror::Error;
+
+pub mod diagnostics;
 
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum PassError {
@@ -24,14 +26,22 @@ pub fn normalize(grammar: &GrammarIr) -> Result<GrammarIr, PassError> {
 pub fn compile(grammar: &GrammarIr) -> Result<PipelineOutput, PassError> {
     let normalized = normalize(grammar)?;
     let type_facts = layout::types::infer(&normalized)?;
-    let layout_facts = layout::run(&normalized, type_facts);
+    let mut layout_facts = layout::run(&normalized, type_facts);
     let shape_facts = shapes::shapes_for_json();
     let recognizers = recognizers::nominate_json(&normalized);
     let backend_ir = extract::single_plan(&normalized, &layout_facts, shape_facts, recognizers)?;
+    let shape_plan = recognizers::derive_backend_shape_with_diagnostics(
+        &normalized,
+        &backend_ir,
+        &layout_facts,
+        recognizers::TargetFeatures::host(),
+    );
+    layout_facts.backend_shape = shape_plan.backend_shape;
     Ok(PipelineOutput {
         grammar: normalized,
         layout_facts,
         backend_ir,
+        diagnostics: shape_plan.diagnostics,
     })
 }
 
@@ -40,6 +50,7 @@ pub struct PipelineOutput {
     pub grammar: GrammarIr,
     pub layout_facts: LayoutFacts,
     pub backend_ir: BackendIr,
+    pub diagnostics: Vec<diagnostics::PassDiagnostic>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -48,6 +59,7 @@ pub struct LayoutFacts {
     pub node_types: HashMap<ExprId, Type>,
     pub layout_policies: HashMap<String, String>,
     pub hot_call_graph: HashMap<ir::RuleId, recognizers::hot_path::HotPathFact>,
+    pub backend_shape: HashMap<ir::RuleId, BackendShape>,
 }
 
 pub mod layout {
@@ -59,6 +71,7 @@ pub mod layout {
             node_types: type_facts.node_types,
             layout_policies: HashMap::new(),
             hot_call_graph: recognizers::hot_path::derive_hot_path(grammar, None),
+            backend_shape: HashMap::new(),
         }
     }
 
@@ -235,6 +248,311 @@ pub mod recognizers {
             alphabet: StructuralAlphabet::json(),
             site: SimdSite::PreEntry,
         }]
+    }
+
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+    pub struct TargetFeatures {
+        pub avx512bw: bool,
+        pub collapsed_stage_author_declared: bool,
+        pub direct_only_output: bool,
+        pub retained_api_consumer: bool,
+    }
+
+    impl TargetFeatures {
+        pub fn host() -> Self {
+            Self {
+                avx512bw: cfg!(all(target_arch = "x86_64", target_feature = "avx512bw")),
+                collapsed_stage_author_declared: false,
+                direct_only_output: false,
+                retained_api_consumer: true,
+            }
+        }
+    }
+
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct BackendShapePlan {
+        pub backend_shape: HashMap<ir::RuleId, BackendShape>,
+        pub diagnostics: Vec<diagnostics::PassDiagnostic>,
+    }
+
+    pub fn derive_backend_shape(
+        grammar: &GrammarIr,
+        backend: &BackendIr,
+        layout: &LayoutFacts,
+        target: TargetFeatures,
+    ) -> HashMap<ir::RuleId, BackendShape> {
+        derive_backend_shape_with_diagnostics(grammar, backend, layout, target).backend_shape
+    }
+
+    pub fn derive_backend_shape_with_diagnostics(
+        grammar: &GrammarIr,
+        backend: &BackendIr,
+        layout: &LayoutFacts,
+        target: TargetFeatures,
+    ) -> BackendShapePlan {
+        let mut backend_shape = HashMap::with_capacity(grammar.rules.len());
+        let mut diagnostics = Vec::new();
+
+        for rule in &grammar.rules {
+            let backend_rule = backend.rules.get(rule.id.0);
+            let shape = match backend_rule {
+                Some(_) if requires_eager_tape(grammar, rule.body, layout) => {
+                    BackendShape::EagerTape
+                }
+                Some(rule_ir) if admits_sink_only(rule_ir, target) => BackendShape::SinkOnly,
+                Some(rule_ir) if admits_collapsed_stage(rule_ir, target) => {
+                    if target.collapsed_stage_author_declared {
+                        BackendShape::CollapsedStage
+                    } else {
+                        diagnostics.push(diagnostics::PassDiagnostic::collapsed_stage_not_viable(
+                            rule.id,
+                            "missing per-grammar collapsed-stage assembly wrapper",
+                        ));
+                        BackendShape::OffsetTape
+                    }
+                }
+                Some(rule_ir) if prefers_event_tape(rule_ir) => BackendShape::EventTape,
+                Some(_) => BackendShape::OffsetTape,
+                None => {
+                    diagnostics.push(diagnostics::PassDiagnostic::backend_shape_inconsistent(
+                        rule.id,
+                        "grammar rule has no matching backend rule",
+                    ));
+                    BackendShape::EagerTape
+                }
+            };
+            backend_shape.insert(rule.id, shape);
+        }
+
+        BackendShapePlan {
+            backend_shape,
+            diagnostics,
+        }
+    }
+
+    fn requires_eager_tape(grammar: &GrammarIr, expr_id: ExprId, layout: &LayoutFacts) -> bool {
+        has_recovery_annotation(grammar, expr_id)
+            || has_parse_time_host_decode(grammar, expr_id)
+            || has_layout_policy(layout)
+            || has_dispatch_overlap(grammar, expr_id)
+    }
+
+    fn has_recovery_annotation(grammar: &GrammarIr, expr_id: ExprId) -> bool {
+        match &grammar.expr(expr_id).kind {
+            ExprKind::Annotation { name, value } => {
+                name.contains("recover")
+                    || value
+                        .as_deref()
+                        .is_some_and(|value| value.contains("recover"))
+            }
+            ExprKind::Seq(children)
+            | ExprKind::Alt {
+                branches: children, ..
+            } => children
+                .iter()
+                .copied()
+                .any(|child| has_recovery_annotation(grammar, child)),
+            ExprKind::Repeat { body, .. } | ExprKind::Optional(body) => {
+                has_recovery_annotation(grammar, *body)
+            }
+            ExprKind::Literal { .. } | ExprKind::Regex { .. } | ExprKind::Ref { .. } => false,
+        }
+    }
+
+    fn has_parse_time_host_decode(grammar: &GrammarIr, expr_id: ExprId) -> bool {
+        match &grammar.expr(expr_id).kind {
+            ExprKind::Annotation { name, value } => {
+                let value = value.as_deref().unwrap_or_default();
+                name.contains("host") && (value.contains("decode") || value.contains("parse"))
+            }
+            ExprKind::Seq(children)
+            | ExprKind::Alt {
+                branches: children, ..
+            } => children
+                .iter()
+                .copied()
+                .any(|child| has_parse_time_host_decode(grammar, child)),
+            ExprKind::Repeat { body, .. } | ExprKind::Optional(body) => {
+                has_parse_time_host_decode(grammar, *body)
+            }
+            ExprKind::Literal { .. } | ExprKind::Regex { .. } | ExprKind::Ref { .. } => false,
+        }
+    }
+
+    fn has_layout_policy(layout: &LayoutFacts) -> bool {
+        !layout.layout_policies.is_empty()
+    }
+
+    fn has_dispatch_overlap(grammar: &GrammarIr, expr_id: ExprId) -> bool {
+        match &grammar.expr(expr_id).kind {
+            ExprKind::Alt { branches, .. } => branches_overlap(grammar, branches),
+            ExprKind::Seq(children) => children
+                .iter()
+                .copied()
+                .any(|child| has_dispatch_overlap(grammar, child)),
+            ExprKind::Repeat { body, .. } | ExprKind::Optional(body) => {
+                has_dispatch_overlap(grammar, *body)
+            }
+            ExprKind::Literal { .. }
+            | ExprKind::Regex { .. }
+            | ExprKind::Ref { .. }
+            | ExprKind::Annotation { .. } => false,
+        }
+    }
+
+    fn branches_overlap(grammar: &GrammarIr, branches: &[ExprId]) -> bool {
+        let mut seen = HashSet::new();
+        for branch in branches {
+            let Some(first) = first_bytes(grammar, *branch, 0) else {
+                continue;
+            };
+            for byte in first.bytes {
+                if !seen.insert(byte) {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    struct FirstBytes {
+        bytes: HashSet<u8>,
+        nullable: bool,
+    }
+
+    fn first_bytes(grammar: &GrammarIr, expr_id: ExprId, depth: usize) -> Option<FirstBytes> {
+        if depth > grammar.rules.len() + 1 {
+            return None;
+        }
+        match &grammar.expr(expr_id).kind {
+            ExprKind::Seq(children) => {
+                let mut bytes = HashSet::new();
+                let mut nullable = true;
+                for child in children {
+                    let child_first = first_bytes(grammar, *child, depth + 1)?;
+                    bytes.extend(child_first.bytes);
+                    if !child_first.nullable {
+                        nullable = false;
+                        break;
+                    }
+                }
+                Some(FirstBytes { bytes, nullable })
+            }
+            ExprKind::Alt { branches, .. } => {
+                let mut bytes = HashSet::new();
+                let mut nullable = false;
+                for branch in branches {
+                    let branch_first = first_bytes(grammar, *branch, depth + 1)?;
+                    bytes.extend(branch_first.bytes);
+                    nullable |= branch_first.nullable;
+                }
+                Some(FirstBytes { bytes, nullable })
+            }
+            ExprKind::Repeat { body, min, .. } => {
+                let mut first = first_bytes(grammar, *body, depth + 1)?;
+                first.nullable |= *min == 0;
+                Some(first)
+            }
+            ExprKind::Optional(body) => {
+                let mut first = first_bytes(grammar, *body, depth + 1)?;
+                first.nullable = true;
+                Some(first)
+            }
+            ExprKind::Literal { bytes, .. } => {
+                let mut set = HashSet::new();
+                if let Some(byte) = bytes.first().copied() {
+                    set.insert(byte);
+                }
+                Some(FirstBytes {
+                    bytes: set,
+                    nullable: bytes.is_empty(),
+                })
+            }
+            ExprKind::Regex { pattern } => regex_first_bytes(pattern),
+            ExprKind::Ref {
+                target: Some(target),
+                ..
+            } => grammar
+                .rule(*target)
+                .and_then(|rule| first_bytes(grammar, rule.body, depth + 1)),
+            ExprKind::Ref { target: None, .. } => None,
+            ExprKind::Annotation { .. } => Some(FirstBytes {
+                bytes: HashSet::new(),
+                nullable: true,
+            }),
+        }
+    }
+
+    fn regex_first_bytes(pattern: &str) -> Option<FirstBytes> {
+        let mut bytes = HashSet::new();
+        let nullable = pattern == r"[ \t\n\r]*";
+        match pattern {
+            r"[ \t\n\r]*" => {
+                bytes.extend([b' ', b'\t', b'\n', b'\r']);
+            }
+            r"-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+\-]?[0-9]+)?" => {
+                bytes.insert(b'-');
+                bytes.extend(b'0'..=b'9');
+            }
+            pattern if pattern.starts_with('"') => {
+                bytes.insert(b'"');
+            }
+            _ => return None,
+        }
+        Some(FirstBytes { bytes, nullable })
+    }
+
+    fn admits_sink_only(rule_ir: &BackendRule, target: TargetFeatures) -> bool {
+        target.direct_only_output
+            && !target.retained_api_consumer
+            && contains_direct_build(&rule_ir.expr)
+    }
+
+    fn admits_collapsed_stage(rule_ir: &BackendRule, target: TargetFeatures) -> bool {
+        target.avx512bw && matches!(rule_ir.expr, BackendExpr::Entry(_))
+    }
+
+    fn prefers_event_tape(rule_ir: &BackendRule) -> bool {
+        alt_branch_count(&rule_ir.expr) >= 8
+    }
+
+    fn contains_direct_build(expr: &BackendExpr) -> bool {
+        match expr {
+            BackendExpr::DirectBuild { .. } => true,
+            BackendExpr::Entry(inner)
+            | BackendExpr::OptionalBranch(inner)
+            | BackendExpr::RepeatLoop { body: inner, .. } => contains_direct_build(inner),
+            BackendExpr::Seq(children)
+            | BackendExpr::Alt {
+                branches: children, ..
+            } => children.iter().any(contains_direct_build),
+            BackendExpr::ByteLiteral(_)
+            | BackendExpr::RegexProgram { .. }
+            | BackendExpr::CallRule { .. }
+            | BackendExpr::SpanMark { .. }
+            | BackendExpr::TapeEmit { .. }
+            | BackendExpr::ValueProject { .. }
+            | BackendExpr::Return => false,
+        }
+    }
+
+    fn alt_branch_count(expr: &BackendExpr) -> usize {
+        match expr {
+            BackendExpr::Alt { branches, .. } => branches.len(),
+            BackendExpr::Entry(inner)
+            | BackendExpr::OptionalBranch(inner)
+            | BackendExpr::RepeatLoop { body: inner, .. } => alt_branch_count(inner),
+            BackendExpr::Seq(children) => children.iter().map(alt_branch_count).max().unwrap_or(0),
+            BackendExpr::ByteLiteral(_)
+            | BackendExpr::RegexProgram { .. }
+            | BackendExpr::CallRule { .. }
+            | BackendExpr::SpanMark { .. }
+            | BackendExpr::TapeEmit { .. }
+            | BackendExpr::DirectBuild { .. }
+            | BackendExpr::ValueProject { .. }
+            | BackendExpr::Return => 0,
+        }
     }
 
     pub mod hot_path {
@@ -459,6 +777,13 @@ mod tests {
         assert_eq!(output.backend_ir.recognizers.len(), 1);
         assert_eq!(output.backend_ir.rules.len(), 15);
         assert!(output.layout_facts.layout_policies.is_empty());
+        assert!(output.diagnostics.is_empty());
+        assert_eq!(output.layout_facts.backend_shape.len(), 15);
+        assert!(output
+            .layout_facts
+            .backend_shape
+            .values()
+            .all(|shape| *shape == BackendShape::OffsetTape));
         let object = output
             .backend_ir
             .rules
@@ -484,6 +809,33 @@ mod tests {
     fn json_shapes_are_curated() {
         let shapes = shapes::shapes_for_json();
         assert_eq!(shapes.shapes.len(), 9);
+    }
+
+    #[test]
+    fn collapsed_stage_without_author_falls_back_with_diagnostic() {
+        let grammar = grammar::parse_json_grammar(JSON_GRAMMAR).unwrap();
+        let output = compile(&grammar).unwrap();
+        let plan = recognizers::derive_backend_shape_with_diagnostics(
+            &output.grammar,
+            &output.backend_ir,
+            &output.layout_facts,
+            recognizers::TargetFeatures {
+                avx512bw: true,
+                collapsed_stage_author_declared: false,
+                direct_only_output: false,
+                retained_api_consumer: true,
+            },
+        );
+
+        let json = output.grammar.rule_by_name("json").unwrap();
+        assert_eq!(
+            plan.backend_shape.get(&json.id).copied(),
+            Some(BackendShape::OffsetTape)
+        );
+        assert!(plan.diagnostics.iter().any(|diagnostic| {
+            diagnostic.code() == "BBNF-COLLAPSEDSTAGE-NOT-VIABLE"
+                && diagnostic.rule == Some(json.id)
+        }));
     }
 
     fn contains_tape_emit_and_direct_build(expr: &BackendExpr) -> bool {

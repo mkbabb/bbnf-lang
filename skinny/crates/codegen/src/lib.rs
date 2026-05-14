@@ -1,4 +1,6 @@
-use ir::BackendIr;
+mod lower;
+
+use ir::{BackendIr, BackendShape, RuleId};
 use std::collections::BTreeMap;
 use std::path::Path;
 use thiserror::Error;
@@ -60,19 +62,48 @@ impl EmittedSource {
 pub fn emit_json_from_source(source: &str) -> Result<EmittedSource, CodegenError> {
     let grammar = grammar::parse_json_grammar(source)?;
     let output = passes::compile(&grammar)?;
-    emit_json(&output.backend_ir)
+    emit_json_with_layout(
+        &output.backend_ir,
+        &output.layout_facts.backend_shape,
+        &output.diagnostics,
+    )
 }
 
 pub fn emit_json(backend: &BackendIr) -> Result<EmittedSource, CodegenError> {
+    let backend_shape = default_backend_shape(backend);
+    emit_json_with_layout(backend, &backend_shape, &[])
+}
+
+fn emit_json_with_layout(
+    backend: &BackendIr,
+    backend_shape: &std::collections::HashMap<RuleId, BackendShape>,
+    diagnostics: &[passes::diagnostics::PassDiagnostic],
+) -> Result<EmittedSource, CodegenError> {
+    let lowered = lower::lower_to_rust(
+        backend,
+        &lower::LowerCtx {
+            backend_shape,
+            diagnostics,
+        },
+    );
     let mut files = BTreeMap::new();
-    files.insert("generated.rs".to_string(), generated_rs(backend));
+    files.insert("generated.rs".to_string(), lowered.generated);
     files.insert("host.rs".to_string(), host_rs());
     files.insert("mod.rs".to_string(), mod_rs());
-    files.insert("parser.rs".to_string(), parser_rs(backend));
+    files.insert("parser.rs".to_string(), lowered.parser);
     files.insert("value.rs".to_string(), value_rs());
     files.insert("view.rs".to_string(), view_rs());
     files.insert("visitor.rs".to_string(), visitor_rs());
     Ok(EmittedSource { files })
+}
+
+fn default_backend_shape(backend: &BackendIr) -> std::collections::HashMap<RuleId, BackendShape> {
+    backend
+        .rules
+        .iter()
+        .enumerate()
+        .map(|(index, _)| (RuleId(index), BackendShape::OffsetTape))
+        .collect()
 }
 
 fn mod_rs() -> String {
@@ -102,16 +133,6 @@ fn host_rs() -> String {
         // JSON is host-fn-free in the skinny compiler slice.
         "#,
     )
-}
-
-fn parser_rs(backend: &BackendIr) -> String {
-    let _ = backend;
-    include_str!("json_templates/parser.rs").to_string()
-}
-
-fn generated_rs(backend: &BackendIr) -> String {
-    let _ = backend;
-    include_str!("json_templates/generated.rs").to_string()
 }
 
 fn view_rs() -> String {

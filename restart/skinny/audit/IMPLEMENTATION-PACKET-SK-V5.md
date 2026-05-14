@@ -401,12 +401,16 @@ parity is meaningful.
   mesh / marine_ik corpora (within ±1 ULP per Rust stdlib `dec2flt`
   precedent; document as `lemire_within_1ulp = true` in the gate).
 - `codegen/src/lower/sink_only.rs` emits the 7-rule JSON SinkOnly lowering.
+  Current implementation status: Track 1 calls generated runtime, but the
+  direct source remains template-authoritative; true BIR-to-Rust SinkOnly
+  lowering is still a blocking follow-up.
 - `bbnf-bench` calls generated runtime for Track 1.
 - Track 1 and Track 2 produce different symbol paths under
   `samply` (Track 1: generated `parse_direct`; Track 2: hand-coded
   module).
 - numbers / canada / mesh / marine_ik direct rows cross the sonic-rs
-  1.10× slack or the report names the exact residual blocker.
+  1.10× slack or the report names the exact residual blocker. Latest gate:
+  `numbers` passes; `canada`, `mesh`, and `marine_ik` remain near-miss NO-GO.
 - All four rows + bench-private removal recorded in REDRESS.md.
 
 ## 5. Wave 3 — UTF-8 Fusion + Class B Batched
@@ -597,7 +601,7 @@ Execute the nuke plan from `restart/skinny/audit/NUKE-PLAN-SK-V5.md`:
 - `rg "OpenFrame" skinny/crates/` returns 0 (verified in A4).
 - Generic crates pass Lock 14 audit (manual grep + cohort verification).
 
-## 7. Wave 5 — Remaining bbnf.asm Primitive Bodies
+## 7. Wave 5 — Consumed bbnf.asm Primitive Admission
 
 ### 7.1 Owner paths
 
@@ -607,47 +611,30 @@ Execute the nuke plan from `restart/skinny/audit/NUKE-PLAN-SK-V5.md`:
 - `skinny/crates/bbnf-simd/src/scalar/<primitive>.rs` (scalar reference)
 - `skinny/crates/bbnf-simd/tests/checkasm_<primitive>.rs`
 
-### 7.2 Wave-A primitives (CollapsedStage unblock per A2 §10)
+### 7.2 Admitted primitives
 
-Per A2's wave ordering:
+- `BYTE_CLASS_FROM_EQ_SET_64`: pre-existing consumer and checkasm
+  coverage.
+- `BYTE_CLASS_FROM_TABLE_64`: consumed by generic `scan_dispatch`.
+- `BITMAP_PREFIX_XOR_64`: consumed by JSON string-region scan.
+- `BITMAP_NEXT_SET_BIT`: consumed by `compact_mask`.
+- `EOB_PAD_CLAMP`: consumed by JSON tail scan.
 
-- `BITMAP_PREFIX_XOR_64`: VPCLMULQDQ-512 carries; simdjson string-region
-  recogniser scaled to 4× width. Scalar reference: bit-parallel carry
-  propagation. NEON fallback: scalar.
-- `BITMAP_NEXT_SET_BIT`: `tzcnt` on x86, `vshrn`-movemask + `ctz` on
-  aarch64. Trivial.
-- `EOB_PAD_CLAMP`: msac-style buffer over-allocation; mask-zero tail.
-  No esoterica.
+### 7.3 Blocked no-orphan primitives
 
-### 7.3 Wave-B primitives (CSS L4 + general grammar gate per A2)
-
-- `BYTE_CLASS_FROM_TABLE_64`: AVX-512 BW `vpermb` / GFNI
-  `vgf2p8affineqb` when affine-encodable; NEON `vqtbl4q_u8`. The CSS
-  L4 admission gate; JSON's current `BYTE_CLASS_FROM_EQ_SET_64` covers
-  ≤8 char sets which suffices for JSON's 6-char structural set.
-
-### 7.4 Frame stack primitives
-
-- `FRAME_PUSH_BOUNDED`: depth-checked push to `open_buf[64]`.
-- `FRAME_POP_BOUNDED`: depth-validated pop with FrameKind check.
-
-### 7.5 Bulk emit
-
-- `BULK_EMIT_COMPRESSED`: AVX-512 VBMI2 `vpcompressb`; NEON `vext` +
-  `ld1`/`st1` chains.
-
-### 7.6 FSM_DISPATCH_THREADED
-
-Gated on codegen emitting its first per-grammar `.asm` consumer. Defer
-to Wave 7 if no consumer materialises by Wave 5 end.
+`BULK_EMIT_COMPRESSED`, `FRAME_PUSH_BOUNDED`, `FRAME_POP_BOUNDED`, and
+`FSM_DISPATCH_THREADED` are not Wave 5 close requirements. They remain
+blocked until their structural-tape compressed sink, bracket-stack
+CollapsedStage, or per-grammar `.asm` CollapsedStage consumers exist and
+land in the same wave as the primitive body.
 
 ### 7.7 dav1d-style checkasm hardening
 
 Per A2 §3 / §8.1, before any of the new primitives land:
 
-- Register-clobber detection: inline-`asm!` shim setting `rbx` / `rbp` /
-  `r12..r15` sentinels pre-`call_new` and verifying post-call; same for
-  `x19..x28` / `d8..d15` on aarch64.
+- Rust candidate calls use verified stack canaries. Raw callee-saved
+  register sentinels are reserved for future FFI/ASM `call_new` shims;
+  applying them around Rust closures is a false-positive harness shape.
 - Stack canary: XOR-fold 1 KiB pre/post; assert equality.
 - Bench cycle counter: `__rdtsc` / `mach_absolute_time` instead of
   `Instant`.
@@ -659,20 +646,26 @@ Per A2 §3 / §8.1, before any of the new primitives land:
 Per A2 §7.1, add `OnceLock<CpuFeatures>` populated via
 `is_x86_feature_detected!` / `std::arch::is_aarch64_feature_detected!`
 at first use. Kernel-table at `bbnf-simd/src/dispatch.rs` holds
-fn-pointers per primitive × ISA tier. Currently `SelectedClassifier`
-covers only the classifier; extend to all 9 macros.
+fn-pointers per admitted primitive × ISA tier. Extend only to primitives
+with hot consumers; do not add dispatch entries for no-orphan-blocked
+bodies.
 
 ### 7.9 Exit gates
 
-- Each primitive has scalar reference + checkasm parity.
-- Each primitive has a generated/runtime caller exercising it on the
-  hot path (no orphan kernels).
-- `cargo run -p xtask --release -- primitive-checkasm` passes
-  including the new register-clobber detection.
-- No row regresses; primitive admission lifts named row(s) by
-  measurable delta.
+- Every admitted primitive has scalar reference + checkasm parity.
+- Every admitted primitive has a generated/runtime hot-path consumer.
+- `primitive-checkasm` passes for the admitted set.
+- `REDRESS.md` records blocked orphan primitives and current `gate-json`
+  status.
+- No SOTA credit is claimed for blocked primitive bodies or for Wave 5
+  itself while `gate-json` remains `N-direct / NoGo`.
 
 ## 8. Wave 6 — Strict Workload Matrix
+
+Wave 6 entry gate: Wave 5 consumed-primitive admission is closed and
+recorded in `skinny/REDRESS.md`; Wave 6 starts from the current
+`N-direct / NoGo` baseline and does not require the four no-orphan-blocked
+primitive bodies.
 
 ### 8.1 Owner paths
 
@@ -722,7 +715,9 @@ hand-written NASM per (grammar × ISA) is admissible. Requires Zen 4
 silicon access + declared NASM author + checkasm parity. If preconditions
 fire:
 
-- Complete `FSM_DISPATCH_THREADED` macro body.
+- Admit `FSM_DISPATCH_THREADED` only after codegen emits its first
+  per-grammar `.asm` CollapsedStage consumer; the body, scalar reference,
+  checkasm parity, and consumer land together.
 - Codegen emits `runtime/grammars/json/json_collapsed.asm` with
   generated `.data` tables (classifier LUT + state-transition LUT).
 - Hand-author the `.asm` wrapper (~150 LOC per grammar × ISA pair).
@@ -738,20 +733,23 @@ The wave order prioritises measurable corpus moves:
 - Wave 0 corrects honest reporting and unblocks profile attribution.
 - Wave 1 builds the substrate that everything else consumes; zero
   user-visible delta but absolutely required.
-- Wave 2 closes the four number-bound rows AND removes the
-  bench-private dishonesty in one wave.
-- Wave 3 closes the four parse-G rows AND lifts string-bound direct
-  rows in one wave.
+- Wave 2 lands the number lever and removes the bench-private dishonesty;
+  current measurements close `numbers` but leave Canada/mesh/marine direct
+  residuals.
+- Wave 3 removes duplicate UTF-8 validation and lifts string-bound rows, but
+  does not close the parse-G or direct Unicode/string gates.
 - Wave 4 nukes the Lock 14 / Lock 1 residue so generic crates pass
   audit (no JSON code in `bbnf-simd` / `parse-that-regex` /
   `codegen/lower`).
-- Wave 5 fills in the remaining 8 grammar-neutral primitive bodies
-  for CollapsedStage + CSS L4 readiness.
+- Wave 5 admits only consumed grammar-neutral primitives and records
+  no-orphan blocks for the remaining macro bodies.
 - Wave 6 finalises the strict workload matrix.
 - Wave 7 is the x86 successor and is optional.
 
-After Wave 3, the M5 Max close condition is met (assuming no surprises).
-Wave 4-6 are durability work on top of a measured win.
+The SK-V5 close condition has not fired while `skinny/RESULTS.md` remains
+`N-direct / NoGo`. Wave 6 may proceed as the strict workload/reporting
+wave from that baseline; Wave 7 remains optional x86 CollapsedStage work
+gated by real `.asm` consumers.
 
 ## 11. Final Handoff
 

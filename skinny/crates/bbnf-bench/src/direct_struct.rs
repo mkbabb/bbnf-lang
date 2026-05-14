@@ -110,6 +110,51 @@ impl JsonDirectDigest {
         digest
     }
 
+    #[inline(always)]
+    fn fold_string_scalar(&mut self, value: &str) {
+        self.strings += 1;
+        self.string_bytes += value.len() as u64;
+        self.max_depth = self.max_depth.max(2);
+        self.fingerprint = mix(self.fingerprint, mix(0x53, hash_bytes(value.as_bytes())));
+    }
+
+    #[inline(always)]
+    fn fold_number_i64_scalar(&mut self, value: i64) {
+        self.fold_number_scalar(0x4e49, value as u64);
+    }
+
+    #[inline(always)]
+    fn fold_number_u64_scalar(&mut self, value: u64) {
+        self.fold_number_scalar(0x4e55, value);
+    }
+
+    #[inline(always)]
+    fn fold_number_f64_scalar(&mut self, value: f64) {
+        self.fold_number_scalar(0x4e46, value.to_bits());
+    }
+
+    #[inline(always)]
+    fn fold_number_scalar(&mut self, tag: u64, value: u64) {
+        self.numbers += 1;
+        self.max_depth = self.max_depth.max(2);
+        self.fingerprint = mix(self.fingerprint, mix(tag, value));
+    }
+
+    #[inline(always)]
+    fn fold_bool_scalar(&mut self, value: bool) {
+        self.bools += 1;
+        self.trues += u64::from(value);
+        self.max_depth = self.max_depth.max(2);
+        self.fingerprint = mix(self.fingerprint, mix(0x42, u64::from(value)));
+    }
+
+    #[inline(always)]
+    fn fold_null_scalar(&mut self) {
+        self.nulls += 1;
+        self.max_depth = self.max_depth.max(2);
+        self.fingerprint = mix(self.fingerprint, mix(0x30, 0));
+    }
+
     fn fold_child(&mut self, child: Self) {
         self.objects += child.objects;
         self.arrays += child.arrays;
@@ -177,6 +222,23 @@ impl JsonDigestSink {
             }
             None => self.root = Some(child),
         }
+    }
+
+    #[inline(always)]
+    fn with_object_parent(&mut self, f: impl FnOnce(&mut JsonDirectDigest)) {
+        let Some(DigestFrame::Object(parent)) = self.stack.last_mut() else {
+            unreachable!("object scalar outside object frame");
+        };
+        f(parent);
+    }
+
+    #[inline(always)]
+    fn with_array_parent(&mut self, f: impl FnOnce(&mut JsonDirectDigest)) {
+        let Some(DigestFrame::Array(parent)) = self.stack.last_mut() else {
+            unreachable!("array scalar outside array frame");
+        };
+        parent.elements += 1;
+        f(parent);
     }
 }
 
@@ -248,6 +310,54 @@ impl JsonSink for JsonDigestSink {
 
     fn null(&mut self) {
         self.push_value(JsonDirectDigest::null());
+    }
+
+    fn array_string(&mut self, value: &str) {
+        self.with_array_parent(|parent| parent.fold_string_scalar(value));
+    }
+
+    fn array_i64(&mut self, value: i64) {
+        self.with_array_parent(|parent| parent.fold_number_i64_scalar(value));
+    }
+
+    fn array_u64(&mut self, value: u64) {
+        self.with_array_parent(|parent| parent.fold_number_u64_scalar(value));
+    }
+
+    fn array_f64(&mut self, value: f64) {
+        self.with_array_parent(|parent| parent.fold_number_f64_scalar(value));
+    }
+
+    fn array_bool(&mut self, value: bool) {
+        self.with_array_parent(|parent| parent.fold_bool_scalar(value));
+    }
+
+    fn array_null(&mut self) {
+        self.with_array_parent(JsonDirectDigest::fold_null_scalar);
+    }
+
+    fn object_string(&mut self, value: &str) {
+        self.with_object_parent(|parent| parent.fold_string_scalar(value));
+    }
+
+    fn object_i64(&mut self, value: i64) {
+        self.with_object_parent(|parent| parent.fold_number_i64_scalar(value));
+    }
+
+    fn object_u64(&mut self, value: u64) {
+        self.with_object_parent(|parent| parent.fold_number_u64_scalar(value));
+    }
+
+    fn object_f64(&mut self, value: f64) {
+        self.with_object_parent(|parent| parent.fold_number_f64_scalar(value));
+    }
+
+    fn object_bool(&mut self, value: bool) {
+        self.with_object_parent(|parent| parent.fold_bool_scalar(value));
+    }
+
+    fn object_null(&mut self) {
+        self.with_object_parent(JsonDirectDigest::fold_null_scalar);
     }
 }
 
@@ -547,11 +657,21 @@ impl<'de> Visitor<'de> for DigestVisitor {
 }
 
 fn hash_bytes(bytes: &[u8]) -> u64 {
-    let mut hash = 0xcbf29ce484222325u64;
-    for byte in bytes {
-        hash ^= *byte as u64;
-        hash = hash.wrapping_mul(0x100000001b3);
+    let mut hash = 0xcbf29ce484222325u64 ^ bytes.len() as u64;
+    let mut chunks = bytes.chunks_exact(8);
+    for chunk in &mut chunks {
+        let value = u64::from_le_bytes(chunk.try_into().expect("chunk size is 8"));
+        hash = mix(hash, value);
     }
+    let tail = chunks.remainder();
+    if !tail.is_empty() {
+        let mut value = 0_u64;
+        for (index, byte) in tail.iter().copied().enumerate() {
+            value |= (byte as u64) << (index * 8);
+        }
+        hash = mix(hash, value);
+    }
+    hash = mix(hash, bytes.len() as u64);
     hash
 }
 

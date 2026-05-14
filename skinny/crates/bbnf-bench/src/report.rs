@@ -138,13 +138,13 @@ impl Report {
         out.push_str("# ");
         out.push_str(&self.title);
         out.push_str("\n\n");
-        out.push_str("| Corpus | Outcome | Verdict | Strictness | parse_utf8 | escape_complete | flaw_probe | Track 1 Mbps | Track 2 Mbps | sonic-rs Mbps | simd-json borrowed Mbps | simd-json owned Mbps | S anchor | S Mbps | Track 1 / S | Track 2 / S |\n");
+        out.push_str("| Corpus | Outcome | Verdict | Strictness | Output plane | parse_utf8 | escape_complete | flaw_probe | Track 1 Mbps | Track 2 Mbps | sonic-rs Mbps | simd-json borrowed Mbps | simd-json owned Mbps | S anchor | S Mbps | Track 1 / S | Track 2 / S |\n");
         out.push_str(
-            "|---|---:|---|---|---|---|---|---:|---:|---:|---:|---:|---|---:|---:|---:|\n",
+            "|---|---:|---|---|---|---|---|---|---:|---:|---:|---:|---:|---|---:|---:|---:|\n",
         );
         for row in &self.rows {
             out.push_str(&format!(
-                "| {} | {} | {} | deferred | view-boundary | yes | JSONTestSuite n_string_unescaped_ctrl_char rejected; i_string_invalid_utf8 rejected outside hot scan | {} | {} | {} | {} | {} | {} | {} | {} | {} |\n",
+                "| {} | {} | {} | deferred | typed_root_over_offset_tape vs competitor DOM | view-boundary | yes | JSONTestSuite n_string_unescaped_ctrl_char rejected; i_string_invalid_utf8 rejected outside hot scan | {} | {} | {} | {} | {} | {} | {} | {} | {} |\n",
                 row.corpus,
                 row.outcome_id,
                 row.verdict,
@@ -161,11 +161,11 @@ impl Report {
         }
         if !self.workload_rows.is_empty() {
             out.push_str("\n## Workloads\n\n");
-            out.push_str("| Corpus | Workload | Strictness | parse_utf8 | escape_complete | flaw_probe | Track 1 Mbps | Track 2 Mbps | sonic-rs Mbps | serde_json Mbps | Track 1 / sonic | Track 2 / sonic | Signal |\n");
-            out.push_str("|---|---|---|---|---|---|---:|---:|---:|---:|---:|---:|---|\n");
+            out.push_str("| Corpus | Workload | Strictness | Output plane | parse_utf8 | escape_complete | flaw_probe | Track 1 Mbps | Track 2 Mbps | sonic-rs Mbps | serde_json Mbps | Track 1 / sonic | Track 2 / sonic | Signal |\n");
+            out.push_str("|---|---|---|---|---|---|---|---:|---:|---:|---:|---:|---:|---|\n");
             for row in &self.workload_rows {
                 out.push_str(&format!(
-                    "| {} | {} | deferred | view-boundary | yes | generated Track 1 SinkOnly vs independent hand Track 2 SinkOnly; UTF-8 remains view-boundary | {} | {} | {} | {} | {} | {} | {} |\n",
+                    "| {} | {} | deferred | generated SinkOnly digest vs independent hand SinkOnly digest vs sonic-rs typed serde | view-boundary | yes | generated Track 1 SinkOnly vs independent hand Track 2 SinkOnly; UTF-8 remains view-boundary | {} | {} | {} | {} | {} | {} | {} |\n",
                     row.corpus,
                     row.workload,
                     format_optional(row.track1_mbps),
@@ -304,7 +304,9 @@ mod tests {
         );
         let markdown = report.render_markdown();
         assert!(markdown.contains("Track 1 Mbps"));
-        assert!(markdown.contains("| twitter | A | GO | deferred | view-boundary | yes |"));
+        assert!(markdown.contains(
+            "| twitter | A | GO | deferred | typed_root_over_offset_tape vs competitor DOM | view-boundary | yes |"
+        ));
     }
 
     #[test]

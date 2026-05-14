@@ -183,7 +183,12 @@ fn lint_loc(root: &Path) -> Result<()> {
 }
 
 fn bench_json(root: &Path, passthrough: Vec<String>) -> Result<()> {
-    let full_run = passthrough.is_empty();
+    let advisory = passthrough.iter().any(|arg| arg == "--advisory");
+    let criterion_args: Vec<String> = passthrough
+        .into_iter()
+        .filter(|arg| arg != "--advisory")
+        .collect();
+    let full_run = criterion_args.is_empty();
     let mut command = Command::new("cargo");
     command
         .current_dir(root)
@@ -191,12 +196,17 @@ fn bench_json(root: &Path, passthrough: Vec<String>) -> Result<()> {
         .arg("-p")
         .arg("bbnf-bench");
     if !full_run {
-        command.arg("--").args(passthrough);
+        command.arg("--").args(&criterion_args);
     }
     let status = command.status().context("failed to spawn cargo bench")?;
     if status.success() {
         if full_run {
-            gate_json(root, Vec::new())
+            let gate_args = if advisory {
+                vec!["--advisory".to_string()]
+            } else {
+                Vec::new()
+            };
+            gate_json(root, gate_args)
         } else {
             Ok(())
         }

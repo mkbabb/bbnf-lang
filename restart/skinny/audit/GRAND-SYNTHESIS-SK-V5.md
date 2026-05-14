@@ -6,6 +6,17 @@ Cohort: 15 agent reports under `restart/skinny/audit/SK-V5-COHORT/` (9 deep
 research/profile reports + 6 novelty-challenge reports). 5,559 LOC of
 audit. Authority for the verdicts below.
 
+Post-assay correction (2026-05-14): SK-V5 implementation is now partially
+landed and the current gate remains `N-direct / NoGo`. The Rust scaffolding for
+`BackendShape` / `derive_backend_shape` exists, but true BIR-to-Rust SinkOnly
+lowering is still incomplete: direct source is generated runtime code, but it
+is still template-authoritative. The latest `skinny/RESULTS.md` records
+13 retained G rows, one Canada L row caused by the structural-scan floor
+(22136 Mbps vs 40000 Mbps), 3 retained A rows (`mesh`, `marine_ik`,
+`numbers`), and only one direct PASS row (`numbers`). Treat the wave plan below
+as historical dispatch intent amended by `HANDOFF-SK-V5.md` and
+`skinny/REDRESS.md` entries 46-47.
+
 ## 1. The Frame
 
 SK-V5 is not new architecture. The architecture is already declared. SK-V5
@@ -148,65 +159,52 @@ again. The remediation is two steps: land generated `SinkOnly`
 emission from `BIR DirectBuild` (Wave 2 of SK-V5), then nuke the
 bench-private `SinkParser` (post-wiring).
 
-D5 verified that `BIR DirectBuild` exists but is skeletal —
-`ir/src/lib.rs:368-370` defines `DirectBuild { shape: String }`, a
-label only with no field roster or slot map. Emitted by
-`passes/src/lib.rs:416-419` for 7 named JSON rules. Only 3 references
-repo-wide; the third is a test asserting the variant appears. Codegen
-explicitly discards `&BackendIr` (`let _ = backend;` at `lib.rs:111-117`)
-and `include_str!`s static templates. The SK-V4 Wave 1 owner path
-`codegen/src/lower/` **does not exist on disk** — the planning was
-inaccurate; SK-V5 must list actual paths or be honest that paths
-need creation.
+D5 verified that `BIR DirectBuild` exists but is skeletal. Post-assay, the
+owner path now exists and Track 1 direct calls generated runtime code, but the
+central problem remains: `codegen/src/lower/sink_only.rs` is not yet an
+authoritative BIR-to-Rust lowerer and `codegen/src/lib.rs` still appends the
+static JSON direct template. The planning gap has narrowed from "missing path"
+to "template-authoritative source generation".
 
 ## 6. The Architecture Wiring Gap
 
-D3 verified A5's diagnosis. The Rust state behind the five-shape
-taxonomy is entirely absent from `skinny/crates/`:
+D3 verified A5's diagnosis. Post-assay status: the Rust state behind the
+five-shape taxonomy is now scaffolded (`BackendShape`,
+`LayoutFacts.backend_shape`, `derive_backend_shape`, and `codegen/src/lower/`
+exist), but the actual emitted Rust is not yet selected and authored by those
+lowerers. The open architecture wiring gap is therefore lowerer authority, not
+symbol absence:
 
-- `BackendShape` enum: declared in `ARCHITECTURE.md:1048-1072`, zero
-  Rust hits in any crate (only matches are in `bbnf-simd/ext/x86/bbnf.asm`
-  comments).
-- `derive_backend_shape`: declared in `ARCHITECTURE.md:1075-1083` as an
-  8-step algorithm, zero Rust symbol exists. `passes::recognizers`
-  contains only `nominate_json` and `hot_path`.
-- `LayoutFacts.backend_shape`: declared in the spec, **absent** as a
-  field at `passes/src/lib.rs:46-51`.
-- Per-rule shape selection: `passes::compile()` at lines 28-29
-  hardcodes `shapes_for_json()` regardless of input grammar.
-  `materialization_for_rule` name-matches the 7 JSON rule names
-  ("object", "array", "pair", "string", "number", "bool", "null") and
-  assigns `JsonObject` / `JsonArray` / etc. shapes — a Lock 14
-  `BBNF-GRAMMAR-NAME-IN-GENERIC-CRATE` violation.
+- `lower::sink_only` must walk existing BIR variants instead of returning
+  placeholder bodies.
+- `emit_json_with_layout` must append lowerer-produced direct source rather
+  than `json_templates/sink_direct.rs`.
+- Per-rule shape selection must become a measured cost decision across retained
+  and direct workloads, not a marker scan that treats `DirectBuild` shape
+  strings as permission to splice a static parser.
 - The existing `ShapeFacts` at `ir/src/lib.rs:436-467` is a different
   thing: a typed-view catalogue for `view.rs` direct-builder emission
   (`JsonRoot { value: JsonValue<'i> }`), confusably co-named with the
   spec's `BackendShape` per-rule lowering-mode selector. Both should
   remain; they are orthogonal.
 
-The codegen pipeline is decorative on the BIR → Rust text step:
-`codegen/src/lib.rs:111-117` literally writes `let _ = backend;` then
-`include_str!`s static JSON templates. The BIR build itself
-(`extract::single_plan`) walks the grammar honestly and produces real
-`BackendIr` with 15 rules; only the Rust emission step is a no-op
-pass-through.
+The codegen pipeline remains decorative at the decisive BIR → direct Rust text
+step. The BIR build itself (`extract::single_plan`) walks the grammar honestly
+and produces real `BackendIr`; retained generated output and SinkOnly direct
+output exist on disk, but the direct parser is still a static-template
+emission rather than the product of the per-shape lowerer.
 
 ## 7. The bbnf-simd Lock 14 Status
 
-The asm contract layer at `bbnf-simd/ext/x86/bbnf.asm` (9 macros, 485
-LOC) is grammar-neutral by construction and holds Lock 14. Layer 0
-`x86inc.asm` (1,978 LOC, BSD-2 dav1d) is grammar-neutral by definition.
-The Rust shim layer for those 9 macros fails Lock 14:
-
-- Only 1 of 9 primitives (`BYTE_CLASS_FROM_EQ_SET_64`) is generic
-  end-to-end. The other 8 macros are still contract declarations
-  without bodies.
-- 4 separate `classify_block_scalar` reference functions hardcode
-  the 7 JSON structural characters: `avx2/classify.rs:31`,
-  `avx512_vbmi2/classify.rs:28`, `avx512_gfni/classify_affine.rs:31`,
-  `avx512_bitalg/multiclass.rs:30`.
-- `aarch64/classify_tbl4.rs:65-71` bakes the same JSON set into a
-  TBL4 LUT.
+The asm contract layer at `bbnf-simd/ext/x86/bbnf.asm` (9 macros) is
+grammar-neutral by construction and holds Lock 14. Layer 0 `x86inc.asm`
+(dav1d, BSD-2) is grammar-neutral by definition. Post-assay admission is
+consumed-only: `BYTE_CLASS_FROM_EQ_SET_64`, `BYTE_CLASS_FROM_TABLE_64`,
+`BITMAP_PREFIX_XOR_64`, `BITMAP_NEXT_SET_BIT`, and `EOB_PAD_CLAMP` are admitted
+with scalar references, checkasm parity, and hot consumers. The remaining macro
+bodies are blocked until same-wave consumers exist; admitting them now would be
+orphan kernel work, not SOTA evidence. Any JSON-specific classifier tables must
+stay outside grammar-neutral primitive bodies.
 - `bbnf-simd/src/lib.rs` (716 LOC) is a JSON god-module:
   `JSON_STRUCTURAL`, `is_json_punctuation`, `scan_json_tail`,
   `JsonParseIndex`, `resolve_json_string_masks_64`, plus `mod neon`
@@ -318,12 +316,12 @@ under-resolved:
    is genuinely empty. SK-V5 names the source path and the move-target
    path.
 
-3. **The "Track 1 SinkOnly mandate" needs the codegen substrate before
-   it can land.** SK-V4 Wave 1 listed `codegen/src/lower/` as an owner
-   path; that directory does not exist. SK-V5 makes Wave 1 the actual
-   substrate authoring (BackendShape enum, LayoutFacts.backend_shape
-   field, derive_backend_shape function, codegen/src/lower/ hierarchy)
-   not just the field-write emission.
+3. **The "Track 1 SinkOnly mandate" still needs lowerer authority.**
+   SK-V5 now has the codegen substrate path and Track 1 calls generated
+   runtime code, but direct source is still emitted from a static template.
+   The remaining work is not a new directive or BIR variant; it is making
+   `codegen/src/lower/sink_only.rs` author the generated direct source from
+   existing BIR.
 
 4. **Strictness disclosure is Wave 0, not Wave 5.** SK-V4 §7 declares
    "strictness plane named per row" as a Wave 5 requirement. B3 showed
@@ -352,15 +350,16 @@ diagnosis and the verified novelty pattern. The path is:
   `parse-that-regex/src/number/integer.rs`; land
   `codegen/src/lower/rust.rs` SinkOnly lowering for the 7 JSON rules
   emitted with `BackendShape::SinkOnly`; rewire `bbnf-bench` Track 1 to
-  call generated runtime; nuke bench-private SinkParser. Closes
-  numbers / canada / mesh / marine_ik direct rows.
+  call generated runtime; nuke bench-private SinkParser. Post-assay
+  correction: this work closed `numbers`; Canada / mesh / marine_ik remain
+  direct residuals, and true lowerer output remains incomplete.
 - **Wave 3** (UTF-8 fusion + Class B batch): NEON UTF-8 codepoint
   pipeline in `parse-that-regex/src/lib.rs:331-339` replacing the 0x80
   early-exit; `utf8_block.rs` module with Lemire 64-byte validator and
   Hoehrmann DFA reference; `unescape_uxxxx_x4_neon` 4-quartet batched
-  body + NEON surrogate-pair join. Closes all four parse-G rows
-  (twitter, random, unicode_mixed, unicode_basic) and lifts direct
-  string-bound rows.
+  body + NEON surrogate-pair join. Post-assay correction: this removed
+  duplicate UTF-8 validation and lifted affected rows, but parse-G and
+  direct string/Unicode gates remain open.
 - **Wave 4** (Lock 14 remediation): split `bbnf-simd/src/lib.rs`
   god-module into per-primitive grammar-neutral modules; remove the 7
   hardcoded JSON punctuation char-lists from the 4 scalar-reference
@@ -368,12 +367,13 @@ diagnosis and the verified novelty pattern. The path is:
   `skinny/crates/simd-scan/` fossil crate; delete refuted
   `generated_eventcursor.rs` + `eventcursor` feature flag + cfg
   branches. Audit-clean against Lock 1 and Lock 14.
-- **Wave 5** (remaining bbnf.asm primitive bodies per A2 ordering):
-  BITMAP_PREFIX_XOR_64, BITMAP_NEXT_SET_BIT, EOB_PAD_CLAMP (the
-  CollapsedStage unblock triple); BYTE_CLASS_FROM_TABLE_64 (CSS L4
-  gate); FRAME_PUSH_BOUNDED / FRAME_POP_BOUNDED; BULK_EMIT_COMPRESSED.
-  FSM_DISPATCH_THREADED remains gated on codegen emitting its first
-  per-grammar `.asm` consumer.
+- **Wave 5** (consumed bbnf.asm primitive admission): admit only primitives
+  with scalar references, checkasm parity, and same-wave runtime/generated
+  consumers. `BYTE_CLASS_FROM_EQ_SET_64`, `BYTE_CLASS_FROM_TABLE_64`,
+  `BITMAP_PREFIX_XOR_64`, `BITMAP_NEXT_SET_BIT`, and `EOB_PAD_CLAMP` meet
+  that bar. `FRAME_PUSH_BOUNDED`, `FRAME_POP_BOUNDED`,
+  `BULK_EMIT_COMPRESSED`, and `FSM_DISPATCH_THREADED` remain blocked until a
+  real consumer lands in the same change.
 - **Wave 6** (strict workload matrix): finalize the 17-row parse +
   17-row direct matrix with strictness columns; sidecar comparator
   table with API and output plane named; cycles-per-byte where

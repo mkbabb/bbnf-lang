@@ -349,6 +349,8 @@ use parse_that_regex::number::{
 use parse_that_regex::unescape_json_string;
 use std::borrow::Cow;
 
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 pub fn parse_direct<'i, S: JsonSink>(input: &'i str, sink: &mut S) -> Result<(), ParseError<'i>> {
     let bytes = input.as_bytes();
     let mut cursor = 0;
@@ -365,6 +367,8 @@ pub fn parse_direct<'i, S: JsonSink>(input: &'i str, sink: &mut S) -> Result<(),
     }
 }
 
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 fn parse_value_direct<'i, S: JsonSink>(
     input: &'i str,
     bytes: &'i [u8],
@@ -384,13 +388,105 @@ fn parse_value_direct<'i, S: JsonSink>(
             Ok(())
         }
         b'-' | b'0'..=b'9' => parse_number_direct(input, bytes, cursor, sink, byte),
-        b't' => parse_literal_direct(input, bytes, cursor, b"true", sink, Some(true)),
-        b'f' => parse_literal_direct(input, bytes, cursor, b"false", sink, Some(false)),
-        b'n' => parse_literal_direct(input, bytes, cursor, b"null", sink, None),
+        b't' => {
+            consume_literal_direct(input, bytes, cursor, b"true")?;
+            sink.bool(true);
+            Ok(())
+        }
+        b'f' => {
+            consume_literal_direct(input, bytes, cursor, b"false")?;
+            sink.bool(false);
+            Ok(())
+        }
+        b'n' => {
+            consume_literal_direct(input, bytes, cursor, b"null")?;
+            sink.null();
+            Ok(())
+        }
         _ => Err(direct_error(input, *cursor, ParseErrorKind::ExpectedValue)),
     }
 }
 
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
+fn parse_object_value_at_direct<'i, S: JsonSink>(
+    input: &'i str,
+    bytes: &'i [u8],
+    cursor: &mut usize,
+    sink: &mut S,
+) -> Result<(), ParseError<'i>> {
+    let Some(byte) = bytes.get(*cursor).copied() else {
+        return Err(direct_error(input, *cursor, ParseErrorKind::ExpectedValue));
+    };
+    match byte {
+        b'{' => parse_object_direct(input, bytes, cursor, sink),
+        b'[' => parse_array_direct(input, bytes, cursor, sink),
+        b'"' => {
+            let value = parse_string_direct(input, bytes, cursor)?;
+            sink.object_string(value.as_ref());
+            Ok(())
+        }
+        b'-' | b'0'..=b'9' => parse_number_object_direct(input, bytes, cursor, sink, byte),
+        b't' => {
+            consume_literal_direct(input, bytes, cursor, b"true")?;
+            sink.object_bool(true);
+            Ok(())
+        }
+        b'f' => {
+            consume_literal_direct(input, bytes, cursor, b"false")?;
+            sink.object_bool(false);
+            Ok(())
+        }
+        b'n' => {
+            consume_literal_direct(input, bytes, cursor, b"null")?;
+            sink.object_null();
+            Ok(())
+        }
+        _ => Err(direct_error(input, *cursor, ParseErrorKind::ExpectedValue)),
+    }
+}
+
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
+fn parse_array_element_at_direct<'i, S: JsonSink>(
+    input: &'i str,
+    bytes: &'i [u8],
+    cursor: &mut usize,
+    sink: &mut S,
+) -> Result<(), ParseError<'i>> {
+    let Some(byte) = bytes.get(*cursor).copied() else {
+        return Err(direct_error(input, *cursor, ParseErrorKind::ExpectedValue));
+    };
+    match byte {
+        b'{' => parse_object_direct(input, bytes, cursor, sink),
+        b'[' => parse_array_direct(input, bytes, cursor, sink),
+        b'"' => {
+            let value = parse_string_direct(input, bytes, cursor)?;
+            sink.array_string(value.as_ref());
+            Ok(())
+        }
+        b'-' | b'0'..=b'9' => parse_number_array_direct(input, bytes, cursor, sink, byte),
+        b't' => {
+            consume_literal_direct(input, bytes, cursor, b"true")?;
+            sink.array_bool(true);
+            Ok(())
+        }
+        b'f' => {
+            consume_literal_direct(input, bytes, cursor, b"false")?;
+            sink.array_bool(false);
+            Ok(())
+        }
+        b'n' => {
+            consume_literal_direct(input, bytes, cursor, b"null")?;
+            sink.array_null();
+            Ok(())
+        }
+        _ => Err(direct_error(input, *cursor, ParseErrorKind::ExpectedValue)),
+    }
+}
+
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 fn parse_object_direct<'i, S: JsonSink>(
     input: &'i str,
     bytes: &'i [u8],
@@ -409,7 +505,8 @@ fn parse_object_direct<'i, S: JsonSink>(
         sink.key(key.as_ref());
         *cursor = skip_json_whitespace(bytes, *cursor);
         consume_direct(input, bytes, cursor, b':', ParseErrorKind::ExpectedColon)?;
-        parse_value_direct(input, bytes, cursor, sink)?;
+        *cursor = skip_json_whitespace(bytes, *cursor);
+        parse_object_value_at_direct(input, bytes, cursor, sink)?;
         *cursor = skip_json_whitespace(bytes, *cursor);
         if take_direct(bytes, cursor, b',') {
             *cursor = skip_json_whitespace(bytes, *cursor);
@@ -421,6 +518,8 @@ fn parse_object_direct<'i, S: JsonSink>(
     }
 }
 
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 fn parse_array_direct<'i, S: JsonSink>(
     input: &'i str,
     bytes: &'i [u8],
@@ -435,9 +534,10 @@ fn parse_array_direct<'i, S: JsonSink>(
         return Ok(());
     }
     loop {
-        parse_value_direct(input, bytes, cursor, sink)?;
+        parse_array_element_at_direct(input, bytes, cursor, sink)?;
         *cursor = skip_json_whitespace(bytes, *cursor);
         if take_direct(bytes, cursor, b',') {
+            *cursor = skip_json_whitespace(bytes, *cursor);
             continue;
         }
         consume_direct(input, bytes, cursor, b']', ParseErrorKind::ExpectedCommaOrArrayEnd)?;
@@ -446,6 +546,8 @@ fn parse_array_direct<'i, S: JsonSink>(
     }
 }
 
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 fn parse_string_direct<'i>(
     input: &'i str,
     bytes: &'i [u8],
@@ -475,6 +577,8 @@ fn parse_string_direct<'i>(
     }
 }
 
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 fn parse_number_direct<'i, S: JsonSink>(
     input: &'i str,
     bytes: &'i [u8],
@@ -488,6 +592,38 @@ fn parse_number_direct<'i, S: JsonSink>(
     emit_number_direct(input, bytes, &span, sink)
 }
 
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
+fn parse_number_object_direct<'i, S: JsonSink>(
+    input: &'i str,
+    bytes: &'i [u8],
+    cursor: &mut usize,
+    sink: &mut S,
+    first: u8,
+) -> Result<(), ParseError<'i>> {
+    let span = match_number_span_from_first(bytes, *cursor, first)
+        .ok_or_else(|| direct_error(input, *cursor, ParseErrorKind::InvalidNumber))?;
+    *cursor = span.end;
+    emit_number_object_direct(input, bytes, &span, sink)
+}
+
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
+fn parse_number_array_direct<'i, S: JsonSink>(
+    input: &'i str,
+    bytes: &'i [u8],
+    cursor: &mut usize,
+    sink: &mut S,
+    first: u8,
+) -> Result<(), ParseError<'i>> {
+    let span = match_number_span_from_first(bytes, *cursor, first)
+        .ok_or_else(|| direct_error(input, *cursor, ParseErrorKind::InvalidNumber))?;
+    *cursor = span.end;
+    emit_number_array_direct(input, bytes, &span, sink)
+}
+
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 fn emit_number_direct<'i, S: JsonSink>(
     input: &'i str,
     bytes: &'i [u8],
@@ -516,13 +652,73 @@ fn emit_number_direct<'i, S: JsonSink>(
     Ok(())
 }
 
-fn parse_literal_direct<'i, S: JsonSink>(
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
+fn emit_number_object_direct<'i, S: JsonSink>(
+    input: &'i str,
+    bytes: &'i [u8],
+    span: &NumberSpan,
+    sink: &mut S,
+) -> Result<(), ParseError<'i>> {
+    let raw = &bytes[span.start..span.end];
+    if span.is_integer {
+        if span.negative {
+            if raw == b"-0" {
+                sink.object_f64(-0.0);
+                return Ok(());
+            }
+            if let Ok(value) = materialize_i64(bytes, span) {
+                sink.object_i64(value);
+                return Ok(());
+            }
+        } else if let Ok(value) = materialize_u64(bytes, span) {
+            sink.object_u64(value);
+            return Ok(());
+        }
+    }
+    let value = materialize_f64(bytes, span)
+        .map_err(|_| direct_error(input, span.start, ParseErrorKind::InvalidNumber))?;
+    sink.object_f64(value);
+    Ok(())
+}
+
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
+fn emit_number_array_direct<'i, S: JsonSink>(
+    input: &'i str,
+    bytes: &'i [u8],
+    span: &NumberSpan,
+    sink: &mut S,
+) -> Result<(), ParseError<'i>> {
+    let raw = &bytes[span.start..span.end];
+    if span.is_integer {
+        if span.negative {
+            if raw == b"-0" {
+                sink.array_f64(-0.0);
+                return Ok(());
+            }
+            if let Ok(value) = materialize_i64(bytes, span) {
+                sink.array_i64(value);
+                return Ok(());
+            }
+        } else if let Ok(value) = materialize_u64(bytes, span) {
+            sink.array_u64(value);
+            return Ok(());
+        }
+    }
+    let value = materialize_f64(bytes, span)
+        .map_err(|_| direct_error(input, span.start, ParseErrorKind::InvalidNumber))?;
+    sink.array_f64(value);
+    Ok(())
+}
+
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
+fn consume_literal_direct<'i>(
     input: &'i str,
     bytes: &'i [u8],
     cursor: &mut usize,
     literal: &'static [u8],
-    sink: &mut S,
-    boolean: Option<bool>,
 ) -> Result<(), ParseError<'i>> {
     let start = *cursor;
     if bytes.get(start..start + literal.len()) != Some(literal) {
@@ -535,10 +731,6 @@ fn parse_literal_direct<'i, S: JsonSink>(
         ));
     }
     *cursor += literal.len();
-    match boolean {
-        Some(value) => sink.bool(value),
-        None => sink.null(),
-    }
     Ok(())
 }
 

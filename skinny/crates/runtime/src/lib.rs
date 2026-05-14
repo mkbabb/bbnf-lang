@@ -9,7 +9,9 @@ pub mod grammars {
 
 #[cfg(test)]
 mod tests {
-    use crate::grammars::json::{parse, parse_bytes, JsonNodeKind, JsonValue};
+    use crate::grammars::json::{
+        parse, parse_bytes, parse_direct, JsonNodeKind, JsonSink, JsonValue,
+    };
 
     #[test]
     fn parses_and_projects_json() {
@@ -97,5 +99,163 @@ mod tests {
                 .to_bits();
             assert_eq!(skinny, serde, "{literal}");
         }
+    }
+
+    #[test]
+    fn generated_direct_parser_dispatches_context_sink_hooks() {
+        #[derive(Default)]
+        struct RecordingSink {
+            events: Vec<String>,
+        }
+
+        impl RecordingSink {
+            fn event(&mut self, event: impl Into<String>) {
+                self.events.push(event.into());
+            }
+        }
+
+        impl JsonSink for RecordingSink {
+            fn begin_object(&mut self) {
+                self.event("begin_object");
+            }
+
+            fn end_object(&mut self) {
+                self.event("end_object");
+            }
+
+            fn begin_array(&mut self) {
+                self.event("begin_array");
+            }
+
+            fn end_array(&mut self) {
+                self.event("end_array");
+            }
+
+            fn key(&mut self, value: &str) {
+                self.event(format!("key:{value}"));
+            }
+
+            fn string(&mut self, value: &str) {
+                self.event(format!("root_string:{value}"));
+            }
+
+            fn i64(&mut self, value: i64) {
+                self.event(format!("root_i64:{value}"));
+            }
+
+            fn u64(&mut self, value: u64) {
+                self.event(format!("root_u64:{value}"));
+            }
+
+            fn f64(&mut self, value: f64) {
+                self.event(format!("root_f64:{:016x}", value.to_bits()));
+            }
+
+            fn bool(&mut self, value: bool) {
+                self.event(format!("root_bool:{value}"));
+            }
+
+            fn null(&mut self) {
+                self.event("root_null");
+            }
+
+            fn array_string(&mut self, value: &str) {
+                self.event(format!("array_string:{value}"));
+            }
+
+            fn array_i64(&mut self, value: i64) {
+                self.event(format!("array_i64:{value}"));
+            }
+
+            fn array_u64(&mut self, value: u64) {
+                self.event(format!("array_u64:{value}"));
+            }
+
+            fn array_f64(&mut self, value: f64) {
+                self.event(format!("array_f64:{:016x}", value.to_bits()));
+            }
+
+            fn array_bool(&mut self, value: bool) {
+                self.event(format!("array_bool:{value}"));
+            }
+
+            fn array_null(&mut self) {
+                self.event("array_null");
+            }
+
+            fn object_string(&mut self, value: &str) {
+                self.event(format!("object_string:{value}"));
+            }
+
+            fn object_i64(&mut self, value: i64) {
+                self.event(format!("object_i64:{value}"));
+            }
+
+            fn object_u64(&mut self, value: u64) {
+                self.event(format!("object_u64:{value}"));
+            }
+
+            fn object_f64(&mut self, value: f64) {
+                self.event(format!("object_f64:{:016x}", value.to_bits()));
+            }
+
+            fn object_bool(&mut self, value: bool) {
+                self.event(format!("object_bool:{value}"));
+            }
+
+            fn object_null(&mut self) {
+                self.event("object_null");
+            }
+        }
+
+        let mut root_scalar = RecordingSink::default();
+        parse_direct("42", &mut root_scalar).unwrap();
+        assert_eq!(root_scalar.events, ["root_u64:42"]);
+
+        let mut sink = RecordingSink::default();
+        parse_direct(
+            r#"{"s":"x","i":-1,"u":2,"f":-0,"b":true,"n":null,"o":{"k":false},"a":["y",3,false,null,{"z":4},[5]]}"#,
+            &mut sink,
+        )
+        .unwrap();
+
+        assert_eq!(
+            sink.events,
+            [
+                "begin_object",
+                "key:s",
+                "object_string:x",
+                "key:i",
+                "object_i64:-1",
+                "key:u",
+                "object_u64:2",
+                "key:f",
+                "object_f64:8000000000000000",
+                "key:b",
+                "object_bool:true",
+                "key:n",
+                "object_null",
+                "key:o",
+                "begin_object",
+                "key:k",
+                "object_bool:false",
+                "end_object",
+                "key:a",
+                "begin_array",
+                "array_string:y",
+                "array_u64:3",
+                "array_bool:false",
+                "array_null",
+                "begin_object",
+                "key:z",
+                "object_u64:4",
+                "end_object",
+                "begin_array",
+                "array_u64:5",
+                "end_array",
+                "end_array",
+                "end_object"
+            ]
+        );
     }
 }

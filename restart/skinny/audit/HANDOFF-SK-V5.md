@@ -2,7 +2,7 @@
 
 Date: 2026-05-13.
 
-Status: **SPEC MATERIALIZED. READY FOR IMPLEMENTATION DISPATCH.**
+Status: **IMPLEMENTATION IN PROGRESS. CURRENT GATE: N-direct / NoGo.**
 
 The implementation agent's reading order is:
 
@@ -18,37 +18,37 @@ plus 6 novelty-challenge reports D1-D6; 5,559 LOC total).
 ## Where SK-V5 Stands
 
 The architecture was declared in `restart/MASTER-PLAN.md` §13 (commit
-`8fa51245`) and `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md`
-(commit `1519cf16`). The Rust state behind that architecture does not
-exist:
+`8fa51245`) and
+`restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md` (commit
+`1519cf16`). The Rust state behind that architecture now exists only
+partially:
 
-- `BackendShape` enum: spec-declared at `ARCHITECTURE.md:1048-1072`,
-  zero Rust hits in `skinny/crates/`.
-- `derive_backend_shape`: spec-declared at `ARCHITECTURE.md:1075-1083`,
-  no Rust symbol exists.
-- `LayoutFacts.backend_shape`: absent from `passes/src/lib.rs:46-51`.
-- `codegen/src/lower/`: SK-V4 Wave 1 owner path that does not exist on
-  disk.
-- `derive_backend_shape` selection: replaced today by `shapes_for_json`
-  hardcoded at `passes/src/lib.rs:28-29` regardless of input grammar.
-- Eisel-Lemire f64 materializer: zero implementation in skinny's
-  `parse-that-regex`; full implementation exists at
-  `/Users/mkbabb/Programming/parse-that/rust/parse_that/src/parsers/eisel_lemire/`
-  (vendorable).
-- NEON UTF-8 codepoint pipeline: zero implementation; the diagnosed hot
-  kernel boundary at 25-40% of `parse_value_at` self-time on every
-  parse-G row.
-- 8 of 9 `bbnf.asm` Layer-1 macros: contract-only, no bodies.
+- `BackendShape`, `LayoutFacts.backend_shape`, `derive_backend_shape`, and
+  `codegen/src/lower/` exist, but the emitted direct parser is still
+  template-authoritative rather than true BIR-to-Rust `SinkOnly` lowerer output.
+- Eisel-Lemire / integer materialization is wired through
+  `parse-that-regex::number`; the current `numbers` direct row passes, while
+  `canada`, `mesh`, and `marine_ik` remain near-miss direct NO-GO rows.
+- Trusted UTF-8 string matching and Class B materialization support landed, but
+  string/Unicode-heavy retained and direct rows remain decisive NO-GO.
+- Wave 5 admits only consumed primitives:
+  `BYTE_CLASS_FROM_EQ_SET_64`, `BYTE_CLASS_FROM_TABLE_64`,
+  `BITMAP_PREFIX_XOR_64`, `BITMAP_NEXT_SET_BIT`, and `EOB_PAD_CLAMP`.
+  Orphan macro bodies remain blocked until same-wave consumers exist.
 
 The current gate per `skinny/RESULTS.md`:
-- 4 parse-G rows (twitter 78%, random 51%, unicode_mixed 47%,
-  unicode_basic 49% of sonic-rs).
-- 11 of 17 direct rows N-direct (numbers 33%, canada 41%, mesh 52%,
-  unicode_mixed 50%, etc.).
-- Strictness plane undisclosed; some rows compare strict-bbnf to
-  permissive-asmjson without flagging it.
-- Track 1 == Track 2 == bench-private SinkParser (the bench measures
-  itself, not the language).
+
+- 13 retained parse rows are G / NO-GO.
+- `canada` is L / NO-GO despite parse throughput beating sonic-rs because the
+  current structural-only scan is 22136 Mbps against the 40000 Mbps floor.
+- 3 retained parse rows are A / GO: `mesh`, `marine_ik`, and `numbers`.
+- 16 of 17 direct rows are N-direct; only `numbers` passes the 1.10x sonic-rs
+  time slack.
+- Strictness and output-plane columns are disclosed; bbnf rows remain
+  `deferred / view-boundary / yes`.
+- Track 1 calls generated runtime `parse_direct`; Track 2 is structurally
+  different. The remaining codegen honesty gap is that direct source is still
+  emitted by a static JSON template, not a real BIR lowerer.
 
 ## The Corrected Diagnosis
 
@@ -74,8 +74,9 @@ The number lever is independent: vendor Eisel-Lemire from
 `/Users/mkbabb/Programming/parse-that/rust/parse_that/src/parsers/eisel_lemire/`
 into skinny's `parse-that-regex/src/number/`. The integer materializer
 is misplaced in `bbnf-bench/src/direct_struct.rs:501`; move to
-`parse-that-regex/src/number/integer.rs`. This closes numbers / canada
-/ mesh / marine_ik direct rows.
+`parse-that-regex/src/number/integer.rs`. This necessary work is landed and
+closes `numbers`, but `canada` / `mesh` / `marine_ik` remain direct near
+misses rather than closed rows.
 
 ## Wave Sequencing
 
@@ -85,16 +86,18 @@ Per `IMPLEMENTATION-PACKET-SK-V5.md`:
 |---|---|---|---|
 | 0 | Strictness columns + parse-attribution feature + nuke decisions | `skinny/RESULTS.md`, `runtime/Cargo.toml`, `runtime/src/grammars/json/generated.rs`, `NUKE-PLAN-SK-V5.md` | Strictness disclosed honestly; parse-attribution build green; nuke targets enumerated |
 | 1 | BackendShape enum + LayoutFacts.backend_shape field + derive_backend_shape + codegen/src/lower/ hierarchy | `ir/src/`, `passes/src/`, `codegen/src/lib.rs`, `codegen/src/lower/` | Substrate plumbing complete; codegen no longer discards `&BackendIr`; regression-free transition |
-| 2 | Number lever + generated SinkOnly + bench rewire + bench-private SinkParser nuke | `parse-that-regex/src/number/`, `codegen/src/lower/sink_only.rs`, `runtime/src/grammars/json/sink.rs`, `bbnf-bench/src/direct_struct.rs` | numbers/canada/mesh/marine_ik direct rows cross 1.10× sonic-rs slack; Track 1 calls generated runtime; Track 2 is structurally different |
-| 3 | UTF-8 fusion + Class B `_x4` batched + utf8_block module | `parse-that-regex/src/lib.rs:331-339`, `parse-that-regex/src/unicode/`, `bbnf-simd/src/aarch64/utf8/`, `bbnf-simd/src/aarch64/unescape_uxxxx.rs` | 4 parse-G rows close; string-bound direct rows lift |
+| 2 | Number lever + generated SinkOnly + bench rewire + bench-private SinkParser nuke | `parse-that-regex/src/number/`, `codegen/src/lower/sink_only.rs`, `runtime/src/grammars/json/sink.rs`, `bbnf-bench/src/direct_struct.rs` | Track 1 calls generated runtime and Track 2 is structurally different; `numbers` direct passes after later redress, but other direct rows remain NO-GO |
+| 3 | UTF-8 fusion + Class B `_x4` batched + utf8_block module | `parse-that-regex/src/lib.rs:331-339`, `parse-that-regex/src/unicode/`, `bbnf-simd/src/aarch64/utf8/`, `bbnf-simd/src/aarch64/unescape_uxxxx.rs` | duplicate UTF-8 validation is removed, but parse-G and string-bound direct rows remain open |
 | 4 | Lock 14 remediation + working-tree nukes | `bbnf-simd/src/lib.rs`, `bbnf-simd/src/aarch64/*`, `bbnf-simd/src/x86_64/*`, `runtime/grammars/json/`, `simd-scan/`, `runtime/.../generated_eventcursor.rs`, `runtime/Cargo.toml` | Lock 14 audit clean; 7 grammar-neutral split items land |
-| 5 | Remaining 8 `bbnf.asm` primitive bodies + checkasm hardening + runtime dispatch table | `bbnf-simd/src/x86_64/<prim>.asm`, `bbnf-simd/src/aarch64/<prim>.rs`, `bbnf-simd/src/scalar/<prim>.rs`, `bbnf-simd/tests/`, `bbnf-simd/src/dispatch.rs` | Per-primitive scalar reference + checkasm parity green; all 8 primitives have generated/runtime consumer |
+| 5 | Consumed `bbnf.asm` primitive admission + checkasm hardening + admitted runtime dispatch | `bbnf-simd/src/{scalar,aarch64}/`, `bbnf-simd/src/dispatch.rs`, `bbnf-simd/tests/`, `runtime/grammars/json/scan.rs`, `xtask` | `BYTE_CLASS_FROM_EQ_SET_64`, `BYTE_CLASS_FROM_TABLE_64`, `BITMAP_PREFIX_XOR_64`, `BITMAP_NEXT_SET_BIT`, and `EOB_PAD_CLAMP` have scalar refs, checkasm parity, and same-wave hot consumers; `BULK_EMIT_COMPRESSED`, `FRAME_PUSH_BOUNDED`, `FRAME_POP_BOUNDED`, and `FSM_DISPATCH_THREADED` are explicitly blocked as no-orphan future work |
 | 6 | Strict workload matrix | `bbnf-bench/`, `RESULTS.md`, `restart/skinny/BENCH.md` | 17 corpora × 7 workloads × N sidecars with strictness disclosed; no parse-G, no N-direct |
 | 7 (optional) | x86 CollapsedStage successor | `bbnf-simd/src/x86_64/*.asm`, `runtime/grammars/json/json_collapsed.asm`, `codegen/src/grammars/json/tables.rs` | Gated on Zen 4 silicon + NASM author + checkasm-green Layer 1 |
 
-After Wave 3, the M5 Max close condition is met (parse-G + N-direct
-both gone). Wave 4-6 are durability work on top of a measured win.
-Wave 7 is the x86 asmjson-beat successor.
+Wave 3 did not fire the SK-V5 close gate. Wave 4/5 are durability and
+primitive-admission work on top of the still-open `N-direct / NoGo`
+baseline. Wave 6 may continue from the consumed-primitive Wave 5 close,
+but it must not claim all 9 primitive bodies are admitted. Wave 7 is the
+x86 asmjson-beat successor.
 
 ## Entry Gates per Wave
 
@@ -111,23 +114,30 @@ named hot leaves (not one fused symbol).
 
 Wave 2 entry gate: BackendShape enum compiles; LayoutFacts.backend_shape
 field populated by `derive_backend_shape`; codegen consumes `&BackendIr`
-honestly; `cargo test --workspace` passes.
+well enough to keep the transition regression-free. The post-assay blocker is
+that `SinkOnly` output still comes from a static template rather than true BIR
+lowering.
 
 Wave 3 entry gate: Wave 2 closed; generated runtime SinkOnly active
-on Track 1; numbers/canada/mesh/marine_ik direct rows above 1.10×
-sonic-rs slack.
+on Track 1; `numbers` direct is green; Canada/mesh/marine_ik direct residuals
+are recorded rather than treated as closure.
 
-Wave 4 entry gate: Wave 3 closed; 4 parse-G rows above outcome-G
-boundary.
+Wave 4 entry gate: Wave 3 landed duplicate-UTF-8 validation redress; parse-G
+rows remain open and are carried as measured residuals.
 
 Wave 5 entry gate: Wave 4 audit clean; all nuked files removed; Lock 14
 sweep returns no grammar leaks in generic crates.
 
-Wave 6 entry gate: Wave 5 closed; all 9 bbnf.asm primitives have bodies
-+ scalar references + checkasm + consumer.
+Wave 6 entry gate: Wave 5 closed under the consumed-primitive admission
+rule; `primitive-checkasm` passes for the admitted set; `skinny/REDRESS.md`
+records the no-orphan block for `BULK_EMIT_COMPRESSED`,
+`FRAME_PUSH_BOUNDED`, `FRAME_POP_BOUNDED`, and `FSM_DISPATCH_THREADED`.
+Wave 6 does not require all 9 bodies.
 
-Wave 7 entry gate: optional; requires Zen 4 silicon access AND NASM
-author declared AND Layer 1 vocabulary fully checkasm-green.
+Wave 7 entry gate: optional; requires Zen 4 silicon access, declared NASM
+author, and a real per-grammar `.asm` CollapsedStage consumer plan.
+`FSM_DISPATCH_THREADED` body admission is gated on that consumer landing
+in the same wave/change with scalar reference and checkasm parity.
 
 ## Exit Gate (SK-V5 close)
 
@@ -139,8 +149,10 @@ author declared AND Layer 1 vocabulary fully checkasm-green.
   path; not the same SinkParser).
 - `parse_value_at` no longer collapses to one symbol; PC-level
   attribution explains any remaining gap.
-- `cargo run -p xtask --release -- primitive-checkasm` passes including
-  register-clobber detection.
+- `cargo run -p xtask --release -- primitive-checkasm` passes for
+  admitted primitives; Rust candidate calls use verified stack canaries.
+  Raw callee-saved register sentinels are reserved for future FFI/ASM
+  `call_new` shims.
 - Lock 1 + Lock 14 audit clean (manual grep + cohort verification).
 - Sidecar comparator table: sonic-rs `Value` / typed direct, simdjson
   C++ DOM / On Demand, yyjson inlined DOM, asmjson SWAR strict/permissive,

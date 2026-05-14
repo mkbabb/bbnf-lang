@@ -54,14 +54,7 @@ pub fn match_number_span_from_first(input: &[u8], offset: usize, first: u8) -> O
             cursor += 1;
         }
         b'1'..=b'9' => {
-            while cursor < len {
-                let digit = input[cursor].wrapping_sub(b'0');
-                if digit > 9 {
-                    break;
-                }
-                parts.push_digit(digit);
-                cursor += 1;
-            }
+            cursor = scan_digit_run(input, cursor, len, &mut parts, false);
         }
         _ => return None,
     }
@@ -70,15 +63,7 @@ pub fn match_number_span_from_first(input: &[u8], offset: usize, first: u8) -> O
         parts.is_integer = false;
         cursor += 1;
         let digits_start = cursor;
-        while cursor < len {
-            let digit = input[cursor].wrapping_sub(b'0');
-            if digit > 9 {
-                break;
-            }
-            parts.push_digit(digit);
-            parts.decimal_exp -= 1;
-            cursor += 1;
-        }
+        cursor = scan_digit_run(input, cursor, len, &mut parts, true);
         if cursor == digits_start {
             return None;
         }
@@ -117,10 +102,143 @@ pub fn match_number_span_from_first(input: &[u8], offset: usize, first: u8) -> O
     Some(parts.finish(cursor))
 }
 
+#[inline(always)]
+fn scan_digit_run(
+    input: &[u8],
+    mut cursor: usize,
+    len: usize,
+    parts: &mut NumberParts,
+    fractional: bool,
+) -> usize {
+    while cursor + 8 <= len && parts.can_push_eight_digits() {
+        let block = unsafe { std::ptr::read_unaligned(input.as_ptr().add(cursor).cast::<u64>()) };
+        if !is_eight_ascii_digits(block) {
+            break;
+        }
+        parts.push_eight_digits(parse_eight_digits(block));
+        if fractional {
+            parts.decimal_exp -= 8;
+        }
+        cursor += 8;
+    }
+
+    while cursor + 4 <= len && parts.can_push_four_digits() {
+        let block = unsafe { std::ptr::read_unaligned(input.as_ptr().add(cursor).cast::<u32>()) };
+        if !is_four_ascii_digits(block) {
+            break;
+        }
+        parts.push_four_digits(parse_four_digits(block));
+        if fractional {
+            parts.decimal_exp -= 4;
+        }
+        cursor += 4;
+    }
+
+    while cursor + 2 <= len && parts.can_push_two_digits() {
+        let block = unsafe { std::ptr::read_unaligned(input.as_ptr().add(cursor).cast::<u16>()) };
+        if !is_two_ascii_digits(block) {
+            break;
+        }
+        parts.push_two_digits(parse_two_digits(block));
+        if fractional {
+            parts.decimal_exp -= 2;
+        }
+        cursor += 2;
+    }
+
+    while cursor < len {
+        let digit = input[cursor].wrapping_sub(b'0');
+        if digit > 9 {
+            break;
+        }
+        parts.push_digit(digit);
+        if fractional {
+            parts.decimal_exp -= 1;
+        }
+        cursor += 1;
+    }
+
+    cursor
+}
+
+#[inline(always)]
+fn is_two_ascii_digits(block: u16) -> bool {
+    const ZEROES: u16 = 0x3030;
+    const NINES: u16 = 0x3939;
+    const HIGH_BITS: u16 = 0x8080;
+
+    let below_zero = block.wrapping_sub(ZEROES);
+    let above_nine = NINES.wrapping_sub(block);
+    ((below_zero | above_nine) & HIGH_BITS) == 0
+}
+
+#[inline(always)]
+fn is_four_ascii_digits(block: u32) -> bool {
+    const ZEROES: u32 = 0x3030_3030;
+    const NINES: u32 = 0x3939_3939;
+    const HIGH_BITS: u32 = 0x8080_8080;
+
+    let below_zero = block.wrapping_sub(ZEROES);
+    let above_nine = NINES.wrapping_sub(block);
+    ((below_zero | above_nine) & HIGH_BITS) == 0
+}
+
+#[inline(always)]
+fn is_eight_ascii_digits(block: u64) -> bool {
+    const ZEROES: u64 = 0x3030_3030_3030_3030;
+    const NINES: u64 = 0x3939_3939_3939_3939;
+    const HIGH_BITS: u64 = 0x8080_8080_8080_8080;
+
+    let below_zero = block.wrapping_sub(ZEROES);
+    let above_nine = NINES.wrapping_sub(block);
+    ((below_zero | above_nine) & HIGH_BITS) == 0
+}
+
+#[inline(always)]
+fn parse_two_digits(block: u16) -> u32 {
+    let digits = block & 0x0f0f;
+    let d0 = (digits & 0x00ff) as u32;
+    let d1 = ((digits >> 8) & 0x00ff) as u32;
+
+    d0 * 10 + d1
+}
+
+#[inline(always)]
+fn parse_four_digits(block: u32) -> u32 {
+    let digits = block & 0x0f0f_0f0f;
+    let pairs = ((digits & 0x00ff_00ff) * 10).wrapping_add((digits >> 8) & 0x00ff_00ff);
+    ((pairs & 0xffff) * 100).wrapping_add((pairs >> 16) & 0xffff)
+}
+
+#[inline(always)]
+fn parse_eight_digits(block: u64) -> u32 {
+    let digits = block & 0x0f0f_0f0f_0f0f_0f0f;
+    let pairs =
+        ((digits & 0x00ff_00ff_00ff_00ff) * 10).wrapping_add((digits >> 8) & 0x00ff_00ff_00ff_00ff);
+    let quads =
+        ((pairs & 0x0000_ffff_0000_ffff) * 100).wrapping_add((pairs >> 16) & 0x0000_ffff_0000_ffff);
+    let lo = (quads & 0xffff) as u32;
+    let hi = ((quads >> 32) & 0xffff) as u32;
+    lo * 10_000 + hi
+}
+
 #[inline]
 pub fn materialize_i64(input: &[u8], span: &NumberSpan) -> Result<i64, NumberError> {
     if !span.is_integer {
         return Err(NumberError::NotInteger);
+    }
+    if span.digit_count <= 19 && !span.mantissa_overflow {
+        return if span.negative {
+            if span.mantissa == (i64::MAX as u64) + 1 {
+                Ok(i64::MIN)
+            } else {
+                i64::try_from(span.mantissa)
+                    .map(|value| -value)
+                    .map_err(|_| NumberError::Overflow)
+            }
+        } else {
+            i64::try_from(span.mantissa).map_err(|_| NumberError::Overflow)
+        };
     }
     integer::parse_i64(raw(input, span))
 }
@@ -129,6 +247,12 @@ pub fn materialize_i64(input: &[u8], span: &NumberSpan) -> Result<i64, NumberErr
 pub fn materialize_u64(input: &[u8], span: &NumberSpan) -> Result<u64, NumberError> {
     if !span.is_integer {
         return Err(NumberError::NotInteger);
+    }
+    if span.negative {
+        return Err(NumberError::Overflow);
+    }
+    if span.digit_count <= 19 && !span.mantissa_overflow {
+        return Ok(span.mantissa);
     }
     integer::parse_u64(raw(input, span))
 }
@@ -196,6 +320,48 @@ impl NumberParts {
     }
 
     #[inline(always)]
+    fn can_push_eight_digits(&self) -> bool {
+        self.digit_count <= 11
+    }
+
+    #[inline(always)]
+    fn can_push_four_digits(&self) -> bool {
+        self.digit_count <= 15
+    }
+
+    #[inline(always)]
+    fn can_push_two_digits(&self) -> bool {
+        self.digit_count <= 17
+    }
+
+    #[inline(always)]
+    fn push_eight_digits(&mut self, value: u32) {
+        debug_assert!(self.can_push_eight_digits());
+        self.digit_count += 8;
+        self.mantissa = self
+            .mantissa
+            .wrapping_mul(100_000_000)
+            .wrapping_add(value as u64);
+    }
+
+    #[inline(always)]
+    fn push_four_digits(&mut self, value: u32) {
+        debug_assert!(self.can_push_four_digits());
+        self.digit_count += 4;
+        self.mantissa = self
+            .mantissa
+            .wrapping_mul(10_000)
+            .wrapping_add(value as u64);
+    }
+
+    #[inline(always)]
+    fn push_two_digits(&mut self, value: u32) {
+        debug_assert!(self.can_push_two_digits());
+        self.digit_count += 2;
+        self.mantissa = self.mantissa.wrapping_mul(100).wrapping_add(value as u64);
+    }
+
+    #[inline(always)]
     fn finish(self, end: usize) -> NumberSpan {
         NumberSpan {
             start: self.start,
@@ -237,6 +403,27 @@ mod tests {
         assert_eq!(
             materialize_u64(b"18446744073709551615", &u).unwrap(),
             u64::MAX
+        );
+    }
+
+    #[test]
+    fn materializes_common_integers_from_span_facts() {
+        let negative = match_number_span(b"-1234567890123456789,", 0).unwrap();
+        assert_eq!(
+            materialize_i64(b"-1234567890123456789,", &negative).unwrap(),
+            -1_234_567_890_123_456_789
+        );
+
+        let positive = match_number_span(b"9999999999999999999]", 0).unwrap();
+        assert_eq!(
+            materialize_u64(b"9999999999999999999]", &positive).unwrap(),
+            9_999_999_999_999_999_999
+        );
+
+        let overflow = match_number_span(b"9223372036854775808", 0).unwrap();
+        assert_eq!(
+            materialize_i64(b"9223372036854775808", &overflow),
+            Err(NumberError::Overflow)
         );
     }
 

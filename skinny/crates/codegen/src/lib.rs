@@ -108,6 +108,7 @@ fn emit_json_with_layout(
     files.insert("mod.rs".to_string(), mod_rs());
     files.insert("parser.rs".to_string(), parser_rs());
     files.insert("scan.rs".to_string(), scan_rs());
+    files.insert("sink.rs".to_string(), sink_rs());
     files.insert("value.rs".to_string(), value_rs());
     files.insert("view.rs".to_string(), view_rs());
     files.insert("visitor.rs".to_string(), visitor_rs());
@@ -172,6 +173,10 @@ fn sink_direct_rs() -> String {
     include_str!("json_templates/sink_direct.rs").to_string()
 }
 
+fn sink_rs() -> String {
+    include_str!("../../runtime/src/grammars/json/sink.rs").to_string()
+}
+
 fn view_rs() -> String {
     include_str!("json_templates/view.rs").to_string()
 }
@@ -225,6 +230,7 @@ mod tests {
                 "mod.rs",
                 "parser.rs",
                 "scan.rs",
+                "sink.rs",
                 "value.rs",
                 "view.rs",
                 "visitor.rs"

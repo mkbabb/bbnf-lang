@@ -26,15 +26,16 @@ rejected implementation decisions are recorded in `skinny/REDRESS.md`. The
 load-bearing measurement findings:
 
 - **`bbnf-bench` cap was redressed to 3,300 LOC after the final auditability gates and direct-to-struct workload landed**: `xtask lint-loc` now carries the fastest-anchor `S` report columns, subprocess RSS probes, persisted SIMD parity metadata, masking probes, and direct-to-struct rows inside the bench crate. The crate-local cap moved because the BENCH.md §7.9/§8.2 reporting contract plus the SK-V3 direct projection proof are now gate surfaces, not optional reports. The old 2,000/2,400 caps were too narrow for the full proof. Track 2 remains gated by substrate-API correspondence (per BENCH.md §10.6), not by an LOC cap. The total handwritten skinny envelope is redressed to 32,000 LOC.
-- **Original triad passed; expanded parse corpus still has G rows; overall gate
-  is N-direct / NoGo** (per `skinny/RESULTS.md`): the lazy tape/direct
-  substrate validates on many shapes, while the expanded parse corpus currently
-  misses S on `twitter`, `random`, `unicode_mixed`, and `unicode_basic`.
-  Direct-to-struct correctness is green. Sink-only direct throughput now passes
-  6 of 17 rows after the UTF-validation and integer-classification redress, but
-  11 rows still miss sonic-rs direct. Codegen remains empirically separable
-  from substrate; the current blocks are event-cursor/string/Unicode lowering
-  coverage plus exact float/string/Unicode materialization inside typed sinks.
+- **Expanded parse corpus still has G/L rows; overall gate is
+  N-direct / NoGo** (per `skinny/RESULTS.md`): the lazy tape/direct substrate
+  validates on several shapes, while the expanded parse corpus currently has
+  13 G rows and a Canada L row caused by the 22136 Mbps structural scan against
+  the 40000 Mbps floor. Direct-to-struct correctness is green. Sink-only direct
+  throughput now passes only `numbers`; 16 rows still miss sonic-rs direct.
+  Codegen remains empirically separable from substrate; the current blocks are
+  true BIR SinkOnly lowering, event-cursor/string/Unicode lowering coverage,
+  structural-scan floor restoration, and exact float/string/Unicode
+  materialization inside typed sinks.
 - **Rejected routes remain recorded** (Lane 9 greenfield discipline): pair-token fusion (REDRESS §16), function-pointer dispatch table (REDRESS §17), 12-byte skipless token (REDRESS §18), structural-index typed parser prepass, NEON no-escape string matcher, separator elision, generic SWAR whitespace skipper, and width churn (REDRESS §25). The accepted path is lazy-offset tape with sparse flags, direct spare-capacity offset writes, SWAR digit/plain-string runs, delimiter fusion, `parse_value_at`, short plain-string fast path, cold errors, and Track 2 inline parity.
 - **The host-call probe split (REDRESS §19)** disposes single-probe / 2-percent-threshold phrasing throughout this file: dispatch overhead passes (≤50ns); eager-decode bands MASK at 57.6%/77.2%/81.9% of Track 1 ns across corpora. The host-fn-free skinny is FAITHFUL only for a V1 path that keeps string decode lazy.
 
@@ -650,7 +651,7 @@ The skinny explicitly omits the following V1 mechanisms. Each omission's impact 
 | Recovery / `@error` directives | Skinny tests on valid + minimally malformed corpus only. | Zero impact on twitter / citm / canada SOTA rows; recovery is its own gate (tranche I). |
 | Multiple grammars | Skinny is JSON-only. | Risk: SIMD-beat for JSON does not imply SIMD-beat for CSS L4 (107K generated LOC, 14-variant OpenFrame relics in current code). The V1 H tranche owns the per-grammar SOTA-beat closure. |
 | CSS prior probe | Spec'd as anti-overfit lever in BENCH.md §9.1 / §11.1; deferred from skinny prototype (no `track2/css_prior.rs` on disk). | Risk: JSON-only result without the CSS prior probe does not bound substrate viability for non-JSON grammars; the only structural anti-overfit measurement the spec proposed is not executed. Mitigation: route the anti-overfit lever to V1 H tranche per multi-grammar V1-closure. |
-| Lazy-offset tape route | Measured canonical JSON substrate for the historical triad (REDRESS §20-§25). The expanded parse gate still has G rows, and the full gate is N-direct / NoGo; misses concentrate in event-cursor dispatch, string/Unicode-shaped rows, and exact float/string/Unicode materialization inside typed sinks. | Risk: V1 may overgeneralize the triad result to grammars with recovery, layout, eager host materialization, or different token alphabets. Mitigation: keep grammar-specific materialization gates and require before/after bench proof for rejected alternates. |
+| Lazy-offset tape route | Measured canonical JSON substrate for the historical triad (REDRESS §20-§25). The expanded parse gate still has 13 G rows plus one Canada L row, and the full gate is N-direct / NoGo; misses concentrate in event-cursor dispatch, string/Unicode-shaped rows, Canada structural-scan floor, true SinkOnly lowering, and exact float/string/Unicode materialization inside typed sinks. | Risk: V1 may overgeneralize the triad result to grammars with recovery, layout, eager host materialization, or different token alphabets. Mitigation: keep grammar-specific materialization gates and require before/after bench proof for rejected alternates. |
 | `egraph-derive` / proc-macro infrastructure | Not invoked in skinny. | Zero impact. |
 | Workspace metadata cross-grammar coherence | One grammar entry only. | Zero impact for JSON. |
 | Generated LOC budget enforcement at scale | One generated tree (`json/`); `xtask lint-loc` gates ≤4,000 JSON generated LOC and ≤3,300 `bbnf-bench` aggregate LOC (Track 2 gated by substrate-API correspondence per BENCH.md §10.6, not by an LOC cap; measured at ~318 LOC). | Risk: V1's nine-grammar generated-LOC ceiling (172,125 LOC per `PASS-2.md:435`) is not exercised. The skinny prevents local JSON bloat but still routes nine-grammar scale to F.W3. |

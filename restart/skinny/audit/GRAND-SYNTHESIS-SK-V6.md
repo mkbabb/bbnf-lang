@@ -290,3 +290,125 @@ directive, no parallel substrate, and no orphan primitive. It is also the most
 direct test of the fresh Wave 1 finding: current retained parse spends the
 largest share of time in duplicate string-boundary recognition rather than raw
 UTF-8 validation.
+
+## 8. Wave 1b Redispatch After Candidate 1/2 Redress
+
+Candidate 1 and Candidate 2 have now been falsified and recorded in
+`skinny/REDRESS.md` items 60-61. The Wave 1b cohort reports live at
+`restart/skinny/audit/SK-V6-COHORT/skv6-R1b-string-boundary.md` through
+`skv6-R6b-measurement-attribution.md`.
+
+Candidate 1 result: removing the retained tiny-string probe was rejected. It
+regressed every focused row because the probe is a real short-string completion
+path, not redundant front matter. It must stay on both retained key and string
+value paths.
+
+Candidate 2 result: an always-wide 64-byte trusted string-special scanner was
+rejected. It improved long-string rows, most notably `gsoc-2018`, but failed the
+full gate because short/non-string sentinel rows (`canada`, `instruments`) paid
+the wider first probe without enough long-string body to amortize it.
+
+### Wave 1b Diagnosis Revision
+
+- The retained string problem is distributional. `gsoc-2018`,
+  `unicode_mixed`, and `unicode_basic` are long-byte dominated;
+  `y_string_unicode` and `unicode_escapes` are escape dominated;
+  `distinct_values` is mid-value dominated; `citm_catalog`, `instruments`, and
+  `marine_ik` are short-key dominated.
+- A single always-on string scanner is therefore the wrong abstraction. The
+  generated retained parser needs a tiny-first, medium/long-gated string scan
+  policy rather than either deleting the tiny probe or starting every fallback
+  with a wide block.
+- Non-string retained overhead is also real. R2b measured
+  `consume_container_next` at 15-21% self on sampled rows and
+  `emit_plain_offset` at 7-11%. Those are separate candidates; they should not
+  be mixed into the next string intervention.
+- The strict competitor lesson is broader than JSON: simd-json wins by making
+  structural events the parse substrate. That route is not an immediate Wave 2
+  redress because SK-V6 pre-blocks sidecar structural-index/EventCursor
+  producer shapes. It belongs in the global architecture feedback loop as a
+  Lock 1 substrate-union review item, not as an unreviewed Wave 2 patch.
+
+### Candidate 3: Delayed-Wide Trusted String Scan
+
+Path:
+
+- `skinny/crates/parse-that-regex/src/lib.rs`
+- `skinny/crates/bbnf-simd/src/aarch64/string_block.rs`
+- `skinny/crates/bbnf-simd/tests/checkasm_string_block_64.rs`
+- `skinny/xtask/src/main.rs`
+
+Mechanism: keep `match_tiny_plain_string` unchanged. In
+`skip_json_string_plain_trusted`, preserve the existing first 16-byte AArch64
+probe. Only after the first 16-byte block reports no quote, backslash, or
+control byte may the scanner enter a 64-byte block loop. This keeps the short
+and key-dominated rows on the current cheap path while recovering the long-body
+gain seen in REDRESS 61. If a 64-byte primitive is reintroduced, it must have a
+scalar executable spec, checkasm parity, and a parse-attribution-visible helper
+or PC-bin attribution so the wrapper-symbol problem is not repeated.
+
+Expected row impact: `gsoc-2018`, `unicode_mixed`, `apache_builds`,
+`github_events`, `update_center`, and `unicode_basic` should gain. `canada`,
+`instruments`, `marine_ik`, `citm_catalog`, and `numbers` are sentinel rows
+because Candidate 2 regressed short/non-string shapes.
+
+Falsifiability gate:
+
+- Production `profile-lazy` smoke: all 17 retained rows, three repetitions,
+  median c/B, using the command ritual from `skv6-R6b-measurement-attribution`.
+- Proceed to full Criterion only if `gsoc-2018` improves by at least 10% c/B,
+  at least one of `unicode_mixed` or `apache_builds` improves by at least 6%,
+  and no retained row regresses by more than 1.5% c/B.
+- Full `bench-json --advisory` acceptance: `gsoc-2018` improves by at least
+  10% Track 1 Mbps, at least two of `unicode_mixed`, `apache_builds`,
+  `github_events`, `update_center`, and `unicode_basic` improve by at least
+  5%, and no retained row regresses by more than 2%.
+- Same-row rejection: if the delayed-wide path improves only the focused
+  string rows but again regresses `canada` or `instruments`, revert and record
+  the route as a blocked always/wide-string class extension.
+
+Why this is admissible: it is not Candidate 2 repeated. The first block remains
+the current 16-byte primitive, the tiny probe remains load-bearing, and the
+wide path is reached only after row-local evidence of a longer plain span. It
+does not add directives, BIR variants, retained side tables, or a parallel
+substrate.
+
+### Candidate 4: Container Next-Byte Carry
+
+Path:
+
+- `skinny/crates/runtime/src/grammars/json/generated.rs`
+- `skinny/crates/codegen/src/json_templates/generated.rs`
+
+Mechanism: split retained object/array loops so the delimiter transition after
+a value carries the next value byte across the comma boundary instead of
+returning only `bool` from `consume_container_next` and re-entering
+`parse_value_at` for a fresh bounds/load/dispatch. Preserve whitespace
+validation, close-offset emission, and the existing tape format.
+
+Expected row impact: `citm_catalog`, `canada`, `random`, `mesh`,
+`marine_ik`, `numbers`, `apache_builds`, and `github_events`. It is not
+expected to close escape-heavy string rows.
+
+Falsifiability gate:
+
+- Focused retained rows: `canada`, `citm_catalog`, `random`, `mesh`,
+  `marine_ik`, `numbers`, `apache_builds`, `github_events`, plus the string
+  guard rows `unicode_mixed`, `unicode_basic`, `distinct_values`, and
+  `y_string_unicode`.
+- Throughput: `canada` improves at least 5%, `citm_catalog` and `random`
+  improve at least 3%, and no measured retained row regresses more than 2%.
+- Attribution: combined `consume_container_next + parse_value_at +
+  dispatch_value` attributed c/B drops at least 25% on `citm_catalog` and
+  `canada`.
+
+Why this is admissible: it targets a current generated-runtime control-flow
+cluster and keeps source bytes as the only retained parse substrate.
+
+### Wave 1b Recommendation
+
+Dispatch Candidate 3 first. It directly redresses the measured reason
+Candidate 2 failed while preserving the long-string gain class. If Candidate 3
+fails, do not attempt another string scanner without a new profile; dispatch
+Candidate 4 as the next retained parser-control experiment. Candidate 3 is the
+next Wave 2 redress target, not a Wave 3 direct-to-struct intervention.

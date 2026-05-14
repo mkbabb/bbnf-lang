@@ -321,9 +321,10 @@ Lazy tape materialization is now reported per corpus:
    TBL-driven `\uXXXX` decoder are implemented and parity-checked. When the
    16-byte tiny-string helper was routed into Track 1/Track 2, Criterion showed
    a real `twitter` regression of roughly 25% on both tracks, so the active
-   parser remains on the 8-byte scalar tiny recognizer. Fresh profiles under
-   `skinny/profile/reprofile-sk-v3-wave1/` show `parse_value_at` still
-   dominating `random`, `unicode_escapes`, and `update-center`.
+   parser remains on the 8-byte scalar tiny recognizer. The now-purged
+   SK-V3 reprofile directory showed `parse_value_at` still dominating
+   `random`, `unicode_escapes`, and `update-center`; SK-V6 requires new
+   profiles on the generated Track 1 baseline before using that finding.
 
 29. HEAD vocabulary state after `74406332` and `9eef728c`.
 
@@ -355,10 +356,11 @@ Lazy tape materialization is now reported per corpus:
 
    `crates/bbnf-bench/src/bin/profile_direct.rs` records focused direct-sink
    profiles for Track 1, Track 2, sonic-rs, and serde baselines. The first
-   samply pass on `twitter`, `numbers`, and `unicode_mixed` is summarized in
-   `skinny/profile/direct-sink-2026-05-12/PROFILE-REPORT.md`; it showed
-   duplicate UTF-8 validation, string/unescape loops, and exact number
-   materialization as the hot leaves. The implemented redress removes the
+   samply pass on `twitter`, `numbers`, and `unicode_mixed` showed duplicate
+   UTF-8 validation, string/unescape loops, and exact number materialization
+   as the hot leaves; its stale profile directory is purged by SK-V6 Wave 0
+   and its surviving findings are folded into SK-V5/SK-V6 authority. The
+   implemented redress removes the
    duplicate UTF-8 validation after `match_json_string_at_quote` has already
    validated the span, and moves integer/non-integer classification into
    `parse_that_regex::JsonNumberMatch` so integral spans do not pay a second
@@ -394,9 +396,10 @@ Lazy tape materialization is now reported per corpus:
    grammar-generic primitive available to future grammars that genuinely
    address the 8-byte early-out layer (CSV-shape or other narrow-scan
    grammars); it is not the SK-V5 parse-G fix and Track 1/Track 2 remain on
-   the 8-byte scalar tiny recognizer. The corrected parse-G fix is the NEON
+   the 8-byte scalar tiny recognizer. The later SK-V5 candidate was the NEON
    UTF-8 codepoint pipeline at `crates/parse-that-regex/src/lib.rs:331-339`,
-   scheduled as Wave 3 of `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md`.
+   but SK-V6 records that route as refuted by entries 50-55 on the generated
+   Track 1 baseline.
    Cohort cites: `restart/skinny/audit/SK-V5-COHORT/skv5-D6-class-ab-novelty.md`
    and `restart/skinny/audit/SK-V5-COHORT/skv5-B1-parse-attribution.md`. This
    refines the diagnosis recorded in entry 28; the kernel admission stands, the
@@ -916,9 +919,10 @@ Direct-to-struct remains explicitly classified after the generated SinkOnly
 rewrite. The workload now proves generated typed sink correctness, not merely
 view projection or a bench-private parser. It moved the attribution to the
 right symbol paths but did not close the SOTA gap: the latest full run reports
-only one direct row (`numbers`) within the 1.10 sonic-rs time slack. Generated
-source hooks now preserve raw string spans to the sink boundary, but the first
-no-allocation decoded-string consumer regressed and was rejected. The residual
+four direct rows (`citm_catalog`, `mesh`, `marine_ik`, `numbers`) within the
+1.10 sonic-rs time slack. Generated source hooks now preserve raw string spans
+to the sink boundary, but the no-allocation decoded-string, exact stats, and
+quote-source streaming routes regressed and were rejected. The residual
 therefore remains dense typed-sink emission, field-layout decoded-string
 delivery, exact float/string/Unicode materialization, and event-stream
 consumption. A later exact decoded-stats sink also regressed escape-heavy
@@ -1218,8 +1222,8 @@ perturbation.
    event stream, retained tape and direct `SinkOnly` are two materializations
    of that stream, and `CollapsedStage` is a conditional x86 per-grammar NASM
    authoring route guarded by `BBNF-COLLAPSEDSTAGE-NOT-VIABLE`. The current
-   receiver packet is
-   `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md`.
+   receiver is SK-V6's profile-first dispatch over the SK-V5 landed substrate,
+   not the purged SK-V4 packet.
 
 ## SK-V5 Wave 5 Primitive Admission Redress
 
@@ -1293,3 +1297,32 @@ perturbation.
   allocate-then-contiguous-hash baseline. Reintroducing an escape/control scan
   inside `unescape_json_string` without a same-loop consumer does not count as
   a new route.
+
+## SK-V6 Wave 0 Regression-Recovery Redress
+
+- Item 58 records the SK-V6 dispatch framing. The current measured authority is
+  the post-SK-V5 `skinny/RESULTS.md` baseline: full gate `N-direct / NoGo`, 13
+  retained parse G rows, four retained A rows (`canada`, `mesh`, `marine_ik`,
+  `numbers`), four direct pass rows (`citm_catalog`, `mesh`, `marine_ik`,
+  `numbers`), and 13 direct red rows. Canada structural scan is green at 41495
+  Mbps against the 40000 Mbps NEON floor. The SK-V6 prompt originally requested
+  entries 57/58, but item 57 is already committed to direct receiver/source
+  redress; the ledger stays monotonic and records the SK-V6 additions as 58/59.
+- Item 58 closes no performance row. Its purpose is dispatch hygiene: purge
+  superseded SK-V3/SK-V4 implementation packets, SK-V1/SK-V2 hardening drafts,
+  and pre-SK-V5 profile directories; preserve SK-V5 as substrate-history
+  authority; and require fresh PC-level profiles of the generated Track 1
+  baseline before any kernel prescription. This prevents another hypothesis
+  transfer from the bench-private SK-V4/SK-V5 audit baseline.
+- Item 59 refutes the SK-V5 Wave 3 UTF-8 fusion class as a close route. The
+  binding sub-routes are already measured: retained projection side tables
+  (50), byte-class whitespace cursor (51), parser-local structural-mask cursor
+  (53), exact decoded-string stats sink (54), and quote-source fused streaming
+  materializer (55). Together they invalidate the claim that "fold UTF-8
+  validation into the NEON 16-byte body scan" is enough to close parse-G or
+  direct string rows on the current generated runtime baseline.
+- Item 59 does not ban `parse-that` string/Unicode work. It bans prescribing
+  that class without same-row falsification gates. Future work must name the
+  corpus rows, profile path, c/B or Mbps delta, and hot symbol boundary before
+  implementation; failure to lift the named row reverts and records another
+  rejected route here.

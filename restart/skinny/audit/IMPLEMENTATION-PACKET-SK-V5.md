@@ -8,10 +8,22 @@ Authority:
 
 - `restart/skinny/audit/GRAND-SYNTHESIS-SK-V5.md` (companion synthesis)
 - `restart/skinny/audit/SK-V5-COHORT/` (15 audit reports, 5,559 LOC)
-- `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md` (prior packet)
 - `restart/MASTER-PLAN.md` §13 H tranche
 - `restart/ARCHITECTURE.md` §7.3 (5-shape BackendShape, derive_backend_shape spec)
 - `skinny/RESULTS.md` (current gate authority)
+
+SK-V6 status overlay (2026-05-14): this packet is historical implementation
+authority, not current dispatch authority. SK-V6 supersedes it for throughput
+recovery because the generated Track 1 baseline shifted after Wave 2 and the
+Wave 3 UTF-8 fusion prescription was empirically refuted. Landed waves:
+Wave 1 `603308b3` (`BackendShape`, `LayoutFacts.backend_shape`,
+`derive_backend_shape`, `codegen/src/lower/`), Wave 2 `20e5fe46` +
+`d37f1cc2` + `d4e1612b` (generated `SinkOnly`, number materialization, source
+hooks), Wave 4 `726ab124` (eventcursor and simd-scan purge), and Wave 5
+`70e8348e` + `cae7b48b` (consumed primitive admission and Canada scan-floor
+redress). Wave 3's single-kernel UTF-8 close is **REFUTED** by REDRESS 50-55.
+Wave 6+7 remain future scope and must be entered through SK-V6's profile-first
+discipline.
 
 ## 0. Close Condition
 
@@ -138,7 +150,7 @@ together.
 - `NUKE-PLAN-SK-V5.md` lists each candidate with file, action, dependent
   references, post-nuke verification command.
 
-## 3. Wave 1 — Substrate Authoring (BackendShape + LayoutFacts + derive_backend_shape)
+## 3. Wave 1 — Substrate Authoring (BackendShape + LayoutFacts + derive_backend_shape) — LANDED
 
 ### 3.1 Owner paths
 
@@ -269,7 +281,11 @@ fallback / reference; the lowerer consumes the BIR honestly.
 - Parse benchmarks within ±2% of the prior gate (no regression from
   substrate plumbing).
 
-## 4. Wave 2 — Number Lever + Generated SinkOnly
+Status: **LANDED** in `603308b3`. Follow-up `d37f1cc2` made the direct
+renderer consume the BIR-derived `SinkOnlyProgram`; the remaining gaps are
+runtime/materialization measurements, not lowerer absence.
+
+## 4. Wave 2 — Number Lever + Generated SinkOnly — LANDED
 
 ### 4.1 Owner paths
 
@@ -464,7 +480,20 @@ parity is meaningful.
   `numbers` passes; `canada`, `mesh`, and `marine_ik` remain near-miss NO-GO.
 - All four rows + bench-private removal recorded in REDRESS.md.
 
-## 5. Wave 3 — UTF-8 Fusion + Class B Batched
+Status: **LANDED** across `20e5fe46`, `76b03f3b`, `d37f1cc2`, and
+`d4e1612b`. `numbers` and later direct rows (`citm_catalog`, `mesh`,
+`marine_ik`) pass after redress, but the overall direct gate remains
+`N-direct / NoGo`.
+
+## 5. Wave 3 — UTF-8 Fusion + Class B Batched — REFUTED AS CLOSE
+
+SK-V6 correction: the Wave 3 source-hook/string work landed, but the
+prescription that one UTF-8 fusion class would close parse-G is refuted.
+REDRESS 50-55 measure and reject the projection-side-table, byte-class cursor,
+parser-local structural-mask cursor, exact decoded-stats sink, and
+quote-source streaming materializer attempts. No future agent should prescribe
+another kernel from this section without SK-V6 Wave 1 re-profiling the current
+generated Track 1 baseline.
 
 ### 5.1 Owner paths
 
@@ -569,7 +598,7 @@ on aarch64 and scalar Hoehrmann fallback elsewhere.
   next hot leaf named for any remaining gap.
 - Record c/B improvement on each row in REDRESS.md.
 
-## 6. Wave 4 — Lock 14 Remediation + Working-Tree Nukes
+## 6. Wave 4 — Lock 14 Remediation + Working-Tree Nukes — PARTIALLY LANDED
 
 ### 6.1 Owner paths
 
@@ -652,7 +681,12 @@ Execute the nuke plan from `restart/skinny/audit/NUKE-PLAN-SK-V5.md`:
 - `rg "OpenFrame" skinny/crates/` returns 0 (verified in A4).
 - Generic crates pass Lock 14 audit (manual grep + cohort verification).
 
-## 7. Wave 5 — Consumed bbnf.asm Primitive Admission
+Status: **PARTIALLY LANDED** in `726ab124`: `simd-scan`, `eventcursor`, and
+`generated_eventcursor.rs` are purged. The `bbnf-simd/src/lib.rs` god-module
+split and remaining grammar-neutral classifier parameterization are still
+pending and move to SK-V6 Wave 5 after SOTA recovery.
+
+## 7. Wave 5 — Consumed bbnf.asm Primitive Admission — LANDED FOR CONSUMED SET
 
 ### 7.1 Owner paths
 
@@ -714,6 +748,14 @@ bodies.
   status.
 - No SOTA credit is claimed for blocked primitive bodies or for Wave 5
   itself while `gate-json` remains `N-direct / NoGo`.
+
+Status: **LANDED FOR THE CONSUMED SET** in `70e8348e` plus scan-floor redress
+`cae7b48b`. `BYTE_CLASS_FROM_EQ_SET_64`, `BYTE_CLASS_FROM_TABLE_64`,
+`BITMAP_PREFIX_XOR_64`, `BITMAP_NEXT_SET_BIT`, `EOB_PAD_CLAMP`,
+`BULK_EMIT_POSITIONS_64`, and the structural+terminator classifier have
+consumers and parity gates. `BULK_EMIT_COMPRESSED`, `FRAME_PUSH_BOUNDED`,
+`FRAME_POP_BOUNDED`, and `FSM_DISPATCH_THREADED` remain blocked by the
+no-orphan rule until a same-wave consumer exists.
 
 ## 8. Wave 6 — Strict Workload Matrix
 
@@ -787,18 +829,17 @@ The wave order prioritises measurable corpus moves:
 
 - Wave 0 corrects honest reporting and unblocks profile attribution.
 - Wave 1 builds the substrate that everything else consumes; zero
-  user-visible delta but absolutely required.
+  user-visible delta but absolutely required. Status: landed in `603308b3`.
 - Wave 2 lands the number lever and removes the bench-private dishonesty;
-  current measurements close `numbers` but leave Canada/mesh/marine direct
-  residuals.
-- Wave 3 removes duplicate UTF-8 validation and lifts string-bound rows;
-  generated source hooks are admitted, while a no-allocation decoded-string
-  visitor consumer, a later exact decoded-stats sink, and a quote-source
-  streaming hasher are rejected by measurement. It does not close the parse-G
-  or direct Unicode/string gates.
+  current measurements close `numbers` and, after later direct receiver
+  redress, four direct rows. Status: landed across Wave 2/redress commits.
+- Wave 3's source-hook work is admitted, but its UTF-8 fusion close is
+  refuted by measurement. It does not close the parse-G or direct
+  Unicode/string gates and cannot be reused as a prescription under SK-V6.
 - Wave 4 nukes the Lock 14 / Lock 1 residue so generic crates pass
   audit (no JSON code in `bbnf-simd` / `parse-that-regex` /
-  `codegen/lower`).
+  `codegen/lower`). Status: eventcursor and simd-scan purges landed; the
+  `bbnf-simd` split remains pending.
 - Wave 5 admits only consumed grammar-neutral primitives and records
   no-orphan blocks for the remaining macro bodies.
 - Wave 6 finalises the strict workload matrix.

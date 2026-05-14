@@ -1,8 +1,16 @@
 # SK-V5 Handoff
 
-Date: 2026-05-13.
+Date: 2026-05-14.
 
-Status: **IMPLEMENTATION IN PROGRESS. CURRENT GATE: N-direct / NoGo.**
+Status: **SUPERSEDED FOR DISPATCH BY SK-V6. CURRENT GATE: N-direct / NoGo.**
+SK-V5 remains the substrate-history authority, but SK-V6 is now the dispatch
+authority for throughput recovery. The current measured authority is
+`skinny/RESULTS.md`: retained parse has 13 G / NO-GO rows and four A / GO rows
+(`canada`, `mesh`, `marine_ik`, `numbers`); direct-to-struct is
+correctness-green with four 1.10x sonic-rs slack passes (`citm_catalog`,
+`mesh`, `marine_ik`, `numbers`) and 13 remaining red rows. Canada structural
+scan is no longer stale: the full matrix reports 41495 Mbps against the 40000
+Mbps NEON floor. Strictness/output-plane columns are disclosed.
 
 The implementation agent's reading order is:
 
@@ -18,9 +26,9 @@ plus 6 novelty-challenge reports D1-D6; 5,559 LOC total).
 ## Where SK-V5 Stands
 
 The architecture was declared in `restart/MASTER-PLAN.md` §13 (commit
-`8fa51245`) and
-`restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md` (commit
-`1519cf16`). The Rust state behind that architecture now exists only
+`8fa51245`) and refined by the SK-V4/SK-V5 audit line. The obsolete SK-V4
+receiver packet was purged by SK-V6 Wave 0; this handoff preserves only the
+surviving SK-V5 findings. The Rust state behind that architecture now exists
 partially:
 
 - `BackendShape`, `LayoutFacts.backend_shape`, `derive_backend_shape`, and
@@ -31,7 +39,9 @@ partially:
   `parse-that-regex::number`; the current `numbers` direct row passes, while
   `canada`, `mesh`, and `marine_ik` remain near-miss direct NO-GO rows.
 - Trusted UTF-8 string matching and Class B materialization support landed, but
-  string/Unicode-heavy retained and direct rows remain decisive NO-GO.
+  the SK-V5 Wave 3 UTF-8 fusion prescription did not close the rows. REDRESS
+  50-55 block the measured sub-routes; SK-V6 requires fresh PC-level profiles
+  on the generated Track 1 baseline before any new kernel prescription.
 - Generated `SinkOnly` direct now preserves raw string source spans to the sink
   boundary through `JsonSink::*_source` hooks. The default hooks keep the old
   allocation behavior; a no-allocation decoded-string digest visitor was
@@ -66,19 +76,17 @@ partially:
 - A post-Wave 5 scan-floor slice admits two additional consumed scanner
   primitives: `BULK_EMIT_POSITIONS_64`, consumed by `compact_mask`, and the
   structural+terminator no-quote classifier, consumed by JSON scan. Focused
-  `simd_scan` now measures Canada at about 41833 Mbps, clearing the 40000 Mbps
-  NEON floor; the full `RESULTS.md` matrix still needs refresh.
+  `simd_scan` measured Canada at about 41833 Mbps, and the refreshed full
+  `RESULTS.md` matrix records Canada structural scan at 41495 Mbps, clearing
+  the 40000 Mbps NEON floor.
 
 The current gate per `skinny/RESULTS.md`:
 
 - 13 retained parse rows are G / NO-GO.
-- `canada` is stale L / NO-GO in checked-in `RESULTS.md` because the prior
-  structural-only scan was 22136 Mbps against the 40000 Mbps floor. Redress
-  item 56 restores the focused structural-only row to about 41833 Mbps; do not
-  count the L row closed until a full matrix refresh records it.
-- 3 retained parse rows are A / GO: `mesh`, `marine_ik`, and `numbers`.
-- 16 of 17 direct rows are N-direct; only `numbers` passes the 1.10x sonic-rs
-  time slack.
+- 4 retained parse rows are A / GO: `canada`, `mesh`, `marine_ik`, and
+  `numbers`.
+- 13 of 17 direct rows are N-direct; `citm_catalog`, `mesh`, `marine_ik`, and
+  `numbers` pass the 1.10x sonic-rs time slack.
 - Strictness and output-plane columns are disclosed; bbnf rows remain
   `deferred / view-boundary / yes`.
 - Track 1 calls generated runtime `parse_direct`; Track 2 is structurally
@@ -88,7 +96,8 @@ The current gate per `skinny/RESULTS.md`:
 
 ## The Corrected Diagnosis
 
-Two SK-V4 framings were wrong:
+Two SK-V4 framings were wrong, and SK-V5 added one empirically refuted
+prescription:
 
 1. **Class A `match_tiny_plain_string` is not the parse-G fix.** D6
    verified: the kernel was previously wired and regressed twitter
@@ -98,13 +107,14 @@ Two SK-V4 framings were wrong:
    B1's PC attribution confirms: `tiny_plain_string_scalar` is at most
    7.9% of `parse_value_at` self-time on random.
 
-2. **The actual hot kernel boundary is `validate_utf8_codepoint`**
-   reached via `skip_json_string_plain`'s NEON 16-byte block returning
-   early on every byte ≥ 0x80. B1+B2+A3 corroborate. The fix is one
-   kernel: fold UTF-8 validation INTO the NEON 16-byte string-body
-   scan, eliminating both the early-exit and the scalar fall-through.
-   All four parse-G rows share this pathology at four intensity
-   levels.
+2. **The old UTF-8 hot-boundary diagnosis is not a sufficient
+   prescription on the generated Track 1 baseline.** B1+B2+A3 named
+   `validate_utf8_codepoint` at the SK-V5 audit baseline, but five
+   subsequent attempts around projection side tables, byte-class cursors,
+   parser-local masks, decoded-string stats, and quote-source streaming
+   were measured and rejected in REDRESS 50-55. SK-V6 therefore forbids
+   hypothesis transfer from the SK-V5 Wave 3 prescription and reopens the
+   row only through fresh `parse-attribution` profiles.
 
 The number lever is independent: vendor Eisel-Lemire from
 `/Users/mkbabb/Programming/parse-that/rust/parse_that/src/parsers/eisel_lemire/`
@@ -159,8 +169,9 @@ Wave 3 entry gate: Wave 2 closed; generated runtime SinkOnly active
 on Track 1; `numbers` direct is green; Canada/mesh/marine_ik direct residuals
 are recorded rather than treated as closure.
 
-Wave 4 entry gate: Wave 3 landed duplicate-UTF-8 validation redress; parse-G
-rows remain open and are carried as measured residuals. Post-redress update:
+Wave 4 entry gate: Wave 3 landed source-hook and UTF-8/string work, but the
+UTF-8 fusion close did not fire; parse-G rows remain open and are carried as
+measured residuals. Post-redress update:
 `JsonSink::*_source` hooks are present and generated direct consumes them, but
 the first no-allocation decoded-string consumer is blocked by measured
 regression, a later exact decoded-stats sink also regressed escaped-string
@@ -213,8 +224,8 @@ gated separately. The SK-V5 close is M5 Max against sonic-rs / simdjson
 / yyjson with strictness disclosed.
 
 SK-V5 does NOT introduce new directives, new BIR variants, new locks, or
-new substrates. The architecture from MASTER-PLAN.md §13 + SK-V4 packet
-holds; SK-V5 fills in the Rust state.
+new substrates. The architecture from MASTER-PLAN.md §13 holds; SK-V5 fills in
+the Rust state, and SK-V6 supersedes dispatch.
 
 SK-V5 does NOT promise CSS L4 / Sheets / BBNF-self closure. The Lock 14
 remediation (Wave 4) ensures generic crates STAY generic so those

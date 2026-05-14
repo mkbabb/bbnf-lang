@@ -310,7 +310,7 @@ Skinny records two corpus tiers:
 
 ### 3.1 Corpus inventory (canonical 17-corpus expansion; 2026-05-12)
 
-The original three-corpus set (twitter / citm / canada) is the simdjson-community canonical anchor but overfits the bench to (a) string-heavy + light-Unicode, (b) deep-object + light-numerics, (c) float-dense. The expanded set adds escape-density, full-Unicode, structural-stress, object-key-dispatch, and adversarial corpora; corpus-shape diversity is the empirical guard against per-corpus overfit (per `skinny/profile/skinny-expanded/PROFILE-REPORT.md` — the 14-corpus profile reveals that marine_ik is the worst-Mbps corpus, not canada; skinny is NOT float-overfit). The 17-row inventory below is the canonical throughput-corpus bench surface; this aligns with `restart/skinny/audit/GRAND-SYNTHESIS-SOTA-BEAT-SK-V3.md` §1 (the V3 authority's expanded SOTA-BEAT corpus). The 14-corpus profile at `skinny/profile/skinny-expanded/` is the historical sub-sample (pre-Wave-2 expansion); the bench harness now reports all 17 rows.
+The original three-corpus set (twitter / citm / canada) is the simdjson-community canonical anchor but overfits the bench to (a) string-heavy + light-Unicode, (b) deep-object + light-numerics, (c) float-dense. The expanded set adds escape-density, full-Unicode, structural-stress, object-key-dispatch, and adversarial corpora; corpus-shape diversity is the empirical guard against per-corpus overfit (per `skinny/profile/skinny-expanded/PROFILE-REPORT.md` — the 14-corpus profile reveals that marine_ik is the worst-Mbps corpus, not canada; skinny is NOT float-overfit). The 17-row inventory below is the canonical throughput-corpus bench surface and now routes through SK-V6's profile-first recovery discipline. The 14-corpus profile at `skinny/profile/skinny-expanded/` is the historical sub-sample (pre-Wave-2 expansion); the bench harness now reports all 17 rows.
 
 | Corpus | Purpose | Bytes (approx) | Hot path | Source |
 |---|---|---|---|---|
@@ -644,6 +644,11 @@ Per-parser baseline values populated at row emission time:
 | RapidJSON default | `permissive` | `none` | `no` | default flags skip UTF-8 validation; controls pass inside strings |
 | serde_json | `strict` | `scan-boundary` | `yes` | (empty) |
 
+SK-V6 fold-back: these columns are landed in the current `skinny/RESULTS.md`
+schema and are no longer optional or future work. They remain part of the
+Wave 1 re-profile input because same-plane sidecar comparisons are required
+before any SOTA-BEAT claim.
+
 The four columns are emitted by the `Sidecar` trait in
 `bbnf-bench/src/lib.rs` and propagate through every native sidecar row.
 Missing values FAIL the schema gate at §5.3 the same way any required field
@@ -852,8 +857,11 @@ lazy offset tape, sparse flags, direct spare-capacity offset writes, cold
 errors, SWAR digit and plain-string runs, fused comma/close delimiter
 consumption, newline-indent space-run skipping, `parse_value_at`, short
 plain-string fast path, Track 2 inline parity, strict `bbnf-simd` checkasm,
-parse-that string/unicode closure, and SK-V5 item 57 direct receiver/source
-inlining. Rejected routes remain rejected: eager-token revival, sidecar
+parse-that string/unicode work, and SK-V5 item 57 direct receiver/source
+inlining. SK-V6 corrects the prior reading: the SK-V5 Wave 3 UTF-8 fusion
+family is refuted as a close route by REDRESS 50-55, so the next kernel must
+come from fresh generated Track 1 profiles. Rejected routes remain rejected:
+eager-token revival, sidecar
 structural-index typed-parser prepass, active retained 16-byte tiny-string
 parser dispatch, separator elision, generic SWAR whitespace skipper,
 12-byte/width churn, and dispatch-table/function-pointer alternates.
@@ -1337,7 +1345,7 @@ Cold-cache is recorded for V1 J.W1 to consume.
 
 ### 7.9 Correctness gates (Lock 9 + JSONTestSuite conformance + UTF-8 validation)
 
-The 2026-05-12 corpus expansion + asm-string-unicode + skinny-expanded agents surfaced two correctness gaps that must be closed before any SOTA-BEAT throughput claim is honest:
+The 2026-05-12 corpus expansion plus the string/unicode and skinny-expanded profile agents surfaced two correctness gaps that must be closed before any SOTA-BEAT throughput claim is honest:
 
 **Gate 1 — UTF-8 validation at scan stage, not view time**. The current skinny binary panics on `i_string_invalid_utf-8.json`, `i_string_overlong_sequence_2_bytes.json`, `i_string_truncated-utf-8.json`, `i_string_iso_latin_1.json` (raw 0xE9) because `view.rs:203, 229` does `std::str::from_utf8(...).expect("parser input is UTF-8")` while the scan emits no UTF-8 validation pass. The fix lands at scan stage inside the `bbnf-simd` boundary via the `simdutf8` crate (Keiser-Lemire 2020 "Validating UTF-8 In Less Than One Instruction Per Byte"; admissible per Lock 16 algorithm-class citation). Per `skinny/profile/skinny-expanded/PROFILE-REPORT.md`, UTF-8 validation is **0.00% self-time** on every current corpus — moving it to scan stage costs nothing measurable but closes the correctness gap. Per `skinny/profile/simdjson-expanded/PROFILE-REPORT.md`, simdjson's scan-time UTF-8 validation costs 0-35% depending on multibyte density; on pure-ASCII corpora the validator's overhead is ≤ 2% of total cycles.
 

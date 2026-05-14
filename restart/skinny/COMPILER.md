@@ -804,7 +804,14 @@ still collapses to one fused symbol means the codegen template did not emit
 the paired `cfg_attr` and the feature is a no-op; that is a regen-equality
 fail at §6.4.
 
-Authority: `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md` §2.3.
+SK-V6 fold-back: the feature is landed and is now mandatory for the Wave 1
+re-profile campaign. A kernel prescription made from a fused
+`parse_value_at` symbol, or from SK-V5 Wave 3 hypothesis transfer instead of
+fresh attribution, is non-canonical. REDRESS 50-55 are the negative evidence
+that forced this rule.
+
+Authority: `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md` §2.3 and
+`restart/skinny/audit/IMPLEMENTATION-AGENT-PROMPT-SK-V6.md` §5 Wave 1.
 
 ---
 
@@ -812,7 +819,7 @@ Authority: `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md` §2.3.
 
 | V1 crate | Skinny status | Per-skip impact on SOTA measurement |
 |---|---|---|
-| `cost-model` | **Stubbed in the current runnable skinny.** The skinny treats every BIR construction as constant-cost. No `CostFacts`, no `CostDecision`, no scalar score, no Pareto frontier. | The expanded corpus refutes the prior "cost-model is not a recovery lever" reading. `skinny/RESULTS.md` is overall `N-direct / NoGo`: retained parse has 13 G rows plus one stale Canada L row from the prior structural-scan floor miss, while direct-to-struct correctness is green but only `numbers` passes the direct slack. SK-V5 redress item 56 restores the focused Canada structural-scan floor, but SOTA-BEAT still requires a grammar-neutral cost model over materialization plan (`OffsetTape` / `EventTape` / `SinkOnly` / `CollapsedStage`), hot-rule inline selection, byte-class primitive choice, generated source-hook SinkOnly emission, full-matrix scan-floor refresh, and fused exact float/string/Unicode materialization. Lens L verdict: **MASKING until those choices are measured as alternatives, not constants**. |
+| `cost-model` | **Stubbed in the current runnable skinny.** The skinny treats every BIR construction as constant-cost. No `CostFacts`, no `CostDecision`, no scalar score, no Pareto frontier. | The expanded corpus refutes the prior "cost-model is not a recovery lever" reading. `skinny/RESULTS.md` is overall `N-direct / NoGo`: retained parse has 13 G rows, while direct-to-struct correctness is green with four pass rows (`citm_catalog`, `mesh`, `marine_ik`, `numbers`) and 13 red rows. SK-V5 redress item 56 is folded into the full matrix and clears Canada structural scan, but SOTA-BEAT still requires a grammar-neutral cost model over materialization plan (`OffsetTape` / `EventTape` / `SinkOnly` / `CollapsedStage`), hot-rule inline selection, byte-class primitive choice, generated source-hook SinkOnly emission, and fused exact float/string/Unicode materialization. Lens L verdict: **MASKING until those choices are measured as alternatives, not constants**. |
 | `egraph` | **Stubbed.** No e-class, no rewrite, no saturation, no fixpoint. ARCH §10.1 `legality-rewrites` and `normalization-rewrites` (LOAD-BEARING for V1 correctness) are inlined as pre-extraction passes in `passes::normalize`; `cost-driven-rewrites` is omitted from the runnable skinny. | JSON's grammar can be extracted without rewrite search, but SOTA-BEAT cannot claim the omitted rewrite/cost axis is orthogonal. The refined skinny keeps e-graph saturation out of the prototype, but BENCH must carry explicit plan probes for materialization mode, dispatch form, primitive kernel, and capacity strategy before the cut can be FAITHFUL. |
 | `csp-solver` | **Stubbed.** No constraint store, no propagation, no improvement, no Implication discharge. | None for JSON. Every CSP axis has zero choice on JSON (§4.2). |
 | `vm` | **Stubbed.** No interpreter, no replay, no debug trace. | None for SOTA. VM is a debug/test artefact. The skinny does not have the `vm::replay` golden gate. |

@@ -9,14 +9,15 @@ audit. Authority for the verdicts below.
 Post-assay correction (2026-05-14): SK-V5 implementation is now partially
 landed and the current gate remains `N-direct / NoGo`. The Rust scaffolding for
 `BackendShape` / `derive_backend_shape` exists, and the generated direct parser
-is now emitted from a BIR-derived `SinkOnlyProgram` rather than the former
-static JSON direct template. The latest `skinny/RESULTS.md` records 13 retained
-G rows, one stale Canada L row caused by the prior structural-scan floor
-(22136 Mbps vs 40000 Mbps), 3 retained A rows (`mesh`, `marine_ik`,
-`numbers`), and only one direct PASS row (`numbers`). SK-V5 redress item 56
-restores the focused Canada structural scan to about 41833 Mbps; the full
-matrix still needs refresh. Treat the wave plan below as historical dispatch
-intent amended by `HANDOFF-SK-V5.md` and `skinny/REDRESS.md` entries 46-56.
+is emitted from a BIR-derived `SinkOnlyProgram` rather than the former static
+JSON direct template. The latest `skinny/RESULTS.md` records 13 retained G
+rows and four retained A rows (`canada`, `mesh`, `marine_ik`, `numbers`);
+Canada structural scan is green in the full matrix at 41495 Mbps against the
+40000 Mbps NEON floor. Direct-to-struct correctness is green, with four direct
+PASS rows (`citm_catalog`, `mesh`, `marine_ik`, `numbers`) and 13 red rows.
+Treat the wave plan below as historical dispatch intent amended by SK-V6,
+`HANDOFF-SK-V5.md`, and `skinny/REDRESS.md` entries 50-57. In particular, the
+Wave 3 UTF-8 fusion prescription is refuted as a close route.
 
 ## 1. The Frame
 
@@ -28,8 +29,8 @@ at `crates/codegen/src/lower/rust.rs` + `BBNF-BACKEND-SHAPE-INCONSISTENT`
 diagnostic — and were never coded. SK-V5 is also the execution of SK-V4
 Wave 1 (generated `SinkOnly` from `BIR DirectBuild`), Wave 2 (exact direct
 materializers), and Wave 3 (parse hot-hub attribution + EventCursor
-lowering) — declared in `IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md`
-(commit `1519cf16`) without specification at the kernel boundary.
+lowering) — declared by the now-purged SK-V4 receiver packet without
+specification at the kernel boundary.
 
 The novelty-challenge wave (D1-D6) verified this frame across six
 finding clusters. Every cluster lands on the same pattern: the work was
@@ -39,11 +40,13 @@ resolution that the SK-V5 cohort A/B agents named. SK-V5 is the
 **implementation packet for prior-declared work**, not a fresh design
 authority.
 
-Three items in the cohort are genuinely-NEW resolution that no prior doc
-named: the NEON UTF-8 codepoint pipeline at
+Three items in the cohort were genuinely-NEW resolution that no prior doc
+named at audit time: the NEON UTF-8 codepoint pipeline at
 `parse-that-regex/src/lib.rs:331-339`, the `unescape_uxxxx_x4_neon`
 4-quartet batched form, and the `parse-attribution` feature flag for
-no-inline diagnostic builds. Three items are NEW-SCOPE (vendor-and-wire,
+no-inline diagnostic builds. SK-V6 later refuted the UTF-8 pipeline as a
+close route, while preserving the profile-attribution feature. Three items
+are NEW-SCOPE (vendor-and-wire,
 not research): the Eisel-Lemire `compute_f64` algorithm copyable from
 `/Users/mkbabb/Programming/parse-that/rust/parse_that/src/parsers/eisel_lemire/`,
 the integer materializer misplaced at `bbnf-bench/direct_struct.rs:501`,

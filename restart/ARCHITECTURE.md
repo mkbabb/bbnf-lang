@@ -1096,9 +1096,20 @@ Per-shape lowering output. Each `BackendShape` value resolves to a concrete arte
 
 The bifurcation is load-bearing for LLVM compatibility. Recursive-descent Rust compiles to an implicit automaton through LLVM's optimiser — the call-stack-as-parse-state lowering fuses with force-inlined hot leaves under Lock 15's `lto = "fat"` + `codegen-units = 1` + ~20 KiB hot-function ceiling, and yyjson's reference C body demonstrates the same shape stays in i-cache. Codegen-emitted *explicit* Rust automatons do not survive this lowering: LLVM cannot fold an indirect-dispatch state walk back into PC-as-state form, and the overhead asmjson eliminates via `jmp [r10 + state*8]` reappears as branch-misprediction taxa in any LLVM-emitted equivalent. The lone exception — `CollapsedStage` — therefore consumes hand-written NASM where direct control over generated-code addresses is available (asmjson's PC-as-state pattern; Lock 16's `FSM_DISPATCH_THREADED` primitive in `skinny/crates/bbnf-simd/ext/x86/bbnf.asm`). All four other shapes stay in LLVM's territory and consume Layer-1 primitives from the same `ext/x86/bbnf.asm` vocabulary only at scan-shaped inner loops where the primitive's grammar-neutral signature (`BYTE_CLASS_FROM_TABLE_64`, `BYTE_CLASS_FROM_EQ_SET_64`, `BITMAP_PREFIX_XOR_64`, `BITMAP_NEXT_SET_BIT`, `BULK_EMIT_COMPRESSED`, `EOB_PAD_CLAMP`, `FRAME_PUSH_BOUNDED`, `FRAME_POP_BOUNDED`) admits a direct FFI binding. The Rust per-shape lowerer surface now exists in the skinny prototype at `skinny/crates/codegen/src/lower/rust.rs`; its `SinkOnly` path lowers Backend IR into a grammar-neutral `SinkOnlyProgram` consumed by the JSON runtime renderer. The two-layer reusable vocabulary — Layer 0 vendored from dav1d at `skinny/crates/bbnf-simd/ext/x86/x86inc.asm` (1,978 LOC, BSD-2), Layer 1 grammar-neutral macros at `skinny/crates/bbnf-simd/ext/x86/bbnf.asm` — is the dav1d / asmjson factoring elaborated at `restart/skinny/audit/SOTA-BEAT-DESIGN.md` §5.2; Lock 1 governs the substrate union that admits all five shapes, Lock 14 governs the zero-grammar-overfitting discipline that keeps `bbnf.asm` grammar-neutral, Lock 15 governs the i-cache residency budget that bounds the recursive-descent shapes, and Lock 16 governs the admissibility allowlist that bounds the primitive vocabulary. The same-wave-consumer rule at `docs/precepts/instructions/LESSONS-LEARNED.md:17-26` constrains admission: a `CollapsedStage` lowering target lands only when a per-grammar kernel author is in flight (no substrate-without-consumer); a primitive lands in `bbnf.asm` only when at least one shape consumes it through codegen at the same wave.
 
-### 7.4 SK-V5 Implementation Status
+### 7.4 SK-V5 / SK-V6 Implementation Status
 
 The §7.3 surfaces — the `BackendShape` enum, the `derive_backend_shape` algorithm, and the `LayoutFacts.backend_shape: HashMap<RuleId, BackendShape>` field — are now present in the skinny prototype. `ir/src/lib.rs` owns `BackendShape`; `passes/src/lib.rs` populates `LayoutFacts.backend_shape` through `passes::recognizers::derive_backend_shape_with_diagnostics`; `codegen/src/lower/` dispatches per shape. The current close blocker is no longer symbol absence; it is measured cost selection and runtime materialization quality across retained parse and generated `SinkOnly`.
+
+SK-V6 fold-back (2026-05-14): Wave 1 substrate state is **LANDED** in
+`603308b3` (`BackendShape`, `LayoutFacts.backend_shape`,
+`derive_backend_shape`, and `codegen/src/lower/`); generated direct `SinkOnly`
+lowering is **LANDED** across `20e5fe46`, `d37f1cc2`, and `d4e1612b`; eventcursor
+and simd-scan fossil purges are **LANDED** in `726ab124`; consumed primitive
+admission is **LANDED** for the active set in `70e8348e` plus `cae7b48b`. The
+SK-V5 Wave 3 UTF-8-fusion close is **REFUTED** by REDRESS 50-55 and is no
+longer an architectural prescription. SK-V6 requires fresh PC-level
+`parse-attribution` profiles on the generated Track 1 baseline before another
+kernel or substrate intervention is selected.
 
 The codegen text-emission step is split. Retained parser/view scaffolding still uses the historical JSON template surface, but the direct `SinkOnly` entry is no longer a decorative pass-through. `codegen/src/lower/sink_only.rs` walks `BackendIr` into `SinkOnlyProgram`, `DirectBuild` carries a field/source roster, and `codegen/src/lib.rs` refuses direct emission if the backend lacks `DirectBuild`. The former `json_templates/sink_direct.rs` splice is removed. Generated direct string lowering now passes raw string spans plus `needs_unescape` to `JsonSink::*_source`; the default hooks preserve the old allocation behavior, and the measured no-allocation decoded visitor route is rejected until a fused decode+sink primitive exists. SK-V5 item 57 adds force-inlined direct receivers plus a bounded direct-only tiny-plain-string raw-span fast path; the refreshed full matrix moves direct passes to `citm_catalog`, `mesh`, `marine_ik`, and `numbers`, but still reports `N-direct / NoGo`, so this is receiver/source-shape evidence rather than SOTA closure. The BIR construction itself remains non-decorative — `extract::single_plan` walks the grammar honestly, projects `materialize_rule` per rule, and emits a `BackendIr` whose recognizers, rules, shape facts, and direct field rosters drive the direct renderer tests.
 
@@ -1510,7 +1521,7 @@ retained tape proves correctness, not throughput. For public APIs that do not
 require path/value traversal after parse, `LayoutFacts.backend_shape` must
 select `SinkOnly` and lower `DirectBuild` to typed-field writes during parsing.
 The first skinny sink-only digest parser closes the retained-view penalty but
-still misses sonic-rs direct on 16 of 17 rows after duplicate UTF-8 validation,
+still misses sonic-rs direct on 13 of 17 rows after duplicate UTF-8 validation,
 scanner-owned integer classification, context-specific scalar hooks, and BIR
 lowered generated `SinkOnly` landed; direct SOTA therefore also depends on
 exact float/string/Unicode materialization primitives inside the sink.

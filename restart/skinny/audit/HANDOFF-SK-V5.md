@@ -24,8 +24,9 @@ The architecture was declared in `restart/MASTER-PLAN.md` §13 (commit
 partially:
 
 - `BackendShape`, `LayoutFacts.backend_shape`, `derive_backend_shape`, and
-  `codegen/src/lower/` exist, but the emitted direct parser is still
-  template-authoritative rather than true BIR-to-Rust `SinkOnly` lowerer output.
+  `codegen/src/lower/` exist. The generated direct parser is now emitted from
+  a BIR-derived `SinkOnlyProgram`; the old static JSON `sink_direct` template
+  is deleted. This closes the codegen-authority blocker, not the SOTA gate.
 - Eisel-Lemire / integer materialization is wired through
   `parse-that-regex::number`; the current `numbers` direct row passes, while
   `canada`, `mesh`, and `marine_ik` remain near-miss direct NO-GO rows.
@@ -47,8 +48,9 @@ The current gate per `skinny/RESULTS.md`:
 - Strictness and output-plane columns are disclosed; bbnf rows remain
   `deferred / view-boundary / yes`.
 - Track 1 calls generated runtime `parse_direct`; Track 2 is structurally
-  different. The remaining codegen honesty gap is that direct source is still
-  emitted by a static JSON template, not a real BIR lowerer.
+  different. Direct source is lowerer-authored from BIR. The remaining
+  direct-to-struct failures are runtime/materialization gaps, not a codegen
+  attribution gap.
 
 ## The Corrected Diagnosis
 
@@ -114,9 +116,10 @@ named hot leaves (not one fused symbol).
 
 Wave 2 entry gate: BackendShape enum compiles; LayoutFacts.backend_shape
 field populated by `derive_backend_shape`; codegen consumes `&BackendIr`
-well enough to keep the transition regression-free. The post-assay blocker is
-that `SinkOnly` output still comes from a static template rather than true BIR
-lowering.
+well enough to keep the transition regression-free. Post-redress update:
+`SinkOnly` direct output is now rendered from the BIR-derived
+`SinkOnlyProgram`, so subsequent Wave 2/3 work should treat codegen
+attribution as closed unless new evidence contradicts it.
 
 Wave 3 entry gate: Wave 2 closed; generated runtime SinkOnly active
 on Track 1; `numbers` direct is green; Canada/mesh/marine_ik direct residuals

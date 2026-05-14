@@ -1,7 +1,7 @@
 use ir::{
-    BackendExpr, BackendIr, BackendRule, BackendShape, ExprId, ExprKind, GrammarIr, Recognizer,
-    ShapeFacts, SimdMode, SimdSite, SourceSpan, SpanKind, SpanMarkKind, StructuralAlphabet,
-    TapeKind, ValidationError,
+    BackendExpr, BackendIr, BackendRule, BackendShape, DirectBuildField, DirectBuildSource, ExprId,
+    ExprKind, GrammarIr, Recognizer, ShapeFacts, SimdMode, SimdSite, SourceSpan, SpanKind,
+    SpanMarkKind, StructuralAlphabet, TapeKind, ValidationError,
 };
 use std::collections::{HashMap, HashSet};
 use thiserror::Error;
@@ -733,6 +733,7 @@ pub mod extract {
             BackendExpr::TapeEmit { kind },
             BackendExpr::DirectBuild {
                 shape: shape.to_string(),
+                fields: direct_fields_for_rule(name),
             },
             BackendExpr::Return,
         ])
@@ -748,6 +749,55 @@ pub mod extract {
             "bool" => Some((TapeKind::Bool, "JsonBool")),
             "null" => Some((TapeKind::Null, "JsonNull")),
             _ => None,
+        }
+    }
+
+    fn direct_fields_for_rule(name: &str) -> Vec<DirectBuildField> {
+        match name {
+            "object" => vec![DirectBuildField {
+                name: "members".to_string(),
+                source: DirectBuildSource::RepeatedRule {
+                    rule: "pair".to_string(),
+                },
+            }],
+            "array" => vec![DirectBuildField {
+                name: "elements".to_string(),
+                source: DirectBuildSource::RepeatedRule {
+                    rule: "value".to_string(),
+                },
+            }],
+            "pair" => vec![
+                DirectBuildField {
+                    name: "key".to_string(),
+                    source: DirectBuildSource::ChildRule {
+                        rule: "string".to_string(),
+                    },
+                },
+                DirectBuildField {
+                    name: "value".to_string(),
+                    source: DirectBuildSource::ChildRule {
+                        rule: "value".to_string(),
+                    },
+                },
+            ],
+            "string" => vec![DirectBuildField {
+                name: "span".to_string(),
+                source: DirectBuildSource::Span {
+                    label: "string".to_string(),
+                },
+            }],
+            "number" => vec![DirectBuildField {
+                name: "span".to_string(),
+                source: DirectBuildSource::Span {
+                    label: "number".to_string(),
+                },
+            }],
+            "bool" => vec![DirectBuildField {
+                name: "value".to_string(),
+                source: DirectBuildSource::Literal { bytes: Vec::new() },
+            }],
+            "null" => Vec::new(),
+            _ => Vec::new(),
         }
     }
 

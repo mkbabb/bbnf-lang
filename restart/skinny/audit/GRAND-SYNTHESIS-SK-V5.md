@@ -8,14 +8,13 @@ audit. Authority for the verdicts below.
 
 Post-assay correction (2026-05-14): SK-V5 implementation is now partially
 landed and the current gate remains `N-direct / NoGo`. The Rust scaffolding for
-`BackendShape` / `derive_backend_shape` exists, but true BIR-to-Rust SinkOnly
-lowering is still incomplete: direct source is generated runtime code, but it
-is still template-authoritative. The latest `skinny/RESULTS.md` records
-13 retained G rows, one Canada L row caused by the structural-scan floor
-(22136 Mbps vs 40000 Mbps), 3 retained A rows (`mesh`, `marine_ik`,
-`numbers`), and only one direct PASS row (`numbers`). Treat the wave plan below
-as historical dispatch intent amended by `HANDOFF-SK-V5.md` and
-`skinny/REDRESS.md` entries 46-47.
+`BackendShape` / `derive_backend_shape` exists, and the generated direct parser
+is now emitted from a BIR-derived `SinkOnlyProgram` rather than the former
+static JSON direct template. The latest `skinny/RESULTS.md` records 13 retained
+G rows, one Canada L row caused by the structural-scan floor (22136 Mbps vs
+40000 Mbps), 3 retained A rows (`mesh`, `marine_ik`, `numbers`), and only one
+direct PASS row (`numbers`). Treat the wave plan below as historical dispatch
+intent amended by `HANDOFF-SK-V5.md` and `skinny/REDRESS.md` entries 46-48.
 
 ## 1. The Frame
 
@@ -159,40 +158,40 @@ again. The remediation is two steps: land generated `SinkOnly`
 emission from `BIR DirectBuild` (Wave 2 of SK-V5), then nuke the
 bench-private `SinkParser` (post-wiring).
 
-D5 verified that `BIR DirectBuild` exists but is skeletal. Post-assay, the
-owner path now exists and Track 1 direct calls generated runtime code, but the
-central problem remains: `codegen/src/lower/sink_only.rs` is not yet an
-authoritative BIR-to-Rust lowerer and `codegen/src/lib.rs` still appends the
-static JSON direct template. The planning gap has narrowed from "missing path"
-to "template-authoritative source generation".
+D5 verified that `BIR DirectBuild` existed but was skeletal. Post-assay
+redress extends `DirectBuild` with field/source roster metadata, makes
+`codegen/src/lower/sink_only.rs` lower BIR into a grammar-neutral
+`SinkOnlyProgram`, and removes the static JSON direct template splice. Track 1
+direct now calls generated runtime code whose `parse_direct` body is authored
+from BIR; the remaining direct failures are materialization/runtime gaps, not
+template-authority.
 
 ## 6. The Architecture Wiring Gap
 
 D3 verified A5's diagnosis. Post-assay status: the Rust state behind the
 five-shape taxonomy is now scaffolded (`BackendShape`,
 `LayoutFacts.backend_shape`, `derive_backend_shape`, and `codegen/src/lower/`
-exist), but the actual emitted Rust is not yet selected and authored by those
-lowerers. The open architecture wiring gap is therefore lowerer authority, not
-symbol absence:
+exist), and the direct `SinkOnly` generated source is now authored by the BIR
+lowerer. The remaining architecture wiring gap is cost-model and retained
+materialization authority, not symbol absence:
 
-- `lower::sink_only` must walk existing BIR variants instead of returning
-  placeholder bodies.
-- `emit_json_with_layout` must append lowerer-produced direct source rather
-  than `json_templates/sink_direct.rs`.
+- `lower::sink_only` now walks existing BIR variants into a `SinkOnlyProgram`
+  and `emit_json_with_layout` appends lowerer-produced direct source.
 - Per-rule shape selection must become a measured cost decision across retained
   and direct workloads, not a marker scan that treats `DirectBuild` shape
-  strings as permission to splice a static parser.
+  strings as the full decision.
 - The existing `ShapeFacts` at `ir/src/lib.rs:436-467` is a different
   thing: a typed-view catalogue for `view.rs` direct-builder emission
   (`JsonRoot { value: JsonValue<'i> }`), confusably co-named with the
   spec's `BackendShape` per-rule lowering-mode selector. Both should
   remain; they are orthogonal.
 
-The codegen pipeline remains decorative at the decisive BIR → direct Rust text
-step. The BIR build itself (`extract::single_plan`) walks the grammar honestly
-and produces real `BackendIr`; retained generated output and SinkOnly direct
-output exist on disk, but the direct parser is still a static-template
-emission rather than the product of the per-shape lowerer.
+The codegen pipeline no longer remains decorative at the decisive BIR → direct
+Rust text step. The BIR build itself (`extract::single_plan`) walks the grammar
+honestly and produces real `BackendIr`; retained generated output and
+SinkOnly direct output exist on disk, and the direct parser is now a product of
+the per-shape lowerer. Retained parser generation still uses the historical
+template surface, and cost-model selection remains measured work.
 
 ## 7. The bbnf-simd Lock 14 Status
 
@@ -316,12 +315,12 @@ under-resolved:
    is genuinely empty. SK-V5 names the source path and the move-target
    path.
 
-3. **The "Track 1 SinkOnly mandate" still needs lowerer authority.**
-   SK-V5 now has the codegen substrate path and Track 1 calls generated
-   runtime code, but direct source is still emitted from a static template.
-   The remaining work is not a new directive or BIR variant; it is making
-   `codegen/src/lower/sink_only.rs` author the generated direct source from
-   existing BIR.
+3. **The "Track 1 SinkOnly mandate" now has lowerer authority.**
+   SK-V5 now has the codegen substrate path, Track 1 calls generated runtime
+   code, and direct source is emitted from a BIR-derived `SinkOnlyProgram`.
+   The remaining work is not a new directive or BIR variant; it is closing the
+   measured runtime rows through decoded-string delivery, exact
+   materialization, event-stream consumption, and structural floor repair.
 
 4. **Strictness disclosure is Wave 0, not Wave 5.** SK-V4 §7 declares
    "strictness plane named per row" as a Wave 5 requirement. B3 showed
@@ -351,8 +350,8 @@ diagnosis and the verified novelty pattern. The path is:
   `codegen/src/lower/rust.rs` SinkOnly lowering for the 7 JSON rules
   emitted with `BackendShape::SinkOnly`; rewire `bbnf-bench` Track 1 to
   call generated runtime; nuke bench-private SinkParser. Post-assay
-  correction: this work closed `numbers`; Canada / mesh / marine_ik remain
-  direct residuals, and true lowerer output remains incomplete.
+  correction: this work plus the lowerer redress closed codegen attribution
+  and `numbers`; Canada / mesh / marine_ik remain direct residuals.
 - **Wave 3** (UTF-8 fusion + Class B batch): NEON UTF-8 codepoint
   pipeline in `parse-that-regex/src/lib.rs:331-339` replacing the 0x80
   early-exit; `utf8_block.rs` module with Lemire 64-byte validator and

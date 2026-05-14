@@ -342,6 +342,8 @@ fn error<'i>(state: &ParserState<'i>, kind: ParseErrorKind) -> ParseError<'i> {
     }
 }
 
+// sink-only lowered from BackendIr: entry=json direct_shapes=JsonArray,JsonBool,JsonNull,JsonNumber,JsonObject,JsonPair,JsonString dispatch_alt_count=8
+
 use super::sink::JsonSink;
 use parse_that_regex::number::{
     materialize_f64, materialize_i64, materialize_u64, match_number_span_from_first, NumberSpan,

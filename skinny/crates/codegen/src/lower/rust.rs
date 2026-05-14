@@ -7,6 +7,7 @@ use super::{collapsed_stage, eager_tape, event_tape, offset_tape, sink_only};
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct LoweredRust {
     pub rule_plans: Vec<RuleLoweringPlan>,
+    pub sink_only_program: Option<sink_only::SinkOnlyProgram>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -31,7 +32,10 @@ pub fn lower_to_rust(backend: &BackendIr, ctx: &LowerCtx<'_>) -> LoweredRust {
         .map(|(index, rule)| lower_rule(rule, shape_for(ctx, index)))
         .collect();
 
-    LoweredRust { rule_plans }
+    LoweredRust {
+        rule_plans,
+        sink_only_program: sink_only::lower_program(backend),
+    }
 }
 
 fn shape_for(ctx: &LowerCtx<'_>, index: usize) -> BackendShape {

@@ -417,19 +417,21 @@ Lazy tape materialization is now reported per corpus:
    `restart/skinny/audit/SK-V5-COHORT/skv5-B2-direct-attribution.md` and
    `restart/skinny/audit/SK-V5-COHORT/skv5-D5-sinkonly-novelty.md`.
 
-35. SK-V5 Wave 1: codegen lowerer scaffolding exists, but generated Rust is
-    still template-authoritative. Status: PARTIAL / BLOCKING.
+35. SK-V5 Wave 1/Wave 2 follow-up: codegen lowerer scaffolding exists and
+    SinkOnly direct source is no longer template-authoritative. Status:
+    CLOSED, with performance residual.
 
    `BackendShape`, `LayoutFacts.backend_shape`, `derive_backend_shape`, and
-   `codegen/src/lower/` now exist, so the earlier "zero Rust state" diagnosis
-   is closed. The remaining dishonesty is narrower and sharper:
-   `codegen/src/lower/sink_only.rs` still emits placeholder lowering text, and
-   `codegen/src/lib.rs` still appends the handwritten JSON `sink_direct`
-   template when it sees the seven `DirectBuild` shape markers. Track 1 direct
-   therefore calls generated runtime code on disk, but that runtime code is not
-   yet produced by a real BIR-to-Rust SinkOnly traversal. The next no-workaround
-   codegen task is to make `lower::sink_only` walk the existing BIR variants
-   and make `emit_json_with_layout` append only lowerer-produced direct source.
+   `codegen/src/lower/` now exist. The follow-up lowerer pass extends the
+   existing `DirectBuild` payload with a field/source roster, makes
+   `lower::sink_only` walk BIR into a grammar-neutral `SinkOnlyProgram`, and
+   makes `emit_json_with_layout` append direct source rendered from that
+   program. The old handwritten `codegen/src/json_templates/sink_direct.rs`
+   file is deleted, and codegen refuses emission when `DirectBuild` nodes are
+   stripped from the backend. Track 1 direct now calls generated runtime code
+   whose direct entry is lowerer-authored from BIR, not a bench-private parser
+   and not a static direct template. This closes the codegen honesty blocker;
+   the remaining NoGo belongs to measured parser/runtime work.
    Cohort cites:
    `restart/skinny/audit/SK-V5-COHORT/skv5-D3-derive-shape-novelty.md`,
    `restart/skinny/audit/SK-V5-COHORT/skv5-D5-sinkonly-novelty.md`, and the
@@ -515,10 +517,11 @@ Lazy tape materialization is now reported per corpus:
 
    `runtime::grammars::json::JsonSink` is the grammar-local sink trait and
    `runtime::generated_json::parse_direct` is the generated runtime entry. The
-   current source is still template-authoritative rather than true
-   `codegen/src/lower/sink_only.rs` output (entry 35), but it is no longer a
-   bench-private parser. `bbnf-bench` Track 1 calls the generated runtime
-   entry; Track 2 calls the independent hand-coded parser.
+   direct source is now rendered from the `codegen/src/lower/sink_only.rs`
+   `SinkOnlyProgram` over BIR `DirectBuild` nodes (entry 35), so it is no
+   longer a bench-private parser or a static JSON direct template.
+   `bbnf-bench` Track 1 calls the generated runtime entry; Track 2 calls the
+   independent hand-coded parser.
    Samply/nm attribution distinguishes the symbol paths:
    `runtime::generated_json::generated::parse_value_direct::<...JsonDigestSink>`
    for Track 1 and `<bbnf_bench::direct_struct::hand::HandParser>::value` for
@@ -527,9 +530,9 @@ Lazy tape materialization is now reported per corpus:
    Representative residuals are `mesh` 8777/8841/9768 Mbps, `marine_ik`
    7805/8004/8846 Mbps, `unicode_mixed` 4178/4022/11143 Mbps, and
    `unicode_basic` 5520/5163/9653 Mbps for Track 1 / Track 2 / sonic-rs. The
-   prior bench-private attribution is gone; the next close belongs to
-   decoded-string delivery, float/materialization quality, and true
-   BIR-lowered SinkOnly.
+   prior bench-private attribution and template-authority gaps are gone; the
+   next close belongs to decoded-string delivery, float/materialization
+   quality, event-stream consumption, and the structural-scan floor.
 
 41. SK-V5 Wave 2: `CARGO_TARGET_DIR` gate and metadata routing were corrected.
     Status: CLOSED.
@@ -629,6 +632,29 @@ Lazy tape materialization is now reported per corpus:
    bench run. `RESULTS.md` also renders an explicit `Output plane` column for
    retained parse rows and direct workload rows, so strictness disclosure is
    paired with the materialization surface being compared.
+
+48. SK-V5 SinkOnly lowerer redress: direct parser emission now consumes BIR.
+    Status: CLOSED, with no throughput claim.
+
+   `DirectBuild` now carries a field/source roster instead of only a shape
+   string. `codegen/src/lower/sink_only.rs` lowers `BackendIr` into a
+   grammar-neutral `SinkOnlyProgram` containing entry rule, rules, direct
+   shapes, span kinds, literals, dispatch-alt count, and direct field rosters.
+   `codegen/src/json_sink_direct.rs` validates the JSON grammar-local sink
+   renderer against that program before emitting `parse_direct`; it rejects
+   backends missing required rules, literals, span programs, shapes, or
+   `DirectBuild` fields. The old `json_templates/sink_direct.rs` splice is
+   removed, `cargo xtask regen-json` marks generated direct source with
+   `sink-only lowered from BackendIr`, and codegen tests prove emission fails
+   if `DirectBuild` nodes are stripped. Verification: `cargo fmt --all`,
+   `xtask check-json`, `xtask check-conformance`, and targeted `runtime`,
+   `bbnf-bench`, `parse-that-regex`, and `codegen` tests pass under
+   `CARGO_TARGET_DIR=/tmp/skv5-lowerer-target`. `xtask lint-loc` remains red
+   on the pre-existing `crates/bbnf-bench` budget (3393/3300 LOC); codegen is
+   2027/4500 and generated runtime JSON is 1683/4000. A direct `gate-json
+   --advisory` run without a fresh Criterion data set correctly produced
+   invalid `n/a` rows and was discarded; no new performance measurement is
+   claimed by this codegen-authority redress.
 
 ## Sonic Closeness
 
@@ -918,9 +944,10 @@ perturbation.
    string/Unicode projection, and Canada structural-scan floor restoration are
    now implementation requirements, not optional tuning.
 3. Carry `N-direct / NoGo` into V1 planning as a separate typed-emission block:
-   sink-only direct parsing closed much of the view-walk gap, but the remaining
-   16 failing rows require exact float, decoded string, and Unicode
-   materialization work inside generated `SinkOnly`.
+   sink-only direct parsing closed much of the view-walk gap and the BIR
+   lowerer now owns the generated direct source, but the remaining 16 failing
+   rows require exact float, decoded string, Unicode materialization, and
+   event-stream consumption inside generated `SinkOnly`.
 4. Carry the SK-V4 asmjson/dav1d reassay into V1 planning as an architecture
    correction, not a new directive: the substrate boundary is now the typed
    event stream, retained tape and direct `SinkOnly` are two materializations

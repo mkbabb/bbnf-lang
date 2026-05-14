@@ -1,19 +1,10 @@
-mod lower;
+mod json_sink_direct;
+pub(crate) mod lower;
 
 use ir::{BackendIr, BackendShape, RuleId};
 use std::collections::BTreeMap;
 use std::path::Path;
 use thiserror::Error;
-
-const JSON_SINK_SHAPES: [&str; 7] = [
-    "JsonObject",
-    "JsonArray",
-    "JsonPair",
-    "JsonString",
-    "JsonNumber",
-    "JsonBool",
-    "JsonNull",
-];
 
 #[derive(Debug, Error)]
 pub enum CodegenError {
@@ -25,6 +16,8 @@ pub enum CodegenError {
     MissingFile(String),
     #[error("generated file `{0}` differs")]
     DifferentFile(String),
+    #[error("lowering failed: {0}")]
+    Lowering(String),
     #[error(transparent)]
     Io(#[from] std::io::Error),
 }
@@ -89,7 +82,7 @@ fn emit_json_with_layout(
     backend_shape: &std::collections::HashMap<RuleId, BackendShape>,
     diagnostics: &[passes::diagnostics::PassDiagnostic],
 ) -> Result<EmittedSource, CodegenError> {
-    let _lowered = lower::lower_to_rust(
+    let lowered = lower::lower_to_rust(
         backend,
         &lower::LowerCtx {
             backend_shape,
@@ -98,10 +91,13 @@ fn emit_json_with_layout(
     );
     let mut files = BTreeMap::new();
     let mut generated = generated_rs();
-    if lower::sink_only::direct_builds_all(backend, &JSON_SINK_SHAPES) {
-        generated.push('\n');
-        generated.push_str(&sink_direct_rs());
-    }
+    let sink_only = lowered.sink_only_program.as_ref().ok_or_else(|| {
+        CodegenError::Lowering(
+            "BackendIr did not contain DirectBuild sink-only program".to_string(),
+        )
+    })?;
+    generated.push('\n');
+    generated.push_str(&json_sink_direct::render(sink_only).map_err(CodegenError::Lowering)?);
 
     files.insert("generated.rs".to_string(), generated);
     files.insert("host.rs".to_string(), host_rs());
@@ -169,10 +165,6 @@ fn scan_rs() -> String {
     include_str!("../../runtime/src/grammars/json/scan.rs").to_string()
 }
 
-fn sink_direct_rs() -> String {
-    include_str!("json_templates/sink_direct.rs").to_string()
-}
-
 fn sink_rs() -> String {
     include_str!("../../runtime/src/grammars/json/sink.rs").to_string()
 }
@@ -214,6 +206,7 @@ fn normalize(source: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ir::BackendExpr;
 
     const JSON_GRAMMAR: &str = include_str!("../../../grammars/json.bbnf");
 
@@ -248,5 +241,74 @@ mod tests {
             .get("generated.rs")
             .unwrap()
             .contains("STRUCTURAL_ALPHABET_JSON"));
+    }
+
+    #[test]
+    fn direct_parser_is_authored_from_sink_only_lowering() {
+        let grammar = grammar::parse_json_grammar(JSON_GRAMMAR).unwrap();
+        let output = passes::compile(&grammar).unwrap();
+        let lowered = lower::lower_to_rust(
+            &output.backend_ir,
+            &lower::LowerCtx {
+                backend_shape: &output.layout_facts.backend_shape,
+                diagnostics: &output.diagnostics,
+            },
+        );
+        let program = lowered.sink_only_program.unwrap();
+
+        assert_eq!(program.entry_rule, "json");
+        assert!(program.has_shape("JsonObject"));
+        assert!(program.has_shape("JsonNull"));
+        assert!(program.has_literal(b"true"));
+        assert!(program.has_literal(b"false"));
+        assert!(program.has_literal(b"null"));
+
+        let emitted = emit_json_from_source(JSON_GRAMMAR).unwrap();
+        let generated = emitted.get("generated.rs").unwrap();
+        assert!(generated.contains("// sink-only lowered from BackendIr: entry=json"));
+        assert!(generated.contains("pub fn parse_direct"));
+    }
+
+    #[test]
+    fn refuses_direct_parser_without_direct_builds() {
+        let grammar = grammar::parse_json_grammar(JSON_GRAMMAR).unwrap();
+        let mut output = passes::compile(&grammar).unwrap();
+        for rule in &mut output.backend_ir.rules {
+            strip_direct_builds(&mut rule.expr);
+        }
+
+        let err = emit_json_with_layout(
+            &output.backend_ir,
+            &output.layout_facts.backend_shape,
+            &output.diagnostics,
+        )
+        .unwrap_err();
+
+        assert!(matches!(err, CodegenError::Lowering(_)));
+    }
+
+    fn strip_direct_builds(expr: &mut BackendExpr) {
+        match expr {
+            BackendExpr::Entry(inner)
+            | BackendExpr::OptionalBranch(inner)
+            | BackendExpr::RepeatLoop { body: inner, .. } => strip_direct_builds(inner),
+            BackendExpr::Seq(children)
+            | BackendExpr::Alt {
+                branches: children, ..
+            } => {
+                children.retain(|child| !matches!(child, BackendExpr::DirectBuild { .. }));
+                for child in children {
+                    strip_direct_builds(child);
+                }
+            }
+            BackendExpr::ByteLiteral(_)
+            | BackendExpr::RegexProgram { .. }
+            | BackendExpr::CallRule { .. }
+            | BackendExpr::SpanMark { .. }
+            | BackendExpr::TapeEmit { .. }
+            | BackendExpr::DirectBuild { .. }
+            | BackendExpr::ValueProject { .. }
+            | BackendExpr::Return => {}
+        }
     }
 }

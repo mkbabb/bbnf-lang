@@ -376,6 +376,7 @@ pub enum BackendExpr {
     },
     DirectBuild {
         shape: String,
+        fields: Vec<DirectBuildField>,
     },
     ValueProject {
         projection: String,
@@ -439,6 +440,21 @@ pub enum TapeKind {
     Null,
     Member,
     Element,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DirectBuildField {
+    pub name: String,
+    pub source: DirectBuildSource,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum DirectBuildSource {
+    Span { label: String },
+    ChildRule { rule: String },
+    RepeatedRule { rule: String },
+    Literal { bytes: Vec<u8> },
+    Empty,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]

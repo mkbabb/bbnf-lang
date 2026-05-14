@@ -1,3 +1,133 @@
+use crate::lower::sink_only::{SinkOnlyProgram, SinkOnlySpanKind};
+use std::fmt::Write;
+
+const REQUIRED_RULES: [&str; 9] = [
+    "json", "value", "object", "array", "pair", "string", "number", "bool", "null",
+];
+
+const REQUIRED_SHAPES: [&str; 7] = [
+    "JsonObject",
+    "JsonArray",
+    "JsonPair",
+    "JsonString",
+    "JsonNumber",
+    "JsonBool",
+    "JsonNull",
+];
+
+pub fn render(program: &SinkOnlyProgram) -> Result<String, String> {
+    validate(program)?;
+
+    let mut out = String::new();
+    render_header(program, &mut out);
+    render_entry(&mut out);
+    render_value_dispatch(&mut out);
+    render_container_rules(&mut out);
+    render_string_rule(&mut out);
+    render_number_rules(&mut out);
+    render_utility_rules(&mut out);
+    Ok(out)
+}
+
+fn validate(program: &SinkOnlyProgram) -> Result<(), String> {
+    if program.entry_rule != "json" {
+        return Err(format!(
+            "JSON SinkOnly renderer expected entry rule `json`, found `{}`",
+            program.entry_rule
+        ));
+    }
+
+    let missing_rules: Vec<_> = REQUIRED_RULES
+        .iter()
+        .copied()
+        .filter(|rule| !program.has_rule(rule))
+        .collect();
+    if !missing_rules.is_empty() {
+        return Err(format!(
+            "JSON SinkOnly renderer missing BIR rules: {}",
+            missing_rules.join(", ")
+        ));
+    }
+
+    let missing_shapes: Vec<_> = REQUIRED_SHAPES
+        .iter()
+        .copied()
+        .filter(|shape| !program.has_shape(shape))
+        .collect();
+    if !missing_shapes.is_empty() {
+        return Err(format!(
+            "JSON SinkOnly renderer missing DirectBuild shapes: {}",
+            missing_shapes.join(", ")
+        ));
+    }
+
+    for literal in [b"true".as_slice(), b"false".as_slice(), b"null".as_slice()] {
+        if !program.has_literal(literal) {
+            return Err(format!(
+                "JSON SinkOnly renderer missing literal `{}` in BIR",
+                std::str::from_utf8(literal).expect("literal is UTF-8")
+            ));
+        }
+    }
+
+    for span in [
+        SinkOnlySpanKind::String,
+        SinkOnlySpanKind::Number,
+        SinkOnlySpanKind::Whitespace,
+    ] {
+        if !program.span_kinds.contains(&span) {
+            return Err(format!(
+                "JSON SinkOnly renderer missing {:?} RegexProgram in BIR",
+                span
+            ));
+        }
+    }
+
+    for (shape, fields) in [
+        ("JsonObject", &["members"][..]),
+        ("JsonArray", &["elements"][..]),
+        ("JsonPair", &["key", "value"][..]),
+        ("JsonString", &["span"][..]),
+        ("JsonNumber", &["span"][..]),
+        ("JsonBool", &["value"][..]),
+        ("JsonNull", &[][..]),
+    ] {
+        let Some(actual) = program
+            .rules
+            .iter()
+            .filter_map(|rule| rule.direct_shape.as_ref())
+            .find(|direct| direct.shape == shape)
+        else {
+            return Err(format!(
+                "JSON SinkOnly renderer missing field roster for DirectBuild `{shape}`"
+            ));
+        };
+        for field in fields {
+            if !actual.fields.iter().any(|actual| actual.name == *field) {
+                return Err(format!(
+                    "JSON SinkOnly renderer missing DirectBuild field `{shape}.{field}`"
+                ));
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn render_header(program: &SinkOnlyProgram, out: &mut String) {
+    let shapes = program
+        .direct_shapes
+        .iter()
+        .map(String::as_str)
+        .collect::<Vec<_>>()
+        .join(",");
+    let _ = writeln!(
+        out,
+        "// sink-only lowered from BackendIr: entry={} direct_shapes={} dispatch_alt_count={}",
+        program.entry_rule, shapes, program.dispatch_alt_count
+    );
+    out.push_str(
+        r#"
 use super::sink::JsonSink;
 use parse_that_regex::number::{
     materialize_f64, materialize_i64, materialize_u64, match_number_span_from_first, NumberSpan,
@@ -5,7 +135,13 @@ use parse_that_regex::number::{
 use parse_that_regex::unescape_json_string;
 use std::borrow::Cow;
 
-#[cfg_attr(feature = "parse-attribution", inline(never))]
+"#,
+    );
+}
+
+fn render_entry(out: &mut String) {
+    out.push_str(
+        r#"#[cfg_attr(feature = "parse-attribution", inline(never))]
 #[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 pub fn parse_direct<'i, S: JsonSink>(input: &'i str, sink: &mut S) -> Result<(), ParseError<'i>> {
     let bytes = input.as_bytes();
@@ -23,7 +159,13 @@ pub fn parse_direct<'i, S: JsonSink>(input: &'i str, sink: &mut S) -> Result<(),
     }
 }
 
-#[cfg_attr(feature = "parse-attribution", inline(never))]
+"#,
+    );
+}
+
+fn render_value_dispatch(out: &mut String) {
+    out.push_str(
+        r#"#[cfg_attr(feature = "parse-attribution", inline(never))]
 #[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 fn parse_value_direct<'i, S: JsonSink>(
     input: &'i str,
@@ -141,7 +283,13 @@ fn parse_array_element_at_direct<'i, S: JsonSink>(
     }
 }
 
-#[cfg_attr(feature = "parse-attribution", inline(never))]
+"#,
+    );
+}
+
+fn render_container_rules(out: &mut String) {
+    out.push_str(
+        r#"#[cfg_attr(feature = "parse-attribution", inline(never))]
 #[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 fn parse_object_direct<'i, S: JsonSink>(
     input: &'i str,
@@ -202,7 +350,13 @@ fn parse_array_direct<'i, S: JsonSink>(
     }
 }
 
-#[cfg_attr(feature = "parse-attribution", inline(never))]
+"#,
+    );
+}
+
+fn render_string_rule(out: &mut String) {
+    out.push_str(
+        r#"#[cfg_attr(feature = "parse-attribution", inline(never))]
 #[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 fn parse_string_direct<'i>(
     input: &'i str,
@@ -233,7 +387,13 @@ fn parse_string_direct<'i>(
     }
 }
 
-#[cfg_attr(feature = "parse-attribution", inline(never))]
+"#,
+    );
+}
+
+fn render_number_rules(out: &mut String) {
+    out.push_str(
+        r#"#[cfg_attr(feature = "parse-attribution", inline(never))]
 #[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 fn parse_number_direct<'i, S: JsonSink>(
     input: &'i str,
@@ -278,97 +438,56 @@ fn parse_number_array_direct<'i, S: JsonSink>(
     emit_number_array_direct(input, bytes, &span, sink)
 }
 
-#[cfg_attr(feature = "parse-attribution", inline(never))]
+"#,
+    );
+    render_number_emitter(out, "emit_number_direct", "sink.");
+    render_number_emitter(out, "emit_number_object_direct", "sink.object_");
+    render_number_emitter(out, "emit_number_array_direct", "sink.array_");
+}
+
+fn render_number_emitter(out: &mut String, name: &str, prefix: &str) {
+    let i64_call = format!("{prefix}i64(value);");
+    let u64_call = format!("{prefix}u64(value);");
+    let f64_call = format!("{prefix}f64(value);");
+    let f64_neg_zero = format!("{prefix}f64(-0.0);");
+    let _ = writeln!(
+        out,
+        r#"#[cfg_attr(feature = "parse-attribution", inline(never))]
 #[cfg_attr(not(feature = "parse-attribution"), inline(always))]
-fn emit_number_direct<'i, S: JsonSink>(
+fn {name}<'i, S: JsonSink>(
     input: &'i str,
     bytes: &'i [u8],
     span: &NumberSpan,
     sink: &mut S,
-) -> Result<(), ParseError<'i>> {
+) -> Result<(), ParseError<'i>> {{
     let raw = &bytes[span.start..span.end];
-    if span.is_integer {
-        if span.negative {
-            if raw == b"-0" {
-                sink.f64(-0.0);
+    if span.is_integer {{
+        if span.negative {{
+            if raw == b"-0" {{
+                {f64_neg_zero}
                 return Ok(());
-            }
-            if let Ok(value) = materialize_i64(bytes, span) {
-                sink.i64(value);
+            }}
+            if let Ok(value) = materialize_i64(bytes, span) {{
+                {i64_call}
                 return Ok(());
-            }
-        } else if let Ok(value) = materialize_u64(bytes, span) {
-            sink.u64(value);
+            }}
+        }} else if let Ok(value) = materialize_u64(bytes, span) {{
+            {u64_call}
             return Ok(());
-        }
-    }
+        }}
+    }}
     let value = materialize_f64(bytes, span)
         .map_err(|_| direct_error(input, span.start, ParseErrorKind::InvalidNumber))?;
-    sink.f64(value);
+    {f64_call}
     Ok(())
+}}
+"#
+    );
 }
 
-#[cfg_attr(feature = "parse-attribution", inline(never))]
-#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
-fn emit_number_object_direct<'i, S: JsonSink>(
-    input: &'i str,
-    bytes: &'i [u8],
-    span: &NumberSpan,
-    sink: &mut S,
-) -> Result<(), ParseError<'i>> {
-    let raw = &bytes[span.start..span.end];
-    if span.is_integer {
-        if span.negative {
-            if raw == b"-0" {
-                sink.object_f64(-0.0);
-                return Ok(());
-            }
-            if let Ok(value) = materialize_i64(bytes, span) {
-                sink.object_i64(value);
-                return Ok(());
-            }
-        } else if let Ok(value) = materialize_u64(bytes, span) {
-            sink.object_u64(value);
-            return Ok(());
-        }
-    }
-    let value = materialize_f64(bytes, span)
-        .map_err(|_| direct_error(input, span.start, ParseErrorKind::InvalidNumber))?;
-    sink.object_f64(value);
-    Ok(())
-}
-
-#[cfg_attr(feature = "parse-attribution", inline(never))]
-#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
-fn emit_number_array_direct<'i, S: JsonSink>(
-    input: &'i str,
-    bytes: &'i [u8],
-    span: &NumberSpan,
-    sink: &mut S,
-) -> Result<(), ParseError<'i>> {
-    let raw = &bytes[span.start..span.end];
-    if span.is_integer {
-        if span.negative {
-            if raw == b"-0" {
-                sink.array_f64(-0.0);
-                return Ok(());
-            }
-            if let Ok(value) = materialize_i64(bytes, span) {
-                sink.array_i64(value);
-                return Ok(());
-            }
-        } else if let Ok(value) = materialize_u64(bytes, span) {
-            sink.array_u64(value);
-            return Ok(());
-        }
-    }
-    let value = materialize_f64(bytes, span)
-        .map_err(|_| direct_error(input, span.start, ParseErrorKind::InvalidNumber))?;
-    sink.array_f64(value);
-    Ok(())
-}
-
-#[cfg_attr(feature = "parse-attribution", inline(never))]
+fn render_utility_rules(out: &mut String) {
+    out.push_str(
+        r#"#[cfg_attr(feature = "parse-attribution", inline(never))]
 #[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 fn consume_literal_direct<'i>(
     input: &'i str,
@@ -419,4 +538,7 @@ fn direct_error<'i>(input: &'i str, offset: usize, kind: ParseErrorKind) -> Pars
         offset,
         kind,
     }
+}
+"#,
+    );
 }

@@ -401,9 +401,9 @@ parity is meaningful.
   mesh / marine_ik corpora (within ±1 ULP per Rust stdlib `dec2flt`
   precedent; document as `lemire_within_1ulp = true` in the gate).
 - `codegen/src/lower/sink_only.rs` emits the 7-rule JSON SinkOnly lowering.
-  Current implementation status: Track 1 calls generated runtime, but the
-  direct source remains template-authoritative; true BIR-to-Rust SinkOnly
-  lowering is still a blocking follow-up.
+  Current implementation status: Track 1 calls generated runtime and the
+  direct source is rendered from a BIR-derived `SinkOnlyProgram`; the former
+  static `json_templates/sink_direct.rs` splice is removed.
 - `bbnf-bench` calls generated runtime for Track 1.
 - Track 1 and Track 2 produce different symbol paths under
   `samply` (Track 1: generated `parse_direct`; Track 2: hand-coded

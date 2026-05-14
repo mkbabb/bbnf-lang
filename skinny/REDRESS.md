@@ -1326,3 +1326,39 @@ perturbation.
   corpus rows, profile path, c/B or Mbps delta, and hot symbol boundary before
   implementation; failure to lift the named row reverts and records another
   rejected route here.
+
+## SK-V6 Wave 2 Candidate-1 Redress
+
+- Item 60 rejects the retained trusted-string boundary collapse. The tested
+  shape removed retained parse's scalar `match_tiny_plain_string` probe before
+  `match_string_at_quote` in both the checked-in generated runtime and the
+  codegen template, while preserving the helper for direct `SinkOnly` because
+  `parse_string_direct` still consumes it. The intent was to eliminate the
+  double string-boundary scan identified by the SK-V6 R1/R2 profiles.
+- The route failed the same-row falsification gate on the new generated Track 1
+  baseline. Focused retained `profile-lazy` rows were built twice from the same
+  tree with only the two-file patch toggled:
+
+  | row | baseline Mbps | candidate Mbps | delta |
+  |---|---:|---:|---:|
+  | twitter | 12009 | 9546 | -20.5% |
+  | random | 7773 | 4675 | -39.9% |
+  | unicode_basic | 10753 | 5707 | -46.9% |
+  | apache_builds | 12106 | 6796 | -43.9% |
+  | distinct_values | 6100 | 5382 | -11.8% |
+  | gsoc-2018 | 21282 | 15894 | -25.3% |
+  | y_string_unicode | 5882 | 4899 | -16.7% |
+
+- The measurements came from `/tmp/skv6-wave2-candidate1-mbps.txt` using
+  `/tmp/skv6-wave2-baseline-release/release/profile-lazy` and
+  `/tmp/skv6-wave2-candidate1-release/release/profile-lazy`. The gate required
+  at least 5% improvement on `twitter`, `random`, `unicode_basic`, and
+  `distinct_values` with no retained row regressing more than 2%; the candidate
+  regressed every measured row and was reverted before commit.
+- The correction is architectural, not cosmetic: the tiny-string probe is not
+  redundant front matter. On dense short-string rows it prevents the trusted
+  full-string matcher from paying a larger loop and error-construction boundary
+  for short plain strings. Future retained string work must specialize the
+  second boundary (`match_string_at_quote`) for long/Unicode rows or split
+  short-string and long-string profiles explicitly; simply deleting the scalar
+  early-out is now a blocked route.

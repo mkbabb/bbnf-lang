@@ -334,9 +334,12 @@ default hooks allocate only on `HAS_ESC` / `NEEDS_DECODE` paths, and decoded
 payload storage carries an explicit drop policy. The no-allocation decoded
 visitor route was measured and rejected, and the later exact decoded-stats
 sink was also measured and rejected because two-pass decoded length/hash work
-regressed escape-heavy direct rows. The admissible direct close is a one-pass
-fused decode+sink primitive rather than parser-side eager decode, a generic
-visitor layered on `unescape_json_string`, or a sink-local exact-stats helper.
+regressed escape-heavy direct rows. A quote-source one-pass streaming hasher
+was also measured and rejected because it lost to the default
+allocate-then-contiguous-hash baseline. The admissible direct close is a
+field-layout decode+sink materializer or same-loop SinkOnly/CollapsedStage
+primitive rather than parser-side eager decode, a generic visitor layered on
+`unescape_json_string`, or a sink-local decoded hash helper.
 There is no offset-vector `set_len(0)` SOTA primitive: offsets are `u32` and
 have no per-element destructor to bypass.
 
@@ -350,10 +353,11 @@ have no per-element destructor to bypass.
   consumes the scanner/tape event stream itself and never materializes a
   retained structural-event sidecar.
 - Direct escaped-string materialization consumes the same source-hook seam but
-  must be single-pass. SK-V5 redress item 54 measured and rejected an exact
-  sink-local decoded-stats helper; conforming `SinkOnly` lowerings route
-  escaped strings through a parse-that decode/materialize primitive or a
-  same-loop grammar event, not through a second decoded pass at the sink.
+  must beat the default allocation baseline. SK-V5 redress item 54 measured
+  and rejected an exact sink-local decoded-stats helper; item 55 measured and
+  rejected a quote-source one-pass streaming hasher. Conforming `SinkOnly`
+  lowerings route escaped strings through a field-layout materializer or a
+  same-loop grammar event, not through a decoded hash helper at the sink.
 - The cycle-per-byte gate (`BENCH.md` §7.9) is comparator-anchored: skinny twitter c/B ≤ 1.5 × simdjson twitter c/B (the simdjson floor at its algorithm is ~1.142 c/B per `simdjson-v2/PROFILE-REPORT.md`).
 - Hot-leaf count gate (`BENCH.md` §6 outcome class `G-fusion-quality`): comparator-anchored count ≤ 3 leaves at ≥10% self-time (comparators: sonic-rs = 1, simdjson = 2).
 

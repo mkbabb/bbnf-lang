@@ -39,7 +39,10 @@ partially:
   `skinny/REDRESS.md` item 49. A later exact decoded-string stats sink kept
   the same hook seam and exact digest semantics but paid a two-pass decoded
   length/hash cost; it regressed generated Track 1 on `unicode_mixed`,
-  `unicode_escapes`, and `y_string_unicode` and was rejected in item 54.
+  `unicode_escapes`, and `y_string_unicode` and was rejected in item 54. A
+  true quote-source one-pass streaming hasher was then measured and rejected in
+  item 55; it avoided the prior two shapes but still lost to the default
+  allocate-then-contiguous-hash baseline on escape-heavy rows.
 - Retained projection aux side tables were measured and rejected in
   `skinny/REDRESS.md` item 50. Dense and sparse parse-time metadata improved
   view probes but regressed retained parse rows, so H.W1 remains typed event
@@ -113,7 +116,7 @@ Per `IMPLEMENTATION-PACKET-SK-V5.md`:
 | 0 | Strictness columns + parse-attribution feature + nuke decisions | `skinny/RESULTS.md`, `runtime/Cargo.toml`, `runtime/src/grammars/json/generated.rs`, `NUKE-PLAN-SK-V5.md` | Strictness disclosed honestly; parse-attribution build green; nuke targets enumerated |
 | 1 | BackendShape enum + LayoutFacts.backend_shape field + derive_backend_shape + codegen/src/lower/ hierarchy | `ir/src/`, `passes/src/`, `codegen/src/lib.rs`, `codegen/src/lower/` | Substrate plumbing complete; codegen no longer discards `&BackendIr`; regression-free transition |
 | 2 | Number lever + generated SinkOnly + bench rewire + bench-private SinkParser nuke | `parse-that-regex/src/number/`, `codegen/src/lower/sink_only.rs`, `runtime/src/grammars/json/sink.rs`, `bbnf-bench/src/direct_struct.rs` | Track 1 calls generated runtime and Track 2 is structurally different; `numbers` direct passes after later redress, but other direct rows remain NO-GO |
-| 3 | UTF-8 fusion + Class B `_x4` batched + utf8_block module + decoded source-hook assay | `parse-that-regex/src/lib.rs:331-339`, `parse-that-regex/src/unicode/`, `bbnf-simd/src/aarch64/utf8/`, `bbnf-simd/src/aarch64/unescape_uxxxx.rs`, `runtime/src/grammars/json/sink.rs` | duplicate UTF-8 validation is removed; generated source hooks are admitted; no-allocation visitor and exact decoded-stats sink routes are rejected; parse-G and string-bound direct rows remain open |
+| 3 | UTF-8 fusion + Class B `_x4` batched + utf8_block module + decoded source-hook assay | `parse-that-regex/src/lib.rs:331-339`, `parse-that-regex/src/unicode/`, `bbnf-simd/src/aarch64/utf8/`, `bbnf-simd/src/aarch64/unescape_uxxxx.rs`, `runtime/src/grammars/json/sink.rs` | duplicate UTF-8 validation is removed; generated source hooks are admitted; no-allocation visitor, exact decoded-stats sink, and quote-source streaming hasher routes are rejected; parse-G and string-bound direct rows remain open |
 | 4 | Lock 14 remediation + working-tree nukes | `bbnf-simd/src/lib.rs`, `bbnf-simd/src/aarch64/*`, `bbnf-simd/src/x86_64/*`, `runtime/grammars/json/`, `simd-scan/`, `runtime/.../generated_eventcursor.rs`, `runtime/Cargo.toml` | Lock 14 audit clean; 7 grammar-neutral split items land |
 | 5 | Consumed `bbnf.asm` primitive admission + checkasm hardening + admitted runtime dispatch | `bbnf-simd/src/{scalar,aarch64}/`, `bbnf-simd/src/dispatch.rs`, `bbnf-simd/tests/`, `runtime/grammars/json/scan.rs`, `xtask` | `BYTE_CLASS_FROM_EQ_SET_64`, `BYTE_CLASS_FROM_TABLE_64`, `BITMAP_PREFIX_XOR_64`, `BITMAP_NEXT_SET_BIT`, and `EOB_PAD_CLAMP` have scalar refs, checkasm parity, and same-wave hot consumers; `BULK_EMIT_COMPRESSED`, `FRAME_PUSH_BOUNDED`, `FRAME_POP_BOUNDED`, and `FSM_DISPATCH_THREADED` are explicitly blocked as no-orphan future work |
 | 6 | Strict workload matrix | `bbnf-bench/`, `RESULTS.md`, `restart/skinny/BENCH.md` | 17 corpora × 7 workloads × N sidecars with strictness disclosed; no parse-G, no N-direct |
@@ -153,9 +156,10 @@ Wave 4 entry gate: Wave 3 landed duplicate-UTF-8 validation redress; parse-G
 rows remain open and are carried as measured residuals. Post-redress update:
 `JsonSink::*_source` hooks are present and generated direct consumes them, but
 the first no-allocation decoded-string consumer is blocked by measured
-regression, and a later exact decoded-stats sink also regressed escaped-string
-rows. Future decoded delivery must fuse parse-that decode and sink write in
-one pass rather than layer a generic visitor or sink-local stats helper over
+regression, a later exact decoded-stats sink also regressed escaped-string
+rows, and a quote-source one-pass streaming hasher still lost to the allocation
+baseline. Future decoded delivery must materialize field-layout facts directly
+rather than layer a generic visitor or sink-local hash helper over
 `unescape_json_string`.
 
 Wave 5 entry gate: Wave 4 audit clean; all nuked files removed; Lock 14

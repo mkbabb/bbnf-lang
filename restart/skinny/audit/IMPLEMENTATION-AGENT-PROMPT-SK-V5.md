@@ -312,9 +312,13 @@ The SK-V5 close fires when ALL of:
 - Lock 1 + Lock 14 audit clean (manual grep + cohort verification).
 - Sidecar comparator table populated with API + output plane named.
 
-After Wave 3, the M5 Max close condition is met (parse-G + N-direct
-both gone). Wave 4-6 are durability on top of a measured win. Wave 7
-is the optional x86 successor.
+After Wave 3, the SK-V5 close condition has not fired. Generated source hooks
+are admitted, but the no-allocation decoded visitor, exact decoded-stats sink,
+and quote-source one-pass streaming hasher are rejected by measurement; parse-G
+and direct string/Unicode rows remain open, and `skinny/RESULTS.md` remains
+`N-direct / NoGo`. Wave 4/5 are durability and consumed-primitive admission
+work from that still-open baseline. Wave 6 continues the strict
+workload/reporting close; Wave 7 is the optional x86 successor.
 
 ## Process notes
 

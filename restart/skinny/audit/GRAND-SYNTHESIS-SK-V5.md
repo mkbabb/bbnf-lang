@@ -257,6 +257,13 @@ regressed escaped-string direct rows. The corrected close is not "remove the
 String allocation somewhere"; it is "fuse decode, validation, and sink/hash
 materialization in one parse-that/SinkOnly loop."
 
+Item 55 then rejects the naive version of that correction: a quote-source
+one-pass streaming hasher with AArch64 batched `\uXXXX` still lost to the
+default path that allocates and hashes contiguous decoded strings. The
+corrected close is therefore narrower again: decoded direct fields need a
+field-layout materializer or same-loop SinkOnly/CollapsedStage event, not a
+sink-local decoded hash path.
+
 The storage substrate itself (`Tape<'input>` + `TapeBuilder` + `ValueRef`)
 holds cleanly with zero type-ambivalence and zero columnar / PayloadStream
 residue. The skinny line has zero OpenFrame residue (`grep -rn
@@ -389,8 +396,8 @@ diagnosis and the verified novelty pattern. The path is:
   body + NEON surrogate-pair join. Post-assay correction: this removed
   duplicate UTF-8 validation and lifted affected rows; generated string source
   hooks are admitted, while the attempted no-allocation decoded visitor route
-  and the later exact decoded-stats sink are rejected by measurement. Parse-G
-  and direct string/Unicode gates remain open.
+  the later exact decoded-stats sink, and the quote-source streaming hasher are
+  rejected by measurement. Parse-G and direct string/Unicode gates remain open.
 - **Wave 4** (Lock 14 remediation): split `bbnf-simd/src/lib.rs`
   god-module into per-primitive grammar-neutral modules; remove the 7
   hardcoded JSON punctuation char-lists from the 4 scalar-reference

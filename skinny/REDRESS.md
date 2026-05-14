@@ -811,13 +811,49 @@ Lazy tape materialization is now reported per corpus:
    two-pass stats cost on escape-heavy strings.
 
    The slice was reverted before commit. The source-hook seam remains
-   canonical, but sink-local exact stats are not the direct-string close. The
-   admissible route is a one-pass fused parse-that string primitive that
-   decodes, validates, and emits sink/hash materialization in the same loop, or
-   same-loop `SinkOnly` / `CollapsedStage` consumption where decoded string
-   facts are produced as part of the grammar event stream. Allocation removal
-   alone does not count as progress unless the affected direct rows cross the
-   sonic-rs 1.10x slack.
+   canonical, but sink-local exact stats are not the direct-string close. At
+   this point the admissible route narrowed to a one-pass parse-that/SinkOnly
+   materializer; item 55 then measured and rejected the sink-local streaming
+   hash version of that route. Allocation removal alone does not count as
+   progress unless the affected direct rows cross the sonic-rs 1.10x slack.
+
+55. SK-V5 quote-source fused string materializer is REJECTED.
+
+   A stricter one-pass direct-string attempt moved the generated parser from
+   pre-scanning strings into `ParsedString { raw, needs_unescape }` to
+   quote-source sink hooks. The specialized digest sink then called a new
+   parse-that fused materializer that scanned, validated escapes, decoded, and
+   streamed decoded bytes into a hash accumulator in the same loop. AArch64
+   four-`\uXXXX` batching was preserved and then tightened to push the decoded
+   UTF-8 stack buffer in one callback. This route avoided the item 49 generic
+   visitor and the item 54 two-pass decoded length/hash helper. Correctness was
+   green: `cargo fmt`, targeted `parse-that-regex`, `bbnf-bench`, `runtime`,
+   and `codegen` tests, `xtask check-json`, and `xtask check-conformance`
+   passed under `CARGO_TARGET_DIR=/tmp/skv5-fused-string-target`.
+
+   The focused direct rows still rejected the shape. Initial rows measured
+   Track 1 / Track 2 / sonic-rs at roughly: `unicode_mixed` 3744 / 3746 /
+   10279 Mbps, `unicode_escapes` 2716 / 2761 / 14312 Mbps,
+   `unicode_basic` 5153 / 5002 / 8029 Mbps, and `y_string_unicode` 2834 /
+   2855 / 7942 Mbps. The follow-up after batching decoded Unicode callbacks
+   did not recover the miss: `unicode_mixed` stayed around 3741 / 3757 /
+   10273 Mbps, `unicode_escapes` around 2681 / 2683 / 14335 Mbps, and
+   `y_string_unicode` around 2800 / 2841 / 7743 Mbps; Criterion marked the
+   `unicode_escapes` Track 2 change as a regression. All of these remain below
+   the checked-in direct baseline where the default source hooks allocate then
+   hash contiguous decoded strings (`unicode_mixed` 4178 / 4022 / 11143 Mbps,
+   `unicode_escapes` 5018 / 4986 / 14746 Mbps, `y_string_unicode` 4518 /
+   4323 / 8691 Mbps).
+
+   The slice was reverted before commit. The conclusion is narrower than item
+   54: even a true one-pass quote-source streaming hasher is not the
+   string/Unicode direct close for the current digest workload. The source-hook
+   seam remains canonical, but the next admissible direct-string plan must beat
+   the default allocate-then-contiguous-hash baseline. That points to a
+   field-layout materializer or same-loop `SinkOnly` / `CollapsedStage` plan
+   that produces the required typed field representation directly; another
+   sink-local decoded hash path is non-canonical unless a before/after row
+   overturns items 49, 54, and 55.
 
 ## Sonic Closeness
 
@@ -837,10 +873,11 @@ right symbol paths but did not close the SOTA gap: the latest full run reports
 only one direct row (`numbers`) within the 1.10 sonic-rs time slack. Generated
 source hooks now preserve raw string spans to the sink boundary, but the first
 no-allocation decoded-string consumer regressed and was rejected. The residual
-therefore remains dense typed-sink emission, one-pass fused decoded-string
+therefore remains dense typed-sink emission, field-layout decoded-string
 delivery, exact float/string/Unicode materialization, and event-stream
 consumption. A later exact decoded-stats sink also regressed escape-heavy
-direct rows and is rejected in item 54, so another sink-local two-pass helper
+direct rows and is rejected in item 54, and a true quote-source one-pass
+streaming hasher is rejected in item 55. Another sink-local decoded hash path
 does not count as the close.
 Parse-time retained projection side tables were also measured and rejected in
 item 50, the byte-class whitespace cursor was rejected in item 51, and the
@@ -1112,8 +1149,8 @@ perturbation.
 1. Keep the rejected-route ledger intact: structural-index typed parser prepass,
    NEON no-escape string matcher, separator elision, generic SWAR whitespace,
    12-byte/width churn, dispatch-table/function-pointer alternates, parse-time
-   projection side tables, byte-class whitespace EventCursor wrappers, and
-   parser-local structural-mask cursors
+   projection side tables, byte-class whitespace EventCursor wrappers,
+   parser-local structural-mask cursors, and sink-local decoded hash helpers
    remain non-canonical unless a future bench row overturns them.
 2. Carry the current G/L rows into V1 planning as the parse/tape SOTA-BEAT
    block: event-stream consumption, random/key-dispatch overhead,
@@ -1122,8 +1159,10 @@ perturbation.
 3. Carry `N-direct / NoGo` into V1 planning as a separate typed-emission block:
    sink-only direct parsing closed much of the view-walk gap and the BIR
    lowerer now owns the generated direct source, but the remaining 16 failing
-   rows require exact float, decoded string, Unicode materialization, and
-   event-stream consumption inside generated `SinkOnly`.
+   rows require exact float, decoded string, Unicode field materialization, and
+   event-stream consumption inside generated `SinkOnly`; decoded string
+   materialization must beat the current allocate-then-contiguous-hash baseline
+   rather than merely remove allocation.
 4. Carry the SK-V4 asmjson/dav1d reassay into V1 planning as an architecture
    correction, not a new directive: the substrate boundary is now the typed
    event stream, retained tape and direct `SinkOnly` are two materializations

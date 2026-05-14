@@ -413,6 +413,16 @@ another sink-local exact-stats helper. The admissible close is a one-pass
 parse-that primitive or same-loop SinkOnly/CollapsedStage materializer that
 decodes, validates, and emits sink/hash facts together.
 
+Post-redress update 6: the quote-source one-pass streaming version of that
+idea was measured and rejected in `skinny/REDRESS.md` item 55. It avoided the
+generic visitor and two-pass stats helper, preserved AArch64 batched
+`\uXXXX`, and was correctness-green, but it still regressed
+`unicode_escapes` and `y_string_unicode` versus the default source-hook path
+that allocates then hashes contiguous decoded strings. Do not implement the
+direct close as another sink-local decoded hash helper. The admissible close
+must materialize typed field facts directly and beat the default allocation
+baseline.
+
 ### 4.6 Bench rewire + bench-private nuke
 
 `bbnf-bench/src/direct_struct.rs`: delete `SinkParser`, `track1_digest`,
@@ -779,8 +789,9 @@ The wave order prioritises measurable corpus moves:
   residuals.
 - Wave 3 removes duplicate UTF-8 validation and lifts string-bound rows;
   generated source hooks are admitted, while a no-allocation decoded-string
-  visitor consumer and a later exact decoded-stats sink are rejected by
-  measurement. It does not close the parse-G or direct Unicode/string gates.
+  visitor consumer, a later exact decoded-stats sink, and a quote-source
+  streaming hasher are rejected by measurement. It does not close the parse-G
+  or direct Unicode/string gates.
 - Wave 4 nukes the Lock 14 / Lock 1 residue so generic crates pass
   audit (no JSON code in `bbnf-simd` / `parse-that-regex` /
   `codegen/lower`).

@@ -1421,3 +1421,54 @@ perturbation.
   (`y_string_unicode`). Future string-scan candidates must either expose a
   separate noinline symbol boundary for the new primitive or use c/B and row
   Mbps deltas as the falsification signal.
+
+## SK-V6 Wave 2 Candidate-3 Redress
+
+- Item 62 rejects the delayed-wide retained trusted string scan. The route kept
+  `match_tiny_plain_string`, preserved the first 16-byte AArch64 trusted string
+  probe, and entered a 64-byte quote/backslash/control scanner only after that
+  first local block reported no special byte. It included a scalar executable
+  reference, AArch64 checkasm parity, and a same-wave consumer inside
+  `parse-that-regex::skip_json_string_plain_trusted`.
+- Correctness and primitive gates were green before measurement:
+  `cargo test -p bbnf-simd --profile ax-iter --test checkasm_string_block_64`,
+  `cargo test -p parse-that-regex --profile ax-iter`,
+  `cargo build --workspace --profile ax-iter`, and
+  `cargo test --workspace --profile ax-iter`.
+- The R6b production `profile-lazy` smoke failed before Criterion. Measurements
+  used baseline and candidate release binaries built from the same tree under
+  `/tmp/skv6-wave2-candidate3-smoke`; each row reports the median of three
+  repetitions:
+
+  | row | base c/B | candidate c/B | c/B delta | base Mbps | candidate Mbps | Mbps delta |
+  |---|---:|---:|---:|---:|---:|---:|
+  | apache_builds | 2.292639 | 2.352151 | +2.60% | 12213 | 11904 | -2.53% |
+  | canada | 1.630846 | 1.662807 | +1.96% | 17169 | 16839 | -1.92% |
+  | citm_catalog | 1.349398 | 1.366187 | +1.24% | 20750 | 20495 | -1.23% |
+  | distinct_values | 4.544717 | 4.966300 | +9.28% | 6161 | 5638 | -8.49% |
+  | github_events | 2.150372 | 2.246830 | +4.49% | 13021 | 12462 | -4.29% |
+  | gsoc-2018 | 1.278539 | 1.324503 | +3.60% | 21900 | 21140 | -3.47% |
+  | instruments | 2.375297 | 2.486899 | +4.70% | 11788 | 11259 | -4.49% |
+  | marine_ik | 2.208028 | 2.268492 | +2.74% | 12681 | 12343 | -2.67% |
+  | mesh | 2.075612 | 2.114484 | +1.87% | 13490 | 13242 | -1.84% |
+  | numbers | 1.528635 | 1.525719 | -0.19% | 18317 | 18352 | +0.19% |
+  | random | 3.567333 | 3.719447 | +4.26% | 7849 | 7528 | -4.09% |
+  | twitter | 2.289078 | 2.473498 | +8.06% | 12232 | 11320 | -7.46% |
+  | unicode_basic | 2.565747 | 2.595476 | +1.16% | 10913 | 10788 | -1.15% |
+  | unicode_escapes | 2.290201 | 2.300929 | +0.47% | 12226 | 12169 | -0.47% |
+  | unicode_mixed | 3.473084 | 3.306956 | -4.78% | 8062 | 8467 | +5.02% |
+  | update_center | 2.992732 | 3.159558 | +5.57% | 9356 | 8862 | -5.28% |
+  | y_string_unicode | 4.712218 | 4.757859 | +0.97% | 5942 | 5885 | -0.96% |
+
+- The gate required `gsoc-2018` to improve by at least 10% c/B, at least one
+  of `unicode_mixed` or `apache_builds` to improve by at least 6%, and no
+  retained row to regress by more than 1.5% c/B before running Criterion. The
+  candidate improved only `unicode_mixed` materially and regressed multiple
+  sentinel rows; it was reverted before `bench-json --advisory`.
+- The blocked class is now broader than Candidate 2's always-wide first block:
+  even a delayed 64-byte trusted scanner is not an admissible retained parse
+  close on this baseline. The next Wave 2 retained intervention should leave
+  string scanning alone unless a fresh profile names a non-wide, non-sidecar
+  string boundary. The current admissible fallback is the parser-control
+  `ContainerNext` / next-byte carry candidate from
+  `GRAND-SYNTHESIS-SK-V6.md` §8.

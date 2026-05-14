@@ -1668,3 +1668,51 @@ perturbation.
   close parse-G. The next admissible implementation route is the generated
   direct field-layout string materializer from
   `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md` §9.
+
+## SK-V6 Wave 3 Candidate-7 Redress
+
+- Item 66 rejects the direct source-hook field-layout materializer. The route
+  added direct-only `JsonSink` source hooks (`key_direct_source`,
+  `string_direct_source`, `array_string_direct_source`,
+  `object_string_direct_source`) and changed the generated SinkOnly direct
+  parser to call those hooks. `JsonDigestSink` then overrode the hooks to fold
+  keys and string scalar values directly into the current object/array/root
+  digest frame, avoiding the existing closure receiver path while preserving
+  the canonical `unescape_json_string` allocation path for escaped strings.
+  This stayed within the direct generated runtime surface: no new directive, no
+  BIR variant, no generic-crate JSON leakage, and no parallel source pass.
+- Correctness was green before measurement:
+  `CARGO_TARGET_DIR=/tmp/skv6-wave3-candidate7-target cargo test -p runtime
+  --profile ax-iter` passed six runtime tests, and
+  `CARGO_TARGET_DIR=/tmp/skv6-wave3-candidate7-target cargo test -p bbnf-bench
+  --profile ax-iter` passed 23 bench tests.
+- Production `profile_direct` smoke used baseline and candidate release
+  binaries built from the same tree under
+  `/Users/mkbabb/Programming/bbnf-lang-skv6-candidate7-base` and the main
+  candidate workspace. Raw measurements are archived at
+  `/tmp/skv6-wave3-candidate7-direct-smoke.csv`; medians are archived at
+  `/tmp/skv6-wave3-candidate7-direct-smoke-summary.csv`.
+
+  | row | median baseline Mbps | median candidate Mbps | median delta |
+  |---|---:|---:|---:|
+  | unicode_escapes | 4447 | 4491 | +0.99% |
+  | unicode_mixed | 3726 | 3730 | +0.11% |
+  | y_string_unicode | 3364 | 3423 | +1.75% |
+  | distinct_values | 6152 | 6247 | +1.54% |
+  | gsoc-2018 | 14680 | 14678 | -0.01% |
+
+- The route failed the written Wave 3 gate from
+  `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md` §9. It required
+  `unicode_escapes >= +20%`, `unicode_mixed >= +15%`, at least two of
+  `y_string_unicode`, `distinct_values`, and `gsoc-2018 >= +8%`, and no direct
+  row regressing by more than 5%. None of the required lift thresholds fired.
+  The direct interpretation is that receiver/closure removal is too small to
+  close direct string/Unicode rows; the dominant cost remains escaped-string
+  decode/materialization and generated direct parser control, not the trait
+  hook call shape itself.
+- The candidate was reverted before commit. The rejected patch is saved at
+  `/tmp/skv6-wave3-candidate7-rejected.patch`. Do not reopen direct source-hook
+  folding under another name. The next direct route must materially change the
+  escaped-string materialization shape without repeating REDRESS 54
+  sink-local decoded stats, REDRESS 55 quote-source streaming hash, or this
+  direct source-hook receiver shortcut.

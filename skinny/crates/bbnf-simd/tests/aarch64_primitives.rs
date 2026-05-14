@@ -119,6 +119,35 @@ fn string_block_reports_escape_and_control_masks() {
 }
 
 #[test]
+fn string_special_block_matches_scalar_reference() {
+    let mut bytes = [b'a'; 16];
+    bytes[0] = b'\'';
+    bytes[2] = b'\\';
+    bytes[5] = 0x1f;
+    bytes[7] = 0x80;
+    bytes[15] = b'\'';
+
+    let scalar = bbnf_simd::aarch64::string_block::scan_string_special_block_scalar(
+        &bytes, b'\'', b'\\', 0x20,
+    );
+    let neon = unsafe {
+        bbnf_simd::aarch64::string_block::scan_string_special_block(
+            bytes.as_ptr(),
+            b'\'',
+            b'\\',
+            0x20,
+        )
+    };
+
+    assert_eq!(neon, scalar);
+    assert_eq!(neon.terminator_mask, (1 << 0) | (1 << 15));
+    assert_eq!(neon.escape_mask, 1 << 2);
+    assert_eq!(neon.control_mask, 1 << 5);
+    assert_eq!(neon.non_ascii_mask, 1 << 7);
+    assert_eq!(neon.first_interesting(), Some(0));
+}
+
+#[test]
 fn digit_mac_parses_four_digit_blocks() {
     assert_eq!(
         bbnf_simd::aarch64::digit_mac::parse_4_digits(*b"2026"),

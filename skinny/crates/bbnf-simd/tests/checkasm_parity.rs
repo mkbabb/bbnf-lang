@@ -27,6 +27,28 @@ use std::time::Instant;
 
 use bbnf_simd::{scan_json_structurals, scan_scalar, JSON_STRUCTURAL};
 
+#[cfg(target_arch = "aarch64")]
+mod sk_v3_primitives {
+    pub use bbnf_simd::aarch64::{match_tiny_plain_string, unescape_uxxxx};
+}
+
+#[cfg(not(target_arch = "aarch64"))]
+mod sk_v3_primitives {
+    pub mod match_tiny_plain_string {
+        include!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/src/aarch64/match_tiny_plain_string.rs"
+        ));
+    }
+
+    pub mod unescape_uxxxx {
+        include!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/src/aarch64/unescape_uxxxx.rs"
+        ));
+    }
+}
+
 // -----------------------------------------------------------------------------
 // Deterministic input generator (xorshift64; no getrandom dependency).
 // -----------------------------------------------------------------------------
@@ -172,6 +194,7 @@ where
 // -----------------------------------------------------------------------------
 
 #[derive(Debug)]
+#[allow(dead_code)]
 struct ParityReport {
     align: usize,
     len: usize,
@@ -327,8 +350,8 @@ fn classifier_parity_random_full_alphabet() {
 fn classifier_corpus_parity() {
     signal_guard::arm();
 
-    let fixtures = test_fixtures::load_available_bench_fixtures()
-        .expect("test-fixtures manifest must load");
+    let fixtures =
+        test_fixtures::load_available_bench_fixtures().expect("test-fixtures manifest must load");
     assert!(
         !fixtures.is_empty(),
         "expected at least one JSON corpus fixture"
@@ -410,27 +433,25 @@ fn sk_v3_scalar_anchors_compile() {
     for byte in b"\"\\,:[]{}".iter().copied() {
         is_member[byte as usize] = true;
     }
-    let mask =
-        bbnf_simd::aarch64::match_tiny_plain_string::match_tiny_plain_string_scalar(
-            &haystack,
-            &is_member,
-        );
+    let mask = sk_v3_primitives::match_tiny_plain_string::match_tiny_plain_string_scalar(
+        &haystack, &is_member,
+    );
     let first =
-        bbnf_simd::aarch64::match_tiny_plain_string::first_match_scalar(&haystack, &is_member);
+        sk_v3_primitives::match_tiny_plain_string::first_match_scalar(&haystack, &is_member);
     assert_eq!(mask, 1u16 << 5 | 1u16 << 13 | 1u16 << 14);
     assert_eq!(first, Some(5));
 
     // Class B: \uXXXX scalar reference (parity anchor).
     assert_eq!(
-        bbnf_simd::aarch64::unescape_uxxxx::unescape_uxxxx_scalar(b"00aF"),
+        sk_v3_primitives::unescape_uxxxx::unescape_uxxxx_scalar(b"00aF"),
         Some(0x00AF)
     );
     assert_eq!(
-        bbnf_simd::aarch64::unescape_uxxxx::unescape_uxxxx_scalar(b"00XX"),
+        sk_v3_primitives::unescape_uxxxx::unescape_uxxxx_scalar(b"00XX"),
         None
     );
     assert_eq!(
-        bbnf_simd::aarch64::unescape_uxxxx::join_surrogates(0xD83D, 0xDE00),
+        sk_v3_primitives::unescape_uxxxx::join_surrogates(0xD83D, 0xDE00),
         0x1F600
     );
 
@@ -454,8 +475,7 @@ fn sk_v3_scalar_anchors_compile() {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     ];
-    let vbmi2_mask =
-        bbnf_simd::x86_64::avx512_vbmi2::classify::classify_block_scalar(&block64);
+    let vbmi2_mask = bbnf_simd::x86_64::avx512_vbmi2::classify::classify_block_scalar(&block64);
     let gfni_mask =
         bbnf_simd::x86_64::avx512_gfni::classify_affine::classify_block_scalar(&block64);
     assert_eq!(vbmi2_mask, gfni_mask);
@@ -467,8 +487,7 @@ fn sk_v3_scalar_anchors_compile() {
     assert_eq!(fused, 0xF0);
 
     // Eisel-Lemire scalar mantissa multiply.
-    let prod =
-        bbnf_simd::x86_64::avx_ifma::mantissa::mul52_low_scalar(0x1_0000_0000_0000, 10);
+    let prod = bbnf_simd::x86_64::avx_ifma::mantissa::mul52_low_scalar(0x1_0000_0000_0000, 10);
     assert_eq!(prod, (0x1_0000_0000_0000u128 * 10 % (1u128 << 52)) as u64);
 
     // VNNI digit-MAC scalar reference.
@@ -479,12 +498,213 @@ fn sk_v3_scalar_anchors_compile() {
 }
 
 #[test]
-#[ignore = "Wave 1 Agent 2 / Wave 6: intrinsic kernel bodies not yet landed"]
 fn sk_v3_intrinsic_parity_aarch64() {
-    // Placeholder gate: once `match_tiny_plain_string_neon` /
-    // `unescape_uxxxx_neon` land, this test sweeps every alignment 0..64 and
-    // asserts bit-parity against the scalar reference above.
-    panic!("kernel stubs are intentionally unimplemented; remove #[ignore] when Wave 1 lands");
+    #[cfg(target_arch = "aarch64")]
+    {
+        use core::arch::aarch64::*;
+
+        const ALIGNMENTS: usize = 64;
+        const TINY_LENGTHS: &[usize] = &[16, 17, 31, 32, 64, 127];
+        const HEX_LENGTHS: &[usize] = &[4, 5, 7, 16, 64];
+        const ALPHABETS: &[&[u8]] = &[b"\"\\,:[]{}", b"0123456789ABCDEF", b"!#$%&'()*+-./"];
+
+        fn membership(alphabet: &[u8]) -> [bool; 256] {
+            let mut is_member = [false; 256];
+            for &byte in alphabet {
+                assert_ne!(byte, 0, "low-6 table reserves NUL as empty slot");
+                let low6 = byte & 0x3f;
+                assert_eq!(
+                    alphabet
+                        .iter()
+                        .copied()
+                        .filter(|candidate| (*candidate & 0x3f) == low6)
+                        .count(),
+                    1,
+                    "test alphabets must be collision-free modulo 0x3f"
+                );
+                is_member[byte as usize] = true;
+            }
+            is_member
+        }
+
+        fn fill_tiny_case(rng: &mut Xorshift64, bytes: &mut [u8], alphabet: &[u8]) {
+            rng.fill(bytes);
+            for index in (0..bytes.len()).step_by(5) {
+                bytes[index] = alphabet[(index / 5) % alphabet.len()];
+            }
+            for index in (3..bytes.len()).step_by(11) {
+                bytes[index] = 0x80 | (index as u8);
+            }
+            for index in (7..bytes.len()).step_by(17) {
+                bytes[index] = 0;
+            }
+        }
+
+        fn valid_hex_cases() -> Vec<[u8; 4]> {
+            vec![
+                *b"0000", *b"0001", *b"00aF", *b"09fF", *b"D83D", *b"DE00", *b"ffff", *b"FFFF",
+                *b"aBcD", *b"1234",
+            ]
+        }
+
+        fn invalid_hex_cases() -> Vec<[u8; 4]> {
+            let mut cases = Vec::new();
+            let seed = *b"1A2b";
+            for position in 0..4 {
+                for byte in 0u8..=255 {
+                    if byte.is_ascii_hexdigit() {
+                        continue;
+                    }
+                    let mut quartet = seed;
+                    quartet[position] = byte;
+                    cases.push(quartet);
+                }
+            }
+            cases.extend([
+                *b"g000",
+                *b"000:",
+                *b" 123",
+                *b"12_4",
+                [0xff, b'0', b'0', b'0'],
+            ]);
+            cases
+        }
+
+        let mut rng = Xorshift64::new(0x5151_4B56_3357_4131);
+
+        for alphabet in ALPHABETS {
+            let table_bytes =
+                sk_v3_primitives::match_tiny_plain_string::build_class_table_lo6(alphabet);
+            let table = unsafe { vld1q_u8_x4(table_bytes.as_ptr()) };
+            let is_member = membership(alphabet);
+
+            for &len in TINY_LENGTHS {
+                for align in 0..ALIGNMENTS {
+                    let mut backing = vec![0u8; align + len + 16];
+                    fill_tiny_case(&mut rng, &mut backing[align..align + len], alphabet);
+                    let haystack = &backing[align..align + 16];
+                    let haystack: &[u8; 16] = haystack.try_into().unwrap();
+                    let expected_mask =
+                        sk_v3_primitives::match_tiny_plain_string::match_tiny_plain_string_scalar(
+                            haystack, &is_member,
+                        );
+                    let expected_first =
+                        sk_v3_primitives::match_tiny_plain_string::first_match_scalar(
+                            haystack, &is_member,
+                        );
+                    let actual = unsafe {
+                        sk_v3_primitives::match_tiny_plain_string::match_tiny_plain_string_neon(
+                            backing.as_ptr().add(align),
+                            table,
+                        )
+                    };
+                    assert_eq!(
+                        actual,
+                        (expected_mask, expected_first),
+                        "tiny-string parity failed alphabet={alphabet:?} len={len} align={align} haystack={haystack:?}"
+                    );
+                }
+            }
+        }
+
+        const JSON_TINY_CASES: &[&[u8]] = &[
+            br#""short""#,
+            br#""sixteen_bytes!!""#,
+            br#""unterminated plain body"#,
+            b"\"has\\escape\"",
+            b"\"has\x1fcontrol\"",
+            b"\"123456789012345\"",
+            b"\"1234567890123456\"",
+        ];
+        for case in JSON_TINY_CASES {
+            for align in 0..ALIGNMENTS {
+                let mut backing = vec![0xCCu8; align + case.len() + 16];
+                backing[align..align + case.len()].copy_from_slice(case);
+                let input = &backing[align..align + case.len()];
+                let expected = bbnf_simd::match_json_tiny_plain_string_scalar(input, 0);
+                let actual = bbnf_simd::match_json_tiny_plain_string(input, 0);
+                assert_eq!(
+                    actual, expected,
+                    "json tiny-string parity failed align={align} case={case:?}"
+                );
+
+                let mut expected_mask = 0u16;
+                for lane in 0..16 {
+                    let byte = backing[align + 1 + lane];
+                    if byte == b'"' || byte == b'\\' || byte < 0x20 {
+                        expected_mask |= 1u16 << lane;
+                    }
+                }
+                let expected_first = if expected_mask == 0 {
+                    None
+                } else {
+                    Some(expected_mask.trailing_zeros() as u8)
+                };
+                let actual_specials = unsafe {
+                    sk_v3_primitives::match_tiny_plain_string::match_json_string_specials_neon(
+                        backing.as_ptr().add(align + 1),
+                    )
+                };
+                assert_eq!(
+                    actual_specials,
+                    (expected_mask, expected_first),
+                    "json special NEON parity failed align={align} case={case:?}"
+                );
+            }
+        }
+
+        for align in 0..ALIGNMENTS {
+            let mut backing = vec![b'a'; align + 16];
+            let block = &mut backing[align..align + 16];
+            block[0] = b'\'';
+            block[3] = b'!';
+            block[5] = 0x1f;
+            block[9] = 0x80;
+            block[15] = b'\'';
+            let haystack: &[u8; 16] = (&*block).try_into().unwrap();
+            let expected = bbnf_simd::aarch64::string_block::scan_string_special_block_scalar(
+                haystack, b'\'', b'!', 0x20,
+            );
+            let actual = unsafe {
+                bbnf_simd::aarch64::string_block::scan_string_special_block(
+                    backing.as_ptr().add(align),
+                    b'\'',
+                    b'!',
+                    0x20,
+                )
+            };
+            assert_eq!(
+                actual, expected,
+                "string-special block parity failed align={align}"
+            );
+        }
+
+        let mut hex_cases = valid_hex_cases();
+        hex_cases.extend(invalid_hex_cases());
+        for &len in HEX_LENGTHS {
+            for align in 0..ALIGNMENTS {
+                for quartet in &hex_cases {
+                    let mut backing = vec![0xCCu8; align + len + 4];
+                    backing[align..align + 4].copy_from_slice(quartet);
+                    let expected = sk_v3_primitives::unescape_uxxxx::unescape_uxxxx_scalar(quartet);
+                    let actual = unsafe {
+                        sk_v3_primitives::unescape_uxxxx::unescape_uxxxx_neon(
+                            backing.as_ptr().add(align),
+                        )
+                    };
+                    assert_eq!(
+                        actual, expected,
+                        "uXXXX parity failed len={len} align={align} quartet={quartet:?}"
+                    );
+                }
+            }
+        }
+    }
+
+    #[cfg(not(target_arch = "aarch64"))]
+    {
+        eprintln!("sk_v3_intrinsic_parity_aarch64: skipped on non-aarch64 host");
+    }
 }
 
 #[test]

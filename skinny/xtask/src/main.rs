@@ -221,25 +221,19 @@ fn gate_json(root: &Path, passthrough: Vec<String>) -> Result<()> {
 }
 
 fn primitive_checkasm(root: &Path) -> Result<()> {
-    let status = Command::new("cargo")
-        .current_dir(root)
-        .env("BBNF_SIMD_STRICT", "1")
-        .env_remove("BBNF_SIMD_INJECT_BUG")
-        .args([
-            "test",
-            "-p",
-            "bbnf-simd",
-            "--release",
-            "--test",
-            "checkasm_parity",
-        ])
-        .status()
-        .context("failed to spawn bbnf-simd primitive checkasm gate")?;
-    if status.success() {
-        Ok(())
-    } else {
-        bail!("bbnf-simd primitive checkasm gate failed with status {status}")
+    for test in ["checkasm_parity", "checkasm_utf8_block"] {
+        let status = Command::new("cargo")
+            .current_dir(root)
+            .env("BBNF_SIMD_STRICT", "1")
+            .env_remove("BBNF_SIMD_INJECT_BUG")
+            .args(["test", "-p", "bbnf-simd", "--release", "--test", test])
+            .status()
+            .with_context(|| format!("failed to spawn bbnf-simd primitive checkasm gate {test}"))?;
+        if !status.success() {
+            bail!("bbnf-simd primitive checkasm gate {test} failed with status {status}");
+        }
     }
+    Ok(())
 }
 
 fn rust_loc(path: &Path) -> Result<usize> {

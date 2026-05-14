@@ -3,7 +3,7 @@ use super::parser::ParserState;
 use super::value::{JsonNodeKind, ParseError, ParseErrorKind};
 use crate::tape::OffsetFlags;
 use parse_that_regex::{
-    match_json_number_from_first, match_json_string_at_quote, skip_json_whitespace,
+    match_json_number_from_first, match_json_string_at_quote_trusted_utf8, skip_json_whitespace,
     JsonNumberMatch, JsonStringMatch, RegexErrorKind,
 };
 
@@ -177,7 +177,7 @@ fn match_string_at_quote<'i>(
     state: &ParserState<'i>,
     start: usize,
 ) -> Result<JsonStringMatch, ParseError<'i>> {
-    match_json_string_at_quote(state.bytes, start).map_err(|err| ParseError {
+    match_json_string_at_quote_trusted_utf8(state.bytes, start).map_err(|err| ParseError {
         input: state.input,
         offset: err.offset,
         kind: match err.kind {

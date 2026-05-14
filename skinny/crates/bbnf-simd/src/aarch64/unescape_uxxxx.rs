@@ -27,6 +27,9 @@
 //!     CSS escapes (`url("\41\42…")`) and JSON Unicode-heavy strings
 //!     (i18n corpora).
 
+#[cfg(target_arch = "aarch64")]
+use core::arch::aarch64::*;
+
 /// Scalar reference — parity anchor.  Decodes a single `\uXXXX` quartet
 /// starting at `*input[0..=3]`.  Returns `None` if any nibble is non-hex.
 ///
@@ -57,18 +60,126 @@ pub fn join_surrogates(high: u16, low: u16) -> u32 {
 /// # Safety
 ///
 /// `ptr` must point to four readable bytes (the `\uXXXX` quartet, *without*
-/// the leading `\u`).  The kernel performs an unaligned 4-byte load via
-/// `vld1_lane_u32::<0>` and TBL-decodes all four nibbles in a single op.
+/// the leading `\u`).  The kernel loads exactly those four bytes into vector
+/// lanes and TBL-decodes all four nibbles in a single op.
 ///
 /// # SK-V3 status
 ///
-/// Stubbed today; Wave 1 Agent 2 will land the `vqtbl1q_u8` chain.  We keep
-/// the symbol so checkasm_parity tests can compile and the dispatch driver
-/// can wire it up.
+/// This is the Wave 1 primitive body.  It uses the low-nibble TBL as the
+/// candidate decode and masks that candidate with explicit ASCII range checks
+/// so digit/letter low-nibble collisions remain bit-identical to the scalar
+/// reference.
 #[cfg(target_arch = "aarch64")]
 #[inline]
-pub unsafe fn unescape_uxxxx_neon(_ptr: *const u8) -> Option<u32> {
-    unimplemented!("Wave 1 Agent 2: vqtbl1q_u8 hex-nibble TBL + vshlq + vorrq fold");
+pub unsafe fn unescape_uxxxx_neon(ptr: *const u8) -> Option<u32> {
+    let mut bytes = unsafe { vdupq_n_u8(0) };
+    bytes = unsafe { vld1q_lane_u8::<0>(ptr, bytes) };
+    bytes = unsafe { vld1q_lane_u8::<1>(ptr.add(1), bytes) };
+    bytes = unsafe { vld1q_lane_u8::<2>(ptr.add(2), bytes) };
+    bytes = unsafe { vld1q_lane_u8::<3>(ptr.add(3), bytes) };
+
+    let low_nibbles = unsafe { vandq_u8(bytes, vdupq_n_u8(0x0f)) };
+    let lut = unsafe { vld1q_u8(HEX_NIBBLE_LUT.as_ptr()) };
+    let base = unsafe { vqtbl1q_u8(lut, low_nibbles) };
+
+    let is_digit = unsafe {
+        vandq_u8(
+            vcgeq_u8(bytes, vdupq_n_u8(b'0')),
+            vcgeq_u8(vdupq_n_u8(b'9'), bytes),
+        )
+    };
+    let is_upper = unsafe {
+        vandq_u8(
+            vcgeq_u8(bytes, vdupq_n_u8(b'A')),
+            vcgeq_u8(vdupq_n_u8(b'F'), bytes),
+        )
+    };
+    let is_lower = unsafe {
+        vandq_u8(
+            vcgeq_u8(bytes, vdupq_n_u8(b'a')),
+            vcgeq_u8(vdupq_n_u8(b'f'), bytes),
+        )
+    };
+    let is_alpha = unsafe { vorrq_u8(is_upper, is_lower) };
+    let is_hex = unsafe { vorrq_u8(is_digit, is_alpha) };
+    let alpha_adjust = unsafe { vandq_u8(is_alpha, vdupq_n_u8(9)) };
+    let nibbles = unsafe { vaddq_u8(base, alpha_adjust) };
+
+    if unsafe { vgetq_lane_u8::<0>(is_hex) } == 0
+        || unsafe { vgetq_lane_u8::<1>(is_hex) } == 0
+        || unsafe { vgetq_lane_u8::<2>(is_hex) } == 0
+        || unsafe { vgetq_lane_u8::<3>(is_hex) } == 0
+    {
+        return None;
+    }
+
+    let codepoint = (u32::from(unsafe { vgetq_lane_u8::<0>(nibbles) }) << 12)
+        | (u32::from(unsafe { vgetq_lane_u8::<1>(nibbles) }) << 8)
+        | (u32::from(unsafe { vgetq_lane_u8::<2>(nibbles) }) << 4)
+        | u32::from(unsafe { vgetq_lane_u8::<3>(nibbles) });
+    Some(codepoint)
+}
+
+#[cfg(target_arch = "aarch64")]
+#[inline]
+pub unsafe fn unescape_uxxxx_x4_neon(quartets: &[u8; 16]) -> Option<[u32; 4]> {
+    let bytes = unsafe { vld1q_u8(quartets.as_ptr()) };
+    let low_nibbles = unsafe { vandq_u8(bytes, vdupq_n_u8(0x0f)) };
+    let lut = unsafe { vld1q_u8(HEX_NIBBLE_LUT.as_ptr()) };
+    let base = unsafe { vqtbl1q_u8(lut, low_nibbles) };
+
+    let is_digit = unsafe {
+        vandq_u8(
+            vcgeq_u8(bytes, vdupq_n_u8(b'0')),
+            vcgeq_u8(vdupq_n_u8(b'9'), bytes),
+        )
+    };
+    let is_upper = unsafe {
+        vandq_u8(
+            vcgeq_u8(bytes, vdupq_n_u8(b'A')),
+            vcgeq_u8(vdupq_n_u8(b'F'), bytes),
+        )
+    };
+    let is_lower = unsafe {
+        vandq_u8(
+            vcgeq_u8(bytes, vdupq_n_u8(b'a')),
+            vcgeq_u8(vdupq_n_u8(b'f'), bytes),
+        )
+    };
+    let is_alpha = unsafe { vorrq_u8(is_upper, is_lower) };
+    let is_hex = unsafe { vorrq_u8(is_digit, is_alpha) };
+    if unsafe { vminvq_u8(is_hex) } == 0 {
+        return None;
+    }
+
+    let alpha_adjust = unsafe { vandq_u8(is_alpha, vdupq_n_u8(9)) };
+    let nibbles = unsafe { vaddq_u8(base, alpha_adjust) };
+    let mut lanes = [0u8; 16];
+    unsafe { vst1q_u8(lanes.as_mut_ptr(), nibbles) };
+
+    Some([
+        pack_quad(&lanes[0..4]),
+        pack_quad(&lanes[4..8]),
+        pack_quad(&lanes[8..12]),
+        pack_quad(&lanes[12..16]),
+    ])
+}
+
+#[inline]
+pub fn join_surrogate_pair_neon(high: u32, low: u32) -> Option<u32> {
+    if (0xd800..=0xdbff).contains(&high) && (0xdc00..=0xdfff).contains(&low) {
+        Some(0x10000 + (((high - 0xd800) << 10) | (low - 0xdc00)))
+    } else {
+        None
+    }
+}
+
+#[inline]
+fn pack_quad(nibbles: &[u8]) -> u32 {
+    (u32::from(nibbles[0]) << 12)
+        | (u32::from(nibbles[1]) << 8)
+        | (u32::from(nibbles[2]) << 4)
+        | u32::from(nibbles[3])
 }
 
 #[inline]

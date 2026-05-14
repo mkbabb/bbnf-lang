@@ -204,6 +204,18 @@ infrastructure.
 
 ## Reproduction
 
+The strict primitive gate is exposed through xtask for host-local Wave 3
+dispatch:
+
+```bash
+cargo run -p xtask --release -- primitive-checkasm
+```
+
+This runs `cargo test -p bbnf-simd --release --test checkasm_parity` and
+`cargo test -p bbnf-simd --release --test checkasm_utf8_block` with
+`BBNF_SIMD_STRICT=1` and clears `BBNF_SIMD_INJECT_BUG`, so any scalar↔host
+primitive divergence covered by the admitted gates is a command failure.
+
 ```bash
 # Default (records but does not fail on the open NEON divergence):
 cargo test -p bbnf-simd --profile ax-iter --test checkasm_parity -- --nocapture

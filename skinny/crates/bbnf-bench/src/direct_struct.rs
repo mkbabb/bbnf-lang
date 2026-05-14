@@ -5,7 +5,7 @@ use std::borrow::Cow;
 use std::fmt;
 
 use parse_that_regex::{
-    match_json_string_at_quote,
+    match_json_string_at_quote_trusted_utf8,
     number::{
         match_number_span_from_first, materialize_f64, materialize_i64, materialize_u64, NumberSpan,
     },
@@ -392,10 +392,10 @@ mod hand {
         }
 
         fn string(&mut self) -> Result<Cow<'a, str>, DirectStructError> {
-            let span = match_json_string_at_quote(self.bytes, self.cursor)
+            let span = match_json_string_at_quote_trusted_utf8(self.bytes, self.cursor)
                 .map_err(|error| DirectStructError::Parse(error.to_string()))?;
-            // SAFETY: match_json_string_at_quote validates the raw UTF-8 content
-            // span while locating escapes and controls.
+            // SAFETY: DirectParser receives `&str`; the trusted matcher still
+            // locates escapes and controls before this raw slice is borrowed.
             let raw = unsafe {
                 std::str::from_utf8_unchecked(&self.bytes[span.content_start..span.content_end])
             };

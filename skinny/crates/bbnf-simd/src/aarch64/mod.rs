@@ -18,3 +18,5 @@ pub mod quad_load;
 pub mod string_block;
 #[cfg(target_arch = "aarch64")]
 pub mod unescape_uxxxx;
+#[cfg(target_arch = "aarch64")]
+pub mod utf8;

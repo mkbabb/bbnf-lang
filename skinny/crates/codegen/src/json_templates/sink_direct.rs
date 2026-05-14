@@ -107,14 +107,17 @@ fn parse_string_direct<'i>(
     bytes: &'i [u8],
     cursor: &mut usize,
 ) -> Result<Cow<'i, str>, ParseError<'i>> {
-    let span = match_json_string_at_quote(bytes, *cursor).map_err(|err| ParseError {
-        input,
-        offset: err.offset,
-        kind: match err.kind {
-            RegexErrorKind::ExpectedString => ParseErrorKind::ExpectedValue,
-            _ => ParseErrorKind::InvalidString,
-        },
-    })?;
+    let span =
+        parse_that_regex::match_json_string_at_quote_trusted_utf8(bytes, *cursor).map_err(|err| {
+            ParseError {
+                input,
+                offset: err.offset,
+                kind: match err.kind {
+                    RegexErrorKind::ExpectedString => ParseErrorKind::ExpectedValue,
+                    _ => ParseErrorKind::InvalidString,
+                },
+            }
+        })?;
     let raw = unsafe { std::str::from_utf8_unchecked(&bytes[span.content_start..span.content_end]) };
     *cursor = span.raw_end;
     if span.needs_unescape {

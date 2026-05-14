@@ -1,5 +1,6 @@
 use parse_that_regex::{
-    match_json_number_from_first, match_json_string_at_quote, skip_json_whitespace, RegexErrorKind,
+    match_json_number_from_first, match_json_string_at_quote_trusted_utf8, skip_json_whitespace,
+    RegexErrorKind,
 };
 use runtime::{
     grammars::json::{JsonRoot, ParseError, ParseErrorKind},
@@ -99,7 +100,7 @@ impl<'i> Parser<'i> {
             self.cursor = raw_end;
         } else {
             let span =
-                match_json_string_at_quote(self.bytes, start).map_err(|error| ParseError {
+                match_json_string_at_quote_trusted_utf8(self.bytes, start).map_err(|error| ParseError {
                     input: self.input,
                     offset: error.offset,
                     kind: match error.kind {
@@ -158,7 +159,7 @@ impl<'i> Parser<'i> {
             self.cursor = raw_end;
             return Ok(());
         }
-        let span = match_json_string_at_quote(self.bytes, start).map_err(|error| ParseError {
+        let span = match_json_string_at_quote_trusted_utf8(self.bytes, start).map_err(|error| ParseError {
             input: self.input,
             offset: error.offset,
             kind: match error.kind {

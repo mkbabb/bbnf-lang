@@ -412,3 +412,170 @@ Candidate 2 failed while preserving the long-string gain class. If Candidate 3
 fails, do not attempt another string scanner without a new profile; dispatch
 Candidate 4 as the next retained parser-control experiment. Candidate 3 is the
 next Wave 2 redress target, not a Wave 3 direct-to-struct intervention.
+
+## 9. Wave 1c Redispatch After Candidate 3/4 Redress
+
+Candidate 3 and Candidate 4 have now been measured. Candidate 3 was rejected
+in `skinny/REDRESS.md` item 62: even with the tiny probe preserved and the
+wide path delayed until after the first local block, the route regressed almost
+every sentinel row. Candidate 4 was admitted in item 63: array next-byte carry
+reduced the redundant value re-entry boundary and moved array-heavy rows, but
+retained parse still has 13 outcome-G rows.
+
+The Wave 1c cohort reports live at
+`restart/skinny/audit/SK-V6-COHORT/skv6-R1c-retained-string-post-c4.md`
+through `skv6-R6c-icache-branch-post-c4.md`. Their binding findings:
+
+| Report | Binding finding |
+|---|---|
+| R1c | Remaining string-heavy retained rows are still matcher dominated; the fresh retained candidate is narrow Unicode-escape-run validation, not another wide/plain scanner. |
+| R2c | No defensible retained string scanner threshold remains after Candidate 4. Raw length thresholds either were measured and rejected or require non-canonical side information. |
+| R3c | Offset/tape emission is visible but single-digit; the only non-string retained candidate is low-ceiling object next-key carry. |
+| R4c | Direct field-layout string materialization is now admissible under the SK-V6 shortlist-exhausted clause and is the next direct-to-struct move. |
+| R5c | Remaining parse-G rows are parser-owned, not explained by sidecar anchor drift. |
+| R6c | Lock 15 still holds; i-cache split, cold outlining, and monomorphization churn are not justified. |
+
+### Wave 1c Diagnosis Revision
+
+- The retained generic string-scanner class is exhausted. REDRESS 60 blocks
+  deleting `match_tiny_plain_string`; REDRESS 61 blocks the always-wide
+  scanner; REDRESS 62 blocks the delayed-wide scanner; R2c rejects corpus or
+  raw-length thresholds because the needed local fact is not available without
+  rescanning or retained side state.
+- Retained Unicode-escape rows are a distinct class. R1c measured
+  `unicode_escapes` at 92.3% inside `match_string_at_quote`, with the top PCs
+  in escape dispatch and hex/surrogate validation. `y_string_unicode` has the
+  same escape-unit validation shape. That is not raw UTF-8 fusion and not a
+  plain-string delimiter scan.
+- Retained object cadence remains a low-ceiling parser-control class. R3c
+  measured `consume_container_next + parse_key_colon + parse_pair` as relevant
+  on object-heavy rows, but string matching remains dominant on most remaining
+  red rows.
+- Direct string materialization is no longer blocked by retained parse work
+  after the remaining retained candidates are either measured or explicitly
+  rejected. R4c proves generated `parse_direct` is the Track 1 path and names
+  `parse_string_direct`, `unescape_json_string`, and receiver/fold closure
+  overhead as the direct blocker.
+
+### Candidate 5: Retained Unicode-Escape Run Validator
+
+Path:
+
+- `skinny/crates/parse-that-regex/src/lib.rs`
+- `skinny/crates/bbnf-simd/src/aarch64/` only if the scalar split first shows
+  row impact
+- `skinny/crates/runtime/src/grammars/json/generated.rs` and
+  `skinny/crates/codegen/src/json_templates/generated.rs` only if an
+  attribution-visible wrapper is needed at the generated call boundary
+
+Mechanism: split the trusted string escape validation sub-boundary so
+contiguous `\\uXXXX` units can be validated as a run. Start scalar and
+attribution-visible: prove that hex/surrogate validation is the row-local
+sub-boundary before adding NEON. If the scalar split moves the named rows,
+admit an AArch64 primitive that validates fixed-width hex units and surrogate
+pairs without materializing decoded characters. The primitive is
+grammar-neutral: JSON lowers `\\uXXXX`; CSS or other grammars may lower their
+own escaped-code-unit policy to the same hex/class primitive family.
+
+Expected row impact: `unicode_escapes`, `y_string_unicode`, and the
+escape-heavy portion of `unicode_mixed`. It is not expected to move
+`distinct_values`, `unicode_basic`, `apache_builds`, or other plain/tiny rows.
+
+Falsifiability gate:
+
+- Focus rows: `unicode_escapes`, `y_string_unicode`, `unicode_mixed`.
+- Guard rows: `apache_builds`, `github_events`, `update_center`, `gsoc-2018`,
+  `unicode_basic`, `distinct_values`, `citm_catalog`, `canada`, `instruments`.
+- Scalar split gate: if an attribution-visible scalar helper does not show at
+  least 20% of `match_string_at_quote` self-time in escape-region PCs on
+  `unicode_escapes` and `y_string_unicode`, reject before SIMD and record the
+  measurement.
+- Throughput gate: retained Track 1 must improve at least
+  `unicode_escapes >= +12%`, `y_string_unicode >= +8%`, and one of
+  `unicode_mixed` or `gsoc-2018 >= +5%`; no guard row may regress by more than
+  2%.
+- Attribution gate: escape-region PCs in `match_string_at_quote` drop at least
+  25% on `unicode_escapes` and `y_string_unicode`; plain-scan PCs remain within
+  noise on guard rows.
+
+Why this is admissible: it targets a fresh post-Candidate4 PC cluster. It does
+not reopen raw UTF-8 fusion, retained sidecars, wide plain scanners, or direct
+decoded-string materialization.
+
+### Candidate 6: Object Next-Key Carry
+
+Path:
+
+- `skinny/crates/runtime/src/grammars/json/generated.rs`
+- `skinny/crates/codegen/src/json_templates/generated.rs`
+
+Mechanism: mirror Candidate 4's parser-control shape for object loops. After
+comma/whitespace, carry the known quote/key state into a `parse_pair_at_current`
+helper instead of re-entering the generic object pair cadence. Preserve
+`match_tiny_plain_string`, quote offset emission, colon validation, and the
+offset-tape format.
+
+Expected row impact: modest gains on `citm_catalog`, `random`,
+`instruments`, and `update_center`; it is a control-flow recovery, not a
+string/unicode close.
+
+Falsifiability gate:
+
+- Focus rows: `citm_catalog`, `random`, `instruments`, `update_center`.
+- Guard row: `distinct_values`, because it is string-bound and should not pay
+  object-cadence churn.
+- Throughput gate: production `profile-lazy` Mbps improves by at least
+  `citm_catalog >= +3%`, `random >= +2%`, `instruments >= +2%`, and
+  `update_center >= +1.5%`; `distinct_values` regresses no more than 1%.
+- Attribution gate: `consume_container_next + parse_key_colon + parse_pair`
+  falls at least 15% relative on `citm_catalog` and `instruments`.
+
+Why this is admissible: it is the only remaining non-string retained
+parser-control surface after Candidate 4. It does not change the substrate or
+introduce a structural sidecar.
+
+### Candidate 7: Direct Field-Layout String Materializer
+
+Path:
+
+- `skinny/crates/runtime/src/grammars/json/sink.rs`
+- `skinny/crates/runtime/src/grammars/json/generated.rs`
+- `skinny/crates/codegen/src/json_sink_direct.rs`
+- `skinny/crates/bbnf-bench/src/direct_struct.rs`
+
+Mechanism: generated direct parsing emits field/string digest facts in the
+same parse loop that owns the string context. The route must avoid allocating
+a decoded `String` and then hashing contiguous decoded bytes, and it must avoid
+the closure-heavy `array_string_source` / `object_string_source` receiver
+shape on non-escaped rows. REDRESS 54/55 remain binding: this cannot be a
+renamed sink-local decoded-stats helper or quote-source streaming hash.
+
+Expected row impact: `unicode_escapes`, `unicode_mixed`,
+`y_string_unicode`, `distinct_values`, and `gsoc-2018` direct rows.
+
+Falsifiability gate:
+
+- Direct rows: `unicode_escapes`, `unicode_mixed`, `y_string_unicode`,
+  `distinct_values`, `gsoc-2018`.
+- Throughput gate: `unicode_escapes >= +20%`, `unicode_mixed >= +15%`, at
+  least two of `y_string_unicode`, `distinct_values`, and `gsoc-2018 >= +8%`;
+  no direct row regresses by more than 5%.
+- Profile gate: `parse_string_direct + unescape_json_string` combined self
+  share drops at least 20% relative on `unicode_escapes` and `unicode_mixed`;
+  receiver/fold closure share drops at least 30% relative on `distinct_values`
+  and `gsoc-2018`.
+
+Why this is admissible: the retained parser-control and generic string-scanner
+shortlist has been exercised. R4c proves the direct blocker is now measured on
+generated Track 1 rather than the old bench-private parser.
+
+### Wave 1c Recommendation
+
+Dispatch Candidate 5 first, because it is the only fresh retained parse
+candidate named by post-Candidate4 PC attribution and it is narrow enough to
+reject quickly if the scalar split does not expose row impact. If Candidate 5
+fails, record it in REDRESS and do not open another retained string scanner
+without a new local fact. Then either test the low-ceiling Candidate 6 object
+carry or move to Candidate 7 direct field-layout materialization under the
+SK-V6 shortlist-exhausted clause; Candidate 7 is the higher-impact path for
+the remaining direct N-direct matrix.

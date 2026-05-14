@@ -1564,3 +1564,58 @@ perturbation.
   candidate must be selected from a fresh profile angle for the remaining
   string/Unicode cluster or from a direct-to-struct Wave 3 bridge if parse-G is
   deliberately left with falsifiability-tested residuals.
+
+## SK-V6 Wave 2 Candidate-5 Redress
+
+- Item 64 rejects the retained Unicode-escape run validator as shipped. The
+  route added an AArch64 four-unit `\uXXXX` validation fast path inside
+  `validate_json_unicode_escape_run`, using the existing
+  `bbnf-simd::aarch64::unescape_uxxxx_x4_neon` primitive and falling back to
+  scalar validation for invalid hex, non-contiguous runs, or a high surrogate
+  at the fourth unit boundary. It also added a forwarded `parse-attribution`
+  feature so the helper could be profiled as its own boundary. This stayed
+  within the canonical substrate: no sidecar, no second source pass, no new BIR
+  variant, and no grammar directive.
+- Correctness was green before measurement:
+  `CARGO_TARGET_DIR=/tmp/skv6-wave2-candidate5-target cargo test -p
+  parse-that-regex --profile ax-iter` passed 24 unit tests, including new
+  four-unit validation-shape coverage for BMP units, surrogate pairs, a
+  boundary-crossing surrogate pair, lone low surrogates, bad high/low pairs,
+  and invalid hex offsets.
+- Production `profile-lazy` smoke used baseline and candidate release binaries
+  built from the same tree under `/tmp/skv6-wave2-candidate5-base` and
+  `/tmp/skv6-wave2-candidate5-cand`. Raw measurements are archived at
+  `/tmp/skv6-wave2-candidate5-smoke.csv`; medians are archived at
+  `/tmp/skv6-wave2-candidate5-smoke-summary.csv`.
+
+  | row | median baseline Mbps | median candidate Mbps | median delta |
+  |---|---:|---:|---:|
+  | apache_builds | 12377 | 12510 | +1.07% |
+  | canada | 19115 | 19165 | +0.26% |
+  | citm_catalog | 21903 | 21798 | -0.48% |
+  | distinct_values | 6070 | 6090 | +0.33% |
+  | github_events | 13142 | 13149 | +0.05% |
+  | gsoc-2018 | 21885 | 21922 | +0.17% |
+  | instruments | 12271 | 12202 | -0.56% |
+  | unicode_basic | 11180 | 11069 | -0.99% |
+  | unicode_escapes | 12758 | 16818 | +31.82% |
+  | unicode_mixed | 8786 | 8945 | +1.81% |
+  | update_center | 9252 | 9330 | +0.84% |
+  | y_string_unicode | 6133 | 5905 | -3.72% |
+
+- The route failed its falsifiability gate. It cleared the
+  `unicode_escapes >= +12%` focus threshold by a wide margin, but it regressed
+  `y_string_unicode` instead of improving it by at least 8%, and neither
+  `unicode_mixed` nor `gsoc-2018` reached the required +5% companion lift. The
+  direct interpretation is that dense contiguous Unicode-escape runs are only
+  the `unicode_escapes` row. `y_string_unicode` has short runs and
+  boundary-crossing surrogate shapes that do not amortize the four-unit path;
+  `unicode_mixed` and `gsoc-2018` are not primarily fixed-width Unicode-escape
+  validation rows.
+- The candidate was reverted before commit. The rejected patch is saved at
+  `/tmp/skv6-wave2-candidate5-rejected.patch`. Do not reopen the same
+  four-unit retained validator unless a new profile names a broader local fact
+  than contiguous `\uXXXX` runs. The remaining retained parser-control
+  candidate is object next-key carry; the higher-impact next direct route is
+  the field-layout string materializer described in
+  `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md` §9.

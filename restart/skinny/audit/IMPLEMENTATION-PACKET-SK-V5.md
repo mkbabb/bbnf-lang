@@ -393,11 +393,15 @@ Post-redress update 3: a transient byte-class whitespace `EventCursor` wrapper
 was measured and rejected in `skinny/REDRESS.md` item 51. Do not implement
 H.W1 by moving `skip_json_whitespace` behind a cursor facade or by using
 `BYTE_CLASS_FROM_EQ_SET_64` as a generic "next non-whitespace byte" wrapper.
-The admissible implementation is the structural-mask cursor: factor the JSON
-scanner's per-64-byte emit-mask calculation, carry only O(1) pending mask /
-quote / escape state, yield structural punctuation and quote events directly,
-and keep scalar validation in the grammar-neutral string/number/literal
-primitives.
+Post-redress update 4: a parser-local structural-mask cursor was measured and
+rejected in `skinny/REDRESS.md` item 53. It consumed the JSON scanner's
+per-64-byte emit mask with O(1) pending state and was correctness-green, but
+retained Track 1 regressed to twitter 6156 Mbps, citm_catalog 8344 Mbps, and
+canada 7139 Mbps because it added a second source scan beside recursive
+descent. Do not implement H.W1 as `ParserState` plus a second source-byte
+cursor. The admissible implementation makes structural projection the single
+parse substrate: scanner-to-tape/event write-through consumed by generated
+lowering, or same-loop mask consumption inside `SinkOnly` / `CollapsedStage`.
 
 ### 4.6 Bench rewire + bench-private nuke
 

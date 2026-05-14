@@ -239,9 +239,16 @@ the retained parse plane.
 The next redress narrows it again: `skinny/REDRESS.md` item 51 rejects a
 byte-class whitespace `EventCursor` wrapper. The wrapper did not add a retained
 side table, but it also did not consume the structural emit mask and regressed
-focused retained Track 1 rows. The substrate union therefore requires a
-mask-bearing structural cursor, not an API rename over source-byte whitespace
-skipping.
+focused retained Track 1 rows. That removed the API-rename route over
+source-byte whitespace skipping.
+
+The subsequent redress narrows it a third time: `skinny/REDRESS.md` item 53
+rejects a parser-local structural-mask cursor even though it consumed the live
+JSON emit mask and kept only O(1) pending state. It still performed a second
+scan beside source-byte recursive descent and regressed the retained triad to
+6156 / 8344 / 7139 Mbps. The corrected union is therefore not "add a cursor to
+the parser"; it is "make the tape/event projection the parser substrate" or
+consume masks in the same `SinkOnly` / `CollapsedStage` loop.
 
 The storage substrate itself (`Tape<'input>` + `TapeBuilder` + `ValueRef`)
 holds cleanly with zero type-ambivalence and zero columnar / PayloadStream

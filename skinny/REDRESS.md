@@ -729,13 +729,15 @@ Lazy tape materialization is now reported per corpus:
 
    The slice was reverted before commit. The rejected route is narrow: moving
    whitespace skipping behind an `EventCursor` name is not the H.W1 close. The
-   admissible cursor must be a mask-bearing structural cursor that consumes
-   the scanner's live per-64-byte JSON emit mask (`punctuation & !string_body |
-   real_quotes`) with O(1) pending state. It may yield structural punctuation
-   and quote events, and generated parsers must cross-check any skipped source
-   bytes with the grammar-neutral string/number/literal primitive boundary so
-   invalid bytes such as `[1x,2]` cannot disappear between scalar and
-   delimiter. No precomputed `StructuralIndex`, no `Vec<JsonEvent>`, no
+   then-admissible cursor had to consume the scanner's live per-64-byte JSON
+   emit mask (`punctuation & !string_body | real_quotes`) with O(1) pending
+   state, yield structural punctuation and quote events, and cross-check any
+   skipped source bytes with the grammar-neutral string/number/literal
+   primitive boundary so invalid bytes such as `[1x,2]` could not disappear
+   between scalar and delimiter. Item 53 subsequently measured and rejected
+   that shape when implemented as a parser-local second scanner; the remaining
+   admissible route is single-substrate event/tape consumption, not a retained
+   parser cursor. No precomputed `StructuralIndex`, no `Vec<JsonEvent>`, no
    whitespace bitmap sidecar, and no aux projection column are admissible.
 
 52. SK-V5 baseline reassay after the event-cursor rejection.
@@ -752,6 +754,37 @@ Lazy tape materialization is now reported per corpus:
    `runtime::generated_json::generated::parse_object_value_at_direct` plus
    `parse_that_regex::unescape_json_string`; decoded string delivery remains a
    direct gate blocker independent of retained parse cursor work.
+
+53. SK-V5 structural-mask parser-local cursor is REJECTED.
+
+   A second retained-parser cursor attempt implemented the stricter route that
+   item 51 left open: `JsonStructuralCursor` consumed the JSON scanner's
+   per-64-byte emit mask (`punctuation & !string_body | real_quotes`), carried
+   quote / backslash state plus only O(1) pending mask state, yielded
+   structural punctuation and quote events, and cross-checked every parser gap
+   with `skip_json_whitespace` so invalid bytes such as `[1x,2]` could not be
+   skipped. It introduced no retained `StructuralIndex`, no `Vec<JsonEvent>`,
+   no whitespace bitmap sidecar, and no aux projection column. Runtime and
+   codegen tests, `xtask check-json`, and `xtask check-conformance` were green.
+
+   The focused retained triad rejected the shape decisively. `track1_generated`
+   measured twitter 6156 Mbps, citm_catalog 8344 Mbps, and canada 7139 Mbps,
+   versus the current RESULTS baseline of 12398 / 21110 / 17321 Mbps. Track 2
+   stayed healthy at twitter 12171 Mbps, citm_catalog 20818 Mbps, and canada
+   17184 Mbps, so the regression is not a substrate-wide correctness or bench
+   problem; it is the parser-local cursor cost. The cursor still performs a
+   second structural scan while the recursive-descent parser continues to read
+   the same source for strings, numbers, literals, and whitespace validation.
+   That turns the "event cursor" into an additional parse-time scanner rather
+   than the parse substrate.
+
+   The slice was reverted before commit. The admissible H.W1 route is now
+   narrower: structural projection must be the parser's single substrate, not a
+   second scanner bolted onto source-byte recursive descent. Either the scanner
+   writes the tape/event stream and generated lowering consumes that stream
+   directly, or a `CollapsedStage` / `SinkOnly` lowering consumes live masks in
+   the same loop. A `ParserState`-owned structural cursor over source bytes is
+   non-canonical unless a future before/after row overturns this measurement.
 
 ## Sonic Closeness
 
@@ -774,10 +807,11 @@ no-allocation decoded-string consumer regressed and was rejected. The residual
 therefore remains dense typed-sink emission, fused decoded-string delivery,
 exact float/string/Unicode materialization, and event-stream consumption.
 Parse-time retained projection side tables were also measured and rejected in
-item 50, and the byte-class whitespace cursor was rejected in item 51. View
-facts must be consumed through a structural-mask typed event cursor rather than
-written as another retained column during parse or hidden behind a renamed
-whitespace skipper.
+item 50, the byte-class whitespace cursor was rejected in item 51, and the
+parser-local structural-mask cursor was rejected in item 53. View facts must be
+consumed through the single tape/event substrate rather than written as another
+retained column, hidden behind a renamed whitespace skipper, or scanned again
+through a second parser-local cursor.
 
 The largest code win already landed was removing redundant whitespace scans:
 large-corpus Track 1 improved by roughly 26-34% when that change first landed.
@@ -1042,7 +1076,8 @@ perturbation.
 1. Keep the rejected-route ledger intact: structural-index typed parser prepass,
    NEON no-escape string matcher, separator elision, generic SWAR whitespace,
    12-byte/width churn, dispatch-table/function-pointer alternates, parse-time
-   projection side tables, and byte-class whitespace EventCursor wrappers
+   projection side tables, byte-class whitespace EventCursor wrappers, and
+   parser-local structural-mask cursors
    remain non-canonical unless a future bench row overturns them.
 2. Carry the current G/L rows into V1 planning as the parse/tape SOTA-BEAT
    block: event-stream consumption, random/key-dispatch overhead,

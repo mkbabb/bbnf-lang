@@ -47,6 +47,12 @@ partially:
   citm_catalog 10291 Mbps, and canada 14110 Mbps. H.W1 must consume the live
   structural emit mask with O(1) pending state; renaming `skip_ws` is not an
   event-cursor close.
+- A stricter parser-local structural-mask cursor was measured and rejected in
+  `skinny/REDRESS.md` item 53. It consumed the live JSON emit mask and carried
+  only O(1) pending state, but it regressed focused retained Track 1 to twitter
+  6156 Mbps, citm_catalog 8344 Mbps, and canada 7139 Mbps. H.W1 must make the
+  structural projection the single parser substrate; adding a second cursor to
+  source-byte recursive descent is not the close.
 - Wave 5 admits only consumed primitives:
   `BYTE_CLASS_FROM_EQ_SET_64`, `BYTE_CLASS_FROM_TABLE_64`,
   `BITMAP_PREFIX_XOR_64`, `BITMAP_NEXT_SET_BIT`, and `EOB_PAD_CLAMP`.

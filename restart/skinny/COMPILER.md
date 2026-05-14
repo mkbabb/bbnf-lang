@@ -328,10 +328,15 @@ fn parse_number<'i>(source: &'i [u8], offsets: &[u32],
 **Primitive 5 — Dispatch density / jump-table emission**. Each `Alt { mode: Dispatch }` lowering emits arm-density facts to encourage LLVM to emit a jump table where the target/backend shape makes that profitable. The stable-Rust shape uses ordinary `match` plus cost-model-owned density; the nightly/ASM path is reserved for admitted `CollapsedStage` NASM and does not introduce a new BIR node. The function-pointer dispatch table previously rejected at `REDRESS-17` is *not* the same primitive; that was call-site indirection (every dispatch invokes through a function pointer), while this is inlined dispatch lowering.
 
 **Primitive 6 — Owned decode materialization policy**. The hot path never
-allocates for borrowed offsets or raw strings. Owned decoded strings allocate
-only on `HAS_ESC` / `NEEDS_DECODE` paths, and decoded payload storage carries
-an explicit drop policy. There is no offset-vector `set_len(0)` SOTA primitive:
-offsets are `u32` and have no per-element destructor to bypass.
+allocates for borrowed offsets or raw strings. `SinkOnly` direct lowering now
+passes raw string spans plus `NEEDS_DECODE` to `JsonSink::*_source` hooks; the
+default hooks allocate only on `HAS_ESC` / `NEEDS_DECODE` paths, and decoded
+payload storage carries an explicit drop policy. The no-allocation decoded
+visitor route was measured and rejected; the admissible direct close is a
+fused decode+sink primitive rather than parser-side eager decode or a generic
+visitor layered on `unescape_json_string`. There is no offset-vector
+`set_len(0)` SOTA primitive: offsets are `u32` and have no per-element
+destructor to bypass.
 
 **Audit invariants** (apply when `backend_shape ∈ {OffsetTape, EventTape, SinkOnly, CollapsedStage}`; `EagerTape` is exempt because it retains the source-byte cursor by design):
 - No `skip_ws` call site survives in generated `parse_*` bodies.
@@ -790,7 +795,7 @@ Authority: `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md` §2.3.
 
 | V1 crate | Skinny status | Per-skip impact on SOTA measurement |
 |---|---|---|
-| `cost-model` | **Stubbed in the current runnable skinny.** The skinny treats every BIR construction as constant-cost. No `CostFacts`, no `CostDecision`, no scalar score, no Pareto frontier. | The expanded corpus refutes the prior "cost-model is not a recovery lever" reading. `skinny/RESULTS.md` is overall `N-direct / NoGo`: retained parse has 13 G rows plus one Canada L row, while direct-to-struct correctness is green but only `numbers` passes the direct slack. SOTA-BEAT therefore requires a grammar-neutral cost model over materialization plan (`OffsetTape` / `EventTape` / `SinkOnly` / `CollapsedStage`), hot-rule inline selection, byte-class primitive choice, true generated direct-sink emission, structural-scan floor restoration, and exact float/string/Unicode materialization. Lens L verdict: **MASKING until those choices are measured as alternatives, not constants**. |
+| `cost-model` | **Stubbed in the current runnable skinny.** The skinny treats every BIR construction as constant-cost. No `CostFacts`, no `CostDecision`, no scalar score, no Pareto frontier. | The expanded corpus refutes the prior "cost-model is not a recovery lever" reading. `skinny/RESULTS.md` is overall `N-direct / NoGo`: retained parse has 13 G rows plus one Canada L row, while direct-to-struct correctness is green but only `numbers` passes the direct slack. SOTA-BEAT therefore requires a grammar-neutral cost model over materialization plan (`OffsetTape` / `EventTape` / `SinkOnly` / `CollapsedStage`), hot-rule inline selection, byte-class primitive choice, generated source-hook SinkOnly emission, structural-scan floor restoration, and fused exact float/string/Unicode materialization. Lens L verdict: **MASKING until those choices are measured as alternatives, not constants**. |
 | `egraph` | **Stubbed.** No e-class, no rewrite, no saturation, no fixpoint. ARCH §10.1 `legality-rewrites` and `normalization-rewrites` (LOAD-BEARING for V1 correctness) are inlined as pre-extraction passes in `passes::normalize`; `cost-driven-rewrites` is omitted from the runnable skinny. | JSON's grammar can be extracted without rewrite search, but SOTA-BEAT cannot claim the omitted rewrite/cost axis is orthogonal. The refined skinny keeps e-graph saturation out of the prototype, but BENCH must carry explicit plan probes for materialization mode, dispatch form, primitive kernel, and capacity strategy before the cut can be FAITHFUL. |
 | `csp-solver` | **Stubbed.** No constraint store, no propagation, no improvement, no Implication discharge. | None for JSON. Every CSP axis has zero choice on JSON (§4.2). |
 | `vm` | **Stubbed.** No interpreter, no replay, no debug trace. | None for SOTA. VM is a debug/test artefact. The skinny does not have the `vm::replay` golden gate. |

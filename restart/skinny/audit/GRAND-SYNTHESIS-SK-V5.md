@@ -318,9 +318,11 @@ under-resolved:
 3. **The "Track 1 SinkOnly mandate" now has lowerer authority.**
    SK-V5 now has the codegen substrate path, Track 1 calls generated runtime
    code, and direct source is emitted from a BIR-derived `SinkOnlyProgram`.
-   The remaining work is not a new directive or BIR variant; it is closing the
-   measured runtime rows through decoded-string delivery, exact
-   materialization, event-stream consumption, and structural floor repair.
+   Generated direct source also preserves raw string spans to the sink boundary
+   through `JsonSink::*_source` hooks. The remaining work is not a new
+   directive or BIR variant; it is closing the measured runtime rows through a
+   fused decoded-string sink primitive, exact materialization, event-stream
+   consumption, and structural floor repair.
 
 4. **Strictness disclosure is Wave 0, not Wave 5.** SK-V4 §7 declares
    "strictness plane named per row" as a Wave 5 requirement. B3 showed
@@ -357,8 +359,10 @@ diagnosis and the verified novelty pattern. The path is:
   early-exit; `utf8_block.rs` module with Lemire 64-byte validator and
   Hoehrmann DFA reference; `unescape_uxxxx_x4_neon` 4-quartet batched
   body + NEON surrogate-pair join. Post-assay correction: this removed
-  duplicate UTF-8 validation and lifted affected rows, but parse-G and
-  direct string/Unicode gates remain open.
+  duplicate UTF-8 validation and lifted affected rows; generated string source
+  hooks are admitted, while the attempted no-allocation decoded visitor route
+  is rejected by measurement. Parse-G and direct string/Unicode gates remain
+  open.
 - **Wave 4** (Lock 14 remediation): split `bbnf-simd/src/lib.rs`
   god-module into per-primitive grammar-neutral modules; remove the 7
   hardcoded JSON punctuation char-lists from the 4 scalar-reference

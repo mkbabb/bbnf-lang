@@ -656,6 +656,36 @@ Lazy tape materialization is now reported per corpus:
    invalid `n/a` rows and was discarded; no new performance measurement is
    claimed by this codegen-authority redress.
 
+49. SK-V5 direct string-source redress: generated source hooks are ADMITTED,
+    but the no-allocation decoded visitor route is REJECTED.
+
+   Generated `parse_direct` now carries `ParsedString { raw, needs_unescape }`
+   to `JsonSink::{key_source,string_source,array_string_source,
+   object_string_source}` instead of unescaping inside the parser before the
+   sink call. The default source hooks preserve the old behavior by allocating
+   only when `needs_unescape`, so the architecture now has a grammar-neutral
+   receiver for future decoded-at-sink materialization without adding a BIR
+   variant or directive. `xtask check-json`, `xtask check-conformance`, and the
+   targeted `runtime`, `bbnf-bench`, `parse-that-regex`, and `codegen` tests
+   pass under `CARGO_TARGET_DIR=/tmp/skv5-string-target`.
+
+   The attempted no-allocation decoded-string visitor was measured and
+   rejected before commit. It added a chunk/char visitor over
+   `parse-that-regex::unescape_json_string`, batched four `\uXXXX` escapes
+   into one decoded byte chunk, and wired `JsonDigestSink` plus hand Track 2 to
+   hash decoded source without building a `String`. Correctness was green, but
+   focused Criterion rows regressed versus the prior direct baseline:
+   `unicode_escapes` landed around 4105 / 4085 / 14352 Mbps for Track 1 /
+   Track 2 / sonic-rs and `unicode_mixed` around 3578 / 3553 / 11004 Mbps.
+   After reverting that active no-allocation consumer and keeping only the
+   generated source-hook seam, the filtered rows returned to baseline:
+   `unicode_escapes` 5031 / 5016 / 14525 Mbps, `unicode_mixed` 4165 / 4077 /
+   11021 Mbps, `unicode_basic` 5523 / 5181 / 9688 Mbps, and
+   `y_string_unicode` 4483 / 4473 / 9027 Mbps. The redress conclusion is
+   narrow: source hooks are the right substrate seam, but decoded direct
+   delivery must be a fused parse-that sink primitive rather than a generic
+   visitor layered on top of the existing unescape path.
+
 ## Sonic Closeness
 
 The parser works as the tape/direct hybrid the spec requires, but the current
@@ -671,9 +701,11 @@ Direct-to-struct remains explicitly classified after the generated SinkOnly
 rewrite. The workload now proves generated typed sink correctness, not merely
 view projection or a bench-private parser. It moved the attribution to the
 right symbol paths but did not close the SOTA gap: the latest full run reports
-only one direct row (`numbers`) within the 1.10 sonic-rs time slack. The
-residual remains dense typed-sink emission, decoded-string delivery, exact
-float/string/Unicode materialization, and event-stream consumption.
+only one direct row (`numbers`) within the 1.10 sonic-rs time slack. Generated
+source hooks now preserve raw string spans to the sink boundary, but the first
+no-allocation decoded-string consumer regressed and was rejected. The residual
+therefore remains dense typed-sink emission, fused decoded-string delivery,
+exact float/string/Unicode materialization, and event-stream consumption.
 
 The largest code win already landed was removing redundant whitespace scans:
 large-corpus Track 1 improved by roughly 26-34% when that change first landed.

@@ -362,6 +362,10 @@ pub trait JsonSink {
     fn end_array(&mut self);
     fn key(&mut self, s: &str);
     fn string(&mut self, s: &str);
+    fn key_source(&mut self, raw: &str, needs_unescape: bool) -> Result<(), RegexError>;
+    fn string_source(&mut self, raw: &str, needs_unescape: bool) -> Result<(), RegexError>;
+    fn array_string_source(&mut self, raw: &str, needs_unescape: bool) -> Result<(), RegexError>;
+    fn object_string_source(&mut self, raw: &str, needs_unescape: bool) -> Result<(), RegexError>;
     fn i64(&mut self, n: i64);
     fn f64(&mut self, n: f64);
     fn bool(&mut self, b: bool);
@@ -371,6 +375,13 @@ pub trait JsonSink {
 
 Generated `parse_direct_digest` consumes a `JsonSinkDigest: JsonSink`
 that produces the digest hash used by the bench.
+Post-redress update: generated direct source now passes raw string spans plus
+`needs_unescape` into the `*_source` hooks. The default hooks preserve the
+previous allocation behavior, so this is a neutral substrate seam rather than a
+throughput claim. A no-allocation decoded-string visitor consumer was measured
+and rejected in `skinny/REDRESS.md` item 49; the next admissible close is a
+fused decode+sink primitive, not a generic visitor layered on
+`unescape_json_string`.
 
 ### 4.6 Bench rewire + bench-private nuke
 
@@ -736,8 +747,10 @@ The wave order prioritises measurable corpus moves:
 - Wave 2 lands the number lever and removes the bench-private dishonesty;
   current measurements close `numbers` but leave Canada/mesh/marine direct
   residuals.
-- Wave 3 removes duplicate UTF-8 validation and lifts string-bound rows, but
-  does not close the parse-G or direct Unicode/string gates.
+- Wave 3 removes duplicate UTF-8 validation and lifts string-bound rows;
+  generated source hooks are admitted, while a no-allocation decoded-string
+  visitor consumer is rejected by measurement. It does not close the parse-G
+  or direct Unicode/string gates.
 - Wave 4 nukes the Lock 14 / Lock 1 residue so generic crates pass
   audit (no JSON code in `bbnf-simd` / `parse-that-regex` /
   `codegen/lower`).

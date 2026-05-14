@@ -418,6 +418,10 @@ timed region; it runs once per fixture during harness setup and then a
 coarse-grained sample (1-in-100 iterations) inside the timed region for drift
 detection. A parity failure is a hard FAIL — bench rows do not publish. This
 is the safety net against "Track 1 is fast because it elides correctness."
+For direct-to-struct rows, the oracle also records whether generated Track 1
+string outputs crossed the `JsonSink::*_source` hooks. A direct string route
+that eagerly decodes inside the parser, writes the payload arena, or bypasses
+the source hook is a schema failure even if the digest matches.
 
 Parity oracle pseudocode (lives at `crates/bbnf-bench/src/parity.rs`):
 

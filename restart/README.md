@@ -311,6 +311,12 @@ struct JsonValue<'i> {
 
 Materialisation: `value.as_str()` indexes `tape.tokens[idx]` for kind/span, returns a borrowed source slice when the token is unescaped, or projects a normalized string from the payload arena when escaping requires it. Kind/span projection is constant-time. Scalar methods such as `as_i64()` are either parsed-scalar payload reads or digit-linear lazy parses, as declared by `TapeShape`. Object/array iteration walks `tape.tokens[idx..]` until the traversal policy's matching close.
 
+Direct-to-struct sinks receive the same source-span authority. String-like
+fields lower to source hooks carrying `(raw, needs_decode)`; defaults share
+the retained lazy decode policy, while SOTA sinks may consume a fused
+decode+sink primitive once measured. Parser-side eager decode and parallel
+string payload trees are not part of the substrate.
+
 Slice-borrow integration: `&'i str` source borrow is the primary lifetime; tape borrows from the same `'i`. Bumpalo opt-in via `parse_in(input, &bump)` returns `JsonValue<'arena, 'i>` where `'arena: 'i`. Owned escape via `parse_owned(input)` deep-copies tape + source.
 
 PASS-3 and the BIR fold specify the user-visible tape semantics, then route exact token byte layout, payload arena classes, sibling-skip/end-pointer choice, typed-value borrow fields, and materialisation-cost classes into Tranche B/F implementation gates. Every rule has a `TapeShape` and `ValueShape`: `TapeShape` owns token kind, span class, payload class, and traversal skip policy; `ValueShape` owns generated field/enum projection over the same node id. Any scalar cache must be declared by one of those shapes.

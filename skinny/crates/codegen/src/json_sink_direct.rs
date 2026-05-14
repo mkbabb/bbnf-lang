@@ -132,8 +132,11 @@ use super::sink::JsonSink;
 use parse_that_regex::number::{
     materialize_f64, materialize_i64, materialize_u64, match_number_span_from_first, NumberSpan,
 };
-use parse_that_regex::unescape_json_string;
-use std::borrow::Cow;
+
+struct ParsedString<'i> {
+    raw: &'i str,
+    needs_unescape: bool,
+}
 
 "#,
     );
@@ -182,7 +185,8 @@ fn parse_value_direct<'i, S: JsonSink>(
         b'[' => parse_array_direct(input, bytes, cursor, sink),
         b'"' => {
             let value = parse_string_direct(input, bytes, cursor)?;
-            sink.string(value.as_ref());
+            sink.string_source(value.raw, value.needs_unescape)
+                .map_err(|err| string_error(input, err))?;
             Ok(())
         }
         b'-' | b'0'..=b'9' => parse_number_direct(input, bytes, cursor, sink, byte),
@@ -221,7 +225,8 @@ fn parse_object_value_at_direct<'i, S: JsonSink>(
         b'[' => parse_array_direct(input, bytes, cursor, sink),
         b'"' => {
             let value = parse_string_direct(input, bytes, cursor)?;
-            sink.object_string(value.as_ref());
+            sink.object_string_source(value.raw, value.needs_unescape)
+                .map_err(|err| string_error(input, err))?;
             Ok(())
         }
         b'-' | b'0'..=b'9' => parse_number_object_direct(input, bytes, cursor, sink, byte),
@@ -260,7 +265,8 @@ fn parse_array_element_at_direct<'i, S: JsonSink>(
         b'[' => parse_array_direct(input, bytes, cursor, sink),
         b'"' => {
             let value = parse_string_direct(input, bytes, cursor)?;
-            sink.array_string(value.as_ref());
+            sink.array_string_source(value.raw, value.needs_unescape)
+                .map_err(|err| string_error(input, err))?;
             Ok(())
         }
         b'-' | b'0'..=b'9' => parse_number_array_direct(input, bytes, cursor, sink, byte),
@@ -306,7 +312,8 @@ fn parse_object_direct<'i, S: JsonSink>(
     }
     loop {
         let key = parse_string_direct(input, bytes, cursor)?;
-        sink.key(key.as_ref());
+        sink.key_source(key.raw, key.needs_unescape)
+            .map_err(|err| string_error(input, err))?;
         *cursor = skip_json_whitespace(bytes, *cursor);
         consume_direct(input, bytes, cursor, b':', ParseErrorKind::ExpectedColon)?;
         *cursor = skip_json_whitespace(bytes, *cursor);
@@ -362,7 +369,7 @@ fn parse_string_direct<'i>(
     input: &'i str,
     bytes: &'i [u8],
     cursor: &mut usize,
-) -> Result<Cow<'i, str>, ParseError<'i>> {
+) -> Result<ParsedString<'i>, ParseError<'i>> {
     let span =
         parse_that_regex::match_json_string_at_quote_trusted_utf8(bytes, *cursor).map_err(|err| {
             ParseError {
@@ -376,15 +383,10 @@ fn parse_string_direct<'i>(
         })?;
     let raw = unsafe { std::str::from_utf8_unchecked(&bytes[span.content_start..span.content_end]) };
     *cursor = span.raw_end;
-    if span.needs_unescape {
-        unescape_json_string(raw).map_err(|err| ParseError {
-            input,
-            offset: err.offset,
-            kind: ParseErrorKind::InvalidString,
-        })
-    } else {
-        Ok(Cow::Borrowed(raw))
-    }
+    Ok(ParsedString {
+        raw,
+        needs_unescape: span.needs_unescape,
+    })
 }
 
 "#,
@@ -537,6 +539,14 @@ fn direct_error<'i>(input: &'i str, offset: usize, kind: ParseErrorKind) -> Pars
         input,
         offset,
         kind,
+    }
+}
+
+fn string_error<'i>(input: &'i str, err: parse_that_regex::RegexError) -> ParseError<'i> {
+    ParseError {
+        input,
+        offset: err.offset,
+        kind: ParseErrorKind::InvalidString,
     }
 }
 "#,

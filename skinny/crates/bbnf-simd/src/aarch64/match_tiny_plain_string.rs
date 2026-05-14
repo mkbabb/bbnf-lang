@@ -8,12 +8,12 @@
 //!   * dav1d/checkasm convention: 16-byte vector primitives keep one
 //!     candidate buffer and one reference buffer bit-identical; we keep the
 //!     same shape so checkasm_parity.rs can sweep alignments cleanly.
-//!   * Lemire + Mula, "Faster JSON parsing on commodity processors" (2019):
+//!   * Lemire + Mula, "Faster parsing on commodity processors" (2019):
 //!     `vqtbl4q_u8` over a 64-entry low-6-bit table replaces a chain of
 //!     `vceqq_u8` membership checks (one fused TBL replaces 4–8 compares).
 //!   * Validark/Sneller "TBL-based ASCII class probes" prior art: reuse the
-//!     low-6-bit shape because every JSON structural byte is <= 0x7F and the
-//!     ASCII class table fits in four uint8x16_t registers.
+//!     low-6-bit shape for small ASCII alphabets that fit in four
+//!     uint8x16_t registers.
 //!
 //! Replaces in asmjson:
 //!   * The `cmp_eq_byte_x8` ladder used by the SK-V2 monolithic scanner to
@@ -95,32 +95,6 @@ pub unsafe fn match_tiny_plain_string_neon(
     (mask, first)
 }
 
-/// JSON string-special classifier over 16 bytes.
-///
-/// Returns a bit for each lane containing `"` or `\` or a control byte
-/// `< 0x20`. This is the direct hot-path primitive used by generated JSON
-/// tiny-string recognizers; the TBL membership kernel above remains the
-/// grammar-generic byte-class primitive.
-///
-/// # Safety
-///
-/// `haystack` must point to 16 readable bytes.
-#[cfg(target_arch = "aarch64")]
-#[inline]
-pub unsafe fn match_json_string_specials_neon(haystack: *const u8) -> (u16, Option<u8>) {
-    let chunk = unsafe { vld1q_u8(haystack) };
-    let quote = unsafe { vceqq_u8(chunk, vdupq_n_u8(b'"')) };
-    let slash = unsafe { vceqq_u8(chunk, vdupq_n_u8(b'\\')) };
-    let control = unsafe { vcltq_u8(chunk, vdupq_n_u8(0x20)) };
-    let mask = unsafe { movemask_u8x16(vorrq_u8(vorrq_u8(quote, slash), control)) };
-    let first = if mask == 0 {
-        None
-    } else {
-        Some(mask.trailing_zeros() as u8)
-    };
-    (mask, first)
-}
-
 #[cfg(target_arch = "aarch64")]
 #[inline(always)]
 unsafe fn movemask_u8x16(value: uint8x16_t) -> u16 {
@@ -152,7 +126,7 @@ unsafe fn movemask_u8x16(value: uint8x16_t) -> u16 {
 /// table slot is set to the original byte.  A subsequent `vqtbl4q_u8` followed
 /// by `vceqq_u8(class, chunk)` returns a non-zero lane exactly where the input
 /// byte is an alphabet member (the table acts as a perfect-hash within the
-/// 6-bit residue class, mirroring `classify_tbl4::json_ascii_table`).
+/// 6-bit residue class.
 pub fn build_class_table_lo6(alphabet: &[u8]) -> [u8; 64] {
     let mut table = [0u8; 64];
     for &byte in alphabet {

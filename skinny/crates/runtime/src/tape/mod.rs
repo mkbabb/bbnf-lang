@@ -4,8 +4,6 @@ mod offsets;
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use bbnf_simd::{scan_json_parse_index, scan_json_structurals, JsonParseIndex, StructuralIndex};
-
 pub use assembler::{CapacityPlan, TapeBuilder};
 pub use offsets::OffsetTapeStats;
 
@@ -225,14 +223,6 @@ pub trait DocumentView<'a> {
     fn root_value(&'a self) -> Self::Root;
     fn tape_id(&self) -> TapeId;
     fn source(&'a self) -> &'a [u8];
-}
-
-pub fn scan_structurals(source: &[u8]) -> StructuralIndex {
-    scan_json_structurals(source)
-}
-
-pub fn scan_parse_index(source: &[u8]) -> JsonParseIndex {
-    scan_json_parse_index(source)
 }
 
 pub(crate) fn checked_u32(value: usize) -> u32 {

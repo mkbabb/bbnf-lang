@@ -4,7 +4,7 @@ use parse_that_regex::{
 };
 use runtime::{
     grammars::json::{JsonRoot, ParseError, ParseErrorKind},
-    tape::{OffsetFlags, TapeBuilder},
+    tape::{CapacityPlan, OffsetFlags, TapeBuilder},
 };
 
 pub fn parse<'i>(input: &'i str) -> Result<JsonRoot<'i>, ParseError<'i>> {
@@ -21,7 +21,10 @@ struct Parser<'i> {
 impl<'i> Parser<'i> {
     #[inline(always)]
     fn new(input: &'i str) -> Self {
-        let capacity = TapeBuilder::json_structural_capacity(input.as_bytes());
+        let capacity = runtime::grammars::json::scan::structural_capacity_for(
+            CapacityPlan::from_env(),
+            input.as_bytes(),
+        );
         Self {
             input,
             bytes: input.as_bytes(),
@@ -100,13 +103,15 @@ impl<'i> Parser<'i> {
             self.cursor = raw_end;
         } else {
             let span =
-                match_json_string_at_quote_trusted_utf8(self.bytes, start).map_err(|error| ParseError {
-                    input: self.input,
-                    offset: error.offset,
-                    kind: match error.kind {
-                        RegexErrorKind::ExpectedString => ParseErrorKind::ExpectedValue,
-                        _ => ParseErrorKind::InvalidString,
-                    },
+                match_json_string_at_quote_trusted_utf8(self.bytes, start).map_err(|error| {
+                    ParseError {
+                        input: self.input,
+                        offset: error.offset,
+                        kind: match error.kind {
+                            RegexErrorKind::ExpectedString => ParseErrorKind::ExpectedValue,
+                            _ => ParseErrorKind::InvalidString,
+                        },
+                    }
                 })?;
             if span.needs_unescape {
                 self.tape
@@ -159,13 +164,15 @@ impl<'i> Parser<'i> {
             self.cursor = raw_end;
             return Ok(());
         }
-        let span = match_json_string_at_quote_trusted_utf8(self.bytes, start).map_err(|error| ParseError {
-            input: self.input,
-            offset: error.offset,
-            kind: match error.kind {
-                RegexErrorKind::ExpectedString => ParseErrorKind::ExpectedValue,
-                _ => ParseErrorKind::InvalidString,
-            },
+        let span = match_json_string_at_quote_trusted_utf8(self.bytes, start).map_err(|error| {
+            ParseError {
+                input: self.input,
+                offset: error.offset,
+                kind: match error.kind {
+                    RegexErrorKind::ExpectedString => ParseErrorKind::ExpectedValue,
+                    _ => ParseErrorKind::InvalidString,
+                },
+            }
         })?;
         if span.needs_unescape {
             self.tape

@@ -9,7 +9,7 @@
 //!     forward; expressing it as a k-mask shift saves a memory round-trip.
 //!
 //! Replaces in asmjson:
-//!   * The `bs_carry` boolean in `lib.rs::neon::scan_json`; this path encodes
+//!   * The `bs_carry` boolean in the structural scanner; this path encodes
 //!     the same carry in a k-mask LSB and threads it via `kshiftlq::<1>`.
 
 #![allow(clippy::missing_safety_doc)]

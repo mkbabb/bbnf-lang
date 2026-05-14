@@ -25,7 +25,9 @@ use std::collections::HashMap;
 use std::sync::OnceLock;
 use std::time::Instant;
 
-use bbnf_simd::{scan_json_structurals, scan_scalar, JSON_STRUCTURAL};
+use bbnf_simd::{scan_dispatch, scan_scalar, StructuralAlphabet};
+
+const CHECKASM_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_bytes(b"{}[],:\"");
 
 #[cfg(target_arch = "aarch64")]
 mod sk_v3_primitives {
@@ -112,7 +114,7 @@ fn strict_enabled() -> bool {
 /// Wraps the candidate kernel; when injection is enabled the first emitted
 /// position is shifted by 1, which the harness must flag.
 fn classify_candidate(input: &[u8]) -> Vec<u32> {
-    let mut positions = scan_json_structurals(input).into_positions();
+    let mut positions = scan_dispatch(input, &CHECKASM_ALPHABET).into_positions();
     if injection_enabled() {
         if let Some(first) = positions.first_mut() {
             *first = first.saturating_add(1);
@@ -122,7 +124,7 @@ fn classify_candidate(input: &[u8]) -> Vec<u32> {
 }
 
 fn classify_reference(input: &[u8]) -> Vec<u32> {
-    scan_scalar(input, &JSON_STRUCTURAL).into_positions()
+    scan_scalar(input, &CHECKASM_ALPHABET).into_positions()
 }
 
 // -----------------------------------------------------------------------------
@@ -456,8 +458,10 @@ fn sk_v3_scalar_anchors_compile() {
     );
 
     // x86_64 AVX-2 fallback scalar references (compile-checked on every host).
+    const STRUCTURAL_SET: &[u8] = b"{}[],:\"";
     let block32: [u8; 32] = *b"{\"a\":1,\"b\":2,\"c\":3,\"d\":4,\"e\":555";
-    let avx2_mask = bbnf_simd::x86_64::avx2::classify::classify_block_scalar(&block32);
+    let avx2_mask =
+        bbnf_simd::x86_64::avx2::classify::classify_block_scalar(&block32, STRUCTURAL_SET);
     // Block content: `{"a":1,"b":2,"c":3,"d":4,"e":555` — 1 brace + 10 quotes
     // + 5 colons + 4 commas = 20 structural bytes.
     assert_eq!(avx2_mask.count_ones(), 20);
@@ -475,12 +479,21 @@ fn sk_v3_scalar_anchors_compile() {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     ];
-    let vbmi2_mask = bbnf_simd::x86_64::avx512_vbmi2::classify::classify_block_scalar(&block64);
-    let gfni_mask =
-        bbnf_simd::x86_64::avx512_gfni::classify_affine::classify_block_scalar(&block64);
+    let vbmi2_mask =
+        bbnf_simd::x86_64::avx512_vbmi2::classify::classify_block_scalar(&block64, STRUCTURAL_SET);
+    let gfni_mask = bbnf_simd::x86_64::avx512_gfni::classify_affine::classify_block_scalar(
+        &block64,
+        STRUCTURAL_SET,
+    );
     assert_eq!(vbmi2_mask, gfni_mask);
 
-    let bitalg = bbnf_simd::x86_64::avx512_bitalg::multiclass::classify_full_scalar(&block64);
+    let bitalg = bbnf_simd::x86_64::avx512_bitalg::multiclass::classify_full_scalar(
+        &block64,
+        STRUCTURAL_SET,
+        b'"',
+        b'\\',
+        0x20,
+    );
     assert_eq!(bitalg.structural_mask, vbmi2_mask);
 
     let fused = bbnf_simd::x86_64::avx512_vbmi2::mask_fuse::fuse_emit_scalar(0xFF, 0x0F, 0xF0);
@@ -604,52 +617,6 @@ fn sk_v3_intrinsic_parity_aarch64() {
                         "tiny-string parity failed alphabet={alphabet:?} len={len} align={align} haystack={haystack:?}"
                     );
                 }
-            }
-        }
-
-        const JSON_TINY_CASES: &[&[u8]] = &[
-            br#""short""#,
-            br#""sixteen_bytes!!""#,
-            br#""unterminated plain body"#,
-            b"\"has\\escape\"",
-            b"\"has\x1fcontrol\"",
-            b"\"123456789012345\"",
-            b"\"1234567890123456\"",
-        ];
-        for case in JSON_TINY_CASES {
-            for align in 0..ALIGNMENTS {
-                let mut backing = vec![0xCCu8; align + case.len() + 16];
-                backing[align..align + case.len()].copy_from_slice(case);
-                let input = &backing[align..align + case.len()];
-                let expected = bbnf_simd::match_json_tiny_plain_string_scalar(input, 0);
-                let actual = bbnf_simd::match_json_tiny_plain_string(input, 0);
-                assert_eq!(
-                    actual, expected,
-                    "json tiny-string parity failed align={align} case={case:?}"
-                );
-
-                let mut expected_mask = 0u16;
-                for lane in 0..16 {
-                    let byte = backing[align + 1 + lane];
-                    if byte == b'"' || byte == b'\\' || byte < 0x20 {
-                        expected_mask |= 1u16 << lane;
-                    }
-                }
-                let expected_first = if expected_mask == 0 {
-                    None
-                } else {
-                    Some(expected_mask.trailing_zeros() as u8)
-                };
-                let actual_specials = unsafe {
-                    sk_v3_primitives::match_tiny_plain_string::match_json_string_specials_neon(
-                        backing.as_ptr().add(align + 1),
-                    )
-                };
-                assert_eq!(
-                    actual_specials,
-                    (expected_mask, expected_first),
-                    "json special NEON parity failed align={align} case={case:?}"
-                );
             }
         }
 

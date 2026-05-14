@@ -1,30 +1,16 @@
 use ir::{BackendExpr, BackendIr, BackendRule};
 
-const JSON_SINK_SHAPES: [&str; 7] = [
-    "JsonObject",
-    "JsonArray",
-    "JsonPair",
-    "JsonString",
-    "JsonNumber",
-    "JsonBool",
-    "JsonNull",
-];
-
 pub fn lower_rule(rule: &BackendRule) -> String {
     format!("rule {} -> sink_only", rule.name)
 }
 
-pub fn lower_json_direct_sink(backend: &BackendIr) -> Option<String> {
-    if JSON_SINK_SHAPES.iter().all(|shape| {
+pub fn direct_builds_all(backend: &BackendIr, required_shapes: &[&str]) -> bool {
+    required_shapes.iter().all(|shape| {
         backend
             .rules
             .iter()
             .any(|rule| direct_builds(&rule.expr, shape))
-    }) {
-        Some(include_str!("../json_templates/sink_direct.rs").to_string())
-    } else {
-        None
-    }
+    })
 }
 
 fn direct_builds(expr: &BackendExpr, shape: &str) -> bool {

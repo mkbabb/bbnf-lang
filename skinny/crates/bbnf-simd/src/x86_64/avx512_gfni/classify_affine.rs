@@ -3,10 +3,9 @@
 //! Citations:
 //!   * Lock 16 (SOTA-BEAT-DESIGN, Wave 1 Agent 3 finding): `vgf2p8affineqb`
 //!     computes `result[i] = matrix * input[i] + bias` over GF(2) per-byte
-//!     in 1 µop, 3-cycle latency on Ice Lake-SP+.  For the JSON structural
-//!     classifier, the matrix is the 8×8 boolean tabulation of "is this byte
-//!     in `{ } [ ] , : "`" — a single instruction replaces the 6-instruction
-//!     `vpcmpeqb` chain.
+//!     in 1 µop, 3-cycle latency on Ice Lake-SP+.  For byte-class membership,
+//!     the matrix is the 8×8 boolean tabulation of the emitted alphabet — a
+//!     single instruction replaces a multi-compare fan-in.
 //!   * Intel ISA Reference, VGF2P8AFFINEQB: bit-matrix-multiply + XOR over
 //!     GF(2); the "imm8" operand provides the additive bias byte.
 //!   * Pohrt "GFNI for boolean classification" tutorial (2021): demonstrates
@@ -25,26 +24,23 @@
 
 /// Scalar reference — bit-identical to `avx512_vbmi2::classify::classify_block_scalar`.
 #[inline]
-pub fn classify_block_scalar(block: &[u8; 64]) -> u64 {
+pub fn classify_block_scalar(block: &[u8; 64], alphabet: &[u8]) -> u64 {
     let mut mask = 0u64;
     for index in 0..64 {
-        if matches!(
-            block[index],
-            b'{' | b'}' | b'[' | b']' | b',' | b':' | b'"'
-        ) {
+        if alphabet.contains(&block[index]) {
             mask |= 1u64 << index;
         }
     }
     mask
 }
 
-/// 8×8 GF(2) affine matrix that selects the JSON structural class.
+/// 8×8 GF(2) affine matrix descriptor for the emitted structural class.
 ///
 /// Constructed offline: the i-th row encodes the boolean function "bit i of
 /// the output is the XOR-sum of these input bits".  See the SK-V3 GFNI
 /// build-table generator (Wave 6 supplementary tool) for the derivation.
-pub const JSON_STRUCTURAL_AFFINE_MATRIX: u64 = 0;
-pub const JSON_STRUCTURAL_AFFINE_BIAS: u8 = 0;
+pub const STRUCTURAL_AFFINE_MATRIX: u64 = 0;
+pub const STRUCTURAL_AFFINE_BIAS: u8 = 0;
 
 /// GFNI affine-classify body.
 ///

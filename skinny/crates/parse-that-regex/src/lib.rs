@@ -530,9 +530,9 @@ fn unescape_four_unicode_escapes(
         packed[index * 4..index * 4 + 4].copy_from_slice(hex);
     }
 
-    let Some(units) = (unsafe {
-        bbnf_simd::aarch64::unescape_uxxxx::unescape_uxxxx_x4_neon(&packed)
-    }) else {
+    let Some(units) =
+        (unsafe { bbnf_simd::aarch64::unescape_uxxxx::unescape_uxxxx_x4_neon(&packed) })
+    else {
         return Some(Err(RegexError {
             offset: slash,
             kind: RegexErrorKind::InvalidUnicodeEscape,
@@ -610,9 +610,7 @@ fn skip_json_string_plain(
             let special_mask = block.terminator_mask | block.escape_mask | block.control_mask;
             if special_mask != 0 {
                 let special = special_mask.trailing_zeros() as usize;
-                if mode.validates_utf8()
-                    && first_non_ascii_before(block.non_ascii_mask, special)
-                {
+                if mode.validates_utf8() && first_non_ascii_before(block.non_ascii_mask, special) {
                     flags.union(validate_utf8_prefix(input, cursor, special, mode)?);
                 }
                 return Ok(PlainStringScan {
@@ -647,8 +645,7 @@ fn skip_json_string_plain(
         let non_ascii = block & HIGH_BITS;
         if special != 0 {
             let first_special = special.trailing_zeros() as usize / 8;
-            if mode.validates_utf8() && first_non_ascii_byte_before(non_ascii, first_special)
-            {
+            if mode.validates_utf8() && first_non_ascii_byte_before(non_ascii, first_special) {
                 flags.union(validate_utf8_prefix(input, cursor, first_special, mode)?);
             }
             return Ok(PlainStringScan {
@@ -683,11 +680,13 @@ fn skip_json_string_plain_trusted(input: &[u8], mut cursor: usize) -> usize {
     #[cfg(target_arch = "aarch64")]
     unsafe {
         while cursor + 16 <= input.len() {
-            let (quote_mask, backslash_mask, control_mask) =
-                bbnf_simd::aarch64::string_block::quote_escape_control_masks(
-                    input.as_ptr().add(cursor),
-                );
-            let special_mask = quote_mask | backslash_mask | control_mask;
+            let block = bbnf_simd::aarch64::string_block::scan_string_special_block(
+                input.as_ptr().add(cursor),
+                b'"',
+                b'\\',
+                0x20,
+            );
+            let special_mask = block.terminator_mask | block.escape_mask | block.control_mask;
             if special_mask != 0 {
                 return cursor + special_mask.trailing_zeros() as usize;
             }
@@ -912,9 +911,7 @@ pub fn unescape_json_string(raw_content: &str) -> Result<Cow<'_, str>, RegexErro
                     Some(b'u') => {
                         let slash = cursor - 1;
                         #[cfg(target_arch = "aarch64")]
-                        if let Some(batch) =
-                            unescape_four_unicode_escapes(bytes, slash, &mut out)
-                        {
+                        if let Some(batch) = unescape_four_unicode_escapes(bytes, slash, &mut out) {
                             cursor = batch?;
                             segment_start = cursor;
                             continue;

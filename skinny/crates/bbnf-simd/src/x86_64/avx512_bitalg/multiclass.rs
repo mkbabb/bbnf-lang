@@ -22,19 +22,28 @@ use crate::classifier::ClassifyResult;
 
 /// Scalar reference — emits the full 4-way ClassifyResult for a 64-byte block.
 #[inline]
-pub fn classify_full_scalar(block: &[u8; 64]) -> ClassifyResult {
+pub fn classify_full_scalar(
+    block: &[u8; 64],
+    structural_alphabet: &[u8],
+    terminator: u8,
+    escape: u8,
+    control_limit: u8,
+) -> ClassifyResult {
     let mut result = ClassifyResult::default();
     for index in 0..64 {
         let bit = 1u64 << index;
         let byte = block[index];
-        if matches!(byte, b'{' | b'}' | b'[' | b']' | b',' | b':' | b'"') {
+        if structural_alphabet.contains(&byte) {
             result.structural_mask |= bit;
         }
-        match byte {
-            b'"' => result.quote_mask |= bit,
-            b'\\' => result.backslash_mask |= bit,
-            0x00..=0x1f => result.control_mask |= bit,
-            _ => {}
+        if byte == terminator {
+            result.quote_mask |= bit;
+        }
+        if byte == escape {
+            result.backslash_mask |= bit;
+        }
+        if byte < control_limit {
+            result.control_mask |= bit;
         }
     }
     result

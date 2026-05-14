@@ -21,17 +21,13 @@
 
 #![allow(clippy::missing_safety_doc)]
 
-/// Scalar reference — parity anchor.  Returns the 32-bit structural mask for a
-/// 32-byte block, where bit `i` is set iff `block[i]` is a JSON structural
-/// (one of `{ } [ ] , : "`).
+/// Scalar reference — parity anchor. Returns the 32-bit structural mask for a
+/// 32-byte block, where bit `i` is set iff `block[i]` is in `alphabet`.
 #[inline]
-pub fn classify_block_scalar(block: &[u8; 32]) -> u32 {
+pub fn classify_block_scalar(block: &[u8; 32], alphabet: &[u8]) -> u32 {
     let mut mask = 0u32;
     for index in 0..32 {
-        if matches!(
-            block[index],
-            b'{' | b'}' | b'[' | b']' | b',' | b':' | b'"'
-        ) {
+        if alphabet.contains(&block[index]) {
             mask |= 1u32 << index;
         }
     }

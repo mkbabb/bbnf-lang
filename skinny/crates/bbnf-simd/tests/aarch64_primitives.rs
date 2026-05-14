@@ -3,7 +3,7 @@
 use bbnf_simd::{ClassifyResult, SimdClassifier};
 use core::arch::aarch64::*;
 
-static JSON_ALPHABET: [u8; 64] = {
+static TEST_ALPHABET: [u8; 64] = {
     let mut alphabet = [0u8; 64];
     alphabet[0] = b'{';
     alphabet[1] = b'}';
@@ -16,7 +16,7 @@ static JSON_ALPHABET: [u8; 64] = {
 };
 
 fn scalar_classify(bytes: &[u8; 64]) -> ClassifyResult {
-    bbnf_simd::scalar::classify_chunk(bytes, &JSON_ALPHABET)
+    bbnf_simd::scalar::classify_chunk(bytes, &TEST_ALPHABET)
 }
 
 #[test]
@@ -30,7 +30,7 @@ fn movemask_extracts_compare_lanes() {
 }
 
 #[test]
-fn vqtbl_json_classifier_matches_scalar_block() {
+fn vqtbl_classifier_matches_scalar_block() {
     let mut bytes = [b'a'; 64];
     for (index, byte) in b"{\"a\":[1,2],\"b\":\"c\\\\d\"}\n"
         .iter()
@@ -41,12 +41,22 @@ fn vqtbl_json_classifier_matches_scalar_block() {
     }
     bytes[40] = 0x1f;
 
-    let neon = unsafe { bbnf_simd::aarch64::classify_tbl4::classify_json_block(bytes.as_ptr()) };
+    let table = bbnf_simd::aarch64::classify_tbl4::build_lo6_table(&TEST_ALPHABET);
+    let table = unsafe { bbnf_simd::aarch64::classify_tbl4::load_lo6_table(&table) };
+    let neon = unsafe {
+        bbnf_simd::aarch64::classify_tbl4::classify_block_from_table(
+            bytes.as_ptr(),
+            table,
+            b'"',
+            b'\\',
+            0x20,
+        )
+    };
     assert_eq!(neon, scalar_classify(&bytes));
 }
 
 #[test]
-fn selected_json_classifier_uses_neon_equivalent_masks() {
+fn selected_classifier_uses_neon_equivalent_masks() {
     let mut bytes = [b'z'; 64];
     bytes[0] = b'{';
     bytes[7] = b'"';
@@ -54,7 +64,7 @@ fn selected_json_classifier_uses_neon_equivalent_masks() {
     bytes[31] = b']';
     bytes[63] = 0x00;
 
-    let classifier = bbnf_simd::select_classifier(&JSON_ALPHABET);
+    let classifier = bbnf_simd::select_classifier(&TEST_ALPHABET);
     assert_eq!(classifier.classify_chunk(&bytes), scalar_classify(&bytes));
 }
 
@@ -111,11 +121,18 @@ fn string_block_reports_escape_and_control_masks() {
     bytes[3] = b'\\';
     bytes[9] = 0x1f;
 
-    let block = unsafe { bbnf_simd::aarch64::string_block::scan_string_block(bytes.as_ptr()) };
-    assert_eq!(block.quote_mask, 1 << 1);
-    assert_eq!(block.backslash_mask, 1 << 3);
+    let block = unsafe {
+        bbnf_simd::aarch64::string_block::scan_string_special_block(
+            bytes.as_ptr(),
+            b'"',
+            b'\\',
+            0x20,
+        )
+    };
+    assert_eq!(block.terminator_mask, 1 << 1);
+    assert_eq!(block.escape_mask, 1 << 3);
     assert_eq!(block.control_mask, 1 << 9);
-    assert!(block.has_escape);
+    assert_ne!(block.interesting_mask(), 0);
 }
 
 #[test]

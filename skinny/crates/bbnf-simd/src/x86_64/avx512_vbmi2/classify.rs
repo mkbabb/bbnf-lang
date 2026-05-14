@@ -22,13 +22,10 @@
 
 /// Scalar reference — 64-bit structural mask for a 64-byte chunk.
 #[inline]
-pub fn classify_block_scalar(block: &[u8; 64]) -> u64 {
+pub fn classify_block_scalar(block: &[u8; 64], alphabet: &[u8]) -> u64 {
     let mut mask = 0u64;
     for index in 0..64 {
-        if matches!(
-            block[index],
-            b'{' | b'}' | b'[' | b']' | b',' | b':' | b'"'
-        ) {
+        if alphabet.contains(&block[index]) {
             mask |= 1u64 << index;
         }
     }

@@ -5,6 +5,16 @@ use std::collections::BTreeMap;
 use std::path::Path;
 use thiserror::Error;
 
+const JSON_SINK_SHAPES: [&str; 7] = [
+    "JsonObject",
+    "JsonArray",
+    "JsonPair",
+    "JsonString",
+    "JsonNumber",
+    "JsonBool",
+    "JsonNull",
+];
+
 #[derive(Debug, Error)]
 pub enum CodegenError {
     #[error(transparent)]
@@ -79,7 +89,7 @@ fn emit_json_with_layout(
     backend_shape: &std::collections::HashMap<RuleId, BackendShape>,
     diagnostics: &[passes::diagnostics::PassDiagnostic],
 ) -> Result<EmittedSource, CodegenError> {
-    let lowered = lower::lower_to_rust(
+    let _lowered = lower::lower_to_rust(
         backend,
         &lower::LowerCtx {
             backend_shape,
@@ -87,10 +97,17 @@ fn emit_json_with_layout(
         },
     );
     let mut files = BTreeMap::new();
-    files.insert("generated.rs".to_string(), lowered.generated);
+    let mut generated = generated_rs();
+    if lower::sink_only::direct_builds_all(backend, &JSON_SINK_SHAPES) {
+        generated.push('\n');
+        generated.push_str(&sink_direct_rs());
+    }
+
+    files.insert("generated.rs".to_string(), generated);
     files.insert("host.rs".to_string(), host_rs());
     files.insert("mod.rs".to_string(), mod_rs());
-    files.insert("parser.rs".to_string(), lowered.parser);
+    files.insert("parser.rs".to_string(), parser_rs());
+    files.insert("scan.rs".to_string(), scan_rs());
     files.insert("value.rs".to_string(), value_rs());
     files.insert("view.rs".to_string(), view_rs());
     files.insert("visitor.rs".to_string(), visitor_rs());
@@ -109,19 +126,16 @@ fn default_backend_shape(backend: &BackendIr) -> std::collections::HashMap<RuleI
 fn mod_rs() -> String {
     normalize(
         r#"
-        #[cfg(not(feature = "eventcursor"))]
         pub mod generated;
-        #[cfg(feature = "eventcursor")]
-        pub mod generated_eventcursor;
         pub mod host;
         pub mod parser;
+        pub mod scan;
         pub mod sink;
         pub mod value;
         pub mod view;
         pub mod visitor;
 
         pub use parser::{parse, parse_bytes, RECOGNIZER_COUNT};
-        #[cfg(not(feature = "eventcursor"))]
         pub use generated::parse_direct;
         pub use sink::JsonSink;
         pub use value::{JsonNodeKind, JsonToken, JsonValue, ParseError, ParseErrorKind};
@@ -140,6 +154,22 @@ fn host_rs() -> String {
         // JSON is host-fn-free in the skinny compiler slice.
         "#,
     )
+}
+
+fn generated_rs() -> String {
+    include_str!("json_templates/generated.rs").to_string()
+}
+
+fn parser_rs() -> String {
+    include_str!("json_templates/parser.rs").to_string()
+}
+
+fn scan_rs() -> String {
+    include_str!("../../runtime/src/grammars/json/scan.rs").to_string()
+}
+
+fn sink_direct_rs() -> String {
+    include_str!("json_templates/sink_direct.rs").to_string()
 }
 
 fn view_rs() -> String {
@@ -194,6 +224,7 @@ mod tests {
                 "host.rs",
                 "mod.rs",
                 "parser.rs",
+                "scan.rs",
                 "value.rs",
                 "view.rs",
                 "visitor.rs"

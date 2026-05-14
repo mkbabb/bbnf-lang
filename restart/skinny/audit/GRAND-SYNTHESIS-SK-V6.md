@@ -579,3 +579,95 @@ without a new local fact. Then either test the low-ceiling Candidate 6 object
 carry or move to Candidate 7 direct field-layout materialization under the
 SK-V6 shortlist-exhausted clause; Candidate 7 is the higher-impact path for
 the remaining direct N-direct matrix.
+
+## 10. Wave 1d Revision After Direct Source-Hook Redress
+
+Candidate 7's first concrete shape has now been falsified in REDRESS 66. The
+route only removed direct source-hook receiver/closure overhead and left the
+escaped-string materialization shape intact. It moved focused direct medians by
+only +0.99% on `unicode_escapes`, +0.11% on `unicode_mixed`, +1.75% on
+`y_string_unicode`, +1.54% on `distinct_values`, and -0.01% on `gsoc-2018`.
+That rejects direct source-hook folding as the direct close.
+
+The Wave 1d reports in `restart/skinny/audit/SK-V6-COHORT/` refine the direct
+candidate without reopening REDRESS 54, REDRESS 55, or REDRESS 66:
+
+- R1d names parser-owned decoded scratch as the next escaped-string
+  materialization route. The parser owns one reusable decoded buffer, writes
+  semantic UTF-8 into it while scanning the quoted string, and passes a normal
+  `&str` to the sink.
+- R2d supplies the focused `profile_direct` and samply gate. The candidate
+  must move escaped rows in production release binaries and expose a named
+  materializer boundary under `runtime/parse-attribution`.
+- R3d confirms the generality path: this is a DirectBuild field-fact
+  materializer, not a new BIR variant, new grammar directive, or JSON logic in
+  generic crates.
+
+### Candidate 8: Parser-Owned Decoded Scratch Direct Materializer
+
+Path:
+
+- `skinny/crates/parse-that-regex/src/lib.rs`
+- `skinny/crates/runtime/src/grammars/json/generated.rs`
+- `skinny/crates/codegen/src/json_sink_direct.rs`
+- `skinny/crates/bbnf-bench/src/direct_struct.rs` only for tests or
+  attribution, not for sink-local decoded facts
+
+Mechanism: generated direct parsing threads one reusable `String` scratch
+through the direct parse helpers. Plain strings stay borrowed. Escaped strings
+are materialized by the parser into the scratch while the quote-owned string
+path validates escapes and Unicode. The parser then calls the existing semantic
+sink methods (`key`, `string`, `array_string`, `object_string`) with
+`scratch.as_str()`. The sink continues to consume normal decoded strings and
+hash contiguous bytes using the existing digest path.
+
+This is deliberately narrower than the phrase "field-layout string
+materializer" in Candidate 7. It does not compute decoded length/hash in the
+sink, does not stream hash during quote-source scanning, and does not add
+direct source hooks.
+
+Expected row impact:
+
+- Primary: `unicode_escapes` and `unicode_mixed`, because their direct profile
+  cost is escaped-string decode/materialization.
+- Secondary: `y_string_unicode`, if dense Unicode escapes amortize the scratch
+  materializer despite small fixture size.
+- Guard: `distinct_values`, `gsoc-2018`, `unicode_basic`, `apache_builds`,
+  `github_events`, `canada`, and `numbers` must not regress, because plain
+  strings and numbers should keep their current production path.
+
+Falsifiability gate:
+
+- Correctness: `cargo test -p parse-that-regex --profile ax-iter`,
+  `cargo test -p runtime --profile ax-iter`, `cargo test -p bbnf-bench
+  --profile ax-iter`, `cargo run -p xtask --release -- check-json`, and
+  `cargo run -p xtask --release -- check-conformance`.
+- Throughput: production `profile_direct` medians against a same-tree
+  baseline must satisfy `unicode_escapes >= +20%`, `unicode_mixed >= +15%`,
+  and one of `y_string_unicode >= +8%` or escaped-string allocation count down
+  at least 90%; no target or guard row may regress by more than 5%.
+- Attribution: under `runtime/parse-attribution`, the candidate-specific
+  materializer must appear as a named symbol. On `unicode_escapes` and
+  `unicode_mixed`, combined `parse_string_direct + unescape_json_string` cost
+  must drop at least 20% relative. `unescape_json_string` should disappear or
+  become negligible for generated direct escaped strings.
+
+Reject conditions:
+
+- If the helper wraps the current matcher and then calls `unescape_json_string`
+  or equivalent full second pass, reject before benchmarking.
+- If the sink computes decoded length/hash directly from raw source, reject as
+  REDRESS 54 recurrence.
+- If the parser streams hash rather than materializing a contiguous semantic
+  string, reject as REDRESS 55 recurrence.
+- If the diff adds direct source hooks or specializes receiver folding, reject
+  as REDRESS 66 recurrence.
+
+### Wave 1d Recommendation
+
+Dispatch Candidate 8 as the next single intervention. It is the only direct
+route left that attacks escaped-string materialization itself while preserving
+the baseline's contiguous decoded-byte hash and the generated SinkOnly Track 1
+surface. If Candidate 8 fails its same-row gate, the direct string/Unicode
+close must return to research with a new local fact; no remaining Candidate 7
+sub-shape should be admitted by renaming source hooks or sink-local facts.

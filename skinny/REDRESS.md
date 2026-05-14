@@ -1,6 +1,6 @@
 # Skinny Redress: Mbps, Tape Materialization, and Spec Amendments
 
-Date: 2026-05-12.
+Date: 2026-05-12 through 2026-05-14.
 
 This note records the implemented redress after the skinny prototype was brought
 closer to the restart skinny/full contracts. The measured findings are now also
@@ -10,7 +10,7 @@ recorded in the runnable prototype surfaces under `skinny/`; the guarded
 ## Current Bench Fact
 
 The gate report is canonicalized to Mbps. The current measured authority is
-`skinny/RESULTS.md`, regenerated after the SK-V5 direct-number/context-sink
+`skinny/RESULTS.md`, regenerated after the SK-V5 direct receiver/source-shape
 redress and full Criterion run. It records **overall outcome N-direct /
 NoGo**.
 
@@ -19,17 +19,17 @@ Three blockers must stay separate:
 1. The retained parse/tape plane has 13 hard G rows across the expanded corpus.
    Track 1 and Track 2 move together on those rows, so the miss is
    substrate/runtime shape rather than generator overhead alone.
-2. `canada` parses faster than sonic-rs but reports **L / NO-GO** because the
-   checked-in full report's structural-only scanner is 22136 Mbps against the
-   40000 Mbps floor. Item 56 restores the focused Canada structural-only row
-   to about 41833 Mbps; the retained GO rows in the full report are currently
-   `mesh`, `marine_ik`, and `numbers`.
+2. `canada` parses faster than sonic-rs and no longer reports the stale
+   **L / NO-GO** structural-floor failure. Item 56 is folded into the current
+   full matrix: Canada structural-only scan reports 41495 Mbps against the
+   40000 Mbps NEON floor. The retained GO rows in the full report are
+   `canada`, `mesh`, `marine_ik`, and `numbers`.
 3. The direct-to-struct workload is correctness-green
    (exact generated Track 1 / hand Track 2 digest equality; sonic-rs and
    serde_json shape parity) and now uses generated SinkOnly for Track 1. The
-   prior bench-private SinkParser table is superseded. Only `numbers` currently
-   passes the `1.10x` sonic-rs time slack; the other 16 direct rows remain
-   N-direct blockers.
+   prior bench-private SinkParser table is superseded. `citm_catalog`, `mesh`,
+   `marine_ik`, and `numbers` currently pass the `1.10x` sonic-rs time slack;
+   the other 13 direct rows remain N-direct blockers.
 
 The earlier original-triad pass remains useful historical evidence, but it is
 not the current close condition. The full 17-fixture gate plus
@@ -38,36 +38,36 @@ explicit output-plane column beside strictness.
 
 | Corpus | Track 1 Mbps | Track 2 Mbps | sonic-rs Mbps | Track 1 / sonic | Track 2 / sonic |
 |---|---:|---:|---:|---:|---:|
-| twitter | 12398 | 12441 | 20727 | 59.8% | 60.0% |
-| citm_catalog | 21110 | 21249 | 25590 | 82.5% | 83.0% |
-| canada | 17321 | 17206 | 13777 | 125.7% | 124.9% |
-| mesh | 13582 | 13426 | 12040 | 112.8% | 111.5% |
-| random | 7965 | 8028 | 15716 | 50.7% | 51.1% |
-| marine_ik | 12794 | 12854 | 10178 | 125.7% | 126.3% |
-| numbers | 18556 | 18599 | 13581 | 136.6% | 136.9% |
-| unicode_mixed | 8578 | 8606 | 17751 | 48.3% | 48.5% |
-| unicode_escapes | 12801 | 12855 | 18946 | 67.6% | 67.9% |
-| unicode_basic | 10800 | 10890 | 15873 | 68.0% | 68.6% |
-| y_string_unicode | 6022 | 6020 | 13686 | 44.0% | 44.0% |
+| twitter | 12303 | 12308 | 21176 | 58.1% | 58.1% |
+| citm_catalog | 20775 | 20856 | 25413 | 81.8% | 82.1% |
+| canada | 17738 | 17277 | 13719 | 129.3% | 125.9% |
+| mesh | 13411 | 13278 | 11871 | 113.0% | 111.8% |
+| random | 7794 | 7763 | 15451 | 50.4% | 50.2% |
+| marine_ik | 12818 | 12803 | 9977 | 128.5% | 128.3% |
+| numbers | 18740 | 18777 | 13523 | 138.6% | 138.9% |
+| unicode_mixed | 8720 | 8623 | 15681 | 55.6% | 55.0% |
+| unicode_escapes | 12848 | 13039 | 19090 | 67.3% | 68.3% |
+| unicode_basic | 10898 | 10581 | 15753 | 69.2% | 67.2% |
+| y_string_unicode | 6084 | 6051 | 13633 | 44.6% | 44.4% |
 
-Structural scan was a current blocker for the checked-in Canada gate row: the
-full report's `canada` structural-only scan reports 22136 Mbps against a
-40000 Mbps floor. Item 56 restores the focused Canada scan row to about
-41833 Mbps, so the full report must now be refreshed rather than treating the
-scanner floor as the live diagnosis.
+Structural scan is no longer the current Canada gate blocker: the full
+report's `canada` structural-only scan reports 41495 Mbps against a
+40000 Mbps floor after item 56. The remaining retained parse misses are
+runtime/materialization and event/tape-consumption gaps, not a scanner-floor
+failure.
 
 Direct-to-struct is now the binding workload blocker:
 
 | Corpus | Track 1 direct Mbps | Track 2 direct Mbps | sonic-rs direct Mbps | Track 1 / sonic direct |
 |---|---:|---:|---:|---:|
-| twitter | 10128 | 9815 | 15678 | 64.6% |
-| citm_catalog | 16127 | 16519 | 22022 | 73.2% |
-| canada | 10316 | 10480 | 12536 | 82.3% |
-| mesh | 8777 | 8841 | 9768 | 89.9% |
-| marine_ik | 7805 | 8004 | 8846 | 88.2% |
-| numbers | 12182 | 12069 | 12748 | 95.6% |
-| unicode_mixed | 4178 | 4022 | 11143 | 37.5% |
-| unicode_escapes | 5018 | 4986 | 14746 | 34.0% |
+| twitter | 11932 | 10986 | 15614 | 76.4% |
+| citm_catalog | 21546 | 20204 | 21874 | 98.5% |
+| canada | 10529 | 10455 | 12606 | 83.5% |
+| mesh | 8942 | 9142 | 9691 | 92.3% |
+| marine_ik | 9500 | 9337 | 8809 | 107.8% |
+| numbers | 12633 | 12153 | 12583 | 100.4% |
+| unicode_mixed | 4633 | 4593 | 11117 | 41.7% |
+| unicode_escapes | 5262 | 5129 | 14427 | 36.5% |
 | unicode_basic | 5520 | 5163 | 9653 | 57.2% |
 | y_string_unicode | 4518 | 4323 | 8691 | 52.0% |
 
@@ -344,8 +344,9 @@ Lazy tape materialization is now reported per corpus:
    digest equality and sonic-rs / serde_json shape parity. This entry recorded
    the pre-Wave-2 bench-private SinkOnly table; entries 34, 40, and 46
    supersede its throughput interpretation. After generated Track 1 SinkOnly
-   landed and the direct-number/context-sink redress ran, only `numbers`
-   passes the current `1.10` time slack. The gate still appends outcome
+   landed, the direct-number/context-sink redress ran, and item 57 refreshed
+   the full matrix, `citm_catalog`, `mesh`, `marine_ik`, and `numbers` pass
+   the current `1.10` time slack. The gate still appends outcome
    `N-direct / NoGo` when either bbnf direct track is slower than
    `sonic-rs * 1.10` in time.
 
@@ -531,10 +532,11 @@ Lazy tape materialization is now reported per corpus:
    `runtime::generated_json::generated::parse_value_direct::<...JsonDigestSink>`
    for Track 1 and `<bbnf_bench::direct_struct::hand::HandParser>::value` for
    Track 2. The current full gate shows correctness PASS on all 17 direct
-   rows, but only `numbers` satisfies the `1.10x` sonic-rs time slack.
-   Representative residuals are `mesh` 8777/8841/9768 Mbps, `marine_ik`
-   7805/8004/8846 Mbps, `unicode_mixed` 4178/4022/11143 Mbps, and
-   `unicode_basic` 5520/5163/9653 Mbps for Track 1 / Track 2 / sonic-rs. The
+   rows. Item 57 refreshes this to four direct pass rows: `citm_catalog`,
+   `mesh`, `marine_ik`, and `numbers`. Representative current residuals are
+   `canada` 10529/10455/12606 Mbps, `unicode_mixed` 4633/4593/11117 Mbps,
+   `unicode_escapes` 5262/5129/14427 Mbps, and `distinct_values`
+   6212/5609/13214 Mbps for Track 1 / Track 2 / sonic-rs. The
    prior bench-private attribution and template-authority gaps are gone; the
    next close belongs to decoded-string delivery, float/materialization
    quality, event-stream consumption, and full-report incorporation of the
@@ -605,8 +607,8 @@ Lazy tape materialization is now reported per corpus:
    full `bench-json` run updates `RESULTS.md` and returns the expected NoGo
    gate status: retained parse has 13 G rows plus one Canada L row, and the
    direct workload has 16 NO-GO rows plus the `numbers` PASS row, with overall
-   **N-direct / NoGo**. Item 56 later restores the focused Canada scan floor,
-   but this Wave 3 report remains the checked-in full matrix until refreshed.
+   **N-direct / NoGo**. Items 56 and 57 later supersede this row: the current
+   full matrix clears Canada L and records four direct pass rows.
    This is a measured handoff to true codegen lowering, event-stream
    consumption, and decoded-string delivery, not a permission to reopen
    rejected Class A tiny-string wiring or eager sidecar prepasses.
@@ -862,8 +864,7 @@ Lazy tape materialization is now reported per corpus:
    sink-local decoded hash path is non-canonical unless a before/after row
    overturns items 49, 54, and 55.
 
-56. SK-V5 structural scan floor redress is ADMITTED for the focused Canada
-    microbench.
+56. SK-V5 structural scan floor redress is ADMITTED.
 
    The stale full `RESULTS.md` gate recorded Canada as L / NO-GO because the
    structural-only scan measured 22136 Mbps against the 40000 Mbps NEON floor.
@@ -891,24 +892,22 @@ Lazy tape materialization is now reported per corpus:
    SIMD at about 25672 Mbps, and Canada SIMD at about 41833 Mbps. Canada now
    clears the 40000 Mbps structural floor in the focused row.
 
-   This does not close SK-V5. The checked-in full `RESULTS.md` still awaits a
-   full `bench-json` / `gate-json` refresh, the expanded retained parse rows
-   still carry G / NoGo failures, and direct-to-struct remains
-   `N-direct / NoGo`. The admitted conclusion is exactly bounded: the Canada
-   structural-scan floor is no longer the active blocker after this slice; the
-   remaining close belongs to single-substrate event/tape consumption,
-   string/Unicode projection, and direct field-layout materialization.
+   Item 57's full `bench-json --advisory` refresh incorporates this slice:
+   Canada structural scan reports 41495 Mbps against the 40000 Mbps NEON
+   floor. The expanded retained parse rows still carry 13 G / NoGo failures,
+   and direct-to-struct remains `N-direct / NoGo`. The admitted conclusion is
+   exactly bounded: the Canada structural-scan floor is no longer the active
+   blocker after this slice; the remaining close belongs to single-substrate
+   event/tape consumption, string/Unicode projection, and direct field-layout
+   materialization.
 
 ## Sonic Closeness
 
 The parser works as the tape/direct hybrid the spec requires, but the current
 full gate is not SOTA-close enough to dispatch. The expanded corpus is now the
-authority for SOTA-BEAT: `mesh`, `marine_ik`, and `numbers` classify as
-A / GO in the checked-in full report; `canada` was faster than sonic-rs but
-classified L / NO-GO in that report because the structural-only scan missed
-the 40000 Mbps floor. Item 56 restores that floor in a focused `simd_scan`
-row at about 41833 Mbps, so the scan floor is no longer the live diagnosis
-pending full report refresh. The remaining 13 retained parse rows classify as
+authority for SOTA-BEAT: `canada`, `mesh`, `marine_ik`, and `numbers`
+classify as A / GO in the checked-in full report, and Canada structural scan
+is green at 41495 Mbps. The remaining 13 retained parse rows classify as
 G / NoGo. The common parse blocker is source/tape event consumption and
 string/Unicode projection, not codegen overhead, tape payload writes, or the
 Canada structural floor.
@@ -1123,10 +1122,9 @@ perturbation.
 - Generated `view.rs`, `value.rs`, and `visitor.rs` now own their definitions;
   `runtime::grammars::json` is the generated module alias.
 - `match_json_number` / `skip_json_whitespace` use the tightened shared scanner
-  path; Canada parse throughput improved materially. The checked-in full gate
-  still records Canada as L / NO-GO from the earlier 22136 Mbps scan row, but
-  item 56's focused redress restores the Canada structural-only scan to about
-  41833 Mbps pending a full `RESULTS.md` refresh.
+  path; Canada parse throughput improved materially. Item 56's structural
+  classifier/bulk-emit redress is now folded into the full matrix: Canada
+  structural-only scan reports 41495 Mbps against the 40000 Mbps NEON floor.
 - JSON close tokens are elided; close kinds remain reserved, and open container
   tokens carry end spans plus subtree skips.
 - The finished tape uses private-Vec semantic sealing and reports both logical
@@ -1142,8 +1140,8 @@ perturbation.
 - Lazy-offset JSON tape plus tape-union migration was implemented and measured;
   subsequent sparse-flag, spare-capacity write, SWAR, delimiter-fusion, and
   parser-split wins remain real, but the checked-in expanded parse gate has
-  13 G rows plus one stale Canada L row; item 56 restores the focused Canada
-  structural floor. The full gate remains `N-direct / NoGo`.
+  13 G rows and four A / GO retained rows (`canada`, `mesh`, `marine_ik`,
+  `numbers`). The full gate remains `N-direct / NoGo`.
 - The report now renders the actual fastest-anchor `S` comparator rather than
   only sonic-rs; conformance and SIMD parity metadata gates are executable.
 - `bbnf-simd` is now the scanner crate used by runtime and bench, with
@@ -1152,14 +1150,13 @@ perturbation.
   `skinny/RESULTS.md` for the runnable prototype, with `restart/skinny/` kept
   as spec authority.
 - Current expanded-corpus parse gate: `skinny/RESULTS.md` records A / GO rows
-  for `mesh`, `marine_ik`, and `numbers`; `canada` is stale L / NO-GO in that
-  full report due to the prior structural-scan floor miss, while item 56's
-  focused row restores the Canada scan floor; every other retained parse row
-  remains G / NoGo.
+  for `canada`, `mesh`, `marine_ik`, and `numbers`; every other retained
+  parse row remains G / NoGo.
 - Current direct-to-struct workload gate: correctness passes, Track 1 now
   calls generated `parse_direct`, Track 2 is an independent hand-coded
-  SinkOnly parser, and only `numbers` passes the sonic-rs `1.10x` time slack.
-  The overall gate reports `N-direct / NoGo`.
+  SinkOnly parser, and `citm_catalog`, `mesh`, `marine_ik`, and `numbers`
+  pass the sonic-rs `1.10x` time slack. The overall gate reports
+  `N-direct / NoGo` because 13 direct rows still miss.
 - SK-V5 Wave 3 adds mode-aware string matching, a trusted UTF-8 JSON string
   path for Rust `&str` callers, a grammar-neutral UTF-8 block parity gate, and
   batched `\uXXXX` materialization. It removes duplicate UTF-8 validation from
@@ -1203,15 +1200,15 @@ perturbation.
    projection side tables, byte-class whitespace EventCursor wrappers,
    parser-local structural-mask cursors, and sink-local decoded hash helpers
    remain non-canonical unless a future bench row overturns them.
-2. Carry the current G/L rows into V1 planning as the parse/tape SOTA-BEAT
+2. Carry the current G rows into V1 planning as the parse/tape SOTA-BEAT
    block: event-stream consumption, random/key-dispatch overhead, and
    string/Unicode projection are now implementation requirements, not optional
-   tuning. Canada structural-scan floor restoration has a focused admitted row
-   in item 56; the remaining reporting requirement is a full matrix refresh
-   that removes the stale L classification without regressing direct rows.
+   tuning. Canada structural-scan floor restoration is admitted in item 56
+   and incorporated in the full matrix; the remaining work is not scanner
+   floor refresh.
 3. Carry `N-direct / NoGo` into V1 planning as a separate typed-emission block:
    sink-only direct parsing closed much of the view-walk gap and the BIR
-   lowerer now owns the generated direct source, but the remaining 16 failing
+   lowerer now owns the generated direct source, but the remaining 13 failing
    rows require exact float, decoded string, Unicode field materialization, and
    event-stream consumption inside generated `SinkOnly`; decoded string
    materialization must beat the current allocate-then-contiguous-hash baseline
@@ -1235,9 +1232,9 @@ perturbation.
 - Post-Wave 5 scan-floor redress admits two more consumed scan primitives:
   `BULK_EMIT_POSITIONS_64`, consumed by `compact_mask`, and the table-driven
   structural+terminator classifier consumed by JSON scan's no-quote fast path.
-  The focused Canada row now clears the 40000 Mbps NEON floor at about
-  41833 Mbps. This is scan-floor credit only; it does not close `N-direct` or
-  the expanded retained parse G rows.
+  The full matrix now clears the 40000 Mbps NEON floor with Canada structural
+  scan at 41495 Mbps. This is scan-floor credit only; it does not close
+  `N-direct` or the expanded retained parse G rows.
 - The packet-level phrase "all remaining bbnf.asm primitive bodies" conflicts
   with the same-wave-consumer non-negotiable for `BULK_EMIT_COMPRESSED`,
   `FRAME_PUSH_BOUNDED`, `FRAME_POP_BOUNDED`, and
@@ -1261,3 +1258,38 @@ perturbation.
 - `gate-json` remains `N-direct / NoGo` after the admitted primitive gates.
   This is expected: the admitted primitives harden scanner vocabulary and
   checkasm coverage; they do not claim to close the direct-to-struct rows.
+
+## SK-V5 Direct Receiver + Full Matrix Redress
+
+- Item 57 admits direct receiver inlining plus the generated direct
+  tiny-plain-string fast path as a bounded direct-to-struct improvement, not
+  as a retained parse-G fix. The implementation adds force-inline annotations
+  to the `JsonDigestSink` / `JsonDirectDigest` receiver hot leaves and routes
+  generated `SinkOnly` direct string parsing through the existing
+  `match_tiny_plain_string` raw-span fast path before the trusted full JSON
+  string matcher. Track 2 receives the same bounded scalar early-out so the
+  dual-track diagnosis remains fair.
+- The full advisory matrix was refreshed after item 57 with
+  `CARGO_TARGET_DIR=/tmp/skv5-tiny-direct-target RUSTFLAGS="-C target-cpu=native"
+  cargo xtask bench-json --advisory`. The current `skinny/RESULTS.md` records
+  retained parse A / GO rows for `canada`, `mesh`, `marine_ik`, and `numbers`;
+  the stale Canada L row is gone and the structural scan reports 41495 Mbps
+  against the 40000 Mbps NEON floor.
+- Direct-to-struct improves from the prior single passing row to four passing
+  rows: `citm_catalog`, `mesh`, `marine_ik`, and `numbers`. The overall gate
+  remains `N-direct / NoGo`: 13 direct rows still miss sonic-rs direct by the
+  1.10x time-slack rule, with the hardest misses concentrated in
+  `unicode_mixed`, `unicode_escapes`, `distinct_values`, and
+  `y_string_unicode`.
+- This redress does not reopen the rejected Class A route. Active
+  `match_tiny_plain_string` wiring as a retained parse-G fix remains rejected
+  by REDRESS entries 28 and 33. Item 57 is direct-only receiver/source-shape
+  work: it reduces generated `SinkOnly` overhead and raw-span routing cost but
+  does not make the scalar tiny-string kernel a SOTA-BEAT primitive.
+- A transient 16-byte AArch64 escape/control scanner for the direct unescape
+  path was tested and reverted before landing. Focused Unicode rows regressed
+  rather than closing the gap, so the admissible close remains a fused
+  field-layout decoded string materializer that beats the current
+  allocate-then-contiguous-hash baseline. Reintroducing an escape/control scan
+  inside `unescape_json_string` without a same-loop consumer does not count as
+  a new route.

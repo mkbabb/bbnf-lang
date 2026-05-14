@@ -370,8 +370,17 @@ fn parse_string_direct<'i>(
     bytes: &'i [u8],
     cursor: &mut usize,
 ) -> Result<ParsedString<'i>, ParseError<'i>> {
+    let start = *cursor;
+    if let Some(raw_end) = match_tiny_plain_string(bytes, start) {
+        let raw = unsafe { std::str::from_utf8_unchecked(&bytes[start + 1..raw_end - 1]) };
+        *cursor = raw_end;
+        return Ok(ParsedString {
+            raw,
+            needs_unescape: false,
+        });
+    }
     let span =
-        parse_that_regex::match_json_string_at_quote_trusted_utf8(bytes, *cursor).map_err(|err| {
+        parse_that_regex::match_json_string_at_quote_trusted_utf8(bytes, start).map_err(|err| {
             ParseError {
                 input,
                 offset: err.offset,

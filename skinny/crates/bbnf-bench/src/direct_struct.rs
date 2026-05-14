@@ -46,6 +46,7 @@ pub enum DirectStructError {
 }
 
 impl JsonDirectDigest {
+    #[inline(always)]
     fn scalar(tag: u64, fingerprint: u64) -> Self {
         Self {
             max_depth: 1,
@@ -54,6 +55,7 @@ impl JsonDirectDigest {
         }
     }
 
+    #[inline(always)]
     fn string(value: &str) -> Self {
         let mut digest = Self::scalar(0x53, hash_bytes(value.as_bytes()));
         digest.strings = 1;
@@ -61,24 +63,29 @@ impl JsonDirectDigest {
         digest
     }
 
+    #[inline(always)]
     fn number_i64(value: i64) -> Self {
         Self::number(0x4e49, value as u64)
     }
 
+    #[inline(always)]
     fn number_u64(value: u64) -> Self {
         Self::number(0x4e55, value)
     }
 
+    #[inline(always)]
     fn number_f64(value: f64) -> Self {
         Self::number(0x4e46, value.to_bits())
     }
 
+    #[inline(always)]
     fn number(tag: u64, value: u64) -> Self {
         let mut digest = Self::scalar(tag, value);
         digest.numbers = 1;
         digest
     }
 
+    #[inline(always)]
     fn number_raw_known(input: &[u8], span: &NumberSpan) -> Self {
         if span.is_integer {
             if span.negative {
@@ -97,6 +104,7 @@ impl JsonDirectDigest {
             .unwrap_or_else(|_| Self::number_f64(f64::NAN))
     }
 
+    #[inline(always)]
     fn bool(value: bool) -> Self {
         let mut digest = Self::scalar(0x42, u64::from(value));
         digest.bools = 1;
@@ -104,6 +112,7 @@ impl JsonDirectDigest {
         digest
     }
 
+    #[inline(always)]
     fn null() -> Self {
         let mut digest = Self::scalar(0x30, 0);
         digest.nulls = 1;
@@ -155,6 +164,7 @@ impl JsonDirectDigest {
         self.fingerprint = mix(self.fingerprint, mix(0x30, 0));
     }
 
+    #[inline(always)]
     fn fold_child(&mut self, child: Self) {
         self.objects += child.objects;
         self.arrays += child.arrays;
@@ -170,11 +180,13 @@ impl JsonDirectDigest {
         self.fingerprint = mix(self.fingerprint, child.fingerprint);
     }
 
+    #[inline(always)]
     fn fold_key(&mut self, key: &str) {
         self.string_bytes += key.len() as u64;
         self.fingerprint = mix(self.fingerprint, hash_bytes(key.as_bytes()));
     }
 
+    #[inline(always)]
     fn same_shape_as(&self, other: &Self) -> bool {
         self.objects == other.objects
             && self.arrays == other.arrays
@@ -203,6 +215,7 @@ enum DigestFrame {
 }
 
 impl JsonDigestSink {
+    #[inline(always)]
     fn finish(self) -> Result<JsonDirectDigest, DirectStructError> {
         if !self.stack.is_empty() {
             return Err(DirectStructError::Parse(
@@ -213,6 +226,7 @@ impl JsonDigestSink {
             .ok_or_else(|| DirectStructError::Parse("empty direct sink".to_string()))
     }
 
+    #[inline(always)]
     fn push_value(&mut self, child: JsonDirectDigest) {
         match self.stack.last_mut() {
             Some(DigestFrame::Object(parent)) => parent.fold_child(child),
@@ -243,6 +257,7 @@ impl JsonDigestSink {
 }
 
 impl JsonSink for JsonDigestSink {
+    #[inline(always)]
     fn begin_object(&mut self) {
         self.stack.push(DigestFrame::Object(JsonDirectDigest {
             objects: 1,
@@ -252,6 +267,7 @@ impl JsonSink for JsonDigestSink {
         }));
     }
 
+    #[inline(always)]
     fn end_object(&mut self) {
         let Some(DigestFrame::Object(mut digest)) = self.stack.pop() else {
             debug_assert!(false, "object end without object frame");
@@ -261,6 +277,7 @@ impl JsonSink for JsonDigestSink {
         self.push_value(digest);
     }
 
+    #[inline(always)]
     fn begin_array(&mut self) {
         self.stack.push(DigestFrame::Array(JsonDirectDigest {
             arrays: 1,
@@ -270,6 +287,7 @@ impl JsonSink for JsonDigestSink {
         }));
     }
 
+    #[inline(always)]
     fn end_array(&mut self) {
         let Some(DigestFrame::Array(mut digest)) = self.stack.pop() else {
             debug_assert!(false, "array end without array frame");
@@ -279,6 +297,7 @@ impl JsonSink for JsonDigestSink {
         self.push_value(digest);
     }
 
+    #[inline(always)]
     fn key(&mut self, value: &str) {
         let Some(DigestFrame::Object(object)) = self.stack.last_mut() else {
             debug_assert!(false, "key outside object frame");
@@ -288,74 +307,92 @@ impl JsonSink for JsonDigestSink {
         object.fold_key(value);
     }
 
+    #[inline(always)]
     fn string(&mut self, value: &str) {
         self.push_value(JsonDirectDigest::string(value));
     }
 
+    #[inline(always)]
     fn i64(&mut self, value: i64) {
         self.push_value(JsonDirectDigest::number_i64(value));
     }
 
+    #[inline(always)]
     fn u64(&mut self, value: u64) {
         self.push_value(JsonDirectDigest::number_u64(value));
     }
 
+    #[inline(always)]
     fn f64(&mut self, value: f64) {
         self.push_value(JsonDirectDigest::number_f64(value));
     }
 
+    #[inline(always)]
     fn bool(&mut self, value: bool) {
         self.push_value(JsonDirectDigest::bool(value));
     }
 
+    #[inline(always)]
     fn null(&mut self) {
         self.push_value(JsonDirectDigest::null());
     }
 
+    #[inline(always)]
     fn array_string(&mut self, value: &str) {
         self.with_array_parent(|parent| parent.fold_string_scalar(value));
     }
 
+    #[inline(always)]
     fn array_i64(&mut self, value: i64) {
         self.with_array_parent(|parent| parent.fold_number_i64_scalar(value));
     }
 
+    #[inline(always)]
     fn array_u64(&mut self, value: u64) {
         self.with_array_parent(|parent| parent.fold_number_u64_scalar(value));
     }
 
+    #[inline(always)]
     fn array_f64(&mut self, value: f64) {
         self.with_array_parent(|parent| parent.fold_number_f64_scalar(value));
     }
 
+    #[inline(always)]
     fn array_bool(&mut self, value: bool) {
         self.with_array_parent(|parent| parent.fold_bool_scalar(value));
     }
 
+    #[inline(always)]
     fn array_null(&mut self) {
         self.with_array_parent(JsonDirectDigest::fold_null_scalar);
     }
 
+    #[inline(always)]
     fn object_string(&mut self, value: &str) {
         self.with_object_parent(|parent| parent.fold_string_scalar(value));
     }
 
+    #[inline(always)]
     fn object_i64(&mut self, value: i64) {
         self.with_object_parent(|parent| parent.fold_number_i64_scalar(value));
     }
 
+    #[inline(always)]
     fn object_u64(&mut self, value: u64) {
         self.with_object_parent(|parent| parent.fold_number_u64_scalar(value));
     }
 
+    #[inline(always)]
     fn object_f64(&mut self, value: f64) {
         self.with_object_parent(|parent| parent.fold_number_f64_scalar(value));
     }
 
+    #[inline(always)]
     fn object_bool(&mut self, value: bool) {
         self.with_object_parent(|parent| parent.fold_bool_scalar(value));
     }
 
+    #[inline(always)]
     fn object_null(&mut self) {
         self.with_object_parent(JsonDirectDigest::fold_null_scalar);
     }
@@ -502,6 +539,13 @@ mod hand {
         }
 
         fn string(&mut self) -> Result<Cow<'a, str>, DirectStructError> {
+            if let Some(raw_end) = self.tiny_plain_string() {
+                let raw = unsafe {
+                    std::str::from_utf8_unchecked(&self.bytes[self.cursor + 1..raw_end - 1])
+                };
+                self.cursor = raw_end;
+                return Ok(Cow::Borrowed(raw));
+            }
             let span = match_json_string_at_quote_trusted_utf8(self.bytes, self.cursor)
                 .map_err(|error| DirectStructError::Parse(error.to_string()))?;
             // SAFETY: DirectParser receives `&str`; the trusted matcher still
@@ -516,6 +560,20 @@ mod hand {
             } else {
                 Ok(Cow::Borrowed(raw))
             }
+        }
+
+        #[inline(always)]
+        fn tiny_plain_string(&self) -> Option<usize> {
+            let mut cursor = self.cursor + 1;
+            let limit = (cursor + 8).min(self.bytes.len());
+            while cursor < limit {
+                match self.bytes[cursor] {
+                    b'"' => return Some(cursor + 1),
+                    b'\\' | 0x00..=0x1f => return None,
+                    _ => cursor += 1,
+                }
+            }
+            None
         }
 
         fn number(&mut self, first: u8) -> Result<JsonDirectDigest, DirectStructError> {
@@ -656,6 +714,7 @@ impl<'de> Visitor<'de> for DigestVisitor {
     }
 }
 
+#[inline(always)]
 fn hash_bytes(bytes: &[u8]) -> u64 {
     let mut hash = 0xcbf29ce484222325u64 ^ bytes.len() as u64;
     let mut chunks = bytes.chunks_exact(8);
@@ -675,6 +734,7 @@ fn hash_bytes(bytes: &[u8]) -> u64 {
     hash
 }
 
+#[inline(always)]
 fn mix(seed: u64, value: u64) -> u64 {
     seed ^ value
         .wrapping_add(0x9e3779b97f4a7c15)

@@ -686,6 +686,33 @@ Lazy tape materialization is now reported per corpus:
    delivery must be a fused parse-that sink primitive rather than a generic
    visitor layered on top of the existing unescape path.
 
+50. SK-V5 retained projection redress: parse-time aux side tables are
+    REJECTED.
+
+   A dense per-cursor aux column was implemented experimentally on the retained
+   offset tape. The parser patched string body ends, scalar ends, and container
+   next-sibling cursors at parse time; views consumed those fields instead of
+   re-matching strings or depth-scanning containers. Correctness and
+   conformance were green, and the eager retained traversal probe improved
+   materially: focused Criterion rows showed `host_call_eager_decode` at
+   twitter 6586 Mbps (+45.8% versus the prior target), canada 7881 Mbps
+   (+96.5%), and unicode_basic 4570 Mbps (+74.7%). The governing parse plane
+   regressed, however: focused `track1_generated` landed at twitter 12143 Mbps
+   (-25.4%), citm_catalog 20625 Mbps (-29.2%), and canada 16614 Mbps (-2.2%).
+
+   A sparse aux side table with O(1) parser-owned slot patching was then tested
+   to avoid zero-writing an aux value for every cursor. It reduced neither the
+   governing parse cost nor the tradeoff: focused rows landed at twitter 11676
+   Mbps (-28.3%), citm_catalog 19874 Mbps (-31.8%), canada 11438 Mbps
+   (-32.7%), and unicode_basic 9496 Mbps (+44.2%) on `track1_generated`; the
+   retained traversal probe improved only twitter 5102 Mbps (+13.0%), canada
+   5517 Mbps (+37.5%), and unicode_basic 2998 Mbps (+14.6%). Both side-table
+   variants were reverted before commit. The conclusion is narrow and binding:
+   retained view projection facts are real, but they cannot be written as a
+   parse-time side table in the SOTA parse path. The admissible route remains
+   typed event consumption over the existing tape projection, with string and
+   number rescans confined to grammar-neutral primitives.
+
 ## Sonic Closeness
 
 The parser works as the tape/direct hybrid the spec requires, but the current
@@ -706,6 +733,9 @@ source hooks now preserve raw string spans to the sink boundary, but the first
 no-allocation decoded-string consumer regressed and was rejected. The residual
 therefore remains dense typed-sink emission, fused decoded-string delivery,
 exact float/string/Unicode materialization, and event-stream consumption.
+Parse-time retained projection side tables were also measured and rejected in
+item 50; view facts must be consumed through the typed event cursor rather than
+written as another retained column during parse.
 
 The largest code win already landed was removing redundant whitespace scans:
 large-corpus Track 1 improved by roughly 26-34% when that change first landed.

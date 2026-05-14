@@ -230,6 +230,12 @@ three load-bearing surfaces:
 - Cost-model `derive_backend_shape` decision substrate entirely absent
   (per §6 above).
 
+Subsequent redress narrows the repair: the union must be a typed event cursor
+over the existing projection, not parse-time retained projection metadata.
+Dense and sparse aux side tables were measured and rejected in
+`skinny/REDRESS.md` item 50 because they improved view probes while regressing
+the retained parse plane.
+
 The storage substrate itself (`Tape<'input>` + `TapeBuilder` + `ValueRef`)
 holds cleanly with zero type-ambivalence and zero columnar / PayloadStream
 residue. The skinny line has zero OpenFrame residue (`grep -rn
@@ -322,7 +328,8 @@ under-resolved:
    through `JsonSink::*_source` hooks. The remaining work is not a new
    directive or BIR variant; it is closing the measured runtime rows through a
    fused decoded-string sink primitive, exact materialization, event-stream
-   consumption, and structural floor repair.
+   consumption, and structural floor repair. Parse-time projection aux side
+   tables are a measured rejected route, not the event-consumption close.
 
 4. **Strictness disclosure is Wave 0, not Wave 5.** SK-V4 §7 declares
    "strictness plane named per row" as a Wave 5 requirement. B3 showed

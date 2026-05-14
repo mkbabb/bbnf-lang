@@ -37,6 +37,10 @@ partially:
   allocation behavior; a no-allocation decoded-string digest visitor was
   measured, regressed Unicode direct rows, and was rejected in
   `skinny/REDRESS.md` item 49.
+- Retained projection aux side tables were measured and rejected in
+  `skinny/REDRESS.md` item 50. Dense and sparse parse-time metadata improved
+  view probes but regressed retained parse rows, so H.W1 remains typed event
+  cursor consumption over the existing tape projection.
 - Wave 5 admits only consumed primitives:
   `BYTE_CLASS_FROM_EQ_SET_64`, `BYTE_CLASS_FROM_TABLE_64`,
   `BITMAP_PREFIX_XOR_64`, `BITMAP_NEXT_SET_BIT`, and `EOB_PAD_CLAMP`.

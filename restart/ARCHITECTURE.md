@@ -1542,6 +1542,10 @@ shared read/write abstraction: it walks offsets, event cells, or collapsed
 state transitions and emits either a sealed tape or direct typed fields. Retained
 document identity is `(TapeId, cursor, event_kind_or_payload_class)`. `SinkOnly`
 has no document identity because no queryable document remains after parse.
+SK-V5 redress item 50 rejects parse-time retained projection side tables as the
+implementation of this cursor: dense and sparse aux columns improved view
+probes but regressed the parse plane. Event consumption must reduce source
+rediscovery without writing another retained column during parse.
 
 Runtime SOTA gates must publish a token-economy artifact alongside throughput:
 token count, logical tape bytes, allocated tape bytes, tape bytes per input

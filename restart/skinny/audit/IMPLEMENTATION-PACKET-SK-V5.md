@@ -383,6 +383,12 @@ and rejected in `skinny/REDRESS.md` item 49; the next admissible close is a
 fused decode+sink primitive, not a generic visitor layered on
 `unescape_json_string`.
 
+Post-redress update 2: retained projection aux side tables were measured and
+rejected in `skinny/REDRESS.md` item 50. Do not implement H.W1 as dense or
+sparse parse-time metadata over `Tape::offsets`; both variants improved view
+probes but regressed retained parse. H.W1 must consume typed events over the
+existing tape projection without adding a retained parse-time side column.
+
 ### 4.6 Bench rewire + bench-private nuke
 
 `bbnf-bench/src/direct_struct.rs`: delete `SinkParser`, `track1_digest`,

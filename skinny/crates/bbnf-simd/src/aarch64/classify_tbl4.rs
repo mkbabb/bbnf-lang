@@ -64,3 +64,41 @@ pub unsafe fn classify_block_from_table(
     }
     result
 }
+
+#[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
+pub struct StructuralTerminatorBlock {
+    pub structural_mask: u64,
+    pub terminator_mask: u64,
+}
+
+#[inline(always)]
+pub unsafe fn classify_structural_terminator_chunk_from_table(
+    ptr: *const u8,
+    table: uint8x16x4_t,
+    terminator: u8,
+) -> (u16, u16) {
+    let chunk = unsafe { vld1q_u8(ptr) };
+    let low6 = unsafe { vandq_u8(chunk, vdupq_n_u8(0x3f)) };
+    let class = unsafe { vqtbl4q_u8(table, low6) };
+    let structural = unsafe { vandq_u8(vceqq_u8(class, chunk), vcgtq_u8(class, vdupq_n_u8(0))) };
+    let terminators = unsafe { vceqq_u8(chunk, vdupq_n_u8(terminator)) };
+    unsafe { (movemask_u8x16(structural), movemask_u8x16(terminators)) }
+}
+
+#[inline(always)]
+pub unsafe fn classify_structural_terminator_block_from_table(
+    ptr: *const u8,
+    table: uint8x16x4_t,
+    terminator: u8,
+) -> StructuralTerminatorBlock {
+    let mut result = StructuralTerminatorBlock::default();
+    for lane in 0..4 {
+        let (structural, terminators) = unsafe {
+            classify_structural_terminator_chunk_from_table(ptr.add(lane * 16), table, terminator)
+        };
+        let shift = lane * 16;
+        result.structural_mask |= u64::from(structural) << shift;
+        result.terminator_mask |= u64::from(terminators) << shift;
+    }
+    result
+}

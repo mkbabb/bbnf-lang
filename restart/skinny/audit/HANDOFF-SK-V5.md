@@ -63,12 +63,19 @@ partially:
   `BYTE_CLASS_FROM_EQ_SET_64`, `BYTE_CLASS_FROM_TABLE_64`,
   `BITMAP_PREFIX_XOR_64`, `BITMAP_NEXT_SET_BIT`, and `EOB_PAD_CLAMP`.
   Orphan macro bodies remain blocked until same-wave consumers exist.
+- A post-Wave 5 scan-floor slice admits two additional consumed scanner
+  primitives: `BULK_EMIT_POSITIONS_64`, consumed by `compact_mask`, and the
+  structural+terminator no-quote classifier, consumed by JSON scan. Focused
+  `simd_scan` now measures Canada at about 41833 Mbps, clearing the 40000 Mbps
+  NEON floor; the full `RESULTS.md` matrix still needs refresh.
 
 The current gate per `skinny/RESULTS.md`:
 
 - 13 retained parse rows are G / NO-GO.
-- `canada` is L / NO-GO despite parse throughput beating sonic-rs because the
-  current structural-only scan is 22136 Mbps against the 40000 Mbps floor.
+- `canada` is stale L / NO-GO in checked-in `RESULTS.md` because the prior
+  structural-only scan was 22136 Mbps against the 40000 Mbps floor. Redress
+  item 56 restores the focused structural-only row to about 41833 Mbps; do not
+  count the L row closed until a full matrix refresh records it.
 - 3 retained parse rows are A / GO: `mesh`, `marine_ik`, and `numbers`.
 - 16 of 17 direct rows are N-direct; only `numbers` passes the 1.10x sonic-rs
   time slack.
@@ -118,7 +125,7 @@ Per `IMPLEMENTATION-PACKET-SK-V5.md`:
 | 2 | Number lever + generated SinkOnly + bench rewire + bench-private SinkParser nuke | `parse-that-regex/src/number/`, `codegen/src/lower/sink_only.rs`, `runtime/src/grammars/json/sink.rs`, `bbnf-bench/src/direct_struct.rs` | Track 1 calls generated runtime and Track 2 is structurally different; `numbers` direct passes after later redress, but other direct rows remain NO-GO |
 | 3 | UTF-8 fusion + Class B `_x4` batched + utf8_block module + decoded source-hook assay | `parse-that-regex/src/lib.rs:331-339`, `parse-that-regex/src/unicode/`, `bbnf-simd/src/aarch64/utf8/`, `bbnf-simd/src/aarch64/unescape_uxxxx.rs`, `runtime/src/grammars/json/sink.rs` | duplicate UTF-8 validation is removed; generated source hooks are admitted; no-allocation visitor, exact decoded-stats sink, and quote-source streaming hasher routes are rejected; parse-G and string-bound direct rows remain open |
 | 4 | Lock 14 remediation + working-tree nukes | `bbnf-simd/src/lib.rs`, `bbnf-simd/src/aarch64/*`, `bbnf-simd/src/x86_64/*`, `runtime/grammars/json/`, `simd-scan/`, `runtime/.../generated_eventcursor.rs`, `runtime/Cargo.toml` | Lock 14 audit clean; 7 grammar-neutral split items land |
-| 5 | Consumed `bbnf.asm` primitive admission + checkasm hardening + admitted runtime dispatch | `bbnf-simd/src/{scalar,aarch64}/`, `bbnf-simd/src/dispatch.rs`, `bbnf-simd/tests/`, `runtime/grammars/json/scan.rs`, `xtask` | `BYTE_CLASS_FROM_EQ_SET_64`, `BYTE_CLASS_FROM_TABLE_64`, `BITMAP_PREFIX_XOR_64`, `BITMAP_NEXT_SET_BIT`, and `EOB_PAD_CLAMP` have scalar refs, checkasm parity, and same-wave hot consumers; `BULK_EMIT_COMPRESSED`, `FRAME_PUSH_BOUNDED`, `FRAME_POP_BOUNDED`, and `FSM_DISPATCH_THREADED` are explicitly blocked as no-orphan future work |
+| 5 | Consumed `bbnf.asm` primitive admission + checkasm hardening + admitted runtime dispatch | `bbnf-simd/src/{scalar,aarch64}/`, `bbnf-simd/src/dispatch.rs`, `bbnf-simd/tests/`, `runtime/grammars/json/scan.rs`, `xtask` | `BYTE_CLASS_FROM_EQ_SET_64`, `BYTE_CLASS_FROM_TABLE_64`, `BITMAP_PREFIX_XOR_64`, `BITMAP_NEXT_SET_BIT`, `EOB_PAD_CLAMP`, `BULK_EMIT_POSITIONS_64`, and the structural+terminator classifier have scalar refs, checkasm parity, and same-wave hot consumers; focused Canada scan clears the NEON floor; `BULK_EMIT_COMPRESSED`, `FRAME_PUSH_BOUNDED`, `FRAME_POP_BOUNDED`, and `FSM_DISPATCH_THREADED` are explicitly blocked as no-orphan future work |
 | 6 | Strict workload matrix | `bbnf-bench/`, `RESULTS.md`, `restart/skinny/BENCH.md` | 17 corpora × 7 workloads × N sidecars with strictness disclosed; no parse-G, no N-direct |
 | 7 (optional) | x86 CollapsedStage successor | `bbnf-simd/src/x86_64/*.asm`, `runtime/grammars/json/json_collapsed.asm`, `codegen/src/grammars/json/tables.rs` | Gated on Zen 4 silicon + NASM author + checkasm-green Layer 1 |
 
@@ -169,7 +176,9 @@ Wave 6 entry gate: Wave 5 closed under the consumed-primitive admission
 rule; `primitive-checkasm` passes for the admitted set; `skinny/REDRESS.md`
 records the no-orphan block for `BULK_EMIT_COMPRESSED`,
 `FRAME_PUSH_BOUNDED`, `FRAME_POP_BOUNDED`, and `FSM_DISPATCH_THREADED`.
-Wave 6 does not require all 9 bodies.
+Post-redress update: the admitted set also includes
+`BULK_EMIT_POSITIONS_64` and the structural+terminator classifier with a
+focused Canada scan-floor pass. Wave 6 does not require all 9 bodies.
 
 Wave 7 entry gate: optional; requires Zen 4 silicon access, declared NASM
 author, and a real per-grammar `.asm` CollapsedStage consumer plan.
@@ -254,7 +263,10 @@ for all future per-grammar codegen output. The scalar Rust reference per
 primitive is the executable specification. The checkasm differential
 harness is the admission gate.
 
-The five-shape taxonomy is correct. The Rust state behind it must now
-exist.
+The five-shape taxonomy is correct. The Rust state behind it now exists for
+BackendShape derivation, BIR-lowered SinkOnly, admitted consumed primitives,
+and the focused Canada scan-floor repair. The close still requires full
+matrix refresh, retained event/tape consumption, and direct field-layout
+materialization.
 
-**Dispatch Wave 0.**
+**Continue from the current SK-V5 implementation state; do not restart at Wave 0.**

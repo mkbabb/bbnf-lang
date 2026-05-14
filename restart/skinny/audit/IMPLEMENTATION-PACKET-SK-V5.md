@@ -706,6 +706,10 @@ bodies.
 - Every admitted primitive has scalar reference + checkasm parity.
 - Every admitted primitive has a generated/runtime hot-path consumer.
 - `primitive-checkasm` passes for the admitted set.
+- Post-Wave 5 scan-floor redress admits `BULK_EMIT_POSITIONS_64` and the
+  structural+terminator classifier only because both have same-change hot
+  consumers (`compact_mask` and JSON scan's no-quote fast path) plus checkasm
+  parity. The focused Canada `simd_scan` row must remain above 40000 Mbps.
 - `REDRESS.md` records blocked orphan primitives and current `gate-json`
   status.
 - No SOTA credit is claimed for blocked primitive bodies or for Wave 5

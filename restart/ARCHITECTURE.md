@@ -1104,7 +1104,7 @@ The codegen text-emission step is split. Retained parser/view scaffolding still 
 
 `passes::compile` at `passes/src/lib.rs:24-36` is grammar-blind in two places that the §7.3 contract requires it not to be. The shape-mining call at `passes/src/lib.rs:28` is the literal `shapes::shapes_for_json()` regardless of input grammar; the recognizer-mining call at `passes/src/lib.rs:29` is `recognizers::nominate_json(&_grammar)` whose `_grammar` parameter is unused (`passes/src/lib.rs:232-238` returns a single hardcoded `SimdScan` over the JSON structural alphabet). The downstream `materialization_for_rule` helper at `passes/src/lib.rs:423-434` matches on the literal rule-name strings `"object"`, `"array"`, `"pair"`, `"string"`, `"number"`, `"bool"`, `"null"`. Each is a `BBNF-GRAMMAR-NAME-IN-GENERIC-CRATE` Lock 14 violation that `cargo xtask lint-no-hardcoded-grammars` would surface if run against `passes`; the lint is catalogued at `restart/locks/14-LOCKS.md:60` and the diagnostic row sits at §7.5 of this document.
 
-The remaining remediation is not another directive or BIR variant. H.W4 must make `derive_backend_shape` a measured cost decision across retained and direct workloads, remove the remaining grammar-specific mining from generic passes during Lock 14 cleanup, and close the measured rows named in `skinny/RESULTS.md`: retained parse G/L rows, `N-direct` rows, fused decoded-string delivery, exact float/string/Unicode materialization, event-stream consumption, and the Canada structural-scan floor.
+The remaining remediation is not another directive or BIR variant. H.W4 must make `derive_backend_shape` a measured cost decision across retained and direct workloads, remove the remaining grammar-specific mining from generic passes during Lock 14 cleanup, and close the measured rows named in `skinny/RESULTS.md`: retained parse G rows, `N-direct` rows, fused decoded-string delivery, exact float/string/Unicode materialization, event-stream consumption, and full-matrix incorporation of the SK-V5 item-56 Canada structural-scan floor fix. Item 56 is a useful general lesson for V1: structural scan throughput is a pair of grammar-neutral operations — classify structural/terminator bytes from a supplied alphabet, then bulk-emit set-bit positions into the active projection — not a JSON-only special case and not a reason to reintroduce a sidecar substrate.
 
 The pre-existing `ShapeFacts` at `ir/src/lib.rs:436-467` is not the spec's `BackendShape` selector and remains untouched by SK-V5. It is a typed-view shape catalogue — a `Vec<Shape>` whose `Shape::{Struct, Enum}` variants carry named Rust types (`JsonRoot { value: JsonValue<'i> }`, etc.) consumed by the `view.rs` direct-builder emission and by the `Value` API. The spec's `LayoutFacts.backend_shape: HashMap<RuleId, BackendShape>` is a per-rule lowering-mode selector that names a generation strategy for `Alt { mode: Dispatch }`. Same surface noun, distinct concerns; both side tables remain, side by side, after Wave 1.
 
@@ -1510,12 +1510,14 @@ retained tape proves correctness, not throughput. For public APIs that do not
 require path/value traversal after parse, `LayoutFacts.backend_shape` must
 select `SinkOnly` and lower `DirectBuild` to typed-field writes during parsing.
 The first skinny sink-only digest parser closes the retained-view penalty but
-still misses sonic-rs direct on 11 of 17 rows after duplicate UTF-8 validation
-was removed and scanner-owned integer classification landed; direct SOTA
-therefore also depends on exact float/string/Unicode materialization
-primitives inside the sink. Generated direct string lowering now reaches the
-sink as `(raw, needs_decode)` source hooks; the generic no-allocation decoded
-visitor was measured and rejected, so the remaining string close is a fused
+still misses sonic-rs direct on 16 of 17 rows after duplicate UTF-8 validation,
+scanner-owned integer classification, context-specific scalar hooks, and BIR
+lowered generated `SinkOnly` landed; direct SOTA therefore also depends on
+exact float/string/Unicode materialization primitives inside the sink.
+Generated direct string lowering now reaches the sink as `(raw, needs_decode)`
+source hooks; the generic no-allocation decoded visitor, the sink-local exact
+decoded-stats helper, and the quote-source streaming hasher were measured and
+rejected, so the remaining string close is a field-layout or same-loop
 decode+sink primitive.
 The retained view-walk digest remains a parity oracle and regression check; it
 is not a SOTA-class direct-to-struct close.

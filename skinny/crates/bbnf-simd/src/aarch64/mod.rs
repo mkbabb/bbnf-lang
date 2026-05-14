@@ -3,6 +3,8 @@ pub mod bitmap_next_set_bit;
 #[cfg(target_arch = "aarch64")]
 pub mod bitmap_prefix_xor_64;
 #[cfg(target_arch = "aarch64")]
+pub mod bulk_emit_positions_64;
+#[cfg(target_arch = "aarch64")]
 pub mod byte_class_from_eq_set_64;
 #[cfg(target_arch = "aarch64")]
 pub mod byte_class_from_table_64;

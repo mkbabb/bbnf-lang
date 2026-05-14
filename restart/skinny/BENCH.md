@@ -302,8 +302,10 @@ Skinny records two corpus tiers:
 - **Expanded SOTA-BEAT gate**: the full throughput corpus below. This tier is
   the current dispatch arbiter. `skinny/RESULTS.md` records overall
   **N-direct / NoGo**. The parse/tape plane has 13 hard G rows plus the
-  canada L structural-floor failure; the sink-only direct-to-struct workload
-  now passes only `numbers`, while 16 rows remain below sonic-rs direct.
+  stale checked-in Canada L structural-floor failure; SK-V5 redress item 56
+  restores the focused scan floor, but the full matrix still needs refresh.
+  The sink-only direct-to-struct workload now passes only `numbers`, while 16
+  rows remain below sonic-rs direct.
 
 ### 3.1 Corpus inventory (canonical 17-corpus expansion; 2026-05-12)
 
@@ -754,7 +756,7 @@ Notation:
 | **I — Parity oracle fail** | n/a | n/a | NO-GO — correctness fail | Block tranche dispatch. Track 1 and Track 2 disagree on materialised output for at least one fixture; codegen is incorrect. Investigate divergence before any further bench claims. |
 | **J — Reproducibility schema fail** | n/a | n/a | INVALID — re-run | Bench row missing required schema fields or schema_version mismatch; classification unsafe. Re-instrument and re-run. |
 | **K — SIMD parity hash fail** | n/a | n/a | NO-GO — correctness fail | The structural-scan SIMD path produces offsets disagreeing with scalar on **any** corpus (twitter / citm / canada); substrate is silently corrupt. Block all dispatch until SIMD codepath fixed. |
-| **L — SIMD throughput fail** | n/a | n/a | NO-GO — SIMD floor fail | Structural scan on **canada** (largest input; binding row) below floor (40000 Mbps NEON / 56000 Mbps AVX2). Even if Track 2 parse hits parity, the substrate ceiling will fail at scale. Block dispatch until the SIMD floor is restored, then re-run the full matrix. |
+| **L — SIMD throughput fail** | n/a | n/a | NO-GO — SIMD floor fail | Structural scan on **canada** (largest input; binding row) below floor (40000 Mbps NEON / 56000 Mbps AVX2). Even if Track 2 parse hits parity, the substrate ceiling will fail at scale. Block dispatch until the SIMD floor is restored, then re-run the full matrix. SK-V5 redress item 56 restores the focused NEON Canada row to about 41833 Mbps; the outcome remains report-red until a full matrix refresh incorporates that row. |
 | **M — Memory residency fail** | n/a | n/a | NO-GO — peak RSS exceeds floor | Track 2 (or Track 1) peak RSS > 3 × the fastest competitor's peak RSS on canada. Substrate that hits SOTA-class throughput at 3× memory is not viable for concurrent-parse workloads (web servers, batch ingestion). Block dispatch until substrate memory profile is fixed. The 3× multiplier is the V1 J.W1 J-side floor projected back to skinny gate; a tighter ratio is encouraged but not required. |
 | **N-direct — Direct projection throughput fail** | n/a | n/a | NO-GO — direct typed emission is not SOTA-class | The `direct_to_struct` workload is correctness-green but either Track 1 direct or Track 2 direct is slower than `sonic-rs * 1.10` in time. The current sink-only digest parser removes the retained view walk from the timed BBNF rows; after generated `SinkOnly`, trusted string spans, source hooks, and integer-classification redress, only `numbers` passes and 16 rows still miss sonic-rs direct. Block SOTA-BEAT dispatch until direct-only API shapes close exact float/string/Unicode materialization under `SinkOnly`. This is separate from outcome G: a parse-only win cannot ratify the BBNF direct-to-struct premise. |
 
@@ -835,12 +837,15 @@ The order is deliberate: correctness/floor failures dominate; substrate
 gaps dominate codegen issues (a fast generator on a broken substrate is
 not viable); codegen issues only matter when the substrate floor is met.
 
-**Measured gate split (2026-05-14, SK-V5 current RESULTS after redress 50-52).**
+**Measured gate split (2026-05-14, SK-V5 current RESULTS after redress 50-56).**
 `skinny/RESULTS.md` records three facts that must stay visible. The expanded
 retained parse corpus has **13 G / NoGo rows** plus **canada L / NO-GO**:
 `mesh`, `marine_ik`, and `numbers` are the only current A / GO guard rows.
-`canada` beats the sonic-rs parse anchor but structural-only canada is
-22136 Mbps against the 40000 Mbps floor, so L dominates. The overall verdict is
+`canada` beats the sonic-rs parse anchor but the checked-in full report's
+structural-only Canada row is 22136 Mbps against the 40000 Mbps floor, so L
+dominates in that report. SK-V5 redress item 56 restores the focused Canada
+structural-only row to about 41833 Mbps; the full matrix still needs a
+refresh before the stale L row can be removed. The overall verdict is
 **N-direct / NoGo** because the `direct_to_struct` workload is
 correctness-green but only `numbers` satisfies the `sonic-rs * 1.10` direct
 time slack; the other 16 direct rows remain
@@ -2129,10 +2134,10 @@ head -1 skinny/RESULTS.md
 
 | Question | Answered | Method |
 |---|---|---|
-| Does the substrate reach SOTA-class throughput on JSON? | partial / NO overall | Track 2 vs sonic-rs / simd-json; current parse rows have 13 G rows plus canada L; only `mesh`, `marine_ik`, and `numbers` are A / GO guard rows |
+| Does the substrate reach SOTA-class throughput on JSON? | partial / NO overall | Track 2 vs sonic-rs / simd-json; current parse rows have 13 G rows plus a stale checked-in Canada L row pending the item-56 scan-floor refresh; only `mesh`, `marine_ik`, and `numbers` are A / GO guard rows |
 | Does the codegen path preserve the substrate's throughput? | mostly yes | Track 1 vs Track 2 ratio (F-positive / F-noise / F-codegen-gap sub-bands when substrate is borderline-weak; A / B / C / D / E when substrate is at parity) |
 | Does the SIMD scan match its scalar reference on every corpus? | yes | per-corpus parity hash equality (twitter / citm / canada) |
-| Does the SIMD scan reach simdjson-class Mbps on the largest input? | NO | current canada structural_scan is 22136 Mbps against the 40000 Mbps floor |
+| Does the SIMD scan reach simdjson-class Mbps on the largest input? | focused yes / full report stale | checked-in full report still shows canada structural_scan = 22136 Mbps against the 40000 Mbps floor; SK-V5 redress item 56 focused row restores Canada SIMD scan to about 41833 Mbps and must be pulled through the next full `bench-json` / `gate-json` refresh |
 | Are bench results reproducible? | yes | reproducibility schema enforcement + `schema_version` field |
 | Is Track 1 byte-equal to Track 2 on output? | yes | parity oracle |
 | Is direct-to-struct SOTA-class? | NO | sink-only direct rows are correctness-green; only `numbers` passes and 16 rows emit `N-direct` against sonic-rs direct |
@@ -2148,8 +2153,10 @@ head -1 skinny/RESULTS.md
 | Is the build PGO-tuned? | NO (out-of-the-box LTO release for both bbnf and competitors) | recorded as `pgo_mode: "none"`; J.W1 may re-run with PGO |
 
 The skinny answers the leading question — JSON-line SOTA viability — with
-honest threshold gates. The current answer is not ready: parse/tape has four G
-rows and direct typed emission is `N-direct / NoGo`.
+honest threshold gates. The current answer is not ready: the checked-in full
+report has 13 parse/tape G rows plus a stale Canada L row that item 56 has
+only cleared in the focused scan-floor bench, and direct typed emission is
+`N-direct / NoGo`.
 
 ---
 

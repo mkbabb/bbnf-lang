@@ -112,7 +112,7 @@ pub fn scan_dispatch(input: &[u8], alphabet: &StructuralAlphabet) -> StructuralI
             .try_into()
             .expect("slice length is fixed by loop guard");
         let mask = prim::byte_class_from_table_64(block, &class_table);
-        compact_mask(input, cursor, mask, &mut positions);
+        compact_mask(cursor, mask, &mut positions);
         cursor += 64;
     }
     for (relative, byte) in input[cursor..].iter().copied().enumerate() {
@@ -205,18 +205,20 @@ pub fn escape_mask_64(bs_mask: u64, bs_carry_in: bool) -> (u64, bool) {
     (escape, new_carry)
 }
 
-pub fn compact_mask(input: &[u8], base: usize, mask: u64, positions: &mut Vec<u32>) {
-    let mut cursor = 0u8;
-    loop {
-        let offset = prim::bitmap_next_set_bit(mask, cursor);
-        if offset == 64 {
-            return;
-        }
-        let offset = offset as usize;
-        let position = base + offset;
-        debug_assert!(input.get(position).is_some());
-        positions.push(checked_position(position));
-        cursor = offset as u8 + 1;
+#[inline(always)]
+pub fn compact_mask(base: usize, mask: u64, positions: &mut Vec<u32>) {
+    if mask == 0 {
+        return;
+    }
+    let count = mask.count_ones() as usize;
+    positions.reserve(count);
+    let len = positions.len();
+    let base = checked_position(base);
+    let written =
+        unsafe { prim::bulk_emit_positions_64(base, mask, positions.as_mut_ptr().add(len)) };
+    debug_assert_eq!(written, count);
+    unsafe {
+        positions.set_len(len + written);
     }
 }
 
@@ -242,6 +244,11 @@ pub mod prim {
     #[inline]
     pub fn bitmap_next_set_bit(mask: u64, cursor: u8) -> u8 {
         (crate::dispatch::primitive_kernels().bitmap_next_set_bit)(mask, cursor)
+    }
+
+    #[inline]
+    pub unsafe fn bulk_emit_positions_64(base: u32, mask: u64, dst: *mut u32) -> usize {
+        unsafe { (crate::dispatch::primitive_kernels().bulk_emit_positions_64)(base, mask, dst) }
     }
 
     #[inline]

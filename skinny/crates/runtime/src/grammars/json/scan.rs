@@ -215,18 +215,24 @@ mod neon {
                 &STRUCTURAL_CLASS_TABLE_LO6,
             );
             while cursor + STRIPE <= input.len() {
-                let result = bbnf_simd::aarch64::classify_tbl4::classify_block_from_table(
+                let structural =
+                    bbnf_simd::aarch64::classify_tbl4::classify_structural_terminator_block_from_table(
                     input.as_ptr().add(cursor),
                     table,
                     b'"',
-                    b'\\',
-                    0x20,
                 );
-                let punctuation = result.structural_mask & !result.quote_mask;
-                let quotes = result.quote_mask;
+                let quotes = structural.terminator_mask;
                 let emit = if quotes == 0 && !in_string {
-                    punctuation
+                    structural.structural_mask
                 } else {
+                    let result = bbnf_simd::aarch64::classify_tbl4::classify_block_from_table(
+                        input.as_ptr().add(cursor),
+                        table,
+                        b'"',
+                        b'\\',
+                        0x20,
+                    );
+                    let punctuation = result.structural_mask & !result.quote_mask;
                     let (escaped, new_bs_carry) =
                         escape_mask_64(result.backslash_mask, bs_carry);
                     let real_quotes_fast = quotes & !escaped;
@@ -258,7 +264,7 @@ mod neon {
                     (punctuation & !string_body) | real_quotes
                 };
                 if emit != 0 {
-                    compact_mask(input, cursor, emit, &mut positions);
+                    compact_mask(cursor, emit, &mut positions);
                 }
                 cursor += STRIPE;
             }

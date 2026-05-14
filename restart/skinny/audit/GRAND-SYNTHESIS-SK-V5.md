@@ -11,10 +11,12 @@ landed and the current gate remains `N-direct / NoGo`. The Rust scaffolding for
 `BackendShape` / `derive_backend_shape` exists, and the generated direct parser
 is now emitted from a BIR-derived `SinkOnlyProgram` rather than the former
 static JSON direct template. The latest `skinny/RESULTS.md` records 13 retained
-G rows, one Canada L row caused by the structural-scan floor (22136 Mbps vs
-40000 Mbps), 3 retained A rows (`mesh`, `marine_ik`, `numbers`), and only one
-direct PASS row (`numbers`). Treat the wave plan below as historical dispatch
-intent amended by `HANDOFF-SK-V5.md` and `skinny/REDRESS.md` entries 46-48.
+G rows, one stale Canada L row caused by the prior structural-scan floor
+(22136 Mbps vs 40000 Mbps), 3 retained A rows (`mesh`, `marine_ik`,
+`numbers`), and only one direct PASS row (`numbers`). SK-V5 redress item 56
+restores the focused Canada structural scan to about 41833 Mbps; the full
+matrix still needs refresh. Treat the wave plan below as historical dispatch
+intent amended by `HANDOFF-SK-V5.md` and `skinny/REDRESS.md` entries 46-56.
 
 ## 1. The Frame
 
@@ -356,8 +358,9 @@ under-resolved:
    through `JsonSink::*_source` hooks. The remaining work is not a new
    directive or BIR variant; it is closing the measured runtime rows through a
    fused decoded-string sink primitive, exact materialization, event-stream
-   consumption, and structural floor repair. Parse-time projection aux side
-   tables are a measured rejected route, not the event-consumption close.
+   consumption, and full-matrix incorporation of the structural-floor repair.
+   Parse-time projection aux side tables are a measured rejected route, not the
+   event-consumption close.
 
 4. **Strictness disclosure is Wave 0, not Wave 5.** SK-V4 §7 declares
    "strictness plane named per row" as a Wave 5 requirement. B3 showed

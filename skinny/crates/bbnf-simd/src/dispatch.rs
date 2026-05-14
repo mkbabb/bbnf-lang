@@ -51,6 +51,7 @@ pub struct PrimitiveKernels {
     pub byte_class_from_table_64: fn(&[u8; 64], &[u8; 256]) -> u64,
     pub bitmap_prefix_xor_64: fn(u64, bool) -> u64,
     pub bitmap_next_set_bit: fn(u64, u8) -> u8,
+    pub bulk_emit_positions_64: unsafe fn(u32, u64, *mut u32) -> usize,
     pub eob_pad_clamp: fn(&[u8]) -> EobBlock,
 }
 
@@ -67,6 +68,8 @@ fn select_primitive_kernels() -> PrimitiveKernels {
                 crate::aarch64::byte_class_from_table_64::byte_class_from_table_64_neon,
             bitmap_prefix_xor_64: crate::aarch64::bitmap_prefix_xor_64::bitmap_prefix_xor_64_neon,
             bitmap_next_set_bit: crate::aarch64::bitmap_next_set_bit::bitmap_next_set_bit_neon,
+            bulk_emit_positions_64:
+                crate::aarch64::bulk_emit_positions_64::bulk_emit_positions_64_neon,
             eob_pad_clamp: crate::aarch64::eob_pad_clamp::eob_pad_clamp_neon,
         };
     }
@@ -77,6 +80,8 @@ fn select_primitive_kernels() -> PrimitiveKernels {
             crate::scalar::byte_class_from_table_64::byte_class_from_table_64_scalar,
         bitmap_prefix_xor_64: crate::scalar::bitmap_prefix_xor_64::bitmap_prefix_xor_64_scalar,
         bitmap_next_set_bit: crate::scalar::bitmap_next_set_bit::bitmap_next_set_bit_scalar,
+        bulk_emit_positions_64:
+            crate::scalar::bulk_emit_positions_64::bulk_emit_positions_64_scalar,
         eob_pad_clamp: crate::scalar::eob_pad_clamp::eob_pad_clamp_scalar,
     }
 }

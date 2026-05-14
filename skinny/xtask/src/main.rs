@@ -234,6 +234,8 @@ fn primitive_checkasm(root: &Path) -> Result<()> {
     for test in [
         "checkasm_byte_class_from_eq_set_64",
         "checkasm_byte_class_from_table_64",
+        "checkasm_bulk_emit_positions_64",
+        "checkasm_structural_terminator_64",
         "checkasm_bitmap_prefix_xor_64",
         "checkasm_bitmap_next_set_bit",
         "checkasm_eob_pad_clamp",

@@ -1472,3 +1472,95 @@ perturbation.
   string boundary. The current admissible fallback is the parser-control
   `ContainerNext` / next-byte carry candidate from
   `GRAND-SYNTHESIS-SK-V6.md` §8.
+
+## SK-V6 Wave 2 Candidate-4 Redress
+
+- Item 63 admits the `ContainerNext` / next-byte carry intervention. The route
+  changes generated retained array parsing so the first element is parsed once,
+  then array separators are consumed by `consume_array_next`; after a comma the
+  next value's first byte is carried directly into `dispatch_value` instead of
+  re-entering `parse_value_at`. This keeps Lock 1 intact: no retained sidecar,
+  no second source pass, no new BIR variant, and no grammar directive.
+- The same change landed in both the checked-in generated runtime and the
+  `codegen` JSON template so regeneration preserves the hot path. The helper is
+  grammar-shaped in generated JSON code only; it does not place JSON logic in
+  `bbnf-simd`, `parse-that-regex`, or generic lowering crates.
+- Production `profile-lazy` smoke used baseline and candidate release binaries
+  built from the same tree under `/tmp/skv6-wave2-candidate4-smoke`. Each row
+  reports the median of three repetitions:
+
+  | row | base c/B | candidate c/B | c/B delta | base Mbps | candidate Mbps | Mbps delta |
+  |---|---:|---:|---:|---:|---:|---:|
+  | apache_builds | 2.272912 | 2.236779 | -1.59% | 12319 | 12518 | +1.62% |
+  | canada | 1.613182 | 1.457802 | -9.63% | 17357 | 19207 | +10.66% |
+  | citm_catalog | 1.331241 | 1.255155 | -5.72% | 21033 | 22308 | +6.06% |
+  | distinct_values | 4.486461 | 4.429679 | -1.27% | 6241 | 6321 | +1.28% |
+  | github_events | 2.133333 | 2.101313 | -1.50% | 13125 | 13325 | +1.52% |
+  | gsoc-2018 | 1.268748 | 1.262399 | -0.50% | 22069 | 22180 | +0.50% |
+  | instruments | 2.338205 | 2.222222 | -4.96% | 11975 | 12600 | +5.22% |
+  | marine_ik | 2.189039 | 1.977680 | -9.66% | 12791 | 14158 | +10.69% |
+  | mesh | 2.066268 | 1.921625 | -7.00% | 13551 | 14571 | +7.53% |
+  | numbers | 1.507159 | 1.365987 | -9.37% | 18578 | 20498 | +10.33% |
+  | random | 3.521127 | 3.317929 | -5.77% | 7952 | 8439 | +6.12% |
+  | twitter | 2.249719 | 2.232677 | -0.76% | 12446 | 12541 | +0.76% |
+  | unicode_basic | 2.528445 | 2.459808 | -2.71% | 11074 | 11383 | +2.79% |
+  | unicode_escapes | 2.292076 | 2.114484 | -7.75% | 12216 | 13242 | +8.40% |
+  | unicode_mixed | 3.375934 | 3.049112 | -9.68% | 8294 | 9183 | +10.72% |
+  | update_center | 2.949853 | 2.917882 | -1.08% | 9492 | 9596 | +1.10% |
+  | y_string_unicode | 4.660453 | 4.516858 | -3.08% | 6008 | 6199 | +3.18% |
+
+- A full `bench-json --advisory` pass then refreshed `skinny/RESULTS.md`. The
+  retained Track 1 rows most directly targeted by the candidate moved as
+  follows against the prior committed authority:
+
+  | row | prior Track 1 Mbps | advisory Track 1 Mbps | delta |
+  |---|---:|---:|---:|
+  | citm_catalog | 20775 | 21811 | +5.0% |
+  | canada | 17738 | 18036 | +1.7% |
+  | apache_builds | 12341 | 12511 | +1.4% |
+  | github_events | 13161 | 13184 | +0.2% |
+  | marine_ik | 12818 | 13265 | +3.5% |
+  | instruments | 11887 | 12532 | +5.4% |
+  | numbers | 18740 | 19853 | +5.9% |
+  | distinct_values | 6097 | 6144 | +0.8% |
+  | y_string_unicode | 6084 | 6272 | +3.1% |
+
+- The long advisory run showed run-order noise on `mesh`, `random`,
+  `update_center`, `unicode_mixed`, and `unicode_escapes`, so the decision used
+  a focused five-run side-by-side rerun at
+  `/tmp/skv6-wave2-candidate4-focused.csv` and
+  `/tmp/skv6-wave2-candidate4-update-center-focused.csv` for those rows:
+
+  | row | median baseline Mbps | median candidate Mbps | median delta |
+  |---|---:|---:|---:|
+  | update_center | 9237 | 9356 | +1.29% |
+  | mesh | 13332 | 14311 | +7.34% |
+  | random | 7768 | 8270 | +6.46% |
+  | unicode_mixed | 7765 | 8348 | +7.51% |
+  | unicode_escapes | 11272 | 11930 | +5.84% |
+  | unicode_basic | 11001 | 11263 | +2.38% |
+  | distinct_values | 6046 | 6082 | +0.60% |
+  | y_string_unicode | 5843 | 6041 | +3.39% |
+
+- The PC-level attribution gate was checked with `runtime/parse-attribution`
+  builds and `samply` profiles under `/tmp/skv6-wave2-candidate4-profiles/`.
+  The old redundant boundary set (`consume_container_next + parse_value_at +
+  dispatch_value`) dropped from 24.97% to 14.51% self samples on
+  `citm_catalog` and from 27.37% to 6.48% self samples on `canada`. Normalized
+  by the profiled Mbps, that is approximately 0.121 -> 0.070 attributed ns/B
+  on `citm_catalog` (-42%) and 0.172 -> 0.041 attributed ns/B on `canada`
+  (-76%). The new `consume_array_next` helper is visible separately, as
+  intended; it is the replacement boundary, not a residual re-entry cost.
+- Correctness and build gates were green before admission: `cargo fmt --all`,
+  `cargo test -p runtime --profile ax-iter`, `cargo build --workspace
+  --profile ax-iter`, `cargo test --workspace --profile ax-iter`,
+  `cargo run -p xtask --release -- check-json`, and `cargo run -p xtask
+  --release -- check-conformance`. The stale prompt command
+  `cargo run -p xtask --release -- gen --check` is not a live `xtask` command
+  in this workspace; `check-json` is the on-disk regeneration/parity gate.
+- Item 63 does not close SK-V6. It is an admissible throughput recovery on the
+  honest generated runtime baseline: parse-G remains dominated by string /
+  Unicode and competitor-anchor gaps after the results refresh. The next Wave 2
+  candidate must be selected from a fresh profile angle for the remaining
+  string/Unicode cluster or from a direct-to-struct Wave 3 bridge if parse-G is
+  deliberately left with falsifiability-tested residuals.

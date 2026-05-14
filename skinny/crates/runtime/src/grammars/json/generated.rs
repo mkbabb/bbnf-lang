@@ -128,12 +128,12 @@ fn parse_array<'i>(state: &mut ParserState<'i>) -> Result<(), ParseError<'i>> {
         return Ok(());
     }
 
+    parse_value_at(state)?;
     loop {
-        parse_value_at(state)?;
-        if consume_container_next(state, b']', ParseErrorKind::ExpectedCommaOrArrayEnd)? {
-            continue;
+        match consume_array_next(state)? {
+            ContainerNext::Next(byte) => dispatch_value(state, byte)?,
+            ContainerNext::Done => return Ok(()),
         }
-        return Ok(());
     }
 }
 
@@ -325,6 +325,45 @@ fn consume_container_next<'i>(
         return Ok(false);
     }
     Err(error(state, error_kind))
+}
+
+enum ContainerNext {
+    Next(u8),
+    Done,
+}
+
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
+fn consume_array_next<'i>(state: &mut ParserState<'i>) -> Result<ContainerNext, ParseError<'i>> {
+    let current = if state.cursor < state.bytes.len() {
+        Some(unsafe { *state.bytes.get_unchecked(state.cursor) })
+    } else {
+        None
+    };
+    let offset = if current == Some(b',') || current == Some(b']') {
+        state.cursor
+    } else {
+        skip_json_whitespace(state.bytes, state.cursor)
+    };
+    if offset >= state.bytes.len() {
+        return Err(error(state, ParseErrorKind::ExpectedCommaOrArrayEnd));
+    }
+    let byte = unsafe { *state.bytes.get_unchecked(offset) };
+    if byte == b',' {
+        let next = skip_json_whitespace(state.bytes, offset + 1);
+        state.cursor = next;
+        if next >= state.bytes.len() {
+            return Err(error(state, ParseErrorKind::ExpectedValue));
+        }
+        let next_byte = unsafe { *state.bytes.get_unchecked(next) };
+        return Ok(ContainerNext::Next(next_byte));
+    }
+    if byte == b']' {
+        state.emit_plain_offset(offset);
+        state.cursor = offset + 1;
+        return Ok(ContainerNext::Done);
+    }
+    Err(error(state, ParseErrorKind::ExpectedCommaOrArrayEnd))
 }
 
 #[inline(always)]

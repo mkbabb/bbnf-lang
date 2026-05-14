@@ -15,6 +15,7 @@ pub enum Outcome {
     KSimdParityHashFail,
     LSimdThroughputFail,
     MMemoryResidencyFail,
+    NDirectProjectionFailure,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -43,6 +44,16 @@ pub struct ThresholdInput {
     pub bbnf_peak_rss: Option<u64>,
 }
 
+#[derive(Debug, Clone)]
+pub struct DirectProjectionInput {
+    pub correctness_ok: bool,
+    pub track1_ns: Option<f64>,
+    pub track2_ns: Option<f64>,
+    pub sonic_rs_ns: Option<f64>,
+}
+
+pub const DIRECT_PROJECTION_SONIC_SLACK: f64 = 1.10;
+
 impl Outcome {
     pub fn verdict(self) -> Verdict {
         match self {
@@ -58,7 +69,8 @@ impl Outcome {
             | Outcome::IParityOracleFail
             | Outcome::KSimdParityHashFail
             | Outcome::LSimdThroughputFail
-            | Outcome::MMemoryResidencyFail => Verdict::NoGo,
+            | Outcome::MMemoryResidencyFail
+            | Outcome::NDirectProjectionFailure => Verdict::NoGo,
         }
     }
 
@@ -77,6 +89,7 @@ impl Outcome {
             Outcome::KSimdParityHashFail => "K",
             Outcome::LSimdThroughputFail => "L",
             Outcome::MMemoryResidencyFail => "M",
+            Outcome::NDirectProjectionFailure => "N-direct",
         }
     }
 }
@@ -153,6 +166,23 @@ pub fn classify(input: &ThresholdInput) -> Outcome {
     Outcome::CSubstrateParityCodegenAcceptable
 }
 
+pub fn classify_direct_projection(input: &DirectProjectionInput) -> Option<Outcome> {
+    if !input.correctness_ok {
+        return Some(Outcome::IParityOracleFail);
+    }
+    let (Some(track1), Some(track2), Some(sonic)) =
+        (input.track1_ns, input.track2_ns, input.sonic_rs_ns)
+    else {
+        return None;
+    };
+    if track1 > sonic * DIRECT_PROJECTION_SONIC_SLACK
+        || track2 > sonic * DIRECT_PROJECTION_SONIC_SLACK
+    {
+        return Some(Outcome::NDirectProjectionFailure);
+    }
+    None
+}
+
 pub fn worst_outcome(outcomes: impl IntoIterator<Item = Outcome>) -> Option<Outcome> {
     outcomes
         .into_iter()
@@ -196,6 +226,7 @@ fn severity(outcome: Outcome) -> u8 {
         Outcome::LSimdThroughputFail => 10,
         Outcome::MMemoryResidencyFail => 11,
         Outcome::GSubstrateFailure => 12,
+        Outcome::NDirectProjectionFailure => 13,
     }
 }
 
@@ -285,5 +316,30 @@ mod tests {
         );
         row.scalar_parity_hash_twitter = None;
         assert!(!validate_schema(&[row]));
+    }
+
+    #[test]
+    fn direct_projection_failure_is_blocking() {
+        let input = DirectProjectionInput {
+            correctness_ok: true,
+            track1_ns: Some(500.0),
+            track2_ns: Some(450.0),
+            sonic_rs_ns: Some(300.0),
+        };
+        assert_eq!(
+            classify_direct_projection(&input),
+            Some(Outcome::NDirectProjectionFailure)
+        );
+    }
+
+    #[test]
+    fn direct_projection_passes_within_sonic_slack() {
+        let input = DirectProjectionInput {
+            correctness_ok: true,
+            track1_ns: Some(329.0),
+            track2_ns: Some(330.0),
+            sonic_rs_ns: Some(300.0),
+        };
+        assert_eq!(classify_direct_projection(&input), None);
     }
 }

@@ -1,7 +1,7 @@
 use bbnf_bench::metadata::{BenchFacts, HostFacts, RowMetadata};
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
-use std::path::PathBuf;
 use std::time::Duration;
+use std::{env, path::PathBuf};
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -62,9 +62,13 @@ fn write_simd_row(
 }
 
 fn metadata_path(corpus: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../..")
-        .join("target")
+    env::var_os("CARGO_TARGET_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| {
+            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../..")
+                .join("target")
+        })
         .join("criterion")
         .join("simd_structural_scan")
         .join(format!("{corpus}_simd"))

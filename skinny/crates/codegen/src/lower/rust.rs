@@ -33,11 +33,15 @@ pub fn lower_to_rust(backend: &BackendIr, ctx: &LowerCtx<'_>) -> LoweredRust {
         .map(|(index, rule)| lower_rule(rule, shape_for(ctx, index)))
         .collect();
 
-    // Wave 1 makes BIR shape selection real while preserving the current JSON
-    // surface byte-for-byte; Wave 2 consumes these plans for SinkOnly emission.
+    let mut generated = include_str!("../json_templates/generated.rs").to_string();
+    if let Some(sink_direct) = sink_only::lower_json_direct_sink(backend) {
+        generated.push('\n');
+        generated.push_str(&sink_direct);
+    }
+
     LoweredRust {
         parser: include_str!("../json_templates/parser.rs").to_string(),
-        generated: include_str!("../json_templates/generated.rs").to_string(),
+        generated,
         rule_plans,
     }
 }

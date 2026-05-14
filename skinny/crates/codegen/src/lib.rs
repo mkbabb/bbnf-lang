@@ -109,14 +109,21 @@ fn default_backend_shape(backend: &BackendIr) -> std::collections::HashMap<RuleI
 fn mod_rs() -> String {
     normalize(
         r#"
+        #[cfg(not(feature = "eventcursor"))]
         pub mod generated;
+        #[cfg(feature = "eventcursor")]
+        pub mod generated_eventcursor;
         pub mod host;
         pub mod parser;
+        pub mod sink;
         pub mod value;
         pub mod view;
         pub mod visitor;
 
         pub use parser::{parse, parse_bytes, RECOGNIZER_COUNT};
+        #[cfg(not(feature = "eventcursor"))]
+        pub use generated::parse_direct;
+        pub use sink::JsonSink;
         pub use value::{JsonNodeKind, JsonToken, JsonValue, ParseError, ParseErrorKind};
         pub use view::{
             JsonArray, JsonBool, JsonDocument, JsonNull, JsonNumber, JsonObject, JsonPair,

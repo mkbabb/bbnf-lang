@@ -165,7 +165,7 @@ impl Report {
             out.push_str("|---|---|---|---|---|---|---:|---:|---:|---:|---:|---:|---|\n");
             for row in &self.workload_rows {
                 out.push_str(&format!(
-                    "| {} | {} | deferred | view-boundary | yes | JSONTestSuite n_string_unescaped_ctrl_char rejected; direct rows bench-private until Wave 2 | {} | {} | {} | {} | {} | {} | {} |\n",
+                    "| {} | {} | deferred | view-boundary | yes | generated Track 1 SinkOnly vs independent hand Track 2 SinkOnly; UTF-8 remains view-boundary | {} | {} | {} | {} | {} | {} | {} |\n",
                     row.corpus,
                     row.workload,
                     format_optional(row.track1_mbps),

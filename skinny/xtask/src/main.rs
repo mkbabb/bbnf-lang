@@ -2,10 +2,12 @@ use anyhow::{bail, Context, Result};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+const USAGE: &str = "usage: cargo xtask <regen-json|check-json|check-conformance|lint-loc|bench-json|gate-json|primitive-checkasm>";
+
 fn main() -> Result<()> {
     let mut args = std::env::args().skip(1);
     let Some(command) = args.next() else {
-        bail!("usage: cargo xtask <regen-json|check-json|check-conformance|lint-loc|bench-json|gate-json>");
+        bail!("{USAGE}");
     };
 
     let root = workspace_root()?;
@@ -15,9 +17,10 @@ fn main() -> Result<()> {
         "check-conformance" => check_conformance(),
         "lint-loc" => lint_loc(&root),
         "bench-json" => bench_json(&root, args.collect()),
-        "gate-json" => gate_json(&root),
+        "gate-json" => gate_json(&root, args.collect()),
+        "primitive-checkasm" => primitive_checkasm(&root),
         "help" | "--help" | "-h" => {
-            eprintln!("usage: cargo xtask <regen-json|check-json|check-conformance|lint-loc|bench-json|gate-json>");
+            eprintln!("{USAGE}");
             Ok(())
         }
         other => bail!("unknown xtask command `{other}`"),
@@ -135,14 +138,19 @@ fn lint_loc(root: &Path) -> Result<()> {
         ("crates/runtime", 4000),
         ("crates/parse-that-regex", 4000),
         ("crates/bbnf-simd", 3500),
-        ("crates/bbnf-bench", 2400),
+        ("crates/bbnf-bench", 3300),
         ("crates/test-fixtures", 800),
-        ("xtask", 500),
+        ("xtask", 650),
     ];
     let mut failures = Vec::new();
     for (path, budget) in budgets {
         let loc = rust_loc(&root.join(path))?;
         println!("{path}: {loc}/{budget} LOC");
+        if path == "crates/bbnf-bench" && (3250..=budget).contains(&loc) {
+            println!(
+                "warning: BBNF-BUDGET-CLIFF {path} has {loc}/{budget} LOC; post-iteration headroom is nearly exhausted"
+            );
+        }
         if loc > budget {
             failures.push(format!("{path} has {loc} LOC over budget {budget}"));
         }
@@ -188,7 +196,7 @@ fn bench_json(root: &Path, passthrough: Vec<String>) -> Result<()> {
     let status = command.status().context("failed to spawn cargo bench")?;
     if status.success() {
         if full_run {
-            gate_json(root)
+            gate_json(root, Vec::new())
         } else {
             Ok(())
         }
@@ -197,16 +205,40 @@ fn bench_json(root: &Path, passthrough: Vec<String>) -> Result<()> {
     }
 }
 
-fn gate_json(root: &Path) -> Result<()> {
+fn gate_json(root: &Path, passthrough: Vec<String>) -> Result<()> {
     let status = Command::new("cargo")
         .current_dir(root)
         .args(["run", "-p", "bbnf-bench", "--bin", "gate"])
+        .arg("--")
+        .args(passthrough)
         .status()
         .context("failed to spawn bench gate")?;
     if status.success() {
         Ok(())
     } else {
         bail!("bench gate failed with status {status}")
+    }
+}
+
+fn primitive_checkasm(root: &Path) -> Result<()> {
+    let status = Command::new("cargo")
+        .current_dir(root)
+        .env("BBNF_SIMD_STRICT", "1")
+        .env_remove("BBNF_SIMD_INJECT_BUG")
+        .args([
+            "test",
+            "-p",
+            "bbnf-simd",
+            "--release",
+            "--test",
+            "checkasm_parity",
+        ])
+        .status()
+        .context("failed to spawn bbnf-simd primitive checkasm gate")?;
+    if status.success() {
+        Ok(())
+    } else {
+        bail!("bbnf-simd primitive checkasm gate failed with status {status}")
     }
 }
 

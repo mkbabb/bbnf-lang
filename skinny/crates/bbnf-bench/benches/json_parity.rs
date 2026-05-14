@@ -1,7 +1,7 @@
 use bbnf_bench::metadata::{BenchFacts, HostFacts, RowMetadata, TrackTag};
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
-use std::path::PathBuf;
 use std::time::Duration;
+use std::{env, path::PathBuf};
 use test_fixtures::JsonFixture;
 
 #[global_allocator]
@@ -15,6 +15,8 @@ fn bench_json_parity(c: &mut Criterion) {
     for fixture in &fixtures {
         let input = std::str::from_utf8(&fixture.bytes).expect("fixture must be UTF-8 JSON");
         bbnf_bench::parity::assert_parity(input).expect("parity oracle failed");
+        bbnf_bench::direct_struct::assert_direct_struct_parity(input, &fixture.bytes)
+            .expect("direct-to-struct parity oracle failed");
         run_fixture(c, &host, fixture, input);
     }
 }
@@ -169,6 +171,86 @@ fn run_fixture(c: &mut Criterion, host: &HostFacts, fixture: &JsonFixture, input
         sample_size as u32,
     );
 
+    group.bench_function("track1_direct_to_struct", |b| {
+        b.iter(|| {
+            let digest = bbnf_bench::direct_struct::track1_digest(black_box(input)).unwrap();
+            black_box(digest);
+        });
+    });
+    write_row(
+        host,
+        fixture,
+        "track1_direct_to_struct",
+        BenchFacts::bbnf_json_workload(
+            fixture.sha256.clone(),
+            fixture.bytes.len() as u64,
+            TrackTag::Track1Generated,
+            "direct_to_struct",
+            track1_payload.0,
+            track1_payload.1,
+            measurement_time_s,
+            sample_size as u32,
+        ),
+    );
+
+    group.bench_function("track2_direct_to_struct", |b| {
+        b.iter(|| {
+            let digest = bbnf_bench::direct_struct::track2_digest(black_box(input)).unwrap();
+            black_box(digest);
+        });
+    });
+    write_row(
+        host,
+        fixture,
+        "track2_direct_to_struct",
+        BenchFacts::bbnf_json_workload(
+            fixture.sha256.clone(),
+            fixture.bytes.len() as u64,
+            TrackTag::Track2Handcoded,
+            "direct_to_struct",
+            track2_payload.0,
+            track2_payload.1,
+            measurement_time_s,
+            sample_size as u32,
+        ),
+    );
+
+    group.bench_function("sonic_rs_direct_to_struct", |b| {
+        b.iter(|| {
+            let digest =
+                bbnf_bench::direct_struct::sonic_digest(black_box(&fixture.bytes)).unwrap();
+            black_box(digest);
+        });
+    });
+    write_competitor_row(
+        host,
+        fixture,
+        "sonic_rs_direct_to_struct",
+        "sonic-rs",
+        "0.5.8",
+        "direct_to_struct",
+        measurement_time_s,
+        sample_size as u32,
+    );
+
+    group.bench_function("serde_json_direct_to_struct", |b| {
+        b.iter(|| {
+            let digest =
+                bbnf_bench::direct_struct::serde_digest(black_box(&fixture.bytes)).unwrap();
+            black_box(digest);
+        });
+    });
+    write_competitor_row(
+        host,
+        fixture,
+        "serde_json_direct_to_struct",
+        "serde_json",
+        "workspace",
+        "direct_to_struct",
+        measurement_time_s,
+        sample_size as u32,
+    );
+
     group.finish();
     run_probe_group(
         c,
@@ -307,9 +389,13 @@ fn write_row(host: &HostFacts, fixture: &JsonFixture, bench_name: &str, facts: B
 }
 
 fn metadata_path(corpus: &str, bench_name: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../..")
-        .join("target")
+    env::var_os("CARGO_TARGET_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| {
+            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../..")
+                .join("target")
+        })
         .join("criterion")
         .join(format!("json_{corpus}"))
         .join(bench_name)

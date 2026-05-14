@@ -1,4 +1,4 @@
-use bbnf_bench::gate::{self, ThresholdInput};
+use bbnf_bench::gate::{self, DirectProjectionInput, Outcome, ThresholdInput, Verdict};
 use bbnf_bench::materialization::track_stats;
 use bbnf_bench::metadata::{current_peak_rss_bytes, RowMetadata, TrackTag};
 use bbnf_bench::report::Report;
@@ -14,8 +14,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     if args.get(1).is_some_and(|arg| arg == "--rss-probe") {
         return rss_probe_main(&args[2..]);
     }
+    let advisory = args.iter().skip(1).any(|arg| arg == "--advisory");
 
-    let criterion_root = workspace_root().join("target/criterion");
+    let criterion_root = env::var_os("CARGO_TARGET_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| workspace_root().join("target"))
+        .join("criterion");
     let results_path = workspace_root().join("RESULTS.md");
     let fixtures = test_fixtures::load_available_bench_fixtures()?;
     let mut report = Report::new("Skinny JSON Bench Results");
@@ -34,9 +38,15 @@ fn main() -> Result<(), Box<dyn Error>> {
             sonic: read_slope_ns(&group, "sonic_rs_anchor"),
             simd_borrowed: read_slope_ns(&group, "simd_json_borrowed"),
             simd_owned: read_slope_ns(&group, "simd_json_owned"),
+            direct_track1: read_slope_ns(&group, "track1_direct_to_struct"),
+            direct_track2: read_slope_ns(&group, "track2_direct_to_struct"),
+            direct_sonic: read_slope_ns(&group, "sonic_rs_direct_to_struct"),
+            direct_serde: read_slope_ns(&group, "serde_json_direct_to_struct"),
         };
         let input = std::str::from_utf8(&fixture.bytes)?;
         let parity_ok = bbnf_bench::parity::assert_parity(input).is_ok();
+        let direct_struct_ok =
+            bbnf_bench::direct_struct::assert_direct_struct_parity(input, &fixture.bytes).is_ok();
         let scalar_offsets = bbnf_bench::scan::structural_offsets_scalar(&fixture.bytes);
         let simd_offsets = bbnf_bench::scan::structural_offsets_simd(&fixture.bytes);
         let scalar_hash = bbnf_bench::scan::hash_offsets(&scalar_offsets);
@@ -51,7 +61,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             peak_rss_bounds(&fixture, estimates.fastest_anchor().map(|anchor| anchor.0));
         let outcome = gate::classify(&ThresholdInput {
             schema_ok: gate::validate_schema(&rows) && estimates.required_present(),
-            parity_ok,
+            parity_ok: parity_ok && direct_struct_ok,
             simd_parity_ok,
             simd_canada_gbps: canada_scan_gbps,
             simd_floor_gbps: simd_floor_gbps(),
@@ -65,6 +75,15 @@ fn main() -> Result<(), Box<dyn Error>> {
             bbnf_peak_rss,
         });
         outcomes.push(outcome);
+        let direct_outcome = gate::classify_direct_projection(&DirectProjectionInput {
+            correctness_ok: direct_struct_ok,
+            track1_ns: estimates.direct_track1,
+            track2_ns: estimates.direct_track2,
+            sonic_rs_ns: estimates.direct_sonic,
+        });
+        if let Some(outcome) = direct_outcome {
+            outcomes.push(outcome);
+        }
         report.push_row(
             fixture.name.clone(),
             outcome,
@@ -79,6 +98,28 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .map(|anchor| anchor.0.to_string()),
             estimates.fastest_anchor().map(|anchor| anchor.1),
         );
+        report.push_workload_row(
+            &fixture.name,
+            "direct_to_struct",
+            fixture.bytes.len() as u64,
+            estimates.direct_track1,
+            estimates.direct_track2,
+            estimates.direct_sonic,
+            estimates.direct_serde,
+            direct_workload_signal(
+                direct_struct_ok,
+                direct_outcome,
+                fixture.bytes.len() as u64,
+                &estimates,
+            ),
+        );
+        if direct_outcome == Some(Outcome::NDirectProjectionFailure) {
+            report.notes.push(direct_projection_note(
+                &fixture.name,
+                fixture.bytes.len() as u64,
+                &estimates,
+            ));
+        }
         push_probe_rows(
             &mut report,
             &criterion_root,
@@ -109,7 +150,14 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
-    if let Some(worst) = gate::worst_outcome(outcomes) {
+    let hard_failure = outcomes.iter().copied().find(|outcome| {
+        matches!(
+            outcome,
+            Outcome::IParityOracleFail | Outcome::JSchemaFail | Outcome::KSimdParityHashFail
+        )
+    });
+    let worst_outcome = gate::worst_outcome(outcomes.iter().copied());
+    if let Some(worst) = worst_outcome {
         report.notes.push(format!(
             "Overall outcome {} / {:?}.",
             worst.id(),
@@ -124,9 +172,81 @@ fn main() -> Result<(), Box<dyn Error>> {
         "Track 2 checklist signed by implementation owner: Track 2 uses runtime::tape::TapeBuilder, shares the same parity oracle as Track 1, and never calls runtime::generated_json::parse."
             .to_string(),
     );
+    report.notes.push(
+        "Sidecar strictness metadata: sonic-rs/simd-json/serde_json rows are strict / scan-boundary / yes; asmjson and RapidJSON default rows, when populated in Wave 6, must be rendered as permissive / none / no with their API and output plane named."
+            .to_string(),
+    );
     report.write_markdown(&results_path)?;
     println!("{}", report.render_markdown());
+    let exit_outcome = if advisory {
+        hard_failure
+    } else {
+        worst_outcome
+    };
+    if let Some(worst) = exit_outcome {
+        let exit_code = exit_code_for_verdict(worst.verdict());
+        if exit_code != 0 {
+            std::process::exit(exit_code);
+        }
+    }
     Ok(())
+}
+
+fn exit_code_for_verdict(verdict: Verdict) -> i32 {
+    match verdict {
+        Verdict::Go | Verdict::GoWithFocus => 0,
+        Verdict::Conditional => 6,
+        Verdict::Invalid => 2,
+        Verdict::NoGo => 5,
+    }
+}
+
+fn direct_workload_signal(
+    correctness_ok: bool,
+    outcome: Option<Outcome>,
+    bytes: u64,
+    estimates: &Estimates,
+) -> String {
+    if !correctness_ok {
+        return "FAIL digest mismatch".to_string();
+    }
+    if outcome == Some(Outcome::NDirectProjectionFailure) {
+        let track1 = throughput_mbps(bytes, estimates.direct_track1);
+        let track2 = throughput_mbps(bytes, estimates.direct_track2);
+        let sonic = throughput_mbps(bytes, estimates.direct_sonic);
+        return format!(
+            "NO-GO sink_only throughput > sonic-rs * {:.2} ns slack; correctness PASS; Track 1 {}, Track 2 {}, sonic {} Mbps",
+            gate::DIRECT_PROJECTION_SONIC_SLACK,
+            format_mbps(track1),
+            format_mbps(track2),
+            format_mbps(sonic)
+        );
+    }
+    "PASS sink_only track1=track2=serde; sonic shape parity; throughput within gate".to_string()
+}
+
+fn direct_projection_note(corpus: &str, bytes: u64, estimates: &Estimates) -> String {
+    format!(
+        "{corpus} direct-to-struct gate: NO-GO. Track 1 {} Mbps, Track 2 {} Mbps, sonic-rs {} Mbps; Track 1 and Track 2 must be within {:.2}x sonic-rs time.",
+        format_mbps(throughput_mbps(bytes, estimates.direct_track1)),
+        format_mbps(throughput_mbps(bytes, estimates.direct_track2)),
+        format_mbps(throughput_mbps(bytes, estimates.direct_sonic)),
+        gate::DIRECT_PROJECTION_SONIC_SLACK
+    )
+}
+
+fn throughput_mbps(bytes: u64, ns: Option<f64>) -> Option<f64> {
+    if bytes == 0 {
+        return None;
+    }
+    ns.filter(|ns| *ns > 0.0 && ns.is_finite())
+        .map(|ns| bytes as f64 * 8_000.0 / ns)
+}
+
+fn format_mbps(value: Option<f64>) -> String {
+    value
+        .map(|value| format!("{value:.0}"))
+        .unwrap_or_else(|| "n/a".to_string())
 }
 
 fn peak_rss_bounds(
@@ -171,6 +291,10 @@ struct Estimates {
     sonic: Option<f64>,
     simd_borrowed: Option<f64>,
     simd_owned: Option<f64>,
+    direct_track1: Option<f64>,
+    direct_track2: Option<f64>,
+    direct_sonic: Option<f64>,
+    direct_serde: Option<f64>,
 }
 
 impl Estimates {
@@ -178,6 +302,10 @@ impl Estimates {
         self.track1.is_some()
             && self.track2.is_some()
             && (self.sonic.is_some() || self.simd_borrowed.is_some() || self.simd_owned.is_some())
+            && self.direct_track1.is_some()
+            && self.direct_track2.is_some()
+            && self.direct_sonic.is_some()
+            && self.direct_serde.is_some()
     }
 
     fn fastest_anchor(&self) -> Option<(&'static str, f64)> {
@@ -200,6 +328,10 @@ fn read_metadata_rows(group: &Path) -> Vec<RowMetadata> {
         "sonic_rs_anchor",
         "simd_json_borrowed",
         "simd_json_owned",
+        "track1_direct_to_struct",
+        "track2_direct_to_struct",
+        "sonic_rs_direct_to_struct",
+        "serde_json_direct_to_struct",
     ]
     .into_iter()
     .filter_map(|bench| fs::read_to_string(group.join(bench).join("metadata.toml")).ok())

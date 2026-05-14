@@ -2,6 +2,7 @@ use std::borrow::Cow;
 use std::fmt;
 
 pub mod integration;
+pub mod number;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RegexError {

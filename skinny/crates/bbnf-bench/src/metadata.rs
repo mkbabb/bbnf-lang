@@ -134,6 +134,29 @@ impl BenchFacts {
         }
     }
 
+    pub fn bbnf_json_workload(
+        input_sha256: String,
+        input_bytes: u64,
+        track: TrackTag,
+        materialisation: &str,
+        arena_writes: u64,
+        payload_allocations: u64,
+        measurement_time_s: f64,
+        sample_size: u32,
+    ) -> Self {
+        let mut facts = Self::bbnf_json(
+            input_sha256,
+            input_bytes,
+            track,
+            arena_writes,
+            payload_allocations,
+            measurement_time_s,
+            sample_size,
+        );
+        facts.materialisation = materialisation.to_string();
+        facts
+    }
+
     pub fn competitor(
         input_sha256: String,
         input_bytes: u64,

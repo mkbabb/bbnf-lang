@@ -1,3 +1,4 @@
+pub mod direct_struct;
 pub mod gate;
 pub mod materialization;
 pub mod metadata;

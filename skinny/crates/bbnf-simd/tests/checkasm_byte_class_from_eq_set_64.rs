@@ -307,9 +307,7 @@ fn byte_class_corpus_parity_twitter() {
     let fixtures = match test_fixtures::load_available_bench_fixtures() {
         Ok(f) => f,
         Err(error) => {
-            eprintln!(
-                "byte_class corpus parity: fixtures unavailable ({error:?}); skipping"
-            );
+            eprintln!("byte_class corpus parity: fixtures unavailable ({error:?}); skipping");
             return;
         }
     };
@@ -341,7 +339,9 @@ fn byte_class_corpus_parity_twitter() {
     // a single divergence yields divergent digests.  Mixer is splitmix64-style
     // (constants from Stafford / Vigna) so neighbouring masks do not cancel.
     fn mix64(state: u64, input: u64) -> u64 {
-        let mut z = state.wrapping_add(input).wrapping_add(0x9E37_79B9_7F4A_7C15);
+        let mut z = state
+            .wrapping_add(input)
+            .wrapping_add(0x9E37_79B9_7F4A_7C15);
         z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
         z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
         z ^ (z >> 31)

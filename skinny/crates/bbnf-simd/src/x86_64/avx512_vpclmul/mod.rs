@@ -7,7 +7,4 @@
 
 pub mod prefix_xor;
 
-pub const ENABLED: bool = cfg!(all(
-    target_arch = "x86_64",
-    target_feature = "vpclmulqdq"
-));
+pub const ENABLED: bool = cfg!(all(target_arch = "x86_64", target_feature = "vpclmulqdq"));

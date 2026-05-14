@@ -154,66 +154,66 @@
 - twitter direct-to-struct gate: NO-GO. Track 1 9849 Mbps, Track 2 9814 Mbps, sonic-rs 11604 Mbps; Track 1 and Track 2 must be within 1.10x sonic-rs time.
 - twitter payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
 - twitter lazy tape materialization: 29573 offsets, 118292 logical offset bytes + 1560 sparse flag bytes (0.19x input), 133632 allocated tape bytes (0.21x input), 0 payload bytes; object opens 1264, array opens 1050, closes 2314, string quotes 18099, numbers 2109, literals 4737, separators 0.
-- twitter peak RSS subprocess probes: bbnf=3522560 bytes, S anchor sonic-rs=4931584 bytes.
+- twitter peak RSS subprocess probes: bbnf=3522560 bytes, S anchor sonic-rs=4816896 bytes.
 - citm_catalog payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
 - citm_catalog lazy tape materialization: 85035 offsets, 340140 logical offset bytes + 5 sparse flag bytes (0.20x input), 524312 allocated tape bytes (0.30x input), 0 payload bytes; object opens 10937, array opens 10451, closes 21388, string quotes 26604, numbers 14392, literals 1263, separators 0.
-- citm_catalog peak RSS subprocess probes: bbnf=4751360 bytes, S anchor sonic-rs=7782400 bytes.
+- citm_catalog peak RSS subprocess probes: bbnf=4751360 bytes, S anchor sonic-rs=7667712 bytes.
 - canada direct-to-struct gate: NO-GO. Track 1 5105 Mbps, Track 2 5099 Mbps, sonic-rs 12512 Mbps; Track 1 and Track 2 must be within 1.10x sonic-rs time.
 - canada payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
 - canada lazy tape materialization: 223236 offsets, 892944 logical offset bytes + 0 sparse flag bytes (0.40x input), 1048576 allocated tape bytes (0.47x input), 0 payload bytes; object opens 4, array opens 56045, closes 56049, string quotes 12, numbers 111126, literals 0, separators 0.
-- canada peak RSS subprocess probes: bbnf=5816320 bytes, S anchor sonic-rs=11386880 bytes.
+- canada peak RSS subprocess probes: bbnf=5799936 bytes, S anchor sonic-rs=11272192 bytes.
 - canada structural scan: 69075 Mbps; floor is 40000 Mbps.
 - apache_builds payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
 - apache_builds lazy tape materialization: 7068 offsets, 28272 logical offset bytes + 5 sparse flag bytes (0.22x input), 32792 allocated tape bytes (0.26x input), 0 payload bytes; object opens 884, array opens 3, closes 887, string quotes 5289, numbers 2, literals 3, separators 0.
-- apache_builds peak RSS subprocess probes: bbnf=2752512 bytes, S anchor sonic-rs=3112960 bytes.
+- apache_builds peak RSS subprocess probes: bbnf=2719744 bytes, S anchor sonic-rs=2998272 bytes.
 - github_events payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
 - github_events lazy tape materialization: 2526 offsets, 10104 logical offset bytes + 25 sparse flag bytes (0.16x input), 16424 allocated tape bytes (0.25x input), 0 payload bytes; object opens 180, array opens 19, closes 199, string quotes 1891, numbers 149, literals 88, separators 0.
-- github_events peak RSS subprocess probes: bbnf=2703360 bytes, S anchor sonic-rs=3096576 bytes.
+- github_events peak RSS subprocess probes: bbnf=2703360 bytes, S anchor sonic-rs=2981888 bytes.
 - update_center payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
 - update_center lazy tape materialization: 35281 offsets, 141124 logical offset bytes + 1045 sparse flag bytes (0.27x input), 263424 allocated tape bytes (0.49x input), 0 payload bytes; object opens 1896, array opens 1937, closes 3833, string quotes 27229, numbers 0, literals 386, separators 0.
-- update_center peak RSS subprocess probes: bbnf=3342336 bytes, S anchor sonic-rs=4521984 bytes.
+- update_center peak RSS subprocess probes: bbnf=3342336 bytes, S anchor sonic-rs=4423680 bytes.
 - mesh direct-to-struct gate: NO-GO. Track 1 4987 Mbps, Track 2 5003 Mbps, sonic-rs 9606 Mbps; Track 1 and Track 2 must be within 1.10x sonic-rs time.
 - mesh payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
 - mesh lazy tape materialization: 80250 offsets, 321000 logical offset bytes + 0 sparse flag bytes (0.44x input), 524288 allocated tape bytes (0.72x input), 0 payload bytes; object opens 3, array opens 3610, closes 3613, string quotes 11, numbers 73013, literals 0, separators 0.
-- mesh peak RSS subprocess probes: bbnf=3653632 bytes, S anchor sonic-rs=6176768 bytes.
+- mesh peak RSS subprocess probes: bbnf=3620864 bytes, S anchor sonic-rs=6078464 bytes.
 - random direct-to-struct gate: NO-GO. Track 1 6676 Mbps, Track 2 6667 Mbps, sonic-rs 9157 Mbps; Track 1 and Track 2 must be within 1.10x sonic-rs time.
 - random payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
 - random lazy tape materialization: 49011 offsets, 196044 logical offset bytes + 0 sparse flag bytes (0.38x input), 262144 allocated tape bytes (0.51x input), 0 payload bytes; object opens 4001, array opens 1001, closes 5002, string quotes 33005, numbers 5002, literals 1000, separators 0.
-- random peak RSS subprocess probes: bbnf=3358720 bytes, S anchor sonic-rs=4767744 bytes.
+- random peak RSS subprocess probes: bbnf=3342336 bytes, S anchor sonic-rs=4653056 bytes.
 - gsoc-2018 direct-to-struct gate: NO-GO. Track 1 5724 Mbps, Track 2 5744 Mbps, sonic-rs 8516 Mbps; Track 1 and Track 2 must be within 1.10x sonic-rs time.
 - gsoc-2018 payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
 - gsoc-2018 lazy tape materialization: 41714 offsets, 166856 logical offset bytes + 8545 sparse flag bytes (0.05x input), 272384 allocated tape bytes (0.08x input), 0 payload bytes; object opens 3793, array opens 0, closes 3793, string quotes 34128, numbers 0, literals 0, separators 0.
-- gsoc-2018 peak RSS subprocess probes: bbnf=6193152 bytes, S anchor sonic-rs=10207232 bytes.
+- gsoc-2018 peak RSS subprocess probes: bbnf=6176768 bytes, S anchor sonic-rs=10108928 bytes.
 - marine_ik direct-to-struct gate: NO-GO. Track 1 6458 Mbps, Track 2 6429 Mbps, sonic-rs 8799 Mbps; Track 1 and Track 2 must be within 1.10x sonic-rs time.
 - marine_ik payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
 - marine_ik lazy tape materialization: 359563 offsets, 1438252 logical offset bytes + 0 sparse flag bytes (0.48x input), 2097152 allocated tape bytes (0.70x input), 0 payload bytes; object opens 9680, array opens 28377, closes 38057, string quotes 38268, numbers 245175, literals 6, separators 0.
-- marine_ik peak RSS subprocess probes: bbnf=7208960 bytes, S anchor sonic-rs=16236544 bytes.
+- marine_ik peak RSS subprocess probes: bbnf=7192576 bytes, S anchor sonic-rs=16138240 bytes.
 - instruments payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
 - instruments lazy tape materialization: 14793 offsets, 59172 logical offset bytes + 0 sparse flag bytes (0.27x input), 65536 allocated tape bytes (0.30x input), 0 payload bytes; object opens 1012, array opens 194, closes 1206, string quotes 6889, numbers 4935, literals 557, separators 0.
-- instruments peak RSS subprocess probes: bbnf=2949120 bytes, S anchor sonic-rs=3620864 bytes.
+- instruments peak RSS subprocess probes: bbnf=2916352 bytes, S anchor sonic-rs=3506176 bytes.
 - numbers direct-to-struct gate: NO-GO. Track 1 4301 Mbps, Track 2 4317 Mbps, sonic-rs 12974 Mbps; Track 1 and Track 2 must be within 1.10x sonic-rs time.
 - numbers payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
 - numbers lazy tape materialization: 10003 offsets, 40012 logical offset bytes + 0 sparse flag bytes (0.27x input), 65536 allocated tape bytes (0.44x input), 0 payload bytes; object opens 0, array opens 1, closes 1, string quotes 0, numbers 10001, literals 0, separators 0.
-- numbers peak RSS subprocess probes: bbnf=2686976 bytes, S anchor sonic-rs=3244032 bytes.
+- numbers peak RSS subprocess probes: bbnf=2670592 bytes, S anchor sonic-rs=3145728 bytes.
 - unicode_mixed direct-to-struct gate: NO-GO. Track 1 3197 Mbps, Track 2 3199 Mbps, sonic-rs 6406 Mbps; Track 1 and Track 2 must be within 1.10x sonic-rs time.
 - unicode_mixed payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
 - unicode_mixed lazy tape materialization: 41870 offsets, 167480 logical offset bytes + 9795 sparse flag bytes (0.17x input), 272384 allocated tape bytes (0.26x input), 0 payload bytes; object opens 4187, array opens 2, closes 4189, string quotes 25121, numbers 8371, literals 0, separators 0.
-- unicode_mixed peak RSS subprocess probes: bbnf=3883008 bytes, S anchor sonic-rs=5685248 bytes.
+- unicode_mixed peak RSS subprocess probes: bbnf=3866624 bytes, S anchor sonic-rs=5570560 bytes.
 - unicode_escapes direct-to-struct gate: NO-GO. Track 1 4574 Mbps, Track 2 4576 Mbps, sonic-rs 9072 Mbps; Track 1 and Track 2 must be within 1.10x sonic-rs time.
 - unicode_escapes payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
 - unicode_escapes lazy tape materialization: 11274 offsets, 45096 logical offset bytes + 9385 sparse flag bytes (0.05x input), 75776 allocated tape bytes (0.07x input), 0 payload bytes; object opens 1879, array opens 1, closes 1880, string quotes 5636, numbers 1877, literals 1, separators 0.
-- unicode_escapes peak RSS subprocess probes: bbnf=3784704 bytes, S anchor sonic-rs=5177344 bytes.
+- unicode_escapes peak RSS subprocess probes: bbnf=3768320 bytes, S anchor sonic-rs=5079040 bytes.
 - unicode_basic direct-to-struct gate: NO-GO. Track 1 4856 Mbps, Track 2 4859 Mbps, sonic-rs 7092 Mbps; Track 1 and Track 2 must be within 1.10x sonic-rs time.
 - unicode_basic payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
 - unicode_basic lazy tape materialization: 92146 offsets, 368584 logical offset bytes + 0 sparse flag bytes (0.35x input), 524288 allocated tape bytes (0.50x input), 0 payload bytes; object opens 5759, array opens 5760, closes 11519, string quotes 57590, numbers 11518, literals 0, separators 0.
-- unicode_basic peak RSS subprocess probes: bbnf=4014080 bytes, S anchor sonic-rs=6504448 bytes.
+- unicode_basic peak RSS subprocess probes: bbnf=3997696 bytes, S anchor sonic-rs=6389760 bytes.
 - distinct_values payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
 - distinct_values lazy tape materialization: 11118 offsets, 44472 logical offset bytes + 0 sparse flag bytes (0.29x input), 65536 allocated tape bytes (0.43x input), 0 payload bytes; object opens 440, array opens 1, closes 441, string quotes 9796, numbers 440, literals 0, separators 0.
-- distinct_values peak RSS subprocess probes: bbnf=2768896 bytes, S anchor sonic-rs=3244032 bytes.
+- distinct_values peak RSS subprocess probes: bbnf=2736128 bytes, S anchor sonic-rs=3129344 bytes.
 - y_string_unicode direct-to-struct gate: NO-GO. Track 1 5620 Mbps, Track 2 5671 Mbps, sonic-rs 8547 Mbps; Track 1 and Track 2 must be within 1.10x sonic-rs time.
 - y_string_unicode payload arena counters: Track 1 0/0 writes/allocations; Track 2 0/0 writes/allocations.
 - y_string_unicode lazy tape materialization: 2202 offsets, 8808 logical offset bytes + 9000 sparse flag bytes (0.50x input), 26624 allocated tape bytes (0.75x input), 0 payload bytes; object opens 0, array opens 1, closes 1, string quotes 2200, numbers 0, literals 0, separators 0.
-- y_string_unicode peak RSS subprocess probes: bbnf=2605056 bytes, S anchor sonic-rs=2752512 bytes.
+- y_string_unicode peak RSS subprocess probes: bbnf=2621440 bytes, S anchor sonic-rs=2670592 bytes.
 - Overall outcome N-direct / NoGo.
 - Track 1 is runtime::generated_json::parse; Track 2 is the independent hand-coded parser over runtime::tape.
 - Track 2 checklist signed by implementation owner: Track 2 uses runtime::tape::TapeBuilder, shares the same parity oracle as Track 1, and never calls runtime::generated_json::parse.

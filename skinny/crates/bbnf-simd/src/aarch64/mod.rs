@@ -1,5 +1,11 @@
 #[cfg(target_arch = "aarch64")]
+pub mod bitmap_next_set_bit;
+#[cfg(target_arch = "aarch64")]
+pub mod bitmap_prefix_xor_64;
+#[cfg(target_arch = "aarch64")]
 pub mod byte_class_from_eq_set_64;
+#[cfg(target_arch = "aarch64")]
+pub mod byte_class_from_table_64;
 #[cfg(target_arch = "aarch64")]
 pub mod byte_context;
 #[cfg(target_arch = "aarch64")]
@@ -8,6 +14,8 @@ pub mod cache_hints;
 pub mod classify_tbl4;
 #[cfg(target_arch = "aarch64")]
 pub mod digit_mac;
+#[cfg(target_arch = "aarch64")]
+pub mod eob_pad_clamp;
 #[cfg(target_arch = "aarch64")]
 pub mod match_tiny_plain_string;
 #[cfg(target_arch = "aarch64")]

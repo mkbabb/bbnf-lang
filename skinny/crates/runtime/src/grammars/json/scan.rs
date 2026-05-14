@@ -113,27 +113,45 @@ fn scan_tail(
 ) {
     let mut cursor = start;
     while cursor < input.len() {
-        let byte = input[cursor];
-        if in_string {
-            if escaped {
-                escaped = false;
-            } else if byte == b'\\' {
-                escaped = true;
-            } else if byte == b'"' {
-                positions.push(bbnf_simd::checked_position(cursor));
-                in_string = false;
-            }
-            cursor += 1;
-            continue;
+        let remaining = input.len() - cursor;
+        let take = remaining.min(64);
+        let block = bbnf_simd::prim::eob_pad_clamp(&input[cursor..cursor + take]);
+        let mut lane = 0usize;
+        while lane < take {
+            let byte = block.bytes[lane];
+            let absolute = cursor + lane;
+            scan_tail_byte(byte, absolute, positions, &mut in_string, &mut escaped);
+            lane += 1;
         }
+        cursor += take;
+    }
+}
 
-        if byte == b'"' {
+#[inline]
+fn scan_tail_byte(
+    byte: u8,
+    cursor: usize,
+    positions: &mut Vec<u32>,
+    in_string: &mut bool,
+    escaped: &mut bool,
+) {
+    if *in_string {
+        if *escaped {
+            *escaped = false;
+        } else if byte == b'\\' {
+            *escaped = true;
+        } else if byte == b'"' {
             positions.push(bbnf_simd::checked_position(cursor));
-            in_string = true;
-        } else if is_punctuation(byte) {
-            positions.push(bbnf_simd::checked_position(cursor));
+            *in_string = false;
         }
-        cursor += 1;
+        return;
+    }
+
+    if byte == b'"' {
+        positions.push(bbnf_simd::checked_position(cursor));
+        *in_string = true;
+    } else if is_punctuation(byte) {
+        positions.push(bbnf_simd::checked_position(cursor));
     }
 }
 

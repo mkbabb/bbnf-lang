@@ -226,3 +226,29 @@ BBNF_SIMD_STRICT=1 cargo test -p bbnf-simd --profile ax-iter --test checkasm_par
 # Prove the harness catches injected bugs:
 BBNF_SIMD_INJECT_BUG=1 cargo test -p bbnf-simd --profile ax-iter --test checkasm_parity -- --nocapture
 ```
+
+## SK-V5 Wave 5 Admitted Primitive Gates
+
+Wave 5 moved the checkasm gate from classifier-only coverage to admitted
+Layer-1 primitives with same-wave consumers:
+
+| Primitive | Consumer | Host implementation | Checkasm test |
+|---|---|---|---|
+| `BYTE_CLASS_FROM_TABLE_64` | generic `scan_dispatch` structural scanner | scalar executable spec on arm64; x86 table body remains gated on real x86 authoring | `checkasm_byte_class_from_table_64` |
+| `BITMAP_PREFIX_XOR_64` | JSON string-region scan via `prefix_xor_64` | scalar bit-parallel carry on arm64 | `checkasm_bitmap_prefix_xor_64` |
+| `BITMAP_NEXT_SET_BIT` | `compact_mask` structural projection emit | scalar `ctz` / compiler-lowered next-bit on arm64 | `checkasm_bitmap_next_set_bit` |
+| `EOB_PAD_CLAMP` | JSON scan tail handling | scalar zero-pad block on arm64 | `checkasm_eob_pad_clamp` |
+
+`primitive-checkasm` now runs the dedicated `BYTE_CLASS_FROM_EQ_SET_64`
+harness as well as these four gates, `checkasm_parity`, and
+`checkasm_utf8_block`. The new `tests/checkasm_common.rs` shared module owns
+deterministic xorshift input generation and verified stack canaries for Rust
+candidate calls. Raw callee-saved register sentinels remain reserved for
+future FFI/ASM call shims; applying them around ordinary Rust closures is not
+sound because the compiler may legitimately allocate callee-saved registers
+inside the closure frame.
+
+The no-orphan rule remains binding: `BULK_EMIT_COMPRESSED`,
+`FRAME_PUSH_BOUNDED`, `FRAME_POP_BOUNDED`, and `FSM_DISPATCH_THREADED` still
+require their real codegen/runtime consumers before body admission. See
+`skinny/REDRESS.md` SK-V5 Wave 5 entry.

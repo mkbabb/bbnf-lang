@@ -885,3 +885,35 @@ perturbation.
    authoring route guarded by `BBNF-COLLAPSEDSTAGE-NOT-VIABLE`. The current
    receiver packet is
    `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md`.
+
+## SK-V5 Wave 5 Primitive Admission Redress
+
+- Wave 5 admitted only primitives with same-wave runtime consumers.
+  `BYTE_CLASS_FROM_TABLE_64` is consumed by generic `scan_dispatch`;
+  `BITMAP_PREFIX_XOR_64` is consumed by JSON string-region scan;
+  `BITMAP_NEXT_SET_BIT` is consumed by `compact_mask`; `EOB_PAD_CLAMP` is
+  consumed by JSON tail scan. Dedicated checkasm gates cover all four plus
+  the pre-existing `BYTE_CLASS_FROM_EQ_SET_64` primitive.
+- The packet-level phrase "all remaining bbnf.asm primitive bodies" conflicts
+  with the same-wave-consumer non-negotiable for `BULK_EMIT_COMPRESSED`,
+  `FRAME_PUSH_BOUNDED`, `FRAME_POP_BOUNDED`, and
+  `FSM_DISPATCH_THREADED`: no current generated/runtime hot path consumes
+  those bodies. Per the A2 dav1d-process report, admitting them now would
+  create orphan kernels and violate Lock 16. They remain blocked until the
+  structural-tape compressed sink, bracket-stack CollapsedStage, and
+  per-grammar `.asm` CollapsedStage consumers exist.
+- This is not a performance deferral claim. It is an admission correction:
+  primitives without consumers cannot close Wave 5 honestly, cannot lift a
+  named row, and cannot be credited toward SOTA. The next implementation
+  packet must either land the missing consumers in the same wave or remove
+  those primitive bodies from the Wave 5 close condition.
+- The first register-clobber harness attempt wrapped arbitrary Rust closures
+  with AArch64 callee-saved GPR sentinels. That is not a sound checkasm shape:
+  the Rust compiler may legitimately allocate callee-saved registers inside
+  the closure frame, so the sentinel can report false positives before any ASM
+  candidate is involved. Wave 5 keeps verified stack canaries for Rust
+  candidate calls and reserves raw register sentinels for future FFI/ASM
+  `call_new` shims, where the callee boundary is explicit.
+- `gate-json` remains `N-direct / NoGo` after the admitted primitive gates.
+  This is expected: the admitted primitives harden scanner vocabulary and
+  checkasm coverage; they do not claim to close the direct-to-struct rows.

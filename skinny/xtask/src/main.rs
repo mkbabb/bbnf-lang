@@ -221,7 +221,15 @@ fn gate_json(root: &Path, passthrough: Vec<String>) -> Result<()> {
 }
 
 fn primitive_checkasm(root: &Path) -> Result<()> {
-    for test in ["checkasm_parity", "checkasm_utf8_block"] {
+    for test in [
+        "checkasm_byte_class_from_eq_set_64",
+        "checkasm_byte_class_from_table_64",
+        "checkasm_bitmap_prefix_xor_64",
+        "checkasm_bitmap_next_set_bit",
+        "checkasm_eob_pad_clamp",
+        "checkasm_parity",
+        "checkasm_utf8_block",
+    ] {
         let status = Command::new("cargo")
             .current_dir(root)
             .env("BBNF_SIMD_STRICT", "1")

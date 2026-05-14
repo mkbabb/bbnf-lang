@@ -36,6 +36,17 @@ impl StructuralAlphabet {
     pub fn contains(&self, byte: u8) -> bool {
         self.table[byte as usize]
     }
+
+    #[inline]
+    pub fn class_table(&self) -> [u8; 256] {
+        let mut table = [0u8; 256];
+        for (byte, is_member) in self.table.iter().copied().enumerate() {
+            if is_member {
+                table[byte] = 0xff;
+            }
+        }
+        table
+    }
 }
 
 #[inline]
@@ -93,7 +104,23 @@ pub struct ScalarParityReport {
 }
 
 pub fn scan_dispatch(input: &[u8], alphabet: &StructuralAlphabet) -> StructuralIndex {
-    scan_scalar(input, alphabet)
+    let class_table = alphabet.class_table();
+    let mut positions = Vec::with_capacity(input.len() / 8 + 8);
+    let mut cursor = 0usize;
+    while cursor + 64 <= input.len() {
+        let block: &[u8; 64] = input[cursor..cursor + 64]
+            .try_into()
+            .expect("slice length is fixed by loop guard");
+        let mask = prim::byte_class_from_table_64(block, &class_table);
+        compact_mask(input, cursor, mask, &mut positions);
+        cursor += 64;
+    }
+    for (relative, byte) in input[cursor..].iter().copied().enumerate() {
+        if alphabet.contains(byte) {
+            positions.push(checked_position(cursor + relative));
+        }
+    }
+    StructuralIndex::from_positions(positions, ScanBackend::Scalar)
 }
 
 pub fn scan_scalar(input: &[u8], alphabet: &StructuralAlphabet) -> StructuralIndex {
@@ -140,18 +167,8 @@ fn hash_positions(input: &[u8], positions: &[u32]) -> [u8; 32] {
 }
 
 #[inline]
-pub fn prefix_xor_64(mut mask: u64, carry_in: bool) -> u64 {
-    mask ^= mask << 1;
-    mask ^= mask << 2;
-    mask ^= mask << 4;
-    mask ^= mask << 8;
-    mask ^= mask << 16;
-    mask ^= mask << 32;
-    if carry_in {
-        !mask
-    } else {
-        mask
-    }
+pub fn prefix_xor_64(mask: u64, carry_in: bool) -> u64 {
+    prim::bitmap_prefix_xor_64(mask, carry_in)
 }
 
 #[inline]
@@ -189,13 +206,17 @@ pub fn escape_mask_64(bs_mask: u64, bs_carry_in: bool) -> (u64, bool) {
 }
 
 pub fn compact_mask(input: &[u8], base: usize, mask: u64, positions: &mut Vec<u32>) {
-    let mut bits = mask;
-    while bits != 0 {
-        let offset = bits.trailing_zeros() as usize;
+    let mut cursor = 0u8;
+    loop {
+        let offset = prim::bitmap_next_set_bit(mask, cursor);
+        if offset == 64 {
+            return;
+        }
+        let offset = offset as usize;
         let position = base + offset;
         debug_assert!(input.get(position).is_some());
         positions.push(checked_position(position));
-        bits &= bits - 1;
+        cursor = offset as u8 + 1;
     }
 }
 
@@ -206,6 +227,28 @@ pub fn compact_mask(input: &[u8], base: usize, mask: u64, positions: &mut Vec<u3
 // ============================================================================
 
 pub mod prim {
+    pub use crate::scalar::eob_pad_clamp::EobBlock;
+
+    #[inline]
+    pub fn byte_class_from_table_64(src: &[u8; 64], table: &[u8; 256]) -> u64 {
+        (crate::dispatch::primitive_kernels().byte_class_from_table_64)(src, table)
+    }
+
+    #[inline]
+    pub fn bitmap_prefix_xor_64(mask: u64, carry_in: bool) -> u64 {
+        (crate::dispatch::primitive_kernels().bitmap_prefix_xor_64)(mask, carry_in)
+    }
+
+    #[inline]
+    pub fn bitmap_next_set_bit(mask: u64, cursor: u8) -> u8 {
+        (crate::dispatch::primitive_kernels().bitmap_next_set_bit)(mask, cursor)
+    }
+
+    #[inline]
+    pub fn eob_pad_clamp(input: &[u8]) -> EobBlock {
+        (crate::dispatch::primitive_kernels().eob_pad_clamp)(input)
+    }
+
     /// Returns a 64-bit mask where bit i is set iff src[i] ∈ set.
     /// set must have len() ≤ 8.
     #[inline]

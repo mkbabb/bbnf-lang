@@ -15,11 +15,7 @@
 
 #[cfg(all(target_arch = "x86_64", target_feature = "avx512bw"))]
 unsafe extern "C" {
-    fn byte_class_from_eq_set_64_avx512(
-        src: *const u8,
-        set_ptr: *const u8,
-        set_len: usize,
-    ) -> u64;
+    fn byte_class_from_eq_set_64_avx512(src: *const u8, set_ptr: *const u8, set_len: usize) -> u64;
 }
 
 /// Safe Rust wrapper around the AVX-512 BW kernel.
@@ -33,7 +29,10 @@ unsafe extern "C" {
 /// specification).
 #[inline]
 pub fn byte_class_from_eq_set_64(src: &[u8; 64], set: &[u8]) -> u64 {
-    debug_assert!(set.len() <= 8, "BYTE_CLASS_FROM_EQ_SET_64 admits sets of size ≤ 8");
+    debug_assert!(
+        set.len() <= 8,
+        "BYTE_CLASS_FROM_EQ_SET_64 admits sets of size ≤ 8"
+    );
 
     #[cfg(all(target_arch = "x86_64", target_feature = "avx512bw"))]
     {

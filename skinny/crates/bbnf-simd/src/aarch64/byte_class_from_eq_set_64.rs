@@ -31,7 +31,10 @@ use core::arch::aarch64::*;
 #[cfg(target_arch = "aarch64")]
 #[inline]
 pub fn byte_class_from_eq_set_64_neon(src: &[u8; 64], set: &[u8]) -> u64 {
-    debug_assert!(set.len() <= 8, "BYTE_CLASS_FROM_EQ_SET_64 admits sets of size ≤ 8");
+    debug_assert!(
+        set.len() <= 8,
+        "BYTE_CLASS_FROM_EQ_SET_64 admits sets of size ≤ 8"
+    );
     unsafe {
         // --- 1. Load the 64-byte source as four uint8x16_t stripes ----------
         let s0 = vld1q_u8(src.as_ptr());

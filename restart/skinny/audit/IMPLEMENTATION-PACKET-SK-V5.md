@@ -389,6 +389,16 @@ sparse parse-time metadata over `Tape::offsets`; both variants improved view
 probes but regressed retained parse. H.W1 must consume typed events over the
 existing tape projection without adding a retained parse-time side column.
 
+Post-redress update 3: a transient byte-class whitespace `EventCursor` wrapper
+was measured and rejected in `skinny/REDRESS.md` item 51. Do not implement
+H.W1 by moving `skip_json_whitespace` behind a cursor facade or by using
+`BYTE_CLASS_FROM_EQ_SET_64` as a generic "next non-whitespace byte" wrapper.
+The admissible implementation is the structural-mask cursor: factor the JSON
+scanner's per-64-byte emit-mask calculation, carry only O(1) pending mask /
+quote / escape state, yield structural punctuation and quote events directly,
+and keep scalar validation in the grammar-neutral string/number/literal
+primitives.
+
 ### 4.6 Bench rewire + bench-private nuke
 
 `bbnf-bench/src/direct_struct.rs`: delete `SinkParser`, `track1_digest`,

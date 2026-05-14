@@ -41,6 +41,12 @@ partially:
   `skinny/REDRESS.md` item 50. Dense and sparse parse-time metadata improved
   view probes but regressed retained parse rows, so H.W1 remains typed event
   cursor consumption over the existing tape projection.
+- A byte-class whitespace `EventCursor` wrapper was measured and rejected in
+  `skinny/REDRESS.md` item 51. It was correctness-green after repair but
+  regressed focused retained Track 1 rows to roughly twitter 7130 Mbps,
+  citm_catalog 10291 Mbps, and canada 14110 Mbps. H.W1 must consume the live
+  structural emit mask with O(1) pending state; renaming `skip_ws` is not an
+  event-cursor close.
 - Wave 5 admits only consumed primitives:
   `BYTE_CLASS_FROM_EQ_SET_64`, `BYTE_CLASS_FROM_TABLE_64`,
   `BITMAP_PREFIX_XOR_64`, `BITMAP_NEXT_SET_BIT`, and `EOB_PAD_CLAMP`.

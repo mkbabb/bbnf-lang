@@ -713,6 +713,46 @@ Lazy tape materialization is now reported per corpus:
    typed event consumption over the existing tape projection, with string and
    number rescans confined to grammar-neutral primitives.
 
+51. SK-V5 event-cursor redress: byte-class whitespace cursor is REJECTED.
+
+   A transient `JsonEventCursor` wrapper was implemented experimentally in the
+   retained generated parser. It did not retain a side table and it kept
+   string/number work inside the existing parse-that primitives, but the
+   cursor only centralized "next non-whitespace byte" using
+   `BYTE_CLASS_FROM_EQ_SET_64`; it did not consume the JSON structural emit
+   mask or carry quote/escape state. The first focused triad run was
+   correctness-green after a start-offset repair, but regressed the governing
+   retained parse plane: `track1_generated` measured approximately twitter
+   7130 Mbps, citm_catalog 10291 Mbps, and canada 14110 Mbps. That is far
+   below the current RESULTS baseline of 12398 / 21110 / 17321 Mbps and below
+   the rejected-side-table experiments on twitter/citm.
+
+   The slice was reverted before commit. The rejected route is narrow: moving
+   whitespace skipping behind an `EventCursor` name is not the H.W1 close. The
+   admissible cursor must be a mask-bearing structural cursor that consumes
+   the scanner's live per-64-byte JSON emit mask (`punctuation & !string_body |
+   real_quotes`) with O(1) pending state. It may yield structural punctuation
+   and quote events, and generated parsers must cross-check any skipped source
+   bytes with the grammar-neutral string/number/literal primitive boundary so
+   invalid bytes such as `[1x,2]` cannot disappear between scalar and
+   delimiter. No precomputed `StructuralIndex`, no `Vec<JsonEvent>`, no
+   whitespace bitmap sidecar, and no aux projection column are admissible.
+
+52. SK-V5 baseline reassay after the event-cursor rejection.
+
+   Three fresh `samply` captures were recorded under
+   `skinny/profile/skv5-event-redress/`: retained `twitter`, retained
+   `random`, and generated direct `unicode_mixed` Track 1. The retained
+   profiles preserve the prior diagnosis: symbol-level self time still
+   collapses into `runtime::generated_json::generated::parse_value_at`, with
+   PC-level leaves spread across the same inlined parse hub. Profile-loop
+   throughput was twitter 11396 Mbps and random 7339 Mbps. The direct
+   `unicode_mixed` Track 1 profile measured 3885 Mbps and attributes the
+   dominant leaves to
+   `runtime::generated_json::generated::parse_object_value_at_direct` plus
+   `parse_that_regex::unescape_json_string`; decoded string delivery remains a
+   direct gate blocker independent of retained parse cursor work.
+
 ## Sonic Closeness
 
 The parser works as the tape/direct hybrid the spec requires, but the current
@@ -734,8 +774,10 @@ no-allocation decoded-string consumer regressed and was rejected. The residual
 therefore remains dense typed-sink emission, fused decoded-string delivery,
 exact float/string/Unicode materialization, and event-stream consumption.
 Parse-time retained projection side tables were also measured and rejected in
-item 50; view facts must be consumed through the typed event cursor rather than
-written as another retained column during parse.
+item 50, and the byte-class whitespace cursor was rejected in item 51. View
+facts must be consumed through a structural-mask typed event cursor rather than
+written as another retained column during parse or hidden behind a renamed
+whitespace skipper.
 
 The largest code win already landed was removing redundant whitespace scans:
 large-corpus Track 1 improved by roughly 26-34% when that change first landed.
@@ -999,8 +1041,9 @@ perturbation.
 
 1. Keep the rejected-route ledger intact: structural-index typed parser prepass,
    NEON no-escape string matcher, separator elision, generic SWAR whitespace,
-   12-byte/width churn, and dispatch-table/function-pointer alternates remain
-   non-canonical unless a future bench row overturns them.
+   12-byte/width churn, dispatch-table/function-pointer alternates, parse-time
+   projection side tables, and byte-class whitespace EventCursor wrappers
+   remain non-canonical unless a future bench row overturns them.
 2. Carry the current G/L rows into V1 planning as the parse/tape SOTA-BEAT
    block: event-stream consumption, random/key-dispatch overhead,
    string/Unicode projection, and Canada structural-scan floor restoration are

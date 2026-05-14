@@ -231,6 +231,16 @@ Net LOC delta for the remaining substrate consolidation: ~−80 LOC capacity/sid
 
 The architectural lesson is narrower than the earlier Wave 3 forecast: the implemented triad win did not require a sidecar structural-index typed-parser prepass, a NEON no-escape matcher, separator elision, generic SWAR whitespace, 12-byte/width churn, or dispatch-table/function-pointer alternates. The expanded gate then revealed the next honest lever: a typed event cursor over the same tape projection, plus grammar-neutral byte/string/number primitives. `parse_value_at` being the dominant fresh profile leaf on `random` and `unicode_escapes` makes this a codegen/substrate-consumption issue, not a return to eager tokens.
 
+SK-V5 redress item 51 narrows "typed event cursor" further. A transient
+`JsonEventCursor` that only centralized whitespace skipping behind
+`BYTE_CLASS_FROM_EQ_SET_64` was measured and rejected: focused
+`track1_generated` rows fell to roughly twitter 7130 Mbps, citm_catalog
+10291 Mbps, and canada 14110 Mbps. The admissible H.W1 cursor therefore is
+not a renamed whitespace skipper. It must consume the scanner's live
+per-stripe JSON emit mask (`punctuation & !string_body | real_quotes`) with
+O(1) pending state, no retained `StructuralIndex`, no `Vec<JsonEvent>`, no
+whitespace bitmap sidecar, and no aux projection column.
+
 ### 1.6 Typed event cursor over tape projection (canonical lowering pattern)
 
 The surviving architectural lever is a **codegen template inversion** over the tape projection: a lowering pattern, not a new BIR variant or directive, and not a new substrate variant. The substrate variants are the five values of `BackendShape` carried at `LayoutFacts.backend_shape` (ARCH §7.3); per-rule selection across `EagerTape`, `OffsetTape`, `EventTape`, `SinkOnly`, and `CollapsedStage` is cost-model-derived from existing Grammar IR facts. Generated parsers consume typed events from the offset/flag stream, never re-scanning source bytes for whitespace or value boundaries outside grammar-neutral primitives. The substrate is Lock 1 verbatim: tape and direct-to-struct are one retained projection. The change is what the emitted `parse_*` functions do with that projection, governed by the per-rule `backend_shape` decision.
@@ -640,7 +650,7 @@ The visitor trait is here because the bench harness's "read-twice" path (parse �
 | Multi-grammar tape kind sharing | `NodeKindId` mapping table per grammar | Skinny is one grammar; the kind table is hard-coded. |
 | `@host fn` decode-string call | Per-grammar `host_decode` registry; V1 emits a lazy `decode_json_string` call from `JsonString::as_str()` | **FAITHFUL-conditional on V1 keeping decode lazy.** `skinny/REDRESS.md` item 19 measured the host-call split: dispatch overhead is fine (`host_call_dispatch_overhead` 0.7-0.7 ns / call, PASS ≤50 ns); but parse-time eager decode is MASKING (`host_call_eager_decode` 57.6% / 77.2% / 81.9% of Track 1 across twitter/citm_catalog/canada). The host-fn-free skinny remains FAITHFUL only if V1 emits `JsonString::as_str` as a lazy host call (matching the `Cow<'input, str>` model in §4.1); if V1 emits a parse-time `decode_json_string_to_arena` host call, the zero-arena claim at §2 breaks and the cut becomes MASKING. |
 
-The skinny substrate keeps **only** what the parse-throughput SOTA test requires: offset tape, structural SIMD scan, payload arena (empty for JSON), typed projection, snapshot identity, read visitor. The omitted features are orthogonal axes (mutation, incremental reuse, recovery, multi-grammar visitors) that do not contribute to the throughput row. The lazy-offset substrate has been measured against the historical triad and passes; the expanded gate remains overall G / NoGo. The remaining work is typed event consumption, string/Unicode/number primitive closure, and capacity policy, all without reintroducing the rejected alternates.
+The skinny substrate keeps **only** what the parse-throughput SOTA test requires: offset tape, structural SIMD scan, payload arena (empty for JSON), typed projection, snapshot identity, read visitor. The omitted features are orthogonal axes (mutation, incremental reuse, recovery, multi-grammar visitors) that do not contribute to the throughput row. The lazy-offset substrate has been measured against the historical triad and passes; the expanded gate remains overall G / NoGo. The remaining work is structural-mask typed event consumption, string/Unicode/number primitive closure, and capacity policy, all without reintroducing the rejected alternates.
 
 ---
 

@@ -341,6 +341,10 @@ destructor to bypass.
 **Audit invariants** (apply when `backend_shape ∈ {OffsetTape, EventTape, SinkOnly, CollapsedStage}`; `EagerTape` is exempt because it retains the source-byte cursor by design):
 - No `skip_ws` call site survives in generated `parse_*` bodies.
 - No `peek` against source bytes survives in dispatch positions; dispatch reads through the typed cursor (`OffsetTape` / `EventTape`), through the typed-sink builder (`SinkOnly`), or through the mask-held state register (`CollapsedStage`). Source-byte reads remain inside grammar-neutral primitives such as `parse-that/string`, `parse-that/number`, and exact literal verification.
+- The cursor is a structural-mask cursor, not a byte-class whitespace wrapper.
+  SK-V5 redress item 51 measured and rejected the wrapper route; a conforming
+  lowering consumes the scanner's live emit mask with O(1) pending state and
+  never materializes a retained structural-event sidecar.
 - The cycle-per-byte gate (`BENCH.md` §7.9) is comparator-anchored: skinny twitter c/B ≤ 1.5 × simdjson twitter c/B (the simdjson floor at its algorithm is ~1.142 c/B per `simdjson-v2/PROFILE-REPORT.md`).
 - Hot-leaf count gate (`BENCH.md` §6 outcome class `G-fusion-quality`): comparator-anchored count ≤ 3 leaves at ≥10% self-time (comparators: sonic-rs = 1, simdjson = 2).
 

@@ -301,10 +301,9 @@ Skinny records two corpus tiers:
   set. It passed after lazy-offset tape and local hot-path specialization.
 - **Expanded SOTA-BEAT gate**: the full throughput corpus below. This tier is
   the current dispatch arbiter. `skinny/RESULTS.md` records overall
-  **N-direct / NoGo**. The parse/tape plane has hard G rows on `twitter`,
-  `random`, `unicode_mixed`, and `unicode_basic`; the sink-only
-  direct-to-struct workload now passes 6 of 17 rows after the UTF-validation
-  and integer-classification redress, but 11 rows remain below sonic-rs direct.
+  **N-direct / NoGo**. The parse/tape plane has 13 hard G rows plus the
+  canada L structural-floor failure; the sink-only direct-to-struct workload
+  now passes only `numbers`, while 16 rows remain below sonic-rs direct.
 
 ### 3.1 Corpus inventory (canonical 17-corpus expansion; 2026-05-12)
 
@@ -750,7 +749,7 @@ Notation:
 | **K — SIMD parity hash fail** | n/a | n/a | NO-GO — correctness fail | The structural-scan SIMD path produces offsets disagreeing with scalar on **any** corpus (twitter / citm / canada); substrate is silently corrupt. Block all dispatch until SIMD codepath fixed. |
 | **L — SIMD throughput fail** | n/a | n/a | NO-GO — SIMD floor fail | Structural scan on **canada** (largest input; binding row) below floor (40000 Mbps NEON / 56000 Mbps AVX2). Even if Track 2 parse hits parity, the substrate ceiling will fail at scale. Block dispatch until the SIMD floor is restored, then re-run the full matrix. |
 | **M — Memory residency fail** | n/a | n/a | NO-GO — peak RSS exceeds floor | Track 2 (or Track 1) peak RSS > 3 × the fastest competitor's peak RSS on canada. Substrate that hits SOTA-class throughput at 3× memory is not viable for concurrent-parse workloads (web servers, batch ingestion). Block dispatch until substrate memory profile is fixed. The 3× multiplier is the V1 J.W1 J-side floor projected back to skinny gate; a tighter ratio is encouraged but not required. |
-| **N-direct — Direct projection throughput fail** | n/a | n/a | NO-GO — direct typed emission is not SOTA-class | The `direct_to_struct` workload is correctness-green but either Track 1 direct or Track 2 direct is slower than `sonic-rs * 1.10` in time. The current sink-only digest parser removes the retained view walk from the timed BBNF rows; after duplicate UTF-8 validation was removed and scanner-owned integer classification landed, 6 of 17 rows pass and 11 still miss sonic-rs direct. Block SOTA-BEAT dispatch until direct-only API shapes close exact float/string/Unicode materialization under `SinkOnly`. This is separate from outcome G: a parse-only win cannot ratify the BBNF direct-to-struct premise. |
+| **N-direct — Direct projection throughput fail** | n/a | n/a | NO-GO — direct typed emission is not SOTA-class | The `direct_to_struct` workload is correctness-green but either Track 1 direct or Track 2 direct is slower than `sonic-rs * 1.10` in time. The current sink-only digest parser removes the retained view walk from the timed BBNF rows; after generated `SinkOnly`, trusted string spans, source hooks, and integer-classification redress, only `numbers` passes and 16 rows still miss sonic-rs direct. Block SOTA-BEAT dispatch until direct-only API shapes close exact float/string/Unicode materialization under `SinkOnly`. This is separate from outcome G: a parse-only win cannot ratify the BBNF direct-to-struct premise. |
 
 ### 6.1.1 G-fusion-quality two-pathology-class taxonomy (Wave 2 Agent 2 finding)
 
@@ -829,17 +828,15 @@ The order is deliberate: correctness/floor failures dominate; substrate
 gaps dominate codegen issues (a fast generator on a broken substrate is
 not viable); codegen issues only matter when the substrate floor is met.
 
-**Measured gate split (2026-05-12, SK-V3 Wave 0/1 + direct workload).**
-`skinny/RESULTS.md` records two facts that must stay visible. The expanded
-parse corpus still has hard **G / NoGo** rows: `twitter`, `random`,
-`unicode_mixed`, and `unicode_basic`. Many shape rows are already viable:
-`citm_catalog`, `canada`, `apache_builds`, `github_events`, `mesh`,
-`gsoc-2018`, `marine_ik`, and `numbers` classify as A / GO; `update_center`,
-`instruments`, `unicode_escapes`, `distinct_values`, and `y_string_unicode`
-classify as C / GO. Structural-only canada remains above the 40000 Mbps floor
-at 69075 Mbps. The overall verdict is now **N-direct / NoGo** because the
-`direct_to_struct` workload is correctness-green; 6 of 17 rows pass after the
-UTF-validation and integer-classification redress, and 11 remain
+**Measured gate split (2026-05-14, SK-V5 current RESULTS after redress 50-52).**
+`skinny/RESULTS.md` records three facts that must stay visible. The expanded
+retained parse corpus has **13 G / NoGo rows** plus **canada L / NO-GO**:
+`mesh`, `marine_ik`, and `numbers` are the only current A / GO guard rows.
+`canada` beats the sonic-rs parse anchor but structural-only canada is
+22136 Mbps against the 40000 Mbps floor, so L dominates. The overall verdict is
+**N-direct / NoGo** because the `direct_to_struct` workload is
+correctness-green but only `numbers` satisfies the `sonic-rs * 1.10` direct
+time slack; the other 16 direct rows remain
 throughput-red against sonic-rs direct. Accepted implementation wins are lazy offset
 tape, sparse flags, direct spare-capacity offset writes, cold errors, SWAR digit
 and plain-string runs, fused comma/close delimiter consumption,
@@ -1246,7 +1243,7 @@ the PEXT row unimplemented in the skinny:
 | `alternate_scalar_plan` | Pure scalar recursive descent; no SIMD scan; byte-by-byte alt dispatch. | Active; passes confirmatory (canonical wins by 38-52% across three corpora per `skinny/RESULTS.md`). | Confirms SIMD adds value on JSON. |
 | `alternate_dispatch_table_plan` | SIMD scan; alt dispatch via a 256-entry direct table instead of match-arm. | **INVALID** per `skinny/REDRESS.md` item 17 — the SK prototype's first row duplicated canonical Track 1 (probe was a no-op duplicate); a real 256-entry function-pointer table was then implemented and regressed against canonical. Canonical Rust `match` is the load-bearing dispatch; LLVM owns the branch-table lowering for byte-disjoint alts. | (No question remains open at the skinny scope.) |
 | `alternate_pext_mask_plan` | x86_64 only; uses BMI2 PEXT to extract structural-bit masks instead of structural index of offsets. | Not implemented in the skinny; reported as `missing` in `skinny/RESULTS.md`. Deferred to V1 H.W2 — the skinny is silent on this axis. | (Would test a different cost-model selection on Intel; not a skinny conclusion.) |
-| `alternate_event_cursor_plan` | Generated parser consumes `Tape::offsets` through a typed cursor instead of source-byte `cursor` + `skip_ws`/`peek`. | Required for SK-V3. Fresh samply profiles show `parse_value_at` dominates `random` and `unicode_escapes`; this row must exist before the expanded gate can close. | Tests whether the current G rows are codegen/substrate-consumption overhead rather than primitive limits. |
+| `alternate_event_cursor_plan` | Generated parser consumes the live JSON structural emit mask through a typed cursor instead of source-byte `cursor` + `skip_ws`/`peek`. | Required before expanded-gate close, but SK-V5 redress item 51 rejects the first attempted byte-class whitespace wrapper: it regressed focused Track 1 rows to roughly 7130 / 10291 / 14110 Mbps on twitter / citm_catalog / canada. The admissible row must consume the scanner's per-64-byte emit mask with O(1) pending state; a renamed whitespace skipper does not count. | Tests whether the current G rows are codegen/substrate-consumption overhead rather than primitive limits. |
 | `alternate_capacity_plan` | Capacity policy variants for offset and sparse-flag vectors: sampled capacity, exact prepass, one-shot SIMD pre-scan, and grow-only geometric reserve. | Plan D has landed: `Vec::with_capacity(256)` plus geometric grow is the production default, while sampled/exact/one-shot pre-scan routes remain rejected-route probes. Keep the row for regression and for re-examination after event-cursor/codegen changes; do not treat capacity as the current SOTA blocker. | Tests whether builder allocation policy has become a hidden SOTA gap after a substrate/codegen change. |
 | `alternate_primitive_kernel_plan` | Scalar/SWAR/NEON/x86 kernel selection for string, Unicode, whitespace, digit, and byte-class primitives. | Required for SK-V3; kernel choice is grammar-neutral and belongs in `bbnf-simd`/`parse-that`, not generated JSON code. | Tests whether the current plan overfits to one JSON hot path and misses other grammar token classes. |
 
@@ -2124,15 +2121,15 @@ head -1 skinny/RESULTS.md
 
 | Question | Answered | Method |
 |---|---|---|
-| Does the substrate reach SOTA-class throughput on JSON? | partial / NO overall | Track 2 vs sonic-rs / simd-json; current parse rows include A/C wins but hard G rows remain on `twitter`, `random`, `unicode_mixed`, and `unicode_basic` |
+| Does the substrate reach SOTA-class throughput on JSON? | partial / NO overall | Track 2 vs sonic-rs / simd-json; current parse rows have 13 G rows plus canada L; only `mesh`, `marine_ik`, and `numbers` are A / GO guard rows |
 | Does the codegen path preserve the substrate's throughput? | mostly yes | Track 1 vs Track 2 ratio (F-positive / F-noise / F-codegen-gap sub-bands when substrate is borderline-weak; A / B / C / D / E when substrate is at parity) |
 | Does the SIMD scan match its scalar reference on every corpus? | yes | per-corpus parity hash equality (twitter / citm / canada) |
-| Does the SIMD scan reach simdjson-class Mbps on the largest input? | yes | structural_scan microbench gated on canada row |
+| Does the SIMD scan reach simdjson-class Mbps on the largest input? | NO | current canada structural_scan is 22136 Mbps against the 40000 Mbps floor |
 | Are bench results reproducible? | yes | reproducibility schema enforcement + `schema_version` field |
 | Is Track 1 byte-equal to Track 2 on output? | yes | parity oracle |
-| Is direct-to-struct SOTA-class? | NO | sink-only direct rows are correctness-green; 6 of 17 pass and 11 emit `N-direct` against sonic-rs direct |
+| Is direct-to-struct SOTA-class? | NO | sink-only direct rows are correctness-green; only `numbers` passes and 16 rows emit `N-direct` against sonic-rs direct |
 | Is the host-fn-free skinny grammar masking V1 dispatch cost? | yes | two probes — per-call dispatch overhead (`host_call_dispatch_overhead`) PASSES at < 1 ns/call; gross-time eager-decode variant (`host_call_eager_decode`) FIRES MASKING per §7.8.1 envelopes, forcing V1 JSON to keep decode lazy |
-| Is the single-plan extraction masking cost-model wins? | confirmatory only | scalar alternate passes (canonical wins); dispatch-table alternate INVALID per `skinny/REDRESS.md` item 17 (real function-pointer table regressed; canonical Rust `match` is load-bearing); PEXT-mask alternate unimplemented in skinny — defers to V1 H.W2 |
+| Is the single-plan extraction masking cost-model wins? | open on event consumption | scalar alternate passes (canonical wins); dispatch-table alternate INVALID per `skinny/REDRESS.md` item 17; byte-class whitespace EventCursor INVALID per item 51; the remaining admissible alternate is structural-mask typed event consumption |
 | Is cold-cache parse latency acceptable? | report-only | cold_first_parse probe per corpus |
 | Is the substrate viable for concurrent-parse workloads? | yes | peak RSS gated at outcome M (≤ 3× competitor on canada) |
 | Does the substrate generalise beyond JSON? | report-only | optional CSS prior probe at bootstrap.css |

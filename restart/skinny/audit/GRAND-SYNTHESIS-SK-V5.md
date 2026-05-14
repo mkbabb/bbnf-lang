@@ -236,6 +236,13 @@ Dense and sparse aux side tables were measured and rejected in
 `skinny/REDRESS.md` item 50 because they improved view probes while regressing
 the retained parse plane.
 
+The next redress narrows it again: `skinny/REDRESS.md` item 51 rejects a
+byte-class whitespace `EventCursor` wrapper. The wrapper did not add a retained
+side table, but it also did not consume the structural emit mask and regressed
+focused retained Track 1 rows. The substrate union therefore requires a
+mask-bearing structural cursor, not an API rename over source-byte whitespace
+skipping.
+
 The storage substrate itself (`Tape<'input>` + `TapeBuilder` + `ValueRef`)
 holds cleanly with zero type-ambivalence and zero columnar / PayloadStream
 residue. The skinny line has zero OpenFrame residue (`grep -rn

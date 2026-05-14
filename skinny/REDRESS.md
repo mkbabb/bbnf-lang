@@ -1619,3 +1619,52 @@ perturbation.
   candidate is object next-key carry; the higher-impact next direct route is
   the field-layout string materializer described in
   `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md` §9.
+
+## SK-V6 Wave 2 Candidate-6 Redress
+
+- Item 65 rejects object next-key carry. The route mirrored the admitted array
+  `ContainerNext` shape for retained object loops: after a comma it skipped
+  whitespace, consumed and emitted the next key quote offset, and carried that
+  quote state into `parse_pair_after_open_quote` instead of re-entering the
+  generic pair/key prologue. The checked-in generated runtime and the codegen
+  JSON template were both updated during the attempt; no generic crate or
+  grammar directive changed.
+- Correctness caught one loop-shape bug before measurement. The initial patch
+  parsed the first pair at the top of every loop iteration and therefore
+  attempted to parse a new key before checking `}`. After fixing the loop to
+  parse the first pair once and drive subsequent pairs from
+  `consume_object_next`, `CARGO_TARGET_DIR=/tmp/skv6-wave2-candidate6-target
+  cargo test -p runtime --profile ax-iter` passed all six runtime tests. The
+  unused old `consume_container_next` helper was also removed during the
+  attempt.
+- Production `profile-lazy` smoke used baseline and candidate release binaries
+  built from the same tree under `/tmp/skv6-wave2-candidate6-base` and
+  `/tmp/skv6-wave2-candidate6-cand`. Raw measurements are archived at
+  `/tmp/skv6-wave2-candidate6-smoke.csv`; medians are archived at
+  `/tmp/skv6-wave2-candidate6-smoke-summary.csv`.
+
+  | row | median baseline Mbps | median candidate Mbps | median delta |
+  |---|---:|---:|---:|
+  | apache_builds | 12260 | 12334 | +0.60% |
+  | citm_catalog | 20229 | 20301 | +0.36% |
+  | distinct_values | 6093 | 6066 | -0.44% |
+  | github_events | 13050 | 13033 | -0.13% |
+  | instruments | 12367 | 12236 | -1.06% |
+  | random | 8292 | 8192 | -1.21% |
+  | unicode_basic | 11204 | 11221 | +0.15% |
+  | update_center | 9346 | 9391 | +0.48% |
+
+- The route failed the written gate. It required `citm_catalog >= +3%`,
+  `random >= +2%`, `instruments >= +2%`, and `update_center >= +1.5%`, with
+  `distinct_values` regressing no more than 1%. Only the guard bound held.
+  Object key carry therefore does not buy enough production throughput to
+  justify another retained parser-control admission.
+- The candidate was reverted before commit. The rejected patch is saved at
+  `/tmp/skv6-wave2-candidate6-rejected.patch`. With REDRESS 60-65, the SK-V6
+  retained parse Wave 2 shortlist is exhausted under the current single-
+  substrate rules: tiny-probe deletion, always-wide scanning, delayed-wide
+  scanning, Unicode-escape run validation, and object next-key carry all have
+  same-row falsification, while array `ContainerNext` was admitted but did not
+  close parse-G. The next admissible implementation route is the generated
+  direct field-layout string materializer from
+  `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md` §9.

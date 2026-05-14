@@ -1362,3 +1362,62 @@ perturbation.
   second boundary (`match_string_at_quote`) for long/Unicode rows or split
   short-string and long-string profiles explicitly; simply deleting the scalar
   early-out is now a blocked route.
+
+## SK-V6 Wave 2 Candidate-2 Redress
+
+- Item 61 rejects the retained long-string trusted scan specialization as
+  tested. The route added a grammar-neutral AArch64 64-byte quote/backslash/
+  control scanner in `bbnf-simd::aarch64::string_block`, a scalar executable
+  reference plus `checkasm_string_block_64`, and a same-wave consumer inside
+  `parse-that-regex::skip_json_string_plain_trusted`. It did not add retained
+  sidecar state and did not reopen the SK-V5 UTF-8-fusion class; the primitive
+  targeted only trusted string-special-byte discovery after the JSON source had
+  already entered the generated runtime path.
+- Focused retained `profile-lazy` measurements showed the route was plausible
+  but incomplete:
+
+  | row | baseline Mbps | candidate Mbps | delta |
+  |---|---:|---:|---:|
+  | unicode_mixed | 7899 | 9235 | +16.9% |
+  | gsoc-2018 | 21651 | 25082 | +15.8% |
+  | y_string_unicode | 5955 | 6313 | +6.0% |
+  | twitter | 12191 | 12370 | +1.5% |
+
+- The full advisory gate failed the Candidate 2 falsifiability contract. The
+  committed authority before the route was compared against the candidate
+  `bench-json --advisory` output:
+
+  | row | baseline Track 1 Mbps | candidate Track 1 Mbps | delta |
+  |---|---:|---:|---:|
+  | twitter | 12303 | 12141 | -1.3% |
+  | citm_catalog | 20775 | 20364 | -2.0% |
+  | canada | 17738 | 15998 | -9.8% |
+  | apache_builds | 12341 | 14142 | +14.6% |
+  | github_events | 13161 | 14087 | +7.0% |
+  | update_center | 9430 | 9884 | +4.8% |
+  | mesh | 13411 | 13223 | -1.4% |
+  | random | 7794 | 8407 | +7.9% |
+  | gsoc-2018 | 21907 | 25285 | +15.4% |
+  | marine_ik | 12818 | 12448 | -2.9% |
+  | instruments | 11887 | 10991 | -7.5% |
+  | numbers | 18740 | 18774 | +0.2% |
+  | unicode_mixed | 8720 | 9495 | +8.9% |
+  | unicode_escapes | 12848 | 13350 | +3.9% |
+  | unicode_basic | 10898 | 11730 | +7.6% |
+  | distinct_values | 6097 | 6369 | +4.5% |
+  | y_string_unicode | 6084 | 6516 | +7.1% |
+
+- The gate required Track 1 to improve by at least 10% on at least two of
+  `unicode_mixed`, `gsoc-2018`, and `y_string_unicode`, with no retained row
+  regression above the written budget. Only `gsoc-2018` cleared the 10% bar in
+  the full matrix, while `canada` and `instruments` regressed by more than 5%.
+  The route was reverted; `skinny/RESULTS.md` remains the pre-candidate
+  authority.
+- The parse-attribution criterion also proved too blunt for this shape. The
+  scanner is consumed under the same `match_string_at_quote` wrapper, so the
+  symbol share did not fall below 45% even when row Mbps improved. Captured
+  profiles at `/tmp/skv6-wave2-candidate2-profiles/` showed wrapper shares of
+  72.26% (`unicode_mixed`), 66.58% (`gsoc-2018`), and 71.93%
+  (`y_string_unicode`). Future string-scan candidates must either expose a
+  separate noinline symbol boundary for the new primitive or use c/B and row
+  Mbps deltas as the falsification signal.

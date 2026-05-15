@@ -765,3 +765,114 @@ The next Wave 3 plan must therefore leave local escaped-string writer churn and
 target DirectBuild field facts or a strict representation-level direct output
 contract. It must not add directives, BIR variants, JSON code to generic
 crates, or a parallel source pass.
+
+## 12. Wave 1f Revision: DirectBuild Field Facts
+
+The Wave 1f cohort is now archived under `restart/skinny/audit/SK-V6-COHORT/`:
+
+- R1f names the next admissible route as an existing-BIR `DirectBuildField`
+  fact extension, not a decoder/materializer tweak.
+- R2f classifies the remaining direct gap as a field-layout / representation
+  mismatch. The current generated direct contract collapses raw string spans
+  into semantic `&str` events too early; escaped rows pay strict
+  materialization, while plain/high-cardinality rows pay scanner plus digest
+  fold pressure.
+- R3f verifies the lock boundary: no new directive, no new top-level BIR
+  variant, no parallel substrate, and no JSON-specific generic-crate branches.
+  The field-fact payload may grow under existing `DirectBuild { shape, fields
+  }`, and `SinkOnlyProgram` must remain the carrier.
+
+### Candidate 10: DirectBuild Semantic String Field Facts
+
+Path:
+
+- `skinny/crates/ir/src/lib.rs`
+- `skinny/crates/passes/src/lib.rs`
+- `skinny/crates/codegen/src/lower/sink_only.rs`
+- `skinny/crates/codegen/src/json_sink_direct.rs`
+- `skinny/crates/runtime/src/grammars/json/sink.rs`
+- `skinny/crates/runtime/src/grammars/json/generated.rs`
+- `skinny/crates/bbnf-bench/src/direct_struct.rs`
+
+Mechanism: extend the existing `DirectBuildField` payload with a generic field
+materialization policy. For JSON strings, the direct field fact declares the
+requested direct representation as a semantic string fact, not merely a raw
+span and not an eager owned `String`. The generated `SinkOnly` path consumes
+that fact in the same parse loop and routes string/key fields to a strict
+semantic fact consumer when the direct output asks for it. The benchmark
+consumer must compute the same shape/count/depth/number fields and the same
+semantic length/fingerprint facts as the current digest; serde_json and
+sonic-rs remain parity oracles on the same strict output plane.
+
+This candidate is distinct from the rejected routes only if the authority for
+the emitted fact comes from `DirectBuildField` and is visible in the lowered
+`SinkOnlyProgram`. A patch that merely overrides `JsonDigestSink::*_source`,
+rewrites `unescape_json_string`, threads parser scratch, or streams a raw-source
+hash without DirectBuild field-fact authority is a REDRESS 54/55/66/67/68
+recurrence and must be rejected before measurement.
+
+Minimum implementation shape:
+
+- Add a grammar-neutral field materializer enum under the existing direct field
+  payload. It must model at least `BorrowSpan`, `SemanticStringFact`,
+  `NumberScalar`, `LiteralMap`, `Child`, `Repeated`, and `Empty` without adding
+  a new BIR expression.
+- Populate the JSON string/key fields with `SemanticStringFact` in the direct
+  field roster. This remains a skinny JSON fact table until generic shape
+  mining graduates it, but the lowerer must consume facts rather than branch on
+  ad hoc sink hooks.
+- Preserve the fact in `SinkOnlyProgram` and make the JSON direct renderer emit
+  fact-aware calls. The generic lowerer may carry names; grammar-specific method
+  names belong only in generated JSON runtime output.
+- Update the direct benchmark sink so Track 1 consumes semantic string facts
+  under this declared representation and Track 2 / serde_json / sonic-rs
+  produce the same strict fact output for parity.
+
+Expected row impact:
+
+- Primary: `unicode_escapes` and `unicode_mixed`, because the current direct
+  contract over-materializes or over-scans semantic strings before producing
+  the benchmark's required facts.
+- Secondary: `y_string_unicode`, `distinct_values`, and `gsoc-2018`, because
+  they expose either escape-heavy tiny strings or high-cardinality string
+  scanner/fold pressure.
+- Guards: `twitter`, `apache_builds`, `github_events`, `unicode_basic`,
+  `canada`, `numbers`, `citm_catalog`, `mesh`, `marine_ik`, and `instruments`.
+
+Falsifiability gate:
+
+- Correctness: `cargo test -p runtime --profile ax-iter`, `cargo test -p
+  bbnf-bench --profile ax-iter`, `cargo run -p xtask --release -- check-json`,
+  and `cargo run -p xtask --release -- check-conformance`.
+- Same-HEAD throughput scout: production `profile_direct` Track 1 medians over
+  five paired samples must satisfy `unicode_escapes >= +20%`,
+  `unicode_mixed >= +15%`, and at least two of `y_string_unicode`,
+  `distinct_values`, and `gsoc-2018 >= +8%`.
+- Guard safety: no guard direct row may regress by more than 3%, and no
+  already-passing direct row may lose PASS status.
+- Attribution: if the throughput scout passes, `runtime/parse-attribution`
+  profiles on `unicode_escapes`, `unicode_mixed`, `distinct_values`, and
+  `gsoc-2018` must show either combined
+  `parse_string_direct + unescape_json_string + fold_string_scalar/hash_bytes`
+  self-time falling by at least 20% on escaped rows and 15% on mixed rows, or a
+  named DirectBuild fact materializer replacing that cost while the row
+  throughput gate holds.
+
+Reject conditions:
+
+- Any patch that adds a directive, new top-level BIR variant, parallel source
+  scan, retained side table, or JSON branch in a generic crate is rejected.
+- Any patch whose hot-path change is only a sink-local decoded-stat helper,
+  quote-source streaming hash, parser-owned scratch, direct source-hook
+  receiver fold, or `unescape_json_string` byte writer is rejected as a prior
+  REDRESS recurrence.
+- If the candidate only changes metadata and cannot plausibly move the named
+  rows, stop before implementation and dispatch a new research tranche.
+
+### Wave 1f Recommendation
+
+Dispatch Candidate 10 as one standalone intervention. It is the only remaining
+Wave 3 route with a new architectural fact after REDRESS 66-68. If it fails,
+record the measurements and stop reopening direct string materialization under
+the current digest workload; the next admissible path would require a different
+strict direct output contract, not another escaped-string local rewrite.

@@ -340,6 +340,15 @@ allocate-then-contiguous-hash baseline. The admissible direct close is a
 field-layout decode+sink materializer or same-loop SinkOnly/CollapsedStage
 primitive rather than parser-side eager decode, a generic visitor layered on
 `unescape_json_string`, or a sink-local decoded hash helper.
+SK-V6 REDRESS 66-68 narrows this further: direct source-hook folding,
+parser-owned decoded scratch, and byte-output `unescape_json_string` were also
+measured and rejected. The admissible representation point is the existing
+`DirectBuild { shape, fields }` payload. Direct field facts may declare a
+generic materialization policy such as `BorrowSpan`, `SemanticStringFact`,
+`NumberScalar`, `LiteralMap`, `Child`, `Repeated`, or `Empty`; `SinkOnly`
+lowering must preserve those facts; generated direct code may consume them to
+emit strict semantic field facts in the parse loop. This is a payload
+refinement of `DirectBuild`, not a new directive or BIR variant.
 There is no offset-vector `set_len(0)` SOTA primitive: offsets are `u32` and
 have no per-element destructor to bypass.
 
@@ -358,6 +367,10 @@ have no per-element destructor to bypass.
   rejected a quote-source one-pass streaming hasher. Conforming `SinkOnly`
   lowerings route escaped strings through a field-layout materializer or a
   same-loop grammar event, not through a decoded hash helper at the sink.
+- SK-V6 direct semantic field facts are `DirectBuild` payload facts. A
+  conforming lowering may carry a semantic string fact policy through
+  `SinkOnlyProgram`, but it may not invent a sidecar scanner, a sink-local
+  decoded-stat shortcut, or a grammar directive to select that policy.
 - The cycle-per-byte gate (`BENCH.md` §7.9) is comparator-anchored: skinny twitter c/B ≤ 1.5 × simdjson twitter c/B (the simdjson floor at its algorithm is ~1.142 c/B per `simdjson-v2/PROFILE-REPORT.md`).
 - Hot-leaf count gate (`BENCH.md` §6 outcome class `G-fusion-quality`): comparator-anchored count ≤ 3 leaves at ≥10% self-time (comparators: sonic-rs = 1, simdjson = 2).
 

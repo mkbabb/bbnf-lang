@@ -16,25 +16,33 @@ NoGo**.
 
 Three blockers must stay separate:
 
-1. The retained parse/tape plane has 13 hard G rows across the expanded corpus.
-   Track 1 and Track 2 move together on those rows, so the miss is
-   substrate/runtime shape rather than generator overhead alone.
+1. The retained parse/tape plane has 5 hard G rows across the expanded corpus
+   at the current generated-runtime baseline: `twitter`, `update_center`,
+   `random`, `unicode_mixed`, and `unicode_basic`. Track 1 and Track 2 move
+   together on those rows, so the miss is substrate/runtime shape rather than
+   generator overhead alone.
 2. `canada` parses faster than sonic-rs and no longer reports the stale
    **L / NO-GO** structural-floor failure. Item 56 is folded into the current
    full matrix: Canada structural-only scan reports 41495 Mbps against the
-   40000 Mbps NEON floor. The retained GO rows in the full report are
-   `canada`, `mesh`, `marine_ik`, and `numbers`.
+   40000 Mbps NEON floor. The retained non-G rows split into 4 A rows
+   (`canada`, `mesh`, `marine_ik`, `numbers`), 3 D rows (`citm_catalog`,
+   `apache_builds`, `unicode_escapes`), and 5 E rows (`github_events`,
+   `gsoc-2018`, `instruments`, `distinct_values`, `y_string_unicode`).
 3. The direct-to-struct workload is correctness-green
    (exact generated Track 1 / hand Track 2 digest equality; sonic-rs and
    serde_json shape parity) and now uses generated SinkOnly for Track 1. The
-   prior bench-private SinkParser table is superseded. `citm_catalog`, `mesh`,
-   `marine_ik`, and `numbers` currently pass the `1.10x` sonic-rs time slack;
-   the other 13 direct rows remain N-direct blockers.
+   prior bench-private SinkParser table is superseded. The
+   `semantic_full_digest_stressor` pass rows are `citm_catalog`,
+   `apache_builds`, `github_events`, `instruments`, and `distinct_values`; the
+   other 12 direct digest rows remain N-direct guard blockers. The
+   representative `real_typed_struct` rows for `twitter` and `update_center`
+   pass under the host/API output-schema plane introduced by item 71.
 
-The earlier original-triad pass remains useful historical evidence, but it is
-not the current close condition. The full 17-fixture gate plus
-`direct_to_struct` is now the binding authority, and the report now renders an
-explicit output-plane column beside strictness.
+The earlier original-triad and SK-V5 intermediate tables below remain useful
+historical evidence, but they are not the current close condition. The full
+17-fixture gate plus the Workloads table in `skinny/RESULTS.md` is now the
+binding authority, and the report now renders an explicit output-plane column
+beside strictness.
 
 | Corpus | Track 1 Mbps | Track 2 Mbps | sonic-rs Mbps | Track 1 / sonic | Track 2 / sonic |
 |---|---:|---:|---:|---:|---:|
@@ -56,7 +64,7 @@ report's `canada` structural-only scan reports 41495 Mbps against a
 runtime/materialization and event/tape-consumption gaps, not a scanner-floor
 failure.
 
-Direct-to-struct is now the binding workload blocker:
+Historical direct-to-struct snapshot retained for comparison:
 
 | Corpus | Track 1 direct Mbps | Track 2 direct Mbps | sonic-rs direct Mbps | Track 1 / sonic direct |
 |---|---:|---:|---:|---:|
@@ -345,9 +353,10 @@ Lazy tape materialization is now reported per corpus:
    digest equality and sonic-rs / serde_json shape parity. This entry recorded
    the pre-Wave-2 bench-private SinkOnly table; entries 34, 40, and 46
    supersede its throughput interpretation. After generated Track 1 SinkOnly
-   landed, the direct-number/context-sink redress ran, and item 57 refreshed
-   the full matrix, `citm_catalog`, `mesh`, `marine_ik`, and `numbers` pass
-   the current `1.10` time slack. The gate still appends outcome
+   landed, the direct-number/context-sink redress ran, and later SK-V6 refreshes
+   updated the full matrix, the five current digest pass rows are
+   `citm_catalog`, `apache_builds`, `github_events`, `instruments`, and
+   `distinct_values`. The gate still appends outcome
    `N-direct / NoGo` when either bbnf direct track is slower than
    `sonic-rs * 1.10` in time.
 
@@ -535,11 +544,11 @@ Lazy tape materialization is now reported per corpus:
    `runtime::generated_json::generated::parse_value_direct::<...JsonDigestSink>`
    for Track 1 and `<bbnf_bench::direct_struct::hand::HandParser>::value` for
    Track 2. The current full gate shows correctness PASS on all 17 direct
-   rows. Item 57 refreshes this to four direct pass rows: `citm_catalog`,
-   `mesh`, `marine_ik`, and `numbers`. Representative current residuals are
-   `canada` 10529/10455/12606 Mbps, `unicode_mixed` 4633/4593/11117 Mbps,
-   `unicode_escapes` 5262/5129/14427 Mbps, and `distinct_values`
-   6212/5609/13214 Mbps for Track 1 / Track 2 / sonic-rs. The
+   rows. Later SK-V6 redress refreshes this to five direct digest pass rows:
+   `citm_catalog`, `apache_builds`, `github_events`, `instruments`, and
+   `distinct_values`; item 71 adds representative `real_typed_struct` passes
+   for `twitter` and `update_center`. Representative current residuals are
+   `canada`, `mesh`, `numbers`, `unicode_mixed`, and `unicode_escapes`. The
    prior bench-private attribution and template-authority gaps are gone; the
    next close belongs to decoded-string delivery, float/materialization
    quality, event-stream consumption, and full-report incorporation of the
@@ -608,10 +617,13 @@ Lazy tape materialization is now reported per corpus:
    `xtask check-json`, and `xtask primitive-checkasm` pass after the Wave 3
    changes; `primitive-checkasm` now includes the UTF-8 block parity test. The
    full `bench-json` run updates `RESULTS.md` and returns the expected NoGo
-   gate status: retained parse has 13 G rows plus one Canada L row, and the
-   direct workload has 16 NO-GO rows plus the `numbers` PASS row, with overall
-   **N-direct / NoGo**. Items 56 and 57 later supersede this row: the current
-   full matrix clears Canada L and records four direct pass rows.
+   gate status for that point in the campaign: retained parse has 13 G rows
+   plus one Canada L row, and the direct workload has 16 NO-GO rows plus the
+   `numbers` PASS row, with overall **N-direct / NoGo**. Items 56, 71, and 72
+   later supersede this row: the current full matrix clears Canada L, records
+   5 retained hard-G rows, records five direct digest pass rows, and records
+   representative `real_typed_struct` passes for `twitter` and
+   `update_center`.
    This is a measured handoff to true codegen lowering, event-stream
    consumption, and decoded-string delivery, not a permission to reopen
    rejected Class A tiny-string wiring or eager sidecar prepasses.
@@ -908,12 +920,10 @@ Lazy tape materialization is now reported per corpus:
 
 The parser works as the tape/direct hybrid the spec requires, but the current
 full gate is not SOTA-close enough to dispatch. The expanded corpus is now the
-authority for SOTA-BEAT: `canada`, `mesh`, `marine_ik`, and `numbers`
-classify as A / GO in the checked-in full report, and Canada structural scan
-is green at 41495 Mbps. The remaining 13 retained parse rows classify as
-G / NoGo. The common parse blocker is source/tape event consumption and
-string/Unicode projection, not codegen overhead, tape payload writes, or the
-Canada structural floor.
+authority for SOTA-BEAT: retained parse has 5 hard G rows, 4 A rows, 3 D rows,
+and 5 E rows, and Canada structural scan is green. The common parse blocker is
+source/tape event consumption and string/Unicode projection, not tape payload
+writes or the Canada structural floor.
 
 Direct-to-struct remains explicitly classified after the generated SinkOnly
 rewrite. The workload now proves generated typed sink correctness, not merely
@@ -1144,8 +1154,8 @@ perturbation.
 - Lazy-offset JSON tape plus tape-union migration was implemented and measured;
   subsequent sparse-flag, spare-capacity write, SWAR, delimiter-fusion, and
   parser-split wins remain real, but the checked-in expanded parse gate has
-  13 G rows and four A / GO retained rows (`canada`, `mesh`, `marine_ik`,
-  `numbers`). The full gate remains `N-direct / NoGo`.
+  5 G rows, 4 A rows, 3 D rows, and 5 E rows. The full gate remains
+  `N-direct / NoGo`.
 - The report now renders the actual fastest-anchor `S` comparator rather than
   only sonic-rs; conformance and SIMD parity metadata gates are executable.
 - `bbnf-simd` is now the scanner crate used by runtime and bench, with
@@ -1153,14 +1163,15 @@ perturbation.
 - Skinny and full specs now use the prototype workspace result path
   `skinny/RESULTS.md` for the runnable prototype, with `restart/skinny/` kept
   as spec authority.
-- Current expanded-corpus parse gate: `skinny/RESULTS.md` records A / GO rows
-  for `canada`, `mesh`, `marine_ik`, and `numbers`; every other retained
-  parse row remains G / NoGo.
+- Current expanded-corpus parse gate: `skinny/RESULTS.md` records hard G rows
+  for `twitter`, `update_center`, `random`, `unicode_mixed`, and
+  `unicode_basic`, with the remaining rows split across A, D, and E.
 - Current direct-to-struct workload gate: correctness passes, Track 1 now
   calls generated `parse_direct`, Track 2 is an independent hand-coded
-  SinkOnly parser, and `citm_catalog`, `mesh`, `marine_ik`, and `numbers`
-  pass the sonic-rs `1.10x` time slack. The overall gate reports
-  `N-direct / NoGo` because 13 direct rows still miss.
+  SinkOnly parser, and the `semantic_full_digest_stressor` rows
+  `citm_catalog`, `apache_builds`, `github_events`, `instruments`, and
+  `distinct_values` pass the sonic-rs `1.10x` time slack. The overall gate
+  reports `N-direct / NoGo` because 12 direct digest rows still miss.
 - SK-V5 Wave 3 adds mode-aware string matching, a trusted UTF-8 JSON string
   path for Rust `&str` callers, a grammar-neutral UTF-8 block parity gate, and
   batched `\uXXXX` materialization. It removes duplicate UTF-8 validation from
@@ -1275,16 +1286,17 @@ perturbation.
   dual-track diagnosis remains fair.
 - The full advisory matrix was refreshed after item 57 with
   `CARGO_TARGET_DIR=/tmp/skv5-tiny-direct-target RUSTFLAGS="-C target-cpu=native"
-  cargo xtask bench-json --advisory`. The current `skinny/RESULTS.md` records
-  retained parse A / GO rows for `canada`, `mesh`, `marine_ik`, and `numbers`;
-  the stale Canada L row is gone and the structural scan reports 41495 Mbps
-  against the 40000 Mbps NEON floor.
-- Direct-to-struct improves from the prior single passing row to four passing
-  rows: `citm_catalog`, `mesh`, `marine_ik`, and `numbers`. The overall gate
-  remains `N-direct / NoGo`: 13 direct rows still miss sonic-rs direct by the
-  1.10x time-slack rule, with the hardest misses concentrated in
-  `unicode_mixed`, `unicode_escapes`, `distinct_values`, and
-  `y_string_unicode`.
+  cargo xtask bench-json --advisory`. Later SK-V6 gate refreshes supersede that
+  snapshot: the current `skinny/RESULTS.md` records 5 retained hard-G rows,
+  D/E retained codegen-gap rows, and a green Canada structural scan above the
+  40000 Mbps NEON floor.
+- Direct-to-struct improves from the prior single passing row to five digest
+  passing rows: `citm_catalog`, `apache_builds`, `github_events`,
+  `instruments`, and `distinct_values`; REDRESS 71 adds representative
+  `real_typed_struct` passes for `twitter` and `update_center`. The overall
+  gate remains `N-direct / NoGo`: 12 digest rows still miss sonic-rs direct by
+  the 1.10x time-slack rule, with the hardest misses concentrated in
+  `canada`, `mesh`, `numbers`, `unicode_mixed`, and `unicode_escapes`.
 - This redress does not reopen the rejected Class A route. Active
   `match_tiny_plain_string` wiring as a retained parse-G fix remains rejected
   by REDRESS entries 28 and 33. Item 57 is direct-only receiver/source-shape
@@ -1301,13 +1313,14 @@ perturbation.
 ## SK-V6 Wave 0 Regression-Recovery Redress
 
 - Item 58 records the SK-V6 dispatch framing. The current measured authority is
-  the post-SK-V5 `skinny/RESULTS.md` baseline: full gate `N-direct / NoGo`, 13
-  retained parse G rows, four retained A rows (`canada`, `mesh`, `marine_ik`,
-  `numbers`), four direct pass rows (`citm_catalog`, `mesh`, `marine_ik`,
-  `numbers`), and 13 direct red rows. Canada structural scan is green at 41495
-  Mbps against the 40000 Mbps NEON floor. The SK-V6 prompt originally requested
-  entries 57/58, but item 57 is already committed to direct receiver/source
-  redress; the ledger stays monotonic and records the SK-V6 additions as 58/59.
+  the post-SK-V5 `skinny/RESULTS.md` baseline as amended by later SK-V6
+  redress: full gate `N-direct / NoGo`, 5 retained hard-G rows, D/E retained
+  codegen-gap rows, five direct digest pass rows, 12 direct digest red rows,
+  and representative `real_typed_struct` passes for `twitter` and
+  `update_center`. Canada structural scan is green against the 40000 Mbps NEON
+  floor. The SK-V6 prompt originally requested entries 57/58, but item 57 is
+  already committed to direct receiver/source redress; the ledger stays
+  monotonic and records the SK-V6 additions as 58/59.
 - Item 58 closes no performance row. Its purpose is dispatch hygiene: purge
   superseded SK-V3/SK-V4 implementation packets, SK-V1/SK-V2 hardening drafts,
   and pre-SK-V5 profile directories; preserve SK-V5 as substrate-history
@@ -1976,3 +1989,57 @@ perturbation.
   `semantic_full_digest_stressor` and still reports N-direct failures. This is
   not a rename of that miss; it is an explicit split between a maximal semantic
   stressor and a real host/API typed-output premise.
+
+## SK-V6 Wave 2 Candidate-13 Redress
+
+- Item 72 rejects widening the retained `match_tiny_plain_string` scalar probe
+  from 8 bytes to 16 bytes as a global generated-runtime policy. The route was
+  admissible to test because it kept the same parse substrate, added no BBNF
+  directive, added no BIR variant, introduced no side table, and did not wire
+  the rejected NEON `match_tiny_plain_string` kernel from REDRESS 28/33. It is
+  still rejected because the canonical Criterion guard matrix regressed
+  already-passing rows by far more than the SK-V6 5% guard threshold.
+- The scout loop was initially positive under `target/release/profile-lazy`:
+
+  | row | cap 8 Mbps | cap 16 Mbps | delta |
+  |---|---:|---:|---:|
+  | twitter | 12133 | 15519 | +27.9% |
+  | citm_catalog | 21999 | 30662 | +39.4% |
+  | canada | 19255 | 18765 | -2.5% |
+  | apache_builds | 12288 | 12610 | +2.6% |
+  | github_events | 13040 | 15207 | +16.6% |
+  | update_center | 9364 | 11517 | +23.0% |
+  | mesh | 14526 | 14433 | -0.6% |
+  | random | 8148 | 9928 | +21.8% |
+  | gsoc-2018 | 21900 | 22787 | +4.1% |
+  | instruments | 12364 | 17112 | +38.4% |
+  | marine_ik | 13934 | 14072 | +1.0% |
+  | numbers | 20733 | 20541 | -0.9% |
+  | distinct_values | 6090 | 9674 | +58.8% |
+  | unicode_mixed | 8761 | 8749 | -0.1% |
+  | unicode_escapes | 12702 | 12681 | -0.2% |
+  | unicode_basic | 11208 | 12286 | +9.6% |
+  | y_string_unicode | 6044 | 6073 | +0.5% |
+
+- The binding Criterion run invalidated the scout. Filtered
+  `cargo bench -p bbnf-bench -- track1_generated` measured the intended red
+  rows improving (`twitter` +26.9%, `update_center` +29.2%, `random` +30.6%,
+  `unicode_basic` +82.3%), but regressed multiple retained guard rows:
+
+  | guard row | Criterion throughput change with cap 16 |
+  |---|---:|
+  | apache_builds | -28.9% |
+  | github_events | -39.4% |
+  | gsoc-2018 | -52.4% |
+  | instruments | -8.5% |
+  | unicode_escapes | -11.3% |
+  | distinct_values | -42.6% |
+  | y_string_unicode | -52.4% |
+
+- The route was reverted before commit and the filtered Criterion
+  `track1_generated` bench was rerun on the restored 8-byte cap to repopulate
+  local gate artifacts. The finding is narrower than REDRESS 60-62 but lands in
+  the same policy class: global retained string first-probe widening is
+  distributionally unsound. A future string intervention must be selected by
+  grammar-neutral cost facts or a proven row-local specialization mechanism,
+  not by a single unconditional cap.

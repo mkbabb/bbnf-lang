@@ -82,11 +82,14 @@ partially:
 
 The current gate per `skinny/RESULTS.md`:
 
-- 13 retained parse rows are G / NO-GO.
-- 4 retained parse rows are A / GO: `canada`, `mesh`, `marine_ik`, and
-  `numbers`.
-- 13 of 17 direct rows are N-direct; `citm_catalog`, `mesh`, `marine_ik`, and
-  `numbers` pass the 1.10x sonic-rs time slack.
+- 5 retained parse rows are G / NO-GO; the remaining rows split across A, D,
+  and E.
+- Canada structural scan is above the 40000 Mbps NEON floor.
+- 12 of 17 `semantic_full_digest_stressor` direct rows are N-direct;
+  `citm_catalog`, `apache_builds`, `github_events`, `instruments`, and
+  `distinct_values` pass the 1.10x sonic-rs time slack.
+- `real_typed_struct` passes for `twitter` and `update_center` under the
+  host/API output-schema plane.
 - Strictness and output-plane columns are disclosed; bbnf rows remain
   `deferred / view-boundary / yes`.
 - Track 1 calls generated runtime `parse_direct`; Track 2 is structurally

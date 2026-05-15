@@ -301,12 +301,14 @@ Skinny records two corpus tiers:
   set. It passed after lazy-offset tape and local hot-path specialization.
 - **Expanded SOTA-BEAT gate**: the full throughput corpus below. This tier is
   the current dispatch arbiter. `skinny/RESULTS.md` records overall
-  **N-direct / NoGo**. The parse/tape plane has 13 hard G rows and four
-  A / GO guard rows (`canada`, `mesh`, `marine_ik`, `numbers`); SK-V5
-  redress item 56 is folded into the current full matrix with Canada
-  structural scan at 41495 Mbps against the 40000 Mbps NEON floor. The
-  sink-only direct-to-struct workload now passes `citm_catalog`, `mesh`,
-  `marine_ik`, and `numbers`, while 13 rows remain below sonic-rs direct.
+  **N-direct / NoGo**. The parse/tape plane has 5 hard G rows, 4 A rows, 3 D
+  rows, and 5 E rows; SK-V5 redress item 56 is folded into the current full
+  matrix with Canada structural scan above the 40000 Mbps NEON floor. The
+  sink-only `semantic_full_digest_stressor` direct workload now passes
+  `citm_catalog`, `apache_builds`, `github_events`, `instruments`, and
+  `distinct_values`, while 12 digest rows remain below sonic-rs direct. The
+  representative `real_typed_struct` rows for `twitter` and `update_center`
+  pass under the host/API output-schema plane.
 
 ### 3.1 Corpus inventory (canonical 17-corpus expansion; 2026-05-12)
 
@@ -773,7 +775,7 @@ Notation:
 | **K — SIMD parity hash fail** | n/a | n/a | NO-GO — correctness fail | The structural-scan SIMD path produces offsets disagreeing with scalar on **any** corpus (twitter / citm / canada); substrate is silently corrupt. Block all dispatch until SIMD codepath fixed. |
 | **L — SIMD throughput fail** | n/a | n/a | NO-GO — SIMD floor fail | Structural scan on **canada** (largest input; binding row) below floor (40000 Mbps NEON / 56000 Mbps AVX2). Even if Track 2 parse hits parity, the substrate ceiling will fail at scale. Block dispatch until the SIMD floor is restored, then re-run the full matrix. SK-V5 redress item 56 is now incorporated into the full matrix: Canada structural scan reports 41495 Mbps, so L no longer dominates the current result. |
 | **M — Memory residency fail** | n/a | n/a | NO-GO — peak RSS exceeds floor | Track 2 (or Track 1) peak RSS > 3 × the fastest competitor's peak RSS on canada. Substrate that hits SOTA-class throughput at 3× memory is not viable for concurrent-parse workloads (web servers, batch ingestion). Block dispatch until substrate memory profile is fixed. The 3× multiplier is the V1 J.W1 J-side floor projected back to skinny gate; a tighter ratio is encouraged but not required. |
-| **N-direct — Direct projection throughput fail** | n/a | n/a | NO-GO — direct typed emission is not SOTA-class | The `direct_to_struct` digest stressor is correctness-green but either Track 1 direct or Track 2 direct is slower than `sonic-rs * 1.10` in time. The current sink-only digest parser removes the retained view walk from the timed BBNF rows; after generated `SinkOnly`, trusted string spans, source hooks, integer-classification redress, and item 57 receiver/source inlining, `citm_catalog`, `mesh`, `marine_ik`, and `numbers` pass while 13 rows still miss sonic-rs direct. REDRESS 66-69 reject the current direct string/Unicode materializer family for this stressor. SK-V6 therefore splits the gate: `semantic_full_digest_stressor` stays reported as a guard row family, while `real_typed_struct` becomes the representative DirectBuild closure row once its owned-output oracle is stable. This is separate from outcome G: a parse-only win cannot ratify the BBNF direct-to-struct premise. |
+| **N-direct — Direct projection throughput fail** | n/a | n/a | NO-GO — direct typed emission is not SOTA-class | The `direct_to_struct` / `semantic_full_digest_stressor` row is correctness-green but either Track 1 direct or Track 2 direct is slower than `sonic-rs * 1.10` in time. The current sink-only digest parser removes the retained view walk from the timed BBNF rows; after generated `SinkOnly`, trusted string spans, source hooks, integer-classification redress, and item 57 receiver/source inlining, the current digest pass rows are `citm_catalog`, `apache_builds`, `github_events`, `instruments`, and `distinct_values`; 12 digest rows still miss sonic-rs direct. REDRESS 66-69 reject the current direct string/Unicode materializer family for this stressor. SK-V6 therefore splits the gate: `semantic_full_digest_stressor` stays reported as a guard row family, while `real_typed_struct` is the representative DirectBuild closure row for host/API typed output after REDRESS 71. This is separate from outcome G: a parse-only win cannot ratify the BBNF direct-to-struct premise. |
 
 ### 6.1.1 G-fusion-quality two-pathology-class taxonomy (Wave 2 Agent 2 finding)
 
@@ -852,16 +854,19 @@ The order is deliberate: correctness/floor failures dominate; substrate
 gaps dominate codegen issues (a fast generator on a broken substrate is
 not viable); codegen issues only matter when the substrate floor is met.
 
-**Measured gate split (2026-05-14, SK-V5 current RESULTS after redress 50-57).**
+**Measured gate split (2026-05-14, SK-V6 current RESULTS after redress 50-72).**
 `skinny/RESULTS.md` records three facts that must stay visible. The expanded
-retained parse corpus has **13 G / NoGo rows** and four A / GO guard rows:
-`canada`, `mesh`, `marine_ik`, and `numbers`. The checked-in full report now
-records Canada structural scan at 41495 Mbps against the 40000 Mbps floor, so
-outcome L no longer dominates the current report. The overall verdict remains
-**N-direct / NoGo** because the `direct_to_struct` workload is
-correctness-green but only `citm_catalog`, `mesh`, `marine_ik`, and `numbers`
-satisfy the `sonic-rs * 1.10` direct time slack; the other 13 direct rows
-remain throughput-red against sonic-rs direct. Accepted implementation wins are
+retained parse corpus has **5 hard G / NoGo rows**, plus D/E codegen-gap rows
+that remain visible even though the storage floor is no longer the blocker. The
+checked-in full report records Canada structural scan above the 40000 Mbps
+floor, so outcome L no longer dominates the current report. The overall verdict remains
+**N-direct / NoGo** because the `direct_to_struct` /
+`semantic_full_digest_stressor` workload is correctness-green but only
+`citm_catalog`, `apache_builds`, `github_events`, `instruments`, and
+`distinct_values` satisfy the `sonic-rs * 1.10` direct time slack; the other
+12 digest rows remain throughput-red against sonic-rs direct. The
+representative `real_typed_struct` host/API rows for `twitter` and
+`update_center` pass after REDRESS 71. Accepted implementation wins are
 lazy offset tape, sparse flags, direct spare-capacity offset writes, cold
 errors, SWAR digit and plain-string runs, fused comma/close delimiter
 consumption, newline-indent space-run skipping, `parse_value_at`, short
@@ -871,9 +876,10 @@ inlining. SK-V6 corrects the prior reading: the SK-V5 Wave 3 UTF-8 fusion
 family is refuted as a close route by REDRESS 50-55, so the next kernel must
 come from fresh generated Track 1 profiles. Rejected routes remain rejected:
 eager-token revival, sidecar
-structural-index typed-parser prepass, active retained 16-byte tiny-string
-parser dispatch, separator elision, generic SWAR whitespace skipper,
-12-byte/width churn, and dispatch-table/function-pointer alternates.
+structural-index typed-parser prepass, active retained NEON tiny-string parser
+dispatch, global 16-byte retained tiny-string cap, separator elision, generic
+SWAR whitespace skipper, 12-byte/width churn, and dispatch-table/function-pointer
+alternates.
 
 ### 6.2.2 Workload split for current NO-GO rows
 
@@ -2151,13 +2157,13 @@ head -1 skinny/RESULTS.md
 
 | Question | Answered | Method |
 |---|---|---|
-| Does the substrate reach SOTA-class throughput on JSON? | partial / NO overall | Track 2 vs sonic-rs / simd-json; current parse rows have 13 G rows and four A / GO guard rows (`canada`, `mesh`, `marine_ik`, `numbers`) |
+| Does the substrate reach SOTA-class throughput on JSON? | partial / NO overall | Track 2 vs sonic-rs / simd-json; current parse rows have 5 G rows, 4 A rows, 3 D rows, and 5 E rows |
 | Does the codegen path preserve the substrate's throughput? | mostly yes | Track 1 vs Track 2 ratio (F-positive / F-noise / F-codegen-gap sub-bands when substrate is borderline-weak; A / B / C / D / E when substrate is at parity) |
 | Does the SIMD scan match its scalar reference on every corpus? | yes | per-corpus parity hash equality (twitter / citm / canada) |
 | Does the SIMD scan reach simdjson-class Mbps on the largest input? | yes | current full report shows Canada structural_scan = 41495 Mbps against the 40000 Mbps NEON floor after SK-V5 redress item 56 |
 | Are bench results reproducible? | yes | reproducibility schema enforcement + `schema_version` field |
 | Is Track 1 byte-equal to Track 2 on output? | yes | parity oracle |
-| Is direct-to-struct SOTA-class? | NO | sink-only direct rows are correctness-green; `citm_catalog`, `mesh`, `marine_ik`, and `numbers` pass while 13 rows emit `N-direct` against sonic-rs direct |
+| Is direct-to-struct SOTA-class? | split | `semantic_full_digest_stressor` rows are correctness-green with five pass rows and 12 `N-direct` guard misses; representative `real_typed_struct` rows for `twitter` and `update_center` pass under the host/API output-schema plane |
 | Is the host-fn-free skinny grammar masking V1 dispatch cost? | yes | two probes — per-call dispatch overhead (`host_call_dispatch_overhead`) PASSES at < 1 ns/call; gross-time eager-decode variant (`host_call_eager_decode`) FIRES MASKING per §7.8.1 envelopes, forcing V1 JSON to keep decode lazy |
 | Is the single-plan extraction masking cost-model wins? | open on event/tape consumption | scalar alternate passes (canonical wins); dispatch-table alternate INVALID per `skinny/REDRESS.md` item 17; byte-class whitespace EventCursor INVALID per item 51; parser-local structural-mask cursor INVALID per item 53; the remaining admissible alternate is single-substrate event/tape consumption |
 | Is cold-cache parse latency acceptable? | report-only | cold_first_parse probe per corpus |
@@ -2171,8 +2177,9 @@ head -1 skinny/RESULTS.md
 
 The skinny answers the leading question — JSON-line SOTA viability — with
 honest threshold gates. The current answer is not ready: the checked-in full
-report has 13 parse/tape G rows and direct typed emission is
-`N-direct / NoGo` despite four direct pass rows.
+report has 5 parse/tape G rows, D/E retained codegen-gap rows, and direct
+typed emission is `N-direct / NoGo` despite five direct digest pass rows plus
+two representative `real_typed_struct` passes.
 
 ---
 

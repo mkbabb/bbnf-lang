@@ -1716,3 +1716,56 @@ perturbation.
   escaped-string materialization shape without repeating REDRESS 54
   sink-local decoded stats, REDRESS 55 quote-source streaming hash, or this
   direct source-hook receiver shortcut.
+
+## SK-V6 Wave 3 Candidate-8 Redress
+
+- Item 67 rejects parser-owned decoded scratch for generated direct escaped
+  strings. The route added
+  `materialize_json_string_at_quote_trusted_utf8_into` to
+  `parse-that-regex`, forwarded `runtime/parse-attribution` into
+  `parse-that-regex`, threaded one reusable `String` scratch through generated
+  `parse_direct`, and changed escaped strings to call the normal semantic sink
+  methods (`key`, `string`, `array_string`, `object_string`) with
+  `scratch.as_str()`. Plain strings stayed on the borrowed path. The generated
+  renderer template was updated in lockstep with
+  `runtime/src/grammars/json/generated.rs`.
+- Correctness was green before measurement:
+  `CARGO_TARGET_DIR=/tmp/skv6-candidate8-correctness cargo test -p
+  parse-that-regex --profile ax-iter` passed 24 tests,
+  `cargo test -p runtime --profile ax-iter` passed six tests,
+  `cargo test -p bbnf-bench --profile ax-iter` passed 23 tests,
+  `cargo run -p xtask --release -- check-json` passed, and
+  `cargo run -p xtask --release -- check-conformance` accepted 21 valid
+  fixtures and rejected seven invalid fixtures.
+- Production `profile_direct` smoke used baseline and candidate release
+  binaries built from the same HEAD under
+  `/Users/mkbabb/Programming/bbnf-lang-skv6-candidate8-base` and the main
+  candidate workspace. Because the primary escaped row immediately regressed by
+  a decisive margin, the longer guard run was stopped after the escaped target
+  rows plus a partial `y_string_unicode` sample. Raw logs and partial CSV are
+  archived under `/tmp/skv6-candidate8-direct-smoke/`.
+
+  | row | median baseline Mbps | median candidate Mbps | median delta | samples |
+  |---|---:|---:|---:|---:|
+  | unicode_escapes | 4999 | 2798 | -44.03% | 5/5 |
+  | unicode_mixed | 4541 | 4318 | -4.91% | 5/5 |
+  | y_string_unicode | 3592 | 2990 | -16.76% | 2/1 |
+
+- The route failed the written Wave 3 gate from
+  `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md` §10. It required
+  `unicode_escapes >= +20%`, `unicode_mixed >= +15%`, and one companion
+  signal. Instead, the parser-owned scratch path was 44% slower on the primary
+  escaped row. The direct interpretation is that keeping `unescape_json_string`
+  as a second pass is faster than folding semantic materialization into the
+  generated parser's direct control path on this host. The baseline allocator
+  cost was not the limiting factor; the direct parser now pays a heavier
+  branch/control mix while still writing the same decoded bytes.
+- The candidate was reverted before commit. The rejected patch is saved at
+  `/tmp/skv6-wave3-candidate8-rejected.patch`. Do not reopen parser-owned
+  decoded scratch under another name. The remaining admissible direct close
+  needs a new local fact beyond allocation reuse or parser-owned decode:
+  either a grammar-neutral decoded-string primitive that beats
+  `unescape_json_string` as a standalone materializer with checkasm/scalar
+  parity and same-wave generated consumer, or a different DirectBuild
+  field-fact plan that changes what the direct workload must materialize while
+  preserving strict semantic equality.

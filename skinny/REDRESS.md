@@ -1819,3 +1819,54 @@ perturbation.
   Wave 3 route must change DirectBuild field facts or the direct workload's
   representation contract while preserving strict semantic equality, not merely
   the local escaped-string writer.
+
+## SK-V6 Wave 3 Candidate-10 Redress
+
+- Item 69 rejects DirectBuild semantic string field facts as implemented. The
+  route extended the existing `DirectBuildField` payload with a generic
+  materializer enum, populated JSON string fields with `SemanticStringFact`,
+  preserved that fact through `SinkOnlyProgram` validation, and changed
+  generated direct string/key calls to fact-aware sink methods. The
+  `JsonDigestSink` override then computed semantic length/fingerprint facts
+  without materializing a decoded `String` for Track 1. No directive, top-level
+  BIR variant, retained side table, or parallel source scan was added.
+- Correctness was green before measurement:
+  `CARGO_TARGET_DIR=/tmp/skv6-candidate10-correctness cargo test -p runtime
+  --profile ax-iter` passed six tests,
+  `cargo test -p bbnf-bench --profile ax-iter` passed 23 tests,
+  `cargo run -p xtask --release -- check-json` passed, and
+  `cargo run -p xtask --release -- check-conformance` accepted 21 valid
+  fixtures and rejected seven invalid fixtures.
+- Production `profile_direct` smoke used baseline and candidate release
+  binaries built from the same HEAD under
+  `/Users/mkbabb/Programming/bbnf-lang-skv6-candidate10-base` and the main
+  candidate workspace. The primary escaped row failed decisively after two
+  paired samples, so the guard run was stopped. Raw CSV is archived at
+  `/tmp/skv6-candidate10-direct-smoke.csv`; raw process output is archived at
+  `/tmp/skv6-candidate10-direct-smoke.raw`; the hand summary is archived at
+  `/tmp/skv6-candidate10-direct-smoke-summary.csv`.
+
+  | row | baseline samples Mbps | candidate samples Mbps | average delta | samples |
+  |---|---:|---:|---:|---:|
+  | unicode_escapes | 4751; 4988 | 4143; 4115 | -15.22% | 2/2 |
+
+- The route failed the written Wave 3 gate from
+  `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md` §12. It required
+  `unicode_escapes >= +20%`, `unicode_mixed >= +15%`, and two secondary rows
+  at `>= +8%`. Instead, the primary row regressed by roughly 15% immediately.
+  The direct interpretation is narrow but important: carrying semantic string
+  facts through `DirectBuild` is architecturally cleaner, but the attempted
+  streaming semantic fact consumer repeats the cost class of REDRESS 54/55 in
+  production. The remaining direct gap is not closed by replacing contiguous
+  decoded-string hashing with one-pass semantic fact hashing under the current
+  digest representation.
+- The candidate was reverted before commit. The rejected patch is saved at
+  `/tmp/skv6-wave3-candidate10-rejected.patch`. Do not reopen semantic string
+  fact hashing for the current direct digest workload unless a new profile
+  names a different consumer representation than decoded byte length plus
+  fingerprint. With REDRESS 66-69, the generated direct string/Unicode close is
+  exhausted under the current strict digest workload. The next admissible move
+  is a new research tranche on the direct output contract itself: either a real
+  typed-struct workload with field-specific access patterns, or an explicit
+  decision that the synthetic digest workload is a SOTA stressor rather than a
+  representative DirectBuild closure gate.

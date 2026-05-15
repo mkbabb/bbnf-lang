@@ -876,3 +876,21 @@ Wave 3 route with a new architectural fact after REDRESS 66-68. If it fails,
 record the measurements and stop reopening direct string materialization under
 the current digest workload; the next admissible path would require a different
 strict direct output contract, not another escaped-string local rewrite.
+
+### Candidate 10 Outcome
+
+Candidate 10 has now been falsified in REDRESS 69. The implementation carried
+`SemanticStringFact` through `DirectBuildField` and generated fact-aware direct
+sink calls, but the first production direct smoke regressed the primary
+`unicode_escapes` row from average 4870 Mbps to 4129 Mbps (-15.22%) over two
+paired samples. The code patch was reverted before commit.
+
+This closes the current Wave 3 string/Unicode direct materialization family:
+receiver/source folding (REDRESS 66), parser-owned scratch (REDRESS 67),
+byte-output unescape (REDRESS 68), and DirectBuild semantic fact hashing
+(REDRESS 69) all fail on the generated Track 1 baseline. The next admissible
+plan is no longer another escaped-string materializer. It must reassess the
+direct output contract itself: either benchmark a real typed-struct workload
+with field-specific access patterns, or explicitly classify the synthetic
+digest workload as a SOTA stressor that is not representative of DirectBuild
+closure for arbitrary grammars.

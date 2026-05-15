@@ -27,6 +27,13 @@ and OpenFrame ladders (`restart/locks/14-LOCKS.md:34`). PASS-3 resolves stale
 ParseStream mentions against the README and locks
 (`restart/audit/pass-3-runtime/PASS-3.md:14-23`).
 
+**SK-V6 fold-back (2026-05-15).** The H/J SOTA close now routes through
+same-plane schema v3 and the SK-V6 asmjson/DAV1D synthesis. The target remains
+to beat sonic-rs, simdjson, yyjson, and strict asmjson rows, but only rows with
+matching strictness, output shape, ownership, hardware, feature mask, corpus,
+and freshness can close SOTA. The mandatory implementation handoff is
+`restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V6-SOTA-RECOVERY.md`.
+
 The central compiler move is two IRs plus side tables. Grammar IR is semantic;
 Backend IR is executable and is the only lowerer input. README requires two
 IRs (`restart/README.md:104-118`), and Lock 5 rejects emitters walking grammar
@@ -136,6 +143,7 @@ in `restart/corpora/SOTA.md:50-89` and `restart/corpora/SOTA.md:130-136`.
 | `json/twitter` + `json/random` + `json/unicode_mixed` + `json/unicode_basic` plus the nine SK-V5-regressed parse rows | sonic-rs / simdjson per-corpus M5 Max anchors in `skinny/RESULTS.md` and sidecar profiles. | `parse_value_at` attributed at PC level under `runtime/parse-attribution`; outcome-G eliminated or each remaining G row carries a falsified REDRESS candidate. | M5 Max macOS arm64 NEON. | SK-V6 Wave 1 re-profile first; H.W1/H.W2/H.W3 only after fresh attribution. |
 | `json/direct_to_struct` / `semantic_full_digest_stressor` (expanded workload gate) | sonic-rs semantic digest sidecar rows in the same `skinny/RESULTS.md` run. | no `N-direct` rows for the stressor unless each miss carries a falsified REDRESS route. The generated SinkOnly direct path is correctness-green, BIR-lowered, and now preserves raw string spans to the sink boundary, but the digest stressor still passes only four rows; REDRESS 66-69 reject source-hook folding, parser-owned decoded scratch, byte-output unescape, and semantic string facts as the close route for this workload. | M5 Max macOS arm64 NEON. | H.W4, J.W1. |
 | `json/real_typed_struct` (representative DirectBuild gate) | sonic-rs serde struct and serde_json struct oracles over the same owned Rust output types. | Track 1 generated `SinkOnly` and Track 2 independent direct parser each produce owned typed structs before checksum; no parse-time checksum-only sink; no bench-private Track 1 parser; broad `serde_json::Value` output is allowed only for fields proven null-only in the checked fixture. REDRESS 70 rejects the first hand-authored typed sink as a close and adds the schema-source rule: the host/API output type must feed generated `DirectBuild` field facts before this row can prove grammar-general direct output. Scout close requires Track 1 within `sonic-rs * 1.10` on one generated typed fixture and no worse than `sonic-rs * 1.25` on the other before folding into the full gate. | M5 Max macOS arm64 NEON. | SK-V6 Wave 3 / H.W4. |
+| `json/collapsed_stage_x86_strict` | asmjson strict/permissive rows split on the same x86_64 host; sonic-rs/simdjson/yyjson sidecars in the same run. | `CollapsedStage` may beat asmjson only on a strict same-plane row with generated grammar tables, admitted Layer 1 primitives, and a per-grammar wrapper. Permissive asmjson rows are flaw probes and cannot close the strict V1 gate. | Zen 4 / AVX-512-class x86_64 after arm64 matrix close. | Optional SK-V6 Wave 7 / H.W5 successor. |
 | `css/bootstrap` | lightning-css 4.16ms. | <= 3.0ms. | M1 Pro macOS, native Rust release with `target-cpu=native`. | H.W6, J.W1. |
 | `css/animate` | lightning-css 1.97ms. | <= 1.6ms. | M1 Pro macOS, native Rust release with `target-cpu=native`. | H.W6, J.W1. |
 | `simd/structural_scan` | simdjson On-Demand ~56000 Mbps on x86 AVX2; ~40000 Mbps on M-series NEON. | >= 40000 Mbps on M-series, >= 56000 Mbps on x86 AVX2; scalar parity hash matches. | M1 Pro macOS NEON and x86_64 AVX2 build host. | H.W2/H.W5, J.W1. |
@@ -497,7 +505,7 @@ Inheritance:
 | Lock 8. | V1 SOTA close gates measure the Rust line only; WASM SOTA defers post-V1 (`restart/locks/14-LOCKS.md:48`). |
 | PASS-2 detector and SIMD coverage. | Detection thresholds and scalar/NEON/AVX2/AVX512 coverage (`restart/audit/pass-2-codegen/PASS-2.md` §3). |
 | SOTA corpus + comparative profile baseline. | JSON/CSS competitor baselines (`restart/corpora/SOTA.md:50-89`, `restart/corpora/SOTA.md:130-136`); six-agent comparative-profile cohort outputs at `skinny/profile/{sonic-rs-v2,simdjson-v2}/PROFILE-REPORT.md` (post-2026-05-12). |
-| SOTA-BEAT design. | `restart/skinny/audit/IMPLEMENTATION-AGENT-PROMPT-SK-V6.md` + `restart/skinny/audit/GRAND-SYNTHESIS-SK-V5.md` + `restart/skinny/audit/SK-V5-COHORT/` — SK-V6 re-profile dispatch over the SK-V5 measured substrate history. The deleted SK-V3/SK-V4 packets are no longer dispatch authority. |
+| SOTA-BEAT design. | `restart/skinny/audit/IMPLEMENTATION-AGENT-PROMPT-SK-V6.md` + `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6-ASMJSON-DAV1D.md` + `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V6-SOTA-RECOVERY.md` + `restart/skinny/audit/SK-V6-COHORT/` — SK-V6 same-plane recovery over the SK-V5 measured substrate history. The deleted SK-V3/SK-V4 packets are no longer dispatch authority. |
 
 Waves (host-arch primary; arm64 Apple Silicon first, then x86_64). SK-V6 now
 binds the wave routing: SK-V5 landed the Rust state, then measurements refuted
@@ -505,6 +513,13 @@ the Wave 3 UTF-8-fusion close. The expanded SOTA-BEAT corpus from
 `restart/skinny/BENCH.md` §3 is the binding gate, not the historical triad.
 No new kernel prescription is canonical until SK-V6 Wave 1 re-profiles the
 generated Track 1 baseline.
+
+SK-V6 addendum: after the 2026-05-15 asmjson/DAV1D pass, H.W6 requires schema
+v3 same-plane comparator metadata before any SOTA claim, and H.W2.5 requires
+DAV1D-grade checkasm hardening (forced feature masks, register-clobber checks,
+stack canaries, cycle counters, scalar oracle normalization, and same-wave
+consumers). The direct close route is generated `DirectFieldFacts`, not a
+benchmark-private sink.
 
 | Wave | Scope | Consumer gate |
 |---|---|---|

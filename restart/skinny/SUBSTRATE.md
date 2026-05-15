@@ -20,6 +20,16 @@ structural-only canada scan stays above floor, so the remaining work is not a
 return to eager tokens; it is string/Unicode primitives, object/key-dispatch
 shape, typed projection discipline, and streaming mask-consume kernels.
 
+**SK-V6 substrate fold-back (2026-05-15).** The asmjson/DAV1D pass reaffirms
+that Lock 1 is a union contract, not an eager-token contract: retained
+structural projection is tape storage, direct output is a sibling projection,
+and transient masks are not retained substrate. The generalized substrate facts
+are `StructuralClassTable`, `EventProjectionPlan`, `PayloadFlagPlan`,
+`TapeBuilderPlan`, `DirectFieldFacts`, `CostFacts`, and `PrimitiveFacts`. JSON
+supplies one instance; CSS, Sheets, and BBNF-self supply others. SIMD/ASM
+primitives are admitted only through Lock 16 scalar-oracle plus checkasm gates
+and a same-wave runtime or generated consumer.
+
 Source authority (verbatim citations, not paraphrase):
 
 - `restart/ARCHITECTURE.md` §9 (lines 1373-1426) — tape and direct-to-struct union; tape invariants; per-grammar runtime template path.

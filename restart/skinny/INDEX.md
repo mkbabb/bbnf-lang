@@ -2,6 +2,18 @@
 
 The skinny exists to validate the V1 architectural premise — specifically the SOTA-viability claim — before tranches A-J commit. **One grammar (JSON) end-to-end through 10 partial crates plus `xtask`, dual-track measured against sonic-rs / simd-json. Buildable in 2-4 weeks; ~32,000 handwritten LOC + ≤4,000 generated LOC.**
 
+**SK-V6 authority update (2026-05-15).** The current synthesis layer is
+`audit/GRAND-SYNTHESIS-SK-V6-ASMJSON-DAV1D.md`, with implementation routing in
+`audit/IMPLEMENTATION-PACKET-SK-V6-SOTA-RECOVERY.md` and handoff in
+`audit/HANDOFF-SK-V6.md`. The twelve-agent SK-V6 asmjson/DAV1D pass is archived
+under `audit/SK-V6-COHORT/skv6-A*.md` and `audit/SK-V6-COHORT/skv6-B*.md`.
+Binding fold-back: asmjson is an x86 DPDA architecture reference and a
+permissive flaw probe unless strict same-plane rows exist; DAV1D/FFmpeg/VLC
+contribute the SIMD admission discipline; grammar-specific behavior enters
+only through grammar source, metadata, generated `.data`, recognizer/cost
+facts, host/API schema facts, and generated runtime modules. No new directive,
+no new BIR variant, and no parallel substrate are admitted by the SK-V6 route.
+
 The full V1 spec lives at `restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`, `restart/MIGRATION.md`, plus the PASS surfaces. This skinny spec carves out a minimum-viable subset of that V1 contract.
 
 ## Four quadrants
@@ -17,6 +29,15 @@ The full V1 spec lives at `restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`, `
 ## What the skinny is testing
 
 **The SOTA-viability premise**: if a JSON parser generated through the V1 substrate (tape + direct-to-struct + structural SIMD scan) lands within or beats the sonic-rs / simd-json envelope on twitter / citm / canada, the V1 architectural premise is validated for JSON-class grammars. The dual-track measurement (generated vs hand-coded against the same substrate) separates **substrate ceiling** from **codegen overhead** as independent levers.
+
+**SK-V6 same-plane rule.** The expanded gate now has five planes, not one
+undifferentiated "JSON speed" number: retained parse, structural scan,
+`semantic_full_digest_stressor`, generated `real_typed_struct`, and native
+sidecar/flaw-probe comparators. SOTA-BEAT can be declared only on same-plane
+rows: strictness, output shape, ownership, hardware, feature mask, corpus, and
+freshness must match. asmjson's permissive Apple Silicon/SWAR rows and any
+lossy UTF-8 competitor row can inform architecture, but they cannot ratify a
+strict bbnf beat.
 
 **Current measured split, 2026-05-14.** The original twitter / citm_catalog /
 canada triad remains useful historical evidence after lazy offset tape and
@@ -84,7 +105,7 @@ The four quadrants share these invariants. A change that breaks one breaks all f
 
 1. **One grammar.** JSON only. Every quadrant assumes JSON's structural alphabet, byte-disjoint alts, monomorphic types, and a deliberate host-fn-free skinny grammar. Because V1 JSON has numeric/string host fns, BENCH must bound the direct-decode vs `CallHost` registry dispatch delta before RESULTS can claim FAITHFUL.
 2. **One Backend.** `RustBackend: Backend` per ARCH §7.5. WASM/TS deferred to V2.
-3. **Tape + direct-to-struct as one substrate.** Per Lock 1. No parallel substrate. No OpenFrame clone. SUBSTRATE.md §1; BENCH.md §1.1.
+3. **Tape + direct-to-struct as one substrate.** Per Lock 1. No parallel substrate. No OpenFrame clone. SUBSTRATE.md §1; BENCH.md §1.1. SK-V6 refinement: tape and structural projection are a union; the retained offset projection is the tape. Mask streams are transient producers and never become a second retained substrate.
 4. **Single-plan extraction.** No CSP, no e-graph, no cost-model selection. COMPILER.md §5.3. BENCH carries alternate-plan probes (BENCH §7.8.2: scalar — reported, dispatch-table — invalidated per `skinny/REDRESS.md` item 17, x86_64 PEXT — plausibly-better; aarch64 measurement currently runs scalar only).
 5. **Samply-resolvable profiles.** `debug = true`, `strip = false` in `release` and `bench`. WORKSPACE.md §3.1.
 6. **Dual-track measurement.** Two bbnf-side parsers (generated + hand-coded) against the same substrate. The delta diagnoses substrate vs codegen. BENCH.md §1.

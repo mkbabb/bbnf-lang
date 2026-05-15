@@ -26,6 +26,18 @@ equality, finite CSP, e-graph rewrites, recognizer mining, cost-model
 extraction, VM replay, language server, and `path-core`. None of those are
 reachable from a JSON parse and none are part of this slice.
 
+**SK-V6 compiler fold-back (2026-05-15).** The compiler route to SOTA is
+grammar-neutral facts, not new syntax. `BackendShape`, `DirectBuild`, and
+existing BIR variants stay fixed. The lowerer must derive structural alphabets,
+recognizer routes, direct field materializers, and cost decisions from Grammar
+IR, metadata, host/API output schema facts, and benchmark evidence. Remaining
+JSON-name helpers in generic crates (`shapes_for_json`, `nominate_json`,
+literal rule-name materializers, and JSON structural alphabet constructors) are
+Lock 14 cleanup targets; they are not patterns for V1.
+C6 extends this cleanup to `parse-that-regex`: JSON-named string, number,
+whitespace, and Unicode helper APIs must become grammar-neutral primitive facts
+or generated compatibility wrappers, not generic crate surface.
+
 ---
 
 ## 1. `json.bbnf` Source Sketch

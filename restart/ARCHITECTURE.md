@@ -16,6 +16,16 @@ alone (`restart/README.md:3`). Legacy plans remain inheritance, not governing
 truth; the inheritance index says BA/BB/BC/BD are to be mined and cited, not
 resumed as-is (`restart/inheritance/INDEX.md:1-5`).
 
+**SK-V6 fold-back (2026-05-15).** The skinny feedback loop now adds the
+asmjson/DAV1D synthesis at
+`restart/skinny/audit/GRAND-SYNTHESIS-SK-V6-ASMJSON-DAV1D.md`. Settled
+architecture remains unchanged: no new directives, no new BIR variants, no
+parallel substrate. The amendment is factual: same-plane SOTA rows are
+required; asmjson is an x86 DPDA reference/flaw probe unless strict comparator
+planes match; DAV1D/FFmpeg/VLC discipline governs SIMD/ASM admission;
+grammar-specific performance behavior flows through generated data and side
+tables, not generic crate branches.
+
 | Topic | Settled architecture | Superseded material | Resolution |
 |---|---|---|---|
 | Runtime substrate | Tape is the substrate and is unioned with direct-to-struct. | Older restart notes and inheritance rows that say tape dies or ParseStream replaces it. | The README names tape and direct-to-struct as a union (`restart/README.md:272-318`), Lock 1 repeats this (`restart/locks/14-LOCKS.md:34`), and PASS-3 resolves ParseStream mentions as stale (`restart/audit/pass-3-runtime/PASS-3.md:14-23`). |
@@ -28,6 +38,7 @@ resumed as-is (`restart/inheritance/INDEX.md:1-5`).
 | Generic grammar code | Mandatory. | Current hardcoded parser registries and grammar-name Rust modules. | CENSUS identifies grammar-name leaks in metadata, registries, path mirrors, and generated shims (`restart/corpora/CENSUS.md:103-122`). Lock 14 rejects generic crates with grammar switches, types, modules, or features (`restart/locks/14-LOCKS.md:60`). |
 | IR boundary | Two IRs plus side tables. | Old backend walkers that emit from Grammar IR directly. | README requires Grammar IR and Backend IR (`restart/README.md:104-118`); Lock 5 forbids emitter walking grammar directly (`restart/locks/14-LOCKS.md:42`). |
 | Optimization graph | CSP, egraph, miners, and cost model compose by output piping. | A fused global hypergraph. | README and Lock 4 require bridged sister crates rather than a fused graph (`restart/README.md:219-228`, `restart/locks/14-LOCKS.md:40`). |
+| asmjson/DAV1D lift | Lift instruction/process vocabulary into `BackendShape`, `CostFacts`, and Lock 16 primitive admission. | JSON-specific asmjson mode or a new `@asm` / `@simd` directive. | SK-V6 A/B reports show the portable unit is DPDA facts plus checkasm-admitted primitives. `CollapsedStage` remains cost-model selected and table-driven; generic crates stay grammar-neutral. |
 
 egglog-style Datalog/equality-saturation fusion is a known SOTA alternative,
 not an omitted design. V1 keeps bridge tables because CSP, egraph, miners, and
@@ -1040,6 +1051,8 @@ tables and internal fact logs are:
 | `BridgeJustification` | `passes::bridge`, with egraph and CSP explanation refs. | Cost extraction, diagnostics, bridge tests. | Public proof reference; does not expose pass-local bridge terms from generic crates. |
 | `CspSolution` | CSP solver (when called by `passes::layout` or other clients). | Cost extraction, layout, host chain typing. | Public when produced for extraction legality; internal when produced inside layout lowering. |
 | `CostFacts` | Cost model. | Backend IR extraction, benchmark report. | Public; stores `CostDecision` records, objective vectors, Pareto/frontier membership, scalarization profile, selected alternative, rejected alternatives, dominated alternatives, and extraction method. |
+| `DirectFieldFacts` | Shape/host API schema bridge. | `DirectBuild`, `SinkOnly`, generated typed materializers, diagnostics. | Public; stores field id/path/type, cardinality, duplicate/unknown policy, null/default policy, representation policy, materializer, and diagnostic context. |
+| `PrimitiveFacts` | `bbnf-simd` admission harness plus codegen verifier. | CPUID dispatch, primitive consumers, bench report, diagnostics. | Public; stores scalar oracle, target feature mask, ABI/checkasm status, same-wave consumer, and corpus-row impact. |
 | `RecoveryFacts` | Error pass. | `ErrorRecover`, LSP diagnostics. | Public. |
 | `TypeFacts` | HM + bidirectional checker (internal to `passes::layout`). | `passes::layout` only. | Internal subroutine artefact; not exported across pass boundaries. |
 | `TypeObligationLog` | HM equality, expected checking, coercion, and finite-choice stages inside `passes::layout`. | Diagnostics until layout/recovery facts are emitted. | Internal diagnostic evidence only. |
@@ -1156,6 +1169,12 @@ gain.
 | `BBNF-PRATT-NOT-APPLIED` | `passes::recognizers`. | Pratt detection ran but rejected the rule; cost model declined. |
 | `BBNF-SIMD-NOT-SELECTED` | `passes::recognizers`. | SIMD detection ran but rejected the rule; cost, unsupported Unicode semantics, or missing exact/prefilter verifier contract rejected the SIMD path. |
 | `BBNF-COST-PLAN-NOT-CANONICAL` | `cost-model` / `codegen::verify`. | A measured alternate materialization, dispatch, primitive, or capacity plan dominates the current canonical plan; generated output must switch plans or record a rejected-with-evidence reason. |
+| `BBNF-COMPARATOR-PLANE-DRIFT` | `bbnf-bench` / cost-model profile ingestion. | Candidate and comparator differ on strictness, output shape, ownership, hardware, feature mask, or freshness; the comparator row cannot ratify a SOTA beat. |
+| `BBNF-LOSSY-UTF8-ANCHOR` | `bbnf-bench` sidecar metadata. | A competitor row uses lossy UTF-8 behavior while the candidate row is strict; classify as flaw probe, not strict S anchor. |
+| `BBNF-SIMD-PRIMITIVE-NOT-ADMITTED` | `bbnf-simd` / codegen verifier. | A primitive lacks scalar oracle, checkasm parity, ABI hardening, or same-wave consumer and is refused by dispatch. |
+| `BBNF-SIMD-FEATURE-MASK-DRIFT` | `bbnf-simd` dispatch. | Runtime CPU feature mask differs from the row metadata or selected primitive contract. |
+| `BBNF-ASM-ABI-CHECK-MISSING` | `bbnf-simd` checkasm. | Handwritten ASM lacks register-clobber, stack-canary, or recoverable fault coverage. |
+| `BBNF-COST-EVIDENCE-INCOMPLETE` | `cost-model` / codegen verifier. | A selected backend shape or primitive route has no measured selected/rejected alternative evidence for the relevant grammar class. |
 | `BBNF-UTF8-INVALID-AT-PARSE` | `runtime` byte entrypoint / `bbnf-simd` validation. | Invalid UTF-8 reached a public view or string accessor instead of failing at parse/scan boundary. |
 | `BBNF-UNICODE-NONCHAR-CODEPOINT` | `parse-that/unicode`. | Unicode escape decoding rejected a Unicode scalar value solely because it is a noncharacter; RFC 8259 JSON accepts such scalar values. |
 | `BBNF-FORCE-INLINE-MISSED` | `codegen::verify`. | A rule mined as hot by `LayoutFacts.hot_call_graph` did not receive the required generated inline attribute or failed the post-LTO hot-leaf gate. |

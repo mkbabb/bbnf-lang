@@ -1,6 +1,14 @@
 # SOTA-BEAT-DESIGN — Structural-Index-Driven Codegen with SIMD Primitive Layer
 
-Status: LIVE (post-Wave-2 redress, SK-V3 Wave 0/1 re-assay, 2026-05-12). Aligned with `GRAND-SYNTHESIS-SOTA-BEAT-SK-V3.md`. The sidecar structural-index *prepass* shape is rejected; the retained tape projection IS the structural index (per SK-V3 §3 and Lock 1 clarification). What remains live in this document: the structural-index-driven codegen *lowering shape* (cursor over `offsets[]`, single indexed byte read per dispatch, no whitespace re-scan), generated `SinkOnly` typed emission for direct-only APIs, the `bbnf-simd` primitive crate and its Lock-16-admissible kernel catalog, the AVX-512 esoteric-stack-on-asmjson story, and the Phase 0–4 falsifiability ladder — all rebased on Wave 2's two-pathology-class diagnosis (Class A `tiny_string_loop`, Class B `hex_decode`) plus the new `N-direct` finding.
+Status: HISTORICAL DESIGN INPUT, superseded for dispatch by
+`IMPLEMENTATION-PACKET-SK-V6-SOTA-RECOVERY.md` (2026-05-15). The sidecar
+structural-index *prepass* shape remains rejected; the retained tape projection
+IS the structural index. Still-live material: structural-index-driven lowering,
+generated `SinkOnly`, `bbnf-simd` primitive vocabulary, and the x86
+`CollapsedStage` / asmjson research shape. Superseded material: the broad
+Class A/Class B prescription and UTF-8-fusion close route. REDRESS 50-55 and
+the SK-V6 A/B cohort require fresh same-plane profiles, DAV1D-grade checkasm,
+and one row-falsifiable intervention at a time.
 
 The expanded corpus in `skinny/RESULTS.md` is the binding gate. The current SK-V3 Wave 0/1 run classifies parse/tape rows as G / NoGo on `twitter`, `random`, `unicode_mixed`, and `unicode_basic`; it classifies several other rows as A / GO or C / GO, so the substrate is shape-sensitive rather than uniformly refuted. The overall verdict is `N-direct / NoGo`: sink-only direct-to-struct correctness passes and no longer pays retained-view traversal in the timed rows. After removing duplicate UTF-8 validation and moving integer/non-integer classification into the scanner result, 6 of 17 direct workload rows pass the 1.10x sonic-rs time slack and 11 remain slower. The architecture is not closed by primitive admission alone; it needs real event-cursor consumption for parse rows and direct sink materialization work for exact float/string/Unicode-heavy rows.
 

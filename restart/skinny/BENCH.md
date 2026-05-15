@@ -16,6 +16,15 @@ The skinny ships ONE grammar end-to-end: `json`. The bench harness here is the
 arbiter that decides whether tranches A-J dispatch, dispatch with codegen
 focus, or block on substrate redesign.
 
+**SK-V6 fold-back (2026-05-15).** The bench now treats SOTA as a same-plane
+claim, not as a single fastest wall-clock row. Every SOTA row must disclose
+strictness, UTF-8 validation point, escape completeness, output plane, ownership
+plane, feature mask, API symbol, corpus hash, hardware, build flags, sidecar
+freshness, and primitive/checkasm status. asmjson is an architectural reference
+for x86 `CollapsedStage`, but permissive asmjson rows are flaw probes only.
+The active implementation route is
+`restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V6-SOTA-RECOVERY.md`.
+
 The full V1 spec lives at `restart/ARCHITECTURE.md` and `restart/MASTER-PLAN.md`.
 SOTA anchors live at `restart/corpora/SOTA.md` and Lock 8
 (`restart/locks/14-LOCKS.md:48`). This document binds the skinny bench harness
@@ -170,6 +179,12 @@ sonic-rs = { version = "=0.5", default-features = false, features = ["sort_keys"
 Pin: `=0.5` exact version; default-features off to avoid the optional
 `unstable` feature drift. Re-pin on each baseline refresh; record the version
 in the per-row metadata block (§5).
+
+SK-V6 caveat: the checked-in bench dependency must not enable `utf8_lossy` for
+strict S anchors. C3 confirmed that the current skinny bench enables
+`utf8_lossy` in `skinny/crates/bbnf-bench/Cargo.toml` and that sonic-rs applies
+lossy mode globally when the feature is compiled. Existing sonic rows are
+therefore `flaw_probe` rows until rebuilt and rerun without that feature.
 
 APIs used:
 
@@ -621,7 +636,7 @@ missing FAILS the gate. Source: `restart/MASTER-PLAN.md:159-168` and
 A row missing any field is INVALID and removed from the dataset before the
 threshold matrix runs.
 
-### 5.1.1 Strictness disclosure columns (SK-V5 Wave 0 deliverable)
+### 5.1.1 Strictness disclosure columns and schema v3 (SK-V6)
 
 Per `restart/skinny/audit/SK-V5-COHORT/skv5-B3-native-sidecars.md` and
 `restart/skinny/audit/GRAND-SYNTHESIS-SK-V5.md` §4, the current
@@ -660,7 +675,15 @@ schema and are no longer optional or future work. They remain part of the
 Wave 1 re-profile input because same-plane sidecar comparisons are required
 before any SOTA-BEAT claim.
 
-The four columns are emitted by the `Sidecar` trait in
+SK-V6 extends these four columns to schema v3. Required row fields:
+`strictness`, `parse_utf8`, `escape_complete`, `flaw_probe`, `output_plane`,
+`ownership_plane`, `feature_mask`, `api_symbol`, `corpus_hash`, `hardware`,
+`build_flags`, `sidecar_freshness`, and `primitive_status`. A row missing any
+field is INVALID. A row whose strictness/output/ownership plane differs from
+the candidate bbnf row emits `BBNF-COMPARATOR-PLANE-DRIFT` and may be reported
+only as a comparator note or flaw probe.
+
+The four original columns are emitted by the `Sidecar` trait in
 `bbnf-bench/src/lib.rs` and propagate through every native sidecar row.
 Missing values FAIL the schema gate at §5.3 the same way any required field
 does. Outcome classification at §6 reads these columns as advisory context;
@@ -673,7 +696,7 @@ strictness-disjoint comparisons cannot ratify a `BEAT` claim, only a
 
 ```rust
 pub struct RowMetadata {
-    schema_version: &'static str,    // "2" — bumped on field schema change
+    schema_version: &'static str,    // "3" — bumped on field schema change
     cpu_model: String,
     cpu_arch: String,
     os_kernel: String,

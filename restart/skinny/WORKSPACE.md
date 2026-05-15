@@ -17,6 +17,15 @@ The skinny is buildable in 2-4 weeks of focused work or it is not skinny. This f
 - The build-time targets and the dev-iteration discipline.
 - The explicit list of what the skinny omits and the impact of each omission on the SOTA-viability test.
 
+**SK-V6 workspace fold-back (2026-05-15).** The workspace now treats
+`bbnf-simd` and `bbnf-bench` as admission gates, not support code. `bbnf-simd`
+must keep grammar-neutral primitive modules, scalar oracles, target dispatch,
+and DAV1D-grade `primitive-checkasm`; JSON wrappers and generated `.data` stay
+under `runtime/src/grammars/json/` or generated output. `bbnf-bench` must emit
+schema v3 comparator-plane rows before any SOTA decision. Remaining Lock 14
+cleanup includes splitting the `bbnf-simd` JSON god-module residue and
+removing JSON-name logic from generic pass/codegen crates.
+
 Not in this file: substrate internals (`SUBSTRATE.md`), compiler pipeline internals (`COMPILER.md`), bench thresholds and reproducibility schema (`BENCH.md`).
 
 ### 0.1 Post-Iteration State (SK-V2)

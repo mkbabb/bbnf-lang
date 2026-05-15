@@ -2086,3 +2086,41 @@ perturbation.
   rows through inlining/code-layout or branch-shape effects. Future Track 2
   work must profile the hand parser's code layout directly; it must not assume
   generated helper shape transfers monotonically to the hand comparator.
+
+## SK-V6 asmjson/DAV1D synthesis redress
+
+- Item 74 records the twelve-agent asmjson/DAV1D and generalization pass as a
+  spec redress, not a code intervention. Reports are archived under
+  `restart/skinny/audit/SK-V6-COHORT/skv6-A*.md` and
+  `restart/skinny/audit/SK-V6-COHORT/skv6-B*.md`; synthesis and handoff live at
+  `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6-ASMJSON-DAV1D.md`,
+  `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V6-SOTA-RECOVERY.md`, and
+  `restart/skinny/audit/HANDOFF-SK-V6.md`.
+- Binding findings: asmjson is a JSON-specific DPDA architecture reference
+  (chunk byte-class masks, next-set-bit seeking, direct-threaded finite
+  control, bounded stack), not a new BBNF directive and not a permissive strict
+  S anchor. The transferable shape is grammar-neutral `CollapsedStage` selected
+  by cost facts, emitted tables, admitted primitives, and same-plane strictness.
+  DAV1D/FFmpeg/VLC contribute the required process: scalar executable specs,
+  forced feature masks, register-clobber checks, stack canaries, cycle counters,
+  and same-wave consumers.
+- Item 75 records the comparator-plane correction forced by the same pass.
+  `sonic-rs` rows built with `utf8_lossy` cannot be strict S anchors; they must
+  be removed from strict rows or marked `flaw_probe`. bbnf retained parse rows
+  that validate UTF-8 at the view boundary remain `deferred` or
+  `strict_after_utf8_view` until scan-boundary validation is measured. asmjson
+  SWAR/permissive rows are flaw probes unless a strict row on the same hardware
+  and output plane is produced. Future `RESULTS.md` rows use schema v3 with
+  strictness, output, ownership, feature mask, API symbol, corpus hash,
+  hardware, build flags, sidecar freshness, and primitive status.
+- Item 76 records the C-pass profiling/generality refinement. C1/C5 split the
+  retained misses into short/plain rows and escape-tail rows and nominate a
+  per-`\uXXXX` table/TBL classifier inside the existing retained string path;
+  this is distinct from the rejected four-contiguous-unit validator. C2
+  nominates a generated `mesh` `real_typed_struct` DirectBuild candidate as the
+  first product-plane expansion beyond `twitter` and `update_center`. C3
+  confirms the active `sonic-rs` bench dependency enables global `utf8_lossy`,
+  making current sonic rows strict-anchor ineligible. C4 keeps PMULL, CSSC,
+  DotProd, SVE/SME, and x86 AVX-512 work unadmitted until exact profiles point
+  there. C6 assigns remaining grammar-name leaks in `passes`, `codegen`, and
+  `parse-that-regex` to SK-V6 Wave 4; `runtime/tape` is clean.

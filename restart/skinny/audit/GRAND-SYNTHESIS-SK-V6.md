@@ -1128,3 +1128,51 @@ Falsifiability gate for the first implementation:
   "generated recursive descent cannot match Serde-shaped sonic-rs on this
   typed-output row without CollapsedStage or a lower-level typed builder
   primitive."
+
+## 16. Wave 3 Result: Candidate 12 Accepted for Representative Typed Output
+
+Candidate 12 landed as a schema-source DirectBuild proof rather than another
+sink-local string kernel. The implementation keeps the grammar clean: the
+host/API output schema is supplied by xtask/consumer code, lowered through a
+grammar-neutral `DirectSchemaSet`, and consumed by generated code without
+adding a BBNF directive or a BIR variant.
+
+Accepted facts:
+
+- `DirectBuildField` may carry optional output-target facts. This is a payload
+  extension of `DirectBuild { shape, fields }`, not a new variant.
+- `DirectSchemaSet` is the schema-source boundary for open data grammars such
+  as JSON. It names roots, Rust type paths, fields, presence policy, duplicate
+  policy, scalar/container types, object-entry vectors, capacity hints, and
+  ignored-field skip facts.
+- `real_typed_struct` is the representative typed-output row. It gates
+  generated Track 1 against sonic-rs/serde sidecars on the same owned Rust
+  struct plane. Track 2 remains a structurally different oracle and is
+  reported separately. The maximal digest row remains
+  `semantic_full_digest_stressor` and still reports its own misses.
+- PC-level attribution named `DirectParser::skip_value` and skipped string
+  values as the remaining `update_center` hot leaf. The accepted close was not
+  raw key dispatch; it was schema-sourced ignored-field facts plus a skip-only
+  plain-string fast path, both consumed by the generated typed parser.
+
+Rejected sub-routes:
+
+- Raw key byte dispatch regressed the `update_center` profile scout.
+- Narrowing the `Plugin` output to only `name` and `version` made sonic-rs
+  faster and failed Criterion.
+- A global 40-byte tiny-string cap and a skip-only 64-byte cap both regressed
+  the scout. The accepted skip-only cap is 96 bytes; materialized strings keep
+  the 32-byte cap.
+
+Measured close:
+
+| row | Track 1 median | sonic-rs median | verdict |
+|---|---:|---:|---|
+| twitter `real_typed_struct` | 278.67 us | 422.12 us | PASS; generated Track 1 beats sonic-rs typed serde. |
+| update_center `real_typed_struct` | 354.15 us | 351.23 us | PASS; generated Track 1 is inside `sonic-rs * 1.10` time slack. |
+
+The result validates the SK/V1 direct-to-struct premise only for an honest
+host/API typed-output plane. It does not rescue the maximal digest stressor:
+`direct_to_struct` remains a visible N-direct family and must keep reporting
+its failures until either a real consumer needs that exact semantic digest or a
+new workload-specific profile names an admissible close.

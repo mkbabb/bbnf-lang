@@ -42,6 +42,10 @@ fn main() -> Result<(), Box<dyn Error>> {
             direct_track2: read_slope_ns(&group, "track2_direct_to_struct"),
             direct_sonic: read_slope_ns(&group, "sonic_rs_direct_to_struct"),
             direct_serde: read_slope_ns(&group, "serde_json_direct_to_struct"),
+            real_typed_track1: read_slope_ns(&group, "track1_real_typed_struct"),
+            real_typed_track2: read_slope_ns(&group, "track2_real_typed_struct"),
+            real_typed_sonic: read_slope_ns(&group, "sonic_rs_real_typed_struct"),
+            real_typed_serde: read_slope_ns(&group, "serde_json_real_typed_struct"),
         };
         let input = std::str::from_utf8(&fixture.bytes)?;
         let parity_ok = bbnf_bench::parity::assert_parity(input).is_ok();
@@ -110,7 +114,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                 direct_struct_ok,
                 direct_outcome,
                 fixture.bytes.len() as u64,
-                &estimates,
+                estimates.direct_track1,
+                estimates.direct_track2,
+                estimates.direct_sonic,
             ),
         );
         if direct_outcome == Some(Outcome::NDirectProjectionFailure) {
@@ -119,6 +125,42 @@ fn main() -> Result<(), Box<dyn Error>> {
                 fixture.bytes.len() as u64,
                 &estimates,
             ));
+        }
+        if estimates.real_typed_track1.is_some() {
+            let real_typed_ok = bbnf_bench::real_typed_struct::fixture_for_name(&fixture.name)
+                .is_some_and(|real_typed| {
+                    bbnf_bench::real_typed_struct::assert_real_typed_parity(
+                        input,
+                        &fixture.bytes,
+                        real_typed,
+                    );
+                    true
+                });
+            let real_typed_outcome = classify_real_typed_projection(
+                real_typed_ok,
+                estimates.real_typed_track1,
+                estimates.real_typed_sonic,
+            );
+            if let Some(outcome) = real_typed_outcome {
+                outcomes.push(outcome);
+            }
+            report.push_workload_row(
+                &fixture.name,
+                "real_typed_struct",
+                fixture.bytes.len() as u64,
+                estimates.real_typed_track1,
+                estimates.real_typed_track2,
+                estimates.real_typed_sonic,
+                estimates.real_typed_serde,
+                real_typed_workload_signal(
+                    real_typed_ok,
+                    real_typed_outcome,
+                    fixture.bytes.len() as u64,
+                    estimates.real_typed_track1,
+                    estimates.real_typed_track2,
+                    estimates.real_typed_sonic,
+                ),
+            );
         }
         push_probe_rows(
             &mut report,
@@ -205,15 +247,17 @@ fn direct_workload_signal(
     correctness_ok: bool,
     outcome: Option<Outcome>,
     bytes: u64,
-    estimates: &Estimates,
+    track1_ns: Option<f64>,
+    track2_ns: Option<f64>,
+    sonic_ns: Option<f64>,
 ) -> String {
     if !correctness_ok {
         return "FAIL digest mismatch".to_string();
     }
     if outcome == Some(Outcome::NDirectProjectionFailure) {
-        let track1 = throughput_mbps(bytes, estimates.direct_track1);
-        let track2 = throughput_mbps(bytes, estimates.direct_track2);
-        let sonic = throughput_mbps(bytes, estimates.direct_sonic);
+        let track1 = throughput_mbps(bytes, track1_ns);
+        let track2 = throughput_mbps(bytes, track2_ns);
+        let sonic = throughput_mbps(bytes, sonic_ns);
         return format!(
             "NO-GO sink_only throughput > sonic-rs * {:.2} ns slack; correctness PASS; Track 1 {}, Track 2 {}, sonic {} Mbps",
             gate::DIRECT_PROJECTION_SONIC_SLACK,
@@ -222,7 +266,54 @@ fn direct_workload_signal(
             format_mbps(sonic)
         );
     }
-    "PASS sink_only track1=track2=serde; sonic shape parity; throughput within gate".to_string()
+    "PASS correctness green; sonic shape parity; throughput within gate".to_string()
+}
+
+fn classify_real_typed_projection(
+    correctness_ok: bool,
+    track1_ns: Option<f64>,
+    sonic_ns: Option<f64>,
+) -> Option<Outcome> {
+    if !correctness_ok {
+        return Some(Outcome::IParityOracleFail);
+    }
+    let (Some(track1), Some(sonic)) = (track1_ns, sonic_ns) else {
+        return None;
+    };
+    if track1 > sonic * gate::DIRECT_PROJECTION_SONIC_SLACK {
+        return Some(Outcome::NDirectProjectionFailure);
+    }
+    None
+}
+
+fn real_typed_workload_signal(
+    correctness_ok: bool,
+    outcome: Option<Outcome>,
+    bytes: u64,
+    track1_ns: Option<f64>,
+    track2_ns: Option<f64>,
+    sonic_ns: Option<f64>,
+) -> String {
+    if !correctness_ok {
+        return "FAIL typed-output parity mismatch".to_string();
+    }
+    let track1 = throughput_mbps(bytes, track1_ns);
+    let track2 = throughput_mbps(bytes, track2_ns);
+    let sonic = throughput_mbps(bytes, sonic_ns);
+    if outcome == Some(Outcome::NDirectProjectionFailure) {
+        return format!(
+            "NO-GO generated typed output > sonic-rs * {:.2} ns slack; correctness PASS; Track 1 {}, Track 2 oracle {}, sonic {} Mbps",
+            gate::DIRECT_PROJECTION_SONIC_SLACK,
+            format_mbps(track1),
+            format_mbps(track2),
+            format_mbps(sonic)
+        );
+    }
+    format!(
+        "PASS generated typed output within sonic-rs * {:.2} ns slack; correctness PASS; Track 2 oracle structurally different at {} Mbps",
+        gate::DIRECT_PROJECTION_SONIC_SLACK,
+        format_mbps(track2)
+    )
 }
 
 fn direct_projection_note(corpus: &str, bytes: u64, estimates: &Estimates) -> String {
@@ -295,6 +386,10 @@ struct Estimates {
     direct_track2: Option<f64>,
     direct_sonic: Option<f64>,
     direct_serde: Option<f64>,
+    real_typed_track1: Option<f64>,
+    real_typed_track2: Option<f64>,
+    real_typed_sonic: Option<f64>,
+    real_typed_serde: Option<f64>,
 }
 
 impl Estimates {
@@ -332,6 +427,10 @@ fn read_metadata_rows(group: &Path) -> Vec<RowMetadata> {
         "track2_direct_to_struct",
         "sonic_rs_direct_to_struct",
         "serde_json_direct_to_struct",
+        "track1_real_typed_struct",
+        "track2_real_typed_struct",
+        "sonic_rs_real_typed_struct",
+        "serde_json_real_typed_struct",
     ]
     .into_iter()
     .filter_map(|bench| fs::read_to_string(group.join(bench).join("metadata.toml")).ok())

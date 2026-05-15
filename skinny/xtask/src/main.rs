@@ -2,7 +2,9 @@ use anyhow::{bail, Context, Result};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-const USAGE: &str = "usage: cargo xtask <regen-json|check-json|check-conformance|lint-loc|bench-json|gate-json|primitive-checkasm>";
+mod real_typed_schema;
+
+const USAGE: &str = "usage: cargo xtask <regen-json|check-json|regen-real-typed|check-real-typed|check-conformance|lint-loc|bench-json|gate-json|primitive-checkasm>";
 
 fn main() -> Result<()> {
     let mut args = std::env::args().skip(1);
@@ -14,6 +16,8 @@ fn main() -> Result<()> {
     match command.as_str() {
         "regen-json" => regen_json(&root),
         "check-json" => check_json(&root),
+        "regen-real-typed" => regen_real_typed(&root),
+        "check-real-typed" => check_real_typed(&root),
         "check-conformance" => check_conformance(),
         "lint-loc" => lint_loc(&root),
         "bench-json" => bench_json(&root, args.collect()),
@@ -126,6 +130,25 @@ fn check_json(root: &Path) -> Result<()> {
     emitted
         .check_dir(root.join("crates/runtime/src/grammars/json"))
         .context("generated JSON runtime is stale; run `cargo xtask regen-json`")
+}
+
+fn regen_real_typed(root: &Path) -> Result<()> {
+    let source = std::fs::read_to_string(root.join("grammars/json.bbnf"))?;
+    let schema = real_typed_schema::schema();
+    let emitted = codegen::emit_json_typed_from_source(&source, &schema)?;
+    emitted.write_to_dir(root.join("crates/bbnf-bench/src"))?;
+    Ok(())
+}
+
+fn check_real_typed(root: &Path) -> Result<()> {
+    let source = std::fs::read_to_string(root.join("grammars/json.bbnf"))?;
+    let schema = real_typed_schema::schema();
+    let emitted = codegen::emit_json_typed_from_source(&source, &schema)?;
+    emitted
+        .check_dir(root.join("crates/bbnf-bench/src"))
+        .context(
+            "generated real typed DirectBuild module is stale; run `cargo xtask regen-real-typed`",
+        )
 }
 
 fn lint_loc(root: &Path) -> Result<()> {

@@ -759,12 +759,14 @@ pub mod extract {
                 source: DirectBuildSource::RepeatedRule {
                     rule: "pair".to_string(),
                 },
+                target: None,
             }],
             "array" => vec![DirectBuildField {
                 name: "elements".to_string(),
                 source: DirectBuildSource::RepeatedRule {
                     rule: "value".to_string(),
                 },
+                target: None,
             }],
             "pair" => vec![
                 DirectBuildField {
@@ -772,12 +774,14 @@ pub mod extract {
                     source: DirectBuildSource::ChildRule {
                         rule: "string".to_string(),
                     },
+                    target: None,
                 },
                 DirectBuildField {
                     name: "value".to_string(),
                     source: DirectBuildSource::ChildRule {
                         rule: "value".to_string(),
                     },
+                    target: None,
                 },
             ],
             "string" => vec![DirectBuildField {
@@ -785,16 +789,19 @@ pub mod extract {
                 source: DirectBuildSource::Span {
                     label: "string".to_string(),
                 },
+                target: None,
             }],
             "number" => vec![DirectBuildField {
                 name: "span".to_string(),
                 source: DirectBuildSource::Span {
                     label: "number".to_string(),
                 },
+                target: None,
             }],
             "bool" => vec![DirectBuildField {
                 name: "value".to_string(),
                 source: DirectBuildSource::Literal { bytes: Vec::new() },
+                target: None,
             }],
             "null" => Vec::new(),
             _ => Vec::new(),

@@ -446,6 +446,8 @@ pub enum TapeKind {
 pub struct DirectBuildField {
     pub name: String,
     pub source: DirectBuildSource,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target: Option<DirectBuildTarget>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -455,6 +457,61 @@ pub enum DirectBuildSource {
     RepeatedRule { rule: String },
     Literal { bytes: Vec<u8> },
     Empty,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DirectBuildTarget {
+    pub rust_field: String,
+    pub type_ref: DirectBuildTypeRef,
+    pub presence: DirectBuildPresence,
+    pub cardinality: DirectBuildCardinality,
+    pub representation: DirectBuildRepresentation,
+    pub decode: DirectBuildDecode,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum DirectBuildTypeRef {
+    Named { type_id: String },
+    Scalar { kind: DirectBuildScalar },
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum DirectBuildScalar {
+    String,
+    Bool,
+    I64,
+    U64,
+    F64,
+    Null,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum DirectBuildPresence {
+    Required,
+    Optional,
+    Default,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum DirectBuildCardinality {
+    One,
+    Vec,
+    Map,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum DirectBuildRepresentation {
+    Borrowed,
+    Owned,
+    BorrowedOrOwned,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum DirectBuildDecode {
+    Raw,
+    JsonString,
+    JsonNumber,
+    Literal,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]

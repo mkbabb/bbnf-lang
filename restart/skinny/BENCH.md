@@ -435,7 +435,11 @@ digest row. That row is now classified as `semantic_full_digest_stressor`.
 The representative typed-output gate is a separate `real_typed_struct`
 workload: Track 1 must call generated `SinkOnly`, produce an owned typed Rust
 struct, and compute any checksum only after parse; Track 2 must be
-structurally independent and produce the same owned type.
+structurally independent and produce the same owned type as an oracle. SK-V6
+REDRESS 71 narrows the SOTA comparison for this representative row to
+generated Track 1 versus same-plane sonic-rs/serde sidecars. Track 2 remains
+reported for structural separation but does not inherit the old maximal
+digest-stressor throughput rule.
 
 Parity oracle pseudocode (lives at `crates/bbnf-bench/src/parity.rs`):
 
@@ -881,7 +885,7 @@ Every expanded-gate rerun reports these workload modes per corpus:
 | `parse_full_traversal` | all strings/numbers/arrays touched, exposing lazy work | Track 1, sonic-rs Value-DOM, simdjson DOM, yyjson sidecar |
 | `path_lookup` | cursor/direct projection and key lookup cost | Track 1 path, sonic-rs pointer/LazyValue, simdjson On-Demand pointer |
 | `direct_to_struct` / `semantic_full_digest_stressor` | Stress every semantic key/string/number byte without retained view walk. | Track 1 generated runtime/codegen `SinkOnly` direct, Track 2 independent hand-coded sink over runtime event/sink traits, retained-view parity oracle, sonic-rs semantic digest sidecar; outcome `N-direct` remains visible if either BBNF direct track is slower than `sonic-rs * 1.10` in time. This stressor may fail while the representative typed gate passes, but it must not be hidden. |
-| `real_typed_struct` | Representative BBNF typed-emission premise. | Track 1 generated runtime/codegen `SinkOnly` direct into owned typed output, Track 2 structurally independent direct parser into the same owned Rust type, sonic-rs serde struct, serde_json struct oracle. The timed checksum is post-parse over the owned struct. A bench-private Track 1 parser, a parse-time checksum-only sink, or broad `serde_json::Value` typed output for live fields is INVALID. |
+| `real_typed_struct` | Representative BBNF typed-emission premise. | Track 1 generated runtime/codegen `SinkOnly` direct into owned typed output from a host/API output schema, Track 2 structurally independent typed oracle into the same owned Rust type, sonic-rs serde struct, serde_json struct oracle. The timed checksum is post-parse over the owned struct. A bench-private Track 1 parser, a parse-time checksum-only sink, broad `serde_json::Value` typed output for live fields, or judging this row by the maximal digest-stressor Track 2 throughput rule is INVALID. |
 | `unicode_string_float` | string decode, UTF-8, escapes, number materialization | `unicode_*`, `numbers`, `canada`, JSONTestSuite-derived rows |
 | `memory` | retained substrate cost | peak RSS, offset/event counts, payload bytes, allocations |
 | `cycles_per_byte` | native SOTA comparability | samply or perf c/B for hot rows |

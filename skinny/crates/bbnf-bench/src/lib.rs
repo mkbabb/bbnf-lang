@@ -1,9 +1,11 @@
 pub mod direct_struct;
 pub mod gate;
+pub mod generated_real_typed;
 pub mod materialization;
 pub mod metadata;
 pub mod parity;
 pub mod probes;
+pub mod real_typed_struct;
 pub mod report;
 pub mod scan;
 pub mod track2;

@@ -17,6 +17,13 @@ fn bench_json_parity(c: &mut Criterion) {
         bbnf_bench::parity::assert_parity(input).expect("parity oracle failed");
         bbnf_bench::direct_struct::assert_direct_struct_parity(input, &fixture.bytes)
             .expect("direct-to-struct parity oracle failed");
+        if let Some(real_typed) = bbnf_bench::real_typed_struct::fixture_for_name(&fixture.name) {
+            bbnf_bench::real_typed_struct::assert_real_typed_parity(
+                input,
+                &fixture.bytes,
+                real_typed,
+            );
+        }
         run_fixture(c, &host, fixture, input);
     }
 }
@@ -250,6 +257,98 @@ fn run_fixture(c: &mut Criterion, host: &HostFacts, fixture: &JsonFixture, input
         measurement_time_s,
         sample_size as u32,
     );
+
+    if let Some(real_typed) = bbnf_bench::real_typed_struct::fixture_for_name(&fixture.name) {
+        group.bench_function("track1_real_typed_struct", |b| {
+            b.iter(|| {
+                let output =
+                    bbnf_bench::real_typed_struct::track1_typed(real_typed, black_box(input))
+                        .unwrap();
+                black_box(bbnf_bench::real_typed_struct::typed_checksum(&output));
+            });
+        });
+        write_row(
+            host,
+            fixture,
+            "track1_real_typed_struct",
+            BenchFacts::bbnf_json_workload(
+                fixture.sha256.clone(),
+                fixture.bytes.len() as u64,
+                TrackTag::Track1Generated,
+                "real_typed_struct",
+                track1_payload.0,
+                track1_payload.1,
+                measurement_time_s,
+                sample_size as u32,
+            ),
+        );
+
+        group.bench_function("track2_real_typed_struct", |b| {
+            b.iter(|| {
+                let output =
+                    bbnf_bench::real_typed_struct::track2_typed(real_typed, black_box(input))
+                        .unwrap();
+                black_box(bbnf_bench::real_typed_struct::typed_checksum(&output));
+            });
+        });
+        write_row(
+            host,
+            fixture,
+            "track2_real_typed_struct",
+            BenchFacts::bbnf_json_workload(
+                fixture.sha256.clone(),
+                fixture.bytes.len() as u64,
+                TrackTag::Track2Handcoded,
+                "real_typed_struct",
+                track2_payload.0,
+                track2_payload.1,
+                measurement_time_s,
+                sample_size as u32,
+            ),
+        );
+
+        group.bench_function("sonic_rs_real_typed_struct", |b| {
+            b.iter(|| {
+                let output = bbnf_bench::real_typed_struct::sonic_typed(
+                    real_typed,
+                    black_box(&fixture.bytes),
+                )
+                .unwrap();
+                black_box(bbnf_bench::real_typed_struct::typed_checksum(&output));
+            });
+        });
+        write_competitor_row(
+            host,
+            fixture,
+            "sonic_rs_real_typed_struct",
+            "sonic-rs",
+            "0.5.8",
+            "real_typed_struct",
+            measurement_time_s,
+            sample_size as u32,
+        );
+
+        group.bench_function("serde_json_real_typed_struct", |b| {
+            b.iter(|| {
+                let output = bbnf_bench::real_typed_struct::serde_typed(
+                    real_typed,
+                    black_box(&fixture.bytes),
+                )
+                .unwrap();
+                black_box(bbnf_bench::real_typed_struct::typed_checksum(&output));
+            });
+        });
+        write_competitor_row(
+            host,
+            fixture,
+            "serde_json_real_typed_struct",
+            "serde_json",
+            "workspace",
+            "real_typed_struct",
+            measurement_time_s,
+            sample_size as u32,
+        );
+    }
 
     group.finish();
     run_probe_group(

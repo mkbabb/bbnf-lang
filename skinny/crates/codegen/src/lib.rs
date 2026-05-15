@@ -1,6 +1,9 @@
+pub mod direct_schema;
 mod json_sink_direct;
+mod json_typed_direct;
 pub(crate) mod lower;
 
+use direct_schema::DirectSchemaSet;
 use ir::{BackendIr, BackendShape, RuleId};
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -77,6 +80,20 @@ pub fn emit_json(backend: &BackendIr) -> Result<EmittedSource, CodegenError> {
     emit_json_with_layout(backend, &backend_shape, &[])
 }
 
+pub fn emit_json_typed_from_source(
+    source: &str,
+    schema: &DirectSchemaSet,
+) -> Result<EmittedSource, CodegenError> {
+    let grammar = grammar::parse_json_grammar(source)?;
+    let output = passes::compile(&grammar)?;
+    emit_json_typed_with_layout(
+        &output.backend_ir,
+        &output.layout_facts.backend_shape,
+        &output.diagnostics,
+        schema,
+    )
+}
+
 fn emit_json_with_layout(
     backend: &BackendIr,
     backend_shape: &std::collections::HashMap<RuleId, BackendShape>,
@@ -108,6 +125,34 @@ fn emit_json_with_layout(
     files.insert("value.rs".to_string(), value_rs());
     files.insert("view.rs".to_string(), view_rs());
     files.insert("visitor.rs".to_string(), visitor_rs());
+    Ok(EmittedSource { files })
+}
+
+fn emit_json_typed_with_layout(
+    backend: &BackendIr,
+    backend_shape: &std::collections::HashMap<RuleId, BackendShape>,
+    diagnostics: &[passes::diagnostics::PassDiagnostic],
+    schema: &DirectSchemaSet,
+) -> Result<EmittedSource, CodegenError> {
+    let lowered = lower::lower_to_rust(
+        backend,
+        &lower::LowerCtx {
+            backend_shape,
+            diagnostics,
+        },
+    );
+    let sink_only = lowered.sink_only_program.as_ref().ok_or_else(|| {
+        CodegenError::Lowering(
+            "BackendIr did not contain DirectBuild sink-only program".to_string(),
+        )
+    })?;
+    let typed =
+        lower::schema_direct::lower_program(sink_only, schema).map_err(CodegenError::Lowering)?;
+    let mut files = BTreeMap::new();
+    files.insert(
+        format!("{}.rs", schema.module_name),
+        json_typed_direct::render(&typed).map_err(CodegenError::Lowering)?,
+    );
     Ok(EmittedSource { files })
 }
 
@@ -206,6 +251,10 @@ fn normalize(source: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use direct_schema::{
+        DirectFieldSchema, DirectRootSchema, DirectScalar, DirectTypeKind, DirectTypeRef,
+        DirectTypeSchema, DuplicatePolicy, PresencePolicy, UnknownFieldPolicy,
+    };
     use ir::BackendExpr;
 
     const JSON_GRAMMAR: &str = include_str!("../../../grammars/json.bbnf");
@@ -285,6 +334,77 @@ mod tests {
         .unwrap_err();
 
         assert!(matches!(err, CodegenError::Lowering(_)));
+    }
+
+    #[test]
+    fn emits_typed_direct_consumer_module() {
+        let schema = tiny_schema();
+        let emitted = emit_json_typed_from_source(JSON_GRAMMAR, &schema).unwrap();
+        let generated = emitted.get("tiny_typed.rs").unwrap();
+
+        assert!(generated.contains("pub fn parse_tiny"));
+        assert!(generated.contains("fn parse_type_tiny_root"));
+        assert!(generated.contains("DirectBuildError"));
+        assert!(!generated.contains("JsonSink"));
+        assert!(!generated.contains("serde_json::Value"));
+    }
+
+    #[test]
+    fn refuses_typed_emission_without_direct_builds() {
+        let schema = tiny_schema();
+        let grammar = grammar::parse_json_grammar(JSON_GRAMMAR).unwrap();
+        let mut output = passes::compile(&grammar).unwrap();
+        for rule in &mut output.backend_ir.rules {
+            strip_direct_builds(&mut rule.expr);
+        }
+
+        let err = emit_json_typed_with_layout(
+            &output.backend_ir,
+            &output.layout_facts.backend_shape,
+            &output.diagnostics,
+            &schema,
+        )
+        .unwrap_err();
+
+        assert!(matches!(err, CodegenError::Lowering(_)));
+    }
+
+    fn tiny_schema() -> DirectSchemaSet {
+        DirectSchemaSet {
+            module_name: "tiny_typed".to_string(),
+            schema_hash: "test-schema".to_string(),
+            roots: vec![DirectRootSchema {
+                function_name: "parse_tiny".to_string(),
+                rust_type: "crate::TinyRoot<'i>".to_string(),
+                type_id: "TinyRoot".to_string(),
+            }],
+            types: vec![DirectTypeSchema {
+                type_id: "TinyRoot".to_string(),
+                rust_type: "crate::TinyRoot<'i>".to_string(),
+                kind: DirectTypeKind::Struct {
+                    unknown_fields: UnknownFieldPolicy::Skip,
+                    ignored_fields: Vec::new(),
+                    fields: vec![
+                        DirectFieldSchema {
+                            json_key: "name".to_string(),
+                            rust_field: "name".to_string(),
+                            ty: DirectTypeRef::Scalar(DirectScalar::String),
+                            presence: PresencePolicy::Required,
+                            duplicate: DuplicatePolicy::Reject,
+                        },
+                        DirectFieldSchema {
+                            json_key: "items".to_string(),
+                            rust_field: "items".to_string(),
+                            ty: DirectTypeRef::Vec(Box::new(DirectTypeRef::Scalar(
+                                DirectScalar::U64,
+                            ))),
+                            presence: PresencePolicy::Default,
+                            duplicate: DuplicatePolicy::LastWins,
+                        },
+                    ],
+                },
+            }],
+        }
     }
 
     fn strip_direct_builds(expr: &mut BackendExpr) {

@@ -1924,3 +1924,55 @@ perturbation.
   hidden BBNF directive and not as a benchmark-private parser. Until that
   schema-source contract exists, `real_typed_struct` remains a measurement
   surface rather than a SOTA-close route.
+
+## SK-V6 Wave 3 Candidate-12 Redress
+
+- Item 71 accepts generated typed `DirectBuild` from a host/API output schema
+  as the representative typed-output close for the two Wave 3 proof rows. The
+  route added a grammar-neutral schema-source API in
+  `codegen::direct_schema`, a `SinkOnlyProgram + DirectSchemaSet` lowerer, and
+  a generated JSON typed parser renderer. The schema enters from xtask/host
+  code, not from a BBNF directive; no new BIR variant, retained side table, or
+  benchmark-private Track 1 parser was added. `DirectBuildField` gained an
+  optional target payload, preserving the existing `DirectBuild { shape,
+  fields }` variant.
+- Correctness was green. `cargo test -p codegen --profile ax-iter`,
+  `cargo test -p bbnf-bench --profile ax-iter real_typed -- --nocapture`,
+  and `cargo run -p xtask --profile ax-iter -- check-real-typed` passed. The
+  generated Track 1 typed output, structurally different Track 2 oracle,
+  sonic-rs typed serde, and serde_json typed serde all produced equal
+  post-parse checksums for `twitter` and `update_center`.
+- The admitted implementation uses three schema-general payload facts:
+  `MapEntriesVec { capacity_hint }` for object-as-entry-vector output,
+  generated skip-only plain-string scanning for ignored fields, and explicit
+  `ignored_fields` with skip kinds (`String`, `Array`, etc.) so known
+  non-output fields do not fall through the generic `skip_value` dispatcher.
+  These are host/API output facts and apply equally to CSS AST fields, CSV row
+  materializers, or Sheets formula nodes; JSON key names remain schema data.
+- Candidate sub-routes measured and rejected before the accepted shape:
+
+  | sub-route | result |
+  |---|---|
+  | Generated full-ish schema without capacity hints | Correct but slow: `update_center` Track 1 about 4.5 Gbps vs sonic about 5.2 Gbps; `twitter` about 9.0 Gbps vs sonic about 13.6 Gbps. |
+  | `MapEntriesVec` full-ish schema only | Worsened the first generated shape: `update_center` about 3.85 Gbps vs sonic about 4.56 Gbps; `twitter` about 7.41 Gbps vs sonic about 10.88 Gbps. |
+  | Raw key byte dispatch for struct fields | Rejected: `update_center` profile scout dropped from 11,537 Mbps to 11,273 Mbps. LLVM's string `match` lowering was better than the hand-emitted byte if-chain. |
+  | Narrow selected-output `Plugin { name, version }` plane | Rejected as a close: the profile scout crossed slack, but Criterion made sonic-rs much faster and widened the gap (`update_center` Track 1 382.45 us vs sonic 278.63 us). |
+  | Global 40-byte tiny string cap | Rejected: profile scout dropped `update_center` Track 1 to 10,918 Mbps. |
+  | Skip-only 64-byte plain-string cap | Rejected: profile scout dropped `update_center` Track 1 to 10,919 Mbps. |
+
+- The accepted shape is measured by Criterion on the same strict selected
+  output plane:
+
+  | row | Track 1 median | sonic-rs median | result |
+  |---|---:|---:|---|
+  | twitter `real_typed_struct` | 278.67 us | 422.12 us | PASS; generated Track 1 is faster than sonic-rs typed serde. |
+  | update_center `real_typed_struct` | 354.15 us | 351.23 us | PASS; generated Track 1 is within the `sonic-rs * 1.10` time slack. |
+
+- Gate accounting was corrected so `real_typed_struct` is not judged by the
+  old maximal digest-stressor rule. The representative typed row gates
+  generated Track 1 against sonic-rs/serde sidecars; Track 2 remains a
+  structurally different oracle and is reported, but it is not the SOTA
+  comparator. The old `direct_to_struct` row remains visible as
+  `semantic_full_digest_stressor` and still reports N-direct failures. This is
+  not a rename of that miss; it is an explicit split between a maximal semantic
+  stressor and a real host/API typed-output premise.

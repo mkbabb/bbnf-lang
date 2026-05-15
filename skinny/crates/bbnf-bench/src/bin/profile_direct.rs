@@ -18,6 +18,8 @@ fn main() {
     let mode = args.get(3).map(String::as_str).unwrap_or("track1");
     let path = if corpus.contains('/') || corpus.ends_with(".json") {
         PathBuf::from(&corpus)
+    } else if mode.starts_with("real_typed_") {
+        bbnf_bench::real_typed_struct::locate_fixture(&corpus)
     } else {
         locate_fixture(&corpus)
     };
@@ -28,7 +30,7 @@ fn main() {
     eprintln!("profile-direct: fixture size = {} bytes", bytes.len());
 
     for _ in 0..16 {
-        run_once(mode, input, &bytes);
+        run_once(mode, &corpus, input, &bytes);
     }
 
     eprintln!("profile-direct: starting timed loop");
@@ -37,6 +39,7 @@ fn main() {
     for _ in 0..iters {
         checksum ^= run_once(
             mode,
+            &corpus,
             std::hint::black_box(input),
             std::hint::black_box(&bytes),
         );
@@ -51,13 +54,18 @@ fn main() {
     );
 }
 
-fn run_once(mode: &str, input: &str, bytes: &[u8]) -> u64 {
+fn run_once(mode: &str, corpus: &str, input: &str, bytes: &[u8]) -> u64 {
     let digest = match mode {
         "track1" => bbnf_bench::direct_struct::track1_digest(input),
         "track2" => bbnf_bench::direct_struct::track2_digest(input),
         "sonic" => bbnf_bench::direct_struct::sonic_digest(bytes),
         "serde" => bbnf_bench::direct_struct::serde_digest(bytes),
-        other => panic!("unknown mode {other}; expected track1|track2|sonic|serde"),
+        "real_typed_track1" | "real_typed_track2" | "real_typed_sonic" | "real_typed_serde" => {
+            return real_typed_checksum(corpus, mode, input, bytes);
+        }
+        other => panic!(
+            "unknown mode {other}; expected track1|track2|sonic|serde|real_typed_track1|real_typed_track2|real_typed_sonic|real_typed_serde"
+        ),
     }
     .expect("direct digest failed");
     std::hint::black_box(
@@ -68,6 +76,20 @@ fn run_once(mode: &str, input: &str, bytes: &[u8]) -> u64 {
             ^ digest.numbers
             ^ digest.string_bytes,
     )
+}
+
+fn real_typed_checksum(corpus: &str, mode: &str, input: &str, bytes: &[u8]) -> u64 {
+    let fixture = bbnf_bench::real_typed_struct::fixture_for_name(corpus)
+        .unwrap_or_else(|| panic!("real typed mode {mode} does not support corpus {corpus}"));
+    let output = match mode {
+        "real_typed_track1" => bbnf_bench::real_typed_struct::track1_typed(fixture, input),
+        "real_typed_track2" => bbnf_bench::real_typed_struct::track2_typed(fixture, input),
+        "real_typed_sonic" => bbnf_bench::real_typed_struct::sonic_typed(fixture, bytes),
+        "real_typed_serde" => bbnf_bench::real_typed_struct::serde_typed(fixture, bytes),
+        _ => unreachable!("real_typed_checksum called for non-real-typed mode"),
+    }
+    .expect("real typed parse failed");
+    std::hint::black_box(bbnf_bench::real_typed_struct::typed_checksum(&output))
 }
 
 fn locate_fixture(name: &str) -> PathBuf {

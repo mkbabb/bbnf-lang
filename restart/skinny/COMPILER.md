@@ -355,6 +355,12 @@ struct such as `TwitterSearch` or `UpdateCenter`; a conforming typed
 DirectBuild row must receive that output schema from the host/API type
 contract and lower it into the existing field facts. This is a payload
 refinement of `DirectBuild`, not a new directive or BIR variant.
+SK-V6 REDRESS 71 validates that contract for the representative typed-output
+row: the host/API schema lowers into generated typed DirectBuild code, object
+entry vectors may carry capacity hints, and ignored non-output fields may carry
+schema-sourced skip kinds so they do not pay the generic unknown-field
+dispatcher. These facts remain grammar-neutral payload facts; JSON key names
+are schema data emitted into the consumer module, not generic crate logic.
 There is no offset-vector `set_len(0)` SOTA primitive: offsets are `u32` and
 have no per-element destructor to bypass.
 

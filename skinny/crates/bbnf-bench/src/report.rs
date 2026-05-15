@@ -164,10 +164,23 @@ impl Report {
             out.push_str("| Corpus | Workload | Strictness | Output plane | parse_utf8 | escape_complete | flaw_probe | Track 1 Mbps | Track 2 Mbps | sonic-rs Mbps | serde_json Mbps | Track 1 / sonic | Track 2 / sonic | Signal |\n");
             out.push_str("|---|---|---|---|---|---|---|---:|---:|---:|---:|---:|---:|---|\n");
             for row in &self.workload_rows {
+                let (output_plane, flaw_probe) = if row.workload == "real_typed_struct" {
+                    (
+                        "generated typed DirectBuild owned struct vs structurally independent typed oracle vs sonic-rs typed serde",
+                        "generated Track 1 consumes host/API output schema; Track 2 is a structural oracle, not the SOTA gate; UTF-8 remains view-boundary",
+                    )
+                } else {
+                    (
+                        "generated SinkOnly digest vs independent hand SinkOnly digest vs sonic-rs typed serde",
+                        "generated Track 1 SinkOnly vs independent hand Track 2 SinkOnly; UTF-8 remains view-boundary",
+                    )
+                };
                 out.push_str(&format!(
-                    "| {} | {} | deferred | generated SinkOnly digest vs independent hand SinkOnly digest vs sonic-rs typed serde | view-boundary | yes | generated Track 1 SinkOnly vs independent hand Track 2 SinkOnly; UTF-8 remains view-boundary | {} | {} | {} | {} | {} | {} | {} |\n",
+                    "| {} | {} | deferred | {} | view-boundary | yes | {} | {} | {} | {} | {} | {} | {} | {} |\n",
                     row.corpus,
                     row.workload,
+                    output_plane,
+                    flaw_probe,
                     format_optional(row.track1_mbps),
                     format_optional(row.track2_mbps),
                     format_optional(row.sonic_mbps),

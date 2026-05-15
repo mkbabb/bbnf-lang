@@ -2057,3 +2057,32 @@ perturbation.
   The next retained parse wave must profile why generated retained cap 16 beats
   hand Track 2 on rows such as `citm_catalog` rather than reapplying a global
   string threshold.
+
+## SK-V6 Wave 2 Candidate-14 Redress
+
+- Item 73 rejects the retained Track 2 array next-byte dispatch parity repair
+  as tested. R8 identified a real helper-shape divergence: generated retained
+  array parsing consumes the first element, then `consume_array_next` returns
+  the next value byte so `dispatch_value(byte)` avoids a second value-entry
+  byte load. Hand Track 2 used the older generic
+  `consume_container_next(b']') -> bool` path and then called `parse_value_at`
+  again. The candidate kept Track 2's 8-byte tiny string probe from item 72,
+  added no directive, added no BIR variant, and touched only the independent
+  hand-coded Track 2 retained parser.
+- Correctness passed before measurement:
+  `CARGO_TARGET_DIR=/tmp/skv6-cargo/main cargo test -p bbnf-bench --profile ax-iter track2::json::tests::emits_track1_compatible_offsets_without_calling_track1_parser`.
+  The candidate was therefore a throughput-only test, not a parity break.
+- The native Criterion falsifier failed early. Command:
+  `CARGO_TARGET_DIR=/tmp/skv6-cargo/track2-array RUSTFLAGS="-C target-cpu=native" cargo bench -p bbnf-bench --bench json_parity -- "json/(citm_catalog|apache_builds|github_events|gsoc-2018|instruments|distinct_values|y_string_unicode)/(track1_generated|track2_handcoded)"`.
+  `citm_catalog` Track 2 improved relative to the R8 comparator snapshot
+  (about 17375 Mbps -> about 20310 Mbps), but the first guard row
+  `apache_builds` regressed decisively (about 10475 Mbps -> about 7490 Mbps).
+  That violates the written guard of no >2% slowdown on
+  `apache_builds`, `github_events`, `gsoc-2018`, or `y_string_unicode`, so the
+  run was stopped before the remaining rows and the candidate was reverted.
+- The measured lesson is narrow. Generated retained's array continuation shape
+  is not a free Track 2 parity repair while Track 2 remains a method-based hand
+  parser: it can help array-heavy `citm_catalog` but hurts object-heavy guard
+  rows through inlining/code-layout or branch-shape effects. Future Track 2
+  work must profile the hand parser's code layout directly; it must not assume
+  generated helper shape transfers monotonically to the hand comparator.

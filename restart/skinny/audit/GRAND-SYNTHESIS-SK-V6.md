@@ -671,3 +671,82 @@ the baseline's contiguous decoded-byte hash and the generated SinkOnly Track 1
 surface. If Candidate 8 fails its same-row gate, the direct string/Unicode
 close must return to research with a new local fact; no remaining Candidate 7
 sub-shape should be admitted by renaming source hooks or sink-local facts.
+
+## 11. Wave 1e Revision After Parser-Owned Scratch Redress
+
+Candidate 8 has now been falsified in REDRESS 67. Parser-owned decoded scratch
+kept strict semantics and passed correctness, but production direct medians
+moved the wrong way: `unicode_escapes` 4999 -> 2798 Mbps (-44.03%),
+`unicode_mixed` 4541 -> 4318 Mbps (-4.91%), and the partial
+`y_string_unicode` sample was also negative. Generated parser control is the
+wrong owner for escaped-string materialization on this host.
+
+The Wave 1e reports in `restart/skinny/audit/SK-V6-COHORT/` identify the next
+local fact:
+
+- R1e proposes a standalone decoded-string primitive under the existing
+  `unescape_json_string` API.
+- R2e shows `unicode_escapes` already routes 135,148 / 136,682 Unicode units
+  through the existing x4 helper; the residual shared cost is materialization
+  writes: segment copies plus simple/Unicode `push(char)` calls.
+- R3e rejects new SIMD/checkasm first because the vector semantics already
+  exist; the next candidate should be a scalar/reference byte writer that
+  reuses existing AArch64 helpers.
+
+### Candidate 9: Byte-Output `unescape_json_string` Materializer
+
+Path:
+
+- `skinny/crates/parse-that-regex/src/lib.rs`
+
+Mechanism: keep `unescape_json_string(raw_content: &str) ->
+Result<Cow<'_, str>, RegexError>` as the public API and preserve the current
+generated direct consumer. The no-backslash path remains borrowed. The escaped
+path changes only the materializer body: build decoded output as bytes in a
+`Vec<u8>`, copy plain segments with `extend_from_slice`, emit simple escapes
+through a byte table, encode Unicode scalars directly into a stack byte buffer,
+and convert the final valid UTF-8 byte vector into `String`. Existing
+`find_next_escape_or_control`, scalar Unicode validation, and the admitted
+AArch64 `unescape_uxxxx_x4_neon` helper remain the semantic substrate.
+
+Expected row impact:
+
+- `unicode_escapes`: primary target. It has dense Unicode escape runs already
+  covered by x4 decode but still pays per-character output.
+- `unicode_mixed`: secondary target. It has no `\u` units; it only moves if
+  the simple-escape byte subpath improves materialization.
+- `y_string_unicode`: small but escape-dense; improvement may be noisy.
+- `unicode_basic`, `distinct_values`, `gsoc-2018`, `apache_builds`,
+  `github_events`, `canada`, and `numbers` are guards because plain strings
+  and non-string rows should keep their existing path.
+
+Falsifiability gate:
+
+- Correctness: `cargo test -p parse-that-regex --profile ax-iter`,
+  `cargo test -p runtime --profile ax-iter`, `cargo test -p bbnf-bench
+  --profile ax-iter`, `cargo run -p xtask --release -- check-json`, and
+  `cargo run -p xtask --release -- check-conformance`.
+- Throughput scout: same-tree production `profile_direct` Track 1 medians
+  must satisfy `unicode_escapes >= +8%`, `unicode_mixed >= +5%`,
+  `y_string_unicode >= +3%` or `unescape_json_string` self-time down at least
+  20% in a high-sample profile, `unicode_basic` no worse than -2%, and no
+  guard row worse than -2%.
+- Close gate: if the scout passes, rerun against the broader Wave 3 direct
+  close thresholds before declaring direct recovery. The scout is not itself
+  sufficient for SK-V6 close.
+
+Reject conditions:
+
+- If the change adds generated parser scratch, source hooks, sink-local decoded
+  stats, or quote-source streaming hash, reject as REDRESS 54/55/66/67
+  recurrence.
+- If `unicode_escapes` improves but `unicode_mixed` is noise, record the
+  Unicode half as too narrow and do not relabel it as direct-string close.
+- If simple-escape rows regress, revert even if `unicode_escapes` improves.
+
+### Wave 1e Recommendation
+
+Dispatch Candidate 9 as one standalone materializer intervention. It is the
+only remaining direct route with a new local fact, and it preserves the
+generated Track 1 call graph that all parser/sink restructuring attempts have
+shown should not be disturbed.

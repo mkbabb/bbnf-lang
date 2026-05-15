@@ -1870,3 +1870,57 @@ perturbation.
   typed-struct workload with field-specific access patterns, or an explicit
   decision that the synthetic digest workload is a SOTA stressor rather than a
   representative DirectBuild closure gate.
+
+## SK-V6 Wave 3 Candidate-11 Redress
+
+- Item 70 rejects the first `real_typed_struct` implementation as a SOTA close.
+  The route added a separate typed-output profile mode for `twitter` and
+  `update_center`, strict owned Rust structs shared by generated Track 1,
+  independent Track 2, sonic-rs, and serde_json, and post-parse checksums over
+  the owned output. Track 1 called `runtime::generated_json::parse_direct`;
+  Track 2 used a structurally independent recursive parser. No directive, BIR
+  variant, retained side table, or parallel source scan was added.
+- Correctness was green: `CARGO_TARGET_DIR=/tmp/skv6-c11-target cargo test -p
+  bbnf-bench --profile ax-iter real_typed_struct -- --nocapture` passed the
+  `twitter` and `update_center` parity tests across generated Track 1,
+  independent Track 2, serde_json, and sonic-rs.
+- The initial `serde_json::Value`-then-typed materializer was not close:
+
+  | row | Track 1 Mbps | sonic-rs Mbps | ratio |
+  |---|---:|---:|---:|
+  | twitter | 3309 | 6286 | 0.53x |
+  | update_center | 2018 | 3812 | 0.53x |
+
+- A same-loop `UpdateCenterSink` typed builder removed the Value materializer
+  for generated Track 1. It lifted `update_center` to roughly 2.74 Gbps with a
+  serialization checksum, then to a 4.84 Gbps median after replacing checksum
+  serialization with a zero-allocation post-parse structural checksum. The
+  same measurement gave sonic-rs a 7.12 Gbps median and serde_json a 5.33 Gbps
+  median. The candidate still failed the written scout gate: generated Track 1
+  did not reach `sonic-rs * 1.10` on any fixture, and the independent Track 2
+  path remained materially slower.
+
+  | row | mode | median Mbps | notes |
+  |---|---|---:|---|
+  | update_center | generated Track 1 typed builder | 4845 | five 500-iteration samples: 4836 / 4880 / 4761 / 4816 / 4845 |
+  | update_center | independent Track 2 typed path | 2661 | five samples: 2677 / 2661 / 2630 / 2687 / 2573 |
+  | update_center | sonic-rs typed struct | 7117 | five samples: 7088 / 7212 / 7117 / 7165 / 7087 |
+  | update_center | serde_json typed struct | 5327 | five samples: 5287 / 5351 / 5166 / 5327 / 5332 |
+
+- PC attribution for the generated Track 1 typed builder is archived at
+  `/tmp/skv6-c11-profiles/update_center_typed_track1.profile.json.gz`.
+  The symbol table names `runtime::generated_json::parse_direct` /
+  `parse_object_direct::<UpdateCenterSink>`, `UpdateCenterSink` event methods,
+  `BTreeMap::insert`, typed-output drop, and, before the checksum rewrite,
+  `serde_json::to_vec` / BLAKE3. Removing checksum serialization improved the
+  absolute row but also revealed sonic-rs' typed parse headroom more clearly.
+- The candidate was reverted before commit. The rejected patch is saved at
+  `/tmp/skv6-wave3-candidate11-rejected.patch`. Do not treat a hand-authored
+  typed sink over JSON as proof that grammar-only `DirectBuild` can emit an
+  arbitrary user struct. The new finding is architectural: for JSON-class
+  "direct to struct" comparisons, the output schema is not present in the JSON
+  grammar. A conforming V1/SK receiver must name the schema source explicitly
+  as a host/API type contract consumed by `DirectBuild` field facts, not as a
+  hidden BBNF directive and not as a benchmark-private parser. Until that
+  schema-source contract exists, `real_typed_struct` remains a measurement
+  surface rather than a SOTA-close route.

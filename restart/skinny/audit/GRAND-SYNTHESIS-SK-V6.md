@@ -984,3 +984,42 @@ existing digest stressor. If the typed workload demonstrates parity and a
 stable throughput signal, fold it into `BENCH.md`, `RESULTS.md`, and the gate
 matrix as the representative DirectBuild closure row while retaining
 `semantic_full_digest_stressor` as an explicit stressor family.
+
+## 14. Wave 1h Revision: Candidate 11 Falsified as Close
+
+Candidate 11 produced the right correctness shape but not the SOTA close. The
+implementation is saved as `/tmp/skv6-wave3-candidate11-rejected.patch` and
+the detailed measurements are REDRESS item 70.
+
+Findings:
+
+- The `real_typed_struct` oracle is valuable: it caught no correctness
+  divergence across generated Track 1, independent Track 2, serde_json, and
+  sonic-rs for `twitter` and `update_center`.
+- The first materializer, `parse_direct -> serde_json::Value -> typed struct`,
+  was predictably not SOTA-class: both scout fixtures landed near 0.53x
+  sonic-rs.
+- A same-loop generated Track 1 `UpdateCenterSink` plus zero-allocation
+  post-parse checksum lifted `update_center` to a 4.84 Gbps median, but
+  sonic-rs on the same owned Rust output shape measured 7.12 Gbps. The scout
+  gate did not fire.
+- The decisive architectural finding is schema-source, not another local
+  string writer. JSON's grammar does not contain `TwitterSearch` or
+  `UpdateCenter`; sonic-rs gets those shapes from Serde. A BBNF direct-output
+  proof must therefore admit an explicit host/API output type contract consumed
+  by `DirectBuild` field facts. That contract is not a new grammar directive
+  and not a new BIR variant; it is a typed consumer schema supplied at the API
+  boundary and lowered into existing `DirectBuild { shape, fields }`.
+
+Next admissible plan:
+
+- Do not reopen hand-authored JSON typed sinks as SOTA proof. They are useful
+  profilers, but they do not prove grammar-general DirectBuild.
+- Plan the schema-source contract first: how an external owned output type
+  contributes field rosters, borrowed/owned representation policy, optionality,
+  repeated fields, map fields, and exact string/number materializers into the
+  existing `DirectBuild` payload.
+- Once that contract exists, regenerate the typed sink from the field facts and
+  measure again. A generated typed sink can close only if it removes the
+  generic JSON event stack and dynamic key/string routing measured in Candidate
+  11.

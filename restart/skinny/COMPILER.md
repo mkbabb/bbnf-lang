@@ -349,7 +349,11 @@ is now owned typed output, not a parse-time checksum or global semantic
 digest. Direct field facts may declare a generic materialization policy such as
 `BorrowSpan`, `NumberScalar`, `LiteralMap`, `Child`, `Repeated`, or `Empty`;
 `SinkOnly` lowering must preserve those facts; generated direct code may
-consume them to emit strict typed fields in the parse loop. This is a payload
+consume them to emit strict typed fields in the parse loop. SK-V6 REDRESS 70
+adds the schema-source constraint: JSON grammar alone does not contain a user
+struct such as `TwitterSearch` or `UpdateCenter`; a conforming typed
+DirectBuild row must receive that output schema from the host/API type
+contract and lower it into the existing field facts. This is a payload
 refinement of `DirectBuild`, not a new directive or BIR variant.
 There is no offset-vector `set_len(0)` SOTA primitive: offsets are `u32` and
 have no per-element destructor to bypass.

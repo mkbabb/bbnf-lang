@@ -159,8 +159,18 @@ fn parse_string<'i>(state: &mut ParserState<'i>) -> Result<(), ParseError<'i>> {
 #[cfg_attr(feature = "parse-attribution", inline(never))]
 #[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 fn match_tiny_plain_string(input: &[u8], offset: usize) -> Option<usize> {
+    match_tiny_plain_string_with_cap::<16>(input, offset)
+}
+
+#[inline(always)]
+fn match_tiny_plain_string_direct(input: &[u8], offset: usize) -> Option<usize> {
+    match_tiny_plain_string_with_cap::<8>(input, offset)
+}
+
+#[inline(always)]
+fn match_tiny_plain_string_with_cap<const CAP: usize>(input: &[u8], offset: usize) -> Option<usize> {
     let mut cursor = offset + 1;
-    let limit = (cursor + 8).min(input.len());
+    let limit = (cursor + CAP).min(input.len());
     while cursor < limit {
         match input[cursor] {
             b'"' => return Some(cursor + 1),
@@ -602,7 +612,7 @@ fn parse_string_direct<'i>(
     cursor: &mut usize,
 ) -> Result<ParsedString<'i>, ParseError<'i>> {
     let start = *cursor;
-    if let Some(raw_end) = match_tiny_plain_string(bytes, start) {
+    if let Some(raw_end) = match_tiny_plain_string_direct(bytes, start) {
         let raw = unsafe { std::str::from_utf8_unchecked(&bytes[start + 1..raw_end - 1]) };
         *cursor = raw_end;
         return Ok(ParsedString {

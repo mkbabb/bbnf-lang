@@ -371,7 +371,7 @@ fn parse_string_direct<'i>(
     cursor: &mut usize,
 ) -> Result<ParsedString<'i>, ParseError<'i>> {
     let start = *cursor;
-    if let Some(raw_end) = match_tiny_plain_string(bytes, start) {
+    if let Some(raw_end) = match_tiny_plain_string_direct(bytes, start) {
         let raw = unsafe { std::str::from_utf8_unchecked(&bytes[start + 1..raw_end - 1]) };
         *cursor = raw_end;
         return Ok(ParsedString {

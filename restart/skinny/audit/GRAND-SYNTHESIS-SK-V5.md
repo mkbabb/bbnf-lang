@@ -10,15 +10,16 @@ Post-assay correction (2026-05-14): SK-V5 implementation is now partially
 landed and the current gate remains `N-direct / NoGo`. The Rust scaffolding for
 `BackendShape` / `derive_backend_shape` exists, and the generated direct parser
 is emitted from a BIR-derived `SinkOnlyProgram` rather than the former static
-JSON direct template. The latest `skinny/RESULTS.md` records 5 retained hard-G
-rows plus D/E retained codegen-gap rows; Canada structural scan is green in the
-full matrix against the 40000 Mbps NEON floor. Direct-to-struct correctness is
-green, with five `semantic_full_digest_stressor` PASS rows, 12 digest red rows,
-and representative `real_typed_struct` PASS rows for `twitter` and
+JSON direct template. The latest `skinny/RESULTS.md` records 13 retained G
+rows and four A rows; Canada structural scan is green in the full matrix
+against the 40000 Mbps NEON floor. Direct-to-struct correctness is green, with
+four `semantic_full_digest_stressor` PASS rows, 13 digest red rows, and
+representative `real_typed_struct` PASS rows for `twitter` and
 `update_center`. Treat the wave plan below as historical dispatch intent
 amended by SK-V6, `HANDOFF-SK-V5.md`, and `skinny/REDRESS.md` entries 50-72.
-In particular, the Wave 3 UTF-8 fusion prescription and global retained
-tiny-string cap widening are refuted as close routes.
+In particular, the Wave 3 UTF-8 fusion prescription is refuted as a close
+route, while REDRESS 72 admits a generated-retained-only cap-16 probe and
+rejects global/direct/Track 2 widening.
 
 ## 1. The Frame
 

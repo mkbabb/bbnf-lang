@@ -12,16 +12,16 @@ below is tied to fresh generated-runtime profile evidence.
 
 The current measured authority remains `N-direct / NoGo`.
 
-Retained parse has 5 outcome-G rows: `twitter`, `update_center`, `random`,
-`unicode_mixed`, and `unicode_basic`. The `semantic_full_digest_stressor`
-direct plane has five passing rows (`citm_catalog`, `apache_builds`,
-`github_events`, `instruments`, `distinct_values`) and 12 red guard rows. The
+Retained parse has 13 outcome-G rows and four A rows (`canada`, `mesh`,
+`marine_ik`, `numbers`). The `semantic_full_digest_stressor`
+direct plane has four passing rows (`citm_catalog`, `apache_builds`,
+`github_events`, `instruments`) and 13 red guard rows. The
 representative `real_typed_struct` rows for `twitter` and `update_center` pass
 under the host/API output-schema plane. Track 1 is now generated runtime on
 the direct plane: R3 verified every sampled direct row reaches
 `runtime::generated_json::parse_direct`.
 
-Canada structural scan remains green at 41495 Mbps against the 40000 Mbps NEON
+Canada structural scan remains green at 69075 Mbps against the 40000 Mbps NEON
 floor. The remaining work is not a structural scan floor repair.
 
 ## 2. Wave 1 Evidence Map
@@ -30,7 +30,7 @@ floor. The remaining work is not a structural scan floor repair.
 |---|---|---|
 | R1 | 9 retained regressed-from-PASS rows | Seven rows are generated string-wrapper bound; `citm_catalog` is structural/container churn; `marine_ik` is number/container and remains a retained GO control. |
 | R2 | 4 original retained parse-G rows | Original G rows remain string-bound, but the current hot leaves are `match_tiny_plain_string` and `match_string_at_quote`, not `validate_utf8_codepoint`. |
-| R3 | 12 direct digest red rows | Generated Track 1 is real. Direct digest rows split into string receiver/fold overhead, escaped-string decode/materialization, and number/emission residuals; representative host/API typed rows pass after REDRESS 71. |
+| R3 | direct digest red rows | Generated Track 1 is real. Direct digest rows split into string receiver/fold overhead, escaped-string decode/materialization, and number/emission residuals; representative host/API typed rows pass after REDRESS 71. |
 | R4 | SK-V4 largest-regression diff | Largest retained regressions are string-boundary recognition in the honest generated runtime; no accessible SK-V4 leaf table splits below fused `parse_value_at`. |
 | R5 | Sidecar refresh | Current strict rows live in `RESULTS.md` for sonic-rs / Rust simd-json; C++ simdjson and yyjson are stale profile-only until sources return; asmjson SWAR is permissive flaw-probe only. |
 | R6 | Lock 15 / PMU proxy | Lock 15 holds by size. Default `parse_value_at` is 8768 B; parse-attribution splits it. No branch/L1i/IPC counters were accessible without privileged tooling. |
@@ -1180,26 +1180,25 @@ host/API typed-output plane. It does not rescue the maximal digest stressor:
 its failures until either a real consumer needs that exact semantic digest or a
 new workload-specific profile names an admissible close.
 
-## 17. Wave 2 Result: Candidate 13 Rejected on Canonical Guard Rows
+## 17. Wave 2 Result: Candidate 13 Admitted Only for Generated Retained
 
 Candidate 13 tested the narrowest remaining retained string first-probe lever:
 raise `match_tiny_plain_string` from an 8-byte scalar probe to 16 bytes in the
 generated retained parser and codegen template. This did not repeat the rejected
 NEON tiny-string kernel and did not add a side table or second source pass.
 
-The scout was attractive but misleading. `profile-lazy` improved the five
-remaining parse-G rows and several guard rows, with no scout guard regression
-above 5%. Canonical Criterion then refuted the route. The intended red rows
-improved (`twitter`, `update_center`, `random`, `unicode_basic`), but multiple
-retained guard rows regressed beyond the SK-V6 stop gate: `apache_builds`,
-`github_events`, `gsoc-2018`, `instruments`, `unicode_escapes`,
-`distinct_values`, and `y_string_unicode`.
+The first Criterion rejection was non-binding because it was not run with the
+native bench contract. `BENCH.md` requires
+`RUSTFLAGS="-C target-cpu=native"`, and the native rerun admitted cap 16 for
+generated retained Track 1: `twitter` +27.5%, `citm_catalog` +49.2%,
+`github_events` +16.9%, `update_center` +27.4%, `random` +21.8%,
+`gsoc-2018` +5.7%, `instruments` +44.9%, `distinct_values` +57.5%, and
+`unicode_basic` +9.9%, with the remaining guard rows within noise.
 
-Conclusion: global retained string first-probe widening is now falsified in
-both broad and narrow forms. REDRESS 60 rejects deleting the tiny probe,
-REDRESS 61/62 reject wide/delayed wide trusted scans, and REDRESS 72 rejects a
-simple 16-byte tiny cap. The next retained parse wave must not propose another
-unconditional string-threshold change. Any string work must arrive through
-grammar-neutral cost facts that can choose a policy per generated shape, or
-through a lower-level primitive with a same-row consumer and a guard matrix
-that preserves already-passing rows under Criterion.
+The same native pass rejected global widening. Cap 16 regressed hand-coded
+retained Track 2 guard rows and generated direct `SinkOnly` guard rows, so the
+admitted shape is per backend: generated retained `OffsetTape` uses cap 16;
+generated direct `SinkOnly`, hand retained Track 2, and hand direct Track 2 use
+cap 8. REDRESS 72 is therefore a cost-model signal. The next retained parse
+wave must explain the generated-retained-vs-Track-2 split instead of proposing
+another global string threshold.

@@ -8,8 +8,8 @@ authority for throughput recovery. The current measured authority is
 `skinny/RESULTS.md`: retained parse has 13 G / NO-GO rows and four A / GO rows
 (`canada`, `mesh`, `marine_ik`, `numbers`); direct-to-struct is
 correctness-green with four 1.10x sonic-rs slack passes (`citm_catalog`,
-`mesh`, `marine_ik`, `numbers`) and 13 remaining red rows. Canada structural
-scan is no longer stale: the full matrix reports 41495 Mbps against the 40000
+`apache_builds`, `github_events`, `instruments`) and 13 remaining red rows.
+Canada structural scan is no longer stale: the full matrix reports 69075 Mbps against the 40000
 Mbps NEON floor. Strictness/output-plane columns are disclosed.
 
 The implementation agent's reading order is:
@@ -77,17 +77,16 @@ partially:
   primitives: `BULK_EMIT_POSITIONS_64`, consumed by `compact_mask`, and the
   structural+terminator no-quote classifier, consumed by JSON scan. Focused
   `simd_scan` measured Canada at about 41833 Mbps, and the refreshed full
-  `RESULTS.md` matrix records Canada structural scan at 41495 Mbps, clearing
+  `RESULTS.md` matrix records Canada structural scan at 69075 Mbps, clearing
   the 40000 Mbps NEON floor.
 
 The current gate per `skinny/RESULTS.md`:
 
-- 5 retained parse rows are G / NO-GO; the remaining rows split across A, D,
-  and E.
+- 13 retained parse rows are G / NO-GO; four rows are A / GO.
 - Canada structural scan is above the 40000 Mbps NEON floor.
-- 12 of 17 `semantic_full_digest_stressor` direct rows are N-direct;
-  `citm_catalog`, `apache_builds`, `github_events`, `instruments`, and
-  `distinct_values` pass the 1.10x sonic-rs time slack.
+- 13 of 17 `semantic_full_digest_stressor` direct rows are N-direct;
+  `citm_catalog`, `apache_builds`, `github_events`, and `instruments` pass the
+  1.10x sonic-rs time slack.
 - `real_typed_struct` passes for `twitter` and `update_center` under the
   host/API output-schema plane.
 - Strictness and output-plane columns are disclosed; bbnf rows remain

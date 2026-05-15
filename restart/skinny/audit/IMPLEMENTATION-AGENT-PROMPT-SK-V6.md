@@ -185,10 +185,9 @@ to record the SK-V5 outcomes honestly.
   3 as REFUTED (point to REDRESS 50-55); annotate Wave 1+2+4+5 as
   LANDED with their commit SHAs; keep Wave 6+7 as future scope.
 - `restart/skinny/audit/HANDOFF-SK-V5.md` — top-line "current state"
-  reflects the latest SK-V6 accounting: 5 retained hard-G rows, D/E retained
-  codegen-gap rows, five direct digest PASS rows, representative
-  `real_typed_struct` PASS rows for `twitter` and `update_center`, and Canada
-  scan floor restored.
+  reflects the latest SK-V6 accounting: 13 retained G rows, four retained A
+  rows, four direct digest PASS rows, representative `real_typed_struct` PASS
+  rows for `twitter` and `update_center`, and Canada scan floor restored.
 - `restart/HANDOFF.md` (top-level) — same correction.
 - `restart/ARCHITECTURE.md` §7.4 — update SK-V5 implementation status:
   `BackendShape` enum LANDED, `derive_backend_shape` LANDED,

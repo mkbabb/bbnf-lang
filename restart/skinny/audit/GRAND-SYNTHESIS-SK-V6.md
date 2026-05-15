@@ -1023,3 +1023,108 @@ Next admissible plan:
   measure again. A generated typed sink can close only if it removes the
   generic JSON event stack and dynamic key/string routing measured in Candidate
   11.
+
+## 15. Wave 1i Plan: DirectBuild Output Schema Contract
+
+REDRESS 70 turns the next Wave 3 intervention into a schema-source problem.
+The implementation route is not another JSON sink and not another string
+kernel. It is a host/API output schema lowered into the existing
+`DirectBuild { shape, fields }` payload.
+
+The schema-source cohort is archived at
+`restart/skinny/audit/SK-V6-COHORT/`:
+
+- `skv6-schema-A-output-schema-boundary.md`: schema enters at the host/API
+  boundary and feeds `ShapeFacts` / `DirectBuildField`, not BBNF syntax.
+- `skv6-schema-B-generated-typed-directbuild.md`: exact-current
+  `DirectBuildField { name, source }` is a no-go; richer payload facts and a
+  schema-specialized lowered program are required, but no new `BackendExpr`
+  variant is required.
+- `skv6-schema-C-redress-gates.md`: exact typed-row thresholds and digest
+  guard rows for Candidate 12.
+
+### Candidate 12: Generated Typed DirectBuild from Host/API Schema
+
+Owner paths:
+
+- `skinny/crates/ir/src/lib.rs`: extend `DirectBuildField` with output target
+  and materialization policy facts. This is a payload extension, not a new BIR
+  variant.
+- `skinny/crates/passes/src/lib.rs`: add an options-bearing entry point,
+  e.g. `compile_with_options(grammar, CompileOptions { direct_output })`, while
+  preserving `compile(grammar)` as the grammar-native default. The direct
+  output schema enters here from host/API code, not from a BBNF directive.
+- `skinny/crates/codegen/src/lower/sink_only.rs`: preserve target/policy facts
+  in `SinkOnlyProgram`.
+- `skinny/crates/codegen/src/direct_schema.rs` (new): public schema-source
+  data model and validation for output types, field rosters, optional/null
+  policy, maps, duplicate keys, unknown fields, and recursive type IDs.
+- `skinny/crates/codegen/src/lower/schema_direct.rs` (new): lower
+  `SinkOnlyProgram + DirectOutputSchema` into a typed direct program. This is
+  the contextual step that specializes JSON `object` into `UpdateCenter`,
+  `Plugin`, `TwitterSearch`, etc.
+- `skinny/crates/codegen/src/json_typed_direct.rs` (new): render a generated
+  typed direct parser from the typed direct program. The renderer must not use a
+  generic JSON event stack, `JsonSink`, `serde_json::Value`, or a
+  benchmark-private hand sink; it emits field-specific builders and key
+  dispatch from schema facts.
+- `skinny/crates/bbnf-bench/src/direct_struct.rs`: add a typed-output mode that
+  calls the generated typed entry point and computes a post-parse checksum over
+  owned output. Keep `semantic_full_digest_stressor` unchanged.
+
+No-go boundary:
+
+- If the implementation keeps exact-current `DirectBuildField { name, source }`
+  with no output-schema payload, it cannot represent host Rust type paths,
+  source keys, required/optional/default/null policy, scalar target types,
+  arrays, maps, recursion, duplicate/unknown-field policy, or owned
+  construction policy. That path is a plan failure.
+- If the implementation adds a new top-level BIR variant, grammar directive,
+  hidden benchmark schema, `JsonSink` typed receiver, generic JSON event stack,
+  or retained side table, the result is invalid rather than merely slow.
+
+Minimal schema facts:
+
+- `DirectOutputSchema { root_shape, rust_type_name, fields }`.
+- Per field: output name, output type, presence (`required | optional |
+  nullable`), cardinality (`one | repeated | map`), source path over grammar
+  fields/keys, representation policy (`borrowed_span | owned_string |
+  number_scalar | literal | child | repeated | map | empty`), and decode policy
+  (`raw_ok | unescape_required | numeric_exact`).
+- JSON-specific keys such as `plugins` or `statuses` are data in the schema
+  instance and generated JSON output, never control flow in generic crates.
+
+Generalization:
+
+- For grammars whose output type is implied by grammar structure, the schema
+  can be derived from `ShapeFacts`.
+- For JSON and other open data grammars, the host/API type supplies the schema
+  just as Serde supplies it to sonic-rs. This is the only honest way to compare
+  direct-to-struct rows without hiding a benchmark-private parser.
+- The same `DirectOutputSchema` shape covers CSS AST emission, CSV row structs,
+  and Sheets formula nodes: field paths differ, but required/optional/repeated
+  and borrowed/owned materialization policies are grammar-neutral.
+
+Falsifiability gate for the first implementation:
+
+- Correctness: generated Track 1 typed output, independent Track 2 typed
+  output, sonic-rs, and serde_json all produce identical owned `UpdateCenter`
+  output and equal post-parse checksum.
+- Throughput: one generated Track 1 typed row must meet strict slack and the
+  other must meet scout slack:
+  - `update_center`: 6,470 Mbps strict floor (`sonic 7,117 / 1.10`) and
+    5,694 Mbps scout floor (`sonic 7,117 / 1.25`).
+  - `twitter`: 5,715 Mbps strict floor (`sonic 6,286 / 1.10`) and 5,029 Mbps
+    scout floor (`sonic 6,286 / 1.25`).
+  Track 2 may remain a slower reference for the first schema-source proof but
+  must be reported separately.
+- Regression guard: `semantic_full_digest_stressor` correctness remains green;
+  its throughput miss remains reported and cannot be renamed as typed closure.
+  No existing direct digest row may regress by more than 5%; rows currently
+  above strict slack (`citm_catalog`, `marine_ik`, `numbers`, and `mesh` if the
+  current RESULTS/prose mismatch resolves in its favor) must remain above it.
+- Rejection: if generated schema-specific code still misses 6,470 Mbps, record
+  the route in REDRESS and move the direct close from "missing schema" to
+  "generated recursive descent cannot match Serde-shaped sonic-rs on this
+  typed-output row without CollapsedStage or a lower-level typed builder
+  primitive."

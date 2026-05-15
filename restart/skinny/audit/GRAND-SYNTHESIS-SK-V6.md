@@ -750,3 +750,18 @@ Dispatch Candidate 9 as one standalone materializer intervention. It is the
 only remaining direct route with a new local fact, and it preserves the
 generated Track 1 call graph that all parser/sink restructuring attempts have
 shown should not be disturbed.
+
+### Candidate 9 Outcome
+
+Candidate 9 has now been falsified in REDRESS 68. The same-HEAD direct smoke
+showed `unicode_escapes` regressing from 4970 Mbps to 4771 Mbps (-4.00%) when
+the escaped-string materializer moved from `String` writes to a byte-output
+buffer under the same public `Cow<str>` API. This exhausts the current local
+materializer family: direct source hooks (REDRESS 66), parser-owned decoded
+scratch (REDRESS 67), and byte-output `unescape_json_string` (REDRESS 68) all
+failed on the new generated Track 1 baseline.
+
+The next Wave 3 plan must therefore leave local escaped-string writer churn and
+target DirectBuild field facts or a strict representation-level direct output
+contract. It must not add directives, BIR variants, JSON code to generic
+crates, or a parallel source pass.

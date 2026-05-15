@@ -1769,3 +1769,53 @@ perturbation.
   parity and same-wave generated consumer, or a different DirectBuild
   field-fact plan that changes what the direct workload must materialize while
   preserving strict semantic equality.
+
+## SK-V6 Wave 3 Candidate-9 Redress
+
+- Item 68 rejects byte-output `unescape_json_string` materialization. The route
+  kept the public `unescape_json_string(raw_content) -> Cow<str>` API and the
+  existing generated direct consumer, but changed the escaped-string body from
+  incremental `String::push_str` / `String::push(char)` writes to a `Vec<u8>`
+  writer. Plain segments used `extend_from_slice`, simple escapes pushed raw
+  bytes, Unicode scalars encoded into a small stack buffer, and the finished
+  buffer became an owned `String` after a debug UTF-8 assertion. No generated
+  parser, direct sink, BIR surface, directive, or retained substrate changed.
+- Correctness was green before measurement:
+  `CARGO_TARGET_DIR=/tmp/skv6-candidate9-correctness cargo test -p
+  parse-that-regex --profile ax-iter` passed 22 tests,
+  `cargo test -p runtime --profile ax-iter` passed six tests,
+  `cargo test -p bbnf-bench --profile ax-iter` passed 23 tests,
+  `cargo run -p xtask --release -- check-json` passed, and
+  `cargo run -p xtask --release -- check-conformance` accepted 21 valid
+  fixtures and rejected seven invalid fixtures.
+- Production `profile_direct` smoke used baseline and candidate release
+  binaries built from the same HEAD under
+  `/Users/mkbabb/Programming/bbnf-lang-skv6-candidate9-base` and the main
+  candidate workspace. The primary escaped row falsified the route after five
+  paired samples, so the longer guard run was stopped. Raw CSV is archived at
+  `/tmp/skv6-candidate9-direct-smoke.csv`; full raw process output is archived
+  at `/tmp/skv6-candidate9-direct-smoke.raw`; the hand summary is archived at
+  `/tmp/skv6-candidate9-direct-smoke-summary.csv`.
+
+  | row | median baseline Mbps | median candidate Mbps | median delta | samples |
+  |---|---:|---:|---:|---:|
+  | unicode_escapes | 4970 | 4771 | -4.00% | 5/5 |
+  | unicode_mixed | 4513 | 4491 | -0.49% | 1/1 |
+
+- The route failed the written Wave 3 gate from
+  `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md` §11. It required
+  `unicode_escapes >= +8%`, `unicode_mixed >= +5%`, and
+  `y_string_unicode >= +3%` or a direct attribution proof that
+  `unescape_json_string` self-time fell by at least 20%. Instead, the primary
+  escaped row regressed by 4.00% with a same-HEAD baseline. The direct
+  interpretation is that `String`'s current UTF-8 appends are not the direct
+  row bottleneck; replacing them with manual byte writes adds enough control
+  and finalization overhead to lose even before guard rows are exhausted.
+- The candidate was reverted before commit. The rejected patch is saved at
+  `/tmp/skv6-wave3-candidate9-rejected.patch`. Do not reopen byte-output
+  escaped-string materialization inside the current `Cow<str>` API. With
+  REDRESS 66-68, the direct-string allocation / receiver / byte-writing family
+  is exhausted under the current direct digest workload. The next admissible
+  Wave 3 route must change DirectBuild field facts or the direct workload's
+  representation contract while preserving strict semantic equality, not merely
+  the local escaped-string writer.

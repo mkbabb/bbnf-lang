@@ -894,3 +894,93 @@ direct output contract itself: either benchmark a real typed-struct workload
 with field-specific access patterns, or explicitly classify the synthetic
 digest workload as a SOTA stressor that is not representative of DirectBuild
 closure for arbitrary grammars.
+
+## 13. Wave 1g Revision: Direct Output Contract Split
+
+The Wave 1g cohort is now archived under `restart/skinny/audit/SK-V6-COHORT/`:
+
+- R1g recommends adding a supplemental `real_typed_struct` gate first, not
+  replacing the digest matrix immediately. The initial fixtures are `twitter`
+  and `update_center`, both on owned Rust structs shared by generated Track 1,
+  independent Track 2, sonic-rs, and serde_json.
+- R2g classifies the current `direct_to_struct` digest as a
+  `semantic_full_digest_stressor`. It remains valuable and strict, but it is
+  not the representative DirectBuild closure gate because it touches every key
+  and string byte globally.
+- R3g routes the full future implementation through generated typed
+  DirectBuild output from field facts. It explicitly rejects directives, new
+  BIR variants, benchmark-private Track 1 parsers, and JSON branches in
+  generic crates.
+
+### Candidate 11: Real Typed Struct Gate
+
+Path:
+
+- `skinny/crates/bbnf-bench/src/real_typed_struct.rs` (new)
+- `skinny/crates/bbnf-bench/src/lib.rs`
+- `skinny/crates/bbnf-bench/src/bin/profile_direct.rs`
+- later, after smoke stability: `skinny/crates/bbnf-bench/benches/json_parity.rs`
+  and gate/report wiring
+
+Mechanism: add a strict typed-output workload separate from the digest stressor.
+The first implementation may hand-author the typed consumer as long as Track 1
+uses generated `runtime::generated_json::parse_direct(input, &mut sink)` and
+returns an owned typed struct before the checksum is computed. Track 2 must be
+independent and must not call `parse_direct`. Sonic-rs and serde_json must
+deserialize the exact same Rust output structs. The checksum is a black-box
+post-parse consumer over the owned output, not a value produced during parse.
+
+Initial fixtures:
+
+- `twitter -> TwitterSearch`, covering nested objects, arrays, optionals,
+  booleans, integers, text fields, real Unicode, and recursive retweeted
+  status objects.
+- `update_center -> UpdateCenter`, covering a dynamic plugin map,
+  dependencies/developers/labels arrays, long strings, optionals, and required
+  preservation of map keys.
+
+Taxonomy change:
+
+- Rename the existing direct digest plane in documentation and result tables to
+  `semantic_full_digest_stressor`.
+- Add `real_typed_struct` as the representative DirectBuild closure gate once
+  the smoke row is stable.
+- Keep the digest stressor as a guard row family. It can fail while typed
+  DirectBuild closure passes, but it must be reported honestly rather than used
+  to veto representative typed closure.
+
+Falsifiability gate:
+
+- Correctness: generated Track 1, independent Track 2, sonic-rs, and
+  serde_json all return identical owned typed structs for `twitter` and
+  `update_center`, and the post-parse checksum agrees across all tracks.
+- Throughput scout: same-HEAD `profile_direct` or `profile_real_typed` medians
+  over five paired samples. Generated Track 1 must be within `1.10x` sonic-rs
+  time on at least one typed fixture and no worse than `1.25x` on the other
+  during the scout. Track 2 must remain structurally independent and within
+  the same broad band or be reported as the residual reference-parser cost.
+- Guard: existing `semantic_full_digest_stressor` rows must remain
+  correctness-green. Their throughput misses stay visible as stressor misses,
+  not hidden or renamed as typed closure.
+- Strictness: no broad `serde_json::Value` escape in the typed output except
+  fields proven null-only in the checked fixture; if a fixture later makes such
+  a field non-null, the typed workload fails until it is modeled.
+
+Reject conditions:
+
+- If Track 1 computes only a checksum during parse, reject: the workload must
+  return owned typed output first.
+- If Track 1 calls the independent parser or serde/sonic path, reject as a
+  benchmark-private parser recurrence.
+- If the typed structs are under-modeled with broad `serde_json::Value` for
+  live non-null fields, reject as a weakened output plane.
+- If implementation requires a new grammar directive or BIR variant, reject.
+
+### Wave 1g Recommendation
+
+Dispatch Candidate 11 as the next redress implementation. Start with a
+separate `real_typed_struct` module and profiling mode so it cannot hide the
+existing digest stressor. If the typed workload demonstrates parity and a
+stable throughput signal, fold it into `BENCH.md`, `RESULTS.md`, and the gate
+matrix as the representative DirectBuild closure row while retaining
+`semantic_full_digest_stressor` as an explicit stressor family.

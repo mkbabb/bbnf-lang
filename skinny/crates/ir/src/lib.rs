@@ -431,13 +431,13 @@ pub enum SpanMarkKind {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum TapeKind {
-    Object,
-    Array,
-    Pair,
-    String,
-    Number,
-    Bool,
-    Null,
+    Container,
+    Sequence,
+    KeyValuePair,
+    StringValue,
+    NumberValue,
+    BoolValue,
+    NullValue,
     Member,
     Element,
 }
@@ -509,8 +509,8 @@ pub enum DirectBuildRepresentation {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum DirectBuildDecode {
     Raw,
-    JsonString,
-    JsonNumber,
+    EscapedString,
+    NumberScalar,
     Literal,
 }
 

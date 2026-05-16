@@ -2181,3 +2181,33 @@ perturbation.
   honest reporting limitation, not an inferred performance result. W1 may open
   with schema-v3 reporting in place; it must not treat W0b as a parser/runtime
   throughput improvement.
+
+## SK-V7 Wave 1 TapeKind Rename Redress
+
+- Item 79 admits the descriptor-preserving TapeKind rename. Generic IR no
+  longer exposes the seven JSON-shaped `TapeKind` variant spellings:
+  `Object`, `Array`, `Pair`, `String`, `Number`, `Bool`, and `Null` are now
+  `Container`, `Sequence`, `KeyValuePair`, `StringValue`, `NumberValue`,
+  `BoolValue`, and `NullValue`. `DirectBuildDecode::{JsonString,JsonNumber}`
+  are now `DirectBuildDecode::{EscapedString,NumberScalar}`.
+- The old `passes::materialization_for_rule` helper is deleted. Behavior is
+  preserved by a single local materialization descriptor that returns the
+  renamed `TapeKind`, existing `Json*` DirectBuild shape string, and existing
+  field roster together for the seven currently materialized rules. This is
+  intentionally not the later W7/W8 broad codegen/parse-that-regex Lock 14
+  rebrand.
+- A focused passes regression test now checks all seven materialized JSON value
+  rules for the renamed neutral `TapeKind`, existing shape name, and field
+  roster. This closes the previous gap where only `object` was asserted for
+  `TapeEmit` plus `DirectBuild`.
+- Verification completed. Exact old-symbol proof:
+  `rg -n 'TapeKind::(Object|Array|Pair|String|Number|Bool|Null)\b|DirectBuildDecode::(JsonString|JsonNumber)\b|fn materialization_for_rule\b' skinny/crates`
+  returned no matches. `cargo test -p passes` passed 5 tests. `cargo run -p
+  xtask --release -- check-json` passed. `cargo run -p xtask --release --
+  check-real-typed` passed. `cargo test --workspace` passed.
+- The non-behavior gate held. `skinny/RESULTS.md`,
+  `skinny/crates/codegen/src/json_templates/generated.rs`,
+  `skinny/crates/runtime/src/grammars/json/generated.rs`, and
+  `skinny/crates/bbnf-bench/src/generated_real_typed.rs` have no diff. W1 did
+  not claim a parser/runtime throughput change and did not reopen REDRESS
+  28+33, 50-55, or 60-72.

@@ -717,7 +717,7 @@ pub mod extract {
     }
 
     fn materialize_rule(name: &str, body: BackendExpr) -> BackendExpr {
-        let Some((kind, shape)) = materialization_for_rule(name) else {
+        let Some(descriptor) = materialization_descriptor(name) else {
             return body;
         };
         BackendExpr::Seq(vec![
@@ -730,82 +730,106 @@ pub mod extract {
                 kind: SpanMarkKind::End,
                 label: name.to_string(),
             },
-            BackendExpr::TapeEmit { kind },
+            BackendExpr::TapeEmit {
+                kind: descriptor.kind,
+            },
             BackendExpr::DirectBuild {
-                shape: shape.to_string(),
-                fields: direct_fields_for_rule(name),
+                shape: descriptor.shape.to_string(),
+                fields: descriptor.fields,
             },
             BackendExpr::Return,
         ])
     }
 
-    fn materialization_for_rule(name: &str) -> Option<(TapeKind, &'static str)> {
-        match name {
-            "object" => Some((TapeKind::Object, "JsonObject")),
-            "array" => Some((TapeKind::Array, "JsonArray")),
-            "pair" => Some((TapeKind::Pair, "JsonPair")),
-            "string" => Some((TapeKind::String, "JsonString")),
-            "number" => Some((TapeKind::Number, "JsonNumber")),
-            "bool" => Some((TapeKind::Bool, "JsonBool")),
-            "null" => Some((TapeKind::Null, "JsonNull")),
-            _ => None,
-        }
+    struct MaterializationDescriptor {
+        kind: TapeKind,
+        shape: &'static str,
+        fields: Vec<DirectBuildField>,
     }
 
-    fn direct_fields_for_rule(name: &str) -> Vec<DirectBuildField> {
-        match name {
-            "object" => vec![DirectBuildField {
-                name: "members".to_string(),
-                source: DirectBuildSource::RepeatedRule {
-                    rule: "pair".to_string(),
-                },
-                target: None,
-            }],
-            "array" => vec![DirectBuildField {
-                name: "elements".to_string(),
-                source: DirectBuildSource::RepeatedRule {
-                    rule: "value".to_string(),
-                },
-                target: None,
-            }],
-            "pair" => vec![
-                DirectBuildField {
-                    name: "key".to_string(),
-                    source: DirectBuildSource::ChildRule {
-                        rule: "string".to_string(),
+    fn materialization_descriptor(name: &str) -> Option<MaterializationDescriptor> {
+        let descriptor = match name {
+            "object" => MaterializationDescriptor {
+                kind: TapeKind::Container,
+                shape: "JsonObject",
+                fields: vec![DirectBuildField {
+                    name: "members".to_string(),
+                    source: DirectBuildSource::RepeatedRule {
+                        rule: "pair".to_string(),
                     },
                     target: None,
-                },
-                DirectBuildField {
-                    name: "value".to_string(),
-                    source: DirectBuildSource::ChildRule {
+                }],
+            },
+            "array" => MaterializationDescriptor {
+                kind: TapeKind::Sequence,
+                shape: "JsonArray",
+                fields: vec![DirectBuildField {
+                    name: "elements".to_string(),
+                    source: DirectBuildSource::RepeatedRule {
                         rule: "value".to_string(),
                     },
                     target: None,
-                },
-            ],
-            "string" => vec![DirectBuildField {
-                name: "span".to_string(),
-                source: DirectBuildSource::Span {
-                    label: "string".to_string(),
-                },
-                target: None,
-            }],
-            "number" => vec![DirectBuildField {
-                name: "span".to_string(),
-                source: DirectBuildSource::Span {
-                    label: "number".to_string(),
-                },
-                target: None,
-            }],
-            "bool" => vec![DirectBuildField {
-                name: "value".to_string(),
-                source: DirectBuildSource::Literal { bytes: Vec::new() },
-                target: None,
-            }],
-            "null" => Vec::new(),
-            _ => Vec::new(),
-        }
+                }],
+            },
+            "pair" => MaterializationDescriptor {
+                kind: TapeKind::KeyValuePair,
+                shape: "JsonPair",
+                fields: vec![
+                    DirectBuildField {
+                        name: "key".to_string(),
+                        source: DirectBuildSource::ChildRule {
+                            rule: "string".to_string(),
+                        },
+                        target: None,
+                    },
+                    DirectBuildField {
+                        name: "value".to_string(),
+                        source: DirectBuildSource::ChildRule {
+                            rule: "value".to_string(),
+                        },
+                        target: None,
+                    },
+                ],
+            },
+            "string" => MaterializationDescriptor {
+                kind: TapeKind::StringValue,
+                shape: "JsonString",
+                fields: vec![DirectBuildField {
+                    name: "span".to_string(),
+                    source: DirectBuildSource::Span {
+                        label: "string".to_string(),
+                    },
+                    target: None,
+                }],
+            },
+            "number" => MaterializationDescriptor {
+                kind: TapeKind::NumberValue,
+                shape: "JsonNumber",
+                fields: vec![DirectBuildField {
+                    name: "span".to_string(),
+                    source: DirectBuildSource::Span {
+                        label: "number".to_string(),
+                    },
+                    target: None,
+                }],
+            },
+            "bool" => MaterializationDescriptor {
+                kind: TapeKind::BoolValue,
+                shape: "JsonBool",
+                fields: vec![DirectBuildField {
+                    name: "value".to_string(),
+                    source: DirectBuildSource::Literal { bytes: Vec::new() },
+                    target: None,
+                }],
+            },
+            "null" => MaterializationDescriptor {
+                kind: TapeKind::NullValue,
+                shape: "JsonNull",
+                fields: Vec::new(),
+            },
+            _ => return None,
+        };
+        Some(descriptor)
     }
 
     fn span_kind(pattern: &str) -> SpanKind {
@@ -869,6 +893,46 @@ mod tests {
     }
 
     #[test]
+    fn materializes_json_value_rules_with_neutral_tape_kinds() {
+        let grammar = grammar::parse_json_grammar(JSON_GRAMMAR).unwrap();
+        let output = compile(&grammar).unwrap();
+
+        let expected = [
+            (
+                "object",
+                TapeKind::Container,
+                "JsonObject",
+                &["members"][..],
+            ),
+            ("array", TapeKind::Sequence, "JsonArray", &["elements"][..]),
+            (
+                "pair",
+                TapeKind::KeyValuePair,
+                "JsonPair",
+                &["key", "value"][..],
+            ),
+            ("string", TapeKind::StringValue, "JsonString", &["span"][..]),
+            ("number", TapeKind::NumberValue, "JsonNumber", &["span"][..]),
+            ("bool", TapeKind::BoolValue, "JsonBool", &["value"][..]),
+            ("null", TapeKind::NullValue, "JsonNull", &[][..]),
+        ];
+
+        for (rule_name, expected_kind, expected_shape, expected_fields) in expected {
+            let rule = output
+                .backend_ir
+                .rules
+                .iter()
+                .find(|rule| rule.name == rule_name)
+                .unwrap_or_else(|| panic!("missing rule {rule_name}"));
+            let (kind, shape, fields) = materialization_of(&rule.expr)
+                .unwrap_or_else(|| panic!("missing materialization for rule {rule_name}"));
+            assert_eq!(kind, expected_kind, "{rule_name} tape kind");
+            assert_eq!(shape, expected_shape, "{rule_name} shape");
+            assert_eq!(fields, expected_fields, "{rule_name} fields");
+        }
+    }
+
+    #[test]
     fn collapsed_stage_without_author_falls_back_with_diagnostic() {
         let grammar = grammar::parse_json_grammar(JSON_GRAMMAR).unwrap();
         let output = compile(&grammar).unwrap();
@@ -914,6 +978,33 @@ mod tests {
                 branches.iter().any(contains_tape_emit_and_direct_build)
             }
             _ => false,
+        }
+    }
+
+    fn materialization_of(expr: &BackendExpr) -> Option<(TapeKind, &str, Vec<&str>)> {
+        match expr {
+            BackendExpr::Seq(children) => {
+                let kind = children.iter().find_map(|child| match child {
+                    BackendExpr::TapeEmit { kind } => Some(*kind),
+                    _ => None,
+                })?;
+                let (shape, fields) = children.iter().find_map(|child| match child {
+                    BackendExpr::DirectBuild { shape, fields } => Some((
+                        shape.as_str(),
+                        fields
+                            .iter()
+                            .map(|field| field.name.as_str())
+                            .collect::<Vec<_>>(),
+                    )),
+                    _ => None,
+                })?;
+                Some((kind, shape, fields))
+            }
+            BackendExpr::Entry(inner)
+            | BackendExpr::OptionalBranch(inner)
+            | BackendExpr::RepeatLoop { body: inner, .. } => materialization_of(inner),
+            BackendExpr::Alt { branches, .. } => branches.iter().find_map(materialization_of),
+            _ => None,
         }
     }
 }

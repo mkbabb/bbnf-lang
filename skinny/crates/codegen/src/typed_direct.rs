@@ -264,7 +264,7 @@ impl<'a> Renderer<'a> {
 
     fn render_field_arm(&self, out: &mut String, field: &DirectFieldSchema) -> Result<(), String> {
         let parse_expr = self.parse_expr(&field.ty)?;
-        out.push_str(&format!("            {:?} => {{\n", field.json_key));
+        out.push_str(&format!("            {:?} => {{\n", field.key_literal));
         if field.duplicate == DuplicatePolicy::Reject {
             out.push_str(&format!(
                 "                if {}.is_some() {{ return Err(parser.error(\"duplicate field\")); }}\n",
@@ -293,7 +293,10 @@ impl<'a> Renderer<'a> {
             DirectSkipKind::Bool => "parser.skip_bool()",
             DirectSkipKind::Null => "parser.consume_literal(b\"null\")",
         };
-        out.push_str(&format!("            {:?} => {skip}?,\n", field.json_key));
+        out.push_str(&format!(
+            "            {:?} => {skip}?,\n",
+            field.key_literal
+        ));
         Ok(())
     }
 

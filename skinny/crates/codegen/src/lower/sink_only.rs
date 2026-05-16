@@ -16,10 +16,12 @@ impl SinkOnlyProgram {
         self.rules.iter().any(|rule| rule.name == name)
     }
 
+    #[cfg(test)]
     pub fn has_shape(&self, shape: &str) -> bool {
         self.direct_shapes.contains(shape)
     }
 
+    #[cfg(test)]
     pub fn has_literal(&self, literal: &[u8]) -> bool {
         self.literals.contains(literal)
     }

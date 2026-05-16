@@ -119,14 +119,14 @@ fn check_float_bits(
 
 fn regen_json(root: &Path) -> Result<()> {
     let source = std::fs::read_to_string(root.join("grammars/json.bbnf"))?;
-    let emitted = codegen::emit_json_from_source(&source)?;
+    let emitted = codegen::emit_from_source("json", &source)?;
     emitted.write_to_dir(root.join("crates/runtime/src/grammars/json"))?;
     Ok(())
 }
 
 fn check_json(root: &Path) -> Result<()> {
     let source = std::fs::read_to_string(root.join("grammars/json.bbnf"))?;
-    let emitted = codegen::emit_json_from_source(&source)?;
+    let emitted = codegen::emit_from_source("json", &source)?;
     emitted
         .check_dir(root.join("crates/runtime/src/grammars/json"))
         .context("generated JSON runtime is stale; run `cargo xtask regen-json`")
@@ -135,7 +135,7 @@ fn check_json(root: &Path) -> Result<()> {
 fn regen_real_typed(root: &Path) -> Result<()> {
     let source = std::fs::read_to_string(root.join("grammars/json.bbnf"))?;
     let schema = real_typed_schema::schema();
-    let emitted = codegen::emit_json_typed_from_source(&source, &schema)?;
+    let emitted = codegen::emit_typed_from_source("json", &source, &schema)?;
     emitted.write_to_dir(root.join("crates/bbnf-bench/src"))?;
     Ok(())
 }
@@ -143,7 +143,7 @@ fn regen_real_typed(root: &Path) -> Result<()> {
 fn check_real_typed(root: &Path) -> Result<()> {
     let source = std::fs::read_to_string(root.join("grammars/json.bbnf"))?;
     let schema = real_typed_schema::schema();
-    let emitted = codegen::emit_json_typed_from_source(&source, &schema)?;
+    let emitted = codegen::emit_typed_from_source("json", &source, &schema)?;
     emitted
         .check_dir(root.join("crates/bbnf-bench/src"))
         .context(

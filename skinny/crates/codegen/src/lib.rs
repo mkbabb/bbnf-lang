@@ -1,7 +1,7 @@
 pub mod direct_schema;
-mod json_sink_direct;
-mod json_typed_direct;
 pub(crate) mod lower;
+mod sink_direct;
+mod typed_direct;
 
 use direct_schema::DirectSchemaSet;
 use ir::{BackendIr, BackendShape, RuleId};
@@ -65,28 +65,29 @@ impl EmittedSource {
     }
 }
 
-pub fn emit_json_from_source(source: &str) -> Result<EmittedSource, CodegenError> {
-    let grammar = grammar::parse_json_grammar(source)?;
+pub fn emit_from_source(grammar_name: &str, source: &str) -> Result<EmittedSource, CodegenError> {
+    let grammar = grammar::parse_grammar(grammar_name, source)?;
     let output = passes::compile(&grammar)?;
-    emit_json_with_layout(
+    emit_with_layout(
         &output.backend_ir,
         &output.layout_facts.backend_shape,
         &output.diagnostics,
     )
 }
 
-pub fn emit_json(backend: &BackendIr) -> Result<EmittedSource, CodegenError> {
+pub fn emit(backend: &BackendIr) -> Result<EmittedSource, CodegenError> {
     let backend_shape = default_backend_shape(backend);
-    emit_json_with_layout(backend, &backend_shape, &[])
+    emit_with_layout(backend, &backend_shape, &[])
 }
 
-pub fn emit_json_typed_from_source(
+pub fn emit_typed_from_source(
+    grammar_name: &str,
     source: &str,
     schema: &DirectSchemaSet,
 ) -> Result<EmittedSource, CodegenError> {
-    let grammar = grammar::parse_json_grammar(source)?;
+    let grammar = grammar::parse_grammar(grammar_name, source)?;
     let output = passes::compile(&grammar)?;
-    emit_json_typed_with_layout(
+    emit_typed_with_layout(
         &output.backend_ir,
         &output.layout_facts.backend_shape,
         &output.diagnostics,
@@ -94,11 +95,12 @@ pub fn emit_json_typed_from_source(
     )
 }
 
-fn emit_json_with_layout(
+fn emit_with_layout(
     backend: &BackendIr,
     backend_shape: &std::collections::HashMap<RuleId, BackendShape>,
     diagnostics: &[passes::diagnostics::PassDiagnostic],
 ) -> Result<EmittedSource, CodegenError> {
+    ensure_runtime_profile(backend)?;
     let lowered = lower::lower_to_rust(
         backend,
         &lower::LowerCtx {
@@ -114,7 +116,7 @@ fn emit_json_with_layout(
         )
     })?;
     generated.push('\n');
-    generated.push_str(&json_sink_direct::render(sink_only).map_err(CodegenError::Lowering)?);
+    generated.push_str(&sink_direct::render(sink_only).map_err(CodegenError::Lowering)?);
 
     files.insert("generated.rs".to_string(), generated);
     files.insert("host.rs".to_string(), host_rs());
@@ -128,12 +130,13 @@ fn emit_json_with_layout(
     Ok(EmittedSource { files })
 }
 
-fn emit_json_typed_with_layout(
+fn emit_typed_with_layout(
     backend: &BackendIr,
     backend_shape: &std::collections::HashMap<RuleId, BackendShape>,
     diagnostics: &[passes::diagnostics::PassDiagnostic],
     schema: &DirectSchemaSet,
 ) -> Result<EmittedSource, CodegenError> {
+    ensure_runtime_profile(backend)?;
     let lowered = lower::lower_to_rust(
         backend,
         &lower::LowerCtx {
@@ -151,9 +154,20 @@ fn emit_json_typed_with_layout(
     let mut files = BTreeMap::new();
     files.insert(
         format!("{}.rs", schema.module_name),
-        json_typed_direct::render(&typed).map_err(CodegenError::Lowering)?,
+        typed_direct::render(&typed).map_err(CodegenError::Lowering)?,
     );
     Ok(EmittedSource { files })
+}
+
+fn ensure_runtime_profile(backend: &BackendIr) -> Result<(), CodegenError> {
+    if backend.grammar_name == "json" {
+        Ok(())
+    } else {
+        Err(CodegenError::Lowering(format!(
+            "runtime emission currently supports grammar profile `json`, found `{}`",
+            backend.grammar_name
+        )))
+    }
 }
 
 fn default_backend_shape(backend: &BackendIr) -> std::collections::HashMap<RuleId, BackendShape> {
@@ -261,7 +275,7 @@ mod tests {
 
     #[test]
     fn emits_expected_file_set_in_order() {
-        let emitted = emit_json_from_source(JSON_GRAMMAR).unwrap();
+        let emitted = emit_from_source("json", JSON_GRAMMAR).unwrap();
         let names: Vec<_> = emitted.files().map(|(path, _)| path).collect();
 
         assert_eq!(
@@ -282,8 +296,8 @@ mod tests {
 
     #[test]
     fn emission_is_deterministic() {
-        let first = emit_json_from_source(JSON_GRAMMAR).unwrap();
-        let second = emit_json_from_source(JSON_GRAMMAR).unwrap();
+        let first = emit_from_source("json", JSON_GRAMMAR).unwrap();
+        let second = emit_from_source("json", JSON_GRAMMAR).unwrap();
 
         assert_eq!(first, second);
         assert!(first
@@ -294,7 +308,7 @@ mod tests {
 
     #[test]
     fn direct_parser_is_authored_from_sink_only_lowering() {
-        let grammar = grammar::parse_json_grammar(JSON_GRAMMAR).unwrap();
+        let grammar = grammar::parse_grammar("json", JSON_GRAMMAR).unwrap();
         let output = passes::compile(&grammar).unwrap();
         let lowered = lower::lower_to_rust(
             &output.backend_ir,
@@ -312,7 +326,7 @@ mod tests {
         assert!(program.has_literal(b"false"));
         assert!(program.has_literal(b"null"));
 
-        let emitted = emit_json_from_source(JSON_GRAMMAR).unwrap();
+        let emitted = emit_from_source("json", JSON_GRAMMAR).unwrap();
         let generated = emitted.get("generated.rs").unwrap();
         assert!(generated.contains("// sink-only lowered from BackendIr: entry=json"));
         assert!(generated.contains("pub fn parse_direct"));
@@ -320,13 +334,13 @@ mod tests {
 
     #[test]
     fn refuses_direct_parser_without_direct_builds() {
-        let grammar = grammar::parse_json_grammar(JSON_GRAMMAR).unwrap();
+        let grammar = grammar::parse_grammar("json", JSON_GRAMMAR).unwrap();
         let mut output = passes::compile(&grammar).unwrap();
         for rule in &mut output.backend_ir.rules {
             strip_direct_builds(&mut rule.expr);
         }
 
-        let err = emit_json_with_layout(
+        let err = emit_with_layout(
             &output.backend_ir,
             &output.layout_facts.backend_shape,
             &output.diagnostics,
@@ -339,7 +353,7 @@ mod tests {
     #[test]
     fn emits_typed_direct_consumer_module() {
         let schema = tiny_schema();
-        let emitted = emit_json_typed_from_source(JSON_GRAMMAR, &schema).unwrap();
+        let emitted = emit_typed_from_source("json", JSON_GRAMMAR, &schema).unwrap();
         let generated = emitted.get("tiny_typed.rs").unwrap();
 
         assert!(generated.contains("pub fn parse_tiny"));
@@ -352,13 +366,13 @@ mod tests {
     #[test]
     fn refuses_typed_emission_without_direct_builds() {
         let schema = tiny_schema();
-        let grammar = grammar::parse_json_grammar(JSON_GRAMMAR).unwrap();
+        let grammar = grammar::parse_grammar("json", JSON_GRAMMAR).unwrap();
         let mut output = passes::compile(&grammar).unwrap();
         for rule in &mut output.backend_ir.rules {
             strip_direct_builds(&mut rule.expr);
         }
 
-        let err = emit_json_typed_with_layout(
+        let err = emit_typed_with_layout(
             &output.backend_ir,
             &output.layout_facts.backend_shape,
             &output.diagnostics,
@@ -386,14 +400,14 @@ mod tests {
                     ignored_fields: Vec::new(),
                     fields: vec![
                         DirectFieldSchema {
-                            json_key: "name".to_string(),
+                            key_literal: "name".to_string(),
                             rust_field: "name".to_string(),
                             ty: DirectTypeRef::Scalar(DirectScalar::String),
                             presence: PresencePolicy::Required,
                             duplicate: DuplicatePolicy::Reject,
                         },
                         DirectFieldSchema {
-                            json_key: "items".to_string(),
+                            key_literal: "items".to_string(),
                             rust_field: "items".to_string(),
                             ty: DirectTypeRef::Vec {
                                 inner: Box::new(DirectTypeRef::Scalar(DirectScalar::U64)),

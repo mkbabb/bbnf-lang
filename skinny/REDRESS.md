@@ -2425,3 +2425,40 @@ perturbation.
 - The admitted scope does not reopen the W4-W6 rejected parser hot-leaf routes
   or any REDRESS 60-72 direct-materialization experiments. Remaining Lock 14
   work is the W8 Phase C+D codegen/IR cleanup already scoped by SPEC §10.
+
+## SK-V7 Wave 8 Lock 14 Phase C+D Codegen Shell Neutralization Redress
+
+- Item 86 admits the W8 Lock 14 Phase C+D codegen shell neutralization. The
+  candidate renames the generic codegen renderer modules away from the
+  `json_*_direct` surface, replaces the public `emit_json*` entry points with
+  grammar-named `emit*` APIs, and migrates the same-wave `bbnf` and `xtask`
+  consumers to pass the `json` grammar name explicitly.
+- The schema/codegen shell no longer exposes JSON key or hard-coded JSON shape
+  policy. `DirectFieldSchema` and ignored-field metadata now carry
+  `key_literal`; schema-direct lowering validates the derived DirectBuild and
+  literal fact sets instead of a `Json*` allowlist; sink-direct validation drops
+  `REQUIRED_RULES`, `REQUIRED_SHAPES`, and JSON-specific diagnostics. The
+  emitted JSON parser body remains byte-identical because W8 is a shell/IR
+  neutralization, not a new route-fact substrate.
+- Phase D removes `StructuralAlphabet::json()` and the JSON whitespace regex
+  string-equality nullability special case from `ir`, replacing the latter with
+  a generic single-atom quantified-shape check and an IR regression test.
+- Verification completed. `cargo test -p codegen -p ir -p bbnf` passed.
+  `cargo run -p xtask --release -- check-json` passed. `cargo run -p xtask
+  --release -- check-real-typed` passed. `cargo run -p xtask --release --
+  check-conformance` accepted 21 valid fixtures and rejected 7 invalid
+  fixtures. `cargo test --workspace` passed. The root ancillary `cargo xtask
+  regen --check` passed with 9 of 9 grammars clean.
+- The falsifiability gate held. Generated JSON outputs stayed unchanged:
+  `skinny/crates/runtime/src/grammars/json/generated.rs` and
+  `skinny/crates/bbnf-bench/src/generated_real_typed.rs` have no diff, and
+  `skinny/RESULTS.md` has no diff. The W8 audit greps for JSON-named codegen
+  modules/functions, schema key naming, schema-direct `Json*` allowlists,
+  sink-direct required-rule/shape constants, JSON renderer diagnostics,
+  `StructuralAlphabet::json()`, and the old whitespace regex equality guard all
+  returned zero matches.
+- The admitted scope does not reopen the W4-W6 rejected parse hot-leaf routes
+  or the REDRESS 60-72 retained/direct-materialization routes. Remaining
+  per-grammar JSON names are confined to the JSON grammar inputs and emitted
+  JSON parser output that W8 intentionally kept byte-identical; W9 proceeds to
+  the CostFacts substrate required before any further route-fact decisions.

@@ -33,7 +33,7 @@ pub enum DirectTypeKind {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DirectFieldSchema {
-    pub json_key: String,
+    pub key_literal: String,
     pub rust_field: String,
     pub ty: DirectTypeRef,
     pub presence: PresencePolicy,
@@ -42,7 +42,7 @@ pub struct DirectFieldSchema {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DirectIgnoredFieldSchema {
-    pub json_key: String,
+    pub key_literal: String,
     pub skip: DirectSkipKind,
 }
 
@@ -164,7 +164,7 @@ fn validate_fields(
     ignored_fields: &[DirectIgnoredFieldSchema],
 ) -> Result<(), String> {
     let mut rust_fields = BTreeSet::new();
-    let mut json_keys = BTreeSet::new();
+    let mut key_literals = BTreeSet::new();
     for field in fields {
         if !is_ident(&field.rust_field) {
             return Err(format!(
@@ -172,8 +172,8 @@ fn validate_fields(
                 field.rust_field
             ));
         }
-        if field.json_key.is_empty() {
-            return Err(format!("type `{type_id}` has empty JSON key"));
+        if field.key_literal.is_empty() {
+            return Err(format!("type `{type_id}` has empty key literal"));
         }
         if !rust_fields.insert(field.rust_field.as_str()) {
             return Err(format!(
@@ -181,21 +181,21 @@ fn validate_fields(
                 field.rust_field
             ));
         }
-        if !json_keys.insert(field.json_key.as_str()) {
+        if !key_literals.insert(field.key_literal.as_str()) {
             return Err(format!(
-                "type `{type_id}` has duplicate JSON key `{}`",
-                field.json_key
+                "type `{type_id}` has duplicate key literal `{}`",
+                field.key_literal
             ));
         }
     }
     for field in ignored_fields {
-        if field.json_key.is_empty() {
-            return Err(format!("type `{type_id}` has empty ignored JSON key"));
+        if field.key_literal.is_empty() {
+            return Err(format!("type `{type_id}` has empty ignored key literal"));
         }
-        if !json_keys.insert(field.json_key.as_str()) {
+        if !key_literals.insert(field.key_literal.as_str()) {
             return Err(format!(
-                "type `{type_id}` has duplicate JSON key `{}`",
-                field.json_key
+                "type `{type_id}` has duplicate key literal `{}`",
+                field.key_literal
             ));
         }
     }

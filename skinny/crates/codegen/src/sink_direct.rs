@@ -1,20 +1,6 @@
 use crate::lower::sink_only::{SinkOnlyProgram, SinkOnlySpanKind};
 use std::fmt::Write;
 
-const REQUIRED_RULES: [&str; 9] = [
-    "json", "value", "object", "array", "pair", "string", "number", "bool", "null",
-];
-
-const REQUIRED_SHAPES: [&str; 7] = [
-    "JsonObject",
-    "JsonArray",
-    "JsonPair",
-    "JsonString",
-    "JsonNumber",
-    "JsonBool",
-    "JsonNull",
-];
-
 pub fn render(program: &SinkOnlyProgram) -> Result<String, String> {
     validate(program)?;
 
@@ -30,44 +16,19 @@ pub fn render(program: &SinkOnlyProgram) -> Result<String, String> {
 }
 
 fn validate(program: &SinkOnlyProgram) -> Result<(), String> {
-    if program.entry_rule != "json" {
+    if !program.has_rule(&program.entry_rule) {
         return Err(format!(
-            "JSON SinkOnly renderer expected entry rule `json`, found `{}`",
+            "sink-only renderer missing entry BIR rule `{}`",
             program.entry_rule
         ));
     }
 
-    let missing_rules: Vec<_> = REQUIRED_RULES
-        .iter()
-        .copied()
-        .filter(|rule| !program.has_rule(rule))
-        .collect();
-    if !missing_rules.is_empty() {
-        return Err(format!(
-            "JSON SinkOnly renderer missing BIR rules: {}",
-            missing_rules.join(", ")
-        ));
+    if program.direct_shapes.is_empty() {
+        return Err("sink-only renderer requires DirectBuild shapes".to_string());
     }
 
-    let missing_shapes: Vec<_> = REQUIRED_SHAPES
-        .iter()
-        .copied()
-        .filter(|shape| !program.has_shape(shape))
-        .collect();
-    if !missing_shapes.is_empty() {
-        return Err(format!(
-            "JSON SinkOnly renderer missing DirectBuild shapes: {}",
-            missing_shapes.join(", ")
-        ));
-    }
-
-    for literal in [b"true".as_slice(), b"false".as_slice(), b"null".as_slice()] {
-        if !program.has_literal(literal) {
-            return Err(format!(
-                "JSON SinkOnly renderer missing literal `{}` in BIR",
-                std::str::from_utf8(literal).expect("literal is UTF-8")
-            ));
-        }
+    if program.literals.is_empty() {
+        return Err("sink-only renderer requires literal recognizers".to_string());
     }
 
     for span in [
@@ -77,35 +38,25 @@ fn validate(program: &SinkOnlyProgram) -> Result<(), String> {
     ] {
         if !program.span_kinds.contains(&span) {
             return Err(format!(
-                "JSON SinkOnly renderer missing {:?} RegexProgram in BIR",
+                "sink-only renderer missing {:?} RegexProgram in BIR",
                 span
             ));
         }
     }
 
-    for (shape, fields) in [
-        ("JsonObject", &["members"][..]),
-        ("JsonArray", &["elements"][..]),
-        ("JsonPair", &["key", "value"][..]),
-        ("JsonString", &["span"][..]),
-        ("JsonNumber", &["span"][..]),
-        ("JsonBool", &["value"][..]),
-        ("JsonNull", &[][..]),
-    ] {
-        let Some(actual) = program
-            .rules
-            .iter()
-            .filter_map(|rule| rule.direct_shape.as_ref())
-            .find(|direct| direct.shape == shape)
-        else {
-            return Err(format!(
-                "JSON SinkOnly renderer missing field roster for DirectBuild `{shape}`"
-            ));
-        };
-        for field in fields {
-            if !actual.fields.iter().any(|actual| actual.name == *field) {
+    for shape in program
+        .rules
+        .iter()
+        .filter_map(|rule| rule.direct_shape.as_ref())
+    {
+        if shape.shape.is_empty() {
+            return Err("sink-only renderer found empty DirectBuild shape".to_string());
+        }
+        for field in &shape.fields {
+            if field.name.is_empty() {
                 return Err(format!(
-                    "JSON SinkOnly renderer missing DirectBuild field `{shape}.{field}`"
+                    "sink-only renderer found empty DirectBuild field in `{}`",
+                    shape.shape
                 ));
             }
         }

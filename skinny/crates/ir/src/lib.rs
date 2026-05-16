@@ -319,7 +319,68 @@ pub fn nullability(grammar: &GrammarIr) -> Vec<bool> {
 }
 
 fn regex_is_nullable(pattern: &str) -> bool {
-    pattern == r"[ \t\n\r]*"
+    let Some(atom) = pattern
+        .strip_suffix('*')
+        .or_else(|| pattern.strip_suffix('?'))
+    else {
+        return pattern.is_empty();
+    };
+    is_single_regex_atom(atom)
+}
+
+fn is_single_regex_atom(pattern: &str) -> bool {
+    if pattern.is_empty() {
+        return false;
+    }
+    if pattern.starts_with('[') {
+        return pattern.ends_with(']') && !ends_with_unescaped(pattern, b'\\');
+    }
+    if pattern.starts_with("(?:") || pattern.starts_with('(') {
+        return pattern.ends_with(')') && balanced_parenthesized(pattern);
+    }
+    if pattern.starts_with('\\') {
+        return pattern.as_bytes().len() == 2;
+    }
+    pattern.chars().count() == 1
+}
+
+fn ends_with_unescaped(pattern: &str, byte: u8) -> bool {
+    let bytes = pattern.as_bytes();
+    let mut count = 0usize;
+    for current in bytes.iter().rev().skip(1) {
+        if *current == byte {
+            count += 1;
+        } else {
+            break;
+        }
+    }
+    count % 2 == 1
+}
+
+fn balanced_parenthesized(pattern: &str) -> bool {
+    let mut depth = 0usize;
+    let mut escaped = false;
+    for (index, byte) in pattern.bytes().enumerate() {
+        if escaped {
+            escaped = false;
+            continue;
+        }
+        match byte {
+            b'\\' => escaped = true,
+            b'(' => depth += 1,
+            b')' => {
+                depth = match depth.checked_sub(1) {
+                    Some(next) => next,
+                    None => return false,
+                };
+                if depth == 0 && index + 1 != pattern.len() {
+                    return false;
+                }
+            }
+            _ => {}
+        }
+    }
+    depth == 0
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -406,14 +467,6 @@ pub enum SimdSite {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct StructuralAlphabet {
     pub bytes: Vec<u8>,
-}
-
-impl StructuralAlphabet {
-    pub fn json() -> Self {
-        Self {
-            bytes: b"{}[],:\"".to_vec(),
-        }
-    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -622,5 +675,33 @@ mod tests {
         grammar.add_rule("null", lit, SourceSpan::new(0, 15));
 
         assert_eq!(grammar.pretty(), "null = \"null\" ;\n");
+    }
+
+    #[test]
+    fn regex_nullability_uses_quantified_atom_shape() {
+        let mut grammar = GrammarIr::new("test", "hash");
+        let ws = grammar.add_expr(
+            ExprKind::Regex {
+                pattern: r"[ \t\n\r]*".to_string(),
+            },
+            SourceSpan::new(0, 11),
+        );
+        let string = grammar.add_expr(
+            ExprKind::Regex {
+                pattern: r#""(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4}))*""#.to_string(),
+            },
+            SourceSpan::new(12, 64),
+        );
+        let number = grammar.add_expr(
+            ExprKind::Regex {
+                pattern: r"-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?".to_string(),
+            },
+            SourceSpan::new(65, 112),
+        );
+
+        let nullable = nullability(&grammar);
+        assert!(nullable[ws.0]);
+        assert!(!nullable[string.0]);
+        assert!(!nullable[number.0]);
     }
 }

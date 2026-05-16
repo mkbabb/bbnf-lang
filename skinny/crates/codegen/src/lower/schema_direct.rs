@@ -13,26 +13,11 @@ pub fn lower_program(
     schema: &DirectSchemaSet,
 ) -> Result<TypedDirectProgram, String> {
     schema.validate()?;
-    for required in [
-        "JsonObject",
-        "JsonArray",
-        "JsonPair",
-        "JsonString",
-        "JsonNumber",
-        "JsonBool",
-        "JsonNull",
-    ] {
-        if !sink_only.has_shape(required) {
-            return Err(format!(
-                "typed DirectBuild requires sink-only shape `{required}`"
-            ));
-        }
+    if sink_only.direct_shapes.is_empty() {
+        return Err("typed DirectBuild requires sink-only DirectBuild shapes".to_string());
     }
-    if !sink_only.has_literal(b"true")
-        || !sink_only.has_literal(b"false")
-        || !sink_only.has_literal(b"null")
-    {
-        return Err("typed DirectBuild requires JSON literal recognizers".to_string());
+    if sink_only.literals.is_empty() {
+        return Err("typed DirectBuild requires literal recognizers".to_string());
     }
     let direct_shape_roster = sink_only.direct_shapes.iter().cloned().collect();
     Ok(TypedDirectProgram {

@@ -209,9 +209,9 @@ impl DirectTypeSchemaExt for DirectTypeSchema {
     }
 }
 
-fn default(json_key: &str, rust_field: &str, ty: DirectTypeRef) -> DirectFieldSchema {
+fn default(key_literal: &str, rust_field: &str, ty: DirectTypeRef) -> DirectFieldSchema {
     DirectFieldSchema {
-        json_key: json_key.to_string(),
+        key_literal: key_literal.to_string(),
         rust_field: rust_field.to_string(),
         ty,
         presence: PresencePolicy::Default,
@@ -219,9 +219,9 @@ fn default(json_key: &str, rust_field: &str, ty: DirectTypeRef) -> DirectFieldSc
     }
 }
 
-fn ignored(json_key: &str, skip: DirectSkipKind) -> DirectIgnoredFieldSchema {
+fn ignored(key_literal: &str, skip: DirectSkipKind) -> DirectIgnoredFieldSchema {
     DirectIgnoredFieldSchema {
-        json_key: json_key.to_string(),
+        key_literal: key_literal.to_string(),
         skip,
     }
 }

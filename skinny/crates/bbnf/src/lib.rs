@@ -55,7 +55,7 @@ impl Grammar for JsonGrammar {
 }
 
 pub fn compile_json_source(source: &str) -> Result<EmittedSource, Error> {
-    Ok(codegen::emit_json_from_source(source)?)
+    Ok(codegen::emit_from_source("json", source)?)
 }
 
 pub fn compile_json_file(path: impl AsRef<std::path::Path>) -> Result<EmittedSource, Error> {

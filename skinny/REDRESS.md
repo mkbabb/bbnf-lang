@@ -2354,3 +2354,42 @@ perturbation.
   inline/asm first-special extractor that beats the scalar leaf before any
   generated parser wiring. W6 proceeds through SPEC §8's control/key
   compaction route.
+
+## SK-V7 Wave 6 Object-Pair Value-Byte Control Compaction Redress
+
+- Item 84 rejects the W6 object-pair value-byte control compaction on the
+  current W5-closed baseline. The candidate changed the generated JSON
+  template/runtime mirror so object key parsing returned the first value byte
+  and dispatched it directly, then mirrored the same boundary reduction in the
+  independent Track 2 hand parser. Track 2 also received the generated
+  `consume_array_next` shape so array commas could dispatch without a second
+  value-entry load.
+- Correctness was green. `cargo run -p xtask --release -- check-json` passed
+  after regenerating the runtime mirror. `cargo test -p bbnf-bench
+  track2::json -- --nocapture` passed. `cargo run -p xtask --release --
+  check-conformance` passed. `cargo test --workspace` passed. The rejected
+  source and refreshed-results patch is saved at
+  `/tmp/skv7-wave-6-control-key-rejected.patch`.
+- The falsifiability gate failed. The focused same-run advisory gate kept both
+  parse rows at `G / NO-GO` and `instruments` direct at `N-direct / NO-GO`.
+  `citm_catalog` parse Track 2 remained below the 90% sonic threshold, and
+  `instruments` parse Track 1 fell below the 100% sonic threshold. The
+  candidate also violated the `citm_catalog` Track 1 no-regression guard.
+
+  | Corpus | Workload | Track 1 Mbps | Track 2 Mbps | sonic-rs strict Mbps | W6 target | Outcome |
+  |---|---|---:|---:|---:|---|---|
+  | citm_catalog | parse_only | 28930 | 20206 | 23794 | Track 2 >= 90% sonic | FAIL at 84.9%; Track 1 below 30831 no-regression floor |
+  | citm_catalog | direct_to_struct | 21197 | 19825 | 20190 | guard PASS/no regression | PASS guard |
+  | instruments | parse_only | 17827 | 12397 | 19192 | Track 1 >= 100% sonic | FAIL at 92.9% |
+  | instruments | direct_to_struct | 12016 | 11123 | 12725 | Track 1 >= 100% sonic | FAIL at 94.4%; `N-direct / NO-GO` |
+
+- The failure mode is not offset-shape correctness. It is control-boundary
+  economics: removing one post-colon value-entry boundary is too small to close
+  the Track 2-sensitive W6 rows, and the generated Track 1 layout became worse
+  on `citm_catalog`. Do not reopen this exact value-byte return route, and do
+  not compensate by reopening object next-key carry, separator elision,
+  function-pointer dispatch, generic SWAR whitespace, EventCursor sidecars,
+  or the W5 string leaf routes blocked in HANDOFF §3. The next viable B6
+  candidate would need fresh PC-level evidence for a different same-row hot
+  owner, most likely a direct-workload control path rather than another
+  retained object-pair helper.

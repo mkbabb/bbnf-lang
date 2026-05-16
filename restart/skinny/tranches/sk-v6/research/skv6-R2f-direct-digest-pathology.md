@@ -11,7 +11,7 @@ Scope: read-only repository/source inspection plus existing SK-V6 reports. No re
 - `skinny/crates/bbnf-bench/src/bin/profile_direct.rs`.
 - `skinny/crates/runtime/src/grammars/json/generated.rs`.
 - `skinny/crates/runtime/src/grammars/json/sink.rs`.
-- Supporting prior read-only reports: `restart/skinny/audit/SK-V6-COHORT/skv6-R3-direct-attribution.md`, `skv6-R1d-direct-escaped-materialization.md`, `skv6-R2e-unescape-distribution.md`, and `skv6-R3d-direct-generality.md`.
+- Supporting prior read-only reports: `restart/skinny/tranches/sk-v6/research/skv6-R3-direct-attribution.md`, `skv6-R1d-direct-escaped-materialization.md`, `skv6-R2e-unescape-distribution.md`, and `skv6-R3d-direct-generality.md`.
 
 ## Current Direct Digest Semantics
 

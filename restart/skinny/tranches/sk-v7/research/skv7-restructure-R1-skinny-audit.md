@@ -1,8 +1,8 @@
-# SK-V7 Restructure R1 — `restart/skinny/audit/` Inventory + Pruning Strategy
+# SK-V7 Restructure R1 — `restart/skinny/tranches/` Inventory + Pruning Strategy
 
 Date: 2026-05-16
 Workspace: `/Users/mkbabb/Programming/bbnf-lang`
-Scope: read-only inspection of `restart/skinny/audit/` and inbound references from `restart/skinny/INDEX.md`, `restart/HANDOFF.md`, `restart/MASTER-PLAN.md`, `restart/ARCHITECTURE.md`, `restart/locks/14-LOCKS.md`.
+Scope: read-only inspection of `restart/skinny/tranches/` and inbound references from `restart/skinny/INDEX.md`, `restart/HANDOFF.md`, `restart/MASTER-PLAN.md`, `restart/ARCHITECTURE.md`, `restart/locks/LOCKS.md`.
 
 Total surface: 32,844 LOC across 104 markdown files in five subtrees (14 top-level + 15 SK-V5 + 51 SK-V6 + 18 SK-V7 + 6 V9.5-PSI).
 
@@ -48,7 +48,7 @@ Total LOC by tier (from `wc -l`):
 | 11 | `IMPLEMENTATION-PACKET-SK-V6-SOTA-RECOVERY.md` | 288 | KEEP-ARCHIVE → `archive/sk-v6/` AS `IMPLEMENTATION-PACKET-SK-V6.md` | Current SK-V6 packet per `restart/skinny/INDEX.md:7`. The `-SOTA-RECOVERY` suffix was a scope qualifier during the renaming-for-clarity pass; archive form should normalize the name. |
 | 12 | `IMPLEMENTATION-PACKET-SK-V7.md` | 437 | KEEP-CANONICAL | Active packet per `HANDOFF-SK-V7.md:14`. |
 | 13 | `NUKE-PLAN-SK-V5.md` | 497 | KEEP-ARCHIVE → `archive/sk-v5/` | SK-V5-specific nuke catalogue (`:5-7` cites SK-V5 grand synthesis + A4/B2/D4/D5/D6 cohort reports). `restart/skinny/INDEX.md:170` calls it `SK-V5 nuke catalogue (476 LOC; 16 sections): decisions recorded in Wave 0, deletions land in Wave 4`. The deletions have landed; the doc is now historical. SK-V6 and SK-V7 did not author equivalents — they performed in-line nukes via REDRESS entries instead. |
-| 14 | `SOTA-BEAT-DESIGN.md` | 550 | KEEP-CANONICAL AND MOVE-TO `design/SOTA-BEAT-DESIGN.md` | Self-declared `HISTORICAL DESIGN INPUT, superseded for dispatch by IMPLEMENTATION-PACKET-SK-V6-SOTA-RECOVERY.md` (`SOTA-BEAT-DESIGN.md:3-4`), but lists "Still-live material: structural-index-driven lowering, generated SinkOnly, bbnf-simd primitive vocabulary, and the x86 CollapsedStage / asmjson research shape" (`:5-7`). Cited from outside the audit dir by `restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`, `restart/HANDOFF.md:90`, `restart/locks/14-LOCKS.md`, and inside the dir by 12+ files including V9.5 excavation. Authority spans iterations → cross-iteration `design/` subdir is the natural home. See §5. |
+| 14 | `SOTA-BEAT-DESIGN.md` | 550 | KEEP-CANONICAL AND MOVE-TO `design/SOTA-BEAT-DESIGN.md` | Self-declared `HISTORICAL DESIGN INPUT, superseded for dispatch by IMPLEMENTATION-PACKET-SK-V6-SOTA-RECOVERY.md` (`SOTA-BEAT-DESIGN.md:3-4`), but lists "Still-live material: structural-index-driven lowering, generated SinkOnly, bbnf-simd primitive vocabulary, and the x86 CollapsedStage / asmjson research shape" (`:5-7`). Cited from outside the audit dir by `restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`, `restart/HANDOFF.md:90`, `restart/locks/LOCKS.md`, and inside the dir by 12+ files including V9.5 excavation. Authority spans iterations → cross-iteration `design/` subdir is the natural home. See §5. |
 
 ---
 
@@ -201,7 +201,7 @@ Verdict: keep ALL 6 as a cohesive unit. Move to `excavation/v9.5-psi/` (lowercas
 
 Status: HISTORICAL DESIGN INPUT (per `:3-4`), but **not superseded** for its surviving sections. Cross-iteration authority — cited by:
 
-- `restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`, `restart/HANDOFF.md:90`, `restart/locks/14-LOCKS.md` (4 cites from V1 spec layer).
+- `restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`, `restart/HANDOFF.md:90`, `restart/locks/LOCKS.md` (4 cites from V1 spec layer).
 - `restart/skinny/INDEX.md:167` (skinny gateway).
 - `GRAND-SYNTHESIS-SK-V5.md`, all 6 `V9.5-PSI-EXCAVATION/` files, 6 `SK-V5-COHORT/` files, 2 `SK-V6-COHORT/` files, 2 `SK-V7-COHORT/` files (16 cites from audit).
 
@@ -225,7 +225,7 @@ Recommendations:
 
 - SK-V5 master suite (5 files, 2,460 LOC): retire to `archive/sk-v5/`. Substrate-history value preserved.
 - SK-V6 master suite (5 files, 2,336 LOC): retire to `archive/sk-v6/`. Two-GRAND-SYNTHESIS pathology fixed at archive-time by renaming the 1204-LOC Wave 1 doc to `GRAND-SYNTHESIS-SK-V6-WAVE1.md` and promoting `-ASMJSON-DAV1D` to the singular `GRAND-SYNTHESIS-SK-V6.md` (per its own self-declared role).
-- SK-V7 master suite: keep top-level. Add `IMPLEMENTATION-AGENT-PROMPT-SK-V7.md` to close the missing-AGENT-PROMPT gap (orchestrator dispatch chain currently routes through `restart/prompts/PASS-ALPHA.md` + `restart/prompts/SKINNY-PASSES.md` per `HANDOFF-SK-V7.md:9-11`, which may make a dedicated AGENT-PROMPT redundant — confirm before authoring).
+- SK-V7 master suite: keep top-level. Add `IMPLEMENTATION-AGENT-PROMPT-SK-V7.md` to close the missing-AGENT-PROMPT gap (orchestrator dispatch chain currently routes through `restart/prompts/pass-contracts/PASS-ALPHA.md` + `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md` per `HANDOFF-SK-V7.md:9-11`, which may make a dedicated AGENT-PROMPT redundant — confirm before authoring).
 - NUKE-PLAN convention: SK-V6 and SK-V7 absorbed nuke decisions into REDRESS instead of standalone files. Do not back-author NUKE-PLAN-SK-V7; the REDRESS ledger is the equivalent.
 
 ---
@@ -264,7 +264,7 @@ This is a minimal lift: only 3 top-level renames are required at archive-time (V
 ## §11. Proposed Restructure
 
 ```
-restart/skinny/audit/
+restart/skinny/tranches/
 ├── current/                                        (SK-V7, ~8,800 LOC)
 │   ├── GRAND-SYNTHESIS-SK-V7.md                    304
 │   ├── IMPLEMENTATION-PACKET-SK-V7.md              437
@@ -318,7 +318,7 @@ Variant rejected: a flat `iterations/sk-v5/`, `iterations/sk-v6/`, `iterations/s
 
 Baseline (BEFORE):
 - 32,844 LOC across 104 files.
-- 5 top-level directories at `restart/skinny/audit/`.
+- 5 top-level directories at `restart/skinny/tranches/`.
 
 Proposed (AFTER):
 - 32,497 LOC across 103 files (single deletion: `IMPLEMENTATION-AGENT-PROMPT-SK-V5.md`, 347 LOC).
@@ -365,7 +365,7 @@ Every move requires a path update in inbound citations. Counts:
 | `restart/HANDOFF.md` | ~10 paths |
 | `restart/MASTER-PLAN.md` | ~3 paths |
 | `restart/ARCHITECTURE.md` | ~2 paths |
-| `restart/locks/14-LOCKS.md` | ~2 paths |
+| `restart/locks/LOCKS.md` | ~2 paths |
 | `skinny/REDRESS.md` | ~30 paths (uncounted; large) |
 | `skinny/RESULTS.md` | ~5 paths |
 | Intra-audit citations | ~150 paths (one-time rewrite) |
@@ -381,7 +381,7 @@ The rewrite must precede the move to keep `git log --follow` history intact: ren
 
 ## §14. Open Questions (Not Addressed In R1)
 
-- Whether `IMPLEMENTATION-AGENT-PROMPT-SK-V7.md` should exist at all, given `HANDOFF-SK-V7.md:7-15` routes via `restart/prompts/PASS-ALPHA.md` + `restart/prompts/SKINNY-PASSES.md`. If those `restart/prompts/` files now serve the AGENT-PROMPT role, the V5/V6 inline prompt pattern is obsolete and the V6 AGENT-PROMPT archives without a V7 successor.
+- Whether `IMPLEMENTATION-AGENT-PROMPT-SK-V7.md` should exist at all, given `HANDOFF-SK-V7.md:7-15` routes via `restart/prompts/pass-contracts/PASS-ALPHA.md` + `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`. If those `restart/prompts/` files now serve the AGENT-PROMPT role, the V5/V6 inline prompt pattern is obsolete and the V6 AGENT-PROMPT archives without a V7 successor.
 - Whether `archive/sk-v6/GRAND-SYNTHESIS-SK-V6-WAVE1.md` (1204 LOC) should be partially redacted to its load-bearing diagnoses (3.A retained string-wrapper cluster, etc.) and the rest archived as raw cohort excerpts. R1 keeps it whole; an R2 pass could measure how much of the 1204 LOC is verbatim from `skv6-R*` reports.
 - Whether `SOTA-BEAT-DESIGN.md:5-7` "still-live material" should be migrated into a current SK-V7 design doc, leaving `SOTA-BEAT-DESIGN.md` itself as a pure historical record. R1 keeps it cross-iteration in `design/`.
 

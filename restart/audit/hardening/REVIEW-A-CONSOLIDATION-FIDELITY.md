@@ -8,7 +8,7 @@
 | Audit target | `restart/audit/hardening/HARDENING-CONSOLIDATED.md` (619 lines) |
 | Audit target commit | `1cf6dac0` |
 | Sources audited (in order) | `restart/audit/hardening/HARDENING-PASS-1.md` (206 lines, commit `8389c077`); `restart/audit/hardening/HARDENING-PASS-2.md` (294 lines, commit `303b91a9`); `restart/audit/hardening/HARDENING-PASS-3.md` (219 lines, commit `c839de98`); `restart/audit/hardening/HARDENING-MASTER-PLAN.md` (227 lines, commit `ac7fa8e2`) |
-| Consolidation contract | `restart/prompts/HARDENING-ORCHESTRATOR.md:79-119` |
+| Consolidation contract | `restart/prompts/sub-orchestrators/HARDENING.md:79-119` |
 | Lanes applied | 5 fidelity lanes — Verdict tally / Conflict authenticity / Punch-list provenance / Floor completeness / Re-draft thresholds |
 | Posture | Calibrated; archaic-permissive; no metalanguage; path:line citations; tables liberal |
 | Scope boundary | Touch only `restart/audit/hardening/REVIEW-A-CONSOLIDATION-FIDELITY.md` |

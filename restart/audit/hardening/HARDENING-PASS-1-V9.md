@@ -44,7 +44,7 @@ The V8.1 READY verdict holds on the main substrate shape: tape/direct union, two
 | `restart/audit/pass-1-substrate/PASS-1.md:207` | `Rust/WASM parity` says Rust and WASM V1 share BIR semantics and points to H/J parity gates. | It turns a V2 carry into a V1 hand-off. |
 | `restart/audit/pass-1-substrate/PASS-1.md:290` | "all backends" applies to Rust V1, WASM V1, TS scaffold. | It contradicts the active-backend matrix. |
 
-The governing sources are explicit: Lock 5 says "TS and WASM backends defer post-V1; V1 ships the Rust impl only" (`restart/locks/14-LOCKS.md:42`), Lock 8 says WASM SOTA defers post-V1 (`restart/locks/14-LOCKS.md:48`), and ARCH §7.5 says V1 ships `RustBackend: Backend` only while V2 adds `WasmBackend` and `TsBackend` (`restart/ARCHITECTURE.md:1090-1097`). V8.1 missed this by affirming the Rust+WASM table as READY (`restart/audit/hardening/HARDENING-PASS-1-V8.1.md:81`).
+The governing sources are explicit: Lock 5 says "TS and WASM backends defer post-V1; V1 ships the Rust impl only" (`restart/locks/LOCKS.md:42`), Lock 8 says WASM SOTA defers post-V1 (`restart/locks/LOCKS.md:48`), and ARCH §7.5 says V1 ships `RustBackend: Backend` only while V2 adds `WasmBackend` and `TsBackend` (`restart/ARCHITECTURE.md:1090-1097`). V8.1 missed this by affirming the Rust+WASM table as READY (`restart/audit/hardening/HARDENING-PASS-1-V8.1.md:81`).
 
 Verdict: **REINVENT**. Keep backend-neutral BIR obligations, but express realization as Rust V1 only plus V2 Wasm/Ts rows.
 
@@ -56,7 +56,7 @@ Verdict: **REINVENT**. Retired dispatch prompts may be archaeology, but current 
 
 ### V9-P3 — Closure capture diagnostic is assigned to the wrong layer
 
-PASS-1 says rustc rejects move-captures from generated `&'i Tape<'i>` references and frames `BBNF-CLOSURE-CAPTURE-BY-MOVE` as a parse-time diagnostic (`restart/audit/pass-1-substrate/PASS-1.md:87`). §6 repeats that capture-by-move is a parse error (`restart/audit/pass-1-substrate/PASS-1.md:263`). Lock 4 only requires that closures capture by `&'i` and capture-by-move is forbidden in V1 (`restart/locks/14-LOCKS.md:40`); Lens J specifically asks the audit to use Rust's borrow checker where it truly applies and avoid redundant lifetime machinery (`restart/prompts/HARDENING.md:164-175`).
+PASS-1 says rustc rejects move-captures from generated `&'i Tape<'i>` references and frames `BBNF-CLOSURE-CAPTURE-BY-MOVE` as a parse-time diagnostic (`restart/audit/pass-1-substrate/PASS-1.md:87`). §6 repeats that capture-by-move is a parse error (`restart/audit/pass-1-substrate/PASS-1.md:263`). Lock 4 only requires that closures capture by `&'i` and capture-by-move is forbidden in V1 (`restart/locks/LOCKS.md:40`); Lens J specifically asks the audit to use Rust's borrow checker where it truly applies and avoid redundant lifetime machinery (`restart/prompts/audit-specs/HARDENING-LENS-SET.md:164-175`).
 
 The BBNF V1 syntax has no `move` capture marker in `LambdaExpr` (`restart/audit/pass-1-substrate/PASS-1.md:241-255`), so parse-time rejection is not the right contract unless a future `move` keyword is added. The useful V1 contract is: closures lower as borrowed environments; `passes::layout` / closure environment validation rejects any non-borrow capture mode before emission; rustc remains the final generated-source correctness gate.
 
@@ -64,7 +64,7 @@ Verdict: **REINVENT**. Keep the diagnostic, move it out of parser semantics, and
 
 ### V9-X1 — ARCH §8.1 contradicts PASS-1's six-directive grammar
 
-PASS-1's grammar production is lock-correct: `Directive = ImportDecl | HostFn | ErrorDecl | LayoutDecl | PrettyDecl | TokenDecl ;` (`restart/audit/pass-1-substrate/PASS-1.md:214-223`), matching Lock 10 (`restart/locks/14-LOCKS.md:52`). ARCH §13.1 also enforces six directives (`restart/ARCHITECTURE.md:1666-1669`). But ARCH §8.1 currently writes `Directive ::= ImportDecl | HostFn | RuleDecl | LayoutDecl | ErrorDecl | PrettyDecl | TokenDecl` (`restart/ARCHITECTURE.md:1167-1175`) and then calls it the "six-directive" canon (`restart/ARCHITECTURE.md:1221-1236`).
+PASS-1's grammar production is lock-correct: `Directive = ImportDecl | HostFn | ErrorDecl | LayoutDecl | PrettyDecl | TokenDecl ;` (`restart/audit/pass-1-substrate/PASS-1.md:214-223`), matching Lock 10 (`restart/locks/LOCKS.md:52`). ARCH §13.1 also enforces six directives (`restart/ARCHITECTURE.md:1666-1669`). But ARCH §8.1 currently writes `Directive ::= ImportDecl | HostFn | RuleDecl | LayoutDecl | ErrorDecl | PrettyDecl | TokenDecl` (`restart/ARCHITECTURE.md:1167-1175`) and then calls it the "six-directive" canon (`restart/ARCHITECTURE.md:1221-1236`).
 
 Verdict: **CROSS-DOC DRIFT, PASS-1 KEEP**. PASS-1 should not change for this item; the MASTER-PLAN / ARCH hardener should route an ARCH-only edit: `Grammar ::= { Directive | RuleDecl }` and `Directive ::= ImportDecl | HostFn | LayoutDecl | ErrorDecl | PrettyDecl | TokenDecl`.
 
@@ -83,7 +83,7 @@ Verdict: **CROSS-DOC DRIFT, PASS-1 KEEP**. PASS-1 should not change for this ite
 | # | Target | Surgery | Source verdict | Owner | Scope |
 |---:|---|---|---|---|---|
 | P1 | `restart/audit/pass-1-substrate/PASS-1.md:61-71`, `:207`, `:290` | Replace WASM V1 language with "Rust V1 active; V2 `WasmBackend: Backend` and `TsBackend: Backend` consume the same BIR without alphabet changes." Remove the WASM V1 obligation column or retitle it V2-reference / deferred-backend obligation. Change `Rust/WASM parity` to V2 carry. Change "all backends" applies-to cell to `RustBackend V1; WasmBackend/TsBackend V2`. | REINVENT | PASS-1 amendment | Lock 5, Lock 8, Lane 1, Lens I/K |
-| P2 | `restart/audit/pass-1-substrate/PASS-1.md:16`, `:328` | Remove live citations to `restart/prompts/PASS-1-SUBSTRATE.md`. For rewrite-mode provenance, cite live README rejection plus agent-5 archaeology (`restart/audit/pass-1-substrate/agent-5-grammar-extension-designer.md:39-42`) or omit the prompt clause. For citation discipline, cite `restart/prompts/HARDENING.md:230-246`. | REINVENT | PASS-1 amendment | Lane 3, Lens H |
+| P2 | `restart/audit/pass-1-substrate/PASS-1.md:16`, `:328` | Remove live citations to `restart/prompts/PASS-1-SUBSTRATE.md`. For rewrite-mode provenance, cite live README rejection plus agent-5 archaeology (`restart/audit/pass-1-substrate/agent-5-grammar-extension-designer.md:39-42`) or omit the prompt clause. For citation discipline, cite `restart/prompts/audit-specs/HARDENING-LENS-SET.md:230-246`. | REINVENT | PASS-1 amendment | Lane 3, Lens H |
 | P3 | `restart/audit/pass-1-substrate/PASS-1.md:87`, `:131`, `:263` | Rephrase `BBNF-CLOSURE-CAPTURE-BY-MOVE` as a `passes::layout` / closure-environment validation diagnostic emitted before Rust source emission. Remove "parse-time" / "parse error" unless a `move` token is added to the grammar. Replace "rustc rejects move-captures from such references" with "rustc remains the final borrow/lifetime correctness gate for generated borrowed environments." | REINVENT | PASS-1 amendment | Lane 7, Lens J |
 | X1 | `restart/ARCHITECTURE.md:1167-1175` | ARCH-only: move `RuleDecl` out of `Directive` so §8.1 matches Lock 10 and PASS-1. | CROSS-DOC | MASTER-PLAN / ARCH hardener | Cross-target drift |
 

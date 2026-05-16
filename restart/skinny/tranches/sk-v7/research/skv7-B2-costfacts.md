@@ -7,7 +7,7 @@ Scope: design-only artifact. No tracked file modified.
 ## Problem Statement
 
 The CostFacts side-table is the single largest generalization gap in SK-V7.
-A6 confirmed (`restart/skinny/audit/SK-V7-COHORT/skv7-A6-ledger-generalization.md`):
+A6 confirmed (`restart/skinny/tranches/sk-v7/research/skv7-A6-ledger-generalization.md`):
 
 - `skinny/crates/passes/src/lib.rs:33-39` writes `layout_facts.backend_shape`
   directly from a single decision tree, with no rejected/dominated alternative

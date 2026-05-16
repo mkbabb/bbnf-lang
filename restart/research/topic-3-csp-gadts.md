@@ -19,7 +19,7 @@ Decision: CSP-backed unification must be split into HM(X)-style constraint gener
 |---|---|---|
 | R1 | The greenfield internals are the apotheosis: CSP, e-graph, shape mining, cost model, bidirectional inference, and grammar-derived everything. | `restart/README.md:5` |
 | R2 | The generic substrate includes `csp-solver`, `egraph`, `parse-that`, and other sister crates without the public `bbnf-` prefix. | `restart/README.md:31`-`restart/README.md:60` |
-| R3 | Optimization sister crates compose by output-piping; CSP and egraph are siblings, not a unified graph. | `restart/README.md:92`; `restart/locks/14-LOCKS.md:40` |
+| R3 | Optimization sister crates compose by output-piping; CSP and egraph are siblings, not a unified graph. | `restart/README.md:92`; `restart/locks/LOCKS.md:40` |
 | R4 | Grammar IR is typed and cost-annotated through side tables; optimized IR is not a third tree. | `restart/README.md:113`-`restart/README.md:114` |
 | R5 | `@host fn` bodies use lexical scoping and propagate type variables through bidirectional inference. | `restart/README.md:145`-`restart/README.md:156` |
 | R6 | Multi-function chains type projections; CSP backs constraint collection. | `restart/README.md:159`-`restart/README.md:162` |
@@ -32,9 +32,9 @@ Decision: CSP-backed unification must be split into HM(X)-style constraint gener
 | R13 | Generic rules in §7 repeat `Object<V>` and say CSP propagates type variables and codegen monomorphizes per call site. | `restart/README.md:264` |
 | R14 | Subtyping is described as full HM with subsumption; CSP relaxes constraints; coercion is constraint relaxation. | `restart/README.md:266` |
 | R15 | Lookbehind's left operand is a context constraint, not a value capture. | `restart/README.md:268` |
-| R16 | Lock 4 forbids a unified hypergraph and requires per-domain orthogonal optimization by output-piping. | `restart/locks/14-LOCKS.md:40` |
-| R17 | Lock 10 in the lock file is Pratt + SIMD auto-detection, with no `@pratt` or `@simd` directives. | `restart/locks/14-LOCKS.md:52` |
-| R18 | Lock 14 forbids grammar-specific code in generic crates and admits new grammars through grammar source, metadata, and rare fenced declarations. | `restart/locks/14-LOCKS.md:60` |
+| R16 | Lock 4 forbids a unified hypergraph and requires per-domain orthogonal optimization by output-piping. | `restart/locks/LOCKS.md:40` |
+| R17 | Lock 10 in the lock file is Pratt + SIMD auto-detection, with no `@pratt` or `@simd` directives. | `restart/locks/LOCKS.md:52` |
+| R18 | Lock 14 forbids grammar-specific code in generic crates and admits new grammars through grammar source, metadata, and rare fenced declarations. | `restart/locks/LOCKS.md:60` |
 | R19 | Architecture says the csp-solver is a generic sister crate used by type inference, layout choices, and extraction facts. | `restart/ARCHITECTURE.md:60` |
 | R20 | Architecture keeps `egraph` and `csp-solver` generic, publishable or path-dep incubated without grammar concepts. | `restart/ARCHITECTURE.md:176` |
 | R21 | Pipeline order currently runs type inference, shape mining, recognizer mining, egraph rewrite, CSP solve, cost extraction, Backend IR, lowerers, and regen equality. | `restart/ARCHITECTURE.md:768`-`restart/ARCHITECTURE.md:784` |
@@ -68,7 +68,7 @@ Decision: CSP-backed unification must be split into HM(X)-style constraint gener
 4. README §7 uses the riskier phrase "CSP-backed unification" (`restart/README.md:260`), which can be misread as a global constraint-programming replacement for unification.
 5. Plain generic rules are not a GADT feature. `Object<V>` is a parametric rule scheme; under the current grammar sketch it is a `Rule` with `GenericParams` and a `Ref` with `TypeArgs` (`restart/ARCHITECTURE.md:824`-`restart/ARCHITECTURE.md:855`, `restart/ARCHITECTURE.md:1067`-`restart/ARCHITECTURE.md:1084`).
 6. GADT pressure appears only if BBNF introduces branch-local equality assumptions, existential rule payloads, indexed return refinements, or host constructors that refine a type variable inside a branch. The restart gestures at GHC's `OutsideIn(X)` in README §7 (`restart/README.md:260`) but does not yet define that local-equality surface.
-7. The research index's Lock 10 mapping is inconsistent with the lock file. Lock 10 is Pratt + SIMD auto-detection (`restart/locks/14-LOCKS.md:52`), not generics. Generics live in README §5/§7 and Architecture §8, with Lock 14 as the closest generality lock.
+7. The research index's Lock 10 mapping is inconsistent with the lock file. Lock 10 is Pratt + SIMD auto-detection (`restart/locks/LOCKS.md:52`), not generics. Generics live in README §5/§7 and Architecture §8, with Lock 14 as the closest generality lock.
 
 ## §2 — SOTA literature deep-dive
 
@@ -221,7 +221,7 @@ Verdict: convergent. The restart should keep type-solver evidence internally ric
 
 ### C6 — Grammar-authoritative genericity matches ADT reconstruction pressure
 
-Restart side: generic crates must not hardcode grammar names (`restart/locks/14-LOCKS.md:60`); onboarding is grammar source plus metadata, with generated output not counted as a third authoring surface (`restart/audit/pass-1-substrate/PASS-1.md:224`-`restart/audit/pass-1-substrate/PASS-1.md:232`).
+Restart side: generic crates must not hardcode grammar names (`restart/locks/LOCKS.md:60`); onboarding is grammar source plus metadata, with generated output not counted as a third authoring surface (`restart/audit/pass-1-substrate/PASS-1.md:224`-`restart/audit/pass-1-substrate/PASS-1.md:232`).
 
 SOTA side: Schrijvers and Bruynooghe reconstruct polymorphic ADT definitions and expression types through constraints rather than hand-authored declarations (S4).
 
@@ -257,7 +257,7 @@ Reason: this is an unconsidered divergence. BBNF generics do not by themselves j
 
 Restart side: Topic 3 labels Lock 10 as BBNF V1 generics `Object<V>` (`restart/research/INDEX.md:68`-`restart/research/INDEX.md:70`).
 
-Lock side: Lock 10 actually says Pratt and SIMD are auto-detected and no `@pratt`/`@simd` directives exist (`restart/locks/14-LOCKS.md:52`).
+Lock side: Lock 10 actually says Pratt and SIMD are auto-detected and no `@pratt`/`@simd` directives exist (`restart/locks/LOCKS.md:52`).
 
 SOTA side: no primary type-system source makes Pratt/SIMD auto-detection relevant to `Object<V>`.
 
@@ -377,7 +377,7 @@ Current text: "Lock 4 + Lock 10 (BBNF V1 generics: `Object<V>`)."
 
 Proposed text: "Lock 4 + Lock 14, plus README/Architecture BBNF V1 generic-rule surface (`Object<V>`). Lock 10 is relevant only where recognizer/SIMD finite choices interact with type/layout CSP."
 
-Rationale: the lock file's Lock 10 is Pratt/SIMD auto-detection (`restart/locks/14-LOCKS.md:52`), not generic rules. This is a restart-internal provenance fault.
+Rationale: the lock file's Lock 10 is Pratt/SIMD auto-detection (`restart/locks/LOCKS.md:52`), not generic rules. This is a restart-internal provenance fault.
 
 ## §6 — Adversarial findings
 
@@ -427,7 +427,7 @@ Severity: high for future GADT surface; medium for current V1 if no such surface
 
 Contradicted lock or settled claim: Topic 3 anchor row says Lock 10 is BBNF V1 generics `Object<V>` (`restart/research/INDEX.md:68`-`restart/research/INDEX.md:70`).
 
-SOTA evidence: not a SOTA contradiction; restart-internal evidence is enough. Lock 10 is Pratt + SIMD auto-detection (`restart/locks/14-LOCKS.md:52`). Lock 14 is the genericity/overfitting lock (`restart/locks/14-LOCKS.md:60`).
+SOTA evidence: not a SOTA contradiction; restart-internal evidence is enough. Lock 10 is Pratt + SIMD auto-detection (`restart/locks/LOCKS.md:52`). Lock 14 is the genericity/overfitting lock (`restart/locks/LOCKS.md:60`).
 
 Finding: the research index's anchor is stale or miscoded. It routes the generic-rule question to the recognizer lock.
 

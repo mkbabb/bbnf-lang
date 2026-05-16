@@ -195,7 +195,7 @@ a prerequisite for any Track 1 / Track 2 divergence measurement.
 
 ## 6. Bench-private direct parser status
 
-Per SK-V4 (restart/skinny/audit/SOTA-BEAT-DESIGN, BackendShape lock 1 +
+Per SK-V4 (restart/skinny/tranches/SOTA-BEAT-DESIGN, BackendShape lock 1 +
 ARCHITECTURE.md:944), `SinkOnly` is one of the five `BackendShape`
 variants and is the *intended* lowering for `BIR::DirectBuild` on rules
 with a struct-like shape. The codegen crate has **no `SinkOnly` emitter

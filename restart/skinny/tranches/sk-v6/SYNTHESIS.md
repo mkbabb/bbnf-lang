@@ -8,7 +8,7 @@ skinny and V1 authority set. It supplements, rather than replaces,
 file is the current synthesis for beating same-plane JSON SOTA while preserving
 grammar generality.
 
-Inputs archived in `restart/skinny/audit/SK-V6-COHORT/`:
+Inputs archived in `restart/skinny/tranches/sk-v6/research/`:
 
 - A1 `skv6-A1-asmjson-generalization.md`
 - A2 `skv6-A2-dav1d-asm-process.md`

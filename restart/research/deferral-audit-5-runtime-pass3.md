@@ -20,7 +20,7 @@ Corpus consulted, in priority order:
   friction).
 - `restart/audit/hardening/HARDENING-CONSOLIDATED-V6.md` §5 (residue ledger),
   §8 (topic ownership matrix), §9 (verification checklist).
-- `restart/locks/14-LOCKS.md` Locks 7 (path split), 11 (incubating sister
+- `restart/locks/LOCKS.md` Locks 7 (path split), 11 (incubating sister
   crates), 12 (ser/gorgeous archive).
 
 Verdict legend used in §2-§5 tables:
@@ -132,7 +132,7 @@ search is unambiguous:
   (`restart/audit/pass-3-runtime/PASS-3.md:16`,
   `restart/audit/hardening/HARDENING-CONSOLIDATED-V6.md:151`).
 - `gorgeous` (the historic pretty-printer crate) is **archive-only** before
-  A.W0 per Lock 12 (`restart/locks/14-LOCKS.md:56`); MASTER-PLAN A.W0
+  A.W0 per Lock 12 (`restart/locks/LOCKS.md:56`); MASTER-PLAN A.W0
   enforces archive (`restart/MASTER-PLAN.md:244`).
 - `css_pretty` is a grammar — not a formatting engine. It generates
   `CssPrettyRoot` over `&'i Tape<'i>` like every other grammar
@@ -148,7 +148,7 @@ search is unambiguous:
 | Item | Path:line | Status | Disposition |
 |---|---|---|---|
 | `@pretty` as a directive | absent | Not committed | DEFER-OK / silent in corpus |
-| `gorgeous`-like pretty-print engine in V1 runtime | `restart/locks/14-LOCKS.md:56` | Archived before A.W0 | DEFER-OK |
+| `gorgeous`-like pretty-print engine in V1 runtime | `restart/locks/LOCKS.md:56` | Archived before A.W0 | DEFER-OK |
 | `@layout` as the formatting surface | `restart/ARCHITECTURE.md:1159` | Committed | V1-READY |
 | Generated formatter via `@layout` + grammar | `restart/audit/pass-3-runtime/PASS-3.md:441` | `BBNF-LAYOUT001` warns when unused | V1-READY |
 | `bbnf/self_host/internal` parse + format roundtrip | `restart/audit/pass-3-runtime/PASS-3.md:498` | <= 100ms internal gate | V1-READY |

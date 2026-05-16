@@ -6,7 +6,7 @@ Scope: read-only; no repo files edited, staged, or committed.
 
 ## Read Set
 
-- `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md`, especially Candidate 3.
+- `restart/skinny/tranches/sk-v6/SYNTHESIS-WAVE-1-PLAN.md`, especially Candidate 3.
 - `skinny/REDRESS.md` entries 54, 55, and 57.
 - Generated retained/direct runtime and sink code:
   - `skinny/crates/runtime/src/grammars/json/generated.rs`

@@ -28,10 +28,10 @@ Shared authority read:
 | Source | Use |
 |---|---|
 | `restart/research/INDEX.md` §2/§3 | Output contract, topic anchors, source-catalogue drift. |
-| `restart/prompts/RESEARCH-FOLD-ORCHESTRATOR.md` Phase 2 | Fold/escalation boundary: §5/§7 fold, §6 escalates only on lock contradiction. |
-| `restart/prompts/AMENDMENT-DISPATCH.md` §1 | Verify-then-patch discipline. |
+| `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` Phase 2 | Fold/escalation boundary: §5/§7 fold, §6 escalates only on lock contradiction. |
+| `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` §1 | Verify-then-patch discipline. |
 | `restart/README.md` and §13 | Gestalt, locks summary, voice discipline, out-of-scope README edits. |
-| `restart/locks/14-LOCKS.md` | Actual lock text, especially Lock 1, Lock 4, Lock 10, Lock 14. |
+| `restart/locks/LOCKS.md` | Actual lock text, especially Lock 1, Lock 4, Lock 10, Lock 14. |
 | PASS-1/PASS-2/PASS-3 cited rows | Scope classification for PASS-owned edits. |
 | `HARDENING-MASTER-PLAN-V5.md`, `HARDENING-CONSOLIDATED-V5.md`, `HARDENING-SYNTHESIS-V5.1.md` | V5/V5.1 posture, current trio status, no-redraft baseline. |
 

@@ -291,11 +291,11 @@ Local BBNF/SK docs:
 
 - `/Users/mkbabb/Programming/bbnf-lang/skinny/REDRESS.md`
 - `/Users/mkbabb/Programming/bbnf-lang/skinny/RESULTS.md`
-- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/audit/GRAND-SYNTHESIS-SK-V5.md`
-- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/audit/SK-V6-COHORT/skv6-R3d-direct-generality.md`
-- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/audit/SK-V6-COHORT/skv6-R5-sidecar-refresh.md`
-- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/audit/SK-V6-COHORT/skv6-schema-C-redress-gates.md`
-- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/audit/SK-V6-COHORT/skv6-R1g-real-typed-struct-workload.md`
+- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v5/SYNTHESIS.md`
+- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v6/research/skv6-R3d-direct-generality.md`
+- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v6/research/skv6-R5-sidecar-refresh.md`
+- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v6/research/skv6-schema-C-redress-gates.md`
+- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v6/research/skv6-R1g-real-typed-struct-workload.md`
 
 asmjson primary sources:
 

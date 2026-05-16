@@ -1,6 +1,6 @@
 # HARDENING-PASS-2-V9.2
 
-V9.2 audit for `target=PASS-2`, cycle `V9.2`, against the lazy-tape substrate amendment proposed at `restart/skinny/audit/LAZY-TAPE-DESIGN.md`. Prior verification `restart/audit/hardening/HARDENING-PASS-2-V9.1.md` closed at AMENDMENT-REQUIRED-NARROW for spelling/citation residues; this report opens a new amendment surface — the dual-mode (Eager | Lazy) tape substrate. Scope: `restart/audit/pass-2-codegen/PASS-2.md` and codegen-adjacent surfaces PASS-2 cites. The hardening lens is V1 lens contract A-K with foci on Lane 1 (Lock 5 + Lock 6 + Lock 14), Lane 3 (BIR alphabet cohesion), Lens I (contrivance), Lens J (host-language leverage), and Lens N (graduation mechanicality).
+V9.2 audit for `target=PASS-2`, cycle `V9.2`, against the lazy-tape substrate amendment proposed at `restart/skinny/tranches/LAZY-TAPE-DESIGN.md`. Prior verification `restart/audit/hardening/HARDENING-PASS-2-V9.1.md` closed at AMENDMENT-REQUIRED-NARROW for spelling/citation residues; this report opens a new amendment surface — the dual-mode (Eager | Lazy) tape substrate. Scope: `restart/audit/pass-2-codegen/PASS-2.md` and codegen-adjacent surfaces PASS-2 cites. The hardening lens is V1 lens contract A-K with foci on Lane 1 (Lock 5 + Lock 6 + Lock 14), Lane 3 (BIR alphabet cohesion), Lens I (contrivance), Lens J (host-language leverage), and Lens N (graduation mechanicality).
 
 This report does not amend the target documents.
 
@@ -10,14 +10,14 @@ This report does not amend the target documents.
 
 | Item | Value |
 |---|---|
-| Amendment under audit | `restart/skinny/audit/LAZY-TAPE-DESIGN.md` (846 lines) |
+| Amendment under audit | `restart/skinny/tranches/LAZY-TAPE-DESIGN.md` (846 lines) |
 | Target codegen surface | `restart/audit/pass-2-codegen/PASS-2.md` (633 lines) |
 | Adjacent V1 surfaces inspected | `restart/ARCHITECTURE.md` §7.2 (lines 900-1008), §7.5 (lines 1096-1162), §8 grammar surface |
 | Adjacent skinny surfaces | `restart/skinny/SUBSTRATE.md`, `restart/skinny/COMPILER.md`, `restart/skinny/BENCH.md` (cited; not re-audited here) |
-| Locks consulted | `restart/locks/14-LOCKS.md` Locks 1, 5, 6, 9, 13, 14 |
+| Locks consulted | `restart/locks/LOCKS.md` Locks 1, 5, 6, 9, 13, 14 |
 | Prior PASS-2 hardening | `restart/audit/hardening/HARDENING-PASS-2-V9.1.md` |
 | Lens set | V1 lens contract A-K, focused on dual-mode admissibility for PASS-2 codegen-side |
-| Empirical premise | SK-V2 outcome G; eager-tape ~12.5K Mbps geomean vs sonic-rs ~21K Mbps; `restart/skinny/audit/LAZY-TAPE-DESIGN.md:9-19` |
+| Empirical premise | SK-V2 outcome G; eager-tape ~12.5K Mbps geomean vs sonic-rs ~21K Mbps; `restart/skinny/tranches/LAZY-TAPE-DESIGN.md:9-19` |
 
 The design proposes per-grammar `tape_mode ∈ {eager, lazy}` selected from workspace metadata. Lazy mode treats the structural-offset array as the tape, deletes `TapeToken` for JSON, lowers `TapeEmit` to a no-op, and computes node kind from `source[offsets[cursor]]`. Eager mode is preserved verbatim for CSS L4 / BBNF-self / Sheets.
 
@@ -47,7 +47,7 @@ The proposal is admissible in spirit. The audit below scrutinizes whether PASS-2
 
 ### 3.1 Lock 1 (Tape is the substrate; no parallel substrate)
 
-Lock 1 verbatim (`restart/locks/14-LOCKS.md:34`): "Tape is the greenfield's contiguous parsed-token-stream-with-payload-arena, unioned with direct-to-struct typed values that borrow into it (`&'i Tape<'i>` + index). [...] Plans that resurrect parallel substrates [...] or implement tape with consumer-later sequencing are faults."
+Lock 1 verbatim (`restart/locks/LOCKS.md:34`): "Tape is the greenfield's contiguous parsed-token-stream-with-payload-arena, unioned with direct-to-struct typed values that borrow into it (`&'i Tape<'i>` + index). [...] Plans that resurrect parallel substrates [...] or implement tape with consumer-later sequencing are faults."
 
 The lazy proposal changes the *content* of the tape — from `Vec<TapeToken>` to `Box<[u32]>` of structural offsets — while preserving the *shape* (a contiguous parsed buffer owned by `Tape<'input>`, borrowed by typed views via `&'doc Tape<'input>` + cursor). The "parsed-token-stream-with-payload-arena" phrase reads as a constraint on the eager-mode shape; the spirit of Lock 1 is the no-parallel-substrate clause, not the literal "token stream" word.
 
@@ -64,7 +64,7 @@ The amendment text proposed in LAZY-TAPE-DESIGN §4.1 is acceptable in shape but
 
 ### 3.2 Lock 5 (IR + per-backend lower)
 
-Lock 5 verbatim (`restart/locks/14-LOCKS.md:42`): "There is no source-emit-per-backend duplication; there is no trait-based emitter walking grammar directly. The IR is the contract."
+Lock 5 verbatim (`restart/locks/LOCKS.md:42`): "There is no source-emit-per-backend duplication; there is no trait-based emitter walking grammar directly. The IR is the contract."
 
 The lazy design's lowering rule is the load-bearing Lock 5 question: under `tape_mode = "lazy"`, `TapeEmit` lowers to a no-op (LAZY §7.2). The proposal explicitly says (LAZY §4.3, §8.2):
 
@@ -82,7 +82,7 @@ The audit accepts this. The BIR contract is "the lowerer consumes BIR variants a
 
 ### 3.3 Lock 6 (committed source generation)
 
-Lock 6 verbatim (`restart/locks/14-LOCKS.md:44`): "xtask emits committed source artefacts. No proc-macro façade. [...] Build is fast incremental because expansion is not at compile time."
+Lock 6 verbatim (`restart/locks/LOCKS.md:44`): "xtask emits committed source artefacts. No proc-macro façade. [...] Build is fast incremental because expansion is not at compile time."
 
 The lazy design changes the *content* of the generated source under `tape_mode = "lazy"` but does not change its *shape*: emitted files remain `runtime/src/grammars/<g>/{generated.rs, parser.rs, host.rs, view.rs, value.rs, visitor.rs}`. The generated body for `generated.rs` shrinks (LAZY §7.4: -200 LOC) because `state.tape.emit(...)` lines vanish; `view.rs` grows (+100 LOC) because the depth-tracked walkers move there. Net JSON generated LOC drops ~100.
 
@@ -96,7 +96,7 @@ The BIR snapshot gate (PASS-2:268 + `cargo xtask bbnf bir --all --check`) is mor
 
 ### 3.4 Lock 9 (slice-borrow primary)
 
-Lock 9 verbatim (`restart/locks/14-LOCKS.md:50`): "Default API is `&'i str` slices + `Cow<'i, str>` for transformations [...] Bumpalo arena is opt-in via `parse_in(input, &bump)`. Owned (no-borrow) is opt-in via `parse_owned(input)`. The three are surfaces over the same parse implementation; the lifetime parameter is the discriminant."
+Lock 9 verbatim (`restart/locks/LOCKS.md:50`): "Default API is `&'i str` slices + `Cow<'i, str>` for transformations [...] Bumpalo arena is opt-in via `parse_in(input, &bump)`. Owned (no-borrow) is opt-in via `parse_owned(input)`. The three are surfaces over the same parse implementation; the lifetime parameter is the discriminant."
 
 LAZY §6.3 commits: "`ValueRef<'doc, 'input, K>` retains both lifetime parameters. `'doc` borrows `tape` (which owns `offsets` and references `source`); `'input` is the bytes the tape references. In lazy mode the offsets array is owned by the tape, exactly as the tokens array was; the `parse(&str)` collapse to `'doc = 'input = 'a` works identically."
 
@@ -106,7 +106,7 @@ The `parse_in(input, &bump)` arena escape is preserved. LAZY §10.3 binds the `p
 
 ### 3.5 Lock 13 (no god directories)
 
-Lock 13 verbatim (`restart/locks/14-LOCKS.md:58`): "Every directory partitions one cohesive concern; siblings are peer partitions of that concern; sub-modules express finer partitions. [...] Files >500 LOC outside `generated/` are forbidden; directories with >10 immediate children mixing concerns are forbidden."
+Lock 13 verbatim (`restart/locks/LOCKS.md:58`): "Every directory partitions one cohesive concern; siblings are peer partitions of that concern; sub-modules express finer partitions. [...] Files >500 LOC outside `generated/` are forbidden; directories with >10 immediate children mixing concerns are forbidden."
 
 The lazy design adds:
 
@@ -122,7 +122,7 @@ PASS-2:451 binds `runtime/src/*` to ≤10 children. Current children are `tape/`
 
 ### 3.6 Lock 14 (full grammar generalisation; zero overfitting)
 
-Lock 14 verbatim (`restart/locks/14-LOCKS.md:60`): "The substrate carries ZERO grammar-specific code. Every grammar plugs into the fleet via three declarative surfaces only: (a) a grammar source file (`<name>.bbnf`), (b) workspace metadata declaring its strategy (recognisers, host fns, output-dir, pratt eligibility, simd eligibility, etc., per Lock 5's IR contract), and (c) optionally a per-grammar declaration crate. [...] Per-grammar runtime modules [...] are emitted from a single grammar-agnostic generator template that consumes (grammar source + workspace metadata) and produces typed Rust."
+Lock 14 verbatim (`restart/locks/LOCKS.md:60`): "The substrate carries ZERO grammar-specific code. Every grammar plugs into the fleet via three declarative surfaces only: (a) a grammar source file (`<name>.bbnf`), (b) workspace metadata declaring its strategy (recognisers, host fns, output-dir, pratt eligibility, simd eligibility, etc., per Lock 5's IR contract), and (c) optionally a per-grammar declaration crate. [...] Per-grammar runtime modules [...] are emitted from a single grammar-agnostic generator template that consumes (grammar source + workspace metadata) and produces typed Rust."
 
 The lazy design adds `tape_mode = "lazy"` | `"eager"` to workspace metadata (LAZY §8.1). This fits Lock 14's surface (b) — workspace metadata declaring strategy. The `kind_at_cursor` discriminator function is generated per-grammar from the grammar's terminal alphabet (LAZY §5.1); it is not hardcoded in the runtime crate. The same template generates different discriminators for JSON vs hypothetical CSS-scan.
 
@@ -150,7 +150,7 @@ PASS-2's §6 future-grammar smoke at PASS-2:407-417 carries the two-surface inva
 
 | Lock | Verdict | Required punch-list edit |
 |---|---|---|
-| Lock 1 | HONORED — verbatim text needs amendment to admit lazy shape | `restart/locks/14-LOCKS.md:34` + LAZY §4.1 amendment text; PASS-2 §2 commitment 3 (PASS-2:36) absorbs the same amendment by reference |
+| Lock 1 | HONORED — verbatim text needs amendment to admit lazy shape | `restart/locks/LOCKS.md:34` + LAZY §4.1 amendment text; PASS-2 §2 commitment 3 (PASS-2:36) absorbs the same amendment by reference |
 | Lock 5 | HONORED — mode is `LowerContext`/`GrammarMeta` parameter, not BIR | `LowerContext` field add at ARCH §7.5; PASS-2 §2 payload-refiner table row 15 (`TapeEmit`) and row 16 (`DirectBuild`) gain lazy-mode columns |
 | Lock 6 | HONORED — content shift, not shape shift | regen gate + BIR snapshot gate unchanged; verification rerun under post-amendment source |
 | Lock 9 | HONORED — lifetime discriminant unchanged | no edit |
@@ -244,7 +244,7 @@ The walkers are O(subtree size) for `JsonObject::iter().nth(k)` (LAZY §9.3); LA
 
 Lens N asks: does the V1 Rust lowerer template change mechanically, or architecturally?
 
-Lock 5 verbatim (`restart/locks/14-LOCKS.md:42`): "Codegen emits a backend-agnostic typed IR; per-backend lowerers produce native source. [...] The IR is the contract."
+Lock 5 verbatim (`restart/locks/LOCKS.md:42`): "Codegen emits a backend-agnostic typed IR; per-backend lowerers produce native source. [...] The IR is the contract."
 
 The lowerer's contract per ARCH §7.5 (line 1108):
 
@@ -273,7 +273,7 @@ Item 5 is where the architectural decision lives. The proposal places mode-selec
 
 The audit asks: does this violate Lock 14's "single grammar-agnostic generator template"?
 
-Lock 14 (`restart/locks/14-LOCKS.md:60`): "Per-grammar runtime modules (value, document, view, kind) are emitted from a single grammar-agnostic generator template that consumes (grammar source + workspace metadata) and produces typed Rust."
+Lock 14 (`restart/locks/LOCKS.md:60`): "Per-grammar runtime modules (value, document, view, kind) are emitted from a single grammar-agnostic generator template that consumes (grammar source + workspace metadata) and produces typed Rust."
 
 The lazy-mode template is *still single and grammar-agnostic*. It consumes `(grammar source + workspace metadata.tape_mode)` and produces typed Rust. The cfg/feature gate is *generated* from the metadata, not hand-edited. The template's mode-branch is grammar-agnostic; it selects an emission shape from a metadata value, not from a grammar identifier.
 
@@ -312,7 +312,7 @@ pub fn as_str(self) -> Cow<'input, str> {
 }
 ```
 
-This is the lightning-css `Cow<'i, str>` shape ratified at Lock 9 (`restart/locks/14-LOCKS.md:50`). The lazy mode walks string-candidate offsets at view-method-call time and decides borrow-vs-own per call. No eager scan; no per-token escape flag stored upfront.
+This is the lightning-css `Cow<'i, str>` shape ratified at Lock 9 (`restart/locks/LOCKS.md:50`). The lazy mode walks string-candidate offsets at view-method-call time and decides borrow-vs-own per call. No eager scan; no per-token escape flag stored upfront.
 
 The pattern is correct for Rust. `Cow<'input, str>` mediates between zero-copy (the common case for non-escape JSON strings) and owned (escape strings). The host-language leverage is the same as lightning-css; the difference is *when* the decision fires: eager mode (today) computes the flag at parse time and stores it; lazy mode computes it at access time.
 
@@ -560,7 +560,7 @@ These are the surgical edits PASS-2 (and adjacent V1 surfaces PASS-2 owns) must 
 
 ### P2-V9.2-14 — Adjacent V1 surface: Lock 1 amendment text
 
-**Target:** `restart/locks/14-LOCKS.md:34` (Lock 1 verbatim).
+**Target:** `restart/locks/LOCKS.md:34` (Lock 1 verbatim).
 
 **Surgery:** Apply LAZY-TAPE-DESIGN §4.1 amendment text verbatim with one tightening: replace the bullet "Lazy mode (`tape_mode = "lazy"`)" sentence "the typed walker (direct-to-struct projections) IS the materialisation" with "the structural-offset array IS the parsed-stream substrate; typed walkers (direct-to-struct projections) compute kind from `source[offsets[cursor]]` at view-method-call time. The structural-offset array is owned by `Tape<'input>` and sealed at parse close; typed values borrow it via `&'doc Tape<'input>` + cursor exactly as eager-mode typed values borrow the token stream + index."
 

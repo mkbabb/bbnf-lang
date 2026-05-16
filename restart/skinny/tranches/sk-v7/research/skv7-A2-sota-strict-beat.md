@@ -448,12 +448,12 @@ In-tree authoritative inputs:
 
 - `/Users/mkbabb/Programming/bbnf-lang/skinny/RESULTS.md` (lines 1-224)
 - `/Users/mkbabb/Programming/bbnf-lang/skinny/REDRESS.md`
-- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/audit/SK-V5-COHORT/skv5-A1-comparative.md`
-- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/audit/SK-V6-COHORT/skv6-A1-asmjson-generalization.md`
-- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/audit/SK-V6-COHORT/skv6-B1-asmjson-challenge.md`
-- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/audit/GRAND-SYNTHESIS-SK-V6-ASMJSON-DAV1D.md`
-- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/audit/V9.5-PSI-EXCAVATION/06-go-no-go-synthesis.md`
-- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/audit/SOTA-BEAT-DESIGN.md`
+- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v5/research/skv5-A1-comparative.md`
+- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v6/research/skv6-A1-asmjson-generalization.md`
+- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v6/research/skv6-B1-asmjson-challenge.md`
+- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v6/SYNTHESIS.md`
+- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v3.5/research/06-go-no-go-synthesis.md`
+- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/shared/SOTA-BEAT-DESIGN.md`
 - `/Users/mkbabb/Programming/bbnf-lang/skinny/crates/bbnf-simd/ext/x86/bbnf.asm` (lines 31-263)
 - `/Users/mkbabb/Programming/bbnf-lang/skinny/crates/bbnf-simd/ext/x86/x86inc.asm` (vendored dav1d Layer 0)
 

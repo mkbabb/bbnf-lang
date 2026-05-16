@@ -3,7 +3,7 @@
 Status: design, pre-implementation.
 Pre-req: SK-V6 Wave 3 admitted host-output-schema typed DirectBuild
 (commit `ab06ff11`). Twitter + update_center real_typed_struct rows are
-landed; cohort C2 (`restart/skinny/audit/SK-V6-COHORT/skv6-C2-direct-profile.md`)
+landed; cohort C2 (`restart/skinny/tranches/sk-v6/research/skv6-C2-direct-profile.md`)
 nominates `mesh` as the third typed product fixture.
 
 A4 ranking carries this as Top 2: "mesh real_typed_struct DirectBuild
@@ -473,7 +473,7 @@ corpus.
 
 ## 10. Citations
 
-- C2 row 57 (mesh same-plane): `restart/skinny/audit/SK-V6-COHORT/skv6-C2-direct-profile.md:57`
+- C2 row 57 (mesh same-plane): `restart/skinny/tranches/sk-v6/research/skv6-C2-direct-profile.md:57`
 - mesh direct_to_struct row: `skinny/RESULTS.md:35`
 - mesh fixture manifest: `skinny/crates/test-fixtures/corpus/json/manifest.toml:37-41`
 - Twitter/UpdateCenter schema (pattern): `skinny/xtask/src/real_typed_schema.rs:7-181`

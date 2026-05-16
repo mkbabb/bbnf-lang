@@ -4,12 +4,12 @@
 
 | Field | Value |
 |---|---|
-| V9.2 audit subject | `restart/skinny/audit/LAZY-TAPE-DESIGN.md` (845 lines) |
+| V9.2 audit subject | `restart/skinny/tranches/LAZY-TAPE-DESIGN.md` (845 lines) |
 | Target surface | `restart/audit/pass-1-substrate/PASS-1.md` (361 lines, post-V9.1) |
-| Adjacent surfaces audited | `restart/locks/14-LOCKS.md` Lock 1 (line 34); `restart/ARCHITECTURE.md` §7.2 (BIR alphabet, lines 900-1008), §9.1 (Tape invariants, 1388-1410), §12.2 (per-grammar matrix, 1605-1654), §3.1 (parse API, 184-224) |
+| Adjacent surfaces audited | `restart/locks/LOCKS.md` Lock 1 (line 34); `restart/ARCHITECTURE.md` §7.2 (BIR alphabet, lines 900-1008), §9.1 (Tape invariants, 1388-1410), §12.2 (per-grammar matrix, 1605-1654), §3.1 (parse API, 184-224) |
 | Prior cycle | V9.1 `AMENDMENT-REQUIRED-NARROW` (single residue: PASS-1:212 stale-prompt allusion). |
 | V9.2 charge | Audit whether the lazy-tape proposal is coherent with the V1 corpus surfaces PASS-1 owns, and produce the V1 amendment punch list. |
-| Lens set | A-K (V8+ contract per `restart/prompts/HARDENING.md:194`). |
+| Lens set | A-K (V8+ contract per `restart/prompts/audit-specs/HARDENING-LENS-SET.md:194`). |
 | Time consumed | ~35 min of the 40-min cap. |
 
 ## §2 Cohort verdict — 9-lane table
@@ -94,7 +94,7 @@
 ### P5 — REINVENT ARC §12.2 per-grammar authority matrix
 - Target: `restart/ARCHITECTURE.md:1616-1627`
 - Surgery: add `tape_mode` column before "Declaration-crate status"; cell values: 9 grammars `eager`, `json` `lazy`, `yaml` `eager` (default)
-- LOC reprojection footnote: "(post-lazy-mode: projected to ~3,400 per `restart/skinny/audit/LAZY-TAPE-DESIGN.md` §7.4)"
+- LOC reprojection footnote: "(post-lazy-mode: projected to ~3,400 per `restart/skinny/tranches/LAZY-TAPE-DESIGN.md` §7.4)"
 
 ### P6 — REINVENT skinny/WORKSPACE.md (and V1 WORKSPACE equivalent)
 - Target: `restart/skinny/WORKSPACE.md` (and V1 corpus WORKSPACE)

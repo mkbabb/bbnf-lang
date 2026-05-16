@@ -23,11 +23,11 @@ plane, feature mask, API symbol, corpus hash, hardware, build flags, sidecar
 freshness, and primitive/checkasm status. asmjson is an architectural reference
 for x86 `CollapsedStage`, but permissive asmjson rows are flaw probes only.
 The active implementation route is
-`restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V6-SOTA-RECOVERY.md`.
+`restart/skinny/tranches/sk-v6/SPEC.md`.
 
 The full V1 spec lives at `restart/ARCHITECTURE.md` and `restart/MASTER-PLAN.md`.
 SOTA anchors live at `restart/corpora/SOTA.md` and Lock 8
-(`restart/locks/14-LOCKS.md:48`). This document binds the skinny bench harness
+(`restart/locks/LOCKS.md:48`). This document binds the skinny bench harness
 to those anchors without reproducing them.
 
 ---
@@ -154,7 +154,7 @@ A code review checklist sits in §10.6 to guard against Track 2 cheating.
 
 ## §2 Comparator baselines and workload planes
 
-The competitor set is fixed by Lock 8 (`restart/locks/14-LOCKS.md:48`) and
+The competitor set is fixed by Lock 8 (`restart/locks/LOCKS.md:48`) and
 extended by the 2026-05-12 SOTA-BEAT research packet. Skinny pins the JSON-line
 subset only, but reports two planes:
 
@@ -638,8 +638,8 @@ threshold matrix runs.
 
 ### 5.1.1 Strictness disclosure columns and schema v3 (SK-V6)
 
-Per `restart/skinny/audit/SK-V5-COHORT/skv5-B3-native-sidecars.md` and
-`restart/skinny/audit/GRAND-SYNTHESIS-SK-V5.md` §4, the current
+Per `restart/skinny/tranches/sk-v5/research/skv5-B3-native-sidecars.md` and
+`restart/skinny/tranches/sk-v5/SYNTHESIS.md` §4, the current
 `skinny/RESULTS.md` reads the N-direct verdict as a pure throughput delta
 against sonic-rs / simdjson / yyjson / asmjson. It is partly a contract delta:
 asmjson SWAR is permissive (accepts `0x00..0x1F` as whitespace, passes
@@ -648,7 +648,7 @@ UTF-8 validation at the scan stage (strict only at view materialization);
 RapidJSON default flags do not validate UTF-8. Comparing strict-bbnf to
 permissive-asmjson without disclosure misreads the gate. Four additional
 columns are required on every bench row so the existing rows can be honestly
-compared. Authority: `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md`
+compared. Authority: `restart/skinny/tranches/sk-v5/SPEC.md`
 §2.2.
 
 | Column | Domain | Meaning |
@@ -802,7 +802,7 @@ Notation:
 
 ### 6.1.1 G-fusion-quality two-pathology-class taxonomy (Wave 2 Agent 2 finding)
 
-The current expanded-gate misses split into two diagnostic pathology classes within `G-fusion-quality`. Each class prescribes a distinct NEON kernel fix; the classes are diagnostic sub-classes of the broader `G-fusion-quality` outcome and route to the SOTA-BEAT implementation packet (`restart/skinny/audit/SOTA-BEAT-DESIGN.md` §6 falsifiability matrix) without reopening Lock 1.
+The current expanded-gate misses split into two diagnostic pathology classes within `G-fusion-quality`. Each class prescribes a distinct NEON kernel fix; the classes are diagnostic sub-classes of the broader `G-fusion-quality` outcome and route to the SOTA-BEAT implementation packet (`restart/skinny/tranches/shared/SOTA-BEAT-DESIGN.md` §6 falsifiability matrix) without reopening Lock 1.
 
 | Pathology class | Symptom | Affected corpora | Prescribed kernel | Falsifier |
 |---|---|---|---|---|
@@ -826,7 +826,7 @@ The Wave 2 re-baseline pass re-anchored DOM-class throughputs on M5 Max. The num
 | `unicode_escapes` | 17079 | Wave 2 re-baseline; sonic-rs Value-DOM |
 | `y_string_unicode` | 11120 | Wave 2 re-baseline; sonic-rs Value-DOM |
 
-Cross-reference: `restart/skinny/audit/SOTA-BEAT-DESIGN.md` §6 (falsifiability matrix) carries the per-class pathology falsifier rows; failed kernels route to materialization-plan probes at §7.8.2 alongside `alternate_event_cursor_plan` / `alternate_capacity_plan` / `alternate_primitive_kernel_plan`.
+Cross-reference: `restart/skinny/tranches/shared/SOTA-BEAT-DESIGN.md` §6 (falsifiability matrix) carries the per-class pathology falsifier rows; failed kernels route to materialization-plan probes at §7.8.2 alongside `alternate_event_cursor_plan` / `alternate_capacity_plan` / `alternate_primitive_kernel_plan`.
 
 ### 6.2 Reading the matrix
 
@@ -1648,7 +1648,7 @@ one generated grammar it actually emits.
 
 Defers to V2 alongside the V2 `WasmBackend: Backend` impl per Lock 5
 amendment. Impact: the skinny does not validate the WASM lower path.
-The Rust line is the V1 SOTA close path per `restart/locks/14-LOCKS.md:48`
+The Rust line is the V1 SOTA close path per `restart/locks/LOCKS.md:48`
 amendment; WASM SOTA is post-V1.
 
 ### 9.5 No Pratt / full recogniser auto-detection bench

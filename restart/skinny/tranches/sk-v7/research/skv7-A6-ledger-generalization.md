@@ -2,7 +2,7 @@
 
 Date: 2026-05-16.
 Cohort scope: V5 + V6 (and predecessor SK-V3/V4 carry-overs surfaced via
-`skinny/REDRESS.md` items 27-76 and `restart/skinny/audit/GRAND-SYNTHESIS-SK-V5.md`/`SK-V6`).
+`skinny/REDRESS.md` items 27-76 and `restart/skinny/tranches/sk-v5/SYNTHESIS.md`/`SK-V6`).
 Workspace: `/Users/mkbabb/Programming/bbnf-lang`.
 Edits: none. This document is the only artifact.
 
@@ -15,16 +15,16 @@ Authority sources (read in order):
 
 - `skinny/RESULTS.md` (current gate)
 - `skinny/REDRESS.md` items 1-76 (rejected/admitted routes)
-- `restart/skinny/audit/GRAND-SYNTHESIS-SK-V5.md` (substrate-history record)
-- `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6-ASMJSON-DAV1D.md` (current synthesis)
-- `restart/skinny/audit/HANDOFF-SK-V6.md`
-- `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V6-SOTA-RECOVERY.md`
+- `restart/skinny/tranches/sk-v5/SYNTHESIS.md` (substrate-history record)
+- `restart/skinny/tranches/sk-v6/SYNTHESIS.md` (current synthesis)
+- `restart/skinny/tranches/sk-v6/HANDOFF.md`
+- `restart/skinny/tranches/sk-v6/SPEC.md`
 - `restart/ARCHITECTURE.md` §7.3-7.5 (substrate spec + SK-V5/V6 status)
 - `restart/MASTER-PLAN.md` §13 (Tranche H)
 - `restart/MIGRATION.md` §3 (crate disposition)
-- `restart/skinny/audit/SK-V5-COHORT/skv5-A6-research-ledger.md`
-- `restart/skinny/audit/SK-V6-COHORT/skv6-A5-general-grammar-abstraction.md`
-- `restart/skinny/audit/SK-V6-COHORT/skv6-C6-generality-costfacts.md`
+- `restart/skinny/tranches/sk-v5/research/skv5-A6-research-ledger.md`
+- `restart/skinny/tranches/sk-v6/research/skv6-A5-general-grammar-abstraction.md`
+- `restart/skinny/tranches/sk-v6/research/skv6-C6-generality-costfacts.md`
 
 ## 1. Validated Items
 
@@ -60,7 +60,7 @@ Total validated: 19.
 ## 2. Invalidated Items
 
 The following items are pruned from active scope and may not be reopened
-without new measurement evidence per `restart/skinny/audit/HANDOFF-SK-V6.md` §4.
+without new measurement evidence per `restart/skinny/tranches/sk-v6/HANDOFF.md` §4.
 
 ### 2.1 SK-V5 Substrate-History Invalidations
 

@@ -8,7 +8,7 @@ Hard cap: 30 min.
 ## Inputs Read
 
 - `skinny/REDRESS.md` item 63: Candidate 4 (`ContainerNext` / next-byte carry) admitted.
-- `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md` §E / Lock 15 cluster and §8 Candidate 4.
+- `restart/skinny/tranches/sk-v6/SYNTHESIS-WAVE-1-PLAN.md` §E / Lock 15 cluster and §8 Candidate 4.
 - `skinny/crates/runtime/src/grammars/json/generated.rs` and `skinny/crates/codegen/src/json_templates/generated.rs` post-Candidate4 shape.
 - `skinny/RESULTS.md` current requested-row retained and direct rows.
 

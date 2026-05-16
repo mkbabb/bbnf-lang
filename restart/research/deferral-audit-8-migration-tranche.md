@@ -262,7 +262,7 @@ non-blocking residual items. Each is audited for hidden architectural prereq.
 | R1 | Research-index + bibliography hygiene | `restart/research/INDEX.md` | Pure work-deferral (source classification). | **None.** Closed by R1/R2 pass. |
 | R2 | README precision | `restart/README.md` | Closed by R1/R2 pass. | **None.** |
 | R3 | Hardening command-harness precision | `restart/audit/hardening/HARDENING-CONSOLIDATED.md` | Closed by R3/R4 pass. | **None.** |
-| R4 | Lock 4 rationale (egglog fusion pressure) | `restart/locks/14-LOCKS.md` | Closed by R3/R4 pass. | **None.** |
+| R4 | Lock 4 rationale (egglog fusion pressure) | `restart/locks/LOCKS.md` | Closed by R3/R4 pass. | **None.** |
 | R5 | Rewrite-budget implementation detail | C.W4/C.W5 implementation specs | Routed; tests do not yet exist. | **YES.** The *categories*, *node/iteration limits*, and *acceptance thresholds* are architectural. **FOLD §8.C1**: lift to ARCHITECTURE §10 (optimization) before C.W4 begins, not as test-shape during. |
 | R6 | H.W3 WASM placeholders `{N}`, `{M}` | H.W3 measurement | Pure measurement-deferral. | **None.** The placeholders are unmeasured numbers, not unmade decisions. |
 | R7 | Per-tranche full-spec drafting | Next drafting phase | Synthesis intentionally ends at A-J stub. | **None directly.** But every architectural-prereq fold from this audit (§8.A1, §8.A2, §8.A3, §8.C1, §8.E1, §8.J1, §8.J2) **reduces R7's per-tranche reconsideration cost** by lifting decisions out of tranche-local drafting. R7 is the **container** that the §8 folds shrink. |

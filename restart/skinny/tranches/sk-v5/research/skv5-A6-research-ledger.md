@@ -7,10 +7,10 @@ Source authorities (paths absolute under `/Users/mkbabb/Programming/bbnf-lang/`)
 
 - `skinny/REDRESS.md` (639 LOC; full implementation ledger)
 - `skinny/RESULTS.md` (219 LOC; full gate authority)
-- `restart/skinny/audit/ASMJSON-DAV1D-GRAND-SYNTHESIS-SK-V4.md` (353 LOC)
-- `restart/skinny/audit/GRAND-SYNTHESIS-SOTA-BEAT-SK-V3.md` (218 LOC)
-- `restart/skinny/audit/WAVE-1-2-COHORT-DIGEST.md` (250 LOC)
-- `restart/skinny/audit/V9.5-PSI-EXCAVATION/06-go-no-go-synthesis.md` (332 LOC)
+- `restart/skinny/tranches/ASMJSON-DAV1D-GRAND-SYNTHESIS-SK-V4.md` (353 LOC)
+- `restart/skinny/tranches/GRAND-SYNTHESIS-SOTA-BEAT-SK-V3.md` (218 LOC)
+- `restart/skinny/tranches/WAVE-1-2-COHORT-DIGEST.md` (250 LOC)
+- `restart/skinny/tranches/sk-v3.5/research/06-go-no-go-synthesis.md` (332 LOC)
 - `restart/HANDOFF.md` (291 LOC)
 - `restart/MASTER-PLAN.md` §13 (Tranche H, lines 480–581)
 - `skinny/profile/native-sidecars/PROFILE-REPORT.md` (306 LOC)
@@ -62,7 +62,7 @@ Each row cites the source that ratified the item plus the measurement that close
 |---|---|---|
 | Lazy/event substrate as right boundary | `skinny/REDRESS.md:224-233`; SK-V4 §3 | Lazy-offset tape (Box<[u32]> offsets + sparse flags) made the historical triad pass and yielded zero JSON payload arena writes/allocations across all 17 corpora (`skinny/RESULTS.md:155-216`, "payload arena counters: 0/0" every row). |
 | Codegen overhead separable from substrate ceiling | `restart/skinny/BENCH.md` Track 1/Track 2 contract; SK-V4 §3 | Track 1 (generated) and Track 2 (hand-coded) Mbps stay within 1-3% on every measured row in `skinny/RESULTS.md:5-21` (e.g., twitter 16294 vs 16068, citm 29185 vs 29401). The remaining red rows move together, ruling out a codegen vs. hand-coded gap. |
-| Lock 15 i-cache discipline (yyjson evidence) | `restart/skinny/audit/WAVE-1-2-COHORT-DIGEST.md:113-118`; native-sidecars `PROFILE-REPORT.md` §(f) | yyjson hot-leaf count = 1 on every corpus (`yyjson_read_opts` 90.1-97.5% self-time); `parse_value_at` is a single 7304-byte function under `lto=thin codegen-units=1 debug=true` — within the ~20 KiB i-cache budget. |
+| Lock 15 i-cache discipline (yyjson evidence) | `restart/skinny/tranches/WAVE-1-2-COHORT-DIGEST.md:113-118`; native-sidecars `PROFILE-REPORT.md` §(f) | yyjson hot-leaf count = 1 on every corpus (`yyjson_read_opts` 90.1-97.5% self-time); `parse_value_at` is a single 7304-byte function under `lto=thin codegen-units=1 debug=true` — within the ~20 KiB i-cache budget. |
 | Lock 16 primitive admission (escape_mask_64 bug) | `WAVE-1-2-COHORT-DIGEST.md:43-52`; `crates/bbnf-simd/CHECKASM-REPORT.md` | First-run differential parity caught 112/448 alignment-sweep divergences and 2/32 uniform-random divergences in `escape_mask_64` NEON path; root-caused to `new_carry / escaped` state-handoff confusion. Corpora pass 17/17 only because they never trigger the boundary; adversarial inputs do. |
 | SIMD vocabulary grammar-neutral + checkasm-gated | `MASTER-PLAN.md:506` (H.W2.5); `WAVE-1-2-COHORT-DIGEST.md:62-72` | Two-layer factoring: Layer 0 `x86inc.asm` (1,978 LOC, BSD-2, dav1d) vendored read-only; Layer 1 `bbnf.asm` (≈600 LOC) authored. First end-to-end primitive `BYTE_CLASS_FROM_EQ_SET_64` lands scalar / aarch64 / x86 / checkasm — commit `9eef728c` (per `REDRESS.md:315-323`). |
 | sonic-rs / yyjson-style direct materialization | `REDRESS.md:325-339`; SK-V4 §5 (sonic-rs) | Direct-to-struct sink-only rewrite passed 6/17 rows after duplicate UTF-8 validation cut + `JsonNumberMatch::is_integer` classification. citm 117.0%, apache_builds 110.3%, instruments 122.4%, distinct_values 105.9% of sonic-rs direct (`skinny/RESULTS.md:27-43`). |
@@ -460,10 +460,10 @@ Surfaces patched during the iteration; each preserves the "no new BBNF directive
 | `restart/skinny/WORKSPACE.md` | `bbnf-simd` is scanner + byte-primitive boundary; expanded gate blocks dispatch. | Redressed local LOC caps to 3,300 / 650 after direct-to-struct proof + `primitive-checkasm` became mandatory surfaces. | SK-V3 §7; `REDRESS.md:276-289`. |
 | `restart/ARCHITECTURE.md` | `BackendShape` becomes materialization-plan enum: `EagerTape`, `OffsetTape`, `EventTape`, `SinkOnly`, `CollapsedStage`. | Direct builders over event stream; added `BBNF-COLLAPSEDSTAGE-NOT-VIABLE` diagnostic. | SK-V3 §7; SK-V4 §8. |
 | `restart/MASTER-PLAN.md` | Tranche H becomes typed-event/SIMD/primitive close, host-aarch64 first and x86 strict plane second. | H.W5 primitive admission consumed by retained/direct shapes; per-grammar `CollapsedStage` separate. | SK-V3 §7; SK-V4 §8. |
-| `restart/locks/14-LOCKS.md` | Lock 1 clarifies structural projection as tape; Lock 16 corpus wording uses expanded suite. | Locks 15 + 16 + Wave 1 strict-additive amendments (5-pack AVX-512 + 3-pack NEON). | SK-V3 §7; `HANDOFF.md:22`. |
-| `restart/skinny/audit/SOTA-BEAT-DESIGN.md` | — | Replaced stale `StructuralIndex` and metadata collapsed-stage selection with five-shape cost-model-derived lowering. | SK-V4 §8. |
-| `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md` | Initial dispatch packet. | Demoted asmjson-beat projection to x86 successor-tranche; SK-V3 close remains M5 Max expanded gate. | SK-V4 §8. |
-| `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md` | n/a (new) | Current receiver packet; closes generated `SinkOnly`, exact materializers, parse hot-hub attribution, same-wave primitive consumption, conditional x86 `CollapsedStage`. | `REDRESS.md:633-639`; `HANDOFF.md:24`. |
+| `restart/locks/LOCKS.md` | Lock 1 clarifies structural projection as tape; Lock 16 corpus wording uses expanded suite. | Locks 15 + 16 + Wave 1 strict-additive amendments (5-pack AVX-512 + 3-pack NEON). | SK-V3 §7; `HANDOFF.md:22`. |
+| `restart/skinny/tranches/shared/SOTA-BEAT-DESIGN.md` | — | Replaced stale `StructuralIndex` and metadata collapsed-stage selection with five-shape cost-model-derived lowering. | SK-V4 §8. |
+| `restart/skinny/tranches/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md` | Initial dispatch packet. | Demoted asmjson-beat projection to x86 successor-tranche; SK-V3 close remains M5 Max expanded gate. | SK-V4 §8. |
+| `restart/skinny/tranches/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md` | n/a (new) | Current receiver packet; closes generated `SinkOnly`, exact materializers, parse hot-hub attribution, same-wave primitive consumption, conditional x86 `CollapsedStage`. | `REDRESS.md:633-639`; `HANDOFF.md:24`. |
 
 ---
 
@@ -549,7 +549,7 @@ From SK-V4 §6 and `reassay-skv4-2026-05-13/PROFILE-REPORT.md` §"Binding Next W
 5. **Same-wave NEON primitive consumption**: land only same-wave consumed NEON primitives (byte class, next-set-bit, hex decode, exact digit blocks). No primitive without a wave-bound consumer.
 6. **x86 CollapsedStage successor**: stay separate until NASM author, silicon, and checkasm are all present. `BBNF-COLLAPSEDSTAGE-NOT-VIABLE` is the correct fallback. Per-grammar × ISA authoring waves are grammar-arrival-driven, not numbered into the H letter tranche.
 
-The dispatch order is **SK-V4 IMPLEMENTATION-PACKET Waves 0-5 in sequence**, as named at `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md`. SK-V3 packet remains historical context; it is no longer the receiver packet.
+The dispatch order is **SK-V4 IMPLEMENTATION-PACKET Waves 0-5 in sequence**, as named at `restart/skinny/tranches/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md`. SK-V3 packet remains historical context; it is no longer the receiver packet.
 
 ---
 
@@ -559,13 +559,13 @@ Before any wave dispatch:
 
 ```
 ls skinny/profile/{native-sidecars,wave2-asm,wave2-pmu,wave2-capacity,wave2-prototype}/PROFILE-REPORT.md
-head -30 restart/skinny/audit/ASMJSON-DAV1D-GRAND-SYNTHESIS-SK-V4.md
-head -30 restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md
-grep -c "^15\.\|^16\." restart/locks/14-LOCKS.md   # >= 2
-grep -E "LD4-interleaved|BCAX|EOR3|svmatch_u8|kreg-facts|VPCLMULQDQ|vpmadd52|vpdpbusd|vpshufbitqmb" restart/locks/14-LOCKS.md | wc -l   # >= 5
+head -30 restart/skinny/tranches/ASMJSON-DAV1D-GRAND-SYNTHESIS-SK-V4.md
+head -30 restart/skinny/tranches/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md
+grep -c "^15\.\|^16\." restart/locks/LOCKS.md   # >= 2
+grep -E "LD4-interleaved|BCAX|EOR3|svmatch_u8|kreg-facts|VPCLMULQDQ|vpmadd52|vpdpbusd|vpshufbitqmb" restart/locks/LOCKS.md | wc -l   # >= 5
 grep -E "BBNF-BACKEND-SHAPE-INCONSISTENT|BBNF-FORCE-INLINE-MISSED|BBNF-ICACHE-BUDGET-EXCEEDED|BBNF-UTF8-INVALID-AT-PARSE|BBNF-UNICODE-NONCHAR-CODEPOINT" restart/ARCHITECTURE.md | wc -l   # 5
 grep -E "EagerTape|OffsetTape|EventTape|SinkOnly|CollapsedStage" restart/ARCHITECTURE.md | wc -l   # >= 5
-rg -n 'tape_mode|lazy-mode|dual-mode' restart/locks/14-LOCKS.md   # 0 matches (Lock 1 verbatim preserved)
+rg -n 'tape_mode|lazy-mode|dual-mode' restart/locks/LOCKS.md   # 0 matches (Lock 1 verbatim preserved)
 BBNF_SIMD_STRICT=1 cargo test -p bbnf-simd --release --test checkasm_parity   # zero divergences
 cargo run -p xtask --release -- bench-json --capacity-plan D --corpus update-center
 cargo build --release -v 2>&1 | grep -E -- '-C lto=(fat|true)|-C codegen-units=1' | wc -l   # >= 1 per member

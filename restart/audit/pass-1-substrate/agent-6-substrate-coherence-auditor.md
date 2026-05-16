@@ -10,7 +10,7 @@ Verdict: tape is the substrate term. It is implemented as a union with direct-to
 
 | Item | Pro | Con | Explication | Challenge | Verdict |
 |---|---|---|---|---|---|
-| Tape | Matches lock and dispatch authority. | Old docs claim tape died. | Lock 1 says tape is substrate and columnar/parallel substrates are dead (`restart/locks/14-LOCKS.md:34`). | Ensure old research is not treated as current plan. | KEEP |
+| Tape | Matches lock and dispatch authority. | Old docs claim tape died. | Lock 1 says tape is substrate and columnar/parallel substrates are dead (`restart/locks/LOCKS.md:34`). | Ensure old research is not treated as current plan. | KEEP |
 | Direct-to-struct | SOTA evidence supports it. | Direct-only loses on-demand value benefits. | README unions direct-to-struct with tape (`restart/README.md:285`-`restart/README.md:315`). | One path/value API over both. | KEEP |
 | ParseStream rename | Could clarify source stream duties. | Conflicts with lock/current authority. | Inheritance says tape name dies (`restart/inheritance/INDEX.md:66`), but lock keeps tape. | Mark stale. | DISCARD |
 | Read-write visitor | Controls mutation. | Requires generated visitor surface. | README says mutation is a read-write visitor (`restart/README.md:316`-`restart/README.md:319`). | Keep mutation out of parse stack. | KEEP |

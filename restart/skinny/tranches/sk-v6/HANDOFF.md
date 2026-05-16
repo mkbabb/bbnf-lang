@@ -12,17 +12,17 @@ row evidence.
 
 ## 1. Read First
 
-1. `restart/skinny/audit/IMPLEMENTATION-AGENT-PROMPT-SK-V6.md`
-2. `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6-ASMJSON-DAV1D.md`
-3. `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V6-SOTA-RECOVERY.md`
+1. `restart/skinny/tranches/sk-v6/DISPATCH-PROMPT.md`
+2. `restart/skinny/tranches/sk-v6/SYNTHESIS.md`
+3. `restart/skinny/tranches/sk-v6/SPEC.md`
 4. `skinny/RESULTS.md`
 5. `skinny/REDRESS.md`
-6. `restart/skinny/audit/SK-V6-COHORT/`
+6. `restart/skinny/tranches/sk-v6/research/`
 
 ## 2. Latest Cohort Findings
 
 The SK-V6 asmjson/DAV1D + profiling pass is archived under
-`restart/skinny/audit/SK-V6-COHORT/` as `skv6-A*.md`, `skv6-B*.md`, and
+`restart/skinny/tranches/sk-v6/research/` as `skv6-A*.md`, `skv6-B*.md`, and
 `skv6-C*.md`.
 
 Binding conclusions:

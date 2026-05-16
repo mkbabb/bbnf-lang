@@ -1,6 +1,6 @@
 # HARDENING-CONSOLIDATED-V8 — Simplification Audit
 
-V8 applies the three new simplification lenses (I — Contrivance / over-engineering; J — Host-language leverage; K — Meta-grammar discipline) per `restart/prompts/HARDENING.md` post-Phase-8.1 amendment. The cohort verifies that V7.1 READY survives lens scrutiny + surfaces simplification candidates.
+V8 applies the three new simplification lenses (I — Contrivance / over-engineering; J — Host-language leverage; K — Meta-grammar discipline) per `restart/prompts/audit-specs/HARDENING-LENS-SET.md` post-Phase-8.1 amendment. The cohort verifies that V7.1 READY survives lens scrutiny + surfaces simplification candidates.
 
 ## §1 Target identifications
 

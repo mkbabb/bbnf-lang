@@ -2,7 +2,7 @@
 
 ## §1 Scope + Framing
 
-Lens: specify auto-detection for Pratt and SIMD emission. Lock 10 says Pratt, SIMD, and PHF recognizers are auto-detected from grammar shape, not user directives (`restart/locks/14-LOCKS.md:52`). README repeats that Pratt, SIMD, and PHF are auto-detected (`restart/README.md:180-182`). PASS-2 prompt assigns Pratt plus SIMD auto-detection to this pass (`restart/prompts/PASS-2-CODEGEN.md:3`).
+Lens: specify auto-detection for Pratt and SIMD emission. Lock 10 says Pratt, SIMD, and PHF recognizers are auto-detected from grammar shape, not user directives (`restart/locks/LOCKS.md:52`). README repeats that Pratt, SIMD, and PHF are auto-detected (`restart/README.md:180-182`). PASS-2 prompt assigns Pratt plus SIMD auto-detection to this pass (`restart/prompts/PASS-2-CODEGEN.md:3`).
 
 The current backend already carries Pratt and SIMD residues. Rust grammar emission writes Pratt precedence LUT constants (`crates/core/src/backend/rust/emitter/grammar.rs:194-202`), and generated strategy state includes delimiter scan configs, key dispatch, regex patterns, and materialization maps (`crates/core/src/backend/driver/mod.rs:52-121`). PASS-2 must move those decisions upstream into PASS-1 analysis plus Backend IR annotations, then lower them uniformly.
 
@@ -19,7 +19,7 @@ The current backend already carries Pratt and SIMD residues. Rust grammar emissi
 
 ## §3 Architectural Commitments Ratified
 
-1. **No directives for Pratt/SIMD/PHF.** Metadata can contain grammar identity and fixtures, but not a force/skip knob for these recognizers in V1. This follows Lock 10 (`restart/locks/14-LOCKS.md:52`).
+1. **No directives for Pratt/SIMD/PHF.** Metadata can contain grammar identity and fixtures, but not a force/skip knob for these recognizers in V1. This follows Lock 10 (`restart/locks/LOCKS.md:52`).
 
 2. **Every auto-decision has an audit row.** Backend IR snapshots include `Decision { rule, detector, selected, rejected_alternatives, cost }`. Lessons learned require producer and consumer gates for contracts (`docs/precepts/instructions/LESSONS-LEARNED.md:74-80`).
 
@@ -71,7 +71,7 @@ Decision log:
 
 PASS-1 owns detection and cost extraction; PASS-2 owns codegen consumption. README's pass order places shape mining, e-graph, cost extraction, and Backend IR lowering before per-backend lower (`restart/README.md:188-217`).
 
-PASS-3 receives decision logs and materialisation cost. API docs can expose why a parser uses Pratt or SIMD, but PASS-3 must not add grammar directives for these decisions because Lock 10 rejects directives (`restart/locks/14-LOCKS.md:52`).
+PASS-3 receives decision logs and materialisation cost. API docs can expose why a parser uses Pratt or SIMD, but PASS-3 must not add grammar directives for these decisions because Lock 10 rejects directives (`restart/locks/LOCKS.md:52`).
 
 ## §6 Risk + Mitigation Table
 
@@ -87,7 +87,7 @@ PASS-3 receives decision logs and materialisation cost. API docs can expose why 
 
 | Source | KEEP | REINVENT | DISCARD |
 |---|---|---|---|
-| Lock 10 | Auto-detect posture (`restart/locks/14-LOCKS.md:52`). | Add decision logs and BIR snapshots. | User directives for Pratt/SIMD/PHF. |
+| Lock 10 | Auto-detect posture (`restart/locks/LOCKS.md:52`). | Add decision logs and BIR snapshots. | User directives for Pratt/SIMD/PHF. |
 | Current Rust emitter | Existing Pratt/PHF table knowledge (`crates/core/src/backend/rust/emitter/grammar.rs:155-202`). | Move selection out of emitter into BIR annotations. | Lowerer-local strategy selection. |
 | `simd-scan` | Data-driven alphabets and kernel shapes (`crates/simd-scan/src/alphabet.rs:1-18`, `crates/simd-scan/src/alphabet.rs:98-125`). | Couple scan results to Tape node offsets. | Grammar-specific scanner variants. |
 | SOTA | simdjson and lightningcss performance anchors (`restart/corpora/SOTA.md:12-16`, `restart/corpora/SOTA.md:130-136`). | Use anchors as gates for BIR cost trajectory. | Blind benchmark claims without corpus rows. |

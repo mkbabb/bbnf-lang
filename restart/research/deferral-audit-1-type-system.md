@@ -17,7 +17,7 @@ Required reading consumed in full:
 |---|---|---:|
 | Anthem and gestalt | `restart/README.md` | 1-479 |
 | Type system block | `restart/README.md` | 260-273 |
-| Locks (4, 10, 14) | `restart/locks/14-LOCKS.md` | 30-60 |
+| Locks (4, 10, 14) | `restart/locks/LOCKS.md` | 30-60 |
 | Type system | `restart/ARCHITECTURE.md` | 1067-1208 |
 | Optimization (codegen lower) | `restart/ARCHITECTURE.md` | 1263-1281 |
 | Substrate verdicts and algorithm | `restart/audit/pass-1-substrate/PASS-1.md` | 1-298 |

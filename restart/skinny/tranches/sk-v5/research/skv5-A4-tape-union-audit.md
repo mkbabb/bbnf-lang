@@ -2,10 +2,10 @@
 
 Authority anchors:
 
-- `restart/locks/14-LOCKS.md:34` (Lock 1 verbatim) — tape is the substrate, properly unioned with direct-to-struct; columnar SoA is dead; orthogonal codepaths and parallel substrates are dead.
+- `restart/locks/LOCKS.md:34` (Lock 1 verbatim) — tape is the substrate, properly unioned with direct-to-struct; columnar SoA is dead; orthogonal codepaths and parallel substrates are dead.
 - `restart/ARCHITECTURE.md:1020-1095` (§7.3) — `BackendShape ∈ { EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage }` and the 8-priority cost-model derivation.
-- `restart/skinny/audit/ASMJSON-DAV1D-GRAND-SYNTHESIS-SK-V4.md:148-152` — eventcursor sidecar prototype refutation: "event cursor must be the lowering boundary, not a parallel prepass".
-- `restart/skinny/audit/ASMJSON-DAV1D-GRAND-SYNTHESIS-SK-V4.md:256-287` (§6) — substrate boundary single arrow + the five-item implementation debt list.
+- `restart/skinny/tranches/ASMJSON-DAV1D-GRAND-SYNTHESIS-SK-V4.md:148-152` — eventcursor sidecar prototype refutation: "event cursor must be the lowering boundary, not a parallel prepass".
+- `restart/skinny/tranches/ASMJSON-DAV1D-GRAND-SYNTHESIS-SK-V4.md:256-287` (§6) — substrate boundary single arrow + the five-item implementation debt list.
 - `restart/skinny/SUBSTRATE.md` (skv-V1 canonical) — `OffsetTape` is the implemented shape; the other four are cost-model-derived sibling values of the same union.
 - `restart/MIGRATION.md:344-349` — `OpenFrame/Vec<OpenFrame>::clone` 86.07 % pathology was the parallel-substrate failure mode under Lock 1.
 
@@ -22,7 +22,7 @@ For each of the five `BackendShape` values:
 | `EagerTape` | partly — `generated.rs` is the canonical lowering, **but** it is source-byte recursive descent that ALSO writes structural offsets into `TapeBuilder`. It is closer to "OffsetTape compiled as if EagerTape" than to a recovery-fallback EagerTape. | `skinny/crates/runtime/src/grammars/json/generated.rs:34-50` (`parse_value_at` dispatches on `state.bytes[state.cursor]` — eager source-byte read), emits offsets via `state.emit_plain_offset(...)` (e.g. line 169 number, line 189 literal, line 221 quote, line 254 structural). The same body writes the offset tape. The shape selector is NOT cost-model-derived; the codegen template at `skinny/crates/codegen/src/lib.rs:115-118` `include_str!`s a single template regardless of grammar. | **PRESENT, BUT WITHOUT DERIVATION**. The shape has a consumer; the cost-model gate that should pick it is missing. |
 | `OffsetTape` | YES — the storage layer (`Tape::offsets`, `Tape::flag_cursors`, `Tape::flag_values` at `skinny/crates/runtime/src/tape/mod.rs:92-99`) IS the OffsetTape projection; the `ValueRef.cursor: u32` indexes into it (`skinny/crates/runtime/src/tape/mod.rs:173-219`); the typed view at `skinny/crates/runtime/src/grammars/json/view.rs:41-48` (`offset_stream`, `token_stream`) consumes it. | `skinny/crates/runtime/src/grammars/json/parser.rs:38-41` (`finish()` seals the builder into `Tape<'i>`); `view.rs:25-27` (`value()` projects via `ValueRef`). | **HOLDS as committed storage shape**. Consumer present at view layer. |
 | `EventTape` | **SPEC-ONLY**. No `EventTape` lowering in source. `Tape` carries only offsets + sparse flags + (empty) payload arena; there is no event-cell record carrying recovery/layout/payload side facts. | Absent from `skinny/crates/runtime/src/tape/`. Lookup `grep -rn "EventTape" --include="*.rs" skinny/crates/` returns zero. | **SUBSTRATE-WITHOUT-CONSUMER risk inverted**: the architecture spec admits the shape, the source tree carries the storage primitives needed (offsets + sparse flag-cursor side facts can extend to event cells), and Lock 1 says the projection variant is the same union member. Not a Lock 1 violation; an unfilled cell. |
-| `SinkOnly` | **NOT GENERATED**. The runtime emits offset writes for every parsed token; there is no `DirectBuild → field-write` lowering path in the codegen template. The bench-side `direct_struct::sink_only_digest` at `skinny/crates/bbnf-bench/src/direct_struct.rs:190-353` is a private hand-coded parser that does NOT go through the substrate at all. | The SinkOnly intent is realised only inside `bbnf-bench`. Per SK-V4 §6 implementation debt item 1 (`restart/skinny/audit/ASMJSON-DAV1D-GRAND-SYNTHESIS-SK-V4.md:279-280`): "Track 1 direct must move out of `bbnf-bench` into generated runtime/codegen `SinkOnly`." | **PRESENT BUT WRONG-LOCUS**. `direct_struct.rs` is bench-private and per SK-V4 disqualifies the row. The intended generated SinkOnly path would land at `skinny/crates/codegen/src/json_templates/` as a per-rule emitter when `LayoutFacts.backend_shape = SinkOnly`; that emitter does not exist. |
+| `SinkOnly` | **NOT GENERATED**. The runtime emits offset writes for every parsed token; there is no `DirectBuild → field-write` lowering path in the codegen template. The bench-side `direct_struct::sink_only_digest` at `skinny/crates/bbnf-bench/src/direct_struct.rs:190-353` is a private hand-coded parser that does NOT go through the substrate at all. | The SinkOnly intent is realised only inside `bbnf-bench`. Per SK-V4 §6 implementation debt item 1 (`restart/skinny/tranches/ASMJSON-DAV1D-GRAND-SYNTHESIS-SK-V4.md:279-280`): "Track 1 direct must move out of `bbnf-bench` into generated runtime/codegen `SinkOnly`." | **PRESENT BUT WRONG-LOCUS**. `direct_struct.rs` is bench-private and per SK-V4 disqualifies the row. The intended generated SinkOnly path would land at `skinny/crates/codegen/src/json_templates/` as a per-rule emitter when `LayoutFacts.backend_shape = SinkOnly`; that emitter does not exist. |
 | `CollapsedStage` | ABSENT (intentional). No `bbnf.asm`/`<grammar>_collapsed.asm` file under `skinny/crates/bbnf-simd/`; no `parse_value` Rust shim that prepares EOB-pad-clamped buffers and jumps into hand-written NASM. | Per ARCH §7.3 line 1156 (`BBNF-COLLAPSEDSTAGE-NOT-VIABLE` diagnostic) the cost-model falls back to OffsetTape when the kernel author + silicon + parity harness are not all present. SK-V4 §6 implementation debt item 5: "x86 `CollapsedStage` must remain separate until NASM author, silicon, and checkasm are all present." | **CORRECTLY ABSENT**. Absence is gated on prerequisites; not a Lock 1 violation. |
 
 **Lock 1 verdict on consumer presence**: 2 of 5 shapes have concrete consumers (OffsetTape, "EagerTape as fused offset writer"); SinkOnly intent is misplaced bench-side; EventTape and CollapsedStage are correctly deferred. The union is structurally admitted by `Tape<'input>` storage shape; not all variants are wired.
@@ -56,7 +56,7 @@ Per `restart/MIGRATION.md:75`, the migration target was `crates/simd-scan → cr
 
 ### 3.2 `generated_eventcursor.rs` — REFUTED PREPASS, STILL WIRED BEHIND FEATURE FLAG
 
-Per SK-V4 §4 (`restart/skinny/audit/ASMJSON-DAV1D-GRAND-SYNTHESIS-SK-V4.md:148-152`): "Eventcursor sidecar prototype. **Invalidated**. A mask/LUT producer bolted in front of unchanged `parse_value_at` regressed and grew the hot hub. Event cursor must be the lowering boundary, not a parallel prepass."
+Per SK-V4 §4 (`restart/skinny/tranches/ASMJSON-DAV1D-GRAND-SYNTHESIS-SK-V4.md:148-152`): "Eventcursor sidecar prototype. **Invalidated**. A mask/LUT producer bolted in front of unchanged `parse_value_at` regressed and grew the hot hub. Event cursor must be the lowering boundary, not a parallel prepass."
 
 The file at `skinny/crates/runtime/src/grammars/json/generated_eventcursor.rs:62-63` does exactly what was refuted:
 
@@ -98,7 +98,7 @@ The replacement is the **lowering-boundary EventCursor** per SK-V4 §6 line 264:
 
 The `track1_digest`/`track2_digest` entry points at lines 150-156 BOTH route through `sink_only_digest`, meaning the "two-track" parity check at lines 166-188 collapses both tracks into the same private parser. Only `track1_view_walk_digest`/`track2_view_walk_digest` (lines 138-148) actually use the substrate: line 139 calls `runtime::generated_json::parse`, line 145 calls `crate::track2::json::parse`. Those routes are admissible substrate consumers.
 
-The private `SinkParser` is the SK-V4 §6 item 1 disqualification (`restart/skinny/audit/ASMJSON-DAV1D-GRAND-SYNTHESIS-SK-V4.md:279-280`): "Track 1 direct must move out of `bbnf-bench` into generated runtime/codegen `SinkOnly`." Bench-private = disqualified Track 1.
+The private `SinkParser` is the SK-V4 §6 item 1 disqualification (`restart/skinny/tranches/ASMJSON-DAV1D-GRAND-SYNTHESIS-SK-V4.md:279-280`): "Track 1 direct must move out of `bbnf-bench` into generated runtime/codegen `SinkOnly`." Bench-private = disqualified Track 1.
 
 It is **not** Lock 1 parallel-substrate (it doesn't coexist with a sealed tape mid-parse); it is **wrong-locus** per Lock 14 (grammar-specific parser in a generic bench crate) and SK-V4 §6 item 1.
 
@@ -190,7 +190,7 @@ Classification:
 
 ## 6. EventCursor — Lowering Boundary vs Parallel Prepass
 
-SK-V4 §6 (`restart/skinny/audit/ASMJSON-DAV1D-GRAND-SYNTHESIS-SK-V4.md:256-265`) names the boundary:
+SK-V4 §6 (`restart/skinny/tranches/ASMJSON-DAV1D-GRAND-SYNTHESIS-SK-V4.md:256-265`) names the boundary:
 
 ```text
 bytes

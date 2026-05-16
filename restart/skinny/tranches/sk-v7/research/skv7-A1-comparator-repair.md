@@ -182,7 +182,7 @@ For the workloads table at `RESULTS.md:25-45` (direct_to_struct + real_typed_str
 
 ### 4.2 Native-sidecar staleness
 
-Independent of `utf8_lossy`, the simdjson C++ and yyjson rows are *profile-only* — they live under `skinny/profile/{simdjson-expanded,yyjson}/PROFILE-REPORT.md` and have not been rerun on the exact 17-corpus skinny fixture set on the same machine, same compiler, same commit. `restart/skinny/audit/SK-V6-COHORT/skv6-R5-sidecar-refresh.md` (referenced by C3) records that `/tmp/simdjson-research` and `/tmp/yyjson-research` are absent from the workspace and have not been refreshed. Until those sidecars are rebuilt and rerun, the strict native ceiling can size the SK-V7 SOTA-beat target but cannot classify the live Rust gate. The asmjson SWAR row at `skinny/profile/native-sidecars/asmjson/NOTE.md` is permissive synthetic, not strict 17-corpus, and is not a strict S anchor candidate on Apple Silicon.
+Independent of `utf8_lossy`, the simdjson C++ and yyjson rows are *profile-only* — they live under `skinny/profile/{simdjson-expanded,yyjson}/PROFILE-REPORT.md` and have not been rerun on the exact 17-corpus skinny fixture set on the same machine, same compiler, same commit. `restart/skinny/tranches/sk-v6/research/skv6-R5-sidecar-refresh.md` (referenced by C3) records that `/tmp/simdjson-research` and `/tmp/yyjson-research` are absent from the workspace and have not been refreshed. Until those sidecars are rebuilt and rerun, the strict native ceiling can size the SK-V7 SOTA-beat target but cannot classify the live Rust gate. The asmjson SWAR row at `skinny/profile/native-sidecars/asmjson/NOTE.md` is permissive synthetic, not strict 17-corpus, and is not a strict S anchor candidate on Apple Silicon.
 
 ## 5. Predicted post-repair gate state
 
@@ -269,7 +269,7 @@ The criterion artifacts at `target/criterion/*/sonic_rs_anchor/metadata.toml` sh
 
 ### 6.4 Schema v3 column inventory for `RESULTS.md`
 
-Per HANDOFF-SK-V6 §2 (`restart/skinny/audit/HANDOFF-SK-V6.md:42-45`) and per BENCH.md §5 metadata schema requirements, every row in `RESULTS.md` must carry these columns. The current `report.rs:141` table has eight content columns plus four ratio columns. The strict-honest v3 minimum is:
+Per HANDOFF-SK-V6 §2 (`restart/skinny/tranches/sk-v6/HANDOFF.md:42-45`) and per BENCH.md §5 metadata schema requirements, every row in `RESULTS.md` must carry these columns. The current `report.rs:141` table has eight content columns plus four ratio columns. The strict-honest v3 minimum is:
 
 - `corpus` — exists
 - `outcome` — exists
@@ -321,10 +321,10 @@ When all six are true, subsequent SK-V7 waves can measure SOTA-beat against the 
 - `skinny/crates/bbnf-bench/src/bin/gate.rs`
 - `skinny/RESULTS.md`
 - `skinny/REDRESS.md`
-- `restart/skinny/audit/HANDOFF-SK-V6.md`
-- `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V6-SOTA-RECOVERY.md`
-- `restart/skinny/audit/SK-V6-COHORT/skv6-C3-sidecar-planes.md`
-- `restart/skinny/audit/SK-V6-COHORT/skv6-A3-comparator-planes.md`
+- `restart/skinny/tranches/sk-v6/HANDOFF.md`
+- `restart/skinny/tranches/sk-v6/SPEC.md`
+- `restart/skinny/tranches/sk-v6/research/skv6-C3-sidecar-planes.md`
+- `restart/skinny/tranches/sk-v6/research/skv6-A3-comparator-planes.md`
 - `/Users/mkbabb/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sonic-rs-0.5.8/Cargo.toml`
 - `/Users/mkbabb/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sonic-rs-0.5.8/src/serde/de.rs`
 - Upstream: `https://github.com/cloudwego/sonic-rs` README ("By default, sonic-rs enable the UTF-8 validation, except for `xx_unchecked` APIs.")

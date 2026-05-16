@@ -39,9 +39,9 @@ Files counted in the V7 preflight:
 | `restart/audit/hardening/HARDENING-PASS-2-V6.md` | 428 |
 | `restart/audit/hardening/HARDENING-CONSOLIDATED-V6.md` | 391 |
 | `restart/research/V1-FOLD-CANDIDATES.md` | 221 |
-| `restart/locks/14-LOCKS.md` | 249 |
+| `restart/locks/LOCKS.md` | 249 |
 | `restart/ARCHITECTURE.md` | 1675 |
-| `restart/prompts/HARDENING.md` | 177 |
+| `restart/prompts/audit-specs/HARDENING-LENS-SET.md` | 177 |
 
 PASS-2.md grew from V6's 589 lines to 612 (+23 lines = +32 inserts / -9 deletes
 per the `3dc95460` commit body). Phase 7.2 classification documents the four
@@ -119,7 +119,7 @@ PASS-2 or its named binding surfaces.
 |---|---|---|---|---|---|
 | `PASS-2.md:134` / Backend trait line citation | Cites `restart/ARCHITECTURE.md:1078-1108`. | The cited band corresponds to the trait declaration block in ARCH §7.5. | The current ARCH file places the trait at `1078-1108` (verified via direct read); the trait actually ends at line 1108 per the closing brace. The cited range is exact. | Refresh the citation to `1067-1144` (the §7.5 section span). | KEEP. The narrow trait-surface citation is the correct anchor — a §-level citation would over-broaden the reference. The cited bytes are the trait code; that is what PASS-2's lowerer suite implements. |
 | `PASS-2.md:140` / `pointer!` glue | Cites `pointer!` as the typed glue consumed by `RustBackend::emit_path_schema`. | Mirrors ARCH §7.5 line 1119 verbatim (`<g>.path-schema.toml` plus typed `pointer!` glue). | The Phase 7.2 SYNTHESIS fold (commit `c8fb1506`) renamed `pointer!` → `path!` corpus-wide per V1-FOLD-CANDIDATES item #11; PASS-3 (`d9414a2f`) carries the rename; ARCH `naming-canon` lint at line 1636 flags `pointer!` as drift. PASS-2 + ARCH §7.5 both retain `pointer!`. | Rename PASS-2 line 140 + line 383 to `path!` immediately. | REINVENT (non-blocking; corpus-hygiene residue). The rename is partial: ARCH §7.5 itself retains `pointer!` at line 1119; PASS-2 mirrors ARCH. The fix lives in a corpus-wide naming-canon sweep, not a PASS-2-local edit. ARCH at `naming-canon` lint formally flags this; the lint is the receiver. See §7 punch list residue R-V7-1. |
-| `PASS-2.md:401` / passes::bridge | Cites `restart/locks/14-LOCKS.md:44` for Lock 6 amendment. | Phase 7.1 Lock 6 amendment text is at line 44 of the locks file (verified via direct read). | One-line citation when the amendment text spans a paragraph. | Demand multi-line range. | KEEP. The amendment is paragraph-form continuation of Lock 6's body; line 44 is the anchor where the egraph/csp-solver decoupling sentence begins. |
+| `PASS-2.md:401` / passes::bridge | Cites `restart/locks/LOCKS.md:44` for Lock 6 amendment. | Phase 7.1 Lock 6 amendment text is at line 44 of the locks file (verified via direct read). | One-line citation when the amendment text spans a paragraph. | Demand multi-line range. | KEEP. The amendment is paragraph-form continuation of Lock 6's body; line 44 is the anchor where the egraph/csp-solver decoupling sentence begins. |
 | `PASS-2.md:144` / per-grammar matrix mechanically grows | Cites ARCH §12.1 grows columns when each new `Backend` impl lands. | Mirrors Lock 14 line 60 + ARCH §12.1 row structure. | The matrix at ARCH lines 1559-1573 currently shows a single column per backend domain (no Wasm/Ts columns). | Rename "grows columns mechanically" to "grows columns post-V2". | KEEP. The text says "when each new Backend impl lands" — the temporal qualifier holds; the V1 matrix is correct for V1. |
 
 Lane 3 verdict: **READY** with one corpus-wide non-blocking residue (R-V7-1

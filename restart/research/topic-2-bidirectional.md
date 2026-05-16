@@ -31,13 +31,13 @@
 
 ### §1.3 Lock and layout authority
 
-22. `restart/locks/14-LOCKS.md:36` states Lock 2: layout lowering is the canonical public pass name; HM/CSP type checking is a subroutine of layout lowering, never a public peer pass.
-23. `restart/locks/14-LOCKS.md:40` states Lock 4: CSP type/layout inference, e-graph rewriting, pattern miners, shape analysis, and cost model compose by output-piping; no unified hypergraph.
-24. `restart/locks/14-LOCKS.md:40` says any plan fusing CSP and e-graph into one solver is a fault.
-25. `restart/locks/14-LOCKS.md:52` states Lock 10: Pratt and SIMD are auto-detected; no `@pratt` or `@simd` directives survive.
-26. `restart/locks/14-LOCKS.md:60` states Lock 14: generic crates carry zero grammar-specific code; grammars enter through source plus workspace metadata, with rare fenced declaration crates only.
+22. `restart/locks/LOCKS.md:36` states Lock 2: layout lowering is the canonical public pass name; HM/CSP type checking is a subroutine of layout lowering, never a public peer pass.
+23. `restart/locks/LOCKS.md:40` states Lock 4: CSP type/layout inference, e-graph rewriting, pattern miners, shape analysis, and cost model compose by output-piping; no unified hypergraph.
+24. `restart/locks/LOCKS.md:40` says any plan fusing CSP and e-graph into one solver is a fault.
+25. `restart/locks/LOCKS.md:52` states Lock 10: Pratt and SIMD are auto-detected; no `@pratt` or `@simd` directives survive.
+26. `restart/locks/LOCKS.md:60` states Lock 14: generic crates carry zero grammar-specific code; grammars enter through source plus workspace metadata, with rare fenced declaration crates only.
 27. `restart/research/INDEX.md:54` labels Topic 2's anchor lock as "Lock 4."
-28. `restart/research/INDEX.md:54` and `restart/locks/14-LOCKS.md:40` now point to different meanings: the research index calls Lock 4 a type-stack lock, while the current lock text defines per-domain optimization.
+28. `restart/research/INDEX.md:54` and `restart/locks/LOCKS.md:40` now point to different meanings: the research index calls Lock 4 a type-stack lock, while the current lock text defines per-domain optimization.
 
 ### §1.4 Architecture authority
 
@@ -231,7 +231,7 @@
 177. Fold note: no consumer outside `passes::layout` should depend on internal type variables.
 
 178. C6. CSP/e-graph separation survives this topic.
-179. Restart claim: Lock 4 says CSP, e-graph, miners, shape analysis, and cost model compose by output-piping (`restart/locks/14-LOCKS.md:40`).
+179. Restart claim: Lock 4 says CSP, e-graph, miners, shape analysis, and cost model compose by output-piping (`restart/locks/LOCKS.md:40`).
 180. SOTA evidence: [S1], [S2], [S3], [S4], and [S5] all distinguish typing/unification from other compiler tasks; none argues for a fused e-graph/CSP hypergraph.
 181. Match: type constraints can feed recognizer and cost decisions as facts.
 182. Fold note: this topic does not contradict actual Lock 4; it clarifies type-checking facts entering that bridge.
@@ -258,7 +258,7 @@
 
 198. D2. The research index's lock label drifts from the current locks file.
 199. Restart claim: Topic 2 says anchor lock is "Lock 4" and describes a type-stack lock (`restart/research/INDEX.md:54`).
-200. Current lock: `restart/locks/14-LOCKS.md:40` defines Lock 4 as per-domain orthogonal optimization.
+200. Current lock: `restart/locks/LOCKS.md:40` defines Lock 4 as per-domain orthogonal optimization.
 201. Divergence reason: the topic catalogue likely retained an older lock label.
 202. Phase 2 should amend the research index or add a note that Topic 2 engages README §7 plus Lock 2 and actual Lock 4.
 
@@ -282,7 +282,7 @@
 
 218. D6. PASS-1's `types/` child conflicts mildly with layout-lowering public vocabulary.
 219. Restart claim: `restart/audit/pass-1-substrate/PASS-1.md:121` lists both `types/` and `layout/`; `restart/audit/pass-1-substrate/PASS-1.md:140` says `types/` owns HM + bidirectional checking.
-220. Later authority: `restart/locks/14-LOCKS.md:36` and `restart/ARCHITECTURE.md:975-994` make `passes::layout` the public owner and `TypeFacts` internal.
+220. Later authority: `restart/locks/LOCKS.md:36` and `restart/ARCHITECTURE.md:975-994` make `passes::layout` the public owner and `TypeFacts` internal.
 221. Divergence reason: hardening accepted this as mostly closed, but topic 2's wording should avoid re-publicising `passes::types`.
 222. Phase 2 should add one sentence that `types/` is an internal module under layout or a private submodule, if retained.
 
@@ -343,7 +343,7 @@
 265. R9 target: `restart/research/INDEX.md:54`.
 266. R9 current text: "Anchor locks: Lock 4."
 267. R9 proposed text: "Anchor surfaces: README §7, Lock 2 (`passes::layout`), actual Lock 4 (per-domain output-piped CSP/egraph composition), and PASS-1 §3 chain-step type-flow rule."
-268. R9 rationale: The current Lock 4 line is a numbering drift relative to `restart/locks/14-LOCKS.md:40`.
+268. R9 rationale: The current Lock 4 line is a numbering drift relative to `restart/locks/LOCKS.md:40`.
 
 269. R10 target: `restart/research/INDEX.md:63`.
 270. R10 current text: "Roc's type checker ... modern Rust-implemented bidirectional..."
@@ -365,7 +365,7 @@
 ### §6.1 Finding A - lock numbering drift
 
 281. Contradicted surface: `restart/research/INDEX.md:54` says Topic 2 anchors Lock 4 as the type-system stack.
-282. Actual lock: `restart/locks/14-LOCKS.md:40` defines Lock 4 as per-domain orthogonal optimization.
+282. Actual lock: `restart/locks/LOCKS.md:40` defines Lock 4 as per-domain orthogonal optimization.
 283. SOTA evidence: none needed; this is internal provenance drift, not a literature contradiction.
 284. Amendment: rewrite the Topic 2 anchor line as R9.
 285. Receiving phase: Phase 2 research fold before any topic index is used as lock authority.
@@ -434,7 +434,7 @@
 
 323. Target: `restart/research/INDEX.md:54`.
 324. Surgery directive: replace "Anchor locks: Lock 4" with R9.
-325. Acceptance gate: `rg -n "Topic 2|Anchor locks|Lock 4" restart/research/INDEX.md restart/locks/14-LOCKS.md` no longer implies that actual Lock 4 is the type-stack lock.
+325. Acceptance gate: `rg -n "Topic 2|Anchor locks|Lock 4" restart/research/INDEX.md restart/locks/LOCKS.md` no longer implies that actual Lock 4 is the type-stack lock.
 326. Dependency: §5 R9 and §6 Finding A.
 
 ### §7.5 Surgery P5 - recast Roc source row

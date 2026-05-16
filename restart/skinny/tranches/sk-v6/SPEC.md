@@ -25,9 +25,9 @@ contract. This packet materializes the next implementation sequence.
 
 ## 2. Reading Order
 
-1. `restart/skinny/audit/IMPLEMENTATION-AGENT-PROMPT-SK-V6.md`
-2. `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6-ASMJSON-DAV1D.md`
-3. `restart/skinny/audit/SK-V6-COHORT/skv6-B6-spec-edit-map.md`
+1. `restart/skinny/tranches/sk-v6/DISPATCH-PROMPT.md`
+2. `restart/skinny/tranches/sk-v6/SYNTHESIS.md`
+3. `restart/skinny/tranches/sk-v6/research/skv6-B6-spec-edit-map.md`
 4. `skinny/RESULTS.md`
 5. `skinny/REDRESS.md`
 6. Wave-specific cohort reports named below.
@@ -224,7 +224,7 @@ Owner paths:
 - `skinny/RESULTS.md`
 - `skinny/crates/bbnf-bench/`
 - `skinny/xtask/`
-- `restart/skinny/audit/HANDOFF-SK-V6.md`
+- `restart/skinny/tranches/sk-v6/HANDOFF.md`
 
 Tasks:
 
@@ -284,5 +284,5 @@ SK-V6 closes only when:
 - Lock 1 and Lock 14 audits are clean;
 - same-plane SOTA rows beat sonic-rs, simdjson, yyjson, and strict asmjson
   where that hardware row exists;
-- `restart/skinny/audit/HANDOFF-SK-V6.md` records commits, row deltas, rejected
+- `restart/skinny/tranches/sk-v6/HANDOFF.md` records commits, row deltas, rejected
   routes, and remaining no-go evidence.

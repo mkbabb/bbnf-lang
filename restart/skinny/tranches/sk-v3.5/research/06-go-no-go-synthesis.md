@@ -62,7 +62,7 @@ Lock 1 keeps columnar SoA **buried**.
 
 ### 1.5 Per-grammar god-modules in generic crates (Lock 14's enumerated list)
 
-Per `restart/locks/14-LOCKS.md:60`:
+Per `restart/locks/LOCKS.md:60`:
 - CSS L4 14-variant `OpenFrame`
 - BBNF aggregator `pub use bbnf::*`
 - Sheets arena fallbacks
@@ -143,7 +143,7 @@ A: **Yes — this is the core insight.** Three concrete corollaries:
 
 ### 4.1 If `CollapsedStage` is dropped from the SK-V3 close (recommended)
 
-Edit `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md`:
+Edit `restart/skinny/tranches/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md`:
 
 **Amendment 1 (Non-negotiable, after line 37)**:
 
@@ -161,7 +161,7 @@ Edit `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md`:
 
 **Amendment 4 (rename or footnote "FSM")** per FSM-audit §e:
 
-In `restart/skinny/audit/SOTA-BEAT-DESIGN.md` §5.1, change the heading "9-state FSM and PC-as-state" to **"9-state DPDA: 9-state finite control, direct-threaded dispatch via `r10`, hardware-bounded explicit stack (`open_buf[MAX_JSON_DEPTH=64]`) for container nesting"**. This is documentation, not architecture.
+In `restart/skinny/tranches/shared/SOTA-BEAT-DESIGN.md` §5.1, change the heading "9-state FSM and PC-as-state" to **"9-state DPDA: 9-state finite control, direct-threaded dispatch via `r10`, hardware-bounded explicit stack (`open_buf[MAX_JSON_DEPTH=64]`) for container nesting"**. This is documentation, not architecture.
 
 ### 4.2 If `CollapsedStage` is kept in the SK-V3 close (NOT recommended)
 
@@ -197,7 +197,7 @@ These items are validated by the excavation, the failure-mode anatomy, and the d
 | `escape_mask_64` NEON correctness fix (state-handoff bug; adversarial repro xorshift seed `0xCAFEF00DBAADF00D`) | Blocks SOTA-BEAT bench claims; required before any wave-1 bench publication; ~30 LOC | `IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md` P0.2 |
 | 4 of 5 `BackendShape` taxonomy values: `EagerTape`, `OffsetTape`, `EventTape`, `SinkOnly` | Cost-model-derived per-rule; 8-priority derivation algorithm; no new directive; no new BIR variant. Distinct from EmissionTier (one side-table field, not two). | `ARCHITECTURE.md` §7.3; `SUBSTRATE.md:213-219` |
 | Lock 15 build profile (`lto="fat"`, `codegen-units=1`, `debug=true`) | Wave 2 PMU confirms fused `parse_value_at` is 7,304 bytes ≪ 20 KiB i-cache budget; sonic-rs NOINLINE wall-clock falls 2.1-3.2× without it; co-load-bearing with codegen template | `IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md` P0.3; sonic-rs-v2 profile §(e) |
-| Lock 16 SIMD/ASM admissibility allowlist (NEON 3-pack, dav1d primitive lineage) | Every `core::arch::*` use-site + every `asm!` block traces to a Lock 16 row with citation + checkasm parity admission | `restart/locks/14-LOCKS.md` §16 |
+| Lock 16 SIMD/ASM admissibility allowlist (NEON 3-pack, dav1d primitive lineage) | Every `core::arch::*` use-site + every `asm!` block traces to a Lock 16 row with citation + checkasm parity admission | `restart/locks/LOCKS.md` §16 |
 | Wave 1 → Wave 2 → Wave 3 → Wave 4 → Wave 5 ordering for arm64-host SOTA-BEAT close | Substrate + consumer same-wave per the `LESSONS-LEARNED.md:17-26` rule | `IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md` §3-§7 |
 
 The 5-shape taxonomy is kept *as a taxonomy*; `CollapsedStage` stays in the taxonomy as a derivable shape, even though its dispatch is deferred. This preserves the cost-model elegance and avoids re-architecting later.
@@ -236,7 +236,7 @@ Current §8 of `IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md` couples AVX-512 primit
 
 ### 7.2 The Lock 16 AVX-512 5-pack lands WITHOUT FSM context
 
-Each primitive's admissibility row in `restart/locks/14-LOCKS.md` §16 stands on its own scalar reference + checkasm parity. Whether `CollapsedStage` consumes them in fused form is downstream — the primitives are useful for `OffsetTape` on x86_64 regardless of whether the FSM backend ever ships.
+Each primitive's admissibility row in `restart/locks/LOCKS.md` §16 stands on its own scalar reference + checkasm parity. Whether `CollapsedStage` consumes them in fused form is downstream — the primitives are useful for `OffsetTape` on x86_64 regardless of whether the FSM backend ever ships.
 
 ### 7.3 Add per-grammar `derive_backend_shape` firing matrix audit
 
@@ -297,7 +297,7 @@ Before the SK-V3 wave dispatcher fires:
   - [x] Gate G7 (FSM codegen parity harness) is a hard precondition for any Phase 4 dispatch.
   - [x] Gate G8 (per-grammar firing matrix) prevents JSON-only `CollapsedStage` lockup.
 
-- [ ] **Amendment list applied to `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md`?**
+- [ ] **Amendment list applied to `restart/skinny/tranches/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md`?**
   - [ ] Amendment 1 (Phase 4 NOT in SK-V3 close)
   - [ ] Amendment 2 (Wave 6 split into 6a unconditional + 6b deferred)
   - [ ] Amendment 3 (close-condition update at §0)
@@ -320,9 +320,9 @@ If all checkboxes resolve to checked, dispatch SK-V3 Wave 0 through Wave 5 again
 | §2 (risk audit) | `/tmp/skv3-psi-diff-audit.md` (b)(c) | `/tmp/psi-failure-anatomy.md` §C + §D |
 | §3 (FSM verdict) | `/tmp/fsm-correctness-audit.md` (a)(b)(c)(d)(e) | `/tmp/skv3-psi-diff-audit.md` (d) |
 | §4 (amendments) | `/tmp/skv3-psi-diff-audit.md` (e) | `/tmp/fsm-correctness-audit.md` (e) |
-| §5 (keep) | `restart/skinny/audit/SOTA-BEAT-DESIGN.md` §10 | `/tmp/psi-failure-anatomy.md` §C.4 |
-| §6 (drop/amend) | `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md` §8 | `/tmp/fsm-correctness-audit.md` (e) + `/tmp/psi-failure-anatomy.md` §D.5 |
-| §7 (redo) | `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md` §8 | this synthesis |
+| §5 (keep) | `restart/skinny/tranches/shared/SOTA-BEAT-DESIGN.md` §10 | `/tmp/psi-failure-anatomy.md` §C.4 |
+| §6 (drop/amend) | `restart/skinny/tranches/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md` §8 | `/tmp/fsm-correctness-audit.md` (e) + `/tmp/psi-failure-anatomy.md` §D.5 |
+| §7 (redo) | `restart/skinny/tranches/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md` §8 | this synthesis |
 | §8 (gates) | this synthesis | derived from §1-§7 |
 | §9 (checklist) | this synthesis | derived from §1-§8 |
 

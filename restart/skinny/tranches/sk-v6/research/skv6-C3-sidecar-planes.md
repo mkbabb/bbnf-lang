@@ -15,8 +15,8 @@ The strict-anchor blocker is `sonic-rs`: the active skinny bench dependency enab
 - `restart/skinny/BENCH.md`
 - `skinny/RESULTS.md`
 - `Cargo.toml`, `skinny/Cargo.toml`, `skinny/crates/bbnf-bench/Cargo.toml`, `crates/core/Cargo.toml`
-- `restart/skinny/audit/SK-V6-COHORT/skv6-A3-comparator-planes.md`
-- `restart/skinny/audit/SK-V6-COHORT/skv6-R5-sidecar-refresh.md`
+- `restart/skinny/tranches/sk-v6/research/skv6-A3-comparator-planes.md`
+- `restart/skinny/tranches/sk-v6/research/skv6-R5-sidecar-refresh.md`
 - active bench/runtime sources under `skinny/crates/bbnf-bench`, `skinny/crates/runtime`, and `skinny/crates/parse-that-regex`
 - existing profile reports under `skinny/profile/`
 

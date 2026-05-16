@@ -9,7 +9,7 @@ Repo edits: none. Pre-existing staged dirty state remained untouched: `skinny/cr
 
 Current `skinny/RESULTS.md` records retained parse G rows on `citm_catalog`, `random`, `instruments`, `distinct_values`, and `update_center`; `canada`, `marine_ik`, `mesh`, and `numbers` are retained GO controls. REDRESS item 63 admits the array `ContainerNext` / next-byte carry intervention and explicitly leaves parse-G open. The key Candidate-4 attribution result was that the old redundant boundary set `consume_container_next + parse_value_at + dispatch_value` fell from 24.97% to 14.51% on `citm_catalog` and from 27.37% to 6.48% on `canada`; the new `consume_array_next` helper is the replacement boundary, not residual re-entry.
 
-I also read `restart/skinny/audit/SK-V6-COHORT/skv6-R2b-parser-dispatch.md`. That pre-Candidate4 report selected the next-byte carry candidate and pre-blocked retained side tables, structural cursors, whitespace cursors, eager tape, and second scanners. This report does not reopen those rejected routes.
+I also read `restart/skinny/tranches/sk-v6/research/skv6-R2b-parser-dispatch.md`. That pre-Candidate4 report selected the next-byte carry candidate and pre-blocked retained side tables, structural cursors, whitespace cursors, eager tape, and second scanners. This report does not reopen those rejected routes.
 
 `skinny/crates/runtime/src/grammars/json/generated.rs` now has the Candidate-4 array shape: `parse_array` parses the first value once, then loops on `consume_array_next`, which consumes comma/close and carries the next value byte into `dispatch_value`. `parse_object` still uses the older `consume_container_next -> parse_pair -> parse_key_colon -> parse_value_at` cadence.
 

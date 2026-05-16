@@ -4,7 +4,7 @@
 
 Lens: specify Rust V1 lowering from Backend IR to template-emitted Rust parser/runtime modules. PASS-2 owns Rust V1 lowerer and runtime template (`restart/prompts/PASS-2-CODEGEN.md:3`). The current source has a Rust emitter, but it is not the greenfield lowerer shape. It sits behind a broad `Emitter` trait (`crates/core/src/backend/emitter.rs:31-566`), and Rust grammar emission contains strategy dispatch, PHF tables, Pratt LUTs, path plans, parser bodies, and registry emission in one area (`crates/core/src/backend/rust/emitter/grammar.rs:119-221`). PASS-2 must split these responsibilities around Backend IR and Tape.
 
-The Rust lowerer must retire the OpenFrame checkpoint pathology. The restart sketch records `Vec<OpenFrame>::clone` as 86.07% of samples in the old substrate (`restart/corpora/RESTART-SKETCH.md:154-184`), and the current builder template still deep-clones stack state in `checkpoint` (`crates/core/src/runtime/builder_template.rs:203-210`). Lock 1 names this exact class of parallel substrate as a fault and mandates Tape with no OpenFrame ladder (`restart/locks/14-LOCKS.md:34`).
+The Rust lowerer must retire the OpenFrame checkpoint pathology. The restart sketch records `Vec<OpenFrame>::clone` as 86.07% of samples in the old substrate (`restart/corpora/RESTART-SKETCH.md:154-184`), and the current builder template still deep-clones stack state in `checkpoint` (`crates/core/src/runtime/builder_template.rs:203-210`). Lock 1 names this exact class of parallel substrate as a fault and mandates Tape with no OpenFrame ladder (`restart/locks/LOCKS.md:34`).
 
 ## §2 Per-Item Table
 
@@ -27,7 +27,7 @@ The Rust lowerer must retire the OpenFrame checkpoint pathology. The restart ske
 
 2. **TapeBuilder is the only mutable materialiser.** `TapeBuilder` owns node, payload, diagnostic, and optional side-table arenas. Checkpoint/rollback is length-truncation. This is the same-wave consumer wiring demanded by lessons on substrate plus consumer gates (`docs/precepts/instructions/LESSONS-LEARNED.md:17-26`, `docs/precepts/instructions/LESSONS-LEARNED.md:74-80`).
 
-3. **Typed values are views.** The generated `<Grammar>Document<'i>` stores `&'i Tape<'i>` and a root node id. Generated `<Rule>View<'i>` or value enums borrow the tape and project fields. This matches Lock 1's typed-value-borrow shape (`restart/locks/14-LOCKS.md:34`).
+3. **Typed values are views.** The generated `<Grammar>Document<'i>` stores `&'i Tape<'i>` and a root node id. Generated `<Rule>View<'i>` or value enums borrow the tape and project fields. This matches Lock 1's typed-value-borrow shape (`restart/locks/LOCKS.md:34`).
 
 4. **Emitter trait collapses to a small Rust lowerer API.** PASS-B already identified the 30-method trait collapse to 8-10 methods (`restart-archive-2026-05-04/audit/passes/PASS-B.md:181-186`). Rust lowerer methods are grouped by module, type, rule, node, scanner, host table, registry, finish.
 

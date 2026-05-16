@@ -20,7 +20,7 @@ The conforming replacement is: an external host/API output schema feeds the `Sha
 
 ## Why This Is The Right Boundary
 
-REDRESS item 70 says the first `real_typed_struct` implementation was correct but not an architectural close because JSON itself does not contain `TwitterSearch` or `UpdateCenter` (`skinny/REDRESS.md:1876-1886`, `skinny/REDRESS.md:1917-1926`). Grand Synthesis §14 states the same finding directly: sonic-rs gets those shapes from Serde, so BBNF must admit an explicit host/API output type contract lowered into existing `DirectBuild { shape, fields }` (`restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md:1006-1012`).
+REDRESS item 70 says the first `real_typed_struct` implementation was correct but not an architectural close because JSON itself does not contain `TwitterSearch` or `UpdateCenter` (`skinny/REDRESS.md:1876-1886`, `skinny/REDRESS.md:1917-1926`). Grand Synthesis §14 states the same finding directly: sonic-rs gets those shapes from Serde, so BBNF must admit an explicit host/API output type contract lowered into existing `DirectBuild { shape, fields }` (`restart/skinny/tranches/sk-v6/SYNTHESIS-WAVE-1-PLAN.md:1006-1012`).
 
 This boundary also avoids violating the metadata rules. Workspace metadata may name files, profiles, and feature flags, but may not name Rust parser types, generated modules, or builder structs (`restart/ARCHITECTURE.md:671-735`). Therefore `TwitterSearch` / `UpdateCenter` should not be hidden in BBNF or generic grammar metadata as a pseudo-directive. They are API consumer schemas.
 
@@ -47,7 +47,7 @@ Common required metadata:
 
 - `grammar = "json"` and `entry = "json"`.
 - `output_name`: benchmark/API row name, e.g. `twitter` or `update_center`.
-- `root_shape`: `TwitterSearch` or `UpdateCenter`; Grand Synthesis names these initial fixture mappings (`restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md:933-940`).
+- `root_shape`: `TwitterSearch` or `UpdateCenter`; Grand Synthesis names these initial fixture mappings (`restart/skinny/tranches/sk-v6/SYNTHESIS-WAVE-1-PLAN.md:933-940`).
 - `root_source`: top-level JSON value.
 - For each output field: host field name, source object key/path, target type, direct materialization policy, presence policy, null policy, default policy, and whether unknown object keys are ignored, rejected, or captured.
 - For scalar fields: string policy (`borrow_span` if unescaped, owned decoded string on `needs_unescape`), number policy (`u64`, `i64`, `f64`, decimal/string, with overflow behavior), bool/literal policy, and null handling.
@@ -58,7 +58,7 @@ Common required metadata:
 `twitter -> TwitterSearch` needs at least:
 
 - Root object fields `statuses: Vec<Status>` and `search_metadata: SearchMetadata`.
-- Nested `Status` shape covering nested objects, arrays, optionals, booleans, integers, text fields, Unicode strings, and recursive `retweeted_status` style child status output, matching the coverage described in Grand Synthesis (`restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md:933-937`).
+- Nested `Status` shape covering nested objects, arrays, optionals, booleans, integers, text fields, Unicode strings, and recursive `retweeted_status` style child status output, matching the coverage described in Grand Synthesis (`restart/skinny/tranches/sk-v6/SYNTHESIS-WAVE-1-PLAN.md:933-937`).
 - Nested user/entities/metadata shapes, with optional/null policies for fields that are absent or null across the fixture.
 - String materialization policy per field so plain strings can borrow and escaped strings decode only when required.
 
@@ -67,7 +67,7 @@ Common required metadata:
 - Root object fields for `connectionCheckUrl`, `core`, `id`, `plugins`, `signature`, and `updateCenterVersion`.
 - `core: Core`.
 - `plugins: Map<String, Plugin>` sourced from the dynamic object under `plugins`; map keys must be preserved because the fixture relies on dynamic plugin names.
-- `Plugin` fields covering dependencies/developers/labels arrays, long strings, optionals, and scalar version/timestamp/checksum-style fields, matching Grand Synthesis (`restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md:938-940`).
+- `Plugin` fields covering dependencies/developers/labels arrays, long strings, optionals, and scalar version/timestamp/checksum-style fields, matching Grand Synthesis (`restart/skinny/tranches/sk-v6/SYNTHESIS-WAVE-1-PLAN.md:938-940`).
 - `Developer` and dependency/label element shapes with array policies and optional/null handling.
 
 This metadata is enough to generate a typed sink because it tells DirectBuild what Serde already knows: which output fields exist, where each field comes from in the input grammar's value space, how to materialize each scalar, and what to do with absence, nulls, maps, arrays, and unknown keys.

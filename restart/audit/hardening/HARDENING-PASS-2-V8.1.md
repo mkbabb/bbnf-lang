@@ -70,7 +70,7 @@ closure-frame validation — is present and verifiable at line 202 + line
 `rg -n 'V2 amendment|deferred to V2|post-V1 amendment' restart/audit/pass-2-codegen/PASS-2.md` returns **zero hits**.
 
 The Phase-8.3.1 corpus cleanup retired GADT-V2 framing in favour of GADT-V1
-(per `restart/locks/14-LOCKS.md:40` Lock 4 V1 surface), retired CHR as a V1
+(per `restart/locks/LOCKS.md:40` Lock 4 V1 surface), retired CHR as a V1
 fold-candidate item (composition-delete), and pruned V5.1 backward-compat
 language. PASS-2 reflects the V1-affirmation cleanly: every closure surface,
 generic-monomorphisation surface, and host-leverage surface is V1 active —

@@ -10,13 +10,13 @@ Repository was not modified.
 ## Authorities read
 
 - Current source: `skinny/crates/parse-that-regex/src/{lib.rs,number/mod.rs,number/integer.rs,number/eisel_lemire/{mod,algorithm,table}.rs,unicode/{mod,utf8_block,utf8_hoehrmann}.rs,integration/{mod,simd_scan_hook}.rs}`.
-- Cohort C5 (latest parse-that audit): `restart/skinny/audit/SK-V6-COHORT/skv6-C5-parse-that-gaps.md`.
+- Cohort C5 (latest parse-that audit): `restart/skinny/tranches/sk-v6/research/skv6-C5-parse-that-gaps.md`.
 - Cohort C1 (retained profile + per-`\uXXXX` candidate): `skv6-C1-retained-profile.md`.
 - Cohort C2 (direct profile + mesh DirectBuild candidate): `skv6-C2-direct-profile.md`.
 - Cohort C6 (Lock 14 generality leaks): `skv6-C6-generality-costfacts.md`.
 - Cohort B5 (post-V6 primitive vocabulary): `skv6-B5-primitive-gap-inventory.md`.
 - V5 baseline (what was empty at SK-V5 start): `SK-V5-COHORT/skv5-A3-parse-that-gaps.md`.
-- HANDOFF: `restart/skinny/audit/HANDOFF-SK-V6.md`.
+- HANDOFF: `restart/skinny/tranches/sk-v6/HANDOFF.md`.
 - Row state: `skinny/RESULTS.md:5-21`, `:27-45`.
 - Rejected route record: `skinny/REDRESS.md` items 50-72.
 

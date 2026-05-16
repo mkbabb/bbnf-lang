@@ -786,7 +786,7 @@ the i-cache-resident hot function the yyjson profile evidenced. Force-inline
 is correct for production builds but obliterates symbol-level samply
 attribution: every kernel boundary collapses into one outer parse symbol, and
 cohort-B-style profile reports cannot name the hot leaf. SK-V5 cohort B1
-(`restart/skinny/audit/SK-V5-COHORT/skv5-B1-parse-attribution.md`) named this
+(`restart/skinny/tranches/sk-v5/research/skv5-B1-parse-attribution.md`) named this
 dishonesty: the gate authority's profile rows attribute the whole hot path to
 `parse_value_at` without PC-level decomposition.
 
@@ -848,8 +848,8 @@ re-profile campaign. A kernel prescription made from a fused
 fresh attribution, is non-canonical. REDRESS 50-55 are the negative evidence
 that forced this rule.
 
-Authority: `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md` §2.3 and
-`restart/skinny/audit/IMPLEMENTATION-AGENT-PROMPT-SK-V6.md` §5 Wave 1.
+Authority: `restart/skinny/tranches/sk-v5/SPEC.md` §2.3 and
+`restart/skinny/tranches/sk-v6/DISPATCH-PROMPT.md` §5 Wave 1.
 
 ---
 

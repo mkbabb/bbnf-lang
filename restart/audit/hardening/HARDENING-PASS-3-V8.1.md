@@ -182,7 +182,7 @@ ARCH §7.4 prose at `:1083-1088` cites PASS-3 as the source-of-truth for verbati
 
 | Lock-anchor | Locks/Lock-10 spelling | PASS-3 spelling | Coherent? |
 |---|---|---|---|
-| Six V1 directives | `@import \| @host fn \| @error \| @layout \| @pretty \| @token` (Lock 10 at `restart/locks/14-LOCKS.md:52`) | `@import, @host fn, @error(recover = ...), @layout, @pretty, @token` (`:16` and `:548`) | **YES** |
+| Six V1 directives | `@import \| @host fn \| @error \| @layout \| @pretty \| @token` (Lock 10 at `restart/locks/LOCKS.md:52`) | `@import, @host fn, @error(recover = ...), @layout, @pretty, @token` (`:16` and `:548`) | **YES** |
 | `@recover` retirement | "Standalone `@recover` retires; absorbed by `@error(recover = ...)`" (Lock 10) | `:195` "A standalone `@recover` token is a legacy alias only if SYNTHESIS keeps a migration parser; it is not a new V1 extension." | **YES** |
 | `@pratt`/`@simd`/`@transducer`/`@rewrite`/`@unicode` retirement | Lock 10 retirement clause | PASS-3 §1 "Rewrite-mode is out; grammar-level Unicode-class algebra is deferred to `parse-that-regex`" + §6b `BBNF-OPT001/002` notes are author-facing optimizer disclosure (not directives) | **YES** |
 | Function values + lambda literals + closure capture | Lock 10 + Lock 4 amendment | `:16` "function values + lambda literals (`|x| body`), and closure capture by `&'i Tape<'i>` reference"; `:191` four-site closure environment commitment | **YES** |

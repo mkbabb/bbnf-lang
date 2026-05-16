@@ -24,7 +24,7 @@ remain in the target.
 
 | Lens | Verdict | Finding count | Rationale |
 |---|---|---:|---|
-| Lane 1 — Lock adherence | AMEND | 2 | Lock 5 / Lock 8 defer WASM post-V1, but PASS-2 still names WASM V1 in active obligations (`restart/audit/pass-2-codegen/PASS-2.md:40`, `restart/locks/14-LOCKS.md:42`, `restart/locks/14-LOCKS.md:48`). |
+| Lane 1 — Lock adherence | AMEND | 2 | Lock 5 / Lock 8 defer WASM post-V1, but PASS-2 still names WASM V1 in active obligations (`restart/audit/pass-2-codegen/PASS-2.md:40`, `restart/locks/LOCKS.md:42`, `restart/locks/LOCKS.md:48`). |
 | Lane 2 — Sequencing | N/A | 0 | PASS-2 is a single-pass synthesis, not a multi-wave tranche. |
 | Lane 3 — Cohesion | AMEND | 2 | PASS-2 says it does not re-own BIR, then labels a 22-row table "Backend IR final variant table" with names that do not match ARCH §7.2 (`restart/audit/pass-2-codegen/PASS-2.md:50-78`, `restart/ARCHITECTURE.md:913-934`). |
 | Lane 4 — SOTA anchoring | KEEP | 0 | Throughput rows name competitor, dataset, platform, target, mechanism, and evidence artefact (`restart/audit/pass-2-codegen/PASS-2.md:472-486`). |
@@ -52,10 +52,10 @@ Backend` is carried post-V1 (`restart/audit/pass-2-codegen/PASS-2.md:137-143`).
 The target therefore contains two incompatible scope stories.
 
 The authoritative lock and ARCH text are clear: V1 ships `RustBackend: Backend`
-only; WASM and TS defer post-V1 (`restart/locks/14-LOCKS.md:42`,
+only; WASM and TS defer post-V1 (`restart/locks/LOCKS.md:42`,
 `restart/ARCHITECTURE.md:1095-1097`). Lock 8 also says no measurement-pending
 WASM anchor lands in V1 and that the WASM lower-and-bench programme awaits the
-V2 `WasmBackend: Backend` impl (`restart/locks/14-LOCKS.md:48`).
+V2 `WasmBackend: Backend` impl (`restart/locks/LOCKS.md:48`).
 MASTER-PLAN repeats the same boundary (`restart/MASTER-PLAN.md:141-143`,
 `restart/MASTER-PLAN.md:187`).
 
@@ -137,7 +137,7 @@ These are not PASS-2-owned edits, but V9 should not lose them:
 
 | Residue | Evidence | Receiver |
 |---|---|---|
-| README still says "No V1 GADT or higher-rank surface" while locks and ARCH say GADT + DK13 higher-rank land V1. | `restart/README.md:264` conflicts with `restart/locks/14-LOCKS.md:40` and `restart/ARCHITECTURE.md:1284-1305`. | MASTER-PLAN / README amendment agent. |
+| README still says "No V1 GADT or higher-rank surface" while locks and ARCH say GADT + DK13 higher-rank land V1. | `restart/README.md:264` conflicts with `restart/locks/LOCKS.md:40` and `restart/ARCHITECTURE.md:1284-1305`. | MASTER-PLAN / README amendment agent. |
 | README still names `pointer!` as a live public macro. | `restart/README.md:35`, `restart/README.md:284-287` conflict with `restart/HANDOFF.md:61`. | MASTER-PLAN / README amendment agent, probably paired with PASS-3. |
 | README SOTA influence table still cites `regex-automata` as adopted influence, while Handoff says it is retired. | `restart/README.md:369` conflicts with `restart/HANDOFF.md:62-63`. | MASTER-PLAN / README amendment agent. |
 | ARCH still has two WASM-V1 residues outside §7.5. | `restart/ARCHITECTURE.md:57`, `restart/ARCHITECTURE.md:733` conflict with `restart/ARCHITECTURE.md:1095-1097` and `restart/ARCHITECTURE.md:1443`. | MASTER-PLAN / ARCH amendment agent. |

@@ -11,13 +11,13 @@ from this dispatch is this file. Fresh samples were captured through
 ## Authority Read
 
 - SK-V6 synthesis and packet:
-  `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md`,
-  `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6-ASMJSON-DAV1D.md`, and
-  `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V6-SOTA-RECOVERY.md`.
+  `restart/skinny/tranches/sk-v6/SYNTHESIS-WAVE-1-PLAN.md`,
+  `restart/skinny/tranches/sk-v6/SYNTHESIS.md`, and
+  `restart/skinny/tranches/sk-v6/SPEC.md`.
 - Current result/redress authority: `skinny/RESULTS.md` and
   `skinny/REDRESS.md`.
 - Cohort references:
-  `restart/skinny/audit/SK-V6-COHORT/skv6-B4-profile-direct-three-way.md`,
+  `restart/skinny/tranches/sk-v6/research/skv6-B4-profile-direct-three-way.md`,
   `skv6-R3-direct-attribution.md`, and
   `skv6-R3g-typed-directbuild-implementation.md`.
 

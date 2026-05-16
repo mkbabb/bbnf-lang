@@ -156,7 +156,7 @@ Sub-agent reports are sealed Wave-1 (May 4) dispatch outputs. Each per-pass synt
 
 ## §4 V2-deferral occurrence ledger
 
-Per `restart/prompts/HARDENING.md` post-Phase-8.1 amendment + V8 §3 Tier δ: ASPIRATIONAL/SPECULATIVE items must fold V1, route to a tranche body receiver, or delete. No naked V2 deferrals.
+Per `restart/prompts/audit-specs/HARDENING-LENS-SET.md` post-Phase-8.1 amendment + V8 §3 Tier δ: ASPIRATIONAL/SPECULATIVE items must fold V1, route to a tranche body receiver, or delete. No naked V2 deferrals.
 
 ### §4.1 PASS-1 V2-deferral ledger
 

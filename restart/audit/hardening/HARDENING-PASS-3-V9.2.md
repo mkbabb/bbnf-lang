@@ -6,7 +6,7 @@
 |---|---|
 | Target | `restart/audit/pass-3-runtime/PASS-3.md` (591 lines, V9.1-closed) |
 | Cycle | V9.2 (lazy-tape amendment audit; the open SK-V2 verdict is SK-AMENDMENT-REQUIRED-NARROW) |
-| Auxiliary target | `restart/skinny/audit/LAZY-TAPE-DESIGN.md` (the amendment proposal) |
+| Auxiliary target | `restart/skinny/tranches/LAZY-TAPE-DESIGN.md` (the amendment proposal) |
 | Adjacent V1 surfaces audited for absorption | `ARCHITECTURE.md` §3.1, §9.1, §9.2, §10; `locks/14-LOCKS.md` Lock 1, Lock 9, Lock 5, Lock 14; sister LSP/DAP surfaces inside PASS-3 §3, §4, §5 |
 | Posture | Steelman the design; produce per-target absorption list; do NOT amend PASS-3 |
 | Lens set | A-K (V8+) |
@@ -358,7 +358,7 @@ Verbatim or surgery-described edits required for PASS-3 (and adjacent runtime su
 
 ### Adjacent V1 surfaces — ARCH §9.1, ARCH §9.2, Lock 1
 
-The lazy-tape design's §4.1 amendment text lands in `restart/locks/14-LOCKS.md:34` (Lock 1) verbatim; the ARCH §9.1 Tape invariants table at `restart/ARCHITECTURE.md:1401-1409` admits a `tape_mode` row and a lazy-variant `Tape<'input>` illustrative shape. These are SYNTHESIS-owned, not PASS-3-owned. PASS-3's role is to absorb the dual-mode contract into its user-surface, error-recovery, incremental-parse, and DAP/LSP rows.
+The lazy-tape design's §4.1 amendment text lands in `restart/locks/LOCKS.md:34` (Lock 1) verbatim; the ARCH §9.1 Tape invariants table at `restart/ARCHITECTURE.md:1401-1409` admits a `tape_mode` row and a lazy-variant `Tape<'input>` illustrative shape. These are SYNTHESIS-owned, not PASS-3-owned. PASS-3's role is to absorb the dual-mode contract into its user-surface, error-recovery, incremental-parse, and DAP/LSP rows.
 
 The PASS-3 §9 KEEP / REINVENT / DISCARD summary at lines 540-571 carries forward: "Tape as the single advanced substrate unioned with direct-to-struct" stays under REINVENT (the dual-mode amendment is the V9.2 reinvent step). No DISCARD additions.
 
@@ -368,20 +368,20 @@ The PASS-3 §9 KEEP / REINVENT / DISCARD summary at lines 540-571 carries forwar
 
 > **Decision: amendment-required**
 >
-> The lazy-tape design at `restart/skinny/audit/LAZY-TAPE-DESIGN.md` survives the V9.2 lens matrix under steelman. It honours Lock 1 (the amendment text the design proposes is sound; the spirit — no parallel substrate, no OpenFrame clone — holds), Lock 5 (zero BIR variant additions; mode is a lowering parameter), Lock 9 (lifetime discriminant preserved), Lock 14 (the kind-discriminator function is template-emitted per-grammar; the substrate carries zero grammar-specific code). The empirical premise (three iterations of measured-and-rejected perturbations against the eager-tape ceiling) is sharp and the falsifiability gate (T1 ≥ 14K Mbps on twitter validates; T1 < 13K Mbps refutes) is mechanically actionable.
+> The lazy-tape design at `restart/skinny/tranches/LAZY-TAPE-DESIGN.md` survives the V9.2 lens matrix under steelman. It honours Lock 1 (the amendment text the design proposes is sound; the spirit — no parallel substrate, no OpenFrame clone — holds), Lock 5 (zero BIR variant additions; mode is a lowering parameter), Lock 9 (lifetime discriminant preserved), Lock 14 (the kind-discriminator function is template-emitted per-grammar; the substrate carries zero grammar-specific code). The empirical premise (three iterations of measured-and-rejected perturbations against the eager-tape ceiling) is sharp and the falsifiability gate (T1 ≥ 14K Mbps on twitter validates; T1 < 13K Mbps refutes) is mechanically actionable.
 >
 > PASS-3 absorbs the dual-mode contract through fourteen narrow surgeries: one preamble at §4 binding the two modes to Lock 1 amendment text; one illustrative-shape pair at §4 publishing eager and lazy `Tape<'input>` side-by-side (with `ValueRef.index` renamed to `ValueRef.cursor`); one `TapeShape` sentence at §4 admitting mode-aware declarations; one materialisation-cost artefact column-list extension at §3; one DAP / playground event-payload binding at §4; one `ReparsePlan` `TapeRange` binding at §5; one "structural span" rename at §5 fallback-rate gates; one `assembler` module rename note at §6; two new diagnostic rows at §6b (`BBNF-TAPE-MODE-CONFLICT` for grammar-author misconfiguration; `BBNF-VISITOR-LAZY-SCAN` for visitor sibling-skip cost class); one `tape_mode` column at §7 bench-row table; one visitor commitments lazy-mode paragraph at §3; one §8 hand-off row binding the mode contract; one §10 unresolved punch-list carry for the SK-V2 verdict.
 >
 > The design's claim "no I tranche redesign required; only the data type for 'reusable range' changes" is correct under Lens N. The dataset-level fallback-rate gates at PASS-3 §5 lines 277-282 apply unchanged with the same thresholds, measured against mode-agnostic structural spans. The DAP / playground acceptance gate at §4 line 189 holds verbatim; lazy-mode kind computation at event-emit time is identity-stable (pure function of immutable `(source, offsets[cursor])`).
 >
-> Hereupon: dispatch a narrow PASS-3 amendment agent applying punch-list items P3-LAZY-1 through P3-LAZY-14; once landed, re-run V9.2 verification scans to confirm absorption; SYNTHESIS dispatches the Lock 1 amendment text into `restart/locks/14-LOCKS.md:34` and the dual-mode `Tape` invariants row into `restart/ARCHITECTURE.md:1401-1409`; SK-V2 bench fires unchanged. After bench classifies outcome A / B / C on twitter (validation), JSON's `tape_mode` flips to `lazy` in workspace metadata and the Tranche B + F + I cascade lands per §10.3 of the design.
+> Hereupon: dispatch a narrow PASS-3 amendment agent applying punch-list items P3-LAZY-1 through P3-LAZY-14; once landed, re-run V9.2 verification scans to confirm absorption; SYNTHESIS dispatches the Lock 1 amendment text into `restart/locks/LOCKS.md:34` and the dual-mode `Tape` invariants row into `restart/ARCHITECTURE.md:1401-1409`; SK-V2 bench fires unchanged. After bench classifies outcome A / B / C on twitter (validation), JSON's `tape_mode` flips to `lazy` in workspace metadata and the Tranche B + F + I cascade lands per §10.3 of the design.
 
 ---
 
 ### Critical Files for Implementation
 
 - /Users/mkbabb/Programming/bbnf-lang/restart/audit/pass-3-runtime/PASS-3.md
-- /Users/mkbabb/Programming/bbnf-lang/restart/locks/14-LOCKS.md
+- /Users/mkbabb/Programming/bbnf-lang/restart/locks/LOCKS.md
 - /Users/mkbabb/Programming/bbnf-lang/restart/ARCHITECTURE.md
-- /Users/mkbabb/Programming/bbnf-lang/restart/skinny/audit/LAZY-TAPE-DESIGN.md
+- /Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/LAZY-TAPE-DESIGN.md
 - /Users/mkbabb/Programming/bbnf-lang/restart/audit/hardening/HARDENING-PASS-3-V9.1.md

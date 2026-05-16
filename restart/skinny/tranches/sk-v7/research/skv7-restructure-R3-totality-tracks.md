@@ -1,7 +1,7 @@
 # SK-V7 Restructure R3 — Totality-Track Audit / Research / Corpora
 
 Inspection scope: `restart/audit/`, `restart/research/`, `restart/corpora/`.
-Distinct from `restart/skinny/audit/` (skinny-iteration-specific, out of R3 scope).
+Distinct from `restart/skinny/tranches/` (skinny-iteration-specific, out of R3 scope).
 
 This report classifies every `.md` file under the three directories, names the
 ratchet of `V{n}` hardening cycles, audits cross-directory references, and
@@ -413,11 +413,11 @@ sub-dir; no moves. The 4-file structure is the right granularity.
 | `restart/MASTER-PLAN.md` | 1 (HARDENING-CONSOLIDATED-V8 + HARDENING-MASTER-PLAN-V8) | 0 |
 | `restart/ARCHITECTURE.md` | 0 | 1 |
 | `restart/MIGRATION.md` | 0 | 1 |
-| `restart/locks/14-LOCKS.md` | 0 | 1 |
+| `restart/locks/LOCKS.md` | 0 | 1 |
 | `restart/prompts/ORCHESTRATOR.md` | 1 (V7.1 required reading) | 1 |
-| `restart/prompts/HARDENING.md` | (multiple via lens contract) | 1 |
-| `restart/prompts/AMENDMENT-DISPATCH.md` | (via cycle) | 1 |
-| `restart/prompts/RESEARCH-FOLD-ORCHESTRATOR.md` | (via cycle) | 1 |
+| `restart/prompts/audit-specs/HARDENING-LENS-SET.md` | (multiple via lens contract) | 1 |
+| `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` | (via cycle) | 1 |
+| `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` | (via cycle) | 1 |
 | `restart/skinny/BENCH.md` | 0 | 2 |
 | `restart/skinny/SUBSTRATE.md` | 0 | 2 |
 | `restart/skinny/WORKSPACE.md` | 0 | 1 |
@@ -433,7 +433,7 @@ sub-dir; no moves. The 4-file structure is the right granularity.
 `restart/corpora/` → outside refs: ~30 across `MIGRATION.md`, `MASTER-PLAN.md`,
 `ARCHITECTURE.md` (counted §6 above).
 
-`restart/skinny/audit/` → `restart/audit/`: **zero direct references** found.
+`restart/skinny/tranches/` → `restart/audit/`: **zero direct references** found.
 The skinny audit dir is iteration-specific and operates on its own
 amendment cohort (SK-V1 through SK-V3 / V9.2 lazy-tape design).
 

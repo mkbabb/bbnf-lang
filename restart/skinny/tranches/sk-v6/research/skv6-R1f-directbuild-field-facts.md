@@ -6,8 +6,8 @@ Scope: read-only inspection of skinny codegen/runtime/direct surfaces. No reposi
 ## Required Inputs Read
 
 - `skinny/REDRESS.md` entries 66-68.
-- `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md` sections 9-11.
-- `restart/skinny/audit/IMPLEMENTATION-AGENT-PROMPT-SK-V6.md` Wave 3 summary.
+- `restart/skinny/tranches/sk-v6/SYNTHESIS-WAVE-1-PLAN.md` sections 9-11.
+- `restart/skinny/tranches/sk-v6/DISPATCH-PROMPT.md` Wave 3 summary.
 - Direct/DirectBuild surfaces:
   - `skinny/crates/ir/src/lib.rs`
   - `skinny/crates/passes/src/lib.rs`

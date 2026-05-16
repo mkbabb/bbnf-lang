@@ -14,7 +14,7 @@ Audited target outputs:
 
 Audit base commit: `015317db283ea1e9652401a6a7438ffa5baf028c`.
 
-Required context read: `restart/README.md`, `restart/locks/14-LOCKS.md`, `docs/precepts/instructions/STYLE.md`, `docs/precepts/instructions/LESSONS-LEARNED.md`, `docs/precepts/instructions/CONSUMING.md`, `restart/prompts/{PASS-1-SUBSTRATE,PASS-2-CODEGEN,PASS-3-RUNTIME,SYNTHESIS}.md`, `restart/corpora/{CENSUS,MODULES,RESTART-SKETCH,SOTA}.md`, and `restart/inheritance/INDEX.md`.
+Required context read: `restart/README.md`, `restart/locks/LOCKS.md`, `docs/precepts/instructions/STYLE.md`, `docs/precepts/instructions/LESSONS-LEARNED.md`, `docs/precepts/instructions/CONSUMING.md`, `restart/prompts/{PASS-1-SUBSTRATE,PASS-2-CODEGEN,PASS-3-RUNTIME,SYNTHESIS}.md`, `restart/corpora/{CENSUS,MODULES,RESTART-SKETCH,SOTA}.md`, and `restart/inheritance/INDEX.md`.
 
 PASS hardening signal: no committed files existed under `restart/audit/hardening/` at start. PASS syntheses under `restart/audit/pass-1-substrate/`, `restart/audit/pass-2-codegen/`, and `restart/audit/pass-3-runtime/` were read as ordinary synthesis context where the target cites them.
 

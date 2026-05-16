@@ -2,7 +2,7 @@
 
 Workspace: `/Users/mkbabb/Programming/bbnf-lang`
 Date: 2026-05-16
-Authority: SK-V7 A5 (`/tmp/skv7-A5-lock-audit.md`), SK-V7 A4 Top 3 #3, Lock 14 (`restart/locks/14-LOCKS.md:60`).
+Authority: SK-V7 A5 (`/tmp/skv7-A5-lock-audit.md`), SK-V7 A4 Top 3 #3, Lock 14 (`restart/locks/LOCKS.md:60`).
 Repo edits: none. This file is the only artifact.
 
 ---
@@ -364,7 +364,7 @@ These are tracked in SK-V7 A4's overall waveplan; Lock 14 cleanup is **bounded t
 
 ## 9. Verifier
 
-After Commit 6, `cargo xtask lint-no-hardcoded-grammars` (the Lock 14 verifier referenced at `restart/locks/14-LOCKS.md:60`) should report **zero violations**.
+After Commit 6, `cargo xtask lint-no-hardcoded-grammars` (the Lock 14 verifier referenced at `restart/locks/LOCKS.md:60`) should report **zero violations**.
 
 Spot checks per the A5 leak inventory:
 

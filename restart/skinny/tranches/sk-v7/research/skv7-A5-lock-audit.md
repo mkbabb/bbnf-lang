@@ -6,8 +6,8 @@ Repo edits: none. This file is the only artifact.
 
 Authority anchors:
 
-- `restart/locks/14-LOCKS.md:34` (Lock 1 — substrate union; columnar SoA dead; parallel substrates dead).
-- `restart/locks/14-LOCKS.md:60` (Lock 14 — zero overfitting; verifier `cargo xtask lint-no-hardcoded-grammars`).
+- `restart/locks/LOCKS.md:34` (Lock 1 — substrate union; columnar SoA dead; parallel substrates dead).
+- `restart/locks/LOCKS.md:60` (Lock 14 — zero overfitting; verifier `cargo xtask lint-no-hardcoded-grammars`).
 - `restart/ARCHITECTURE.md:1020-1133` (§7.3 / §7.4 — `BackendShape`, side tables, SK-V6 implementation status).
 - Prior baselines: SK-V5 `skv5-A4-tape-union-audit.md`, `skv5-A5-grammar-generalization.md`; SK-V6 `skv6-A5-general-grammar-abstraction.md`, `skv6-C6-generality-costfacts.md`.
 
@@ -361,7 +361,7 @@ V5 §2.1 named four offending files: `aarch64/classify_tbl4.rs`, `x86_64/avx2/cl
 
 ## 4. Lock 16 Admissibility — 9-Macro Vocabulary Status
 
-Per `restart/locks/14-LOCKS.md:69-94` + `bbnf-simd/ext/x86/bbnf.asm` header (verified at file:30-44):
+Per `restart/locks/LOCKS.md:69-94` + `bbnf-simd/ext/x86/bbnf.asm` header (verified at file:30-44):
 
 | # | Macro | Body? | Scalar ref | checkasm test | Consumer wired |
 |---|---|---|---|---|---|

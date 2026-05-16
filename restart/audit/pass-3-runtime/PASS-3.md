@@ -27,8 +27,8 @@ Conflicts surfaced:
 | Surface | Explication | Pro | Con | Challenge | Verdict |
 | --- | --- | --- | --- | --- | --- |
 | Value API | Generated grammars expose typed roots, `DocumentView`, and untyped `ValueRef` over shared tape/direct identity. | Clear for normal users; powerful for tools. | Lifetimes can be intimidating. | Keep `parse(&str)` simple and route advanced cases to cookbook diagnostics. | KEEP / REINVENT |
-| Parse constructors | `parse`, `parse_in`, and `parse_owned` implement Lock 9 slice-borrow/default plus explicit arena/owned modes (`restart/locks/14-LOCKS.md:50`). | Covers low allocation, batch, and durable use cases. | Owned mode can hide copies. | Bench all modes separately. | KEEP |
-| Tape/direct union | Tape is the single advanced substrate; direct structs remain the ergonomic default (`restart/README.md:285-314`, `restart/locks/14-LOCKS.md:34`). | Unifies path, visitors, debug, LSP, and benchmarks. | Requires careful identity invariants. | Every visible direct node carries tape identity. | REINVENT |
+| Parse constructors | `parse`, `parse_in`, and `parse_owned` implement Lock 9 slice-borrow/default plus explicit arena/owned modes (`restart/locks/LOCKS.md:50`). | Covers low allocation, batch, and durable use cases. | Owned mode can hide copies. | Bench all modes separately. | KEEP |
+| Tape/direct union | Tape is the single advanced substrate; direct structs remain the ergonomic default (`restart/README.md:285-314`, `restart/locks/LOCKS.md:34`). | Unifies path, visitors, debug, LSP, and benchmarks. | Requires careful identity invariants. | Every visible direct node carries tape identity. | REINVENT |
 | `ParseStream` | Stale replacement name in prompts/inheritance. | None under current authority. | Would fork naming and contracts. | Mention only as stale conflict. | DISCARD |
 | Path/select DSL | `path!` and `select!` validate against generated metadata and lower to runtime traversal plans. | Strong diagnostics and static typing. | Current registry is overfit. | Replace hardcoded fixtures with metadata. | REINVENT |
 | Visitors | Generated visitors plus `VisitTypes` bitflag pruning are the only mutation channel. | Matches W5 and lightningcss-style traversal. | Large generated APIs need restraint. | Expose simple prelude plus advanced modules. | KEEP |
@@ -415,7 +415,7 @@ fixtures/
   sheets/
 ```
 
-Fixture directories are data and manifests only. Rust fixture code is grammar-agnostic, preserving Amendment 01 (`restart-archive-2026-05-04/audit/master-plan/AMENDMENT-01-NO-PER-GRAMMAR-CRATES.md:58-62`) and Lock 14 no-overfit pressure (`restart/locks/14-LOCKS.md:60`).
+Fixture directories are data and manifests only. Rust fixture code is grammar-agnostic, preserving Amendment 01 (`restart-archive-2026-05-04/audit/master-plan/AMENDMENT-01-NO-PER-GRAMMAR-CRATES.md:58-62`) and Lock 14 no-overfit pressure (`restart/locks/LOCKS.md:60`).
 
 **Fixture separation.** Lock 14 onboarding admits exactly two surfaces: the grammar source file (`yaml.bbnf`) and one workspace-metadata block (`[workspace.metadata.bbnf.grammars.yaml]`). `fixtures/yaml/*` is *not* part of the onboarding allowance. The four `fixtures/<grammar>/` directories above are post-onboarding parity evidence — they appear after a grammar's runtime emission, visitor, `path!`/`select!` adapters, and host route are already proven. Adding yaml therefore proceeds in two phases:
 
@@ -479,7 +479,7 @@ Scanner diagnostics follow two runtime rules. In exact mode, a SIMD positive tha
 
 ## §7 Benchmark and SOTA gates
 
-Every throughput SOTA gate that claims external performance names a competitor per Lock 8 (`restart/locks/14-LOCKS.md:48`). The SOTA corpus compares sonic-rs, simdjson/simd-json, lightningcss, and tree-sitter style tradeoffs (`restart/corpora/SOTA.md:12-16`, `restart/corpora/SOTA.md:35-42`, `restart/corpora/SOTA.md:64-77`, `restart/corpora/SOTA.md:103-118`). Non-throughput rows such as incremental fallback and debug trace overhead are report-only measurement gates until bench output records input hash, machine, compiler flags, warmup, sample count, validation mode, source ownership mode, direct/tape materialisation mode, scalar-cache policy, string-normalization policy, selected objective profile, trace mode, and surface under test.
+Every throughput SOTA gate that claims external performance names a competitor per Lock 8 (`restart/locks/LOCKS.md:48`). The SOTA corpus compares sonic-rs, simdjson/simd-json, lightningcss, and tree-sitter style tradeoffs (`restart/corpora/SOTA.md:12-16`, `restart/corpora/SOTA.md:35-42`, `restart/corpora/SOTA.md:64-77`, `restart/corpora/SOTA.md:103-118`). Non-throughput rows such as incremental fallback and debug trace overhead are report-only measurement gates until bench output records input hash, machine, compiler flags, warmup, sample count, validation mode, source ownership mode, direct/tape materialisation mode, scalar-cache policy, string-normalization policy, selected objective profile, trace mode, and surface under test.
 
 | Dataset | Baseline citation | PASS-3 gate |
 | --- | --- | --- |
@@ -487,11 +487,11 @@ Every throughput SOTA gate that claims external performance names a competitor p
 | `citm_catalog.json` | sonic/simd-json fixture references (`restart/corpora/SOTA.md:54-56`) | object traversal and `path!` |
 | `canada.json` | sonic/simd-json fixture references (`restart/corpora/SOTA.md:54-56`) | selector scan and array-heavy parse |
 | CSS bootstrap/animate | lightningcss visitor and perf evidence (`restart/corpora/SOTA.md:103-118`, `restart/corpora/SOTA.md:134-136`) | generated visitor pruning and layout metadata |
-| BBNF grammar corpus | restart full-grammar generalization (`restart/locks/14-LOCKS.md:60`) | no per-grammar overfit |
+| BBNF grammar corpus | restart full-grammar generalization (`restart/locks/LOCKS.md:60`) | no per-grammar overfit |
 
 PASS-3 recommends bench reports include: borrowed/arena/owned timings, `parse(&str)` prevalidation versus byte/file validation labels, source ownership mode, tape/direct projection timings, direct/tape materialisation mode, scalar-cache and string-normalization policy, selected objective profile, `path!` and `select!` traversal timings, visitor pruning win/loss, incremental fallback rate, and DAP trace overhead.
 
-Exact PASS-3 benchmark rows. Competitor floor + Platform columns inline the per-row attribution mandated by Lock 8 (`restart/locks/14-LOCKS.md:48` and `restart/README.md:328-334`); cross-document carry to SYNTHESIS H/J at §10 remains as insurance for any post-PASS-3 ratification.
+Exact PASS-3 benchmark rows. Competitor floor + Platform columns inline the per-row attribution mandated by Lock 8 (`restart/locks/LOCKS.md:48` and `restart/README.md:328-334`); cross-document carry to SYNTHESIS H/J at §10 remains as insurance for any post-PASS-3 ratification.
 
 | Row | Target | Competitor floor | Platform | Surface under test |
 |---|---|---|---|---|

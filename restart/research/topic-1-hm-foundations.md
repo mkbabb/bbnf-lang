@@ -64,11 +64,11 @@ Claim R16: `restart/README.md:386` says Lock 4 is honoured by composing `egraph`
 
 Claim R17: `restart/README.md:473` closes by naming the type system as "Hindley-Milner + bidirectional + Pierce-Turner-styled."
 
-Claim R18: `restart/locks/14-LOCKS.md:36` states Lock 2: "HM/CSP type checking is a subroutine of layout lowering, never a public peer pass; `LayoutFacts` is the public side-table."
+Claim R18: `restart/locks/LOCKS.md:36` states Lock 2: "HM/CSP type checking is a subroutine of layout lowering, never a public peer pass; `LayoutFacts` is the public side-table."
 
-Claim R19: `restart/locks/14-LOCKS.md:40` states Lock 4: "CSP type/layout inference, e-graph rewriting, pattern miners, shape analysis, and cost model compose by output-piping. No unified hypergraph."
+Claim R19: `restart/locks/LOCKS.md:40` states Lock 4: "CSP type/layout inference, e-graph rewriting, pattern miners, shape analysis, and cost model compose by output-piping. No unified hypergraph."
 
-Claim R20: `restart/locks/14-LOCKS.md:60` states Lock 14: every grammar plugs in through grammar source, workspace metadata, and an optional fenced declaration crate; generic crates carry zero grammar-specific code.
+Claim R20: `restart/locks/LOCKS.md:60` states Lock 14: every grammar plugs in through grammar source, workspace metadata, and an optional fenced declaration crate; generic crates carry zero grammar-specific code.
 
 Claim R21: `restart/ARCHITECTURE.md:796` states: "Type inference annotates Grammar IR; it does not mutate grammar syntax", and names `passes::layout` as the owner where HM + bidirectional + CSP run as a subroutine.
 
@@ -352,7 +352,7 @@ Convergence C9: subtyping must be algorithmic when present.
 
 Convergence C10: the restart's non-fused optimizer lock is compatible with type inference.
 
-- Restart claim: Lock 4 forbids a unified hypergraph at `restart/locks/14-LOCKS.md:40`.
+- Restart claim: Lock 4 forbids a unified hypergraph at `restart/locks/LOCKS.md:40`.
 - SOTA evidence: Heeren and Pottier-Remy both support phase separation: generate constraints, solve them, retain proof obligations.
 - Match: bbnf's CSP/egraph bridge remains orthogonal to HM foundations.
 - Fold note: do not fuse type equality, e-graph equivalence, and finite CSP choice into one solver.
@@ -402,7 +402,7 @@ Divergence D5: typed-record narrowing is not settled by the cited HM sources.
 
 Divergence D6: PASS-1's `passes/types` and `passes/layout` split is useful but conflicts softly with Lock 2 phrasing.
 
-- Restart text: Lock 2 says HM/CSP type checking is a subroutine of layout lowering at `restart/locks/14-LOCKS.md:36`.
+- Restart text: Lock 2 says HM/CSP type checking is a subroutine of layout lowering at `restart/locks/LOCKS.md:36`.
 - Restart text: PASS-1 crate tree gives both `passes/types` and `passes/layout` at `restart/audit/pass-1-substrate/PASS-1.md:121`.
 - Restart text: PASS-1 rationale says `passes/types` carries HM + bidirectional checking while `passes/layout` owns layout lowering at `restart/audit/pass-1-substrate/PASS-1.md:140`.
 - SOTA pressure: production systems commonly separate elaboration/typechecking from later layout/codegen facts.

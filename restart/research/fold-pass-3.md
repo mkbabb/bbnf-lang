@@ -20,10 +20,10 @@ Required artefacts read:
 - `restart/research/topic-7-green-red-incremental.md`
 - `restart/research/topic-8-simd-dfa.md`
 - `restart/research/INDEX.md` §2-§3
-- `restart/prompts/RESEARCH-FOLD-ORCHESTRATOR.md` Phase 2
-- `restart/prompts/AMENDMENT-DISPATCH.md` §1 verify-then-patch discipline
+- `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` Phase 2
+- `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` §1 verify-then-patch discipline
 - `restart/README.md` gestalt and §13 voice
-- `restart/locks/14-LOCKS.md`
+- `restart/locks/LOCKS.md`
 - `restart/audit/pass-3-runtime/PASS-3.md`
 - `restart/audit/hardening/HARDENING-PASS-3-V5.md`
 - `restart/audit/hardening/HARDENING-CONSOLIDATED-V5.md`

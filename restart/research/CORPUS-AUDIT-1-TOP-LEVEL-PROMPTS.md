@@ -1,7 +1,7 @@
 # Corpus Audit 1 — Top-Level + Prompts + Locks + Inheritance + Corpora
 
 Date: 2026-05-07
-Scope: `restart/{README, ARCHITECTURE, MASTER-PLAN, MIGRATION, HANDOFF}.md` (5 files), `restart/prompts/*.md` (5 files), `restart/locks/14-LOCKS.md`, `restart/inheritance/INDEX.md`, `restart/corpora/{CENSUS, MODULES, RESTART-SKETCH, SOTA}.md` (4 files). Total: 16 files.
+Scope: `restart/{README, ARCHITECTURE, MASTER-PLAN, MIGRATION, HANDOFF}.md` (5 files), `restart/prompts/*.md` (5 files), `restart/locks/LOCKS.md`, `restart/inheritance/INDEX.md`, `restart/corpora/{CENSUS, MODULES, RESTART-SKETCH, SOTA}.md` (4 files). Total: 16 files.
 
 This audit classifies each file as EXPLICATE / UPDATE / PRUNE / MERGE / ASK; surfaces overlap; and proposes the post-audit shape the synthesis should adopt. Two cross-cutting questions own this audit specifically: orchestrator-prompt reconciliation (which is the right one?) and top-level-doc reconciliation (5 docs, all needed?). The independent-Codex-hardening protocol question is the third surface.
 
@@ -47,10 +47,10 @@ The five docs partition cleanly. **HANDOFF** is the cold-start orientation point
 | Path | Role (1 sentence) | Disposition | Rationale |
 |---|---|---|---|
 | `restart/prompts/ORCHESTRATOR.md` | Phase-8.1 main entry: phase identification + fan-out to one of three sub-orchestrators per phase type. | **UPDATE** | Genuine entry post-Phase-8.1 (`ORCHESTRATOR.md:3` "single main orchestrator prompt"). §4 phase-8 dispatch table (`ORCHESTRATOR.md:42-50`) is stale — claims 8.1 "IN-PROGRESS"; commits `25addd94` + `597ac678` + `cd6c2b4c` + `624b5af2` show Phase 8.2 complete and `28987de4` is Phase 8.3 V8 consolidation. UPDATE the §4 table to reflect 8.0/8.1/8.2/8.3 DONE; 8.4 PENDING. |
-| `restart/prompts/HARDENING-ORCHESTRATOR.md` | Sub-orchestrator dispatching hardening cycles (V1 through V8+); orchestrates per-target hardener agents + Phase-6 consolidation. | **UPDATE** | Pre-Phase-8.1 vintage; the §Required-reading list (`HARDENING-ORCHESTRATOR.md:9-15`) names retired prompts (`PASS-1-SUBSTRATE`, `PASS-2-CODEGEN`, `PASS-3-RUNTIME`, `SYNTHESIS`). Phase 1/2 (PASS dispatch + SYNTHESIS) sections are dead branches (those phases committed during Wave 1; the prompts retired Phase 8.0). The live surface is Phase 3/6 (4-parallel hardening + consolidation) which is what current waves use. UPDATE: cut Phases 1/2 (dead); rename to reflect sub-orchestrator role; remove retired-prompt refs. |
-| `restart/prompts/RESEARCH-FOLD-ORCHESTRATOR.md` | Sub-orchestrator dispatching research deep-dives (8 topics) + fold cycles (V5 metahardening + Phase-1 research + Phase-2 fold + escalation + V6 hardening + V6 consolidation). | **EXPLICATE** | The richest sub-orchestrator: encodes the V5-V6 cycle that landed Wave 5. Live as a re-runnable phase template; future research-fold cycles invoke this prompt. §1 required reading is current (cites HARDENING-CONSOLIDATED-V4 as carry baseline; that's the right anchor for re-running the V5-V6 cycle from scratch). EXPLICATE; no edits required. |
-| `restart/prompts/AMENDMENT-DISPATCH.md` | Sub-orchestrator dispatching verify-then-patch amendment cycles (the four-wave Wave-4.1 + Phase-7.5 + future cycles pattern). | **UPDATE** | The §3 Wave-1/2/3/4 plan is V1-vintage (cites V1 punch-list items 1-47 + Reviewer A/B/C/D reports + V1 reconciliation directives). Live discipline (verify-then-patch + reviewer-reconciliation + per-item routing in §1-§2 + §4-§7) is reusable; the §3 wave-specific table is V1-historical. UPDATE: hoist §1-§2 + §4-§7 (the discipline) above the §3 wave-specific table; rewrite §3 as a schematic ("each amendment cycle dispatches per the §1 verify-then-patch contract; per-cycle wave-tables live in the dispatching commit's research notes"). |
-| `restart/prompts/HARDENING.md` | Per-target audit specification: 9 lanes + lenses A-K + per-item Pro/Con/Explication/Challenge discipline + KEEP/REINVENT/DISCARD verdicts (+SIMPLIFY/CONSOLIDATE/LEVERAGE/HYBRID/LOAD-BEARING/ASPIRATIONAL/SPECULATIVE per V8+). | **UPDATE** | Live contract; every hardening agent reads it. The §Cycle-specific lens application table (`HARDENING.md:189-194`) shows V1-V4 + V5-V7 + V8+ rows (current). **`HARDENING.md:53` carries explicit "SPECULATIVE (Lens K) — V2+; cite the V2 amendment receiver" — this is the language the user retires.** Mirror at `HARDENING.md:186`. UPDATE: rename SPECULATIVE / fold "V2 amendment receiver" language; rephrase as SIMPLIFY-or-DELETE-not-defer. See §7 V2-deferral ledger below. |
+| `restart/prompts/sub-orchestrators/HARDENING.md` | Sub-orchestrator dispatching hardening cycles (V1 through V8+); orchestrates per-target hardener agents + Phase-6 consolidation. | **UPDATE** | Pre-Phase-8.1 vintage; the §Required-reading list (`HARDENING-ORCHESTRATOR.md:9-15`) names retired prompts (`PASS-1-SUBSTRATE`, `PASS-2-CODEGEN`, `PASS-3-RUNTIME`, `SYNTHESIS`). Phase 1/2 (PASS dispatch + SYNTHESIS) sections are dead branches (those phases committed during Wave 1; the prompts retired Phase 8.0). The live surface is Phase 3/6 (4-parallel hardening + consolidation) which is what current waves use. UPDATE: cut Phases 1/2 (dead); rename to reflect sub-orchestrator role; remove retired-prompt refs. |
+| `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` | Sub-orchestrator dispatching research deep-dives (8 topics) + fold cycles (V5 metahardening + Phase-1 research + Phase-2 fold + escalation + V6 hardening + V6 consolidation). | **EXPLICATE** | The richest sub-orchestrator: encodes the V5-V6 cycle that landed Wave 5. Live as a re-runnable phase template; future research-fold cycles invoke this prompt. §1 required reading is current (cites HARDENING-CONSOLIDATED-V4 as carry baseline; that's the right anchor for re-running the V5-V6 cycle from scratch). EXPLICATE; no edits required. |
+| `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` | Sub-orchestrator dispatching verify-then-patch amendment cycles (the four-wave Wave-4.1 + Phase-7.5 + future cycles pattern). | **UPDATE** | The §3 Wave-1/2/3/4 plan is V1-vintage (cites V1 punch-list items 1-47 + Reviewer A/B/C/D reports + V1 reconciliation directives). Live discipline (verify-then-patch + reviewer-reconciliation + per-item routing in §1-§2 + §4-§7) is reusable; the §3 wave-specific table is V1-historical. UPDATE: hoist §1-§2 + §4-§7 (the discipline) above the §3 wave-specific table; rewrite §3 as a schematic ("each amendment cycle dispatches per the §1 verify-then-patch contract; per-cycle wave-tables live in the dispatching commit's research notes"). |
+| `restart/prompts/audit-specs/HARDENING-LENS-SET.md` | Per-target audit specification: 9 lanes + lenses A-K + per-item Pro/Con/Explication/Challenge discipline + KEEP/REINVENT/DISCARD verdicts (+SIMPLIFY/CONSOLIDATE/LEVERAGE/HYBRID/LOAD-BEARING/ASPIRATIONAL/SPECULATIVE per V8+). | **UPDATE** | Live contract; every hardening agent reads it. The §Cycle-specific lens application table (`HARDENING.md:189-194`) shows V1-V4 + V5-V7 + V8+ rows (current). **`HARDENING.md:53` carries explicit "SPECULATIVE (Lens K) — V2+; cite the V2 amendment receiver" — this is the language the user retires.** Mirror at `HARDENING.md:186`. UPDATE: rename SPECULATIVE / fold "V2 amendment receiver" language; rephrase as SIMPLIFY-or-DELETE-not-defer. See §7 V2-deferral ledger below. |
 
 ### §3.1 — Prompts as a coherent suite
 
@@ -110,7 +110,7 @@ The user's question: **which is the right one?**
 
 | Path | Role (1 sentence) | Disposition | Rationale |
 |---|---|---|---|
-| `restart/locks/14-LOCKS.md` | Settled architectural commitments (14 locks; post-Phase-7.1 amendments to 4/5/6/7/8/10/12 + 3 NEW: Backend trait, egraph decoupling, 6-directive grammar). | **UPDATE** | Live contract; every audited file cites it. Lock 4 (`14-LOCKS.md:40`) carries "user-facing GADT surface defers to V2 amendment via `BBNF-LOCAL-EQUALITY-ANNOTATION`" — V2-deferral language the user retires. Lock 7 (`14-LOCKS.md:46`) carries "`crates/path-ts/` defers post-V1 alongside the TS-native parse+runtime fork". Lock 8 (`14-LOCKS.md:48`) carries "the WASM lower-and-bench programme awaits the V2 `WasmBackend: Backend` impl". These are user-adjudicated V2 carries (TS+WASM scope-deferred per Phase-7.1; not the SPECULATIVE-V2-amendment-receiver pattern), not stub deferrals. **The user retires the V2 amendment receiver pattern but retains user-adjudicated V1/V2 scope partitions** — the locks' V2 language describes the latter, not the former. UPDATE: re-read each V2 reference; confirm scope-partition (KEEP) vs amendment-receiver (DELETE/INLINE); §7 V2 ledger below disambiguates per occurrence. |
+| `restart/locks/LOCKS.md` | Settled architectural commitments (14 locks; post-Phase-7.1 amendments to 4/5/6/7/8/10/12 + 3 NEW: Backend trait, egraph decoupling, 6-directive grammar). | **UPDATE** | Live contract; every audited file cites it. Lock 4 (`14-LOCKS.md:40`) carries "user-facing GADT surface defers to V2 amendment via `BBNF-LOCAL-EQUALITY-ANNOTATION`" — V2-deferral language the user retires. Lock 7 (`14-LOCKS.md:46`) carries "`crates/path-ts/` defers post-V1 alongside the TS-native parse+runtime fork". Lock 8 (`14-LOCKS.md:48`) carries "the WASM lower-and-bench programme awaits the V2 `WasmBackend: Backend` impl". These are user-adjudicated V2 carries (TS+WASM scope-deferred per Phase-7.1; not the SPECULATIVE-V2-amendment-receiver pattern), not stub deferrals. **The user retires the V2 amendment receiver pattern but retains user-adjudicated V1/V2 scope partitions** — the locks' V2 language describes the latter, not the former. UPDATE: re-read each V2 reference; confirm scope-partition (KEEP) vs amendment-receiver (DELETE/INLINE); §7 V2 ledger below disambiguates per occurrence. |
 | `restart/inheritance/INDEX.md` | Legacy BA-BD plan-set inheritance map: per-tranche legacy survival ledger; what does + does not inherit; inheritance discipline. | **EXPLICATE** | 73 lines; no V2-deferral language; no metalanguage; clean per-tranche table. Does its job. |
 | `restart/corpora/CENSUS.md` | Frozen 2026-05-03 mechanical census: tape archaeology, grammar-specific code in generic crates, legacy markers, duplicated effort, god modules, dynamic typing abuse, inline tests, dead exports, 9-grammar runtime inventory, top-line summary. | **EXPLICATE** | Frozen reference; cited from MIGRATION + ARCHITECTURE for evidence rows. Static; no edits. |
 | `restart/corpora/MODULES.md` | Frozen 2026-05-03 module-by-module explication: per-crate module inventories, layered re-org synthesis, crate-level re-org, pipeline ordering, hard-cap tally. | **EXPLICATE** | Same — frozen reference; cited heavily across MIGRATION; static. |
@@ -132,7 +132,7 @@ Per `RESEARCH-FOLD-ORCHESTRATOR.md:3` ("written to be executed by a coding-agent
 1. `restart/HANDOFF.md` (170 lines) — orientation; current state; next move; verification rituals at §6.
 2. `restart/prompts/ORCHESTRATOR.md` (144 lines) — main entry; phase identification protocol; fan-out table.
 3. `restart/README.md` (479 lines) — gestalt anchor; required to interpret what the locks govern.
-4. `restart/locks/14-LOCKS.md` (249 lines) — 14 architectural commitments (post-Phase-7.1 + Phase-8.1 amended).
+4. `restart/locks/LOCKS.md` (249 lines) — 14 architectural commitments (post-Phase-7.1 + Phase-8.1 amended).
 5. The most recent `restart/audit/hardening/HARDENING-CONSOLIDATED-V{N}.md` — terminal-verdict carry baseline. Currently V8 at `28987de4`.
 6. `docs/precepts/instructions/STYLE.md` + `LESSONS-LEARNED.md` — voice + discipline (governs all writing).
 7. The three executable surfaces (`ARCHITECTURE.md`, `MASTER-PLAN.md`, `MIGRATION.md`) read on-demand per phase obligation, not cover-to-cover.
@@ -147,7 +147,7 @@ The verification-ritual block at `HANDOFF.md:108-138` specifies the cold-start v
 git log --oneline -10               # commit-head identification
 git status --short                  # working-tree cleanliness
 
-rg -n 'DK13|Dunfield|higher-rank|GADT.*hidden|closure.*&.i' restart/locks/14-LOCKS.md
+rg -n 'DK13|Dunfield|higher-rank|GADT.*hidden|closure.*&.i' restart/locks/LOCKS.md
 rg -n 'ImportDecl.*HostFn.*PrettyDecl' restart/audit/pass-1-substrate/PASS-1.md restart/ARCHITECTURE.md
 rg -nC2 '7\.5 Backend|trait Backend|RustBackend.*Backend' restart/ARCHITECTURE.md
 rg -n 'path!' restart/audit/pass-3-runtime/PASS-3.md restart/MASTER-PLAN.md
@@ -174,7 +174,7 @@ Acceptance: HANDOFF.md "current state" §3 names the latest committed verdict; t
 ```bash
 cat restart/prompts/ORCHESTRATOR.md                 # phase identification + fan-out
 cat restart/README.md                               # gestalt
-cat restart/locks/14-LOCKS.md                       # commitments
+cat restart/locks/LOCKS.md                       # commitments
 cat restart/audit/hardening/HARDENING-CONSOLIDATED-V{N}.md   # carry baseline
 cat docs/precepts/instructions/{STYLE,LESSONS-LEARNED}.md
 ```
@@ -205,14 +205,14 @@ Per `HANDOFF.md:122-138`, the verification block needs three additions for V8/Ph
 
 ```bash
 # Phase 8.1 prompt restructure landed
-ls restart/prompts/ORCHESTRATOR.md restart/prompts/HARDENING-ORCHESTRATOR.md restart/prompts/RESEARCH-FOLD-ORCHESTRATOR.md restart/prompts/AMENDMENT-DISPATCH.md restart/prompts/HARDENING.md
+ls restart/prompts/ORCHESTRATOR.md restart/prompts/sub-orchestrators/HARDENING.md restart/prompts/sub-orchestrators/RESEARCH-FOLD.md restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md restart/prompts/audit-specs/HARDENING-LENS-SET.md
 
 # V8 simplification audit landed
 ls restart/audit/hardening/HARDENING-{PASS-1,PASS-2,PASS-3,MASTER-PLAN}-V8.md
 ls restart/audit/hardening/HARDENING-CONSOLIDATED-V8.md
 
 # Lenses I/J/K added to HARDENING.md
-rg -n 'Lens I|Lens J|Lens K' restart/prompts/HARDENING.md  # ≥3 hits
+rg -n 'Lens I|Lens J|Lens K' restart/prompts/audit-specs/HARDENING-LENS-SET.md  # ≥3 hits
 ```
 
 These additions land in the proposed HANDOFF UPDATE.
@@ -294,11 +294,11 @@ None proposed. The 5-doc top-level + 5-prompt structure partitions cleanly.
 | `restart/HANDOFF.md` | §3 current-state: V7.1 → V8 SIMPLIFY-AVAILABLE; §4 prompt-structure: Phase 8.1 IN-PROGRESS → DONE; §6 verification rituals: add 3 Phase-8.1 commands per §6.5 above; §7 next move: 8.0/8.1/8.2/8.3 → 8.4 PENDING. | synthesis |
 | `restart/README.md` | §12 prompt-suite shape: replace 6-prompt PASS/SYNTHESIS table with current 5-prompt structure (or remove §12 prompt-suite section entirely; the canonical prompt-suite description belongs in HANDOFF + ORCHESTRATOR, not in the gestalt anchor). | synthesis |
 | `restart/prompts/ORCHESTRATOR.md` | §4 phase-8 dispatch table: 8.0/8.1/8.2/8.3 DONE; 8.4 PENDING (conditional on V8 SIMPLIFY-AVAILABLE). | synthesis |
-| `restart/prompts/HARDENING-ORCHESTRATOR.md` | Prune Phase 1/2 sections; renumber (Phase 3 → 1, Phase 6 → 2); refresh required-reading; rename role to "hardening-cycle sub-orchestrator". | synthesis |
-| `restart/prompts/AMENDMENT-DISPATCH.md` | Hoist §1-§2 + §4-§7 (the discipline) above §3; rewrite §3 as schematic ("each cycle's wave-tables live in dispatching commit's research notes"). | synthesis |
-| `restart/prompts/HARDENING.md` | Drop SPECULATIVE verdict class at `:53` + `:186`; replace with FOLD-V1 / DELETE / V2-confirmed (the latter requires class-(a) scope partition + Lock + ARCH-trait receiver). | synthesis |
+| `restart/prompts/sub-orchestrators/HARDENING.md` | Prune Phase 1/2 sections; renumber (Phase 3 → 1, Phase 6 → 2); refresh required-reading; rename role to "hardening-cycle sub-orchestrator". | synthesis |
+| `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` | Hoist §1-§2 + §4-§7 (the discipline) above §3; rewrite §3 as schematic ("each cycle's wave-tables live in dispatching commit's research notes"). | synthesis |
+| `restart/prompts/audit-specs/HARDENING-LENS-SET.md` | Drop SPECULATIVE verdict class at `:53` + `:186`; replace with FOLD-V1 / DELETE / V2-confirmed (the latter requires class-(a) scope partition + Lock + ARCH-trait receiver). | synthesis |
 | `restart/MIGRATION.md:803` + `restart/MASTER-PLAN.md:{781,787,788,790}` | Rephrase "V2 amendment" → "V2 release: {Backend impl}" per §7.2 ledger. | synthesis |
-| `restart/locks/14-LOCKS.md:40` + `restart/ARCHITECTURE.md:1293` | **ASK user** on the GADT/BBNF-LOCAL-EQUALITY-ANNOTATION deferral: FOLD V1 (rank-1 HM is settled; the user-facing surface drops; the diagnostic-code retires) or DELETE (out-of-scope V1+V2 unless re-opened). | synthesis (post-decision) |
+| `restart/locks/LOCKS.md:40` + `restart/ARCHITECTURE.md:1293` | **ASK user** on the GADT/BBNF-LOCAL-EQUALITY-ANNOTATION deferral: FOLD V1 (rank-1 HM is settled; the user-facing surface drops; the diagnostic-code retires) or DELETE (out-of-scope V1+V2 unless re-opened). | synthesis (post-decision) |
 
 ### §8.4 — EXPLICATE (authoritative; no edits)
 
@@ -309,7 +309,7 @@ None proposed. The 5-doc top-level + 5-prompt structure partitions cleanly.
 | `restart/MIGRATION.md` | Phase-2 disposition; per-file fates for tranche authors |
 | `restart/inheritance/INDEX.md` | Legacy BA-BD survival map; per-tranche inheritance |
 | `restart/corpora/{CENSUS,MODULES,RESTART-SKETCH,SOTA}.md` | Frozen 2026-05-03 snapshots; cited from MIGRATION + ARCHITECTURE |
-| `restart/prompts/RESEARCH-FOLD-ORCHESTRATOR.md` | Re-runnable research-fold pipeline template |
+| `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` | Re-runnable research-fold pipeline template |
 
 ---
 

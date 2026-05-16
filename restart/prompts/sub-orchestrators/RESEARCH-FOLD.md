@@ -9,13 +9,13 @@ The orchestrator-agent dispatches sub-agents (per phase) and consolidates their 
 ## §1 — Required reading (mandatory; the orchestrator-agent reads end-to-end before dispatch)
 
 1. `restart/README.md` — gestalt anchor; settled positions; 14 locks; BBNF V1 extensions; tape + direct-to-struct union; SOTA synthesis.
-2. `restart/locks/14-LOCKS.md` — settled architectural commitments.
+2. `restart/locks/LOCKS.md` — settled architectural commitments.
 3. `restart/audit/hardening/HARDENING-CONSOLIDATED-V4.md` — V4 cohort verdict (READY); the carry-baseline.
 4. `restart/audit/hardening/HARDENING-CONSOLIDATED.md` (V1) + `HARDENING-CONSOLIDATED-V2.md` + `HARDENING-CONSOLIDATED-V3.md` — V1→V4 history (audit drift evidence).
 5. `restart/research/INDEX.md` — the research catalogue (the eight deep-dive topics, their anchors, sources, deliverable shapes).
-6. `restart/prompts/HARDENING-ORCHESTRATOR.md` — the per-target hardening contract (reused unchanged for V6).
-7. `restart/prompts/HARDENING.md` — the per-target audit specification.
-8. `restart/prompts/AMENDMENT-DISPATCH.md` — verify-then-patch discipline (reused for any intermediate amendment cycle).
+6. `restart/prompts/sub-orchestrators/HARDENING.md` — the per-target hardening contract (reused unchanged for V6).
+7. `restart/prompts/audit-specs/HARDENING-LENS-SET.md` — the per-target audit specification.
+8. `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` — verify-then-patch discipline (reused for any intermediate amendment cycle).
 9. `docs/precepts/instructions/STYLE.md` + `LESSONS-LEARNED.md` + `CONSUMING.md`.
 10. `restart/ARCHITECTURE.md`, `restart/MIGRATION.md`, `restart/MASTER-PLAN.md` — folded surfaces.
 11. `restart/audit/pass-{1-substrate,2-codegen,3-runtime}/PASS-{1,2,3}.md` — folded surfaces.
@@ -174,7 +174,7 @@ Decision rules:
 
 ## §6 — Phase 3 — Hardening V6 (4 parallel)
 
-The orchestrator-agent reuses `restart/prompts/HARDENING-ORCHESTRATOR.md` Phase 3 unchanged, parameterised with V6 output paths:
+The orchestrator-agent reuses `restart/prompts/sub-orchestrators/HARDENING.md` Phase 3 unchanged, parameterised with V6 output paths:
 - `restart/audit/hardening/HARDENING-PASS-1-V6.md`
 - `restart/audit/hardening/HARDENING-PASS-2-V6.md`
 - `restart/audit/hardening/HARDENING-PASS-3-V6.md`

@@ -37,9 +37,9 @@ waivers, not architecture.
   stream and no parallel substrate (`restart/skinny/SUBSTRATE.md:213-250`).
 - Lock 5: lowerers consume Backend IR only (`restart/ARCHITECTURE.md:1004-1012`).
 - Lock 10: Pratt, SIMD, and materialization shape are mined/cost-derived, not
-  grammar-author directives (`restart/locks/14-LOCKS.md:52`).
+  grammar-author directives (`restart/locks/LOCKS.md:52`).
 - Lock 14: adding a grammar is `.bbnf` plus metadata, with zero generic-crate
-  Rust changes (`restart/locks/14-LOCKS.md:60`,
+  Rust changes (`restart/locks/LOCKS.md:60`,
   `restart/ARCHITECTURE.md:1697-1733`).
 - Lock 16: primitive additions require an allowed architectural primitive,
   scalar parity, and a same-wave consumer (`restart/MASTER-PLAN.md:535-588`).

@@ -1,6 +1,6 @@
 # SK-V7 Restructure R4 — Top-Level + Locks + Inheritance Audit
 
-Scope: `restart/{README,ARCHITECTURE,MASTER-PLAN,MIGRATION,HANDOFF}.md`, `restart/locks/14-LOCKS.md`, `restart/inheritance/INDEX.md`. Output of a Pass Omega R4 inspection: cohesion, staleness, lock-amendment status, Lock 17 recommendation, restructure proposal.
+Scope: `restart/{README,ARCHITECTURE,MASTER-PLAN,MIGRATION,HANDOFF}.md`, `restart/locks/LOCKS.md`, `restart/inheritance/INDEX.md`. Output of a Pass Omega R4 inspection: cohesion, staleness, lock-amendment status, Lock 17 recommendation, restructure proposal.
 
 ## §1 — Inventory
 
@@ -11,10 +11,10 @@ Scope: `restart/{README,ARCHITECTURE,MASTER-PLAN,MIGRATION,HANDOFF}.md`, `restar
 | `restart/MASTER-PLAN.md` | 986 | §13 H tranche + SK-V5/V6 routing | §13 H.W1-H.W7 named; SK-V6 fold-back at §0 |
 | `restart/MIGRATION.md` | 826 | per-crate disposition + commit chain | `simd-scan → bbnf-simd` rename ratified; `ser`/`gorgeous` archive ledger |
 | `restart/HANDOFF.md` | 352 | SK-V6 dispatch authority (2026-05-15) | reading order is SK-V6; SK-V7 not yet anchored |
-| `restart/locks/14-LOCKS.md` | 283 | Locks 1-16 (Lock 14 prompt body wraps) | structurally a HARDENING prompt with locks embedded |
+| `restart/locks/LOCKS.md` | 283 | Locks 1-16 (Lock 14 prompt body wraps) | structurally a HARDENING prompt with locks embedded |
 | `restart/inheritance/INDEX.md` | 73 | BA-BD legacy mapping to A-J | active per `MASTER-PLAN.md:14` + `README.md:458` |
 
-`restart/inheritance/` carries exactly one file. `restart/locks/` carries exactly one file (named `14-LOCKS.md` despite housing 16 locks). `restart/prompts/` carries nine files (`README`, `ORCHESTRATOR`, `HARDENING-ORCHESTRATOR`, `HARDENING`, `RESEARCH-FOLD-ORCHESTRATOR`, `AMENDMENT-DISPATCH`, `PASS-ALPHA`, `PASS-OMEGA`, `SKINNY-PASSES`).
+`restart/inheritance/` carries exactly one file. `restart/locks/` carries exactly one file (named `LOCKS.md` despite housing 16 locks). `restart/prompts/` carries nine files (`README`, `ORCHESTRATOR`, `HARDENING-ORCHESTRATOR`, `HARDENING`, `RESEARCH-FOLD-ORCHESTRATOR`, `AMENDMENT-DISPATCH`, `PASS-ALPHA`, `PASS-OMEGA`, `SKINNY-PASSES`).
 
 Legacy targets resolved: `docs/tranches/BA/` through `docs/tranches/BD/` exist (inheritance references valid); `restart-archive-2026-05-04/` exists; `docs/tranches/archive/` exists.
 
@@ -41,7 +41,7 @@ Legacy targets resolved: `docs/tranches/BA/` through `docs/tranches/BD/` exist (
 **README staleness summary:**
 
 1. `README.md:5` + §12 §15 claim **five prompts**; reality is **eight functional prompts** in `restart/prompts/` (`ORCHESTRATOR`, `HARDENING-ORCHESTRATOR`, `RESEARCH-FOLD-ORCHESTRATOR`, `AMENDMENT-DISPATCH`, `HARDENING`, `PASS-OMEGA`, `PASS-ALPHA`, `SKINNY-PASSES`). The prompt-suite table at `README.md:420-424` must grow to eight rows.
-2. README has no anchor to SK-V{n} skinny iterations. `HANDOFF.md` carries SK-V6; `restart/skinny/audit/` carries SK-V7 cohort + grand synthesis. README does not surface the skinny → totality fold loop that `PASS-OMEGA.md:158-166` declares load-bearing.
+2. README has no anchor to SK-V{n} skinny iterations. `HANDOFF.md` carries SK-V6; `restart/skinny/tranches/` carries SK-V7 cohort + grand synthesis. README does not surface the skinny → totality fold loop that `PASS-OMEGA.md:158-166` declares load-bearing.
 3. The Lock 11 table row at `README.md:401-403` does not mention `parse-that-regex` rename (which `MIGRATION.md:75` ratifies). `bbnf-regex` is named, not `parse-that-regex`.
 4. §9 gates measure M1 Pro only; SK-V6 + SK-V7 cohorts run on M5 Max; the gate table requires a column extension to record post-2026-05-12 cross-platform comparator landscape, mirroring `HANDOFF.md:113-130`.
 
@@ -61,7 +61,7 @@ Section header survey at `ARCHITECTURE.md:1-1893`:
 | §7.1 Grammar IR | 857-910 | current. |
 | §7.2 Backend IR | 911-1032 | 20-variant (19 + Return) per Phase-8.4 fold; concordant. |
 | §7.3 Side tables | 1033-1111 | `LayoutFacts.backend_shape` 5-shape canon at line 1060; concordant with `MASTER-PLAN.md:526`. |
-| **§7.4 SK-V5/SK-V6 implementation status** | 1112-1133 | **Title says SK-V5/SK-V6; body carries SK-V6 fold-back at 1116-1125; SK-V7 absent**. SK-V7 GRAND-SYNTHESIS exists at `restart/skinny/audit/GRAND-SYNTHESIS-SK-V7.md`; §7.4 must rename to "SK-V5/V6/V7 Implementation Status" and absorb a new SK-V7 paragraph. |
+| **§7.4 SK-V5/SK-V6 implementation status** | 1112-1133 | **Title says SK-V5/SK-V6; body carries SK-V6 fold-back at 1116-1125; SK-V7 absent**. SK-V7 GRAND-SYNTHESIS exists at `restart/skinny/tranches/sk-v7/SYNTHESIS.md`; §7.4 must rename to "SK-V5/V6/V7 Implementation Status" and absorb a new SK-V7 paragraph. |
 | §7.5 Diagnostic vocabulary | 1135-1212 | current. |
 | §7.6 Backend trait | 1213-1279 | current. |
 | §8 BBNF language surface | 1280-1497 | concordant with Lock 10 amendment. |
@@ -92,7 +92,7 @@ Section header survey at `ARCHITECTURE.md:1-1893`:
 | §5 Tranche set + 5.1-5.3 | 181-253 | A-J table; YAML walkthrough. Current. |
 | §6-§12 Per-tranche A-G | 255-487 | current. |
 | **§13 H tranche** | 489-549 | wave routing SK-V5 + SK-V6; SK-V7 absent. H.W1 cites SK-V5 Wave 1 `603308b3` landed status; H.W2 / H.W3 / H.W4 / H.W4.LOCK14 / H.W5 carry partial-landed annotations dated through SK-V6. |
-| §13.1 Admissible SIMD primitives | 550-614 | Lock 16 allowlist verbatim — concordant with `restart/locks/14-LOCKS.md:69-94`. |
+| §13.1 Admissible SIMD primitives | 550-614 | Lock 16 allowlist verbatim — concordant with `restart/locks/LOCKS.md:69-94`. |
 | §14-§15 Tranches I + J | 616-680 | current. |
 | §16-§22 Workspace + migration + lock ownership + docs + risk | 682-873 | concordant. |
 | §23 Risk register | 862-873 | current. |
@@ -126,7 +126,7 @@ Section header survey at `ARCHITECTURE.md:1-1893`:
 
 **HANDOFF staleness summary:**
 
-1. **Top-level pointer is one cohort behind.** `restart/skinny/audit/` carries `GRAND-SYNTHESIS-SK-V7.md`, `IMPLEMENTATION-PACKET-SK-V7.md`, `HANDOFF-SK-V7.md`, `IMPLEMENTATION-AGENT-PROMPT-SK-V7.md`, plus `SK-V7-COHORT/`. HANDOFF must point to SK-V7.
+1. **Top-level pointer is one cohort behind.** `restart/skinny/tranches/` carries `GRAND-SYNTHESIS-SK-V7.md`, `IMPLEMENTATION-PACKET-SK-V7.md`, `HANDOFF-SK-V7.md`, `IMPLEMENTATION-AGENT-PROMPT-SK-V7.md`, plus `SK-V7-COHORT/`. HANDOFF must point to SK-V7.
 2. The reading order at line 9 lists `IMPLEMENTATION-AGENT-PROMPT-SK-V6.md` as dispatch authority. After Pass Omega G-Omega close it must point to SK-V7.
 3. SK-V3 wave-history rows at lines 53-55 reference paths since restructured ("the old SK-V3 packet files are purged in SK-V6 Wave 0"); concordant — files no longer exist. Wave 0 nuke was honoured.
 
@@ -148,7 +148,7 @@ Section header survey at `ARCHITECTURE.md:1-1893`:
 
 1. **OpenFrame removal status.** §3 cites Lock 1 + `corpora/RESTART-SKETCH.md:154-184` for the 86.07% `Vec<OpenFrame>::clone` pathology. The current SK-V6 / SK-V7 implementation has retired OpenFrame in skinny but the prior workspace at `crates/core/src/runtime/<grammar>/**` still carries it per `MIGRATION.md:139` (GENERATED-REPLACE pending Tranche F). Status is correctly "pending replacement", not stale.
 2. **`simd-scan → bbnf-simd` rename.** Ratified at `MIGRATION.md:75`, `MIGRATION.md:104`, `MIGRATION.md:158-159`, `MIGRATION.md:259-269`. Concordant with `README.md:57` Lock 16 + Lock 14 boundary.
-3. **`parse-that-regex` rename.** Ratified at `restart/locks/14-LOCKS.md:54` Lock 11 amendment + `MIGRATION.md` references; README.md still uses `bbnf-regex` at §10 (`README.md:380`).
+3. **`parse-that-regex` rename.** Ratified at `restart/locks/LOCKS.md:54` Lock 11 amendment + `MIGRATION.md` references; README.md still uses `bbnf-regex` at §10 (`README.md:380`).
 4. **`crates/bbnf-path-ts` disposition.** `MIGRATION.md:71` carries V2 defer; concordant with Lock 7 / Lock 11 amendments + `MASTER-PLAN.md:200`.
 
 ## §7 — locks/14-LOCKS.md — content audit
@@ -172,9 +172,9 @@ Section header survey at `ARCHITECTURE.md:1-1893`:
 | **15 — Build-profile + fusion + i-cache** | 62-67 | 2026-05-12 landing + Wave 2 cite | current |
 | **16 — SIMD/ASM admissibility allowlist** | 69-94 | 2026-05-12 + Wave 1 5-pack AVX-512 + 3-pack NEON | current |
 
-**Lock-document structural finding.** `restart/locks/14-LOCKS.md` is structurally **a HARDENING prompt** with the 16-lock manifest embedded at §"Gestalt — sixteen locks". The file's top-level title `# Hardening pass — plan set` at line 1 is misleading: the file is the canonical lock corpus consumed by HANDOFF and MASTER-PLAN, not an active hardening prompt (which lives at `restart/prompts/HARDENING.md`).
+**Lock-document structural finding.** `restart/locks/LOCKS.md` is structurally **a HARDENING prompt** with the 16-lock manifest embedded at §"Gestalt — sixteen locks". The file's top-level title `# Hardening pass — plan set` at line 1 is misleading: the file is the canonical lock corpus consumed by HANDOFF and MASTER-PLAN, not an active hardening prompt (which lives at `restart/prompts/audit-specs/HARDENING-LENS-SET.md`).
 
-**Filename mismatch.** `14-LOCKS.md` names "14" while housing **16** locks. The numeral 14 is anchored on the original Lock 14 (full grammar generalisation) which the document was named after when only 14 locks existed; Locks 15 + 16 landed 2026-05-12 without renaming. Rename to `LOCKS.md` or `16-LOCKS.md`.
+**Filename mismatch.** `LOCKS.md` names "14" while housing **16** locks. The numeral 14 is anchored on the original Lock 14 (full grammar generalisation) which the document was named after when only 14 locks existed; Locks 15 + 16 landed 2026-05-12 without renaming. Rename to `LOCKS.md` or `16-LOCKS.md`.
 
 **Lock 17 recommendation:** see §10 below.
 
@@ -206,9 +206,9 @@ Section header survey at `ARCHITECTURE.md:1-1893`:
 | Locks anchor | `MIGRATION.md:18-21` | `locks/14-LOCKS.md:34,42,58,60` | resolves; line numbers match |
 | Locks anchor | `MASTER-PLAN.md:26,40,95,130,131,267,298,334,403,435,467,501-505` | `locks/14-LOCKS.md:34-60` | resolves |
 | README → prompts | `README.md:420-424` | `restart/prompts/{ORCHESTRATOR,HARDENING-ORCHESTRATOR,RESEARCH-FOLD-ORCHESTRATOR,AMENDMENT-DISPATCH,HARDENING}.md` | resolves but **incomplete** (missing PASS-OMEGA, PASS-ALPHA, SKINNY-PASSES) |
-| HANDOFF → SK-V5 packet | `HANDOFF.md:9` | `restart/skinny/audit/IMPLEMENTATION-AGENT-PROMPT-SK-V6.md` | resolves; **one cohort behind** SK-V7 |
+| HANDOFF → SK-V5 packet | `HANDOFF.md:9` | `restart/skinny/tranches/sk-v6/DISPATCH-PROMPT.md` | resolves; **one cohort behind** SK-V7 |
 | ARCH §7.4 → skinny prototype | `ARCHITECTURE.md:1114-1125` | `ir/src/lib.rs`, `passes/src/lib.rs`, `codegen/src/lower/` | resolves; SK-V6 commit SHAs cited |
-| MASTER-PLAN §13 H.W{n} → skinny packet | `MASTER-PLAN.md:489-549` | `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md` | resolves; **two cohorts behind** SK-V7 |
+| MASTER-PLAN §13 H.W{n} → skinny packet | `MASTER-PLAN.md:489-549` | `restart/skinny/tranches/sk-v5/SPEC.md` | resolves; **two cohorts behind** SK-V7 |
 | Inheritance → BA-BD legacy | `inheritance/INDEX.md:11-21` | `docs/tranches/{BA,BB,BC,BD}/` | resolves |
 | MASTER-PLAN → corpora | `MASTER-PLAN.md:140-149` | `restart/corpora/SOTA.md:50-89,130-136` | resolves (uninspected here; cited by multiple docs) |
 
@@ -232,18 +232,18 @@ Anchoring evidence:
 - `HANDOFF.md:76` (SK-V5 corrected diagnosis #3: bench-private SinkParser dishonesty).
 - `HANDOFF.md:64` ("strictness/output-plane columns are disclosed").
 - `MASTER-PLAN.md:146` (`json/collapsed_stage_x86_strict` strict/permissive split).
-- `restart/skinny/audit/GRAND-SYNTHESIS-SK-V7.md` (per the user's instruction; uninspected here but referenced).
+- `restart/skinny/tranches/sk-v7/SYNTHESIS.md` (per the user's instruction; uninspected here but referenced).
 - `PASS-OMEGA.md:171-172` (CH5 hidden coupling: Track 1 ≡ Track 2 dishonesty audit).
 
 **Verdict: ADD Lock 17.** The discipline already binds skinny implementation (SK-V5 Wave 2 rewired Track 1 to generated runtime; strictness columns added 2026-05-14). Codifying as Lock 17 makes the discipline grammar-neutral + V1-binding + G-Omega-gated. Without Lock 17, future tranches can silently regress (the failure mode SK-V5 caught).
 
-**Lock 17 receiver:** `restart/locks/14-LOCKS.md`, appended after line 94 Lock 16 close. File rename to `LOCKS.md` (per §7 above) coincident.
+**Lock 17 receiver:** `restart/locks/LOCKS.md`, appended after line 94 Lock 16 close. File rename to `LOCKS.md` (per §7 above) coincident.
 
 ## §11 — Restructure proposal
 
 | Surface | Current state | Proposal |
 |---|---|---|
-| `restart/locks/` | 1 file (`14-LOCKS.md`); name lags lock count | rename to `restart/locks/LOCKS.md`; consider adding `LOCK-AMENDMENT-HISTORY.md` (or `AMENDMENTS.md`) tracking per-lock landing dates + commit SHAs (currently this lives **inline** in lock bodies and in `MASTER-PLAN.md:807-823`). |
+| `restart/locks/` | 1 file (`LOCKS.md`); name lags lock count | rename to `restart/locks/LOCKS.md`; consider adding `LOCK-AMENDMENT-HISTORY.md` (or `AMENDMENTS.md`) tracking per-lock landing dates + commit SHAs (currently this lives **inline** in lock bodies and in `MASTER-PLAN.md:807-823`). |
 | `restart/inheritance/` | 1 file (`INDEX.md`) | **keep** as-is. Active per `MASTER-PLAN.md:14`. Optionally add a `CARRY-LEDGER-XREF.md` that points to `MASTER-PLAN.md:875-924` (the V1 carry ledger) to make the two-source-of-truth relationship explicit. **Do not** archive; legacy BA-BD are still under inheritance discipline per `inheritance/INDEX.md:46-54`. |
 | `restart/` top-level (5 docs) | README + ARCHITECTURE + MASTER-PLAN + MIGRATION + HANDOFF | **keep** as-is. The 5-doc structure is the V1 totality spec surface; collapsing breaks Pass Omega CRUD-1/CRUD-2/CRUD-4 ownership. |
 | Pass Omega output dir | `restart/totality/astral/V{V}/` per `PASS-OMEGA.md:117-134` | **does not exist** yet. First Pass Omega invocation creates it. Recommend pre-creating `restart/totality/astral/.gitkeep` so the path is referenceable. |
@@ -270,13 +270,13 @@ Anchoring evidence:
 3. `restart/MASTER-PLAN.md` — §0 SK-V7 anchor; §13 H.W{n} SK-V7 disposition annotations; §28 SK-V7 fold ledger.
 4. `restart/HANDOFF.md` — header date refresh; reading order SK-V6 → SK-V7; §2/§6/§6a SK-V7 cohort rows.
 5. `restart/MIGRATION.md` — verify `bbnf-regex` cleanup only.
-6. `restart/locks/14-LOCKS.md` — append Lock 17 (G-Omega gated); rename to `LOCKS.md`.
+6. `restart/locks/LOCKS.md` — append Lock 17 (G-Omega gated); rename to `LOCKS.md`.
 7. `restart/inheritance/INDEX.md` — correct stale ParseStream + 22-variant claims; add carry-ledger cross-reference.
 
 **Move / delete:**
 
 - No file deletion proposed.
-- `restart/locks/14-LOCKS.md` → `restart/locks/LOCKS.md` (rename).
+- `restart/locks/LOCKS.md` → `restart/locks/LOCKS.md` (rename).
 - Optional: pre-create `restart/totality/astral/.gitkeep` for Pass Omega output.
 
 **Proposed lock amendments:**
@@ -294,8 +294,8 @@ The 5-top-level-doc + 1-locks-doc + 1-inheritance-doc layout is **sound**. The l
 
 **Top 3 stale items:**
 
-1. `restart/HANDOFF.md:9` reading order names SK-V6 dispatch authority while SK-V7 packet + grand synthesis exist at `restart/skinny/audit/`. HANDOFF lags one cohort.
+1. `restart/HANDOFF.md:9` reading order names SK-V6 dispatch authority while SK-V7 packet + grand synthesis exist at `restart/skinny/tranches/`. HANDOFF lags one cohort.
 2. `restart/README.md:420-424` prompt-suite table lists 5 prompts while `restart/prompts/` carries 8 functional prompts (PASS-OMEGA, PASS-ALPHA, SKINNY-PASSES absent from the README table). README also names `bbnf-regex` at line 380 instead of `parse-that-regex`.
 3. `restart/inheritance/INDEX.md:66` states "tape's *name* dies; ... survives as ParseStream" — contradicted by every other top-level doc (Lock 1 2026-05-04 reframe keeps tape's name; `MASTER-PLAN.md:227` forbids ParseStream as runtime term). Index also still cites 22-variant BIR while ARCHITECTURE §7.2 is 20-variant.
 
-**Lock 17 recommendation:** **ADD.** Body: bench-private Track 1 prohibition + comparator-plane strictness disclosure. Anchored in SK-V5 corrected diagnosis #3 (bench-private SinkParser dishonesty) + SK-V6 strict/permissive comparator split + SK-V7 GRAND-SYNTHESIS §9 (per user invocation). G-Omega-gated per Pass Omega §6. Receiver: `restart/locks/14-LOCKS.md` appended after Lock 16 (line 94), coincident with rename to `LOCKS.md`.
+**Lock 17 recommendation:** **ADD.** Body: bench-private Track 1 prohibition + comparator-plane strictness disclosure. Anchored in SK-V5 corrected diagnosis #3 (bench-private SinkParser dishonesty) + SK-V6 strict/permissive comparator split + SK-V7 GRAND-SYNTHESIS §9 (per user invocation). G-Omega-gated per Pass Omega §6. Receiver: `restart/locks/LOCKS.md` appended after Lock 16 (line 94), coincident with rename to `LOCKS.md`.

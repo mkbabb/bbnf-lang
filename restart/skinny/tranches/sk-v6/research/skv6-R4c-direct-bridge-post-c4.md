@@ -8,7 +8,7 @@ Scope: research only; no repository files edited.
 
 - `skinny/RESULTS.md` direct table, current after REDRESS 63 / Candidate 4.
 - `skinny/REDRESS.md` entries 54, 55, and 63.
-- `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md` §C and Candidate 3.
+- `restart/skinny/tranches/sk-v6/SYNTHESIS-WAVE-1-PLAN.md` §C and Candidate 3.
 - Direct Track 1 source:
   - `skinny/crates/bbnf-bench/src/direct_struct.rs:401-405`
   - `skinny/crates/runtime/src/grammars/json/generated.rs:396-430`

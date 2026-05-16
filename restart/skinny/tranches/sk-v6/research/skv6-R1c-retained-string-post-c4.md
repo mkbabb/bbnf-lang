@@ -9,8 +9,8 @@ Repo edits: none
 
 - `skinny/RESULTS.md` current retained parse authority after Candidate4.
 - `skinny/REDRESS.md` item 63: `ContainerNext` admitted; retained parse-G remains 13.
-- `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md` §8: Candidate 1/2 rejected, Candidate 3 rejected, Candidate 4 admitted.
-- `restart/skinny/audit/SK-V6-COHORT/skv6-R1-parse-regressed.md`, `skv6-R2-parse-original-g.md`, `skv6-R4b-string-distribution.md`.
+- `restart/skinny/tranches/sk-v6/SYNTHESIS-WAVE-1-PLAN.md` §8: Candidate 1/2 rejected, Candidate 3 rejected, Candidate 4 admitted.
+- `restart/skinny/tranches/sk-v6/research/skv6-R1-parse-regressed.md`, `skv6-R2-parse-original-g.md`, `skv6-R4b-string-distribution.md`.
 
 Pre-blocked routes honored: REDRESS 60-63 remain closed. This report does not propose removing `match_tiny_plain_string`, always/delayed 64-byte string scanners, sidecar cursors, retained UTF-8 fusion, direct decoded-string materializers, or quote-source fused materialization.
 

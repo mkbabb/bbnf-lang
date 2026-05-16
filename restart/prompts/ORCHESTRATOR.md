@@ -8,13 +8,13 @@ The pipeline is composable: each sub-orchestrator runs its own waves of sub-agen
 
 1. `restart/HANDOFF.md` — current-state orientation; latest verdict; next move.
 2. `restart/README.md` — gestalt anchor; 14 locks; SOTA synthesis.
-3. `restart/locks/14-LOCKS.md` — settled architectural commitments (post-Phase-7.1 amendments).
+3. `restart/locks/LOCKS.md` — settled architectural commitments (post-Phase-7.1 amendments).
 4. `restart/audit/hardening/HARDENING-CONSOLIDATED-V7.1.md` — terminal verdict baseline.
 5. `restart/research/V1-FOLD-CANDIDATES.md` — Phase 7 contract; 30-item synthesis.
-6. `restart/prompts/HARDENING.md` — per-target audit specification (the contract each hardening agent reads).
-7. `restart/prompts/HARDENING-ORCHESTRATOR.md` — sub-orchestrator for hardening cycles.
-8. `restart/prompts/RESEARCH-FOLD-ORCHESTRATOR.md` — sub-orchestrator for research deep-dives + fold cycles.
-9. `restart/prompts/AMENDMENT-DISPATCH.md` — sub-orchestrator for verify-then-patch amendment cycles.
+6. `restart/prompts/audit-specs/HARDENING-LENS-SET.md` — per-target audit specification (the contract each hardening agent reads).
+7. `restart/prompts/sub-orchestrators/HARDENING.md` — sub-orchestrator for hardening cycles.
+8. `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` — sub-orchestrator for research deep-dives + fold cycles.
+9. `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` — sub-orchestrator for verify-then-patch amendment cycles.
 10. `docs/precepts/instructions/STYLE.md` + `LESSONS-LEARNED.md` — voice + discipline.
 
 ## §2 — Phase identification protocol
@@ -32,10 +32,10 @@ Each phase type maps to one sub-orchestrator. The sub-orchestrator owns its own 
 
 | Phase type | Trigger | Sub-orchestrator | Dispatched cycles |
 |---|---|---|---|
-| **Hardening** — verify the corpus against a lens set | Latest commit is fold/amendment; verify-then-rerun mandate | `restart/prompts/HARDENING-ORCHESTRATOR.md` | 4 parallel hardener agents per `HARDENING.md` lens spec → 1 consolidation. `HARDENING-{TARGET}-V{N}.md` outputs. |
-| **Research-fold** — ground SOTA assertions in primary literature, then absorb | Architectural surfaces assert SOTA without grounding; user explicit | `restart/prompts/RESEARCH-FOLD-ORCHESTRATOR.md` | 8 parallel topic deep-dives (Phase 1) → 4 parallel fold agents (Phase 2) → escalation summary if structural (Phase 2.5) → V{N+1} hardening (Phase 3) → V{N+1} consolidation (Phase 4). |
-| **Amendment-dispatch** — verify-then-patch a punch list | Hardening returns AMENDMENT-REQUIRED with ≤20 narrow items | `restart/prompts/AMENDMENT-DISPATCH.md` | 1-4 parallel narrow-amendment agents → V{N}.1 verification rerun. |
-| **Surface fold** — absorb a settled architectural decision into the per-pass surfaces | User adjudicates V1-fold candidates; lock amendments demand cascade | `restart/prompts/HARDENING-ORCHESTRATOR.md` then `AMENDMENT-DISPATCH.md` | 1 single SYNTHESIS agent (locks + ARCH amendments) → 4 parallel surface-fold agents (PASS-1 / PASS-2 / PASS-3 / SYNTHESIS trio) → V{N+1} hardening verification. |
+| **Hardening** — verify the corpus against a lens set | Latest commit is fold/amendment; verify-then-rerun mandate | `restart/prompts/sub-orchestrators/HARDENING.md` | 4 parallel hardener agents per `HARDENING.md` lens spec → 1 consolidation. `HARDENING-{TARGET}-V{N}.md` outputs. |
+| **Research-fold** — ground SOTA assertions in primary literature, then absorb | Architectural surfaces assert SOTA without grounding; user explicit | `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` | 8 parallel topic deep-dives (Phase 1) → 4 parallel fold agents (Phase 2) → escalation summary if structural (Phase 2.5) → V{N+1} hardening (Phase 3) → V{N+1} consolidation (Phase 4). |
+| **Amendment-dispatch** — verify-then-patch a punch list | Hardening returns AMENDMENT-REQUIRED with ≤20 narrow items | `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` | 1-4 parallel narrow-amendment agents → V{N}.1 verification rerun. |
+| **Surface fold** — absorb a settled architectural decision into the per-pass surfaces | User adjudicates V1-fold candidates; lock amendments demand cascade | `restart/prompts/sub-orchestrators/HARDENING.md` then `AMENDMENT-DISPATCH.md` | 1 single SYNTHESIS agent (locks + ARCH amendments) → 4 parallel surface-fold agents (PASS-1 / PASS-2 / PASS-3 / SYNTHESIS trio) → V{N+1} hardening verification. |
 | **Per-tranche full-spec drafting** — Wave 9+; out of orchestrator scope | All audits + folds returned READY | (separate spec-drafting orchestrator; not yet authored) | 10 parallel tranche-spec agents (one per tranche A-J; ~3,000-5,000 lines each). |
 
 ## §4 — Phase 8 dispatch table (current — updated after each phase commits)

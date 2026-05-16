@@ -23,7 +23,7 @@ registries are migration targets, not patterns to preserve
 The central runtime move is tape unioned with direct-to-struct. Tape is the
 substrate name and implementation family; ParseStream is not a replacement
 term. Lock 1 sets tape plus direct-to-struct and rejects parallel substrates
-and OpenFrame ladders (`restart/locks/14-LOCKS.md:34`). PASS-3 resolves stale
+and OpenFrame ladders (`restart/locks/LOCKS.md:34`). PASS-3 resolves stale
 ParseStream mentions against the README and locks
 (`restart/audit/pass-3-runtime/PASS-3.md:14-23`).
 
@@ -32,12 +32,12 @@ same-plane schema v3 and the SK-V6 asmjson/DAV1D synthesis. The target remains
 to beat sonic-rs, simdjson, yyjson, and strict asmjson rows, but only rows with
 matching strictness, output shape, ownership, hardware, feature mask, corpus,
 and freshness can close SOTA. The mandatory implementation handoff is
-`restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V6-SOTA-RECOVERY.md`.
+`restart/skinny/tranches/sk-v6/SPEC.md`.
 
 The central compiler move is two IRs plus side tables. Grammar IR is semantic;
 Backend IR is executable and is the only lowerer input. README requires two
 IRs (`restart/README.md:104-118`), and Lock 5 rejects emitters walking grammar
-directly (`restart/locks/14-LOCKS.md:42`). PASS-2 supplies the Backend IR
+directly (`restart/locks/LOCKS.md:42`). PASS-2 supplies the Backend IR
 payload contract (`restart/audit/pass-2-codegen/PASS-2.md:52-76`); the
 post-Phase-8.4 fold lands the 20-variant alphabet (19 semantic variants plus
 `Return`) per ARCH §7.2.
@@ -92,7 +92,7 @@ rule (`restart/README.md:29-60`).
 
 The old workspace crates map to this set according to `restart/MIGRATION.md`.
 `ser` and `gorgeous` are archive-only before implementation starts, per Lock 12
-(`restart/locks/14-LOCKS.md:56`).
+(`restart/locks/LOCKS.md:56`).
 
 ## 3. IR And BBNF Contract Summary
 
@@ -127,8 +127,8 @@ inputs, not work to reopen inside tranche drafting.
 | Tree shape | 4-10 children and no handwritten file over 500 LOC. | A through J |
 | SOTA | JSON/CSS/SIMD gates. | H/J |
 
-Lock 13 defines the tree-shape and LOC ceiling (`restart/locks/14-LOCKS.md:58`).
-Lock 8 defines SOTA competitor anchors (`restart/locks/14-LOCKS.md:48`).
+Lock 13 defines the tree-shape and LOC ceiling (`restart/locks/LOCKS.md:58`).
+Lock 8 defines SOTA competitor anchors (`restart/locks/LOCKS.md:48`).
 PASS-2 defines generated LOC budget tracking (`restart/audit/pass-2-codegen/PASS-2.md` §6).
 
 Exact SOTA close rows. Each row binds a competitor baseline, a bbnf target, and
@@ -149,7 +149,7 @@ in `restart/corpora/SOTA.md:50-89` and `restart/corpora/SOTA.md:130-136`.
 | `simd/structural_scan` | simdjson On-Demand ~56000 Mbps on x86 AVX2; ~40000 Mbps on M-series NEON. | >= 40000 Mbps on M-series, >= 56000 Mbps on x86 AVX2; scalar parity hash matches. | M1 Pro macOS NEON and x86_64 AVX2 build host. | H.W2/H.W5, J.W1. |
 
 The SOTA close gates measure the Rust line only at H.W1/H.W2/H.W4/H.W5/H.W6
-per Lock 8 amendment (`restart/locks/14-LOCKS.md:48`). WASM SOTA measurements
+per Lock 8 amendment (`restart/locks/LOCKS.md:48`). WASM SOTA measurements
 defer post-V1 alongside the V2 `WasmBackend: Backend` impl per
 `restart/ARCHITECTURE.md` §7.5; no measurement-pending WASM anchor lands in V1.
 
@@ -264,7 +264,7 @@ Inheritance:
 | BA archive ceremony and preflight gates. | Archive `ser`/`gorgeous`; establish close checklist. |
 | README crate table. | Create the 24-crate workspace (`restart/README.md:29-60`). |
 | MODULES archive calls. | Move archive-only crates out of production (`restart/corpora/MODULES.md:165-212`). |
-| Lock 14. | Enforce grammar generalization (`restart/locks/14-LOCKS.md:60`). |
+| Lock 14. | Enforce grammar generalization (`restart/locks/LOCKS.md:60`). |
 
 Stub waves:
 
@@ -295,7 +295,7 @@ Inheritance:
 
 | Source | Use |
 |---|---|
-| Lock 1. | Tape/direct substrate and no OpenFrame ladders (`restart/locks/14-LOCKS.md:34`). |
+| Lock 1. | Tape/direct substrate and no OpenFrame ladders (`restart/locks/LOCKS.md:34`). |
 | PASS-3 runtime architecture. | `DocumentView`, `parse`, `parse_in`, `parse_owned`, tape/direct model (`restart/audit/pass-3-runtime/PASS-3.md:42-135`). |
 | Restart sketch perf evidence. | Remove OpenFrame clone pressure (`restart/corpora/RESTART-SKETCH.md:154-184`). |
 
@@ -331,7 +331,7 @@ Inheritance:
 |---|---|
 | README two-IR decision. | Grammar IR and Backend IR stay distinct (`restart/README.md:104-118`). |
 | PASS-1 IR and type commitments. | Grammar IR variants, type inference, CSP/egraph bridge (`restart/audit/pass-1-substrate/PASS-1.md:24-42`). |
-| Lock 4. | Bridge crates compose by output piping, not fused hypergraph (`restart/locks/14-LOCKS.md:40`). |
+| Lock 4. | Bridge crates compose by output piping, not fused hypergraph (`restart/locks/LOCKS.md:40`). |
 | Current `ir` corpus. | Mine useful facts and split large files (`restart/corpora/MODULES.md:264-505`). |
 
 Stub waves:
@@ -400,7 +400,7 @@ Inheritance:
 | Source | Use |
 |---|---|
 | PASS-2 BIR table. | 20-variant shape (19 semantic variants plus `Return`) per ARCH §7.2 and PASS-2 payload-refiner mapping. |
-| Lock 5. | Lowerers consume BIR, not Grammar IR (`restart/locks/14-LOCKS.md:42`). |
+| Lock 5. | Lowerers consume BIR, not Grammar IR (`restart/locks/LOCKS.md:42`). |
 | BC backend ABI inheritance. | Parity and typed boundary discipline. |
 
 Stub waves:
@@ -432,7 +432,7 @@ Inheritance:
 |---|---|
 | PASS-2 runtime template. | Output under `runtime/src/grammars/<name>` (`restart/audit/pass-2-codegen/PASS-2.md` §7). |
 | PASS-2 lowerer contract. | `BackendLowerer` methods and Rust V1 scope (`restart/audit/pass-2-codegen/PASS-2.md:80-96`). |
-| Lock 6. | Committed source generation, no proc-macro facade (`restart/locks/14-LOCKS.md:44`). |
+| Lock 6. | Committed source generation, no proc-macro facade (`restart/locks/LOCKS.md:44`). |
 
 Stub waves:
 
@@ -464,7 +464,7 @@ Inheritance:
 | Source | Use |
 |---|---|
 | README path API. | `path!`, `select!`, visitor mutation (`restart/README.md:272-318`). |
-| Lock 7. | `path`, `path-core` split on the V1 Rust line (`restart/locks/14-LOCKS.md:46`); `path-ts` defers post-V1. |
+| Lock 7. | `path`, `path-core` split on the V1 Rust line (`restart/locks/LOCKS.md:46`); `path-ts` defers post-V1. |
 | PASS-3 path and visitor commitments. | Typed path diagnostics and mutation API (`restart/audit/pass-3-runtime/PASS-3.md:82-95`). |
 
 Stub waves:
@@ -488,24 +488,24 @@ cargo test -p test-fixtures future_grammar_yaml
 
 ## 13. Tranche H - Pratt, SIMD, typed-event codegen
 
-The SK-V5 implementation packet at `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md` declares seven numbered waves (0–7) that execute the H-tranche scope below. The two numbering schemes align as follows: SK-V5 Wave 0 has no prior H-tranche entry (it is new strictness/diagnostic infrastructure); SK-V5 Wave 1 covers H.W1 plus H.W2.5 substrate authoring; SK-V5 Wave 2 covers H.W2 (number lever) and the `SinkOnly` portion of H.W4; SK-V5 Wave 3 covers H.W3 (parse-that string/Unicode closure) and the residual UTF-8 work folded out of H.W4; SK-V5 Wave 4 is the Lock 14 remediation row added below (not previously wave-tagged); SK-V5 Wave 5 covers H.W5 (primitive bodies); SK-V5 Wave 6 covers H.W6 (CSS SOTA gates / strict matrix); SK-V5 Wave 7 is the x86 `CollapsedStage` successor (optional, grammar-keyed). The reading order for execution is `restart/skinny/audit/GRAND-SYNTHESIS-SK-V5.md` → `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md` → `restart/skinny/audit/HANDOFF-SK-V5.md`; the SK-V3 packet remains the historical attribution path that the SK-V5 packet supersedes for wave routing.
+The SK-V5 implementation packet at `restart/skinny/tranches/sk-v5/SPEC.md` declares seven numbered waves (0–7) that execute the H-tranche scope below. The two numbering schemes align as follows: SK-V5 Wave 0 has no prior H-tranche entry (it is new strictness/diagnostic infrastructure); SK-V5 Wave 1 covers H.W1 plus H.W2.5 substrate authoring; SK-V5 Wave 2 covers H.W2 (number lever) and the `SinkOnly` portion of H.W4; SK-V5 Wave 3 covers H.W3 (parse-that string/Unicode closure) and the residual UTF-8 work folded out of H.W4; SK-V5 Wave 4 is the Lock 14 remediation row added below (not previously wave-tagged); SK-V5 Wave 5 covers H.W5 (primitive bodies); SK-V5 Wave 6 covers H.W6 (CSS SOTA gates / strict matrix); SK-V5 Wave 7 is the x86 `CollapsedStage` successor (optional, grammar-keyed). The reading order for execution is `restart/skinny/tranches/sk-v5/SYNTHESIS.md` → `restart/skinny/tranches/sk-v5/SPEC.md` → `restart/skinny/tranches/sk-v5/HANDOFF.md`; the SK-V3 packet remains the historical attribution path that the SK-V5 packet supersedes for wave routing.
 
 Goal: activate performance recognizers + typed-event codegen template + per-target SIMD/ASM primitive layer (`bbnf-simd`) on the Rust line; close the expanded skinny SOTA-BEAT gate against sonic-rs, simd-json, yyjson, simdjson C++, and asmjson reference planes. The primary close is **arm64 Apple Silicon**. x86_64 AVX-512 closes as a secondary hardware gate with strict/permissive comparator rows separated.
 
-The H tranche post-2026-05-12 is no longer "aspirational" per Lock 8's earlier framing. It is a concrete engineering target with empirical attribution (`restart/skinny/audit/SOTA-BEAT-DESIGN.md` §1) and three measurable gates: (a) twitter Mbps wall-clock, (b) hot-leaf count vs comparator, (c) cycle-per-byte vs simdjson floor.
+The H tranche post-2026-05-12 is no longer "aspirational" per Lock 8's earlier framing. It is a concrete engineering target with empirical attribution (`restart/skinny/tranches/shared/SOTA-BEAT-DESIGN.md` §1) and three measurable gates: (a) twitter Mbps wall-clock, (b) hot-leaf count vs comparator, (c) cycle-per-byte vs simdjson floor.
 
 Inheritance:
 
 | Source | Use |
 |---|---|
-| Lock 10. | Pratt and SIMD are auto-detected (`restart/locks/14-LOCKS.md:52`); the cost model selects per-grammar `backend_shape ∈ {EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage}`. |
+| Lock 10. | Pratt and SIMD are auto-detected (`restart/locks/LOCKS.md:52`); the cost model selects per-grammar `backend_shape ∈ {EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage}`. |
 | Lock 15. | Build-profile discipline (`lto=true codegen-units=1 panic="abort" debug=true`) — co-load-bearing with the codegen template inversion. |
 | Lock 16. | SIMD/ASM admissibility allowlist (§4 below carries the verbatim allowlist). |
 | Lock 5. | V1 ships `RustBackend: Backend` only via `restart/ARCHITECTURE.md` §7.5; WASM defers post-V1 as `WasmBackend: Backend`. |
-| Lock 8. | V1 SOTA close gates measure the Rust line only; WASM SOTA defers post-V1 (`restart/locks/14-LOCKS.md:48`). |
+| Lock 8. | V1 SOTA close gates measure the Rust line only; WASM SOTA defers post-V1 (`restart/locks/LOCKS.md:48`). |
 | PASS-2 detector and SIMD coverage. | Detection thresholds and scalar/NEON/AVX2/AVX512 coverage (`restart/audit/pass-2-codegen/PASS-2.md` §3). |
 | SOTA corpus + comparative profile baseline. | JSON/CSS competitor baselines (`restart/corpora/SOTA.md:50-89`, `restart/corpora/SOTA.md:130-136`); six-agent comparative-profile cohort outputs at `skinny/profile/{sonic-rs-v2,simdjson-v2}/PROFILE-REPORT.md` (post-2026-05-12). |
-| SOTA-BEAT design. | `restart/skinny/audit/IMPLEMENTATION-AGENT-PROMPT-SK-V6.md` + `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6-ASMJSON-DAV1D.md` + `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V6-SOTA-RECOVERY.md` + `restart/skinny/audit/SK-V6-COHORT/` — SK-V6 same-plane recovery over the SK-V5 measured substrate history. The deleted SK-V3/SK-V4 packets are no longer dispatch authority. |
+| SOTA-BEAT design. | `restart/skinny/tranches/sk-v6/DISPATCH-PROMPT.md` + `restart/skinny/tranches/sk-v6/SYNTHESIS.md` + `restart/skinny/tranches/sk-v6/SPEC.md` + `restart/skinny/tranches/sk-v6/research/` — SK-V6 same-plane recovery over the SK-V5 measured substrate history. The deleted SK-V3/SK-V4 packets are no longer dispatch authority. |
 
 Waves (host-arch primary; arm64 Apple Silicon first, then x86_64). SK-V6 now
 binds the wave routing: SK-V5 landed the Rust state, then measurements refuted
@@ -664,7 +664,7 @@ Stub waves:
 | J.W0 | Rust/VM parity matrix for the V1 line; WASM/TS parity defers to V2 backend impls. | Rust/VM parity matrix passes for seed grammars; V2 carries cross-backend parity after `WasmBackend` / `TsBackend` registration. |
 | J.W1 | Final SOTA gate and benchmark report. | JSON/CSS/SIMD targets met; misses require amendment before close. |
 | J.W2 | Public docs redo. | Docs build and examples run. |
-| J.W3 | Package readiness for public crates: confirm publication-name plan, validate `[workspace.package]` defaults, dry-run `cargo publish` for every public crate, and verify path-dep incubation does not leak to `crates.io`. Two gates apply per Lock 11 (`restart/locks/14-LOCKS.md:54`): (i) the **stable surface** (`bbnf`, `bbnf-cli`, `bbnf-language-server`, `bbnf-bench`, `path`, `path-core`, `parse-that-regex`) publishes unconditionally at J.W3; (ii) the **incubation-cleared sister crates** (`egraph`, `egraph-derive`, `csp-solver`, `parse-that`) publish at J.W3 only after the 2-tranche stability gate clears — API has not changed across two consecutive prior tranche closes, downstream consumers compile against a frozen-version dry-run, and no breaking change is queued. Crates that fail the stability gate carry their dry-run results in the J.W3 report and remain path-deps until the next J cycle. `path-ts` defers post-V1 alongside the principled TS-native parse+runtime fork; the V2 `TsBackend: Backend` impl per `restart/ARCHITECTURE.md` §7.5 publishes `path-ts` in V2. | `cargo xtask publish --dry-run` passes for the stable surface (`bbnf`, `bbnf-cli`, `bbnf-language-server`, `bbnf-bench`, `path`, `path-core`, `parse-that-regex`) plus every incubation-cleared sister crate (`egraph`, `egraph-derive`, `csp-solver`, `parse-that`); incubation-failing sister crates remain path-deps with the failure recorded; `path-ts` is not in V1 publish scope; private crates are unpublished. |
+| J.W3 | Package readiness for public crates: confirm publication-name plan, validate `[workspace.package]` defaults, dry-run `cargo publish` for every public crate, and verify path-dep incubation does not leak to `crates.io`. Two gates apply per Lock 11 (`restart/locks/LOCKS.md:54`): (i) the **stable surface** (`bbnf`, `bbnf-cli`, `bbnf-language-server`, `bbnf-bench`, `path`, `path-core`, `parse-that-regex`) publishes unconditionally at J.W3; (ii) the **incubation-cleared sister crates** (`egraph`, `egraph-derive`, `csp-solver`, `parse-that`) publish at J.W3 only after the 2-tranche stability gate clears — API has not changed across two consecutive prior tranche closes, downstream consumers compile against a frozen-version dry-run, and no breaking change is queued. Crates that fail the stability gate carry their dry-run results in the J.W3 report and remain path-deps until the next J cycle. `path-ts` defers post-V1 alongside the principled TS-native parse+runtime fork; the V2 `TsBackend: Backend` impl per `restart/ARCHITECTURE.md` §7.5 publishes `path-ts` in V2. | `cargo xtask publish --dry-run` passes for the stable surface (`bbnf`, `bbnf-cli`, `bbnf-language-server`, `bbnf-bench`, `path`, `path-core`, `parse-that-regex`) plus every incubation-cleared sister crate (`egraph`, `egraph-derive`, `csp-solver`, `parse-that`); incubation-failing sister crates remain path-deps with the failure recorded; `path-ts` is not in V1 publish scope; private crates are unpublished. |
 | J.W4 | Archive and migration audit. | No stale crates/docs in production workspace. |
 | J.W5 | Restart close report. | All locks, gates, and routed punch-list items recorded. |
 

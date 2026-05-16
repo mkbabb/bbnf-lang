@@ -10,7 +10,7 @@ Every skinny pass cycle has three phases, each in its own commit:
 
 ### Phase 1: Research (read-only)
 
-**Purpose**: Profile-first diagnosis. Six parallel research agents fan out on disjoint scope rows. Each reads the current code + the most recent RESULTS.md + the most recent REDRESS ledger. Each produces ONE artefact at `restart/skinny/audit/SK-V{N}-COHORT/skv{N}-{wave-letter}{agent-id}-{topic}.md`.
+**Purpose**: Profile-first diagnosis. Six parallel research agents fan out on disjoint scope rows. Each reads the current code + the most recent RESULTS.md + the most recent REDRESS ledger. Each produces ONE artefact at `restart/skinny/tranches/SK-V{N}-COHORT/skv{N}-{wave-letter}{agent-id}-{topic}.md`.
 
 **Agents**: 6 parallel by default. Scope rows are pass-specific (per the wave letter assigned by Pass Alpha's IMPLEMENTATION-PACKET-SK-V{N}.md). Examples from SK-V6 / SK-V7:
 - A1: SOTA comparator deep dive
@@ -149,7 +149,7 @@ The SK-V{N} bracket may produce 5-50 commits total (research + plan + redress pe
 ## §6 — Per-wave artefact paths
 
 ```
-restart/skinny/audit/SK-V{N}-COHORT/
+restart/skinny/tranches/SK-V{N}-COHORT/
 ├── skv{N}-W{w}-{a}-{topic}.md    ← per-research-agent output
 ├── skv{N}-W{w}-plan.md            ← plan artefact
 └── ...
@@ -157,9 +157,9 @@ restart/skinny/audit/SK-V{N}-COHORT/
 skinny/REDRESS.md                  ← grows; entries land in order of admit/reject
 skinny/RESULTS.md                  ← refreshed after each admit/reject
 
-restart/skinny/audit/HANDOFF-SK-V{N}.md
-restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V{N}.md
-restart/skinny/audit/GRAND-SYNTHESIS-SK-V{N}.md
+restart/skinny/tranches/HANDOFF-SK-V{N}.md
+restart/skinny/tranches/IMPLEMENTATION-PACKET-SK-V{N}.md
+restart/skinny/tranches/GRAND-SYNTHESIS-SK-V{N}.md
 ```
 
 ## §7 — Hard caps + commit cadence
@@ -191,8 +191,8 @@ This was the SK-V5 failure shape (Class A NEON kernel parity-green but unwired �
 
 Each commit MUST occupy exactly one triumvirate role:
 
-- **Research commit** is read-only diagnosis. NO source edits. NO new files outside `restart/skinny/audit/SK-V{N}-COHORT/`.
-- **Plan commit** is synthesis. NO source edits. NO new files outside `restart/skinny/audit/SK-V{N}-COHORT/`.
+- **Research commit** is read-only diagnosis. NO source edits. NO new files outside `restart/skinny/tranches/SK-V{N}-COHORT/`.
+- **Plan commit** is synthesis. NO source edits. NO new files outside `restart/skinny/tranches/SK-V{N}-COHORT/`.
 - **Redress commit** is implementation + measurement. Source edits + bench output + REDRESS entry. NO research synthesis content (research already happened).
 
 The orchestrator enforces by refusing to dispatch a redress agent without an antecedent plan commit, and refusing to dispatch a plan agent without an antecedent research commit.

@@ -138,7 +138,7 @@ Disposition: **KSH-PRU** for all four. Audit-trail value is the cycle-name refer
 
 ## §6 V2-deferral occurrence ledger
 
-User mandate per `restart/prompts/HARDENING.md` post-Phase-8.1 amendment: V2 deferrals are retired. V1 is the surface that ships; aspirational items route to per-tranche bodies, not "V2 amendment".
+User mandate per `restart/prompts/audit-specs/HARDENING-LENS-SET.md` post-Phase-8.1 amendment: V2 deferrals are retired. V1 is the surface that ships; aspirational items route to per-tranche bodies, not "V2 amendment".
 
 Surface scan across consolidations + per-target reports:
 
@@ -220,7 +220,7 @@ Re-classification under recommendation:
 2. **REVIEW-A/B/C reviewer files (1078 lines combined; never cited by filename).** Per §4, classified KSH on adversarial-pass-evidence grounds. If "adversarial-pass-evidence" is not a load-bearing classification under user discipline, these are aggressive-prune candidates. **Awaiting user adjudication.**
 3. **HARDENING-MASTER-PLAN-V6 absence.** V6 used `HARDENING-SYNTHESIS-V6.md` as the trio audit filename rather than `HARDENING-MASTER-PLAN-V6.md`. V7 returned to MASTER-PLAN nomenclature. The single-cycle nomenclature anomaly is sealed-by-commit but produces a search-discovery friction. **No prune — note for SYNTHESIS-V6 explicate: cross-reference filename in V7 history table for downstream-grep stability.**
 4. **V8 Tier δ V2-amendment receivers.** §6 surfaces 5 must-rewrite locations in V8 CONSOLIDATED + MASTER-PLAN where "V2 amendment" remains the routing receiver for CHR-improvement / function composition / GADT surface. Under the user mandate retiring V2 deferrals, these need reroute to per-tranche bodies. **Recommend Wave-4.1 amendment-class redress agent re-anchors V8 Tier δ to tranche-D body / library-tranche / CSP-solver crate.** This is forward-policy work, not history-rewrite.
-5. **Cross-directory dependence.** The hardening directory cites `restart/research/V1-FOLD-CANDIDATES.md`, `restart/research/INDEX.md`, `restart/research/fold-{pass,synthesis}-N.md`, `restart/locks/14-LOCKS.md`, `restart/prompts/HARDENING.md`, `restart/prompts/AMENDMENT-DISPATCH.md`. Audit-3 scope is hardening directory only; cross-directory pruning would need parallel audit on those receivers. **Out of scope.**
+5. **Cross-directory dependence.** The hardening directory cites `restart/research/V1-FOLD-CANDIDATES.md`, `restart/research/INDEX.md`, `restart/research/fold-{pass,synthesis}-N.md`, `restart/locks/LOCKS.md`, `restart/prompts/audit-specs/HARDENING-LENS-SET.md`, `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md`. Audit-3 scope is hardening directory only; cross-directory pruning would need parallel audit on those receivers. **Out of scope.**
 
 ---
 

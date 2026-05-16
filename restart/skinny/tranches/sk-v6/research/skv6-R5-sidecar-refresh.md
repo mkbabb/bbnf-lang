@@ -2,10 +2,10 @@
 
 Date: 2026-05-14 16:25 EDT.
 Workspace: `/Users/mkbabb/Programming/bbnf-lang`.
-Authority read: `restart/skinny/audit/IMPLEMENTATION-AGENT-PROMPT-SK-V6.md`
+Authority read: `restart/skinny/tranches/sk-v6/DISPATCH-PROMPT.md`
 sections 1, 2, Wave 1 R5, and 7; `skinny/RESULTS.md`;
-`restart/skinny/audit/SK-V5-COHORT/skv5-B3-native-sidecars.md`;
-`restart/skinny/audit/SK-V5-COHORT/skv5-A1-comparative.md`.
+`restart/skinny/tranches/sk-v5/research/skv5-B3-native-sidecars.md`;
+`restart/skinny/tranches/sk-v5/research/skv5-A1-comparative.md`.
 
 No tracked files were modified, staged, or committed. The worktree was already
 dirty before this dispatch in:

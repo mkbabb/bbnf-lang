@@ -314,7 +314,7 @@ pub enum NotAdmissible {
 **Where Rust automaton is rejected** (V9.5): emitting a Rust state
 machine over the same LUTs would produce a switch/branch-heavy body
 LLVM cannot pack into SIMD; the .asm body must use direct GFNI/VBMI2
-classification per `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md`.
+classification per `restart/skinny/tranches/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md`.
 
 **Runtime consumer**:
 `runtime/src/grammars/{grammar}/collapsed.rs` — wrapper that links the

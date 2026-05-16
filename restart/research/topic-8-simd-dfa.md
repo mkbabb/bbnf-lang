@@ -184,19 +184,19 @@ Each row is a settled restart claim, followed by the implication for this topic.
 
 89. `restart/ARCHITECTURE.md:1280` says WASM/SIMD target-specific output must be attributed by target and SOTA report.
 
-90. `restart/locks/14-LOCKS.md:34` defines tape as the greenfield contiguous parsed-token-stream-with-payload-arena.
+90. `restart/locks/LOCKS.md:34` defines tape as the greenfield contiguous parsed-token-stream-with-payload-arena.
 
-91. `restart/locks/14-LOCKS.md:34` forbids parallel substrates and orthogonal codepaths.
+91. `restart/locks/LOCKS.md:34` forbids parallel substrates and orthogonal codepaths.
 
-92. `restart/locks/14-LOCKS.md:52` says Pratt and SIMD are auto-detected.
+92. `restart/locks/LOCKS.md:52` says Pratt and SIMD are auto-detected.
 
-93. `restart/locks/14-LOCKS.md:52` says the optimizer mines leaf-pattern shape, including charclass, keyword set, and regex, into SIMD scanner decisions.
+93. `restart/locks/LOCKS.md:52` says the optimizer mines leaf-pattern shape, including charclass, keyword set, and regex, into SIMD scanner decisions.
 
-94. `restart/locks/14-LOCKS.md:52` says cost model decides when SIMD overhead is worth dispatch cost.
+94. `restart/locks/LOCKS.md:52` says cost model decides when SIMD overhead is worth dispatch cost.
 
-95. `restart/locks/14-LOCKS.md:54` path-deps `bbnf-regex`, `parse-that`, and other sister crates until API stability.
+95. `restart/locks/LOCKS.md:54` path-deps `bbnf-regex`, `parse-that`, and other sister crates until API stability.
 
-96. `restart/locks/14-LOCKS.md:60` says generic crates carry zero grammar-specific code.
+96. `restart/locks/LOCKS.md:60` says generic crates carry zero grammar-specific code.
 
 97. `restart/audit/pass-2-codegen/PASS-2.md:5` assigns SIMD scanner kernels and Pratt/SIMD auto-detection to PASS-2.
 
@@ -486,7 +486,7 @@ Assessment: Scalar/reference parity is the correct test floor.
 
 5. Convergence: SIMD should be cost-selected.
 
-Restart evidence: `restart/locks/14-LOCKS.md:52` says the cost model decides whether SIMD overhead is worth dispatch cost.
+Restart evidence: `restart/locks/LOCKS.md:52` says the cost model decides whether SIMD overhead is worth dispatch cost.
 
 SOTA evidence: [S5] warns lazy DFA speed may be worse without a good prefilter and that full DFA construction can be costly.
 
@@ -510,7 +510,7 @@ Assessment: bbnf can generate deterministic scanner code when the grammar gives 
 
 8. Convergence: No user `@simd` or `@pratt` directive.
 
-Restart evidence: `restart/README.md:180-182`, `restart/locks/14-LOCKS.md:52`, and `restart/audit/hardening/HARDENING-SYNTHESIS-V5.1.md:136` all forbid author-forced SIMD/Pratt.
+Restart evidence: `restart/README.md:180-182`, `restart/locks/LOCKS.md:52`, and `restart/audit/hardening/HARDENING-SYNTHESIS-V5.1.md:136` all forbid author-forced SIMD/Pratt.
 
 SOTA evidence: [S5] and [S8] make engine choice a compiler/library decision, with config and builders rather than grammar syntax.
 
@@ -576,7 +576,7 @@ Disposition: Add Unicode-state-budget and fallback policy to `parse-that/regex`.
 
 5. Divergence: Vectorscan/Hyperscan targets massive multi-pattern scanning, while bbnf needs grammar-local recognizers.
 
-Restart evidence: `restart/locks/14-LOCKS.md:60` forbids grammar-specific code in generic crates and `restart/ARCHITECTURE.md:720` defaults recognizers to auto.
+Restart evidence: `restart/locks/LOCKS.md:60` forbids grammar-specific code in generic crates and `restart/ARCHITECTURE.md:720` defaults recognizers to auto.
 
 SOTA evidence: [S6] and [S7] target large sets of regexes and streaming/block/vectored scans.
 
@@ -586,7 +586,7 @@ Disposition: Do not imitate Hyperscan's database and callback API unless future 
 
 6. Divergence: Logos uses derive-time Rust codegen; bbnf uses committed generated parser/runtime source.
 
-Restart evidence: `restart/locks/14-LOCKS.md:44` requires xtask-emitted committed source.
+Restart evidence: `restart/locks/LOCKS.md:44` requires xtask-emitted committed source.
 
 SOTA evidence: [S8] does heavy lifting at compile time in derive-generated lexer implementation.
 
@@ -624,7 +624,7 @@ Current text: "SIMD: first-class everywhere ... portable scalar fallback."
 
 Proposed text: "SIMD: first-class where cost and exactness permit ... portable scalar and DFA/VM verifier fallback."
 
-Rationale: [S3] and [S5] both show fast paths are conditional; Lock 10 at `restart/locks/14-LOCKS.md:52` already says cost decides.
+Rationale: [S3] and [S5] both show fast paths are conditional; Lock 10 at `restart/locks/LOCKS.md:52` already says cost decides.
 
 Refinement 4.
 
@@ -704,7 +704,7 @@ Current text: "falling back to scalar because SIMD cost evidence did not win; me
 
 Proposed text: "falling back to scalar or regex verifier-first because SIMD cost or exactness evidence did not win; metadata may disable unsupported kernels but cannot force SIMD."
 
-Rationale: [S5] says engine choice can shift dynamically; Lock 10 forbids user forcing at `restart/locks/14-LOCKS.md:52`.
+Rationale: [S5] says engine choice can shift dynamically; Lock 10 forbids user forcing at `restart/locks/LOCKS.md:52`.
 
 Refinement 12.
 
@@ -778,7 +778,7 @@ Adversarial finding 5: Hyperscan/Vectorscan multi-pattern expectations may be a 
 
 Contradicted or weakened lock: No lock is contradicted; this is a scope pressure point against over-borrowing.
 
-Restart evidence: `restart/locks/14-LOCKS.md:60` demands grammar-neutral generic crates; `restart/ARCHITECTURE.md:720` keeps recognizers automatic.
+Restart evidence: `restart/locks/LOCKS.md:60` demands grammar-neutral generic crates; `restart/ARCHITECTURE.md:720` keeps recognizers automatic.
 
 SOTA evidence: [S6] and [S7] optimize large regex sets, streaming state, vectored input, and scratch/database APIs.
 
@@ -828,7 +828,7 @@ Target: `restart/ARCHITECTURE.md:535-540`.
 
 Directive: Expand the `parse-that/src/` tree to include `regex/hir`, `regex/nfa`, `regex/dfa`, `regex/vm`, and `regex/prefilter`.
 
-Acceptance gate: The tree still obeys Lock 13's 4-to-10 child rule at `restart/locks/14-LOCKS.md:58`.
+Acceptance gate: The tree still obeys Lock 13's 4-to-10 child rule at `restart/locks/LOCKS.md:58`.
 
 Dependency: §5 refinement 4 and §6 finding 2.
 

@@ -577,7 +577,7 @@ When implementation is allowed, the local code changes should be mechanical:
 - Local: `skinny/crates/bbnf-bench/src/real_typed_struct.rs`
 - Local: `skinny/profile/native-sidecars/PROFILE-REPORT.md`
 - Local: `skinny/profile/native-sidecars/asmjson/NOTE.md`
-- Local: `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md`
+- Local: `restart/skinny/tranches/sk-v6/SYNTHESIS-WAVE-1-PLAN.md`
 - sonic-rs: https://github.com/cloudwego/sonic-rs
 - simd-json: https://github.com/simd-lite/simd-json and https://docs.rs/simd-json
 - simdjson: https://github.com/simdjson/simdjson

@@ -8,11 +8,11 @@ Evidence below reuses existing repo and `/tmp` artifacts.
 
 ## Inputs read
 
-- `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6-ASMJSON-DAV1D.md`
-- `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V6-SOTA-RECOVERY.md`
+- `restart/skinny/tranches/sk-v6/SYNTHESIS.md`
+- `restart/skinny/tranches/sk-v6/SPEC.md`
 - `skinny/RESULTS.md`
 - `skinny/REDRESS.md`
-- `restart/skinny/audit/SK-V6-COHORT/skv6-B3-profile-retained-three-way.md`
+- `restart/skinny/tranches/sk-v6/research/skv6-B3-profile-retained-three-way.md`
 - Existing profile reports/artifacts under `skinny/profile/*` and `/tmp/skv6-B3-*`
 
 ## Artifact inventory

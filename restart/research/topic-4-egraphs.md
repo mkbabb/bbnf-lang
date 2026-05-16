@@ -109,18 +109,18 @@ Adversarial finding count: 5.
     cost-model with a union-system bridge" (`restart/README.md:471-473`).
 38. Lock 4 claim: CSP type/layout inference, e-graph rewriting, pattern miners,
     shape analysis, and cost model compose by output-piping
-    (`restart/locks/14-LOCKS.md:40`).
+    (`restart/locks/LOCKS.md:40`).
 39. Lock 4 claim: "No unified hypergraph" and plans that fuse CSP and e-graph
-    into one solver are faults (`restart/locks/14-LOCKS.md:40`).
+    into one solver are faults (`restart/locks/LOCKS.md:40`).
 40. Lock 6 claim: generated source artefacts are emitted by `xtask`; no
-    proc-macro facade for codegen output (`restart/locks/14-LOCKS.md:44`).
+    proc-macro facade for codegen output (`restart/locks/LOCKS.md:44`).
 41. Lock 10 claim: Pratt and SIMD are auto-detected, and the cost model decides
-    when SIMD dispatch is worth it (`restart/locks/14-LOCKS.md:52`).
+    when SIMD dispatch is worth it (`restart/locks/LOCKS.md:52`).
 42. Lock 11 claim: `egraph`, `egraph-derive`, and `csp-solver` stay as path-deps
-    until APIs stabilize (`restart/locks/14-LOCKS.md:54`).
+    until APIs stabilize (`restart/locks/LOCKS.md:54`).
 43. Lock 14 claim: generic crates, including `egraph`, `csp-solver`,
     `parse-that`, and `simd-scan`, carry zero grammar-specific code
-    (`restart/locks/14-LOCKS.md:60`).
+    (`restart/locks/LOCKS.md:60`).
 44. Architecture boundary claim: optimization graph means CSP, egraph, miners,
     and cost model compose by output piping, against a fused global hypergraph
     (`restart/ARCHITECTURE.md:29-30`).
@@ -460,7 +460,7 @@ Adversarial finding count: 5.
 
 21. Convergence C5 - explicit boundaries are necessary.
 22. Restart evidence: Lock 4 requires output piping, no fused hypergraph
-    (`restart/locks/14-LOCKS.md:40`).
+    (`restart/locks/LOCKS.md:40`).
 23. SOTA evidence: S3 `Runner` has phase limits; S6 `run` computes matches then
     applies updates and rebuilds.
 24. Match: bridge exchange should be at named pass boundaries.
@@ -507,7 +507,7 @@ Adversarial finding count: 5.
 
 46. Convergence C10 - Lean confirms orientation and guards matter.
 47. Restart evidence: Pratt/SIMD are auto-detected and cost-governed, with no
-    author-forced directives (`restart/locks/14-LOCKS.md:52`).
+    author-forced directives (`restart/locks/LOCKS.md:52`).
 48. SOTA evidence: Lean `simp` needs curated simp lemmas, `simp only`, and
     looping-rule avoidance.
 49. Match: rewrite systems need curated rule surfaces.
@@ -518,7 +518,7 @@ Adversarial finding count: 5.
 
 1. Divergence D1 - bbnf rejects egglog-style fusion.
 2. Restart evidence: Lock 4 says no unified hypergraph and forbids fusing CSP
-   and egraph into one solver (`restart/locks/14-LOCKS.md:40`).
+   and egraph into one solver (`restart/locks/LOCKS.md:40`).
 3. SOTA evidence: S5 egglog unifies Datalog and equality saturation and reports
    faster, simpler reimplementations for two applications.
 4. Classification: principled divergence if bbnf records why CSP must remain a
@@ -641,7 +641,7 @@ Adversarial finding count: 5.
     tables; non-monotone CSP search state remains inside `csp-solver`, and
     extraction consults solved assignments through `passes::extract`."
 15. Rationale: S2 e-class analyses require merge-safe data; S5 supports lattice
-    reasoning; Lock 4 requires output piping (`restart/locks/14-LOCKS.md:40`).
+    reasoning; Lock 4 requires output piping (`restart/locks/LOCKS.md:40`).
 
 16. Refinement R4.
 17. Target: `restart/ARCHITECTURE.md:319-321`.
@@ -866,7 +866,7 @@ Adversarial finding count: 5.
 37. Dependency: §4 D8 and §5 R8/R9.
 
 38. Surgery S8 - Lock 4 rationale.
-39. Target: `restart/locks/14-LOCKS.md:40` or Architecture opening table at
+39. Target: `restart/locks/LOCKS.md:40` or Architecture opening table at
     `restart/ARCHITECTURE.md:29-30`.
 40. Directive: add one sentence: "egglog demonstrates that Datalog/EqSat fusion
     is viable; bbnf V1 keeps bridge tables because CSP, egraph, miners, and

@@ -1,6 +1,6 @@
 # HARDENING-CONSOLIDATED-V9.2 — Lazy-Tape Lock 1 Amendment Cohort
 
-V9.2 consolidates the four-target V1-corpus hardening audit of the lazy-offset tape amendment proposal at `restart/skinny/audit/LAZY-TAPE-DESIGN.md`. The audit was dispatched in parallel with the SK-V2 amendment cohort that applies the per-quadrant skinny text-propagation punch list.
+V9.2 consolidates the four-target V1-corpus hardening audit of the lazy-offset tape amendment proposal at `restart/skinny/tranches/LAZY-TAPE-DESIGN.md`. The audit was dispatched in parallel with the SK-V2 amendment cohort that applies the per-quadrant skinny text-propagation punch list.
 
 ## §1 Cycle identification
 
@@ -50,7 +50,7 @@ The four per-target punch lists deduplicate to ~20 surgical edits across the V1 
 
 | Item | Targets | Surgery class | Load-bearing? |
 |---|---|---|---|
-| Lock 1 verbatim amendment | `restart/locks/14-LOCKS.md:34` | Wholesale replacement per LAZY-TAPE-DESIGN.md §4.1 | **YES — single load-bearing edit** |
+| Lock 1 verbatim amendment | `restart/locks/LOCKS.md:34` | Wholesale replacement per LAZY-TAPE-DESIGN.md §4.1 | **YES — single load-bearing edit** |
 | ARCH §7.2 BIR `TapeEmit`/`DirectBuild` mode-branching | `restart/ARCHITECTURE.md:927-959` | Per-row payload extension | YES |
 | ARCH §9.1 dual-mode tape invariants | `restart/ARCHITECTURE.md:1388-1409` | Module table + invariants table rewrite | YES |
 | ARCH §3.1 parse API mode-monomorphic note | `restart/ARCHITECTURE.md:218-223` | Paragraph append | no |

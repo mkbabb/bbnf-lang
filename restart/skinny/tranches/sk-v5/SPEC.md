@@ -6,8 +6,8 @@ Workspace: `/Users/mkbabb/Programming/bbnf-lang/skinny`.
 
 Authority:
 
-- `restart/skinny/audit/GRAND-SYNTHESIS-SK-V5.md` (companion synthesis)
-- `restart/skinny/audit/SK-V5-COHORT/` (15 audit reports, 5,559 LOC)
+- `restart/skinny/tranches/sk-v5/SYNTHESIS.md` (companion synthesis)
+- `restart/skinny/tranches/sk-v5/research/` (15 audit reports, 5,559 LOC)
 - `restart/MASTER-PLAN.md` §13 H tranche
 - `restart/ARCHITECTURE.md` §7.3 (5-shape BackendShape, derive_backend_shape spec)
 - `skinny/RESULTS.md` (current gate authority)
@@ -83,7 +83,7 @@ Required final report state:
   the feature)
 - `skinny/crates/bbnf-bench/src/lib.rs` + relevant harness files (emit
   strictness column from the `Sidecar` trait)
-- `restart/skinny/audit/NUKE-PLAN-SK-V5.md` (decision authority)
+- `restart/skinny/tranches/sk-v5/NUKE-PLAN.md` (decision authority)
 
 ### 2.2 Strictness columns
 
@@ -133,7 +133,7 @@ symbol level directly.
 
 ### 2.4 Nuke audit (decisions only; execution Wave 4)
 
-Catalogue every nuke candidate from `restart/skinny/audit/NUKE-PLAN-SK-V5.md`.
+Catalogue every nuke candidate from `restart/skinny/tranches/sk-v5/NUKE-PLAN.md`.
 The packet records the decision; the deletions land in Wave 4 alongside
 the bbnf-simd Lock-14 remediation so all related changes commit
 together.
@@ -652,7 +652,7 @@ alphabet_len: usize) -> u64` parameterised on the alphabet.
 
 ### 6.3 Working-tree nukes
 
-Execute the nuke plan from `restart/skinny/audit/NUKE-PLAN-SK-V5.md`:
+Execute the nuke plan from `restart/skinny/tranches/sk-v5/NUKE-PLAN.md`:
 
 1. Delete `skinny/crates/simd-scan/` entirely (fossil; not in workspace
    members; zero callers).
@@ -855,7 +855,7 @@ gated by real `.asm` consumers.
 Final SK-V5 report lands at:
 
 ```text
-restart/skinny/audit/HANDOFF-SK-V5.md
+restart/skinny/tranches/sk-v5/HANDOFF.md
 ```
 
 Required sections per SK-V4 §9 convention, plus:

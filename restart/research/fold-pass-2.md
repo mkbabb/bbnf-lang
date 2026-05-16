@@ -19,10 +19,10 @@ Read set:
 | `restart/research/topic-7-green-red-incremental.md` | Out-of-scope scan except no PASS-2 cache ownership. |
 | `restart/research/topic-8-simd-dfa.md` | Fold for exact SIMD parity, prefilter verifier route, regex execution plan, and oracle routing. |
 | `restart/research/INDEX.md` §2/§3 | Research output contract and topic routing. |
-| `restart/prompts/RESEARCH-FOLD-ORCHESTRATOR.md` §4/§5 | Phase 2 fold rule: fold §5/§7, surface §6 contradictions. |
-| `restart/prompts/AMENDMENT-DISPATCH.md` §1 | Verify-then-patch discipline. |
+| `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` §4/§5 | Phase 2 fold rule: fold §5/§7, surface §6 contradictions. |
+| `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` §1 | Verify-then-patch discipline. |
 | `restart/README.md` gestalt and §13 | Voice, two-surface, optimization, tape, performance, and discipline anchors. |
-| `restart/locks/14-LOCKS.md` | Lock 1, 4, 5, 6, 8, 10, 13, and 14 checks. |
+| `restart/locks/LOCKS.md` | Lock 1, 4, 5, 6, 8, 10, 13, and 14 checks. |
 | `restart/audit/pass-2-codegen/PASS-2.md` | Current amendment surface. |
 | `restart/audit/pass-1-substrate/PASS-1.md` cited rows | BIR producer, diagnostic ownership, cost/egraph/type handoffs. |
 | `restart/audit/pass-3-runtime/PASS-3.md` cited rows | Materialisation cost and benchmark receiver boundaries. |

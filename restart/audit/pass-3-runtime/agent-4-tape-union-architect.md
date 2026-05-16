@@ -2,7 +2,7 @@
 
 ## §1 Scope + framing
 
-Lens: runtime substrate exposure at the user layer, tape/direct-to-struct union, cursor identity, debug stepping, and compatibility with SOTA on-demand parser lessons. The settled authority is explicit: tape is the substrate, properly unioned with direct-to-struct; columnar SoA and parallel substrates are dead; do not rename tape to `ParseStream`. This report therefore marks `ParseStream` prompt clauses as stale (`restart/prompts/PASS-3-RUNTIME.md:3`, `restart/prompts/PASS-3-RUNTIME.md:79-81`) and follows Lock 1 (`restart/locks/14-LOCKS.md:34`).
+Lens: runtime substrate exposure at the user layer, tape/direct-to-struct union, cursor identity, debug stepping, and compatibility with SOTA on-demand parser lessons. The settled authority is explicit: tape is the substrate, properly unioned with direct-to-struct; columnar SoA and parallel substrates are dead; do not rename tape to `ParseStream`. This report therefore marks `ParseStream` prompt clauses as stale (`restart/prompts/PASS-3-RUNTIME.md:3`, `restart/prompts/PASS-3-RUNTIME.md:79-81`) and follows Lock 1 (`restart/locks/LOCKS.md:34`).
 
 Phase-1 parallel assumption: PASS-1/PASS-2 syntheses are not consumed as authority under this dispatch. This report states the PASS-3 user/runtime requirements that SYNTHESIS must route into PASS-1 substrate and PASS-2 codegen.
 

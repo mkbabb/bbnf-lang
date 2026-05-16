@@ -4,9 +4,9 @@ Date: 2026-05-15.
 Workspace read-only: `/Users/mkbabb/Programming/bbnf-lang`.
 
 Sources read: `skinny/REDRESS.md`, `skinny/RESULTS.md`,
-`restart/HANDOFF.md`, `restart/skinny/audit/HANDOFF-SK-V5.md`,
-`restart/skinny/audit/GRAND-SYNTHESIS-SK-V5.md`, and all reports under
-`restart/skinny/audit/SK-V6-COHORT/`.
+`restart/HANDOFF.md`, `restart/skinny/tranches/sk-v5/HANDOFF.md`,
+`restart/skinny/tranches/sk-v5/SYNTHESIS.md`, and all reports under
+`restart/skinny/tranches/sk-v6/research/`.
 
 ## Current binding gate
 

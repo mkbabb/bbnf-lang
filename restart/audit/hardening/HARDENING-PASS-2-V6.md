@@ -39,11 +39,11 @@ Required reading consumed:
 
 | Artefact | Use in this report |
 |---|---|
-| `restart/prompts/HARDENING-ORCHESTRATOR.md` | Phase 3 lane shape and Phase 6 consolidation shape. |
-| `restart/prompts/HARDENING.md` | Nine-lane audit and Pro/Con/Explication/Challenge discipline. |
-| `restart/prompts/AMENDMENT-DISPATCH.md` §1 | Verify-then-patch discipline and pre-fill caution. |
+| `restart/prompts/sub-orchestrators/HARDENING.md` | Phase 3 lane shape and Phase 6 consolidation shape. |
+| `restart/prompts/audit-specs/HARDENING-LENS-SET.md` | Nine-lane audit and Pro/Con/Explication/Challenge discipline. |
+| `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` §1 | Verify-then-patch discipline and pre-fill caution. |
 | `restart/README.md` | Gestalt, two-surface onboarding, pass order, SOTA, tape/direct, and voice locks. |
-| `restart/locks/14-LOCKS.md` | Lock 1, 4, 5, 6, 8, 10, 13, and 14 checks. |
+| `restart/locks/LOCKS.md` | Lock 1, 4, 5, 6, 8, 10, 13, and 14 checks. |
 | V4/V5/V5.1/V5.1A hardening reports | Regression baseline for directive drift, citation drift, and F/G/H pathology. |
 | Eight topic research artefacts | Topic §6 adversarial pressure and §5/§7 fold pressure. |
 | Four fold reports | PASS-2 fold classification and sibling/out-of-scope routing. |

@@ -2,7 +2,7 @@
 
 Date: 2026-05-13.
 
-Cohort: 15 agent reports under `restart/skinny/audit/SK-V5-COHORT/` (9 deep
+Cohort: 15 agent reports under `restart/skinny/tranches/sk-v5/research/` (9 deep
 research/profile reports + 6 novelty-challenge reports). 5,559 LOC of
 audit. Authority for the verdicts below.
 
@@ -436,10 +436,10 @@ generated runtime, parse_value_at no longer hides cost without
 PC-level explanation.
 
 The implementation packet for these waves is at
-`restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md` (companion
+`restart/skinny/tranches/sk-v5/SPEC.md` (companion
 document). The nuke schedule is at
-`restart/skinny/audit/NUKE-PLAN-SK-V5.md`. The handoff is at
-`restart/skinny/audit/HANDOFF-SK-V5.md`.
+`restart/skinny/tranches/sk-v5/NUKE-PLAN.md`. The handoff is at
+`restart/skinny/tranches/sk-v5/HANDOFF.md`.
 
 ## 13. Closing Posture
 

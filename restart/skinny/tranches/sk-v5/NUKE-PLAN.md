@@ -2,8 +2,8 @@
 
 Date: 2026-05-13.
 
-Authority: `restart/skinny/audit/GRAND-SYNTHESIS-SK-V5.md` + cohort
-reports A4 + B2 + D4 + D5 + D6 at `restart/skinny/audit/SK-V5-COHORT/`.
+Authority: `restart/skinny/tranches/sk-v5/SYNTHESIS.md` + cohort
+reports A4 + B2 + D4 + D5 + D6 at `restart/skinny/tranches/sk-v5/research/`.
 
 Each item below names: file path, why it must die, who depended on it,
 the verification command after removal, and the wave that executes the

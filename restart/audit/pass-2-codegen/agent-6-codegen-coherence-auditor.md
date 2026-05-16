@@ -4,17 +4,17 @@
 
 Lens: verify the PASS-2 plan is coherent across Backend IR, lowerers, runtime template, SIMD, Pratt, and regen equality. PASS-2 prompt assigns this agent the boundary check, regen equality, generated LOC budget, Lock 14 checks, and convergent-pivot identity (`restart/prompts/PASS-2-CODEGEN.md:37`). The worktree currently has unrelated untracked PASS-3 audit files under `restart/audit/pass-3-runtime/`; this PASS-2 audit writes only `restart/audit/pass-2-codegen/`.
 
-The current codebase confirms PASS-2 must replace wiring, not patch it. `crates/core/src/backend/` contains a broad backend tree, and current source inspection found large files such as `struct_direct.rs` at 1033 LOC, `regex_scan_adapter.rs` at 786 LOC, and `emitter.rs` at 566 LOC. CENSUS independently lists these god-module surfaces and flags backend/runtime module size problems (`restart/corpora/CENSUS.md:321-354`). Runtime has nine manual grammar modules (`crates/core/src/runtime/mod.rs:8-23`), and Lock 14 forbids that shape in generic crates (`restart/locks/14-LOCKS.md:60`).
+The current codebase confirms PASS-2 must replace wiring, not patch it. `crates/core/src/backend/` contains a broad backend tree, and current source inspection found large files such as `struct_direct.rs` at 1033 LOC, `regex_scan_adapter.rs` at 786 LOC, and `emitter.rs` at 566 LOC. CENSUS independently lists these god-module surfaces and flags backend/runtime module size problems (`restart/corpora/CENSUS.md:321-354`). Runtime has nine manual grammar modules (`crates/core/src/runtime/mod.rs:8-23`), and Lock 14 forbids that shape in generic crates (`restart/locks/LOCKS.md:60`).
 
 ## §2 Per-Item Table
 
 | Coherence Item | Pro | Con | Explication | Challenge | Disposition |
 |---|---|---|---|---|---|
-| Backend IR boundary | Required by Lock 5 (`restart/locks/14-LOCKS.md:42`). | Current driver walks Grammar IR (`crates/core/src/backend/driver/mod.rs:1-6`). | Lowerers import `backend_ir` only. | Add import-deny check. | REINVENT. |
-| Regen equality | Lock 6 requires generated committed source (`restart/locks/14-LOCKS.md:44`). | Current `xtask/src/regen.rs` is 849 LOC per CENSUS (`restart/corpora/CENSUS.md:321-354`). | Split regen into plan, metadata, emit, write, budget, and check modules. | `xtask regen --check` must return zero source diff. | KEEP-REINVENT. |
-| Generated LOC budget | Lock budget starts at 168K across 9 grammars (`restart/locks/14-LOCKS.md:118-125`). | Current generated tree is 168,750 LOC by PASS-B (`restart-archive-2026-05-04/audit/passes/PASS-B.md:91-101`). | PASS-2 budget caps initial Rust generated output at +2% until template reductions land. | Gate per grammar, not aggregate only. | KEEP-MODIFY. |
+| Backend IR boundary | Required by Lock 5 (`restart/locks/LOCKS.md:42`). | Current driver walks Grammar IR (`crates/core/src/backend/driver/mod.rs:1-6`). | Lowerers import `backend_ir` only. | Add import-deny check. | REINVENT. |
+| Regen equality | Lock 6 requires generated committed source (`restart/locks/LOCKS.md:44`). | Current `xtask/src/regen.rs` is 849 LOC per CENSUS (`restart/corpora/CENSUS.md:321-354`). | Split regen into plan, metadata, emit, write, budget, and check modules. | `xtask regen --check` must return zero source diff. | KEEP-REINVENT. |
+| Generated LOC budget | Lock budget starts at 168K across 9 grammars (`restart/locks/LOCKS.md:118-125`). | Current generated tree is 168,750 LOC by PASS-B (`restart-archive-2026-05-04/audit/passes/PASS-B.md:91-101`). | PASS-2 budget caps initial Rust generated output at +2% until template reductions land. | Gate per grammar, not aggregate only. | KEEP-MODIFY. |
 | Lock 14 genericity | README says two onboarding surfaces and no Rust crate or match arm (`restart/README.md:13-25`). | Current runtime and registry code have grammar names. | Generic crates fail CI on grammar-specific matches and public types. | Generated subdirs are allowed only under runtime grammars. | REINVENT. |
-| Tape naming | Lock 1 and README now say Tape (`restart/locks/14-LOCKS.md:34`, `restart/README.md:285-314`). | Prompt/inheritance still say ParseStream (`restart/prompts/PASS-2-CODEGEN.md:81`, `restart/inheritance/INDEX.md:65-66`). | PASS-2 output must name conflict and resolve to Tape. | No new ParseStream type. | DISCARD stale text. |
+| Tape naming | Lock 1 and README now say Tape (`restart/locks/LOCKS.md:34`, `restart/README.md:285-314`). | Prompt/inheritance still say ParseStream (`restart/prompts/PASS-2-CODEGEN.md:81`, `restart/inheritance/INDEX.md:65-66`). | PASS-2 output must name conflict and resolve to Tape. | No new ParseStream type. | DISCARD stale text. |
 | Cross-pass boundary | PASS-1 output unavailable by Phase 1 dispatch. | PASS-2 prompt says consume PASS-1 output (`restart/prompts/PASS-2-CODEGEN.md:8-21`). | Read PASS-1 prompt and README; state assumptions and handoffs. | SYNTHESIS reconciles later. | KEEP-MODIFY. |
 
 ## §3 Architectural Commitments Ratified
@@ -40,7 +40,7 @@ rg -n "GrammarIR" crates/codegen/src/lower crates/codegen/src/runtime_template
 rg -nE "JsonParser|CssL4Parser|BbnfBootstrap|GoogleSheetsParser" crates/{ir,parse,codegen,runtime,path,path-core,egraph,csp-solver,bbnf-regex,parse-that,simd-scan,analysis,lsp}/src/
 ```
 
-The `rg "GrammarIR"` command is allowed to find `BackendIrLowerer` producer code, but not lowerer consumers. The grammar-name command must return zero outside generated outputs, matching Lock 14 verification (`restart/locks/14-LOCKS.md:60`).
+The `rg "GrammarIR"` command is allowed to find `BackendIrLowerer` producer code, but not lowerer consumers. The grammar-name command must return zero outside generated outputs, matching Lock 14 verification (`restart/locks/LOCKS.md:60`).
 
 Generated LOC budget:
 
@@ -77,7 +77,7 @@ PASS-3: PASS-2 emits runtime module shape and materialisation cost. PASS-3 owns 
 
 | Source | KEEP | REINVENT | DISCARD |
 |---|---|---|---|
-| Lock 5/6/13/14 | Boundary, generated source, directory cohesion, genericity (`restart/locks/14-LOCKS.md:42-60`). | Add concrete commands and per-grammar budgets. | Any direct Grammar IR lowerer consumer. |
+| Lock 5/6/13/14 | Boundary, generated source, directory cohesion, genericity (`restart/locks/LOCKS.md:42-60`). | Add concrete commands and per-grammar budgets. | Any direct Grammar IR lowerer consumer. |
 | CENSUS | God-module evidence and per-grammar runtime inventory (`restart/corpora/CENSUS.md:321-354`, `restart/corpora/CENSUS.md:435-527`). | Convert inventory to greenfield crate tree. | Manual runtime module re-exports. |
 | PASS-B | Generated LOC baseline and emitter collapse (`restart-archive-2026-05-04/audit/passes/PASS-B.md:91-101`, `restart-archive-2026-05-04/audit/passes/PASS-B.md:181-186`). | Apply to Tape and no per-grammar crates. | Old direct-only/no-tape wording. |
 | BD parity waves | Production parity test shape (`docs/tranches/BD/waves/W5.md:181-217`). | Keep as PASS-3/BD handoff. | Claiming it at PASS-2 close. |

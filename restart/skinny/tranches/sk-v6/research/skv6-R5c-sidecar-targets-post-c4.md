@@ -8,8 +8,8 @@ Hard cap: 30 minutes. No full bench was run.
 ## Read Set
 
 - `skinny/RESULTS.md` at current HEAD after Candidate4.
-- `restart/skinny/audit/SK-V6-COHORT/skv6-R5-sidecar-refresh.md`.
-- `restart/skinny/audit/SK-V6-COHORT/skv6-R5b-direct-bridge.md`.
+- `restart/skinny/tranches/sk-v6/research/skv6-R5-sidecar-refresh.md`.
+- `restart/skinny/tranches/sk-v6/research/skv6-R5b-direct-bridge.md`.
 - Existing Criterion output under `/tmp/skv6-wave2-candidate4-bench/criterion/`.
 - Existing stale/default Criterion output under `skinny/target/criterion/` only for freshness checks.
 - Existing native sidecar profile reports under `skinny/profile/{simdjson-expanded,yyjson,sonic-rs-expanded}/`.
@@ -113,8 +113,8 @@ Rows like `distinct_values`, `update_center`, `github_events`, `twitter`, and `g
 
 - Current gate authority: `skinny/RESULTS.md`.
 - Candidate4 Criterion artefacts: `/tmp/skv6-wave2-candidate4-bench/criterion/`.
-- Previous R5 sidecar snapshot: `restart/skinny/audit/SK-V6-COHORT/skv6-R5-sidecar-refresh.md`.
-- Direct/retained boundary note: `restart/skinny/audit/SK-V6-COHORT/skv6-R5b-direct-bridge.md`.
+- Previous R5 sidecar snapshot: `restart/skinny/tranches/sk-v6/research/skv6-R5-sidecar-refresh.md`.
+- Direct/retained boundary note: `restart/skinny/tranches/sk-v6/research/skv6-R5b-direct-bridge.md`.
 - simdjson C++ hot-shape profile: `skinny/profile/simdjson-expanded/PROFILE-REPORT.md`.
 - yyjson hot-shape profile: `skinny/profile/yyjson/PROFILE-REPORT.md`.
 - sonic-rs hot-shape profile subset: `skinny/profile/sonic-rs-expanded/PROFILE-REPORT.md`.

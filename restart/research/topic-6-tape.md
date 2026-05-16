@@ -25,10 +25,10 @@
 - Settled claim 11: restart wants "No orthogonal codepath; no parallel substrate; no Vec<OpenFrame> ladder" (`restart/README.md:314`).
 - Settled claim 12: restart wants "One representation; one materialisation surface; one Visitor pattern" (`restart/README.md:314`).
 - Settled claim 13: direct typed-property mutation is unsound under slice-borrow, so mutation routes through the visitor (`restart/README.md:316-318`).
-- Settled claim 14: Lock 1 says "Tape is the substrate, properly unioned with direct-to-struct; columnar SoA is dead; orthogonal codepaths and parallel substrates are dead" (`restart/locks/14-LOCKS.md:34`).
-- Settled claim 15: Lock 1 defines tape as "contiguous parsed-token-stream-with-payload-arena" unioned with typed values that borrow `&'i Tape<'i>` plus index (`restart/locks/14-LOCKS.md:34`).
-- Settled claim 16: Lock 1 identifies the prior failure as orthogonal codepaths, type ambivalence, substrate-first/consumer-later, and dormant columnar SoA (`restart/locks/14-LOCKS.md:34`).
-- Settled claim 17: Lock 1 requires same-wave consumer wiring plus the direct-to-struct union (`restart/locks/14-LOCKS.md:34`).
+- Settled claim 14: Lock 1 says "Tape is the substrate, properly unioned with direct-to-struct; columnar SoA is dead; orthogonal codepaths and parallel substrates are dead" (`restart/locks/LOCKS.md:34`).
+- Settled claim 15: Lock 1 defines tape as "contiguous parsed-token-stream-with-payload-arena" unioned with typed values that borrow `&'i Tape<'i>` plus index (`restart/locks/LOCKS.md:34`).
+- Settled claim 16: Lock 1 identifies the prior failure as orthogonal codepaths, type ambivalence, substrate-first/consumer-later, and dormant columnar SoA (`restart/locks/LOCKS.md:34`).
+- Settled claim 17: Lock 1 requires same-wave consumer wiring plus the direct-to-struct union (`restart/locks/LOCKS.md:34`).
 - Settled claim 18: Architecture's conflict ledger says tape is the substrate and ParseStream is stale as a runtime term (`restart/ARCHITECTURE.md:21-22`).
 - Settled claim 19: Architecture says `runtime` owns tape, direct-to-struct builder support, generated grammar modules, visitors, and document views (`restart/ARCHITECTURE.md:52`).
 - Settled claim 20: Architecture says BIR includes `SpanMark`, `TapeEmit`, `DirectBuild`, `ValueProject`, `PathEval`, and `DebugMark` (`restart/ARCHITECTURE.md:897-902`).
@@ -231,7 +231,7 @@
 - C15 SOTA evidence: yyjson has separate immutable and mutable document/value types (`P7`, lines 21-31).
 - C15 fold consequence: `Visitor` should operate as controlled snapshot transformation, not as arbitrary field mutation.
 - C16: Restart and hardening converge on no parallel substrate.
-- C16 restart evidence: Lock 1 bans parallel substrates (`restart/locks/14-LOCKS.md:34`).
+- C16 restart evidence: Lock 1 bans parallel substrates (`restart/locks/LOCKS.md:34`).
 - C16 SOTA evidence: simdjson tape docs expose one tape plus string tape, not independent DOM and tape products (`P2`, lines 6-10 and 109-113).
 - C16 fold consequence: a direct builder can allocate typed views, but it cannot own separate traversal truth.
 
@@ -318,7 +318,7 @@
 - R4 target: `restart/ARCHITECTURE.md:1198-1203`.
 - R4 current text: "Direct builders do not bypass the tape. They are scheduled with `TapeEmit` and `DirectBuild` from Backend IR and share spans, source slices, and diagnostics. The direct value is a typed view/projection over the same parse event stream."
 - R4 proposed text: "Direct builders do not bypass the tape. They are scheduled with `TapeEmit` and `DirectBuild` from Backend IR and share spans, source slices, diagnostics, node kind, and payload slots. The direct value is a typed view/projection over the same parse event stream; direct scalar fields are caches over declared payload slots, not a second authoritative tree."
-- R4 rationale: Lock 1 bans parallel substrates (`restart/locks/14-LOCKS.md:34`), while RapidJSON/yyjson show compact payload slots can be useful when owned by one document/value representation (`P6`, lines 26-82; `P9`, internals lines 53-121).
+- R4 rationale: Lock 1 bans parallel substrates (`restart/locks/LOCKS.md:34`), while RapidJSON/yyjson show compact payload slots can be useful when owned by one document/value representation (`P6`, lines 26-82; `P9`, internals lines 53-121).
 - R4 fold dependency: §6 A2.
 - R5 target: `restart/audit/pass-3-runtime/PASS-3.md:139-141`.
 - R5 current text: codegen emits materialisation cost with "field counts, payload arena bytes, and tape-token width per node kind."
@@ -328,7 +328,7 @@
 - R6 target: `restart/audit/pass-3-runtime/PASS-3.md:184`.
 - R6 current text: "PASS-2 may build direct structs first or tape first per grammar, but the externally visible invariant is stable: every public node has tape identity and every tape node can be projected through `ValueRef`."
 - R6 proposed text: "PASS-2 may build direct structs first or tape first per grammar, but build order is not semantic. The externally visible invariant is stable: every public node has tape identity, every tape node can be projected through `ValueRef`, and every generated direct field can be traced to one `(TapeId, node id, payload class)`."
-- R6 rationale: same-wave consumer wiring from Lock 1 and the lessons file requires producer/consumer closure rather than substrate prose (`restart/locks/14-LOCKS.md:34`, `docs/precepts/instructions/LESSONS-LEARNED.md:17-26`).
+- R6 rationale: same-wave consumer wiring from Lock 1 and the lessons file requires producer/consumer closure rather than substrate prose (`restart/locks/LOCKS.md:34`, `docs/precepts/instructions/LESSONS-LEARNED.md:17-26`).
 - R6 fold dependency: §6 A2.
 - R7 target: `restart/ARCHITECTURE.md:1264-1271`.
 - R7 current text: benchmark metadata includes CPU, OS, compiler flags, input hash, parse mode, competitor version, bbnf commit, warmup, sample policy.
@@ -373,7 +373,7 @@
 - A1 severity: high for benchmark truth; low for Lock 1 architecture.
 - A1 verdict: lock survives, prose and gates need surgery.
 - A2 title: "union" can be misread as two trees.
-- A2 contradicted lock or claim: Lock 1 bans parallel substrates while PASS-2 says every rule has both `TapeShape` and `ValueShape` (`restart/locks/14-LOCKS.md:34`, `restart/audit/pass-2-codegen/PASS-2.md:36`).
+- A2 contradicted lock or claim: Lock 1 bans parallel substrates while PASS-2 says every rule has both `TapeShape` and `ValueShape` (`restart/locks/LOCKS.md:34`, `restart/audit/pass-2-codegen/PASS-2.md:36`).
 - A2 SOTA evidence: RapidJSON `GenericValue` is a single variant representation with flags and data union, not a separate tape plus DOM (`P9`, class lines 193-204; union lines 4-18).
 - A2 SOTA evidence: yyjson immutable values share a document lifetime and document-owned memory (`P6`, lines 152-156).
 - A2 pressure: if generated direct structs own traversal and payload truth independently, the prior OpenFrame failure recurs under nicer types.

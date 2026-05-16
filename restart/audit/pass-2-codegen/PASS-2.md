@@ -2,7 +2,7 @@
 
 ## §1 Verdict Ledger
 
-PASS-2 is viable only as a replacement of the current codegen/runtime wiring, not a patch of it. The settled scope assigns this pass Backend IR, Rust V1, deferred V2 backend proof for WASM/TS, runtime template, SIMD scanner kernels, Pratt/SIMD auto-detection, and regen equality (`restart/prompts/ORCHESTRATOR.md:54-69`, `restart/locks/14-LOCKS.md:42`). Lock 5 requires an IR plus per-backend lowerers and forbids direct grammar walking by codegen (`restart/locks/14-LOCKS.md:42`). Current source violates that boundary because the shared driver says it walks `GrammarIR` (`crates/core/src/backend/driver/mod.rs:1-6`) and the broad `Emitter` trait is invoked from that grammar-walking driver (`crates/core/src/backend/emitter.rs:1-13`).
+PASS-2 is viable only as a replacement of the current codegen/runtime wiring, not a patch of it. The settled scope assigns this pass Backend IR, Rust V1, deferred V2 backend proof for WASM/TS, runtime template, SIMD scanner kernels, Pratt/SIMD auto-detection, and regen equality (`restart/prompts/ORCHESTRATOR.md:54-69`, `restart/locks/LOCKS.md:42`). Lock 5 requires an IR plus per-backend lowerers and forbids direct grammar walking by codegen (`restart/locks/LOCKS.md:42`). Current source violates that boundary because the shared driver says it walks `GrammarIR` (`crates/core/src/backend/driver/mod.rs:1-6`) and the broad `Emitter` trait is invoked from that grammar-walking driver (`crates/core/src/backend/emitter.rs:1-13`).
 
 Verdict: **REINVENT codegen around Backend IR, Tape-backed runtime template, and BIR-only lowerers.** Keep the useful implementation knowledge in current Rust/WASM emitters, PHF/Pratt tables, `simd-scan`, xtask content-equality writing, and BB cohort template work. Discard stale ParseStream naming, grammar-level Unicode sets, rewrite-mode walker, per-grammar declaration crates as default, OpenFrame checkpointing, and direct Grammar IR consumers in lowerers.
 
@@ -10,11 +10,11 @@ Conflict ledger:
 
 | Conflict | Stale authority | Settled resolution |
 |---|---|---|
-| Tape name | Inheritance says tape name dies (`restart/inheritance/INDEX.md:65-66`). | Tape is the substrate, unioned with direct-to-struct typed values (`restart/locks/14-LOCKS.md:34`, `restart/README.md:285-314`). |
+| Tape name | Inheritance says tape name dies (`restart/inheritance/INDEX.md:65-66`). | Tape is the substrate, unioned with direct-to-struct typed values (`restart/locks/LOCKS.md:34`, `restart/README.md:285-314`). |
 | Rewrite mode | Inheritance and retired prompt archaeology mention rewrite-mode (`restart/inheritance/INDEX.md:34`, `restart/audit/pass-1-substrate/agent-5-grammar-extension-designer.md:39-42`). | Rewrite mode is rejected; Visitor covers transformations (`restart/README.md:123-129`). |
 | Unicode set surface | Retired prompt archaeology names Unicode-set pressure; live README routes it below BBNF. | Grammar-level Unicode class algebra is not added; regex literals and `parse-that/regex` carry Unicode (`restart/README.md:131-143`). |
-| Per-grammar declaration crates | MASTER-PLAN contains 9 declaration crates (`restart-archive-2026-05-04/audit/master-plan/MASTER-PLAN.md:79-89`), and Lock 14 still names an optional escape (`restart/locks/14-LOCKS.md:60`). | No declaration crate for the 9 extant grammars; two onboarding surfaces plus generic host primitives or `@host fn` (`restart/README.md:13-25`). |
-| TS production | BD.W1 plans production TS (`docs/tranches/BD/waves/W1.md:10-24`). | PASS-2 keeps TS-lowerability as BIR-shape proof only; production TS defers to the V2 `TsBackend: Backend` impl (`restart/locks/14-LOCKS.md:42`). |
+| Per-grammar declaration crates | MASTER-PLAN contains 9 declaration crates (`restart-archive-2026-05-04/audit/master-plan/MASTER-PLAN.md:79-89`), and Lock 14 still names an optional escape (`restart/locks/LOCKS.md:60`). | No declaration crate for the 9 extant grammars; two onboarding surfaces plus generic host primitives or `@host fn` (`restart/README.md:13-25`). |
+| TS production | BD.W1 plans production TS (`docs/tranches/BD/waves/W1.md:10-24`). | PASS-2 keeps TS-lowerability as BIR-shape proof only; production TS defers to the V2 `TsBackend: Backend` impl (`restart/locks/LOCKS.md:42`). |
 
 Sub-agent dispatch status:
 
@@ -33,17 +33,17 @@ Sub-agent dispatch status:
 
 2. **The upstream BIR alphabet count is 20 variants: 19 semantic variants plus `Return`** post Phase-8.4 α3 fold (`restart/ARCHITECTURE.md:913-940`). The PASS-1 BIR base of 22 variants collapses three semantically-redundant pairs — `(DispatchAlt, SpeculativeAlt) → `Alt { mode: Dispatch | Speculative }`, `(LayoutPush, LayoutPop) → `LayoutScope { kind: Push | Pop }`, `(CallHost, HostChain) → `CallHost` (chains express as `Seq`-of-`CallHost`) — landing on 19 semantic variants plus `Return`. PASS-1 + ARCH §7.2 own the alphabet; PASS-2 cites without re-owning. PASS-2 keeps Unicode inside the regex-program payload carried by `RegexProgram`. The `RegexProgram` spelling is the canonical BIR alphabet entry at `restart/ARCHITECTURE.md:919`; it does not require full-DFA codegen for every regex (the payload is a regex-program contract; VM, lazy-DFA, full-DFA, and prefilter are all legal execution plans).
 
-3. **Tape/direct-to-struct is one materialisation plan.** Every rule has a `TapeShape` and `ValueShape`. `TapeShape` owns token kind, span class, payload class, traversal skip policy, and scalar-cache policy. `ValueShape` owns generated field/enum projection over the same tape identity and node id. Typed documents/views borrow `&'i Tape<'i>` plus node id; any scalar cache is declared by one of those shapes, not by a second authoritative tree or parallel substrate. This follows Lock 1 (`restart/locks/14-LOCKS.md:34`) and avoids the prior OpenFrame checkpoint clone that dominated samples (`restart/corpora/RESTART-SKETCH.md:154-184`).
+3. **Tape/direct-to-struct is one materialisation plan.** Every rule has a `TapeShape` and `ValueShape`. `TapeShape` owns token kind, span class, payload class, traversal skip policy, and scalar-cache policy. `ValueShape` owns generated field/enum projection over the same tape identity and node id. Typed documents/views borrow `&'i Tape<'i>` plus node id; any scalar cache is declared by one of those shapes, not by a second authoritative tree or parallel substrate. This follows Lock 1 (`restart/locks/LOCKS.md:34`) and avoids the prior OpenFrame checkpoint clone that dominated samples (`restart/corpora/RESTART-SKETCH.md:154-184`).
 
 4. **Rust V1 is the primary production lowerer.** The lowerer emits parser functions, TapeBuilder operations, typed views, scanner constants, Pratt tables, host chain calls, diagnostics, and generated registry data from BIR.
 
-5. **WASM and TS are V2 backend impls.** Current raw WAT remains a smoke fixture and wasm32 Rust binding notes remain archaeology/proof for the future `WasmBackend: Backend` impl. V1 emits Rust through `RustBackend` only; V2 owns WASM binding ABI, npm/browser packaging, and TS-native runtime work (`restart/locks/14-LOCKS.md:42`, `restart/ARCHITECTURE.md:1095-1097`).
+5. **WASM and TS are V2 backend impls.** Current raw WAT remains a smoke fixture and wasm32 Rust binding notes remain archaeology/proof for the future `WasmBackend: Backend` impl. V1 emits Rust through `RustBackend` only; V2 owns WASM binding ABI, npm/browser packaging, and TS-native runtime work (`restart/locks/LOCKS.md:42`, `restart/ARCHITECTURE.md:1095-1097`).
 
 6. **SIMD scanner remains generic.** `simd-scan` already has NEON, AVX2, AVX512, WASM, and scalar modules (`crates/simd-scan/src/lib.rs:19-29`). BIR emits data-only `StructuralAlphabet` constants; no grammar code enters `simd-scan`.
 
 7. **Runtime template emits all per-grammar runtime files.** `runtime/src/grammars/<name>/{generated.rs, parser.rs, host.rs}` is generated from grammar source plus metadata. Current manual runtime module listings are discarded (`crates/core/src/runtime/mod.rs:8-72`).
 
-8. **Regen equality is a hard gate.** Lock 6 requires xtask-emitted committed source (`restart/locks/14-LOCKS.md:44`). PASS-2 keeps content-equality writing from current regen (`xtask/src/regen.rs:400-461`) but splits the module and adds BIR/runtime budget checks.
+8. **Regen equality is a hard gate.** Lock 6 requires xtask-emitted committed source (`restart/locks/LOCKS.md:44`). PASS-2 keeps content-equality writing from current regen (`xtask/src/regen.rs:400-461`) but splits the module and adds BIR/runtime budget checks.
 
 9. **No per-grammar declaration crates by default.** Amendment 01 retracts them (`restart-archive-2026-05-04/audit/master-plan/AMENDMENT-01-NO-PER-GRAMMAR-CRATES.md:13-24`), and README makes two onboarding surfaces authoritative (`restart/README.md:13-25`).
 
@@ -128,7 +128,7 @@ pub trait BackendLowerer {
 
 This is the concrete collapse of the current broad trait (`crates/core/src/backend/emitter.rs:31-566`) into the 8-method shape PASS-B forecast (`restart-archive-2026-05-04/audit/passes/PASS-B.md:181-186`).
 
-Backend trait integration — Phase-7.1 ARCH §7.5 anchor (post Phase-8.4 α1 fold): PASS-2's lowerer suite is the V1 `RustBackend: Backend` impl per the formal trait at `restart/ARCHITECTURE.md` §7.5. The `Backend` trait carries two methods — `lower(bir, ctx)` and `emit_artefacts(grammar, schemas) -> ArtefactSet` — that gate the V1/V2 contract boundary. `lower` produces the parse-function source; `emit_artefacts` co-emits the typed `Value` enum, the `Visitor` trait + `VisitTypes` bitflag, the `<g>.path-schema.toml` + typed `path!` glue, and the runtime-template module tree from a single grammar+schema input. The four artefacts share input metadata (tape kinds + view structs + grammar metadata + value/visitor/path schemas); per-method dispatch was contrivance — the four were always co-emitted from the same input. Phase-8.4 α1 collapses them. The internal `BackendLowerer` (8-method) shape below is the per-rule emission decomposition that `RustBackend::lower` invokes; the two trait surfaces compose, they do not duplicate. Lock 5 (`restart/locks/14-LOCKS.md:42`) commits to per-backend lowerers as the contract boundary; the formal trait at ARCH §7.5 is what enforces that boundary in V1 and what gates seamless post-V1 expansion to `WasmBackend` and `TsBackend` impls without re-architecting BIR or codegen.
+Backend trait integration — Phase-7.1 ARCH §7.5 anchor (post Phase-8.4 α1 fold): PASS-2's lowerer suite is the V1 `RustBackend: Backend` impl per the formal trait at `restart/ARCHITECTURE.md` §7.5. The `Backend` trait carries two methods — `lower(bir, ctx)` and `emit_artefacts(grammar, schemas) -> ArtefactSet` — that gate the V1/V2 contract boundary. `lower` produces the parse-function source; `emit_artefacts` co-emits the typed `Value` enum, the `Visitor` trait + `VisitTypes` bitflag, the `<g>.path-schema.toml` + typed `path!` glue, and the runtime-template module tree from a single grammar+schema input. The four artefacts share input metadata (tape kinds + view structs + grammar metadata + value/visitor/path schemas); per-method dispatch was contrivance — the four were always co-emitted from the same input. Phase-8.4 α1 collapses them. The internal `BackendLowerer` (8-method) shape below is the per-rule emission decomposition that `RustBackend::lower` invokes; the two trait surfaces compose, they do not duplicate. Lock 5 (`restart/locks/LOCKS.md:42`) commits to per-backend lowerers as the contract boundary; the formal trait at ARCH §7.5 is what enforces that boundary in V1 and what gates seamless post-V1 expansion to `WasmBackend` and `TsBackend` impls without re-architecting BIR or codegen.
 
 Internal-trait clarification — Phase-8.4 α7 fold: the 8-method `BackendLowerer` trait above carries no V1 polymorphism; only `RustLowerer` implements it. The 8-method method set is per-rule emission decomposition (types / rule / node / scanner / host / pratt / error / registry), not a contract gate. Future per-backend lowerer impls — `WasmLowerer` for wasm32 codegen, `TsLowerer` for the TS-native fork — inherit the same trait shape without polymorphism widening; the trait carries one V1 impl now, and admits two more post-V1 without method-set changes. Trait dispatch under a single live impl monomorphises away under rustc; the cost of the partition is documentation, not runtime.
 
@@ -179,7 +179,7 @@ Detection thresholds:
 
 | Decision | Select when | Reject when | Evidence |
 |---|---|---|---|
-| Pratt | recursive expression family has operator-bearing prefix/infix/postfix alternatives and a total precedence order. | recursion lacks operator partition or width/progress proof. | Lock 10 auto-detects Pratt (`restart/locks/14-LOCKS.md:52`). |
+| Pratt | recursive expression family has operator-bearing prefix/infix/postfix alternatives and a total precedence order. | recursion lacks operator partition or width/progress proof. | Lock 10 auto-detects Pratt (`restart/locks/LOCKS.md:52`). |
 | SIMD | structural byte alphabet is non-empty, the scan mode is exact with scalar parity or prefilter with verifier route, target legality holds, and the selected objective profile beats scalar for expected input length. | candidate is illegal for the target, the regex summary cannot expose a safe prefilter, alphabet is Unicode-semantic or tiny, verifier route is missing, or setup/code-size cost dominates runtime gain under the selected objective profile. | `KernelShape` categories exist in `simd-scan` (`crates/simd-scan/src/alphabet.rs:98-125`). |
 | PHF | literal/keyword set is large enough that hash dispatch beats match-tree under cost model. | small sets or prefix-overlap make branch tree cheaper. | current Rust emission already has PHF keyword table path (`crates/core/src/backend/rust/emitter/grammar.rs:155-163`). |
 | Lookbehind | predicate width is fixed or bounded by PASS-1 analysis. | unbounded lookbehind. | lookbehind is grammar-level V1 (`restart/README.md:125-129`). |
@@ -190,7 +190,7 @@ PASS-2 ratifies the canonical `|<` grammar-level lookbehind syntax that PASS-1 o
 
 Unified cursor + byte-skip obligation — Lock 3 ratification at the codegen-side: Rust V1 lowerer emits one parse implementation; cursor consultation generates a byte-skip when consult returns `Skip`; the empty-path case (`__EAGER_EMPTY_PATH`) elides cursor calls. The unified path is realized by `CallRule`, `ByteLiteral`, the `RegexProgram` regex-program payload, and `SimdScan` BIR variants; `PrattSpine` and `SimdScan` carry their own dispatch and elide cursor consultation in the inner loop. V2 `WasmBackend` honours the same obligation when it lands, sharing the BIR payload and the structural snapshot consumed by Rust V1; the cursor-vs-byte-skip decision is a lowering choice, not a substrate split.
 
-Function-value lowering — Phase-7.1 Lock 4 fold (`restart/locks/14-LOCKS.md:40`) folded function values + lambda literals (`|x| body`) + closure capture by `&'i` reference + function types `fn(T) -> U` in the `Type` non-terminal into V1. PASS-2 lowering follows audit #6 §7.4 V1 recommendation:
+Function-value lowering — Phase-7.1 Lock 4 fold (`restart/locks/LOCKS.md:40`) folded function values + lambda literals (`|x| body`) + closure capture by `&'i` reference + function types `fn(T) -> U` in the `Type` non-terminal into V1. PASS-2 lowering follows audit #6 §7.4 V1 recommendation:
 
 | Surface | Lowering option | Mechanism |
 |---|---|---|
@@ -305,7 +305,7 @@ runtime/src/
       host.rs
 ```
 
-Rationale: Lock 1 places tape at `runtime/src/tape/` (`restart/locks/14-LOCKS.md:34`). Lock 13 rejects the current mixed runtime god directory (`restart/locks/14-LOCKS.md:58`). Every `<name>` subdir is generated and structurally identical.
+Rationale: Lock 1 places tape at `runtime/src/tape/` (`restart/locks/LOCKS.md:34`). Lock 13 rejects the current mixed runtime god directory (`restart/locks/LOCKS.md:58`). Every `<name>` subdir is generated and structurally identical.
 
 `host`:
 
@@ -397,7 +397,7 @@ PASS-2 assumes PASS-1 will provide:
 | Opaque regex cost summaries | `RegexCostSummary` evidence for regex paths, consumed without importing regex HIR, NFA, DFA, VM, Unicode, or prefilter internals. |
 | Cost model trait and scores | alt dispatch, PHF, SIMD, Pratt choices, with scalar Cost allowed only as a fast extraction path when the full evidence record survives. The trait + score machinery is owned upstream at the `cost-model` crate (`restart/corpora/MODULES.md` registers `cost-model`) with `CostFacts` produced by `passes::extract` per ARCH §10.1 (`restart/ARCHITECTURE.md` §10.1 rewrite-budget categories + §7.3 `CostFacts` row); per Phase-8.4 ε2 PASS-2 consumes `CostDecision` records and never re-owns the trait. The cross-substrate sharing claim — parser cost-model and `parse-that-regex` cost-model share trait shape — is structural at V1 (one trait, two impls); semantic composition (cross-substrate cost decisions) is post-V1 generality with no V1 receiver. |
 | Shape mining outputs | seq/alt/repeat materialisation and scanner plans |
-| E-graph extraction | simplified rule bodies before BIR plus `BridgeJustification` records keyed by stable Grammar IR node ids, e-class ids, CSP variables, and proof refs. The egraph + csp-solver compose at `passes::bridge` per Lock 6 (`restart/locks/14-LOCKS.md:44`); the bridge settles before BIR reaches PASS-2. PASS-2 codegen never imports either crate directly and consumes BIR post-extraction only — Lock 4 per-domain orthogonality holds at the dependency-graph level (audit #4 §3 X-5). Per Phase-8.4 ε4, the rewrite-category cardinality and per-category classification (legality / normalization / cost-driven / simplification) live at ARCH §10.1 (`restart/ARCHITECTURE.md` §10.1); PASS-2 is consumer and cites the inventory without restating. |
+| E-graph extraction | simplified rule bodies before BIR plus `BridgeJustification` records keyed by stable Grammar IR node ids, e-class ids, CSP variables, and proof refs. The egraph + csp-solver compose at `passes::bridge` per Lock 6 (`restart/locks/LOCKS.md:44`); the bridge settles before BIR reaches PASS-2. PASS-2 codegen never imports either crate directly and consumes BIR post-extraction only — Lock 4 per-domain orthogonality holds at the dependency-graph level (audit #4 §3 X-5). Per Phase-8.4 ε4, the rewrite-category cardinality and per-category classification (legality / normalization / cost-driven / simplification) live at ARCH §10.1 (`restart/ARCHITECTURE.md` §10.1); PASS-2 is consumer and cites the inventory without restating. |
 | Lookbehind width analysis | bounded `Lookbehind` BIR node |
 | Layout and error annotations | `LayoutScope` and `ErrorRecover` nodes |
 | Host function inference | `CallHost` chains |
@@ -418,7 +418,7 @@ Future grammar onboarding smoke:
 
 ## §6 Generated LOC
 
-Generated Rust output starts from PASS-B's 168,750 LOC baseline across 9 grammars (`restart-archive-2026-05-04/audit/passes/PASS-B.md:91-101`). Lock 14's budget block starts at 168K and requires budget checks (`restart/locks/14-LOCKS.md:118-125`). PASS-2 sets an initial +2% ceiling while the template transition lands. Each grammar carries a per-grammar xtask wall ceiling drawn from §6's regen-cycle budget (`single grammar regen ≤ 4s for cohort, ≤ 12s for CSS L4`) and an explicit baseline category:
+Generated Rust output starts from PASS-B's 168,750 LOC baseline across 9 grammars (`restart-archive-2026-05-04/audit/passes/PASS-B.md:91-101`). Lock 14's budget block starts at 168K and requires budget checks (`restart/locks/LOCKS.md:118-125`). PASS-2 sets an initial +2% ceiling while the template transition lands. Each grammar carries a per-grammar xtask wall ceiling drawn from §6's regen-cycle budget (`single grammar regen ≤ 4s for cohort, ≤ 12s for CSS L4`) and an explicit baseline category:
 
 | Grammar | Current generated_loc | PASS-2 max | Disposition | xtask wall ceiling | Baseline |
 |---|---:|---:|---|---:|---|
@@ -438,9 +438,9 @@ Carry pointer: SYNTHESIS Wave-2 carries this table into `restart/MASTER-PLAN.md`
 
 Generic monomorphisation budget gate: PASS-2 emits generic-rule instances only from a finite `(RuleId, TypeArgs)` instance set supplied by PASS-1 validation. The lowerers may not discover or instantiate new generic shapes during emission. `cargo xtask bbnf generated-loc-budget --check` records generated LOC by instance set and fails if a generic-cycle diagnostic or missing finite-instance report reaches codegen close.
 
-Generated files are exempt from the per-file LOC cap but not from this budget. Non-generated files still obey Lock 13's 500 LOC cap (`restart/locks/14-LOCKS.md:58`).
+Generated files are exempt from the per-file LOC cap but not from this budget. Non-generated files still obey Lock 13's 500 LOC cap (`restart/locks/LOCKS.md:58`).
 
-Non-generated budget, child-count floor, and per-area enforcement command. Lock 13 owns the 500 LOC + 4-10 sibling rule (`restart/locks/14-LOCKS.md:58`); each non-generated area binds the rule to a sibling-count proof and an enforcing command:
+Non-generated budget, child-count floor, and per-area enforcement command. Lock 13 owns the 500 LOC + 4-10 sibling rule (`restart/locks/LOCKS.md:58`); each non-generated area binds the rule to a sibling-count proof and an enforcing command:
 
 | Area | LOC budget | Child-count proof | Enforcing command |
 |---|---|---|---|
@@ -452,7 +452,7 @@ Non-generated budget, child-count floor, and per-area enforcement command. Lock 
 | `host/src/*` | No handwritten file > 500 LOC | 4-10 children: `mod.rs`, `primitive.rs`, `registry.rs`, `chain.rs`, `signature.rs`, `wasm.rs`. | `find crates/host/src -mindepth 1 -maxdepth 1 \| wc -l` ∈ [4,10]; per-file LOC check as above. |
 | `xtask/src/regen/*` | Split before new generation paths land; `regen.rs` does not grow further. | 4-10 children: `mod.rs`, `plan.rs`, `metadata.rs`, `backend_ir.rs`, `runtime.rs`, `write.rs`, `check.rs`, `budget.rs`, `registry.rs`. | `find crates/xtask/src/regen -mindepth 1 -maxdepth 1 \| wc -l` ∈ [4,10]; per-file LOC check as above. |
 
-Generated subdirs (`runtime/src/grammars/<name>/`) are exempt from the 500 LOC cap by Lock 13 (`restart/locks/14-LOCKS.md:58`). They remain bound by the per-grammar generated LOC table above.
+Generated subdirs (`runtime/src/grammars/<name>/`) are exempt from the 500 LOC cap by Lock 13 (`restart/locks/LOCKS.md:58`). They remain bound by the per-grammar generated LOC table above.
 
 Regen-cycle wall-time budget. Each row carries a baseline category (`observed` against current source, or `provisional (owner)` while measurement lands):
 
@@ -506,7 +506,7 @@ Per-construct contribution plan:
 | `CallHost` | Moves chained host functions into typed generic calls. | README host fn and chaining scope (`restart/README.md:145-166`). |
 | `LayoutScope` | Centralizes skip policy and prevents repeated whitespace scanning. | `@layout` in V1 (`restart/README.md:176-178`). |
 
-Runtime emission table — per-grammar runtime files plus emission source. Every cell is template-emitted or data-only; hand-written runtime files are forbidden (Lock 14 generic-fleet posture, `restart/locks/14-LOCKS.md:60`):
+Runtime emission table — per-grammar runtime files plus emission source. Every cell is template-emitted or data-only; hand-written runtime files are forbidden (Lock 14 generic-fleet posture, `restart/locks/LOCKS.md:60`):
 
 | Grammar | `generated.rs` | `parser.rs` | `host.rs` | host source | layout source | error source | Pratt/SIMD source |
 |---|---|---|---|---|---|---|---|
@@ -588,7 +588,7 @@ Carry ledger — every deferral carries Receiver, Blocker, and Receiving gate pe
 | V2 parity matrix | V2 backend cycle and Tranche J final close | Rust V1 runs the seed grammar parity matrix on the V1 line; WASM/TS parity waits for V2 `WasmBackend: Backend` / `TsBackend: Backend` registration. | V1 Rust/VM parity matrix plus J.W1 final-close numeric SOTA gate; V2 owns cross-backend parity. |
 | Publication (`bbnf` aggregator + `bbnf-cli` + `bbnf-language-server`) | Tranche BD.W3 (publication) and SYNTHESIS package routing | Workspace crate names are bound; package-name details are not yet routed. | A.W1 / J.W3 publication gate per HARDENING-CONSOLIDATED §4.22; PASS-2 supplies emitted runtime modules and parse signatures. |
 | Fixtures (post-onboarding parity, not onboarding surface) | Tranche BD.W4 (fleet fixtures) and downstream parity gates | Lock 14 onboarding accepts only grammar source + workspace metadata; fixtures land separately to avoid third-surface inflation. | BD.W4 fleet-fixture gate (`docs/tranches/BD/waves/W4.md:8-27`); PASS-2 emits the runtime modules that fixtures exercise. |
-| `path-ts` proc-macro shell | V2 `TsBackend: Backend` cycle | Rust toolchain forbids proc-macro path-dep sharing; `path-ts` lives outside V1 because TS production defers post-V1 (`restart/locks/14-LOCKS.md:42`, `restart/locks/14-LOCKS.md:46`). | V2 `path-ts` builds against the same `path-core` AST + compile logic that `path` consumes; PASS-2 has no V1 `path-ts` obligation. |
+| `path-ts` proc-macro shell | V2 `TsBackend: Backend` cycle | Rust toolchain forbids proc-macro path-dep sharing; `path-ts` lives outside V1 because TS production defers post-V1 (`restart/locks/LOCKS.md:42`, `restart/locks/LOCKS.md:46`). | V2 `path-ts` builds against the same `path-core` AST + compile logic that `path` consumes; PASS-2 has no V1 `path-ts` obligation. |
 | WASM host primitive ABI descriptor + npm packaging | V2 `WasmBackend: Backend` impl | WASM host primitives are emitted as lowerer/runtime ABI descriptors, not grammar annotations; packaging surface is downstream. | V2 wasm-bindgen production path consumes exported function names, host-call shape rows, marshalling descriptors, and scalar/SIMD parity evidence without runtime trait dispatch. |
 
 ## §9 Punch List

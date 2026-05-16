@@ -39,7 +39,7 @@ External docs used:
 - `skinny/crates/bbnf-simd`: primitive dispatch, scalar refs, AArch64 NEON bodies, x86 asm/stub bodies, checkasm reports.
 - `skinny/crates/parse-that-regex`: JSON string/number primitives, UTF-8 block path, `unescape_json_string`, x4 AArch64 Unicode escape decode.
 - `skinny/crates/runtime/src/grammars/json`: generated retained parser, structural scan, sink/direct string materialization boundary.
-- SK-V6 reports under `restart/skinny/audit/SK-V6-COHORT/` and `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md`.
+- SK-V6 reports under `restart/skinny/tranches/sk-v6/research/` and `restart/skinny/tranches/sk-v6/SYNTHESIS-WAVE-1-PLAN.md`.
 - Current `skinny/RESULTS.md`.
 
 ## Opportunity map by primitive class

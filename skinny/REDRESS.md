@@ -411,8 +411,8 @@ Lazy tape materialization is now reported per corpus:
    UTF-8 codepoint pipeline at `crates/parse-that-regex/src/lib.rs:331-339`,
    but SK-V6 records that route as refuted by entries 50-55 on the generated
    Track 1 baseline.
-   Cohort cites: `restart/skinny/audit/SK-V5-COHORT/skv5-D6-class-ab-novelty.md`
-   and `restart/skinny/audit/SK-V5-COHORT/skv5-B1-parse-attribution.md`. This
+   Cohort cites: `restart/skinny/tranches/sk-v5/research/skv5-D6-class-ab-novelty.md`
+   and `restart/skinny/tranches/sk-v5/research/skv5-B1-parse-attribution.md`. This
    refines the diagnosis recorded in entry 28; the kernel admission stands, the
    active-dispatch verdict stands, and the parse-G attribution moves to the
    UTF-8 codepoint pipeline.
@@ -434,8 +434,8 @@ Lazy tape materialization is now reported per corpus:
    reshaped Track 2 into a structurally different hand-coded SinkOnly parser.
    The old shared `sink_only_digest` path is gone; the residual `mod hand`
    path is Track 2's required independent comparison surface. Cohort cites:
-   `restart/skinny/audit/SK-V5-COHORT/skv5-B2-direct-attribution.md` and
-   `restart/skinny/audit/SK-V5-COHORT/skv5-D5-sinkonly-novelty.md`.
+   `restart/skinny/tranches/sk-v5/research/skv5-B2-direct-attribution.md` and
+   `restart/skinny/tranches/sk-v5/research/skv5-D5-sinkonly-novelty.md`.
 
 35. SK-V5 Wave 1/Wave 2 follow-up: codegen lowerer scaffolding exists and
     SinkOnly direct source is no longer template-authoritative. Status:
@@ -453,8 +453,8 @@ Lazy tape materialization is now reported per corpus:
    and not a static direct template. This closes the codegen honesty blocker;
    the remaining NoGo belongs to measured parser/runtime work.
    Cohort cites:
-   `restart/skinny/audit/SK-V5-COHORT/skv5-D3-derive-shape-novelty.md`,
-   `restart/skinny/audit/SK-V5-COHORT/skv5-D5-sinkonly-novelty.md`, and the
+   `restart/skinny/tranches/sk-v5/research/skv5-D3-derive-shape-novelty.md`,
+   `restart/skinny/tranches/sk-v5/research/skv5-D5-sinkonly-novelty.md`, and the
    SK-V5 post-assay codegen read-only pass.
 
 36. SK-V5 Wave 4: JSON-hardcoded scalar references in `bbnf-simd` IDENTIFIED
@@ -471,11 +471,11 @@ Lazy tape materialization is now reported per corpus:
    violation: a primitive library that the spec requires to be grammar-neutral
    instead carries the JSON alphabet directly in its `.text` and `.rodata`.
    Status is PENDING Wave 4 of
-   `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md`: parameterise each
+   `restart/skinny/tranches/sk-v5/SPEC.md`: parameterise each
    classifier on the alphabet, move JSON-specific data tables out of
    `bbnf-simd` into codegen-emitted `.data`, and admit the result through a
    Lock 14 remediation gate. Cohort cite:
-   `restart/skinny/audit/SK-V5-COHORT/skv5-D4-simd-split-novelty.md`.
+   `restart/skinny/tranches/sk-v5/research/skv5-D4-simd-split-novelty.md`.
 
 37. SK-V5 Wave 4: `bbnf-simd/src/lib.rs` JSON god-module status IDENTIFIED.
     Status: PENDING.
@@ -491,11 +491,11 @@ Lazy tape materialization is now reported per corpus:
    intent, and commit `9eef728c` lifted only 1 of the 9 declared primitives
    (`BYTE_CLASS_FROM_EQ_SET_64`); the other 8 remain inside the god module.
    Status is PENDING Wave 4 of
-   `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md`: complete the
+   `restart/skinny/tranches/sk-v5/SPEC.md`: complete the
    primitive-by-primitive split into Layer 1 `bbnf.asm` modules and reduce
    `lib.rs` to a vocabulary index. Cohort cites:
-   `restart/skinny/audit/SK-V5-COHORT/skv5-D4-simd-split-novelty.md` and
-   `restart/skinny/audit/SK-V5-COHORT/skv5-A5-grammar-generalization.md`.
+   `restart/skinny/tranches/sk-v5/research/skv5-D4-simd-split-novelty.md` and
+   `restart/skinny/tranches/sk-v5/research/skv5-A5-grammar-generalization.md`.
 
 38. SK-V5 Wave 4: `crates/simd-scan/` fossil status IDENTIFIED. Status:
     PENDING deletion.
@@ -510,9 +510,9 @@ Lazy tape materialization is now reported per corpus:
    `bbnf-simd` surface violates the single-crate substrate boundary recorded
    in entry 22 and adds drift risk for every future SIMD change. Status is
    PENDING Wave 4 of
-   `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md`: delete
+   `restart/skinny/tranches/sk-v5/SPEC.md`: delete
    `crates/simd-scan/` outright. Cohort cite:
-   `restart/skinny/audit/SK-V5-COHORT/skv5-D4-simd-split-novelty.md`.
+   `restart/skinny/tranches/sk-v5/research/skv5-D4-simd-split-novelty.md`.
 
 39. SK-V5 Wave 2: Eisel-Lemire number materialization was vendored and
     wired into generated and hand SinkOnly. Status: CLOSED with residual.
@@ -1632,7 +1632,7 @@ perturbation.
   than contiguous `\uXXXX` runs. The remaining retained parser-control
   candidate is object next-key carry; the higher-impact next direct route is
   the field-layout string materializer described in
-  `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md` §9.
+  `restart/skinny/tranches/sk-v6/SYNTHESIS-WAVE-1-PLAN.md` §9.
 
 ## SK-V6 Wave 2 Candidate-6 Redress
 
@@ -1681,7 +1681,7 @@ perturbation.
   same-row falsification, while array `ContainerNext` was admitted but did not
   close parse-G. The next admissible implementation route is the generated
   direct field-layout string materializer from
-  `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md` §9.
+  `restart/skinny/tranches/sk-v6/SYNTHESIS-WAVE-1-PLAN.md` §9.
 
 ## SK-V6 Wave 3 Candidate-7 Redress
 
@@ -1716,7 +1716,7 @@ perturbation.
   | gsoc-2018 | 14680 | 14678 | -0.01% |
 
 - The route failed the written Wave 3 gate from
-  `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md` §9. It required
+  `restart/skinny/tranches/sk-v6/SYNTHESIS-WAVE-1-PLAN.md` §9. It required
   `unicode_escapes >= +20%`, `unicode_mixed >= +15%`, at least two of
   `y_string_unicode`, `distinct_values`, and `gsoc-2018 >= +8%`, and no direct
   row regressing by more than 5%. None of the required lift thresholds fired.
@@ -1766,7 +1766,7 @@ perturbation.
   | y_string_unicode | 3592 | 2990 | -16.76% | 2/1 |
 
 - The route failed the written Wave 3 gate from
-  `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md` §10. It required
+  `restart/skinny/tranches/sk-v6/SYNTHESIS-WAVE-1-PLAN.md` §10. It required
   `unicode_escapes >= +20%`, `unicode_mixed >= +15%`, and one companion
   signal. Instead, the parser-owned scratch path was 44% slower on the primary
   escaped row. The direct interpretation is that keeping `unescape_json_string`
@@ -1817,7 +1817,7 @@ perturbation.
   | unicode_mixed | 4513 | 4491 | -0.49% | 1/1 |
 
 - The route failed the written Wave 3 gate from
-  `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md` §11. It required
+  `restart/skinny/tranches/sk-v6/SYNTHESIS-WAVE-1-PLAN.md` §11. It required
   `unicode_escapes >= +8%`, `unicode_mixed >= +5%`, and
   `y_string_unicode >= +3%` or a direct attribution proof that
   `unescape_json_string` self-time fell by at least 20%. Instead, the primary
@@ -1865,7 +1865,7 @@ perturbation.
   | unicode_escapes | 4751; 4988 | 4143; 4115 | -15.22% | 2/2 |
 
 - The route failed the written Wave 3 gate from
-  `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md` §12. It required
+  `restart/skinny/tranches/sk-v6/SYNTHESIS-WAVE-1-PLAN.md` §12. It required
   `unicode_escapes >= +20%`, `unicode_mixed >= +15%`, and two secondary rows
   at `>= +8%`. Instead, the primary row regressed by roughly 15% immediately.
   The direct interpretation is narrow but important: carrying semantic string
@@ -2091,11 +2091,11 @@ perturbation.
 
 - Item 74 records the twelve-agent asmjson/DAV1D and generalization pass as a
   spec redress, not a code intervention. Reports are archived under
-  `restart/skinny/audit/SK-V6-COHORT/skv6-A*.md` and
-  `restart/skinny/audit/SK-V6-COHORT/skv6-B*.md`; synthesis and handoff live at
-  `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6-ASMJSON-DAV1D.md`,
-  `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V6-SOTA-RECOVERY.md`, and
-  `restart/skinny/audit/HANDOFF-SK-V6.md`.
+  `restart/skinny/tranches/sk-v6/research/skv6-A*.md` and
+  `restart/skinny/tranches/sk-v6/research/skv6-B*.md`; synthesis and handoff live at
+  `restart/skinny/tranches/sk-v6/SYNTHESIS.md`,
+  `restart/skinny/tranches/sk-v6/SPEC.md`, and
+  `restart/skinny/tranches/sk-v6/HANDOFF.md`.
 - Binding findings: asmjson is a JSON-specific DPDA architecture reference
   (chunk byte-class masks, next-set-bit seeking, direct-threaded finite
   control, bounded stack), not a new BBNF directive and not a permissive strict

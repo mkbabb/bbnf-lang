@@ -7,14 +7,14 @@ Date: 2026-05-14. Host: macOS 26.4.1 (25E253), arm64, Apple M5 Max. Workspace:
 
 Read before measurement:
 
-- `restart/skinny/audit/IMPLEMENTATION-AGENT-PROMPT-SK-V6.md` §2
+- `restart/skinny/tranches/sk-v6/DISPATCH-PROMPT.md` §2
   profile-first rule, §5 Wave 1 R6, §7 Lock 15, and §9 same-symbol
   fuse-collapse warning.
 - `restart/MASTER-PLAN.md` §13 Lock 15 / H.W rows.
 - `skinny/RESULTS.md`.
-- `restart/skinny/audit/SK-V5-COHORT/skv5-A1-comparative.md` Lock 15 /
+- `restart/skinny/tranches/sk-v5/research/skv5-A1-comparative.md` Lock 15 /
   yyjson notes.
-- `restart/skinny/audit/SK-V5-COHORT/skv5-B1-parse-attribution.md`.
+- `restart/skinny/tranches/sk-v5/research/skv5-B1-parse-attribution.md`.
 
 ## Tool availability / PMU status
 

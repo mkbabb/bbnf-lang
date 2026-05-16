@@ -24,7 +24,7 @@ Relevant architecture/doc facts:
 - ARCH §7.2 invariant: `TapeEmit` and `DirectBuild` are scheduled together from side tables (`restart/ARCHITECTURE.md:1008-1009`).
 - ARCH §7.4 explicitly says the remaining remediation is not another directive or BIR variant (`restart/ARCHITECTURE.md:1118`).
 - ARCH §9.2 says `SinkOnly` direct outputs are projections over the same accepted event stream, with no second authoritative tree (`restart/ARCHITECTURE.md:1511-1517`).
-- Lock 14 forbids grammar-specific code in generic crates (`restart/locks/14-LOCKS.md:60`).
+- Lock 14 forbids grammar-specific code in generic crates (`restart/locks/LOCKS.md:60`).
 
 Relevant code facts:
 

@@ -124,18 +124,18 @@ Adversarial finding count: 6.
     (`restart/README.md:450-452`).
 44. Lock 4 claim: CSP inference, e-graph rewriting, pattern miners, shape
     analysis, and cost model compose by output-piping with no unified
-    hypergraph (`restart/locks/14-LOCKS.md:40`).
+    hypergraph (`restart/locks/LOCKS.md:40`).
 45. Lock 6 claim: xtask emits committed source artefacts; proc-macro codegen
-    facades are faults (`restart/locks/14-LOCKS.md:44`).
+    facades are faults (`restart/locks/LOCKS.md:44`).
 46. Lock 7 claim: `crates/path/` is the consolidated path crate; the runtime
-    cursor engine merges into it (`restart/locks/14-LOCKS.md:46`).
+    cursor engine merges into it (`restart/locks/LOCKS.md:46`).
 47. Lock 8 claim: every perf gate names a specific competitor number on a
-    specific dataset on a specific platform (`restart/locks/14-LOCKS.md:48`).
+    specific dataset on a specific platform (`restart/locks/LOCKS.md:48`).
 48. Lock 10 claim: Pratt and SIMD are auto-detected; the cost model decides
-    when SIMD overhead is worth dispatch cost (`restart/locks/14-LOCKS.md:52`).
+    when SIMD overhead is worth dispatch cost (`restart/locks/LOCKS.md:52`).
 49. Lock 14 claim: generic crates, including `egraph`, `csp-solver`,
     `bbnf-regex`, `parse-that`, and `simd-scan`, carry zero grammar-specific
-    code (`restart/locks/14-LOCKS.md:60`).
+    code (`restart/locks/LOCKS.md:60`).
 50. Architecture conflict ledger claim: CSP, egraph, miners, and cost model
     compose by output piping; a fused global hypergraph is rejected
     (`restart/ARCHITECTURE.md:30`).
@@ -590,7 +590,7 @@ pub trait CostModel {
     while Deb frames multi-objective optimization as a set of trade-off
     solutions followed by policy selection (S9).
 12. Restart and V5.1 hardening converge on no force directives: Lock 10 says no
-    `@pratt`/`@simd` (`restart/locks/14-LOCKS.md:52`), PASS-2 diagnostics now
+    `@pratt`/`@simd` (`restart/locks/LOCKS.md:52`), PASS-2 diagnostics now
     say cost evidence must win (`restart/audit/hardening/HARDENING-PASS-1-PASS-2-V5.1.md:49-51`),
     and production cost systems use measured/estimated evidence rather than
     author override (S5-S7).
@@ -626,7 +626,7 @@ pub trait CostModel {
 8. The source catalogue's lock pointer diverges from the active lock file.
    Topic 5 says Lock 6/7 are cost-related (`restart/research/INDEX.md:95`),
    while active Lock 6 is committed codegen and active Lock 7 is path crate
-   consolidation (`restart/locks/14-LOCKS.md:44-46`).
+   consolidation (`restart/locks/LOCKS.md:44-46`).
 9. The Almomany source remains a provenance gap. It must not support a dynamic
    cost-model claim until a primary citation is found.
 10. The exact Deb 2014 pointer remains a provenance gap. The fold can cite S9
@@ -757,7 +757,7 @@ pub trait CostModel {
    Contradicted lock or settled claim: README says parser can know regex scan
    cost without regex internals (`restart/README.md:217`), while Lock 4 and
    Lock 14 require output-piped, generic substrates
-   (`restart/locks/14-LOCKS.md:40`, `restart/locks/14-LOCKS.md:60`).
+   (`restart/locks/LOCKS.md:40`, `restart/locks/LOCKS.md:60`).
    SOTA evidence: LLVM and Cranelift expose contextual costs through summaries
    and target hooks rather than one universal semantic body (S5-S7).
    Proposed amendment: define `RegexCostSummary` as an opaque contribution to
@@ -768,7 +768,7 @@ pub trait CostModel {
    Contradicted lock or settled claim: `restart/research/INDEX.md:95` maps
    Topic 5 to Lock 6/7 as cost locks, but active Lock 6 and Lock 7 are
    committed codegen and path-crate consolidation
-   (`restart/locks/14-LOCKS.md:44-46`).
+   (`restart/locks/LOCKS.md:44-46`).
    SOTA evidence: none required; this is internal provenance pressure. It
    affects routing rather than cost theory.
    Proposed amendment: route Topic 5 to Lock 4, Lock 8, Lock 10, and Lock 14,

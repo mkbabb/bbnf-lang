@@ -9,9 +9,9 @@ The cycle naming convention follows the canon at `restart/prompts/ORCHESTRATOR.m
 ## Required reading
 
 1. `restart/README.md` — gestalt anchor; settled positions; the 14 locks
-2. `restart/locks/14-LOCKS.md` — the 14 architectural commitments
+2. `restart/locks/LOCKS.md` — the 14 architectural commitments
 3. `restart/prompts/ORCHESTRATOR.md` — main entry; phase-identification + hardening-cycle naming canon
-4. `restart/prompts/HARDENING.md` — per-target audit specification (the contract each hardener reads)
+4. `restart/prompts/audit-specs/HARDENING-LENS-SET.md` — per-target audit specification (the contract each hardener reads)
 5. `docs/precepts/instructions/STYLE.md` + `LESSONS-LEARNED.md` + `CONSUMING.md`
 6. `restart/audit/hardening/HARDENING-CONSOLIDATED-V{N-1}.md` — the prior cycle's consolidated verdict (for context on what carries forward)
 
@@ -26,7 +26,7 @@ Check for committed artefacts at the cycle's per-target paths:
 
 For each absent artefact, dispatch one hardener agent. The four dispatches run in parallel; each agent's contract:
 
-- Reads `restart/prompts/HARDENING.md` as its operational specification, parameterised with the named target
+- Reads `restart/prompts/audit-specs/HARDENING-LENS-SET.md` as its operational specification, parameterised with the named target
 - Reads the target's output(s)
 - Applies the lens audit per `HARDENING.md` (lenses A-K post-Phase-8.1; lenses I/J/K added at Phase 8.1 for the V8 simplification axis)
 - Produces `restart/audit/hardening/HARDENING-{TARGET}-V{N}.md`
@@ -112,14 +112,14 @@ You orchestrate; you do not audit. Per-target audit is the dispatched hardeners'
 For each dispatched agent, compose a prompt that includes:
 
 - The agent's role + scope (e.g., "HARDENING with target=PASS-2, cycle=V8")
-- Reference to `restart/prompts/HARDENING.md`
-- Reference to `restart/locks/14-LOCKS.md`
+- Reference to `restart/prompts/audit-specs/HARDENING-LENS-SET.md`
+- Reference to `restart/locks/LOCKS.md`
 - The voice + discipline locks
 - The output path and the commit message format
 - The cross-tranche scope boundary (touch ONLY the agent's output path; do NOT modify other restart subdirs)
 - The hard cap
 
-The dispatch prompts are NOT pre-written here — you compose them at dispatch time. The contract at `restart/prompts/HARDENING.md` is the per-agent specification; your role is to invoke it with the right scope.
+The dispatch prompts are NOT pre-written here — you compose them at dispatch time. The contract at `restart/prompts/audit-specs/HARDENING-LENS-SET.md` is the per-agent specification; your role is to invoke it with the right scope.
 
 ## Output commits
 
@@ -144,7 +144,7 @@ You do NOT modify:
 
 This sub-orchestrator runs whenever a hardening cycle is named by the main `restart/prompts/ORCHESTRATOR.md`. Cycles V1 through V8 have already executed; their consolidated reports live at `restart/audit/hardening/HARDENING-CONSOLIDATED-V{1..8}.md`. The next cycle's number is the next integer (or `.{minor}` if a verification rerun follows a fold) per the cycle-naming canon at `restart/prompts/ORCHESTRATOR.md` §5.
 
-You orchestrate; the dispatched hardeners execute; you consolidate at the end. The next step after the consolidated verdict is named by the main orchestrator — amendment dispatch via `restart/prompts/AMENDMENT-DISPATCH.md` (if AMENDMENT-REQUIRED), simplification fold via the same (if SIMPLIFY-AVAILABLE), per-tranche full-spec drafting (if READY), or PASS / SYNTHESIS re-dispatch (if RE-DRAFT) — out of this sub-orchestrator's scope.
+You orchestrate; the dispatched hardeners execute; you consolidate at the end. The next step after the consolidated verdict is named by the main orchestrator — amendment dispatch via `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` (if AMENDMENT-REQUIRED), simplification fold via the same (if SIMPLIFY-AVAILABLE), per-tranche full-spec drafting (if READY), or PASS / SYNTHESIS re-dispatch (if RE-DRAFT) — out of this sub-orchestrator's scope.
 
 ---
 

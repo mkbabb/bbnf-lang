@@ -285,7 +285,7 @@ identically whether `inner` is `Tweet` or `f64`. Compare
 
 Mesh sits at 121.1% retained vs sonic and 91.8% direct vs sonic
 (`RESULTS.md:11, :35`). The hot leaves from cohort C2
-(`restart/skinny/audit/SK-V6-COHORT/skv6-C2-direct-profile.md:57`)
+(`restart/skinny/tranches/sk-v6/research/skv6-C2-direct-profile.md:57`)
 attribute mesh direct to `parse_array_element_at_direct` 77.6%,
 `materialize_f64` 4.8%, `materialize_u64` 2.6%. The C5 audit
 (`skv6-C5-parse-that-gaps.md:33-35`) flags the gap as "generated

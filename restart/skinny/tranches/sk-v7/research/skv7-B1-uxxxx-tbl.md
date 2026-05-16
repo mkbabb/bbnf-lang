@@ -9,14 +9,14 @@ sidecar. Hard cap 60 min implementation, 30 min measurement.
 SK-V7 Wave A converged on the per-unit `\uXXXX` decode primitive as the single
 highest-impact admission for the remaining unicode/escape gap.
 
-- A2 (`restart/skinny/audit/skv7-A2-sota-strict-beat.md`): names this primitive
+- A2 (`restart/skinny/tranches/skv7-A2-sota-strict-beat.md`): names this primitive
   as the moving lever for nine of thirteen parse-G rows. Quantified targets:
   `unicode_mixed` parse (currently 56.1 % sonic), `y_string_unicode` parse
   (46.0 %), `unicode_escapes` parse (80.4 %), `random` parse (65.5 %), plus
   five string-match-bottlenecked rows whose dominant residual is the inner
   `\uXXXX` decode loop: twitter, update_center, apache_builds, github_events,
   gsoc-2018.
-- A4 (`restart/skinny/audit/skv7-A4-parse-that-gaps.md`): Top-1 missing
+- A4 (`restart/skinny/tranches/skv7-A4-parse-that-gaps.md`): Top-1 missing
   primitive, named `unicode_escape_run_decode_utf8`. Calls out reuse of the
   existing `bbnf_simd::aarch64::unescape_uxxxx::unescape_uxxxx_neon` TBL kernel
   (already in tree at lines 74-121 of
@@ -24,7 +24,7 @@ highest-impact admission for the remaining unicode/escape gap.
   Hoehrmann scalar at lines 979-1047 of
   `skinny/crates/parse-that-regex/src/lib.rs`. Estimated 150-300 LOC of new
   code; remainder is wiring.
-- `restart/skinny/audit/HANDOFF-SK-V6.md:76-80`: explicitly distinguishes this
+- `restart/skinny/tranches/sk-v6/HANDOFF.md:76-80`: explicitly distinguishes this
   (per-unit decode) from the rejected "broad UTF-8 fusion as generated-baseline
   close." The broad fusion is dead. This candidate has structurally different
   shape and is admitted.
@@ -543,11 +543,11 @@ REDRESS commentary at `skinny/REDRESS.md:1571-1574`.
 
 ## 13. References
 
-- `restart/skinny/audit/skv7-A2-sota-strict-beat.md` — row-impact table for
+- `restart/skinny/tranches/skv7-A2-sota-strict-beat.md` — row-impact table for
   the unicode/escape cluster.
-- `restart/skinny/audit/skv7-A4-parse-that-gaps.md` — Top-1 primitive listing,
+- `restart/skinny/tranches/skv7-A4-parse-that-gaps.md` — Top-1 primitive listing,
   LOC estimate, existing-kernel reuse argument.
-- `restart/skinny/audit/HANDOFF-SK-V6.md:76-80` — distinguishes per-unit decode
+- `restart/skinny/tranches/sk-v6/HANDOFF.md:76-80` — distinguishes per-unit decode
   from rejected broad UTF-8 fusion.
 - `skinny/REDRESS.md:1582-1635` — REDRESS 64 rejection of four-unit retained
   validator; the structural baseline this design must out-distinguish.

@@ -11,7 +11,7 @@ two gates. The original twitter / citm_catalog / canada triad passes and
 validates `OffsetTape` (the lazy-offset implementation of one of the five
 `BackendShape` values per ARCH §7.3) plus direct projection as the canonical
 substrate; the empirical anchor is the A/A/A triad at `skinny/RESULTS.md` and
-the V3 authority at `restart/skinny/audit/GRAND-SYNTHESIS-SOTA-BEAT-SK-V3.md`
+the V3 authority at `restart/skinny/tranches/GRAND-SYNTHESIS-SOTA-BEAT-SK-V3.md`
 §4 "validated original research items". The expanded corpus in
 `skinny/RESULTS.md` is now the binding SOTA-BEAT authority and records overall
 outcome G / NoGo: `github_events`, `update_center`, `random`,
@@ -37,8 +37,8 @@ Source authority (verbatim citations, not paraphrase):
 - `restart/audit/pass-3-runtime/PASS-3.md` §4 (lines 150-191) — illustrative `Tape<'input>` / `TapeToken` / `ValueRef<'doc, 'input, K>` shape; closure environment by `&'i Tape<'i>`.
 - `restart/ARCHITECTURE.md` §7.2 BIR rows for `TapeEmit`, `DirectBuild`, `ValueProject`, `SimdScan`, `SpanMark` (lines 920-963) — what the substrate is the receiver of.
 - `restart/audit/pass-2-codegen/PASS-2.md` §2 commitment 3 — TapeShape + ValueShape are one materialisation plan.
-- `restart/locks/14-LOCKS.md` Lock 1 (line 34) — tape is THE substrate; no parallel substrate; no OpenFrame clone.
-- `restart/locks/14-LOCKS.md` Lock 8 (line 48) — sonic-rs / simdjson / lightning-css anchors.
+- `restart/locks/LOCKS.md` Lock 1 (line 34) — tape is THE substrate; no parallel substrate; no OpenFrame clone.
+- `restart/locks/LOCKS.md` Lock 8 (line 48) — sonic-rs / simdjson / lightning-css anchors.
 - `restart/ARCHITECTURE.md` §11 row `simd/structural_scan` (line 1519) — ≥56000 Mbps AVX2, ≥40000 Mbps NEON, scalar parity hash mandatory.
 
 The full-V1 spec PASS-3 §4 admits its layout is **illustrative, not mandatory** ("This layout is not a PASS-1 mandate; it is a user-surface contract. PASS-1 may pack differently if these semantics remain true." — `PASS-3.md:187`). The skinny pins one packing and measures it. If the bench fails parity, the packing is the variable to perturb, not the contract.
@@ -154,7 +154,7 @@ pub struct ValueRef<'doc, 'input: 'doc, K = AnyKind> {
 }
 ```
 
-The lifetime parameters `'doc` and `'input` are **the discriminant** of the slice-borrow / arena / owned forms (Lock 9, `restart/locks/14-LOCKS.md:50`). For the skinny:
+The lifetime parameters `'doc` and `'input` are **the discriminant** of the slice-borrow / arena / owned forms (Lock 9, `restart/locks/LOCKS.md:50`). For the skinny:
 
 - `parse<'i>(input: &'i str) -> Result<JsonDocument<'i>, ParseError>` collapses to `'doc = 'input = 'i`. The public Grammar API takes `&str` (UTF-8 prevalidation outside the timed region per Lock 9); the substrate operates on the underlying byte slice internally.
 - `parse_in<'i>(input: &'i str, arena: &'i Arena) -> Result<JsonDocument<'i>, ParseError>` keeps them collapsed; the `Arena` only widens the payload arena's backing storage.
@@ -222,7 +222,7 @@ impl<'input> DocumentView<'input> for JsonDocument<'input> {
 
 ### 1.5 Tape ≡ structural projection (canonical; OffsetTape implementation)
 
-`Tape<'input>` is the canonical retained substrate; the lazy-offset implementation is the `BackendShape::OffsetTape` value of the five-shape taxonomy carried at `restart/ARCHITECTURE.md` §7.3 (`LayoutFacts.backend_shape`). The substrate is grammar-neutral: the five shapes are `EagerTape`, `OffsetTape`, `EventTape`, `SinkOnly`, and `CollapsedStage`. JSON in the skinny lowers to `OffsetTape` per the cost-model derivation in ARCH §7.3; that derivation is auto (no directive, no workspace metadata) and is keyed off existing Grammar IR facts (first-set disjointness, `@error(recover)` presence, `@host fn` parse-time-decoded presence, `@layout` scope presence). The lazy-offset implementation remains the measured storage choice, but the expanded throughput corpus is the binding SOTA-BEAT gate and currently records overall `N-direct / NoGo`: 5 retained hard-G rows, D/E retained codegen-gap rows, five `semantic_full_digest_stressor` pass rows, 12 direct digest misses, and representative `real_typed_struct` passes for `twitter` and `update_center`. SK-V5 redress item 56 restores the focused Canada structural-only scan floor above the 40000 Mbps NEON floor, so the storage shape is not reopened as eager tape; the remaining work is the typed event cursor over the same projection, decoded string/direct materialization, grammar-neutral cost facts, and primitive closure. Lock 1 verbatim plus the 2026-05-12 clarification at `restart/locks/14-LOCKS.md:34` establish that the structural projection IS the tape's storage; there has never been a separate "tape" buffer the parser writes to after consuming the scan output.
+`Tape<'input>` is the canonical retained substrate; the lazy-offset implementation is the `BackendShape::OffsetTape` value of the five-shape taxonomy carried at `restart/ARCHITECTURE.md` §7.3 (`LayoutFacts.backend_shape`). The substrate is grammar-neutral: the five shapes are `EagerTape`, `OffsetTape`, `EventTape`, `SinkOnly`, and `CollapsedStage`. JSON in the skinny lowers to `OffsetTape` per the cost-model derivation in ARCH §7.3; that derivation is auto (no directive, no workspace metadata) and is keyed off existing Grammar IR facts (first-set disjointness, `@error(recover)` presence, `@host fn` parse-time-decoded presence, `@layout` scope presence). The lazy-offset implementation remains the measured storage choice, but the expanded throughput corpus is the binding SOTA-BEAT gate and currently records overall `N-direct / NoGo`: 5 retained hard-G rows, D/E retained codegen-gap rows, five `semantic_full_digest_stressor` pass rows, 12 direct digest misses, and representative `real_typed_struct` passes for `twitter` and `update_center`. SK-V5 redress item 56 restores the focused Canada structural-only scan floor above the 40000 Mbps NEON floor, so the storage shape is not reopened as eager tape; the remaining work is the typed event cursor over the same projection, decoded string/direct materialization, grammar-neutral cost facts, and primitive closure. Lock 1 verbatim plus the 2026-05-12 clarification at `restart/locks/LOCKS.md:34` establish that the structural projection IS the tape's storage; there has never been a separate "tape" buffer the parser writes to after consuming the scan output.
 
 `Tape<'input>` owns the offsets array, the payload arena, and the per-offset packed flags as one structure. `ValueRef<'doc, 'input, K>` carries `cursor: u32` indexing into `Tape::offsets`; the typed cursor consumes the same projection that the scan emitted. There is no parallel sidecar structural-index `Vec`; if structural offsets are retained, they ARE the tape. Among the five comparator parsers (simdjson, asmjson, sonic-rs LazyValue, yyjson, RapidJSON), only simdjson keeps two buffers post-parse (`structural_indexes` on `dom_parser_implementation` plus `tape` on `document`). asmjson, yyjson, RapidJSON, and sonic-rs's LazyValue path all emit directly into the parse-time-output buffer; the LazyValue path emits nothing because the slice IS the projection. The skinny adopts the one-buffer posture.
 
@@ -282,7 +282,7 @@ LayoutFacts.backend_shape[rule_id]: BackendShape  // see ARCH §7.3
 // per the 8-step algorithm at ARCH §7.3.
 ```
 
-Lens N classification: **ADDITIVE-MECHANICAL**. The substrate gains a typed cursor adapter and a materialization-plan enum; `DocumentView` is unchanged; the payload arena is unchanged. The BIR alphabet is unchanged (20 variants); the lowerer at `crates/codegen/src/lower/rust.rs` reads `LayoutFacts.backend_shape[rule_id]` and emits one access pattern for the existing `Alt { mode: Dispatch }` variant. V1 closure cost: ~650-900 LOC across `runtime::tape`, `bbnf-codegen`, `bbnf-simd`, and `parse-that/{string,unicode,number}`. The exact wave contract lives in `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md`.
+Lens N classification: **ADDITIVE-MECHANICAL**. The substrate gains a typed cursor adapter and a materialization-plan enum; `DocumentView` is unchanged; the payload arena is unchanged. The BIR alphabet is unchanged (20 variants); the lowerer at `crates/codegen/src/lower/rust.rs` reads `LayoutFacts.backend_shape[rule_id]` and emits one access pattern for the existing `Alt { mode: Dispatch }` variant. V1 closure cost: ~650-900 LOC across `runtime::tape`, `bbnf-codegen`, `bbnf-simd`, and `parse-that/{string,unicode,number}`. The exact wave contract lives in `restart/skinny/tranches/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md`.
 
 The SOTA-BEAT route stacks four levers, each falsifiable independently:
 1. **Lock 15 enforcement** (`lto=fat` + force-inline hot leaves + ~20 KiB i-cache budget): catches the `lto=thin` regression and applies the yyjson lever; closes ~30-40% of the gap.

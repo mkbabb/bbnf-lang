@@ -136,7 +136,7 @@ user with `BLOCKED` verdict.
 - **v+1 fold**: After CHALLENGE closes, the original sub-agent author re-runs with the dispositions in hand and produces v+1 of the artefact.
 - **Convergence criterion**: ≥95% ACCEPT on the most recent CHALLENGE + zero open critical defects + no orphan unresolved REVISE.
 - **Triumvirate**: Research → Plan → Redress. Three distinct commits per wave. Research = read-only diagnosis. Plan = synthesis. Redress = implementation + measurement + REDRESS entry.
-- **SK-V{N}**: Skinny iteration N. Audit dir at `restart/skinny/audit/SK-V{N}-COHORT/`; master docs at `restart/skinny/audit/{GRAND-SYNTHESIS,IMPLEMENTATION-PACKET,HANDOFF}-SK-V{N}.md`.
+- **SK-V{N}**: Skinny iteration N. Audit dir at `restart/skinny/tranches/SK-V{N}-COHORT/`; master docs at `restart/skinny/tranches/{GRAND-SYNTHESIS,IMPLEMENTATION-PACKET,HANDOFF}-SK-V{N}.md`.
 - **V{V}**: Pass iteration version within a single pass (V1, V2, V3, …). Auto-incremented per N-iteration governance.
 
 ## Dispatch invocation phrases

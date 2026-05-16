@@ -156,7 +156,7 @@ Phase 8 closed. The architecture is the leanest it has been across 8 hardening c
 2. Codex reads `restart/prompts/ORCHESTRATOR.md` (phase fan-out)
 3. Codex reads this consolidation (`HARDENING-CONSOLIDATED-V8.1.md`)
 4. Codex identifies "post-Phase-8.5; pre-Wave-9" phase
-5. Codex dispatches fresh V9 hardening cycle per `restart/prompts/HARDENING-ORCHESTRATOR.md` with full lens set A-K (per `restart/prompts/HARDENING.md` lens contract)
+5. Codex dispatches fresh V9 hardening cycle per `restart/prompts/sub-orchestrators/HARDENING.md` with full lens set A-K (per `restart/prompts/audit-specs/HARDENING-LENS-SET.md` lens contract)
 
 Codex's V9 will naturally absorb the 2 PASS-3 narrow residues (V8.1-A, V8.1-B) as part of its own punch-list pass; the residue is intentionally documented for V9 to find.
 

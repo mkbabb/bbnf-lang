@@ -22,7 +22,7 @@ unique target paths classified; 73 dead-link instances identified.
 | skinny/audit/ master synthesis docs | 14 |
 | skinny/audit/ cohort directories | 4 (SK-V5/6/7 + V9.5-PSI-EXCAVATION) |
 | prompts/ files | 9 |
-| Locks file | 1 (`14-LOCKS.md`; carries Locks 1-16) |
+| Locks file | 1 (`LOCKS.md`; carries Locks 1-16) |
 | Legacy `restart/audit/{pass-1,pass-2,pass-3,hardening}/` files | 86 |
 | Legacy `restart/research/` files | 22 |
 | `inheritance/` files | 1 |
@@ -44,9 +44,9 @@ ghosts.
 
 | Source | Dead target | Count |
 |---|---|---:|
-| `restart/skinny/audit/IMPLEMENTATION-AGENT-PROMPT-SK-V6.md` | 11 SK-V1/SK-V2 hardening docs | ~11 |
+| `restart/skinny/tranches/sk-v6/DISPATCH-PROMPT.md` | 11 SK-V1/SK-V2 hardening docs | ~11 |
 | `restart/skinny/INDEX.md`, `BENCH.md`, `HARDENING.md`, `WORKSPACE.md` | `skinny/REDRESS.md`, `RESULTS.md`, `MIGRATION.md` (wrong prefix; live at `/Users/mkbabb/Programming/bbnf-lang/skinny/`, not `restart/skinny/`) | ~3 |
-| `restart/skinny/audit/SK-V7-COHORT/skv7-B5-mesh-typed.md:485` | `restart/HANDOFF-SK-V6.md` (wrong path; live target is `restart/skinny/audit/HANDOFF-SK-V6.md`) | 1 |
+| `restart/skinny/tranches/sk-v7/research/skv7-B5-mesh-typed.md:485` | `restart/HANDOFF-SK-V6.md` (wrong path; live target is `restart/skinny/tranches/sk-v6/HANDOFF.md`) | 1 |
 
 ### §2.2 — Class II: Live-prefix path errors
 
@@ -70,15 +70,15 @@ under either prefix. Either author the file or strike the references.
 
 | Dead target | First referenced by | Likely disposition |
 |---|---|---|
-| `restart/skinny/audit/HARDENING-{BENCH,COMPILER,CONSOLIDATED,INDEX,SUBSTRATE,WORKSPACE}-SK-V{1,2}.md` (12 files) | `IMPLEMENTATION-AGENT-PROMPT-SK-V6.md` (verification ritual) | Strike the verification ritual lines; these files are intentionally retired per SK-V6 nuke |
-| `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md` | `V9.5-PSI-EXCAVATION/`, SK-V5 cohort | Move to `archive/` (or delete; the V9.5 dig is the surviving forensic) |
-| `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md` | SK-V5/V6 cohort archaeology | Same |
-| `restart/skinny/audit/GRAND-SYNTHESIS-SOTA-BEAT-SK-V3.md` | V9.5 + SK-V5 + SK-V7 C2 | Same |
-| `restart/skinny/audit/ASMJSON-DAV1D-GRAND-SYNTHESIS-SK-V4.md` | SK-V5 + SK-V6 | Same |
-| `restart/skinny/audit/LAZY-TAPE-DESIGN.md` | `IMPLEMENTATION-AGENT-PROMPT-SK-V6.md` | Strike; design absorbed into V9.5 + locks |
-| `restart/skinny/audit/HARDENING-CONSOLIDATED-SK-V{1,2}.md` | `IMPLEMENTATION-AGENT-PROMPT-SK-V6.md` | Strike retired-doc citations |
-| `restart/skinny/audit/HARDENING-INDEX-SK-V{1,2}.md` | Same | Same |
-| `restart/skinny/audit/WAVE-1-2-COHORT-DIGEST.md` | SK-V5/V6 cohorts | Move to `archive/` if surviving evidence; else strike |
+| `restart/skinny/tranches/HARDENING-{BENCH,COMPILER,CONSOLIDATED,INDEX,SUBSTRATE,WORKSPACE}-SK-V{1,2}.md` (12 files) | `IMPLEMENTATION-AGENT-PROMPT-SK-V6.md` (verification ritual) | Strike the verification ritual lines; these files are intentionally retired per SK-V6 nuke |
+| `restart/skinny/tranches/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md` | `V9.5-PSI-EXCAVATION/`, SK-V5 cohort | Move to `archive/` (or delete; the V9.5 dig is the surviving forensic) |
+| `restart/skinny/tranches/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md` | SK-V5/V6 cohort archaeology | Same |
+| `restart/skinny/tranches/GRAND-SYNTHESIS-SOTA-BEAT-SK-V3.md` | V9.5 + SK-V5 + SK-V7 C2 | Same |
+| `restart/skinny/tranches/ASMJSON-DAV1D-GRAND-SYNTHESIS-SK-V4.md` | SK-V5 + SK-V6 | Same |
+| `restart/skinny/tranches/LAZY-TAPE-DESIGN.md` | `IMPLEMENTATION-AGENT-PROMPT-SK-V6.md` | Strike; design absorbed into V9.5 + locks |
+| `restart/skinny/tranches/HARDENING-CONSOLIDATED-SK-V{1,2}.md` | `IMPLEMENTATION-AGENT-PROMPT-SK-V6.md` | Strike retired-doc citations |
+| `restart/skinny/tranches/HARDENING-INDEX-SK-V{1,2}.md` | Same | Same |
+| `restart/skinny/tranches/WAVE-1-2-COHORT-DIGEST.md` | SK-V5/V6 cohorts | Move to `archive/` if surviving evidence; else strike |
 
 ### §2.4 — Class IV: Pre-Phase-8 prompt-suite ghosts
 
@@ -125,7 +125,7 @@ plus the 8-step `derive_backend_shape` algorithm appears in **40 files**.
 - `restart/HANDOFF.md` §5 — currently inlines the full enum + 8-step algo + per-grammar matrix (lines 153-198). Should cite ARCHITECTURE.md §7.3 + carry the per-grammar matrix only.
 - `restart/MASTER-PLAN.md` — currently re-inlines the algorithm.
 - `restart/skinny/COMPILER.md`, `restart/skinny/SUBSTRATE.md`, `restart/skinny/INDEX.md` — each carries partial restatements.
-- `restart/skinny/audit/SOTA-BEAT-DESIGN.md` — same.
+- `restart/skinny/tranches/shared/SOTA-BEAT-DESIGN.md` — same.
 
 **Recommendation**: ARCHITECTURE.md §7.3 stays canonical; all other surfaces
 cite `restart/ARCHITECTURE.md §7.3` with a one-line summary ("5 shapes:
@@ -139,7 +139,7 @@ The full Lock 15 prose ("LTO + codegen-units=1 + force-inline + ≤20 KiB hot
 function ceiling") and Lock 16 prose (allowlist of NEON/AVX-512 primitives
 including the Wave 1 5-pack + 3-pack) appears in:
 
-- `restart/locks/14-LOCKS.md` (canonical).
+- `restart/locks/LOCKS.md` (canonical).
 - `restart/HANDOFF.md` §3 (reading order #2 inlines).
 - `restart/README.md` §11 ("Locks Carried Forward" table).
 - `restart/ARCHITECTURE.md` §13.1 (admissible-SIMD-primitives table).
@@ -173,10 +173,10 @@ specific subset.
 
 The 17-row corpus × parser throughput table appears in:
 - `restart/HANDOFF.md` §4 (lines 112-130).
-- `restart/skinny/audit/HANDOFF-SK-V6.md`.
-- `restart/skinny/audit/HANDOFF-SK-V7.md`.
-- `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6-ASMJSON-DAV1D.md`.
-- `restart/skinny/audit/SK-V7-COHORT/skv7-A2-sota-strict-beat.md`.
+- `restart/skinny/tranches/sk-v6/HANDOFF.md`.
+- `restart/skinny/tranches/sk-v7/HANDOFF.md`.
+- `restart/skinny/tranches/sk-v6/SYNTHESIS.md`.
+- `restart/skinny/tranches/sk-v7/research/skv7-A2-sota-strict-beat.md`.
 
 Each version is dated; per-SK numbers may differ. The most-current is the
 post-V6 RESULTS.md numbers (HANDOFF-SK-V7 + GRAND-SYNTHESIS-SK-V7).
@@ -195,18 +195,18 @@ Pre-rename names (`Object`, `Array`, `Pair`, `String`, `Number`, `Bool`, `Null`,
 - `restart/audit/pass-2-codegen/agent-2-rust-lowerer-architect.md`.
 - `restart/audit/pass-2-codegen/agent-4-runtime-template-architect.md`.
 - `restart/corpora/CENSUS.md`.
-- `restart/skinny/audit/SK-V6-COHORT/skv6-A5-general-grammar-abstraction.md`.
-- `restart/skinny/audit/SK-V6-COHORT/skv6-C6-generality-costfacts.md`.
-- `restart/skinny/audit/SK-V6-COHORT/skv6-R3d-direct-generality.md`.
+- `restart/skinny/tranches/sk-v6/research/skv6-A5-general-grammar-abstraction.md`.
+- `restart/skinny/tranches/sk-v6/research/skv6-C6-generality-costfacts.md`.
+- `restart/skinny/tranches/sk-v6/research/skv6-R3d-direct-generality.md`.
 
 Post-rename names (`Container`, `Bucket`, `KeyValuePair`, `StringValue`,
 `NumberValue`, `BoolValue`, `NullValue`, `Member`, `Element`) appear in:
-- `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V7.md` §3 (the SK-V7 W1 plan
+- `restart/skinny/tranches/sk-v7/SPEC.md` §3 (the SK-V7 W1 plan
   authoritative).
-- `restart/skinny/audit/HANDOFF-SK-V7.md`.
-- `restart/skinny/audit/GRAND-SYNTHESIS-SK-V7.md`.
-- `restart/skinny/audit/SK-V7-COHORT/skv7-A5-lock-audit.md`.
-- `restart/skinny/audit/SK-V7-COHORT/skv7-B3-lock14-sequence.md`.
+- `restart/skinny/tranches/sk-v7/HANDOFF.md`.
+- `restart/skinny/tranches/sk-v7/SYNTHESIS.md`.
+- `restart/skinny/tranches/sk-v7/research/skv7-A5-lock-audit.md`.
+- `restart/skinny/tranches/sk-v7/research/skv7-B3-lock14-sequence.md`.
 
 The two are not yet reconciled because the rename is a SK-V7 W1 admit-pending.
 **No corrective action until W1 lands.** The MIGRATION.md should carry the
@@ -241,7 +241,7 @@ IMPLEMENTATION-PACKET-SK-V7.md §0.3.
 | `HANDOFF.md` §1 | "16 architectural locks post-2026-05-12" | matches |
 | `prompts/README.md` | "Lock 1-16 (Pass Omega proposes amendments)" | matches |
 
-The filename `14-LOCKS.md` is misleading: 14 was the legacy count before
+The filename `LOCKS.md` is misleading: 14 was the legacy count before
 Locks 15 + 16 (2026-05-12 build-profile + SIMD admissibility) landed.
 **Recommendation**: rename to `restart/locks/LOCKS.md` (drop the count;
 PASS-OMEGA can extend).
@@ -300,10 +300,10 @@ Asymmetries:
 **Action**: per the PASS-ALPHA.md §6 output structure, the canonical pattern
 is:
 ```
-restart/skinny/audit/SK-V{N}-COHORT/{alpha,alpha-hardening}/
-restart/skinny/audit/GRAND-SYNTHESIS-SK-V{N}.md
-restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V{N}.md
-restart/skinny/audit/HANDOFF-SK-V{N}.md
+restart/skinny/tranches/SK-V{N}-COHORT/{alpha,alpha-hardening}/
+restart/skinny/tranches/GRAND-SYNTHESIS-SK-V{N}.md
+restart/skinny/tranches/IMPLEMENTATION-PACKET-SK-V{N}.md
+restart/skinny/tranches/HANDOFF-SK-V{N}.md
 ```
 The existing structure honours this for SK-V7. SK-V5 + SK-V6 should be moved
 to `archive/SK-V{N}/` (carrying master docs + cohort dir together).
@@ -338,7 +338,7 @@ Reference inward (from existing files into the new V7 prompts):
 - HANDOFF-SK-V7.md cites `PASS-ALPHA.md` + `PASS-OMEGA.md`.
 - GRAND-SYNTHESIS-SK-V7.md cites `PASS-ALPHA.md` §2.
 - No incoming citation from `restart/README.md`, `restart/HANDOFF.md`,
-  `restart/MASTER-PLAN.md`, or `restart/locks/14-LOCKS.md`.
+  `restart/MASTER-PLAN.md`, or `restart/locks/LOCKS.md`.
 
 **Recommendation**: README.md §12 + HANDOFF.md §1 must add anchors to the V7
 prompt-suite. README §12 should be amended to list:
@@ -347,10 +347,10 @@ Cold-start reading order (V7+):
 1. restart/HANDOFF.md
 2. restart/prompts/README.md
 3. restart/prompts/ORCHESTRATOR.md
-4. restart/prompts/PASS-ALPHA.md or PASS-OMEGA.md (per current phase)
+4. restart/prompts/pass-contracts/PASS-ALPHA.md or PASS-OMEGA.md (per current phase)
 5. restart/README.md
 6. restart/locks/LOCKS.md
-7. restart/skinny/audit/HANDOFF-SK-V{N}.md (most recent)
+7. restart/skinny/tranches/HANDOFF-SK-V{N}.md (most recent)
 ```
 
 ### §6.2 — SK-V7 master docs
@@ -368,7 +368,7 @@ Inconsistencies with existing master docs:
 
 The V7 trio is the first iteration of the formal Pass Alpha contract. The
 V5/V6 docs are pre-formalism artefacts; they should be archived under
-`restart/skinny/audit/archive/` per the per-iteration archive recommendation.
+`restart/skinny/tranches/archive/` per the per-iteration archive recommendation.
 
 ---
 
@@ -437,11 +437,11 @@ restart/
 
 | Rank | Move | Source | Target | Rationale |
 |---|---|---|---|---|
-| 1 | Rename + extend locks file | `restart/locks/14-LOCKS.md` | `restart/locks/LOCKS.md` | filename misleads (carries 16 locks); PASS-OMEGA can extend; remove count-coupling |
-| 2 | Archive SK-V5 + SK-V6 cohorts + master docs | `restart/skinny/audit/{SK-V5-COHORT,SK-V6-COHORT,GRAND-SYNTHESIS-SK-V5.md,HANDOFF-SK-V5.md,NUKE-PLAN-SK-V5.md,IMPLEMENTATION-PACKET-SK-V5.md,IMPLEMENTATION-AGENT-PROMPT-SK-V5.md,GRAND-SYNTHESIS-SK-V6.md,GRAND-SYNTHESIS-SK-V6-ASMJSON-DAV1D.md,HANDOFF-SK-V6.md,IMPLEMENTATION-PACKET-SK-V6-SOTA-RECOVERY.md,IMPLEMENTATION-AGENT-PROMPT-SK-V6.md}` | `restart/skinny/audit/archive/{SK-V5/,SK-V6/}` | SK-V7 is current; per-iteration archive discipline (§5) requires asymmetry resolution |
+| 1 | Rename + extend locks file | `restart/locks/LOCKS.md` | `restart/locks/LOCKS.md` | filename misleads (carries 16 locks); PASS-OMEGA can extend; remove count-coupling |
+| 2 | Archive SK-V5 + SK-V6 cohorts + master docs | `restart/skinny/tranches/{SK-V5-COHORT,SK-V6-COHORT,GRAND-SYNTHESIS-SK-V5.md,HANDOFF-SK-V5.md,NUKE-PLAN-SK-V5.md,IMPLEMENTATION-PACKET-SK-V5.md,IMPLEMENTATION-AGENT-PROMPT-SK-V5.md,GRAND-SYNTHESIS-SK-V6.md,GRAND-SYNTHESIS-SK-V6-ASMJSON-DAV1D.md,HANDOFF-SK-V6.md,IMPLEMENTATION-PACKET-SK-V6-SOTA-RECOVERY.md,IMPLEMENTATION-AGENT-PROMPT-SK-V6.md}` | `restart/skinny/tranches/archive/{SK-V5/,SK-V6/}` | SK-V7 is current; per-iteration archive discipline (§5) requires asymmetry resolution |
 | 3 | Author missing TOTALITY-PASS files | (none) | `restart/prompts/pass-contracts/TOTALITY-PASS-{1,2,3}-{RESEARCH,PROFILE,HARDENING}.md` | README.md:9 + ORCHESTRATOR cite them; currently dead refs |
 | 4 | Strike pre-Phase-8 prompt ghosts from README + HANDOFF | `restart/README.md:435`, `restart/HANDOFF.md` various | edit-in-place | 9+ dead refs to `PASS-1-SUBSTRATE.md` / `PASS-2-CODEGEN.md` / `PASS-3-RUNTIME.md` / `SYNTHESIS.md`; per README §12 these retired at Phase 8.0 |
-| 5 | Move V9.5-PSI-EXCAVATION + rename | `restart/skinny/audit/V9.5-PSI-EXCAVATION/` | `restart/skinny/audit/archive/SK-V3.5-PSI-EXCAVATION/` | establishes archive/ subdir; consistent SK-V{N} naming; signal that the dig is historical not current |
+| 5 | Move V9.5-PSI-EXCAVATION + rename | `restart/skinny/tranches/sk-v3.5/research/` | `restart/skinny/tranches/archive/SK-V3.5-PSI-EXCAVATION/` | establishes archive/ subdir; consistent SK-V{N} naming; signal that the dig is historical not current |
 
 ### §7.3 — Concrete CRUD list
 
@@ -459,21 +459,21 @@ All four classes can move to `restart/audit/archive/`.
 
 | From | To | Note |
 |---|---|---|
-| `restart/skinny/audit/SK-V5-COHORT/` | `restart/skinny/audit/archive/SK-V5/COHORT/` | +12 files |
-| `restart/skinny/audit/SK-V6-COHORT/` | `restart/skinny/audit/archive/SK-V6/COHORT/` | +32 files |
-| `restart/skinny/audit/V9.5-PSI-EXCAVATION/` | `restart/skinny/audit/archive/SK-V3.5-PSI-EXCAVATION/` | rename + move |
-| `restart/skinny/audit/GRAND-SYNTHESIS-SK-V5.md` + master peers | `restart/skinny/audit/archive/SK-V5/` | with cohort dir |
-| `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6*.md` + peers | `restart/skinny/audit/archive/SK-V6/` | with cohort dir |
-| `restart/prompts/HARDENING.md` + `HARDENING-ORCHESTRATOR.md` + `RESEARCH-FOLD-ORCHESTRATOR.md` + `AMENDMENT-DISPATCH.md` | `restart/prompts/sub-orchestrators/` | encapsulate |
-| `restart/locks/14-LOCKS.md` | `restart/locks/LOCKS.md` | rename |
+| `restart/skinny/tranches/sk-v5/research/` | `restart/skinny/tranches/archive/SK-V5/COHORT/` | +12 files |
+| `restart/skinny/tranches/sk-v6/research/` | `restart/skinny/tranches/archive/SK-V6/COHORT/` | +32 files |
+| `restart/skinny/tranches/sk-v3.5/research/` | `restart/skinny/tranches/archive/SK-V3.5-PSI-EXCAVATION/` | rename + move |
+| `restart/skinny/tranches/sk-v5/SYNTHESIS.md` + master peers | `restart/skinny/tranches/archive/SK-V5/` | with cohort dir |
+| `restart/skinny/tranches/GRAND-SYNTHESIS-SK-V6*.md` + peers | `restart/skinny/tranches/archive/SK-V6/` | with cohort dir |
+| `restart/prompts/audit-specs/HARDENING-LENS-SET.md` + `HARDENING-ORCHESTRATOR.md` + `RESEARCH-FOLD-ORCHESTRATOR.md` + `AMENDMENT-DISPATCH.md` | `restart/prompts/sub-orchestrators/` | encapsulate |
+| `restart/locks/LOCKS.md` | `restart/locks/LOCKS.md` | rename |
 
 **RENAME** (3 entries):
 
 | Old | New | Rationale |
 |---|---|---|
-| `restart/locks/14-LOCKS.md` | `restart/locks/LOCKS.md` | count-decoupled |
-| `restart/skinny/audit/V9.5-PSI-EXCAVATION/` | `restart/skinny/audit/archive/SK-V3.5-PSI-EXCAVATION/` | SK-V{N} convention |
-| `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V6-SOTA-RECOVERY.md` | `restart/skinny/audit/archive/SK-V6/IMPLEMENTATION-PACKET-SK-V6.md` | drop tag suffix; archive |
+| `restart/locks/LOCKS.md` | `restart/locks/LOCKS.md` | count-decoupled |
+| `restart/skinny/tranches/sk-v3.5/research/` | `restart/skinny/tranches/archive/SK-V3.5-PSI-EXCAVATION/` | SK-V{N} convention |
+| `restart/skinny/tranches/sk-v6/SPEC.md` | `restart/skinny/tranches/archive/SK-V6/IMPLEMENTATION-PACKET-SK-V6.md` | drop tag suffix; archive |
 
 **UPDATE** (8 surfaces):
 
@@ -486,7 +486,7 @@ All four classes can move to `restart/audit/archive/`.
 | `restart/ARCHITECTURE.md` §7.3 | Mark as canonical BackendShape source; cross-link from HANDOFF §5 |
 | `restart/skinny/INDEX.md` | Fix `restart/skinny/REDRESS.md`/`RESULTS.md` references to `skinny/` (workspace root) |
 | `restart/skinny/BENCH.md` | Same fix |
-| `restart/skinny/audit/IMPLEMENTATION-AGENT-PROMPT-SK-V6.md` verification ritual | Strike pre-SK-V3 SK-V{1,2} HARDENING-* refs (intentionally retired) |
+| `restart/skinny/tranches/sk-v6/DISPATCH-PROMPT.md` verification ritual | Strike pre-SK-V3 SK-V{1,2} HARDENING-* refs (intentionally retired) |
 
 **CREATE** (5 entries):
 
@@ -495,7 +495,7 @@ All four classes can move to `restart/audit/archive/`.
 | `restart/prompts/pass-contracts/TOTALITY-PASS-1-RESEARCH.md` | currently dead-ref per README.md:9 |
 | `restart/prompts/pass-contracts/TOTALITY-PASS-2-PROFILE.md` | same |
 | `restart/prompts/pass-contracts/TOTALITY-PASS-3-HARDENING.md` | same |
-| `restart/skinny/audit/archive/README.md` | one-liner pointer to per-iteration archive shape |
+| `restart/skinny/tranches/archive/README.md` | one-liner pointer to per-iteration archive shape |
 | `restart/audit/archive/README.md` | same for hardening + pass-* archive |
 
 ---
@@ -530,7 +530,7 @@ Expected impact (per IMPLEMENTATION-PACKET-SK-V7 §0.1 + §2 exit gate):
 - No Track 1 / Track 2 regression (W0 is comparator-only).
 - Hard cap 60 min.
 
-Companion write: `restart/skinny/audit/SK-V7-COHORT/wave-0-strict-baseline.md`
+Companion write: `restart/skinny/tranches/sk-v7/research/wave-0-strict-baseline.md`
 documenting the per-row Mbps delta. This file is currently dead-referenced
 from HANDOFF-SK-V7.md + IMPLEMENTATION-PACKET-SK-V7.md (the W0 owner-paths
 section).

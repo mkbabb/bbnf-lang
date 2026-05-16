@@ -35,10 +35,10 @@ Required artefacts read:
 | `restart/research/topic-7-green-red-incremental.md` | Recovery nodes and typed placeholder pressure; only PASS-1 `ErrorDirective` / recovery fact producer wording is in scope. |
 | `restart/research/topic-8-simd-dfa.md` | No PASS-1-owned §5/§7 item found; SIMD/regex refinements route to PASS-2/SYNTHESIS. |
 | `restart/research/INDEX.md` §2/§3 | Research output contract, topic routing, adversarial-finding obligation. |
-| `restart/prompts/RESEARCH-FOLD-ORCHESTRATOR.md` Phase 2 | PASS-1 fold routing and §6 escalation rule. |
-| `restart/prompts/AMENDMENT-DISPATCH.md` §1 | Verify-then-patch discipline. |
+| `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` Phase 2 | PASS-1 fold routing and §6 escalation rule. |
+| `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` §1 | Verify-then-patch discipline. |
 | `restart/README.md` gestalt and §13 | Voice, lock posture, current risky type wording, two-surface grammar authority. |
-| `restart/locks/14-LOCKS.md` | Lock 1, Lock 2, Lock 4, Lock 10, Lock 13, Lock 14 boundaries. |
+| `restart/locks/LOCKS.md` | Lock 1, Lock 2, Lock 4, Lock 10, Lock 13, Lock 14 boundaries. |
 | `restart/audit/pass-1-substrate/PASS-1.md` | Current target text and amendment anchor lines. |
 | `HARDENING-PASS-1-V5.md` | PASS-1 V5 blockers and watch items. |
 | `HARDENING-CONSOLIDATED-V5.md` | V5 bundle map and narrow-amendment posture. |

@@ -6,7 +6,7 @@ Workspace: `/Users/mkbabb/Programming/bbnf-lang`
 ## Authority read
 
 - `skinny/REDRESS.md` items 60-61.
-- `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md` Candidate 1 and Candidate 2 sections.
+- `restart/skinny/tranches/sk-v6/SYNTHESIS-WAVE-1-PLAN.md` Candidate 1 and Candidate 2 sections.
 - `skinny/crates/runtime/src/grammars/json/generated.rs`.
 - `skinny/crates/parse-that-regex/src/lib.rs`.
 - Existing focused Candidate 2 profiles under `/tmp/skv6-wave2-candidate2-profiles`.

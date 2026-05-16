@@ -1,6 +1,6 @@
 # SK-V6 Wave 1c R2c: Medium/Long String Distribution and Threshold Plan Post-Candidate4
 
-Scope: retained parse string-distribution analysis after Candidate4 (`ContainerNext`) landed. This report does not edit repo files. It reads `skinny/REDRESS.md` entries 60-63, `restart/skinny/audit/SK-V6-COHORT/skv6-R4b-string-distribution.md`, and current `skinny/RESULTS.md`, then recomputes corpus string buckets directly from the manifest paths in `skinny/crates/test-fixtures/corpus/json/manifest.toml`.
+Scope: retained parse string-distribution analysis after Candidate4 (`ContainerNext`) landed. This report does not edit repo files. It reads `skinny/REDRESS.md` entries 60-63, `restart/skinny/tranches/sk-v6/research/skv6-R4b-string-distribution.md`, and current `skinny/RESULTS.md`, then recomputes corpus string buckets directly from the manifest paths in `skinny/crates/test-fixtures/corpus/json/manifest.toml`.
 
 Hard cap: 30 minutes. Report path: `/tmp/skv6-R2c-string-thresholds-post-c4.md`.
 

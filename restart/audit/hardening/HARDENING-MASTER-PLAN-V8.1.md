@@ -28,7 +28,7 @@ Mandatory read set:
 - `restart/MIGRATION.md` skim (verify untouched per Phase 8.4 fold)
 - `restart/audit/hardening/HARDENING-MASTER-PLAN-V8.md` (V8 baseline; 11 punch items)
 - `restart/audit/hardening/HARDENING-CONSOLIDATED-V8.md` (V8 cohort, 41 items, 4 tiers)
-- `restart/locks/14-LOCKS.md` (architectural commitments)
+- `restart/locks/LOCKS.md` (architectural commitments)
 - `restart/HANDOFF.md`, `restart/README.md` (Phase 8.3.1 surfaces)
 
 Phase 8.4 commit chain (4 fold agents + 4 classifications + trio commit):
@@ -62,7 +62,7 @@ additions) hold post-Phase-8.4.
 
 | Item | Verification | Status |
 |---|---|---|
-| Q1 GADT V1 in Lock 4 | `restart/locks/14-LOCKS.md:40` carries "**V1 type system folds higher-rank polymorphism via DK13 algorithmic completeness; GADT user-facing surface lands V1: pattern-match arms admit branch-local-equality refinements (`Pattern @ where T = U -> Block` per the §6 BBNF grammar amendment); OutsideIn(X)-style implication constraints solved at `passes/types/` carry the equalities through to `LayoutFacts`; the user-facing diagnostic `BBNF-LOCAL-EQUALITY-ANNOTATION` is emitted when a match-arm refinement annotation is missing or ill-typed.**" | **PASS** |
+| Q1 GADT V1 in Lock 4 | `restart/locks/LOCKS.md:40` carries "**V1 type system folds higher-rank polymorphism via DK13 algorithmic completeness; GADT user-facing surface lands V1: pattern-match arms admit branch-local-equality refinements (`Pattern @ where T = U -> Block` per the §6 BBNF grammar amendment); OutsideIn(X)-style implication constraints solved at `passes/types/` carry the equalities through to `LayoutFacts`; the user-facing diagnostic `BBNF-LOCAL-EQUALITY-ANNOTATION` is emitted when a match-arm refinement annotation is missing or ill-typed.**" | **PASS** |
 | Q1 GADT V1 in ARCH §8.2 | `restart/ARCHITECTURE.md:1284-1303` lists the five named mechanisms ending with "GADT branch-local-equality refinement (Phase 8.3.1 V1 fold; OutsideIn(X) implication constraints discharged at `passes::types` and propagated to `LayoutFacts`)"; `restart/ARCHITECTURE.md:1305-1315` re-asserts "GADT branch-local-equality refinements are V1 user-facing surface". | **PASS** |
 | Q3 Function composition library deleted | `rg -n 'function composition library' restart/MASTER-PLAN.md` returns only `restart/MASTER-PLAN.md:866` (Phase 8.3.1 retirement note: "Q3 (function composition library DELETE)") and `restart/MASTER-PLAN.md:877` (δ9 RETIRED row: "Phase 8.3.1 Q3 user adjudication DELETED the library entirely; V1 function-value surface absorbs every composition use case via inline closure expression; trio carries no V2 row"). All living references retired; only deletion archaeology remains. | **PASS** |
 | Q4 V5.1 prune | `ls restart/audit/hardening/ \| grep V5.1` returns zero. The pruned mid-cycle artefact is gone. | **PASS** |
@@ -381,7 +381,7 @@ READY.
 
 | # | Lane | Surface | Verification | V8.1 Status |
 |---:|---|---|---|---|
-| 1 | Lane 1 — Lock-Adherence | Lock 1 (tape substrate) | `restart/locks/14-LOCKS.md:34` carries the substrate identity; ARCH §9.1 (line 1382 +) carries the canonical tape; §27 Phase 8.4 fold did not touch substrate. | honored |
+| 1 | Lane 1 — Lock-Adherence | Lock 1 (tape substrate) | `restart/locks/LOCKS.md:34` carries the substrate identity; ARCH §9.1 (line 1382 +) carries the canonical tape; §27 Phase 8.4 fold did not touch substrate. | honored |
 | 2 | Lane 1 — Lock-Adherence | Lock 4 (per-domain orthogonality + GADT V1) | `14-LOCKS.md:40` carries DK13 + GADT V1 fold (Phase 8.3.1); ARCH §8.2:1305-1315 implements the user-facing surface; csp-solver carries CHR-improvement helper per §8.2:1295-1299. | honored |
 | 3 | Lane 1 — Lock-Adherence | Lock 5 (Backend trait per-backend lower) | Backend trait at ARCH §7.5:1101-1117 carries the post-α1 two-method shape; V1 RustBackend impl + V2 WasmBackend + V2 TsBackend deferred per §7.5 obligation table at lines 1124-1127. | honored (post-α1) |
 | 4 | Lane 1 — Lock-Adherence | Lock 8 (SOTA gates) | M1 Pro Rust-line at MASTER-PLAN §4:131-138 (six gate rows); SOTA-parity vs SOTA-beat at lines 145-154 (post-δ8 fold); WASM defers post-V1 per ARCH §7.5. | honored (post-δ8) |

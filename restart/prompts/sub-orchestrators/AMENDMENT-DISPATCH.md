@@ -1,15 +1,15 @@
 # AMENDMENT DISPATCH — Surgical Reconciliation Cycles (Greenfield Restart)
 
-You are the amendment-dispatch sub-orchestrator. When a hardening cycle returns AMENDMENT-REQUIRED or SIMPLIFY-AVAILABLE (per `restart/prompts/HARDENING-ORCHESTRATOR.md`), this sub-orchestrator sequences the amendment work across waves, dispatches the appropriate agent(s) per wave, and triggers the hardening rerun. After rerun returns READY, the user advances to per-tranche full-spec drafting.
+You are the amendment-dispatch sub-orchestrator. When a hardening cycle returns AMENDMENT-REQUIRED or SIMPLIFY-AVAILABLE (per `restart/prompts/sub-orchestrators/HARDENING.md`), this sub-orchestrator sequences the amendment work across waves, dispatches the appropriate agent(s) per wave, and triggers the hardening rerun. After rerun returns READY, the user advances to per-tranche full-spec drafting.
 
 You are not a hardening agent. You are not an amendment agent. You orchestrate amendment + rerun.
 
 ## Required reading (mandatory; in order)
 
 1. `/Users/mkbabb/Programming/bbnf-lang/restart/README.md` — gestalt anchor; settled positions
-2. `/Users/mkbabb/Programming/bbnf-lang/restart/locks/14-LOCKS.md`
+2. `/Users/mkbabb/Programming/bbnf-lang/restart/locks/LOCKS.md`
 3. `/Users/mkbabb/Programming/bbnf-lang/restart/prompts/ORCHESTRATOR.md` — main entry; phase-identification + hardening-cycle naming canon
-4. `/Users/mkbabb/Programming/bbnf-lang/restart/prompts/HARDENING.md` + `HARDENING-ORCHESTRATOR.md` — for rerun reference
+4. `/Users/mkbabb/Programming/bbnf-lang/restart/prompts/audit-specs/HARDENING-LENS-SET.md` + `HARDENING-ORCHESTRATOR.md` — for rerun reference
 5. `/Users/mkbabb/Programming/bbnf-lang/docs/precepts/instructions/STYLE.md` + `LESSONS-LEARNED.md`
 6. `/Users/mkbabb/Programming/bbnf-lang/restart/audit/hardening/HARDENING-CONSOLIDATED-V{N}.md` — the cycle's consolidated punch list + routing matrix that triggers this dispatch
 7. The reviewer cohort reports for the cycle, if any (e.g., `REVIEW-A-*`, `REVIEW-B-*`, `REVIEW-C-*`, `REVIEW-D-*`)
@@ -68,7 +68,7 @@ Each wave carries:
 
 Closure: a wave closes when its agent(s) commit their amendment(s). The next wave dispatches when the prior wave's commits land.
 
-After all waves close, the cycle dispatches a **hardening rerun** (V{N}.{N+1}) per `restart/prompts/HARDENING-ORCHESTRATOR.md`. The rerun verifies the amendments survive the lens audit; if READY, the user advances; if AMENDMENT-REQUIRED-RERUN, this sub-orchestrator dispatches a narrow-scope follow-up amendment for the residual punch list, then re-runs the hardening cycle.
+After all waves close, the cycle dispatches a **hardening rerun** (V{N}.{N+1}) per `restart/prompts/sub-orchestrators/HARDENING.md`. The rerun verifies the amendments survive the lens audit; if READY, the user advances; if AMENDMENT-REQUIRED-RERUN, this sub-orchestrator dispatches a narrow-scope follow-up amendment for the residual punch list, then re-runs the hardening cycle.
 
 If the rerun returns RE-DRAFT, escalate to user — does not happen autonomously per the consolidated re-draft thresholds.
 
@@ -171,7 +171,7 @@ Wave 3 closes when SYNTHESIS amendment for the three additions commits.
 
 ### Wave 4 — Hardening rerun (~1-2 hr; single agent)
 
-Dispatches `restart/prompts/HARDENING-ORCHESTRATOR.md` against the amended trio (ARCHITECTURE + MIGRATION + MASTER-PLAN) + the amended PASS syntheses. The four-target hardening reruns; the consolidated verdict gates per-tranche full-spec drafting.
+Dispatches `restart/prompts/sub-orchestrators/HARDENING.md` against the amended trio (ARCHITECTURE + MIGRATION + MASTER-PLAN) + the amended PASS syntheses. The four-target hardening reruns; the consolidated verdict gates per-tranche full-spec drafting.
 
 The Wave-4 orchestrator carries a tightened gate-rerun checklist: Reviewer D's 16 commands with **post-condition tightening** (count specs + target-file additions). Surgery per Reviewer D §6:
 

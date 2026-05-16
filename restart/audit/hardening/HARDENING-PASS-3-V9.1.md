@@ -8,7 +8,7 @@
 | Verification cycle | V9.1 |
 | Target lines audited | 591 |
 | Verification time | 2026-05-07 18:16:41 EDT |
-| Inputs read | `restart/prompts/HARDENING.md`; `restart/audit/hardening/HARDENING-PASS-3-V9.md`; `restart/audit/hardening/HARDENING-CONSOLIDATED-V9.md`; `restart/audit/pass-3-runtime/PASS-3.md`; `restart/ARCHITECTURE.md` section 7.4 |
+| Inputs read | `restart/prompts/audit-specs/HARDENING-LENS-SET.md`; `restart/audit/hardening/HARDENING-PASS-3-V9.md`; `restart/audit/hardening/HARDENING-CONSOLIDATED-V9.md`; `restart/audit/pass-3-runtime/PASS-3.md`; `restart/ARCHITECTURE.md` section 7.4 |
 | Scope boundary | Verification report only; no target-document edits |
 | Final decision | **AMENDMENT-REQUIRED-NARROW** |
 

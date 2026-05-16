@@ -177,7 +177,7 @@ walks) exercise distinct code paths.
 
 ## §5. SK-V4 Wave 1 Commitment Level
 
-Source: `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md`
+Source: `restart/skinny/tranches/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md`
 §3 (lines 96-128).
 
 **Goal-declared, not specced.** What is named:
@@ -294,6 +294,6 @@ none of which the bench code provides.
 - `/Users/mkbabb/Programming/bbnf-lang/skinny/crates/codegen/src/lib.rs:60-76,110-118`
 - `/Users/mkbabb/Programming/bbnf-lang/skinny/crates/bbnf-bench/src/direct_struct.rs:138-202,204-353`
 - `/Users/mkbabb/Programming/bbnf-lang/skinny/grammars/json.bbnf` (18 LOC)
-- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md:96-128`
-- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/audit/SK-V5-COHORT/skv5-A4-tape-union-audit.md`
-- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/audit/SK-V5-COHORT/skv5-B2-direct-attribution.md`
+- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md:96-128`
+- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v5/research/skv5-A4-tape-union-audit.md`
+- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v5/research/skv5-B2-direct-attribution.md`

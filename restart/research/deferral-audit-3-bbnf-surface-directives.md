@@ -18,7 +18,7 @@ Greenfield-mandate audit of the BBNF V1 source surface: what grammar productions
 | `restart/ARCHITECTURE.md:1015-1058` | §7.4 Diagnostic Vocabulary | consolidated `BBNF-*` code catalogue (binds the rename surface) |
 | `restart/audit/pass-3-runtime/PASS-3.md:84-122` | §3 Path / select commitments | `pointer!` and `select!` validation surface; canonical macro spelling |
 | `docs/ffuzzy.md:597-645` | three-primitive walkback | `@transducer` proposal retracted; runtime walker is ~30 LOC; user kept lookbehind, dropped rewrite-mode and grammar-level Unicode |
-| `restart/locks/14-LOCKS.md:46`, `:52`, `:60` | Lock 7, Lock 10, Lock 14 | path crate consolidation; auto-detect Pratt/SIMD; full grammar generalisation |
+| `restart/locks/LOCKS.md:46`, `:52`, `:60` | Lock 7, Lock 10, Lock 14 | path crate consolidation; auto-detect Pratt/SIMD; full grammar generalisation |
 
 ### §1.2 Audit posture
 
@@ -47,7 +47,7 @@ The greenfield BBNF EBNF lives at `restart/audit/pass-1-substrate/PASS-1.md:194-
 | `let` bindings in expression context | absent | **DEFER** | **DEFER** | Captures are introduced by `RuleParams`, `Closure` params, and chain-step bindings; an expression-level `let` would force HM to track block-scoped existentials, opening the GADT/local-equality gate the type system explicitly closes (`ARCHITECTURE.md:1161-1166`, diagnostic `BBNF-LOCAL-EQUALITY-ANNOTATION`). |
 | `if` / `else` as expressions | absent | **DEFER** | **DEFER** | Branching is owned by `Alt` (parser branching) and by `@host fn` block bodies (host computational branching). A grammar-surface `if` blurs the parser/host boundary the architecture is at pains to keep separate. |
 | Annotation surface `e : T` (ascription) | `Ref ::= Ident GenericArgs?` and `MapTail`/`ReturnType` carry typed annotation; no infix `:` | **PRESENT** as `ReturnType ::= "->" Type` and `Param ::= Ident ":" Type`; **no infix expression-level `:`** | **KEEP** | The hybrid annotation surface (`restart/README.md:264-266`) is honoured at the rule, generic-param, host-fn-param, and return-type sites. An expression-level `e : T` would multiply diagnostic provenance without adding inference power; HM principal schemes already converge without it. |
-| Currently deferred V1 grammar items per Lock 10 | `restart/locks/14-LOCKS.md:52` | retired `@pratt` / `@simd` directives; auto-detection only | **DISCARD** | Honoured by `restart/README.md:180-183`; mentioned as forbidden output at `restart/MASTER-PLAN.md:204` and HARDENING-CONSOLIDATED-V6.md:151. No surface; no diagnostic teaches them. |
+| Currently deferred V1 grammar items per Lock 10 | `restart/locks/LOCKS.md:52` | retired `@pratt` / `@simd` directives; auto-detection only | **DISCARD** | Honoured by `restart/README.md:180-183`; mentioned as forbidden output at `restart/MASTER-PLAN.md:204` and HARDENING-CONSOLIDATED-V6.md:151. No surface; no diagnostic teaches them. |
 | GADT / higher-rank / row-polymorphism | `ARCHITECTURE.md:1161-1171`, `PASS-1.md:74-75` | **DEFER** with named diagnostic | **DEFER** | `BBNF-LOCAL-EQUALITY-ANNOTATION` is the named amendment gate. V1 is rank-1 HM; opening this surface requires reopening the type-system proof (Dunfield-Krishnaswami / OutsideIn(X)). |
 | Open-row / structural record subtyping | `PASS-1.md:75`, `ARCHITECTURE.md:1168-1171` | **DEFER** | **DEFER** | Record narrowing in V1 is finite generated-shape coercion only; row polymorphism routes to a later type-system gate. |
 
@@ -72,7 +72,7 @@ The V1 grammar surface as `PASS-1.md:194-227` carries it is the **lean, small, r
 
 | Directive | Path:line | Status | Verification |
 |---|---|---|---|
-| `@pratt` | `restart/README.md:182`, `restart/locks/14-LOCKS.md:52`, `MASTER-PLAN.md:204` | **RETIRED** | `rg "@pratt" restart/{README,ARCHITECTURE,MASTER-PLAN,MIGRATION}.md restart/audit/pass-*` returns only Lock 10 prohibition rows and forbidden-output rows. `BBNF-OPT001` (`ARCHITECTURE.md:1040`) explains rejection by cost evidence; the diagnostic body does not teach `@pratt` (`restart/audit/hardening/HARDENING-PASS-2-V5.md:222`). |
+| `@pratt` | `restart/README.md:182`, `restart/locks/LOCKS.md:52`, `MASTER-PLAN.md:204` | **RETIRED** | `rg "@pratt" restart/{README,ARCHITECTURE,MASTER-PLAN,MIGRATION}.md restart/audit/pass-*` returns only Lock 10 prohibition rows and forbidden-output rows. `BBNF-OPT001` (`ARCHITECTURE.md:1040`) explains rejection by cost evidence; the diagnostic body does not teach `@pratt` (`restart/audit/hardening/HARDENING-PASS-2-V5.md:222`). |
 | `@simd` | as above; plus `restart/research/topic-8-simd-dfa.md:511`, `:861` | **RETIRED** | `BBNF-OPT002` (`ARCHITECTURE.md:1041`) explains rejection without `@simd hint may force` wording. PASS-2 V5.1 amendment closed the leak. |
 | `@phf` | `restart/README.md:182` | **RETIRED** | Auto-detected via `passes::recognizers` keyword-set detection. |
 | `@recover` (standalone, top-level) | `ARCHITECTURE.md:1134`, `PASS-3.md:190-191` | **FOLDED** into `@error(recover = ...)` | "PASS-3 amendment; no production for `Recover ::= ...` outside `@error` body." Migration-alias only if SYNTHESIS keeps a parser hook (`PASS-3.md:190`). The greenfield grammar parser rejects bare `@recover`. |
@@ -214,7 +214,7 @@ The hardening corpus contains many `pointer!` citations that survive as **deleti
 
 Older hardening rounds (V2-V5) record the path the corpus walked; they are **historical** in shape but their grep gates are referenced by the V6 close. The rename should propagate cleanly because the prior verdict ("`path!` is the deprecated alias") is being inverted, not erased.
 
-### §4.10 `restart/locks/14-LOCKS.md`
+### §4.10 `restart/locks/LOCKS.md`
 
 | Line | Verbatim | Rename target |
 |---|---|---|
@@ -294,7 +294,7 @@ While auditing, the following naming inconsistencies surfaced as candidates for 
 | "JSON-pointer" / "json pointer" naming in path-DSL prose | `MASTER-PLAN.md:799` (cookbook title `cookbook/path-pointer.md`), various explainer prose | the path-DSL absorbed JSON-pointer ergonomics from sonic-rs; cookbook page named `path-pointer.md` | **RENAME** cookbook page to `cookbook/path-dsl.md`; preserve "JSON-pointer-style" as influence-attribution prose only. |
 | `sib_skip` / `sibling_skip` | `PASS-3.md:174` (`sibling_skip: u32`) and `topic-6-tape.md:102, 180` (`sib_skip`) | one document uses long form, another uses short | **STANDARDISE** to `sibling_skip` per the canonical PASS-3 token shape. Cosmetic; receiver Tranche B.W2 (tape token packing). |
 | `RecoveryKind` variant names | `PASS-3.md:248, 261-263` (`{Error, Missing, Substituted}`) | three-variant set tracks treesitter (`Error` + `Missing`) plus a `Substituted` for `@error(recover = ...)` substitution semantics | **KEEP**; the names are precise. |
-| `__EAGER_EMPTY_PATH` magic-name | `ARCHITECTURE.md:823`, `PASS-2.md:180`, `restart/locks/14-LOCKS.md:38` | underscore-prefixed magic name for Lock 3 elision sentinel | **KEEP**; it is a runtime-internal const, not a public surface. |
+| `__EAGER_EMPTY_PATH` magic-name | `ARCHITECTURE.md:823`, `PASS-2.md:180`, `restart/locks/LOCKS.md:38` | underscore-prefixed magic name for Lock 3 elision sentinel | **KEEP**; it is a runtime-internal const, not a public surface. |
 
 ### §6.1 Other naming verdict
 
@@ -348,7 +348,7 @@ The BBNF V1 surface is settled: a small EBNF (PASS-1.md §6), three directives, 
 - `restart/MASTER-PLAN.md` (6 sites)
 - `restart/audit/pass-2-codegen/PASS-2.md` (1 site)
 - `restart/audit/pass-3-runtime/PASS-3.md` (~22 sites including verbatim diagnostic strings)
-- `restart/locks/14-LOCKS.md` (2 sites)
+- `restart/locks/LOCKS.md` (2 sites)
 - `restart/research/` (5 sites)
 - `restart/audit/hardening/` (~10 inversion sites carrying gate evidence)
 

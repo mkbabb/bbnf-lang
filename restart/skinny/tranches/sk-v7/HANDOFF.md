@@ -8,13 +8,13 @@ The implementation agent's reading order:
 
 1. `restart/prompts/README.md` (framework gestalt).
 2. `restart/prompts/ORCHESTRATOR.md` (phase identification + dispatch matrix).
-3. `restart/prompts/PASS-ALPHA.md` (this packet's contract).
-4. `restart/prompts/SKINNY-PASSES.md` (per-wave triumvirate).
-5. `restart/skinny/audit/GRAND-SYNTHESIS-SK-V7.md` (the why).
-6. `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V7.md` (the what + when).
+3. `restart/prompts/pass-contracts/PASS-ALPHA.md` (this packet's contract).
+4. `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md` (per-wave triumvirate).
+5. `restart/skinny/tranches/sk-v7/SYNTHESIS.md` (the why).
+6. `restart/skinny/tranches/sk-v7/SPEC.md` (the what + when).
 7. `skinny/RESULTS.md` (current gate).
 8. `skinny/REDRESS.md` (rejected-route ledger).
-9. `restart/skinny/audit/SK-V7-COHORT/` (18 cohort reports).
+9. `restart/skinny/tranches/sk-v7/research/` (18 cohort reports).
 
 ## 1. Where SK-V7 Stands
 

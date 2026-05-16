@@ -3,7 +3,7 @@
 Date: 2026-05-14.
 
 Authority: SK-V6 Wave 1 cohort reports under
-`restart/skinny/audit/SK-V6-COHORT/`, current `skinny/RESULTS.md`, and
+`restart/skinny/tranches/sk-v6/research/`, current `skinny/RESULTS.md`, and
 `skinny/REDRESS.md` entries 50-72. This document is the Wave 1 PLAN artifact.
 It does not prescribe a kernel from SK-V5 hypothesis transfer; every candidate
 below is tied to fresh generated-runtime profile evidence.
@@ -298,7 +298,7 @@ UTF-8 validation.
 
 Candidate 1 and Candidate 2 have now been falsified and recorded in
 `skinny/REDRESS.md` items 60-61. The Wave 1b cohort reports live at
-`restart/skinny/audit/SK-V6-COHORT/skv6-R1b-string-boundary.md` through
+`restart/skinny/tranches/sk-v6/research/skv6-R1b-string-boundary.md` through
 `skv6-R6b-measurement-attribution.md`.
 
 Candidate 1 result: removing the retained tiny-string probe was rejected. It
@@ -426,7 +426,7 @@ reduced the redundant value re-entry boundary and moved array-heavy rows, but
 retained parse still has 13 outcome-G rows.
 
 The Wave 1c cohort reports live at
-`restart/skinny/audit/SK-V6-COHORT/skv6-R1c-retained-string-post-c4.md`
+`restart/skinny/tranches/sk-v6/research/skv6-R1c-retained-string-post-c4.md`
 through `skv6-R6c-icache-branch-post-c4.md`. Their binding findings:
 
 | Report | Binding finding |
@@ -592,7 +592,7 @@ only +0.99% on `unicode_escapes`, +0.11% on `unicode_mixed`, +1.75% on
 `y_string_unicode`, +1.54% on `distinct_values`, and -0.01% on `gsoc-2018`.
 That rejects direct source-hook folding as the direct close.
 
-The Wave 1d reports in `restart/skinny/audit/SK-V6-COHORT/` refine the direct
+The Wave 1d reports in `restart/skinny/tranches/sk-v6/research/` refine the direct
 candidate without reopening REDRESS 54, REDRESS 55, or REDRESS 66:
 
 - R1d names parser-owned decoded scratch as the next escaped-string
@@ -684,7 +684,7 @@ moved the wrong way: `unicode_escapes` 4999 -> 2798 Mbps (-44.03%),
 `y_string_unicode` sample was also negative. Generated parser control is the
 wrong owner for escaped-string materialization on this host.
 
-The Wave 1e reports in `restart/skinny/audit/SK-V6-COHORT/` identify the next
+The Wave 1e reports in `restart/skinny/tranches/sk-v6/research/` identify the next
 local fact:
 
 - R1e proposes a standalone decoded-string primitive under the existing
@@ -771,7 +771,7 @@ crates, or a parallel source pass.
 
 ## 12. Wave 1f Revision: DirectBuild Field Facts
 
-The Wave 1f cohort is now archived under `restart/skinny/audit/SK-V6-COHORT/`:
+The Wave 1f cohort is now archived under `restart/skinny/tranches/sk-v6/research/`:
 
 - R1f names the next admissible route as an existing-BIR `DirectBuildField`
   fact extension, not a decoder/materializer tweak.
@@ -900,7 +900,7 @@ closure for arbitrary grammars.
 
 ## 13. Wave 1g Revision: Direct Output Contract Split
 
-The Wave 1g cohort is now archived under `restart/skinny/audit/SK-V6-COHORT/`:
+The Wave 1g cohort is now archived under `restart/skinny/tranches/sk-v6/research/`:
 
 - R1g recommends adding a supplemental `real_typed_struct` gate first, not
   replacing the digest matrix immediately. The initial fixtures are `twitter`
@@ -1035,7 +1035,7 @@ kernel. It is a host/API output schema lowered into the existing
 `DirectBuild { shape, fields }` payload.
 
 The schema-source cohort is archived at
-`restart/skinny/audit/SK-V6-COHORT/`:
+`restart/skinny/tranches/sk-v6/research/`:
 
 - `skv6-schema-A-output-schema-boundary.md`: schema enters at the host/API
   boundary and feeds `ShapeFacts` / `DirectBuildField`, not BBNF syntax.

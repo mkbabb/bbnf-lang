@@ -14,7 +14,7 @@ report is the sole output.
 | Verification time | 2026-05-07T18:16:26-04:00 |
 | Primary target files | `restart/ARCHITECTURE.md` (1,725 lines), `restart/MIGRATION.md` (817), `restart/MASTER-PLAN.md` (886) |
 | State files | `restart/HANDOFF.md` (185), `restart/prompts/ORCHESTRATOR.md` (145) |
-| Hardening authorities | `restart/prompts/HARDENING.md`, `restart/audit/hardening/HARDENING-MASTER-PLAN-V9.md`, `restart/audit/hardening/HARDENING-CONSOLIDATED-V9.md` |
+| Hardening authorities | `restart/prompts/audit-specs/HARDENING-LENS-SET.md`, `restart/audit/hardening/HARDENING-MASTER-PLAN-V9.md`, `restart/audit/hardening/HARDENING-CONSOLIDATED-V9.md` |
 | Support file inspected | `restart/README.md` (458) |
 
 The worktree already contained external V9 edits and untracked V9 hardening

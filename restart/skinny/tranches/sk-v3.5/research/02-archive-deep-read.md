@@ -323,7 +323,7 @@ emitter helper existed but the IR never populated it. Same fate for
 
 Lock 1 of the current restart names the columnar SoA explicitly as
 **buried but not denied**:
-`/Users/mkbabb/Programming/bbnf-lang/restart/locks/14-LOCKS.md:34`:
+`/Users/mkbabb/Programming/bbnf-lang/restart/locks/LOCKS.md:34`:
 
 > The 2,000-commit prior failure was implementation, not concept:
 > orthogonal codepaths (the Vec<OpenFrame>::clone parallel substrate
@@ -397,7 +397,7 @@ alongside `Vec<OpenFrame>::clone`.
 **PSI was NOT an OpenFrame ladder.** OpenFrame
 (`Vec<OpenFrame>::clone` at the 86.07% samply pathology) was a
 *different* Era IV/V parallel substrate documented at Lock 1 of
-`restart/locks/14-LOCKS.md:34`. OpenFrame and PSI co-existed; both are
+`restart/locks/LOCKS.md:34`. OpenFrame and PSI co-existed; both are
 named as separate failure mechanisms.
 
 **PSI was a precomputed-payload-job stream, paired with the DTA
@@ -441,7 +441,7 @@ parallel-fill path. See
 
 | Comparison | Verdict | Citation |
 |---|---|---|
-| PSI = OpenFrame? | **No.** Different artefacts. OpenFrame is the `Vec<OpenFrame>::clone` parallel-substrate pathology; PSI is the per-leaf payload-job stream. They co-existed in Era V; both are listed separately as Lock 1 forbidden surfaces. | `restart/locks/14-LOCKS.md:34` |
+| PSI = OpenFrame? | **No.** Different artefacts. OpenFrame is the `Vec<OpenFrame>::clone` parallel-substrate pathology; PSI is the per-leaf payload-job stream. They co-existed in Era V; both are listed separately as Lock 1 forbidden surfaces. | `restart/locks/LOCKS.md:34` |
 | PSI = columnar SoA? | **No.** Columnar SoA is `kind`-partitioned column arrays as the tape substrate (Phase 7); PSI is a payload-fill scheduling stream (Phase 4). Columnar SoA was designed (`AV/research/04-columnar-soa.md`) but never activated; PSI was activated and shipped, then deleted. Both are listed separately as Lock 1 forbidden / buried items. | `AV/research/04-columnar-soa.md`; `psi-and-dead-substrate.md:9` |
 | PSI = an FSM-based parser? | **Adjacent but not equal.** PSI itself is a queue/buffer of `PayloadJob` records; the DTA *is* the FSM-based parser that fills the queue. They are paired but distinct: `psi.rs` (805 LOC) is the data structure + rayon drain; `driver.rs` + `dta.rs` (~3,873 LOC) is the interpreter. Together they form a "FSM scans → payload jobs → parallel scanner pool" pipeline structurally analogous to simdjson's stage-1 / stage-2 split but driven by a grammar-derived counter-DFA rather than a JSON-specific stage-1 SIMD kernel. | `06-psi-dta-parallelism.md:32-46`; `01-dta-driver-design.md:15-73` |
 
@@ -489,4 +489,4 @@ git history.
 - `/Users/mkbabb/Programming/bbnf-lang/docs/tranches/AX/FINAL.md` (491 lines) — interpreter deletion close
 - `/Users/mkbabb/Programming/bbnf-lang/docs/precepts/instructions/LESSONS-LEARNED.md` (311 lines) — cross-repo precept ledger
 - `/Users/mkbabb/Programming/bbnf-lang/restart-archive-2026-05-04/INTERROGATION-2026-05-04.md` (378 lines) — 35-question restart-of-restart synthesis
-- `/Users/mkbabb/Programming/bbnf-lang/restart/locks/14-LOCKS.md:34` — Lock 1 (the current canonical forbidden-surface list)
+- `/Users/mkbabb/Programming/bbnf-lang/restart/locks/LOCKS.md:34` — Lock 1 (the current canonical forbidden-surface list)

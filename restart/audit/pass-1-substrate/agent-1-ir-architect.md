@@ -14,7 +14,7 @@ Verdict: keep two IRs. Grammar IR is a compact semantic grammar representation; 
 | Grammar IR 12-15 variants | Keeps semantics inspectable. | Current `IrNode` already mixes semantic and backend hints. | `crates/ir/src/types/node.rs:30`-`crates/ir/src/types/node.rs:98` includes `AltDispatch` and `TokenDispatch`, which should lower later. | Define final variant fields before code migration. | REINVENT |
 | Backend IR about 22 variants | Old typed table is a useful execution catalog. | Some legacy variants encode stale terms. | The BC table includes `HostCall`, `Layout`, `PrattSpine`, `SimdScan`, and `ErrorRecovery` (`docs/tranches/BC/audit/W0-typed-ir-variant-table.md:160`-`docs/tranches/BC/audit/W0-typed-ir-variant-table.md:254`). | Reclassify table entries into backend op, side table, or deletion. | KEEP AS CATALOG |
 | Optimized side tables | Fits existing `GrammarIR` sidecar practice. | Side tables can hide invariants. | Current grammar data carries regex info, facts, recognizer decisions, configs, and cost config (`crates/ir/src/types/grammar.rs:70`-`crates/ir/src/types/grammar.rs:168`). | Every side table needs producer and consumer gates. | KEEP |
-| Tape/direct value substrate | Supports both simdjson-style tape and sonic-rs-style direct build. | Requires one API over two materializations. | Tape is locked as substrate and unioned with direct-to-struct (`restart/README.md:285`-`restart/README.md:315`, `restart/locks/14-LOCKS.md:34`). | Do not rename to ParseStream. | KEEP |
+| Tape/direct value substrate | Supports both simdjson-style tape and sonic-rs-style direct build. | Requires one API over two materializations. | Tape is locked as substrate and unioned with direct-to-struct (`restart/README.md:285`-`restart/README.md:315`, `restart/locks/LOCKS.md:34`). | Do not rename to ParseStream. | KEEP |
 
 ## §3 Architectural Commitments Ratified
 
@@ -37,7 +37,7 @@ Verdict: keep two IRs. Grammar IR is a compact semantic grammar representation; 
 
 | Receiver | Handoff |
 |---|---|
-| PASS-2 | Module layout must give `ir`, `passes`, `vm`, `host`, `cost-model`, `egraph`, and `csp-solver` sibling APIs without god directories; Lock 13 applies (`restart/locks/14-LOCKS.md:58`). |
+| PASS-2 | Module layout must give `ir`, `passes`, `vm`, `host`, `cost-model`, `egraph`, and `csp-solver` sibling APIs without god directories; Lock 13 applies (`restart/locks/LOCKS.md:58`). |
 | PASS-2 | Any proposed `source` module may own normalization and spans, but it must not rename tape to ParseStream. |
 | PASS-3 | Backend/VM/debug consumers take Backend IR plus side tables; they do not walk Grammar IR directly. |
 | PASS-3 | Host-call lowering consumes typed host metadata and `HostChain` backend operations, not grammar-specific registries. |

@@ -39,10 +39,10 @@ Per audit #1 §4: **three orchestrators is correct, post-cleanup**.
 | Prompt | Role | Genuine? | Action |
 |---|---|---|---|
 | `restart/prompts/ORCHESTRATOR.md` | Main entry; phase-identification protocol; phase-type fan-out; hardening-cycle naming canon | **GENUINE** main entry, not ceremonial | KEEP |
-| `restart/prompts/HARDENING-ORCHESTRATOR.md` | Sub-orchestrator for hardening cycles V1-V8+ | GENUINE — but Phase 1/2 historical PASS dispatch + SYNTHESIS sections retired Phase 8.0 | UPDATE — surgical PRUNE of historical Phase 1/2 |
-| `restart/prompts/RESEARCH-FOLD-ORCHESTRATOR.md` | Sub-orchestrator for research deep-dives + fold cycles | GENUINE — clean | KEEP |
-| `restart/prompts/AMENDMENT-DISPATCH.md` | Sub-orchestrator for verify-then-patch amendment cycles | GENUINE — but §3 Wave 1/2/3/4 plan is V1-historical | UPDATE — hoist §3 to schematic; preserve historical V1 plan in appendix |
-| `restart/prompts/HARDENING.md` | Per-target audit specification (lenses A-K post-Phase-8.1) | GENUINE — load-bearing | KEEP — drop SPECULATIVE verdict class per V2-deferral retirement |
+| `restart/prompts/sub-orchestrators/HARDENING.md` | Sub-orchestrator for hardening cycles V1-V8+ | GENUINE — but Phase 1/2 historical PASS dispatch + SYNTHESIS sections retired Phase 8.0 | UPDATE — surgical PRUNE of historical Phase 1/2 |
+| `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` | Sub-orchestrator for research deep-dives + fold cycles | GENUINE — clean | KEEP |
+| `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` | Sub-orchestrator for verify-then-patch amendment cycles | GENUINE — but §3 Wave 1/2/3/4 plan is V1-historical | UPDATE — hoist §3 to schematic; preserve historical V1 plan in appendix |
+| `restart/prompts/audit-specs/HARDENING-LENS-SET.md` | Per-target audit specification (lenses A-K post-Phase-8.1) | GENUINE — load-bearing | KEEP — drop SPECULATIVE verdict class per V2-deferral retirement |
 
 **ORCHESTRATOR.md is the cold-start entry**. It carries phase-identification protocol that the sub-orchestrators do not duplicate. Sub-orchestrators are invoked by ORCHESTRATOR per phase type. The user's concern (which is the right one?) resolves: ORCHESTRATOR.md.
 
@@ -74,13 +74,13 @@ Per audit #1 + #3 + #2:
 | 3 | `restart/MASTER-PLAN.md:787` | Same |
 | 4 | `restart/MASTER-PLAN.md:788` | Same |
 | 5 | `restart/MASTER-PLAN.md:790` | Same |
-| 6 | `restart/prompts/HARDENING.md:53` + `:186` | Drop SPECULATIVE verdict class from V8+ verdict set (ASPIRATIONAL stays — those route to tranche bodies, not V2) |
+| 6 | `restart/prompts/audit-specs/HARDENING-LENS-SET.md:53` + `:186` | Drop SPECULATIVE verdict class from V8+ verdict set (ASPIRATIONAL stays — those route to tranche bodies, not V2) |
 
 ### §4.3 — Class (c) — User-decision items (1 case)
 
 | Item | Path:line | Decision |
 |---|---|---|
-| GADT / `BBNF-LOCAL-EQUALITY-ANNOTATION` reserved | `Lock 4` (`restart/locks/14-LOCKS.md:40`) + `restart/ARCHITECTURE.md:1293` + `restart/audit/pass-1-substrate/PASS-1.md:117` + `restart/audit/pass-3-runtime/PASS-3.md:468` | **ASK** — fold V1 (full GADT surface) or delete the reserved code (no GADT, no V2 amendment) |
+| GADT / `BBNF-LOCAL-EQUALITY-ANNOTATION` reserved | `Lock 4` (`restart/locks/LOCKS.md:40`) + `restart/ARCHITECTURE.md:1293` + `restart/audit/pass-1-substrate/PASS-1.md:117` + `restart/audit/pass-3-runtime/PASS-3.md:468` | **ASK** — fold V1 (full GADT surface) or delete the reserved code (no GADT, no V2 amendment) |
 
 The reserved-without-emission `BBNF-LOCAL-EQUALITY-ANNOTATION` at PASS-1:117 + PASS-3:468 is a V8 simplification candidate (β2 — drop reserved emission infrastructure for cookbook-only). Coupled with audit #2's must-delete classification.
 
@@ -130,7 +130,7 @@ Any cold-start agent (Codex, Claude, etc) reads in order:
 1. `restart/HANDOFF.md` — orientation; current verdict; next move
 2. `restart/prompts/ORCHESTRATOR.md` — phase-identification + dispatch protocol
 3. `restart/README.md` — gestalt + 14 locks anchor
-4. `restart/locks/14-LOCKS.md` — settled commitments
+4. `restart/locks/LOCKS.md` — settled commitments
 5. `restart/audit/hardening/HARDENING-CONSOLIDATED-V{N}.md` (most recent; currently V8) — operating verdict
 6. `docs/precepts/instructions/STYLE.md` + `LESSONS-LEARNED.md` + `CONSUMING.md`
 
@@ -168,7 +168,7 @@ For an independent Codex agent to harden the entire corpus from cold-start:
 
 1. Codex reads `restart/HANDOFF.md` → identifies current state (V7.1 READY post-Phase-8.3; V8 SIMPLIFY-AVAILABLE pending Phase 8.4 decision).
 2. Codex reads `restart/prompts/ORCHESTRATOR.md` → identifies the phase-type table.
-3. Codex selects the hardening phase type → reads `restart/prompts/HARDENING-ORCHESTRATOR.md` + `restart/prompts/HARDENING.md`.
+3. Codex selects the hardening phase type → reads `restart/prompts/sub-orchestrators/HARDENING.md` + `restart/prompts/audit-specs/HARDENING-LENS-SET.md`.
 4. Codex dispatches 4 parallel hardener agents per HARDENING-ORCHESTRATOR Phase 3 protocol.
 5. Codex consolidates per HARDENING-ORCHESTRATOR Phase 6.
 

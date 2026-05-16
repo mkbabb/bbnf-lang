@@ -11,7 +11,7 @@ Verdict: define a reusable `AnalysisCost`-style trait and domain weights, but ke
 | Item | Pro | Con | Explication | Challenge | Verdict |
 |---|---|---|---|---|---|
 | Trait cost model | Matches `restart/README.md:211`-`restart/README.md:218`. | Weak defaults can pick poor plans. | Terminal, sequence, alt, repeat, host, layout, materialization, SIMD, and Pratt weights become scored inputs. | Record alternatives and selected score. | KEEP |
-| SOTA gates | Keeps performance claims concrete. | Too many gates can slow iteration. | SOTA targets are required by `restart/README.md:322`-`restart/README.md:349` and Lock 8 (`restart/locks/14-LOCKS.md:48`). | Separate throughput, allocation, LOC, and parity gates. | KEEP |
+| SOTA gates | Keeps performance claims concrete. | Too many gates can slow iteration. | SOTA targets are required by `restart/README.md:322`-`restart/README.md:349` and Lock 8 (`restart/locks/LOCKS.md:48`). | Separate throughput, allocation, LOC, and parity gates. | KEEP |
 | Tape/direct cost | Covers simdjson and sonic-rs patterns. | Requires one value API. | sonic-rs supports direct/lazy evidence (`restart/corpora/SOTA.md:28`-`restart/corpora/SOTA.md:58`); simdjson supports tape/on-demand evidence (`restart/corpora/SOTA.md:62`-`restart/corpora/SOTA.md:89`). | Do not regress to direct-only. | KEEP |
 | Metadata profiles | Avoids grammar switches. | Metadata schema must be strong. | Current hard-coded registry rows show the anti-pattern (`crates/ir/src/registry/strategy.rs:134`-`crates/ir/src/registry/strategy.rs:189`). | Replace with generated facts. | REINVENT |
 | Cost evidence | Makes extraction debuggable. | Adds output artifacts. | Every selected Backend IR strategy should say why it won. | Keep evidence compact. | KEEP |

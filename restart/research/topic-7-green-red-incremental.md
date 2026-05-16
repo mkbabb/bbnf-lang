@@ -68,20 +68,20 @@ inside this research slot; they are routed in §2 and §6, not asserted as facts
     progression (`restart/audit/hardening/HARDENING-PASS-3-V5.md:392-430`).
 19. Lock 1: "Tape is the substrate, properly unioned with direct-to-struct;
     columnar SoA is dead; orthogonal codepaths and parallel substrates are
-    dead" (`restart/locks/14-LOCKS.md:34`).
+    dead" (`restart/locks/LOCKS.md:34`).
 20. Lock 1 tape shape: tape is a "contiguous parsed-token-stream-with-payload
     arena, unioned with direct-to-struct typed values that borrow into it
-    (`&'i Tape<'i>` + index)" (`restart/locks/14-LOCKS.md:34`).
+    (`&'i Tape<'i>` + index)" (`restart/locks/LOCKS.md:34`).
 21. Lock 1 fault rule: plans that resurrect parallel substrates or implement
     tape with consumer-later sequencing are faults; same-wave consumer wiring
-    plus direct-to-struct union is honored (`restart/locks/14-LOCKS.md:34`).
+    plus direct-to-struct union is honored (`restart/locks/LOCKS.md:34`).
 22. Lock 14: "Full grammar generalisation; zero overfitting"; the substrate
-    carries zero grammar-specific code (`restart/locks/14-LOCKS.md:60`).
+    carries zero grammar-specific code (`restart/locks/LOCKS.md:60`).
 23. Lock 14 onboarding: every grammar plugs in through grammar source,
     workspace metadata, and only rare declaration-crate escape valves
-    (`restart/locks/14-LOCKS.md:60`).
+    (`restart/locks/LOCKS.md:60`).
 24. Lock 14 yaml gate: adding a new grammar is a config plus grammar-source
-    change with no generic-crate code change (`restart/locks/14-LOCKS.md:60`).
+    change with no generic-crate code change (`restart/locks/LOCKS.md:60`).
 25. README tape claim: the failure was implementation rather than naming; the
     greenfield substrate is "a proper tape + direct-to-struct union, called
     tape" (`restart/README.md:285-287`).
@@ -430,7 +430,7 @@ inside this research slot; they are routed in §2 and §6, not asserted as facts
 
 6. Green-data plus typed-view architecture converges.
 7. Restart claim: typed values borrow into tape through `&'i Tape<'i>` plus
-   index (`restart/README.md:296-305`; `restart/locks/14-LOCKS.md:34`).
+   index (`restart/README.md:296-305`; `restart/locks/LOCKS.md:34`).
 8. SOTA evidence: rust-analyzer uses green data, red nodes, and AST views [S2];
    rowan `SyntaxNode` wraps green data with parent and offset context [S1].
 9. Match: bbnf's direct structs can be the typed AST-like layer as long as the
@@ -618,7 +618,7 @@ inside this research slot; they are routed in §2 and §6, not asserted as facts
 1. Finding A1: "one representation" is too strong unless scoped to ownership.
 2. Contradicted lock: Lock 1, insofar as readers may interpret "one
    representation" as forbidding red/cursor views (`restart/README.md:314`;
-   `restart/locks/14-LOCKS.md:34`).
+   `restart/locks/LOCKS.md:34`).
 3. SOTA evidence: rowan's red `SyntaxNode` points to a green node and a parent
    syntax node, providing ancestors and offsets over immutable green data [S1].
 4. Proposed amendment: replace "one representation" with "one owning

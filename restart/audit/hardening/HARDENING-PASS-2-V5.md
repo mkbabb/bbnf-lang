@@ -32,15 +32,15 @@ Mandatory authority read before writing:
 | Authority | Status |
 |---|---|
 | `restart/README.md` | Read |
-| `restart/locks/14-LOCKS.md` | Read |
+| `restart/locks/LOCKS.md` | Read |
 | `restart/audit/hardening/HARDENING-CONSOLIDATED-V4.md` | Read |
 | `restart/audit/hardening/HARDENING-CONSOLIDATED.md` | Read |
 | `restart/audit/hardening/HARDENING-CONSOLIDATED-V2.md` | Read |
 | `restart/audit/hardening/HARDENING-CONSOLIDATED-V3.md` | Read |
 | `restart/research/INDEX.md` | Read |
-| `restart/prompts/HARDENING-ORCHESTRATOR.md` | Read |
-| `restart/prompts/HARDENING.md` | Read |
-| `restart/prompts/AMENDMENT-DISPATCH.md` | Read |
+| `restart/prompts/sub-orchestrators/HARDENING.md` | Read |
+| `restart/prompts/audit-specs/HARDENING-LENS-SET.md` | Read |
+| `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` | Read |
 | `docs/precepts/instructions/STYLE.md` | Read |
 | `docs/precepts/instructions/LESSONS-LEARNED.md` | Read |
 | `docs/precepts/instructions/CONSUMING.md` | Read |

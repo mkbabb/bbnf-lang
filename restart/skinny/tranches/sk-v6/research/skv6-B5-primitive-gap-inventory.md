@@ -7,8 +7,8 @@ Scope: read-only inventory across `parse-that-regex`, `bbnf-simd`, generated JSO
 ## Authorities Read
 
 - Current row authority: `skinny/RESULTS.md:3-21` retained parse rows and `skinny/RESULTS.md:25-45` direct rows.
-- A6 ledger: `restart/skinny/audit/SK-V5-COHORT/skv5-A6-research-ledger.md:19-21`, `:157-180`, `:185-210`.
-- SK-V6 synthesis: `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md:13-25`, `:40-109`, `:163-280`.
+- A6 ledger: `restart/skinny/tranches/sk-v5/research/skv5-A6-research-ledger.md:19-21`, `:157-180`, `:185-210`.
+- SK-V6 synthesis: `restart/skinny/tranches/sk-v6/SYNTHESIS-WAVE-1-PLAN.md:13-25`, `:40-109`, `:163-280`.
 - Generated retained JSON: `skinny/crates/runtime/src/grammars/json/generated.rs:12-17`, `:90-156`, `:159-214`.
 - Generated direct JSON: `skinny/crates/runtime/src/grammars/json/generated.rs:394-460`; `skinny/crates/codegen/src/json_sink_direct.rs:364-497`; `skinny/crates/codegen/src/json_typed_direct.rs:455-535`.
 - JSON scan/capacity: `skinny/crates/runtime/src/grammars/json/scan.rs:1-54`, `:107-198`, `:200-276`.

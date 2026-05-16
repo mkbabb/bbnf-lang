@@ -230,7 +230,7 @@ the stage ratio — bench averaging hides this.
 
 ### bbnf-simd Layer 1 (grammar-neutral SIMD primitive macros, dav1d-style)
 
-The Layer 1 vocabulary is already named in `restart/skinny/audit/SOTA-BEAT-
+The Layer 1 vocabulary is already named in `restart/skinny/tranches/SOTA-BEAT-
 DESIGN.md` §5.2 and partly implemented at HEAD `9eef728c`. The nine primitive
 macros — `BYTE_CLASS_FROM_TABLE_64`, `BYTE_CLASS_FROM_EQ_SET_64`,
 `BITMAP_PREFIX_XOR_64`, `BITMAP_NEXT_SET_BIT`, `BULK_EMIT_COMPRESSED`,
@@ -468,7 +468,7 @@ External authoritative anchors (all WebFetched 2026-05-13):
   — `func_ref` vs `func_new` differential discipline, `declare_func` macro
   family, `bench_new` perf instrumentation, signal-safe context-save baseline.
 
-In-tree authoritative inputs (bbnf-lang `restart/skinny/audit/`):
+In-tree authoritative inputs (bbnf-lang `restart/skinny/tranches/`):
 
 - `ASMJSON-DAV1D-GRAND-SYNTHESIS-SK-V4.md` (353 LOC, HEAD `9eef728c`) — SK-V4
   amendment establishing five-shape BackendShape, two-layer ASM vocabulary,
@@ -485,7 +485,7 @@ In-tree authoritative inputs (bbnf-lang `restart/skinny/audit/`):
   numbers on M5 Max twitter DOM-class.
 - `skinny/RESULTS.md` — current N-direct / NoGo gate with 4 parse G rows
   and 11/17 direct red rows.
-- V9.5 PSI excavation cohort under `restart/skinny/audit/V9.5-PSI-EXCAVATION/`
+- V9.5 PSI excavation cohort under `restart/skinny/tranches/sk-v3.5/research/`
   — Rust-codegen-automaton rejection result; CollapsedStage admissibility
   only as hand-authored NASM.
 

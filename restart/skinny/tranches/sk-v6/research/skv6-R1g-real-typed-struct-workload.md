@@ -10,7 +10,7 @@
   - 68: byte-output `unescape_json_string` regressed `unicode_escapes` by 4%.
   - 69: `DirectBuild` semantic string facts regressed `unicode_escapes` by
     roughly 15%.
-- `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md` section 12 outcome says the
+- `restart/skinny/tranches/sk-v6/SYNTHESIS-WAVE-1-PLAN.md` section 12 outcome says the
   generated direct string/Unicode materialization family is closed for the
   current strict digest workload. The next admissible plan must reassess the
   direct output contract: benchmark a real typed-struct workload with

@@ -3,7 +3,7 @@
 Date: 2026-05-16.
 
 Cohort: 6 restructure agents (R1-R6) archived at
-`restart/skinny/audit/SK-V7-COHORT/skv7-restructure-{R1..R6}.md` (~3,000
+`restart/skinny/tranches/sk-v7/research/skv7-restructure-{R1..R6}.md` (~3,000
 LOC of file-level inspection).
 
 ## Executive summary
@@ -19,7 +19,7 @@ The restart/ corpus is **structurally healthy but procedurally drifted**:
 
 ## Findings by agent
 
-### R1 — restart/skinny/audit/ (104 files / 32,844 LOC)
+### R1 — restart/skinny/tranches/ (104 files / 32,844 LOC)
 
 Most consequential proposal: **split SK-V6-COHORT into primary tier + redress tier**. SK-V6 mixed primary research (18 A/B/C reports, 5,521 LOC) with mid-iteration redress (30 R*-redress + 3 schema-* files, 5,562 LOC) in one directory — violates V5/V7 invariant + new-tranche-new-doc rule. Recommendation: `archive/sk-v6/cohort/` + `archive/sk-v6/cohort-redress/`. Full inbound-citation traceability preserved (V7 cohort A4 alone cites 10 of the redress files).
 
@@ -35,7 +35,7 @@ Top 3 stale items:
 2. **5 dead links to deleted SK-V3/V4 packets** in SUBSTRATE + SOTA-BEAT-DESIGN.
 3. **HARDENING.md cycle-naming table frozen at SK-V1/V2/V3+** with stale output-path convention.
 
-`restart/skinny/HARDENING.md` is **NOT a duplicate** of `restart/prompts/HARDENING.md` (post-restructure: `audit-specs/HARDENING-LENS-SET.md`). Skinny-scope (202 LOC, Lenses L/M/N) vs V1-scope (268 LOC, Lenses A-K); they compose by reference at `skinny/HARDENING.md:198`. Keep both.
+`restart/skinny/HARDENING.md` is **NOT a duplicate** of `restart/prompts/audit-specs/HARDENING-LENS-SET.md` (post-restructure: `audit-specs/HARDENING-LENS-SET.md`). Skinny-scope (202 LOC, Lenses L/M/N) vs V1-scope (268 LOC, Lenses A-K); they compose by reference at `skinny/HARDENING.md:198`. Keep both.
 
 Net: 0 deletes / 0 moves / 0 renames; in-place edits to 7 files via Pass Omega CRUD.
 
@@ -49,7 +49,7 @@ corpora: 4 files, heavily cited; no restructure needed.
 Strategy: keep latest V{n} + LIVE-CITED at top of `audit/hardening/`; move ~32 SEALED to `archive/sealed/V{n}/`. Sub-dir research/ into 5 functional bands (topics/, folds/, deferral-audits/, corpus-audits/).
 
 Pruning: 0 deletes, ~58-62 moves, ~22K LOC of moves. Audit-trail integrity 100%.
-Zero cross-references between restart/audit/ and restart/skinny/audit/.
+Zero cross-references between restart/audit/ and restart/skinny/tranches/.
 
 ### R4 — restart top-level + locks + inheritance (10 files)
 
@@ -104,7 +104,7 @@ Duplicate-section count: 5 load-bearing.
 
 5 most consequential restructure proposals:
 1. **Rename `locks/14-LOCKS.md` → `locks/LOCKS.md`** (filename misleads). EXECUTED.
-2. **Archive SK-V5 + SK-V6 cohorts** to `restart/skinny/audit/archive/SK-V{5,6}/`. DEFERRED (~220 path swaps required).
+2. **Archive SK-V5 + SK-V6 cohorts** to `restart/skinny/tranches/archive/SK-V{5,6}/`. DEFERRED (~220 path swaps required).
 3. **Author missing `pass-contracts/TOTALITY-PASS-{1,2,3}-*.md`** OR strike references from README. STRUCK (README rewritten).
 4. **Strike pre-Phase-8 prompt-suite ghosts** (`PASS-1-SUBSTRATE.md`, `PASS-2-CODEGEN.md`, `PASS-3-RUNTIME.md`, `SYNTHESIS.md`) from README §12 + HANDOFF. DEFERRED (top-level README + HANDOFF Pass Omega CRUD).
 5. **Rename + move `V9.5-PSI-EXCAVATION/`** → `archive/SK-V3.5-PSI-EXCAVATION/`. DEFERRED.
@@ -117,7 +117,7 @@ Additional findings beyond the asks:
 
 ## Executed in this commit
 
-1. **`restart/locks/14-LOCKS.md` → `LOCKS.md`** (rename).
+1. **`restart/locks/LOCKS.md` → `LOCKS.md`** (rename).
 2. **`restart/prompts/` restructure**:
    - Created subdirs: `sub-orchestrators/`, `pass-contracts/`, `audit-specs/`.
    - Moved 7 files into appropriate subdirs.
@@ -126,13 +126,13 @@ Additional findings beyond the asks:
    - Renamed `HARDENING-ORCHESTRATOR.md` → `HARDENING.md` (now in sub-orchestrators/).
    - Renamed `RESEARCH-FOLD-ORCHESTRATOR.md` → `RESEARCH-FOLD.md`.
 3. **`restart/prompts/README.md`** rewritten with actual file layout + A-K vs CH1-CH6 distinction + complete reading order.
-4. **6 R-cohort restructure reports** archived to `restart/skinny/audit/SK-V7-COHORT/`.
+4. **6 R-cohort restructure reports** archived to `restart/skinny/tranches/sk-v7/research/`.
 
 ## Deferred to Pass Omega CRUD (user approval pending)
 
 A1. **SK-V5/V6 cohort archival** (R1 + R6 #2):
-   - Move `restart/skinny/audit/SK-V5-COHORT/` → `restart/skinny/audit/archive/sk-v5/cohort/`.
-   - Move `restart/skinny/audit/SK-V6-COHORT/` → `restart/skinny/audit/archive/sk-v6/` (split into `cohort/` primary + `cohort-redress/` per R1).
+   - Move `restart/skinny/tranches/sk-v5/research/` → `restart/skinny/tranches/archive/sk-v5/cohort/`.
+   - Move `restart/skinny/tranches/sk-v6/research/` → `restart/skinny/tranches/archive/sk-v6/` (split into `cohort/` primary + `cohort-redress/` per R1).
    - Move SK-V5/V6 master docs (GRAND-SYNTHESIS, IMPLEMENTATION-PACKET, HANDOFF) → `archive/sk-v{5,6}/`.
    - ~220 path swaps across HANDOFF/INDEX/SUBSTRATE/MASTER-PLAN/ARCHITECTURE/REDRESS/RESULTS.
 
@@ -181,7 +181,7 @@ A8. **Duplicate-section consolidation** (R6):
 
 After this commit lands, the prompt suite is **self-consistent** and the
 framework is anchored. SK-V7 Wave 0 dispatch is ready per
-`restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V7.md` §2 + the one-liner
+`restart/skinny/tranches/sk-v7/SPEC.md` §2 + the one-liner
 in R6 §SK-V7-W0:
 
 ```bash

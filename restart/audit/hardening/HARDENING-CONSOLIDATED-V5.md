@@ -258,7 +258,7 @@ V5 did not surface a structural lock contradiction:
   correction.
 
 The V5 result is therefore **AMENDMENT-REQUIRED with <=10 narrow bundles**.
-Per `restart/prompts/RESEARCH-FOLD-ORCHESTRATOR.md` §2, Phase 0.5 should run
+Per `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` §2, Phase 0.5 should run
 one narrow amendment cycle, then a V5.1 verification cycle before Phase 1
 research dispatch.
 
@@ -317,7 +317,7 @@ Hereupon Phase 0 returns **AMENDMENT-REQUIRED**.
 The next step is Phase 0.5 narrow amendment:
 
 1. Dispatch three amendment agents on the routing matrix in §4.
-2. Require verify-then-patch pre-fill per `restart/prompts/AMENDMENT-DISPATCH.md` §1.
+2. Require verify-then-patch pre-fill per `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` §1.
 3. Preserve disjoint write ownership.
 4. Stage only intended paths.
 5. Commit each amendment with a body that states why, what landed, evidence,

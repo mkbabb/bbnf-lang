@@ -1,14 +1,14 @@
 # HARDENING-MASTER-PLAN-V9.2 — Lazy-Tape Amendment Absorption Audit
 
-Cycle V9.2 audits the lazy-offset tape amendment proposal at `restart/skinny/audit/LAZY-TAPE-DESIGN.md` against the MASTER-PLAN trio (`restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`, `restart/MIGRATION.md`) plus Lock 1. The output is a per-target absorption punch list. Scope is read-only against the live trio at `pre-restart-2026-05-04` lineage. This report does not amend the trio; it specifies the surgical edits that admit a dual-mode (`Eager` | `Lazy`) tape substrate under the existing locks.
+Cycle V9.2 audits the lazy-offset tape amendment proposal at `restart/skinny/tranches/LAZY-TAPE-DESIGN.md` against the MASTER-PLAN trio (`restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`, `restart/MIGRATION.md`) plus Lock 1. The output is a per-target absorption punch list. Scope is read-only against the live trio at `pre-restart-2026-05-04` lineage. This report does not amend the trio; it specifies the surgical edits that admit a dual-mode (`Eager` | `Lazy`) tape substrate under the existing locks.
 
 ## §1. Target Identification
 
 | Field | Value |
 |---|---|
 | Target | MASTER-PLAN trio + Lock 1 amendment surface; lazy-tape absorption |
-| Primary target files | `restart/ARCHITECTURE.md` (1,725 lines), `restart/MASTER-PLAN.md` (~886), `restart/MIGRATION.md` (817), `restart/locks/14-LOCKS.md` (Lock 1 at line 34) |
-| Source proposal | `restart/skinny/audit/LAZY-TAPE-DESIGN.md` (846 lines) |
+| Primary target files | `restart/ARCHITECTURE.md` (1,725 lines), `restart/MASTER-PLAN.md` (~886), `restart/MIGRATION.md` (817), `restart/locks/LOCKS.md` (Lock 1 at line 34) |
+| Source proposal | `restart/skinny/tranches/LAZY-TAPE-DESIGN.md` (846 lines) |
 | Empirical anchor | `restart/skinny/RESULTS.md`, `restart/skinny/REDRESS.md` |
 | Predecessor verdict | SK-V2 returned `SK-AMENDMENT-REQUIRED-NARROW`; lazy-tape designer dispatched as 6th agent |
 | Inheritance | `restart/audit/hardening/HARDENING-MASTER-PLAN-V9.1.md` (V9.1 closed AMENDMENT-REQUIRED-NARROW on README §9 only; trio internally coherent) |

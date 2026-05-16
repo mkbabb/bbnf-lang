@@ -23,7 +23,7 @@ The mandatory invocation is `target=MASTER-PLAN`. PASS-level hardening is option
 ## Required reading (mandatory; in order)
 
 1. `/Users/mkbabb/Programming/bbnf-lang/restart/README.md` — gestalt anchor; settled positions Q1-Q35
-2. `/Users/mkbabb/Programming/bbnf-lang/restart/locks/14-LOCKS.md`
+2. `/Users/mkbabb/Programming/bbnf-lang/restart/locks/LOCKS.md`
 3. `/Users/mkbabb/Programming/bbnf-lang/docs/precepts/instructions/STYLE.md` + `LESSONS-LEARNED.md` + `CONSUMING.md`
 4. `/Users/mkbabb/Programming/bbnf-lang/restart/prompts/{PASS-1, PASS-2, PASS-3, SYNTHESIS}.md` — the prompts that produced the target
 5. The target output(s) (per Target Selection table)

@@ -28,11 +28,11 @@ Required governing text read:
 
 | Source | Load-bearing rule applied |
 |---|---|
-| `restart/prompts/HARDENING.md:35-42` | Pro / Con / Explication / Challenge discipline. |
-| `restart/prompts/HARDENING.md:54-105` | Nine-lane audit contract; Lane 2 applies only to multi-wave targets. |
-| `restart/prompts/HARDENING.md:109-147` | Output shape: target identification, lane table, punch list, final readiness. |
+| `restart/prompts/audit-specs/HARDENING-LENS-SET.md:35-42` | Pro / Con / Explication / Challenge discipline. |
+| `restart/prompts/audit-specs/HARDENING-LENS-SET.md:54-105` | Nine-lane audit contract; Lane 2 applies only to multi-wave targets. |
+| `restart/prompts/audit-specs/HARDENING-LENS-SET.md:109-147` | Output shape: target identification, lane table, punch list, final readiness. |
 | `restart/README.md:450-452` | Voice, path:line citations, no soft hedging, no unreceivered future work. |
-| `restart/locks/14-LOCKS.md:34-60` | Locks 1, 2, 4, 5, 8, 10, 13, and 14 applied against PASS-1 scope. |
+| `restart/locks/LOCKS.md:34-60` | Locks 1, 2, 4, 5, 8, 10, 13, and 14 applied against PASS-1 scope. |
 | `restart/audit/pass-1-substrate/PASS-1.md:1-298` | Direct target, read end-to-end. |
 | `restart/research/fold-pass-1.md:1-235` | Fold ownership, adversarial routing, accepted amendment plan, no-escalation verdict. |
 | `restart/research/topic-1-hm-foundations.md:492-728` | HM/CSP split, `LayoutFacts` / `TypeFacts` boundary, diagnostic metadata. |

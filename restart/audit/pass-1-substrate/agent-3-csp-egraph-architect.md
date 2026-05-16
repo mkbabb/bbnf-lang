@@ -11,7 +11,7 @@ Verdict: bridge CSP and e-graph; do not fuse them. E-graph owns equivalence and 
 | Item | Pro | Con | Explication | Challenge | Verdict |
 |---|---|---|---|---|---|
 | Bridged CSP/e-graph | Matches `restart/README.md:219`-`restart/README.md:228`. | Needs stable exchange ids. | E-class analysis feeds CSP; CSP decisions feed extraction. | Keep exchange schema small. | KEEP |
-| No unified hypergraph | Prevents domain collapse. | More adapters. | Lock 4 says per-domain optimization and no unified hypergraph (`restart/locks/14-LOCKS.md:40`). | Make adapters explicit. | KEEP |
+| No unified hypergraph | Prevents domain collapse. | More adapters. | Lock 4 says per-domain optimization and no unified hypergraph (`restart/locks/LOCKS.md:40`). | Make adapters explicit. | KEEP |
 | Recognizer mining | Enables Pratt/SIMD without user directives. | Facts can go stale after rewrites. | BB says Pratt/SIMD auto-detect from grammar shape (`docs/tranches/BB/BB.md:5`-`docs/tranches/BB/BB.md:9`). | Regenerate or invalidate facts after saturation. | KEEP |
 | E-graph generic engine | Current crate is domain-agnostic. | Domain languages still need clear modules. | `crates/egraph/src/lib.rs:1`-`crates/egraph/src/lib.rs:10` shares infra across grammar and regex. | Avoid grammar-specific engine code. | KEEP |
 | CSP solver | Already supports variables, constraints, propagation. | Needs deterministic tie-breaks. | `crates/csp-solver/src/lib.rs:120`-`crates/csp-solver/src/lib.rs:184` defines variables/constraints; propagation is at `crates/csp-solver/src/lib.rs:250`-`crates/csp-solver/src/lib.rs:260`. | Deterministic extraction must be locked. | REINVENT |

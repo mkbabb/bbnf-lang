@@ -49,7 +49,7 @@ The eight Phase 7.2 fold commits absorbed the V1-FOLD-CANDIDATES (30 items acros
 | **Closure capture by `&'i` only** (Tier 1 #6) | PASS-1.md:75/:248; PASS-2.md:194; PASS-3.md:191 | LANDED |
 | **Backend trait** (NEW per user redirect) | ARCH §7.5 (1067-1144); PASS-2.md:134-144 | LANDED |
 | **6-directive grammar** (`Directive = ImportDecl \| HostFn \| ErrorDecl \| LayoutDecl \| PrettyDecl \| TokenDecl`) | PASS-1 §6 :197/:201/:203; ARCH §8.1 (1158/1210-1235) | LANDED with cohesion residue (P6) |
-| **Lock amendments × 7** (Lock 4 / 5 / 6 / 7 / 8 / 10 / 12) | `restart/locks/14-LOCKS.md` post-Phase-7.1 | LANDED with cohesion residue (P1) |
+| **Lock amendments × 7** (Lock 4 / 5 / 6 / 7 / 8 / 10 / 12) | `restart/locks/LOCKS.md` post-Phase-7.1 | LANDED with cohesion residue (P1) |
 | **`pointer!` → `path!` rename (~58 sites)** | PASS-3 :22 sites; MASTER-PLAN 6 sites; MIGRATION 0 active sites; **PASS-2 + ARCH §7.5 still carry `pointer!`** | PARTIAL (V7 surfaces this as cross-target residue) |
 | **`BBNF-POINTER-*` → `BBNF-PATH-*` codes** | PASS-3 ledger 7 hits; MASTER-PLAN/MIGRATION clean; **ARCH §7.4 catalogue still carries BBNF-POINTER-*** | PARTIAL (P7) |
 | **`bbnf-regex` → `parse-that-regex` rename** | All targets clean | LANDED |
@@ -83,12 +83,12 @@ The 14 V7 punch items distribute across MASTER-PLAN (10 hard items P1-P10) + PAS
 
 | # | Surgery | Path:line | Severity |
 |---:|---|---|---|
-| P1 | Lock 8 cites `H.W5`; H wave dropped 6→5 (H.W0-H.W4 only). Update Lock 8 wave references. | `restart/locks/14-LOCKS.md:48` | Cite hygiene |
+| P1 | Lock 8 cites `H.W5`; H wave dropped 6→5 (H.W0-H.W4 only). Update Lock 8 wave references. | `restart/locks/LOCKS.md:48` | Cite hygiene |
 | P2 | "ARCH §13 appendix" for declaration-crate review form template; template lives in ARCH §5 (lines 738-770). Fix the cite. | `restart/MASTER-PLAN.md:771` | Cite hygiene |
 | P3 | "ARCH §13 appendix (landed Phase 7.1)" for cookbook page contract template; no such section authored. Either author the section or fix the cite. | `restart/MASTER-PLAN.md:797` | Cite + missing-author |
 | P4 | MIGRATION broadens Lock 12 A.W0 archive ceremony to include `bbnf-path-ts`; Lock 12 names only `ser` + `gorgeous`. Drop `bbnf-path-ts` from MIGRATION row. | `restart/MIGRATION.md:71` | Lock-text overreach |
 | P5 | C.W4 cite over-promises §10.1: "fail-closed posture, representative-stability protocol now landed" — neither phrase appears. Soften to "rewrite-budget categories landed". | `restart/MASTER-PLAN.md:321` | Cite over-promise |
-| P6 | Lock 10 production name `Directive` vs ARCH §8.1 production name `Item`. Reconcile to one production name. | `restart/locks/14-LOCKS.md:52`; `restart/ARCHITECTURE.md:1158` | Cross-document drift |
+| P6 | Lock 10 production name `Directive` vs ARCH §8.1 production name `Item`. Reconcile to one production name. | `restart/locks/LOCKS.md:52`; `restart/ARCHITECTURE.md:1158` | Cross-document drift |
 | P7 | BBNF-POINTER-* survives in ARCH §7.4 catalogue while MASTER-PLAN §25 uses BBNF-PATH-*. Rename catalogue codes to BBNF-PATH-*. | `restart/ARCHITECTURE.md:1044-1046, 1579` | Rename cascade incomplete |
 | P8 | ARCH §7.2:935 keeps `regex-automata` oracle role; contradicts §12.2 + §13.1 retirement. Remove oracle clause. | `restart/ARCHITECTURE.md:935` | User mandate violation |
 | P9 | H tranche prose at MASTER-PLAN.md:174/:194 references `H.W5`; H wave dropped 6→5. Downstream cleanup of P1. | `restart/MASTER-PLAN.md:174, 194` | Cite hygiene |

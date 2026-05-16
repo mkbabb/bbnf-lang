@@ -2,7 +2,7 @@
 
 ## §1 Scope and Corpus
 
-Audit subject: the 14 governing locks (`restart/locks/14-LOCKS.md`) and the
+Audit subject: the 14 governing locks (`restart/locks/LOCKS.md`) and the
 authoritative `restart/ARCHITECTURE.md`. Greenfield mandate: every architectural
 commitment that V2 would have to rewrite is a candidate for absorption now,
 because the cost of moving lock text post-V1 is paid in cited-line drift across
@@ -12,7 +12,7 @@ Corpus references consulted:
 
 | File | Use |
 |---|---|
-| `restart/locks/14-LOCKS.md` | Authoritative lock text (249 lines, 14 numbered commitments). |
+| `restart/locks/LOCKS.md` | Authoritative lock text (249 lines, 14 numbered commitments). |
 | `restart/audit/hardening/HARDENING-CONSOLIDATED-V6.md` | §3 binding ledger, §4 cross-target conflicts, §5 residue ledger, §8 topic ownership, §9 verification commands. |
 | `restart/ARCHITECTURE.md` | §0 authority/conflict ledger, §6 pipeline, §7.3 side tables, §8.2 type system, §9 runtime, §10 lowerers, §11 perf, §12 yaml onboarding. |
 | `restart/research/fold-synthesis.md` | Latest absorbed positions for Topics 1-8. |
@@ -37,7 +37,7 @@ LOW = wording polish only; NONE = no deferral worth absorbing).
 
 Settled: tape lives at `runtime/src/tape/`; typed-value records borrow into it;
 no parallel substrate; columnar SoA stays buried
-(`restart/locks/14-LOCKS.md:34`).
+(`restart/locks/LOCKS.md:34`).
 
 Deferral language: a 2026-05-04 reframe ("the prior restart's wholesale
 retirement of the tape name was an over-correction... Lock 1's spirit holds;
@@ -50,7 +50,7 @@ Greenfield-fold value: **NONE**. The lock is settled and inheritance-free.
 
 Settled: `passes::layout` is the canonical name; HM/CSP run as subroutines;
 `LayoutFacts` is public, `TypeFacts` is internal
-(`restart/locks/14-LOCKS.md:36`; reinforced by V6 §4 conflict #2 and
+(`restart/locks/LOCKS.md:36`; reinforced by V6 §4 conflict #2 and
 ARCHITECTURE §7.3 `restart/ARCHITECTURE.md:990-1013`).
 
 Deferral language: none in the lock itself. The fold-synthesis records Topic 1
@@ -62,7 +62,7 @@ counter-example to "we'll rename it later" failure.
 ### §2.3 Lock 3 — Cursor + Byte-Skip Unified
 
 Settled: one parse implementation, `__EAGER_EMPTY_PATH` elides cursor calls
-on the empty path (`restart/locks/14-LOCKS.md:38`).
+on the empty path (`restart/locks/LOCKS.md:38`).
 
 Deferral language: none.
 
@@ -72,14 +72,14 @@ Greenfield-fold value: **NONE**. Lock 3 admits no future amendment.
 
 Settled: CSP, e-graph, miners, shape, cost compose by output piping; no
 unified hypergraph; egglog fusion is a known SOTA pressure
-(`restart/locks/14-LOCKS.md:40`).
+(`restart/locks/LOCKS.md:40`).
 
 Deferral language: "Egglog-style Datalog/equality-saturation fusion is a known
 SOTA pressure, not an omitted option; **V1 rejects that fusion** because
 diagnostics, public proof records, monotone bridge boundaries, and independent
 stabilization gates must stay owned by the domain that produced them. **Fusion
 remains a post-V1 research comparison, not the governing architecture**"
-(`restart/locks/14-LOCKS.md:40`, emphasis added).
+(`restart/locks/LOCKS.md:40`, emphasis added).
 
 Greenfield-fold value: **LOW**. The deferral is a *negative* commitment — V1
 does not adopt egglog fusion. Folding it into V1 would invert the lock, not
@@ -90,10 +90,10 @@ useful. Tracked as research-comparison residue, not architectural debt.
 ### §2.5 Lock 5 — IR + Per-Backend Lower
 
 Settled: backend-agnostic typed BIR; per-backend lowerers; "TS+WASM at BD+"
-(`restart/locks/14-LOCKS.md:42`).
+(`restart/locks/LOCKS.md:42`).
 
 Deferral language: "per-backend lowerers (Rust now, **TS+WASM at BD+**)"
-(`restart/locks/14-LOCKS.md:42`).
+(`restart/locks/LOCKS.md:42`).
 
 Greenfield-fold value: **HIGH**. The "TS+WASM at BD+" clause cites legacy
 tranche letters (BA-BD), which `restart/ARCHITECTURE.md:14-16` declares
@@ -109,7 +109,7 @@ prevents the lock from re-citing retired tranche names.
 ### §2.6 Lock 6 — xtask Emits Committed Source
 
 Settled: no proc-macro façade; generated source is greppable
-(`restart/locks/14-LOCKS.md:44`).
+(`restart/locks/LOCKS.md:44`).
 
 Deferral language: none.
 
@@ -119,12 +119,12 @@ Greenfield-fold value: **NONE**.
 
 Settled: runtime cursor merges into `crates/path/`; `pointer!` macro lives
 there; TS variant at `crates/path-ts/`; optional `crates/path-core/` shared
-non-proc-macro crate (`restart/locks/14-LOCKS.md:46`).
+non-proc-macro crate (`restart/locks/LOCKS.md:46`).
 
 Deferral language: "A `crates/path-core/` (non-proc-macro) crate **may exist**
 to share the path-AST + compile logic between the two proc-macro shells; if
 so, it is the only deduplication mechanism allowed"
-(`restart/locks/14-LOCKS.md:46`, emphasis added).
+(`restart/locks/LOCKS.md:46`, emphasis added).
 
 Greenfield-fold value: **MEDIUM**. The conditional ("may exist") is a deferred
 decision: V1 either has `path-core` or does not. ARCHITECTURE §1 lists
@@ -137,7 +137,7 @@ rest of the corpus).
 ### §2.8 Lock 8 — Surpass sonic-rs / simdjson / lightning-css
 
 Settled: every perf gate names a competitor + dataset + platform; AU is never
-mentioned (`restart/locks/14-LOCKS.md:48`).
+mentioned (`restart/locks/LOCKS.md:48`).
 
 Deferral language: none in the lock. Trapped in V6 R6 is a placeholder
 `{N}`/`{M}` for the WASM lightning-css comparison
@@ -154,7 +154,7 @@ ones. Optional; not a fault.
 ### §2.9 Lock 9 — Slice-Borrow + bumpalo + owned
 
 Settled: `&'i str` default; `parse_in(input, &bump)` opt-in; `parse_owned`
-escape; one parse implementation (`restart/locks/14-LOCKS.md:50`).
+escape; one parse implementation (`restart/locks/LOCKS.md:50`).
 
 Deferral language: none.
 
@@ -163,7 +163,7 @@ Greenfield-fold value: **NONE**. Lock 9 is fully scoped to V1.
 ### §2.10 Lock 10 — Pratt + SIMD Auto-Detected
 
 Settled: no `@pratt`/`@simd` directives; optimizer mines grammar shape
-(`restart/locks/14-LOCKS.md:52`).
+(`restart/locks/LOCKS.md:52`).
 
 Deferral language: none in the lock. Topic 8 (`fold-synthesis.md` §Topic 8,
 T8-A4) absorbed verifier-bound prefilter and `regex-automata` oracle posture
@@ -178,10 +178,10 @@ exact/prefilter mode contract is settled in
 
 Settled: egraph, egraph-derive, csp-solver, bbnf-regex, parse-that path-dep
 until stable; **promote to registry once stable**
-(`restart/locks/14-LOCKS.md:54`).
+(`restart/locks/LOCKS.md:54`).
 
 Deferral language: "**promote to registry once stable**"
-(`restart/locks/14-LOCKS.md:54`). A staged-publication post-V1 hook.
+(`restart/locks/LOCKS.md:54`). A staged-publication post-V1 hook.
 
 Greenfield-fold value: **HIGH**. Promotion-to-registry is a V2/J.W3-class
 event (V6 references publication split: synthesis amendment 2026-04-12 noted
@@ -200,7 +200,7 @@ about promotion is appended rather than restructured.
 ### §2.12 Lock 12 — ser + gorgeous Archive BEFORE BA.W0
 
 Settled: ser/gorgeous archive is the precondition for BA.W0 to begin
-(`restart/locks/14-LOCKS.md:56`).
+(`restart/locks/LOCKS.md:56`).
 
 Deferral language: references "BA.W0" — a legacy tranche slot.
 ARCHITECTURE.md:14-16 declares BA-BD inheritance, not governing.
@@ -216,7 +216,7 @@ Risk: **LOW**. Single sentence wording change; no semantic shift.
 ### §2.13 Lock 13 — No God Directories; Cohesive Encapsulation
 
 Settled: 4-10 children per directory; no handwritten file >500 LOC outside
-generated; sibling APIs uniform (`restart/locks/14-LOCKS.md:58`).
+generated; sibling APIs uniform (`restart/locks/LOCKS.md:58`).
 
 Deferral language: none. The lock is exhaustive about exception handling
 ("Files >500 LOC outside `generated/` are forbidden; directories with >10
@@ -230,7 +230,7 @@ the exception ledger in line with the lock
 
 Settled: substrate carries zero grammar-specific code; per-grammar
 declaration crates are rare escape valves with the §5.6 review form
-(`restart/locks/14-LOCKS.md:60`; ARCHITECTURE §5.6 form
+(`restart/locks/LOCKS.md:60`; ARCHITECTURE §5.6 form
 `restart/ARCHITECTURE.md:739-770`).
 
 Deferral language: "Per-grammar deviations... are encoded in the grammar
@@ -327,7 +327,7 @@ proof. (Out of scope for this audit; flagged for synthesis.)
 
 Lock 7 declares `path-core` exists conditionally ("may exist"). Lock 14
 implicitly assumes `path-core` is a generic crate
-(`restart/locks/14-LOCKS.md:60`: "Generic crates — `bbnf-parse`,
+(`restart/locks/LOCKS.md:60`: "Generic crates — `bbnf-parse`,
 `bbnf-codegen`, `bbnf-runtime`, `bbnf-ir`, `path`, `path-core`,
 `egraph`, ..."). Lock 14 hardcodes `path-core` in its zero-grammar-code
 list; Lock 7 says the crate may not exist. Cohesion failure.
@@ -363,14 +363,14 @@ Sorted descending by greenfield value: HIGH first, then MEDIUM, then LOW.
 
 | # | Item | Source | Surgery | Greenfield value | Risk |
 |---:|---|---|---|---|---|
-| 1 | Lock 5 BD+ → H.W3/J.W3 | `restart/locks/14-LOCKS.md:42` | Rename inline phrase. | HIGH (eliminates legacy tranche letter from structural lock). | LOW |
-| 2 | Lock 11 promotion gate binding | `restart/locks/14-LOCKS.md:54` | Append J.W3 publication clause. | HIGH (settles V2 transition). | MEDIUM |
-| 3 | Lock 12 BA.W0 → A.W0 | `restart/locks/14-LOCKS.md:56` | Token replace. | HIGH (legacy slot reference in a lock that gates BA tranche start). | LOW |
-| 4 | Lock 7 `path-core` conditional → declarative | `restart/locks/14-LOCKS.md:46` | Replace "may exist" with "exists". | MEDIUM (cohesion with Lock 14). | LOW |
-| 5 | Lock 8 WASM competitor anchor | `restart/locks/14-LOCKS.md:48` | Append WASM row. | MEDIUM (covers routed H.W3 measurement). | LOW |
+| 1 | Lock 5 BD+ → H.W3/J.W3 | `restart/locks/LOCKS.md:42` | Rename inline phrase. | HIGH (eliminates legacy tranche letter from structural lock). | LOW |
+| 2 | Lock 11 promotion gate binding | `restart/locks/LOCKS.md:54` | Append J.W3 publication clause. | HIGH (settles V2 transition). | MEDIUM |
+| 3 | Lock 12 BA.W0 → A.W0 | `restart/locks/LOCKS.md:56` | Token replace. | HIGH (legacy slot reference in a lock that gates BA tranche start). | LOW |
+| 4 | Lock 7 `path-core` conditional → declarative | `restart/locks/LOCKS.md:46` | Replace "may exist" with "exists". | MEDIUM (cohesion with Lock 14). | LOW |
+| 5 | Lock 8 WASM competitor anchor | `restart/locks/LOCKS.md:48` | Append WASM row. | MEDIUM (covers routed H.W3 measurement). | LOW |
 | 6 | ARCH §8.2 post-V1 type-system receiver naming | `restart/ARCHITECTURE.md:1162-1171` | Name the post-J research-dispatch receiver explicitly. | LOW (routing clarity). | LOW |
-| 7 | Locks §168 fourteen-vs-twelve drift | `restart/locks/14-LOCKS.md:201` | Token replace. | LOW (V5/V6 R1 lingering hygiene). | LOW |
-| 8 | Locks §1 prose "BA-restart" → greenfield | `restart/locks/14-LOCKS.md:3` | Single phrase. | LOW. | LOW |
+| 7 | Locks §168 fourteen-vs-twelve drift | `restart/locks/LOCKS.md:201` | Token replace. | LOW (V5/V6 R1 lingering hygiene). | LOW |
+| 8 | Locks §1 prose "BA-restart" → greenfield | `restart/locks/LOCKS.md:3` | Single phrase. | LOW. | LOW |
 
 Cumulative effect of items 1-5: **two HIGH-value lock-text amendments and
 three MEDIUM amendments fold post-V1 transitions into V1 itself**. None

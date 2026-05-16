@@ -3,7 +3,7 @@
 V8 simplification audit against `restart/audit/pass-2-codegen/PASS-2.md`
 applying Lens I (contrivance / over-engineering), Lens J (host-language
 leverage), and Lens K (meta-grammar discipline) per the Phase-8.1
-HARDENING.md amendment (`restart/prompts/HARDENING.md:152-186`). The V7
+HARDENING.md amendment (`restart/prompts/audit-specs/HARDENING-LENS-SET.md:152-186`). The V7
 baseline returned READY with four non-blocking corpus-hygiene residues
 (R-V7-1 through R-V7-4); the V7.1 cohort returned READY for PASS-2 with
 no regression. V8 does not relitigate Lanes 1-9 + Lens F/G/H — those
@@ -76,7 +76,7 @@ apparatus); CONSOLIDATE (Lens I merges with adjacent facility); LEVERAGE
 LOAD-BEARING (Lens K V1 mandatory); ASPIRATIONAL (Lens K V1 surface;
 tranche-deferrable); SPECULATIVE (Lens K V2+).
 
-V8 KEEP-fraction discipline: HARDENING.md `restart/prompts/HARDENING.md:55`
+V8 KEEP-fraction discipline: HARDENING.md `restart/prompts/audit-specs/HARDENING-LENS-SET.md:55`
 enforces "60-80% KEEP" as a healthy mixed-verdicts target; KEEP-without-
 challenge in any per-item table is per-row fault. V8 verdict distribution
 across the three lenses: 14 KEEP / 1 LEVERAGE-FULL / 3 HYBRID / 1

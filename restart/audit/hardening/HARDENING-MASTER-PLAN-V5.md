@@ -19,23 +19,23 @@ Audit posture:
 - V5 worker scope: audit only.
 - Target surfaces were read, not patched.
 - Prior hardening reports V1 through V4 were treated as carry history, not as proof.
-- `restart/prompts/RESEARCH-FOLD-ORCHESTRATOR.md` §1-§2 supplied the Phase 0 V5 contract.
-- `restart/prompts/HARDENING.md` supplied the compressed 9-lane audit discipline.
-- `restart/prompts/AMENDMENT-DISPATCH.md` §1 supplied verify-then-patch hygiene; this report verifies claims and routes amendments without applying them.
+- `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` §1-§2 supplied the Phase 0 V5 contract.
+- `restart/prompts/audit-specs/HARDENING-LENS-SET.md` supplied the compressed 9-lane audit discipline.
+- `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` §1 supplied verify-then-patch hygiene; this report verifies claims and routes amendments without applying them.
 - `docs/precepts/instructions/STYLE.md`, `LESSONS-LEARNED.md`, and `CONSUMING.md` supplied voice and process discipline.
 
 Mandatory read set completed:
 
 - `restart/README.md`
-- `restart/locks/14-LOCKS.md`
+- `restart/locks/LOCKS.md`
 - `restart/audit/hardening/HARDENING-CONSOLIDATED-V4.md`
 - `restart/audit/hardening/HARDENING-CONSOLIDATED.md`
 - `restart/audit/hardening/HARDENING-CONSOLIDATED-V2.md`
 - `restart/audit/hardening/HARDENING-CONSOLIDATED-V3.md`
 - `restart/research/INDEX.md`
-- `restart/prompts/HARDENING-ORCHESTRATOR.md`
-- `restart/prompts/HARDENING.md`
-- `restart/prompts/AMENDMENT-DISPATCH.md`
+- `restart/prompts/sub-orchestrators/HARDENING.md`
+- `restart/prompts/audit-specs/HARDENING-LENS-SET.md`
+- `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md`
 - `docs/precepts/instructions/STYLE.md`
 - `docs/precepts/instructions/LESSONS-LEARNED.md`
 - `docs/precepts/instructions/CONSUMING.md`
@@ -93,12 +93,12 @@ Redraft threshold:
 | D3 | Coverage gap | `restart/ARCHITECTURE.md:242`; `restart/ARCHITECTURE.md:898-930`; `restart/MASTER-PLAN.md:490-501` | Debug/runtime hook claims remain under-specified: the BIR and runtime sections name hooks, but no trace event schema or acceptance fixture is named. | AMEND |
 | D4 | Coverage gap | `restart/ARCHITECTURE.md:1105-1120`; `restart/ARCHITECTURE.md:1027`; `restart/MASTER-PLAN.md:393` | Generic-rule typing and recovery facts are each specified, but their intersection under `@error(recover = ...)` is not gated. | AMEND |
 | D5 | Coverage gap | `restart/MASTER-PLAN.md:459`; `restart/MASTER-PLAN.md:753`; `restart/ARCHITECTURE.md:868` | WASM host primitives have a performance gate and ABI carry row, but no primitive matrix tying host-call shape to exported WASM binding names. | AMEND |
-| D6 | Coverage gap | `restart/MASTER-PLAN.md:524`; `restart/locks/14-LOCKS.md:54`; `restart/MASTER-PLAN.md:677` | Lock 11 incubation stability is correctly expanded in J.W3, though the lock ownership table remains terse. | KEEP-WITH-POLISH |
-| E1 | Cumulative lock tension | `restart/locks/14-LOCKS.md:34`; `restart/ARCHITECTURE.md:1165-1206`; `restart/MASTER-PLAN.md:251-272` | Lock 1 tape/direct pressure is honored across architecture, runtime waves, and migration gates. | KEEP |
-| E2 | Cumulative lock tension | `restart/locks/14-LOCKS.md:42`; `restart/ARCHITECTURE.md:780-903`; `restart/MASTER-PLAN.md:380-407` | Lock 5 BIR sequencing is mostly coherent; the chain grammar drift is the remaining Lock 4/Lock 5 boundary fault. | AMEND |
-| E3 | Cumulative lock tension | `restart/locks/14-LOCKS.md:52`; `restart/ARCHITECTURE.md:817-819`; `restart/MASTER-PLAN.md:428` | Lock 10 Pratt/SIMD auto-detection is preserved in trio surfaces. | KEEP |
-| E4 | Cumulative lock tension | `restart/locks/14-LOCKS.md:54`; `restart/MASTER-PLAN.md:524`; `restart/MASTER-PLAN.md:677` | Lock 11 path-dep incubation no longer forces sister crate publication; J.W3 has a stability gate. The line citation is wrong. | AMEND |
-| E5 | Cumulative lock tension | `restart/locks/14-LOCKS.md:60`; `restart/ARCHITECTURE.md:1275-1306`; `restart/MASTER-PLAN.md:770` | Lock 14 onboarding is preserved as two surfaces, but table and example gaps weaken enforcement for the first unfamiliar grammar. | AMEND |
+| D6 | Coverage gap | `restart/MASTER-PLAN.md:524`; `restart/locks/LOCKS.md:54`; `restart/MASTER-PLAN.md:677` | Lock 11 incubation stability is correctly expanded in J.W3, though the lock ownership table remains terse. | KEEP-WITH-POLISH |
+| E1 | Cumulative lock tension | `restart/locks/LOCKS.md:34`; `restart/ARCHITECTURE.md:1165-1206`; `restart/MASTER-PLAN.md:251-272` | Lock 1 tape/direct pressure is honored across architecture, runtime waves, and migration gates. | KEEP |
+| E2 | Cumulative lock tension | `restart/locks/LOCKS.md:42`; `restart/ARCHITECTURE.md:780-903`; `restart/MASTER-PLAN.md:380-407` | Lock 5 BIR sequencing is mostly coherent; the chain grammar drift is the remaining Lock 4/Lock 5 boundary fault. | AMEND |
+| E3 | Cumulative lock tension | `restart/locks/LOCKS.md:52`; `restart/ARCHITECTURE.md:817-819`; `restart/MASTER-PLAN.md:428` | Lock 10 Pratt/SIMD auto-detection is preserved in trio surfaces. | KEEP |
+| E4 | Cumulative lock tension | `restart/locks/LOCKS.md:54`; `restart/MASTER-PLAN.md:524`; `restart/MASTER-PLAN.md:677` | Lock 11 path-dep incubation no longer forces sister crate publication; J.W3 has a stability gate. The line citation is wrong. | AMEND |
+| E5 | Cumulative lock tension | `restart/locks/LOCKS.md:60`; `restart/ARCHITECTURE.md:1275-1306`; `restart/MASTER-PLAN.md:770` | Lock 14 onboarding is preserved as two surfaces, but table and example gaps weaken enforcement for the first unfamiliar grammar. | AMEND |
 
 Lens A-E summary:
 
@@ -118,10 +118,10 @@ Lens A-E summary:
 | F5 | LLM bias | `restart/MASTER-PLAN.md:764-770`; `restart/ARCHITECTURE.md:270-272` | User-facing assertions without examples | Present. Cookbook rows do not substitute for a worked query or yaml path through the system. |
 | G1 | Overfitting | `restart/ARCHITECTURE.md:1275-1306`; `restart/MASTER-PLAN.md:770`; `restart/audit/pass-3-runtime/PASS-3.md:320-344` | YAML as a named future grammar could become a special case | Controlled by two-surface rule, but needs the corrected table row and an unfamiliar-grammar walkthrough. |
 | G2 | Overfitting | `restart/ARCHITECTURE.md:1320-1331`; `restart/MASTER-PLAN.md:641-652` | Seed-grammar budget rows could freeze today’s grammar set | Mostly controlled by yaml probe and generated budget gates. The YAML row fault weakens the proof. |
-| G3 | Overfitting | `restart/MASTER-PLAN.md:719`; `restart/MASTER-PLAN.md:744`; `restart/locks/14-LOCKS.md:60` | Generic crates could regain grammar-named branches | Controlled by lint rows and future grammar gate. |
+| G3 | Overfitting | `restart/MASTER-PLAN.md:719`; `restart/MASTER-PLAN.md:744`; `restart/locks/LOCKS.md:60` | Generic crates could regain grammar-named branches | Controlled by lint rows and future grammar gate. |
 | G4 | Overfitting | `restart/ARCHITECTURE.md:1252-1259`; `restart/MASTER-PLAN.md:129-136` | SOTA rows could bias only JSON/CSS hot fixtures | Partly controlled by explicit fixtures, but a worked non-hot grammar trajectory would reduce overfit pressure. |
-| H1 | Hallucination/provenance | `restart/ARCHITECTURE.md:1000`; `restart/locks/14-LOCKS.md:69-72`; `restart/locks/14-LOCKS.md:60` | Wrong citation line | Present. Lock 14 itself is line 60; lines 69-72 introduce lanes, not metadata/onboarding clauses. |
-| H2 | Hallucination/provenance | `restart/MASTER-PLAN.md:524`; `restart/locks/14-LOCKS.md:54`; `restart/locks/14-LOCKS.md:60` | Wrong citation line | Present. MASTER says Lock 11 at line 60, but line 60 is Lock 14; Lock 11 is line 54. |
+| H1 | Hallucination/provenance | `restart/ARCHITECTURE.md:1000`; `restart/locks/LOCKS.md:69-72`; `restart/locks/LOCKS.md:60` | Wrong citation line | Present. Lock 14 itself is line 60; lines 69-72 introduce lanes, not metadata/onboarding clauses. |
+| H2 | Hallucination/provenance | `restart/MASTER-PLAN.md:524`; `restart/locks/LOCKS.md:54`; `restart/locks/LOCKS.md:60` | Wrong citation line | Present. MASTER says Lock 11 at line 60, but line 60 is Lock 14; Lock 11 is line 54. |
 | H3 | Hallucination/provenance | `restart/ARCHITECTURE.md:1256`; `restart/MASTER-PLAN.md:133`; `restart/corpora/SOTA.md:56` | Cross-document benchmark provenance mismatch | Architecture lists only sonic-rs for `json/canada`; MASTER carries both sonic-rs and simd-json with SOTA citation. |
 | H4 | Hallucination/provenance | `restart/ARCHITECTURE.md:270-272`; `restart/README.md:278-283`; `restart/audit/pass-3-runtime/PASS-3.md:360` | Multiple public examples without an explicit canonical form | Present. The trio needs one canonical macro grammar-prefix rule or a compatibility note. |
 | H5 | Hallucination/provenance | `restart/MASTER-PLAN.md:737-757`; `restart/MIGRATION.md:772-783` | Remainder routed without owner | Not present. Remainder is routed to MASTER §23-§24 and MIGRATION points there. |
@@ -218,7 +218,7 @@ Targeted verification notes:
 - Result: PASS-3 row 342 supplies the missing YAML host-route content.
 - V5 read: P5 is verified.
 
-- `nl -ba restart/locks/14-LOCKS.md | sed -n '52,62p;69,72p'`
+- `nl -ba restart/locks/LOCKS.md | sed -n '52,62p;69,72p'`
 - Result: Lock 11 is line 54.
 - Result: Lock 14 is line 60.
 - Result: lines 69-72 introduce lane scaffolding, not metadata/onboarding clauses.
@@ -246,7 +246,7 @@ Local edit hygiene:
 
 | Claim | ARCHITECTURE binding | MIGRATION binding | MASTER binding | External binding | V5 result |
 |---|---|---|---|---|---|
-| Tape/direct is the one runtime substrate. | `restart/ARCHITECTURE.md:1165-1206` | `restart/MIGRATION.md:90-105` | `restart/MASTER-PLAN.md:251-272` | `restart/locks/14-LOCKS.md:34` | KEEP |
+| Tape/direct is the one runtime substrate. | `restart/ARCHITECTURE.md:1165-1206` | `restart/MIGRATION.md:90-105` | `restart/MASTER-PLAN.md:251-272` | `restart/locks/LOCKS.md:34` | KEEP |
 | OpenFrame is retired. | `restart/ARCHITECTURE.md:19-30` | `restart/MIGRATION.md:90-105` | `restart/MASTER-PLAN.md:26`; `restart/MASTER-PLAN.md:113` | PASS-3 runtime carry | KEEP |
 | Backend IR belongs in `ir::backend_ir`. | `restart/ARCHITECTURE.md:780-903` | `restart/MIGRATION.md:232-244` | `restart/MASTER-PLAN.md:380-407` | `restart/audit/pass-2-codegen/PASS-2.md:196` | KEEP |
 | Codegen may not walk Grammar IR directly. | `restart/ARCHITECTURE.md:780-903` | `restart/MIGRATION.md:232-244` | `restart/MASTER-PLAN.md:721` | `restart/audit/pass-2-codegen/PASS-2.md:5` | KEEP |
@@ -267,8 +267,8 @@ Local edit hygiene:
 | Generated LOC budget is per grammar. | `restart/ARCHITECTURE.md:1320-1331` | Migration status rows | `restart/MASTER-PLAN.md:641-652` | PASS-2 budget discipline | KEEP-WITH-YAML-CORRECTION |
 | Future grammar admission is proof against overfitting. | `restart/ARCHITECTURE.md:1275-1306` | `restart/MIGRATION.md:749-759` | `restart/MASTER-PLAN.md:428`; `restart/MASTER-PLAN.md:744` | Lock 14 | KEEP-WITH-EXAMPLE |
 | Public/dev crate split is settled. | `restart/ARCHITECTURE.md:38-63` | `restart/MIGRATION.md:282-297` | `restart/MASTER-PLAN.md:227`; `restart/MASTER-PLAN.md:524` | README package names | KEEP |
-| Lock 11 path-dep incubation has stability gate. | `restart/ARCHITECTURE.md:58-62` | Migration package rows | `restart/MASTER-PLAN.md:524`; terse at `restart/MASTER-PLAN.md:677` | `restart/locks/14-LOCKS.md:54` | AMEND-CITATION |
-| Lock 14 metadata/onboarding citation points to lock text. | `restart/ARCHITECTURE.md:1000` | Not duplicated | §24 consumes diagnostics | `restart/locks/14-LOCKS.md:60`, not 69-72 | AMEND-CITATION |
+| Lock 11 path-dep incubation has stability gate. | `restart/ARCHITECTURE.md:58-62` | Migration package rows | `restart/MASTER-PLAN.md:524`; terse at `restart/MASTER-PLAN.md:677` | `restart/locks/LOCKS.md:54` | AMEND-CITATION |
+| Lock 14 metadata/onboarding citation points to lock text. | `restart/ARCHITECTURE.md:1000` | Not duplicated | §24 consumes diagnostics | `restart/locks/LOCKS.md:60`, not 69-72 | AMEND-CITATION |
 | Benchmark SOTA rows have competitor anchors. | `restart/ARCHITECTURE.md:1252-1259` | Benchmark metadata gate | `restart/MASTER-PLAN.md:129-136` | `restart/corpora/SOTA.md:54-56` | AMEND-PROVENANCE |
 | Benchmark metadata captures machine/build/input. | Not fully in ARCH | `restart/MIGRATION.md:344` | `restart/MASTER-PLAN.md:143-149`; `restart/MASTER-PLAN.md:727` | SOTA corpus | KEEP |
 | WASM V1 uses competitor-anchored gate. | ARCH backend rows | Migration receivers | `restart/MASTER-PLAN.md:459`; `restart/MASTER-PLAN.md:753` | Lock 8 | AMEND-HOST-MATRIX |
@@ -292,8 +292,8 @@ Ledger conclusion:
 | P3 | `restart/ARCHITECTURE.md:1077-1078` | Clarify that method-chain syntax is legal only inside `@host fn` bodies, not as a rule-level `HostCall` chain surface. | Architecture grammar sketch and PASS-1 line 217 agree on rule-level vs host-body chain syntax. | A3, B5 |
 | P4 | `restart/MASTER-PLAN.md:329` | Change `@host fn declarations` to block-bodied `@host fn` definitions and host primitive registry. | `rg -n '@host fn declarations' restart/MASTER-PLAN.md restart/ARCHITECTURE.md` returns zero. | B5, E2 |
 | P5 | `restart/ARCHITECTURE.md:1331` | Insert the missing YAML `Host route` cell from PASS-3 feeder row before the generated LOC cell. | `awk -F'|' 'NR>=1320 && NR<=1331 { print NR, NF-1 }' restart/ARCHITECTURE.md` reports 11 pipe-delimited cells for every row. | A4, D1, E5, G1 |
-| P6 | `restart/ARCHITECTURE.md:1000` | Replace `restart/locks/14-LOCKS.md:69-72` with the actual Lock 14 citation at line 60 or cite a separate source that truly owns metadata/onboarding diagnostics. | Manual check: referenced line names Lock 14, not lane scaffolding. | H1 |
-| P7 | `restart/MASTER-PLAN.md:524` | Replace Lock 11 citation from `restart/locks/14-LOCKS.md:60` to `restart/locks/14-LOCKS.md:54`. | Manual check: J.W3 cites Lock 11 line 54; line 60 remains Lock 14 only. | E4, H2 |
+| P6 | `restart/ARCHITECTURE.md:1000` | Replace `restart/locks/LOCKS.md:69-72` with the actual Lock 14 citation at line 60 or cite a separate source that truly owns metadata/onboarding diagnostics. | Manual check: referenced line names Lock 14, not lane scaffolding. | H1 |
+| P7 | `restart/MASTER-PLAN.md:524` | Replace Lock 11 citation from `restart/locks/LOCKS.md:60` to `restart/locks/LOCKS.md:54`. | Manual check: J.W3 cites Lock 11 line 54; line 60 remains Lock 14 only. | E4, H2 |
 | P8 | `restart/ARCHITECTURE.md:1256` | Add the `json/canada` simd-json comparator present in MASTER, or state why Architecture’s SOTA table intentionally records only one comparator. | ARCH and MASTER canada rows carry the same competitor set and SOTA source citation. | A3, H3, G4 |
 | P9 | `restart/MASTER-PLAN.md:764`; `restart/ARCHITECTURE.md:270-272` | Add or route a compact worked example showing one JSON query through `pointer!` and one structural query through `select!`, including canonical macro grammar-prefix syntax and one diagnostic failure. | Example syntax agrees with README and PASS-3 diagnostics; `BBNF-POINTER001/002/003` remain referenced. | B4, C2, H4 |
 | P10 | `restart/ARCHITECTURE.md:1275-1306`; `restart/MASTER-PLAN.md:770` | Add or route an end-to-end yaml onboarding example: `yaml.bbnf`, workspace metadata, generated runtime files, path schema, host route, zero Rust edits, parity fixture deferred. | Future grammar test explicitly checks zero Rust edits and zero `fixtures/yaml/` during onboarding. | C1, D1, G1 |

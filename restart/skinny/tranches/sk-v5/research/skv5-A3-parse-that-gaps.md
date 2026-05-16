@@ -4,7 +4,7 @@ Author: A3 (parse-that-regex audit cohort)
 Scope: `skinny/crates/parse-that-regex/` exclusively. Cross-references to
 `bbnf-simd/`, `bbnf-bench/`, and `runtime/grammars/json/` are read-only.
 Reference: SK-V4 grand-synthesis (commit `1519cf16`,
-`restart/skinny/audit/ASMJSON-DAV1D-GRAND-SYNTHESIS-SK-V4.md` §5/§7) — exact
+`restart/skinny/tranches/ASMJSON-DAV1D-GRAND-SYNTHESIS-SK-V4.md` §5/§7) — exact
 materialisers belong in `parse-that/number`, `parse-that/string`,
 `parse-that/unicode`, not in JSON bench code. Current measured posture:
 numbers ~33% of sonic-rs on direct, `serde_json::parse_number` ~23.4% self-time;

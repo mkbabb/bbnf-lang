@@ -177,7 +177,7 @@ Two pathologies, plus one outlier shape:
   `consume_container_next` + `consume_array_next` + `parse_key_colon` +
   `consume_structural` dominate.
 
-## 5. Diff vs SK-V6 C1 (`restart/skinny/audit/SK-V6-COHORT/skv6-C1-retained-profile.md`)
+## 5. Diff vs SK-V6 C1 (`restart/skinny/tranches/sk-v6/research/skv6-C1-retained-profile.md`)
 
 V6 C1 reported attribution from `/tmp/skv6-B3-profiles/*` and
 `skinny/profile/skinny-expanded/*` (older bin). The post-V6 admits cited by
@@ -220,7 +220,7 @@ The two V6 admits did what they advertised:
 
 ## 6. Per-`\uXXXX` TBL hypothesis check
 
-The B1 candidate (per `restart/skinny/audit/SK-V6-COHORT/skv6-B1-asmjson-challenge.md`
+The B1 candidate (per `restart/skinny/tranches/sk-v6/research/skv6-B1-asmjson-challenge.md`
 and the V6 C1 "falsifiable intervention candidate" section) is to replace
 the scalar per-`\uXXXX` nibble validate inside
 `validate_json_unicode_escape_run` with a per-unit TBL classifier. That
@@ -281,7 +281,7 @@ inline wrapper, or a counter).
 
 ## 7. Strict-vs-strict implication (A1)
 
-`restart/skinny/audit/SK-V6-COHORT/skv6-A1-asmjson-generalization.md` §1 and
+`restart/skinny/tranches/sk-v6/research/skv6-A1-asmjson-generalization.md` §1 and
 §4 say sonic-rs is utf8_lossy and BBNF retained is `deferred /
 view-boundary / yes` (current rows are not strict-vs-strict wins against
 sonic). A1 does not publish a numeric "3-8% sonic regression post-strict"

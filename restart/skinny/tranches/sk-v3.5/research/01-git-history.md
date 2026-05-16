@@ -106,7 +106,7 @@ The user's `restart/` (current) is the **third** workspace surface, distinct fro
 **Not a git tag.** `git tag --list` shows only `v1.0.5`. The "tag" is a **directory and a date anchor**:
 
 - Directory: `/Users/mkbabb/Programming/bbnf-lang/restart-archive-2026-05-04/` (mtime 2026-05-04 13:04).
-- Cited as a logical tag in `restart/locks/14-LOCKS.md:56` Lock 12: *"The archive ceremony cites `pre-restart-2026-05-04` as the source-of-truth tag; legacy `BA-` / `BB-` / `BC-` / `BD-` slot drift retires under the canonical `A-` / `B-` / `C-` / `D-` tranche letters."*
+- Cited as a logical tag in `restart/locks/LOCKS.md:56` Lock 12: *"The archive ceremony cites `pre-restart-2026-05-04` as the source-of-truth tag; legacy `BA-` / `BB-` / `BC-` / `BD-` slot drift retires under the canonical `A-` / `B-` / `C-` / `D-` tranche letters."*
 
 The ceremony is **prescribed in Lock 12** as A.W0's precondition; the archive directory exists but no git tag matching `pre-restart*` has been cut.
 
@@ -114,7 +114,7 @@ The ceremony is **prescribed in Lock 12** as A.W0's precondition; the archive di
 
 ## (e) Era-V Failure-Mode Taxonomy
 
-Per `era-V-dta-psi-rut.md` and `restart/locks/14-LOCKS.md:34` (Lock 1):
+Per `era-V-dta-psi-rut.md` and `restart/locks/LOCKS.md:34` (Lock 1):
 
 ### Named failures Lock 1 enumerates (4 in one sentence)
 
@@ -129,7 +129,7 @@ Per `era-V-dta-psi-rut.md` and `restart/locks/14-LOCKS.md:34` (Lock 1):
 - **Bench collapse** — at Era V close, every entry below AU-baseline: JSON twitter 486 MB/s (24.7% of AU); CSS / Sheets / BBNF 3-7% of AU baseline (`era-V-dta-psi-rut.md:5-6`).
 - **Carry-blindness** — Lock D5 in `14-LOCKS.md:237`: *"Treating every 'deferred to BB' as legitimate without auditing whether BB has the gate. Era V's failure mode replicated."*
 
-### Lock 1's defining quote (verbatim, `restart/locks/14-LOCKS.md:34`)
+### Lock 1's defining quote (verbatim, `restart/locks/LOCKS.md:34`)
 
 > The 2,000-commit prior failure was implementation, not concept: orthogonal codepaths (the Vec<OpenFrame>::clone parallel substrate that produced the 86.07% samply pathology); type ambivalence (tape and OpenFrame and direct-to-struct competing for the same role); substrate-first/consumer-later (Era V failure mode); columnar SoA designed in AV.04 archaeology but never activated.
 
@@ -175,7 +175,7 @@ Per `era-V-dta-psi-rut.md` and `restart/locks/14-LOCKS.md:34` (Lock 1):
 
 ## Key path:line citations
 
-- `restart/locks/14-LOCKS.md:34` — Lock 1 verbatim
+- `restart/locks/LOCKS.md:34` — Lock 1 verbatim
 - `docs/tranches/meta-audit/archaeology/era-V-dta-psi-rut.md` (330 lines) — canonical retrospective
 - `docs/tranches/AV/AV.md` (1,323 lines) — AV plan
 - `docs/tranches/AV/research/06-psi-dta-parallelism.md` (129 lines) — PSI architectural sketch

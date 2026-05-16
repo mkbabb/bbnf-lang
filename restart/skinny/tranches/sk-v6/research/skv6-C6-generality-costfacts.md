@@ -8,12 +8,12 @@ Repo edits: none. This report is the only written artifact.
 
 Read sources:
 
-- `restart/skinny/audit/SK-V6-COHORT/skv6-A5-general-grammar-abstraction.md`
-- `restart/skinny/audit/SK-V6-COHORT/skv6-B6-spec-edit-map.md`
+- `restart/skinny/tranches/sk-v6/research/skv6-A5-general-grammar-abstraction.md`
+- `restart/skinny/tranches/sk-v6/research/skv6-B6-spec-edit-map.md`
 - `restart/ARCHITECTURE.md` sections 7.3 and 7.5
 - `restart/skinny/COMPILER.md`
 - `restart/skinny/SUBSTRATE.md`
-- `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V6-SOTA-RECOVERY.md` for current wave ownership
+- `restart/skinny/tranches/sk-v6/SPEC.md` for current wave ownership
 
 Search surface:
 

@@ -245,7 +245,7 @@ Rows touched: instruments, citm_catalog, distinct_values, y_string_unicode — t
 
 ## 7. Strict-vs-strict implication (RESULTS.md A1 §5)
 
-Per the SOTA-beat design audit (`restart/skinny/audit/GRAND-SYNTHESIS-SOTA-BEAT-SK-V3.md` and RESULTS.md note line referencing 3-8%): if `sonic-rs` is rebuilt under strict-equivalent flags (no UTF-8 fast-skip on control bytes, no permissive escape handling) it loses 3-8% throughput. Applied to the current sonic column:
+Per the SOTA-beat design audit (`restart/skinny/tranches/GRAND-SYNTHESIS-SOTA-BEAT-SK-V3.md` and RESULTS.md note line referencing 3-8%): if `sonic-rs` is rebuilt under strict-equivalent flags (no UTF-8 fast-skip on control bytes, no permissive escape handling) it loses 3-8% throughput. Applied to the current sonic column:
 
 | Corpus           | sonic Mbps | sonic-strict est | T1 Mbps | T1/sonic-strict | Flips to PASS? |
 |------------------|-----------:|-----------------:|--------:|----------------:|----------------|
@@ -290,7 +290,7 @@ All 14 active N-direct rows close. The lone T2 oracle gaps (canada/mesh/marine_i
 
 ## 9. Cross-reference to V3 SK design
 
-- B1 is the streamable variant of the per-`\uXXXX` TBL classifier called out in the SK-V3 packet (`restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md`). The C2 profile confirms the dispatch overhead around the existing `unescape_uxxxx_x4_neon` kernel is itself worth ~15% of the unicode_escapes total — the fix is one layer up from the kernel.
+- B1 is the streamable variant of the per-`\uXXXX` TBL classifier called out in the SK-V3 packet (`restart/skinny/tranches/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md`). The C2 profile confirms the dispatch overhead around the existing `unescape_uxxxx_x4_neon` kernel is itself worth ~15% of the unicode_escapes total — the fix is one layer up from the kernel.
 - B2 specifically targets the inlined-string-scan cluster on lines 480/520. The existing `match_tiny_plain_string_direct` already wins on short strings; widening it to 16-byte stride is a direct extension.
 - B5 is the mesh real_typed_struct candidate already noted in `project_aq_status` and HANDOFF V4. The profile confirms `eisel_lemire::compute_f64` is on the critical path but is not the bottleneck — the digit-scan around it is. The two-part fix above addresses both.
 - B7 is bench-side only and does not appear in the SK-V3 design surface. It is included here because the profile data shows it is a real 15-25% line on five rows; once the SinkOnly digest no longer cryptographically fingerprints string bytes, the bench number is a fairer reflection of generated-parse cost.

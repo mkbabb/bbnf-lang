@@ -580,7 +580,7 @@ Required amendments:
 
 - Update date/status to 2026-05-15 reinforcement fold-back after A1-A6/B6.
 - Add reading order entry for A1-A6 reports and this B6 spec edit map. If these
-  reports are later copied into `restart/skinny/audit/SK-V6-COHORT/`, update
+  reports are later copied into `restart/skinny/tranches/sk-v6/research/`, update
   paths from `/tmp`.
 - In current state, keep A4's binding gate numbers and add representative typed
   output split.
@@ -631,7 +631,7 @@ Required amendment:
 ## Implementation Handoff Packet Outline
 
 The implementation packet should be a separate file, probably under
-`restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V6-B6.md` or the existing
+`restart/skinny/tranches/IMPLEMENTATION-PACKET-SK-V6-B6.md` or the existing
 SK-V6 cohort directory once reports leave `/tmp`. It should be organized as
 follows.
 

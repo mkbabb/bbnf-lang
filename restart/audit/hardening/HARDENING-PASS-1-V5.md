@@ -15,7 +15,7 @@
 - Carry-aware framing: V1-V4 closed most PASS-1 issues; V5 is stricter about cross-document surfaces that downstream workers will read as canonical.
 - Mandatory reading consumed before writing: README, Locks, V1-V4 consolidated hardening, research index, hardening prompts, amendment dispatch, style/process precepts, Architecture, Migration, Master Plan, PASS-1, PASS-2, PASS-3, and PASS-1 hardening V1-V3.
 - Audit hygiene: claims below are bound to observed file lines or to rerun local `rg` checks.
-- Lane note: Lane 2 is `N/A` for PASS targets per `restart/prompts/HARDENING.md:56-58` and `restart/prompts/HARDENING.md:171-175`.
+- Lane note: Lane 2 is `N/A` for PASS targets per `restart/prompts/audit-specs/HARDENING-LENS-SET.md:56-58` and `restart/prompts/audit-specs/HARDENING-LENS-SET.md:171-175`.
 
 ## §2 Carry-Aware Lens Table A-E
 
@@ -28,7 +28,7 @@
 | A5 | Narrative coherence | `restart/audit/pass-1-substrate/PASS-1.md:249-259`, `restart/MIGRATION.md:606-633`, `restart/MASTER-PLAN.md:562-580` | PASS-1 inheritance ledger, migration sequence, and master commit chain all route old substrate work into restart tranches. | Closed from V4; no new surgery. | Keep as evidence for READY once A1/A2 close. |
 | B1 | Vocabulary drift | `restart/audit/pass-1-substrate/PASS-1.md:111-126`, `restart/ARCHITECTURE.md:393-450`, `restart/audit/pass-2-codegen/PASS-2.md:69` | PASS-1 crate tree uses `passes` children including `types`, `layout`, and `facts`; PASS-2/Architecture carry public `LayoutFacts`, `LayoutSink`, and `passes::layout`, with `TypeFacts` internal. | Prior V3 noted acceptable target-local absence; V5 keeps a watch item. | Add a short PASS-1 handoff sentence that the public layout vocabulary is defined downstream, or keep the Architecture/PASS-2 carry gate explicit. |
 | B2 | Vocabulary drift | `restart/audit/pass-1-substrate/PASS-1.md:39`, `restart/audit/pass-2-codegen/PASS-2.md:52-79`, `restart/ARCHITECTURE.md:875-901` | PASS-1 states Backend IR has 22 variants without `Return`; PASS-2/Architecture carry 23-node language, with Architecture noting the equivalence requirement if `Return` is omitted. | Acceptable only while equivalence proof remains visible. | Keep the equivalence proof as a hard gate in PASS-2 or synthesis close. |
-| B3 | Vocabulary drift | `restart/audit/pass-1-substrate/PASS-1.md:57`, `restart/locks/14-LOCKS.md:34`, `restart/audit/pass-2-codegen/PASS-2.md:455` | `OpenFrame` is consistently retired in favor of tape/direct runtime and `TapeBuilder` checkpoint language. | Closed. | No amendment. |
+| B3 | Vocabulary drift | `restart/audit/pass-1-substrate/PASS-1.md:57`, `restart/locks/LOCKS.md:34`, `restart/audit/pass-2-codegen/PASS-2.md:455` | `OpenFrame` is consistently retired in favor of tape/direct runtime and `TapeBuilder` checkpoint language. | Closed. | No amendment. |
 | B4 | Vocabulary drift | `restart/audit/pass-1-substrate/PASS-1.md:196`, `restart/ARCHITECTURE.md:1065` | PASS-1 uses infix lookbehind `Expr "|<" Expr`; Architecture sketch uses prefix `|< Suffix`. | Amendment blocker. | Replace Architecture production or mark it non-normative and bind to PASS-1 §6. |
 | B5 | Vocabulary drift | `restart/audit/pass-1-substrate/PASS-1.md:183`, `restart/audit/pass-1-substrate/PASS-1.md:211`, `restart/ARCHITECTURE.md:1081` | PASS-1 rejects bodyless host declarations; Architecture sketch accepts `@host fn ... ;`. | Amendment blocker. | Replace `HostDecl` with PASS-1 `HostFn ... Block` production. |
 | B6 | Vocabulary drift | `restart/audit/pass-1-substrate/PASS-1.md:205-217`, `restart/ARCHITECTURE.md:1077-1079` | PASS-1 rule-level chains use `->`; Architecture uses method-chain grammar plus `=>` map expression. | Amendment blocker. | Move method-chain grammar under host-body expression only and remove rule-level `=>`. |
@@ -45,13 +45,13 @@
 | D4 | Coverage gap | `restart/audit/pass-1-substrate/PASS-1.md:71`, `restart/audit/pass-1-substrate/PASS-1.md:217` | Generic host/rule typing under chain flow is described, but not stress-tested under recovery values and host overload selection. | Test-design gap. | Add a gate for generic chain typing when a prior step is recovered or substituted. |
 | D5 | Coverage gap | `restart/audit/pass-1-substrate/PASS-1.md:67`, `restart/MASTER-PLAN.md:374-405` | WASM host primitives are routed, but the primitive-set stability boundary is thinner than Rust V1's host dispatch language. | Coverage gap. | Add a WASM host primitive manifest smoke gate in H or PASS-2 handoff. |
 | D6 | Coverage gap | `restart/audit/pass-3-runtime/PASS-3.md:179-190`, `restart/MASTER-PLAN.md:482-500` | LSP fallback policy is coherent; default silence and debug-only reporting are clear. | Closed. | No amendment. |
-| D7 | Coverage gap | `restart/locks/14-LOCKS.md:54`, `restart/MASTER-PLAN.md:524` | Lock 11 incubation is stable: sister crates stay path-deps until stability gate. | Closed. | No amendment. |
-| E1 | Lock tension | `restart/locks/14-LOCKS.md:34`, `restart/audit/pass-1-substrate/PASS-1.md:57` | Lock 1 tape/direct union and PASS-1 builder-frame substrate agree; `OpenFrame` is deletion archaeology only. | Resolved tension. | No amendment. |
-| E2 | Lock tension | `restart/locks/14-LOCKS.md:40`, `restart/audit/pass-1-substrate/PASS-1.md:73-75` | Lock 4 keeps egraph and CSP separate; PASS-1 keeps `AnalysisCost` extraction separate from HM/CSP choices. | Resolved tension. | No amendment. |
-| E3 | Lock tension | `restart/locks/14-LOCKS.md:52`, `restart/audit/pass-2-codegen/PASS-2.md:540-541` | Lock 10 says Pratt/SIMD are automatic, but PASS-2 diagnostic strings reintroduce directive vocabulary. | Amendment blocker. | Remove `@pratt`/`@simd` from diagnostics and any user-facing remediation. |
-| E4 | Lock tension | `restart/locks/14-LOCKS.md:58`, `restart/audit/pass-1-substrate/PASS-1.md:221-227` | Lock 14 two-surface grammar generalization is carried by PASS-1 yaml proof. | Resolved tension. | Strengthen with worked example only. |
-| E5 | Lock tension | `restart/locks/14-LOCKS.md:46`, `restart/audit/pass-3-runtime/PASS-3.md:82-115` | Lock 7 path crates and PASS-3 path API agree on `pointer!`, `select!`, `path`, `path-core`, `path-ts`. | Resolved tension. | No amendment. |
-| E6 | Lock tension | `restart/locks/14-LOCKS.md:36`, `restart/ARCHITECTURE.md:971-990` | Layout side-table public/private split is coherent in Architecture, but PASS-1 should not be read as defining public `TypeFacts`. | Watch item only. | Keep `LayoutFacts` public, `TypeFacts` internal in downstream specs. |
+| D7 | Coverage gap | `restart/locks/LOCKS.md:54`, `restart/MASTER-PLAN.md:524` | Lock 11 incubation is stable: sister crates stay path-deps until stability gate. | Closed. | No amendment. |
+| E1 | Lock tension | `restart/locks/LOCKS.md:34`, `restart/audit/pass-1-substrate/PASS-1.md:57` | Lock 1 tape/direct union and PASS-1 builder-frame substrate agree; `OpenFrame` is deletion archaeology only. | Resolved tension. | No amendment. |
+| E2 | Lock tension | `restart/locks/LOCKS.md:40`, `restart/audit/pass-1-substrate/PASS-1.md:73-75` | Lock 4 keeps egraph and CSP separate; PASS-1 keeps `AnalysisCost` extraction separate from HM/CSP choices. | Resolved tension. | No amendment. |
+| E3 | Lock tension | `restart/locks/LOCKS.md:52`, `restart/audit/pass-2-codegen/PASS-2.md:540-541` | Lock 10 says Pratt/SIMD are automatic, but PASS-2 diagnostic strings reintroduce directive vocabulary. | Amendment blocker. | Remove `@pratt`/`@simd` from diagnostics and any user-facing remediation. |
+| E4 | Lock tension | `restart/locks/LOCKS.md:58`, `restart/audit/pass-1-substrate/PASS-1.md:221-227` | Lock 14 two-surface grammar generalization is carried by PASS-1 yaml proof. | Resolved tension. | Strengthen with worked example only. |
+| E5 | Lock tension | `restart/locks/LOCKS.md:46`, `restart/audit/pass-3-runtime/PASS-3.md:82-115` | Lock 7 path crates and PASS-3 path API agree on `pointer!`, `select!`, `path`, `path-core`, `path-ts`. | Resolved tension. | No amendment. |
+| E6 | Lock tension | `restart/locks/LOCKS.md:36`, `restart/ARCHITECTURE.md:971-990` | Layout side-table public/private split is coherent in Architecture, but PASS-1 should not be read as defining public `TypeFacts`. | Watch item only. | Keep `LayoutFacts` public, `TypeFacts` internal in downstream specs. |
 
 ## §3 LLM-Pathology Table F-H
 
@@ -75,10 +75,10 @@
 | Row | Lane | Site | Verification | Result |
 |---|---|---|---|---|
 | 1 | Lane 1 - Authority | `restart/README.md:11-25` | Two onboarding surfaces and no per-grammar match arms are still the restart premise. | PASS for PASS-1; worked example still needed. |
-| 2 | Lane 1 - Authority | `restart/locks/14-LOCKS.md:34-60` | Locks cover tape/direct, layout, BIR, path, SOTA, Pratt/SIMD auto, Lock 11, Lock 14. | PASS with one downstream diagnostic conflict. |
+| 2 | Lane 1 - Authority | `restart/locks/LOCKS.md:34-60` | Locks cover tape/direct, layout, BIR, path, SOTA, Pratt/SIMD auto, Lock 11, Lock 14. | PASS with one downstream diagnostic conflict. |
 | 3 | Lane 1 - Authority | `restart/audit/pass-1-substrate/PASS-1.md:5-20` | PASS-1 declares conflict closure and key reconciliations. | PASS internally. |
 | 4 | Lane 1 - Authority | `restart/ARCHITECTURE.md:1049-1081` | Architecture grammar sketch conflicts with PASS-1 grammar. | FAIL; amendment required. |
-| 5 | Lane 2 - Multi-wave | `restart/prompts/HARDENING.md:56-58` | Multi-wave dispute lane is not applicable to PASS targets. | N/A. |
+| 5 | Lane 2 - Multi-wave | `restart/prompts/audit-specs/HARDENING-LENS-SET.md:56-58` | Multi-wave dispute lane is not applicable to PASS targets. | N/A. |
 | 6 | Lane 3 - Work preservation | `restart/audit/pass-1-substrate/PASS-1.md:249-259` | PASS-1 routes old research into keep/reinvent/discard without editing old crates. | PASS. |
 | 7 | Lane 3 - Work preservation | `restart/MIGRATION.md:111-165` | Migration keeps mixed-fate crosswalk and receiver gates. | PASS. |
 | 8 | Lane 4 - Handoff | `restart/audit/pass-1-substrate/PASS-1.md:154-174` | PASS-1 sends BIR, lowering, tape/direct, and host/layout/error obligations to PASS-2/PASS-3. | PASS. |

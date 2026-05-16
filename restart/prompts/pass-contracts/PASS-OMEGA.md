@@ -1,6 +1,6 @@
 # PASS-OMEGA — Totality Astral Synthesis (V1 Spec Cohesion + Skinny Lessons Fold-In)
 
-Pass Omega is the **totality astral synthesis pass**. It consumes the most recent totality pass cycle's research/profile/hardening artefacts AND the most recent skinny iteration's REDRESS evidence + validated/invalidated ledger, then folds findings into V1 spec surfaces: `restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`, `restart/locks/14-LOCKS.md`, `restart/HANDOFF.md`, `restart/MIGRATION.md`, and the skinny corpus surfaces (`restart/skinny/{BENCH,COMPILER,HARDENING,INDEX,SUBSTRATE,WORKSPACE}.md`).
+Pass Omega is the **totality astral synthesis pass**. It consumes the most recent totality pass cycle's research/profile/hardening artefacts AND the most recent skinny iteration's REDRESS evidence + validated/invalidated ledger, then folds findings into V1 spec surfaces: `restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`, `restart/locks/LOCKS.md`, `restart/HANDOFF.md`, `restart/MIGRATION.md`, and the skinny corpus surfaces (`restart/skinny/{BENCH,COMPILER,HARDENING,INDEX,SUBSTRATE,WORKSPACE}.md`).
 
 The pass is **iterative + auto-convergent**. Six parallel sub-agents fan out per the scope matrix in §2. A six-lens CHALLENGE pass adversarially reviews the output. Six CRUD agents execute Create/Read/Update/Delete operations on the document corpus per the consolidated synthesis. Dispositions fold into v+1. The loop terminates at convergence per `ORCHESTRATOR.md` §iteration-governance + user G-Omega sign-off.
 
@@ -29,7 +29,7 @@ Pass Omega dispatches when:
 |---|---|---|
 | **Ω-A V1 spec coherence audit** | Cross-document audit: every claim in ARCHITECTURE / MASTER-PLAN / HANDOFF / MIGRATION cites file:line or commit SHA. Every locks reference cites the lock at file:line. Every spec ↔ implementation pairing is verified (e.g. "BackendShape Rust state landed at ir/src/lib.rs:334-341"). | `restart/totality/astral/V{V}/ΩA-coherence-audit.md` |
 | **Ω-B Skinny lessons digest** | Walk every SK-V{1..N} cycle's master docs + REDRESS + RESULTS. Extract: load-bearing wins per iteration + load-bearing rejections per iteration + per-iteration trajectory per corpus per workload. Produce the longitudinal V5→V6→V7→V{N} table for ARCHITECTURE §implementation-status update. | `restart/totality/astral/V{V}/ΩB-skinny-lessons.md` |
-| **Ω-C Locks amendments** | Audit the 16 locks against the most recent skinny REDRESS + the totality T-P3 hardening. Identify: lock amendments required, lock additions justified by repeated REDRESS evidence, locks no longer load-bearing (proposed for retirement). Output: locks amendment diff for `restart/locks/14-LOCKS.md`. | `restart/totality/astral/V{V}/ΩC-locks-amendments.md` |
+| **Ω-C Locks amendments** | Audit the 16 locks against the most recent skinny REDRESS + the totality T-P3 hardening. Identify: lock amendments required, lock additions justified by repeated REDRESS evidence, locks no longer load-bearing (proposed for retirement). Output: locks amendment diff for `restart/locks/LOCKS.md`. | `restart/totality/astral/V{V}/ΩC-locks-amendments.md` |
 | **Ω-D Master-plan reconciliation** | Audit `restart/MASTER-PLAN.md` §H tranche against actual landed work (per SK iteration commit SHAs). Identify: waves landed / waves refuted / waves pending. Update wave allocations + per-wave references. Identify NEW waves implied by skinny REDRESS + totality T-P1/T-P2 findings. | `restart/totality/astral/V{V}/ΩD-master-plan-reconciliation.md` |
 | **Ω-E Skinny corpus alignment** | Audit `restart/skinny/{BENCH,COMPILER,HARDENING,INDEX,SUBSTRATE,WORKSPACE}.md` for: outdated references, stale cohort citations, missing SK-V{N+1} anchors, drift from V1 spec terminology. Output: per-surface diff. | `restart/totality/astral/V{V}/ΩE-skinny-corpus.md` |
 | **Ω-F Migration + Handoff** | Update `restart/MIGRATION.md` with any rename / abrogate / refactor decisions surfaced by skinny lessons. Update `restart/HANDOFF.md` top-level state to reflect the latest SK iteration + totality cycle state. Author the next-cycle dispatch directive. | `restart/totality/astral/V{V}/ΩF-migration-handoff.md` |
@@ -66,10 +66,10 @@ Each CRUD operation is one of: Create (new file/section), Read (verification pas
 |---|---|---|
 | **CRUD-1 ARCHITECTURE** | `restart/ARCHITECTURE.md` | Update §implementation-status; add new sections per Ω-A coherence findings; verify cross-refs. |
 | **CRUD-2 MASTER-PLAN** | `restart/MASTER-PLAN.md` | Update §H tranche per Ω-D; add new waves; mark landed waves; verify §13.1 SIMD admissibility table cross-refs. |
-| **CRUD-3 LOCKS** | `restart/locks/14-LOCKS.md` (+ any new lock files) | Apply Ω-C amendments. Requires user G-Omega sign-off BEFORE merge. Until sign-off: amendments live in a diff file at `restart/totality/astral/V{V}/locks-diff.md`. |
+| **CRUD-3 LOCKS** | `restart/locks/LOCKS.md` (+ any new lock files) | Apply Ω-C amendments. Requires user G-Omega sign-off BEFORE merge. Until sign-off: amendments live in a diff file at `restart/totality/astral/V{V}/locks-diff.md`. |
 | **CRUD-4 HANDOFF + MIGRATION** | `restart/HANDOFF.md` + `restart/MIGRATION.md` | Update per Ω-F. Mark prior tranches' state. Author next-cycle dispatch directive. |
 | **CRUD-5 SKINNY CORPUS** | `restart/skinny/{BENCH,COMPILER,HARDENING,INDEX,SUBSTRATE,WORKSPACE}.md` | Update per Ω-E. Sync references to latest SK-V{N} anchors. Verify Lock 14 audit results are reflected. |
-| **CRUD-6 AUDIT + CLEANUP** | Legacy doc nuke + cohort archive | Delete superseded audit docs per the nuke plan. Archive SK-V{1..N-1} cohort reports if outdated. Keep historical audits in `restart/skinny/audit/` per the new-tranche-new-doc rule. |
+| **CRUD-6 AUDIT + CLEANUP** | Legacy doc nuke + cohort archive | Delete superseded audit docs per the nuke plan. Archive SK-V{1..N-1} cohort reports if outdated. Keep historical audits in `restart/skinny/tranches/` per the new-tranche-new-doc rule. |
 
 CRUD agents commit independently. Hard cap 30 min per agent. Outputs at `restart/totality/astral/V{V}/CRUD-LOG.md` (consolidated diff log) + the actual file edits per surface.
 
@@ -97,7 +97,7 @@ After CRUD completes, the orchestrator presents the proposed V1 spec amendments 
 
 ## §6 — User sign-off (G-Omega)
 
-G-Omega is **mandatory** before any locks amendment merges to `restart/locks/14-LOCKS.md`. The orchestrator presents to the user:
+G-Omega is **mandatory** before any locks amendment merges to `restart/locks/LOCKS.md`. The orchestrator presents to the user:
 
 - Summary of the cycle: T-P{1,2,3} pass cycles consumed + SK-V{N} lessons consumed + corpus-coherence delta.
 - The CHALLENGE CONSOLIDATED verdict.
@@ -135,7 +135,7 @@ restart/totality/astral/V{V}/
 
 restart/ARCHITECTURE.md      ← v+1 (CRUD-1)
 restart/MASTER-PLAN.md       ← v+1 (CRUD-2)
-restart/locks/14-LOCKS.md    ← v+1 (CRUD-3, post-G-Omega)
+restart/locks/LOCKS.md    ← v+1 (CRUD-3, post-G-Omega)
 restart/HANDOFF.md           ← v+1 (CRUD-4)
 restart/MIGRATION.md         ← v+1 (CRUD-4)
 restart/skinny/*.md          ← v+1 (CRUD-5)

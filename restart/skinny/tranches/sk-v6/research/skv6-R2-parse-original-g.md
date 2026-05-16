@@ -15,14 +15,14 @@ were present before this dispatch in:
 
 Read before profiling:
 
-- `restart/skinny/audit/IMPLEMENTATION-AGENT-PROMPT-SK-V6.md` sections 1-5,
+- `restart/skinny/tranches/sk-v6/DISPATCH-PROMPT.md` sections 1-5,
   especially Wave 1 R2 and the ban on SK-V5 hypothesis transfer.
-- `restart/skinny/audit/GRAND-SYNTHESIS-SK-V5.md` post-assay header and
+- `restart/skinny/tranches/sk-v5/SYNTHESIS.md` post-assay header and
   section 2.
 - `skinny/RESULTS.md`.
 - `skinny/REDRESS.md` entries 50-59.
-- `restart/skinny/audit/SK-V5-COHORT/skv5-B1-parse-attribution.md`.
-- `restart/skinny/audit/SK-V5-COHORT/skv5-D2-utf8-novelty.md`.
+- `restart/skinny/tranches/sk-v5/research/skv5-B1-parse-attribution.md`.
+- `restart/skinny/tranches/sk-v5/research/skv5-D2-utf8-novelty.md`.
 
 Binding correction: the SK-V5 Wave 3 UTF-8 fusion close route is refuted by
 REDRESS 50, 51, 53, 54, 55, and recorded as a route-class rejection by item 59.

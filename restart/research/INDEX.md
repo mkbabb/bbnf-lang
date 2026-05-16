@@ -2,12 +2,12 @@
 
 This index defines the eight research deep-dives that ground the bbnf-lang restart's SOTA-asserted architectural commitments in primary literature. Each topic maps to one or more of the 14 settled locks, names the specific architectural surface the research must engage, and prescribes the deliverable shape.
 
-The dispatched research agent for each topic produces `restart/research/<topic>.md` (~500-1000 lines). The fold cycle (Phase 2 of `restart/prompts/RESEARCH-FOLD-ORCHESTRATOR.md`) then absorbs §5 (refinements) + §7 (surgery proposals) into the existing trio + PASS surfaces. §6 (adversarial findings) of any artefact may trigger Phase 2 escalation if SOTA contradicts a settled lock.
+The dispatched research agent for each topic produces `restart/research/<topic>.md` (~500-1000 lines). The fold cycle (Phase 2 of `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md`) then absorbs §5 (refinements) + §7 (surgery proposals) into the existing trio + PASS surfaces. §6 (adversarial findings) of any artefact may trigger Phase 2 escalation if SOTA contradicts a settled lock.
 
 ## §1 — Required reading (per research agent, before topic-specific dispatch)
 
 1. `restart/README.md` — gestalt anchor; settled positions; 14 locks; BBNF V1 extensions; tape + direct-to-struct union; SOTA synthesis.
-2. `restart/locks/14-LOCKS.md` — settled architectural commitments; the agent's research must engage at least one named lock.
+2. `restart/locks/LOCKS.md` — settled architectural commitments; the agent's research must engage at least one named lock.
 3. `restart/ARCHITECTURE.md` — primary trio surface; the anchor sections per topic are listed below.
 4. `restart/MASTER-PLAN.md` — tranche-level context; the topic's evidence rows live here.
 5. `restart/audit/pass-{1-substrate,2-codegen,3-runtime}/PASS-{1,2,3}.md` — the surfaces a fold may touch.
@@ -127,7 +127,7 @@ repository, or benchmark report is cited.
 ### Topic 6 — Tape encoding + direct-to-struct union design
 
 **Anchor locks**: Lock 1 (tape + direct-to-struct union; properly implemented).
-**Anchor sections**: `restart/README.md` §8 substrate; `restart/ARCHITECTURE.md` §11; `restart/locks/14-LOCKS.md` Lock 1 reframe; PASS-3 §6 runtime crate tree.
+**Anchor sections**: `restart/README.md` §8 substrate; `restart/ARCHITECTURE.md` §11; `restart/locks/LOCKS.md` Lock 1 reframe; PASS-3 §6 runtime crate tree.
 **Engagement question**: the restart commits to "tape + direct-to-struct UNION" — every rule has `TapeShape` and `ValueShape`; typed values borrow `&'i Tape<'i>` plus node id. What does the union really mean — both representations co-exist, or one materialises to the other? How does sonic-rs's tape compare? What does simdjson's two-stage parsing give that bbnf's union doesn't, and vice versa?
 **Key sources**:
 - Langdale, G. & Lemire, D. (2019). *Parsing Gigabytes of JSON per Second.* VLDB Journal — the simdjson paper.

@@ -1,7 +1,7 @@
 # FSM/DTA Correctness Audit — From-First-Principles
 
 Audit target: should bbnf-lang use an FSM / DTA architecture, as proposed in
-`restart/skinny/audit/SOTA-BEAT-DESIGN.md` §5 ("Phase 3 — Collapsed-stage
+`restart/skinny/tranches/shared/SOTA-BEAT-DESIGN.md` §5 ("Phase 3 — Collapsed-stage
 AVX-512 backend (asmjson-class)") and §5.1 ("9-state FSM and PC-as-state")?
 
 Audit date: 2026-05-12. Status: complete.
@@ -24,7 +24,7 @@ docs as a *live* term. Its only occurrences are archaeological labels for the
 
 The retired-substrate file `crates/tape/src/dta.rs` (per `git log -- ` cited in
 PASS-C §7.5 ¶2) names the layer. **No current document in
-`restart/skinny/audit/` or `restart/locks/` defines DTA as an active acronym.**
+`restart/skinny/tranches/` or `restart/locks/` defines DTA as an active acronym.**
 
 ### Best-fit reading of the archive "DTA"
 
@@ -62,7 +62,7 @@ corroborated by:
   structural-index prepass shape is rejected; the retained tape projection IS
   the structural index"*).
 - The Era V archive names PSI alongside DTA as the failed substrate; the
-  surviving Lock 1 (`restart/locks/14-LOCKS.md:34` per PASS-C reference)
+  surviving Lock 1 (`restart/locks/LOCKS.md:34` per PASS-C reference)
   rewords the lesson as *"the structural projection IS the tape, not a
   sidecar to it; no parallel offset stream"* (quoted at
   `restart/skinny/SUBSTRATE.md:221`).
@@ -191,7 +191,7 @@ asmjson is therefore a **deterministic pushdown automaton (DPDA)**:
 ### Why the "FSM" framing leaks into the design doc
 
 The 9-state finite-control fragment is what `SOTA-BEAT-DESIGN.md` §5.1 calls
-"the FSM" (`restart/skinny/audit/SOTA-BEAT-DESIGN.md:277`):
+"the FSM" (`restart/skinny/tranches/shared/SOTA-BEAT-DESIGN.md:277`):
 
 > *"State alphabet: V (value), O (object body), K (key expected),
 > D (colon expected), C (comma-or-close), S (string body), F (false
@@ -332,10 +332,10 @@ already encodes the right discriminators (`SUBSTRATE.md:215`).
 - `restart-archive-2026-05-04/audit/per-agent/pass-c-agent-6-cross-cut.md:116` — "Each tranche claimed the next would consume; none did"
 - `restart/skinny/SUBSTRATE.md:215` — 5-shape `BackendShape` taxonomy + cost-model derivation
 - `restart/skinny/SUBSTRATE.md:221` — Lock 1 clarification ("structural projection IS the tape")
-- `restart/skinny/audit/SOTA-BEAT-DESIGN.md:267` — "collapsing Stage A and Stage B into one mask-driven FSM walk in the style of asmjson"
-- `restart/skinny/audit/SOTA-BEAT-DESIGN.md:277-283` — 9-state alphabet and PC-as-state
-- `restart/skinny/audit/SOTA-BEAT-DESIGN.md:332` — arm64 stays on structural-index template
-- `restart/skinny/audit/SOTA-BEAT-DESIGN.md:148-188` — asmjson architecture-verbatim + esoteric-stack-on-top strategy
+- `restart/skinny/tranches/shared/SOTA-BEAT-DESIGN.md:267` — "collapsing Stage A and Stage B into one mask-driven FSM walk in the style of asmjson"
+- `restart/skinny/tranches/shared/SOTA-BEAT-DESIGN.md:277-283` — 9-state alphabet and PC-as-state
+- `restart/skinny/tranches/shared/SOTA-BEAT-DESIGN.md:332` — arm64 stays on structural-index template
+- `restart/skinny/tranches/shared/SOTA-BEAT-DESIGN.md:148-188` — asmjson architecture-verbatim + esoteric-stack-on-top strategy
 - `restart/skinny/COMPILER.md:243-253` — Per-rule `BackendShape` lowering contract
 - `restart/skinny/COMPILER.md:247` — `EagerTape` admission predicates
 - asmjson `doc/dev.md` (via WebFetch 2026-05-12) — 9-state FSM description

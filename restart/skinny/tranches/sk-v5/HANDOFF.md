@@ -14,13 +14,13 @@ Mbps NEON floor. Strictness/output-plane columns are disclosed.
 
 The implementation agent's reading order is:
 
-1. `restart/skinny/audit/GRAND-SYNTHESIS-SK-V5.md` (the why)
-2. `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md` (the what + when)
-3. `restart/skinny/audit/NUKE-PLAN-SK-V5.md` (the removals)
+1. `restart/skinny/tranches/sk-v5/SYNTHESIS.md` (the why)
+2. `restart/skinny/tranches/sk-v5/SPEC.md` (the what + when)
+3. `restart/skinny/tranches/sk-v5/NUKE-PLAN.md` (the removals)
 4. This document (the entry/exit gates + dispatch posture)
 
 Cohort authority: 15 audit reports under
-`restart/skinny/audit/SK-V5-COHORT/` (9 deep cohort reports A1-A6 + B1-B3,
+`restart/skinny/tranches/sk-v5/research/` (9 deep cohort reports A1-A6 + B1-B3,
 plus 6 novelty-challenge reports D1-D6; 5,559 LOC total).
 
 ## Where SK-V5 Stands
@@ -152,7 +152,7 @@ x86 asmjson-beat successor.
 Each wave begins by reading: GRAND-SYNTHESIS-SK-V5 §11-12 (the wave
 sequencing rationale), IMPLEMENTATION-PACKET-SK-V5 §N (the specific
 wave's owner paths + concrete file plan), the relevant cohort report
-in `restart/skinny/audit/SK-V5-COHORT/` for the diagnostic findings.
+in `restart/skinny/tranches/sk-v5/research/` for the diagnostic findings.
 
 Wave 0 entry gate: synthesis docs are landed (this commit).
 

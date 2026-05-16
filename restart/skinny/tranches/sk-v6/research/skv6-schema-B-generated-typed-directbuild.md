@@ -8,7 +8,7 @@ Read requested code and audit context:
 - `skinny/crates/runtime/src/grammars/json/sink.rs`
 - `skinny/crates/runtime/src/grammars/json/generated.rs`
 - `skinny/crates/bbnf-bench/src/direct_struct.rs`
-- `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md` section 14
+- `restart/skinny/tranches/sk-v6/SYNTHESIS-WAVE-1-PLAN.md` section 14
 - `skinny/REDRESS.md` item 70
 
 Current facts:

@@ -6,7 +6,7 @@ Date: 2026-05-14
 ## Required Inputs Read
 
 - `skinny/REDRESS.md` rows 66-68 summary and surrounding entries.
-- `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md` Candidate 7/8/9 outcomes and final Wave 1e instruction.
+- `restart/skinny/tranches/sk-v6/SYNTHESIS-WAVE-1-PLAN.md` Candidate 7/8/9 outcomes and final Wave 1e instruction.
 - `restart/skinny/COMPILER.md` DirectBuild, SinkOnly, BIR construction discipline, hand-curated shape waiver, and lowerer sections.
 - `restart/ARCHITECTURE.md` BackendShape / DirectBuild / direct-to-struct union / Lock 14 future grammar sections.
 - Current skinny code for `DirectBuild`, `DirectBuildField`, `DirectBuildSource`, `passes::extract::materialize_rule`, and `codegen::lower::sink_only`.

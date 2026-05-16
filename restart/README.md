@@ -386,7 +386,7 @@ The VM (kept per Q7) is the debug + replay runtime: incremental edits replay thr
 
 ## §11 — Locks Carried Forward
 
-The **16 locks** at `restart/locks/14-LOCKS.md` are settled and govern the greenfield. Particular emphasis under the new gestalt:
+The **16 locks** at `restart/locks/LOCKS.md` are settled and govern the greenfield. Particular emphasis under the new gestalt:
 
 | Lock | Greenfield posture |
 |---|---|
@@ -418,17 +418,17 @@ The **16 locks** at `restart/locks/14-LOCKS.md` are settled and govern the green
 | Prompt | Path | Role |
 |---|---|---|
 | ORCHESTRATOR | `restart/prompts/ORCHESTRATOR.md` | main entry; phase-identification protocol; phase-type fan-out; hardening-cycle naming canon |
-| HARDENING-ORCHESTRATOR | `restart/prompts/HARDENING-ORCHESTRATOR.md` | sub-orchestrator for hardening cycles V1 through V8+; coordinates four parallel hardener agents and the consolidation |
-| RESEARCH-FOLD-ORCHESTRATOR | `restart/prompts/RESEARCH-FOLD-ORCHESTRATOR.md` | sub-orchestrator for research deep-dives + fold cycles |
-| AMENDMENT-DISPATCH | `restart/prompts/AMENDMENT-DISPATCH.md` | sub-orchestrator for verify-then-patch amendment cycles after AMENDMENT-REQUIRED / SIMPLIFY-AVAILABLE verdicts |
-| HARDENING | `restart/prompts/HARDENING.md` | per-target audit specification; lens contract (lenses A-K post-Phase-8.1); load-bearing input to every HARDENING-ORCHESTRATOR dispatch |
+| HARDENING-ORCHESTRATOR | `restart/prompts/sub-orchestrators/HARDENING.md` | sub-orchestrator for hardening cycles V1 through V8+; coordinates four parallel hardener agents and the consolidation |
+| RESEARCH-FOLD-ORCHESTRATOR | `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` | sub-orchestrator for research deep-dives + fold cycles |
+| AMENDMENT-DISPATCH | `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` | sub-orchestrator for verify-then-patch amendment cycles after AMENDMENT-REQUIRED / SIMPLIFY-AVAILABLE verdicts |
+| HARDENING | `restart/prompts/audit-specs/HARDENING-LENS-SET.md` | per-target audit specification; lens contract (lenses A-K post-Phase-8.1); load-bearing input to every HARDENING-ORCHESTRATOR dispatch |
 
 **Cold-start reading order.** Any cold-start agent reads in sequence:
 
 1. `restart/HANDOFF.md` — orientation; current verdict; next move
 2. `restart/prompts/ORCHESTRATOR.md` — phase-identification + dispatch protocol
 3. `restart/README.md` — gestalt + 16 locks anchor
-4. `restart/locks/14-LOCKS.md` — settled commitments
+4. `restart/locks/LOCKS.md` — settled commitments
 5. `restart/audit/hardening/HARDENING-CONSOLIDATED-V{N}.md` (most recent) — operating verdict
 6. `docs/precepts/instructions/STYLE.md` + `LESSONS-LEARNED.md` + `CONSUMING.md`
 
@@ -449,7 +449,7 @@ Per `docs/precepts/instructions/STYLE.md`. Calibrated, trenchant, archaic-permis
 This README synthesizes:
 - 35-question interrogation (`restart-archive-2026-05-04/INTERROGATION-2026-05-04.md`); user answers ratified
 - The ffuzzy three-primitive insight (`docs/ffuzzy.md`)
-- The 16 locks (`restart/locks/14-LOCKS.md`)
+- The 16 locks (`restart/locks/LOCKS.md`)
 - The precepts (`docs/precepts/`, submodule, STYLE + LESSONS-LEARNED + ORCHESTRATION + tranche/{SPEC, START, RESEARCH, CHALLENGE, WAVE_SPEC, AGENT_DISPATCH_TEMPLATE, DOC_UPDATE_WAVE})
 - The corpus carried forward at `restart/corpora/` (CENSUS, MODULES, RESTART-SKETCH, SOTA, plus the prior Phase-3 8-lane audit syntheses preserved in archive)
 

@@ -8,17 +8,17 @@ Discipline: read-only repo. No repository files edited. Report-only output.
 
 Required SK-V6 inputs read:
 
-- `restart/skinny/audit/SK-V6-COHORT/skv6-A2-dav1d-asm-process.md`
-- `restart/skinny/audit/SK-V6-COHORT/skv6-A6-host-asm-instruction-map.md`
-- `restart/skinny/audit/SK-V6-COHORT/skv6-B2-checkasm-hardening-plan.md`
-- `restart/skinny/audit/SK-V6-COHORT/skv6-B5-primitive-gap-inventory.md`
-- `restart/skinny/audit/SOTA-BEAT-DESIGN.md`
+- `restart/skinny/tranches/sk-v6/research/skv6-A2-dav1d-asm-process.md`
+- `restart/skinny/tranches/sk-v6/research/skv6-A6-host-asm-instruction-map.md`
+- `restart/skinny/tranches/sk-v6/research/skv6-B2-checkasm-hardening-plan.md`
+- `restart/skinny/tranches/sk-v6/research/skv6-B5-primitive-gap-inventory.md`
+- `restart/skinny/tranches/shared/SOTA-BEAT-DESIGN.md`
 
 Additional local evidence used because this C4 task asks for current hot
 retained/direct symbol mapping:
 
-- `restart/skinny/audit/SK-V6-COHORT/skv6-B3-profile-retained-three-way.md`
-- `restart/skinny/audit/SK-V6-COHORT/skv6-B4-profile-direct-three-way.md`
+- `restart/skinny/tranches/sk-v6/research/skv6-B3-profile-retained-three-way.md`
+- `restart/skinny/tranches/sk-v6/research/skv6-B4-profile-direct-three-way.md`
 - `skinny/profile/wave2-asm/PROFILE-REPORT.md`
 - `skinny/profile/wave2-pmu/PMU-REPORT.md`
 - existing cargo-asm files in `skinny/profile/asm/*.s`

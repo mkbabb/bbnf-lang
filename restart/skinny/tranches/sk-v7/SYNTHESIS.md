@@ -2,18 +2,18 @@
 
 Date: 2026-05-16.
 
-Cohort: 18 agent reports under `restart/skinny/audit/SK-V7-COHORT/` (6 deep
+Cohort: 18 agent reports under `restart/skinny/tranches/sk-v7/research/` (6 deep
 research A1-A6 + 6 reinforcement design B1-B6 + 6 profile C1-C6). The C4
 PMU access was blocked on M5 Max; used static disassembly fall-back per
 SK-V6 R6c precedent.
 
 Authority: this document is the **Pass Alpha α-F output** per
-`restart/prompts/PASS-ALPHA.md` §2. It folds the SK-V6 measured state +
+`restart/prompts/pass-contracts/PASS-ALPHA.md` §2. It folds the SK-V6 measured state +
 the SK-V7 cohort findings into the next-cycle synthesis. The companion
 artefacts are `IMPLEMENTATION-PACKET-SK-V7.md` (the wave plan with
 precisely-defined goalset + telemetry binding) + `HANDOFF-SK-V7.md`
 (packet handoff). The Pass Alpha CHALLENGE pass against this synthesis
-landed at `restart/skinny/audit/SK-V7-COHORT/alpha-hardening/` (when
+landed at `restart/skinny/tranches/sk-v7/research/alpha-hardening/` (when
 dispatched; this synthesis is the V1 of the cycle).
 
 ## 1. The Frame
@@ -268,7 +268,7 @@ Omega Ω-C (locks amendments) consideration:
   formalises strictness as required RESULTS schema.
 
 These proposals go to Pass Omega Ω-C for evaluation; G-Omega
-sign-off required before merge to `restart/locks/14-LOCKS.md`.
+sign-off required before merge to `restart/locks/LOCKS.md`.
 
 ## 10. Closing Posture
 

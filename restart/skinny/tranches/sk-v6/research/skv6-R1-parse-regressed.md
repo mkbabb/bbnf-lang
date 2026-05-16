@@ -5,7 +5,7 @@ Workspace: `/Users/mkbabb/Programming/bbnf-lang`
 
 ## Scope and baseline
 
-Authority read: `restart/skinny/audit/IMPLEMENTATION-AGENT-PROMPT-SK-V6.md` sections 1, 2, 3, and Wave 1; `restart/skinny/audit/GRAND-SYNTHESIS-SK-V5.md` post-assay header; `skinny/RESULTS.md`; latest SK-V6 section of `skinny/REDRESS.md`; and `restart/skinny/audit/SK-V5-COHORT/skv5-B1-parse-attribution.md`.
+Authority read: `restart/skinny/tranches/sk-v6/DISPATCH-PROMPT.md` sections 1, 2, 3, and Wave 1; `restart/skinny/tranches/sk-v5/SYNTHESIS.md` post-assay header; `skinny/RESULTS.md`; latest SK-V6 section of `skinny/REDRESS.md`; and `restart/skinny/tranches/sk-v5/research/skv5-B1-parse-attribution.md`.
 
 This profiles the NEW Track 1 retained parse baseline, not SK-V4. The profiled binary is `/tmp/skv6-cargo/R1/release/profile-lazy`, built from `skinny` with:
 

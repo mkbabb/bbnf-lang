@@ -250,7 +250,7 @@ Observations:
 
 ## 6. Cross-correlation with V5/V6 R6 / R6c findings
 
-Source: `restart/skinny/audit/SK-V6-COHORT/skv6-R6-icache-branch.md`, `skv6-R6c-icache-branch-post-c4.md`, `skv6-C4-host-asm-profile.md`.
+Source: `restart/skinny/tranches/sk-v6/research/skv6-R6-icache-branch.md`, `skv6-R6c-icache-branch-post-c4.md`, `skv6-C4-host-asm-profile.md`.
 
 | metric | SK-V6 R6c (post-C4) | SK-V7 C4 (current) | delta |
 |---|---:|---:|---:|

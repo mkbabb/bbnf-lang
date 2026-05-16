@@ -177,7 +177,7 @@ The current state is:
 - All SK-V7 master docs are at `restart/skinny/tranches/sk-v7/` per precepts/tranche layout.
 - SK-V7 cohort (18 reports + 6 restructure reports) is at `tranche/sk-v7/research/`.
 - SK-V5, SK-V6, SK-V3.5 are archived to sibling `tranche/sk-v{5,6,3.5}/` dirs.
-- 16 architectural locks at `restart/locks/LOCKS.md` (formerly `14-LOCKS.md`).
+- 16 architectural locks at `restart/locks/LOCKS.md` (formerly `LOCKS.md`).
 - 4-subdir prompt suite at `restart/prompts/` (sub-orchestrators/, pass-contracts/, audit-specs/).
 - ~220 cross-file path references are broken pending Pass Omega CRUD; non-blocking for W0.
 

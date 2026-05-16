@@ -18,8 +18,8 @@ Local bbnf-lang sources:
 - `/Users/mkbabb/Programming/bbnf-lang/skinny/crates/bbnf-simd/build.rs`
 - `/Users/mkbabb/Programming/bbnf-lang/skinny/crates/bbnf-simd/ext/x86/bbnf.asm`
 - `/Users/mkbabb/Programming/bbnf-lang/skinny/REDRESS.md`
-- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/audit/SK-V5-COHORT/skv5-A2-dav1d-process.md`
-- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/audit/SK-V5-COHORT/skv5-A6-research-ledger.md`
+- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v5/research/skv5-A2-dav1d-process.md`
+- `/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v5/research/skv5-A6-research-ledger.md`
 
 Upstream source snapshots:
 
@@ -465,7 +465,7 @@ Require benchmark rows to disclose:
 
 Checkasm bench numbers should be treated as admission diagnostics. End-to-end benchmark credit should come only after the primitive is wired through a real consumer.
 
-### `restart/locks/14-LOCKS.md`
+### `restart/locks/LOCKS.md`
 
 Extend Lock 16 with three concrete requirements:
 

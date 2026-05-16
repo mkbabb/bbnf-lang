@@ -66,9 +66,9 @@ REDRESS.md UTF context (lines 27, 332, 348-351, 605): all references describe th
 
 **Remediation (C5): EXTANT-PLANNED, but cohort B1/B2/A3 contribute the specific kernel boundary.** The high-level remedy ("UTF-8 validation at scan boundary, fused into the SIMD body scan") is already committed in three places:
 
-- `restart/skinny/audit/SOTA-BEAT-DESIGN.md:301-304` — "UTF-8 validation is a scan-boundary policy".
+- `restart/skinny/tranches/shared/SOTA-BEAT-DESIGN.md:301-304` — "UTF-8 validation is a scan-boundary policy".
 - `restart/MASTER-PLAN.md:507` — H.W3 enumerates `UTF8_VALIDATED` flag plumbing, `parse_bytes` scan-boundary validation, and `unicode_*` row gates.
-- `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md:158` (Wave 2) — "invalid UTF-8 rejected at scan boundary, not view access" as part of the string primitive contract.
+- `restart/skinny/tranches/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md:158` (Wave 2) — "invalid UTF-8 rejected at scan boundary, not view access" as part of the string primitive contract.
 
 The novel B1/B2/A3 contribution is **kernel-level specificity** absent from those plans:
 - B1 names `scan_string_special_block` (`string_block.rs:65`) as the fold target and quantifies 25–40% `parse_value_at` self-time attribution on every parse-G row.

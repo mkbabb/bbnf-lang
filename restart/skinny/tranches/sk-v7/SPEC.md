@@ -6,11 +6,11 @@ Workspace: `/Users/mkbabb/Programming/bbnf-lang/skinny`.
 
 Authority:
 
-- `restart/skinny/audit/GRAND-SYNTHESIS-SK-V7.md` (companion synthesis).
-- `restart/skinny/audit/SK-V7-COHORT/` (18 cohort reports).
-- `restart/skinny/audit/HANDOFF-SK-V7.md` (packet handoff).
-- `restart/prompts/PASS-ALPHA.md` (this packet's goalset format spec).
-- `restart/prompts/SKINNY-PASSES.md` (per-wave triumvirate contract).
+- `restart/skinny/tranches/sk-v7/SYNTHESIS.md` (companion synthesis).
+- `restart/skinny/tranches/sk-v7/research/` (18 cohort reports).
+- `restart/skinny/tranches/sk-v7/HANDOFF.md` (packet handoff).
+- `restart/prompts/pass-contracts/PASS-ALPHA.md` (this packet's goalset format spec).
+- `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md` (per-wave triumvirate contract).
 - `restart/prompts/ORCHESTRATOR.md` (dispatch + sign-off gates).
 - `skinny/RESULTS.md` (current gate authority).
 
@@ -103,7 +103,7 @@ All must pass before closing each wave's exit gate.
 - `skinny/crates/bbnf-bench/Cargo.toml` (line 21: remove `"utf8_lossy"`)
 - `skinny/crates/bbnf-bench/src/lib.rs` (verify no API depends on lossy mode)
 - `skinny/RESULTS.md` (re-baseline; populate schema v3 columns)
-- `restart/skinny/audit/SK-V7-COHORT/wave-0-strict-baseline.md` (the rerun report)
+- `restart/skinny/tranches/sk-v7/research/wave-0-strict-baseline.md` (the rerun report)
 
 ### Tasks
 1. Edit `bbnf-bench/Cargo.toml:21`: remove `, "utf8_lossy"` from sonic-rs features.
@@ -111,7 +111,7 @@ All must pass before closing each wave's exit gate.
 3. Run `cargo bench -p bbnf-bench --bench json_parity` (fresh; ~30 min wall).
 4. Run `cargo run -p bbnf-bench --bin gate --release` to emit refreshed RESULTS.md.
 5. Manually add the missing schema v3 columns if the bench harness doesn't yet emit them (this is per PASS-ALPHA §4.3; if the bench harness is incomplete, mark as a Wave 0 follow-up).
-6. Write a re-baseline report at `restart/skinny/audit/SK-V7-COHORT/wave-0-strict-baseline.md` documenting per-row Mbps delta.
+6. Write a re-baseline report at `restart/skinny/tranches/sk-v7/research/wave-0-strict-baseline.md` documenting per-row Mbps delta.
 
 ### Exit gate
 - sonic-rs Mbps drops 3-8% on every row vs current RESULTS.md.
@@ -421,7 +421,7 @@ GRAND-SYNTHESIS §9).
 
 Final report lands at:
 ```
-restart/skinny/audit/HANDOFF-SK-V7.md  (THIS PACKET's companion; lands now)
+restart/skinny/tranches/sk-v7/HANDOFF.md  (THIS PACKET's companion; lands now)
 ```
 
 Required sections per SK-V6 HANDOFF convention plus:

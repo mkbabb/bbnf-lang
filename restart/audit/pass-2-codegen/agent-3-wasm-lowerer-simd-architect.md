@@ -21,11 +21,11 @@ SIMD is first-class. README names NEON, AVX2, AVX512, WASM-SIMD, and scalar targ
 
 ## §3 Architectural Commitments Ratified
 
-1. **WASM lowerer consumes Backend IR.** The current WASM emitter's trait implementation must be replaced with a BIR consumer. This matches Lock 5 and prevents a second grammar-walking backend (`restart/locks/14-LOCKS.md:42`).
+1. **WASM lowerer consumes Backend IR.** The current WASM emitter's trait implementation must be replaced with a BIR consumer. This matches Lock 5 and prevents a second grammar-walking backend (`restart/locks/LOCKS.md:42`).
 
 2. **Linear-memory ABI mirrors Tape.** WASM parser exports accept `(ptr, len)` or `&[u8]` through wasm-bindgen and return an owned result handle or serialized result depending on PASS-3 API. Internally the parser builds Tape and typed views exactly like native Rust. BD.W5 describes WASM output as typed struct in linear memory for parity purposes (`docs/tranches/BD/waves/W5.md:14-18`); PASS-2 gives that memory layout a Tape-backed core.
 
-3. **SIMD scanner is a sibling substrate, not per-grammar code.** `StructuralAlphabet` is emitted from BIR and consumed by `simd-scan`; the crate remains generic. Lock 14 forbids grammar match arms in generic crates (`restart/locks/14-LOCKS.md:60`).
+3. **SIMD scanner is a sibling substrate, not per-grammar code.** `StructuralAlphabet` is emitted from BIR and consumed by `simd-scan`; the crate remains generic. Lock 14 forbids grammar match arms in generic crates (`restart/locks/LOCKS.md:60`).
 
 4. **WASM SIMD and scalar are byte-identical.** `scan_structural` already centralizes dispatch with scalar fallback (`crates/simd-scan/src/lib.rs:70-114`). PASS-2 adds cross-kernel snapshot fixtures for each emitted alphabet.
 

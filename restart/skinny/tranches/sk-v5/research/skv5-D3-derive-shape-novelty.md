@@ -70,7 +70,7 @@ The grammar parse → BIR build → emit pipeline is real for the determinism / 
 
 `derive_backend_shape`:
 - **Declared** in spec: `restart/ARCHITECTURE.md:1075-1083` (8-step priority algorithm).
-- **Re-specified** at `restart/skinny/COMPILER.md:241-336` (lowering matrix per shape) and `restart/skinny/audit/SOTA-BEAT-DESIGN.md:228-273, 351-361`.
+- **Re-specified** at `restart/skinny/COMPILER.md:241-336` (lowering matrix per shape) and `restart/skinny/tranches/shared/SOTA-BEAT-DESIGN.md:228-273, 351-361`.
 - **NOT implemented**: no Rust symbol named `derive_backend_shape`, `derive_shape`, or `shape_for_rule` exists. `passes::recognizers` (`passes/src/lib.rs:229-329`) contains only `nominate_json` + the `hot_path` submodule.
 
 `shapes_for_json` vs spec `ShapeFacts`:

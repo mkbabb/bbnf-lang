@@ -2,9 +2,9 @@
 
 Scope: inventory + per-file inspection of the six durable skinny-spec
 surfaces under `restart/skinny/` plus the cross-iteration
-`restart/skinny/audit/SOTA-BEAT-DESIGN.md`. Produces a pruning +
+`restart/skinny/tranches/shared/SOTA-BEAT-DESIGN.md`. Produces a pruning +
 restructuring recommendation, with explicit attention to (1) the
-`HARDENING.md` duplication question against `restart/prompts/HARDENING.md`,
+`HARDENING.md` duplication question against `restart/prompts/audit-specs/HARDENING-LENS-SET.md`,
 (2) the SK-V6 → SK-V7 anchor drift in `INDEX.md`, and (3) the dead
 SK-V3 references that persist in `SUBSTRATE.md` + `SOTA-BEAT-DESIGN.md`
 after the SK-V3/SK-V4 packets were deleted.
@@ -22,16 +22,16 @@ restart/skinny/HARDENING.md                       202 LOC ( 17 396 B)
 restart/skinny/INDEX.md                           176 LOC ( 34 651 B)
 restart/skinny/SUBSTRATE.md                       748 LOC ( 57 942 B)
 restart/skinny/WORKSPACE.md                       695 LOC ( 53 538 B)
-restart/skinny/audit/SOTA-BEAT-DESIGN.md          550 LOC ( 66 315 B)
+restart/skinny/tranches/shared/SOTA-BEAT-DESIGN.md          550 LOC ( 66 315 B)
                                                 ─────
 Total                                            5574 LOC (424 059 B)
 ```
 
-Sibling `restart/prompts/HARDENING.md` for the duplication audit:
+Sibling `restart/prompts/audit-specs/HARDENING-LENS-SET.md` for the duplication audit:
 
 ```
-restart/prompts/HARDENING.md                      268 LOC ( ~21 KB)
-restart/prompts/HARDENING-ORCHESTRATOR.md         151 LOC
+restart/prompts/audit-specs/HARDENING-LENS-SET.md                      268 LOC ( ~21 KB)
+restart/prompts/sub-orchestrators/HARDENING.md         151 LOC
 ```
 
 Last-modified commits:
@@ -43,9 +43,9 @@ Last-modified commits:
 | `restart/skinny/INDEX.md` | `2631a834` SK-V6 asmjson DAV1D fold | 2026-05-15 |
 | `restart/skinny/SUBSTRATE.md` | `2631a834` SK-V6 asmjson DAV1D fold | 2026-05-15 |
 | `restart/skinny/WORKSPACE.md` | `2631a834` SK-V6 asmjson DAV1D fold | 2026-05-15 |
-| `restart/skinny/audit/SOTA-BEAT-DESIGN.md` | `2631a834` SK-V6 fold | 2026-05-15 |
+| `restart/skinny/tranches/shared/SOTA-BEAT-DESIGN.md` | `2631a834` SK-V6 fold | 2026-05-15 |
 | `restart/skinny/HARDENING.md` | `1519cf16` SK-V4 redress | older (pre-SK-V5) |
-| `restart/prompts/HARDENING.md` | `bc31560c` phase-8.1 restructure | concurrent |
+| `restart/prompts/audit-specs/HARDENING-LENS-SET.md` | `bc31560c` phase-8.1 restructure | concurrent |
 
 The lag is load-bearing. Five of the six durable spec files folded the
 SK-V6 asmjson/DAV1D pass on 2026-05-15. `HARDENING.md` was last touched
@@ -75,7 +75,7 @@ Top-level structure (heading anchors at `INDEX.md:19, 29, 88, 102, 114, 144, 162
 
 **Cross-references to other restart/ docs**:
 `../ARCHITECTURE.md` §7.3 + §11; `../MASTER-PLAN.md`; `../MIGRATION.md`;
-`../locks/14-LOCKS.md` Locks 1/14/15/16; `../prompts/HARDENING.md`
+`../locks/LOCKS.md` Locks 1/14/15/16; `../prompts/HARDENING.md`
 implicit via `HARDENING.md`'s reading list.
 
 **Cross-references to SK-V{n} master docs**
@@ -99,7 +99,7 @@ implicit via `HARDENING.md`'s reading list.
 1. **No SK-V7 reference exists in `INDEX.md`.** `audit/GRAND-SYNTHESIS-SK-V7.md`,
    `audit/IMPLEMENTATION-PACKET-SK-V7.md`, `audit/HANDOFF-SK-V7.md`, and
    `audit/SK-V7-COHORT/` (18 reports) are landed on disk
-   (`ls restart/skinny/audit/`) but the anchor doc still names SK-V6 as
+   (`ls restart/skinny/tranches/`) but the anchor doc still names SK-V6 as
    the active dispatch authority (`INDEX.md:5-9, 57-58`).
 2. **The SK-V6 fold-back paragraph is now historical** (`INDEX.md:5-15`).
    Per `audit/GRAND-SYNTHESIS-SK-V7.md:42-67`, V6 is settled state
@@ -157,15 +157,15 @@ Top-level structure (`SUBSTRATE.md:1, 3, 48, 297, 368, 466, 575, 594, 650, 671, 
 **Cross-references to other restart/ docs** (sampled):
 `../ARCHITECTURE.md` §9 (lines 1373-1426), §3.1 (lines 191-244), §7.2
 (BIR rows lines 920-963), §7.3, §11 row 1519; `../audit/pass-3-runtime/PASS-3.md`
-§4; `../audit/pass-2-codegen/PASS-2.md` §2; `../locks/14-LOCKS.md` Lock 1
+§4; `../audit/pass-2-codegen/PASS-2.md` §2; `../locks/LOCKS.md` Lock 1
 + Lock 8 (verbatim citations at `SUBSTRATE.md:35-43`).
 
 **Cross-references to SK-V{n} master docs**:
 
-- `restart/skinny/audit/GRAND-SYNTHESIS-SOTA-BEAT-SK-V3.md` (line 14) —
+- `restart/skinny/tranches/GRAND-SYNTHESIS-SOTA-BEAT-SK-V3.md` (line 14) —
   **DEAD LINK**. This file no longer exists (no `V3` or `V4` files in
   `audit/`).
-- `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md` (line 285) —
+- `restart/skinny/tranches/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md` (line 285) —
   **DEAD LINK**.
 - SK-V5 redress items 50-56 and SK-V6 redress items 66-72 are referenced
   by *number* but the docs themselves are not cited as anchors.
@@ -238,7 +238,7 @@ Top-level structure (`COMPILER.md:1, 43, 158, 218, 416, 554, 670, 856, 895, 928,
 
 **Cross-references**: `SUBSTRATE.md`, `BENCH.md`, `WORKSPACE.md`,
 `../ARCHITECTURE.md` §7.3, `../audit/pass-2-codegen/PASS-2.md:432`,
-`../locks/14-LOCKS.md` Lock 14/15/16.
+`../locks/LOCKS.md` Lock 14/15/16.
 
 **Cross-references to SK-V{n} master docs**:
 SK-V5 redress 52/54/57 (lines 383-389); SK-V6 redress 66-72
@@ -294,7 +294,7 @@ at 995). Top-level structure (10 §-headers; from `BENCH.md:1, 35, 168,
 
 **Cross-references to other restart/ docs**: extensive — `../ARCHITECTURE.md`
 §7.3 + §11; `../MASTER-PLAN.md` §4 lines 108-169 + 140-154 + 160-168;
-`../locks/14-LOCKS.md` Lock 8 + Lock 9 + Lock 16; `../corpora/SOTA.md`
+`../locks/LOCKS.md` Lock 8 + Lock 9 + Lock 16; `../corpora/SOTA.md`
 lines 50-89 + 130-136.
 
 **Cross-references to SK-V{n} master docs**:
@@ -341,7 +341,7 @@ LOC budget, Cargo.toml skeleton, directory layout, build commands, xtask
 runner, migration parity, deviation ledger, closure conditions.
 
 **Cross-references**: `SUBSTRATE.md`, `COMPILER.md`, `BENCH.md`,
-`../audit/pass-2-codegen/PASS-2.md:432`, `../locks/14-LOCKS.md` Lock
+`../audit/pass-2-codegen/PASS-2.md:432`, `../locks/LOCKS.md` Lock
 13/14/16, `skinny/REDRESS.md` items 15/16/17/18/19/20/25.
 
 **Cross-references to SK-V{n} master docs**: §0.1 "Post-Iteration State
@@ -406,32 +406,32 @@ Top-level structure (`HARDENING.md:1, 7, 21, 36, 52, 75, 133, 145, 163,
 ## §11 — Closing posture
 ```
 
-**Cross-references**: Composes with `restart/prompts/HARDENING.md`
+**Cross-references**: Composes with `restart/prompts/audit-specs/HARDENING-LENS-SET.md`
 (lines 19, 36, 42, 54, 56-67); cycle dispatch via
-`restart/prompts/HARDENING-ORCHESTRATOR.md` (line 198).
+`restart/prompts/sub-orchestrators/HARDENING.md` (line 198).
 
-**Comparison vs `restart/prompts/HARDENING.md` (268 LOC)**:
+**Comparison vs `restart/prompts/audit-specs/HARDENING-LENS-SET.md` (268 LOC)**:
 
-| Surface | `restart/prompts/HARDENING.md` (V1) | `restart/skinny/HARDENING.md` (skinny) |
+| Surface | `restart/prompts/audit-specs/HARDENING-LENS-SET.md` (V1) | `restart/skinny/HARDENING.md` (skinny) |
 |---|---|---|
 | Targets | PASS-1/2/3, MASTER-PLAN, SUITE (V1 master plan + ARCH + MIGRATION) | SUBSTRATE, COMPILER, BENCH, WORKSPACE, INDEX, SKINNY-SUITE (skinny quadrants) |
-| Lenses A-K | Defined verbatim (Lanes 1-9 + Lens F + G + H + I + J + K) | **Referenced only** — "Lenses A-K live at `restart/prompts/HARDENING.md`" (line 198) |
+| Lenses A-K | Defined verbatim (Lanes 1-9 + Lens F + G + H + I + J + K) | **Referenced only** — "Lenses A-K live at `restart/prompts/audit-specs/HARDENING-LENS-SET.md`" (line 198) |
 | Lenses L-M-N | Absent | **Defined verbatim** (skinny-specific premise fidelity, falsifiability, graduation mechanicality) |
 | Verdict classes | KEEP/REINVENT/DISCARD + V8+ SIMPLIFY/CONSOLIDATE/LEVERAGE/HYBRID/LOAD-BEARING/ASPIRATIONAL/SPECULATIVE | Inherits V1 verdicts + adds FAITHFUL/MASKING (Lens L) + MECHANICAL/ANTI-MECHANICAL (Lens N) |
 | Cycle namespace | V1, V2, … (V1 corpus) | SK-V1, SK-V2, … (skinny corpus) |
-| Output path | `restart/audit/hardening/HARDENING-{TARGET}.md` | `restart/skinny/audit/HARDENING-{TARGET}-SK-V{N}.md` |
+| Output path | `restart/audit/hardening/HARDENING-{TARGET}.md` | `restart/skinny/tranches/HARDENING-{TARGET}-SK-V{N}.md` |
 
 **Verdict**: this is **NOT a duplicate**. `restart/skinny/HARDENING.md`
 is a complementary skinny-scoped audit specification that explicitly
-composes by reference with the V1 spec at `restart/prompts/HARDENING.md`
-(line 198: "Lenses A-K live at `restart/prompts/HARDENING.md`; Lenses
+composes by reference with the V1 spec at `restart/prompts/audit-specs/HARDENING-LENS-SET.md`
+(line 198: "Lenses A-K live at `restart/prompts/audit-specs/HARDENING-LENS-SET.md`; Lenses
 L-N live here. Cycle dispatch lives at
-`restart/prompts/HARDENING-ORCHESTRATOR.md`; skinny target table +
+`restart/prompts/sub-orchestrators/HARDENING.md`; skinny target table +
 cycle namespace live here").
 
 The two files are **canonical for different audit scopes**:
 
-- `restart/prompts/HARDENING.md` audits V1 architecture surfaces
+- `restart/prompts/audit-specs/HARDENING-LENS-SET.md` audits V1 architecture surfaces
   (MASTER-PLAN + ARCHITECTURE + MIGRATION + passes 1/2/3).
 - `restart/skinny/HARDENING.md` audits skinny implementation surfaces
   (BENCH + COMPILER + SUBSTRATE + WORKSPACE + INDEX, plus the SUITE
@@ -443,7 +443,7 @@ The two files are **canonical for different audit scopes**:
 |---|---|---|
 | 139 | "SK-V1 \| (initial) \| First-pass after `restart/skinny/` lands the five quadrants" | Stale; SK-V6 has landed, SK-V7 is the active cycle |
 | 141 | "SK-V3+ \| SK-V2 \| Subsequent measurement-driven amendments" | Stale; cycle is now at SK-V7 |
-| 143 | "Cycle outputs land at `restart/skinny/audit/HARDENING-CONSOLIDATED-SK-V{N}.md`" | **No `HARDENING-CONSOLIDATED-SK-V*.md` files exist in `audit/`** — the convention was abandoned in favor of the `GRAND-SYNTHESIS-SK-V{n}.md` + cohort directory pattern |
+| 143 | "Cycle outputs land at `restart/skinny/tranches/HARDENING-CONSOLIDATED-SK-V{N}.md`" | **No `HARDENING-CONSOLIDATED-SK-V*.md` files exist in `audit/`** — the convention was abandoned in favor of the `GRAND-SYNTHESIS-SK-V{n}.md` + cohort directory pattern |
 
 This last item is the most acute: the `HARDENING.md` cycle output path
 contract is unenforced. The actual cycle output for SK-V5/V6/V7 lives
@@ -460,7 +460,7 @@ Specifically:
 1. **Do not delete** `restart/skinny/HARDENING.md` — it is canonical
    for skinny-scoped Lenses L/M/N + cycle naming + per-quadrant target
    table.
-2. **Do not move** `restart/prompts/HARDENING.md` — it is canonical for
+2. **Do not move** `restart/prompts/audit-specs/HARDENING-LENS-SET.md` — it is canonical for
    V1 Lenses A-K and is referenced by the skinny doc.
 3. **Rename clarification optional**: if disambiguation is desired,
    rename `restart/skinny/HARDENING.md` → `restart/skinny/HARDENING-SKINNY.md`
@@ -502,7 +502,7 @@ Top-level structure (`SOTA-BEAT-DESIGN.md:1, 18, 32, 65, 231, 316, 435,
 `skinny/profile/{native-sidecars,sonic-rs-v2,sonic-rs-expanded,simdjson-v2,
 yyjson,wave2-asm,wave2-pmu,wave2-capacity,reprofile-2026-05-12,skinny-expanded}/PROFILE-REPORT.md`,
 `SUBSTRATE.md`, `BENCH.md`, `COMPILER.md`, `INDEX.md`, `WORKSPACE.md`,
-`../locks/14-LOCKS.md` Lock 1/10/14/15/16, dav1d FFmpeg references.
+`../locks/LOCKS.md` Lock 1/10/14/15/16, dav1d FFmpeg references.
 
 **Cross-references to SK-V{n} master docs**:
 
@@ -546,7 +546,7 @@ twitter (0.91 c/B) is the actual M5 Max DOM-class leader, not simdjson
 (1.142 c/B). bbnf at 15,597 Mbps = ~1,950 MiB/s. The 1.98x gap is the
 primary SOTA-beat target"). The targets are current.
 
-**Should it move to `restart/skinny/audit/design/`?**: arguable but
+**Should it move to `restart/skinny/tranches/design/`?**: arguable but
 not required. The doc is cross-iteration design context with explicit
 "historical design input" status. Moving it under `audit/design/` would
 isolate it from the per-iteration audit cohort (which currently
@@ -557,7 +557,7 @@ contrivance.
 **Recommendation: KEEP-AT-AUDIT-with-EDIT-INLINE-{dead-link purge +
 status-header refresh}**. Specifically:
 
-1. **Keep at `restart/skinny/audit/SOTA-BEAT-DESIGN.md`** (do not move).
+1. **Keep at `restart/skinny/tranches/shared/SOTA-BEAT-DESIGN.md`** (do not move).
 2. **Refresh status header** (lines 3-11): change "superseded for
    dispatch by `IMPLEMENTATION-PACKET-SK-V6-SOTA-RECOVERY.md`
    (2026-05-15)" to "superseded for dispatch by
@@ -607,7 +607,7 @@ The structural shape is already correct:
 restart/skinny/
 ├── BENCH.md            ← keep canonical (2208 LOC)
 ├── COMPILER.md         ← keep canonical (995 LOC)
-├── HARDENING.md        ← keep canonical (202 LOC); NOT a duplicate of restart/prompts/HARDENING.md
+├── HARDENING.md        ← keep canonical (202 LOC); NOT a duplicate of restart/prompts/audit-specs/HARDENING-LENS-SET.md
 ├── INDEX.md            ← keep + rebase SK-V6 → SK-V7 anchors
 ├── SUBSTRATE.md        ← keep canonical (748 LOC); purge SK-V3 dead links
 ├── WORKSPACE.md        ← keep canonical (695 LOC); rebase §0.1 heading
@@ -713,7 +713,7 @@ SOTA-beat route.
 
 **Recommendation on HARDENING.md duplication**: **NOT A DUPLICATE — KEEP
 BOTH.** `restart/skinny/HARDENING.md` (202 LOC, skinny-scope) is
-complementary to `restart/prompts/HARDENING.md` (268 LOC, V1 scope).
+complementary to `restart/prompts/audit-specs/HARDENING-LENS-SET.md` (268 LOC, V1 scope).
 They compose by reference at `restart/skinny/HARDENING.md:198`. Lenses
 A-K are canonical in the V1 doc; Lenses L/M/N (premise fidelity,
 falsifiability, graduation mechanicality) are canonical in the skinny

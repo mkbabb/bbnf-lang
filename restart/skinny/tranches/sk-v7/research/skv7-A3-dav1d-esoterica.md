@@ -6,14 +6,14 @@ Scope: research-only. No repository files were edited. Output written only to `/
 
 Prior cohort reads:
 
-- `restart/skinny/audit/SK-V6-COHORT/skv6-A2-dav1d-asm-process.md` (FFmpeg/dav1d/VLC process)
-- `restart/skinny/audit/SK-V6-COHORT/skv6-A5-general-grammar-abstraction.md` (BackendShape + grammar-neutrality)
-- `restart/skinny/audit/SK-V6-COHORT/skv6-A6-host-asm-instruction-map.md` (M5 Max ISA inventory)
-- `restart/skinny/audit/SK-V6-COHORT/skv6-B2-checkasm-hardening-plan.md` (admission discipline)
-- `restart/skinny/audit/SK-V6-COHORT/skv6-B5-primitive-gap-inventory.md` (primitive vocabulary)
-- `restart/skinny/audit/SK-V6-COHORT/skv6-C5-parse-that-gaps.md` (parse-that primitive gaps)
-- `restart/skinny/audit/SK-V6-COHORT/skv6-C6-generality-costfacts.md` (Lock 14 leaks)
-- `restart/skinny/audit/SK-V5-COHORT/skv5-A2-dav1d-process.md` (x86inc/x86util audit-grade walk)
+- `restart/skinny/tranches/sk-v6/research/skv6-A2-dav1d-asm-process.md` (FFmpeg/dav1d/VLC process)
+- `restart/skinny/tranches/sk-v6/research/skv6-A5-general-grammar-abstraction.md` (BackendShape + grammar-neutrality)
+- `restart/skinny/tranches/sk-v6/research/skv6-A6-host-asm-instruction-map.md` (M5 Max ISA inventory)
+- `restart/skinny/tranches/sk-v6/research/skv6-B2-checkasm-hardening-plan.md` (admission discipline)
+- `restart/skinny/tranches/sk-v6/research/skv6-B5-primitive-gap-inventory.md` (primitive vocabulary)
+- `restart/skinny/tranches/sk-v6/research/skv6-C5-parse-that-gaps.md` (parse-that primitive gaps)
+- `restart/skinny/tranches/sk-v6/research/skv6-C6-generality-costfacts.md` (Lock 14 leaks)
+- `restart/skinny/tranches/sk-v5/research/skv5-A2-dav1d-process.md` (x86inc/x86util audit-grade walk)
 - `skinny/crates/bbnf-simd/ext/x86/bbnf.asm:1-486` (the 9-macro vocabulary)
 - `restart/MASTER-PLAN.md:491-534` (H-tranche wave routing)
 

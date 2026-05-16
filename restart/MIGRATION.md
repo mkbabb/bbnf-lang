@@ -14,10 +14,10 @@ The migration follows the resolved Phase 2 authority:
 |---|---|
 | README says onboarding is grammar source plus workspace metadata, without Rust crate or per-grammar match arms (`restart/README.md:11-25`). | Current grammar-name registries and runtime shims are not preserved as handwritten code. |
 | README fixes the 24-crate workspace and crate naming (`restart/README.md:29-60`). | Existing `core`, `analysis`, `lsp`, `bbnf-path`, `bbnf-path-ts`, `bootstrap`, `ser`, and `gorgeous` do not carry over as-is. |
-| Lock 1 says tape is the substrate unioned with direct-to-struct (`restart/locks/14-LOCKS.md:34`). | Old anti-tape notes and ParseStream language are migration conflicts, not goals. |
-| Lock 5 says lowerers consume Backend IR, not grammar source (`restart/locks/14-LOCKS.md:42`). | Current backend walkers are mined for behavior and replaced at the architecture boundary. |
-| Lock 13 sets tree and LOC discipline (`restart/locks/14-LOCKS.md:58`). | Current god modules are split or replaced. |
-| Lock 14 forbids grammar switches/types/modules/features in generic crates (`restart/locks/14-LOCKS.md:60`). | Current hardcoded grammar tables become deletion gates. |
+| Lock 1 says tape is the substrate unioned with direct-to-struct (`restart/locks/LOCKS.md:34`). | Old anti-tape notes and ParseStream language are migration conflicts, not goals. |
+| Lock 5 says lowerers consume Backend IR, not grammar source (`restart/locks/LOCKS.md:42`). | Current backend walkers are mined for behavior and replaced at the architecture boundary. |
+| Lock 13 sets tree and LOC discipline (`restart/locks/LOCKS.md:58`). | Current god modules are split or replaced. |
+| Lock 14 forbids grammar switches/types/modules/features in generic crates (`restart/locks/LOCKS.md:60`). | Current hardcoded grammar tables become deletion gates. |
 | PASS-2 says codegen/runtime wiring must be replaced, not patched (`restart/audit/pass-2-codegen/PASS-2.md:5-8`). | Migration is a greenfield rebuild with mined implementation knowledge. |
 
 The current repository contains 13 Rust crate directories under `crates/`.
@@ -79,7 +79,7 @@ plumbing are replaced; old archive crates leave the production workspace.
 
 The corpus already classifies `ser` and `gorgeous` as archive-only
 (`restart/corpora/MODULES.md:165-212`), and Lock 12 requires that archive before
-implementation starts (`restart/locks/14-LOCKS.md:56`).
+implementation starts (`restart/locks/LOCKS.md:56`).
 
 ### 3.1 Current Inventory By Crate
 
@@ -192,14 +192,14 @@ before editing files.
 | File or family | New location | Bucket | Rationale | Source finding |
 |---|---|---|---|---|
 | Macro entrypoint | `path/src/macro_impl` | KEEP-MODIFY | Public Rust macro surface remains. | README path API (`restart/README.md:272-318`). |
-| Parser/evaluator logic | `path-core/src/parse`, `path-core/src/eval` | ABROGATE-MOVE/KEEP-MODIFY | Shared by Rust and TS. | Lock 7 path split (`restart/locks/14-LOCKS.md:46`). |
+| Parser/evaluator logic | `path-core/src/parse`, `path-core/src/eval` | ABROGATE-MOVE/KEEP-MODIFY | Shared by Rust and TS. | Lock 7 path split (`restart/locks/LOCKS.md:46`). |
 | Proc-macro `syn::ParseStream` use | `path/src/macro_impl` | KEEP-MODIFY | This is not runtime ParseStream. | PASS-3 stale runtime term resolution (`restart/audit/pass-3-runtime/PASS-3.md:14-23`). |
 
 #### `crates/bbnf-path-ts`
 
 | File or family | New location | Bucket | Rationale | Source finding |
 |---|---|---|---|---|
-| TS emitter/schema | V2 `path-ts/src/schema`, V2 `path-ts/src/emit` | KEEP-MODIFY-DEFER | Keep TS surface as V2 work, consuming shared semantics after `TsBackend: Backend` lands. | Lock 7 + Lock 5 (`restart/locks/14-LOCKS.md:42`, `restart/locks/14-LOCKS.md:46`). |
+| TS emitter/schema | V2 `path-ts/src/schema`, V2 `path-ts/src/emit` | KEEP-MODIFY-DEFER | Keep TS surface as V2 work, consuming shared semantics after `TsBackend: Backend` lands. | Lock 7 + Lock 5 (`restart/locks/LOCKS.md:42`, `restart/locks/LOCKS.md:46`). |
 | Hardcoded grammar registries | none | ABROGATE-DELETE | Generic path package cannot name grammars. | CENSUS path leaks (`restart/corpora/CENSUS.md:103-122`). |
 | Fixture duplicates | `test-fixtures` | ABROGATE-MOVE | Shared parity fixture ownership. | BD inheritance via index (`restart/inheritance/INDEX.md:29-40`). |
 
@@ -219,12 +219,12 @@ before editing files.
 | `grammar/generated/.registry.json` | none | ABROGATE-DELETE | Metadata is source of truth. | README two-surface onboarding (`restart/README.md:11-25`). |
 | `grammar` AST/parser helpers | `grammar/src/*` | ABROGATE-MOVE/KEEP-MODIFY | Grammar crate owns BBNF parsing. | PASS-1 crate tree (`restart/audit/pass-1-substrate/PASS-1.md:46-61`). |
 | `imports`, source maps, spans | `source/src/*` | ABROGATE-MOVE | Shared source substrate. | README pipeline (`restart/README.md:188-207`). |
-| `lower` and normalization | `passes`, `ir`, `codegen` | ABROGATE-REPLACE | Split semantic passes from backend lowering. | Lock 5 (`restart/locks/14-LOCKS.md:42`). |
+| `lower` and normalization | `passes`, `ir`, `codegen` | ABROGATE-REPLACE | Split semantic passes from backend lowering. | Lock 5 (`restart/locks/LOCKS.md:42`). |
 | `backend/**` | `codegen/src/*` | ABROGATE-REPLACE | BIR-only lowerers replace grammar walkers. | PASS-2 (`restart/audit/pass-2-codegen/PASS-2.md:5-8`). |
 | `runtime/mod.rs` generic support | `runtime/src/document`, `runtime/src/support` | KEEP-MODIFY | Useful support under tape/direct contract. | PASS-3 runtime (`restart/audit/pass-3-runtime/PASS-3.md:96-135`). |
 | `runtime/<grammar>/**` | `runtime/src/grammars/<name>/**` | GENERATED-REPLACE | Template-emitted per grammar modules. | PASS-2 template schema (`restart/audit/pass-2-codegen/PASS-2.md` §7). |
 | `path` executor | `path-core`, `runtime` | ABROGATE-REPLACE | Shared path semantics and runtime view integration. | README path API (`restart/README.md:272-318`). |
-| `css_types.rs` and host shims | `host`, metadata, generated `host.rs` | ABROGATE-REPLACE | Host functions are generic/fenced. | Lock 14 (`restart/locks/14-LOCKS.md:60`). |
+| `css_types.rs` and host shims | `host`, metadata, generated `host.rs` | ABROGATE-REPLACE | Host functions are generic/fenced. | Lock 14 (`restart/locks/LOCKS.md:60`). |
 | `generate/serialize` | none | ABROGATE-DELETE | `ser` is archive-only. | MODULES ser archive (`restart/corpora/MODULES.md:165-184`). |
 | Old tests bound to grammar names | `test-fixtures` plus owner crates | KEEP-MODIFY/REPLACE | Preserve fixtures, replace assumptions. | CENSUS duplicate runtime cohort (`restart/corpora/CENSUS.md:435-527`). |
 
@@ -234,19 +234,19 @@ before editing files.
 |---|---|---|---|---|
 | IR IDs/types | `ir/src/grammar_ir`, `ir/src/backend_ir` | KEEP-MODIFY/REPLACE | Two IRs are final architecture. | README two IRs (`restart/README.md:104-118`). |
 | Strategy registry | none | ABROGATE-DELETE | Hardcoded grammar strategy violates Lock 14. | CENSUS leaks (`restart/corpora/CENSUS.md:103-122`). |
-| Type facts | `passes/src/layout` (subroutine), `ir/src/side_tables` (`LayoutFacts`) | ABROGATE-MOVE/KEEP-MODIFY | HM + bidirectional + CSP run inside layout lowering per Lock 2; `TypeFacts` is internal scratch, `LayoutFacts` is the public side-table. | README type system (`restart/README.md:258-268`); Lock 2 (`restart/locks/14-LOCKS.md:36`). |
+| Type facts | `passes/src/layout` (subroutine), `ir/src/side_tables` (`LayoutFacts`) | ABROGATE-MOVE/KEEP-MODIFY | HM + bidirectional + CSP run inside layout lowering per Lock 2; `TypeFacts` is internal scratch, `LayoutFacts` is the public side-table. | README type system (`restart/README.md:258-268`); Lock 2 (`restart/locks/LOCKS.md:36`). |
 | Shape facts | `passes/src/shapes`, `ir/src/side_tables` | ABROGATE-MOVE/KEEP-MODIFY | Direct/value/path consumers. | PASS-1 side-table contract (`restart/audit/pass-1-substrate/PASS-1.md:24-42`). |
-| Recognizer facts | `passes/src/recognizers` | ABROGATE-MOVE/KEEP-MODIFY | Pratt/SIMD auto-detection. | Lock 10 (`restart/locks/14-LOCKS.md:52`). |
+| Recognizer facts | `passes/src/recognizers` | ABROGATE-MOVE/KEEP-MODIFY | Pratt/SIMD auto-detection. | Lock 10 (`restart/locks/LOCKS.md:52`). |
 | VM/debug | `vm` | ABROGATE-MOVE/REPLACE | VM replays BIR, not old IR. | PASS-1 VM scope (`restart/audit/pass-1-substrate/PASS-1.md:46-61`). |
-| Egraph/CSP bridge | `passes/src/bridge` | ABROGATE-MOVE/KEEP-MODIFY | Bridge, not fused hypergraph. | Lock 4 (`restart/locks/14-LOCKS.md:40`). |
+| Egraph/CSP bridge | `passes/src/bridge` | ABROGATE-MOVE/KEEP-MODIFY | Bridge, not fused hypergraph. | Lock 4 (`restart/locks/LOCKS.md:40`). |
 
 #### `crates/csp-solver`
 
 | File or family | New location | Bucket | Rationale | Source finding |
 |---|---|---|---|---|
 | Generic domains/constraints | `csp-solver` | KEEP-OUTRIGHT/KEEP-MODIFY | Generic solver survives. | MODULES csp-solver (`restart/corpora/MODULES.md:73-132`). |
-| BBNF-specific adapters | `passes/src/bridge` | ABROGATE-MOVE | Keep solver generic. | Lock 4/11 (`restart/locks/14-LOCKS.md:40`, `restart/locks/14-LOCKS.md:52-56`). |
-| Oversized modules/tests | `csp-solver` split modules | KEEP-MODIFY | Lock 13 file size. | Lock 13 (`restart/locks/14-LOCKS.md:58`). |
+| BBNF-specific adapters | `passes/src/bridge` | ABROGATE-MOVE | Keep solver generic. | Lock 4/11 (`restart/locks/LOCKS.md:40`, `restart/locks/LOCKS.md:52-56`). |
+| Oversized modules/tests | `csp-solver` split modules | KEEP-MODIFY | Lock 13 file size. | Lock 13 (`restart/locks/LOCKS.md:58`). |
 
 #### `crates/egraph` And `crates/egraph-derive`
 
@@ -254,7 +254,7 @@ before editing files.
 |---|---|---|---|---|
 | Generic egraph core | `egraph` | KEEP-MODIFY | Useful sister crate. | MODULES egraph (`restart/corpora/MODULES.md:136-162`). |
 | Derive macro | `egraph-derive` | KEEP-MODIFY | Keep with egraph. | MODULES egraph derive (`restart/corpora/MODULES.md:136-162`). |
-| BBNF terms/adapters | `passes/src/bridge` | ABROGATE-MOVE | Generic crate stays grammar-neutral. | Lock 14 (`restart/locks/14-LOCKS.md:60`). |
+| BBNF terms/adapters | `passes/src/bridge` | ABROGATE-MOVE | Generic crate stays grammar-neutral. | Lock 14 (`restart/locks/LOCKS.md:60`). |
 
 #### `crates/simd-scan` → `crates/bbnf-simd` (rename per Lock 14 + Lock 16)
 
@@ -431,7 +431,7 @@ cargo test -p bbnf-language-server diagnostics incremental
 ## 8. Path Crates Disposition
 
 Lock 7 consolidates old path crates into `path` and `path-core` on the V1
-Rust line, with `path-ts` deferred to V2 (`restart/locks/14-LOCKS.md:46`).
+Rust line, with `path-ts` deferred to V2 (`restart/locks/LOCKS.md:46`).
 The module corpus already identifies
 duplication and registry problems in the current path crates
 (`restart/corpora/MODULES.md:232-260`).
@@ -598,11 +598,11 @@ optional; they are the replacement architecture.
 | `crates/passes` | Type/shape/recognizer/extract/bridge passes, including HM equality obligations, expected checking, bounded coercion, finite CSP choices, stable bridge IDs, and extraction-time legality. | C/H | PASS-1 commitments (`restart/audit/pass-1-substrate/PASS-1.md:24-42`). |
 | `crates/vm` | Backend IR replay/debug. | E/I | README VM debug/replay (`restart/README.md:344-348`). |
 | `crates/codegen` | BIR-only lowerers and templates. | E/F/H | PASS-2 (`restart/audit/pass-2-codegen/PASS-2.md` §2-§7). |
-| `crates/runtime` | Tape/direct runtime, payload policy, snapshot-scoped tape identity, typed projections, and generated grammar modules. | B/F | Lock 1 (`restart/locks/14-LOCKS.md:34`). |
+| `crates/runtime` | Tape/direct runtime, payload policy, snapshot-scoped tape identity, typed projections, and generated grammar modules. | B/F | Lock 1 (`restart/locks/LOCKS.md:34`). |
 | `crates/host` | Generic host primitive/registry system. | D/F | README host decisions (`restart/README.md:160-182`). |
 | `crates/cost-model` | `CostDecision` facts, objective profiles, Pareto/frontier evidence, solver-backed extraction adapters, LOC budgets. | C/H/J | PASS-1 cost model (`restart/audit/pass-1-substrate/PASS-1.md:46-61`). |
-| `crates/path-core` | Shared path semantics. | G | Lock 7 (`restart/locks/14-LOCKS.md:46`). |
-| `crates/parse-that` | Parser combinator family below BBNF, paired with the regex sub-crate `crates/parse-that-regex` (renamed from legacy `bbnf-regex` per Lock 11). Grammar-owned HIR/verifier integration; cross-engine parity (NFA, lazy DFA, full DFA, VM) is internal to `parse-that-regex`; no third-party regex oracle is cited. | D/H | README Unicode routing (`restart/README.md:131-143`); Lock 11 (`restart/locks/14-LOCKS.md:54`). |
+| `crates/path-core` | Shared path semantics. | G | Lock 7 (`restart/locks/LOCKS.md:46`). |
+| `crates/parse-that` | Parser combinator family below BBNF, paired with the regex sub-crate `crates/parse-that-regex` (renamed from legacy `bbnf-regex` per Lock 11). Grammar-owned HIR/verifier integration; cross-engine parity (NFA, lazy DFA, full DFA, VM) is internal to `parse-that-regex`; no third-party regex oracle is cited. | D/H | README Unicode routing (`restart/README.md:131-143`); Lock 11 (`restart/locks/LOCKS.md:54`). |
 | `crates/test-fixtures` | Shared fixtures and parity matrix. | A/G/J | Inheritance map (`restart/inheritance/INDEX.md:29-40`). |
 
 ## 14. LOC Trajectory

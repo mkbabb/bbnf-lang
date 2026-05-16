@@ -93,7 +93,7 @@ Where the eight audits disagreed on disposition, the user-mandate-aware reconcil
 | 27 | **Lint manifest as architectural contract** in ARCH §13 | #8 §8.A2 | ARCHITECTURE.md | 80 |
 | 28 | **Declaration-crate review form template** (the 8-field fence in actionable template form) | #8 §8.A3 | template + cookbook | 60 |
 | 29 | **Cookbook page contract template** | #8 §8.J1 | template | 80 |
-| 30 | **5 lock amendments**: Lock 5 (TS+WASM at BD+ → H.W3/J.W3), Lock 11 (J.W3 + 2-tranche stability), Lock 12 (BA.W0 → A.W0), Lock 7 (path-core "may" → "exists"), Lock 8 (WASM measurement-pending anchor) | #7 | `restart/locks/14-LOCKS.md` | 5 sentence-level edits |
+| 30 | **5 lock amendments**: Lock 5 (TS+WASM at BD+ → H.W3/J.W3), Lock 11 (J.W3 + 2-tranche stability), Lock 12 (BA.W0 → A.W0), Lock 7 (path-core "may" → "exists"), Lock 8 (WASM measurement-pending anchor) | #7 | `restart/locks/LOCKS.md` | 5 sentence-level edits |
 
 **Tier 4 total**: ~320 LOC + 5 lock-text edits.
 
@@ -176,7 +176,7 @@ Per `restart/README.md` §13. The synthesis preserves: calibrated direct prose, 
 The cohort produces a **fold-V1 amendment cycle** (Wave 7) with three phases:
 
 **Phase 7.1 — Lock + ARCHITECTURE amendments** (single SYNTHESIS agent; ~75 min):
-- Land 8 lock amendments (5 from audit #7 + 3 NEW) at `restart/locks/14-LOCKS.md`
+- Land 8 lock amendments (5 from audit #7 + 3 NEW) at `restart/locks/LOCKS.md`
 - Land architectural amendments at `restart/ARCHITECTURE.md` for Tier 4 items (rewrite-budget, lint manifest, declaration-crate template, cookbook contract)
 - Update PASS-1 §2 BBNF formal grammar with the 6-directive `Directive` production
 - Update Lock 10 with function-value + lambda + closure surface

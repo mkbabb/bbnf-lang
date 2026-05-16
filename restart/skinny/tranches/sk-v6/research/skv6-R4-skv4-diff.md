@@ -1,6 +1,6 @@
 # SK-V6 Wave 1 R4: SK-V4 Diff for Largest Regressions
 
-Baseline check: `skinny/profile/reassay-skv4-2026-05-13/` exists, but it contains only `PROFILE-REPORT.md`; there are no per-target profile JSONs or target leaf tables for `gsoc-2018`, `distinct_values`, or `y_string_unicode`. The SK-V4 side is therefore leaf-unresolved beyond the fused retained parse hub (`runtime::generated_json::generated::parse_value_at`) described by that report. `restart/skinny/audit/SK-V5-COHORT/skv5-B1-parse-attribution.md` is used only as historical context for the old UTF-8-validator hypothesis; it did not profile these three regression rows.
+Baseline check: `skinny/profile/reassay-skv4-2026-05-13/` exists, but it contains only `PROFILE-REPORT.md`; there are no per-target profile JSONs or target leaf tables for `gsoc-2018`, `distinct_values`, or `y_string_unicode`. The SK-V4 side is therefore leaf-unresolved beyond the fused retained parse hub (`runtime::generated_json::generated::parse_value_at`) described by that report. `restart/skinny/tranches/sk-v5/research/skv5-B1-parse-attribution.md` is used only as historical context for the old UTF-8-validator hypothesis; it did not profile these three regression rows.
 
 Build/profile evidence:
 

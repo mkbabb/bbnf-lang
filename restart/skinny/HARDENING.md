@@ -6,7 +6,7 @@ This prompt is parameterised by target. It composes with the existing greenfield
 
 ## §1 — Purpose: why skinny hardening differs from V1 hardening
 
-The V1 corpus hardening (`restart/prompts/HARDENING.md`) audits whether the V1 architecture is internally coherent and load-bearing. The skinny hardening audits something different: **whether the skinny faithfully tests the V1 premise, while remaining buildable in 2-4 weeks and graduating mechanically**.
+The V1 corpus hardening (`restart/prompts/audit-specs/HARDENING-LENS-SET.md`) audits whether the V1 architecture is internally coherent and load-bearing. The skinny hardening audits something different: **whether the skinny faithfully tests the V1 premise, while remaining buildable in 2-4 weeks and graduating mechanically**.
 
 Three axes the V1 hardening does not cover:
 
@@ -16,7 +16,7 @@ Three axes the V1 hardening does not cover:
 
 These three axes become **Lenses L, M, N** below and are mandatory at every skinny hardening cycle.
 
-The full lens stack (A-N) is the V1 set A-K (`restart/prompts/HARDENING.md` §Lanes + §Lens F + §Lens G + §Lens H + §Lens I + §Lens J + §Lens K) plus the three skinny-specific lenses.
+The full lens stack (A-N) is the V1 set A-K (`restart/prompts/audit-specs/HARDENING-LENS-SET.md` §Lanes + §Lens F + §Lens G + §Lens H + §Lens I + §Lens J + §Lens K) plus the three skinny-specific lenses.
 
 ## §2 — Target selection
 
@@ -39,11 +39,11 @@ Per-quadrant authority sources are colocated; orchestration sources are inherite
 
 1. `restart/skinny/INDEX.md` — cross-quadrant invariants + decision protocol + flagged contradictions.
 2. The target file(s) per §2.
-3. `restart/prompts/HARDENING.md` — the V1 lens contract (Lenses A-K). **Read in full**; this skinny prompt does not duplicate the lens definitions.
+3. `restart/prompts/audit-specs/HARDENING-LENS-SET.md` — the V1 lens contract (Lenses A-K). **Read in full**; this skinny prompt does not duplicate the lens definitions.
 4. `restart/prompts/ORCHESTRATOR.md` — dispatch protocol; phase-type table; cycle naming canon.
 5. `restart/ARCHITECTURE.md` — V1 architecture authority (the skinny is a subset of this; deviations must be documented).
 6. `restart/MASTER-PLAN.md` §4 (Hard Architectural Gates, lines 108-169) — V1 SOTA gate definitions.
-7. `restart/locks/14-LOCKS.md` — settled commitments; particularly Lock 1 (tape substrate), Lock 5 (Backend trait), Lock 8 (SOTA anchors), Lock 13 (directory discipline), Lock 14 (Lock 14 onboarding).
+7. `restart/locks/LOCKS.md` — settled commitments; particularly Lock 1 (tape substrate), Lock 5 (Backend trait), Lock 8 (SOTA anchors), Lock 13 (directory discipline), Lock 14 (Lock 14 onboarding).
 8. `restart/corpora/SOTA.md` lines 50-89 + 130-136 — competitor baselines.
 9. `docs/precepts/instructions/STYLE.md` + `LESSONS-LEARNED.md` — voice + discipline.
 
@@ -51,7 +51,7 @@ The agent does NOT read pass-1/pass-2/pass-3 V1 audits unless a contradiction in
 
 ## §4 — Lens registry
 
-The skinny audit applies **Lenses A-K from `restart/prompts/HARDENING.md` plus Lenses L-N below**.
+The skinny audit applies **Lenses A-K from `restart/prompts/audit-specs/HARDENING-LENS-SET.md` plus Lenses L-N below**.
 
 | Lens family | Source | Adapted for skinny? |
 |---|---|---|
@@ -140,11 +140,11 @@ The skinny hardening cycles are named **SK-V1**, **SK-V2**, etc. — namespaced 
 | SK-V2 | SK-V1 | If SK-V1 returns AMENDMENT-REQUIRED-NARROW; verify-then-rerun |
 | SK-V3+ | SK-V2 | Subsequent measurement-driven amendments (e.g., bench-result feedback into SUBSTRATE token layout) |
 
-Cycle outputs land at `restart/skinny/audit/HARDENING-CONSOLIDATED-SK-V{N}.md` (the consolidation) plus per-target reports `HARDENING-{TARGET}-SK-V{N}.md`. The audit subdirectory is created at SK-V1 dispatch.
+Cycle outputs land at `restart/skinny/tranches/HARDENING-CONSOLIDATED-SK-V{N}.md` (the consolidation) plus per-target reports `HARDENING-{TARGET}-SK-V{N}.md`. The audit subdirectory is created at SK-V1 dispatch.
 
 ## §7 — Per-item discipline
 
-Inherited verbatim from V1 `restart/prompts/HARDENING.md` §"Per-Item Discipline". Every claim, gate, decision, surgery, verdict, and proposal in the target carries the four-part shape:
+Inherited verbatim from V1 `restart/prompts/audit-specs/HARDENING-LENS-SET.md` §"Per-Item Discipline". Every claim, gate, decision, surgery, verdict, and proposal in the target carries the four-part shape:
 
 - **Explication** — what the item means
 - **Pros** — why it earns its place
@@ -162,7 +162,7 @@ A target where every item lands KEEP / FAITHFUL / MECHANICAL without challenge i
 
 ## §8 — Output contract
 
-Per-target file: `restart/skinny/audit/HARDENING-{TARGET}-SK-V{N}.md`, ~600-1,200 lines (SKINNY-SUITE consolidated may extend to ~1,500-2,000), structured per V1 `HARDENING.md` §"Output Contract" §1-§13. Adaptations:
+Per-target file: `restart/skinny/tranches/HARDENING-{TARGET}-SK-V{N}.md`, ~600-1,200 lines (SKINNY-SUITE consolidated may extend to ~1,500-2,000), structured per V1 `HARDENING.md` §"Output Contract" §1-§13. Adaptations:
 
 - §2 cohort verdict adds three rows (Lens L, M, N) to the lane-verdict table.
 - §3-§11 inherits V1 lane sections; lane 2 (sequencing) reports N/A for skinny single-wave.
@@ -189,13 +189,13 @@ At 0.9 × cap, commit the report as-written. At 1.0 × cap, halt. Empty return i
 
 ## §10 — Cross-tranche scope boundary
 
-Touch ONLY `restart/skinny/audit/HARDENING-{TARGET}-SK-V{N}.md`. Do NOT modify the skinny target files. Do NOT modify `restart/audit/`, `restart/prompts/`, `restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`, or any V1-corpus surface. Do NOT execute git operations beyond the single commit at completion.
+Touch ONLY `restart/skinny/tranches/HARDENING-{TARGET}-SK-V{N}.md`. Do NOT modify the skinny target files. Do NOT modify `restart/audit/`, `restart/prompts/`, `restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`, or any V1-corpus surface. Do NOT execute git operations beyond the single commit at completion.
 
-The skinny audit lives in its own subdirectory (`restart/skinny/audit/`) parallel to the V1 audit dir (`restart/audit/`). The two streams do not share state.
+The skinny audit lives in its own subdirectory (`restart/skinny/tranches/`) parallel to the V1 audit dir (`restart/audit/`). The two streams do not share state.
 
 ## §11 — Closing posture
 
-The skinny hardening prompt composes with the V1 hardening prompt by reference, not by duplication. Lenses A-K live at `restart/prompts/HARDENING.md`; Lenses L-N live here. Cycle dispatch lives at `restart/prompts/HARDENING-ORCHESTRATOR.md`; skinny target table + cycle namespace live here. The skinny is a graphically separate corpus with its own dispatch graph; this prompt is the single skinny-specific contract the hardening agents read.
+The skinny hardening prompt composes with the V1 hardening prompt by reference, not by duplication. Lenses A-K live at `restart/prompts/audit-specs/HARDENING-LENS-SET.md`; Lenses L-N live here. Cycle dispatch lives at `restart/prompts/sub-orchestrators/HARDENING.md`; skinny target table + cycle namespace live here. The skinny is a graphically separate corpus with its own dispatch graph; this prompt is the single skinny-specific contract the hardening agents read.
 
 After SK-V1 returns SK-READY (or SK-V2+ does, post-amendment), the skinny dispatches per `INDEX.md` §"Decision protocol" — implementation begins; the bench harness adjudicates the V1 SOTA-viability premise; the V1 tranches A-J wait on the bench verdict.
 

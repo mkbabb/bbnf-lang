@@ -4,7 +4,7 @@ Workspace: `/Users/mkbabb/Programming/bbnf-lang`
 Output date: 2026-05-16
 Wave: SK-V7 Wave 4 (parallel with Lock 14 cleanup)
 Hard caps: 45 min implementation; 15 min measurement
-Predecessors: `restart/skinny/audit/SK-V6-COHORT/skv6-B2-checkasm-hardening-plan.md`, SK-V7 Wave A finding A5
+Predecessors: `restart/skinny/tranches/sk-v6/research/skv6-B2-checkasm-hardening-plan.md`, SK-V7 Wave A finding A5
 
 Scope guardrail. Design artifact only; no tracked file is modified by this
 document. Implementation lands as a follow-on tranche.
@@ -447,7 +447,7 @@ Primary citations used in this design:
   cycle accounting that fabricates B/cycle.
 - `skinny/crates/bbnf-simd/tests/checkasm_bulk_emit_positions_64.rs:40-43`
   — example thin-test call shape that the V7 macro replaces.
-- `restart/skinny/audit/SK-V6-COHORT/skv6-B2-checkasm-hardening-plan.md:42-97`
+- `restart/skinny/tranches/sk-v6/research/skv6-B2-checkasm-hardening-plan.md:42-97`
   — admission principle and per-primitive status table from which this
   design inherits its row taxonomy.
 

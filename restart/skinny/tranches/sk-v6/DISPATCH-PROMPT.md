@@ -135,38 +135,38 @@ The SK-V3 / SK-V4 / V1-V2 audit detritus is now superseded by the SK-V5
 
 | File | Reason |
 |---|---|
-| `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md` | Superseded by SK-V5 packet + this SK-V6 prompt. |
-| `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md` | Superseded; the Wave 3 UTF-8 prescription was refuted. |
-| `restart/skinny/audit/GRAND-SYNTHESIS-SOTA-BEAT-SK-V3.md` | Superseded. |
-| `restart/skinny/audit/WAVE-1-2-COHORT-DIGEST.md` | Superseded by SK-V5-COHORT/. |
-| `restart/skinny/audit/ASMJSON-DAV1D-GRAND-SYNTHESIS-SK-V4.md` | Superseded by GRAND-SYNTHESIS-SK-V5.md + this prompt's §1 verdict. |
-| `restart/skinny/audit/IMPLEMENTATION-PACKET-V2.md` | Pre-SK-V3 packet; superseded. |
-| `restart/skinny/audit/IMPLEMENTATION-PACKET-SOTA-BEAT.md` | Pre-SK-V3 packet; superseded. |
-| `restart/skinny/audit/LAZY-TAPE-DESIGN.md` | Superseded by tape ≡ projection union (Lock 1 canonical). |
-| `restart/skinny/audit/HARDENING-BENCH-SK-V1.md` | Pre-SK-V2 draft. |
-| `restart/skinny/audit/HARDENING-COMPILER-SK-V1.md` | Pre-SK-V2 draft. |
-| `restart/skinny/audit/HARDENING-CONSOLIDATED-SK-V1.md` | Pre-SK-V2 draft. |
-| `restart/skinny/audit/HARDENING-CONSOLIDATED-SK-V1-pre-redress.md` | Pre-redress draft. |
-| `restart/skinny/audit/HARDENING-INDEX-SK-V1.md` | Pre-SK-V2 draft. |
-| `restart/skinny/audit/HARDENING-SUBSTRATE-SK-V1.md` | Pre-SK-V2 draft. |
-| `restart/skinny/audit/HARDENING-WORKSPACE-SK-V1.md` | Pre-SK-V2 draft. |
-| `restart/skinny/audit/HARDENING-BENCH-SK-V2.md` | Superseded by skinny/BENCH.md fold-back. |
-| `restart/skinny/audit/HARDENING-COMPILER-SK-V2.md` | Superseded by skinny/COMPILER.md fold-back. |
-| `restart/skinny/audit/HARDENING-CONSOLIDATED-SK-V2.md` | Superseded by GRAND-SYNTHESIS-SK-V5.md. |
-| `restart/skinny/audit/HARDENING-INDEX-SK-V2.md` | Superseded by skinny/INDEX.md fold-back. |
-| `restart/skinny/audit/HARDENING-SUBSTRATE-SK-V2.md` | Superseded by SK-V5 Wave 4 split (canonical now in code). |
-| `restart/skinny/audit/HARDENING-WORKSPACE-SK-V2.md` | Superseded by skinny/WORKSPACE.md fold-back. |
+| `restart/skinny/tranches/IMPLEMENTATION-PACKET-SK-V3-SOTA-BEAT.md` | Superseded by SK-V5 packet + this SK-V6 prompt. |
+| `restart/skinny/tranches/IMPLEMENTATION-PACKET-SK-V4-ASMJSON-BEAT.md` | Superseded; the Wave 3 UTF-8 prescription was refuted. |
+| `restart/skinny/tranches/GRAND-SYNTHESIS-SOTA-BEAT-SK-V3.md` | Superseded. |
+| `restart/skinny/tranches/WAVE-1-2-COHORT-DIGEST.md` | Superseded by SK-V5-COHORT/. |
+| `restart/skinny/tranches/ASMJSON-DAV1D-GRAND-SYNTHESIS-SK-V4.md` | Superseded by GRAND-SYNTHESIS-SK-V5.md + this prompt's §1 verdict. |
+| `restart/skinny/tranches/IMPLEMENTATION-PACKET-V2.md` | Pre-SK-V3 packet; superseded. |
+| `restart/skinny/tranches/IMPLEMENTATION-PACKET-SOTA-BEAT.md` | Pre-SK-V3 packet; superseded. |
+| `restart/skinny/tranches/LAZY-TAPE-DESIGN.md` | Superseded by tape ≡ projection union (Lock 1 canonical). |
+| `restart/skinny/tranches/HARDENING-BENCH-SK-V1.md` | Pre-SK-V2 draft. |
+| `restart/skinny/tranches/HARDENING-COMPILER-SK-V1.md` | Pre-SK-V2 draft. |
+| `restart/skinny/tranches/HARDENING-CONSOLIDATED-SK-V1.md` | Pre-SK-V2 draft. |
+| `restart/skinny/tranches/HARDENING-CONSOLIDATED-SK-V1-pre-redress.md` | Pre-redress draft. |
+| `restart/skinny/tranches/HARDENING-INDEX-SK-V1.md` | Pre-SK-V2 draft. |
+| `restart/skinny/tranches/HARDENING-SUBSTRATE-SK-V1.md` | Pre-SK-V2 draft. |
+| `restart/skinny/tranches/HARDENING-WORKSPACE-SK-V1.md` | Pre-SK-V2 draft. |
+| `restart/skinny/tranches/HARDENING-BENCH-SK-V2.md` | Superseded by skinny/BENCH.md fold-back. |
+| `restart/skinny/tranches/HARDENING-COMPILER-SK-V2.md` | Superseded by skinny/COMPILER.md fold-back. |
+| `restart/skinny/tranches/HARDENING-CONSOLIDATED-SK-V2.md` | Superseded by GRAND-SYNTHESIS-SK-V5.md. |
+| `restart/skinny/tranches/HARDENING-INDEX-SK-V2.md` | Superseded by skinny/INDEX.md fold-back. |
+| `restart/skinny/tranches/HARDENING-SUBSTRATE-SK-V2.md` | Superseded by SK-V5 Wave 4 split (canonical now in code). |
+| `restart/skinny/tranches/HARDENING-WORKSPACE-SK-V2.md` | Superseded by skinny/WORKSPACE.md fold-back. |
 | `skinny/profile/direct-sink-2026-05-12/` | Pre-SK-V5 profile; stale. |
 | `skinny/profile/reprofile-sk-v3-wave1/` | Pre-SK-V5 profile; stale. |
 | `skinny/profile/asm-string-unicode/` | Pre-SK-V5 string-unicode profile; stale (B3 confirmed these directories' artefacts are superseded by SK-V5-COHORT B-reports). |
 
 Reading order after the nuke:
 1. This prompt (SK-V6).
-2. `restart/skinny/audit/GRAND-SYNTHESIS-SK-V5.md` with the 2026-05-14 post-assay header (the corrected baseline state).
-3. `restart/skinny/audit/SK-V5-COHORT/` — cohort authority (15 reports, 5,559 LOC).
-4. `restart/skinny/audit/HANDOFF-SK-V5.md` — packet handoff (still applies to substrate intent; supplemented by this prompt's regression-recovery framing).
-5. `restart/skinny/audit/NUKE-PLAN-SK-V5.md` — the items not-yet-executed.
-6. `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md` — packet (Wave 1, 2, 4 are partially or fully landed; Wave 3 prescription refuted; Wave 5+ pending).
+2. `restart/skinny/tranches/sk-v5/SYNTHESIS.md` with the 2026-05-14 post-assay header (the corrected baseline state).
+3. `restart/skinny/tranches/sk-v5/research/` — cohort authority (15 reports, 5,559 LOC).
+4. `restart/skinny/tranches/sk-v5/HANDOFF.md` — packet handoff (still applies to substrate intent; supplemented by this prompt's regression-recovery framing).
+5. `restart/skinny/tranches/sk-v5/NUKE-PLAN.md` — the items not-yet-executed.
+6. `restart/skinny/tranches/sk-v5/SPEC.md` — packet (Wave 1, 2, 4 are partially or fully landed; Wave 3 prescription refuted; Wave 5+ pending).
 
 The remaining canonical docs are then: `restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`, `restart/HANDOFF.md`, `restart/locks/*.md`, `restart/MIGRATION.md`, the four GRAND-SYNTHESIS-SK-V5 + IMPLEMENTATION-PACKET-SK-V5 + NUKE-PLAN-SK-V5 + HANDOFF-SK-V5 audit docs, the SK-V5-COHORT directory, this SK-V6 prompt, and the skinny corpus (BENCH/COMPILER/INDEX/SUBSTRATE/WORKSPACE/HARDENING.md + RESULTS.md + REDRESS.md).
 
@@ -178,13 +178,13 @@ The remaining canonical docs are then: `restart/ARCHITECTURE.md`, `restart/MASTE
 to record the SK-V5 outcomes honestly.
 
 **Files to edit**:
-- `restart/skinny/audit/GRAND-SYNTHESIS-SK-V5.md` — verify the
+- `restart/skinny/tranches/sk-v5/SYNTHESIS.md` — verify the
   2026-05-14 post-assay header at lines 9-19 is present and accurate;
   no further edits.
-- `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V5.md` — annotate Wave
+- `restart/skinny/tranches/sk-v5/SPEC.md` — annotate Wave
   3 as REFUTED (point to REDRESS 50-55); annotate Wave 1+2+4+5 as
   LANDED with their commit SHAs; keep Wave 6+7 as future scope.
-- `restart/skinny/audit/HANDOFF-SK-V5.md` — top-line "current state"
+- `restart/skinny/tranches/sk-v5/HANDOFF.md` — top-line "current state"
   reflects the latest SK-V6 accounting: 13 retained G rows, four retained A
   rows, four direct digest PASS rows, representative `real_typed_struct` PASS
   rows for `twitter` and `update_center`, and Canada scan floor restored.
@@ -280,8 +280,8 @@ parallel via background agents per the
 `bg-then-monitor` discipline.
 
 **Exit gate**:
-- 6 reports archived to `restart/skinny/audit/SK-V6-COHORT/`.
-- A synthesis at `restart/skinny/audit/GRAND-SYNTHESIS-SK-V6.md` that
+- 6 reports archived to `restart/skinny/tranches/sk-v6/research/`.
+- A synthesis at `restart/skinny/tranches/sk-v6/SYNTHESIS-WAVE-1-PLAN.md` that
   names ONE diagnosis-revision conclusion per major regression cluster.
 - The synthesis lists at most THREE candidate kernel interventions for
   Wave 2 with: file path, expected row impact, falsifiability gate.
@@ -443,7 +443,7 @@ The campaign closes when ALL of these hold simultaneously:
 11. SOTA-beat declared per row: bbnf Track 1 strict-vs-strict beats
     sonic-rs / simdjson / yyjson on M5 Max with 1.10× slack.
 12. SK-V6 final report at
-    `restart/skinny/audit/HANDOFF-SK-V6.md` matches the SK-V5
+    `restart/skinny/tranches/sk-v6/HANDOFF.md` matches the SK-V5
     HANDOFF format + adds: per-wave commit chain + per-wave Mbps
     delta on each row + the empirically-refuted SK-V5 Wave 3 routes
     in REDRESS canonical form.
@@ -453,7 +453,7 @@ The campaign closes when ALL of these hold simultaneously:
 Before each new wave, re-read:
 
 - This prompt (SK-V6).
-- `restart/skinny/audit/GRAND-SYNTHESIS-SK-V5.md` (post-assay header
+- `restart/skinny/tranches/sk-v5/SYNTHESIS.md` (post-assay header
   + the unchanged diagnostic body).
 - The latest REDRESS.md (every rejected route in the prior tranche).
 - The latest RESULTS.md (the current gate state — single authority).

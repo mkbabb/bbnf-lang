@@ -12,13 +12,13 @@ The nine files cluster into four roles. The classification is mechanical from ea
 |---|---|---|
 | `README.md` (162 LOC) | `restart/prompts/README.md:1` "Prompt Suite — Iterative Auto-Convergent Multi-Pass Framework" | **Gestalt** (framework-level introduction; non-dispatching) |
 | `ORCHESTRATOR.md` (145 LOC) | `restart/prompts/ORCHESTRATOR.md:3` "single main orchestrator prompt for the bbnf-lang greenfield restart" | **Top-level orchestrator** (phase identification + fan-out to one of three sub-orchestrators) |
-| `HARDENING-ORCHESTRATOR.md` (151 LOC) | `restart/prompts/HARDENING-ORCHESTRATOR.md:1` "You are the hardening sub-orchestrator" | **Sub-orchestrator** (dispatches hardening cycles V1-V9+) |
-| `RESEARCH-FOLD-ORCHESTRATOR.md` (262 LOC) | `restart/prompts/RESEARCH-FOLD-ORCHESTRATOR.md:1` "This document is a runnable orchestrator specification" | **Sub-orchestrator** (research deep-dive + fold cycles) |
-| `AMENDMENT-DISPATCH.md` (189 LOC) | `restart/prompts/AMENDMENT-DISPATCH.md:1` "You are the amendment-dispatch sub-orchestrator" | **Sub-orchestrator** (verify-then-patch surgical reconciliation cycles) |
-| `PASS-ALPHA.md` (206 LOC) | `restart/prompts/PASS-ALPHA.md:3` "Pass Alpha is the skinny astral synthesis pass" | **Pass contract** (skinny SK-V{N+1} synthesis, six-agent fan-out + CHALLENGE + CRUD) |
-| `PASS-OMEGA.md` (182 LOC) | `restart/prompts/PASS-OMEGA.md:3` "Pass Omega is the totality astral synthesis pass" | **Pass contract** (totality V1 spec cohesion + skinny fold-in) |
-| `SKINNY-PASSES.md` (210 LOC) | `restart/prompts/SKINNY-PASSES.md:3` "the contract for skinny passes 1-n... per-iteration triumvirate cycles" | **Pass contract** (single contract: per-wave research/plan/redress triumvirate) |
-| `HARDENING.md` (268 LOC) | `restart/prompts/HARDENING.md:3` "You are the hardening agent. Your role is to challenge..." | **Audit specification** (per-target lens contract; load-bearing input to every hardening dispatch) |
+| `HARDENING-ORCHESTRATOR.md` (151 LOC) | `restart/prompts/sub-orchestrators/HARDENING.md:1` "You are the hardening sub-orchestrator" | **Sub-orchestrator** (dispatches hardening cycles V1-V9+) |
+| `RESEARCH-FOLD-ORCHESTRATOR.md` (262 LOC) | `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md:1` "This document is a runnable orchestrator specification" | **Sub-orchestrator** (research deep-dive + fold cycles) |
+| `AMENDMENT-DISPATCH.md` (189 LOC) | `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md:1` "You are the amendment-dispatch sub-orchestrator" | **Sub-orchestrator** (verify-then-patch surgical reconciliation cycles) |
+| `PASS-ALPHA.md` (206 LOC) | `restart/prompts/pass-contracts/PASS-ALPHA.md:3` "Pass Alpha is the skinny astral synthesis pass" | **Pass contract** (skinny SK-V{N+1} synthesis, six-agent fan-out + CHALLENGE + CRUD) |
+| `PASS-OMEGA.md` (182 LOC) | `restart/prompts/pass-contracts/PASS-OMEGA.md:3` "Pass Omega is the totality astral synthesis pass" | **Pass contract** (totality V1 spec cohesion + skinny fold-in) |
+| `SKINNY-PASSES.md` (210 LOC) | `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md:3` "the contract for skinny passes 1-n... per-iteration triumvirate cycles" | **Pass contract** (single contract: per-wave research/plan/redress triumvirate) |
+| `HARDENING.md` (268 LOC) | `restart/prompts/audit-specs/HARDENING-LENS-SET.md:3` "You are the hardening agent. Your role is to challenge..." | **Audit specification** (per-target lens contract; load-bearing input to every hardening dispatch) |
 
 Four roles, four destinations in the proposed layout:
 
@@ -42,31 +42,31 @@ The current names carry five inconsistency classes.
 
 Two files share the `HARDENING` prefix but do different things:
 
-- `restart/prompts/HARDENING.md` (268 LOC) — the **per-target audit specification** that each dispatched hardener agent reads as its operational contract. Per `restart/prompts/HARDENING.md:1` "You are the hardening agent". It contains lens definitions (A through K), per-item discipline (Pro/Con/Explication/Challenge), verdict classes (KEEP/REINVENT/DISCARD + SIMPLIFY/CONSOLIDATE/LEVERAGE/HYBRID/LOAD-BEARING/ASPIRATIONAL/SPECULATIVE), and the output contract.
-- `restart/prompts/HARDENING-ORCHESTRATOR.md` (151 LOC) — the **sub-orchestrator** that dispatches hardening cycles. Per `restart/prompts/HARDENING-ORCHESTRATOR.md:1` "You are the hardening sub-orchestrator. Your role is to coordinate a hardening cycle (V1 through V8+) by dispatching four parallel hardener agents."
+- `restart/prompts/audit-specs/HARDENING-LENS-SET.md` (268 LOC) — the **per-target audit specification** that each dispatched hardener agent reads as its operational contract. Per `restart/prompts/audit-specs/HARDENING-LENS-SET.md:1` "You are the hardening agent". It contains lens definitions (A through K), per-item discipline (Pro/Con/Explication/Challenge), verdict classes (KEEP/REINVENT/DISCARD + SIMPLIFY/CONSOLIDATE/LEVERAGE/HYBRID/LOAD-BEARING/ASPIRATIONAL/SPECULATIVE), and the output contract.
+- `restart/prompts/sub-orchestrators/HARDENING.md` (151 LOC) — the **sub-orchestrator** that dispatches hardening cycles. Per `restart/prompts/sub-orchestrators/HARDENING.md:1` "You are the hardening sub-orchestrator. Your role is to coordinate a hardening cycle (V1 through V8+) by dispatching four parallel hardener agents."
 
 These are not parent/child — they are dispatcher and audit-spec-contract. The `-ORCHESTRATOR` suffix is doing the disambiguation work, but reading `HARDENING.md` first gives the wrong mental model (one would expect the contract file to be the orchestrator, not the audit-spec).
 
 The `restart/prompts/ORCHESTRATOR.md:14-16` required reading already calls out the awkwardness:
 
 ```
-6. `restart/prompts/HARDENING.md` — per-target audit specification (the contract each hardening agent reads).
-7. `restart/prompts/HARDENING-ORCHESTRATOR.md` — sub-orchestrator for hardening cycles.
+6. `restart/prompts/audit-specs/HARDENING-LENS-SET.md` — per-target audit specification (the contract each hardening agent reads).
+7. `restart/prompts/sub-orchestrators/HARDENING.md` — sub-orchestrator for hardening cycles.
 ```
 
 The parenthetical at line 6 is doing the disambiguation work the filename should do. Rename: `HARDENING.md` → `HARDENING-LENS-SET.md` (or equivalent). The lens set is what makes `HARDENING.md` distinctive — it is the only file in the directory that defines an adversarial lens vocabulary. `restart/skinny/HARDENING.md:19` already uses the phrase "lens stack" to refer to this content.
 
 ### §2.3 — `SKINNY-PASSES.md` plurality
 
-The filename is plural but `restart/prompts/SKINNY-PASSES.md:3` declares "the contract for skinny passes 1-n" — singular contract for an unbounded count of cycle invocations. The content is a single triumvirate-pattern specification (research/plan/redress), not three pass definitions. The plurality is misleading; readers expect either (a) one file per pass type or (b) a single contract whose name reflects its content.
+The filename is plural but `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md:3` declares "the contract for skinny passes 1-n" — singular contract for an unbounded count of cycle invocations. The content is a single triumvirate-pattern specification (research/plan/redress), not three pass definitions. The plurality is misleading; readers expect either (a) one file per pass type or (b) a single contract whose name reflects its content.
 
-Rename: `SKINNY-PASSES.md` → `SKINNY-TRIUMVIRATE.md`. The triumvirate is the load-bearing concept (research/plan/redress; three commits per wave; `restart/prompts/SKINNY-PASSES.md:191-200` "Triumvirate role separation (load-bearing)"). The triumvirate is also the SK-V6/SK-V7 vocabulary in flight — `restart/skinny/audit/HANDOFF-SK-V7.md:12` cites the file by its triumvirate role.
+Rename: `SKINNY-PASSES.md` → `SKINNY-TRIUMVIRATE.md`. The triumvirate is the load-bearing concept (research/plan/redress; three commits per wave; `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md:191-200` "Triumvirate role separation (load-bearing)"). The triumvirate is also the SK-V6/SK-V7 vocabulary in flight — `restart/skinny/tranches/sk-v7/HANDOFF.md:12` cites the file by its triumvirate role.
 
 ### §2.4 — `PASS-ALPHA` / `PASS-OMEGA` opacity
 
 `PASS-ALPHA` and `PASS-OMEGA` are short and memorable but opaque to a first-time reader. The README.md author already supplies the long-form gloss inline (`restart/prompts/README.md:7-8` "skinny astral synthesis" / "totality astral synthesis"). The choice is between:
 
-- Keep the bracket short names (the vocabulary is already established in the corpus at `restart/skinny/audit/GRAND-SYNTHESIS-SK-V7.md:11` and `IMPLEMENTATION-PACKET-SK-V7.md:12`).
+- Keep the bracket short names (the vocabulary is already established in the corpus at `restart/skinny/tranches/sk-v7/SYNTHESIS.md:11` and `IMPLEMENTATION-PACKET-SK-V7.md:12`).
 - Lengthen to `PASS-ALPHA-SKINNY-ASTRAL.md` / `PASS-OMEGA-TOTALITY-ASTRAL.md` (descriptive but verbose).
 - Drop the Greek-letter prefix and use `SKINNY-ASTRAL.md` / `TOTALITY-ASTRAL.md` (clearer about role; loses the Alpha/Omega bracket symmetry that the README leans on).
 
@@ -113,13 +113,13 @@ The four-deep nesting (`prompts/{sub-orchestrators,pass-contracts,audit-specs}/`
 |---|---|---|---|
 | `restart/prompts/README.md` | `restart/prompts/README.md` | Rewrite content | Existing content declares non-existent files (`TOTALITY-PASS-1/2/3-*.md`); rewrite to match actual layout per §5 |
 | `restart/prompts/ORCHESTRATOR.md` | `restart/prompts/ORCHESTRATOR.md` | Keep | Top-level orchestrator stays at top level; content unchanged at file level but the §1 required-reading list (`restart/prompts/ORCHESTRATOR.md:14-17`) needs path updates per §6 |
-| `restart/prompts/HARDENING-ORCHESTRATOR.md` | `restart/prompts/sub-orchestrators/HARDENING.md` | Move + rename | Subdir conveys "sub-orchestrator"; the `-ORCHESTRATOR` suffix becomes redundant |
-| `restart/prompts/RESEARCH-FOLD-ORCHESTRATOR.md` | `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` | Move + rename | Same rationale as HARDENING; `-ORCHESTRATOR` suffix retired |
-| `restart/prompts/AMENDMENT-DISPATCH.md` | `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` | Move | Subdir conveys role; filename already had `-DISPATCH` action verb (kept; less redundant with subdir than `-ORCHESTRATOR` would have been) |
-| `restart/prompts/PASS-ALPHA.md` | `restart/prompts/pass-contracts/PASS-ALPHA.md` | Move | Subdir conveys "pass-contract" role |
-| `restart/prompts/PASS-OMEGA.md` | `restart/prompts/pass-contracts/PASS-OMEGA.md` | Move | Same |
-| `restart/prompts/SKINNY-PASSES.md` | `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md` | Move + rename | Plural → singular; "triumvirate" names the actual content (per `restart/prompts/SKINNY-PASSES.md:7` "the triumvirate structure" + `:191` "triumvirate role separation (load-bearing)") |
-| `restart/prompts/HARDENING.md` | `restart/prompts/audit-specs/HARDENING-LENS-SET.md` | Move + rename | Resolves the `HARDENING` ambiguity with `HARDENING-ORCHESTRATOR`; "lens set" names the distinctive content per `restart/prompts/HARDENING.md:189-194` cycle-lens table + `restart/skinny/HARDENING.md:19` "lens stack" vocabulary |
+| `restart/prompts/sub-orchestrators/HARDENING.md` | `restart/prompts/sub-orchestrators/HARDENING.md` | Move + rename | Subdir conveys "sub-orchestrator"; the `-ORCHESTRATOR` suffix becomes redundant |
+| `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` | `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` | Move + rename | Same rationale as HARDENING; `-ORCHESTRATOR` suffix retired |
+| `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` | `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` | Move | Subdir conveys role; filename already had `-DISPATCH` action verb (kept; less redundant with subdir than `-ORCHESTRATOR` would have been) |
+| `restart/prompts/pass-contracts/PASS-ALPHA.md` | `restart/prompts/pass-contracts/PASS-ALPHA.md` | Move | Subdir conveys "pass-contract" role |
+| `restart/prompts/pass-contracts/PASS-OMEGA.md` | `restart/prompts/pass-contracts/PASS-OMEGA.md` | Move | Same |
+| `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md` | `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md` | Move + rename | Plural → singular; "triumvirate" names the actual content (per `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md:7` "the triumvirate structure" + `:191` "triumvirate role separation (load-bearing)") |
+| `restart/prompts/audit-specs/HARDENING-LENS-SET.md` | `restart/prompts/audit-specs/HARDENING-LENS-SET.md` | Move + rename | Resolves the `HARDENING` ambiguity with `HARDENING-ORCHESTRATOR`; "lens set" names the distinctive content per `restart/prompts/audit-specs/HARDENING-LENS-SET.md:189-194` cycle-lens table + `restart/skinny/HARDENING.md:19` "lens stack" vocabulary |
 
 Operation counts: **2 renames** (`HARDENING.md` → `HARDENING-LENS-SET.md`; `SKINNY-PASSES.md` → `SKINNY-TRIUMVIRATE.md`), **5 moves-with-implicit-rename** (the `-ORCHESTRATOR` suffix retirement on two files; the bare moves on three files), **1 rewrite** (`README.md`), **1 keep** (`ORCHESTRATOR.md` content; only required-reading paths update).
 
@@ -176,15 +176,15 @@ Renaming and moving files invalidates the following cross-corpus citations. Each
 | Citing path | Citing line | Old reference | New reference |
 |---|---|---|---|
 | `restart/README.md` | 420 | `restart/prompts/ORCHESTRATOR.md` | unchanged (file stays at top level) |
-| `restart/README.md` | 421 | `restart/prompts/HARDENING-ORCHESTRATOR.md` | `restart/prompts/sub-orchestrators/HARDENING.md` |
-| `restart/README.md` | 422 | `restart/prompts/RESEARCH-FOLD-ORCHESTRATOR.md` | `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` |
-| `restart/README.md` | 423 | `restart/prompts/AMENDMENT-DISPATCH.md` | `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` |
-| `restart/README.md` | 424 | `restart/prompts/HARDENING.md` | `restart/prompts/audit-specs/HARDENING-LENS-SET.md` |
+| `restart/README.md` | 421 | `restart/prompts/sub-orchestrators/HARDENING.md` | `restart/prompts/sub-orchestrators/HARDENING.md` |
+| `restart/README.md` | 422 | `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` | `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` |
+| `restart/README.md` | 423 | `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` | `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` |
+| `restart/README.md` | 424 | `restart/prompts/audit-specs/HARDENING-LENS-SET.md` | `restart/prompts/audit-specs/HARDENING-LENS-SET.md` |
 | `restart/README.md` | 466 | "The five prompts at `restart/prompts/` dispatch next" | "The five sub-orchestrator + pass-contract files at `restart/prompts/{sub-orchestrators,pass-contracts}/` dispatch next" (or equivalent restatement) |
-| `restart/prompts/ORCHESTRATOR.md` | 14 | `restart/prompts/HARDENING.md` | `restart/prompts/audit-specs/HARDENING-LENS-SET.md` |
-| `restart/prompts/ORCHESTRATOR.md` | 15 | `restart/prompts/HARDENING-ORCHESTRATOR.md` | `restart/prompts/sub-orchestrators/HARDENING.md` |
-| `restart/prompts/ORCHESTRATOR.md` | 16 | `restart/prompts/RESEARCH-FOLD-ORCHESTRATOR.md` | `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` |
-| `restart/prompts/ORCHESTRATOR.md` | 17 | `restart/prompts/AMENDMENT-DISPATCH.md` | `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` |
+| `restart/prompts/ORCHESTRATOR.md` | 14 | `restart/prompts/audit-specs/HARDENING-LENS-SET.md` | `restart/prompts/audit-specs/HARDENING-LENS-SET.md` |
+| `restart/prompts/ORCHESTRATOR.md` | 15 | `restart/prompts/sub-orchestrators/HARDENING.md` | `restart/prompts/sub-orchestrators/HARDENING.md` |
+| `restart/prompts/ORCHESTRATOR.md` | 16 | `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` | `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` |
+| `restart/prompts/ORCHESTRATOR.md` | 17 | `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` | `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` |
 | `restart/prompts/ORCHESTRATOR.md` | 35-39 | phase-type table cell references | each row's sub-orchestrator path |
 | `restart/prompts/sub-orchestrators/HARDENING.md` (formerly HARDENING-ORCHESTRATOR.md) | 5, 13-15 | required-reading list | path updates throughout |
 | `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` (formerly RESEARCH-FOLD-ORCHESTRATOR.md) | 16-18 | required-reading list | path updates throughout |
@@ -193,23 +193,23 @@ Renaming and moving files invalidates the following cross-corpus citations. Each
 | `restart/prompts/pass-contracts/PASS-OMEGA.md` | 11, 146-154 | references to `RESEARCH-FOLD-ORCHESTRATOR.md`, `HARDENING-ORCHESTRATOR.md`, `AMENDMENT-DISPATCH.md` | each cited path updates per the move table §4 |
 | `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md` (formerly SKINNY-PASSES.md) | (no internal cross-refs to peer prompts) | — | no internal references require updates |
 | `restart/prompts/audit-specs/HARDENING-LENS-SET.md` (formerly HARDENING.md) | 196 | "The hardening orchestrator (`HARDENING-ORCHESTRATOR.md`) selects the lens set per cycle" | "The hardening sub-orchestrator (`restart/prompts/sub-orchestrators/HARDENING.md`) selects the lens set per cycle" |
-| `restart/research/fold-pass-1.md` | 38 | `restart/prompts/RESEARCH-FOLD-ORCHESTRATOR.md` Phase 2 | `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` Phase 2 |
-| `restart/research/fold-pass-1.md` | 39 | `restart/prompts/AMENDMENT-DISPATCH.md` §1 | `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` §1 |
+| `restart/research/fold-pass-1.md` | 38 | `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` Phase 2 | `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` Phase 2 |
+| `restart/research/fold-pass-1.md` | 39 | `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` §1 | `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` §1 |
 | `restart/research/fold-pass-2.md` | 22-23 | same | same updates |
 | `restart/research/fold-pass-3.md` | 23-24 | same | same updates |
 | `restart/research/fold-synthesis.md` | 31-32 | same | same updates |
-| `restart/research/INDEX.md` | 5 | `restart/prompts/RESEARCH-FOLD-ORCHESTRATOR.md` | `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` |
+| `restart/research/INDEX.md` | 5 | `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` | `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` |
 | `restart/research/CORPUS-AUDIT-1-TOP-LEVEL-PROMPTS.md` | 4 + 15 + 49-53 + 93 + 133 + 175 + 208 + 215 + 261-262 + 273 + 296-299 + 312 | extensive prompts/ citations | full sweep per move table §4 |
-| `restart/research/CORPUS-AUDIT-2-PASS-DIRS.md` | 159 | `restart/prompts/HARDENING.md` | `restart/prompts/audit-specs/HARDENING-LENS-SET.md` |
-| `restart/research/CORPUS-AUDIT-3-HARDENING-DIR.md` | 141 + 223 | `restart/prompts/HARDENING.md` + `restart/prompts/AMENDMENT-DISPATCH.md` | per move table |
+| `restart/research/CORPUS-AUDIT-2-PASS-DIRS.md` | 159 | `restart/prompts/audit-specs/HARDENING-LENS-SET.md` | `restart/prompts/audit-specs/HARDENING-LENS-SET.md` |
+| `restart/research/CORPUS-AUDIT-3-HARDENING-DIR.md` | 141 + 223 | `restart/prompts/audit-specs/HARDENING-LENS-SET.md` + `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` | per move table |
 | `restart/research/CORPUS-AUDIT-SYNTHESIS.md` | 10 + 41-45 + 77 + 131 + 170-171 | extensive prompts/ citations | per move table |
 | `restart/skinny/HARDENING.md` | 9 + 19 + 42-43 + 54 + 147 + 192 + 198 | references to V1 hardening prompt | each updates to `restart/prompts/audit-specs/HARDENING-LENS-SET.md` (or `restart/prompts/sub-orchestrators/HARDENING.md` where it cites the sub-orchestrator) |
-| `restart/skinny/INDEX.md` | 27 | `restart/prompts/HARDENING.md` | `restart/prompts/audit-specs/HARDENING-LENS-SET.md` |
-| `restart/skinny/audit/HANDOFF-SK-V7.md` | 9-12 | `restart/prompts/README.md`, `ORCHESTRATOR.md`, `PASS-ALPHA.md`, `SKINNY-PASSES.md` | latter two update per move table |
-| `restart/skinny/audit/GRAND-SYNTHESIS-SK-V7.md` | 11 + 23 | `restart/prompts/PASS-ALPHA.md` + `{README,PASS-ALPHA,PASS-OMEGA,SKINNY-PASSES}.md` | per move table |
-| `restart/skinny/audit/IMPLEMENTATION-PACKET-SK-V7.md` | 12-13 + 83 | `restart/prompts/PASS-ALPHA.md` + `SKINNY-PASSES.md` + `README.md` | per move table |
-| `restart/audit/hardening/HARDENING-PASS-1-V9.md` | 86 | `restart/prompts/HARDENING.md:230-246` | `restart/prompts/audit-specs/HARDENING-LENS-SET.md:230-246` |
-| `restart/audit/hardening/HARDENING-PASS-3-V9.md` + `HARDENING-PASS-3-V9.1.md` + `HARDENING-CONSOLIDATED-V9.1.md` + `HARDENING-MASTER-PLAN-V9.1.md` + `HARDENING-SYNTHESIS-V6.md` | various | `restart/prompts/HARDENING.md` and `restart/prompts/ORCHESTRATOR.md` references | sweep per move table |
+| `restart/skinny/INDEX.md` | 27 | `restart/prompts/audit-specs/HARDENING-LENS-SET.md` | `restart/prompts/audit-specs/HARDENING-LENS-SET.md` |
+| `restart/skinny/tranches/sk-v7/HANDOFF.md` | 9-12 | `restart/prompts/README.md`, `ORCHESTRATOR.md`, `PASS-ALPHA.md`, `SKINNY-PASSES.md` | latter two update per move table |
+| `restart/skinny/tranches/sk-v7/SYNTHESIS.md` | 11 + 23 | `restart/prompts/pass-contracts/PASS-ALPHA.md` + `{README,PASS-ALPHA,PASS-OMEGA,SKINNY-PASSES}.md` | per move table |
+| `restart/skinny/tranches/sk-v7/SPEC.md` | 12-13 + 83 | `restart/prompts/pass-contracts/PASS-ALPHA.md` + `SKINNY-PASSES.md` + `README.md` | per move table |
+| `restart/audit/hardening/HARDENING-PASS-1-V9.md` | 86 | `restart/prompts/audit-specs/HARDENING-LENS-SET.md:230-246` | `restart/prompts/audit-specs/HARDENING-LENS-SET.md:230-246` |
+| `restart/audit/hardening/HARDENING-PASS-3-V9.md` + `HARDENING-PASS-3-V9.1.md` + `HARDENING-CONSOLIDATED-V9.1.md` + `HARDENING-MASTER-PLAN-V9.1.md` + `HARDENING-SYNTHESIS-V6.md` | various | `restart/prompts/audit-specs/HARDENING-LENS-SET.md` and `restart/prompts/ORCHESTRATOR.md` references | sweep per move table |
 
 Total identified citing files: **22 files** with **~50+ individual line references**. The actual sweep is a single `rg -l 'restart/prompts/'` + targeted `sed`-class rewrites; the deliverable is a single follow-on commit. All references are mechanical path substitutions; no semantic content changes.
 
@@ -231,9 +231,9 @@ Does bbnf-lang need an analogous `dispatch/` subdir?
 
 Reading the current bbnf-lang sub-orchestrators:
 
-- `restart/prompts/HARDENING-ORCHESTRATOR.md:110-122` ("Per-dispatch prompts you compose") declares the dispatch prompts are **composed at dispatch time, not pre-written**. The contract at `HARDENING.md` is the per-agent specification.
-- `restart/prompts/RESEARCH-FOLD-ORCHESTRATOR.md:231-246` ("Per-agent dispatch prompt template") similarly declares the orchestrator-agent **composes** dispatch prompts at dispatch time.
-- `restart/prompts/AMENDMENT-DISPATCH.md:75-89` ("Per-Wave Dispatch Prompts") similarly **composes** at dispatch time.
+- `restart/prompts/sub-orchestrators/HARDENING.md:110-122` ("Per-dispatch prompts you compose") declares the dispatch prompts are **composed at dispatch time, not pre-written**. The contract at `HARDENING.md` is the per-agent specification.
+- `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md:231-246` ("Per-agent dispatch prompt template") similarly declares the orchestrator-agent **composes** dispatch prompts at dispatch time.
+- `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md:75-89` ("Per-Wave Dispatch Prompts") similarly **composes** at dispatch time.
 
 bbnf-lang's pattern is **deliberately non-template**: every dispatch composes the prompt from the role-contract spec + the cycle-specific parameters. A `dispatch/` subdir with pre-written templates would contradict the composability discipline.
 
@@ -247,7 +247,7 @@ If a future user-mandate requires per-pass templates (e.g., to standardise the d
 |---|---|---|
 | Naming scheme | Subdirectory hierarchy (no numeric prefix) | Less brittle to corpus reference churn; subdirs carry role taxonomy; aligns with hassio-config `dispatch/` precedent for using a subdir as the structural unit |
 | `HARDENING.md` rename | `audit-specs/HARDENING-LENS-SET.md` | Resolves `HARDENING.md` vs. `HARDENING-ORCHESTRATOR.md` ambiguity; "lens set" names the distinctive content; consistent with `restart/skinny/HARDENING.md:19` "lens stack" vocabulary |
-| `SKINNY-PASSES.md` rename | `pass-contracts/SKINNY-TRIUMVIRATE.md` | Resolves plurality/singular content mismatch; "triumvirate" is the load-bearing concept (`restart/prompts/SKINNY-PASSES.md:191-200`) |
+| `SKINNY-PASSES.md` rename | `pass-contracts/SKINNY-TRIUMVIRATE.md` | Resolves plurality/singular content mismatch; "triumvirate" is the load-bearing concept (`restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md:191-200`) |
 | `PASS-ALPHA` / `PASS-OMEGA` rename | Keep as-is, place in `pass-contracts/` | Greek-letter bracket carries semantic weight (gates G-Alpha / G-Omega); subdir supplies role context |
 | Sub-orchestrator suffix retirement | `-ORCHESTRATOR` retired from `HARDENING.md`, `RESEARCH-FOLD.md`; `-DISPATCH` retained on `AMENDMENT-DISPATCH.md` | Subdir conveys role; `-ORCHESTRATOR` redundant; `-DISPATCH` is an action verb (not a role marker), kept |
 | README rewrite | Mandatory | Current README declares 7 nonexistent-or-mislabeled files; standalone fault even pre-restructure |

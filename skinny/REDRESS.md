@@ -2246,3 +2246,38 @@ perturbation.
   concrete hot leaf such as `match_number_span_from_first` and generated
   array-number direct dispatch. The rejected routes in HANDOFF §3 remain
   blocked.
+
+## SK-V7 Wave 3 Capacity-Hinted Numeric Vec Real-Typed Expansion Redress
+
+- Item 81 admits the W3 capacity-hinted numeric Vec route. `DirectTypeRef::Vec`
+  now carries `capacity_hint`, generated helper names include that hint to avoid
+  collisions, Vec helpers allocate with `Vec::with_capacity`, and the typed
+  direct scalar set includes `U32` for integer vector fixtures.
+- The same-wave consumers are generated `real_typed_struct` rows for `mesh` and
+  `marine_ik`. The schemas bind the actual fixture shapes rather than the stale
+  sketch names: mesh consumes `positions`, `tex0`, `colors`, `influences`,
+  `normals`, `indices`, and `batches`; marine_ik consumes
+  `geometries[].data.{uvs,vertices,skinWeights,skinIndices,normals,faces}`.
+  Checksums include the numeric vectors, so these are materialized typed rows,
+  not skip-only rows.
+- Verification completed. `cargo run -p xtask --release -- regen-real-typed`
+  regenerated the bench consumer. `cargo run -p xtask --release --
+  check-real-typed` passed. `cargo test -p codegen typed_direct` passed.
+  `cargo test -p bbnf-bench real_typed -- --nocapture` passed. Full-fixture
+  profile probes matched checksums across Track 1, Track 2, sonic-rs, and
+  serde_json for both new rows. `cargo test --workspace` passed. The scoped
+  Criterion commands for W3 rows completed, and `cargo run -p bbnf-bench --bin
+  gate --release -- --advisory` refreshed `skinny/RESULTS.md`; it exited 5
+  only because the overall skinny gate remains `N-direct / NoGo`.
+- Measurement evidence:
+
+  | Corpus | Workload | Track 1 Mbps | Track 2 Mbps | sonic-rs strict Mbps | Outcome |
+  |---|---|---:|---:|---:|---|
+  | mesh | real_typed_struct | 9466 | 8089 | 8696 | A / GO |
+  | marine_ik | real_typed_struct | 12020 | 9630 | 8750 | A / GO |
+  | mesh | direct_to_struct guard | 8259 | 8483 | 8789 | A / GO |
+  | twitter | real_typed_struct guard | 18513 | 16193 | 15486 | A / GO |
+
+- The W3 gate is closed. This does not reopen the rejected V5/V6 retained-parse
+  materializer routes, benchmark-private hand typed sink, or capacity prescan
+  routes named in HANDOFF §3.

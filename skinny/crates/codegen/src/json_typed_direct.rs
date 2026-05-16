@@ -174,8 +174,9 @@ impl<'a> Renderer<'a> {
             DirectTypeRef::Scalar(DirectScalar::Bool) => Ok("bool".to_string()),
             DirectTypeRef::Scalar(DirectScalar::I64) => Ok("i64".to_string()),
             DirectTypeRef::Scalar(DirectScalar::U64) => Ok("u64".to_string()),
+            DirectTypeRef::Scalar(DirectScalar::U32) => Ok("u32".to_string()),
             DirectTypeRef::Scalar(DirectScalar::F64) => Ok("f64".to_string()),
-            DirectTypeRef::Vec(inner) => Ok(format!("Vec<{}>", self.rust_type(inner)?)),
+            DirectTypeRef::Vec { inner, .. } => Ok(format!("Vec<{}>", self.rust_type(inner)?)),
             DirectTypeRef::MapString(inner) => Ok(format!(
                 "BTreeMap<Cow<'i, str>, {}>",
                 self.rust_type(inner)?
@@ -194,8 +195,9 @@ impl<'a> Renderer<'a> {
             DirectTypeRef::Scalar(DirectScalar::Bool) => Ok("parser.parse_bool()".to_string()),
             DirectTypeRef::Scalar(DirectScalar::I64) => Ok("parser.parse_i64()".to_string()),
             DirectTypeRef::Scalar(DirectScalar::U64) => Ok("parser.parse_u64()".to_string()),
+            DirectTypeRef::Scalar(DirectScalar::U32) => Ok("parser.parse_u32()".to_string()),
             DirectTypeRef::Scalar(DirectScalar::F64) => Ok("parser.parse_f64()".to_string()),
-            DirectTypeRef::Vec(_)
+            DirectTypeRef::Vec { .. }
             | DirectTypeRef::MapString(_)
             | DirectTypeRef::MapEntriesVec { .. }
             | DirectTypeRef::Option(_) => Ok(format!("{}(parser)", self.helper_name(ty)?)),
@@ -212,7 +214,7 @@ impl<'a> Renderer<'a> {
 
     fn collect_helpers(&mut self, ty: &DirectTypeRef) {
         match ty {
-            DirectTypeRef::Vec(inner)
+            DirectTypeRef::Vec { inner, .. }
             | DirectTypeRef::MapString(inner)
             | DirectTypeRef::MapEntriesVec { value: inner, .. }
             | DirectTypeRef::Option(inner) => {
@@ -303,14 +305,18 @@ impl<'a> Renderer<'a> {
     ) -> Result<(), String> {
         let return_ty = self.rust_type(ty)?;
         match ty {
-            DirectTypeRef::Vec(inner) => {
+            DirectTypeRef::Vec {
+                inner,
+                capacity_hint,
+            } => {
                 let inner_ty = self.rust_type(inner)?;
                 let inner_expr = self.parse_expr(inner)?;
+                let capacity = capacity_hint.unwrap_or(0);
                 out.push_str(&format!(
                     "fn {name}<'i>(parser: &mut DirectParser<'i>) -> Result<{return_ty}, DirectBuildError<'i>> {{\n"
                 ));
                 out.push_str(&format!(
-                    "    let mut out: Vec<{inner_ty}> = Vec::new();\n    parser.ws();\n    parser.expect(b'[')?;\n    parser.ws();\n    if parser.take(b']') {{ return Ok(out); }}\n    loop {{\n        out.push({inner_expr}?);\n        parser.ws();\n        if parser.take(b',') {{ parser.ws(); continue; }}\n        parser.expect(b']')?;\n        return Ok(out);\n    }}\n}}\n\n"
+                    "    let mut out: Vec<{inner_ty}> = Vec::with_capacity({capacity});\n    parser.ws();\n    parser.expect(b'[')?;\n    parser.ws();\n    if parser.take(b']') {{ return Ok(out); }}\n    loop {{\n        out.push({inner_expr}?);\n        parser.ws();\n        if parser.take(b',') {{ parser.ws(); continue; }}\n        parser.expect(b']')?;\n        return Ok(out);\n    }}\n}}\n\n"
                 ));
             }
             DirectTypeRef::MapString(inner) => {
@@ -359,7 +365,16 @@ fn type_key(ty: &DirectTypeRef) -> String {
     match ty {
         DirectTypeRef::Type(type_id) => format!("type_{type_id}"),
         DirectTypeRef::Scalar(scalar) => format!("scalar_{scalar:?}"),
-        DirectTypeRef::Vec(inner) => format!("vec_{}", type_key(inner)),
+        DirectTypeRef::Vec {
+            inner,
+            capacity_hint,
+        } => format!(
+            "vec_cap_{}_{}",
+            capacity_hint
+                .map(|hint| hint.to_string())
+                .unwrap_or_else(|| "none".to_string()),
+            type_key(inner)
+        ),
         DirectTypeRef::MapString(inner) => format!("map_string_{}", type_key(inner)),
         DirectTypeRef::MapEntriesVec {
             entry_rust_type,
@@ -515,6 +530,13 @@ impl<'i> DirectParser<'i> {
     fn parse_u64(&mut self) -> Result<u64, DirectBuildError<'i>> {
         let span = self.number_span()?;
         materialize_u64(self.bytes, &span).map_err(|_| self.error("integer range"))
+    }
+
+    #[allow(dead_code)]
+    #[inline(always)]
+    fn parse_u32(&mut self) -> Result<u32, DirectBuildError<'i>> {
+        let value = self.parse_u64()?;
+        u32::try_from(value).map_err(|_| self.error("integer range"))
     }
 
     #[allow(dead_code)]

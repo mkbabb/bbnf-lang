@@ -395,9 +395,10 @@ mod tests {
                         DirectFieldSchema {
                             json_key: "items".to_string(),
                             rust_field: "items".to_string(),
-                            ty: DirectTypeRef::Vec(Box::new(DirectTypeRef::Scalar(
-                                DirectScalar::U64,
-                            ))),
+                            ty: DirectTypeRef::Vec {
+                                inner: Box::new(DirectTypeRef::Scalar(DirectScalar::U64)),
+                                capacity_hint: None,
+                            },
                             presence: PresencePolicy::Default,
                             duplicate: DuplicatePolicy::LastWins,
                         },

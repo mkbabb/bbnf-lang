@@ -7,7 +7,7 @@ use codegen::direct_schema::{
 pub fn schema() -> DirectSchemaSet {
     DirectSchemaSet {
         module_name: "generated_real_typed".to_string(),
-        schema_hash: "sk-v6-real-typed-v1".to_string(),
+        schema_hash: "sk-v7-real-typed-v2".to_string(),
         roots: vec![
             DirectRootSchema {
                 function_name: "parse_twitter_search".to_string(),
@@ -18,6 +18,16 @@ pub fn schema() -> DirectSchemaSet {
                 function_name: "parse_update_center".to_string(),
                 rust_type: "crate::real_typed_struct::UpdateCenter<'i>".to_string(),
                 type_id: "UpdateCenter".to_string(),
+            },
+            DirectRootSchema {
+                function_name: "parse_mesh".to_string(),
+                rust_type: "crate::real_typed_struct::Mesh".to_string(),
+                type_id: "Mesh".to_string(),
+            },
+            DirectRootSchema {
+                function_name: "parse_marine_ik".to_string(),
+                rust_type: "crate::real_typed_struct::MarineIk".to_string(),
+                type_id: "MarineIk".to_string(),
             },
         ],
         types: vec![
@@ -93,6 +103,78 @@ pub fn schema() -> DirectSchemaSet {
                 ignored("sha1", DirectSkipKind::String),
                 ignored("wiki", DirectSkipKind::String),
             ]),
+            struct_ty(
+                "Mesh",
+                "crate::real_typed_struct::Mesh",
+                vec![
+                    default("batches", "batches", vec_with_capacity(ty("MeshBatch"), 1)),
+                    default(
+                        "positions",
+                        "positions",
+                        vec_with_capacity(f64_ty(), 10_800),
+                    ),
+                    default("tex0", "tex0", vec_with_capacity(f64_ty(), 7_200)),
+                    default("colors", "colors", vec_with_capacity(u32_ty(), 3_600)),
+                    default(
+                        "influences",
+                        "influences",
+                        vec_with_capacity(vec_with_capacity(f64_ty(), 2), 3_600),
+                    ),
+                    default("normals", "normals", vec_with_capacity(f64_ty(), 10_800)),
+                    default("indices", "indices", vec_with_capacity(u32_ty(), 33_408)),
+                ],
+            ),
+            struct_ty(
+                "MeshBatch",
+                "crate::real_typed_struct::MeshBatch",
+                vec![
+                    default("indexRange", "index_range", vec_with_capacity(u32_ty(), 2)),
+                    default(
+                        "vertexRange",
+                        "vertex_range",
+                        vec_with_capacity(u32_ty(), 2),
+                    ),
+                    default("usedBones", "used_bones", vec_with_capacity(u32_ty(), 4)),
+                ],
+            ),
+            struct_ty(
+                "MarineIk",
+                "crate::real_typed_struct::MarineIk",
+                vec![default(
+                    "geometries",
+                    "geometries",
+                    vec_with_capacity(ty("MarineGeometry"), 1),
+                )],
+            ),
+            struct_ty(
+                "MarineGeometry",
+                "crate::real_typed_struct::MarineGeometry",
+                vec![default("data", "data", opt(ty("MarineGeometryData")))],
+            ),
+            struct_ty(
+                "MarineGeometryData",
+                "crate::real_typed_struct::MarineGeometryData",
+                vec![
+                    default(
+                        "uvs",
+                        "uvs",
+                        vec_with_capacity(vec_with_capacity(f64_ty(), 10_532), 1),
+                    ),
+                    default("vertices", "vertices", vec_with_capacity(f64_ty(), 17_220)),
+                    default(
+                        "skinWeights",
+                        "skin_weights",
+                        vec_with_capacity(f64_ty(), 11_480),
+                    ),
+                    default(
+                        "skinIndices",
+                        "skin_indices",
+                        vec_with_capacity(u32_ty(), 11_480),
+                    ),
+                    default("normals", "normals", vec_with_capacity(f64_ty(), 17_208)),
+                    default("faces", "faces", vec_with_capacity(u32_ty(), 74_087)),
+                ],
+            ),
         ],
     }
 }
@@ -156,8 +238,26 @@ fn u64_ty() -> DirectTypeRef {
     DirectTypeRef::Scalar(DirectScalar::U64)
 }
 
+fn u32_ty() -> DirectTypeRef {
+    DirectTypeRef::Scalar(DirectScalar::U32)
+}
+
+fn f64_ty() -> DirectTypeRef {
+    DirectTypeRef::Scalar(DirectScalar::F64)
+}
+
 fn vec(inner: DirectTypeRef) -> DirectTypeRef {
-    DirectTypeRef::Vec(Box::new(inner))
+    DirectTypeRef::Vec {
+        inner: Box::new(inner),
+        capacity_hint: None,
+    }
+}
+
+fn vec_with_capacity(inner: DirectTypeRef, capacity_hint: usize) -> DirectTypeRef {
+    DirectTypeRef::Vec {
+        inner: Box::new(inner),
+        capacity_hint: Some(capacity_hint),
+    }
 }
 
 fn map_entries(

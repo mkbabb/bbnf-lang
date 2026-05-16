@@ -10,6 +10,8 @@ use crate::direct_struct::DirectStructError;
 pub enum RealTypedFixture {
     Twitter,
     UpdateCenter,
+    Mesh,
+    MarineIk,
 }
 
 #[derive(Debug, Deserialize)]
@@ -66,15 +68,75 @@ pub struct PluginEntry<'a> {
     pub value: Plugin<'a>,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct Mesh {
+    #[serde(default)]
+    pub batches: Vec<MeshBatch>,
+    #[serde(default)]
+    pub positions: Vec<f64>,
+    #[serde(default)]
+    pub tex0: Vec<f64>,
+    #[serde(default)]
+    pub colors: Vec<u32>,
+    #[serde(default)]
+    pub influences: Vec<Vec<f64>>,
+    #[serde(default)]
+    pub normals: Vec<f64>,
+    #[serde(default)]
+    pub indices: Vec<u32>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct MeshBatch {
+    #[serde(default, rename = "indexRange")]
+    pub index_range: Vec<u32>,
+    #[serde(default, rename = "vertexRange")]
+    pub vertex_range: Vec<u32>,
+    #[serde(default, rename = "usedBones")]
+    pub used_bones: Vec<u32>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct MarineIk {
+    #[serde(default)]
+    pub geometries: Vec<MarineGeometry>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct MarineGeometry {
+    #[serde(default)]
+    pub data: Option<MarineGeometryData>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct MarineGeometryData {
+    #[serde(default)]
+    pub uvs: Vec<Vec<f64>>,
+    #[serde(default)]
+    pub vertices: Vec<f64>,
+    #[serde(default, rename = "skinWeights")]
+    pub skin_weights: Vec<f64>,
+    #[serde(default, rename = "skinIndices")]
+    pub skin_indices: Vec<u32>,
+    #[serde(default)]
+    pub normals: Vec<f64>,
+    #[serde(default)]
+    pub faces: Vec<u32>,
+}
+
 pub enum RealTypedOutput<'a> {
     Twitter(TwitterSearch<'a>),
     UpdateCenter(UpdateCenter<'a>),
+    Mesh(Mesh),
+    MarineIk(MarineIk),
 }
 
 pub fn fixture_for_name(name: &str) -> Option<RealTypedFixture> {
     match name {
         "twitter" => Some(RealTypedFixture::Twitter),
         "update_center" | "update-center" => Some(RealTypedFixture::UpdateCenter),
+        "mesh" => Some(RealTypedFixture::Mesh),
+        "marine_ik" | "marine-ik" => Some(RealTypedFixture::MarineIk),
         _ => None,
     }
 }
@@ -104,6 +166,8 @@ fn candidate_names(name: &str) -> [&str; 2] {
     match name {
         "update_center" => ["update-center", "update_center"],
         "update-center" => ["update-center", "update_center"],
+        "marine_ik" => ["marine_ik", "marine-ik"],
+        "marine-ik" => ["marine_ik", "marine-ik"],
         _ => [name, name],
     }
 }
@@ -118,6 +182,12 @@ pub fn track1_typed<'a>(
             .map_err(|error| DirectStructError::Parse(error.to_string())),
         RealTypedFixture::UpdateCenter => crate::generated_real_typed::parse_update_center(input)
             .map(RealTypedOutput::UpdateCenter)
+            .map_err(|error| DirectStructError::Parse(error.to_string())),
+        RealTypedFixture::Mesh => crate::generated_real_typed::parse_mesh(input)
+            .map(RealTypedOutput::Mesh)
+            .map_err(|error| DirectStructError::Parse(error.to_string())),
+        RealTypedFixture::MarineIk => crate::generated_real_typed::parse_marine_ik(input)
+            .map(RealTypedOutput::MarineIk)
             .map_err(|error| DirectStructError::Parse(error.to_string())),
     }
 }
@@ -140,6 +210,12 @@ pub fn serde_typed<'a>(
         RealTypedFixture::UpdateCenter => serde_json::from_slice::<UpdateCenter<'a>>(bytes)
             .map(RealTypedOutput::UpdateCenter)
             .map_err(|error| DirectStructError::Serde(error.to_string())),
+        RealTypedFixture::Mesh => serde_json::from_slice::<Mesh>(bytes)
+            .map(RealTypedOutput::Mesh)
+            .map_err(|error| DirectStructError::Serde(error.to_string())),
+        RealTypedFixture::MarineIk => serde_json::from_slice::<MarineIk>(bytes)
+            .map(RealTypedOutput::MarineIk)
+            .map_err(|error| DirectStructError::Serde(error.to_string())),
     }
 }
 
@@ -153,6 +229,12 @@ pub fn sonic_typed<'a>(
             .map_err(|error| DirectStructError::Sonic(error.to_string())),
         RealTypedFixture::UpdateCenter => sonic_rs::from_slice::<UpdateCenter<'a>>(bytes)
             .map(RealTypedOutput::UpdateCenter)
+            .map_err(|error| DirectStructError::Sonic(error.to_string())),
+        RealTypedFixture::Mesh => sonic_rs::from_slice::<Mesh>(bytes)
+            .map(RealTypedOutput::Mesh)
+            .map_err(|error| DirectStructError::Sonic(error.to_string())),
+        RealTypedFixture::MarineIk => sonic_rs::from_slice::<MarineIk>(bytes)
+            .map(RealTypedOutput::MarineIk)
             .map_err(|error| DirectStructError::Sonic(error.to_string())),
     }
 }
@@ -177,6 +259,8 @@ pub fn typed_checksum(output: &RealTypedOutput<'_>) -> u64 {
     match output {
         RealTypedOutput::Twitter(value) => checksum_twitter(value),
         RealTypedOutput::UpdateCenter(value) => checksum_update_center(value),
+        RealTypedOutput::Mesh(value) => checksum_mesh(value),
+        RealTypedOutput::MarineIk(value) => checksum_marine_ik(value),
     }
 }
 
@@ -224,6 +308,51 @@ fn checksum_plugin(value: &Plugin<'_>) -> u64 {
     fold_opt_str(hash, &value.version)
 }
 
+fn checksum_mesh(value: &Mesh) -> u64 {
+    let mut hash = mix(0x6d657368, value.batches.len() as u64);
+    for batch in &value.batches {
+        hash = mix(hash, checksum_mesh_batch(batch));
+    }
+    hash = fold_f64_slice(hash, &value.positions);
+    hash = fold_f64_slice(hash, &value.tex0);
+    hash = fold_u32_slice(hash, &value.colors);
+    hash = fold_nested_f64_slice(hash, &value.influences);
+    hash = fold_f64_slice(hash, &value.normals);
+    fold_u32_slice(hash, &value.indices)
+}
+
+fn checksum_mesh_batch(value: &MeshBatch) -> u64 {
+    let mut hash = 0x6d65736862617463;
+    hash = fold_u32_slice(hash, &value.index_range);
+    hash = fold_u32_slice(hash, &value.vertex_range);
+    fold_u32_slice(hash, &value.used_bones)
+}
+
+fn checksum_marine_ik(value: &MarineIk) -> u64 {
+    let mut hash = mix(0x6d6172696e65, value.geometries.len() as u64);
+    for geometry in &value.geometries {
+        hash = mix(hash, checksum_marine_geometry(geometry));
+    }
+    hash
+}
+
+fn checksum_marine_geometry(value: &MarineGeometry) -> u64 {
+    match &value.data {
+        Some(data) => mix(0x67656f6d, checksum_marine_geometry_data(data)),
+        None => mix(0x67656f6d, 0),
+    }
+}
+
+fn checksum_marine_geometry_data(value: &MarineGeometryData) -> u64 {
+    let mut hash = 0x6d6172696e656461;
+    hash = fold_nested_f64_slice(hash, &value.uvs);
+    hash = fold_f64_slice(hash, &value.vertices);
+    hash = fold_f64_slice(hash, &value.skin_weights);
+    hash = fold_u32_slice(hash, &value.skin_indices);
+    hash = fold_f64_slice(hash, &value.normals);
+    fold_u32_slice(hash, &value.faces)
+}
+
 fn fold_opt_str(hash: u64, value: &Option<Cow<'_, str>>) -> u64 {
     match value {
         Some(value) => mix(hash, hash_str(value.as_ref())),
@@ -233,6 +362,30 @@ fn fold_opt_str(hash: u64, value: &Option<Cow<'_, str>>) -> u64 {
 
 fn fold_opt_u64(hash: u64, value: Option<u64>) -> u64 {
     value.map_or_else(|| mix(hash, 0), |value| mix(hash, value))
+}
+
+fn fold_nested_f64_slice(mut hash: u64, values: &[Vec<f64>]) -> u64 {
+    hash = mix(hash, values.len() as u64);
+    for value in values {
+        hash = fold_f64_slice(hash, value);
+    }
+    hash
+}
+
+fn fold_f64_slice(mut hash: u64, values: &[f64]) -> u64 {
+    hash = mix(hash, values.len() as u64);
+    for value in values {
+        hash = mix(hash, value.to_bits());
+    }
+    hash
+}
+
+fn fold_u32_slice(mut hash: u64, values: &[u32]) -> u64 {
+    hash = mix(hash, values.len() as u64);
+    for value in values {
+        hash = mix(hash, *value as u64);
+    }
+    hash
 }
 
 fn hash_str(value: &str) -> u64 {
@@ -294,5 +447,19 @@ mod tests {
         let input = br#"{"connectionCheckUrl":"http://example.test/","core":{"buildDate":"today","name":"core","sha1":"abc","url":"http://u","version":"1"},"id":"default","plugins":{"p":{"buildDate":"today","dependencies":[{"name":"dep","optional":true,"version":"1"}],"developers":[{"developerId":"dev","email":"dev@example.test","name":"Dev"}],"excerpt":"e","gav":"g","labels":["a","b"],"name":"p","releaseTimestamp":"now","requiredCore":"1","scm":"git","sha1":"s","title":"P","url":"http://p","version":"1","wiki":"http://w"}},"signature":{"digest":"d","signature":"s"},"updateCenterVersion":"1"}"#;
         let text = std::str::from_utf8(input).unwrap();
         assert_real_typed_parity(text, input, RealTypedFixture::UpdateCenter);
+    }
+
+    #[test]
+    fn generated_mesh_typed_parser_matches_sidecars() {
+        let input = br#"{"batches":[{"indexRange":[0,3],"vertexRange":[0,1],"usedBones":[22]}],"positions":[1.0,2.5,-3.25],"tex0":[0.0,1.0],"colors":[4278190080],"influences":[[1.0,0.0]],"normals":[0.0,1.0,0.0],"indices":[0,1,2],"morphTargets":{}}"#;
+        let text = std::str::from_utf8(input).unwrap();
+        assert_real_typed_parity(text, input, RealTypedFixture::Mesh);
+    }
+
+    #[test]
+    fn generated_marine_ik_typed_parser_matches_sidecars() {
+        let input = br#"{"metadata":{"version":4.3},"geometries":[{"uuid":"g","type":"Geometry","data":{"uvs":[[0.0,1.0]],"vertices":[1.0,2.0,3.0],"skinWeights":[1.0,0.0],"skinIndices":[0,1],"normals":[0.0,1.0,0.0],"faces":[1,2,3],"animations":[]}}],"materials":[]}"#;
+        let text = std::str::from_utf8(input).unwrap();
+        assert_real_typed_parity(text, input, RealTypedFixture::MarineIk);
     }
 }

@@ -61,7 +61,10 @@ pub enum DirectSkipKind {
 pub enum DirectTypeRef {
     Type(String),
     Scalar(DirectScalar),
-    Vec(Box<DirectTypeRef>),
+    Vec {
+        inner: Box<DirectTypeRef>,
+        capacity_hint: Option<usize>,
+    },
     MapString(Box<DirectTypeRef>),
     MapEntriesVec {
         entry_rust_type: String,
@@ -79,6 +82,7 @@ pub enum DirectScalar {
     Bool,
     I64,
     U64,
+    U32,
     F64,
 }
 
@@ -211,7 +215,7 @@ fn validate_type_ref(
             }
         }
         DirectTypeRef::Scalar(_) => Ok(()),
-        DirectTypeRef::Vec(inner)
+        DirectTypeRef::Vec { inner, .. }
         | DirectTypeRef::MapString(inner)
         | DirectTypeRef::MapEntriesVec { value: inner, .. }
         | DirectTypeRef::Option(inner) => validate_type_ref(inner, types),

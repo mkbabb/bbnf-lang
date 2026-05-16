@@ -16,13 +16,21 @@ use std::env;
 use std::path::PathBuf;
 use std::time::Instant;
 
-const CORPORA: &[&str] = &["update-center", "random", "unicode_escapes", "github_events"];
+const CORPORA: &[&str] = &[
+    "update-center",
+    "random",
+    "unicode_escapes",
+    "github_events",
+];
 const PLANS: &[&str] = &["A", "B", "C", "D"];
 
 fn main() {
     let args: Vec<String> = env::args().collect();
     let iters: usize = args.get(1).and_then(|s| s.parse().ok()).unwrap_or(75_000);
-    let corpus_arg = args.get(2).cloned().unwrap_or_else(|| "update-center".into());
+    let corpus_arg = args
+        .get(2)
+        .cloned()
+        .unwrap_or_else(|| "update-center".into());
     let plan_arg = args.get(3).cloned();
 
     let corpora: Vec<String> = if corpus_arg == "all" {
@@ -60,11 +68,11 @@ fn main() {
             let mut offset_count: u64 = 0;
             let mut cap_bytes_sum: u64 = 0;
             for _ in 0..iters {
-                let root = runtime::generated_json::parse(std::hint::black_box(input))
-                    .expect("parse");
+                let root =
+                    runtime::generated_json::parse(std::hint::black_box(input)).expect("parse");
                 offset_count = offset_count.wrapping_add(root.tape().offsets().len() as u64);
-                cap_bytes_sum = cap_bytes_sum
-                    .wrapping_add(root.tape().offset_capacity_bytes() as u64);
+                cap_bytes_sum =
+                    cap_bytes_sum.wrapping_add(root.tape().offset_capacity_bytes() as u64);
                 std::hint::black_box(root);
             }
             let elapsed = start.elapsed();

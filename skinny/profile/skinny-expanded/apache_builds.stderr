@@ -1,5 +1,0 @@
-profile-lazy: corpus=test_data/apache_builds.json path="test_data/apache_builds.json" iters=23571
-profile-lazy: fixture size = 127275 bytes
-profile-lazy: starting timed loop
-profile-lazy: 23571 iters in 2.82s -> 8502 Mbps (offset cksum 291266847)
-Stopping profile.

@@ -1,5 +1,0 @@
-corpus             plan                   Mbps    src_KiB      offsets      cap_bytes   maxrss_KiB
-update-center      A:sampled             19330        520        35281         357404         2848
-update-center      B:exact                8323        520        35281         387544         2848
-update-center      C:simd                11441        520        35281         363000         3520
-update-center      D:grow                18852        520        35281         264064         3648

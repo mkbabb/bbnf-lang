@@ -121,7 +121,7 @@ impl BenchFacts {
             materialisation: "typed_root_over_tape".to_string(),
             parse_mode: "parse_str_prevalidate".to_string(),
             source_ownership: "borrowed".to_string(),
-            plan_variant: "canonical".to_string(),
+            plan_variant: runtime::tape::CapacityPlan::from_env().label().to_string(),
             host_call_mode: "none".to_string(),
             arena_writes: Some(arena_writes),
             payload_allocations: Some(payload_allocations),

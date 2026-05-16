@@ -1,5 +1,20 @@
-use ir::{AltMode, BackendExpr, BackendIr, BackendRule, DirectBuildField, SpanKind};
+use super::{LowerCtx, ShapeLowering};
+use ir::{
+    AltMode, BackendExpr, BackendIr, BackendRule, BackendShape, CostFacts, DirectBuildField,
+    SpanKind,
+};
 use std::collections::BTreeSet;
+
+pub static LOWERING: Lowering = Lowering;
+
+pub struct Lowering;
+
+impl ShapeLowering for Lowering {
+    fn lower_rule(&self, _ctx: &LowerCtx<'_>, rule: &BackendRule, cost: &CostFacts) -> String {
+        debug_assert_eq!(cost.chosen, BackendShape::SinkOnly);
+        lower_rule(rule)
+    }
+}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SinkOnlyProgram {

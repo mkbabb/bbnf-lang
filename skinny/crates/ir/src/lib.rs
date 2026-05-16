@@ -3,6 +3,12 @@ use std::collections::HashMap;
 use std::fmt;
 use thiserror::Error;
 
+pub mod cost;
+pub use cost::{
+    all_backend_shapes, CapacityPolicy, CostFacts, EvidenceSource, Measurement, PriorityStep,
+    RejectedAlternative, RejectionReason, ShapeRationale,
+};
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct RuleId(pub usize);
 

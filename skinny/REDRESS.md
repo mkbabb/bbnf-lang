@@ -2462,3 +2462,45 @@ perturbation.
   per-grammar JSON names are confined to the JSON grammar inputs and emitted
   JSON parser output that W8 intentionally kept byte-identical; W9 proceeds to
   the CostFacts substrate required before any further route-fact decisions.
+
+## SK-V7 Wave 9 CostFacts Substrate Projection Redress
+
+- Item 87 admits the W9 CostFacts substrate projection. The candidate adds a
+  grammar-neutral `ir::cost` module with `CostFacts`, shape rationale,
+  rejected alternatives, measurements, evidence sources, capacity policy, and
+  priority steps. Measurement fields use scaled integers so the existing
+  equality-derived layout facts remain viable.
+- `passes::compile()` now populates `LayoutFacts.cost_facts` and derives
+  `LayoutFacts.backend_shape` as a projection of `CostFacts.chosen`.
+  The existing backend-shape decision predicates remain behavior-preserving,
+  but each rule now records the selected priority and one rejected alternative
+  per non-selected backend shape. REDRESS 72 is backfilled as evidence:
+  generated retained `OffsetTape` string rules carry cap 16 as capacity policy,
+  while the direct/Track 2 cap-16 regressions are recorded as
+  `PreviouslyRegressed` alternatives sourced from `RedressBackfill`.
+- `codegen` now threads CostFacts through `LowerCtx`, introduces the
+  `ShapeLowering` trait, and selects lowerers from `CostFacts.chosen`.
+  The current lowerer output strings and the generated JSON parser files remain
+  byte-identical. `xtask gate-json --with-cost-facts --advisory` prints a
+  single JSON report with schema `sk-v7-costfacts-v1`; unflagged `gate-json`
+  keeps the existing bench-gate passthrough behavior.
+- The W9 diagnostics are present and non-fatal:
+  `BBNF-DOMINATED-ALTERNATIVE` records REDRESS-backed rejected alternatives,
+  and `BBNF-COSTFACTS-MISSING-EVIDENCE` records rules without measurement
+  evidence so silent defaults are visible without changing parser selection.
+- Verification completed. `cargo test -p ir` passed. `cargo test -p passes`
+  passed. `cargo test -p codegen` passed. `cargo run -p xtask --release --
+  gate-json --with-cost-facts --advisory > /tmp/skv7-costfacts.json` produced
+  parseable JSON; jq verified schema `sk-v7-costfacts-v1`, grammar `json`, 15
+  CostFacts entries, at least four rejected alternatives per entry, REDRESS 72
+  `PreviouslyRegressed` evidence, and both new diagnostic codes. `cargo run -p
+  xtask --release -- check-json` passed. `cargo run -p xtask --release --
+  check-real-typed` passed. `cargo run -p xtask --release -- check-conformance`
+  accepted 21 valid fixtures and rejected 7 invalid fixtures. `cargo test
+  --workspace` passed. The root ancillary `cargo xtask regen --check` passed
+  with 9 of 9 grammars clean.
+- The falsifiability gate held. `skinny/crates/ir/src/cost.rs` has no JSON,
+  corpus, or comparator naming matches under the W9 grep. Generated JSON output
+  files and `skinny/RESULTS.md` have no diff. W9 does not reopen REDRESS 50-72,
+  REDRESS 28+33, W5's StringBlock16 wrapper, W6's object-pair value-byte
+  compaction, or any pre-blocked route in HANDOFF §3; it records evidence only.

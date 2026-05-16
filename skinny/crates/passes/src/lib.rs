@@ -1,7 +1,9 @@
 use ir::{
-    BackendExpr, BackendIr, BackendRule, BackendShape, DirectBuildField, DirectBuildSource, ExprId,
-    ExprKind, GrammarIr, Recognizer, ShapeFacts, SimdMode, SimdSite, SourceSpan, SpanKind,
-    SpanMarkKind, StructuralAlphabet, TapeKind, ValidationError,
+    all_backend_shapes, BackendExpr, BackendIr, BackendRule, BackendShape, CapacityPolicy,
+    CostFacts, DirectBuildField, DirectBuildSource, EvidenceSource, ExprId, ExprKind, GrammarIr,
+    Measurement, PriorityStep, Recognizer, RejectedAlternative, RejectionReason, ShapeFacts,
+    ShapeRationale, SimdMode, SimdSite, SourceSpan, SpanKind, SpanMarkKind, StructuralAlphabet,
+    TapeKind, ValidationError,
 };
 use std::collections::{HashMap, HashSet};
 use thiserror::Error;
@@ -46,6 +48,11 @@ pub fn compile(grammar: &GrammarIr) -> Result<PipelineOutput, PassError> {
         recognizers::TargetFeatures::host(),
     );
     layout_facts.backend_shape = shape_plan.backend_shape;
+    layout_facts.cost_facts = shape_plan.cost_facts;
+    debug_assert!(layout_facts
+        .cost_facts
+        .iter()
+        .all(|(rule, facts)| layout_facts.backend_shape.get(rule) == Some(&facts.chosen)));
     Ok(PipelineOutput {
         grammar: normalized,
         layout_facts,
@@ -81,6 +88,7 @@ pub struct LayoutFacts {
     pub layout_policies: HashMap<String, String>,
     pub hot_call_graph: HashMap<ir::RuleId, recognizers::hot_path::HotPathFact>,
     pub backend_shape: HashMap<ir::RuleId, BackendShape>,
+    pub cost_facts: HashMap<ir::RuleId, CostFacts>,
 }
 
 pub mod layout {
@@ -97,6 +105,7 @@ pub mod layout {
             layout_policies: HashMap::new(),
             hot_call_graph: recognizers::hot_path::derive_hot_path(grammar, Some(entry_rule), None),
             backend_shape: HashMap::new(),
+            cost_facts: HashMap::new(),
         }
     }
 
@@ -365,6 +374,7 @@ pub mod recognizers {
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub struct BackendShapePlan {
         pub backend_shape: HashMap<ir::RuleId, BackendShape>,
+        pub cost_facts: HashMap<ir::RuleId, CostFacts>,
         pub diagnostics: Vec<diagnostics::PassDiagnostic>,
     }
 
@@ -384,43 +394,235 @@ pub mod recognizers {
         target: TargetFeatures,
     ) -> BackendShapePlan {
         let mut backend_shape = HashMap::with_capacity(grammar.rules.len());
+        let mut cost_facts = HashMap::with_capacity(grammar.rules.len());
         let mut diagnostics = Vec::new();
 
         for rule in &grammar.rules {
             let backend_rule = backend.rules.get(rule.id.0);
-            let shape = match backend_rule {
-                Some(_) if requires_eager_tape(grammar, rule.body, layout) => {
-                    BackendShape::EagerTape
-                }
-                Some(rule_ir) if admits_sink_only(rule_ir, target) => BackendShape::SinkOnly,
-                Some(rule_ir) if admits_collapsed_stage(rule_ir, target) => {
-                    if target.collapsed_stage_author_declared {
-                        BackendShape::CollapsedStage
-                    } else {
-                        diagnostics.push(diagnostics::PassDiagnostic::collapsed_stage_not_viable(
-                            rule.id,
-                            "missing per-grammar collapsed-stage assembly wrapper",
-                        ));
-                        BackendShape::OffsetTape
-                    }
-                }
-                Some(rule_ir) if prefers_event_tape(rule_ir) => BackendShape::EventTape,
-                Some(_) => BackendShape::OffsetTape,
-                None => {
-                    diagnostics.push(diagnostics::PassDiagnostic::backend_shape_inconsistent(
-                        rule.id,
-                        "grammar rule has no matching backend rule",
-                    ));
-                    BackendShape::EagerTape
-                }
+            let (chosen, rationale, priority_fired) = choose_backend_shape(
+                grammar,
+                rule,
+                backend_rule,
+                layout,
+                target,
+                &mut diagnostics,
+            );
+            let rejected = rejected_alternatives(backend_rule, chosen, target);
+            let capacity_policy = capacity_policy(backend_rule, chosen);
+            let facts = CostFacts {
+                rule_id: rule.id,
+                chosen,
+                rationale,
+                rejected,
+                priority_fired,
+                capacity_policy,
             };
-            backend_shape.insert(rule.id, shape);
+            if facts.rejected.len() < 4 || !has_measurement_evidence(&facts) {
+                diagnostics.push(diagnostics::PassDiagnostic::cost_facts_missing_evidence(
+                    rule.id,
+                    "cost facts entry has no measurement-backed evidence for at least one audited decision",
+                ));
+            }
+            if has_previously_regressed_evidence(&facts) {
+                diagnostics.push(diagnostics::PassDiagnostic::dominated_alternative(
+                    rule.id,
+                    "previously regressed alternative retained as a rejected cost fact",
+                ));
+            }
+            backend_shape.insert(rule.id, facts.chosen);
+            cost_facts.insert(rule.id, facts);
         }
 
         BackendShapePlan {
             backend_shape,
+            cost_facts,
             diagnostics,
         }
+    }
+
+    const PRIORITY_TABLE: [PriorityStep; 8] = PriorityStep::ALL;
+
+    pub fn priority_steps() -> &'static [PriorityStep] {
+        &PRIORITY_TABLE
+    }
+
+    fn choose_backend_shape(
+        grammar: &GrammarIr,
+        rule: &ir::Rule,
+        backend_rule: Option<&BackendRule>,
+        layout: &LayoutFacts,
+        target: TargetFeatures,
+        diagnostics: &mut Vec<diagnostics::PassDiagnostic>,
+    ) -> (BackendShape, ShapeRationale, PriorityStep) {
+        match backend_rule {
+            Some(_) if requires_eager_tape(grammar, rule.body, layout) => (
+                BackendShape::EagerTape,
+                eager_rationale(grammar, rule.body, layout),
+                PriorityStep::P1EagerForced,
+            ),
+            Some(rule_ir) if admits_sink_only(rule_ir, target) => (
+                BackendShape::SinkOnly,
+                ShapeRationale::DirectBuildNoConsumer,
+                PriorityStep::P2SinkOnlyConsumer,
+            ),
+            Some(rule_ir) if admits_collapsed_stage(rule_ir, target) => {
+                if target.collapsed_stage_author_declared {
+                    (
+                        BackendShape::CollapsedStage,
+                        ShapeRationale::CollapsedStageAdmissible,
+                        PriorityStep::P3CollapsedStage,
+                    )
+                } else {
+                    diagnostics.push(diagnostics::PassDiagnostic::collapsed_stage_not_viable(
+                        rule.id,
+                        "missing per-grammar collapsed-stage assembly wrapper",
+                    ));
+                    (
+                        BackendShape::OffsetTape,
+                        ShapeRationale::DefaultOffsetTape,
+                        PriorityStep::P7OffsetTapeDefault,
+                    )
+                }
+            }
+            Some(rule_ir) if prefers_event_tape(rule_ir) => (
+                BackendShape::EventTape,
+                ShapeRationale::EventTapeAltDensity,
+                PriorityStep::P4EventTapeAltDensity,
+            ),
+            Some(_) => (
+                BackendShape::OffsetTape,
+                ShapeRationale::DefaultOffsetTape,
+                PriorityStep::P7OffsetTapeDefault,
+            ),
+            None => {
+                diagnostics.push(diagnostics::PassDiagnostic::backend_shape_inconsistent(
+                    rule.id,
+                    "grammar rule has no matching backend rule",
+                ));
+                (
+                    BackendShape::EagerTape,
+                    ShapeRationale::DefaultOffsetTape,
+                    PriorityStep::P8EagerFallback,
+                )
+            }
+        }
+    }
+
+    fn eager_rationale(
+        grammar: &GrammarIr,
+        expr_id: ExprId,
+        layout: &LayoutFacts,
+    ) -> ShapeRationale {
+        if has_recovery_annotation(grammar, expr_id) {
+            ShapeRationale::ErrorRecoveryRequired
+        } else if has_parse_time_host_decode(grammar, expr_id) {
+            ShapeRationale::HostFnParseTime
+        } else if has_layout_policy(layout) {
+            ShapeRationale::LayoutScopeWide
+        } else {
+            ShapeRationale::FirstSetOverlap
+        }
+    }
+
+    fn rejected_alternatives(
+        backend_rule: Option<&BackendRule>,
+        chosen: BackendShape,
+        target: TargetFeatures,
+    ) -> Vec<RejectedAlternative> {
+        all_backend_shapes()
+            .iter()
+            .copied()
+            .filter(|shape| *shape != chosen)
+            .map(|shape| {
+                let evidence = redress_72_evidence(backend_rule, shape);
+                let reason = if !evidence.is_empty() {
+                    RejectionReason::PreviouslyRegressed
+                } else {
+                    rejection_reason(backend_rule, shape, target)
+                };
+                RejectedAlternative {
+                    shape,
+                    reason,
+                    evidence,
+                }
+            })
+            .collect()
+    }
+
+    fn rejection_reason(
+        backend_rule: Option<&BackendRule>,
+        shape: BackendShape,
+        target: TargetFeatures,
+    ) -> RejectionReason {
+        match (backend_rule, shape) {
+            (None, _) => RejectionReason::PreconditionUnmet,
+            (Some(rule_ir), BackendShape::SinkOnly) if !admits_sink_only(rule_ir, target) => {
+                RejectionReason::ConsumerMismatch
+            }
+            (Some(_), BackendShape::CollapsedStage) if !target.collapsed_stage_author_declared => {
+                RejectionReason::AuthorWaiverAbsent
+            }
+            _ => RejectionReason::PreconditionUnmet,
+        }
+    }
+
+    fn capacity_policy(
+        backend_rule: Option<&BackendRule>,
+        chosen: BackendShape,
+    ) -> Option<CapacityPolicy> {
+        let rule_ir = backend_rule?;
+        if chosen == BackendShape::OffsetTape
+            && contains_tape_kind(&rule_ir.expr, TapeKind::StringValue)
+        {
+            return Some(CapacityPolicy {
+                tiny_string_cap: Some(16),
+                container_initial_capacity: None,
+            });
+        }
+        None
+    }
+
+    fn redress_72_evidence(
+        backend_rule: Option<&BackendRule>,
+        rejected_shape: BackendShape,
+    ) -> Vec<Measurement> {
+        let Some(rule_ir) = backend_rule else {
+            return Vec::new();
+        };
+        if rejected_shape != BackendShape::SinkOnly
+            || !contains_tape_kind(&rule_ir.expr, TapeKind::StringValue)
+        {
+            return Vec::new();
+        }
+        ["direct", "track2"]
+            .into_iter()
+            .map(|workload| Measurement {
+                workload: workload.to_string(),
+                throughput_mbps_x1000: None,
+                cycles_per_byte_x1000: None,
+                hot_leaf_count: None,
+                source: EvidenceSource::RedressBackfill,
+                source_ref: "REDRESS-72".to_string(),
+            })
+            .collect()
+    }
+
+    fn has_measurement_evidence(facts: &CostFacts) -> bool {
+        facts
+            .rejected
+            .iter()
+            .any(|alternative| !alternative.evidence.is_empty())
+            || facts.capacity_policy.is_some()
+    }
+
+    fn has_previously_regressed_evidence(facts: &CostFacts) -> bool {
+        facts.rejected.iter().any(|alternative| {
+            alternative.reason == RejectionReason::PreviouslyRegressed
+                && alternative
+                    .evidence
+                    .iter()
+                    .any(|measurement| measurement.source == EvidenceSource::RedressBackfill)
+        })
     }
 
     fn requires_eager_tape(grammar: &GrammarIr, expr_id: ExprId, layout: &LayoutFacts) -> bool {
@@ -625,6 +827,28 @@ pub mod recognizers {
             | BackendExpr::CallRule { .. }
             | BackendExpr::SpanMark { .. }
             | BackendExpr::TapeEmit { .. }
+            | BackendExpr::ValueProject { .. }
+            | BackendExpr::Return => false,
+        }
+    }
+
+    fn contains_tape_kind(expr: &BackendExpr, needle: TapeKind) -> bool {
+        match expr {
+            BackendExpr::TapeEmit { kind } => *kind == needle,
+            BackendExpr::Entry(inner)
+            | BackendExpr::OptionalBranch(inner)
+            | BackendExpr::RepeatLoop { body: inner, .. } => contains_tape_kind(inner, needle),
+            BackendExpr::Seq(children)
+            | BackendExpr::Alt {
+                branches: children, ..
+            } => children
+                .iter()
+                .any(|child| contains_tape_kind(child, needle)),
+            BackendExpr::ByteLiteral(_)
+            | BackendExpr::RegexProgram { .. }
+            | BackendExpr::CallRule { .. }
+            | BackendExpr::SpanMark { .. }
+            | BackendExpr::DirectBuild { .. }
             | BackendExpr::ValueProject { .. }
             | BackendExpr::Return => false,
         }
@@ -1269,8 +1493,12 @@ mod tests {
         assert_eq!(output.backend_ir.recognizers.len(), 1);
         assert_eq!(output.backend_ir.rules.len(), 15);
         assert!(output.layout_facts.layout_policies.is_empty());
-        assert!(output.diagnostics.is_empty());
+        assert!(output
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code() == "BBNF-COSTFACTS-MISSING-EVIDENCE"));
         assert_eq!(output.layout_facts.backend_shape.len(), 15);
+        assert_eq!(output.layout_facts.cost_facts.len(), 15);
         assert!(output
             .layout_facts
             .backend_shape
@@ -1283,6 +1511,61 @@ mod tests {
             .find(|rule| rule.name == "object")
             .unwrap();
         assert!(contains_tape_emit_and_direct_build(&object.expr));
+    }
+
+    #[test]
+    fn cost_facts_populate_direct_build_rules_with_redress_evidence() {
+        let grammar = grammar::parse_json_grammar(JSON_GRAMMAR).unwrap();
+        let output = compile(&grammar).unwrap();
+        let direct_build_rule_ids = output
+            .backend_ir
+            .rules
+            .iter()
+            .enumerate()
+            .filter_map(|(index, rule)| {
+                contains_tape_emit_and_direct_build(&rule.expr).then_some(ir::RuleId(index))
+            })
+            .collect::<Vec<_>>();
+
+        assert_eq!(direct_build_rule_ids.len(), 7);
+        for rule_id in &direct_build_rule_ids {
+            let facts = output.layout_facts.cost_facts.get(rule_id).unwrap();
+            assert_eq!(
+                output.layout_facts.backend_shape.get(rule_id),
+                Some(&facts.chosen)
+            );
+            assert!(facts.rejected.len() >= 4);
+        }
+        assert!(output.layout_facts.cost_facts.values().any(|facts| {
+            facts
+                .capacity_policy
+                .as_ref()
+                .is_some_and(|policy| policy.tiny_string_cap == Some(16))
+        }));
+        assert!(output.layout_facts.cost_facts.values().any(|facts| {
+            facts.rejected.iter().any(|alternative| {
+                alternative.reason == ir::RejectionReason::PreviouslyRegressed
+                    && alternative.evidence.iter().any(|measurement| {
+                        measurement.source == ir::EvidenceSource::RedressBackfill
+                    })
+            })
+        }));
+        assert!(output
+            .diagnostics
+            .iter()
+            .any(|diagnostic| { diagnostic.code() == "BBNF-DOMINATED-ALTERNATIVE" }));
+        assert!(output
+            .diagnostics
+            .iter()
+            .any(|diagnostic| { diagnostic.code() == "BBNF-COSTFACTS-MISSING-EVIDENCE" }));
+    }
+
+    #[test]
+    fn priority_table_matches_costfacts_priority_enum() {
+        assert_eq!(
+            recognizers::priority_steps(),
+            ir::PriorityStep::ALL.as_slice()
+        );
     }
 
     #[test]

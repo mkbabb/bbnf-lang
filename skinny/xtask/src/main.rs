@@ -239,6 +239,9 @@ fn bench_json(root: &Path, passthrough: Vec<String>) -> Result<()> {
 }
 
 fn gate_json(root: &Path, passthrough: Vec<String>) -> Result<()> {
+    if passthrough.iter().any(|arg| arg == "--with-cost-facts") {
+        return gate_json_cost_facts(root, passthrough);
+    }
     let status = Command::new("cargo")
         .current_dir(root)
         .args(["run", "-p", "bbnf-bench", "--bin", "gate"])
@@ -251,6 +254,39 @@ fn gate_json(root: &Path, passthrough: Vec<String>) -> Result<()> {
     } else {
         bail!("bench gate failed with status {status}")
     }
+}
+
+fn gate_json_cost_facts(root: &Path, passthrough: Vec<String>) -> Result<()> {
+    let unexpected = passthrough
+        .iter()
+        .filter(|arg| *arg != "--with-cost-facts" && *arg != "--advisory")
+        .collect::<Vec<_>>();
+    if !unexpected.is_empty() {
+        bail!(
+            "gate-json --with-cost-facts only accepts --advisory as an additional flag; got {unexpected:?}"
+        );
+    }
+    let source = std::fs::read_to_string(root.join("grammars/json.bbnf"))?;
+    let snapshot = codegen::cost_facts_from_source("json", &source)?;
+    let diagnostics = snapshot
+        .diagnostics
+        .iter()
+        .map(|diagnostic| {
+            serde_json::json!({
+                "code": diagnostic.code.as_str(),
+                "rule": diagnostic.rule.map(|rule| rule.0),
+                "message": diagnostic.message.as_str(),
+            })
+        })
+        .collect::<Vec<_>>();
+    let report = serde_json::json!({
+        "schema": "sk-v7-costfacts-v1",
+        "grammar": snapshot.grammar,
+        "cost_facts": snapshot.cost_facts,
+        "diagnostics": diagnostics,
+    });
+    println!("{}", serde_json::to_string_pretty(&report)?);
+    Ok(())
 }
 
 fn primitive_checkasm(root: &Path) -> Result<()> {

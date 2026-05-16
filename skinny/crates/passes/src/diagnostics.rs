@@ -24,6 +24,22 @@ impl PassDiagnostic {
         }
     }
 
+    pub fn dominated_alternative(rule: RuleId, reason: impl Into<String>) -> Self {
+        Self {
+            code: PassDiagnosticCode::DominatedAlternative,
+            rule: Some(rule),
+            message: reason.into(),
+        }
+    }
+
+    pub fn cost_facts_missing_evidence(rule: RuleId, reason: impl Into<String>) -> Self {
+        Self {
+            code: PassDiagnosticCode::CostFactsMissingEvidence,
+            rule: Some(rule),
+            message: reason.into(),
+        }
+    }
+
     pub fn code(&self) -> &'static str {
         self.code.as_str()
     }
@@ -33,6 +49,8 @@ impl PassDiagnostic {
 pub enum PassDiagnosticCode {
     CollapsedStageNotViable,
     BackendShapeInconsistent,
+    DominatedAlternative,
+    CostFactsMissingEvidence,
 }
 
 impl PassDiagnosticCode {
@@ -40,6 +58,8 @@ impl PassDiagnosticCode {
         match self {
             Self::CollapsedStageNotViable => "BBNF-COLLAPSEDSTAGE-NOT-VIABLE",
             Self::BackendShapeInconsistent => "BBNF-BACKEND-SHAPE-INCONSISTENT",
+            Self::DominatedAlternative => "BBNF-DOMINATED-ALTERNATIVE",
+            Self::CostFactsMissingEvidence => "BBNF-COSTFACTS-MISSING-EVIDENCE",
         }
     }
 }

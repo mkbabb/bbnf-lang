@@ -4,7 +4,7 @@ mod sink_direct;
 mod typed_direct;
 
 use direct_schema::DirectSchemaSet;
-use ir::{BackendIr, BackendShape, RuleId};
+use ir::{BackendIr, BackendShape, CostFacts, PriorityStep, RuleId, ShapeRationale};
 use std::collections::BTreeMap;
 use std::path::Path;
 use thiserror::Error;
@@ -71,13 +71,15 @@ pub fn emit_from_source(grammar_name: &str, source: &str) -> Result<EmittedSourc
     emit_with_layout(
         &output.backend_ir,
         &output.layout_facts.backend_shape,
+        &output.layout_facts.cost_facts,
         &output.diagnostics,
     )
 }
 
 pub fn emit(backend: &BackendIr) -> Result<EmittedSource, CodegenError> {
     let backend_shape = default_backend_shape(backend);
-    emit_with_layout(backend, &backend_shape, &[])
+    let cost_facts = default_cost_facts(&backend_shape);
+    emit_with_layout(backend, &backend_shape, &cost_facts, &[])
 }
 
 pub fn emit_typed_from_source(
@@ -90,6 +92,7 @@ pub fn emit_typed_from_source(
     emit_typed_with_layout(
         &output.backend_ir,
         &output.layout_facts.backend_shape,
+        &output.layout_facts.cost_facts,
         &output.diagnostics,
         schema,
     )
@@ -98,6 +101,7 @@ pub fn emit_typed_from_source(
 fn emit_with_layout(
     backend: &BackendIr,
     backend_shape: &std::collections::HashMap<RuleId, BackendShape>,
+    cost_facts: &std::collections::HashMap<RuleId, CostFacts>,
     diagnostics: &[passes::diagnostics::PassDiagnostic],
 ) -> Result<EmittedSource, CodegenError> {
     ensure_runtime_profile(backend)?;
@@ -105,6 +109,7 @@ fn emit_with_layout(
         backend,
         &lower::LowerCtx {
             backend_shape,
+            cost_facts,
             diagnostics,
         },
     );
@@ -133,6 +138,7 @@ fn emit_with_layout(
 fn emit_typed_with_layout(
     backend: &BackendIr,
     backend_shape: &std::collections::HashMap<RuleId, BackendShape>,
+    cost_facts: &std::collections::HashMap<RuleId, CostFacts>,
     diagnostics: &[passes::diagnostics::PassDiagnostic],
     schema: &DirectSchemaSet,
 ) -> Result<EmittedSource, CodegenError> {
@@ -141,6 +147,7 @@ fn emit_typed_with_layout(
         backend,
         &lower::LowerCtx {
             backend_shape,
+            cost_facts,
             diagnostics,
         },
     );
@@ -177,6 +184,67 @@ fn default_backend_shape(backend: &BackendIr) -> std::collections::HashMap<RuleI
         .enumerate()
         .map(|(index, _)| (RuleId(index), BackendShape::OffsetTape))
         .collect()
+}
+
+fn default_cost_facts(
+    backend_shape: &std::collections::HashMap<RuleId, BackendShape>,
+) -> std::collections::HashMap<RuleId, CostFacts> {
+    backend_shape
+        .iter()
+        .map(|(rule_id, shape)| {
+            (
+                *rule_id,
+                CostFacts::projection(
+                    *rule_id,
+                    *shape,
+                    ShapeRationale::DefaultOffsetTape,
+                    PriorityStep::P7OffsetTapeDefault,
+                ),
+            )
+        })
+        .collect()
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CostFactsSnapshot {
+    pub grammar: String,
+    pub cost_facts: std::collections::BTreeMap<String, CostFacts>,
+    pub diagnostics: Vec<DiagnosticSnapshot>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DiagnosticSnapshot {
+    pub code: String,
+    pub rule: Option<RuleId>,
+    pub message: String,
+}
+
+pub fn cost_facts_from_source(
+    grammar_name: &str,
+    source: &str,
+) -> Result<CostFactsSnapshot, CodegenError> {
+    let grammar = grammar::parse_grammar(grammar_name, source)?;
+    let output = passes::compile(&grammar)?;
+    let cost_facts = output
+        .layout_facts
+        .cost_facts
+        .iter()
+        .map(|(rule_id, facts)| (rule_id.0.to_string(), facts.clone()))
+        .collect();
+    let diagnostics = output
+        .diagnostics
+        .iter()
+        .map(|diagnostic| DiagnosticSnapshot {
+            code: diagnostic.code().to_string(),
+            rule: diagnostic.rule,
+            message: diagnostic.message.clone(),
+        })
+        .collect();
+    Ok(CostFactsSnapshot {
+        grammar: output.grammar.name,
+        cost_facts,
+        diagnostics,
+    })
 }
 
 fn mod_rs() -> String {
@@ -314,6 +382,7 @@ mod tests {
             &output.backend_ir,
             &lower::LowerCtx {
                 backend_shape: &output.layout_facts.backend_shape,
+                cost_facts: &output.layout_facts.cost_facts,
                 diagnostics: &output.diagnostics,
             },
         );
@@ -343,6 +412,7 @@ mod tests {
         let err = emit_with_layout(
             &output.backend_ir,
             &output.layout_facts.backend_shape,
+            &output.layout_facts.cost_facts,
             &output.diagnostics,
         )
         .unwrap_err();
@@ -375,6 +445,7 @@ mod tests {
         let err = emit_typed_with_layout(
             &output.backend_ir,
             &output.layout_facts.backend_shape,
+            &output.layout_facts.cost_facts,
             &output.diagnostics,
             &schema,
         )

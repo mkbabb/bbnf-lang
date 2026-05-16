@@ -14,9 +14,9 @@ Each wave executes one full triumvirate cycle.
 1. `docs/precepts/instructions/README.md` (core rules) + `STYLE.md` (prose register).
 2. `docs/precepts/instructions/ORCHESTRATION.md` (dispatch, work isolation, verification).
 3. `docs/precepts/instructions/tranche/README.md` + `SPEC.md` (tranche lifecycle).
-4. `restart/skinny/tranche/sk-v7/HANDOFF.md` (entry state + pre-blocked routes).
-5. `restart/skinny/tranche/sk-v7/SPEC.md` (the wave plan; sections §0-§14 carry all wave specs).
-6. `restart/skinny/tranche/sk-v7/SYNTHESIS.md` (the corrected diagnosis + cohort findings).
+4. `restart/skinny/tranches/sk-v7/HANDOFF.md` (entry state + pre-blocked routes).
+5. `restart/skinny/tranches/sk-v7/SPEC.md` (the wave plan; sections §0-§14 carry all wave specs).
+6. `restart/skinny/tranches/sk-v7/SYNTHESIS.md` (the corrected diagnosis + cohort findings).
 7. `restart/prompts/README.md` + `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md` (per-wave triumvirate contract).
 8. `skinny/RESULTS.md` (current gate authority) + `skinny/REDRESS.md` (rejected-route ledger).
 
@@ -143,7 +143,7 @@ predecessor.
 
 Dispatch Pass Alpha for SK-V7 → SK-V8 per
 `restart/prompts/pass-contracts/PASS-ALPHA.md`. Pass Alpha produces
-`restart/skinny/tranche/sk-v8/{SYNTHESIS, SPEC, HANDOFF, DISPATCH-PROMPT}.md`
+`restart/skinny/tranches/sk-v8/{SYNTHESIS, SPEC, HANDOFF, DISPATCH-PROMPT}.md`
 + `research/` cohort. G-Alpha user sign-off required before SK-V8
 dispatch.
 
@@ -174,7 +174,7 @@ SK-V7 closes.
 ## Entry condition (NOW)
 
 The current state is:
-- All SK-V7 master docs are at `restart/skinny/tranche/sk-v7/` per precepts/tranche layout.
+- All SK-V7 master docs are at `restart/skinny/tranches/sk-v7/` per precepts/tranche layout.
 - SK-V7 cohort (18 reports + 6 restructure reports) is at `tranche/sk-v7/research/`.
 - SK-V5, SK-V6, SK-V3.5 are archived to sibling `tranche/sk-v{5,6,3.5}/` dirs.
 - 16 architectural locks at `restart/locks/LOCKS.md` (formerly `14-LOCKS.md`).

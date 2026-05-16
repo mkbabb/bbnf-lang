@@ -2281,3 +2281,36 @@ perturbation.
 - The W3 gate is closed. This does not reopen the rejected V5/V6 retained-parse
   materializer routes, benchmark-private hand typed sink, or capacity prescan
   routes named in HANDOFF §3.
+
+## SK-V7 Wave 4 Single-Quartet Unicode Escape Classifier Redress
+
+- Item 82 rejects the W4 single-quartet Unicode escape classifier on the
+  current W3 baseline. The patch moved the existing scalar `\uXXXX` decoder
+  into `parse-that-regex/src/unicode/escape_decode.rs`, reused the existing
+  `bbnf_simd::aarch64::unescape_uxxxx::unescape_uxxxx_neon` primitive for one
+  quartet at a time, consumed it in both `decode_json_unicode_escape` and the
+  `unescape_json_string` materializer, and added a primitive checkasm test for
+  BMP, surrogate, and invalid-hex cases.
+- Correctness and parity were green. `cargo test -p parse-that-regex
+  unicode_escape -- --nocapture` passed. `cargo test -p bbnf-simd --release
+  --test checkasm_unicode_escape` passed. `cargo run -p xtask --release --
+  primitive-checkasm` passed with the new unicode escape checkasm route.
+  `cargo test --workspace` passed. The rejected source patch is saved at
+  `/tmp/skv7-wave-4-rejected.patch`.
+- The falsifiability gate failed. The parse rows improved only the
+  heavily-escaped `unicode_escapes` corpus and still missed the W4 threshold;
+  the direct rows remained far below threshold, and `y_string_unicode`
+  direct Track 2 regressed beyond the allowed guard.
+
+  | Corpus | Workload | Track 1 Mbps | Track 2 Mbps | sonic-rs strict Mbps | Threshold | Outcome |
+  |---|---|---:|---:|---:|---:|---|
+  | unicode_escapes | parse_only | 14516 | 14535 | 17671 | 95% | FAIL at 82.1% of sonic |
+  | unicode_escapes | direct_to_struct | 5118 | 5255 | 12996 | 95% | FAIL at 39.4% of sonic |
+  | y_string_unicode | parse_only | 6331 | 6053 | 12697 | 70% | FAIL at 49.9% of sonic |
+  | y_string_unicode | direct_to_struct | 5093 | 3517 | 7952 | 70% | FAIL at 64.0% of sonic; Track 2 regressed 6.6% |
+
+- The next candidate is not another per-quartet materializer helper and does
+  not reopen the REDRESS 64 or REDRESS 66-69 escape-tail families. W5 proceeds
+  through SPEC §7's 16-byte plain-string scan widening route, with
+  `unicode_mixed` and `distinct_values` handled as part of that string-bound
+  parse surface.

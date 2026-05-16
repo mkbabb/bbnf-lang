@@ -1,7 +1,7 @@
 use bbnf_bench::gate::{self, DirectProjectionInput, Outcome, ThresholdInput, Verdict};
 use bbnf_bench::materialization::track_stats;
 use bbnf_bench::metadata::{current_peak_rss_bytes, RowMetadata, TrackTag};
-use bbnf_bench::report::Report;
+use bbnf_bench::report::{ComparatorSet, Report};
 use serde_json::Value;
 use std::env;
 use std::error::Error;
@@ -36,8 +36,10 @@ fn main() -> Result<(), Box<dyn Error>> {
             track1: read_slope_ns(&group, "track1_generated"),
             track2: read_slope_ns(&group, "track2_handcoded"),
             sonic: read_slope_ns(&group, "sonic_rs_anchor"),
+            sonic_lossy: read_slope_ns(&group, "sonic_rs_lossy"),
             simd_borrowed: read_slope_ns(&group, "simd_json_borrowed"),
             simd_owned: read_slope_ns(&group, "simd_json_owned"),
+            serde_json: read_slope_ns(&group, "serde_json"),
             direct_track1: read_slope_ns(&group, "track1_direct_to_struct"),
             direct_track2: read_slope_ns(&group, "track2_direct_to_struct"),
             direct_sonic: read_slope_ns(&group, "sonic_rs_direct_to_struct"),
@@ -94,22 +96,18 @@ fn main() -> Result<(), Box<dyn Error>> {
             fixture.bytes.len() as u64,
             estimates.track1,
             estimates.track2,
-            estimates.sonic,
-            estimates.simd_borrowed,
-            estimates.simd_owned,
-            estimates
-                .fastest_anchor()
-                .map(|anchor| anchor.0.to_string()),
-            estimates.fastest_anchor().map(|anchor| anchor.1),
+            parse_comparators(fixture.bytes.len() as u64, &fixture.name, &estimates),
         );
         report.push_workload_row(
             &fixture.name,
             "direct_to_struct",
+            direct_outcome,
             fixture.bytes.len() as u64,
             estimates.direct_track1,
             estimates.direct_track2,
-            estimates.direct_sonic,
-            estimates.direct_serde,
+            direct_comparators(fixture.bytes.len() as u64, &estimates),
+            "digest",
+            "generated Track 1 SinkOnly vs independent hand Track 2 SinkOnly; UTF-8 remains view-boundary",
             direct_workload_signal(
                 direct_struct_ok,
                 direct_outcome,
@@ -147,11 +145,13 @@ fn main() -> Result<(), Box<dyn Error>> {
             report.push_workload_row(
                 &fixture.name,
                 "real_typed_struct",
+                real_typed_outcome,
                 fixture.bytes.len() as u64,
                 estimates.real_typed_track1,
                 estimates.real_typed_track2,
-                estimates.real_typed_sonic,
-                estimates.real_typed_serde,
+                real_typed_comparators(fixture.bytes.len() as u64, &estimates),
+                "typed direct",
+                "generated Track 1 consumes host/API output schema; Track 2 is a structural oracle, not the SOTA gate; UTF-8 remains view-boundary",
                 real_typed_workload_signal(
                     real_typed_ok,
                     real_typed_outcome,
@@ -215,9 +215,17 @@ fn main() -> Result<(), Box<dyn Error>> {
             .to_string(),
     );
     report.notes.push(
-        "Sidecar strictness metadata: sonic-rs/simd-json/serde_json rows are strict / scan-boundary / yes; asmjson and RapidJSON default rows, when populated in Wave 6, must be rendered as permissive / none / no with their API and output plane named."
+        "Schema v3 sidecar provenance: sonic-rs strict/lossy and serde_json rows are same-run; C++ simdjson, yyjson, RapidJSON, and asmjson columns come only from documented sidecar profile artefacts when populated and do not count as same-run strict anchors."
             .to_string(),
     );
+    if let Err(error) = report.validate_schema_v3() {
+        report
+            .notes
+            .push(format!("Schema v3 validation failure: {error}."));
+        report.write_markdown(&results_path)?;
+        println!("{}", report.render_markdown());
+        std::process::exit(exit_code_for_verdict(Verdict::Invalid));
+    }
     report.write_markdown(&results_path)?;
     println!("{}", report.render_markdown());
     let exit_outcome = if advisory {
@@ -326,6 +334,80 @@ fn direct_projection_note(corpus: &str, bytes: u64, estimates: &Estimates) -> St
     )
 }
 
+fn parse_comparators(bytes: u64, corpus: &str, estimates: &Estimates) -> ComparatorSet {
+    let sidecar = sidecar_comparators(corpus);
+    ComparatorSet {
+        sonic_strict_mbps: throughput_mbps(bytes, estimates.sonic),
+        sonic_lossy_mbps: throughput_mbps(bytes, estimates.sonic_lossy),
+        simdjson_dom_mbps: sidecar.simdjson_dom_mbps,
+        simdjson_ondemand_mbps: sidecar.simdjson_ondemand_mbps,
+        yyjson_default_mbps: sidecar.yyjson_default_mbps,
+        asmjson_swar_mbps: sidecar.asmjson_swar_mbps,
+        asmjson_avx512_mbps: sidecar.asmjson_avx512_mbps,
+        rapidjson_default_mbps: sidecar.rapidjson_default_mbps,
+        serde_json_mbps: throughput_mbps(bytes, estimates.serde_json),
+    }
+}
+
+fn direct_comparators(bytes: u64, estimates: &Estimates) -> ComparatorSet {
+    ComparatorSet {
+        sonic_strict_mbps: throughput_mbps(bytes, estimates.direct_sonic),
+        serde_json_mbps: throughput_mbps(bytes, estimates.direct_serde),
+        ..ComparatorSet::default()
+    }
+}
+
+fn real_typed_comparators(bytes: u64, estimates: &Estimates) -> ComparatorSet {
+    ComparatorSet {
+        sonic_strict_mbps: throughput_mbps(bytes, estimates.real_typed_sonic),
+        serde_json_mbps: throughput_mbps(bytes, estimates.real_typed_serde),
+        ..ComparatorSet::default()
+    }
+}
+
+fn sidecar_comparators(corpus: &str) -> ComparatorSet {
+    let mut comparators = ComparatorSet::default();
+    comparators.simdjson_dom_mbps = sidecar_mib_to_mbps(match corpus {
+        "twitter" => Some(2923.0),
+        "citm_catalog" => Some(4270.0),
+        "canada" => Some(1370.0),
+        "apache_builds" => Some(4292.9),
+        "github_events" => Some(4725.3),
+        "update_center" => Some(3646.7),
+        "mesh" => Some(1122.2),
+        "random" => Some(2460.1),
+        "distinct_values" => Some(2720.7),
+        "unicode_basic" => Some(1940.1),
+        "unicode_escapes" => Some(671.9),
+        "unicode_mixed" => Some(1567.5),
+        "y_string_unicode" => Some(1624.3),
+        _ => None,
+    });
+    comparators.yyjson_default_mbps = sidecar_mib_to_mbps(match corpus {
+        "twitter" => Some(3687.0),
+        "citm_catalog" => Some(2498.0),
+        "canada" => Some(1550.0),
+        "apache_builds" => Some(1940.0),
+        "github_events" => Some(2554.0),
+        "update_center" => Some(2210.0),
+        _ => None,
+    });
+    comparators.rapidjson_default_mbps = sidecar_mib_to_mbps(match corpus {
+        "twitter" => Some(479.2),
+        "citm_catalog" => Some(805.8),
+        "canada" => Some(618.3),
+        "apache_builds" => Some(470.2),
+        "instruments" => Some(891.3),
+        "random" => Some(420.3),
+        _ => None,
+    });
+    comparators
+}
+
+fn sidecar_mib_to_mbps(value: Option<f64>) -> Option<f64> {
+    value.map(|mib_per_sec| mib_per_sec / 0.1192)
+}
+
 fn throughput_mbps(bytes: u64, ns: Option<f64>) -> Option<f64> {
     if bytes == 0 {
         return None;
@@ -380,8 +462,10 @@ struct Estimates {
     track1: Option<f64>,
     track2: Option<f64>,
     sonic: Option<f64>,
+    sonic_lossy: Option<f64>,
     simd_borrowed: Option<f64>,
     simd_owned: Option<f64>,
+    serde_json: Option<f64>,
     direct_track1: Option<f64>,
     direct_track2: Option<f64>,
     direct_sonic: Option<f64>,
@@ -397,6 +481,8 @@ impl Estimates {
         self.track1.is_some()
             && self.track2.is_some()
             && (self.sonic.is_some() || self.simd_borrowed.is_some() || self.simd_owned.is_some())
+            && self.sonic_lossy.is_some()
+            && self.serde_json.is_some()
             && self.direct_track1.is_some()
             && self.direct_track2.is_some()
             && self.direct_sonic.is_some()
@@ -421,8 +507,10 @@ fn read_metadata_rows(group: &Path) -> Vec<RowMetadata> {
         "track1_generated",
         "track2_handcoded",
         "sonic_rs_anchor",
+        "sonic_rs_lossy",
         "simd_json_borrowed",
         "simd_json_owned",
+        "serde_json",
         "track1_direct_to_struct",
         "track2_direct_to_struct",
         "sonic_rs_direct_to_struct",

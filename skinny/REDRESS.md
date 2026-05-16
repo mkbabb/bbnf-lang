@@ -2146,3 +2146,38 @@ perturbation.
   candidate is W0b: same-run schema-v3 comparator reporting that records
   strict/lossy provenance and the missing yyjson/asmjson/RapidJSON fields
   before a fresh row-close decision.
+
+## SK-V7 Wave 0b Schema-v3 Telemetry Redress
+
+- Item 78 admits the schema-v3 telemetry row builder and same-run sonic-rs
+  strict/lossy provenance. The legacy results table is replaced with the
+  PASS-ALPHA schema-v3 named column surface, Criterion metadata is bumped to
+  schema `3`, parse rows use `Workload=parse_only`, and `skinny/RESULTS.md`
+  now records strictness, UTF-8 boundary, flaw-probe, output-plane, comparator,
+  sidecar, hot-leaf, and signal provenance in one row surface.
+- The Cargo feature-plane repair from item 77 remained intact. The verification
+  command
+  `cargo tree -p bbnf-bench --edges=features | rg 'sonic-rs|utf8_lossy|sort_keys'`
+  showed only `sonic-rs feature "sort_keys"` and `sonic-rs v0.5.8`; no
+  `utf8_lossy` feature was reintroduced. The lossy sonic column is produced by
+  an explicit same-run `Deserializer::utf8_lossy()` benchmark row and is marked
+  as flaw-probe provenance, not as a strict classification anchor.
+- Measurement completed with the W0b gate commands. `cargo test -p bbnf-bench`
+  passed 26 tests. `cargo bench -p bbnf-bench --bench json_parity` completed
+  the full JSON corpus sweep. `cargo run -p bbnf-bench --bin gate --release`
+  regenerated `skinny/RESULTS.md` and exited 5 only because the current
+  measured authority remains `N-direct / NoGo`. `cargo run -p xtask --release
+  -- gate-json` reached the same schema-v3 gate and failed only by wrapping the
+  gate's performance exit.
+- The row-close guard held. `instruments` remains measurement-classified:
+  parse `K / NO-GO` at Track 1 18038 Mbps, sonic strict 16312 Mbps, sonic lossy
+  18747 Mbps; direct `N-direct / NO-GO` at Track 1 11972 Mbps and sonic strict
+  12673 Mbps. `unicode_basic` remains honest under the new schema: parse
+  `K / NO-GO` at Track 1 11416 Mbps, sonic strict 15596 Mbps, sonic lossy
+  15625 Mbps; direct `A / GO` at Track 1 8576 Mbps and sonic strict
+  8502 Mbps. Schema reshaping did not create a performance admission.
+- Residual caveat: `Delta vs SK-V6` is present but explicitly rendered as
+  `n/a` because W0b has no machine-readable SK-V6 baseline binding. That is an
+  honest reporting limitation, not an inferred performance result. W1 may open
+  with schema-v3 reporting in place; it must not treat W0b as a parser/runtime
+  throughput improvement.

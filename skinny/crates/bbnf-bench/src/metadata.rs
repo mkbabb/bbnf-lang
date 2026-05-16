@@ -4,9 +4,9 @@ use std::io;
 use std::path::Path;
 use std::process::Command;
 
-pub const SCHEMA_VERSION: &str = "2";
+pub const SCHEMA_VERSION: &str = "3";
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum TrackTag {
     Track1Generated,
@@ -38,6 +38,17 @@ pub struct RowMetadata {
     pub outlier_rejection: String,
     pub statistical_method: String,
     pub track: TrackTag,
+    pub workload: String,
+    pub strictness: String,
+    pub parse_utf8: String,
+    pub escape_complete: String,
+    pub flaw_probe: String,
+    pub output_plane: String,
+    pub feature_mask: String,
+    pub api_symbol: String,
+    pub sidecar_freshness: String,
+    pub primitive_status: String,
+    pub hot_leaf: String,
     pub materialisation: String,
     pub parse_mode: String,
     pub source_ownership: String,
@@ -70,6 +81,17 @@ pub struct BenchFacts {
     pub competitor_crate: Option<String>,
     pub competitor_version: Option<String>,
     pub track: TrackTag,
+    pub workload: String,
+    pub strictness: String,
+    pub parse_utf8: String,
+    pub escape_complete: String,
+    pub flaw_probe: String,
+    pub output_plane: String,
+    pub feature_mask: String,
+    pub api_symbol: String,
+    pub sidecar_freshness: String,
+    pub primitive_status: String,
+    pub hot_leaf: String,
     pub materialisation: String,
     pub parse_mode: String,
     pub source_ownership: String,
@@ -118,6 +140,22 @@ impl BenchFacts {
             competitor_crate: None,
             competitor_version: None,
             track,
+            workload: "parse_only".to_string(),
+            strictness: "deferred".to_string(),
+            parse_utf8: "view-boundary".to_string(),
+            escape_complete: "yes".to_string(),
+            flaw_probe: "invalid UTF-8 rejected outside hot scan".to_string(),
+            output_plane: "borrowed view over offset tape".to_string(),
+            feature_mask: "n/a".to_string(),
+            api_symbol: match track {
+                TrackTag::Track1Generated => "runtime::generated_json::parse",
+                TrackTag::Track2Handcoded => "bbnf_bench::track2::json::parse",
+                _ => "bbnf",
+            }
+            .to_string(),
+            sidecar_freshness: "same-run".to_string(),
+            primitive_status: "runtime path".to_string(),
+            hot_leaf: "unprofiled in W0b".to_string(),
             materialisation: "typed_root_over_tape".to_string(),
             parse_mode: "parse_str_prevalidate".to_string(),
             source_ownership: "borrowed".to_string(),
@@ -154,6 +192,13 @@ impl BenchFacts {
             sample_size,
         );
         facts.materialisation = materialisation.to_string();
+        facts.workload = materialisation.to_string();
+        facts.output_plane = match materialisation {
+            "direct_to_struct" => "digest",
+            "real_typed_struct" => "typed direct",
+            _ => "borrowed view over offset tape",
+        }
+        .to_string();
         facts
     }
 
@@ -172,8 +217,20 @@ impl BenchFacts {
             competitor_crate: Some(crate_name.to_string()),
             competitor_version: Some(crate_version.to_string()),
             track: TrackTag::Competitor,
+            workload: workload_for_materialisation(materialisation).to_string(),
+            strictness: strictness_for_competitor(crate_name, materialisation).to_string(),
+            parse_utf8: parse_utf8_for_competitor(crate_name, materialisation).to_string(),
+            escape_complete: escape_complete_for_competitor(crate_name, materialisation)
+                .to_string(),
+            flaw_probe: flaw_probe_for_competitor(crate_name, materialisation).to_string(),
+            output_plane: output_plane_for_competitor(materialisation).to_string(),
+            feature_mask: feature_mask_for_competitor(crate_name, materialisation).to_string(),
+            api_symbol: api_symbol_for_competitor(crate_name, materialisation).to_string(),
+            sidecar_freshness: "same-run".to_string(),
+            primitive_status: "comparator".to_string(),
+            hot_leaf: "unprofiled in W0b".to_string(),
             materialisation: materialisation.to_string(),
-            parse_mode: "from_slice".to_string(),
+            parse_mode: parse_mode_for_competitor(crate_name, materialisation).to_string(),
             source_ownership: "owned".to_string(),
             plan_variant: "canonical".to_string(),
             host_call_mode: "none".to_string(),
@@ -208,6 +265,17 @@ impl BenchFacts {
             competitor_crate: None,
             competitor_version: None,
             track: TrackTag::SimdScan,
+            workload: "cycles_per_byte".to_string(),
+            strictness: "strict".to_string(),
+            parse_utf8: "none".to_string(),
+            escape_complete: "n/a".to_string(),
+            flaw_probe: "structural scan parity probe".to_string(),
+            output_plane: "offset bitmap".to_string(),
+            feature_mask: format!("{:?}", bbnf_simd::active_backend()),
+            api_symbol: "bbnf_bench::scan::structural_offsets_simd".to_string(),
+            sidecar_freshness: "same-run".to_string(),
+            primitive_status: "checkasm-backed primitive".to_string(),
+            hot_leaf: "unprofiled in W0b".to_string(),
             materialisation: "structural_offsets".to_string(),
             parse_mode: "simd_scan".to_string(),
             source_ownership: "borrowed".to_string(),
@@ -248,6 +316,17 @@ impl RowMetadata {
             outlier_rejection: "iqr".to_string(),
             statistical_method: "bootstrap".to_string(),
             track: facts.track,
+            workload: facts.workload,
+            strictness: facts.strictness,
+            parse_utf8: facts.parse_utf8,
+            escape_complete: facts.escape_complete,
+            flaw_probe: facts.flaw_probe,
+            output_plane: facts.output_plane,
+            feature_mask: facts.feature_mask,
+            api_symbol: facts.api_symbol,
+            sidecar_freshness: facts.sidecar_freshness,
+            primitive_status: facts.primitive_status,
+            hot_leaf: facts.hot_leaf,
             materialisation: facts.materialisation,
             parse_mode: facts.parse_mode,
             source_ownership: facts.source_ownership,
@@ -290,6 +369,17 @@ impl RowMetadata {
             && self.confidence_interval > 0.0
             && !self.outlier_rejection.is_empty()
             && !self.statistical_method.is_empty()
+            && !self.workload.is_empty()
+            && !self.strictness.is_empty()
+            && !self.parse_utf8.is_empty()
+            && !self.escape_complete.is_empty()
+            && !self.flaw_probe.is_empty()
+            && !self.output_plane.is_empty()
+            && !self.feature_mask.is_empty()
+            && !self.api_symbol.is_empty()
+            && !self.sidecar_freshness.is_empty()
+            && !self.primitive_status.is_empty()
+            && !self.hot_leaf.is_empty()
             && !self.materialisation.is_empty()
             && !self.parse_mode.is_empty()
             && !self.source_ownership.is_empty()
@@ -318,6 +408,91 @@ impl RowMetadata {
         .into_iter()
         .flatten()
         .any(|hash| !hash.is_empty())
+    }
+}
+
+fn workload_for_materialisation(materialisation: &str) -> &str {
+    match materialisation {
+        "direct_to_struct" => "direct_to_struct",
+        "real_typed_struct" => "real_typed_struct",
+        _ => "parse_only",
+    }
+}
+
+fn strictness_for_competitor(crate_name: &str, materialisation: &str) -> &'static str {
+    if crate_name == "sonic-rs" && materialisation.contains("lossy") {
+        "permissive"
+    } else {
+        match crate_name {
+            "sonic-rs" | "simd-json" | "serde_json" => "strict",
+            _ => "unknown",
+        }
+    }
+}
+
+fn parse_utf8_for_competitor(crate_name: &str, materialisation: &str) -> &'static str {
+    if crate_name == "sonic-rs" && materialisation.contains("lossy") {
+        "none"
+    } else {
+        match crate_name {
+            "sonic-rs" | "simd-json" | "serde_json" => "scan-boundary",
+            _ => "none",
+        }
+    }
+}
+
+fn escape_complete_for_competitor(crate_name: &str, materialisation: &str) -> &'static str {
+    if crate_name == "sonic-rs" && materialisation.contains("lossy") {
+        "no"
+    } else {
+        "yes"
+    }
+}
+
+fn flaw_probe_for_competitor(crate_name: &str, materialisation: &str) -> &'static str {
+    if crate_name == "sonic-rs" && materialisation.contains("lossy") {
+        "lossy UTF-8 substitution; not S-anchor eligible"
+    } else {
+        "none"
+    }
+}
+
+fn output_plane_for_competitor(materialisation: &str) -> &'static str {
+    match materialisation {
+        "direct_to_struct" | "direct_to_struct_lossy" => "digest",
+        "real_typed_struct" | "real_typed_struct_lossy" => "typed direct",
+        "borrowed" | "owned" | "eager_typed" | "eager_typed_lossy" => "DOM",
+        _ => "DOM",
+    }
+}
+
+fn feature_mask_for_competitor(crate_name: &str, _materialisation: &str) -> &'static str {
+    match crate_name {
+        "sonic-rs" => "sort_keys",
+        "simd-json" => "serde_impl",
+        "serde_json" => "preserve_order",
+        _ => "unknown",
+    }
+}
+
+fn api_symbol_for_competitor(crate_name: &str, materialisation: &str) -> &'static str {
+    match (crate_name, materialisation) {
+        ("sonic-rs", "eager_typed_lossy") => {
+            "sonic_rs::Deserializer::from_slice(...).utf8_lossy().deserialize::<Value>()"
+        }
+        ("sonic-rs", _) => "sonic_rs::from_slice::<T>",
+        ("simd-json", "borrowed") => "simd_json::to_borrowed_value",
+        ("simd-json", "owned") => "simd_json::to_owned_value",
+        ("serde_json", _) => "serde_json::from_slice::<T>",
+        _ => "unknown",
+    }
+}
+
+fn parse_mode_for_competitor(crate_name: &str, materialisation: &str) -> &'static str {
+    if crate_name == "sonic-rs" && materialisation.contains("lossy") {
+        "from_slice_utf8_lossy"
+    } else {
+        "from_slice"
     }
 }
 

@@ -101,19 +101,19 @@ fn run_fixture(c: &mut Criterion, host: &HostFacts, fixture: &JsonFixture, input
         sample_size as u32,
     );
 
-    group.bench_function("sonic_rs_checked", |b| {
+    group.bench_function("sonic_rs_lossy", |b| {
         b.iter(|| {
-            let value = sonic_rs::from_slice::<sonic_rs::Value>(black_box(&fixture.bytes)).unwrap();
+            let value = sonic_lossy_value(black_box(&fixture.bytes)).unwrap();
             black_box(value);
         });
     });
     write_competitor_row(
         host,
         fixture,
-        "sonic_rs_checked",
+        "sonic_rs_lossy",
         "sonic-rs",
         "0.5.8",
-        "eager_typed",
+        "eager_typed_lossy",
         measurement_time_s,
         sample_size as u32,
     );
@@ -452,6 +452,13 @@ fn eager_decode_strings(root: &runtime::grammars::json::JsonRoot<'_>) -> usize {
         }
     }
     walk(&root.value())
+}
+
+fn sonic_lossy_value(bytes: &[u8]) -> sonic_rs::Result<sonic_rs::Value> {
+    let mut deserializer = sonic_rs::Deserializer::from_slice(bytes).utf8_lossy();
+    let value = deserializer.deserialize::<sonic_rs::Value>()?;
+    deserializer.end()?;
+    Ok(value)
 }
 
 fn write_competitor_row(

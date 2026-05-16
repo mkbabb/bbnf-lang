@@ -18,7 +18,7 @@ serde.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
 simd-json = { version = "=0.13.11", default-features = false, features = ["serde_impl"] }
-sonic-rs = { version = "=0.5.8", default-features = false, features = ["sort_keys", "utf8_lossy"] }
+sonic-rs = { version = "=0.5.8", default-features = false, features = ["sort_keys"] }
 test-fixtures.workspace = true
 thiserror.workspace = true
 toml.workspace = true

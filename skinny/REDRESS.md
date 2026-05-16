@@ -2124,3 +2124,25 @@ perturbation.
   DotProd, SVE/SME, and x86 AVX-512 work unadmitted until exact profiles point
   there. C6 assigns remaining grammar-name leaks in `passes`, `codegen`, and
   `parse-that-regex` to SK-V6 Wave 4; `runtime/tape` is clean.
+
+## SK-V7 Wave 0 Comparator-Plane Redress
+
+- Item 77 admits the `sonic-rs` strict feature repair and rejects the W0
+  row-flip forecast. The bench dependency now enables only `sort_keys`; the
+  feature-tree proof showed no `utf8_lossy`, so the repaired sonic rows no
+  longer use the lossy UTF-8 comparator plane rejected by item 75.
+- Measurement completed with the intended W0 commands. `cargo bench -p
+  bbnf-bench --bench json_parity` completed on the strict rebuild.
+  `cargo run -p bbnf-bench --bin gate --release` refreshed
+  `skinny/RESULTS.md` and exited 5 because the overall gate remains
+  `N-direct / NoGo`.
+- The falsifiability forecast missed. sonic-rs parse deltas against the W0 plan
+  baseline ranged from -14.6% to +18.5% rather than the expected uniform 3-8%
+  slowdown. `instruments` stayed `G/NO-GO` and moved 92.0% -> 91.6% Track 1/S;
+  `unicode_basic` stayed `G/NO-GO` and moved 91.7% -> 76.2% Track 1/S. No parse
+  row reclassified.
+- Because reverting would restore the known comparator flaw, the strict feature
+  repair stays as the honest baseline. W1 is not opened from this run. The next
+  candidate is W0b: same-run schema-v3 comparator reporting that records
+  strict/lossy provenance and the missing yyjson/asmjson/RapidJSON fields
+  before a fresh row-close decision.

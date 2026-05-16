@@ -2314,3 +2314,43 @@ perturbation.
   through SPEC §7's 16-byte plain-string scan widening route, with
   `unicode_mixed` and `distinct_values` handled as part of that string-bound
   parse surface.
+
+## SK-V7 Wave 5 Generated-Retained StringBlock16 Tiny Probe Redress
+
+- Item 83 rejects the W5 generated-retained StringBlock16 tiny probe on the
+  current W4-closed baseline. The candidate added a JSON-specific 16-byte
+  wrapper over `bbnf-simd::aarch64::string_block::scan_string_special_block`,
+  wired only the generated retained `match_tiny_plain_string_with_cap::<16>`
+  helper in `runtime/src/grammars/json/generated.rs` and the JSON template, and
+  kept the direct `CAP=8`, Track 2, parse-that-regex, old Class A TBL, UTF-8
+  fusion, and materialization surfaces untouched.
+- Correctness and parity were green. `cargo test -p bbnf-simd --release
+  --test checkasm_string_block -- --nocapture` passed. `cargo run -p xtask
+  --release -- primitive-checkasm` passed. `cargo run -p xtask --release --
+  check-json` passed. `cargo test --workspace` passed. The rejected source and
+  refreshed-results patch is saved at `/tmp/skv7-wave-5-b2-rejected.patch`.
+- The falsifiability gate failed decisively: zero of six named parse rows
+  crossed threshold, and every named Track 1 parse row regressed by more than
+  the allowed 3% guard. The same-run advisory gate exited 5 because the overall
+  skinny gate remains `N-direct / NoGo`; the W5 rejection is based only on the
+  six focused W5 parse rows below.
+
+  | Corpus | Track 1 Mbps | Track 2 Mbps | sonic-rs strict Mbps | Threshold | Track 1 / sonic | Guard outcome |
+  |---|---:|---:|---:|---:|---:|---|
+  | twitter | 10076 | 11860 | 20550 | 90% | 49.0% | FAIL; Track 1 -36.0%, Track 2 -3.5% |
+  | update_center | 7375 | 9086 | 19368 | 90% | 38.1% | FAIL; Track 1 -34.1% |
+  | unicode_basic | 7173 | 10899 | 15719 | 100% | 45.6% | FAIL; Track 1 -37.2% |
+  | random | 5524 | 7742 | 14193 | 85% | 38.9% | FAIL; Track 1 -43.8% |
+  | unicode_mixed | 6646 | 8374 | 15466 | 85% | 43.0% | FAIL; Track 1 -17.3% |
+  | distinct_values | 6111 | 6045 | 17629 | 85% | 34.7% | FAIL; Track 1 -8.2% |
+
+- The failure mode is not semantic correctness; it is hot-leaf cost. The
+  existing AArch64 `string_block` movemask shape is too expensive for the
+  already-tiny generated retained quote-pair probe, so replacing the scalar
+  16-byte loop with that wrapper increases per-string overhead. Do not reopen
+  this exact wrapper route, and do not compensate by widening parse-that full
+  string scanning or materialization routes blocked in HANDOFF §3. A future
+  same-row candidate would need fresh PC-level evidence for a lower-overhead
+  inline/asm first-special extractor that beats the scalar leaf before any
+  generated parser wiring. W6 proceeds through SPEC §8's control/key
+  compaction route.

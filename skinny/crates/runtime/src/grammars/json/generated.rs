@@ -3,8 +3,8 @@ use super::parser::ParserState;
 use super::value::{JsonNodeKind, ParseError, ParseErrorKind};
 use crate::tape::OffsetFlags;
 use parse_that_regex::{
-    match_json_number_from_first, match_json_string_at_quote_trusted_utf8, skip_json_whitespace,
-    JsonNumberMatch, JsonStringMatch, RegexErrorKind,
+    match_number_span_from_first, match_string_at_quote_trusted_utf8, skip_ascii_whitespace,
+    NumberSpan, RegexErrorKind, StringMatch,
 };
 
 const STRUCTURAL_ALPHABET_JSON: &[u8] = b"{}[],:\"";
@@ -96,7 +96,7 @@ fn parse_key_colon<'i>(state: &mut ParserState<'i>) -> Result<(), ParseError<'i>
         state.cursor = raw_end;
     } else {
         let span = match_string_at_quote(state, start)?;
-        if span.needs_unescape {
+        if span.needs_decode() {
             state.patch_flags(open_cursor, OffsetFlags::NONE.with(OffsetFlags::HAS_ESC));
         }
         state.cursor = span.raw_end;
@@ -107,12 +107,12 @@ fn parse_key_colon<'i>(state: &mut ParserState<'i>) -> Result<(), ParseError<'i>
     {
         state.cursor
     } else {
-        skip_json_whitespace(state.bytes, state.cursor)
+        skip_ascii_whitespace(state.bytes, state.cursor)
     };
     if colon >= state.bytes.len() || unsafe { *state.bytes.get_unchecked(colon) } != b':' {
         return Err(error(state, ParseErrorKind::ExpectedColon));
     }
-    state.cursor = skip_json_whitespace(state.bytes, colon + 1);
+    state.cursor = skip_ascii_whitespace(state.bytes, colon + 1);
     Ok(())
 }
 
@@ -149,7 +149,7 @@ fn parse_string<'i>(state: &mut ParserState<'i>) -> Result<(), ParseError<'i>> {
         return Ok(());
     }
     let span = match_string_at_quote(state, start)?;
-    if span.needs_unescape {
+    if span.needs_decode() {
         state.patch_flags(open_cursor, OffsetFlags::NONE.with(OffsetFlags::HAS_ESC));
     }
     state.cursor = span.raw_end;
@@ -168,7 +168,10 @@ fn match_tiny_plain_string_direct(input: &[u8], offset: usize) -> Option<usize> 
 }
 
 #[inline(always)]
-fn match_tiny_plain_string_with_cap<const CAP: usize>(input: &[u8], offset: usize) -> Option<usize> {
+fn match_tiny_plain_string_with_cap<const CAP: usize>(
+    input: &[u8],
+    offset: usize,
+) -> Option<usize> {
     let mut cursor = offset + 1;
     let limit = (cursor + CAP).min(input.len());
     while cursor < limit {
@@ -186,8 +189,8 @@ fn match_tiny_plain_string_with_cap<const CAP: usize>(input: &[u8], offset: usiz
 fn match_string_at_quote<'i>(
     state: &ParserState<'i>,
     start: usize,
-) -> Result<JsonStringMatch, ParseError<'i>> {
-    match_json_string_at_quote_trusted_utf8(state.bytes, start).map_err(|err| ParseError {
+) -> Result<StringMatch, ParseError<'i>> {
+    match_string_at_quote_trusted_utf8(state.bytes, start).map_err(|err| ParseError {
         input: state.input,
         offset: err.offset,
         kind: match err.kind {
@@ -209,8 +212,8 @@ fn parse_number<'i>(state: &mut ParserState<'i>, first: u8) -> Result<(), ParseE
 
 #[cfg_attr(feature = "parse-attribution", inline(never))]
 #[cfg_attr(not(feature = "parse-attribution"), inline(always))]
-fn match_number_at_digit(input: &[u8], cursor: usize, first: u8) -> Option<JsonNumberMatch> {
-    match_json_number_from_first(input, cursor, first)
+fn match_number_at_digit(input: &[u8], cursor: usize, first: u8) -> Option<NumberSpan> {
+    match_number_span_from_first(input, cursor, first)
 }
 
 #[cfg_attr(feature = "parse-attribution", inline(never))]
@@ -224,9 +227,7 @@ fn parse_literal<'i>(
     if state.bytes.get(start..start + literal.len()) != Some(literal) {
         return Err(error(
             state,
-            ParseErrorKind::InvalidLiteral(
-                std::str::from_utf8(literal).expect("literal is UTF-8"),
-            ),
+            ParseErrorKind::InvalidLiteral(std::str::from_utf8(literal).expect("literal is UTF-8")),
         ));
     }
     state.emit_plain_offset(start);
@@ -237,7 +238,7 @@ fn parse_literal<'i>(
 #[cfg_attr(feature = "parse-attribution", inline(never))]
 #[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 fn skip_ws(state: &mut ParserState<'_>) {
-    state.cursor = skip_json_whitespace(state.bytes, state.cursor);
+    state.cursor = skip_ascii_whitespace(state.bytes, state.cursor);
 }
 
 #[cfg_attr(feature = "parse-attribution", inline(never))]
@@ -248,7 +249,7 @@ fn consume_delimiter(state: &mut ParserState<'_>, byte: u8) -> bool {
     {
         state.cursor
     } else {
-        skip_json_whitespace(state.bytes, state.cursor)
+        skip_ascii_whitespace(state.bytes, state.cursor)
     };
     if offset >= state.bytes.len() || unsafe { *state.bytes.get_unchecked(offset) } != byte {
         return false;
@@ -294,7 +295,7 @@ fn consume_structural(state: &mut ParserState<'_>, byte: u8) -> Option<u32> {
     {
         state.cursor
     } else {
-        skip_json_whitespace(state.bytes, state.cursor)
+        skip_ascii_whitespace(state.bytes, state.cursor)
     };
     if offset >= state.bytes.len() || unsafe { *state.bytes.get_unchecked(offset) } != byte {
         return None;
@@ -319,14 +320,14 @@ fn consume_container_next<'i>(
     let offset = if current == Some(b',') || current == Some(close) {
         state.cursor
     } else {
-        skip_json_whitespace(state.bytes, state.cursor)
+        skip_ascii_whitespace(state.bytes, state.cursor)
     };
     if offset >= state.bytes.len() {
         return Err(error(state, error_kind));
     }
     let byte = unsafe { *state.bytes.get_unchecked(offset) };
     if byte == b',' {
-        state.cursor = skip_json_whitespace(state.bytes, offset + 1);
+        state.cursor = skip_ascii_whitespace(state.bytes, offset + 1);
         return Ok(true);
     }
     if byte == close {
@@ -353,14 +354,14 @@ fn consume_array_next<'i>(state: &mut ParserState<'i>) -> Result<ContainerNext, 
     let offset = if current == Some(b',') || current == Some(b']') {
         state.cursor
     } else {
-        skip_json_whitespace(state.bytes, state.cursor)
+        skip_ascii_whitespace(state.bytes, state.cursor)
     };
     if offset >= state.bytes.len() {
         return Err(error(state, ParseErrorKind::ExpectedCommaOrArrayEnd));
     }
     let byte = unsafe { *state.bytes.get_unchecked(offset) };
     if byte == b',' {
-        let next = skip_json_whitespace(state.bytes, offset + 1);
+        let next = skip_ascii_whitespace(state.bytes, offset + 1);
         state.cursor = next;
         if next >= state.bytes.len() {
             return Err(error(state, ParseErrorKind::ExpectedValue));
@@ -395,7 +396,7 @@ fn error<'i>(state: &ParserState<'i>, kind: ParseErrorKind) -> ParseError<'i> {
 
 use super::sink::JsonSink;
 use parse_that_regex::number::{
-    materialize_f64, materialize_i64, materialize_u64, match_number_span_from_first, NumberSpan,
+    materialize_f64, materialize_i64, materialize_u64,
 };
 
 struct ParsedString<'i> {
@@ -409,7 +410,7 @@ pub fn parse_direct<'i, S: JsonSink>(input: &'i str, sink: &mut S) -> Result<(),
     let bytes = input.as_bytes();
     let mut cursor = 0;
     parse_value_direct(input, bytes, &mut cursor, sink)?;
-    cursor = skip_json_whitespace(bytes, cursor);
+    cursor = skip_ascii_whitespace(bytes, cursor);
     if cursor == bytes.len() {
         Ok(())
     } else {
@@ -429,7 +430,7 @@ fn parse_value_direct<'i, S: JsonSink>(
     cursor: &mut usize,
     sink: &mut S,
 ) -> Result<(), ParseError<'i>> {
-    *cursor = skip_json_whitespace(bytes, *cursor);
+    *cursor = skip_ascii_whitespace(bytes, *cursor);
     let Some(byte) = bytes.get(*cursor).copied() else {
         return Err(direct_error(input, *cursor, ParseErrorKind::ExpectedValue));
     };
@@ -552,7 +553,7 @@ fn parse_object_direct<'i, S: JsonSink>(
 ) -> Result<(), ParseError<'i>> {
     consume_direct(input, bytes, cursor, b'{', ParseErrorKind::ExpectedValue)?;
     sink.begin_object();
-    *cursor = skip_json_whitespace(bytes, *cursor);
+    *cursor = skip_ascii_whitespace(bytes, *cursor);
     if take_direct(bytes, cursor, b'}') {
         sink.end_object();
         return Ok(());
@@ -561,13 +562,13 @@ fn parse_object_direct<'i, S: JsonSink>(
         let key = parse_string_direct(input, bytes, cursor)?;
         sink.key_source(key.raw, key.needs_unescape)
             .map_err(|err| string_error(input, err))?;
-        *cursor = skip_json_whitespace(bytes, *cursor);
+        *cursor = skip_ascii_whitespace(bytes, *cursor);
         consume_direct(input, bytes, cursor, b':', ParseErrorKind::ExpectedColon)?;
-        *cursor = skip_json_whitespace(bytes, *cursor);
+        *cursor = skip_ascii_whitespace(bytes, *cursor);
         parse_object_value_at_direct(input, bytes, cursor, sink)?;
-        *cursor = skip_json_whitespace(bytes, *cursor);
+        *cursor = skip_ascii_whitespace(bytes, *cursor);
         if take_direct(bytes, cursor, b',') {
-            *cursor = skip_json_whitespace(bytes, *cursor);
+            *cursor = skip_ascii_whitespace(bytes, *cursor);
             continue;
         }
         consume_direct(input, bytes, cursor, b'}', ParseErrorKind::ExpectedCommaOrObjectEnd)?;
@@ -586,16 +587,16 @@ fn parse_array_direct<'i, S: JsonSink>(
 ) -> Result<(), ParseError<'i>> {
     consume_direct(input, bytes, cursor, b'[', ParseErrorKind::ExpectedValue)?;
     sink.begin_array();
-    *cursor = skip_json_whitespace(bytes, *cursor);
+    *cursor = skip_ascii_whitespace(bytes, *cursor);
     if take_direct(bytes, cursor, b']') {
         sink.end_array();
         return Ok(());
     }
     loop {
         parse_array_element_at_direct(input, bytes, cursor, sink)?;
-        *cursor = skip_json_whitespace(bytes, *cursor);
+        *cursor = skip_ascii_whitespace(bytes, *cursor);
         if take_direct(bytes, cursor, b',') {
-            *cursor = skip_json_whitespace(bytes, *cursor);
+            *cursor = skip_ascii_whitespace(bytes, *cursor);
             continue;
         }
         consume_direct(input, bytes, cursor, b']', ParseErrorKind::ExpectedCommaOrArrayEnd)?;
@@ -621,7 +622,7 @@ fn parse_string_direct<'i>(
         });
     }
     let span =
-        parse_that_regex::match_json_string_at_quote_trusted_utf8(bytes, start).map_err(|err| {
+        parse_that_regex::match_string_at_quote_trusted_utf8(bytes, start).map_err(|err| {
             ParseError {
                 input,
                 offset: err.offset,
@@ -631,11 +632,11 @@ fn parse_string_direct<'i>(
                 },
             }
         })?;
-    let raw = unsafe { std::str::from_utf8_unchecked(&bytes[span.content_start..span.content_end]) };
+    let raw = unsafe { std::str::from_utf8_unchecked(&bytes[span.content_start()..span.content_end()]) };
     *cursor = span.raw_end;
     Ok(ParsedString {
         raw,
-        needs_unescape: span.needs_unescape,
+        needs_unescape: span.needs_decode(),
     })
 }
 

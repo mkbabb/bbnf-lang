@@ -2393,3 +2393,35 @@ perturbation.
   candidate would need fresh PC-level evidence for a different same-row hot
   owner, most likely a direct-workload control path rather than another
   retained object-pair helper.
+
+## SK-V7 Wave 7 Lock 14 Phase A+B Neutralization Redress
+
+- Item 85 admits the W7 Lock 14 Phase A+B neutralization. Phase A removes the
+  public JSON-prefixed `parse-that-regex` string/number matcher surface and
+  migrates consumers to grammar-neutral `StringMatch`, `NumberSpan`,
+  `StringMode::{Utf8,TrustedUtf8}`, `skip_ascii_whitespace`,
+  `match_string_at_quote_trusted_utf8`, `unescape_string`, and
+  `decode_unicode_escape`.
+- Phase B removes the old `passes::compile()` JSON binding helpers
+  `shapes_for_json`, `nominate_json`, and literal rule-name materialization.
+  Materialization is now derived from grammar structure: regex span kind,
+  direct literal terminals, direct rule-reference roles, and structural
+  container/sequence/pair syntax. A renamed-rule regression proves the pipeline
+  still derives the seven DirectBuild roles when none of the JSON rule names are
+  present.
+- Verification completed. `cargo test -p parse-that-regex -p passes -p
+  codegen` passed. `cargo run -p xtask --release -- check-json` passed and left
+  the generated runtime mirror consistent with the fixed direct-sink emitter.
+  `cargo run -p xtask --release -- check-real-typed` passed. `cargo run -p
+  xtask --release -- check-conformance` accepted 21 valid fixtures and rejected
+  7 invalid fixtures. `cargo test --workspace` passed.
+- The Lock 14 audit gates passed. The parse-that grep for public
+  JSON-prefixed matcher types/functions, `StrictJson`, `StrictJsonTrustedUtf8`,
+  `JsonStringMatch`, and `JsonNumberMatch` returned no matches. The passes grep
+  for `shapes_for_json`, `nominate_json`, `materialization_for_rule`,
+  `descriptor_for_rule`, `rule_by_name("json")`, `MissingEntry("json")`, and
+  `StructuralAlphabet::json()` returned no matches. `skinny/RESULTS.md` has no
+  diff, so W7 makes no throughput claim.
+- The admitted scope does not reopen the W4-W6 rejected parser hot-leaf routes
+  or any REDRESS 60-72 direct-materialization experiments. Remaining Lock 14
+  work is the W8 Phase C+D codegen/IR cleanup already scoped by SPEC §10.

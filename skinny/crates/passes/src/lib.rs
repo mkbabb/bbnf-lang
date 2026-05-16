@@ -25,11 +25,20 @@ pub fn normalize(grammar: &GrammarIr) -> Result<GrammarIr, PassError> {
 
 pub fn compile(grammar: &GrammarIr) -> Result<PipelineOutput, PassError> {
     let normalized = normalize(grammar)?;
+    let entry_rule = derive_entry_rule(&normalized)?;
     let type_facts = layout::types::infer(&normalized)?;
-    let mut layout_facts = layout::run(&normalized, type_facts);
-    let shape_facts = shapes::shapes_for_json();
-    let recognizers = recognizers::nominate_json(&normalized);
-    let backend_ir = extract::single_plan(&normalized, &layout_facts, shape_facts, recognizers)?;
+    let mut layout_facts = layout::run(&normalized, type_facts, entry_rule);
+    let materialization = extract::derive_materialization_plan(&normalized);
+    let shape_facts = shapes::derive_shape_facts(&normalized, &materialization);
+    let recognizers = recognizers::derive_recognizers(&normalized);
+    let backend_ir = extract::single_plan(
+        &normalized,
+        &layout_facts,
+        entry_rule,
+        shape_facts,
+        recognizers,
+        &materialization,
+    )?;
     let shape_plan = recognizers::derive_backend_shape_with_diagnostics(
         &normalized,
         &backend_ir,
@@ -43,6 +52,18 @@ pub fn compile(grammar: &GrammarIr) -> Result<PipelineOutput, PassError> {
         backend_ir,
         diagnostics: shape_plan.diagnostics,
     })
+}
+
+fn derive_entry_rule(grammar: &GrammarIr) -> Result<ir::RuleId, PassError> {
+    if let Some(rule) = grammar
+        .rules
+        .iter()
+        .find(|rule| rule.name == grammar.name)
+        .or_else(|| grammar.rules.last())
+    {
+        return Ok(rule.id);
+    }
+    Err(PassError::MissingEntry(grammar.name.clone()))
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -65,12 +86,16 @@ pub struct LayoutFacts {
 pub mod layout {
     use super::*;
 
-    pub fn run(grammar: &GrammarIr, type_facts: types::TypeFacts) -> LayoutFacts {
+    pub fn run(
+        grammar: &GrammarIr,
+        type_facts: types::TypeFacts,
+        entry_rule: ir::RuleId,
+    ) -> LayoutFacts {
         LayoutFacts {
             rule_types: type_facts.rule_types,
             node_types: type_facts.node_types,
             layout_policies: HashMap::new(),
-            hot_call_graph: recognizers::hot_path::derive_hot_path(grammar, None),
+            hot_call_graph: recognizers::hot_path::derive_hot_path(grammar, Some(entry_rule), None),
             backend_shape: HashMap::new(),
         }
     }
@@ -208,44 +233,112 @@ pub enum BuiltinTy {
 pub mod shapes {
     use super::*;
 
-    pub fn shapes_for_json() -> ShapeFacts {
+    pub fn derive_shape_facts(
+        grammar: &GrammarIr,
+        materialization: &extract::MaterializationPlan,
+    ) -> ShapeFacts {
         let mut facts = ShapeFacts::new();
-        facts.add_struct("JsonRoot", &[("value", "JsonValue<'i>")]);
-        facts.add_enum(
-            "JsonValue",
-            &[
-                "Object(JsonObject<'i>)",
-                "Array(JsonArray<'i>)",
-                "String(JsonString<'i>)",
-                "Number(JsonNumber<'i>)",
-                "Bool(bool)",
-                "Null",
-            ],
-        );
-        facts.add_struct("JsonObject", &[("members", "TapeSlice<'i, JsonPair<'i>>")]);
-        facts.add_struct("JsonArray", &[("elements", "TapeSlice<'i, JsonValue<'i>>")]);
+        let prefix = pascal_case(&grammar.name);
+        let root_shape = format!("{prefix}Root");
+        let value_shape = format!("{prefix}Value");
+        let value_ty = format!("{value_shape}<'i>");
+        facts.add_struct(root_shape, &[("value", value_ty.as_str())]);
+
+        let shape_for = |kind: TapeKind| {
+            materialization
+                .descriptors
+                .values()
+                .find(|descriptor| descriptor.kind == kind)
+                .map(|descriptor| descriptor.shape.as_str())
+        };
+        let object_shape = shape_for(TapeKind::Container).unwrap_or("Object");
+        let array_shape = shape_for(TapeKind::Sequence).unwrap_or("Array");
+        let pair_shape = shape_for(TapeKind::KeyValuePair).unwrap_or("Pair");
+        let string_shape = shape_for(TapeKind::StringValue).unwrap_or("String");
+        let number_shape = shape_for(TapeKind::NumberValue).unwrap_or("Number");
+        let bool_shape = shape_for(TapeKind::BoolValue).unwrap_or("Bool");
+        let null_shape = shape_for(TapeKind::NullValue).unwrap_or("Null");
+
+        let variants = [
+            format!("Object({object_shape}<'i>)"),
+            format!("Array({array_shape}<'i>)"),
+            format!("String({string_shape}<'i>)"),
+            format!("Number({number_shape}<'i>)"),
+            "Bool(bool)".to_string(),
+            "Null".to_string(),
+        ];
+        let variant_refs = variants.iter().map(String::as_str).collect::<Vec<_>>();
+        facts.add_enum(&value_shape, &variant_refs);
+
+        let pair_ty = format!("TapeSlice<'i, {pair_shape}<'i>>");
+        let value_slice_ty = format!("TapeSlice<'i, {value_shape}<'i>>");
+        let string_ty = format!("{string_shape}<'i>");
+        let value_ty = format!("{value_shape}<'i>");
+        facts.add_struct(object_shape, &[("members", pair_ty.as_str())]);
+        facts.add_struct(array_shape, &[("elements", value_slice_ty.as_str())]);
         facts.add_struct(
-            "JsonPair",
-            &[("key", "JsonString<'i>"), ("value", "JsonValue<'i>")],
+            pair_shape,
+            &[("key", string_ty.as_str()), ("value", value_ty.as_str())],
         );
         facts.add_struct(
-            "JsonString",
+            string_shape,
             &[("span", "Span<'i>"), ("needs_unescape", "bool")],
         );
-        facts.add_struct("JsonNumber", &[("span", "Span<'i>")]);
-        facts.add_struct("JsonBool", &[("value", "bool")]);
-        facts.add_struct("JsonNull", &[]);
+        facts.add_struct(number_shape, &[("span", "Span<'i>")]);
+        facts.add_struct(bool_shape, &[("value", "bool")]);
+        facts.add_struct(null_shape, &[]);
         facts
+    }
+
+    fn pascal_case(input: &str) -> String {
+        let mut out = String::new();
+        let mut upper = true;
+        for ch in input.chars() {
+            if ch == '_' || ch == '-' {
+                upper = true;
+                continue;
+            }
+            if upper {
+                out.extend(ch.to_uppercase());
+                upper = false;
+            } else {
+                out.push(ch);
+            }
+        }
+        out
     }
 }
 
 pub mod recognizers {
     use super::*;
 
-    pub fn nominate_json(_grammar: &GrammarIr) -> Vec<Recognizer> {
+    pub fn derive_recognizers(grammar: &GrammarIr) -> Vec<Recognizer> {
+        let mut present = HashSet::new();
+        for expr in &grammar.exprs {
+            match &expr.kind {
+                ExprKind::Literal { bytes, .. } if bytes.len() == 1 => {
+                    let byte = bytes[0];
+                    if matches!(byte, b'{' | b'}' | b'[' | b']' | b',' | b':' | b'"') {
+                        present.insert(byte);
+                    }
+                }
+                ExprKind::Regex { pattern } if pattern.starts_with('"') => {
+                    present.insert(b'"');
+                }
+                _ => {}
+            }
+        }
+        let bytes = b"{}[],:\""
+            .iter()
+            .copied()
+            .filter(|byte| present.contains(byte))
+            .collect::<Vec<_>>();
+        if bytes.is_empty() {
+            return Vec::new();
+        }
         vec![Recognizer::SimdScan {
             mode: SimdMode::Exact,
-            alphabet: StructuralAlphabet::json(),
+            alphabet: StructuralAlphabet { bytes },
             site: SimdSite::PreEntry,
         }]
     }
@@ -571,14 +664,13 @@ pub mod recognizers {
 
         pub fn derive_hot_path(
             grammar_ir: &GrammarIr,
+            entry_rule: Option<ir::RuleId>,
             profile_hints: Option<&PriorBenchProfile>,
         ) -> HashMap<ir::RuleId, HotPathFact> {
-            let entry = grammar_ir
-                .rule_by_name("json")
-                .or_else(|| grammar_ir.rule_by_name("parse_value"))
-                .or_else(|| grammar_ir.rules.first());
             let mut hot = HashMap::new();
-            if let Some(rule) = entry {
+            if let Some(rule_id) = entry_rule {
+                mark_transitive(grammar_ir, rule_id, 0, &mut hot);
+            } else if let Some(rule) = grammar_ir.rules.last() {
                 mark_transitive(grammar_ir, rule.id, 0, &mut hot);
             }
             if let Some(profile) = profile_hints {
@@ -649,20 +741,176 @@ pub mod recognizers {
 pub mod extract {
     use super::*;
 
+    #[derive(Clone, Debug, Default, PartialEq, Eq)]
+    pub struct MaterializationPlan {
+        pub descriptors: HashMap<ir::RuleId, MaterializationDescriptor>,
+    }
+
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct MaterializationDescriptor {
+        pub(crate) kind: TapeKind,
+        pub(crate) label: String,
+        pub(crate) shape: String,
+        pub(crate) fields: Vec<DirectBuildField>,
+    }
+
+    pub fn derive_materialization_plan(grammar: &GrammarIr) -> MaterializationPlan {
+        let mut descriptors = HashMap::new();
+        let prefix = pascal_case(&grammar.name);
+        let roles = derive_materialization_roles(grammar);
+
+        if let Some(rule) = roles.container {
+            if let Some(pair_rule) = roles.pair.and_then(|id| grammar.rule(id)) {
+                descriptors.insert(
+                    rule,
+                    MaterializationDescriptor {
+                        kind: TapeKind::Container,
+                        label: "object".to_string(),
+                        shape: format!("{prefix}Object"),
+                        fields: vec![DirectBuildField {
+                            name: "members".to_string(),
+                            source: DirectBuildSource::RepeatedRule {
+                                rule: pair_rule.name.clone(),
+                            },
+                            target: None,
+                        }],
+                    },
+                );
+            }
+        }
+
+        if let Some(rule) = roles.sequence {
+            if let Some(value_rule) = roles.value.and_then(|id| grammar.rule(id)) {
+                descriptors.insert(
+                    rule,
+                    MaterializationDescriptor {
+                        kind: TapeKind::Sequence,
+                        label: "array".to_string(),
+                        shape: format!("{prefix}Array"),
+                        fields: vec![DirectBuildField {
+                            name: "elements".to_string(),
+                            source: DirectBuildSource::RepeatedRule {
+                                rule: value_rule.name.clone(),
+                            },
+                            target: None,
+                        }],
+                    },
+                );
+            }
+        }
+
+        if let Some(rule) = roles.pair {
+            if let (Some(string_rule), Some(value_rule)) = (
+                roles.string.and_then(|id| grammar.rule(id)),
+                roles.value.and_then(|id| grammar.rule(id)),
+            ) {
+                descriptors.insert(
+                    rule,
+                    MaterializationDescriptor {
+                        kind: TapeKind::KeyValuePair,
+                        label: "pair".to_string(),
+                        shape: format!("{prefix}Pair"),
+                        fields: vec![
+                            DirectBuildField {
+                                name: "key".to_string(),
+                                source: DirectBuildSource::ChildRule {
+                                    rule: string_rule.name.clone(),
+                                },
+                                target: None,
+                            },
+                            DirectBuildField {
+                                name: "value".to_string(),
+                                source: DirectBuildSource::ChildRule {
+                                    rule: value_rule.name.clone(),
+                                },
+                                target: None,
+                            },
+                        ],
+                    },
+                );
+            }
+        }
+
+        if let Some(rule) = roles.string {
+            descriptors.insert(
+                rule,
+                MaterializationDescriptor {
+                    kind: TapeKind::StringValue,
+                    label: "string".to_string(),
+                    shape: format!("{prefix}String"),
+                    fields: vec![DirectBuildField {
+                        name: "span".to_string(),
+                        source: DirectBuildSource::Span {
+                            label: "string".to_string(),
+                        },
+                        target: None,
+                    }],
+                },
+            );
+        }
+
+        if let Some(rule) = roles.number {
+            descriptors.insert(
+                rule,
+                MaterializationDescriptor {
+                    kind: TapeKind::NumberValue,
+                    label: "number".to_string(),
+                    shape: format!("{prefix}Number"),
+                    fields: vec![DirectBuildField {
+                        name: "span".to_string(),
+                        source: DirectBuildSource::Span {
+                            label: "number".to_string(),
+                        },
+                        target: None,
+                    }],
+                },
+            );
+        }
+
+        if let Some(rule) = roles.bool_value {
+            descriptors.insert(
+                rule,
+                MaterializationDescriptor {
+                    kind: TapeKind::BoolValue,
+                    label: "bool".to_string(),
+                    shape: format!("{prefix}Bool"),
+                    fields: vec![DirectBuildField {
+                        name: "value".to_string(),
+                        source: DirectBuildSource::Literal { bytes: Vec::new() },
+                        target: None,
+                    }],
+                },
+            );
+        }
+
+        if let Some(rule) = roles.null_value {
+            descriptors.insert(
+                rule,
+                MaterializationDescriptor {
+                    kind: TapeKind::NullValue,
+                    label: "null".to_string(),
+                    shape: format!("{prefix}Null"),
+                    fields: Vec::new(),
+                },
+            );
+        }
+
+        MaterializationPlan { descriptors }
+    }
+
     pub fn single_plan(
         grammar: &GrammarIr,
         _layout_facts: &LayoutFacts,
+        entry_rule: ir::RuleId,
         shape_facts: ShapeFacts,
         recognizers: Vec<Recognizer>,
+        materialization: &MaterializationPlan,
     ) -> Result<BackendIr, PassError> {
-        let entry = grammar
-            .rule_by_name("json")
-            .ok_or_else(|| PassError::MissingEntry("json".to_string()))?;
         let mut rules = Vec::with_capacity(grammar.rules.len());
         for rule in &grammar.rules {
             let expr = lower_expr(grammar, rule.body);
-            let expr = materialize_rule(&rule.name, expr);
-            let expr = if rule.id == entry.id {
+            let expr = materialize_rule(rule.id, expr, materialization);
+            let expr = if rule.id == entry_rule {
                 BackendExpr::Entry(Box::new(expr))
             } else {
                 expr
@@ -675,7 +923,10 @@ pub mod extract {
 
         Ok(BackendIr {
             grammar_name: grammar.name.clone(),
-            entry_rule: entry.name.clone(),
+            entry_rule: grammar
+                .rule(entry_rule)
+                .map(|rule| rule.name.clone())
+                .ok_or_else(|| PassError::MissingEntry(grammar.name.clone()))?,
             recognizers,
             rules,
             shape_facts,
@@ -716,120 +967,280 @@ pub mod extract {
         }
     }
 
-    fn materialize_rule(name: &str, body: BackendExpr) -> BackendExpr {
-        let Some(descriptor) = materialization_descriptor(name) else {
+    fn materialize_rule(
+        rule_id: ir::RuleId,
+        body: BackendExpr,
+        materialization: &MaterializationPlan,
+    ) -> BackendExpr {
+        let Some(descriptor) = materialization.descriptors.get(&rule_id) else {
             return body;
         };
         BackendExpr::Seq(vec![
             BackendExpr::SpanMark {
                 kind: SpanMarkKind::Start,
-                label: name.to_string(),
+                label: descriptor.label.clone(),
             },
             body,
             BackendExpr::SpanMark {
                 kind: SpanMarkKind::End,
-                label: name.to_string(),
+                label: descriptor.label.clone(),
             },
             BackendExpr::TapeEmit {
                 kind: descriptor.kind,
             },
             BackendExpr::DirectBuild {
-                shape: descriptor.shape.to_string(),
-                fields: descriptor.fields,
+                shape: descriptor.shape.clone(),
+                fields: descriptor.fields.clone(),
             },
             BackendExpr::Return,
         ])
     }
 
-    struct MaterializationDescriptor {
-        kind: TapeKind,
-        shape: &'static str,
-        fields: Vec<DirectBuildField>,
+    #[derive(Clone, Copy, Debug, Default)]
+    struct MaterializationRoles {
+        container: Option<ir::RuleId>,
+        sequence: Option<ir::RuleId>,
+        pair: Option<ir::RuleId>,
+        string: Option<ir::RuleId>,
+        number: Option<ir::RuleId>,
+        bool_value: Option<ir::RuleId>,
+        null_value: Option<ir::RuleId>,
+        value: Option<ir::RuleId>,
     }
 
-    fn materialization_descriptor(name: &str) -> Option<MaterializationDescriptor> {
-        let descriptor = match name {
-            "object" => MaterializationDescriptor {
-                kind: TapeKind::Container,
-                shape: "JsonObject",
-                fields: vec![DirectBuildField {
-                    name: "members".to_string(),
-                    source: DirectBuildSource::RepeatedRule {
-                        rule: "pair".to_string(),
-                    },
-                    target: None,
-                }],
-            },
-            "array" => MaterializationDescriptor {
-                kind: TapeKind::Sequence,
-                shape: "JsonArray",
-                fields: vec![DirectBuildField {
-                    name: "elements".to_string(),
-                    source: DirectBuildSource::RepeatedRule {
-                        rule: "value".to_string(),
-                    },
-                    target: None,
-                }],
-            },
-            "pair" => MaterializationDescriptor {
-                kind: TapeKind::KeyValuePair,
-                shape: "JsonPair",
-                fields: vec![
-                    DirectBuildField {
-                        name: "key".to_string(),
-                        source: DirectBuildSource::ChildRule {
-                            rule: "string".to_string(),
-                        },
-                        target: None,
-                    },
-                    DirectBuildField {
-                        name: "value".to_string(),
-                        source: DirectBuildSource::ChildRule {
-                            rule: "value".to_string(),
-                        },
-                        target: None,
-                    },
-                ],
-            },
-            "string" => MaterializationDescriptor {
-                kind: TapeKind::StringValue,
-                shape: "JsonString",
-                fields: vec![DirectBuildField {
-                    name: "span".to_string(),
-                    source: DirectBuildSource::Span {
-                        label: "string".to_string(),
-                    },
-                    target: None,
-                }],
-            },
-            "number" => MaterializationDescriptor {
-                kind: TapeKind::NumberValue,
-                shape: "JsonNumber",
-                fields: vec![DirectBuildField {
-                    name: "span".to_string(),
-                    source: DirectBuildSource::Span {
-                        label: "number".to_string(),
-                    },
-                    target: None,
-                }],
-            },
-            "bool" => MaterializationDescriptor {
-                kind: TapeKind::BoolValue,
-                shape: "JsonBool",
-                fields: vec![DirectBuildField {
-                    name: "value".to_string(),
-                    source: DirectBuildSource::Literal { bytes: Vec::new() },
-                    target: None,
-                }],
-            },
-            "null" => MaterializationDescriptor {
-                kind: TapeKind::NullValue,
-                shape: "JsonNull",
-                fields: Vec::new(),
-            },
-            _ => return None,
+    fn derive_materialization_roles(grammar: &GrammarIr) -> MaterializationRoles {
+        let string = grammar
+            .rules
+            .iter()
+            .find(|rule| rule_has_regex_kind(grammar, rule, SpanKind::String))
+            .map(|rule| rule.id);
+        let number = grammar
+            .rules
+            .iter()
+            .find(|rule| rule_has_regex_kind(grammar, rule, SpanKind::Number))
+            .map(|rule| rule.id);
+        let bool_value = grammar
+            .rules
+            .iter()
+            .find(|rule| {
+                let literals = direct_literals(grammar, rule.body);
+                literals.iter().any(|literal| literal.as_slice() == b"true")
+                    && literals
+                        .iter()
+                        .any(|literal| literal.as_slice() == b"false")
+            })
+            .map(|rule| rule.id);
+        let null_value = grammar
+            .rules
+            .iter()
+            .find(|rule| {
+                let literals = direct_literals(grammar, rule.body);
+                literals.len() == 1 && literals[0].as_slice() == b"null"
+            })
+            .map(|rule| rule.id);
+        let container = grammar
+            .rules
+            .iter()
+            .find(|rule| {
+                rule_has_direct_literal(grammar, rule, b"{")
+                    && rule_has_direct_literal(grammar, rule, b"}")
+            })
+            .map(|rule| rule.id);
+        let sequence = grammar
+            .rules
+            .iter()
+            .find(|rule| {
+                rule_has_direct_literal(grammar, rule, b"[")
+                    && rule_has_direct_literal(grammar, rule, b"]")
+            })
+            .map(|rule| rule.id);
+
+        let value_targets = [container, sequence, string, number, bool_value, null_value]
+            .into_iter()
+            .flatten()
+            .collect::<Vec<_>>();
+        let value = grammar
+            .rules
+            .iter()
+            .find(|rule| {
+                let refs = direct_rule_refs(grammar, rule.body);
+                value_targets
+                    .iter()
+                    .filter(|target| refs.contains(target))
+                    .count()
+                    >= 4
+            })
+            .map(|rule| rule.id);
+
+        let pair = match (string, value) {
+            (Some(string_rule), Some(value_rule)) => grammar
+                .rules
+                .iter()
+                .find(|rule| {
+                    let refs = direct_rule_refs(grammar, rule.body);
+                    refs.contains(&string_rule)
+                        && refs.contains(&value_rule)
+                        && rule_has_literal(grammar, rule, b":")
+                })
+                .map(|rule| rule.id),
+            _ => None,
         };
-        Some(descriptor)
+
+        MaterializationRoles {
+            container,
+            sequence,
+            pair,
+            string,
+            number,
+            bool_value,
+            null_value,
+            value,
+        }
+    }
+
+    fn rule_has_regex_kind(grammar: &GrammarIr, rule: &ir::Rule, kind: SpanKind) -> bool {
+        expr_has_regex_kind(grammar, rule.body, kind)
+    }
+
+    fn expr_has_regex_kind(grammar: &GrammarIr, expr_id: ExprId, kind: SpanKind) -> bool {
+        match &grammar.expr(expr_id).kind {
+            ExprKind::Seq(children) => children
+                .iter()
+                .any(|child| expr_has_regex_kind(grammar, *child, kind)),
+            ExprKind::Alt { branches, .. } => branches
+                .iter()
+                .any(|branch| expr_has_regex_kind(grammar, *branch, kind)),
+            ExprKind::Repeat { body, .. } | ExprKind::Optional(body) => {
+                expr_has_regex_kind(grammar, *body, kind)
+            }
+            ExprKind::Regex { pattern } => span_kind(pattern) == kind,
+            ExprKind::Literal { .. } | ExprKind::Ref { .. } | ExprKind::Annotation { .. } => false,
+        }
+    }
+
+    fn rule_has_direct_literal(grammar: &GrammarIr, rule: &ir::Rule, literal: &[u8]) -> bool {
+        direct_literals(grammar, rule.body)
+            .iter()
+            .any(|candidate| candidate.as_slice() == literal)
+    }
+
+    fn rule_has_literal(grammar: &GrammarIr, rule: &ir::Rule, literal: &[u8]) -> bool {
+        let mut visited_rules = HashSet::new();
+        expr_has_literal(grammar, rule.body, literal, &mut visited_rules)
+    }
+
+    fn expr_has_literal(
+        grammar: &GrammarIr,
+        expr_id: ExprId,
+        literal: &[u8],
+        visited_rules: &mut HashSet<ir::RuleId>,
+    ) -> bool {
+        match &grammar.expr(expr_id).kind {
+            ExprKind::Seq(children) => children
+                .iter()
+                .any(|child| expr_has_literal(grammar, *child, literal, visited_rules)),
+            ExprKind::Alt { branches, .. } => branches
+                .iter()
+                .any(|branch| expr_has_literal(grammar, *branch, literal, visited_rules)),
+            ExprKind::Repeat { body, .. } | ExprKind::Optional(body) => {
+                expr_has_literal(grammar, *body, literal, visited_rules)
+            }
+            ExprKind::Literal { bytes, .. } => bytes == literal,
+            ExprKind::Ref {
+                target: Some(rule), ..
+            } => {
+                if !visited_rules.insert(*rule) {
+                    return false;
+                }
+                grammar.rule(*rule).is_some_and(|rule| {
+                    expr_has_literal(grammar, rule.body, literal, visited_rules)
+                })
+            }
+            ExprKind::Ref { target: None, .. }
+            | ExprKind::Regex { .. }
+            | ExprKind::Annotation { .. } => false,
+        }
+    }
+
+    fn direct_rule_refs(grammar: &GrammarIr, expr_id: ExprId) -> HashSet<ir::RuleId> {
+        let mut refs = HashSet::new();
+        collect_direct_rule_refs(grammar, expr_id, &mut refs);
+        refs
+    }
+
+    fn collect_direct_rule_refs(
+        grammar: &GrammarIr,
+        expr_id: ExprId,
+        refs: &mut HashSet<ir::RuleId>,
+    ) {
+        match &grammar.expr(expr_id).kind {
+            ExprKind::Seq(children) => {
+                for child in children {
+                    collect_direct_rule_refs(grammar, *child, refs);
+                }
+            }
+            ExprKind::Alt { branches, .. } => {
+                for branch in branches {
+                    collect_direct_rule_refs(grammar, *branch, refs);
+                }
+            }
+            ExprKind::Repeat { body, .. } | ExprKind::Optional(body) => {
+                collect_direct_rule_refs(grammar, *body, refs);
+            }
+            ExprKind::Ref {
+                target: Some(rule), ..
+            } => {
+                refs.insert(*rule);
+            }
+            ExprKind::Ref { target: None, .. }
+            | ExprKind::Literal { .. }
+            | ExprKind::Regex { .. }
+            | ExprKind::Annotation { .. } => {}
+        }
+    }
+
+    fn direct_literals(grammar: &GrammarIr, expr_id: ExprId) -> Vec<Vec<u8>> {
+        let mut literals = Vec::new();
+        collect_direct_literals(grammar, expr_id, &mut literals);
+        literals
+    }
+
+    fn collect_direct_literals(grammar: &GrammarIr, expr_id: ExprId, literals: &mut Vec<Vec<u8>>) {
+        match &grammar.expr(expr_id).kind {
+            ExprKind::Seq(children) => {
+                for child in children {
+                    collect_direct_literals(grammar, *child, literals);
+                }
+            }
+            ExprKind::Alt { branches, .. } => {
+                for branch in branches {
+                    collect_direct_literals(grammar, *branch, literals);
+                }
+            }
+            ExprKind::Repeat { body, .. } | ExprKind::Optional(body) => {
+                collect_direct_literals(grammar, *body, literals);
+            }
+            ExprKind::Literal { bytes, .. } => literals.push(bytes.clone()),
+            ExprKind::Ref { .. } | ExprKind::Regex { .. } | ExprKind::Annotation { .. } => {}
+        }
+    }
+
+    fn pascal_case(input: &str) -> String {
+        let mut out = String::new();
+        let mut upper = true;
+        for ch in input.chars() {
+            if ch == '_' || ch == '-' {
+                upper = true;
+                continue;
+            }
+            if upper {
+                out.extend(ch.to_uppercase());
+                upper = false;
+            } else {
+                out.push(ch);
+            }
+        }
+        out
     }
 
     fn span_kind(pattern: &str) -> SpanKind {
@@ -888,7 +1299,9 @@ mod tests {
 
     #[test]
     fn json_shapes_are_curated() {
-        let shapes = shapes::shapes_for_json();
+        let grammar = grammar::parse_json_grammar(JSON_GRAMMAR).unwrap();
+        let materialization = extract::derive_materialization_plan(&grammar);
+        let shapes = shapes::derive_shape_facts(&grammar, &materialization);
         assert_eq!(shapes.shapes.len(), 9);
     }
 
@@ -933,6 +1346,52 @@ mod tests {
     }
 
     #[test]
+    fn materialization_derives_from_structure_not_rule_names() {
+        let source = r#"
+nothing   = "null" ;
+truth     = "true" | "false" ;
+digits    = /-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/ ;
+quoted    = /"(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4}))*"/ ;
+space     = /[ \t\n\r]*/ ;
+delimiter = "," space ;
+split     = ":" space ;
+item      = space (map | list | quoted | digits | truth | nothing) space ;
+entry     = quoted space split item ;
+entries   = entry (delimiter entry)* ;
+many      = entries? ;
+members   = (item (delimiter item)*)? ;
+list      = "[" space members "]" ;
+map       = "{" space many "}" ;
+sample_json = space item space ;
+"#;
+        let grammar = grammar::parse_grammar("sample_json", source).unwrap();
+        let output = compile(&grammar).unwrap();
+
+        let expected = [
+            ("map", TapeKind::Container, "SampleJsonObject"),
+            ("list", TapeKind::Sequence, "SampleJsonArray"),
+            ("entry", TapeKind::KeyValuePair, "SampleJsonPair"),
+            ("quoted", TapeKind::StringValue, "SampleJsonString"),
+            ("digits", TapeKind::NumberValue, "SampleJsonNumber"),
+            ("truth", TapeKind::BoolValue, "SampleJsonBool"),
+            ("nothing", TapeKind::NullValue, "SampleJsonNull"),
+        ];
+
+        for (rule_name, expected_kind, expected_shape) in expected {
+            let rule = output
+                .backend_ir
+                .rules
+                .iter()
+                .find(|rule| rule.name == rule_name)
+                .unwrap_or_else(|| panic!("missing rule {rule_name}"));
+            let (kind, shape, _) = materialization_of(&rule.expr)
+                .unwrap_or_else(|| panic!("missing materialization for rule {rule_name}"));
+            assert_eq!(kind, expected_kind, "{rule_name} tape kind");
+            assert_eq!(shape, expected_shape, "{rule_name} shape");
+        }
+    }
+
+    #[test]
     fn collapsed_stage_without_author_falls_back_with_diagnostic() {
         let grammar = grammar::parse_json_grammar(JSON_GRAMMAR).unwrap();
         let output = compile(&grammar).unwrap();
@@ -948,14 +1407,13 @@ mod tests {
             },
         );
 
-        let json = output.grammar.rule_by_name("json").unwrap();
+        let entry = derive_entry_rule(&output.grammar).unwrap();
         assert_eq!(
-            plan.backend_shape.get(&json.id).copied(),
+            plan.backend_shape.get(&entry).copied(),
             Some(BackendShape::OffsetTape)
         );
         assert!(plan.diagnostics.iter().any(|diagnostic| {
-            diagnostic.code() == "BBNF-COLLAPSEDSTAGE-NOT-VIABLE"
-                && diagnostic.rule == Some(json.id)
+            diagnostic.code() == "BBNF-COLLAPSEDSTAGE-NOT-VIABLE" && diagnostic.rule == Some(entry)
         }));
     }
 

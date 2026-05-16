@@ -1,5 +1,5 @@
 use parse_that_regex::{
-    match_json_number_from_first, match_json_string_at_quote_trusted_utf8, skip_json_whitespace,
+    match_number_span_from_first, match_string_at_quote_trusted_utf8, skip_ascii_whitespace,
     RegexErrorKind,
 };
 use runtime::{
@@ -102,18 +102,17 @@ impl<'i> Parser<'i> {
         if let Some(raw_end) = match_tiny_plain_string(self.bytes, start) {
             self.cursor = raw_end;
         } else {
-            let span =
-                match_json_string_at_quote_trusted_utf8(self.bytes, start).map_err(|error| {
-                    ParseError {
-                        input: self.input,
-                        offset: error.offset,
-                        kind: match error.kind {
-                            RegexErrorKind::ExpectedString => ParseErrorKind::ExpectedValue,
-                            _ => ParseErrorKind::InvalidString,
-                        },
-                    }
-                })?;
-            if span.needs_unescape {
+            let span = match_string_at_quote_trusted_utf8(self.bytes, start).map_err(|error| {
+                ParseError {
+                    input: self.input,
+                    offset: error.offset,
+                    kind: match error.kind {
+                        RegexErrorKind::ExpectedString => ParseErrorKind::ExpectedValue,
+                        _ => ParseErrorKind::InvalidString,
+                    },
+                }
+            })?;
+            if span.needs_decode() {
                 self.tape
                     .patch_flags(open_cursor, OffsetFlags::NONE.with(OffsetFlags::HAS_ESC));
             }
@@ -125,12 +124,12 @@ impl<'i> Parser<'i> {
         {
             self.cursor
         } else {
-            skip_json_whitespace(self.bytes, self.cursor)
+            skip_ascii_whitespace(self.bytes, self.cursor)
         };
         if colon >= self.bytes.len() || unsafe { *self.bytes.get_unchecked(colon) } != b':' {
             return Err(self.error(ParseErrorKind::ExpectedColon));
         }
-        self.cursor = skip_json_whitespace(self.bytes, colon + 1);
+        self.cursor = skip_ascii_whitespace(self.bytes, colon + 1);
         Ok(())
     }
 
@@ -164,17 +163,16 @@ impl<'i> Parser<'i> {
             self.cursor = raw_end;
             return Ok(());
         }
-        let span = match_json_string_at_quote_trusted_utf8(self.bytes, start).map_err(|error| {
-            ParseError {
+        let span =
+            match_string_at_quote_trusted_utf8(self.bytes, start).map_err(|error| ParseError {
                 input: self.input,
                 offset: error.offset,
                 kind: match error.kind {
                     RegexErrorKind::ExpectedString => ParseErrorKind::ExpectedValue,
                     _ => ParseErrorKind::InvalidString,
                 },
-            }
-        })?;
-        if span.needs_unescape {
+            })?;
+        if span.needs_decode() {
             self.tape
                 .patch_flags(open_cursor, OffsetFlags::NONE.with(OffsetFlags::HAS_ESC));
         }
@@ -184,7 +182,7 @@ impl<'i> Parser<'i> {
 
     #[inline(always)]
     fn parse_number(&mut self, first: u8) -> Result<(), ParseError<'i>> {
-        let number = match_json_number_from_first(self.bytes, self.cursor, first)
+        let number = match_number_span_from_first(self.bytes, self.cursor, first)
             .ok_or_else(|| self.error(ParseErrorKind::InvalidNumber))?;
         self.tape.push_plain_offset(number.start);
         self.cursor = number.end;
@@ -206,7 +204,7 @@ impl<'i> Parser<'i> {
 
     #[inline(always)]
     fn skip_ws(&mut self) {
-        self.cursor = skip_json_whitespace(self.bytes, self.cursor);
+        self.cursor = skip_ascii_whitespace(self.bytes, self.cursor);
     }
 
     #[inline(always)]
@@ -216,7 +214,7 @@ impl<'i> Parser<'i> {
         {
             self.cursor
         } else {
-            skip_json_whitespace(self.bytes, self.cursor)
+            skip_ascii_whitespace(self.bytes, self.cursor)
         };
         if offset >= self.bytes.len() || unsafe { *self.bytes.get_unchecked(offset) } != byte {
             return false;
@@ -259,7 +257,7 @@ impl<'i> Parser<'i> {
         {
             self.cursor
         } else {
-            skip_json_whitespace(self.bytes, self.cursor)
+            skip_ascii_whitespace(self.bytes, self.cursor)
         };
         if offset >= self.bytes.len() || unsafe { *self.bytes.get_unchecked(offset) } != byte {
             return None;
@@ -283,14 +281,14 @@ impl<'i> Parser<'i> {
         let offset = if current == Some(b',') || current == Some(close) {
             self.cursor
         } else {
-            skip_json_whitespace(self.bytes, self.cursor)
+            skip_ascii_whitespace(self.bytes, self.cursor)
         };
         if offset >= self.bytes.len() {
             return Err(self.error(error_kind));
         }
         let byte = unsafe { *self.bytes.get_unchecked(offset) };
         if byte == b',' {
-            self.cursor = skip_json_whitespace(self.bytes, offset + 1);
+            self.cursor = skip_ascii_whitespace(self.bytes, offset + 1);
             return Ok(true);
         }
         if byte == close {

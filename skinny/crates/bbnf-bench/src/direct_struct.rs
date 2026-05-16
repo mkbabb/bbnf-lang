@@ -5,11 +5,11 @@ use std::borrow::Cow;
 use std::fmt;
 
 use parse_that_regex::{
-    match_json_string_at_quote_trusted_utf8,
+    match_string_at_quote_trusted_utf8,
     number::{
         match_number_span_from_first, materialize_f64, materialize_i64, materialize_u64, NumberSpan,
     },
-    skip_json_whitespace, unescape_json_string,
+    skip_ascii_whitespace, unescape_string,
 };
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -546,17 +546,16 @@ mod hand {
                 self.cursor = raw_end;
                 return Ok(Cow::Borrowed(raw));
             }
-            let span = match_json_string_at_quote_trusted_utf8(self.bytes, self.cursor)
+            let span = match_string_at_quote_trusted_utf8(self.bytes, self.cursor)
                 .map_err(|error| DirectStructError::Parse(error.to_string()))?;
             // SAFETY: DirectParser receives `&str`; the trusted matcher still
             // locates escapes and controls before this raw slice is borrowed.
             let raw = unsafe {
-                std::str::from_utf8_unchecked(&self.bytes[span.content_start..span.content_end])
+                std::str::from_utf8_unchecked(&self.bytes[span.content_start()..span.content_end()])
             };
             self.cursor = span.raw_end;
-            if span.needs_unescape {
-                unescape_json_string(raw)
-                    .map_err(|error| DirectStructError::Parse(error.to_string()))
+            if span.needs_decode() {
+                unescape_string(raw).map_err(|error| DirectStructError::Parse(error.to_string()))
             } else {
                 Ok(Cow::Borrowed(raw))
             }
@@ -596,7 +595,7 @@ mod hand {
         }
 
         fn ws(&mut self) {
-            self.cursor = skip_json_whitespace(self.bytes, self.cursor);
+            self.cursor = skip_ascii_whitespace(self.bytes, self.cursor);
         }
 
         fn expect(&mut self, byte: u8) -> Result<(), DirectStructError> {

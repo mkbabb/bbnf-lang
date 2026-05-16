@@ -1,4 +1,4 @@
-use parse_that_regex::{unescape_json_string, RegexError};
+use parse_that_regex::{unescape_string, RegexError};
 
 pub trait JsonSink {
     fn begin_object(&mut self);
@@ -16,7 +16,7 @@ pub trait JsonSink {
     #[inline(always)]
     fn key_source(&mut self, raw: &str, needs_unescape: bool) -> Result<(), RegexError> {
         if needs_unescape {
-            let decoded = unescape_json_string(raw)?;
+            let decoded = unescape_string(raw)?;
             self.key(decoded.as_ref());
         } else {
             self.key(raw);
@@ -27,7 +27,7 @@ pub trait JsonSink {
     #[inline(always)]
     fn string_source(&mut self, raw: &str, needs_unescape: bool) -> Result<(), RegexError> {
         if needs_unescape {
-            let decoded = unescape_json_string(raw)?;
+            let decoded = unescape_string(raw)?;
             self.string(decoded.as_ref());
         } else {
             self.string(raw);
@@ -43,7 +43,7 @@ pub trait JsonSink {
     #[inline(always)]
     fn array_string_source(&mut self, raw: &str, needs_unescape: bool) -> Result<(), RegexError> {
         if needs_unescape {
-            let decoded = unescape_json_string(raw)?;
+            let decoded = unescape_string(raw)?;
             self.array_string(decoded.as_ref());
         } else {
             self.array_string(raw);
@@ -84,7 +84,7 @@ pub trait JsonSink {
     #[inline(always)]
     fn object_string_source(&mut self, raw: &str, needs_unescape: bool) -> Result<(), RegexError> {
         if needs_unescape {
-            let decoded = unescape_json_string(raw)?;
+            let decoded = unescape_string(raw)?;
             self.object_string(decoded.as_ref());
         } else {
             self.object_string(raw);

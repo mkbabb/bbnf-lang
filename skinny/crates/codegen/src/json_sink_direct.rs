@@ -130,7 +130,7 @@ fn render_header(program: &SinkOnlyProgram, out: &mut String) {
         r#"
 use super::sink::JsonSink;
 use parse_that_regex::number::{
-    materialize_f64, materialize_i64, materialize_u64, match_number_span_from_first, NumberSpan,
+    materialize_f64, materialize_i64, materialize_u64,
 };
 
 struct ParsedString<'i> {
@@ -150,7 +150,7 @@ pub fn parse_direct<'i, S: JsonSink>(input: &'i str, sink: &mut S) -> Result<(),
     let bytes = input.as_bytes();
     let mut cursor = 0;
     parse_value_direct(input, bytes, &mut cursor, sink)?;
-    cursor = skip_json_whitespace(bytes, cursor);
+    cursor = skip_ascii_whitespace(bytes, cursor);
     if cursor == bytes.len() {
         Ok(())
     } else {
@@ -176,7 +176,7 @@ fn parse_value_direct<'i, S: JsonSink>(
     cursor: &mut usize,
     sink: &mut S,
 ) -> Result<(), ParseError<'i>> {
-    *cursor = skip_json_whitespace(bytes, *cursor);
+    *cursor = skip_ascii_whitespace(bytes, *cursor);
     let Some(byte) = bytes.get(*cursor).copied() else {
         return Err(direct_error(input, *cursor, ParseErrorKind::ExpectedValue));
     };
@@ -305,7 +305,7 @@ fn parse_object_direct<'i, S: JsonSink>(
 ) -> Result<(), ParseError<'i>> {
     consume_direct(input, bytes, cursor, b'{', ParseErrorKind::ExpectedValue)?;
     sink.begin_object();
-    *cursor = skip_json_whitespace(bytes, *cursor);
+    *cursor = skip_ascii_whitespace(bytes, *cursor);
     if take_direct(bytes, cursor, b'}') {
         sink.end_object();
         return Ok(());
@@ -314,13 +314,13 @@ fn parse_object_direct<'i, S: JsonSink>(
         let key = parse_string_direct(input, bytes, cursor)?;
         sink.key_source(key.raw, key.needs_unescape)
             .map_err(|err| string_error(input, err))?;
-        *cursor = skip_json_whitespace(bytes, *cursor);
+        *cursor = skip_ascii_whitespace(bytes, *cursor);
         consume_direct(input, bytes, cursor, b':', ParseErrorKind::ExpectedColon)?;
-        *cursor = skip_json_whitespace(bytes, *cursor);
+        *cursor = skip_ascii_whitespace(bytes, *cursor);
         parse_object_value_at_direct(input, bytes, cursor, sink)?;
-        *cursor = skip_json_whitespace(bytes, *cursor);
+        *cursor = skip_ascii_whitespace(bytes, *cursor);
         if take_direct(bytes, cursor, b',') {
-            *cursor = skip_json_whitespace(bytes, *cursor);
+            *cursor = skip_ascii_whitespace(bytes, *cursor);
             continue;
         }
         consume_direct(input, bytes, cursor, b'}', ParseErrorKind::ExpectedCommaOrObjectEnd)?;
@@ -339,16 +339,16 @@ fn parse_array_direct<'i, S: JsonSink>(
 ) -> Result<(), ParseError<'i>> {
     consume_direct(input, bytes, cursor, b'[', ParseErrorKind::ExpectedValue)?;
     sink.begin_array();
-    *cursor = skip_json_whitespace(bytes, *cursor);
+    *cursor = skip_ascii_whitespace(bytes, *cursor);
     if take_direct(bytes, cursor, b']') {
         sink.end_array();
         return Ok(());
     }
     loop {
         parse_array_element_at_direct(input, bytes, cursor, sink)?;
-        *cursor = skip_json_whitespace(bytes, *cursor);
+        *cursor = skip_ascii_whitespace(bytes, *cursor);
         if take_direct(bytes, cursor, b',') {
-            *cursor = skip_json_whitespace(bytes, *cursor);
+            *cursor = skip_ascii_whitespace(bytes, *cursor);
             continue;
         }
         consume_direct(input, bytes, cursor, b']', ParseErrorKind::ExpectedCommaOrArrayEnd)?;
@@ -380,7 +380,7 @@ fn parse_string_direct<'i>(
         });
     }
     let span =
-        parse_that_regex::match_json_string_at_quote_trusted_utf8(bytes, start).map_err(|err| {
+        parse_that_regex::match_string_at_quote_trusted_utf8(bytes, start).map_err(|err| {
             ParseError {
                 input,
                 offset: err.offset,
@@ -390,11 +390,11 @@ fn parse_string_direct<'i>(
                 },
             }
         })?;
-    let raw = unsafe { std::str::from_utf8_unchecked(&bytes[span.content_start..span.content_end]) };
+    let raw = unsafe { std::str::from_utf8_unchecked(&bytes[span.content_start()..span.content_end()]) };
     *cursor = span.raw_end;
     Ok(ParsedString {
         raw,
-        needs_unescape: span.needs_unescape,
+        needs_unescape: span.needs_decode(),
     })
 }
 

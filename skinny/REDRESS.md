@@ -2211,3 +2211,38 @@ perturbation.
   `skinny/crates/bbnf-bench/src/generated_real_typed.rs` have no diff. W1 did
   not claim a parser/runtime throughput change and did not reopen REDRESS
   28+33, 50-55, or 60-72.
+
+## SK-V7 Wave 2 Zero-Fallback Mantissa-Widen Redress
+
+- Item 80 rejects the W2 mantissa-widen route on the current W1 baseline.
+  Fresh attribution over `canada.json` counted 111126 numbers, 111080 f64
+  candidates, zero mantissa overflows, zero ambiguous Eisel-Lemire returns, and
+  zero `str::parse::<f64>()` fallbacks. The measured fallback rate is 0.0000%,
+  contradicting the stale handoff hypothesis that canada had a material f64
+  fallback pool to eliminate.
+- No source patch was attempted after the same-wave consumer disappeared. The
+  rejected patch file exists at `/tmp/skv7-wave-2-rejected.patch` and is empty
+  by construction. The Eisel-Lemire power table already covers the f64
+  `[-342, 308]` exponent range, so table-only widening has no measured
+  exponent miss to consume.
+- Verification completed. `cargo test --workspace` passed. `cargo run -p xtask
+  --release -- primitive-checkasm` passed. The scoped Criterion command
+  `cargo bench -p bbnf-bench --bench json_parity --
+  'json/(canada|numbers|mesh|marine_ik)/(track1_direct_to_struct|track2_direct_to_struct|sonic_rs_direct_to_struct|serde_json_direct_to_struct)$'`
+  completed. `cargo run -p bbnf-bench --bin gate --release -- --advisory`
+  refreshed `skinny/RESULTS.md` and exited 5 because the overall gate remains
+  `N-direct / NoGo`.
+- Measurement evidence:
+
+  | Corpus | Track 1 Mbps | Track 2 Mbps | sonic-rs strict Mbps | Outcome |
+  |---|---:|---:|---:|---|
+  | canada | 10773 | 10296 | 12421 | N-direct / NO-GO |
+  | numbers | 12615 | 12362 | 12838 | A / GO |
+  | mesh | 8798 | 8699 | 9902 | N-direct / NO-GO |
+  | marine_ik | 9391 | 9349 | 8465 | A / GO |
+
+- The next candidate shape is not a hidden W2 source edit. It is a fresh
+  numeric-array scan/dispatch wave or sub-wave with profile evidence naming a
+  concrete hot leaf such as `match_number_span_from_first` and generated
+  array-number direct dispatch. The rejected routes in HANDOFF §3 remain
+  blocked.

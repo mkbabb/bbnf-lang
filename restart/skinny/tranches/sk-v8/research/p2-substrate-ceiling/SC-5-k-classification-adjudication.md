@@ -325,8 +325,9 @@ exist, that row is telemetry/gate-binding work only.
 
 1. **No same-run structural-index competitor exists yet.** simdjson stage-1
    and sonic lazy skeleton are not currently benched. Standing up
-   `tape_vs_tape` is a W0/W1 gate-binding augmentation only: about 120-180
-   LOC across the comparator harness source
+   `tape_vs_tape` is a possible W0/W1 gate-binding augmentation, now routed as
+   residual rather than default SK-V8 scope: about 120-180 LOC across the
+   comparator harness source
    `skinny/crates/bbnf-bench/benches/json_parity.rs`, workload metadata in
    `skinny/crates/bbnf-bench/src/metadata.rs`, and report/gate plumbing in
    `skinny/crates/bbnf-bench/src/report.rs`,
@@ -337,9 +338,12 @@ exist, that row is telemetry/gate-binding work only.
    strict-admission refusal test, a stale/sidecar-only comparator refusal
    test, and a same-run row test that rejects bbnf-only structural-scan
    numbers as SOTA evidence. The rerun budget is one allowed gate refresh
-   after the harness lands. SK-V8 Section 1 forbids new substrate or
-   behavior smuggled into W0; this work is telemetry/gate-binding only and
-   cannot be counted as a W3 production consumer or W3 same-wave consumer.
+   after the harness lands. SK-V8 Section 1 forbids new substrate or behavior
+   smuggled into W0; this work is telemetry/gate-binding only and cannot be
+   counted as a W3 production consumer or W3 same-wave consumer. Because SPEC
+   V4 does not assign this work to W0 or W1, a later plan must explicitly add
+   owner files, LOC, focused tests, and rerun budget before it can consume wave
+   scope.
 2. **Enum amendment touches a frozen surface.** SPEC Section 0.3 freezes
    `{A,C,G,K,L,N-direct}`. Adding `S` (substrate-guard) requires a REDRESS
    entry + SPEC edit + `gate-json` reject-list update. If done sloppily it

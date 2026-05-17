@@ -80,7 +80,9 @@ scratch. SC-1..SC-6 authorize no W3 plan by themselves: W3 remains blocked on
 W0/W1 closure, fresh plan owner paths, same-wave production consumer, revert
 protocol, measurement thresholds, measured-path strict validation proof, and
 challenge acceptance. `tape_vs_tape` is W0/W1 telemetry only, not a W3
-production consumer.
+production consumer. For this packet it is explicitly a routed residual, not
+default W0/W1 scope; adding it later requires a named owner/LOC/test/rerun plan
+before it can consume wave budget.
 
 ## 4. Dispatch Posture
 

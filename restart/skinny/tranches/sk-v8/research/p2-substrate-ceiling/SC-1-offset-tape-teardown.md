@@ -100,29 +100,28 @@ rows, and sidecar/permissive rows are planning signals only.
 
 | Corpus          | alloc tape / input | evidence class | observed delta / signal | posture |
 |-----------------|-------------------:|----------------|-------------------------:|---------|
-| canada          | 0.47x              | same-run sonic strict | **+54.6%** | strict win evidence |
-| mesh            | 0.72x              | same-run sonic strict | **+51.5%** | strict win evidence |
-| numbers         | 0.44x              | historical SK-V6; no same-run strict anchor | +51% vs SK-V6 | planning signal, not strict evidence |
-| marine_ik       | 0.70x              | historical SK-V6; no same-run strict anchor | +37% vs SK-V6 | planning signal, not strict evidence |
-| citm_catalog    | 0.30x              | same-run sonic strict | -11.3% | strict residual |
-| instruments     | 0.30x              | no strict anchor | +10.6% | planning signal, not strict evidence |
+| canada          | 0.47x              | same-run sonic strict | **+27.9%** (`+54.6%` simdjson DOM sidecar) | substrate-guard win signal, not SOTA admission |
+| mesh            | 0.72x              | same-run sonic strict | **+21.4%** (`+51.5%` simdjson DOM sidecar) | substrate-guard win signal, not SOTA admission |
+| numbers         | 0.44x              | same-run sonic strict | **+51.2%** | substrate-guard win signal, not SOTA admission |
+| marine_ik       | 0.70x              | same-run sonic strict | **+37.0%** | substrate-guard win signal, not SOTA admission |
+| citm_catalog    | 0.30x              | same-run sonic strict | **+24.6%** (`-11.3%` simdjson DOM sidecar) | substrate-guard win signal, not SOTA admission |
+| instruments     | 0.30x              | same-run sonic strict | **+10.6%** | substrate-guard win signal, not SOTA admission |
 | twitter         | 0.21x              | same-run sonic strict | -25.1% | strict loss |
-| update_center   | 0.49x              | same-run sonic strict | -63.4% | strict loss |
-| apache_builds   | 0.26x              | same-run sonic strict | -65.3% | strict loss |
-| github_events   | 0.25x              | same-run sonic strict | -61.7% | strict loss |
-| gsoc-2018       | **0.08x**          | historical SK comparison | -53.3% vs SK | planning loss signal |
-| unicode_escapes | **0.07x**          | lossy/permissive sidecar plus historical SK | +113% lossy / -34% SK | planning signal, not strict evidence |
-| distinct_values | 0.43x              | same-run sonic strict | -70.8% | strict loss |
-| y_string_unicode| 0.75x              | same-run sonic strict | -54.4% | strict loss |
+| update_center   | 0.49x              | same-run sonic strict | -43.1% (`-63.4%` simdjson DOM sidecar) | strict loss |
+| apache_builds   | 0.26x              | same-run sonic strict | -28.2% (`-65.3%` simdjson DOM sidecar) | strict loss |
+| github_events   | 0.25x              | same-run sonic strict | -34.0% (`-61.7%` simdjson DOM sidecar) | strict loss |
+| gsoc-2018       | **0.08x**          | same-run sonic strict | -53.3% | strict loss |
+| unicode_escapes | **0.07x**          | same-run sonic strict plus simdjson sidecar | -34.6% (`+113.6%` simdjson DOM sidecar) | strict loss plus sidecar planning signal |
+| distinct_values | 0.43x              | same-run sonic strict | -61.2% (`-70.8%` simdjson DOM sidecar) | strict loss |
+| y_string_unicode| 0.75x              | same-run sonic strict | -54.1% (`-54.4%` simdjson DOM sidecar) | strict loss |
 
 **The correlation is the opposite of the hypothesis.** High tape-byte ratio
-does NOT predict a loss. canada (0.47x) and mesh (0.72x) are strict wins;
-marine_ik (0.70x) and numbers (0.44x) are high-ratio historical planning win
-signals. gsoc-2018 (0.08x) and unicode_escapes (0.07x) are the *lowest*
-tape-byte producers and planning loss signals. y_string_unicode is the single
-highest ratio (0.75x) and a -54% strict loss, but its absolute offset count is
-tiny (2202 offsets) and its 9000 flag bytes signal an all-escaped-string
-corpus.
+does NOT predict a loss. canada (0.47x), mesh (0.72x), numbers (0.44x), and
+marine_ik (0.70x) are positive same-run sonic-strict substrate-guard signals.
+gsoc-2018 (0.08x) and unicode_escapes (0.07x) are among the lowest tape-byte
+producers and strict losses. y_string_unicode is the single highest ratio
+(0.75x) and a -54.1% strict loss, but its absolute offset count is tiny (2202
+offsets) and its 9000 flag bytes signal an all-escaped-string corpus.
 
 Within JSON telemetry, the discriminator that separates the same-run strict
 wins and losses is **string quote-count share**, not tape bytes. canada: 12
@@ -193,10 +192,12 @@ tape-build into the structural scan, plus the absence of a retained
 
 Evidence the tape itself is not the ceiling:
 
-- The two same-run strict `parse_only` wins (canada +54.6%, mesh +51.5%) and
-  the two historical SK-V6 planning win signals (numbers, marine_ik) all run
-  the *same* `push_plain_offset` path and all produce high tape-byte ratios. If
-  the offset write were the ceiling these would be the first rows to regress.
+- The same-run sonic-strict `parse_only` substrate-guard win signals (canada
+  +27.9%, mesh +21.4%, numbers +51.2%, marine_ik +37.0%) all run the *same*
+  `push_plain_offset` path and all produce high tape-byte ratios. These rows
+  remain `K`/future-`S` non-admission while strictness is deferred and UTF-8
+  validation is view-boundary; they are guard telemetry, not SOTA wins. If the
+  offset write were the ceiling these would be the first rows to regress.
 - Payload arena is provably zero-cost: `0/0 writes/allocations` on every corpus
   (RESULTS.md Notes). The arena is not in the picture at all.
 - SK-V7's six rejected micro-kernels (W2/W4/W5/W6/W10/W10b) were all *inside*
@@ -390,7 +391,7 @@ specific predictor variable does not.
 | # | Risk | Pre-block |
 |---|------|-----------|
 | R1 | Fusion wave re-introduces a parallel prepass (`generated_eventcursor.rs` shape, SK-V5 A4 §3.2) — a scan that runs upfront in front of an unchanged recursive-descent body. SK-V4 §4 already refuted this; it regressed and grew the hot hub. | The fused cursor MUST be the dispatch boundary *inside* the generated body (`buf[offsets[i++]]` per `consume_*` site), not a `ParseIndexCursor`-style sidecar attached before `parse_value`. Gate: `grep` the generated parser for any retained `StructuralIndex`/`Vec<JsonEvent>` field on `ParserState` — must be zero, and no parser-owned cursor/facts field may be introduced. |
-| R2 | Tier A regresses the number-heavy strict/planning rows (canada/mesh/numbers) because the recursive-descent re-walk was hiding a real advantage (number spans need byte-level scanning anyway, so structural dispatch is a small fraction there). | Bench gate: canada/mesh/numbers `parse_only` candidate telemetry must stay inside the post-W0 maintain budget filled by S-P3/W3 with same-run strict anchors where admission is claimed. If they miss that budget, the Tier A union candidate is net-negative for number-heavy rows and must be rejected or routed to a later independent S-P3 proof. It must not preserve `OffsetTape`-via-recursive-descent as a mixed old producer inside the same retained-index design; any later route still must satisfy one producer, one retained `Tape`, and no new directive/BIR/substrate. |
+| R2 | Tier A regresses the number-heavy strict guard rows (canada/mesh/numbers) because the recursive-descent re-walk was hiding a real advantage (number spans need byte-level scanning anyway, so structural dispatch is a small fraction there). | Bench gate: canada/mesh/numbers `parse_only` candidate telemetry must stay inside the post-W0 maintain budget filled by S-P3/W3 with same-run strict anchors where admission is claimed. If they miss that budget, the current Tier A union candidate is rejected for this cycle. Later reconsideration requires fresh W0 evidence plus a newly accepted S-P3/W3 plan; it is not a carry-forward promise from S-P2. It must not preserve `OffsetTape`-via-recursive-descent as a mixed old producer inside the same retained-index design; any later route still must satisfy one producer, one retained `Tape`, and no new directive/BIR/substrate. |
 | R3 | Packing `StructuralClass` into the offset `u32` overflows 32 bits on inputs >256 MiB if 4 bits are stolen for the ordinal (offset range drops to 2^28). | `checked_u32` (`mod.rs:228`) already debug-asserts the 32-bit bound; avoid offset packing unless W3 proves the bound is acceptable. Prefer a parallel co-indexed `Vec<u8>` class lane (costs 1 byte/element, ratio still <1x input) to keep the full 32-bit offset range and preserve the dense offset array byte-identically. |
 | R4 | The SIMD scan and recursive-descent parser disagree on structural count for adversarial inputs (escaped-quote parity edge cases — `scan.rs:164-198` `resolve_string_masks_64` slow path). A fused parser that trusts the scan would mis-parse where the standalone recursive-descent did not. | The scalar parity hash (`scan.rs:38-45`, `scalar_parity_report`) must gate the fused path in CI across the full corpus before the fusion wave commits; this is the existing Lock-8 Exact-mode contract (`SUBSTRATE.md` §3.4). Reusing string-boundary or quote/backslash-parity facts as retained template facts is Tier B, not part of Tier A closure. |
 | R5 | `SUBSTRATE.md` is stale on two load-bearing points (claims close-token elision; claims "structural projection IS the tape's storage" while the scan output is discarded). A wave that trusts the doc designs against fiction. | SK-V8 must correct `SUBSTRATE.md` §1.5 and §3.6 alongside the fusion code (per the `document-alongside-code` memory): record that closes ARE emitted and that pre-fusion the scan output was unconsumed. Stale-doc-driven design is a recurring REDRESS pattern. |

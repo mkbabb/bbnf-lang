@@ -92,13 +92,20 @@ A new-lens skinny S-P2 research cohort — six agents SC-1 through SC-6 under
 `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/` — interrogated a
 single hypothesis: that no SK-V7 micro-kernel could win because the offset-tape
 substrate itself imposes an irreducible per-structural-element cost. The cohort
-converged, independently, on a sharper and more damning finding.
+aligned, independently, on a sharper and more falsifiable finding. This is not
+S-P2 governance convergence: V1, V2, and V3 hardening did not converge, and a
+future V4 ACCEPT cycle would be only the first ACCEPT cycle after REVISE unless
+followed by another qualifying ACCEPT cycle or explicitly pinned by the user. No
+automatic S-P3 follows one ACCEPT cycle.
 
 The offset-tape is not a ceiling by write amplification. SC-1 found that
 allocated-tape-byte amplification anti-correlates with loss — the highest-ratio
-corpora (canada 0.47x, mesh 0.72x, marine_ik 0.70x) are exactly the corpora
-bbnf wins by roughly +50%, and the payload arena is provably untouched (`0/0`
-writes on every corpus).
+corpora (canada 0.47x, mesh 0.72x, marine_ik 0.70x) are positive same-run
+sonic-strict substrate-guard signals (+27.9%, +21.4%, +37.0%), not SOTA
+admission rows while `Strictness=deferred` and `parse_utf8=view-boundary`.
+Simdjson DOM sidecar magnitudes such as canada +54.6% and mesh +51.5% remain
+planning signals only. The payload arena is provably untouched (`0/0` writes on
+every corpus).
 
 The real defect is structural duplication. bbnf already produces a SOTA-grade
 stage-1 SIMD structural index — `scan_structurals` runs near 69 Gbps — and then
@@ -177,6 +184,11 @@ CostFacts-template closure. That hypothesis is not selected by S-P2; W3 still
 requires W0/W1 closure, a fresh S-P3/W3 plan, exact owner paths, same-wave
 production consumer, revert protocol, measurement thresholds, measured-path
 validation proof, and challenge acceptance.
+
+S-P2 also remains blocked on its own challenge convergence. V1, V2, and V3 did
+not converge; if V4 ACCEPTs, it is only the first qualifying cycle after REVISE.
+The orchestrator may not dispatch S-P3 until a second consecutive qualifying
+ACCEPT cycle lands or the user explicitly pins S-P2 final.
 
 The SK-V8 thesis:
 

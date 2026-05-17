@@ -122,6 +122,14 @@ inside the measured row. `Strictness=deferred`, `parse_utf8=view-boundary`,
 stale sidecars, C++ sidecar-only evidence, or plane mismatch may appear only as
 guard telemetry.
 
+`tape_vs_tape` is a routed residual, not default SK-V8 W0/W1 scope. SC-5 prices
+it as a possible 120-180 LOC comparator-plane augmentation, but this SPEC does
+not assign that work to W0 or W1. W0/W1 stay limited to the manifested
+schema/refusal/CostFacts work unless a later accepted plan explicitly adds
+owner files, tests, LOC, and the extra gate refresh. In every state,
+`tape_vs_tape` is telemetry only: it is not current SOTA admission evidence and
+cannot satisfy W3's production same-wave consumer.
+
 ### Section 0.5 - Opening Row Goalset
 
 W0 has the only dispatchable per-row target before G-Alpha: every current row
@@ -442,6 +450,11 @@ protocol, measurement thresholds, pre-blocked routes, and challenge acceptance.
 Telemetry or comparator rows such as a future `tape_vs_tape` gate may consume
 gate/report work, but they do not satisfy the production same-wave consumer
 requirement for a parser or substrate primitive.
+
+This nomination also does not advance S-P2. V1, V2, and V3 S-P2 hardening did
+not converge. A future V4 ACCEPT cycle would be only the first ACCEPT cycle
+after REVISE unless followed by another qualifying ACCEPT cycle or explicitly
+pinned by the user; no automatic S-P3 follows one ACCEPT cycle.
 
 This candidate touches the substrate, so its challenge carries an extra burden
 (see exit gate). It must either follow Pass Omega ratification of the SC-6-L1-R1

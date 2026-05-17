@@ -245,14 +245,18 @@ The evidence is exact and corpus-correlated:
   fed-index stage 2 does not run. In simdjson, finding a string's end is "read
   the next index" — O(1), branch-free, already done in stage 1. In bbnf it is a
   byte loop with a data-dependent branch per byte.
-- The losses cluster *exactly* on string/escape density. RESULTS.md: number-
-  heavy corpora where strings are rare *win* — canada (+54.6% vs sonic strict,
-  12 string quotes, 111126 numbers), mesh (+51.5%, 11 quotes), numbers, marine_ik.
-  String-heavy corpora *lose* — twitter (-35.8%, 18099 quotes), update_center
-  (-63.4%, 27229 quotes), distinct_values (-70.8%, 9796 quotes), apache_builds
-  (-65.3%, 5289 quotes), y_string_unicode (-54.4%). The discriminant is the
-  string-quote count. That is the *signature of a per-string inner-scan cost*,
-  i.e. the signature of a missing stage-2-fed-index.
+- The losses cluster on string/escape density once the authoritative RESULTS
+  column order is respected. Number-heavy corpora where strings are rare produce
+  positive same-run sonic-strict substrate-guard signals: canada (+27.9% vs
+  sonic strict; +54.6% is simdjson DOM sidecar), mesh (+21.4%; +51.5% is
+  simdjson DOM sidecar), numbers (+51.2%), and marine_ik (+37.0%).
+  String-heavy corpora lose on the same strict-sonic plane: twitter (-25.1%;
+  -35.8% is simdjson DOM sidecar), update_center (-43.1%; -63.4% sidecar),
+  distinct_values (-61.2%; -70.8% sidecar), apache_builds (-28.2%; -65.3%
+  sidecar), and y_string_unicode (-54.1%; -54.4% sidecar). The discriminant is
+  the string-quote count. That is the *signature of a per-string inner-scan
+  cost*, i.e. the signature of a missing stage-2-fed-index. Sidecar magnitudes
+  remain diagnostic only.
 - SK-V7 rejected *every micro-kernel* (Eisel-Lemire, per-`\uXXXX` TBL, NEON
   plain-string scan, control/key compaction, PMULL/CSSC bodies) precisely
   because each one optimised *the inner scan* without removing it. A faster
@@ -369,6 +373,9 @@ Tier A touched/proven-untouched rows:
 - **Selection bar.** Both tiers remain unselected until an S-P3/W3 challenge
   supplies owner paths, revert protocol, numeric thresholds, strict same-run
   comparator planes, and accepted challenge evidence.
+- **Threshold provenance.** Any S-P3/W3 threshold copied from S-P2 must be
+  recomputed from post-W0 same-run strict rows. Stale sidecar magnitudes and
+  V3/V2 research prose are not admissible threshold inputs.
 
 The predicted impact is tiered. Tier A should remove structural rediscovery
 overhead and prove the one-producer/one-retained-`Tape` shape without claiming

@@ -26,8 +26,11 @@
 
 #![allow(clippy::needless_range_loop)]
 
+mod checkasm_common;
+
 use bbnf_simd::prim::byte_class_from_eq_set_64;
 use bbnf_simd::scalar::byte_class_from_eq_set_64::byte_class_from_eq_set_64_scalar;
+use checkasm_common::with_stack_canary_xor_fold;
 
 // -----------------------------------------------------------------------------
 // Deterministic input generator (xorshift64; matches checkasm_parity.rs).
@@ -128,13 +131,7 @@ fn stack_clobber_then<F, R>(f: F) -> R
 where
     F: FnOnce() -> R,
 {
-    let mut canary = [0xDEu8; 1024];
-    let probe = unsafe { std::ptr::read_volatile(canary.as_ptr()) };
-    std::hint::black_box(probe);
-    let result = f();
-    let probe = unsafe { std::ptr::read_volatile(canary.as_mut_ptr()) };
-    std::hint::black_box(probe);
-    result
+    with_stack_canary_xor_fold("byte_class_from_eq_set_64", f)
 }
 
 // -----------------------------------------------------------------------------

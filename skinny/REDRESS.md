@@ -2583,3 +2583,36 @@ perturbation.
   the W10b per-row maintain invariant. The next candidate shape is W10c:
   admit only the B6 canary hardening as Stage 1, leave both bitmap asm body
   fills rejected for this tranche, and require zero `RESULTS.md` diff.
+
+## SK-V7 Wave 10c B6 Stack-Canary Stage 1 Redress
+
+- Item 90 admits W10c B6 stack-canary Stage 1 only. The admitted slice
+  replaces the fixed 0xDE volatile-probe checkasm canary with a shared
+  randomized XOR-fold helper plus byte-exact backstop diagnostics, then routes
+  the existing `guarded_call`, `stack_canary_then`, byte-class, and parity
+  wrappers through that helper.
+- This redress does not admit the original W10 bitmap body-fill target.
+  PMULL prefix-XOR remains rejected by Item 88, and the CSSC CTZ/bulk consumer
+  remains rejected by Item 89. The original W10 §12 "both primitives admitted"
+  exit gate is therefore not green; SK-V7 closes the wave honestly as B6
+  hardening admitted with the bitmap asm bodies routed to Pass Alpha/SK-V8.
+- Verification completed. Release checkasm passed for
+  `checkasm_byte_class_from_eq_set_64`, `checkasm_parity`,
+  `checkasm_bitmap_next_set_bit`, and `checkasm_bulk_emit_positions_64`.
+  `cargo run -p xtask --release -- primitive-checkasm` passed after the
+  negative canary control was removed. `cargo test --workspace` passed before
+  the negative canary control was injected.
+- The negative canary control failed closed in representative wrappers:
+  injected `canary[0] ^= 1` produced status 101 for bitmap-next-bit,
+  bulk-emit, byte-class, and parity; the logs are archived at
+  `/tmp/skv7-w10c-canary-next.log`, `/tmp/skv7-w10c-canary-bulk.log`,
+  `/tmp/skv7-w10c-canary-byte-class.log`, and
+  `/tmp/skv7-w10c-canary-parity.log`.
+- Static audits held. The old fixed 0xDE volatile canary pattern is absent from
+  `skinny/crates/bbnf-simd/tests/checkasm_*.rs`. Production bitmap/runtime and
+  generated JSON paths have zero diff, `skinny/RESULTS.md` has zero diff, no
+  PMULL text exists in `bitmap_prefix_xor_64.rs`, prefix-XOR still delegates to
+  the scalar body, and `bulk_emit_positions_64.rs` still delegates to its
+  scalar body.
+- No benchmark refresh was performed for W10c because the admitted slice is
+  test-harness hardening only and has zero production or `RESULTS.md` diff.

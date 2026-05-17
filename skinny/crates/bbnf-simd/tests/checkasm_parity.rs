@@ -21,11 +21,14 @@
 
 #![allow(clippy::needless_range_loop)]
 
+mod checkasm_common;
+
 use std::collections::HashMap;
 use std::sync::OnceLock;
 use std::time::Instant;
 
 use bbnf_simd::{scan_dispatch, scan_scalar, StructuralAlphabet};
+use checkasm_common::with_stack_canary_xor_fold;
 
 const CHECKASM_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_bytes(b"{}[],:\"");
 
@@ -177,16 +180,7 @@ fn stack_clobber_then<F, R>(f: F) -> R
 where
     F: FnOnce() -> R,
 {
-    let mut canary = [0xDEu8; 1024];
-    // Force the compiler to actually write the canary by reading from a volatile
-    // pointer into it before the closure runs.
-    let probe = unsafe { std::ptr::read_volatile(canary.as_ptr()) };
-    std::hint::black_box(probe);
-    let result = f();
-    // Touch the canary again afterwards so it stays live across the call.
-    let probe = unsafe { std::ptr::read_volatile(canary.as_mut_ptr()) };
-    std::hint::black_box(probe);
-    result
+    with_stack_canary_xor_fold("checkasm_parity", f)
 }
 
 // -----------------------------------------------------------------------------

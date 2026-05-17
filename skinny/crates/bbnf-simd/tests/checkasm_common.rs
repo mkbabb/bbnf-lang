@@ -35,7 +35,7 @@ pub fn guarded_call<F, R>(f: F) -> R
 where
     F: FnOnce() -> R,
 {
-    stack_canary_then(f)
+    with_stack_canary_xor_fold("guarded_call", f)
 }
 
 #[inline(never)]
@@ -43,13 +43,41 @@ pub fn stack_canary_then<F, R>(f: F) -> R
 where
     F: FnOnce() -> R,
 {
-    let canary = [0xDEu8; 1024];
+    with_stack_canary_xor_fold("stack_canary_then", f)
+}
+
+#[inline(never)]
+pub fn with_stack_canary_xor_fold<F, R>(label: &'static str, f: F) -> R
+where
+    F: FnOnce() -> R,
+{
+    let mut canary = [0u8; 1024];
+    Xorshift64::new(0xC0DE_CAFE_C0DE_CAFE).fill(&mut canary);
     let before = canary;
+    let pre_fold = xor_fold(&canary);
     std::hint::black_box(&before);
     let result = f();
     std::hint::black_box(&canary);
-    assert_eq!(canary, before, "checkasm stack canary was clobbered");
+    let post_fold = xor_fold(&canary);
+    if pre_fold != post_fold || canary != before {
+        let first_bad_byte = canary
+            .iter()
+            .zip(before.iter())
+            .position(|(after, before)| after != before);
+        panic!(
+            "checkasm stack canary was clobbered in {label}: pre_fold={pre_fold:#018x} post_fold={post_fold:#018x} first_bad_byte={first_bad_byte:?}"
+        );
+    }
     result
+}
+
+fn xor_fold(bytes: &[u8; 1024]) -> u64 {
+    let mut fold = 0u64;
+    for chunk in bytes.chunks_exact(8) {
+        let lane = u64::from_le_bytes(chunk.try_into().expect("canary chunks are 8 bytes"));
+        fold ^= lane;
+    }
+    fold
 }
 
 #[cfg(target_arch = "aarch64")]

@@ -94,9 +94,10 @@ single hypothesis: that no SK-V7 micro-kernel could win because the offset-tape
 substrate itself imposes an irreducible per-structural-element cost. The cohort
 aligned, independently, on a sharper and more falsifiable finding. This is not
 S-P2 governance convergence: V1, V2, V3, and V4 hardening did not converge, and
-a future V5 ACCEPT cycle would be only the first ACCEPT cycle after REVISE unless
-followed by another qualifying ACCEPT cycle or explicitly pinned by the user. No
-automatic S-P3 follows one ACCEPT cycle.
+V5 reached the pass hard ceiling with CH4 REVISE
+(`research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V5-CONSOLIDATED.md`).
+S-P2 is BLOCKED until the user explicitly pins the cycle final or revises the
+orchestration; no automatic S-P3 follows.
 
 The offset-tape is not a ceiling by write amplification. SC-1 found that
 allocated-tape-byte amplification anti-correlates with loss — the highest-ratio
@@ -186,10 +187,9 @@ production consumer, revert protocol, measurement thresholds, measured-path
 validation proof, and challenge acceptance.
 
 S-P2 also remains blocked on its own challenge convergence. V1, V2, V3, and V4
-did not converge; if V5 ACCEPTs, it is only the first qualifying cycle after
-REVISE.
-The orchestrator may not dispatch S-P3 until a second consecutive qualifying
-ACCEPT cycle lands or the user explicitly pins S-P2 final.
+did not converge; V5 reached the hard ceiling with CH4 REVISE. The orchestrator
+may not dispatch S-P3 unless the user explicitly pins S-P2 final or revises the
+hard-ceiling instruction.
 
 The SK-V8 thesis:
 

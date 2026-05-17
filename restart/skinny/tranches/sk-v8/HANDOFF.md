@@ -71,9 +71,11 @@ names row set, formula, target, maintain budget, and pass/fail rule.
 The cohort is S-P2 research output. Per the pass framework
 (`restart/prompts/skinny/PASS-2-RESEARCH.md` §3) S-P2 advances only after two
 consecutive CHALLENGE cycles at >=95% ACCEPT with no unresolved REVISE, or an
-explicit user pin. V1, V2, V3, and V4 did not converge, so a future V5 ACCEPT
-cycle is still only the first ACCEPT cycle after a REVISE unless followed by
-another ACCEPT cycle or pinned by the user. The cohort does not change the
+explicit user pin. V1, V2, V3, and V4 did not converge, and V5 reached the pass
+hard ceiling with CH4 REVISE
+(`research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V5-CONSOLIDATED.md`).
+S-P2 is BLOCKED until the user explicitly pins the cycle final or revises the
+orchestration; no automatic S-P3 follows. The cohort does not change the
 G-Alpha-W0-only constraint; it nominates a lead W3 hypothesis so W0 telemetry
 confirms or falsifies the finding executably rather than discovering it from
 scratch. SC-1..SC-6 authorize no W3 plan by themselves: W3 remains blocked on

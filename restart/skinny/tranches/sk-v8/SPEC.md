@@ -452,9 +452,10 @@ gate/report work, but they do not satisfy the production same-wave consumer
 requirement for a parser or substrate primitive.
 
 This nomination also does not advance S-P2. V1, V2, V3, and V4 S-P2 hardening
-did not converge. A future V5 ACCEPT cycle would be only the first ACCEPT cycle
-after REVISE unless followed by another qualifying ACCEPT cycle or explicitly
-pinned by the user; no automatic S-P3 follows one ACCEPT cycle.
+did not converge. V5 reached the pass hard ceiling with CH4 REVISE
+(`research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V5-CONSOLIDATED.md`).
+S-P2 is BLOCKED until the user explicitly pins the cycle final or revises the
+orchestration; no automatic S-P3 follows.
 
 This candidate touches the substrate, so its challenge carries an extra burden
 (see exit gate). It must either follow Pass Omega ratification of the SC-6-L1-R1

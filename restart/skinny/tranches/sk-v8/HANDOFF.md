@@ -75,10 +75,11 @@ explicit user pin. V1, V2, V3, and V4 did not converge, and V5 reached the pass
 hard ceiling with CH4 REVISE
 (`research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V5-CONSOLIDATED.md`).
 The user revised the hard-ceiling instruction on 2026-05-17 by authorizing an
-exceptional V6 challenge. V6 does not by itself dispatch S-P3: if V6 ACCEPTs,
-it is only the first qualifying cycle after V5 REVISE unless the user pins S-P2
-final or explicitly authorizes any additional over-ceiling cycle. The cohort
-does not change the
+exceptional V6 challenge. V6 ACCEPTed 6/6
+(`research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V6-CONSOLIDATED.md`),
+but it is only the first qualifying cycle after V5 REVISE. S-P2 still cannot
+dispatch S-P3 unless the user pins S-P2 final or explicitly authorizes another
+over-ceiling cycle. The cohort does not change the
 G-Alpha-W0-only constraint; it nominates a lead W3 hypothesis so W0 telemetry
 confirms or falsifies the finding executably rather than discovering it from
 scratch. SC-1..SC-6 authorize no W3 plan by themselves: W3 remains blocked on

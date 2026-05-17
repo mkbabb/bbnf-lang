@@ -97,9 +97,11 @@ S-P2 governance convergence: V1, V2, V3, and V4 hardening did not converge, and
 V5 reached the pass hard ceiling with CH4 REVISE
 (`research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V5-CONSOLIDATED.md`).
 The user revised the hard-ceiling instruction on 2026-05-17 by authorizing an
-exceptional V6 challenge. V6 does not by itself dispatch S-P3: if V6 ACCEPTs,
-it is only the first qualifying cycle after V5 REVISE unless the user pins S-P2
-final or explicitly authorizes any additional over-ceiling cycle.
+exceptional V6 challenge. V6 ACCEPTed 6/6
+(`research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V6-CONSOLIDATED.md`),
+but it is only the first qualifying cycle after V5 REVISE. S-P2 still cannot
+dispatch S-P3 unless the user pins S-P2 final or explicitly authorizes another
+over-ceiling cycle.
 
 The offset-tape is not a ceiling by write amplification. SC-1 found that
 allocated-tape-byte amplification anti-correlates with loss — the highest-ratio
@@ -189,10 +191,11 @@ production consumer, revert protocol, measurement thresholds, measured-path
 validation proof, and challenge acceptance.
 
 S-P2 also remains blocked on its own challenge convergence. V1, V2, V3, and V4
-did not converge; V5 reached the hard ceiling with CH4 REVISE. The orchestrator
-may run the user-authorized exceptional V6, but may not dispatch S-P3 unless
-the user explicitly pins S-P2 final or explicitly authorizes any additional
-over-ceiling cycle needed for two consecutive qualifying ACCEPT cycles.
+did not converge; V5 reached the hard ceiling with CH4 REVISE; V6 ACCEPTed but
+is only the first qualifying cycle after V5 REVISE. The orchestrator may not
+dispatch S-P3 unless the user explicitly pins S-P2 final or explicitly
+authorizes an additional over-ceiling cycle needed for two consecutive
+qualifying ACCEPT cycles.
 
 The SK-V8 thesis:
 

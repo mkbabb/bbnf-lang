@@ -454,8 +454,10 @@ requirement for a parser or substrate primitive.
 This nomination also does not advance S-P2. V1, V2, V3, and V4 S-P2 hardening
 did not converge. V5 reached the pass hard ceiling with CH4 REVISE
 (`research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V5-CONSOLIDATED.md`).
-S-P2 is BLOCKED until the user explicitly pins the cycle final or revises the
-orchestration; no automatic S-P3 follows.
+The user revised the hard-ceiling instruction on 2026-05-17 by authorizing an
+exceptional V6 challenge. V6 does not by itself dispatch S-P3: if V6 ACCEPTs,
+it is only the first qualifying cycle after V5 REVISE unless the user pins S-P2
+final or explicitly authorizes any additional over-ceiling cycle.
 
 This candidate touches the substrate, so its challenge carries an extra burden
 (see exit gate). It must either follow Pass Omega ratification of the SC-6-L1-R1

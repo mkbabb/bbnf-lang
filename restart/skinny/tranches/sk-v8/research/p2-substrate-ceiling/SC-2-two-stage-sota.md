@@ -266,175 +266,194 @@ information in the slow plane. The "irreducible cost" is self-inflicted by
 *not consuming the index that has already been built*. The substrate is not
 the ceiling — the **missing index-driven stage 2** is the ceiling.
 
-## §3. Candidate — the union substrate
+## §3. Candidate — tiered W3 union substrate
 
-The user's framing — "a union of tape and structural projection" — is a
-falsifiable candidate, not a selected W3 prescription. The two-stage lens makes
-the candidate concrete, but SC-2 alone does not authorize a wave. The candidate
-is **not** to add a second materialisation pass (that would re-introduce the
-stage-boundary memory traffic that yyjson and sonic-rs appear to avoid in this
-architecture summary, and the SK-V7 verdict already shows micro-kernels don't
-pay). The candidate to challenge is:
+The user's framing — "a union of tape and structural projection" — remains a
+falsifiable candidate, not a selected W3 prescription. SC-2 now splits that
+candidate into two scopes so S-P3 cannot buy the narrow migration and claim the
+larger string-plane close.
 
-> **The structural index IS the offset-tape. Produce it once, branch-free, in
-> the stage-1 kernel; consume it lazily as the parser's token cursor.**
+The architecture evidence is also split. **simdjson** is the retained,
+document-wide stage-1 index precedent. **sonic-rs** is not used here as
+persistent-index proof; absent exact upstream anchors, it remains a same-run
+strict performance anchor plus a local skip-scan/single-pass comparator. Any
+later stronger sonic-rs architecture claim must add exact upstream source
+anchors before it can support this candidate.
 
-Concretely — call it the **fused index-tape candidate**:
+### 3.1 Tier A — structural-class cursor migration
 
-1. **One production site.** `scan_structurals` is promoted from a capacity-
-   sizing throwaway to *the* structural pass. Its `Vec<u32>` of positions *is*
-   the offset-tape's `offsets` vector — no copy, no second build. The
-   `(flag_cursor, flag_value)` escape/control facts are emitted by the *same*
-   stage-1 kernel into the tape's sparse fact columns (it already computes the
-   backslash mask and the in-string mask — `HAS_ESC` is a popcount-test on a
-   mask it already holds). They share the offsets' cursor domain and do not
-   become an aux table, external projection, or independently retained
-   substrate. This is the "union": the tape and the structural projection
-   become the *same array* plus tape-internal sparse facts, produced in the
-   branch-free plane.
+Tier A's candidate is narrow:
 
-2. **The recursive-descent parser becomes a fed-index walker.** `parse_value_
-   at` no longer calls `match_tiny_plain_string` / `match_string_at_quote` to
-   *find* a string's end. It reads `tape.offsets[cursor]` and
-   `tape.offsets[cursor+1]`: the string body is exactly the half-open interval
-   between two consecutive indices; the closing quote *is* the next index.
-   String *validation* (UTF-8, unescaped-control rejection) was already done
-   branch-free in stage 1 via the masks — the `HAS_CONTROL` flag is the
-   rejection signal. The parser's inner loop collapses from O(token-length)
-   branchy bytes to O(1) index reads. This is literally simdjson's stage 2,
-   minus the separate tape word — because the index *is* the tape.
+> **The structural index becomes the retained tape's structural-position and
+> opaque structural-class cursor.**
 
-3. **No second materialisation.** The fused index-tape is consumed *lazily* and
-   *forward-only*, exactly like simdjson On Demand: typed `direct_to_struct` /
-   `real_typed_struct` rows materialise a field only when the schema asks for
-   it, by reading the interval from the index and decoding in place. There is
-   no eager tape *word* array distinct from the index array. The offset-tape's
-   current `PayloadArena` (empty in every row already) stays empty — payloads
-   are decoded on access from the source slice the index points at. This keeps
-   the two-stage throughput win (branch-free stage 1; O(1)-per-element stage 2)
-   *without* paying simdjson's separate-tape memory traffic — it is the
-   simdjson stage split fused onto a sonic-rs-style lazy consume.
+Tier A promotes `scan_structurals` from a capacity-sizing throwaway to the one
+producer of retained structural positions. The `Vec<u32>` of positions is the
+tape's offset column, and an aligned `classes: Vec<u8>` column records opaque
+structural-class ordinals. The scan product is move-consumed into the retained
+`Tape`; no post-build `StructuralIndex` query API, sidecar, aux table, density
+cache, parser-owned cursor, or parallel offset append path may survive.
 
-4. **Strict-plane preservation.** Strictness is *not* lost by this move — it is
-   *strengthened*. simdjson and bbnf both validate UTF-8 and reject unescaped
-   controls at the stage-1 scan boundary; the `OffsetFlags::HAS_CONTROL` bit
-   already exists for exactly this. asmjson's permissive 10.93 GiB/s path is
-   a flaw probe only, because it exposes the cost of strict string-body/control
-   validation by omitting part of it; it is not a strict admission anchor. The
-   target is strict-vs-strict, and stage-1 branch-free validation is the only
-   candidate path this artefact admits for cheap strictness.
+Tier A may delete structural-byte rediscovery such as JSON `consume_structural`
+and replace those calls with cursor/class reads. It **does not** delete
+string-boundary work, does not stop re-walking strings, and does not close the
+quote/backslash/parity plane. Existing measured parser validation for string
+boundaries, UTF-8, escapes, and unescaped controls stays in the production row
+unless Tier B is also implemented in the same accepted W3 slice. Transient masks
+inside the scanner may remain implementation detail for structural-position
+correctness; they are not retained string facts and cannot be counted as a
+string-boundary consumer.
 
-The falsifiability contract, if S-P3/W3 later chooses to challenge this
-candidate, is:
+Tier A's same-wave production consumer is therefore the retained JSON parser
+path that consumes structural positions/classes from the retained `Tape`.
+Direct, `SinkOnly`, `path!`, retained view traversal, generated Track 1, and
+Track 2 are not Tier A proof unless the W3 plan names exact owner paths and
+same-wave verification for each touched path. Otherwise they are
+touched/proven-untouched rows or Tier B/residual work, not Tier A consumers.
 
-- **Scalar reference expectation.** A scalar oracle must produce the same
-  offset sequence and the same tape-internal `HAS_ESC`/`HAS_CONTROL` facts as
-  the SIMD path on every selected strict row, including block-boundary escape
-  carries and C0-control rejection.
-- **checkasm expectation.** Any admitted SIMD primitive, including
-  `compact_mask`/classifier/string-mask work, needs a named checkasm-style
-  parity test before it can become a production gate.
-- **Same-wave consumer placeholder.** A W3 plan must name the production
-  consumer that stops re-walking strings in the same wave as the fused
-  index-tape change. A telemetry-only `tape_vs_tape` row is not enough.
-- **Selection bar.** The fused index-tape remains unselected until an S-P3/W3
-  challenge supplies owner paths, revert protocol, numeric thresholds,
-  strict same-run comparator planes, and accepted challenge evidence.
+### 3.2 Tier B — string-boundary / parity / CostFacts-template union
 
-The size-budget hypothesis is deletion-positive, but still unproven. It would
-need to remove the `match_tiny_plain_string`/`match_string_at_quote`
-inner-scan call sites from the generated parser and remove the throwaway
-capacity scan without exceeding the W3 verification budget. The cost-model hook
-would likely be `BackendShape`; the per-rule decision "fed-index walk vs
-inner-scan" would become a `CostFacts` fact if S-P3 proves that route.
+Tier B is the larger string-plane candidate. It may claim string-boundary
+closure only if it co-indexes quote/backslash/parity-derived bounds or facts
+inside the singular retained `Tape`, rewrites the relevant string consumers in
+the same wave, and keeps validation evidence in the measured strict row. A
+view-boundary UTF-8 claim, post-parse check, stale sidecar, or telemetry-only
+`tape_vs_tape` row cannot satisfy Tier B.
 
-The predicted impact is likewise a hypothesis: the string-heavy loss cluster
-(twitter, update_center, distinct_values, apache_builds, github_events, the
-unicode rows — ~9 of 13 parse-G rows) is exactly the set whose reported hot
-leaf is the inner string scan. A fed-index stage 2 should remove that leaf if
-the same-wave consumer lands. This is a structural candidate SK-V7's
-micro-kernel waves did not test; it is not selected until the S-P3/W3 challenge
-passes.
+Tier B is also where `match_tiny_plain_string` /
+`match_string_at_quote` deletion, direct/SinkOnly/path migration, and
+`CostFacts` template parity belong unless a W3 plan proves they fit the
+650-LOC template-parity cap and verification budget. The string-heavy loss
+cluster (twitter, update_center, distinct_values, apache_builds,
+github_events, the unicode rows) is the diagnostic target for Tier B, not proof
+that Tier A has closed the string plane.
+
+### 3.3 Tier A S-P3 owner, cost, and proof table
+
+| Requirement | Tier A S-P3 challenge contract |
+|---|---|
+| Source owner files | `skinny/crates/bbnf-simd/src/lib.rs`, `skinny/crates/bbnf-simd/src/scalar/mod.rs`, `skinny/crates/bbnf-simd/tests/checkasm_parity.rs`, `skinny/crates/runtime/src/tape/{mod,assembler,offsets}.rs`, `skinny/crates/runtime/src/grammars/json/{scan,generated,parser}.rs`, `skinny/crates/codegen/src/json_templates/{generated,parser}.rs`, and any regenerated JSON output named by the plan. |
+| Source LOC budget | Tier A only: about +55 `bbnf-simd`, +90/-10 `runtime/src/tape`, -30 regenerated JSON parser output, +45 JSON codegen/table emission; net about +150 source LOC. Quote/backslash/parity masks, string-boundary consumers, and `CostFacts` template parity are Tier B and cannot spend this budget. |
+| Generated-output audit | Regenerate rather than hand-patch `runtime/src/grammars/json/`. Review a byte diff for `scan.rs`, `generated.rs`, `parser.rs`, `view.rs`, and `value.rs`; any change outside structural-position/class consumption must be routed to Tier B or residual. |
+| Strict row/plane targets | Same-run strict JSON parse plane only. Tier A must preserve strict validation fields in the measured row (`Strictness`, `parse_utf8`, `escape_complete`, `flaw_probe`) and must not rely on sidecar, view-boundary, post-parse, or stale comparator evidence. Candidate rows: twitter, update_center, distinct_values, apache_builds as structural/string-heavy diagnostics; canada, mesh, numbers as number-heavy maintain guards; all 38 current main rows keep the W3 maintain budget. |
+| Same-wave production consumer | JSON retained parser consumes retained `Tape` positions/classes at `consume_structural` sites. `ValueRef::offset()` may be touched only to preserve cursor/offset semantics. No direct/SinkOnly/path claim counts unless separately owned and verified in the same wave. |
+| Named parser tests | `cargo test --manifest-path skinny/Cargo.toml -p runtime`; `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench parity`; and the plan's named generated parser tests for invalid escapes, C0 controls, block-boundary strings, nested arrays/objects, and trailing-data rejection. |
+| Scalar oracle command | Add/extend a scalar oracle for positions plus classes, then run `cargo test --manifest-path skinny/Cargo.toml -p bbnf-simd --test classifier_parity` and `cargo test --manifest-path skinny/Cargo.toml -p bbnf-simd --test corpus_parity`. The oracle must produce the same positions/classes as SIMD on selected rows. |
+| checkasm command | Add the named cell `checkasm_bbnf_simd_compact_mask_positions_classes`, then run `cargo test --manifest-path skinny/Cargo.toml -p bbnf-simd --profile ax-iter --test checkasm_parity`. If the primitive-checkasm wrapper is updated, also run `cargo run --manifest-path skinny/Cargo.toml -p xtask --release -- primitive-checkasm`. |
+| Full-gate rerun budget | One full SK-V8 gate refresh: `cargo run --manifest-path skinny/Cargo.toml -p xtask --release -- gate-json` or the W0-updated equivalent. A second rerun requires a REDRESS cost note. |
+| Revert slice | Revert `bbnf-simd`, `runtime/src/tape`, JSON templates/generated output, gate/report/RESULTS changes, and any named non-JSON proof edits as one W3 slice. Preserve rejected evidence under the W3 research directory. |
+| Non-JSON proof | If any generic crate or generic template changes, the same Tier A plan must price CSS L4, Sheets, and BBNF-self proof per SPEC §2.1: no-op dry run, focused test, or unchanged-output audit proving no JSON structural roles are required to compile, lower, cost, or run. |
+
+Tier A touched/proven-untouched rows:
+
+| Row/path | Tier A status |
+|---|---|
+| Generated Track 1 retained parse | Touched. Owner paths are `runtime/src/grammars/json/{scan,generated,parser}.rs`, matching codegen templates, and `runtime/src/tape/`. This is the only Tier A production consumer. |
+| Retained view / `ValueRef` | Touched or proven untouched. Owner paths are `runtime/src/tape/mod.rs`, `runtime/src/grammars/json/{view,value}.rs`, and matching templates. Verification must prove borrowed spans, offsets, and `DocumentView` traversal still use the measured retained `Tape`. |
+| `path!` | Proven untouched unless S-P3 names an actual owner path/API. If touched, it must verify same-wave cursor semantics over the retained `Tape`; otherwise it is residual. |
+| Direct / `SinkOnly` generated loops | Proven untouched for Tier A or routed to Tier B. Owner paths, if touched, include `runtime/src/grammars/json/generated.rs`, `runtime/src/grammars/json/sink.rs`, `codegen/src/sink_direct.rs`, and `codegen/src/lower/sink_only.rs`. |
+| Generated Track 1 direct rows | Proven untouched unless the direct parser is explicitly in scope. Existing direct GO rows must maintain; they do not prove Tier A. |
+| Independent Track 2 | Proven untouched. Owner paths are `bbnf-bench/src/track2/json.rs` and parity/gate code. Track 2 must remain structurally independent and cannot consume generated Track 1 or the new retained cursor. |
+
+### 3.4 Shared falsifiability contract
+
+- **Measured-path proof.** Validation and structural/tape facts must be emitted
+  and consumed by the measured production row. Sidecar-only facts,
+  view-boundary UTF-8, post-parse validation, stale C++ sidecars, or
+  telemetry-only rows are guard evidence only.
+- **Scalar reference expectation.** Tier A needs a scalar oracle for positions
+  plus classes. Tier B additionally needs scalar parity for quote/backslash
+  carries, string bounds, and any admitted tape-internal string facts.
+- **checkasm expectation.** Any admitted SIMD primitive needs a named
+  checkasm-style parity test before it can become a production gate.
+- **Selection bar.** Both tiers remain unselected until an S-P3/W3 challenge
+  supplies owner paths, revert protocol, numeric thresholds, strict same-run
+  comparator planes, and accepted challenge evidence.
+
+The predicted impact is tiered. Tier A should remove structural rediscovery
+overhead and prove the one-producer/one-retained-`Tape` shape without claiming
+the 75% string hot-leaf deletion. Tier B is the route that may remove the
+string inner-scan leaf and challenge the string-heavy parse losses.
 
 ## §4. Generalisation — grammar-neutral
 
-The fused index-tape is **not JSON-specific**, and the two-stage decomposition
-is the most grammar-neutral thing in the SOTA literature, because stage 1 knows
-*nothing about grammar* — it only classifies bytes into a structural alphabet.
+The union candidate is not JSON-specific when it is kept to byte sets, opaque
+structural-class ordinals, generated per-grammar data, and one retained `Tape`.
+Stage 1 still knows no grammar semantics; it only classifies bytes supplied by
+generated grammar modules.
 
-- **The grammar-neutral interface** is: a grammar declares (a) its *structural
-  byte alphabet* (JSON: `{}[],:"`; CSS L4: `{}();:,` plus `/` `*` `@`; Sheets:
-  `(),;` plus operators; BBNF-self: `|()[]{}` plus `::=`); and (b) a *string-
-  like delimited-region set* (JSON strings; CSS strings + comments + url();
-  Sheets quoted text). Stage 1 is then the *same kernel parameterised by a
-  per-grammar 256-byte classifier LUT* — exactly the dav1d data-vs-code split
-  (skv7-A3 §1, §6): one shared `BYTE_CLASS_FROM_TABLE_64` macro body, one
-  per-grammar `.data` table. The fused index-tape `Vec<u32>` is grammar-neutral
-  by construction — it is just offsets.
+- **Tier A's grammar-neutral interface** is a structural byte alphabet plus
+  opaque class ordinals (JSON: `{}[],:"`; CSS L4: `{}();:,` plus `/` `*` `@`;
+  Sheets: `(),;` plus operators; BBNF-self: `|()[]{}` plus `::=`). Generic
+  SIMD/runtime code consumes byte sets and ordinals; generated grammar modules
+  interpret meaning from parser state plus class/byte. If Tier A edits generic
+  crates, CSS L4, Sheets, and BBNF-self proof is part of Tier A's cost, not an
+  optional later audit.
 
-- **The fed-index stage-2 walker** is the existing recursive-descent codegen
-  with its inner *find-the-token-end* loops replaced by *read-the-next-index*.
-  That transformation is mechanical and grammar-independent: any rule that
-  currently scans for a delimiter instead reads the interval `[idx[c], idx[c+1])`.
-  Grammars whose tokens are *not* delimited by structural bytes (significant
-  whitespace, e.g. YAML) cannot use a fed-index stage 2 — but that is already
-  the `CollapsedStage` admissibility boundary (skv7-A3 §5): YAML is rejected,
-  CSS L4 declaration-body admits, BBNF-self admits, Sheets admits.
+- **Tier A's stage-2 change** is structural cursor walking only. It replaces
+  structural-byte rediscovery with cursor/class reads where the token boundary
+  is already known by the retained tape. It does not replace string end scans,
+  quote/backslash parity, escape validation, or grammar-specific recovery facts.
 
-- **CSS L4 specifically.** CSS declarations are structural-byte-delimited
-  within a block; `scan_structurals` parameterised with the CSS alphabet
-  produces an index whose intervals are selectors, property names, values.
-  The tape-internal escape facts generalise directly to CSS hex escapes
-  (`\E9 `). The
-  `@`-rule envelope and `@error(recover)` recovery branches are the part that
-  falls back — but the *declaration body*, which is the bulk of any
-  stylesheet, gets the fed-index stage 2. This matches skv7-A3 §5's
-  "CSS L4 declaration-body only" admissibility row.
+- **Tier B's grammar-neutral interface** is the string-boundary extension:
+  generated string-like delimited-region sets, quote/backslash/parity facts, and
+  `CostFacts` template parity. CSS strings/comments/url(), Sheets quoted text,
+  and BBNF-self delimited spans are Tier B proof obligations if that route is
+  challenged.
 
-- **The union is a framework-level candidate**, not a JSON hack: it says
-  *every grammar with a structural-byte alphabet gets one branch-free stage-1
-  index, and that index is the substrate the typed/event/sink lowerings all
-  consume*. That is the "skinny ⊂ greater arch" feedback loop (skv7-A3 §7) as
-  a hypothesis: the JSON close would be the proof only after S-P3/W3 challenge
-  evidence, not from SC-2 wording alone.
+- **CSS L4 specifically.** Tier A may prove declaration-body structural cursor
+  walking for CSS alphabets, but it cannot claim CSS string/comment/url()
+  boundary closure or `@error(recover)` behavior without Tier B string facts and
+  recovery/layout ownership.
+
+- **The union is a framework-level candidate**, not a JSON hack, only under the
+  singular-substrate invariant: every admitted grammar with a structural-byte
+  alphabet gets one branch-free structural scan whose retained output is the
+  tape. Typed/event/sink lowerings consume it only when their owner paths and
+  same-wave verification are in the accepted W3 plan.
 
 ## §5. Risks
 
-1. **Stage-1 carry correctness across 64-byte blocks.** The fed-index contract
-   requires stage 1's quote/escape state to be *exactly* right at every block
-   boundary — a single misplaced index desynchronises the entire stage-2 walk.
-   `scan.rs` already has a `fast_path_is_strict` guard that falls back to
+1. **Tier A can be oversold as Tier B.** Structural-class cursor migration does
+   not remove `match_tiny_plain_string` / `match_string_at_quote` and therefore
+   cannot claim the string-plane close. Mitigation: every W3 plan names Tier A
+   and Tier B rows separately, and direct/SinkOnly/path claims are residual
+   unless same-wave owner paths and tests are present.
+
+2. **Stage-1 carry correctness across 64-byte blocks.** Tier A still depends on
+   exact structural-position correctness outside strings. Tier B additionally
+   depends on exact quote/backslash parity and string-boundary facts. `scan.rs`
+   already has a `fast_path_is_strict` guard that falls back to
    `resolve_string_masks_64` scalar when the SIMD prefix-XOR path cannot prove
-   strictness; that fallback must remain, and the fed-index walk must treat the
-   index as authoritative *only* on the strict path. Mitigation: differential
-   parity (`scalar_parity_report` already exists) gating every corpus row.
+   strictness; that fallback must remain measured-row validation, not sidecar
+   proof. Mitigation: differential parity (`scalar_parity_report` already
+   exists) gating every selected corpus row.
 
-2. **Index density vs cache.** A `Vec<u32>` index over a string-dense corpus is
-   larger than over a number-dense one (RESULTS.md: gsoc-2018 tape 0.05x input,
-   marine_ik 0.48x). For pathological all-structural input the index approaches
-   0.5x input size. simdjson accepts this; it is bounded and sequential, so it
-   streams from cache well. Risk is low but must be measured, not assumed.
+3. **Index density vs cache.** A `Vec<u32>` index plus class column over a
+   string-dense corpus is larger than over a number-dense one (RESULTS.md:
+   gsoc-2018 tape 0.05x input, marine_ik 0.48x). For pathological
+   all-structural input the index approaches 0.5x input size before the class
+   column. simdjson accepts retained index traffic; bbnf must measure it, not
+   assume it is free.
 
-3. **The lazy-consume vs eager-tape decision is a real cost-model fork.** For
+4. **The lazy-consume vs eager-tape decision is a Tier B cost-model fork.** For
    `real_typed_struct` rows that access *all* fields (mesh, marine_ik — every
-   numeric required), lazy access has no skip-work win and the fed-index walk
-   must be as fast eager as a tuned inner scan. The SK-V7 twitter 151.5% "win"
-   was shown to be skip-work (SYNTHESIS §3.6) — the fused index-tape must be
-   honest about which rows are skip-work wins and which are genuine. Mitigation:
-   the CostFacts substrate records access density per rule.
+   numeric required), lazy access has no skip-work win. Direct/SinkOnly and
+   typed materialisation claims must be priced in Tier B or marked untouched in
+   Tier A. Mitigation: `CostFacts` records access density per rule before any
+   template route is selected.
 
-4. **Refactor surface.** Replacing the inner-scan call sites in generated code
-   touches the codegen string-rule lowering and the `parse-that-regex` string
-   matchers. This is a Lock-14-class change (codegen rebrand was the riskiest
-   SK-V7 phase). Mitigation: it is *deletion-positive* — fewer call sites, not
-   more — and byte-identical generated-output diffing gates each step.
+5. **Refactor surface.** Tier A touches scanner, tape, codegen, and generated
+   JSON parser output. Tier B touches string-rule lowering and
+   `parse-that-regex` string matchers. Both are Lock-14-class changes.
+   Mitigation: byte-identical generated-output diffing and SPEC §2.1
+   non-JSON proof gate every generic edit.
 
-5. **Not a micro-kernel — not selected here.** The SK-V7 failure mode was 14
-   waves of micro-kernels that moved no production number. The fused index-tape
-   is a *substrate-change candidate*; if S-P3/W3 challenges it, the plan must
-   provide a scalar oracle, checkasm parity, same-wave production consumer, and
-   falsifiable strict-row gate (string-heavy parse rows cross toward PASS).
-   SC-2 does not select that wave.
+6. **Not a micro-kernel — not selected here.** The SK-V7 failure mode was 14
+   waves of micro-kernels that moved no production number. The tiered union is
+   a substrate-change candidate; if S-P3/W3 challenges it, the plan must provide
+   scalar oracle, checkasm parity, same-wave production consumer, and
+   falsifiable strict-row gates. SC-2 does not select that wave.
 
 ## §6. Sources
 

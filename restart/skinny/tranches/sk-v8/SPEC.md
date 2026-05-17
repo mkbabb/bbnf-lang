@@ -57,7 +57,7 @@ unless W0 or a later telemetry wave adds same-run C++ product-plane evidence.
 ### Section 0.3 - Outcome Enum
 
 SK-V8 extends the current schema-v3 outcome enum to match existing
-`skinny/RESULTS.md` rows:
+`skinny/RESULTS.md` rows and to make substrate-guard telemetry explicit:
 
 ```text
 A
@@ -66,11 +66,15 @@ G
 K
 L
 N-direct
+S
 ```
 
-`K` and `N-direct` are current, valid outcomes. `gate-json` must reject any
-other outcome after W0 unless the enum is deliberately amended in REDRESS and
-the SPEC.
+`K` and `N-direct` are current, valid outcomes. `S` is the post-W0
+substrate-guard / non-SOTA spelling for `parse_only` rows if W0 amends the
+report schema; until then current `K` parse rows are treated as substrate-guard
+non-admission rows by policy. `gate-json` must reject any other outcome after
+W0 unless the enum is deliberately amended in REDRESS and the SPEC. Neither
+`K` nor `S` may support strict SOTA admission.
 
 ### Section 0.4 - Required Telemetry
 
@@ -110,6 +114,14 @@ comparator_id, comparator_plane, comparator_strictness, run_id,
 sidecar_freshness)`. Non-JSON domains require their own strict anchors or an
 explicit absence-of-strict-comparator reason.
 
+Executable strict-admission refusal rule: `gate-json` rejects strict admission
+unless the comparator plane matches the row's output plane,
+`comparator_strictness=strict`, `sidecar_freshness=same-run` or the comparator
+is a same-run native strict anchor, and UTF-8/control/escape validation occurred
+inside the measured row. `Strictness=deferred`, `parse_utf8=view-boundary`,
+stale sidecars, C++ sidecar-only evidence, or plane mismatch may appear only as
+guard telemetry.
+
 ### Section 0.5 - Opening Row Goalset
 
 W0 has the only dispatchable per-row target before G-Alpha: every current row
@@ -118,23 +130,23 @@ budget. Later behavior targets are provisional until W0 closes.
 
 | Row | Current state | W0 target | Later posture |
 |---|---|---|---|
-| twitter parse_only | K/NO-GO, 15752 T1, 12285 T2, 21020 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Candidate parse residual only after W0 names hot leaf. |
-| citm_catalog parse_only | K/NO-GO, 31784 T1, 20817 T2, 25509 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Diagnose why faster-than-sonic row remains K. |
-| canada parse_only | K/NO-GO, 17765 T1, 17070 T2, 13885 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Guard row for any parser change. |
-| apache_builds parse_only | K/NO-GO, 12482 T1, 12151 T2, 17381 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Candidate only if W0 names a non-blocked owner. |
-| github_events parse_only | K/NO-GO, 15198 T1, 13046 T2, 23034 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Candidate only if W0 names a non-blocked owner. |
-| update_center parse_only | K/NO-GO, 11193 T1, 9227 T2, 19684 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Candidate only if W0 names a non-blocked owner. |
-| mesh parse_only | K/NO-GO, 14265 T1, 13287 T2, 11754 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Guard row for numeric/bitmap changes. |
-| random parse_only | K/NO-GO, 9838 T1, 7804 T2, 15457 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Candidate only after W0. |
-| gsoc-2018 parse_only | K/NO-GO, 23026 T1, 21881 T2, 49292 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Candidate only after W0. |
-| marine_ik parse_only | K/NO-GO, 13797 T1, 12384 T2, 10070 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Guard row for typed/numeric changes. |
-| instruments parse_only | K/NO-GO, 18038 T1, 11678 T2, 16312 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Guard row for control/key changes. |
-| numbers parse_only | K/NO-GO, 20609 T1, 18514 T2, 13626 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Guard row for numeric/bitmap changes. |
-| unicode_mixed parse_only | K/NO-GO, 8035 T1, 7698 T2, 16180 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Do not reopen W4/W5 shape without new evidence. |
-| unicode_escapes parse_only | K/NO-GO, 12042 T1, 11146 T2, 18415 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Do not reopen REDRESS 82 as-is. |
-| unicode_basic parse_only | K/NO-GO, 11416 T1, 10653 T2, 15596 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Candidate only after W0. |
-| distinct_values parse_only | K/NO-GO, 6655 T1, 5633 T2, 17148 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Do not reopen W5 shape without new evidence. |
-| y_string_unicode parse_only | K/NO-GO, 6216 T1, 6038 T2, 13537 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Do not reopen REDRESS 82 as-is. |
+| twitter parse_only | K/NO-GO, 15752 T1, 12285 T2, 21020 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard only; non-SOTA residual until W0 names hot leaf and plane-matched strict validation. |
+| citm_catalog parse_only | K/NO-GO, 31784 T1, 20817 T2, 25509 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard only; strict win evidence is diagnostic, not admission while validation is deferred. |
+| canada parse_only | K/NO-GO, 17765 T1, 17070 T2, 13885 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard row for parser changes; not SOTA admission. |
+| apache_builds parse_only | K/NO-GO, 12482 T1, 12151 T2, 17381 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard only; candidate work requires later plane-matched gate. |
+| github_events parse_only | K/NO-GO, 15198 T1, 13046 T2, 23034 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard only; candidate work requires later plane-matched gate. |
+| update_center parse_only | K/NO-GO, 11193 T1, 9227 T2, 19684 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard only; candidate work requires later plane-matched gate. |
+| mesh parse_only | K/NO-GO, 14265 T1, 13287 T2, 11754 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard row for numeric/bitmap changes; not SOTA admission. |
+| random parse_only | K/NO-GO, 9838 T1, 7804 T2, 15457 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard only. |
+| gsoc-2018 parse_only | K/NO-GO, 23026 T1, 21881 T2, 49292 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard only. |
+| marine_ik parse_only | K/NO-GO, 13797 T1, 12384 T2, 10070 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard for typed/numeric changes; not SOTA admission. |
+| instruments parse_only | K/NO-GO, 18038 T1, 11678 T2, 16312 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard for control/key changes; not SOTA admission. |
+| numbers parse_only | K/NO-GO, 20609 T1, 18514 T2, 13626 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard for numeric/bitmap changes; not SOTA admission. |
+| unicode_mixed parse_only | K/NO-GO, 8035 T1, 7698 T2, 16180 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard; do not reopen W4/W5 shape without new evidence. |
+| unicode_escapes parse_only | K/NO-GO, 12042 T1, 11146 T2, 18415 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard; do not reopen REDRESS 82 as-is. |
+| unicode_basic parse_only | K/NO-GO, 11416 T1, 10653 T2, 15596 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard only. |
+| distinct_values parse_only | K/NO-GO, 6655 T1, 5633 T2, 17148 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard; do not reopen W5 shape without new evidence. |
+| y_string_unicode parse_only | K/NO-GO, 6216 T1, 6038 T2, 13537 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard; do not reopen REDRESS 82 as-is. |
 | twitter direct_to_struct | N-direct/NO-GO, 11832 T1, 10986 T2, 14885 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Guard row; not typed product proof. |
 | citm_catalog direct_to_struct | A/GO, 21438 T1, 20280 T2, 19966 sonic | Profile-bound; maintain GO | Guard row. |
 | canada direct_to_struct | N-direct/NO-GO, 10773 T1, 10296 T2, 12421 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Guard row; no stale EL fallback assumption. |
@@ -232,8 +244,13 @@ Every wave has this exit gate, with extra checks when generic crates are edited:
 - Grammar branch scan: no generic branch selects behavior by JSON grammar name,
   JSON corpus name, JSON object/array role, or JSON field name.
 - Primitive/table scan: no generic primitive, SIMD table, or classifier embeds
-  JSON structural policy unless it is a grammar-neutral byte-set primitive with
-  a scalar reference and same-wave consumer.
+  JSON structural policy unless it is generated byte-set data plus opaque class
+  ordinals with a scalar reference and same-wave consumer.
+- Role/fact interpretation boundary: generic code may store and search
+  generated structural-class ordinals or opaque fact ids, but event-role,
+  recovery, layout, record-boundary, indentation, and reused-punctuation meaning
+  is interpreted only inside generated grammar modules keyed by parser state plus
+  class/byte.
 - Template/provider boundary: JSON-specific templates/providers remain
   per-grammar surfaces. Generic codegen may consume grammar-derived facts, not
   hard-coded JSON policy under neutral names.
@@ -267,7 +284,9 @@ structural alphabets, JSON binding helpers, and public `Json*` generic APIs.
    mask, and c/B or equivalent sample cost for every current main row.
 4. Add sidecar freshness validation and at least one malformed-manifest test.
 5. Make `gate-json` reject placeholder hot leaves, missing profile artifacts,
-   missing `SK-V8-open` deltas, missing run ids, and unsupported outcomes.
+   missing `SK-V8-open` deltas, missing run ids, unsupported outcomes, and any
+   strict-admission claim whose comparator plane, strictness, freshness, or
+   measured-row validation fails Section 0.4.
 6. Refresh `skinny/RESULTS.md` only through the checked gate.
 
 ### Exit gate
@@ -276,6 +295,10 @@ structural alphabets, JSON binding helpers, and public `Json*` generic APIs.
 - Missing sidecar values are allowed only when the row records an explicit
   `sidecar_freshness=absent:<reason>` non-admission value; populated sidecar
   cells require manifest coverage.
+- Every current `parse_only` row is reported as substrate-guard non-admission
+  telemetry (`K` under the current schema or `S` if W0 amends the schema).
+  No `parse_only` row may count toward strict SOTA admission while
+  `Strictness=deferred` or `parse_utf8=view-boundary`.
 - W0 creates the Lock 14 baseline allowlist from Section 2.1.
 - Throughput cells move no more than +/-1.0 percent versus `SK-V8-open`.
 - `gate-json` rejects one intentionally malformed sidecar manifest.
@@ -393,14 +416,25 @@ The S-P2 substrate-ceiling cohort
 (`research/p2-substrate-ceiling/SC-1..SC-6`) nominates the lead W3 hypothesis:
 the tape ⊕ structural-projection union. bbnf already produces a stage-1 SIMD
 structural index (`scan_structurals`) and discards it via the no-op
-`attach_structural_index`; the recursive-descent parser then re-discovers every
-structural byte and string boundary in a scalar pass that holds roughly 75% of
-self-time on the loss corpora. The union retains the stage-1 index, adds a
-co-allocated index-aligned structural-class column, and rewrites the parser as a
-class-column cursor-walker — deleting the scalar rediscovery pass. The candidate
-is subtractive: it removes a producer rather than adding one. SC-3 sizes it near
-+210 net source LOC at medium risk. The W3 plan consumes SC-3's migration
-sketch and SC-4's string-quote-density gate table as research inputs.
+`attach_structural_index`; the recursive-descent parser then re-discovers
+structural bytes and delimiter boundaries in a scalar pass. The V3 fold splits
+the hypothesis into two scopes:
+
+- Tier A: structural-class cursor migration. Retain the stage-1 index inside the
+  single `Tape`, add a scan-written opaque structural-class ordinal column, and
+  migrate generated retained JSON Track 1 parsing plus retained view/`ValueRef`
+  to consume that cursor in the same wave. Tier A deletes structural
+  rediscovery; it does not claim string-boundary closure.
+- Tier B: string-boundary / quote-backslash-parity / CostFacts-template union.
+  Any reusable string-boundary facts, quote/backslash/parity masks, string
+  density gates, CostFacts-template selection, or non-JSON production migration
+  require their own owner paths, LOC budget, strict rows, and challenge proof.
+
+The candidate remains subtractive only if it replaces the old offset append path
+with one retained `Tape`; a retained structural projection added beside the old
+append path is a sidecar and fails Lock 1. SC-3 now prices Tier A as the only
+S-P3-ready W3 candidate; SC-4's string-density evidence is diagnostic telemetry,
+not an admission gate.
 
 This nomination does not select W3. W3 selection requires W0/W1 closure, a
 fresh plan naming exact owner paths, same-wave production consumer, revert
@@ -416,15 +450,21 @@ Lock 1 refinement, or prove at challenge that it satisfies Lock 1 as written.
 ### Owner paths
 
 Not pre-authorized beyond the W3 plan. The W3 plan must name exact files before
-implementation. If paths under `scan.rs`, parser templates, `bbnf-simd`, or
-parse-that scanners are included, the plan must prove the change is consumed in
-the same parser/tape or SinkOnly loop.
+implementation and must start from SC-3's Tier A owner/cost table. If paths
+under `scan.rs`, parser templates, `bbnf-simd`, or parse-that scanners are
+included, the plan must prove the change is consumed in the same retained JSON
+parser/tape loop or explicitly expand scope with same-wave direct/SinkOnly/path
+owners and tests. `path!`, retained-view, direct/SinkOnly, generated Track 1,
+and Track 2 must be marked touched or proven untouched.
 
 ### Exit gate
 
 - Selected parse rows cross the declared threshold.
 - All 38 current main rows respect the W3 maintain budget; default is no Track
   1 or Track 2 regression worse than -2.0 percent.
+- Selected rows must prove strict validation, comparator evidence, structural
+  cursor work, and admitted tape facts occurred in the measured row, not in a
+  view-boundary, post-parse, sidecar, or comparator-only path.
 - Generic-code edits pass the Section 2.1 generality and Lock 14 gate.
 - Any primitive has scalar reference and checkasm parity before wiring.
 - Any source-byte second scan, retained cursor, aux table, density cache, or

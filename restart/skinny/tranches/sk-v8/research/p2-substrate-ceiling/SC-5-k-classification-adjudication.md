@@ -37,25 +37,35 @@ across all 17:
 | `Signal` | `NO-GO parse gate classified K` |
 
 The throughput is *not* uniform — and that is the load-bearing fact. The
-`Δ vs sonic-strict` column ranges across the full sign spectrum:
+authoritative delta order in `skinny/RESULTS.md` is `Δ vs SK-V6`, `Δ vs
+sonic-strict`, `Δ vs simdjson DOM`, then `Δ vs yyjson`. Read in that order, the
+same-run sonic-strict comparator column spans both positive and negative
+non-admission signals:
 
-- **bbnf already faster than sonic-rs strict** on 7 of 17: canada (+54.6%),
-  mesh (+51.5%), numbers (+51.2%), marine_ik (positive Track-1/sonic), citm
-  (-11.3% only because it is compared to a 25509 anchor while Track 1 is
-  31784 — the table's own `+24.6%` Δ vs SK-V6 and the `+51.7%` Δ vs
-  simdjson DOM confirm citm is a *fast* row), instruments (+10.6% Δ vs SK-V6),
-  unicode_escapes Δ vs simdjson DOM (+113.6%).
-- **bbnf slower than sonic-rs strict** on the remainder: twitter (-35.8%),
-  apache_builds (-65.3%), github_events (-61.7%), update_center (-63.4%),
-  random (-52.3%), gsoc-2018 (-53.3%), distinct_values (-70.8%),
-  y_string_unicode (-54.4%), unicode_basic (-29.9%), unicode_mixed (-38.9%).
+- **Positive same-run sonic comparator deltas, but not strict-admission
+  evidence:** citm_catalog (+24.6%), canada (+27.9%), mesh (+21.4%),
+  marine_ik (+37.0%), instruments (+10.6%), and numbers (+51.2%). These are
+  guard telemetry only because the measured bbnf row is still
+  `Strictness=deferred`, `parse_utf8=view-boundary`, and `Output plane=borrowed
+  view over offset tape vs DOM`.
+- **Negative same-run sonic comparator deltas:** twitter (-25.1%),
+  apache_builds (-28.2%), github_events (-34.0%), update_center (-43.1%),
+  random (-36.4%), gsoc-2018 (-53.3%), unicode_mixed (-50.3%),
+  unicode_escapes (-34.6%), unicode_basic (-26.8%), distinct_values (-61.2%),
+  and y_string_unicode (-54.1%).
+- **Sidecar/historical planning signals, not same-run sonic-strict evidence:**
+  C++ simdjson/yyjson/RapidJSON/asmjson deltas and SK-V6 deltas stay printed
+  but cannot be called strict-admission evidence. For example, unicode_escapes
+  is a sonic loss (-34.6%) despite the simdjson DOM sidecar delta (+113.6%);
+  canada's +54.6% is simdjson DOM sidecar, not sonic; citm_catalog's -11.3% is
+  simdjson DOM sidecar while +24.6% is the sonic column.
 
-So K is applied **uniformly to rows where bbnf wins and rows where bbnf
-loses alike**. K is not a throughput verdict. It is, per the row prose, a
+So K is applied **uniformly to rows with positive and negative throughput
+signals alike**. K is not a throughput verdict. It is, per the row prose, a
 declared *kind-mismatch*: bbnf `parse_only` produces a borrowed view over an
 offset tape; sonic-rs / simdjson DOM rows produce a materialized DOM. The
 RESULTS notes (§Notes, "lazy tape materialization" lines) reinforce this —
-bbnf emits an offset/sparse-flag tape (0.05x–0.75x of input bytes, **0
+bbnf emits an offset/sparse-flag tape (0.05x-0.75x of input bytes, **0
 payload bytes** on every corpus). It never builds value nodes.
 
 ### The mechanical truth of the K letter
@@ -113,11 +123,13 @@ from the pre-existing gate path.
    same badge. That is the excuse: the uniform K masks whichever of the two
    is actually firing per row.
 2. **K hides at least one real loss as a "non-comparison".** twitter
-   `parse_only` is -35.8% vs sonic strict and -49.1% vs simdjson DOM; the
-   SK-V7 synthesis §2.6/§7 already names twitter parse as the "hard
+   `parse_only` is -25.1% vs same-run sonic strict, -35.8% vs simdjson DOM
+   sidecar, and -49.1% vs yyjson sidecar; the SK-V7 synthesis §2.6/§7 already
+   names twitter parse as the "hard
    residual" with a yyjson 1.98x gap requiring a fusion-quality refactor.
    That is a substantive throughput loss. Filing it under K alongside
-   canada (+54.6% vs sonic) tells the reader "incomparable" when the honest
+   canada (+27.9% vs same-run sonic, with separate +54.6% simdjson DOM and
+   +36.6% yyjson sidecar deltas) tells the reader "incomparable" when the honest
    statement is "bbnf's offset-emit plane is slower than sonic's DOM-build
    plane on this corpus *even though bbnf does strictly less work*". The
    non-comparison framing is technically true but rhetorically convenient —
@@ -153,14 +165,15 @@ own terms is strategically empty.
 
 ### Option (b) — retire `parse_only` entirely; GO target moves to `direct_to_struct` + `real_typed_struct`
 **Partially accept, but insufficient alone.** It is correct that the SOTA
-*product* claim already lives on `direct_to_struct` (digest) and
-`real_typed_struct` (typed) — those are plane-honest (Track 1 generated vs
-Track 2 independent hand parser / oracle). Retiring `parse_only` as a *SOTA
-gate* is right. But fully *deleting* `parse_only` discards a genuinely
-useful signal: it is the cleanest measurement of the **structural substrate
-itself** — the offset-tape emit rate — independent of payload decode and
-typed projection. SK-V8 SPEC Section 0.5 already keeps several parse rows as
-named *guard rows* ("Guard row for any parser change", canada/mesh/numbers/
+*product* claim surfaces are `direct_to_struct` (digest) and
+`real_typed_struct` (typed) — those are the plane-honest candidates (Track 1
+generated vs Track 2 independent hand parser / oracle), subject to the strict
+measured-path admission predicates in §4. Retiring `parse_only` as a *SOTA
+gate* is right. But fully *deleting* `parse_only` discards a genuinely useful
+signal: it is the cleanest measurement of the **structural substrate itself**
+— the offset-tape emit rate — independent of payload decode and typed
+projection. SK-V8 SPEC Section 0.5 already keeps several parse rows as named
+*guard rows* ("Guard row for any parser change", canada/mesh/numbers/
 marine_ik/instruments). Deleting the workload would forfeit that guard.
 
 ### Option (c) — replace `parse_only` with a plane-matched workload; retain a renamed substrate-guard row — **RECOMMENDED**
@@ -172,11 +185,14 @@ permanent non-*SOTA*-gate in its current form.** Recommendation:
    explicitly-labelled **substrate-guard rows** with their own outcome
    class (see §4) — not K, not A/G. Demotion does not permit deletion or
    down-sampling of residuals: every substrate-guard row must retain all
-   strict comparator deltas and named residuals already visible in RESULTS,
-   including twitter, unicode_basic, unicode_mixed, y_string_unicode,
-   unicode_escapes, and distinct_values losses.
+   same-run sonic comparator deltas, sidecar/historical deltas, and named
+   residuals already visible in RESULTS, including twitter, unicode_basic,
+   unicode_mixed, y_string_unicode, unicode_escapes, and distinct_values
+   losses. Positive rows such as citm_catalog/canada/mesh/marine_ik/
+   instruments/numbers remain visible as substrate-guard deltas, not strict
+   SOTA-admission evidence.
 2. **Introduce a new plane-matched telemetry row: `tape_vs_tape`** (working
-   name). This is W1/W0-plan telemetry or gate-binding work, not a W3
+   name). This is W0/W1-plan telemetry or gate-binding work, not a W3
    production consumer and not SOTA-admission evidence yet. The comparator
    is *not* a DOM builder; it is a structural-index producer on the same
    output plane: simdjson's *structural index stage* (the `stage 1`
@@ -189,8 +205,9 @@ permanent non-*SOTA*-gate in its current form.** Recommendation:
    structural scan: 69075 Mbps; floor is 40000 Mbps` is bbnf-only telemetry;
    it is encouraging, but not a gate.
 3. **Keep `direct_to_struct` + `real_typed_struct` as the SOTA-claim
-   surfaces** (they already are, per SK-V8 Section 0.5 and the SK-V7
-   synthesis §8 posture). The overall verdict is driven by those.
+   surfaces.** They are the product-shaped rows to adjudicate once the §4
+   `gate-json` strict-admission predicates hold. The overall verdict is driven
+   by those admitted product rows, not by `parse_only`.
 
 Net: option (c) = (b)'s demotion + a new plane-matched telemetry/gate-binding
 row + preservation of the substrate-guard signal. This satisfies the
@@ -220,15 +237,27 @@ SPEC"):
    narrated in prose; it must become an executable gate predicate. This is
    a natural W1 CostFacts-gate-binding extension: the gate already consumes
    `comparator_plane`; it should now branch on it.
-3. **New workload value `tape_vs_tape` as gate-binding telemetry.**
+3. **Executable `gate-json` strict-admission refusal rules.** A row can enter
+   strict admission only when all four predicates hold in the measured row:
+   matching `comparator_plane`, `comparator_strictness` in the accepted strict
+   set, same-run freshness for the comparator evidence, and strict validation
+   performed inside the measured path. `gate-json` must refuse strict
+   admission, not merely warn, when any predicate fails. `Strictness=deferred`,
+   `parse_utf8=view-boundary`, stale sidecars, sidecar-only C++ evidence,
+   historical SK-V6 evidence, and output-plane mismatch may remain printed as
+   guard telemetry only. The refusal must apply before an A/G/GO SOTA verdict
+   is computed, so a deferred parse row cannot pass by outsourcing validation,
+   freshness, or comparator work outside the row being measured.
+4. **New workload value `tape_vs_tape` as gate-binding telemetry.**
    `metadata.rs:418` maps workloads; a later plan may add `tape_vs_tape`
    alongside `parse_only`, with comparator columns restricted to
    structural-index-plane competitors (simdjson stage-1, sonic lazy
    skeleton). Its `comparator_plane` is `offset/index` on both sides. That
    makes the row eligible for future strict-vs-strict adjudication, but only
    after same-run structural-index competitor rows exist. Until then, it is
-   W1/W0-plan telemetry and cannot support SOTA admission.
-4. **Close condition / goalset changes (SPEC Section 0.1 + 0.5):**
+   W0/W1 telemetry/gate-binding and cannot support SOTA admission. It must not
+   be counted as W3's production same-wave consumer.
+5. **Close condition / goalset changes (SPEC Section 0.1 + 0.5):**
    - Section 0.1 item 7 ("Any parse/direct behavior wave meets its named
      row threshold...") is rewritten so `parse_only` rows are
      *maintain-only* (the existing ±1.0% W0 budget), never a *close*
@@ -237,14 +266,15 @@ SPEC"):
      ±1.0 percent" W0 target but their "Later posture" column changes from
      "Candidate parse residual" to "Substrate-guard row; not a SOTA gate".
      The four already marked "Guard row" are unchanged in spirit. All
-     strict comparator deltas remain printed, and twitter/unicode/distinct
-     losses stay named as residuals rather than disappearing behind `S`.
+     comparator-delta columns remain printed with their anchors separated, and
+     twitter/unicode/distinct losses stay named as residuals rather than
+     disappearing behind `S`.
    - The SOTA close remains driven by `direct_to_struct` +
      `real_typed_struct` until `tape_vs_tape` has same-run
      structural-index competitor rows with strict deltas. `tape_vs_tape` is
      a candidate future plane-matched gate, not a current close
-     contributor; `parse_only` is retired from the win column.
-5. **W0 unaffected as a dispatch.** W0's job (Section 3) is telemetry lock,
+     contributor; `parse_only` is retired from SOTA-admission counting.
+6. **W0 unaffected as a dispatch.** W0's job (Section 3) is telemetry lock,
    not behavior. The enum amendment and the `tape_vs_tape` row addition are
    *plan augmentations* for W1 gate-binding or an explicit W0 plan
    augmentation, not behavior smuggled into W0 and not a W3 production
@@ -264,7 +294,8 @@ tape ⊕ structural-projection. This is exactly the construct that makes
 - **The structural-projection half** is what `direct_to_struct` and
   `real_typed_struct` measure: structure projected straight into a digest
   or typed struct. Those are already plane-matched against sonic-rs strict
-  (digest vs struct) and are the live SOTA gates.
+  (digest vs struct) and are the live product-claim surfaces, subject to the
+  §4 strict-admission predicates.
 - **The union** therefore does *not* make the present `parse_only` row
   plane-comparable to a DOM — a DOM is a *third* plane (materialized value
   tree) that neither half of the union produces. What the union does is
@@ -294,17 +325,21 @@ exist, that row is telemetry/gate-binding work only.
 
 1. **No same-run structural-index competitor exists yet.** simdjson stage-1
    and sonic lazy skeleton are not currently benched. Standing up
-   `tape_vs_tape` is a W1 gate-binding or explicit W0-plan augmentation:
-   about 120-180 LOC across the comparator harness source
-   `bbnf-bench/benches/json_parity.rs`, workload metadata in
-   `metadata.rs`, and report/gate plumbing if the schema prints the new
+   `tape_vs_tape` is a W0/W1 gate-binding augmentation only: about 120-180
+   LOC across the comparator harness source
+   `skinny/crates/bbnf-bench/benches/json_parity.rs`, workload metadata in
+   `skinny/crates/bbnf-bench/src/metadata.rs`, and report/gate plumbing in
+   `skinny/crates/bbnf-bench/src/report.rs`,
+   `skinny/crates/bbnf-bench/src/gate.rs`, and
+   `skinny/crates/bbnf-bench/src/bin/gate.rs` if the schema prints the new
    plane. Focused tests must include a workload-map test, a
-   comparator-plane refusal test for DOM rows, and a same-run row test that
-   rejects bbnf-only structural-scan numbers as SOTA evidence. The rerun
-   budget is one allowed gate refresh after the harness lands. SK-V8
-   Section 1 forbids new substrate or behavior smuggled into W0; this work
-   is telemetry/gate-binding only and cannot be counted as a W3 production
-   consumer.
+   comparator-plane refusal test for DOM rows, a deferred/view-boundary
+   strict-admission refusal test, a stale/sidecar-only comparator refusal
+   test, and a same-run row test that rejects bbnf-only structural-scan
+   numbers as SOTA evidence. The rerun budget is one allowed gate refresh
+   after the harness lands. SK-V8 Section 1 forbids new substrate or
+   behavior smuggled into W0; this work is telemetry/gate-binding only and
+   cannot be counted as a W3 production consumer or W3 same-wave consumer.
 2. **Enum amendment touches a frozen surface.** SPEC Section 0.3 freezes
    `{A,C,G,K,L,N-direct}`. Adding `S` (substrate-guard) requires a REDRESS
    entry + SPEC edit + `gate-json` reject-list update. If done sloppily it

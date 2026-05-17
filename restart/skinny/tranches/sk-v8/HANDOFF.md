@@ -54,25 +54,33 @@ names bitmap work as a hot owner and challenge accepts the changed framing.
 ## 3a. Substrate-Ceiling Finding
 
 A new-lens skinny S-P2 research cohort ran six agents SC-1 through SC-6 under
-`research/p2-substrate-ceiling/`. It converged on a lead hypothesis: bbnf produces a stage-1 SIMD
-structural index (`scan_structurals`, ~69 Gbps) and discards it; the parser
-re-discovers every structural byte and string boundary in a scalar pass holding
-~75% of self-time on the loss corpora. SK-V7's six rejected kernels each
-optimised that scalar rediscovery — a pass that should not exist. The nominated
-candidate shape is the tape ⊕ structural-projection union: retain the stage-1 index, add a
-co-allocated structural-class column, walk it as a cursor, delete the
-rediscovery pass. It is the named W3 lead candidate in `SPEC.md` Section 6,
-subtractive (removes a producer), ~+210 LOC, medium risk.
+`research/p2-substrate-ceiling/`. It produced a lead hypothesis: bbnf
+produces a stage-1 SIMD structural index (`scan_structurals`, ~69 Gbps) and
+discards it; the parser re-discovers structural bytes and delimiter boundaries
+in a scalar pass. SK-V7's six rejected kernels each optimised that scalar
+rediscovery — a pass that should not exist. V3 splits the nominated tape ⊕
+structural-projection union into two scopes. Tier A is the S-P3-ready
+structural-class cursor migration: retain the stage-1 index inside the single
+`Tape`, add scan-written opaque structural-class ordinals, and migrate generated
+retained JSON Track 1 parsing plus retained view/`ValueRef` to consume that
+cursor in the same wave. Tier B owns string-boundary /
+quote-backslash-parity / CostFacts-template closure and is not part of Tier A.
+String-density/knee evidence is diagnostic telemetry only until a later gate
+names row set, formula, target, maintain budget, and pass/fail rule.
 
 The cohort is S-P2 research output. Per the pass framework
-(`restart/prompts/skinny/PASS-2-RESEARCH.md` §3) the next framework step is the
-six-lens CH1-CH6 CHALLENGE wave over SC-1..SC-6, then S-P3 Synthesis-Plan. The
-cohort does not change the G-Alpha-W0-only constraint; it nominates a lead W3
-hypothesis so W0 telemetry confirms or falsifies the finding executably rather
-than discovering it from scratch. SC-1..SC-6 authorize no W3 plan by
-themselves: W3 remains blocked on W0/W1 closure, fresh plan owner paths,
-same-wave consumer, revert protocol, measurement thresholds, and challenge
-acceptance.
+(`restart/prompts/skinny/PASS-2-RESEARCH.md` §3) S-P2 advances only after two
+consecutive CHALLENGE cycles at >=95% ACCEPT with no unresolved REVISE, or an
+explicit user pin. V1 and V2 did not converge, so a future single ACCEPT cycle
+is still only the first ACCEPT cycle after a REVISE unless followed by another
+ACCEPT cycle or pinned by the user. The cohort does not change the
+G-Alpha-W0-only constraint; it nominates a lead W3 hypothesis so W0 telemetry
+confirms or falsifies the finding executably rather than discovering it from
+scratch. SC-1..SC-6 authorize no W3 plan by themselves: W3 remains blocked on
+W0/W1 closure, fresh plan owner paths, same-wave production consumer, revert
+protocol, measurement thresholds, measured-path strict validation proof, and
+challenge acceptance. `tape_vs_tape` is W0/W1 telemetry only, not a W3
+production consumer.
 
 ## 4. Dispatch Posture
 

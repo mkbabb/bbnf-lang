@@ -93,8 +93,8 @@ A new-lens skinny S-P2 research cohort — six agents SC-1 through SC-6 under
 single hypothesis: that no SK-V7 micro-kernel could win because the offset-tape
 substrate itself imposes an irreducible per-structural-element cost. The cohort
 aligned, independently, on a sharper and more falsifiable finding. This is not
-S-P2 governance convergence: V1, V2, and V3 hardening did not converge, and a
-future V4 ACCEPT cycle would be only the first ACCEPT cycle after REVISE unless
+S-P2 governance convergence: V1, V2, V3, and V4 hardening did not converge, and
+a future V5 ACCEPT cycle would be only the first ACCEPT cycle after REVISE unless
 followed by another qualifying ACCEPT cycle or explicitly pinned by the user. No
 automatic S-P3 follows one ACCEPT cycle.
 
@@ -185,8 +185,9 @@ requires W0/W1 closure, a fresh S-P3/W3 plan, exact owner paths, same-wave
 production consumer, revert protocol, measurement thresholds, measured-path
 validation proof, and challenge acceptance.
 
-S-P2 also remains blocked on its own challenge convergence. V1, V2, and V3 did
-not converge; if V4 ACCEPTs, it is only the first qualifying cycle after REVISE.
+S-P2 also remains blocked on its own challenge convergence. V1, V2, V3, and V4
+did not converge; if V5 ACCEPTs, it is only the first qualifying cycle after
+REVISE.
 The orchestrator may not dispatch S-P3 until a second consecutive qualifying
 ACCEPT cycle lands or the user explicitly pins S-P2 final.
 

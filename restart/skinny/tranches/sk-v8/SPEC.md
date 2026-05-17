@@ -451,8 +451,8 @@ Telemetry or comparator rows such as a future `tape_vs_tape` gate may consume
 gate/report work, but they do not satisfy the production same-wave consumer
 requirement for a parser or substrate primitive.
 
-This nomination also does not advance S-P2. V1, V2, and V3 S-P2 hardening did
-not converge. A future V4 ACCEPT cycle would be only the first ACCEPT cycle
+This nomination also does not advance S-P2. V1, V2, V3, and V4 S-P2 hardening
+did not converge. A future V5 ACCEPT cycle would be only the first ACCEPT cycle
 after REVISE unless followed by another qualifying ACCEPT cycle or explicitly
 pinned by the user; no automatic S-P3 follows one ACCEPT cycle.
 

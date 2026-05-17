@@ -373,7 +373,10 @@ recommendation is the same in shape (consume the scan, do not re-walk) but the
 representation must carry opaque generated `StructuralClass` ordinals or closed
 neutral facts, not JSON roles and not parser-owned sidecar facts. If Tier A
 cannot satisfy that invariant for a grammar class, the union candidate is
-rejected or routed to a separate S-P3 proof; it cannot keep an old
+rejected for this S-P2 packet. Any later reconsideration requires fresh W0
+evidence plus a newly accepted S-P3/W3 plan with named owners, tests,
+thresholds, a same-wave production consumer, and challenge acceptance; this
+packet carries no fallback claim for keeping an old
 `OffsetTape`-via-recursive-descent producer beside the retained-index design.
 
 **Does NOT generalise:** the specific win/loss correlation (string quote-count

@@ -2504,3 +2504,37 @@ perturbation.
   files and `skinny/RESULTS.md` have no diff. W9 does not reopen REDRESS 50-72,
   REDRESS 28+33, W5's StringBlock16 wrapper, W6's object-pair value-byte
   compaction, or any pre-blocked route in HANDOFF §3; it records evidence only.
+
+## SK-V7 Wave 10 Consumed AArch64 Bitmap Bodies and B6 Canary Fold Redress
+
+- Item 88 rejects the first W10 consumed aarch64 bitmap bodies candidate. The
+  rejected patch is archived at `/tmp/skv7-wave-10-rejected.patch`.
+- The candidate added an aarch64 PMULL implementation for
+  `bitmap_prefix_xor_64`, an aarch64 `trailing_zeros` body for
+  `bitmap_next_set_bit`, rewired `bulk_emit_positions_64_neon` through
+  `bitmap_next_set_bit_neon`, and consolidated the checkasm stack canary into a
+  shared XOR-fold helper with an exact byte-compare backstop.
+- Correctness checks passed before measurement: release checkasm for
+  `checkasm_bitmap_prefix_xor_64`, `checkasm_bitmap_next_set_bit`,
+  `checkasm_bulk_emit_positions_64`, `checkasm_byte_class_from_eq_set_64`, and
+  `checkasm_parity`; `cargo run -p xtask --release -- primitive-checkasm`;
+  `cargo test --workspace`; negative canary injection failed as expected in
+  both `guarded_call` and the migrated byte-class wrapper; explicit host asm
+  proof with `-C target-feature=+cssc,+aes` showed `pmull.1q` and `ctz`.
+- The `simd_scan` benchmark against `skv7-w10-pre` did not falsify the
+  structural scan rows: reported SIMD rows were stable or improved, with the
+  largest observed SIMD midpoint drop about -0.52% on `update_center/simd`.
+- The JSON parse benchmark falsified the candidate before `RESULTS.md` refresh
+  could be admitted. A coherent final `bench-json --advisory` run was stopped
+  after repeated hard-row regressions:
+  `instruments/track1_generated` 103.38 us, -4.62% throughput;
+  `instruments/track2_handcoded` 148.04 us, -4.19% throughput;
+  `numbers/track1_generated` 64.465 us, -10.04% throughput;
+  `unicode_escapes/track1_generated` 670.99 us, -12.66% throughput; and
+  `unicode_escapes/track2_handcoded` 678.12 us, -15.52% throughput.
+- Failure mode: PMULL as the default hot `bitmap_prefix_xor_64` body is not
+  admissible for escape-heavy and narrow parse-only JSON rows on this host,
+  even though the primitive is correct and visible in asm. The next candidate
+  shape is W10b: retain the B6 canary fold and CSSC/`ctz` next-bit consumer,
+  but keep prefix-XOR scalar on the production hot path unless a measured,
+  narrowly gated PMULL consumer proves same-row non-regression.

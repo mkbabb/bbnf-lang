@@ -2538,3 +2538,48 @@ perturbation.
   shape is W10b: retain the B6 canary fold and CSSC/`ctz` next-bit consumer,
   but keep prefix-XOR scalar on the production hot path unless a measured,
   narrowly gated PMULL consumer proves same-row non-regression.
+
+## SK-V7 Wave 10b CTZ Bulk Consumer and B6 Canary Fold Redress
+
+- Item 89 rejects the narrowed W10b CTZ bulk consumer plus B6 canary fold
+  candidate. The rejected patch is archived at
+  `/tmp/skv7-wave-10b-rejected.patch`.
+- The candidate kept `bitmap_prefix_xor_64` on the scalar production path,
+  replaced the aarch64 `bitmap_next_set_bit_neon` scalar delegate with a local
+  `trailing_zeros` body, consumed that body from
+  `bulk_emit_positions_64_neon`, and consolidated the checkasm stack canary
+  into a shared randomized XOR-fold helper with byte-exact backstop checks.
+- Correctness and integrity gates passed before measurement. Release checkasm
+  for `checkasm_bitmap_next_set_bit`, `checkasm_bulk_emit_positions_64`,
+  `checkasm_byte_class_from_eq_set_64`, and `checkasm_parity` passed.
+  `cargo run -p xtask --release -- primitive-checkasm` passed.
+  `cargo test --workspace` passed. Static audits confirmed the bulk consumer
+  calls `bitmap_next_set_bit_neon`, prefix-XOR still delegates to the scalar
+  body, no PMULL text exists in the prefix-XOR source, and the old fixed
+  0xDE volatile canary pattern is gone.
+- The negative canary control failed closed in the migrated wrappers: injected
+  `canary[0] ^= 1` produced status 101 for bitmap-next-bit, bulk-emit,
+  byte-class, and the classifier parity wrapper. The originally planned
+  `sk_v3_scalar_anchors_compile` anchor did not enter the stack-canary wrapper,
+  so the representative parity proof used `classifier_parity_alignment_sweep`.
+- Explicit asm proof with
+  `RUSTFLAGS='-C target-cpu=native -C target-feature=+cssc'` emitted `ctz`
+  at `/tmp/skv7-w10b-asm/release/deps/*.s:1687` and `:1753`; native cfg did
+  not advertise CSSC; no `pmull` was emitted.
+- Dedicated `simd_scan` pre/post measurement against
+  `skv7-w10b-pre` did not falsify the SIMD scan rows; the largest SIMD midpoint
+  drop observed in `/tmp/skv7-w10b-simd-scan.log` was about -1.40% on
+  `numbers/simd`, still reported within Criterion's noise threshold.
+- The refreshed `RESULTS.md` comparison falsified the W10b admit gate because
+  six Track 1/2 rows dropped more than 2% versus the saved pre-W10b report,
+  despite no verdict downgrades: `canada/parse_only` Track 1 -3.11% and
+  Track 2 -4.14%; `citm_catalog/parse_only` Track 1 -7.36%;
+  `instruments/parse_only` Track 1 -3.96%; `marine_ik/parse_only` Track 1
+  -5.68%; `mesh/parse_only` Track 1 -8.07% and Track 2 -7.46%; and
+  `numbers/parse_only` Track 1 -6.44%.
+- The PMULL failure mode from Item 88 was not reopened: the W10b JSON rows that
+  previously falsified PMULL were neutral or improved. The remaining failure
+  mode is the production-path `bitmap_next_set_bit`/bulk consumer change under
+  the W10b per-row maintain invariant. The next candidate shape is W10c:
+  admit only the B6 canary hardening as Stage 1, leave both bitmap asm body
+  fills rejected for this tranche, and require zero `RESULTS.md` diff.

@@ -13,9 +13,11 @@ W1-W6 require W0 closure and plan augmentation before implementation.
 3. `restart/skinny/tranches/sk-v8/DISPATCH-PROMPT.md`
 4. `restart/skinny/tranches/sk-v8/research/alpha/`
 5. `restart/skinny/tranches/sk-v8/research/alpha-hardening/V1/`
-6. `skinny/RESULTS.md`
-7. `skinny/REDRESS.md`
-8. `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`
+6. `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/` (the S-P2 substrate-ceiling cohort, SC-1..SC-6)
+7. `skinny/RESULTS.md`
+8. `skinny/REDRESS.md`
+9. `restart/prompts/skinny/PASS-2-RESEARCH.md` + `PASS-3-SYNTHESIS-PLAN.md`
+10. `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`
 
 ## 2. Current Measured State
 
@@ -49,6 +51,25 @@ SK-V7 W10 did not admit the original bitmap body-fill target.
 PMULL and CTZ/bulk enter SK-V8 only as reserve research after W0/W1 evidence
 names bitmap work as a hot owner and challenge accepts the changed framing.
 
+## 3a. Substrate-Ceiling Finding
+
+A new-lens skinny S-P2 research cohort ran six agents SC-1 through SC-6 under
+`research/p2-substrate-ceiling/`. It converged: bbnf produces a stage-1 SIMD
+structural index (`scan_structurals`, ~69 Gbps) and discards it; the parser
+re-discovers every structural byte and string boundary in a scalar pass holding
+~75% of self-time on the loss corpora. SK-V7's six rejected kernels each
+optimised that scalar rediscovery — a pass that should not exist. The prescribed
+fix is the tape ⊕ structural-projection union: retain the stage-1 index, add a
+co-allocated structural-class column, walk it as a cursor, delete the
+rediscovery pass. It is the named W3 lead candidate in `SPEC.md` Section 6,
+subtractive (removes a producer), ~+210 LOC, medium risk.
+
+The cohort is S-P2 research output. Per the pass framework
+(`restart/prompts/skinny/PASS-2-RESEARCH.md` §3) the next framework step is the
+six-lens CH1-CH6 CHALLENGE wave over SC-1..SC-6, then S-P3 Synthesis-Plan. The
+cohort does not change the G-Alpha-W0-only constraint; it prescribes W3 ahead of
+time so W0 telemetry confirms the finding executably rather than discovering it.
+
 ## 4. Dispatch Posture
 
 | Wave | Name | Status |
@@ -56,7 +77,7 @@ names bitmap work as a hot owner and challenge accepts the changed framing.
 | W0 | Baseline Profile And Telemetry Lock | Dispatchable after G-Alpha |
 | W1 | CostFacts Gate Binding | Conditional on W0 close |
 | W2 | Typed Product Plane Expansion | Conditional on W0/W1 plan update |
-| W3 | Profile-Selected Parse Candidate | Conditional on W0/W1 challenge |
+| W3 | Profile-Selected Parse Candidate — lead candidate: tape ⊕ structural-projection union (S-P2 cohort) | Conditional on W0/W1 challenge |
 | W4 | Direct Guard Triage | Conditional on W0/W1 plan update |
 | W5 | Grammar-Neutral Audit And Lock 14 Preservation | Conditional on W1-W4 close |
 | W6 | Close And Alpha Feedback | Conditional on all prior dispositions |

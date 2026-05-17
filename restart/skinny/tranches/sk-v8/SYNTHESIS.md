@@ -86,6 +86,66 @@ The original W10 bitmap body-fill gate was not green. SK-V7 closes honestly:
 B6 Stage 1 landed, while PMULL and CTZ/bulk remain rejected for SK-V7 and
 routed only as reserve evidence for a future, profile-proven frame.
 
+## Substrate-Ceiling Finding (S-P2 Cohort)
+
+A new-lens skinny S-P2 research cohort — six agents SC-1 through SC-6 under
+`restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/` — interrogated a
+single hypothesis: that no SK-V7 micro-kernel could win because the offset-tape
+substrate itself imposes an irreducible per-structural-element cost. The cohort
+converged, independently, on a sharper and more damning finding.
+
+The offset-tape is not a ceiling by write amplification. SC-1 found that
+allocated-tape-byte amplification anti-correlates with loss — the highest-ratio
+corpora (canada 0.47x, mesh 0.72x, marine_ik 0.70x) are exactly the corpora
+bbnf wins by roughly +50%, and the payload arena is provably untouched (`0/0`
+writes on every corpus).
+
+The real defect is structural duplication. bbnf already produces a SOTA-grade
+stage-1 SIMD structural index — `scan_structurals` runs near 69 Gbps — and then
+discards it: `attach_structural_index` is a no-op, and the index `Vec<u32>` is
+used only to size an allocation. The generated recursive-descent parser then
+re-discovers every structural byte and every string boundary itself, in a
+scalar pass whose hot leaves (`consume_structural`,
+`match_tiny_plain_string`/`match_string_at_quote`) account for roughly 75% of
+self-time on the loss corpora. bbnf is a two-pass parser whose fast pass is
+dead code; it pays for structural scanning twice.
+
+This explains every SK-V7 rejection at once. W2, W4, W5, W6, W10, and W10b each
+optimised the scalar rediscovery pass — a pass that should not exist. SC-4
+showed the string-plane loss is a clean step function in string-quote density:
+every corpus below 0.14 string fraction wins (~+49%, number-dominated), every
+corpus above 0.55 loses (−11% to −71%, monotone with density). No kernel closes
+that plane under a substrate that re-discovers string bounds per element.
+
+The fix is subtractive, not additive. SC-2 and SC-3 designed the union the
+original SK-V8 brief named: retain the stage-1 SIMD scan output and add a
+co-allocated, index-aligned structural-class column produced free from the same
+branch-free classify mask; the parser becomes a class-column cursor-walker that
+materialises scalar spans lazily and keeps zero-copy borrowed views; the scalar
+rediscovery pass is deleted. The structural projection IS the tape. SC-3 sizes
+it at roughly +210 net source LOC, medium risk, a W3-class candidate. Because it
+removes a producer rather than adding one, it pre-empts the REDRESS 50-72
+sidecar concern instead of reopening it.
+
+SC-5 adjudicated the uniform `parse_only` K-classification: it is partly correct
+— bbnf's offset-tape emit plane is genuinely incomparable to a DOM builder — and
+partly an excuse, because `K` is an overloaded enum that launders real losses
+(twitter −35.8% vs sonic strict) and real wins (canada +54.6%) into one
+non-comparison bucket. The adjudication is to retire `parse_only` from the SOTA
+scoreboard, add a plane-matched `tape_vs_tape` gate that benches bbnf's tape
+against structural-index-stage competitors rather than full DOMs, and keep the
+17 rows alive as explicitly-labelled substrate-guard rows under a new outcome
+letter — a telemetry amendment routed through W0 and W1.
+
+SC-6 confirmed the union satisfies Lock 1 — and satisfies it better than the
+present spec — provided it replaces the offset-tape rather than running
+alongside it; the deciding test is substrate cardinality. It proposes one Lock 1
+refinement (SC-6-L1-R1, a Pass Omega candidate) promoting the structural
+projection from transient mask stream to retained substrate while keeping the
+parallel-sidecar case forbidden, and generalises the union grammar-neutrally
+through a codegen-emitted per-grammar `StructuralAlphabet` table with JSON, CSS
+L4, and Sheets instances.
+
 ## SK-V8 Thesis
 
 SK-V8 is an observability-bound tranche before it is a performance tranche.
@@ -95,6 +155,13 @@ kernels or plausible local rewrites lost whole-row throughput. The current
 RESULTS surface has enough strict comparator data to identify residual rows,
 but not enough hot-leaf and per-row attribution to prescribe another parser
 intervention.
+
+The S-P2 substrate-ceiling cohort named that attribution structurally ahead of
+W0. W0 telemetry still stands — it makes the finding executable, with run ids,
+profile artifacts, and per-row hot-leaf columns rather than a research claim —
+but W3's parse candidate is no longer unprescribed. The profile-grounded W3
+target is the tape ⊕ structural-projection union: wire the discarded stage-1
+index into the parser and delete the scalar rediscovery pass.
 
 The SK-V8 thesis:
 
@@ -150,6 +217,17 @@ top-level CRUD, lock amendments, broad path cleanup, and non-skinny canonical
 surface refresh. SK-V8 may cite those needs, but it must not mix broad Omega
 CRUD into performance waves. Omega may add enforcement or clarification; it
 cannot weaken Lock 14 or authorize generic JSON policy leaks.
+
+The S-P2 cohort surfaces one concrete Omega input: the Lock 1 refinement
+SC-6-L1-R1, drafted in
+`research/p2-substrate-ceiling/SC-6-lock1-amendment-generalisation.md`. It
+promotes the structural projection from a transient mask stream to a retained
+substrate, keeping the parallel-sidecar case forbidden. The W3 union candidate
+either consumes this refinement once Omega ratifies it, or the W3 challenge
+proves the union satisfies Lock 1 as presently written by deleting the offset-
+tape's scalar rediscovery and holding substrate cardinality at one. Omega
+ratification is the cleaner route; the SK-V8 wave does not amend `LOCKS.md`
+itself.
 
 ## G-Alpha Posture
 

@@ -387,6 +387,25 @@ Conditional. W3 may not dispatch until W0 and W1 close, then a fresh plan names
 one parse candidate, exact owner paths, exact rows, and challenge proves it is
 not a renamed REDRESS 82, 83, 84, 88, or 89 route.
 
+### Lead candidate
+
+The S-P2 substrate-ceiling cohort
+(`research/p2-substrate-ceiling/SC-1..SC-6`) prescribes the W3 parse candidate:
+the tape ⊕ structural-projection union. bbnf already produces a stage-1 SIMD
+structural index (`scan_structurals`) and discards it via the no-op
+`attach_structural_index`; the recursive-descent parser then re-discovers every
+structural byte and string boundary in a scalar pass that holds roughly 75% of
+self-time on the loss corpora. The union retains the stage-1 index, adds a
+co-allocated index-aligned structural-class column, and rewrites the parser as a
+class-column cursor-walker — deleting the scalar rediscovery pass. The candidate
+is subtractive: it removes a producer rather than adding one. SC-3 sizes it near
++210 net source LOC at medium risk. The W3 plan consumes SC-3's migration
+sketch and SC-4's string-quote-density gate table; it is not unprescribed.
+
+This candidate touches the substrate, so its challenge carries an extra burden
+(see exit gate). It must either follow Pass Omega ratification of the SC-6-L1-R1
+Lock 1 refinement, or prove at challenge that it satisfies Lock 1 as written.
+
 ### Owner paths
 
 Not pre-authorized beyond the W3 plan. The W3 plan must name exact files before
@@ -401,8 +420,13 @@ the same parser/tape or SinkOnly loop.
   1 or Track 2 regression worse than -2.0 percent.
 - Generic-code edits pass the Section 2.1 generality and Lock 14 gate.
 - Any primitive has scalar reference and checkasm parity before wiring.
-- Any source-byte second scan, retained cursor, aux table, density cache,
-  sidecar event vector, or parser-owned structural projection fails Lock 1.
+- Any source-byte second scan, retained cursor, aux table, density cache, or
+  sidecar event vector that runs alongside the offset tape fails Lock 1. A
+  structural projection passes Lock 1 only if it replaces the offset-tape
+  outright — substrate cardinality stays at one, the scalar rediscovery pass is
+  deleted, and no producer runs in parallel. The union candidate must
+  demonstrate this at challenge: a retained projection added beside the existing
+  tape is a sidecar and fails; a projection that becomes the tape passes.
 
 ### Revert protocol
 

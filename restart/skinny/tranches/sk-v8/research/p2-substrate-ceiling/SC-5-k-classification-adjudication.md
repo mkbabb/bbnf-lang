@@ -1,0 +1,344 @@
+---
+title: "SC-5 — Is parse_only a permanent non-gate? K-classification adjudication"
+tranche: sk-v8
+phase: p2-substrate-ceiling
+lens: substrate-ceiling
+scope: SC-5
+date: 2026-05-17
+status: research (read-only adjudication; no code edits, no commit)
+authority_inputs:
+  - skinny/RESULTS.md
+  - skinny/REDRESS.md (items 75, 77, 78; SK-V7 W0/W0b sections)
+  - restart/skinny/tranches/sk-v7/SYNTHESIS.md
+  - restart/skinny/tranches/sk-v8/SPEC.md (Section 0)
+  - skinny/crates/bbnf-bench/src/gate.rs
+  - skinny/crates/bbnf-bench/src/bin/gate.rs
+  - skinny/crates/bbnf-bench/src/report.rs
+  - skinny/crates/bbnf-bench/src/metadata.rs
+verdict: "Option (c) — retire parse_only as a strict-vs-strict SOTA gate, replace with a plane-matched tape-vs-tape workload; K is partly an excuse"
+---
+
+# SC-5 — Is `parse_only` a permanent non-gate?
+
+## §1 The K-classification catalogued (per-row, why K)
+
+`skinny/RESULTS.md` carries 17 `parse_only` rows. Every single one is
+`Outcome=K`, `Verdict=NO-GO`. The supporting columns are byte-identical
+across all 17:
+
+| Column | Value (all 17 rows) |
+|---|---|
+| `Strictness` | `deferred` |
+| `parse_utf8` | `view-boundary` |
+| `escape_complete` | `yes` |
+| `flaw_probe` | `invalid UTF-8 rejected outside hot scan; lossy/permissive competitors are flaw probes` |
+| `Output plane` | `borrowed view over offset tape vs DOM` |
+| `Hot leaf` | `unprofiled in W0b; no kernel prescription from this row` |
+| `Signal` | `NO-GO parse gate classified K` |
+
+The throughput is *not* uniform — and that is the load-bearing fact. The
+`Δ vs sonic-strict` column ranges across the full sign spectrum:
+
+- **bbnf already faster than sonic-rs strict** on 7 of 17: canada (+54.6%),
+  mesh (+51.5%), numbers (+51.2%), marine_ik (positive Track-1/sonic), citm
+  (-11.3% only because it is compared to a 25509 anchor while Track 1 is
+  31784 — the table's own `+24.6%` Δ vs SK-V6 and the `+51.7%` Δ vs
+  simdjson DOM confirm citm is a *fast* row), instruments (+10.6% Δ vs SK-V6),
+  unicode_escapes Δ vs simdjson DOM (+113.6%).
+- **bbnf slower than sonic-rs strict** on the remainder: twitter (-35.8%),
+  apache_builds (-65.3%), github_events (-61.7%), update_center (-63.4%),
+  random (-52.3%), gsoc-2018 (-53.3%), distinct_values (-70.8%),
+  y_string_unicode (-54.4%), unicode_basic (-29.9%), unicode_mixed (-38.9%).
+
+So K is applied **uniformly to rows where bbnf wins and rows where bbnf
+loses alike**. K is not a throughput verdict. It is, per the row prose, a
+declared *kind-mismatch*: bbnf `parse_only` produces a borrowed view over an
+offset tape; sonic-rs / simdjson DOM rows produce a materialized DOM. The
+RESULTS notes (§Notes, "lazy tape materialization" lines) reinforce this —
+bbnf emits an offset/sparse-flag tape (0.05x–0.75x of input bytes, **0
+payload bytes** on every corpus). It never builds value nodes.
+
+### The mechanical truth of the K letter
+
+The enum letter K is **not** native to "DOM-vs-view non-comparison". In
+`skinny/crates/bbnf-bench/src/gate.rs:15` the variant is named
+`KSimdParityHashFail`. `gate::classify` (gate.rs:118-126) returns K *only*
+at:
+
+```
+if !input.simd_parity_ok { return Outcome::KSimdParityHashFail; }
+```
+
+and `simd_parity_ok` is computed in `src/bin/gate.rs:60-63` as
+`scalar_hash == simd_hash` **AND** the SIMD-metadata sidecar hash matching
+the scalar hash. The report builder (`report.rs:504`) proves the
+`parse_only` workload *can* legitimately render `A / GO` — K is not wired
+into the workload string. K is therefore a **repurposed enum letter**: an
+outcome that originally meant "the scalar vs SIMD differential offset-hash
+disagreed (or the SIMD sidecar is absent/stale)" is now carrying a
+hand-authored `Signal="parse gate classified K"` narrative about output
+planes. The W0b telemetry redress (REDRESS item 78, `0d2fab3f`) is what
+authored the `Output plane` / `flaw_probe` prose; the letter itself comes
+from the pre-existing gate path.
+
+## §2 Is K correct, or an excuse? (evidence)
+
+**It is both — and the parts must be separated.**
+
+### What is genuinely correct about K
+
+1. **The output-plane mismatch is real.** RESULTS' own materialization
+   notes show every parse corpus emits `0 payload bytes`. bbnf `parse_only`
+   produces offsets + sparse structural flags only; it never decodes
+   numbers, never unescapes strings, never builds nodes. sonic-rs strict,
+   simdjson DOM, yyjson, RapidJSON all return a navigable value tree with
+   decoded scalars. Comparing 12285 Mbps of "emit offsets" against 21020
+   Mbps of "emit a DOM" *is* a category error. A like-for-like strict gate
+   cannot be built on unequal output contracts.
+2. **The strictness plane is honestly deferred.** `parse_utf8=view-boundary`
+   means bbnf validates UTF-8 at the borrow boundary, outside the hot scan;
+   `Strictness=deferred` is disclosed, not hidden. SK-V7 W0 (REDRESS 77)
+   genuinely repaired the sonic-rs comparator by removing `utf8_lossy`, and
+   W0b marks the lossy column as a flaw probe. The strictness discipline is
+   sound.
+
+### What is an excuse hiding inside K
+
+1. **K is a single letter doing two jobs.** The enum says "SIMD parity hash
+   fail"; the row prose says "output-plane non-comparison". A reader cannot
+   tell from the outcome whether the SIMD differential failed, the sidecar
+   is missing, or the row is a deliberate non-gate. This conflation lets a
+   *measurement-pipeline failure* (absent/stale SIMD sidecar hash → K) and a
+   *philosophical non-comparison* (DOM vs view → also rendered K) wear the
+   same badge. That is the excuse: the uniform K masks whichever of the two
+   is actually firing per row.
+2. **K hides at least one real loss as a "non-comparison".** twitter
+   `parse_only` is -35.8% vs sonic strict and -49.1% vs simdjson DOM; the
+   SK-V7 synthesis §2.6/§7 already names twitter parse as the "hard
+   residual" with a yyjson 1.98x gap requiring a fusion-quality refactor.
+   That is a substantive throughput loss. Filing it under K alongside
+   canada (+54.6% vs sonic) tells the reader "incomparable" when the honest
+   statement is "bbnf's offset-emit plane is slower than sonic's DOM-build
+   plane on this corpus *even though bbnf does strictly less work*". The
+   non-comparison framing is technically true but rhetorically convenient —
+   it removes a loss from the scoreboard without resolving it.
+3. **The "DOM vs view" framing is not symmetric.** A view-over-offset-tape
+   is *strictly less* output than a DOM. If bbnf is slower while producing
+   less, that is a worse result than a like-for-like loss, not an
+   incomparable one. K presents an asymmetry that disfavors bbnf as if it
+   were neutral incomparability.
+
+**Adjudication of §2:** K is *correct* that `parse_only` cannot be a
+strict-vs-strict SOTA gate against DOM builders. K is an *excuse* in that it
+(a) overloads a SIMD-parity enum letter, and (b) launders real throughput
+losses (twitter, the unicode/distinct family) into "non-comparison" status.
+The classification's *conclusion* (not a valid SOTA gate) is right; its
+*encoding* (uniform K, no loss disclosure) is misleading.
+
+## §3 The adjudication (a / b / c)
+
+Three options were weighed.
+
+### Option (a) — bbnf builds a comparable DOM and competes plane-matched
+**Reject.** This contradicts the entire skinny thesis. bbnf-skinny's value
+proposition is the lazy offset tape with `0 payload bytes` — the GO rows
+(`direct_to_struct`, `real_typed_struct`) win precisely *because* they
+project structure directly into a typed digest/struct and never build an
+intermediate DOM. Forcing a DOM build for parity would (i) introduce a
+parser shape bbnf does not otherwise want, (ii) re-introduce the very
+allocation/payload cost the substrate is designed to avoid, and (iii)
+violate the SK-V8 Section 1 non-negotiables ("No new substrate without a
+same-wave consumer"). Building a DOM only to lose to simdjson on simdjson's
+own terms is strategically empty.
+
+### Option (b) — retire `parse_only` entirely; GO target moves to `direct_to_struct` + `real_typed_struct`
+**Partially accept, but insufficient alone.** It is correct that the SOTA
+*product* claim already lives on `direct_to_struct` (digest) and
+`real_typed_struct` (typed) — those are plane-honest (Track 1 generated vs
+Track 2 independent hand parser / oracle). Retiring `parse_only` as a *SOTA
+gate* is right. But fully *deleting* `parse_only` discards a genuinely
+useful signal: it is the cleanest measurement of the **structural substrate
+itself** — the offset-tape emit rate — independent of payload decode and
+typed projection. SK-V8 SPEC Section 0.5 already keeps several parse rows as
+named *guard rows* ("Guard row for any parser change", canada/mesh/numbers/
+marine_ik/instruments). Deleting the workload would forfeit that guard.
+
+### Option (c) — replace `parse_only` with a plane-matched workload; retain a renamed substrate-guard row — **RECOMMENDED**
+The adjudication: **`parse_only` is not a permanent non-gate, but it is a
+permanent non-*SOTA*-gate in its current form.** Recommendation:
+
+1. **Demote `parse_only` from the SOTA scoreboard.** It stops being a
+   GO/NO-GO contributor to the overall verdict. Its 17 rows become
+   explicitly-labelled **substrate-guard rows** with their own outcome
+   class (see §4) — not K, not A/G.
+2. **Introduce a new plane-matched gate row: `tape_vs_tape`** (working
+   name). The comparator is *not* a DOM builder; it is a structural-index
+   producer on the same output plane: simdjson's *structural index stage*
+   (the `stage 1` find-marks pass), or sonic-rs's lazy/`get` skeleton, or
+   yyjson's `read-insitu` minimal mode. These produce an offset/index
+   structure, not a full DOM. That is genuinely like-for-like with bbnf's
+   offset tape and *is* a winnable strict-vs-strict gate. The RESULTS notes
+   already record `canada structural scan: 69075 Mbps; floor is 40000
+   Mbps` — bbnf's structural scan plane is fast and *already measured*; it
+   just is not currently gated against a plane-matched competitor.
+3. **Keep `direct_to_struct` + `real_typed_struct` as the SOTA-claim
+   surfaces** (they already are, per SK-V8 Section 0.5 and the SK-V7
+   synthesis §8 posture). The overall verdict is driven by those.
+
+Net: option (c) = (b)'s demotion + a new plane-matched replacement gate +
+preservation of the substrate-guard signal. This satisfies the
+substrate-ceiling lens's actual question — *interrogate the substrate* —
+because `tape_vs_tape` measures the substrate ceiling directly against a
+substrate-class competitor.
+
+## §4 Telemetry + goalset implications
+
+The SK-V8 SPEC (Section 0.3) currently freezes the outcome enum to
+`{A, C, G, K, L, N-direct}` and Section 0.4 requires the schema-v3 surface
+plus the new W0 telemetry block. If option (c) is adopted, the following
+schema changes are required and must be routed through a REDRESS amendment
+(SPEC Section 0.3 explicitly permits enum amendment "in REDRESS and the
+SPEC"):
+
+1. **New outcome letter for substrate-guard rows.** Add an explicit
+   non-SOTA-gate outcome — e.g. `S` ("substrate guard: maintain-only, not a
+   SOTA gate") — so the 17 demoted `parse_only` rows stop wearing the
+   overloaded `K`. `K` reverts to its honest single meaning
+   (`KSimdParityHashFail`) and is reserved for an actual scalar-vs-SIMD
+   differential failure. This removes the §2 conflation at the root.
+2. **`Output plane` becomes a gate-eligibility key, not just prose.** The
+   gate must read `comparator_plane` (already a required SK-V8 field per
+   Section 0.4) and *refuse to compute a strict GO/NO-GO when the bbnf row
+   plane and the comparator plane differ*. Today the plane mismatch is
+   narrated in prose; it must become an executable gate predicate. This is
+   a natural W1 CostFacts-gate-binding extension: the gate already consumes
+   `comparator_plane`; it should now branch on it.
+3. **New workload value `tape_vs_tape`.** `metadata.rs:418` maps workloads;
+   it gains `tape_vs_tape` alongside `parse_only`. Its comparator columns
+   are restricted to structural-index-plane competitors (simdjson stage-1,
+   sonic lazy skeleton). Its `comparator_plane` is `offset/index` on both
+   sides — making it strict-vs-strict admissible.
+4. **Close condition / goalset changes (SPEC Section 0.1 + 0.5):**
+   - Section 0.1 item 7 ("Any parse/direct behavior wave meets its named
+     row threshold...") is rewritten so `parse_only` rows are
+     *maintain-only* (the existing ±1.0% W0 budget), never a *close*
+     contributor. The overall verdict no longer counts `parse_only`.
+   - Section 0.5's 17 `parse_only` rows keep their "Profile-bound;
+     ±1.0 percent" W0 target but their "Later posture" column changes from
+     "Candidate parse residual" to "Substrate-guard row; not a SOTA gate".
+     The four already marked "Guard row" are unchanged in spirit.
+   - The SOTA close becomes: GO when `direct_to_struct` + `real_typed_struct`
+     + the new `tape_vs_tape` rows clear their plane-matched thresholds.
+     `tape_vs_tape` is the *only* new winnable gate; `parse_only` is retired
+     from the win column.
+5. **W0 unaffected as a dispatch.** W0's job (Section 3) is telemetry lock,
+   not behavior. The enum amendment and the `tape_vs_tape` row addition are
+   *plan augmentations* for a post-W0 wave (most naturally folded into W1's
+   gate-binding or a W0 plan augmentation). W0 itself should still capture
+   all 17 `parse_only` rows as `SK-V8-open` baseline — they are not deleted,
+   only reclassified later.
+
+## §5 Interaction with the union substrate
+
+The substrate-ceiling hypothesis posits a **union substrate**: the offset
+tape ⊕ structural-projection. This is exactly the construct that makes
+`parse_only` plane-comparable — and it reframes the adjudication.
+
+- **The offset tape alone** is what `parse_only` measures today. Against a
+  DOM it is incomparable (§1–§2). Against a *structural-index* competitor
+  (the `tape_vs_tape` row of §3) it is comparable — because the offset tape
+  *is* the structural-index half of the union.
+- **The structural-projection half** is what `direct_to_struct` and
+  `real_typed_struct` measure: structure projected straight into a digest
+  or typed struct. Those are already plane-matched against sonic-rs strict
+  (digest vs struct) and are the live SOTA gates.
+- **The union** therefore does *not* make the present `parse_only` row
+  plane-comparable to a DOM — a DOM is a *third* plane (materialized value
+  tree) that neither half of the union produces. What the union does is
+  explain *why* `parse_only` should be split, not patched: `parse_only`
+  isolates the tape half; `direct_to_struct`/`real_typed_struct` isolate
+  the projection half. The correct gate topology mirrors the substrate
+  topology:
+  - tape half → `tape_vs_tape` vs structural-index competitors;
+  - projection half → `direct_to_struct` / `real_typed_struct` vs
+    sonic-rs strict.
+- This is the strongest argument for option (c) over (b): a *union*
+  substrate has two measurable faces, and a healthy gate suite measures
+  *both* faces against plane-matched competitors. Deleting `parse_only`
+  (pure option b) blinds the suite to the tape face. Renaming it to a
+  plane-matched `tape_vs_tape` gate keeps the union fully observed and
+  turns the substrate-ceiling question into a *winnable* one: the
+  `canada structural scan: 69075 Mbps` figure already in RESULTS suggests
+  the tape face is fast and the ceiling is high.
+
+So: a union substrate does **not** make today's `parse_only` (tape vs DOM)
+comparable. It makes a *correctly-planed* `tape_vs_tape` row both
+comparable and winnable — and that is the SC-5 recommendation.
+
+## §6 Risks
+
+1. **No same-run structural-index competitor exists yet.** simdjson stage-1
+   and sonic lazy skeleton are not currently benched. Standing up
+   `tape_vs_tape` requires new comparator harness code in
+   `bbnf-bench/benches/json_parity.rs` + `metadata.rs`. SK-V8 Section 1
+   forbids new substrate without a same-wave consumer — the consumer here
+   is the new gate row, so it is admissible, but it is real work
+   (estimated within the W2/W4 LOC envelope) and must be planned, not
+   smuggled into W0.
+2. **Enum amendment touches a frozen surface.** SPEC Section 0.3 freezes
+   `{A,C,G,K,L,N-direct}`. Adding `S` (substrate-guard) requires a REDRESS
+   entry + SPEC edit + `gate-json` reject-list update. If done sloppily it
+   re-introduces exactly the kind of comparator drift REDRESS 75/77 warned
+   about. It must be a deliberate, redress-recorded amendment.
+3. **Demotion could be read as concealing the twitter loss.** Moving
+   `parse_only` off the SOTA scoreboard must *not* erase the twitter
+   -35.8%/-49.1% residual. The substrate-guard rows must still publish
+   their Δ vs every competitor; the `tape_vs_tape` row must surface twitter
+   honestly. If the demotion is used to quietly drop twitter, that repeats
+   the §2 excuse at a larger scale. Mitigation: the substrate-guard outcome
+   `S` must still carry full delta telemetry, and twitter's structural-scan
+   residual must appear as a named SK-V9/Pass-Omega routed residual.
+4. **Risk of plane proliferation.** Three workloads (`tape_vs_tape`,
+   `direct_to_struct`, `real_typed_struct`) each need a distinct comparator
+   set. The schema is already 24+ columns; adding a fourth workload class
+   risks an unreadable table. Mitigation: `tape_vs_tape` *replaces*
+   `parse_only` in the scoreboard role rather than adding a fourth class —
+   net workload count is unchanged.
+5. **`canada structural scan 69075 Mbps` is a single number, not a gate.**
+   It is encouraging but it is bbnf-only; it is not yet measured against a
+   competitor's stage-1. The optimism in §3/§5 about a "winnable" gate is a
+   hypothesis until the plane-matched competitor is benched. The W0
+   profile-lock should be the moment this is confirmed or falsified.
+
+## §7 Sources
+
+- `skinny/RESULTS.md` — all 17 `parse_only` rows, columns `Outcome`,
+  `Strictness`, `parse_utf8`, `escape_complete`, `flaw_probe`,
+  `Output plane`, `Hot leaf`, `Signal`, the `Δ vs sonic-strict` /
+  `Δ vs simdjson DOM` columns, and the §Notes `lazy tape materialization` /
+  `canada structural scan: 69075 Mbps` lines.
+- `skinny/REDRESS.md` — item 75 (comparator-plane correction; strict-anchor
+  ineligibility of lossy rows), item 77 (SK-V7 W0 strict comparator repair),
+  item 78 (SK-V7 W0b schema-v3 telemetry; authored the `Output plane` /
+  `flaw_probe` prose; `parse_only` workload string).
+- `restart/skinny/tranches/sk-v7/SYNTHESIS.md` — §1 strict-vs-strict
+  comparator gate discipline, §2 post-V6 open gates, §3.1 W0 comparator
+  repair, §3.6 twitter real_typed skip-work, §7 twitter parse hard
+  residual, §8 SOTA-beat posture, §9 proposed comparator-plane disclosure
+  lock.
+- `restart/skinny/tranches/sk-v8/SPEC.md` — Section 0.1 global close
+  condition, 0.2 comparator classes, 0.3 outcome enum freeze, 0.4 required
+  telemetry, 0.5 opening row goalset (17 `parse_only` targets).
+- `skinny/crates/bbnf-bench/src/gate.rs` — `Outcome::KSimdParityHashFail`
+  (line 15), `classify` returning K on `!simd_parity_ok` (lines 118-126),
+  verdict mapping K → NoGo (lines 68-72).
+- `skinny/crates/bbnf-bench/src/bin/gate.rs` — `simd_parity_ok` computation
+  (lines 60-63), `gate::classify` call site for `parse_only` rows
+  (lines 68-83).
+- `skinny/crates/bbnf-bench/src/report.rs` — `output_plane` field,
+  `parse_only` workload string, `borrowed view over offset tape vs DOM`
+  literal (lines 41, 78, 85), `parse_only | A | GO` test (line 504) proving
+  K is not wired into the workload.
+- `skinny/crates/bbnf-bench/src/metadata.rs` — `output_plane` /
+  `borrowed view over offset tape` (lines 46, 148, 196-199), workload map
+  default `parse_only` (line 418).

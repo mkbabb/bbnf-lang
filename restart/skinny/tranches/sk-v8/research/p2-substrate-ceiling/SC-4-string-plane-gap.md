@@ -175,6 +175,12 @@ tokens; opens/closes are structural and roughly cancel across competitors).
 (`RESULTS.md` Δ column); where that cell is `n/a` the Δ-vs-SK-V6 figure (vs
 the bbnf baseline) is used and marked `*`.
 
+This table is diagnostic, not an admission gate. Rows with same-run
+sonic-strict values are the only rows eligible to support a strict admission
+claim. Rows marked `*` are historical SK-V6 deltas, and rows whose strongest
+comparison is a C++ sidecar are planning signals until W0/W1 refreshes their
+strictness, output plane, run id, and sidecar freshness under the SK-V8 gate.
+
 | Corpus | Quotes | Numbers | Literals | String fraction | Verdict | Δ vs sonic (parse) |
 |---|---:|---:|---:|---:|:--:|---:|
 | numbers | 0 | 10,001 | 0 | 0.00 | **WIN** | +51.2% * |
@@ -199,8 +205,8 @@ the bbnf baseline) is used and marked `*`.
 corpus (5,637 Mbps — its escape path is pathological); against sonic-strict,
 bbnf still loses −34.6%, so it is a loss row for this analysis.
 
-**Does string-quote density predict the loss?** Yes — sharply, with a clean
-threshold:
+**Does string-quote density predict the loss?** Yes — sharply, as a planning
+signal with a clean threshold:
 
 - Every corpus with **string fraction ≤ 0.135 WINS** (numbers, mesh, canada,
   marine_ik) — average ≈ +49%.
@@ -212,11 +218,14 @@ threshold:
   (distinct_values). The two pure-string corpora (gsoc-2018, y_string_unicode,
   fraction 1.00) sit at −53/−54%.
 
-String-quote density is **the** predictor. The correlation is not noisy: it is
-a step function with the knee between fraction 0.14 and 0.56. The number-plane
-advantage and the string-plane deficit are the *same substrate property seen
-from two sides* — the offset tape is cheap for monotone scalar tokens and
-expensive for length-proportional, escape-validated, dispatch-bifurcated spans.
+String-quote density is **the** predictor for candidate selection, but V2 does
+not let the mixed strict/deferred/sidecar table carry admission by itself. The
+strict same-run sonic rows support the observed knee; the SK-V6 and sidecar
+rows explain why W0 must preserve the signal as telemetry and then regenerate
+the gate before any W3 admission claim. The number-plane advantage and the
+string-plane deficit are the *same substrate property seen from two sides* —
+the offset tape is cheap for monotone scalar tokens and expensive for
+length-proportional, escape-validated, dispatch-bifurcated spans.
 
 ## §3 Substrate-ceiling verdict
 
@@ -262,33 +271,38 @@ quote bitmap, exactly as in the two-stage architectures.
 
 ## §4 Recommendation
 
-1. **Stop dispatching string kernels.** No further per-`\uXXXX` classifier,
-   plain-scan widening, or escape-decode kernel should be opened against the
-   current substrate. SK-V8 P2 should treat the string plane as *closed to
-   kernel work* and route all string effort to the substrate change.
+1. **Pre-block local string kernels absent fresh evidence.** No further
+   per-`\uXXXX` classifier, plain-scan widening, or escape-decode kernel should
+   be opened against the current substrate unless W0 names fresh hot-leaf
+   evidence, the plan names a same-wave consumer and no-regression gate, the
+   route cites the REDRESS entries it differs from, and challenge accepts the
+   changed frame.
 
-2. **Adopt the tape ⊕ structural-projection union as the SK-V8 P2 spine.**
-   Add a stage-1-style branchless structural sweep that emits, for the whole
-   document in one linear pass: the `"` position bitmap, the `\` bitmap, and a
-   parallel-prefix backslash-parity mask (`bbnf-simd` already has
-   `bitmap_prefix_xor_64` and `bitmap_next_set_bit` primitives — see
-   `aarch64/bitmap_prefix_xor_64.rs`, `bitmap_next_set_bit.rs`). The
-   recursive-descent stage then *consumes* string bounds from this index:
-   `parse_string` becomes "read next-quote position from the bitmap, emit one
-   offset, done" — no per-string scan loop, no fast/slow dispatch.
+2. **Adopt the tape ⊕ structural-projection union as the SK-V8 P2 lead
+   hypothesis.** A stage-1-style structural sweep may compute quote,
+   backslash, and parallel-prefix parity masks while building the union, but
+   those masks are transient scan state unless a later plan proves they are
+   co-indexed tape facts inside the singular `Tape`. No retained document-wide
+   bitmap may live beside `Tape`. The recursive-descent stage then consumes
+   string bounds from the union cursor: `parse_string` becomes "read the next
+   structural offset/class fact, emit or view one span, done" — no per-string
+   scan loop, no fast/slow dispatch.
 
-3. **Fold `HAS_ESC` into the index, not a side vector.** The escape fact is
-   already known from the `\` bitmap intersected with the string span; the
-   `patch_flags` side-vector write (`assembler.rs:94-113`) becomes a bitmap AND
-   and disappears as a per-string cost.
+3. **Fold `HAS_ESC` into tape-internal facts, not a side vector.** The escape
+   fact is already derivable from scan-state masks intersected with the string
+   span; the `patch_flags` side-vector write (`assembler.rs:94-113`) is replaced
+   only if the fact is produced by the same union producer, shares the same
+   cursor domain, and has no independent lifetime outside `Tape`.
 
 4. **Re-validate the number plane stays neutral.** The number-heavy wins are
    the current asset. The structural sweep must be *additive* — strings consume
    the index, numbers keep their monotone scan — and the SK-V8 gate must prove
    canada/mesh/numbers/marine_ik do not regress. REDRESS 88-90 show structural
    primitives (PMULL prefix-XOR, CSSC ctz) regressed number/escape rows when
-   put on the *unconditional* hot path; the index sweep must be gated and
-   measured per-row exactly as those waves demanded.
+   put on the *unconditional* hot path; PMULL prefix-XOR and CTZ/bulk remain
+   rejected production defaults unless fresh W0/W3 evidence proves a narrowly
+   gated same-wave consumer with no-regression. The index sweep must be gated
+   and measured per-row exactly as those waves demanded.
 
 5. **Measure against the §2 threshold.** The success criterion is
    *displacement of the knee*: the string-fraction value at which corpora flip
@@ -336,10 +350,11 @@ ceiling generalises with it:
    canada/mesh/numbers no-regression — REDRESS 88-90 are the precedent for
    structural primitives regressing number rows.
 
-2. **Memory footprint.** A quote/backslash/parity bitmap is ≈3 bits/byte of
-   input. `RESULTS.md` already tracks tape bytes at 0.05x-0.75x input; the
-   index adds to that. RSS is currently a bbnf *advantage* (bbnf 2.7 MB vs
-   sonic 3.7 MB on twitter — `RESULTS.md:156`); the index must not erase it.
+2. **Memory footprint.** A retained quote/backslash/parity bitmap would be a
+   Lock 1 sidecar unless it is replaced by transient masks or by co-indexed tape
+   facts inside the singular `Tape`. `RESULTS.md` already tracks tape bytes at
+   0.05x-0.75x input; RSS is currently a bbnf *advantage* (bbnf 2.7 MB vs sonic
+   3.7 MB on twitter — `RESULTS.md:156`); any retained fact must not erase it.
 
 3. **Backslash-parity correctness.** The parallel-prefix parity that
    distinguishes a real quote from an escaped `\"` is the subtle core of stage
@@ -349,8 +364,10 @@ ceiling generalises with it:
 
 4. **Substrate change is large.** SYNTHESIS §3.8 estimates the CostFacts
    substrate alone at ≈830 LOC across ir/+passes/+codegen/+xtask; the full
-   tape⊕index union is larger. It is a multi-wave tranche, not a single kernel
-   wave — SK-V8 P2 must be scoped accordingly.
+   tape⊕index union is larger. Quote/backslash/parity, CostFacts/template
+   parity, and full string-index closure are follow-on or multi-wave work unless
+   a later W3 plan explicitly fits SPEC's 650 LOC template-parity cap and
+   verification budget. SK-V8 P2 must be scoped accordingly.
 
 5. **Falsifiability.** Like every SK-V7 kernel, the union could be
    correctness-green and still fail the gate. The §4.5 knee-displacement metric

@@ -156,12 +156,15 @@ RESULTS surface has enough strict comparator data to identify residual rows,
 but not enough hot-leaf and per-row attribution to prescribe another parser
 intervention.
 
-The S-P2 substrate-ceiling cohort named that attribution structurally ahead of
-W0. W0 telemetry still stands — it makes the finding executable, with run ids,
-profile artifacts, and per-row hot-leaf columns rather than a research claim —
-but W3's parse candidate is no longer unprescribed. The profile-grounded W3
-target is the tape ⊕ structural-projection union: wire the discarded stage-1
-index into the parser and delete the scalar rediscovery pass.
+The S-P2 substrate-ceiling cohort named the leading structural hypothesis ahead
+of W0. W0 telemetry still stands — it confirms or falsifies the finding
+executably, with run ids, profile artifacts, and per-row hot-leaf columns rather
+than a research claim. The lead W3 hypothesis is the tape ⊕
+structural-projection union: wire the discarded stage-1 index into the parser
+and delete the scalar rediscovery pass. That hypothesis is not selected by S-P2;
+W3 still requires W0/W1 closure, a fresh S-P3/W3 plan, exact owner paths,
+same-wave consumer, revert protocol, measurement thresholds, and challenge
+acceptance.
 
 The SK-V8 thesis:
 
@@ -179,7 +182,9 @@ Generic-crate changes must carry non-JSON proof. JSON row data is the opening
 benchmark surface, not proof that a change is grammar-general. CostFacts,
 codegen, runtime, SIMD, or parser-template edits must show that CSS L4, Sheets,
 and BBNF-self do not need JSON structural roles to compile, lower, cost, or
-run.
+run. The S-P2 fold requires any structural alphabet to use generated
+per-grammar byte-set tables plus fixed neutral structural-role ordinals; grammar
+meaning stays in generated grammar modules, not generic substrate code.
 
 ## Comparator Posture
 
@@ -222,12 +227,14 @@ The S-P2 cohort surfaces one concrete Omega input: the Lock 1 refinement
 SC-6-L1-R1, drafted in
 `research/p2-substrate-ceiling/SC-6-lock1-amendment-generalisation.md`. It
 promotes the structural projection from a transient mask stream to a retained
-substrate, keeping the parallel-sidecar case forbidden. The W3 union candidate
-either consumes this refinement once Omega ratifies it, or the W3 challenge
-proves the union satisfies Lock 1 as presently written by deleting the offset-
-tape's scalar rediscovery and holding substrate cardinality at one. Omega
-ratification is the cleaner route; the SK-V8 wave does not amend `LOCKS.md`
-itself.
+substrate, keeping the parallel-sidecar case forbidden. The discriminant is
+cardinality: if the old offset append path survives beside a retained
+structural index, Lock 1 fails. The W3 union hypothesis either consumes this
+refinement once Omega ratifies it, or the W3 challenge proves the union
+satisfies Lock 1 as presently written by deleting the offset-tape's scalar
+rediscovery, leaving one retained `Tape`, and routing the Omega residual
+explicitly. Omega ratification is the cleaner route; the SK-V8 wave does not
+amend `LOCKS.md` itself.
 
 ## G-Alpha Posture
 

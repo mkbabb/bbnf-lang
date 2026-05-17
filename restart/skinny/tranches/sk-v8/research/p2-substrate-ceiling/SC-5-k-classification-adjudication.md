@@ -170,26 +170,33 @@ permanent non-*SOTA*-gate in its current form.** Recommendation:
 1. **Demote `parse_only` from the SOTA scoreboard.** It stops being a
    GO/NO-GO contributor to the overall verdict. Its 17 rows become
    explicitly-labelled **substrate-guard rows** with their own outcome
-   class (see §4) — not K, not A/G.
-2. **Introduce a new plane-matched gate row: `tape_vs_tape`** (working
-   name). The comparator is *not* a DOM builder; it is a structural-index
-   producer on the same output plane: simdjson's *structural index stage*
-   (the `stage 1` find-marks pass), or sonic-rs's lazy/`get` skeleton, or
-   yyjson's `read-insitu` minimal mode. These produce an offset/index
-   structure, not a full DOM. That is genuinely like-for-like with bbnf's
-   offset tape and *is* a winnable strict-vs-strict gate. The RESULTS notes
-   already record `canada structural scan: 69075 Mbps; floor is 40000
-   Mbps` — bbnf's structural scan plane is fast and *already measured*; it
-   just is not currently gated against a plane-matched competitor.
+   class (see §4) — not K, not A/G. Demotion does not permit deletion or
+   down-sampling of residuals: every substrate-guard row must retain all
+   strict comparator deltas and named residuals already visible in RESULTS,
+   including twitter, unicode_basic, unicode_mixed, y_string_unicode,
+   unicode_escapes, and distinct_values losses.
+2. **Introduce a new plane-matched telemetry row: `tape_vs_tape`** (working
+   name). This is W1/W0-plan telemetry or gate-binding work, not a W3
+   production consumer and not SOTA-admission evidence yet. The comparator
+   is *not* a DOM builder; it is a structural-index producer on the same
+   output plane: simdjson's *structural index stage* (the `stage 1`
+   find-marks pass), or sonic-rs's lazy/`get` skeleton, or yyjson's
+   `read-insitu` minimal mode. These produce an offset/index structure, not
+   a full DOM. That is the only like-for-like comparator class for bbnf's
+   offset tape, but `tape_vs_tape` cannot support SOTA admission until
+   same-run structural-index competitor rows exist and publish strict
+   deltas on the same corpus/profile run. The RESULTS note `canada
+   structural scan: 69075 Mbps; floor is 40000 Mbps` is bbnf-only telemetry;
+   it is encouraging, but not a gate.
 3. **Keep `direct_to_struct` + `real_typed_struct` as the SOTA-claim
    surfaces** (they already are, per SK-V8 Section 0.5 and the SK-V7
    synthesis §8 posture). The overall verdict is driven by those.
 
-Net: option (c) = (b)'s demotion + a new plane-matched replacement gate +
-preservation of the substrate-guard signal. This satisfies the
+Net: option (c) = (b)'s demotion + a new plane-matched telemetry/gate-binding
+row + preservation of the substrate-guard signal. This satisfies the
 substrate-ceiling lens's actual question — *interrogate the substrate* —
-because `tape_vs_tape` measures the substrate ceiling directly against a
-substrate-class competitor.
+because `tape_vs_tape` can measure the substrate ceiling directly against a
+substrate-class competitor once same-run competitor rows exist.
 
 ## §4 Telemetry + goalset implications
 
@@ -213,11 +220,14 @@ SPEC"):
    narrated in prose; it must become an executable gate predicate. This is
    a natural W1 CostFacts-gate-binding extension: the gate already consumes
    `comparator_plane`; it should now branch on it.
-3. **New workload value `tape_vs_tape`.** `metadata.rs:418` maps workloads;
-   it gains `tape_vs_tape` alongside `parse_only`. Its comparator columns
-   are restricted to structural-index-plane competitors (simdjson stage-1,
-   sonic lazy skeleton). Its `comparator_plane` is `offset/index` on both
-   sides — making it strict-vs-strict admissible.
+3. **New workload value `tape_vs_tape` as gate-binding telemetry.**
+   `metadata.rs:418` maps workloads; a later plan may add `tape_vs_tape`
+   alongside `parse_only`, with comparator columns restricted to
+   structural-index-plane competitors (simdjson stage-1, sonic lazy
+   skeleton). Its `comparator_plane` is `offset/index` on both sides. That
+   makes the row eligible for future strict-vs-strict adjudication, but only
+   after same-run structural-index competitor rows exist. Until then, it is
+   W1/W0-plan telemetry and cannot support SOTA admission.
 4. **Close condition / goalset changes (SPEC Section 0.1 + 0.5):**
    - Section 0.1 item 7 ("Any parse/direct behavior wave meets its named
      row threshold...") is rewritten so `parse_only` rows are
@@ -226,17 +236,20 @@ SPEC"):
    - Section 0.5's 17 `parse_only` rows keep their "Profile-bound;
      ±1.0 percent" W0 target but their "Later posture" column changes from
      "Candidate parse residual" to "Substrate-guard row; not a SOTA gate".
-     The four already marked "Guard row" are unchanged in spirit.
-   - The SOTA close becomes: GO when `direct_to_struct` + `real_typed_struct`
-     + the new `tape_vs_tape` rows clear their plane-matched thresholds.
-     `tape_vs_tape` is the *only* new winnable gate; `parse_only` is retired
-     from the win column.
+     The four already marked "Guard row" are unchanged in spirit. All
+     strict comparator deltas remain printed, and twitter/unicode/distinct
+     losses stay named as residuals rather than disappearing behind `S`.
+   - The SOTA close remains driven by `direct_to_struct` +
+     `real_typed_struct` until `tape_vs_tape` has same-run
+     structural-index competitor rows with strict deltas. `tape_vs_tape` is
+     a candidate future plane-matched gate, not a current close
+     contributor; `parse_only` is retired from the win column.
 5. **W0 unaffected as a dispatch.** W0's job (Section 3) is telemetry lock,
    not behavior. The enum amendment and the `tape_vs_tape` row addition are
-   *plan augmentations* for a post-W0 wave (most naturally folded into W1's
-   gate-binding or a W0 plan augmentation). W0 itself should still capture
-   all 17 `parse_only` rows as `SK-V8-open` baseline — they are not deleted,
-   only reclassified later.
+   *plan augmentations* for W1 gate-binding or an explicit W0 plan
+   augmentation, not behavior smuggled into W0 and not a W3 production
+   consumer. W0 itself should still capture all 17 `parse_only` rows as
+   `SK-V8-open` baseline — they are not deleted, only reclassified later.
 
 ## §5 Interaction with the union substrate
 
@@ -266,38 +279,48 @@ tape ⊕ structural-projection. This is exactly the construct that makes
   substrate has two measurable faces, and a healthy gate suite measures
   *both* faces against plane-matched competitors. Deleting `parse_only`
   (pure option b) blinds the suite to the tape face. Renaming it to a
-  plane-matched `tape_vs_tape` gate keeps the union fully observed and
-  turns the substrate-ceiling question into a *winnable* one: the
-  `canada structural scan: 69075 Mbps` figure already in RESULTS suggests
-  the tape face is fast and the ceiling is high.
+  plane-matched `tape_vs_tape` telemetry row keeps the union fully observed
+  and may later turn the substrate-ceiling question into a winnable one.
+  The `canada structural scan: 69075 Mbps` figure already in RESULTS
+  suggests the tape face is fast and the ceiling is high, but it cannot
+  admit a SOTA claim without same-run structural-index competitor rows.
 
 So: a union substrate does **not** make today's `parse_only` (tape vs DOM)
-comparable. It makes a *correctly-planed* `tape_vs_tape` row both
-comparable and winnable — and that is the SC-5 recommendation.
+comparable. It makes a *correctly-planed* `tape_vs_tape` row the right
+future comparator shape; until same-run structural-index competitor rows
+exist, that row is telemetry/gate-binding work only.
 
 ## §6 Risks
 
 1. **No same-run structural-index competitor exists yet.** simdjson stage-1
    and sonic lazy skeleton are not currently benched. Standing up
-   `tape_vs_tape` requires new comparator harness code in
-   `bbnf-bench/benches/json_parity.rs` + `metadata.rs`. SK-V8 Section 1
-   forbids new substrate without a same-wave consumer — the consumer here
-   is the new gate row, so it is admissible, but it is real work
-   (estimated within the W2/W4 LOC envelope) and must be planned, not
-   smuggled into W0.
+   `tape_vs_tape` is a W1 gate-binding or explicit W0-plan augmentation:
+   about 120-180 LOC across the comparator harness source
+   `bbnf-bench/benches/json_parity.rs`, workload metadata in
+   `metadata.rs`, and report/gate plumbing if the schema prints the new
+   plane. Focused tests must include a workload-map test, a
+   comparator-plane refusal test for DOM rows, and a same-run row test that
+   rejects bbnf-only structural-scan numbers as SOTA evidence. The rerun
+   budget is one allowed gate refresh after the harness lands. SK-V8
+   Section 1 forbids new substrate or behavior smuggled into W0; this work
+   is telemetry/gate-binding only and cannot be counted as a W3 production
+   consumer.
 2. **Enum amendment touches a frozen surface.** SPEC Section 0.3 freezes
    `{A,C,G,K,L,N-direct}`. Adding `S` (substrate-guard) requires a REDRESS
    entry + SPEC edit + `gate-json` reject-list update. If done sloppily it
    re-introduces exactly the kind of comparator drift REDRESS 75/77 warned
    about. It must be a deliberate, redress-recorded amendment.
-3. **Demotion could be read as concealing the twitter loss.** Moving
+3. **Demotion could be read as concealing real losses.** Moving
    `parse_only` off the SOTA scoreboard must *not* erase the twitter
-   -35.8%/-49.1% residual. The substrate-guard rows must still publish
-   their Δ vs every competitor; the `tape_vs_tape` row must surface twitter
-   honestly. If the demotion is used to quietly drop twitter, that repeats
-   the §2 excuse at a larger scale. Mitigation: the substrate-guard outcome
-   `S` must still carry full delta telemetry, and twitter's structural-scan
-   residual must appear as a named SK-V9/Pass-Omega routed residual.
+   -35.8%/-49.1% residual, the unicode-family losses, or the
+   distinct_values loss. The substrate-guard rows must still publish their
+   strict Δ vs every competitor and carry named residuals for
+   twitter/unicode/distinct rows; the `tape_vs_tape` row must surface the
+   same corpora honestly once same-run structural-index competitors exist.
+   If the demotion is used to quietly drop those losses, that repeats the
+   §2 excuse at a larger scale. Mitigation: the substrate-guard outcome `S`
+   must still carry full delta telemetry, and each named structural-scan
+   residual must be routed rather than hidden.
 4. **Risk of plane proliferation.** Three workloads (`tape_vs_tape`,
    `direct_to_struct`, `real_typed_struct`) each need a distinct comparator
    set. The schema is already 24+ columns; adding a fourth workload class

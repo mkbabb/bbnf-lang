@@ -387,10 +387,10 @@ Conditional. W3 may not dispatch until W0 and W1 close, then a fresh plan names
 one parse candidate, exact owner paths, exact rows, and challenge proves it is
 not a renamed REDRESS 82, 83, 84, 88, or 89 route.
 
-### Lead candidate
+### Lead Hypothesis
 
 The S-P2 substrate-ceiling cohort
-(`research/p2-substrate-ceiling/SC-1..SC-6`) prescribes the W3 parse candidate:
+(`research/p2-substrate-ceiling/SC-1..SC-6`) nominates the lead W3 hypothesis:
 the tape ⊕ structural-projection union. bbnf already produces a stage-1 SIMD
 structural index (`scan_structurals`) and discards it via the no-op
 `attach_structural_index`; the recursive-descent parser then re-discovers every
@@ -400,7 +400,14 @@ co-allocated index-aligned structural-class column, and rewrites the parser as a
 class-column cursor-walker — deleting the scalar rediscovery pass. The candidate
 is subtractive: it removes a producer rather than adding one. SC-3 sizes it near
 +210 net source LOC at medium risk. The W3 plan consumes SC-3's migration
-sketch and SC-4's string-quote-density gate table; it is not unprescribed.
+sketch and SC-4's string-quote-density gate table as research inputs.
+
+This nomination does not select W3. W3 selection requires W0/W1 closure, a
+fresh plan naming exact owner paths, same-wave production consumer, revert
+protocol, measurement thresholds, pre-blocked routes, and challenge acceptance.
+Telemetry or comparator rows such as a future `tape_vs_tape` gate may consume
+gate/report work, but they do not satisfy the production same-wave consumer
+requirement for a parser or substrate primitive.
 
 This candidate touches the substrate, so its challenge carries an extra burden
 (see exit gate). It must either follow Pass Omega ratification of the SC-6-L1-R1

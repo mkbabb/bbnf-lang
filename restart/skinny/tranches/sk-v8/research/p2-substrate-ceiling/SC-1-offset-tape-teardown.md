@@ -38,8 +38,9 @@ pub struct Tape<'input> {
 ```
 
 **Per-structural-element cost — bytes written.** Every structural element costs
-exactly **4 bytes** in the dense `offsets` array. There is no kind tag, no span,
-no payload slot. One `u32` source-byte offset is the entire record
+exactly **4 bytes** in the dense `offsets` array. There is no retained
+`StructuralClass` ordinal, no span, no payload slot. One `u32` source-byte
+offset is the entire record
 (`assembler.rs:71-85`, `push_plain_offset`). The element vocabulary and what
 each writes:
 
@@ -76,14 +77,18 @@ escape-heavy corpora this is real cost: gsoc-2018 8545 flag bytes, unicode_mixed
 9795, unicode_escapes 9385, y_string_unicode 9000 (RESULTS.md Notes).
 
 **Per-element READ cost (the hidden tax).** Because the tape stores a bare
-`u32` with **no kind tag**, every consumer must re-derive the kind by reading
-`source[offsets[cursor]]`. `JsonNodeKind::at_cursor` does exactly this; `view.rs`
-calls it 6+ times per traversal step (`view.rs:313,320,335,355,360,365,394,
-417`). `next_sibling_cursor` (`view.rs:354-381`) does an O(subtree) depth-counted
-walk re-classifying every offset to skip a container — there is no sibling-skip
-cache (the `payload_or_skip` field in `SUBSTRATE.md` §1.1 does not exist). The
-tape is write-cheap but **read-expensive**: it defers all structural meaning to
-a second source-byte fetch.
+`u32` with **no retained `StructuralClass` ordinal**, every consumer must
+re-derive the structural role by reading `source[offsets[cursor]]`.
+`JsonNodeKind::at_cursor` does exactly this for the current JSON instance;
+`view.rs` calls it 6+ times per traversal step
+(`view.rs:313,320,335,355,360,365,394,417`). `next_sibling_cursor`
+(`view.rs:354-381`) does an O(subtree) depth-counted walk re-classifying every
+offset to skip a container — there is no sibling-skip cache (the
+`payload_or_skip` field in `SUBSTRATE.md` §1.1 does not exist). The tape is
+write-cheap but **read-expensive**: it defers all structural meaning to a second
+source-byte fetch. The neutral form of this finding is governed by SC-3/SC-6:
+the retained identity, if any, is an opaque `StructuralClass` ordinal or fixed
+neutral role, not JSON-only structural semantics.
 
 ### 1.2 Write amplification vs win/loss correlation
 
@@ -175,8 +180,8 @@ traversal that produces it** is not.
 ### 1.4 Verdict — is the offset-tape an irreducible ceiling?
 
 **No. The offset-tape data structure is not the ceiling. The non-fusion of
-tape-build into the structural scan, plus the kind-tag-free encoding, is the
-cost — and both are removable.**
+tape-build into the structural scan, plus the absence of a retained
+`StructuralClass` ordinal, is the cost — and both are removable.**
 
 Evidence the tape itself is not the ceiling:
 
@@ -198,10 +203,11 @@ Evidence of removable headroom a kernel never reached:
   parser to consume `scan` offsets instead of re-walking source is a
   *substrate-consumption* refactor, not a kernel. No SK-V7 wave attempted it
   (all six waves were kernels inside the existing recursive-descent body).
-- The kind-tag-free `u32` offset forces every read-side consumer to re-fetch
-  `source[offset]` (`view.rs` `at_cursor`). A tagged encoding (kind in the high
-  bits of the offset `u32`, or a parallel `u8` kind lane) would remove the
-  re-fetch. Not a kernel; an encoding change.
+- The class-free `u32` offset forces every read-side consumer to re-fetch
+  `source[offset]` (`view.rs` `at_cursor`). A scan-written
+  `StructuralClass` ordinal, stored as a neutral co-indexed tape column or
+  otherwise under the SC-3/SC-6 tape-union design, would remove the re-fetch.
+  Not a kernel; an encoding and ownership change.
 
 So the answer to the user's framing ("Is our tape design flawed? union of tape
 and structural projection"): **the tape design's flaw is precisely that it is
@@ -251,9 +257,15 @@ the recursive-descent body and so could never reach it.
 
 ---
 
-## §3 Recommendation
+## §3 Candidate Research Recommendation
 
-For SK-V8, the substrate move is **fuse, do not redesign**:
+This section records a candidate research direction only. It does **not** select
+an SK-V8 implementation wave, prescribe W3, or close the planning question.
+S-P3/W3 must supply exact owner paths, same-wave production consumer, revert
+protocol, numeric measurement thresholds, and accepted challenge proof before
+any implementation dispatch.
+
+Candidate substrate direction for later challenge:
 
 1. **Wire the SIMD scan into the parse path.** Make `attach_structural_index`
    actually attach the `scan_structurals` offset stream, and rewrite the
@@ -263,8 +275,11 @@ For SK-V8, the substrate move is **fuse, do not redesign**:
    the structural projection — the union the user asked for. SK-V5 A4 §9.2
    already specifies this as the "WIRE" work; it was deferred through SK-V7.
 
-2. **Tag the offset encoding.** Store the node kind alongside the offset (kind
-   in the high 3–4 bits of the `u32`, or a parallel `Vec<u8>` kind lane). This
+2. **Retain scan-written structural identity in neutral form.** Store an
+   opaque `StructuralClass` ordinal or fixed neutral role alongside the offset,
+   governed by SC-3/SC-6 rather than JSON-only structural semantics. The preferred
+   candidate shape is a co-indexed tape column that preserves the dense `u32`
+   offset lane and keeps the identity scan-written, not parser-patched. This
    removes the `source[offset]` re-fetch in every `at_cursor` call on the read
    side (`view.rs`) and lets `next_sibling_cursor` skip containers without
    re-classifying. This is the missing `payload_or_skip` capability that
@@ -273,23 +288,30 @@ For SK-V8, the substrate move is **fuse, do not redesign**:
 3. **Sequence after, not instead of, the string-scanner work.** The string
    scanner pair (SK-V7 §3.4, ~75% self-time on loss corpora) is the larger
    single number. Fusion (item 1) and string-scanner work are *additive* — both
-   are needed; neither subsumes the other. Recommend fusion first because it is
-   a substrate-consumption refactor with a measurable falsifiable gate (parser
-   stops calling `skip_ws`; structural dispatch becomes a pointer-add) and it
-   un-wastes an already-built 69 Gbps kernel.
+   are needed; neither subsumes the other. Fusion is only a lead hypothesis
+   because it is a substrate-consumption refactor with a measurable falsifiable
+   gate (parser stops calling `skip_ws`; structural dispatch becomes a
+   pointer-add) and it un-wastes an already-built 69 Gbps kernel.
 
-**Falsifiability gate for the fusion wave:** after wiring, `parse_only` on the
-number-heavy wins (canada, mesh, numbers) must not regress, and the string-loss
-corpora (twitter, update_center) must show the structural-dispatch fraction of
-self-time collapse toward zero, isolating the residual squarely on the string
-scanner. If the wins regress, the recursive-descent re-walk was load-bearing and
-the finding is falsified.
+**W3 gate table template for any future fusion candidate:** W0 has not run, so
+profile artifact, hot leaf, owner file, and numeric threshold cells are
+post-W0 required and intentionally unfilled here. S-P3/W3 must complete them
+before selection.
+
+| row | workload | comparator plane | strictness source | baseline Track 1 Mbps | baseline Track 2 Mbps | threshold | maintain budget | profile artifact | hot leaf | owner file | pass/fail rule |
+|---:|---|---|---|---:|---:|---|---|---|---|---|---|
+| 1 | canada | strict same-run `parse_only` | post-W0 required | post-W0 required | post-W0 required | post-W0 required | no regression budget to be set by S-P3/W3 | post-W0 required | post-W0 required | post-W0 required | pass only if Track 1/2 maintain budget and profile artifact prove the structural-dispatch leaf is reduced under the filled numeric threshold |
+| 2 | mesh | strict same-run `parse_only` | post-W0 required | post-W0 required | post-W0 required | post-W0 required | no regression budget to be set by S-P3/W3 | post-W0 required | post-W0 required | post-W0 required | pass only if Track 1/2 maintain budget and profile artifact prove the structural-dispatch leaf is reduced under the filled numeric threshold |
+| 3 | numbers | strict same-run `parse_only` | post-W0 required | post-W0 required | post-W0 required | post-W0 required | no regression budget to be set by S-P3/W3 | post-W0 required | post-W0 required | post-W0 required | pass only if Track 1/2 maintain budget and profile artifact prove no number-heavy regression under the filled numeric threshold |
+| 4 | twitter | strict same-run `parse_only` | post-W0 required | post-W0 required | post-W0 required | post-W0 required | no regression budget to be set by S-P3/W3 | post-W0 required | post-W0 required | post-W0 required | pass only if residual profile mass is assigned to the string scanner or another named leaf, not to unowned structural re-walk |
+| 5 | update_center | strict same-run `parse_only` | post-W0 required | post-W0 required | post-W0 required | post-W0 required | no regression budget to be set by S-P3/W3 | post-W0 required | post-W0 required | post-W0 required | pass only if residual profile mass is assigned to the string scanner or another named leaf, not to unowned structural re-walk |
 
 **Do NOT** redesign the tape into a wide `TapeToken`. SK-V5 redress items 16/17/
 18/50/53 already measured and rejected wider tokens, dense aux columns, sparse
 aux side tables, and event-cursor prepasses. The encoding stays `u32`-dense; the
-only addition is a kind tag, and the only structural change is *who produces
-it* (the SIMD scan, not a second recursive-descent traversal).
+only admitted candidate addition is a scan-written neutral `StructuralClass`
+ordinal or role column under SC-3/SC-6, and the only structural change is *who
+produces it* (the SIMD scan, not a second recursive-descent traversal).
 
 ---
 
@@ -307,8 +329,9 @@ offset_tape")` — i.e. **no shape-specific lowering exists at all yet**
 grammar inherits. CSS L4's structural alphabet (`{};:()` + selectors) and
 Sheets' formula tokens are equally SIMD-classifiable; the same "SIMD scan
 produces the offset projection, parser dispatches off it" union applies. The
-kind-tag recommendation generalises directly — CSS and Sheets have more node
-kinds than JSON's ~10, so a tagged offset (or `u8` kind lane) helps them *more*.
+`StructuralClass` recommendation generalises directly — CSS and Sheets need
+grammar-neutral structural ordinals rather than JSON roles, so a co-indexed
+class lane helps them *more*.
 
 **Caveat — context-sensitive / recursive grammars.** A grammar whose structural
 meaning is not one-byte-decidable from `source[offset]` (e.g. CSS where `{` is a
@@ -316,12 +339,13 @@ block open vs. a declaration depends on selector context, or Sheets formulas
 with host-function chains) cannot dispatch purely off a flat offset stream;
 those are exactly the grammars `SUBSTRATE.md` §1.6 routes to `EventTape` /
 `CollapsedStage` rather than `OffsetTape`. For them the recommendation is the
-same in shape (consume the scan, do not re-walk) but the scan must emit a
-*tagged* event tape, not bare offsets — which reinforces §3 item 2. The
+same in shape (consume the scan, do not re-walk) but the scan must emit an
+event tape carrying neutral `StructuralClass` ordinals or roles, not bare
+offsets — which reinforces §3 item 2. The
 `derive_backend_shape` cost model (absent in skinny per SK-V5 A4 §2) is the
 mechanism that picks per-rule; once that lands, JSON gets `OffsetTape` + fused
-scan, CSS/Sheets get `EventTape` + tagged scan, and the "tape ≡ structural
-projection" union is honored across all of them.
+scan, CSS/Sheets get `EventTape` + scan-written neutral class data, and the
+"tape ≡ structural projection" union is honored across all of them.
 
 **Does NOT generalise:** the specific win/loss correlation (string-quote density
 drives it) is JSON-corpus-specific. For CSS the analogous discriminator would be
@@ -336,11 +360,11 @@ density is) generalises; the specific predictor variable does not.
 | # | Risk | Pre-block |
 |---|------|-----------|
 | R1 | Fusion wave re-introduces a parallel prepass (`generated_eventcursor.rs` shape, SK-V5 A4 §3.2) — a scan that runs upfront in front of an unchanged recursive-descent body. SK-V4 §4 already refuted this; it regressed and grew the hot hub. | The fused cursor MUST be the dispatch boundary *inside* the generated body (`buf[offsets[i++]]` per `consume_*` site), not a `ParseIndexCursor`-style sidecar attached before `parse_value`. Gate: `grep` the generated parser for any retained `StructuralIndex`/`Vec<JsonEvent>` field on `ParserState` — must be zero. |
-| R2 | Wiring the scan regresses the number-heavy wins (canada/mesh/numbers) because the recursive-descent re-walk was hiding a real advantage (number-spans need byte-level scanning anyway, so structural dispatch is a small fraction there). | Bench gate: canada/mesh/numbers `parse_only` Mbps must stay within noise of the pre-fusion baseline. If they regress >3%, the fusion is net-negative for number corpora — keep `OffsetTape`-via-recursive-descent for low-quote-density rules via `derive_backend_shape`, do not force one path. |
-| R3 | Kind-tagging the offset `u32` overflows 32 bits on inputs >256 MiB if 4 bits are stolen for the tag (offset range drops to 2^28). | `checked_u32` (`mod.rs:228`) already debug-asserts the 32-bit bound; tighten it to assert `< 2^28` when the tagged encoding lands, or use a parallel `Vec<u8>` kind lane (costs 1 byte/element, ratio still <1x input) to keep the full 32-bit offset range. Prefer the parallel lane — it sidesteps the overflow entirely and keeps the dense offset array byte-identical. |
+| R2 | Wiring the scan regresses the number-heavy wins (canada/mesh/numbers) because the recursive-descent re-walk was hiding a real advantage (number-spans need byte-level scanning anyway, so structural dispatch is a small fraction there). | Bench gate: canada/mesh/numbers `parse_only` Mbps must stay inside the post-W0 maintain budget filled by S-P3/W3. If they miss that budget, the fusion candidate is net-negative for number corpora — keep `OffsetTape`-via-recursive-descent for low-quote-density rules via `derive_backend_shape`, do not force one path. |
+| R3 | Packing `StructuralClass` into the offset `u32` overflows 32 bits on inputs >256 MiB if 4 bits are stolen for the ordinal (offset range drops to 2^28). | `checked_u32` (`mod.rs:228`) already debug-asserts the 32-bit bound; avoid offset packing unless W3 proves the bound is acceptable. Prefer a parallel co-indexed `Vec<u8>` class lane (costs 1 byte/element, ratio still <1x input) to keep the full 32-bit offset range and preserve the dense offset array byte-identically. |
 | R4 | The SIMD scan and recursive-descent parser disagree on structural count for adversarial inputs (escaped-quote parity edge cases — `scan.rs:164-198` `resolve_string_masks_64` slow path). A fused parser that trusts the scan would mis-parse where the standalone recursive-descent did not. | The scalar parity hash (`scan.rs:38-45`, `scalar_parity_report`) must gate the fused path in CI across the full corpus before the fusion wave commits; this is the existing Lock-8 Exact-mode contract (`SUBSTRATE.md` §3.4). Do not skip it. |
 | R5 | `SUBSTRATE.md` is stale on two load-bearing points (claims close-token elision; claims "structural projection IS the tape's storage" while the scan output is discarded). A wave that trusts the doc designs against fiction. | SK-V8 must correct `SUBSTRATE.md` §1.5 and §3.6 alongside the fusion code (per the `document-alongside-code` memory): record that closes ARE emitted and that pre-fusion the scan output was unconsumed. Stale-doc-driven design is a recurring REDRESS pattern. |
-| R6 | Effort misallocation: a wave spends its budget fusing the scan and the headline `parse_only` numbers on string-loss corpora (twitter, update_center) barely move because the ~75% string-scanner cost (SK-V7 §3.4) is untouched. | State the prediction up front: fusion closes the *structural-dispatch* fraction (~10–25% on object-heavy corpora per SK-V7 §3.3), not the string-scan fraction. The fusion wave's gate is "structural-dispatch self-time → ~0", not "twitter flips to GO". Sequence string-scanner work in the same tranche. |
+| R6 | Effort misallocation: a wave spends its budget fusing the scan and the headline `parse_only` numbers on string-loss corpora (twitter, update_center) barely move because the ~75% string-scanner cost (SK-V7 §3.4) is untouched. | State the prediction up front: fusion targets the *structural-dispatch* fraction (~10–25% on object-heavy corpora per SK-V7 §3.3), not the string-scan fraction. The fusion candidate's gate must use the W3 table's filled numeric threshold for the named structural-dispatch hot leaf, not "twitter flips to GO". Route string-scanner residuals separately in S-P3/W3 planning. |
 
 ---
 

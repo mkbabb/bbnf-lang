@@ -25,6 +25,23 @@ external_anchors:
 
 ## §1. Findings
 
+### 1.0 Source-anchor caution for comparator architecture claims
+
+The upstream comparator summaries in this artefact are research architecture
+summaries unless the claim is anchored to exact upstream source file/line
+evidence here. In particular, sonic-rs, yyjson, asmjson, and simdjson claims
+below should not be treated as admission evidence for bbnf unless they are tied
+to exact source anchors in this artefact or later challenge work. They preserve
+the prior S-P2/SK-V7 taxonomy as an external-anchor map, not as a substitute
+for same-run strict comparator rows.
+
+This caution matters most for sonic-rs: absent exact upstream source evidence
+to the contrary, SC-2 treats sonic-rs as having no persistent document-wide
+structural index. Its SIMD projection is described as locally re-derived and
+consumed inside skip/parse operations, not as a retained index substrate.
+asmjson's permissive fast path remains a flaw probe for what a register-resident
+DPDA can avoid; it is not a strict-plane admission anchor.
+
 ### 1.1 The simdjson two-stage architecture, precisely
 
 simdjson (Langdale & Lemire, "Parsing Gigabytes of JSON per Second",
@@ -59,7 +76,7 @@ mispredictions are the dominant cost of scalar JSON parsers (paper §2), and
 stage 1's design goal is to spend zero of them. Its output, the structural
 index, is *grammar-agnostic at the byte level*: it knows nothing about JSON
 nesting; it only knows "these byte offsets are where something interesting
-begins". UTF-8 validation runs as a fused side-channel of the same pass.
+begins". UTF-8 validation runs as fused work in the same pass.
 
 **Stage 2 — the tape builder.** Stage 2 walks the *structural index*, not the
 input. It is a goto-threaded state machine (`object_begin`, `array_begin`,
@@ -164,10 +181,12 @@ thus (a) simdjson — wide branch-free stage 1, fed-index stage 2; and
 ### 1.5 What bbnf's offset-tape actually is, and what it conflates
 
 bbnf's substrate is the `OffsetTape` (`runtime/src/tape/mod.rs`,
-`tape/assembler.rs`): a `Vec<u32>` of offsets, a parallel sparse
-`(flag_cursor, flag_value)` sidecar for `HAS_ESC`/`HAS_CONTROL`, and an
-(empty in every measured row) `PayloadArena`. RESULTS.md confirms the tape is
-genuinely offset-only: every row reports `0 payload bytes`,
+`tape/assembler.rs`): a `Vec<u32>` of offsets, sparse tape-internal
+`(flag_cursor, flag_value)` facts for `HAS_ESC`/`HAS_CONTROL`, and an (empty in
+every measured row) `PayloadArena`. The flag facts share the same producer and
+cursor domain as the offsets and have no independent retained lifetime outside
+the tape. RESULTS.md confirms the tape is genuinely offset-only: every row
+reports `0 payload bytes`,
 `0/0 writes/allocations`. So far this *looks* like a simdjson-style structural
 index — it is, structurally, "an array of `u32`, one per structural element".
 
@@ -247,27 +266,32 @@ information in the slow plane. The "irreducible cost" is self-inflicted by
 *not consuming the index that has already been built*. The substrate is not
 the ceiling — the **missing index-driven stage 2** is the ceiling.
 
-## §3. Recommendation — the union substrate
+## §3. Candidate — the union substrate
 
-The user's framing — "a union of tape and structural projection" — is exactly
-the right move, and the two-stage lens makes it concrete. The recommendation is
-**not** to add a second materialisation pass (that would re-introduce the
-stage-boundary memory traffic that yyjson and sonic-rs avoid, and the SK-V7
-verdict already shows micro-kernels don't pay). The recommendation is:
+The user's framing — "a union of tape and structural projection" — is a
+falsifiable candidate, not a selected W3 prescription. The two-stage lens makes
+the candidate concrete, but SC-2 alone does not authorize a wave. The candidate
+is **not** to add a second materialisation pass (that would re-introduce the
+stage-boundary memory traffic that yyjson and sonic-rs appear to avoid in this
+architecture summary, and the SK-V7 verdict already shows micro-kernels don't
+pay). The candidate to challenge is:
 
 > **The structural index IS the offset-tape. Produce it once, branch-free, in
 > the stage-1 kernel; consume it lazily as the parser's token cursor.**
 
-Concretely — call it the **fused index-tape**:
+Concretely — call it the **fused index-tape candidate**:
 
 1. **One production site.** `scan_structurals` is promoted from a capacity-
    sizing throwaway to *the* structural pass. Its `Vec<u32>` of positions *is*
    the offset-tape's `offsets` vector — no copy, no second build. The
-   `(flag_cursor, flag_value)` escape/control sidecar is emitted by the *same*
-   stage-1 kernel as a fused side-channel (it already computes the backslash
-   mask and the in-string mask — `HAS_ESC` is a popcount-test on a mask it
-   already holds). This is the "union": the tape and the structural projection
-   become the *same array*, produced in the branch-free plane.
+   `(flag_cursor, flag_value)` escape/control facts are emitted by the *same*
+   stage-1 kernel into the tape's sparse fact columns (it already computes the
+   backslash mask and the in-string mask — `HAS_ESC` is a popcount-test on a
+   mask it already holds). They share the offsets' cursor domain and do not
+   become an aux table, external projection, or independently retained
+   substrate. This is the "union": the tape and the structural projection
+   become the *same array* plus tape-internal sparse facts, produced in the
+   branch-free plane.
 
 2. **The recursive-descent parser becomes a fed-index walker.** `parse_value_
    at` no longer calls `match_tiny_plain_string` / `match_string_at_quote` to
@@ -294,23 +318,43 @@ Concretely — call it the **fused index-tape**:
 4. **Strict-plane preservation.** Strictness is *not* lost by this move — it is
    *strengthened*. simdjson and bbnf both validate UTF-8 and reject unescaped
    controls at the stage-1 scan boundary; the `OffsetFlags::HAS_CONTROL` bit
-   already exists for exactly this. asmjson's permissive 10.93 GiB/s is *not*
-   the target — the target is strict-vs-strict, and stage-1 branch-free
-   validation is the only way to do strict cheaply.
+   already exists for exactly this. asmjson's permissive 10.93 GiB/s path is
+   a flaw probe only, because it exposes the cost of strict string-body/control
+   validation by omitting part of it; it is not a strict admission anchor. The
+   target is strict-vs-strict, and stage-1 branch-free validation is the only
+   candidate path this artefact admits for cheap strictness.
 
-The size budget: this is a *deletion-positive* change. It removes the
-`match_tiny_plain_string`/`match_string_at_quote` inner-scan call sites from
-the generated parser and removes the throwaway capacity scan. The cost-model
-hook is `BackendShape` — the fused index-tape is the lowering for the
-`OffsetTape` shape; the per-rule decision "fed-index walk vs inner-scan" becomes
-a `CostFacts` fact (the SK-V7 W9 CostFacts substrate is the natural home).
+The falsifiability contract, if S-P3/W3 later chooses to challenge this
+candidate, is:
 
-The predicted impact: the string-heavy loss cluster (twitter, update_center,
-distinct_values, apache_builds, github_events, the unicode rows — ~9 of 13
-parse-G rows) is exactly the set whose hot leaf is the inner string scan. A
-fed-index stage 2 removes that leaf. This is the *one structural move* SK-V7's
-14 wasted micro-kernel waves could not be, because it changes the substrate
-shape rather than speeding the wrong plane.
+- **Scalar reference expectation.** A scalar oracle must produce the same
+  offset sequence and the same tape-internal `HAS_ESC`/`HAS_CONTROL` facts as
+  the SIMD path on every selected strict row, including block-boundary escape
+  carries and C0-control rejection.
+- **checkasm expectation.** Any admitted SIMD primitive, including
+  `compact_mask`/classifier/string-mask work, needs a named checkasm-style
+  parity test before it can become a production gate.
+- **Same-wave consumer placeholder.** A W3 plan must name the production
+  consumer that stops re-walking strings in the same wave as the fused
+  index-tape change. A telemetry-only `tape_vs_tape` row is not enough.
+- **Selection bar.** The fused index-tape remains unselected until an S-P3/W3
+  challenge supplies owner paths, revert protocol, numeric thresholds,
+  strict same-run comparator planes, and accepted challenge evidence.
+
+The size-budget hypothesis is deletion-positive, but still unproven. It would
+need to remove the `match_tiny_plain_string`/`match_string_at_quote`
+inner-scan call sites from the generated parser and remove the throwaway
+capacity scan without exceeding the W3 verification budget. The cost-model hook
+would likely be `BackendShape`; the per-rule decision "fed-index walk vs
+inner-scan" would become a `CostFacts` fact if S-P3 proves that route.
+
+The predicted impact is likewise a hypothesis: the string-heavy loss cluster
+(twitter, update_center, distinct_values, apache_builds, github_events, the
+unicode rows — ~9 of 13 parse-G rows) is exactly the set whose reported hot
+leaf is the inner string scan. A fed-index stage 2 should remove that leaf if
+the same-wave consumer lands. This is a structural candidate SK-V7's
+micro-kernel waves did not test; it is not selected until the S-P3/W3 challenge
+passes.
 
 ## §4. Generalisation — grammar-neutral
 
@@ -340,18 +384,19 @@ is the most grammar-neutral thing in the SOTA literature, because stage 1 knows
 - **CSS L4 specifically.** CSS declarations are structural-byte-delimited
   within a block; `scan_structurals` parameterised with the CSS alphabet
   produces an index whose intervals are selectors, property names, values.
-  The escape sidecar generalises directly to CSS hex escapes (`\E9 `). The
+  The tape-internal escape facts generalise directly to CSS hex escapes
+  (`\E9 `). The
   `@`-rule envelope and `@error(recover)` recovery branches are the part that
   falls back — but the *declaration body*, which is the bulk of any
   stylesheet, gets the fed-index stage 2. This matches skv7-A3 §5's
   "CSS L4 declaration-body only" admissibility row.
 
-- **The union is the right shape for the whole framework**, not a JSON hack:
-  it says *every grammar with a structural-byte alphabet gets one branch-free
-  stage-1 index, and that index is the substrate the typed/event/sink lowerings
-  all consume*. That is precisely the "skinny ⊂ greater arch" feedback loop
-  (skv7-A3 §7): the JSON close is the proof; the index-tape substrate is the
-  generalisation.
+- **The union is a framework-level candidate**, not a JSON hack: it says
+  *every grammar with a structural-byte alphabet gets one branch-free stage-1
+  index, and that index is the substrate the typed/event/sink lowerings all
+  consume*. That is the "skinny ⊂ greater arch" feedback loop (skv7-A3 §7) as
+  a hypothesis: the JSON close would be the proof only after S-P3/W3 challenge
+  evidence, not from SC-2 wording alone.
 
 ## §5. Risks
 
@@ -384,12 +429,12 @@ is the most grammar-neutral thing in the SOTA literature, because stage 1 knows
    SK-V7 phase). Mitigation: it is *deletion-positive* — fewer call sites, not
    more — and byte-identical generated-output diffing gates each step.
 
-5. **Not a micro-kernel — must not be waved as one.** The SK-V7 failure mode
-   was 14 waves of micro-kernels that moved no production number. The fused
-   index-tape is a *substrate change*; it must be planned as one structural
-   wave with a falsifiable gate (string-heavy parse rows cross toward PASS),
-   not decomposed into kernel admissions. If decomposed, it will fail the same
-   way SK-V7 did.
+5. **Not a micro-kernel — not selected here.** The SK-V7 failure mode was 14
+   waves of micro-kernels that moved no production number. The fused index-tape
+   is a *substrate-change candidate*; if S-P3/W3 challenges it, the plan must
+   provide a scalar oracle, checkasm parity, same-wave production consumer, and
+   falsifiable strict-row gate (string-heavy parse rows cross toward PASS).
+   SC-2 does not select that wave.
 
 ## §6. Sources
 
@@ -428,7 +473,7 @@ In-tree (authoritative):
 - `restart/skinny/tranches/sk-v7/SYNTHESIS.md` §3.3–§3.6 — string-scanner pair
   ≈75% self-time; twitter "win" is skip-work.
 - `skinny/crates/runtime/src/tape/mod.rs`, `tape/assembler.rs` — `OffsetTape`
-  substrate: `Vec<u32>` offsets + sparse flag sidecar + empty `PayloadArena`;
+  substrate: `Vec<u32>` offsets + sparse tape facts + empty `PayloadArena`;
   `TapeBuilder::push_offset`.
 - `skinny/crates/runtime/src/grammars/json/scan.rs` — `scan_structurals`: the
   existing branch-free NEON stage-1 structural indexer (prefix-XOR, TBL

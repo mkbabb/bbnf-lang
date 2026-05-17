@@ -54,12 +54,12 @@ names bitmap work as a hot owner and challenge accepts the changed framing.
 ## 3a. Substrate-Ceiling Finding
 
 A new-lens skinny S-P2 research cohort ran six agents SC-1 through SC-6 under
-`research/p2-substrate-ceiling/`. It converged: bbnf produces a stage-1 SIMD
+`research/p2-substrate-ceiling/`. It converged on a lead hypothesis: bbnf produces a stage-1 SIMD
 structural index (`scan_structurals`, ~69 Gbps) and discards it; the parser
 re-discovers every structural byte and string boundary in a scalar pass holding
 ~75% of self-time on the loss corpora. SK-V7's six rejected kernels each
-optimised that scalar rediscovery — a pass that should not exist. The prescribed
-fix is the tape ⊕ structural-projection union: retain the stage-1 index, add a
+optimised that scalar rediscovery — a pass that should not exist. The nominated
+candidate shape is the tape ⊕ structural-projection union: retain the stage-1 index, add a
 co-allocated structural-class column, walk it as a cursor, delete the
 rediscovery pass. It is the named W3 lead candidate in `SPEC.md` Section 6,
 subtractive (removes a producer), ~+210 LOC, medium risk.
@@ -67,8 +67,12 @@ subtractive (removes a producer), ~+210 LOC, medium risk.
 The cohort is S-P2 research output. Per the pass framework
 (`restart/prompts/skinny/PASS-2-RESEARCH.md` §3) the next framework step is the
 six-lens CH1-CH6 CHALLENGE wave over SC-1..SC-6, then S-P3 Synthesis-Plan. The
-cohort does not change the G-Alpha-W0-only constraint; it prescribes W3 ahead of
-time so W0 telemetry confirms the finding executably rather than discovering it.
+cohort does not change the G-Alpha-W0-only constraint; it nominates a lead W3
+hypothesis so W0 telemetry confirms or falsifies the finding executably rather
+than discovering it from scratch. SC-1..SC-6 authorize no W3 plan by
+themselves: W3 remains blocked on W0/W1 closure, fresh plan owner paths,
+same-wave consumer, revert protocol, measurement thresholds, and challenge
+acceptance.
 
 ## 4. Dispatch Posture
 

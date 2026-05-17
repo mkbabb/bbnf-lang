@@ -103,14 +103,21 @@ counted and discarded, then re-derived. The union is therefore not a new
 artefact: it is the deletion of the rediscovery pass by **retaining the SIMD
 scan output and making it the tape's offset column directly**.
 
-One substrate, one producer, two columns that are co-resident and
-co-allocated:
+One retained substrate, one producer, two mandatory columns that are
+co-resident and co-allocated:
 
 - the **offset column** — `Vec<u32>` of structural positions, written *once*
   by the SIMD compaction step;
 - the **class column** — one byte per structural position naming which member
   of the `StructuralAlphabet` sits there (`{` `}` `[` `]` `:` `,` `"` for
   JSON), written *in the same SIMD pass* from the same classify mask.
+
+Cardinality invariant: after construction there is exactly one retained
+`Tape`. `StructuralIndex` is consumed by move into `Tape`; it has no query
+surface, clone path, cache path, attach-after-build path, parser-owned cursor,
+or post-build API. The builder may receive the scan product only to move its
+columns into the tape; any surviving independent `StructuralIndex` falsifies
+the design.
 
 The parser stops *producing* offsets. It becomes a **consumer** that walks the
 class column, validates grammar well-formedness, and lazily materialises
@@ -121,9 +128,11 @@ the structural-validation stage walks it branch-predictably.
 ### §2.2 Data layout
 
 The union is a single struct, `Tape<'input>`, replacing the current one. It
-is **structure-of-arrays** keyed by one cursor index — the structural
-ordinal. Every column is `index`-aligned: column `c[i]` describes the i-th
-structural character.
+uses **co-indexed internal tape columns** keyed by one cursor index — the
+structural ordinal. Every column is `index`-aligned: column `c[i]` describes
+the i-th structural character. This is not Lock 1's rejected dead columnar
+SoA substrate: there is no separate columnar artefact beside the tape, and no
+consumer can retain or query a second projection.
 
 ```
                        Tape<'input>  — the union substrate
@@ -133,10 +142,11 @@ structural character.
   └──────────────────────────────────────────────────────────────────┘
                                   │  one SIMD pass writes ▼
   ┌──────────────────────────────────────────────────────────────────┐
-  │ STRUCTURAL COLUMNS  (SoA, length = N structural chars, i-aligned)  │
+  │ STRUCTURAL COLUMNS  (length = N structural chars, i-aligned)       │
   │                                                                    │
   │   offset : Vec<u32>     ── byte position of i-th structural char   │
-  │   class  : Vec<u8>      ── StructuralClass id of i-th char         │
+  │   class  : Vec<u8>      ── mandatory StructuralClass id of i-th    │
+  │                            char; primary structural identity       │
   │                            (alphabet ordinal: 0..K, K = |alphabet|)│
   │                                                                    │
   │   index i:   0    1    2    3    4    5    6   ...                  │
@@ -144,10 +154,12 @@ structural character.
   │   class   [ '{', '"', '"', ':', '{', '"', '"',...]   ← JSON LUT    │
   └──────────────────────────────────────────────────────────────────┘
   ┌──────────────────────────────────────────────────────────────────┐
-  │ SPAN-FACT COLUMN  (sparse, populated only by EventTape shape)      │
-  │   facts : Vec<(u32 cursor, u8 flags)>   ── escape/control bits,    │
-  │                                            recovery, layout side  │
-  │                                            facts; cursor-ordered   │
+  │ SPAN-FACT COLUMN  (sparse, populated only by admitted shapes)      │
+  │   facts : Vec<(u32 cursor, u8 flags)>   ── legacy escape/control   │
+  │                                            flags plus EventTape-   │
+  │                                            required recovery and   │
+  │                                            layout facts only;      │
+  │                                            cursor-ordered and      │
   │                                            binary-searched.        │
   │   (this is today's flag_cursors/flag_values pair, generalised and  │
   │    kept SPARSE — most grammars touch it zero times.)               │
@@ -165,12 +177,21 @@ structural character.
 
 The `offset` and `class` columns are **the same length** and **written
 together** by the SIMD compaction step. There is no second `offsets`
-producer. `class` costs one extra byte per structural char — for `twitter`
-that is +29.5 KiB against a 118 KiB offset column (~+25%), and it *deletes*
-the entire scalar `consume_structural` rediscovery loop, which is the
-dominant cost on string-dense corpora. The classify mask that SIMD already
-computes to *find* a structural byte is the same mask that *names* it; the
-class column is free at the mask level and costs only the compressed store.
+producer. `class` is mandatory primary structural identity: scan-written
+only, never parser-patched, never optional for retained shapes, and never
+backfilled from byte rediscovery. `class` costs one extra byte per structural
+char — for `twitter` that is +29.5 KiB against a 118 KiB offset column
+(~+25%), and it *deletes* the entire scalar `consume_structural` rediscovery
+loop, which is the dominant cost on string-dense corpora. The classify mask
+that SIMD already computes to *find* a structural byte is the same mask that
+*names* it; the class column is free at the mask level and costs only the
+compressed store.
+
+The `facts` column is deliberately narrow. It admits only legacy
+escape/control flags and EventTape-required recovery/layout facts. It does
+not admit density tables, quote caches, skip caches, profile counters,
+parser-owned slots, per-consumer caches, or any fact with an independent
+lifetime from the tape.
 
 ### §2.3 The one-pass branch-free producer
 
@@ -236,9 +257,9 @@ the runtime owns the columns.
 | Shape | offset col | class col | facts col | payload arena | Cursor discipline |
 |---|---|---|---|---|---|
 | `OffsetTape` | yes | yes | empty | empty (lazy) | Retained doc. Parser validates by walking `class`; `ValueRef` borrows `source` via `offset[cursor]`. The canonical union shape. |
-| `EventTape` | yes | yes | **populated** | lazy | Retained doc carrying per-cursor side facts (escape/control flags, recovery marks, layout depth) in the sparse `facts` column — today's `flag_cursors`/`flag_values`, generalised. |
+| `EventTape` | yes | yes | **populated** | lazy | Retained doc carrying admitted per-cursor facts only: legacy escape/control flags and EventTape-required recovery/layout facts in the sparse `facts` column — today's `flag_cursors`/`flag_values`, narrowed and renamed. |
 | `EagerTape` | yes | yes | optional | optional | Retained doc, but the cursor reads `source[pos]` *eagerly* for rules with first-set overlap / `@error` / `@host` / `@layout` (per `derive_backend_shape` steps 1–4). The class column still backs the structural skeleton; eager byte reads handle only the ambiguous sub-rules. The union is a superset — eager rules simply bypass the class fast-path. |
-| `SinkOnly` | yes (transient) | yes (transient) | empty | n/a | Parser walks the union columns to drive typed-field writes, then **drops the `Tape`**: no retained document identity. The union is the parse-time scaffold; the SoA columns are freed at `finish()`. SOTA direct shape. |
+| `SinkOnly` | yes (transient) | yes (transient) | empty | n/a | Parser walks the union columns to drive typed-field writes, then **drops the `Tape`**: no retained document identity. The union is the parse-time scaffold; the co-indexed internal tape columns are freed at `finish()`. SOTA direct shape. |
 | `CollapsedStage` | fused | fused | n/a | n/a | The AVX-512/asmjson FSM does not separate "find structural" from "build column" at all — the mask-held state walk *is* the union, collapsed into one pass with no retained `Vec`. The union's data-layout is the *uncollapsed* form of exactly this; `CollapsedStage` is the union with `offset` and `class` never spilling to memory. The taxonomy's extreme point, still the same artefact conceptually. |
 
 The key property: `OffsetTape`, `EventTape`, `EagerTape`, `SinkOnly` differ
@@ -307,7 +328,8 @@ structural positions — exactly the JSON number/string laziness.
 **Google Sheets** (formula/cell grammar): the structural alphabet is
 `( ) , ; { } : & = + - * / "`  — formula parens and arg separators, array
 literal braces, range colons, the cell-ref/string quote. K ≈ 14. The same
-`compact_mask` produces the same SoA columns; the Sheets parser walks them.
+`compact_mask` produces the same co-indexed internal tape columns; the Sheets
+parser walks them.
 
 **BBNF-self**: alphabet `= ; | ( ) [ ] { } < > , " /` — rule terminators,
 alternation bars, grouping. The self-hosting parser becomes a class-column
@@ -327,18 +349,43 @@ mining). The class table is a codegen *projection* of the same mined fact.
 
 ### §5.1 What changes
 
+Cardinality invariant for every migration slice: exactly one retained `Tape`
+may survive. `StructuralIndex` is a move-only scan product consumed into that
+`Tape`; no `positions()`/`classes()` query API may survive past build except
+through `Tape`, no clone or cache is allowed, `attach_structural_index` cannot
+be a post-build attachment hook, and generated parsers must not own an
+independent structural cursor.
+
+**Tier A: narrow W3 class-column candidate requiring W3 challenge proof**
+
+Exact consumers in scope: JSON retained `OffsetTape` parsing, JSON
+`EventTape` sparse fact patching where already present, `ValueRef::offset()`,
+and JSON generated `consume_structural` call sites that become class-cursor
+reads. Out of scope for Tier A: quote/backslash/parity masks, CostFacts
+template parity, density policy, non-JSON grammars, `CollapsedStage`, and the
+five placeholder lowerer bodies beyond the JSON walk needed for the same-wave
+consumer.
+
 **`skinny/crates/bbnf-simd/src/lib.rs`** (~+40 LOC)
 - `StructuralIndex` gains a `classes: Vec<u8>` column alongside `positions`.
-  `from_positions` → `from_positions_and_classes`; `positions()` keeps its
-  signature; add `classes()`.
+  `from_positions` → `from_positions_and_classes` internally, then the
+  index is move-consumed into `Tape`; no post-build `positions()` or
+  `classes()` query surface survives.
 - `compact_mask` (`lib.rs:115`) emits class ordinals in lockstep with
   positions, reading a `&[u8; 256]` class table argument.
 - `scan_dispatch` / NEON `neon::scan` thread the class table through.
+- Scalar oracle placeholder:
+  `skinny/crates/bbnf-simd/src/scalar.rs::compact_mask_positions_classes_oracle`.
+- checkasm placeholder:
+  `checkasm_bbnf_simd_compact_mask_positions_classes`.
 
 **`skinny/crates/runtime/src/tape/`** (~+90 LOC, ~−10 LOC)
 - `mod.rs` — `Tape` gains `classes: Vec<u8>`; `class_at(cursor) -> u8`;
-  `from_offsets` → `from_columns`. `flag_cursors`/`flag_values` keep their
-  shape but are renamed to the `facts` column for clarity (mechanical).
+  `from_offsets` → `from_columns`. `class` is mandatory scan-written primary
+  identity; parser patching is forbidden and is row-falsified against REDRESS
+  50 aux-side-table regressions. `flag_cursors`/`flag_values` keep their
+  storage shape but are narrowed to admitted `facts`: legacy escape/control
+  flags plus EventTape-required recovery/layout facts only.
 - `assembler.rs` — `TapeBuilder::new` takes the retained
   `StructuralIndex`; `push_plain_offset`/`reserve_offsets_cold` are
   **deleted** (the offset column arrives whole from SIMD, not appended).
@@ -355,43 +402,60 @@ hand-patched per `feedback_generated_files_clean_regen`)
   become `class`-column cursor reads. `parser.rs` `emit_plain_offset`
   **deleted**.
 
-**`skinny/crates/codegen/src/lower/`** (~+120 LOC)
-- `offset_tape.rs` / `event_tape.rs` / `eager_tape.rs` / `sink_only.rs` /
-  `collapsed_stage.rs` — the five 17-line placeholders gain real bodies that
-  emit the column/cursor disciplines of §3. This is net-new lowering code,
-  but it is *required regardless* — the union just defines what they emit.
-- codegen emits the `StructuralClassTable` from the mined `SimdScan`
-  alphabet fact.
-
-### §5.2 LOC estimate
+Tier A LOC/risk/rerun budget:
 
 | Area | Delta |
 |---|---:|
-| `bbnf-simd` (class column) | +40 |
-| `runtime/src/tape/` | +90 / −10 |
-| generated `grammars/json/` | −30 (rediscovery deleted) regenerated |
-| `codegen/src/lower/` | +120 (placeholder → real, required anyway) |
-| **Net source** | **≈ +210 LOC** |
+| `bbnf-simd` class column + scalar oracle + checkasm hook | +55 |
+| `runtime/src/tape/` move-consumed columns + narrowed facts | +90 / −10 |
+| generated `grammars/json/` class-cursor consumer | −30 regenerated |
+| minimal codegen emission for JSON `StructuralClassTable` | +45 |
+| **Net Tier A source** | **≈ +150 LOC** |
 
-This sits inside a W2/W3-class source LOC budget (SPEC.md §2: W3 450). It is
-*not* a W0/W1 change — W0 is telemetry-only, W1 is CostFacts-gate-only
-(SPEC.md §1: "No SK-V8 implementation wave dispatches before G-Alpha"; W0/W1
-forbid parser/codegen behaviour change). The union is a **W3 candidate**
-(profile-selected parse candidate, SPEC.md §6) and must be challenge-proven
-not a renamed REDRESS 60–72 retained-parse route — it is not: REDRESS 60–72
-rejected *sidecar producers and retained side-table columns added during
-parse*; the union *removes* a pass and retains *fewer* artefacts. It must
-carry the SPEC §6 entry gate: scalar reference + checkasm for the modified
-`compact_mask` primitive.
+Risk: medium. It replaces a parser hot leaf and modifies the scan primitive,
+but its same-wave consumer list is narrow and executable. Rerun budget: one
+focused scalar/checkasm parity run for `compact_mask`, one JSON generated
+runtime test pass, and one full SK-V8 gate refresh if Tier A is promoted by
+S-P3/W3 challenge.
 
-### §5.3 Risk class
+### §5.2 Tier B — multi-wave string-index union work
+
+Tier B is follow-on work, not part of the narrow Tier A challenge candidate.
+It routes the larger string-index union: quote/backslash/parity masks,
+CostFacts/template parity, density admission, non-JSON grammar table
+generation, and any
+document-wide string recovery/layout expansion. These items must prove they
+remain transient masks or admitted tape facts; retained quote caches, skip
+caches, density tables, parser-owned slots, profile counters, or
+per-consumer caches remain banned.
+
+Tier B owns the larger `skinny/crates/codegen/src/lower/` fill:
+`offset_tape.rs`, `event_tape.rs`, `eager_tape.rs`, `sink_only.rs`, and
+`collapsed_stage.rs` growing from placeholders into complete lowerers, plus
+template parity for CostFacts. SC-3 does not price that as a single W3 slice;
+it is multi-wave unless S-P3 supplies an explicit 650-LOC template-parity plan
+with same-wave consumers and accepted challenge proof.
+
+### §5.3 Admission posture
+
+Tier A sits inside a W3-class source LOC budget only as a **candidate
+requiring W3 challenge proof**. It is *not* a W0/W1 change — W0 is
+telemetry-only, W1 is CostFacts-gate-only (SPEC.md §1: "No SK-V8
+implementation wave dispatches before G-Alpha"; W0/W1 forbid parser/codegen
+behaviour change). S-P2 does not select or prescribe it. The candidate must
+prove it is not a renamed REDRESS 50 or REDRESS 60–72 retained-parse route:
+REDRESS 50 rejected parser-written aux side tables, and REDRESS 60–72
+rejected sidecar producers and retained side-table columns added during
+parse. SC-3 can satisfy that REDRESS challenge only with W3 evidence showing
+one retained tape, scan-written mandatory class identity, no surviving
+`StructuralIndex`, no parser-owned aux slots, scalar/checkasm parity for the
+modified `compact_mask`, and same-run no-regression rows.
 
 **Medium.** It is a substrate replacement, but a *contracting* one — it
 deletes a producer and a hot leaf rather than adding. The blast radius is
-bounded: `Tape`, `TapeBuilder`, one SIMD function, and regenerated JSON
-output. No new BIR variant, no new directive, no new public API name. The
-five-shape lowerer fill is the larger half of the LOC and is mandatory work
-the union merely *directs*.
+bounded for Tier A: `Tape`, `TapeBuilder`, one SIMD function, and regenerated
+JSON output. No new BIR variant, no new directive, no new public API name.
+The five-shape lowerer fill and full string-index union are Tier B work.
 
 ---
 
@@ -400,9 +464,9 @@ the union merely *directs*.
 | # | Risk | Pre-block / mitigation |
 |---|---|---|
 | R1 | The union reads as a "parser-owned structural projection" or "retained aux column" — SPEC.md §6 fails any such on Lock 1. | Frame the W3 challenge precisely: the union *deletes* the scalar rediscovery pass and retains *one* artefact where today two exist (discarded `StructuralIndex` + appended offset `Vec`). It is fewer substrates, not more. The `class` column is not an *aux* column — it is the *primary* structural identity, replacing the implicit class that `consume_structural`'s byte-match recovered per call. |
-| R2 | REDRESS 50 rejected "parse-time retained projection side tables" — dense/sparse aux columns that regressed the parse plane. The `class` column could be read as exactly that. | REDRESS 50 rejected columns *written during the scalar parse pass*. The `class` column is written by the *SIMD pass*, before parse, and the parse pass becomes a pure *reader*. The regression mode REDRESS 50 found (parse plane pays to write a column the view plane reads) is inverted here: the parse plane pays *less* (no rediscovery) and reads more. Must be proven with a before/after parse-plane bench row. |
+| R2 | REDRESS 50 rejected "parse-time retained projection side tables" — dense/sparse aux columns that regressed the parse plane. The `class` column could be read as exactly that. | REDRESS 50 row-falsifier: `class` must be mandatory primary structural identity, scan-written only, and never parser-patched. If any parser pass writes, patches, caches, or owns class/fact slots, the candidate fails as a REDRESS 50 aux-side-table regression. Must be proven with a before/after parse-plane bench row. |
 | R3 | The class column adds ~+25% to retained tape bytes; could regress RSS-sensitive or cache-bound corpora. | `SinkOnly` shape frees the columns at `finish()` — zero retained cost for direct workloads. For retained shapes, the +1 byte/structural is offset by deleting the per-call whitespace-skip fallback in `consume_structural`. Bench the structural-dense corpora (`gsoc-2018`, `distinct_values`, `apache_builds`) where the win is predicted; if RSS regresses without throughput gain, the column packs to 4-bit nibbles (K ≤ 15 for every named grammar). |
-| R4 | `CollapsedStage` "fused" projection may not obviously reconcile with a memory-resident `offset`/`class` SoA. | The design states it explicitly: `CollapsedStage` is the union with the columns held in registers and never spilled. The taxonomy point is preserved by *definition*, not by a separate substrate. No code lands for `CollapsedStage` until a per-grammar kernel author is in flight (ARCHITECTURE.md §7.3 same-wave-consumer rule). |
+| R4 | `CollapsedStage` "fused" projection may not obviously reconcile with memory-resident `offset`/`class` columns. | The design states it explicitly: `CollapsedStage` is the union with the co-indexed internal tape columns held in registers and never spilled. The taxonomy point is preserved by *definition*, not by a separate substrate. No code lands for `CollapsedStage` until a per-grammar kernel author is in flight (ARCHITECTURE.md §7.3 same-wave-consumer rule). |
 | R5 | Grammar-neutrality slip: the JSON `StructuralClassTable` could leak into the generic `tape/` crate. | The class table is emitted by codegen into per-grammar `scan.rs`; the generic `compact_mask` takes it as a `&[u8; 256]` argument and never names a grammar. Lock 14 audit: `rg 'Json|CssL4' crates/runtime/src/tape crates/bbnf-simd/src` must stay zero. The W5 grammar-neutral audit (SPEC.md §8) covers this. |
 | R6 | The number-heavy corpora (`canada`, `mesh`, `numbers`) currently *win*; the union must not regress them. | Those corpora are structural-sparse — the `class` walk replaces a short `consume_structural` path and the scalar number scanner is untouched. Predicted neutral-to-slight-positive. Guard rows per SPEC.md §0.5 ("Guard row for numeric/bitmap changes"); W3 maintain budget −2.0% applies. |
 | R7 | Capacity planning (`CapacityPlan` A–D, `assembler.rs:13-40`) becomes vestigial — the offset column arrives exact-sized from SIMD. | This is a *simplification*, not a risk: `CapacityPlan::OneShotSimd` becomes the only plan and the env-var selector retires. Fold the deletion into the same W3 slice; it removes ~50 LOC and the `BBNF_CAPACITY_PLAN` surface. |

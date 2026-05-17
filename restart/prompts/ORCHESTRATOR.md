@@ -1,145 +1,248 @@
-# ORCHESTRATOR — bbnf-lang Greenfield Restart
+# ORCHESTRATOR — bbnf-lang Iterative Auto-Convergent Pass Framework
 
-This is the **single main orchestrator prompt** for the bbnf-lang greenfield restart. All phase dispatch flows through this document. The orchestrator-agent (you) reads this prompt end-to-end, identifies the current phase from git state + corpus, then fans out to one of three encapsulated sub-orchestrators per the phase-type table at §3.
+This is the **single main orchestrator prompt** for bbnf-lang. All dispatch
+flows through this document. The orchestrator-agent reads this prompt
+end-to-end, identifies the active track + pass + cycle from git state + the
+handoff surfaces, then fans out parallel sub-agents per the pass table at §3.
 
-The pipeline is composable: each sub-orchestrator runs its own waves of sub-agents independently. This permits any phase to re-execute many times over without contract drift.
+The framework is **two-track** and **pipelined**. Each track runs a
+three-pass pipeline plus one astral synthesis pass. Every pass is
+**iterative + auto-convergent**: a pass dispatch is followed by an
+adversarial CHALLENGE wave, dispositions fold into v+1, and the loop
+terminates at the convergence criterion in §3Z. Re-execution is
+composable — any pass may re-run without contract drift.
+
+Each pass is its own self-contained prompt under `totality/`, `skinny/`,
+or `pass-contracts/`. The orchestrator dispatches a pass by handing its
+prompt to a sub-agent cohort; the prompt carries the per-agent contract.
+A pass prompt is written to be runnable by **any agentic system** — it
+names its own inputs, outputs, hard caps, and convergence test.
 
 ## §1 — Required reading (the orchestrator-agent reads end-to-end before any dispatch)
 
-1. `restart/HANDOFF.md` — current-state orientation; latest verdict; next move.
-2. `restart/README.md` — gestalt anchor; 14 locks; SOTA synthesis.
-3. `restart/locks/LOCKS.md` — settled architectural commitments (post-Phase-7.1 amendments).
-4. `restart/audit/hardening/HARDENING-CONSOLIDATED-V7.1.md` — terminal verdict baseline.
-5. `restart/research/V1-FOLD-CANDIDATES.md` — Phase 7 contract; 30-item synthesis.
-6. `restart/prompts/audit-specs/HARDENING-LENS-SET.md` — per-target audit specification (the contract each hardening agent reads).
-7. `restart/prompts/sub-orchestrators/HARDENING.md` — sub-orchestrator for hardening cycles.
-8. `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` — sub-orchestrator for research deep-dives + fold cycles.
-9. `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` — sub-orchestrator for verify-then-patch amendment cycles.
-10. `docs/precepts/instructions/STYLE.md` + `LESSONS-LEARNED.md` — voice + discipline.
+1. `restart/HANDOFF.md` — totality-track current state; latest verdict; next move.
+2. `restart/skinny/tranches/sk-v{N}/HANDOFF.md` — skinny-track current state for the active iteration.
+3. `restart/README.md` — gestalt anchor; SOTA synthesis.
+4. `restart/locks/LOCKS.md` — settled architectural commitments (16 locks).
+5. `restart/prompts/README.md` — framework gestalt + directory layout.
+6. The prompt for the active pass (per §3): one of `totality/PASS-{1,2,3}-*.md`, `skinny/PASS-{1,2,3}-*.md`, `pass-contracts/PASS-{OMEGA,ALPHA}.md`, `pass-contracts/SKINNY-TRIUMVIRATE.md`.
+7. `restart/prompts/audit-specs/HARDENING-LENS-SET.md` — A-K per-target audit lens registry (consumed by pass CHALLENGE waves that audit document content).
+8. `docs/precepts/instructions/README.md` + `STYLE.md` — core rules + prose register.
+9. `docs/precepts/instructions/tranche/README.md` — tranche lifecycle (binds the skinny tranches).
 
-## §2 — Phase identification protocol
+## §2 — Track + pass identification protocol
 
-The orchestrator-agent identifies the current phase by:
+The orchestrator-agent identifies the active state by:
 
-1. Reading `git log --oneline -10` to find the most recent phase commit.
-2. Cross-referencing the latest commit against `restart/HANDOFF.md` §3 (current state).
-3. If phase identification is ambiguous, the orchestrator-agent reads the most recent `HARDENING-CONSOLIDATED-V*.md` to find the active verdict + residue.
-4. If the user has explicitly named a phase, that phase wins.
+1. Reading both handoff surfaces (§1.1, §1.2) — the latest verdict + next-move line is canonical.
+2. If a handoff is ambiguous, running `git log --oneline -15` and matching the most recent pass commit against the §3 table commit-prefix column.
+3. Within a pass, identifying the cycle V{N} from the most recent `.../hardening/HARDENING-{PASS}-V{N}-CONSOLIDATED.md` verdict line; `git log` tie-breaks.
+4. If the user explicitly names a track + pass, the user wins; the orchestrator does not re-derive a pinned state.
 
-## §3 — Phase-type table (the fan-out)
+## §3 — The two-track pass table (the fan-out)
 
-Each phase type maps to one sub-orchestrator. The sub-orchestrator owns its own wave / agent dispatch internally.
+Each row is one pass. The trigger is the precondition; the prompt column
+names the self-contained pass prompt; the agents column is the fan-out
+count; the output column is the committed artefact set.
 
-| Phase type | Trigger | Sub-orchestrator | Dispatched cycles |
-|---|---|---|---|
-| **Hardening** — verify the corpus against a lens set | Latest commit is fold/amendment; verify-then-rerun mandate | `restart/prompts/sub-orchestrators/HARDENING.md` | 4 parallel hardener agents per `HARDENING.md` lens spec → 1 consolidation. `HARDENING-{TARGET}-V{N}.md` outputs. |
-| **Research-fold** — ground SOTA assertions in primary literature, then absorb | Architectural surfaces assert SOTA without grounding; user explicit | `restart/prompts/sub-orchestrators/RESEARCH-FOLD.md` | 8 parallel topic deep-dives (Phase 1) → 4 parallel fold agents (Phase 2) → escalation summary if structural (Phase 2.5) → V{N+1} hardening (Phase 3) → V{N+1} consolidation (Phase 4). |
-| **Amendment-dispatch** — verify-then-patch a punch list | Hardening returns AMENDMENT-REQUIRED with ≤20 narrow items | `restart/prompts/sub-orchestrators/AMENDMENT-DISPATCH.md` | 1-4 parallel narrow-amendment agents → V{N}.1 verification rerun. |
-| **Surface fold** — absorb a settled architectural decision into the per-pass surfaces | User adjudicates V1-fold candidates; lock amendments demand cascade | `restart/prompts/sub-orchestrators/HARDENING.md` then `AMENDMENT-DISPATCH.md` | 1 single SYNTHESIS agent (locks + ARCH amendments) → 4 parallel surface-fold agents (PASS-1 / PASS-2 / PASS-3 / SYNTHESIS trio) → V{N+1} hardening verification. |
-| **Per-tranche full-spec drafting** — Wave 9+; out of orchestrator scope | All audits + folds returned READY | (separate spec-drafting orchestrator; not yet authored) | 10 parallel tranche-spec agents (one per tranche A-J; ~3,000-5,000 lines each). |
+### Totality track — V1 greater spec (grammar-neutral; JSON + CSS L4 + BBNF-self + Sheets + arbitrary user grammars)
 
-## §4 — Phase 8 dispatch table (current — updated after each phase commits)
+| Pass | Trigger | Prompt | Agents | Output root | Commit prefix |
+|---|---|---|---|---|---|
+| **T-P1 Excavation** | totality cycle opens; `HANDOFF.md` says ready-for-T-P1 | `totality/PASS-1-EXCAVATION.md` | 6 (1A–1F) | `restart/audit/totality/p1/` | `docs(t-p1-excavation):` |
+| **T-P2 Research** | T-P1 converged | `totality/PASS-2-RESEARCH.md` | 6 (2A–2F) | `restart/audit/totality/p2/` | `docs(t-p2-research):` |
+| **T-P3 Synthesis** | T-P2 converged | `totality/PASS-3-SYNTHESIS.md` | 6 (3A–3F) | `restart/audit/totality/p3/` | `docs(t-p3-synthesis):` |
+| **Pass Omega** | T-P3 converged OR a major skinny iteration closed OR `dispatch omega` | `pass-contracts/PASS-OMEGA.md` | 6 substantive + 6 CHALLENGE + 6 CRUD | `restart/audit/totality/astral/V{V}/` + V1 spec surfaces | `docs(omega-V{V}):` |
 
-| Phase | Status | Sub-orchestrator | Owner |
-|---|---|---|---|
-| 8.0 — Prune + HANDOFF rewrite | DONE (commit `94873cf0`) | (direct edit; no sub-orchestrator) | orchestrator-agent |
-| 8.1 — Restructure prompts + add lenses I/J/K | DONE (commit `bc31560c`) | (direct edit; no sub-orchestrator) | orchestrator-agent |
-| 8.2 — V8 simplification audit (4 parallel) | DONE (`624b5af2` / `597ac678` / `cd6c2b4c` / `25addd94`) | `HARDENING-ORCHESTRATOR.md` (per Phase-3 dispatch pattern) | dispatched hardener cohort |
-| 8.3 — V8 consolidation | DONE (`28987de4`) | `HARDENING-ORCHESTRATOR.md` (per Phase-6 consolidation pattern) | orchestrator-agent |
-| 8.4 — Simplification fold | DONE (`4c69b848` / `23311ff8` / `831b2f90` / `1a75ea53` / `85187a74` / `bd213632` / `c72318cd` / `e5cb1e4b`) | `AMENDMENT-DISPATCH.md` | dispatched fold cohort |
-| 8.5 — V8.1 verification rerun | DONE (`277910df` / `fe36af42` / `7d8f03ea` / `0374d7ef` / `af3d1a73`) | `HARDENING-ORCHESTRATOR.md` | dispatched verification cohort + orchestrator-agent |
+### Skinny track — JSON-focused empirical subset (feedback loop for the totality spec)
 
-After Phase 8.5 returned READY-WITH-NARROW-RESIDUE, the user-directed V9 hardening cycle became the pre-Wave-9 gate. V9.1 now returns READY after narrow verification amendments; Wave 9 per-tranche full-spec drafting is the active next phase.
+| Pass | Trigger | Prompt | Agents | Output root | Commit prefix |
+|---|---|---|---|---|---|
+| **S-P1 Profile** | SK-V{N} opens after G-Alpha; `sk-v{N}/HANDOFF.md` ready-for-S-P1 | `skinny/PASS-1-PROFILE.md` | 6 (P1-A–P1-F) | `restart/skinny/tranches/sk-v{N}/research/p1/` | `docs(sk-v{N}-p1-profile):` |
+| **S-P2 Research** | S-P1 converged | `skinny/PASS-2-RESEARCH.md` | 6 (P2-A–P2-F) | `restart/skinny/tranches/sk-v{N}/research/p2/` | `docs(sk-v{N}-p2-research):` |
+| **S-P3 Synthesis-Plan** | S-P2 converged | `skinny/PASS-3-SYNTHESIS-PLAN.md` | 6 (P3-A–P3-F) | `restart/skinny/tranches/sk-v{N}/research/p3/` + `sk-v{N}/SPEC.md` + `sk-v{N}/DISPATCH-PROMPT.md` | `docs(sk-v{N}-p3-plan):` |
+| **Wave triumvirate** | S-P3 converged; per wave in `sk-v{N}/SPEC.md` | `pass-contracts/SKINNY-TRIUMVIRATE.md` | 6 research + 1–2 plan + 1 redress | `sk-v{N}/research/wave-{W}-*.md` + source + `skinny/{RESULTS,REDRESS}.md` | `docs(sk-v{N}-wave{W}-{research,plan,redress}):` / `feat(sk-v{N}-wave{W}):` |
+| **Pass Alpha** | all SK-V{N} waves closed OR `dispatch alpha SK-V{N}→SK-V{N+1}` | `pass-contracts/PASS-ALPHA.md` | 6 substantive + 6 CHALLENGE | `restart/skinny/tranches/sk-v{N+1}/research/alpha/` + `sk-v{N+1}/{SYNTHESIS,HANDOFF}.md` | `docs(sk-v{N+1}-alpha):` |
 
-## §5 — Hardening-cycle naming canon
+**Track relationship.** Skinny ⊂ totality. The skinny track is the
+empirical engine; the totality track is the durable target. Pass Omega
+consumes skinny REDRESS + RESULTS to amend the V1 spec. Skinny lessons
+drive totality evolution; totality does not dictate to skinny
+mid-iteration. A skinny iteration follows the Pass Alpha contract that
+brackets it.
 
-Across the cycle V1 through V8+, the hardening cohort's verdicts are named:
+### §3W — Universal CHALLENGE lens set (CH1–CH6)
 
-| Cycle | Predecessor | Trigger | Outputs |
-|---|---|---|---|
-| V1 | (initial) | First-pass after PASS dispatch + SYNTHESIS trio | `HARDENING-CONSOLIDATED.md` (no version suffix) |
-| V2 | V1 | Single serial author (insufficient pressure; adversarially weak) | `HARDENING-CONSOLIDATED-V2.md` |
-| V3 | V2 | 4-parallel independent (surfaces what V2 missed) | `HARDENING-CONSOLIDATED-V3.md` |
-| V4 | V3 | Post-narrow-amendment verification | `HARDENING-CONSOLIDATED-V4.md` |
-| V5 | V4 | Carry-aware metahardening (5 carry-aware lenses A-E + 3 LLM-pathology lenses F-H) | `HARDENING-CONSOLIDATED-V5.md` + `V5.1.md` (post-narrow-amend) |
-| V6 | V5 | Research-fold verification (Phase 5+ pipeline) | `HARDENING-CONSOLIDATED-V6.md` |
-| V7 | V6 | Phase 7 fold verification (V1-FOLD-CANDIDATES absorption) | `HARDENING-CONSOLIDATED-V7.md` + `V7.1.md` |
-| **V8** | **V7.1** | **Simplification audit (lenses I/J/K + extant A-H)** | `HARDENING-CONSOLIDATED-V8.md` + `V8.1.md` (if needed) |
-| **V9** | **V8.1** | **Independent Codex hardening before Wave 9 (full lens set A-K)** | `HARDENING-CONSOLIDATED-V9.md` + `V9.1.md` (if needed) |
+Every pass — totality and skinny, substantive and astral — closes each
+cycle with a CHALLENGE wave that dispatches the same six adversarial
+lenses. One lens, one agent; six agents per cycle; each writes one file
+at `{pass-output-root}/hardening/V{N}/CH{n}.md`.
 
-Future cycles (V10+) follow the same pattern. Each cycle's lens set is documented in `HARDENING.md`.
+| Lens | Name | Disposition focus |
+|---|---|---|
+| **CH1** | CORRECTNESS | Every claim cites file:line, commit SHA, RESULTS row, or REDRESS entry that resolves. Falsifiability gates are measurable. Comparator deltas match the strictness plane. |
+| **CH2** | GENERALITY | Lock 14 holds: no grammar-name leak; every proposed intervention is grammar-neutral and works for CSS L4 / Sheets / BBNF-self, not only JSON. |
+| **CH3** | REGRESSION | No proposal re-opens a route in `skinny/REDRESS.md`; the pre-block list is correctly identified; no admitted row is silently regressed. |
+| **CH4** | COST | LOC budget, risk class, wave alignment, and hard cap are stated and realistic; same-wave consumer present per kernel/primitive. |
+| **CH5** | HIDDEN COUPLING | No parallel substrate, sidecar producer, renamed-scanner Lock 1 violation, or Track 1 ≡ Track 2 dishonesty; substrate union holds. |
+| **CH6** | ANTI-PAPER-CLOSE | No agent self-report of "complete"/"wired"/"verified" stands without orchestrator-cited live evidence (bench row, samply symbol path, checkasm pass). No deferral to a future phase. |
 
-## §6 — Lens registry (full set; the audit specification)
+The lens registry is **monotonically extensible**: a pass that surfaces
+a failure mode the six lenses cannot disposition may add CH7+; existing
+CH1–CH6 are never renumbered. Per-pass operational detail — what each
+lens scans inside that pass's output — lives in the pass prompt's own
+§CHALLENGE section.
 
-`HARDENING.md` carries the per-target lens contract. The full lens set as of Phase 8.1:
+The A-K lens set at `audit-specs/HARDENING-LENS-SET.md` is the
+**complementary** scheme: A-K are per-target audit lenses for document
+content (narrative coherence, vocabulary drift, LLM pathology,
+simplification). CH1–CH6 challenge intervention plans + synthesis
+artefacts. A pass CHALLENGE wave that audits prose may compose A-K
+lenses by reference; a pass CHALLENGE wave that reviews a plan uses
+CH1–CH6.
 
-**Carry-aware lenses (A-E)** — surface what punch-list cycles structurally missed:
-- **A** — Inter-document narrative coherence
-- **B** — Vocabulary drift
-- **C** — Worked-example scarcity
-- **D** — Coverage gaps
-- **E** — Architectural axiom cumulative consistency
+### §3Z — N-iteration auto-convergence governance
 
-**LLM-pathology lenses (F-H)** — guard against authorship pathologies:
-- **F** — LLM bias (hedging, reference-stuffing, pseudo-precision, unfalsifiable claims, ornament substituted for commitment, buzzword reliance, confident generality)
-- **G** — Overfitting (SOTA-only justification, pattern-lift, missing alternative-considered, mimetic convergence, training-corpus inheritance)
-- **H** — Hallucination + provenance gaps (non-existent citations, wrong-line refs, unverified externals, derived claims from unstated premises)
+Every pass executes cycles V1, V2, V3, … until convergence. The cycle
+counter is **per-pass + independent**: T-P1 V2 is unrelated to S-P2 V1;
+the orchestrator tracks one counter per active pass.
 
-**Simplification lenses (I-K)** — surface complexity exceeding the meta-grammar mandate:
-- **I** — Contrivance / over-engineering (speculative generality, cardinality bloat, premature optimization, cardinality redundancy)
-- **J** — Host-language leverage (places where Rust / TS / WASM provide the facility cleanly at a higher layer)
-- **K** — Meta-grammar discipline (architectural complexity exceeding bbnf's role as parser-generator for extant target languages)
+**Cycle protocol per pass:**
 
-Hardening cycles V1-V4 ran lenses A-E + 9-lane standard audit only. V5+ added F-H. V8+ adds I-K.
+1. **Pass V{N} dispatch.** The pass's agents fan out per §3; each writes to its assigned output path (overwritten in place each cycle; git history preserves V1, V2, … versions).
+2. **Pass V{N} commit.** Every pass output commits before the CHALLENGE wave dispatches.
+3. **CHALLENGE V{N} dispatch.** Six lens agents fan out per §3W; each writes `{root}/hardening/V{N}/CH{n}.md`.
+4. **CHALLENGE V{N} consolidation.** One aggregator agent produces `{root}/hardening/HARDENING-{PASS}-V{N}-CONSOLIDATED.md` — the six dispositions + the cycle verdict (ACCEPT-rate + REJECT list + REVISE list).
+5. **Fold into V{N+1}.** Dispositions fold into the pass V{N+1} dispatch. Hardening without folding is paper-hardening; the orchestrator does not advance until folding is complete.
 
-## §7 — Sub-orchestrator dispatch protocol
+**Convergence criterion** (advances the pass):
 
-When the orchestrator-agent dispatches a sub-orchestrator, the dispatch carries:
+- CHALLENGE V{N} returns **≥95% ACCEPT for two consecutive cycles**, with zero open critical defects and no orphan unresolved REVISE; OR
+- The user explicitly pins the cycle as final at the corresponding sign-off gate (§6).
 
-1. **Phase identifier** (e.g., "Phase 8.2 — V8 simplification audit").
-2. **Reference to this orchestrator** (`restart/prompts/ORCHESTRATOR.md` §3 row N).
-3. **Reference to the sub-orchestrator** (`HARDENING-ORCHESTRATOR.md` / `RESEARCH-FOLD-ORCHESTRATOR.md` / `AMENDMENT-DISPATCH.md`).
-4. **Lens set or item list** (e.g., "lenses I/J/K" for V8 simplification audit).
-5. **Output path** (e.g., `restart/audit/hardening/HARDENING-{TARGET}-V8.md`).
-6. **Hard cap** (per the sub-orchestrator's per-phase wall budget).
-7. **Cross-tranche scope boundary** (the sub-orchestrator enforces).
+Until convergence holds, the next pass does not dispatch.
 
-The sub-orchestrator owns wave/agent dispatch internally; the main orchestrator only fans out the phase + collects the consolidation.
+**Hard ceiling.** V ≤ 5 per pass. A pass that reaches V5 without
+convergence escalates to the user with a `BLOCKED` verdict naming the
+unresolved REVISE dispositions. A skinny wave bracket exceeding 12
+waves escalates likewise.
 
-## §8 — Cross-tranche scope boundary (the orchestrator-agent's own scope)
+## §4 — Sub-agent dispatch protocol
+
+Each dispatch the orchestrator fans out carries:
+
+1. **Track + pass + cycle identifier** (e.g. "S-P2 Research V2 — agent P2-C").
+2. **Reference to this orchestrator** (`restart/prompts/ORCHESTRATOR.md` §3 row + §3W for CHALLENGE).
+3. **Reference to the pass prompt** (the self-contained contract the agent reads end-to-end).
+4. **Sub-agent index** (1A–1F / 2A–2F / 3A–3F for totality; P1-A–P1-F etc. for skinny; CH1–CH6 for CHALLENGE).
+5. **Output path** per the §3 output root.
+6. **Hard cap** per the pass prompt's §hard-caps.
+7. **Cross-scope boundary** — the pass prompt enforces; the orchestrator restates.
+
+The pass prompt carries the per-agent operational spec. The orchestrator
+does not duplicate that content; it dispatches with the parameters above
+and waits. Sub-agents that touch disjoint files run in parallel; sub-agents
+that may collide on a shared file are serialised, and the orchestrator
+commits before parallelising per the agent-orchestration discipline.
+
+## §5 — After-pass protocol
+
+When a pass fans out, the orchestrator waits for all parallel agents to
+commit, then:
+
+1. Reads every committed output end-to-end.
+2. Dispatches the CHALLENGE wave (§3W); reads the six CH outputs + the consolidation; computes the ACCEPT-rate; applies §3Z.
+3. If converged: updates the relevant handoff surface and fires the next pass (or escalates to the sign-off gate per §6).
+4. If not converged: folds dispositions into the V{N+1} dispatch.
+5. Commits the handoff update single-threaded (the orchestrator's own commit is never parallel).
+
+## §6 — User sign-off gates
+
+| Gate | Trigger | Authority |
+|---|---|---|
+| **G1** | T-P1 Excavation converged | user (optional convergence pin) |
+| **G2** | T-P2 Research converged | user (optional convergence pin) |
+| **G3** | T-P3 Synthesis converged; locks amendments + master-plan deltas queued | user (mandatory) |
+| **G-Omega** | Pass Omega CHALLENGE converged; CRUD operations proposed | user (mandatory — no locks amendment merges without it) |
+| **G-Alpha(N→N+1)** | Pass Alpha CHALLENGE converged; SK-V{N+1} contract drafted | user (mandatory — no SK-V{N+1} dispatch without it) |
+| **G5(N)** | SK-V{N} waves closed + measured | user per skinny iteration |
+
+G3, G-Omega, and G-Alpha are mandatory. The orchestrator does not
+advance past them without explicit user confirmation. Sign-off is
+recorded verbatim in the relevant handoff surface with a UTC timestamp.
+
+## §7 — Cross-scope boundary (the orchestrator-agent's own scope)
 
 The orchestrator-agent touches ONLY:
-- Sub-orchestrator dispatch invocations.
-- `restart/HANDOFF.md` (after each phase completes; document the new state).
-- `restart/audit/hardening/HARDENING-CONSOLIDATED-V{N}.md` (consolidation phase outputs).
+
+- `restart/HANDOFF.md` + `restart/skinny/tranches/sk-v{N}/HANDOFF.md` (after each pass; document the new state).
+- The CHALLENGE consolidation files (the aggregator agent authors; the orchestrator reads).
+- Sub-agent dispatch invocations.
 
 The orchestrator-agent does NOT touch:
-- `restart/prompts/` (locked; sub-orchestrator content is owned by sub-orchestrator authoring).
-- `restart/README.md`, `restart/locks/`, `restart/inheritance/`, `restart/corpora/` (governance surfaces).
-- `restart/audit/pass-*/`, `restart/research/` (each sub-orchestrator owns its agent outputs).
-- The per-target hardening reports (each hardener owns).
-- `crates/`, `docs/`, `restart-archive-2026-05-04/`.
 
-## §9 — Hardening cycle hard cap
+- `restart/prompts/` — the pass prompts are read-only contracts; pass-prompt authoring is a distinct directed task.
+- `restart/README.md`, `restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`, `restart/locks/` — governance surfaces; only Pass Omega CRUD amends them, post-G-Omega.
+- The pass outputs (`restart/audit/totality/`, `restart/skinny/tranches/sk-v{N}/research/`) — each sub-agent owns its own output.
+- Source code — implementation lands only inside the skinny wave triumvirate's redress phase.
 
-Per-phase wall budgets (from per-sub-orchestrator):
+## §8 — Voice + discipline + non-negotiables
 
-| Phase | Wall budget (parallel) |
+Per `restart/README.md` + `docs/precepts/instructions/STYLE.md`:
+calibrated direct prose; archaic-permissive register; no metalanguage
+(no "after the prior attempt", "this time", "lessons from earlier");
+path:line citations on every concrete claim; per-X tables for "all
+targets"/"all lenses" claims.
+
+The non-negotiables, enforced by the CHALLENGE wave every cycle:
+
+| Rule | Enforcement lens |
 |---|---|
-| Phase 0 sub-prep | 30 min |
-| Hardening cycle (4 parallel + consolidation) | ~75-100 min |
-| Research-fold cycle (8 parallel research + 4 parallel fold + 2 consolidation) | ~6-9 hours |
-| Amendment-dispatch cycle (≤4 parallel + verification) | ~90-120 min |
-| Per-tranche full-spec (Wave 9+; 10 parallel) | ~5-7 hours per tranche |
+| No new BBNF directives | CH2 — grep `grammars/` + `restart/skinny/` pre-/post-pass |
+| No new BIR variant | CH5 — grep `ir/src/` pre-/post-pass |
+| No new substrate; the substrate union holds | CH5 — Lock 1 audit per wave |
+| No JSON code in generic crates | CH2 — Lock 14 audit per pass |
+| Scalar reference per SIMD/ASM primitive; checkasm parity before wiring | CH1 + CH4 |
+| Same-wave consumer — no orphan kernel | CH4 + CH6 |
+| Profile-first prescription — no hypothesis transfer between SK iterations | CH1 — fresh profile of the new baseline required |
+| Strict-vs-strict comparator gate — permissive rows are flaw-probe only | CH1 |
+| Triumvirate role separation — research/plan/redress in distinct commits | CH6 |
+| Same-row falsification gate — no orphan REDRESS | CH3 |
+| No deferrals — a wave closes on measurement, not a future-phase promise | CH6 |
+| No contrivance — smallest change that achieves elegance + performance | CH4 |
 
-A single hardening cycle is ~2 hours. The corpus has been hardened 7 times; the architecture supports many more. Each cycle is a discrete phase commit; no cycle blocks future cycles.
+## §9 — Hard caps
 
-## §10 — Voice + discipline locks
+| Pass | Wall budget (parallel) |
+|---|---|
+| Totality / skinny substantive pass (6 parallel) | ~45 min per agent; ~60 min wall incl. commit |
+| CHALLENGE wave (6 parallel + 1 consolidation) | ~90 min wall |
+| Pass Omega (6 substantive + 6 CHALLENGE + 6 CRUD) | ~5–7 hours wall |
+| Pass Alpha (6 substantive + 6 CHALLENGE) | ~4 hours wall |
+| Skinny wave triumvirate (6 research + plan + redress) | ~3–4 hours wall |
 
-Per `restart/README.md` §13. Calibrated, direct prose. Archaic-permissive. No metalanguage. Path:line citations on every concrete claim. Per-X tables for "all targets" / "all lenses" claims. No quick solutions. No legacy code uncontested. Lock 14 binds.
+Every dispatch carries an explicit minute cap. At 0.9× the cap the agent
+commits what it has; at the cap it halts. A pass that overruns surfaces
+the slip to the user as an extension decision — the orchestrator does
+not silently engineer a deferral.
 
-## §11 — Closing posture
+## §10 — Closing posture
 
-The orchestrator is composable and re-runnable. Each phase commits autonomously; the sub-orchestrators encapsulate their own waves; the lens registry grows monotonically (A-E → F-H → I-K → future). After any READY verdict, per-tranche full-spec drafting unblocks; before any per-tranche dispatch, this orchestrator can re-execute any prior phase to harden further.
+The orchestrator is composable and re-runnable. Each pass commits
+autonomously; each pass prompt encapsulates its own waves; the CHALLENGE
+wave at every cycle boundary is the firewall against paper-close; the
+lens registry grows monotonically. Two tracks, three passes each, one
+astral synthesis each — totality P1/P2/P3 + Omega, skinny P1/P2/P3 +
+Alpha + the wave triumvirate beneath S-P3.
 
-Hereupon the orchestrator-agent identifies the current phase + dispatches the appropriate sub-orchestrator.
+No pass advances without convergence on the prior cycle. No V1 spec
+amendment without Pass Omega. No SK-V{N+1} without Pass Alpha. No
+commit merges triumvirate roles. No hypothesis transfers between SK
+iterations without fresh profile evidence.
+
+The work is bounded by the gates. The throughput is bounded by the
+bench. The architecture is bounded by the locks. The discipline is the
+suite.
+
+Hereupon the orchestrator-agent identifies the active track + pass per
+§2 and dispatches the appropriate pass prompt per §3.

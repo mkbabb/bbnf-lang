@@ -1,200 +1,181 @@
-# bbnf-lang Prompt Suite — Iterative Auto-Convergent Multi-Pass Framework
+# bbnf-lang Prompt Suite — Iterative Auto-Convergent Two-Track Pass Framework
 
-This directory carries the prompt contracts for bbnf-lang's totality + skinny
-pass framework. The orchestrator-agent reads these to identify the current
-pass + cycle and dispatch sub-agents.
+This directory carries the prompt contracts for bbnf-lang's pass
+framework. The orchestrator-agent reads these to identify the active
+track + pass + cycle and dispatch sub-agent cohorts. Every pass prompt
+is a **self-contained dispatch contract** — an agentic system handed one
+pass prompt plus `ORCHESTRATOR.md` can run that pass end-to-end.
 
-## Directory layout (post-SK-V7 restructure)
+## Directory layout
 
 ```
 restart/prompts/
-├── README.md                              ← this file
-├── ORCHESTRATOR.md                        ← top-level dispatcher
-├── sub-orchestrators/                     ← phase-type dispatchers
-│   ├── HARDENING.md                       ← hardening-cycle sub-orchestrator
-│   ├── RESEARCH-FOLD.md                   ← research-fold sub-orchestrator
-│   └── AMENDMENT-DISPATCH.md              ← verify-then-patch sub-orchestrator
-├── pass-contracts/                        ← pass-specific contracts
-│   ├── PASS-ALPHA.md                      ← skinny astral synthesis (SK-V{N+1} cycle creation)
-│   ├── PASS-OMEGA.md                      ← totality astral synthesis (V1 spec cohesion + skinny fold-in)
-│   └── SKINNY-TRIUMVIRATE.md              ← per-iteration triumvirate (research/plan/redress)
-└── audit-specs/                           ← per-target audit lens contracts
-    └── HARDENING-LENS-SET.md              ← lens registry (A-K target audit + CH1-CH6 challenge)
+├── README.md                          ← this file
+├── ORCHESTRATOR.md                    ← top-level dispatcher; the binding contract
+├── totality/                          ← totality-track pass prompts (V1 greater spec)
+│   ├── PASS-1-EXCAVATION.md            ← T-P1: current-state evidence excavation
+│   ├── PASS-2-RESEARCH.md              ← T-P2: SOTA + architecture literature grounding
+│   └── PASS-3-SYNTHESIS.md             ← T-P3: distil P1+P2 → spec amendments
+├── skinny/                            ← skinny-track pass prompts (JSON empirical subset)
+│   ├── PASS-1-PROFILE.md               ← S-P1: samply 3-way + PMU baseline profiling
+│   ├── PASS-2-RESEARCH.md              ← S-P2: SOTA teardown + primitive design
+│   └── PASS-3-SYNTHESIS-PLAN.md        ← S-P3: distil P1+P2 → SK-V{N} SPEC wave plan
+├── pass-contracts/                    ← astral synthesis + per-wave contracts
+│   ├── PASS-OMEGA.md                   ← totality astral: V1 spec cohesion + skinny fold-in
+│   ├── PASS-ALPHA.md                   ← skinny astral: SK-V{N+1} contract creation
+│   └── SKINNY-TRIUMVIRATE.md           ← per-wave research/plan/redress contract (beneath S-P3)
+├── audit-specs/
+│   └── HARDENING-LENS-SET.md           ← A-K per-target document-audit lens registry
+└── sub-orchestrators/                 ← legacy operational detail; superseded by the pass prompts
+    ├── HARDENING.md
+    ├── RESEARCH-FOLD.md
+    └── AMENDMENT-DISPATCH.md
 ```
+
+The `sub-orchestrators/` directory is **legacy** — its hardening /
+research-fold / amendment-dispatch cycles were the pre-framework totality
+dispatch path. The three discrete `totality/` pass prompts supersede it.
+The directory survives for historical reference and is queued for Pass
+Omega CRUD archival; it is no longer in the `ORCHESTRATOR.md` §3 fan-out.
 
 ## Reading order
 
-1. **This README** (framework gestalt — 5 min read).
-2. **`ORCHESTRATOR.md`** (phase identification + dispatch matrix + sub-orchestrator routing).
-3. **The contract relevant to the active pass**:
-   - Skinny iteration cycle: `pass-contracts/SKINNY-TRIUMVIRATE.md` (per-wave research/plan/redress contract).
-   - Skinny astral (SK-V{N+1} creation): `pass-contracts/PASS-ALPHA.md`.
-   - Totality astral (V1 spec cohesion + locks amendment): `pass-contracts/PASS-OMEGA.md`.
-   - Hardening cycle: `sub-orchestrators/HARDENING.md` + `audit-specs/HARDENING-LENS-SET.md`.
-   - Research-fold (deep-dive + topic absorption): `sub-orchestrators/RESEARCH-FOLD.md`.
-   - Amendment-dispatch (narrow verify-then-patch): `sub-orchestrators/AMENDMENT-DISPATCH.md`.
+1. **This README** — framework gestalt.
+2. **`ORCHESTRATOR.md`** — track + pass identification, the §3 pass table, §3W CHALLENGE lenses, §3Z convergence governance, §6 sign-off gates.
+3. **The prompt for the active pass** — per the `ORCHESTRATOR.md` §3 table.
 
 ## Framework gestalt
 
-bbnf-lang has two architectural tracks: the **V1 totality spec** (greater
-architecture; grammar-neutral; targets JSON + CSS L4 + BBNF-self + Sheets +
-arbitrary user grammars) and the **skinny spec subset** (JSON-focused
-implementation serving as feedback loop for the greater spec). Skinny
-iterations (SK-V1 through SK-V{n}) are the empirical engine; the totality
-spec is the durable target.
+bbnf-lang has two architectural tracks. The **totality track** drives
+the V1 greater spec — grammar-neutral, targeting JSON + CSS L4 +
+BBNF-self + Sheets + arbitrary user grammars. The **skinny track** drives
+the SK-V{N} iterations — a JSON-focused empirical subset that serves as
+the feedback loop proving the greater spec out. Skinny ⊂ totality:
+skinny is the empirical engine; totality is the durable target; skinny
+lessons fold up into the V1 spec, never the reverse mid-iteration.
 
-The prompt suite formalises this duality.
+Each track runs a **three-pass pipeline plus one astral synthesis pass**:
 
-**Two parallel pass tracks**:
+| Track | P1 | P2 | P3 | Astral |
+|---|---|---|---|---|
+| **Totality** | Excavation — current-state evidence | Research — SOTA + architecture grounding | Synthesis — spec amendments | **Pass Omega** — V1 spec cohesion + skinny fold-in + CRUD |
+| **Skinny** | Profile — samply 3-way + PMU baseline | Research — SOTA teardown + primitive design | Synthesis-Plan — SK-V{N} SPEC wave plan | **Pass Alpha** — SK-V{N+1} contract creation |
 
-- **Totality passes** drive V1 spec evolution via the existing
-  `sub-orchestrators/` (hardening + research-fold + amendment-dispatch).
-  Each runs V1-V9+ cycles per ORCHESTRATOR.md §5 cycle-naming canon. The
-  **Pass Omega** (`pass-contracts/PASS-OMEGA.md`) is the periodic cohesion
-  + skinny-lessons-fold-in layer above the sub-orchestrators.
-- **Skinny passes** drive SK-V{N} evolution via the **SKINNY-TRIUMVIRATE**
-  (`pass-contracts/SKINNY-TRIUMVIRATE.md`) per-wave research/plan/redress
-  pattern. Each SK-V{N} bracket runs 1-12 waves and closes when the
-  measured close condition (no parse-G, no N-direct, strict-vs-strict
-  comparator gate) holds OR a fixpoint is reached. **Pass Alpha**
-  (`pass-contracts/PASS-ALPHA.md`) brackets each cycle by producing the
-  next SK-V{N+1} contract with detailed goalset + precisely-defined
-  telemetry binding.
+Beneath skinny S-P3 sits the **wave triumvirate**
+(`pass-contracts/SKINNY-TRIUMVIRATE.md`): each wave of the S-P3 wave
+plan executes one research → plan → redress cycle in three distinct
+commits. The triumvirate is the implementation layer; S-P3 is the
+planning layer above it; Pass Alpha brackets the whole iteration.
 
-## Lens registry — two complementary schemes
+## Iteration + auto-convergence
 
-The audit + challenge layers use two distinct lens schemes:
+Every pass — totality and skinny, substantive and astral — is iterative.
+A pass executes cycles V1, V2, V3, …; each cycle closes with a six-lens
+CHALLENGE wave; dispositions fold into v+1. The cycle counter is
+per-pass and independent.
 
-**A-K lens scheme** (`audit-specs/HARDENING-LENS-SET.md`) — per-target
-audit lenses for hardening cycles. Five carry-aware lenses A-E (inter-
-document narrative coherence + vocabulary drift + worked-example scarcity
-+ coverage gaps + architectural axiom consistency), three LLM-pathology
-lenses F-H (bias + overfitting + hallucination), three simplification
-lenses I-K (contrivance + host-language leverage + meta-grammar
-discipline). Used by `sub-orchestrators/HARDENING.md` cycles.
+**Convergence** (per `ORCHESTRATOR.md` §3Z): CHALLENGE returns ≥95%
+ACCEPT for two consecutive cycles, with zero open critical defects and
+no orphan unresolved REVISE — OR the user pins the cycle as final at the
+pass's sign-off gate.
 
-**CH1-CH6 lens scheme** (defined inline in each pass contract) — universal
-challenge-pass adversarial lenses. CH1 Correctness + CH2 Generality + CH3
-Regression + CH4 Cost + CH5 Hidden Coupling + CH6 Next-Tranche-Impact.
-Used by Pass Alpha + Pass Omega + Skinny Triumvirate CHALLENGE phases
-for adversarial review of antecedent artefacts (not per-target audit).
+**Hard ceiling**: V ≤ 5 per pass; a skinny wave bracket ≤ 12 waves.
+Overflow escalates to the user with a `BLOCKED` verdict.
 
-The two schemes are complementary. A-K audits document content for
-authorial pathologies + coverage gaps + architectural inconsistencies.
-CH1-CH6 challenges intervention plans + synthesis artefacts for
-falsifiability + regression risk + next-tranche impact.
+## Two complementary lens schemes
+
+**CH1–CH6** (`ORCHESTRATOR.md` §3W) — the universal CHALLENGE lens set.
+Every pass cycle closes with these six adversarial lenses reviewing the
+pass output: CH1 Correctness, CH2 Generality, CH3 Regression, CH4 Cost,
+CH5 Hidden Coupling, CH6 Anti-Paper-Close. They challenge intervention
+plans and synthesis artefacts for falsifiability + regression risk.
+
+**A-K** (`audit-specs/HARDENING-LENS-SET.md`) — the per-target
+document-audit lens registry: five carry-aware lenses (A-E), three
+LLM-pathology lenses (F-H), three simplification lenses (I-K). They
+audit document *content* for authorial pathologies + coverage gaps. A
+CHALLENGE agent auditing prose may compose A-K by reference.
+
+The two schemes are complementary: CH1–CH6 challenge plans; A-K audit
+content.
 
 ## Sign-off gates
 
 | Gate | Trigger | Authority |
 |---|---|---|
-| **G1** | Totality P1 (research-fold convergence) | user |
-| **G2** | Totality P2 (hardening V{N}.1 convergence) | user |
-| **G3** | Totality P3 (locks amendments proposed) | user |
-| **G4** | MASTER-PLAN.md crystallised post-Omega | user |
-| **G5(N)** | SK-V{N} implementation packet executed + measured | user per iteration |
-| **G-Omega** | Pass Omega CRUD CONSOLIDATED | user |
-| **G-Alpha(N→N+1)** | SK-V{N}'s Pass Alpha CHALLENGE CONSOLIDATED | user |
+| **G1** | T-P1 Excavation converged | user (optional pin) |
+| **G2** | T-P2 Research converged | user (optional pin) |
+| **G3** | T-P3 Synthesis converged; locks + master-plan deltas queued | user (mandatory) |
+| **G-Omega** | Pass Omega CHALLENGE converged; CRUD proposed | user (mandatory) |
+| **G-Alpha(N→N+1)** | Pass Alpha CHALLENGE converged; SK-V{N+1} contract drafted | user (mandatory) |
+| **G5(N)** | SK-V{N} waves closed + measured | user per skinny iteration |
 
-User sign-off is **mandatory** at G3, G-Omega, G-Alpha. The orchestrator
-does not advance past these gates without explicit user confirmation.
+G3, G-Omega, G-Alpha are mandatory. No V1 spec amendment merges without
+G-Omega; no SK-V{N+1} dispatches without G-Alpha.
 
-## Iteration + auto-convergence governance
+## Non-negotiables (apply across all passes; enforced by the CHALLENGE wave)
 
-Each substantive pass iterates V1, V2, V3, … per `ORCHESTRATOR.md`
-§5 cycle-naming + Pass Alpha §8 + Pass Omega §5 convergence rules.
-
-**Convergence rule**: ≥95% ACCEPT on the most recent CHALLENGE pass +
-zero open critical defects + no orphan unresolved REVISE.
-
-**Hard ceiling**: V ≤ 5 per pass; > V5 without convergence escalates to
-user with `BLOCKED` verdict.
-
-**Hard ceiling**: 12 waves per SK-V{N} bracket; > 12 escalates.
-
-## Non-negotiables (apply across all passes)
-
-| Rule | Enforcement |
+| Rule | Lens |
 |---|---|
-| No new BBNF directives | grep grammars/ + restart/skinny/ pre-/post-pass |
-| No new BIR variant | grep ir/src/ pre-/post-pass |
-| No new substrate | Lock 1 audit per CH5 per wave |
-| No JSON code in generic crates | Lock 14 audit per CH2 per pass |
-| Scalar reference per primitive | every SIMD/ASM primitive ships with scalar Rust ref + checkasm parity BEFORE wiring |
-| Same-wave consumer | each redress commit lands hot-path caller; verified via samply symbol path |
-| Profile-first prescription | no kernel intervention without fresh PC-level profile of NEW Track 1 baseline; hypothesis transfer between SK iterations forbidden |
-| Strict-vs-strict comparisons | every comparator row matches strictness plane; permissive rows flaw-probe only |
-| Triumvirate discipline | research → plan → redress in distinct commits |
-| Hard cap per dispatch | every dispatch carries minute cap; at 0.9× commit, at cap halt |
-| Same-row falsification gate | a kernel that does not lift a previously-named row is rejected; record in REDRESS with measurements |
-| No deferrals | wave closes on measurement, not "future phase will fix it" |
-
-## Phase glossary
-
-- **CHALLENGE pass**: Adversarial review wave. CH1-CH6 lens agents take antecedent artefacts and produce dispositions (ACCEPT / REVISE / REJECT).
-- **CRUD wave**: Document maintenance wave under Pass Omega + Alpha. Creates new sections, Reads for cohesion, Updates stale text, Deletes superseded artefacts.
-- **v+1 fold**: After CHALLENGE closes, the original sub-agent author re-runs with the dispositions in hand and produces v+1 of the artefact.
-- **Convergence criterion**: ≥95% ACCEPT on the most recent CHALLENGE + zero open critical defects + no orphan unresolved REVISE.
-- **Triumvirate**: Research → Plan → Redress. Three distinct commits per wave. Research = read-only diagnosis. Plan = synthesis. Redress = implementation + measurement + REDRESS entry.
-- **SK-V{N}**: Skinny iteration N. Audit dir at `restart/skinny/tranches/SK-V{N}-COHORT/`; master docs at `restart/skinny/tranches/{GRAND-SYNTHESIS,IMPLEMENTATION-PACKET,HANDOFF}-SK-V{N}.md`.
-- **V{V}**: Pass iteration version within a single pass (V1, V2, V3, …). Auto-incremented per N-iteration governance.
+| No new BBNF directives; no new BIR variant; no new substrate | CH2 / CH5 |
+| The substrate union holds — structural projection IS the tape | CH5 |
+| No JSON code in generic crates (Lock 14 grammar-neutrality) | CH2 |
+| Scalar reference per SIMD/ASM primitive; checkasm parity before wiring | CH1 / CH4 |
+| Same-wave consumer — no orphan kernel | CH4 / CH6 |
+| Profile-first prescription — no hypothesis transfer between SK iterations | CH1 |
+| Strict-vs-strict comparator gate — permissive rows are flaw-probe only | CH1 |
+| Triumvirate role separation — research/plan/redress in distinct commits | CH6 |
+| Same-row falsification gate — no orphan REDRESS | CH3 |
+| No deferrals — a wave closes on measurement, not a future-phase promise | CH6 |
+| No contrivance — the smallest change that achieves elegance + performance | CH4 |
 
 ## Dispatch invocation phrases
 
 | Phrase | Action |
 |---|---|
-| `dispatch sk-v{N} W{w}` | Dispatch skinny wave W of iteration N per IMPLEMENTATION-PACKET §{wave-section} |
-| `dispatch alpha SK-V{N}→SK-V{N+1}` | Dispatch Pass Alpha for SK-V{N+1} contract creation |
-| `dispatch omega` | Dispatch Pass Omega for V1 spec cohesion + skinny fold-in |
-| `dispatch hardening` | Dispatch hardening cycle (per sub-orchestrators/HARDENING.md) |
-| `dispatch research-fold {topic}` | Dispatch research-fold (per sub-orchestrators/RESEARCH-FOLD.md) |
-| `dispatch amendment {target}` | Dispatch amendment cycle (per sub-orchestrators/AMENDMENT-DISPATCH.md) |
-| `status` | Orchestrator emits current pass + cycle + open dispositions |
-| `pin {pass}` | User overrides current-pass identification |
-| `abandon SK-V{N}` | Orchestrator nukes uncommitted SK-V{N} artefacts + restores SK-V{N-1} state |
+| `dispatch t-p1` / `t-p2` / `t-p3` | Dispatch the named totality pass per `totality/PASS-{1,2,3}-*.md` |
+| `dispatch omega` | Dispatch Pass Omega per `pass-contracts/PASS-OMEGA.md` |
+| `dispatch sk-v{N} p1` / `p2` / `p3` | Dispatch the named skinny pass per `skinny/PASS-{1,2,3}-*.md` |
+| `dispatch sk-v{N} W{w}` | Dispatch one wave triumvirate per `sk-v{N}/SPEC.md` |
+| `dispatch alpha SK-V{N}→SK-V{N+1}` | Dispatch Pass Alpha per `pass-contracts/PASS-ALPHA.md` |
+| `status` | Orchestrator emits active track + pass + cycle + open dispositions |
+| `pin {pass}` | User overrides the auto pass-identification |
+| `abandon SK-V{N}` | Orchestrator nukes uncommitted SK-V{N} artefacts + restores prior state |
 
-## Repository layout (post-restructure)
+## Repository layout (the surfaces the passes read + write)
 
 ```
 restart/
-├── README.md                              ← gestalt anchor (top-level)
-├── ARCHITECTURE.md                        ← V1 spec
-├── HANDOFF.md                             ← top-level state pointer
-├── MASTER-PLAN.md                         ← H tranche + Pass Omega proposals
-├── MIGRATION.md                           ← renames + abrogates
-├── locks/
-│   └── LOCKS.md                           ← Lock 1-16 (+ proposed Lock 17 per SK-V7)
-├── prompts/                               ← THIS DIRECTORY
-├── audit/                                 ← totality-track hardening cycles (V1-V9+)
-├── research/                              ← totality-track research deep-dives
-├── corpora/                               ← test corpora references
-├── inheritance/                           ← pre-restart corpus (archive)
+├── README.md            ARCHITECTURE.md       ← V1 spec gestalt + greater spec
+├── MASTER-PLAN.md       MIGRATION.md          HANDOFF.md
+├── locks/LOCKS.md                             ← the 16 architectural locks
+├── prompts/                                   ← THIS DIRECTORY
+├── audit/
+│   └── totality/{p1,p2,p3,astral}/            ← totality pass + Pass Omega outputs
+├── research/                                  ← totality research deep-dives
 └── skinny/
-    ├── BENCH.md
-    ├── COMPILER.md
-    ├── HARDENING.md                       ← skinny-scope hardening (Lenses L/M/N; composes by reference with audit-specs/HARDENING-LENS-SET.md)
-    ├── INDEX.md
-    ├── SUBSTRATE.md
-    ├── WORKSPACE.md
-    └── audit/
-        ├── GRAND-SYNTHESIS-SK-V{N}.md     ← per-SK synthesis (current = SK-V7)
-        ├── IMPLEMENTATION-PACKET-SK-V{N}.md
-        ├── HANDOFF-SK-V{N}.md
-        ├── SOTA-BEAT-DESIGN.md            ← cross-iteration design doc
-        ├── SK-V{N}-COHORT/                ← per-SK cohort reports (current = SK-V7-COHORT/)
-        └── V9.5-PSI-EXCAVATION/           ← historical excavation (proposed move to archive/sk-v3.5-psi/)
+    ├── {INDEX,SUBSTRATE,COMPILER,BENCH,WORKSPACE,HARDENING}.md
+    └── tranches/
+        └── sk-v{N}/
+            ├── SYNTHESIS.md  SPEC.md  HANDOFF.md  DISPATCH-PROMPT.md
+            └── research/{p1,p2,p3,alpha}/      ← skinny pass + Pass Alpha outputs
+
+skinny/RESULTS.md        ← the empirical bench gate (authority)
+skinny/REDRESS.md        ← the rejected-route + admitted-win ledger
 ```
-
-## The bbnf-lang specific axes
-
-1. **Bench gate is empirical, not declarative.** Convergence requires `skinny/RESULTS.md` rows; "wired/complete" without bench citation is forbidden.
-2. **Skinny ⊂ totality with feedback loop.** Pass Omega explicitly consumes skinny REDRESS to amend V1 locks. Skinny lessons drive totality evolution; not the reverse.
-3. **Grammar generalisation is non-negotiable.** Lock 14 audit lives inside every CH2 lens; per-grammar variation lives in codegen-emitted .data + per-grammar wrapper dirs.
 
 ## Closing posture
 
-The prompt suite is the durable orchestrator. The skinny + totality content evolves through iteration. The framework gives the iteration a shape — auto-convergent, challenge-hardened, telemetry-bound, gate-controlled.
+The prompt suite is the durable orchestrator. The skinny + totality
+content evolves through iteration; the framework gives the iteration a
+shape — two tracks, three passes each, one astral synthesis each,
+auto-convergent, challenge-hardened, telemetry-bound, gate-controlled.
 
-No SK-V{N+1} dispatches without Pass Alpha goalset. No V1 spec amendment without Pass Omega cohesion verification. No new pass cycle without convergence on the prior. No commit merges triumvirate roles. No hypothesis transfer between SK iterations without fresh profile evidence.
+No pass advances without convergence on the prior cycle. No V1 spec
+amendment without Pass Omega. No SK-V{N+1} without Pass Alpha. No commit
+merges triumvirate roles. No hypothesis transfers between SK iterations
+without fresh profile evidence.
 
-The work is bounded by the gates. The throughput is bounded by the bench. The architecture is bounded by the locks. The discipline is the suite.
+The work is bounded by the gates. The throughput is bounded by the
+bench. The architecture is bounded by the locks. The discipline is the
+suite.

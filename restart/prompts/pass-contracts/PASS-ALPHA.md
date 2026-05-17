@@ -1,8 +1,8 @@
 # PASS-ALPHA — Skinny Astral Synthesis (SK-V{N+1} Cycle Creation)
 
-Pass Alpha is the **skinny astral synthesis pass**. It consumes the completed SK-V{N} cycle (research + planning + redress commits + measured RESULTS) and produces the next SK-V{N+1} contract: GRAND-SYNTHESIS-SK-V{N+1}.md + IMPLEMENTATION-PACKET-SK-V{N+1}.md + HANDOFF-SK-V{N+1}.md. The new contract carries a **detailed, precisely-defined goalset + telemetry binding**: per-corpus per-workload Mbps, c/B, strictness plane, output plane, hot-leaf attribution, delta-vs-previous-SK, delta-vs-every-competitor (sonic-rs / simdjson / yyjson / asmjson / RapidJSON / serde_json + future grammar-domain comparators for CSS / Sheets / BBNF-self).
+Pass Alpha is the **skinny astral synthesis pass**. It consumes the completed SK-V{N} cycle (research + planning + redress commits + measured RESULTS) and produces the next SK-V{N+1} contract: the `sk-v{N+1}/SYNTHESIS.md` + the §0 goalset/close-condition + `sk-v{N+1}/HANDOFF.md`. The detailed wave plan in `sk-v{N+1}/SPEC.md` is authored downstream by skinny pass S-P3 (`skinny/PASS-3-SYNTHESIS-PLAN.md`), which consumes Pass Alpha's goalset. The new contract carries a **detailed, precisely-defined goalset + telemetry binding**: per-corpus per-workload Mbps, c/B, strictness plane, output plane, hot-leaf attribution, delta-vs-previous-SK, delta-vs-every-competitor (sonic-rs / simdjson / yyjson / asmjson / RapidJSON / serde_json + future grammar-domain comparators for CSS / Sheets / BBNF-self).
 
-The pass is **iterative + auto-convergent**. Six parallel sub-agents fan out per the scope matrix in §2. A six-lens CHALLENGE pass adversarially reviews the output. Dispositions fold into v+1. The loop terminates at convergence per `ORCHESTRATOR.md` §iteration-governance + user G-Alpha sign-off.
+The pass is **iterative + auto-convergent**. Six parallel sub-agents fan out per the scope matrix in §2. A six-lens CHALLENGE pass adversarially reviews the output. Dispositions fold into v+1. The loop terminates at convergence per `ORCHESTRATOR.md` §3Z + user G-Alpha sign-off.
 
 ## §1 — Trigger + entry condition
 
@@ -19,20 +19,20 @@ Or the user explicitly invokes `dispatch alpha SK-V{N}→SK-V{N+1}`.
 
 | Agent | Scope | Output |
 |---|---|---|
-| **α-A SK-V{N} results extraction** | Extract every row of `skinny/RESULTS.md`: per-corpus per-workload (parse_only, direct_to_struct, real_typed_struct, parse_full_traversal, path_lookup, unicode_string_float, memory, cycles_per_byte) Mbps + c/B + strictness + output plane + hot leaf attribution. Compute delta vs SK-V{N-1} per row. | `restart/skinny/tranches/SK-V{N+1}-COHORT/alpha/αA-results-extraction.md` |
-| **α-B Competitor delta extraction** | For every comparator (sonic-rs strict / sonic-rs lossy / simdjson DOM / simdjson On Demand / yyjson default / yyjson minify / asmjson SWAR / asmjson AVX-512 / RapidJSON default / serde_json + any grammar-domain comparator if scope expands), compute per-corpus delta vs bbnf Track 1. Disclose strictness + output plane for each comparator row. | `restart/skinny/tranches/SK-V{N+1}-COHORT/alpha/αB-competitor-deltas.md` |
-| **α-C REDRESS digest** | Walk every REDRESS entry from SK-V{N}'s cycle. Classify: admitted (commit SHA) / rejected (measurement evidence) / partial. Identify routes that should pre-block SK-V{N+1} (avoid re-opening). Identify routes that may admit under different framing. | `restart/skinny/tranches/SK-V{N+1}-COHORT/alpha/αC-redress-digest.md` |
-| **α-D Validated/invalidated ledger** | Update the validated/invalidated/demoted/still-open ledger from prior SK iterations. Cite commit SHAs + RESULTS rows. Identify the load-bearing wins from SK-V{N} that carry forward; identify the still-open items that become SK-V{N+1} candidates. | `restart/skinny/tranches/SK-V{N+1}-COHORT/alpha/αD-validated-invalidated.md` |
-| **α-E Cohort candidate shortlist** | Synthesise the SK-V{N} cohort A/B/C reports (research + reinforcement + profile). Produce a shortlist of ≤5 candidate interventions for SK-V{N+1}. Each candidate carries: file path, scalar reference status, checkasm test status, same-wave consumer plan, falsifiability gate (named corpus rows + Mbps thresholds), LOC budget, risk classification. | `restart/skinny/tranches/SK-V{N+1}-COHORT/alpha/αE-candidate-shortlist.md` |
-| **α-F SK-V{N+1} contract draft** | Compose the SK-V{N+1} GRAND-SYNTHESIS + IMPLEMENTATION-PACKET + HANDOFF. Each carries: corrected diagnosis from α-A through α-E + the precisely-defined goalset (§4) + the wave structure with falsifiability gates per wave + the pre-blocked routes from α-C. Includes the telemetry-binding schema (§5). | `restart/skinny/tranches/GRAND-SYNTHESIS-SK-V{N+1}.md` + `IMPLEMENTATION-PACKET-SK-V{N+1}.md` + `HANDOFF-SK-V{N+1}.md` |
+| **α-A SK-V{N} results extraction** | Extract every row of `skinny/RESULTS.md`: per-corpus per-workload (parse_only, direct_to_struct, real_typed_struct, parse_full_traversal, path_lookup, unicode_string_float, memory, cycles_per_byte) Mbps + c/B + strictness + output plane + hot leaf attribution. Compute delta vs SK-V{N-1} per row. | `restart/skinny/tranches/sk-v{N+1}/research/alpha/αA-results-extraction.md` |
+| **α-B Competitor delta extraction** | For every comparator (sonic-rs strict / sonic-rs lossy / simdjson DOM / simdjson On Demand / yyjson default / yyjson minify / asmjson SWAR / asmjson AVX-512 / RapidJSON default / serde_json + any grammar-domain comparator if scope expands), compute per-corpus delta vs bbnf Track 1. Disclose strictness + output plane for each comparator row. | `restart/skinny/tranches/sk-v{N+1}/research/alpha/αB-competitor-deltas.md` |
+| **α-C REDRESS digest** | Walk every REDRESS entry from SK-V{N}'s cycle. Classify: admitted (commit SHA) / rejected (measurement evidence) / partial. Identify routes that should pre-block SK-V{N+1} (avoid re-opening). Identify routes that may admit under different framing. | `restart/skinny/tranches/sk-v{N+1}/research/alpha/αC-redress-digest.md` |
+| **α-D Validated/invalidated ledger** | Update the validated/invalidated/demoted/still-open ledger from prior SK iterations. Cite commit SHAs + RESULTS rows. Identify the load-bearing wins from SK-V{N} that carry forward; identify the still-open items that become SK-V{N+1} candidates. | `restart/skinny/tranches/sk-v{N+1}/research/alpha/αD-validated-invalidated.md` |
+| **α-E Cohort candidate shortlist** | Synthesise the SK-V{N} cohort A/B/C reports (research + reinforcement + profile). Produce a shortlist of ≤5 candidate interventions for SK-V{N+1}. Each candidate carries: file path, scalar reference status, checkasm test status, same-wave consumer plan, falsifiability gate (named corpus rows + Mbps thresholds), LOC budget, risk classification. | `restart/skinny/tranches/sk-v{N+1}/research/alpha/αE-candidate-shortlist.md` |
+| **α-F SK-V{N+1} contract draft** | Compose the SK-V{N+1} `SYNTHESIS.md` + the §0 goalset/close-condition + `HANDOFF.md`. Each carries: corrected diagnosis from α-A through α-E + the precisely-defined goalset (§4) + the pre-blocked routes from α-C. Includes the telemetry-binding schema (§5). The detailed wave plan in `SPEC.md` is authored downstream by skinny pass S-P3, which consumes this goalset. | `restart/skinny/tranches/sk-v{N+1}/SYNTHESIS.md` + `sk-v{N+1}/HANDOFF.md` |
 
-Each agent reads the antecedent SK-V{N} cohort + the four canonical files (RESULTS.md / REDRESS.md / restart/HANDOFF.md / restart/skinny/tranches/HANDOFF-SK-V{N}.md). Each writes ONE artefact at the assigned path. Hard cap 45 min per agent.
+Each agent reads the antecedent SK-V{N} cohort + the four canonical files (RESULTS.md / REDRESS.md / restart/HANDOFF.md / restart/skinny/tranches/sk-v{N}/HANDOFF.md). Each writes ONE artefact at the assigned path. Hard cap 45 min per agent.
 
 After all six commit, the **CHALLENGE pass** dispatches (§3).
 
 ## §3 — Six-lens CHALLENGE pass
 
-Six lens agents (CH1-CH6 per `ORCHESTRATOR.md` §5) adversarially review the α-A through α-F artefacts. Each produces dispositions per sub-section: ACCEPT / REVISE / REJECT.
+Six lens agents (CH1-CH6 per `ORCHESTRATOR.md` §3W) adversarially review the α-A through α-F artefacts. Each produces dispositions per sub-section: ACCEPT / REVISE / REJECT.
 
 **CH1 Correctness** — does every claim cite RESULTS.md row, REDRESS entry, commit SHA, or measurement file? Are falsifiability gates measurable? Are competitor deltas computed against the correct strictness plane?
 
@@ -46,11 +46,11 @@ Six lens agents (CH1-CH6 per `ORCHESTRATOR.md` §5) adversarially review the α-
 
 **CH6 Next-Tranche-Impact** — does the SK-V{N+1} contract specify revert protocol per intervention? Hard caps? Triumvirate discipline? Is the goalset measurable + verifiable from the bench gate?
 
-The CHALLENGE pass produces `restart/skinny/tranches/SK-V{N+1}-COHORT/alpha-hardening/V{V}/{CH1..CH6}.md` + `CONSOLIDATED.md`. Hard cap 90 min for the CHALLENGE wave.
+The CHALLENGE pass produces `restart/skinny/tranches/sk-v{N+1}/research/alpha-hardening/V{V}/{CH1..CH6}.md` + `CONSOLIDATED.md`. Hard cap 90 min for the CHALLENGE wave.
 
 ## §4 — The SK-V{N+1} goalset template (the load-bearing artefact)
 
-The IMPLEMENTATION-PACKET-SK-V{N+1}.md carries a **detailed, precisely-defined goalset** at §0 Close Condition. The goalset has four layers:
+The SK-V{N+1} `SYNTHESIS.md` carries a **detailed, precisely-defined goalset** at §0 Close Condition. The goalset has four layers; layer §4.4 (the wave-by-wave structure) is filled in downstream by skinny pass S-P3 when it authors `sk-v{N+1}/SPEC.md`, consuming the goalset Pass Alpha sets here.
 
 ### §4.1 — Per-row close conditions
 
@@ -111,7 +111,7 @@ The SK-V{N+1} bench harness must emit this schema verbatim. The xtask gate-json 
 
 ### §4.4 — Wave-by-wave falsifiability gates
 
-Each wave in the IMPLEMENTATION-PACKET-SK-V{N+1}.md carries:
+This layer is authored downstream by skinny pass S-P3 in `sk-v{N+1}/SPEC.md`, consuming the goalset Pass Alpha sets at §4.1–§4.3. Each wave in `sk-v{N+1}/SPEC.md` carries:
 
 - **Owner paths**: file paths the wave is authorised to touch.
 - **Entry gate**: what must be true before dispatch (e.g. "Wave 1 entry: comparator-plane repair landed; sonic-rs is strict; RESULTS.md re-baselined").
@@ -139,36 +139,37 @@ The cycle of Pass Alpha iterations is bounded by V5 per the orchestrator ceiling
 After Pass Alpha closes:
 
 ```
-restart/skinny/tranches/SK-V{N+1}-COHORT/
-├── alpha/
-│   ├── αA-results-extraction.md
-│   ├── αB-competitor-deltas.md
-│   ├── αC-redress-digest.md
-│   ├── αD-validated-invalidated.md
-│   ├── αE-candidate-shortlist.md
-│   └── αF-contract-draft.md
-├── alpha-hardening/
-│   └── V{V}/
-│       ├── CH1.md
-│       ├── CH2.md
-│       ├── CH3.md
-│       ├── CH4.md
-│       ├── CH5.md
-│       ├── CH6.md
-│       └── CONSOLIDATED.md
-└── [post-G-Alpha: the SK-V{N+1} cycle's own research/profile/redress cohort will populate]
-
-restart/skinny/tranches/GRAND-SYNTHESIS-SK-V{N+1}.md   ← THE master synthesis
-restart/skinny/tranches/IMPLEMENTATION-PACKET-SK-V{N+1}.md ← THE implementation packet with goalset §4
-restart/skinny/tranches/HANDOFF-SK-V{N+1}.md           ← THE packet handoff
+restart/skinny/tranches/sk-v{N+1}/
+├── research/
+│   ├── alpha/
+│   │   ├── αA-results-extraction.md
+│   │   ├── αB-competitor-deltas.md
+│   │   ├── αC-redress-digest.md
+│   │   ├── αD-validated-invalidated.md
+│   │   ├── αE-candidate-shortlist.md
+│   │   └── αF-contract-draft.md
+│   └── alpha-hardening/
+│       └── V{V}/
+│           ├── CH1.md
+│           ├── CH2.md
+│           ├── CH3.md
+│           ├── CH4.md
+│           ├── CH5.md
+│           ├── CH6.md
+│           └── CONSOLIDATED.md
+├── SYNTHESIS.md   ← THE master synthesis (Pass Alpha output, carries goalset §4.1–§4.3)
+├── HANDOFF.md     ← THE packet handoff (Pass Alpha output)
+└── SPEC.md        ← THE implementation packet with the §4.4 wave plan (authored downstream by skinny pass S-P3)
 ```
+
+The SK-V{N+1} cycle's own research / profile / redress cohort populates `sk-v{N+1}/research/` post-G-Alpha, beneath skinny passes S-P1/P2/P3.
 
 ## §7 — User sign-off (G-Alpha)
 
 After CHALLENGE CONSOLIDATED returns ≥95% ACCEPT, the orchestrator presents the SK-V{N+1} contract to the user:
 
 - Summary: rows targeted + interventions + LOC budget + hard caps + pre-blocked routes.
-- The full GRAND-SYNTHESIS-SK-V{N+1}.md + IMPLEMENTATION-PACKET-SK-V{N+1}.md links.
+- The full `sk-v{N+1}/SYNTHESIS.md` + `sk-v{N+1}/HANDOFF.md` links.
 - The goalset table (§4.1) + telemetry schema (§4.3).
 - The predicted close state (per α-A delta projection + α-B competitor delta).
 
@@ -178,7 +179,7 @@ After G-Alpha closed, the orchestrator can dispatch SK-V{N+1} P1 (the first skin
 
 ## §8 — Convergence + escalation
 
-Pass Alpha converges per `ORCHESTRATOR.md` §iteration-governance: ≥95% ACCEPT on CHALLENGE + zero open critical defects + no orphan REVISE + user G-Alpha sign-off.
+Pass Alpha converges per `ORCHESTRATOR.md` §3Z: ≥95% ACCEPT on CHALLENGE + zero open critical defects + no orphan REVISE + user G-Alpha sign-off.
 
 Escalation to user:
 

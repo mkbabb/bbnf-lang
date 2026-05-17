@@ -1,18 +1,18 @@
-# SKINNY-PASSES — Skinny Passes 1-n Contract (Per-Iteration Triumvirate Cycles)
+# SKINNY-TRIUMVIRATE — Per-Wave Research/Plan/Redress Contract
 
-This document is the **contract for skinny passes 1-n**: the per-iteration cycles inside a single SK-V{N} bracket, between G-Alpha(N-1→N) sign-off (start of SK-V{N}) and G-Alpha(N→N+1) sign-off (end of SK-V{N}).
+This document is the **per-wave triumvirate contract**: the research → plan → redress cycle that executes ONE wave of the wave plan that skinny pass S-P3 (`skinny/PASS-3-SYNTHESIS-PLAN.md`) authored into `sk-v{N}/SPEC.md`. The orchestrator invokes this contract once per wave, beneath skinny pass S-P3, inside the SK-V{N} bracket — between G-Alpha(N-1→N) sign-off (start of SK-V{N}) and G-Alpha(N→N+1) sign-off (end of SK-V{N}).
 
-A skinny iteration is bounded by Pass Alpha (`PASS-ALPHA.md`). Within the bracket, the implementation work proceeds through one or more **triumvirate passes**: research → plan → redress, with adversarial CHALLENGE between phases. The count `n` is unbounded; the discipline is auto-convergent per `ORCHESTRATOR.md` §iteration-governance.
+Skinny is itself a three-pass track — S-P1 Profile, S-P2 Research, S-P3 Synthesis-Plan, each its own discrete prompt under `restart/prompts/skinny/`. S-P3 produces the wave plan. This contract is the engine that executes each wave of that plan: research → plan → redress, with adversarial CHALLENGE between phases. The number of waves is set by `sk-v{N}/SPEC.md`; the discipline is auto-convergent per `ORCHESTRATOR.md` §3Z. A skinny iteration is bounded by Pass Alpha (`PASS-ALPHA.md`).
 
 ## §1 — The triumvirate structure
 
-Every skinny pass cycle has three phases, each in its own commit:
+Every wave triumvirate has three phases, each in its own commit:
 
 ### Phase 1: Research (read-only)
 
-**Purpose**: Profile-first diagnosis. Six parallel research agents fan out on disjoint scope rows. Each reads the current code + the most recent RESULTS.md + the most recent REDRESS ledger. Each produces ONE artefact at `restart/skinny/tranches/SK-V{N}-COHORT/skv{N}-{wave-letter}{agent-id}-{topic}.md`.
+**Purpose**: Profile-first diagnosis. Six parallel research agents fan out on disjoint scope rows. Each reads the current code + the most recent RESULTS.md + the most recent REDRESS ledger. Each produces ONE artefact at `restart/skinny/tranches/sk-v{N}/research/skv{N}-{wave-letter}{agent-id}-{topic}.md`.
 
-**Agents**: 6 parallel by default. Scope rows are pass-specific (per the wave letter assigned by Pass Alpha's IMPLEMENTATION-PACKET-SK-V{N}.md). Examples from SK-V6 / SK-V7:
+**Agents**: 6 parallel by default. Scope rows are wave-specific (per the wave letter assigned by `sk-v{N}/SPEC.md`). Examples from SK-V6 / SK-V7:
 - A1: SOTA comparator deep dive
 - A2: DAV1D esoterica + grammar-neutral primitives
 - A3: parse-that primitive gap analysis
@@ -89,7 +89,7 @@ Pre-blocked routes: {REDRESS entries this wave must NOT re-open}.
 
 ## §2 — Wave numbering convention
 
-Within an SK-V{N} bracket, waves are letter-numbered: W0, W1, W2, … (or alpha-letter: WA, WB, WC, …; per Pass Alpha's IMPLEMENTATION-PACKET).
+Within an SK-V{N} bracket, waves are letter-numbered: W0, W1, W2, … (or alpha-letter: WA, WB, WC, …; per the wave plan in `sk-v{N}/SPEC.md`).
 
 Sub-cycle versions within a wave: W1b, W1c, W1d (per the SK-V6 pattern where W1b/W1c emerged from re-research after W1 failed to produce a candidate).
 
@@ -101,7 +101,7 @@ A failed wave (rejected redress) still produces 3 commits. The next wave (W2 / W
 
 The SK-V{N} bracket may have any number of waves. The bracket converges when:
 
-- Every wave in IMPLEMENTATION-PACKET-SK-V{N}.md has been executed (admit OR reject with measurement).
+- Every wave in `sk-v{N}/SPEC.md` has been executed (admit OR reject with measurement).
 - The empirical close condition from Pass Alpha §0 is met (e.g. "no parse-G rows; no N-direct; strictness disclosed; Track 1 ≡ generated runtime; Track 2 structurally different").
 - OR the bracket has reached a fixpoint: no remaining candidate intervention in the shortlist would lift any named row.
 
@@ -113,7 +113,7 @@ If the SK-V{N} bracket has > 12 waves without convergence, the orchestrator esca
 
 For high-risk interventions (e.g. substrate changes, lock-amendment-class kernels), the orchestrator may interpose a CHALLENGE pass between Research and Plan, or between Plan and Redress.
 
-CHALLENGE phases use the universal lens set (CH1-CH6 per `ORCHESTRATOR.md` §5). For skinny waves, CHALLENGE is **adversarial review of the intervention plan**:
+CHALLENGE phases use the universal lens set (CH1-CH6 per `ORCHESTRATOR.md` §3W). For skinny waves, CHALLENGE is **adversarial review of the intervention plan**:
 
 - CH1 Correctness: does the plan cite file:line for every claim? Is the falsifiability gate measurable?
 - CH2 Generality: does the intervention respect Lock 14? Does it generalise to non-JSON grammars?
@@ -126,7 +126,7 @@ CHALLENGE pass adds 60-90 min to the wave wall-clock. For routine waves (mechani
 
 ## §5 — Cycle bracketing (Pass Alpha entry/exit)
 
-The skinny pass cycle is bracketed by Pass Alpha:
+The skinny wave cycle is bracketed by Pass Alpha:
 
 ```
 G-Alpha(N-1→N) closed                    [user sign-off]
@@ -149,7 +149,7 @@ The SK-V{N} bracket may produce 5-50 commits total (research + plan + redress pe
 ## §6 — Per-wave artefact paths
 
 ```
-restart/skinny/tranches/SK-V{N}-COHORT/
+restart/skinny/tranches/sk-v{N}/research/
 ├── skv{N}-W{w}-{a}-{topic}.md    ← per-research-agent output
 ├── skv{N}-W{w}-plan.md            ← plan artefact
 └── ...
@@ -157,9 +157,9 @@ restart/skinny/tranches/SK-V{N}-COHORT/
 skinny/REDRESS.md                  ← grows; entries land in order of admit/reject
 skinny/RESULTS.md                  ← refreshed after each admit/reject
 
-restart/skinny/tranches/HANDOFF-SK-V{N}.md
-restart/skinny/tranches/IMPLEMENTATION-PACKET-SK-V{N}.md
-restart/skinny/tranches/GRAND-SYNTHESIS-SK-V{N}.md
+restart/skinny/tranches/sk-v{N}/HANDOFF.md
+restart/skinny/tranches/sk-v{N}/SPEC.md
+restart/skinny/tranches/sk-v{N}/SYNTHESIS.md
 ```
 
 ## §7 — Hard caps + commit cadence
@@ -191,8 +191,8 @@ This was the SK-V5 failure shape (Class A NEON kernel parity-green but unwired �
 
 Each commit MUST occupy exactly one triumvirate role:
 
-- **Research commit** is read-only diagnosis. NO source edits. NO new files outside `restart/skinny/tranches/SK-V{N}-COHORT/`.
-- **Plan commit** is synthesis. NO source edits. NO new files outside `restart/skinny/tranches/SK-V{N}-COHORT/`.
+- **Research commit** is read-only diagnosis. NO source edits. NO new files outside `restart/skinny/tranches/sk-v{N}/research/`.
+- **Plan commit** is synthesis. NO source edits. NO new files outside `restart/skinny/tranches/sk-v{N}/research/`.
 - **Redress commit** is implementation + measurement. Source edits + bench output + REDRESS entry. NO research synthesis content (research already happened).
 
 The orchestrator enforces by refusing to dispatch a redress agent without an antecedent plan commit, and refusing to dispatch a plan agent without an antecedent research commit.

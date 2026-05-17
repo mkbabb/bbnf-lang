@@ -1,0 +1,53 @@
+# S-P2 V1 CH5 — Hidden Coupling
+Date: 2026-05-17.
+Lens verdict: REVISE.
+Accept score: 82/100.
+
+## §1 — Disposition Table
+
+| Target | Disposition | Finding | Evidence | Required fold |
+|---|---|---|---|---|
+| SC-1 | ACCEPT | The teardown names the existing coupling and demands that the scan become the dispatch boundary, not a sidecar. | CH5 forbids parallel substrates and renamed scanners at `restart/prompts/ORCHESTRATOR.md:87`; SC-1 requires no retained `StructuralIndex` or `Vec<JsonEvent>` on parser state at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-1-offset-tape-teardown.md:338`. | Preserve the generated-parser grep gate in V2. |
+| SC-2 | REVISE | The fused index-tape thesis is cardinality-safe, but the escape/control "side-channel" wording can be read as a sidecar producer unless it is explicitly tape-internal and co-produced. | SC-2 says the structural index is the offset tape at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-2-two-stage-sota.md:258`; it also says `(flag_cursor, flag_value)` is emitted as a side-channel at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-2-two-stage-sota.md:266`. | Rename side-channel to sparse tape facts, require same producer, same cursor domain, and no independent lifetime. |
+| SC-3 | REVISE | The union survives only if `class` and `facts` are columns of the one `Tape`, not aux/cache tables. The document mostly states that, but the SoA, retained-index, and facts-column wording needs hard guards. | SC-3 constrains "no parallel/sidecar substrate" at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-3-union-substrate-design.md:17`; it defines `offset` and `class` co-resident under one substrate at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-3-union-substrate-design.md:106`; it calls the layout "structure-of-arrays" at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-3-union-substrate-design.md:124`; it admits sparse `facts` at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-3-union-substrate-design.md:147`; it says `StructuralIndex` is moved into `TapeBuilder` at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-3-union-substrate-design.md:342`. | V2 must state: substrate cardinality is one; `StructuralIndex` is consumed by move and has no post-build API; `class` is primary structural identity; `facts` may only replace current flags or EventTape-required facts, never density/cache/profiling facts. |
+| SC-4 | REJECT-AS-WRITTEN | The string-plane finding is useful, but its recommendation introduces retained quote/backslash/parity bitmaps beside the index. That is a sidecar unless rewritten as transient masks or as the tape's own columns. | S-P2 CH5 rejects a second scan, retained cursor, aux density table, or parser-owned projection at `restart/prompts/skinny/PASS-2-RESEARCH.md:126`; SC-4 asks for `"` bitmap, `\` bitmap, and parity mask at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-4-string-plane-gap.md:270`; it later prices quote/backslash/parity bitmap memory as added index footprint at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-4-string-plane-gap.md:339`. | Fold SC-4 into SC-3's union vocabulary: masks are transient; retained facts are tape columns only; no document-wide bitmap sidecar survives parse. |
+| SC-5 | ACCEPT-WITH-FOLD | The K adjudication does not add a production substrate, and the `tape_vs_tape` row has a same-wave gate consumer. It must remain a comparator workload, not a runtime sidecar. | SC-5 says `parse_only` is tape-vs-DOM and not plane-comparable at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-5-k-classification-adjudication.md:247`; it proposes `tape_vs_tape` against structural-index competitors at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-5-k-classification-adjudication.md:174`; it names the new gate row as consumer at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-5-k-classification-adjudication.md:284`. | V2 must state that comparator sidecars stay sidecar planning signals and never count as same-run strict admission unless W0/W1 freshness gates consume them. |
+| SC-6 | ACCEPT-WITH-FOLD | The Lock 1 refinement is the right discriminant: cardinality=1 passes, cardinality=2 fails. It correctly remains a Pass Omega candidate, not binding law. | SC-6 names replacement rather than shadowing at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-6-lock1-amendment-generalisation.md:199`; its amendment forbids a structural index retained alongside a separate tape at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-6-lock1-amendment-generalisation.md:272`; it says the discriminant is cardinality at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-6-lock1-amendment-generalisation.md:276`; it also says the amendment is only a Pass Omega candidate at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-6-lock1-amendment-generalisation.md:256`. | V2 must cite SK-V8 SPEC's rule that W3 must either await Pass Omega or prove Lock 1 as written. |
+
+## §2 — Critical Defects
+
+1. SC-4 is a Lock 1 blocker as written. It asks the union wave to emit retained document-wide quote, backslash, and parity bitmaps at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-4-string-plane-gap.md:270`, then treats their memory as an added index cost at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-4-string-plane-gap.md:339`. That is an aux bitmap sidecar unless V2 rewrites the bitmaps as transient masks or as co-indexed tape facts.
+
+2. SC-3's `facts` column has no hard admissibility boundary. It generalises today's flags into cursor-ordered sparse facts at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-3-union-substrate-design.md:147`, then permits recovery and layout facts in EventTape at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-3-union-substrate-design.md:239`. Without a "no density/cache/profile facts" rule, this can recreate REDRESS 50-style aux tables under a new name.
+
+3. SC-3 uses "structure-of-arrays" for the union at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-3-union-substrate-design.md:124`, while Lock 1 says columnar SoA is dead at `restart/locks/LOCKS.md:34`. V2 must distinguish co-indexed internal tape columns from the forbidden old columnar-SoA substrate.
+
+## §3 — Revisions Required
+
+- In `SC-4-string-plane-gap.md` §4, replace the bitmap recommendation with: stage-1 quote/backslash/parity masks are transient; the only retained output is the union tape's offset/class/facts columns; any retained bitmap outside `Tape` is a Lock 1 failure.
+
+- In `SC-3-union-substrate-design.md` §2.2, add a cardinality invariant: `Tape` is the only retained document identity; `StructuralIndex` is consumed by move into `Tape` and cannot be queried, cloned, cached, or attached to parser state after construction.
+
+- In `SC-3-union-substrate-design.md` §2.2 and §3, define `facts` narrowly: current escape/control flags and EventTape-required recovery/layout facts only. Ban density tables, quote caches, skip caches, profile counters, parser-owned slots, and any per-consumer cache.
+
+- In `SC-3-union-substrate-design.md` §5.1, replace "renamed to the `facts` column" with "folded into the tape-internal sparse facts column"; require the producer to be the same SIMD compaction/build step and the consumer to be named in the same wave.
+
+- In `SC-6-lock1-amendment-generalisation.md` §4.3 and §4.4, replace grammar-specific event class names such as `DeclTerminator`, `PropValueDelim`, and `RangeDelim` with the fixed neutral role set SC-6 itself requires at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-6-lock1-amendment-generalisation.md:623`.
+
+- In the V2 synthesis or consolidated hardening, cite the governing W3 gate: a projection passes only if it replaces the offset tape outright, cardinality stays one, scalar rediscovery is deleted, and no producer runs in parallel at `restart/skinny/tranches/sk-v8/SPEC.md:423`.
+
+## §4 — Accepted Claims
+
+- The existing implementation has duplicate structural work: SC-3 says `scan_structurals` is counted and discarded at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-3-union-substrate-design.md:55`, and `attach_structural_index` is a no-op at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-3-union-substrate-design.md:58`.
+
+- The valid union claim is replacement, not addition: SC-3 says the structural projection is retained as the tape's offset column at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-3-union-substrate-design.md:99`, and SC-6 says the offset tape must cease to be separately constructed at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-6-lock1-amendment-generalisation.md:186`.
+
+- The `class` column can survive CH5 if it is primary identity, not aux metadata: SC-3 says it names the structural byte at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-3-union-substrate-design.md:111`, and it states the parser stops producing offsets and walks the class column at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-3-union-substrate-design.md:115`.
+
+- Track 1 / Track 2 dishonesty is not present in this cohort. SK-V8 requires structural independence for typed rows at `restart/skinny/tranches/sk-v8/SPEC.md:370`, and current RESULTS disclose that Track 1 is generated while Track 2 is an independent hand-coded parser over runtime tape at `skinny/RESULTS.md:217`.
+
+- SC-6's Lock 1 refinement is properly non-binding until Pass Omega: it says the amendment must fold through Pass Omega and does not bind V1 at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-6-lock1-amendment-generalisation.md:256`, while SK-V8 W3 already requires Pass Omega ratification or proof against current Lock 1 at `restart/skinny/tranches/sk-v8/SPEC.md:405`.
+
+## §5 — Verdict Rationale
+
+REVISE. The cohort's central union is sound only in the strict form: one producer, one retained `Tape`, one cursor identity, and deletion of scalar rediscovery. SC-3 and SC-6 know this and mostly say it. SC-4 does not: retained quote/backslash/parity bitmaps are a sidecar under CH5 unless they become transient masks or tape-internal facts. SC-3's `facts` column and SoA wording also need containment before V2, because REDRESS 50-style aux columns can re-enter through those names. No Track 1 == Track 2 dishonesty is found, and SC-6's Lock 1 refinement is acceptable as a Pass Omega candidate, not as already-ratified authority.

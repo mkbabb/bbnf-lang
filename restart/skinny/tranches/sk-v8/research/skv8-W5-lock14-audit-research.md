@@ -12,7 +12,8 @@ rejected, or been explicitly routed. W5's default source budget is 0 LOC; it
 may use <=150 source LOC only if a W5 plan names a small Lock 14 cleanup.
 
 The W5 research question is therefore narrow: is there a named Lock 14 drift
-that must be fixed before W6 close, or can W5 close as a no-source audit gate?
+that must be fixed before W6 close, or can W5 close from an audit gate with a
+bounded named cleanup?
 
 ## Audit Scope
 
@@ -26,9 +27,10 @@ Required W5 surfaces from SPEC Section 8 and P3-C:
   and 86;
 - generated JSON output and `skinny/RESULTS.md` have zero behavior drift by
   default;
-- CSS L4, Sheets, and BBNF-self proof is required for generic edits. W5 has no
-  generic edit, so this is checked as unchanged-output coverage rather than a
-  new source proof.
+- CSS L4, Sheets, and BBNF-self proof is required for generic edits. W5 touches
+  the generic `codegen/src/lib.rs` surface only to delegate provider material to
+  `json_provider`, so this is checked as unchanged-output coverage plus the
+  provider-boundary scans rather than a new behavior proof.
 
 ## Evidence
 
@@ -105,8 +107,10 @@ W7/W8 Lock 14 residue suites:
    profile guard and JSON template/runtime includes belonged in a per-grammar
    provider surface, not in the generic `codegen/src/lib.rs` surface.
 3. REDRESS 36-38 remain historical violation records, not live blockers:
-   REDRESS 85 and REDRESS 86 record the admitted neutralization work and the
-   current tests still pass.
+   `skinny/REDRESS.md:460-515` records the old Lock 14 violations, while
+   `skinny/REDRESS.md:2399-2427` and `skinny/REDRESS.md:2431-2464` record the
+   admitted REDRESS 85 and 86 neutralization work. The current tests still
+   pass.
 4. The non-JSON proof burden remains satisfied by unchanged output over all
    nine root grammars. The W5 cleanup is a provider-boundary/allowlist change
    and does not alter generated output.
@@ -161,9 +165,26 @@ Post-fold checks:
   source, IR, passes, parse-that-regex, SIMD, runtime, skinny bbnf, and xtask
   owner paths returned clean.
 
+## V2 Hardening Fold
+
+W5 V2 hardening returned CH1 REVISE and five ACCEPT results. CH1 found no code
+blocker, but required the documentation to stop carrying stale no-source and
+no-generic-edit language after the named provider-boundary cleanup.
+
+The fold keeps the code unchanged and clarifies that:
+
+- the source/test insertion count remains 148, below W5's <=150 named Lock 14
+  cleanup cap;
+- `skinny/crates/codegen/src/lib.rs` is a generic surface touched only to
+  delegate provider material to `skinny/crates/codegen/src/json_provider.rs`;
+- same-wave consumer evidence is the audit gate plus existing codegen/runtime
+  checks;
+- REDRESS reconciliation anchors resolve to `skinny/REDRESS.md:460-515`,
+  `skinny/REDRESS.md:2399-2427`, and `skinny/REDRESS.md:2431-2464`.
+
 ## Recommended Plan
 
-Proceed to a W5 V2 plan with a named Lock 14 cleanup:
+Proceed to a W5 V3 challenge with the named Lock 14 cleanup:
 
 - same-wave consumer: the W5 audit gate itself;
 - source owner paths:

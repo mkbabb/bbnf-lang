@@ -75,6 +75,8 @@ W5 passes only if all of the following hold:
 3. Allowed JSON surfaces remain confined to grammar inputs, generated JSON
    output, per-grammar templates/providers, tests, and host/API schema facts.
 4. REDRESS 36-38 remain reconciled by REDRESS 85 and REDRESS 86; the
+   resolving anchors are `skinny/REDRESS.md:460-515`,
+   `skinny/REDRESS.md:2399-2427`, and `skinny/REDRESS.md:2431-2464`, and the
    W7/W8-era Lock 14 unit suites still pass.
 5. `skinny/RESULTS.md`, generated JSON output, generated typed output, direct
    guard source, and generic crate surfaces have zero diff from HEAD.
@@ -113,27 +115,31 @@ generated-output tooling, or `json_provider.rs` lines.
 
 ## Hardening Plan
 
-Run a W5 CH1-CH6 challenge against this no-source audit close:
+Run a W5 CH1-CH6 challenge against this named Lock 14 provider-boundary cleanup:
 
 - CH1: citations, command evidence, and zero-drift claims resolve.
 - CH2: Lock 14 and grammar-neutrality hold; allowed JSON surfaces are not
   confused with generic JSON policy.
-- CH3: REDRESS 36-38, 85, and 86 remain closed; no pre-blocked route reopens.
-- CH4: 0 source LOC, 90-minute cap, and audit-gate same-wave consumer are
-  realistic.
+- CH3: REDRESS 36-38 (`skinny/REDRESS.md:460-515`), REDRESS 85
+  (`skinny/REDRESS.md:2399-2427`), and REDRESS 86
+  (`skinny/REDRESS.md:2431-2464`) remain closed; no pre-blocked route reopens.
+- CH4: <=150 source/test insertions, 90-minute cap, and audit-gate plus
+  existing codegen/runtime same-wave consumer evidence are realistic.
 - CH5: no hidden substrate, sidecar, `UnionTape`, `BackendShape`, or
   Track 1/Track 2 coupling is introduced.
 - CH6: no paper close; W5 closes on live command evidence, not assertion.
 
 V1 returned CH1 and CH2 REVISE. V2 must challenge the folded provider-boundary
-cleanup and the cwd-qualified verification plan. If V2 returns a qualifying
-ACCEPT, re-challenge the unchanged packet once more. W5 may close only after
-two consecutive qualifying ACCEPT cycles.
+cleanup and the cwd-qualified verification plan. V2 returned CH1 REVISE for
+stale no-source/no-generic-edit language and missing exact REDRESS anchors.
+V3 must challenge the folded documentation and unchanged source packet. If V3
+returns a qualifying ACCEPT, re-challenge the unchanged packet once more. W5
+may close only after two consecutive qualifying ACCEPT cycles.
 
 ## Revert And Redress
 
-No source revert is expected. If hardening finds live Lock 14 drift, stop W5
-close and either:
+No further source revert is expected. If hardening finds live Lock 14 drift,
+stop W5 close and either:
 
 - write a new W5 plan naming the exact source cleanup within <=150 LOC and the
   same-wave consumer tests; or

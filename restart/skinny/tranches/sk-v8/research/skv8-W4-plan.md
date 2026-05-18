@@ -2,7 +2,7 @@
 
 Date: 2026-05-18.
 
-Status: W4 plan pending challenge.
+Status: W4 plan challenged and rejected/routed after V1 measurement.
 
 ## Scope
 
@@ -95,3 +95,18 @@ Residual rows after W4 remain routed by output-contract class:
   direct-workload control path only with fresh hot-leaf evidence.
 - Digest-as-product remains rejected; typed product proof is owned by
   `real_typed_struct`, not W4 direct digest.
+
+## V1 Fold And Disposition
+
+W4 V1 hardening returned REVISE because the original plan under-proved SPEC
+Section 7 full-table maintain, lacked a W4-aware checked report path, and had
+no Lock 14 W4 parent-diff allowance for `direct_struct.rs`.
+
+A local source attempt implemented the planned hand Track 2 scalar-parent fold
+and saved the rejected patch at
+`/tmp/skv8-wave4-track2-scalar-fold-rejected.patch`. Correctness passed, but
+native Criterion falsified the selected three-row gate: `apache_builds` cleared
+sonic/1.10, while `random` remained below sonic/1.10 and `numbers` Track 2
+regressed by +6.3287% time. The source patch was reverted, `skinny/RESULTS.md`
+remains unchanged, and W4 closes only as a rejected/routed direct guard triage
+after V2/V3 hardening accepts this disposition.

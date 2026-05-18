@@ -2688,3 +2688,42 @@ perturbation.
   grammar including numbers/literals and string quote ownership, prove the
   retained `ValueRef` cursor contract over that grammar, and only then reopen a
   measured structural-heavy parse row wave.
+
+## SK-V8 Wave 4 Direct Guard Triage Redress
+
+- Item 93 rejects/routes the W4 hand Track 2 scalar-parent fold candidate. The
+  selected `N-direct` rows were `apache_builds/direct_to_struct`,
+  `numbers/direct_to_struct`, and `random/direct_to_struct`, chosen because
+  generated Track 1 already cleared the same-run direct floor and the opening
+  miss was Track 2-only. Their floors were `ceil(sonic-rs strict Mbps / 1.10)`:
+  Apache 8048 Mbps, numbers 7230 Mbps, and random 7401 Mbps.
+- The attempted source patch changed only
+  `skinny/crates/bbnf-bench/src/direct_struct.rs`: the independent hand
+  Track 2 parser folded scalar object/array values directly into the parent
+  digest instead of constructing a temporary scalar child digest. It added no
+  runtime, codegen, BIR, directive, substrate, generic crate, generated Track 1,
+  string materializer, cap-16, value-byte carry, source-hook, semantic
+  string-fact, raw-f64, or mantissa route.
+- Correctness was green:
+  `cargo test -p bbnf-bench direct_struct -- --nocapture` passed after the
+  patch. Directional profile probes showed Apache and numbers improving in
+  release-loop form, but random still below its floor.
+- Binding native Criterion falsified the three-row W4 gate. Apache improved
+  and cleared sonic/1.10 (`track2_direct_to_struct` 95.347 us versus
+  `sonic_rs_direct_to_struct` 92.643 us), but random remained below sonic/1.10
+  (`track2` 569.57 us versus sonic 463.26 us), and numbers regressed by
+  +6.3287% Track 2 time (`track2` 106.43 us versus sonic 93.211 us). This
+  misses selected-row floors before any row-table admission question.
+- W4 V1 hardening also found that a source admission would need a W4-aware
+  checked report path and explicit Lock 14 W4 parent-diff allowance. Because
+  the source candidate was already falsified on selected rows, W4 does not add
+  that gate surface in this wave. This is fail-closed: no source patch is
+  admitted, no Lock 14 allowance is added, and `skinny/RESULTS.md` remains
+  unchanged.
+- The rejected patch is saved at
+  `/tmp/skv8-wave4-track2-scalar-fold-rejected.patch`. Do not reopen scalar
+  parent folding under another name unless a later wave first supplies a
+  W4/V9-aware checked gate, full-table maintain measurement, and an independent
+  Track 2 digest-arithmetic backstop. Remaining direct digest misses route to a
+  later direct-output-contract or control-path research tranche; digest evidence
+  remains guard-plane only and is not product proof.

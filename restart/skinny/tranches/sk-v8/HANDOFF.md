@@ -5,11 +5,12 @@ Date: 2026-05-18.
 Status: G-Alpha closed by user on 2026-05-18T05:26:48Z. SK-V8 W0, W1, W2, and
 W3 are closed. W2 admits source/product parity and rejects benchmark row-table
 admission for this wave. W3 rejects/routes Tier A implementation on the
-pre-redress fit gate. W4 is the next active wave under its own research, plan,
-challenge, and redress gates. W5-W6 require prior wave dispositions and their
+pre-redress fit gate. W4 has a proposed rejection/routing disposition after the
+scalar-parent fold candidate failed the selected row gate, but it remains
+pending hardening convergence. W5-W6 require prior wave dispositions and their
 own gates before implementation.
 
-Next move: SK-V8 W4.
+Next move: finish SK-V8 W4 hardening convergence.
 
 ## 1. Read First
 
@@ -135,7 +136,7 @@ dispatch W0.
 | W1 | CostFacts Gate Binding | Closed by W1 redress commit `c6345e4d` | 0 parser/generated behavior LOC; 272 insertions / 13 deletions in CostFacts/report/gate/test scope |
 | W2 | Typed Product Plane Expansion | Closed by V4+V5 challenge convergence: source/product parity admitted, benchmark row-table admission rejected/routed in REDRESS 91 | <=650 source/test LOC; generated output and row tables named separately |
 | W3 | Profile-Selected Parse Candidate — lead candidate: tape ⊕ structural-projection union (S-P2 cohort) | Rejected/routed by W3 V1 challenge on pre-redress fit gate; no source or RESULTS change | <=450 source/test LOC default; <=650 only with accepted pre-redress fit proof |
-| W4 | Direct Guard Triage | Conditional on W0/W1 plan update | <=300 source/test LOC and <=3 selected rows |
+| W4 | Direct Guard Triage | Proposed rejection/routing disposition after V1 challenge and measured scalar-parent fold miss; pending V2/V3 convergence | <=300 source/test LOC and <=3 selected rows |
 | W5 | Grammar-Neutral Audit And Lock 14 Preservation | Conditional on W1-W4 close | 0 source LOC default; <=150 named Lock 14 cleanup LOC |
 | W6 | Close And Alpha Feedback | Conditional on all prior dispositions | 0 source LOC; docs/RESULTS/REDRESS/HANDOFF/SPEC reconciliation only |
 
@@ -210,7 +211,22 @@ grammar, including numbers/literals and string quote ownership, prove the
 retained `ValueRef` cursor contract over that grammar, and only then reopen a
 measured structural-heavy parse row wave.
 
-W4 is now the active wave.
+W4 disposition record: W4 research and plan selected
+`apache_builds/direct_to_struct`, `numbers/direct_to_struct`, and
+`random/direct_to_struct` because each was a Track2-only direct miss under the
+same-run `ceil(sonic-rs / 1.10)` floor. W4 V1 hardening found that source
+admission would require a W4-aware checked report path, full-table maintain
+proof, and a Lock 14 W4 parent-diff allowance. A local source candidate folded
+hand Track 2 scalar object/array values directly into parent digests, saved the
+rejected patch at `/tmp/skv8-wave4-track2-scalar-fold-rejected.patch`, and
+then failed the selected-row gate: Apache cleared sonic/1.10, but random still
+missed and numbers Track 2 regressed by +6.3287% time in Criterion. The patch
+was reverted, `skinny/RESULTS.md` remains unchanged, no Lock 14 allowance was
+added, and the remaining direct digest misses route to a later direct output
+contract or control-path tranche. This is the proposed disposition pending
+V2/V3 hardening convergence.
+
+W4 hardening convergence is now the active work.
 
 ## 5. Entry Gates
 
@@ -300,8 +316,10 @@ Decision recorded:
 - `G-Alpha closed` by user on 2026-05-18T05:26:48Z.
 
 Authority granted: dispatch SK-V8 after `G-Alpha closed`, with W0 and W1 now
-closed under their recorded gates and W2 disposition recorded in REDRESS 91.
+closed under their recorded gates, W2 and W3 dispositions recorded in REDRESS
+91 and 92, and W4's proposed disposition recorded in REDRESS 93 pending
+hardening convergence.
 
-W3-W6 remain blocked until each later wave satisfies its own entry gates,
+W4-W6 remain blocked until each later wave satisfies its own entry gates,
 plan/challenge requirements, prior-wave disposition requirements, and dispatch
 authority.

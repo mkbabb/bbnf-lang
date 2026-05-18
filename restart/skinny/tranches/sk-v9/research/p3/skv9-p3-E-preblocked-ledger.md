@@ -1,6 +1,6 @@
 # SK-V9 P3-E: Pre-Blocked-Route Ledger
 
-Pass: S-P3 Synthesis-Plan. Cycle: V1.
+Pass: S-P3 Synthesis-Plan. Cycle: V3.
 Date: 2026-05-18.
 Scope: the binding pre-block ledger for the SK-V9 wave plan — per-wave
 REDRESS entries each wave must NOT reopen, the material differentials that
@@ -50,20 +50,29 @@ Three disposition classes, mirroring P1-V3-F:
   reject owns the live constraint (§6).
 
 The SK-V9 wave set this ledger covers, drawn from the S-P2 candidate pool
-and the HANDOFF §3 candidate boundaries:
+and the HANDOFF §3 candidate boundaries. P3-E was originally drafted with
+lettered wave shorthand (W-AC/W-RG/W-UE/W-UC/W-AS); the **binding**
+manifest is the numeric W1-W5 / W4a-d sequence the P3-F SPEC §2 carries.
+The lettered→numeric mapping is fixed here once and the numeric scheme is
+used throughout §2:
 
-| Wave | Topic | REDRESS-adjacency |
-|---|---|---|
-| W0 | baseline-profile / telemetry-lock | telemetry-hygiene only; no behavior route |
-| W-AC | Apache/CITM typed row-table admission (P2-C) | REDRESS-adjacent (91) |
-| W-RG | retained class/event grammar + `ValueRef` proof (P2-B) | REDRESS-adjacent (92, 50–72) |
-| W-UE | union event-model (P2-A) | REDRESS-adjacent (92, 50–53, 60–72) |
-| W-UC | unicode codec + string-block widening (P2-D / P2-E) | REDRESS-adjacent (82, 83, 64) |
-| W-AS | aarch64 ASM (SHA3 EOR3, CSSC CTZ) (P2-D) | REDRESS-adjacent (88, 89, 33) |
+| P3-E letter | SK-V9 numeric wave | Topic | REDRESS-adjacency |
+|---|---|---|---|
+| W0 | W0 | baseline-profile / telemetry-lock | telemetry-hygiene only; no behavior route |
+| W-AC | **W1** | Apache/CITM typed row-table admission (P2-C) | REDRESS-adjacent (91) |
+| W-RG | **W2** | retained class/event grammar + `ValueRef` proof (P2-B) | REDRESS-adjacent (92, 50–72) |
+| W-UE | **W3** | union event-model + P2-D §5 structural-bitmap chain (P2-A) | REDRESS-adjacent (92, 50–53, 60–72) |
+| W-UC | **W4a + W4b-1/W4b-2/W4b-3** | 32-byte string-block widening + the codec (P2-D §4 / P2-E) | REDRESS-adjacent (82, 83, 64) |
+| W-AS | **W4c + W4d** | SHA3 EOR3 ladder (W4c) + CSSC CTZ (W4d) (P2-D) | REDRESS-adjacent (88, 89, 33) |
 
-Wave letters are P3-E shorthand; P3-B owns the canonical W0…W{n}
-numbering. Topological order per S-P2 CONVERGED: W-RG proof → W-UE union →
-W-UC / W-AS consumers; W-AC is fully independent.
+The numeric W1-W5 manifest with W4 sub-waved (W4a, the three codec
+sub-waves W4b-1/W4b-2/W4b-3, W4c, W4d) is the canonical wave plan
+(P3-F SPEC §2). The old lettered W-UC bundled the string-block widening
+and the codec as one wave, and W-AS bundled EOR3 + CTZ as one wave; the
+numeric manifest splits each: W-UC → W4a (string-block) + W4b-1/W4b-2/W4b-3
+(the codec, itself three sub-waves for LOC reasons, P3-F SPEC §2.2);
+W-AS → W4c (EOR3) + W4d (CTZ). Topological order per S-P2 CONVERGED:
+W2 proof → W3 union → W4 consumers; W1 is fully independent.
 
 ---
 
@@ -74,6 +83,10 @@ and — separately — the REDRESS-adjacent entries it *touches* and must clear
 via the §3 differential.
 
 ### §2.1 — W0 baseline-profile / telemetry-lock
+
+The numeric wave scheme (P3-F SPEC §2) is used throughout §2; the
+lettered shorthand from earlier P3-E drafts is parenthesised on first
+mention per sub-section per the §1 mapping table.
 
 W0 is telemetry-hygiene only. It produces no behavior route.
 
@@ -88,7 +101,7 @@ c/B characterises hot leaves but admits no behavior route (P1-V3-F §3.2,
 
 **REDRESS-adjacent:** none. W0 touches no behavior route.
 
-### §2.2 — W-AC Apache/CITM typed row-table admission (P2-C)
+### §2.2 — W1 (W-AC) Apache/CITM typed row-table admission (P2-C)
 
 **Must NOT reopen (honour as written):**
 
@@ -112,7 +125,7 @@ c/B characterises hot leaves but admits no behavior route (P1-V3-F §3.2,
 
 **REDRESS-adjacent (clear via §3.1):** REDRESS 91.
 
-### §2.3 — W-RG retained class/event grammar + `ValueRef` proof (P2-B)
+### §2.3 — W2 (W-RG) retained class/event grammar + `ValueRef` proof (P2-B)
 
 **Must NOT reopen (honour as written):**
 
@@ -136,7 +149,7 @@ c/B characterises hot leaves but admits no behavior route (P1-V3-F §3.2,
 
 **REDRESS-adjacent (clear via §3.2):** REDRESS 92.
 
-### §2.4 — W-UE union event-model (P2-A)
+### §2.4 — W3 (W-UE) union event-model (P2-A)
 
 **Must NOT reopen (honour as written):**
 
@@ -180,7 +193,7 @@ c/B characterises hot leaves but admits no behavior route (P1-V3-F §3.2,
 routed precursor* REDRESS 92 named; it does not reopen the rejection. W-UE
 is gated behind the W-RG proof per S-P2 CONVERGED dependency order.
 
-### §2.5 — W-UC unicode codec + string-block widening (P2-D / P2-E)
+### §2.5 — W4a + W4b-1/W4b-2/W4b-3 (W-UC) string-block widening + unicode codec (P2-D / P2-E)
 
 **Must NOT reopen (honour as written):**
 
@@ -202,7 +215,7 @@ is gated behind the W-RG proof per S-P2 CONVERGED dependency order.
 _unit` broadening / `unescape_uxxxx_x4_neon` per-quartet route), REDRESS 83
 (32-byte string-block widening).
 
-### §2.6 — W-AS aarch64 ASM (SHA3 EOR3, CSSC CTZ) (P2-D)
+### §2.6 — W4c + W4d (W-AS) aarch64 ASM — SHA3 EOR3 (W4c), CSSC CTZ (W4d) (P2-D)
 
 **Must NOT reopen (honour as written):**
 
@@ -232,7 +245,7 @@ material differential bound to a same-row falsification gate. The
 differential is itself falsifiable: if the gate fires, the route reverts
 and a new REDRESS entry records the falsification (SK-V9 SPEC §1).
 
-### §3.1 — W-AC vs REDRESS 91 (Apache/CITM measured-row admission)
+### §3.1 — W1 (W-AC) vs REDRESS 91 (Apache/CITM measured-row admission)
 
 **REDRESS 91 rejected:** measured `real_typed_struct A / GO` row-table
 admission for Apache/CITM. The W2 admit (commit `12aff1e4`) admitted
@@ -261,7 +274,7 @@ direct rows must hold their `SK-V9-open` verdicts. Miss any gate → halt at
 redress, record the falsified gate, replace the REDRESS-entry "promotion"
 framing with a "falsification report" framing, revert.
 
-### §3.2 — W-RG / W-UE vs REDRESS 92 (W3 union rejection) + 50–72 (sidecar routes)
+### §3.2 — W2 / W3 (W-RG / W-UE) vs REDRESS 92 (W3 union rejection) + 50–72 (sidecar routes)
 
 **REDRESS 92 rejected:** the SK-V8 W3 Tier A tape + structural-projection
 implementation *before source redress*. The fit gate failed because the
@@ -308,7 +321,7 @@ written only by the parser; no new `ParserState` cursor; no second
 substrate API/`UnionTape`. Any falsifier tripping reopens the cited
 REDRESS class. P3-C owns the named-corpus + Mbps thresholds.
 
-### §3.3 — W-AS vs REDRESS 88 (SHA3 EOR3 prefix-XOR vs PMULL rejection)
+### §3.3 — W4c (W-AS) vs REDRESS 88 (SHA3 EOR3 prefix-XOR vs PMULL rejection)
 
 **REDRESS 88 rejected:** the aarch64 PMULL (`vmull_p64`/`vmull_high_p64`)
 implementation of `bitmap_prefix_xor_64` as the default hot body — a
@@ -349,7 +362,7 @@ W10b six-row WIN block (§5). MEDIUM risk: the vector-ladder representation
 differs from the u64-word scalar representation, so the parity oracle
 must cover all three. Miss → revert to scalar-only.
 
-### §3.4 — W-UC vs REDRESS 82 (`unescape_uxxxx` broadening / single-quartet classifier)
+### §3.4 — W4b-1/W4b-2/W4b-3 (W-UC) vs REDRESS 82 (`unescape_uxxxx` broadening / single-quartet classifier)
 
 **REDRESS 82 rejected:** the SK-V7 W4 single-quartet Unicode-escape
 classifier. The W4 candidate moved the scalar `\uXXXX` decoder into
@@ -388,7 +401,7 @@ conditional rule**: the codec ships paired with the string-scanner
 widening (§3.5 below) in W-UC, never alone. A codec-only orphan is a
 REDRESS-82-style orphan and is itself pre-blocked.
 
-### §3.5 — W-UC vs REDRESS 83 (32-byte string-block widening vs StringBlock16 tiny probe)
+### §3.5 — W4a (W-UC) vs REDRESS 83 (32-byte string-block widening vs StringBlock16 tiny probe)
 
 **REDRESS 83 rejected:** the SK-V7 W5 generated-retained StringBlock16
 tiny probe. The candidate added a JSON-specific 16-byte wrapper over
@@ -415,7 +428,7 @@ mask-handling halving, not producer-side throughput — so the falsification
 gate must measure the *combined producer + consumer path*, not the
 block-scan microbench. MEDIUM risk. Miss → revert.
 
-### §3.6 — W-AS vs REDRESS 89 (CSSC CTZ string-mask consumer vs CTZ bulk consumer)
+### §3.6 — W4d (W-AS) vs REDRESS 89 (CSSC CTZ string-mask consumer vs CTZ bulk consumer)
 
 **REDRESS 89 rejected:** the SK-V7 W10b CSSC CTZ body for
 `bitmap_next_set_bit`, consumed from `bulk_emit_positions_64_neon` (the
@@ -658,3 +671,19 @@ Every upstream artefact cited:
   §3 CH3 (the pre-blocked ledger CHALLENGE lens — REDRESS 28+33, 50–55,
   60–72, 80, 82–84, 88, 89 + historical routes), §8.6 (no hypothesis
   transfer).
+
+## §0 V3 fold footer
+
+V3 comprehensive integration. P3-E is re-bound to the unified P3-F SPEC
+§2 numeric manifest. Changes: (1) the §1 wave-set table gains a binding
+**lettered→numeric mapping** — W-AC → W1, W-RG → W2, W-UE → W3, W-UC →
+W4a + W4b-1/W4b-2/W4b-3, W-AS → W4c + W4d — and the numeric scheme is
+used throughout: the old lettered W-UC bundled the string-block
+widening and the codec as one wave (now W4a + the three codec
+sub-waves), and W-AS bundled EOR3 + CTZ (now W4c + W4d). (2) Every §2
+and §3 sub-section header carries the numeric wave id with the lettered
+shorthand parenthesised, so a reader following a SPEC/dispatch
+"P3-E §3.x" citation lands on a numeric-labelled section. The
+per-wave pre-block content is unchanged — the material differentials
+and hard pre-blocks bind identically; only the wave labelling is
+reconciled to the canonical manifest.

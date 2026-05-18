@@ -1,6 +1,6 @@
 # SK-V9 P3-D: Telemetry-Schema Binding
 
-Pass: S-P3 Synthesis-Plan. Cycle: V1.
+Pass: S-P3 Synthesis-Plan. Cycle: V3.
 Date: 2026-05-18.
 Scope: Bind every SK-V9 wave's measurement to a `gate-json`-consumed schema —
 field table, per-wave population, outcome enum, measured-row admission fields,
@@ -26,18 +26,24 @@ The two layers, as they exist in `skinny/crates/bbnf-bench/`:
 2. **SK-V9 W0 telemetry manifest** — the 22-column `## SK-V9 W0 Telemetry
    Manifest` block in `skinny/RESULTS.md:44+`, backed by the `SkV8Telemetry`
    struct (`report.rs:44-67`, 21 fields) plus the `SkV8ComparatorEvidence`
-   struct (`report.rs:33-40`, 6 fields), validated by
+   struct (`report.rs:33-40`, **7 fields** — `comparator_id`,
+   `comparator_plane`, `comparator_strictness`, `comparator_freshness`,
+   `sidecar_freshness`, `value_mbps`, `source_artifact`), validated by
    `RowMetadata::validate_sk_v8_w0` (`report.rs:276-388`).
 
-The SPEC §0.4 "Required Telemetry" list of 31 field names is the union of
-these two layers' gate-consumed identifiers. The list is already complete:
-W0 closed against it (`G-W0-TELEMETRY-LOCK` PASS,
+The canonical SK-V9 schema is the **36-identifier gate-consumed set**
+P3-D §2.2 pins — the exact union of the `RowMetadata` schema-v3 fields,
+the `SkV8Telemetry` fields, and the `SkV8ComparatorEvidence` fields
+(`value_mbps` and `source_artifact` fold into the single comparator-string
+manifest column, so the 36-row count holds against the 7-field struct).
+The V3 SPEC §0.y carries this 36-identifier set verbatim. The set is
+complete: W0 closed against it (`G-W0-TELEMETRY-LOCK` PASS,
 `sk-v9-open:criterion-fnv64-cd1673844eeea12f`). P3-D's job is therefore not
 addition but **binding** — stating which wave populates which field, and
 codifying the same-wave-consumption rule so no behaviour wave emits a
 producer-only column.
 
-Source grounding: the 31-name list is verified against `report.rs` field
+Source grounding: the 36-name list is verified against `report.rs` field
 names one-to-one; the W0-accepted outcome set is read from
 `validate_w0_outcome` (`report.rs:977-988`); the run-id grammar from
 `SK_V9_OPEN_RUN_ID_PREFIX` / `is_skv9_open_run_id` (`report.rs:685-695`);
@@ -54,12 +60,14 @@ behaviour wave adds a column. The S-P1 V3–V6 convergence (real PMU data at
 deep hot-leaf attribution) produced *diagnostic* evidence; per the SPEC §1
 non-negotiable, "no PMU or cycles-per-byte … used as a producer", that
 evidence does not earn a gate column (see §5). The schema therefore stays
-at its W0 cardinality: 26 schema-v3 columns + 22 manifest columns, 31
-distinct gate-consumed required-field identifiers.
+at its W0 cardinality: 26 schema-v3 columns + 22 manifest columns, **36
+distinct gate-consumed required-field identifiers** (the §2.2 table) —
+the exact union of the `RowMetadata` schema-v3 fields, the `SkV8Telemetry`
+fields, and the `SkV8ComparatorEvidence` fields.
 
 ### §2.2 — Field table
 
-The 31 required identifiers, their layer, their producer, and the wave
+The 36 required identifiers, their layer, their producer, and the wave
 that first populates a non-placeholder value.
 
 | # | Field | Layer | Type / domain | First non-placeholder wave |
@@ -101,13 +109,11 @@ that first populates a non-placeholder value.
 | 35 | `track2_independence_status` | manifest | `independent_verified` | W0 |
 | 36 | `diagnostic_nonproducer_status` | manifest | fixed `structural_scan+masking_probes+pmu+cycles:nonproducer` | W0 |
 
-The SPEC §0.4 list names 31 of these (it elides `corpus`/`workload`/
-`verdict`/`strictness`/`output_plane` as "implicit schema-v3 head" and the
-three `costfacts_*` as one `CostFacts ids` token); the canonical
-gate-consumed identifier set is the 36-row table above, which is the exact
-union of `RowMetadata` schema-v3 fields + `SkV8Telemetry` fields +
-`SkV8ComparatorEvidence` fields. SK-V9 P3-D pins this 36-identifier set as
-the SK-V9 schema. No SK-V9 wave adds a 37th.
+The V3 SPEC §0.y carries this 36-identifier set verbatim as the SK-V9
+telemetry schema — the exact union of `RowMetadata` schema-v3 fields +
+`SkV8Telemetry` fields + `SkV8ComparatorEvidence` fields. The 36-row
+table above is the canonical gate-consumed identifier set; P3-D pins it
+and the SPEC carries it. No SK-V9 wave adds a 37th.
 
 ### §2.3 — Per-wave population obligation
 
@@ -115,20 +121,30 @@ Each wave must populate the schema as follows. A wave that emits a value
 for a field below without it being gate-consumed in that same wave fails
 its exit gate (§6 rule).
 
+The wave labels below are the **V3 SPEC §2 behaviour waves** — W1
+Apache/CITM admission, W2 retained-grammar proof, W3 union substrate,
+the W4 sub-waves W4a / W4b-1/W4b-2/W4b-3 / W4c / W4d, and W5 close —
+not the superseded SPEC-placeholder slot numbering.
+
 | Wave | Schema obligation |
 |---|---|
 | **W0** (closed) | Populates all 36 fields for the 38-row baseline. Behaviour-class fields take their pre-behaviour constants: `costfacts_* = none:pre-W1`, `redress_entry = none` (except already-redressed rows), `wave_id = SK-V9-open`, `sk_v9_open_delta = baseline`, `same_wave_consumer_class = gate_only`. `gate-json` consumes every field via `validate_schema_v3` + `validate_sk_v8_w0`. |
 | **Interlock (S-P1 rerun)** | Produces NO RESULTS rows. The PMU table (`pmu_rows.tsv`) and Time Profiler exports are diagnostic artefacts (§5); they populate no schema field. The rerun's only schema touch is confirming the W0 manifest still validates. |
-| **W1** (revised S-P2/S-P3 release) | Planning gate only. No row emission, no field population. It authorises which behaviour fields W2–W4 may move. |
-| **W2** (Apache/CITM typed admission) | Populates the full 36-field set for two new `real_typed_struct` rows (Apache, CITM) and refreshes `run_id` across the file (P2-C §2.2–§2.4). First wave to emit non-`none` `costfacts_*`? — **No**: P2-C §2.4 binds `costfacts_* = none:pre-W1` for the row-table wave (Lock 14: a row-table admission wave produces no CostFacts). `wave_id` becomes the per-wave id (P2-C §2.3 names `sk-v9-real-typed-w{n}`); `sk_v9_open_delta` becomes a signed Δ against `SK-V9-open`; `redress_entry` binds the new REDRESS anchor; `same_wave_consumer_class` = `gate_only` (the row IS the artefact). |
-| **W3** (tape + structural projection) | If released, populates `substrate_surface` / `structural_projection_status` / `substrate_cardinality` with the retained-substrate identity. `substrate_cardinality` MUST stay `one`. `costfacts_*` carries the chosen retained-shape rule id if the wave's intervention is cost-model-driven; otherwise `none:pre-W1`. `same_wave_consumer_class` names the retained-tape kernel → its production consumer. |
-| **W4** (direct contract) | Populates `output_plane` / `measured_validation_path` for the direct-contract rows; `same_wave_consumer_class` names the codec/scanner kernel → `unescape_string` (the P2-E production consumer, `parse-that-regex/src/lib.rs:718`). `costfacts_*` carries the chosen-shape rule id if a CostFacts decision drives the kernel selection. |
+| **W1** (Apache/CITM measured typed-row admission) | Populates the full 36-field set for two new `real_typed_struct` rows (Apache, CITM) and refreshes `run_id` across the file (P2-C §2.2–§2.4). First wave to emit non-`none` `costfacts_*`? — **No**: P2-C §2.4 binds `costfacts_* = none:pre-W1` for the row-table wave (Lock 14: a row-table admission wave produces no CostFacts). `wave_id` becomes the per-wave id (P2-C §2.3 names `sk-v9-real-typed-w{n}`); `sk_v9_open_delta` becomes a signed Δ against `SK-V9-open`; `redress_entry` binds the new REDRESS anchor; `same_wave_consumer_class` = `gate_only` (the row IS the artefact). |
+| **W2** (retained class/event grammar + `ValueRef` proof) | Proof-only — populates **no** RESULTS field, moves no row. `RESULTS.md` stays byte-identical (P2-B §1.1); the verification surface is `cargo check` + `cargo test`, not the schema. |
+| **W3** (union event-model — class-column substrate) | Populates `substrate_surface` / `structural_projection_status` / `substrate_cardinality` for the structural-dense rows with the union-substrate identity. `substrate_cardinality` MUST stay `one`. `costfacts_*` carries the chosen retained-shape rule id only if the wave's intervention is cost-model-driven; otherwise `none:pre-W1`. `same_wave_consumer_class` names the structural-bitmap kernel → `JsonNodeKind::at_cursor` class-column read. |
+| **W4a** (32-byte string-block widening) | Populates `same_wave_consumer_class` with `scan_string_special_block_32→match_string_at_quote_trusted_utf8` for the string-dense rows; `sk_v9_open_delta` is the signed Δ on the affected parse_only rows. |
+| **W4b-1** (codec scalar reference + checkasm harness) | Emits **no** RESULTS row — it ships no parse-loop edit; the verification surface is `cargo test` parity, not the schema. |
+| **W4b-2** (fixed-width codec bodies + JSON consumer) | Populates `same_wave_consumer_class` with `escape_codec_hex_unit→unescape_four_unicode_escapes` (the P2-E x4 JSON production consumer, `parse-that-regex/src/lib.rs:402`) for the unicode rows; `sk_v9_open_delta` is the signed Δ. `costfacts_*` carries the chosen-shape rule id only if a CostFacts decision drives the kernel selection. |
+| **W4b-3** (variable-width const-generic bindings + codegen) | Emits **no** RESULTS row — variable-width bodies have no JSON production consumer; the CSS L4 binding is a compile-validated scaffold. |
+| **W4c** (SHA3 EOR3 prefix-XOR ladder) | A producer accelerator — moves no row of its own; `same_wave_consumer_class` names `bitmap_prefix_xor_64→W3 structural-bitmap producer`. Its speed-up surfaces inside W3's already-emitted must-improve rows. |
+| **W4d** (CSSC CTZ string-mask consumer) | A consumer accelerator — moves no row of its own; `same_wave_consumer_class` names the CTZ extract → the W4a 32-byte block scanner mask consumer. |
 | **W5** (close) | No new field. Reconciles RESULTS / REDRESS / SPEC / DISPATCH-PROMPT / HANDOFF; verifies the 36-field schema renders identically across all admitted/rejected rows. |
 
 The `costfacts_*` triad is the only field group whose *value class* changes
 across waves: `none:pre-W1` through W0/W1, then a real rule id only in a
 wave whose intervention is selected by a CostFacts decision. P2-C §2.4 is
-explicit that the typed row-table wave is NOT such a wave. The triad
+explicit that the typed row-table wave (W1) is NOT such a wave. The triad
 therefore stays `none:pre-W1` unless a behaviour wave's plan demonstrates
 a CostFacts-driven shape choice; that demonstration is the wave's burden,
 gated in the same wave.
@@ -143,10 +159,11 @@ gated in the same wave.
 `validate_w0_outcome` (`report.rs:977-988`) restricts the **W0-admissible**
 set to 10: `A C G I J K L M N-direct S`.
 
-SPEC §0.3 names the SK-V9 outcome enum as `A C G K L N-direct S` — 7
-identifiers. This is a strict subset of the W0-admissible 10; it omits
-`I` (parity-oracle fail), `J` (schema fail), and `M` (memory-residency
-fail).
+The V3 SPEC §0.x carries the SK-V9 outcome enum as exactly that
+**10-identifier W0-admissible set** `A C G I J K L M N-direct S` — the
+superseded V1 SPEC §0.3 had named a narrower 7-identifier subset
+(`A C G K L N-direct S`, omitting `I`, `J`, `M`); the V3 SPEC corrected
+it to the full 10. P3-D's ruling below is what the V3 SPEC enacts.
 
 ### §3.2 — Verdict: no new outcome; reconcile the SPEC list
 
@@ -172,20 +189,22 @@ The S/L semantics the prompt flags are already correct in code:
 is a hard-failure axis carried unchanged through `w0_parse_non_admission`
 (`gate.rs:374-379`). No semantic change is required.
 
-**However** the SPEC §0.3 list is **narrower than the W0-admissible code
-set** and the *rendered* RESULTS.md. Three of the 38 baseline rows can carry
-`I`/`J`/`M` outcomes — `validate_w0_outcome` admits them, and they are
-real diagnostic verdicts (`I` = oracle disagreement, `J` = invalid-input
-schema rejection, `M` = memory-residency). P3-D's binding ruling:
+The superseded V1 SPEC §0.3 list was **narrower than the W0-admissible
+code set** and the *rendered* RESULTS.md. Three of the 38 baseline rows
+can carry `I`/`J`/`M` outcomes — `validate_w0_outcome` admits them, and
+they are real diagnostic verdicts (`I` = oracle disagreement, `J` =
+invalid-input schema rejection, `M` = memory-residency). P3-D's binding
+ruling, **enacted by the V3 SPEC §0.x**:
 
 > **The SK-V9 outcome enum is the 10-identifier W0-admissible set
-> `A C G I J K L M N-direct S`, not the 7-identifier SPEC §0.3 subset.**
-> The SPEC §0.3 list must be corrected to the 10-identifier set, because
-> `validate_w0_outcome` already gate-admits all ten and the rendered
-> baseline can carry `I`/`J`/`M`. A 7-identifier SPEC enum would make
-> `gate-json` reject a row the code itself produces — a producer/consumer
-> contradiction. This is a SPEC-text fix (P3-F's burden), not a code
-> change.
+> `A C G I J K L M N-direct S`.** The V3 SPEC §0.x carries the
+> 10-outcome enum verbatim — the dedicated "Outcome Enum" section
+> enumerates all ten with per-identifier semantics. The V1 SPEC §0.3
+> 7-identifier subset was a SPEC-text defect: `validate_w0_outcome`
+> gate-admits all ten and the rendered baseline can carry `I`/`J`/`M`,
+> so a 7-identifier enum would have made `gate-json` reject a row the
+> code itself produces — a producer/consumer contradiction. The V3
+> SPEC corrected it; no code change was ever required.
 
 `B`, `D`, `E`, `F-positive`, `F-noise` remain defined in `gate::Outcome`
 but are **not** SK-V9-admissible (`validate_w0_outcome` rejects them as
@@ -382,3 +401,24 @@ measurable from a same-wave-consumed field.
   PMU TSV + per-class c/B (projection, not gating).
 - `restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md` — §2 P3-D scope; §8.2
   telemetry-binding load-bearing discipline.
+
+## §0 V3 fold footer
+
+V3 comprehensive integration. P3-D is re-authored to the unified
+P3-F SPEC manifest. Changes: (1) the §3 outcome-enum ruling-prose goes
+past-tense — the V3 SPEC §0.x carries the 10-outcome enum
+`A C G I J K L M N-direct S`; the V1 SPEC §0.3 7-identifier subset was
+a SPEC-text defect the V3 SPEC corrected, never a code change. (2) The
+§2 schema confusion is resolved: the canonical set is the
+36-identifier table; §2.1/§2.2 no longer say "31 distinct" — the V3
+SPEC §0.y carries the 36-identifier set verbatim. (3) N5: §1's
+`SkV8ComparatorEvidence` field count is corrected `6 → 7` (live
+`report.rs:33-40` — `comparator_id`, `comparator_plane`,
+`comparator_strictness`, `comparator_freshness`, `sidecar_freshness`,
+`value_mbps`, `source_artifact`); the 36-row total is unaffected
+(`value_mbps`/`source_artifact` fold into the comparator-string
+column). (4) The §2.3 per-wave population table is re-bound to the
+actual V3 behaviour waves — W1 Apache/CITM, W2 proof, W3 union, the W4
+sub-waves W4a / W4b-1/W4b-2/W4b-3 / W4c / W4d, W5 close — replacing the
+superseded SPEC-placeholder slot labels (W1 release / W2 typed / W3
+tape / W4 direct contract).

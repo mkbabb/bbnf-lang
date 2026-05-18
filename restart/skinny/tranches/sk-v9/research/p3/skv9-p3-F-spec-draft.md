@@ -1,6 +1,6 @@
 # SK-V9 P3-F: SPEC Draft — Recovery + Behavior Wave Plan
 
-Pass: S-P3 Synthesis-Plan. Cycle: V2.
+Pass: S-P3 Synthesis-Plan. Cycle: V3.
 Date: 2026-05-18.
 Scope: the next SK-V9 SPEC — §0 close condition + goalset, §0.x
 telemetry schema, §1 non-negotiables, §2 wave manifest, §3+ per-wave
@@ -19,6 +19,26 @@ eight-candidate shortlist C1..C8.
 §0 footer — V2 fold: integrated P3-A..E; all [INTEGRATE] markers
 resolved; unified W1-W5 manifest with W4 sub-waved; 10-outcome enum;
 36-field schema; live RESULTS floors.
+
+## §0 V3 fold footer
+
+V3 comprehensive integration. Changes in this SPEC: (1) W4b
+sub-divided along the P2-E §7.4 slice seams into W4b-1 (scalar
+reference + checkasm harness, §7.2.1), W4b-2 (fixed-width codec bodies
++ JSON consumer — the row-moving sub-wave, PAIRED with W4a, §7.2.2),
+and W4b-3 (variable-width const-generic bindings + codegen, §7.2.3) —
+no single 75-min redress carries the ~1,045-net-LOC codec; the §2
+manifest, §2.2 cascade prose, §7 intro, and the §N G-Gate are updated
+consistently. (2) W3 risk escalated MEDIUM→HIGH per the P2-A C3 §2.2
+warning that the folded P2-D §5 chain raises aggregate risk; W3 is not
+sub-waved (the class column and its sole SIMD producer are one
+cascade) — it carries a CHALLENGE-gated redress-extension to ≤110 min.
+(3) Arithmetic: `update_center` W3 floor `14369 → 14370`
+(`ceil(15806/1.10)`); `gsoc-2018` W4b no-regression base `21646 →
+22184` live (`RESULTS.md:24`), floor `21430 → 21963`; the W10b six-row
+maintain floors are floored uniformly (`floor(today × 0.98)`) — `citm_catalog`
+`28631 → 28630`, `numbers` `17597 → 17596`. The W4a + codec pairing is
+preserved: W4a pairs with W4b-2.
 
 ---
 
@@ -110,8 +130,8 @@ kernel-bound**. Four diagnoses bind the goalset:
 |---|---|---|---|
 | 1 | `scan_structurals` is 0.00% self-time on every row — the SIMD stage-1 index is discarded; the parser re-discovers structural bytes scalar. | `consume_structural` ≤ 5% self-time on `twitter`, `apache_builds`; `JsonNodeKind::at_cursor` ≤ 1%. | W3 |
 | 2 | String-scanner pair (`match_tiny_plain_string` + `match_string_at_quote`) reaches 47-67% self-time on dense-key losses. | 32-byte string-block widening lifts the string-dense losses. | W4a |
-| 3 | Unicode-escape codec (`read_hex_unit_scalar` + `hex_nibble`) = 38-44% on `y_string_unicode`. | `escape_codec_hex_unit` SIMD primitive, paired with the W4a scanner widening. | W4b |
-| 4 | OLS fit `ns_per_byte ≈ 1.079·(q/B) + 0.184·(n/B) + 0.051`, R²=0.371. Four LOSS rows exceed 130-460% of the per-byte budget — delimiter-only intervention is insufficient. | The four uncloseable rows need the codec AND the scanner widening; neither closes them alone (P2-E §6.4). | W4a + W4b paired |
+| 3 | Unicode-escape codec (`read_hex_unit_scalar` + `hex_nibble`) = 38-44% on `y_string_unicode`. | `escape_codec_hex_unit` SIMD primitive, paired with the W4a scanner widening. | W4b (W4b-1/2/3) |
+| 4 | OLS fit `ns_per_byte ≈ 1.079·(q/B) + 0.184·(n/B) + 0.051`, R²=0.371. Four LOSS rows exceed 130-460% of the per-byte budget — delimiter-only intervention is insufficient. | The four uncloseable rows need the codec AND the scanner widening; neither closes them alone (P2-E §6.4). | W4a + W4b-2 paired |
 
 The cheapest GO-count lift is substrate-independent: Apache/CITM
 measured typed-row admission (P3-A C1, P2-C) is a mechanical
@@ -287,12 +307,22 @@ skinny-bracket ceiling.
 | W0 | Section 3 | SK-V9-open Telemetry-Lock Recovery | — | — | Closed | telemetry/gate/report only | — | — |
 | W1 | Section 4 | Apache/CITM Measured Typed-Row Admission | C1 | P2-C | Dispatchable — independent, no substrate dependency | ~300 hand | LOW | ≤90 min |
 | W2 | Section 5 | Retained Class/Event Grammar + `ValueRef` Proof | C2 | P2-B | Conditional on W1 close + proof-first CHALLENGE | ~425 hand, 0 generated | LOW | ≤90 min |
-| W3 | Section 6 | Union Event-Model — Class-Column Substrate | C3 (+ C8 chain) | P2-A + P2-D §5 | Conditional on W2 proof acceptance | ~265 hand + ~120 regen + ~120-220 SIMD chain + ~50-90 checkasm | MEDIUM | ≤90 min |
-| W4a | Section 7.1 | 32-byte String-Block Widening | C5 | P2-D §4 | Conditional on W3 close (union substrate is the consumer base) | ~145-270 hand incl. ~40-70 checkasm | MEDIUM | ≤90 min |
-| W4b | Section 7.2 | `escape_codec_hex_unit` Codec — Conditional Admission | C4 | P2-E + P2-D §3 | PAIRED with W4a (strictly adjacent; neither closes the four uncloseable rows alone) | ~1,045 net incl. ~250 checkasm | MEDIUM-HIGH | ≤90 min |
-| W4c | Section 7.3 | SHA3 EOR3 Prefix-XOR Ladder | C6 | P2-D §5.3.1 | Conditional on W3 close | ~60-120 hand incl. ~20-40 checkasm | MEDIUM | ≤90 min |
-| W4d | Section 7.4 | CSSC CTZ String-Mask Consumer | C7 | P2-D §4.4 | Conditional on W3 close + W4a close | ~15-35 hand | HIGH | ≤90 min |
+| W3 | Section 6 | Union Event-Model — Class-Column Substrate | C3 (+ C8 chain) | P2-A + P2-D §5 | Conditional on W2 proof acceptance | ~265 hand + ~120 regen + ~120-220 SIMD chain + ~30-60 VEXT + ~50-90 checkasm | HIGH (CHALLENGE-gated redress extension) | ≤90 min wall / redress 75-min target, ≤110-min CHALLENGE-gated extension |
+| W4a | Section 7.1 | 32-byte String-Block Widening | C5 | P2-D §4 | Conditional on W3 close (union substrate is the consumer base) | ~145-270 hand incl. ~40-70 checkasm | MEDIUM | ≤90 min wall / 75-min redress |
+| W4b-1 | Section 7.2.1 | `escape_codec` Scalar Reference + Checkasm Harness | C4 (S1/S6) | P2-E §7.1 + P2-D §3 | Conditional on W3 close — lands FIRST, blocks the W4b chain | ~450 hand incl. ~250 checkasm | MEDIUM | ≤90 min wall / 75-min redress |
+| W4b-2 | Section 7.2.2 | Fixed-Width Codec Bodies + JSON `unescape_four_unicode_escapes` Consumer | C4 (S2/S3/S5/S7/S8/S11) | P2-E §7.1 + P2-D §3 | PAIRED with W4a; conditional on W4b-1 close — the row-moving sub-wave | ~165 net incl. −215 deletion | MEDIUM-HIGH | ≤90 min wall / 75-min redress |
+| W4b-3 | Section 7.2.3 | Variable-Width Const-Generic Bindings + Codegen | C4 (S4/S9/S10) | P2-E §7.1 + P2-D §3 | Conditional on W4b-2 close | ~340 hand | MEDIUM | ≤90 min wall / 75-min redress |
+| W4c | Section 7.3 | SHA3 EOR3 Prefix-XOR Ladder | C6 | P2-D §5.3.1 | Conditional on W3 close | ~60-120 hand incl. ~20-40 checkasm | MEDIUM | ≤90 min wall / 75-min redress |
+| W4d | Section 7.4 | CSSC CTZ String-Mask Consumer | C7 | P2-D §4.4 | Conditional on W3 close + W4a close | ~15-35 hand | HIGH | ≤90 min wall / 75-min redress |
 | W5 | Section 8 | Close And Alpha Feedback | — | — | Conditional on W1-W4 dispositions | docs only | — | ≤90 min |
+
+The `Hard cap` column states the wave wall allowance and the binding
+redress sub-cap together: every behaviour wave and W4 sub-wave runs
+≤90 min wall with the implementation+measure redress phase fixed at
+75 min (60 impl + 15 measure) per `SKINNY-TRIUMVIRATE.md` §7. A wave
+whose hand-LOC cannot land in the 75-min redress sub-divides before
+dispatch — that is why W4b is itself three sub-waves W4b-1/W4b-2/W4b-3
+(§2.2, §7.2), not one ~1,045-net-LOC redress.
 
 LOC budgets are conjunctive with the 90-minute cap. They count
 hand-edited source, tests, gate/report code, and hand-written doc
@@ -353,8 +383,58 @@ same-commit, no orphan ships. A monolithic codec+string-block+ASM wave
 would be ~1,595-1,860 LOC (P3-A C4 ~1,045 net + C5 ~145-270 + C6
 ~60-120 + C7 ~15-35 + the C8 checkasm files) and cannot complete in a
 75-min redress (CH4 #19). The sub-wave structure resolves this without
-violating the cascade — each W4x is a fresh triumvirate, individually
-inside its LOC budget and its 75-min redress cap.
+violating the cascade — each sub-wave is a fresh triumvirate,
+individually inside its LOC budget and its 75-min redress cap.
+
+**W4b is itself three sub-waves.** The `escape_codec_hex_unit` codec
+(C4) is ~1,045 net LOC across the eleven P2-E §7.4 slices — ~6.0 h
+aggregate per-slice cap. One 75-min redress cannot land it; sub-waving
+the *bracket* W4a-d did not sub-divide the *codec*. W4b is therefore
+cut along the P2-E §7.4 slice seams into three sub-waves, each inside
+its own 75-min redress:
+
+- **W4b-1** (§7.2.1) — the `escape_codec/scalar.rs` reference (S1) +
+  `escape_codec/mod.rs` kernel surface + the `checkasm_escape_codec.rs`
+  differential harness (S6). The parity foundation; lands FIRST and
+  blocks the W4b chain. ~450 hand incl. ~250 checkasm.
+- **W4b-2** (§7.2.2) — the fixed-width NEON bodies `hex_x4_neon.rs`
+  (JSON-4 + TOML-4, S2), `hex_x8_neon.rs` (TOML-8, S3), and
+  `surrogate_join.rs` (S5), plus the JSON production consumer
+  re-body of `unescape_four_unicode_escapes` (S7), the sink call-site
+  swap (S8), and the −215 superseded-kernel deletion (S11). This is
+  **the sub-wave that moves the unicode rows** — it carries the W4b
+  conditional-admission gate and is **PAIRED with W4a** (§7.2.2,
+  P2-E §6.4). ~165 net LOC.
+- **W4b-3** (§7.2.3) — the variable-width const-generic body
+  `hex_variable_neon.rs` (CSS L4, JS `\u{}`, S4), the CSS L4 scaffold
+  (S9), and the `codegen/src/escape_codec/` const-generic emission
+  (S10). The grammar-neutrality breadth slice. ~340 hand LOC.
+
+The W4a + W4b pairing is preserved exactly: W4a pairs with **W4b-2**
+— the codec moves no row to GO without the string-block widening, and
+W4b-2 is the codec sub-wave that carries the row-moving consumer
+(P2-E §6.4). W4b-1 and W4b-3 carry no row gate. The codec admits as a
+checkasm-verified primitive at W4b-1; the rows admit, per-row on
+measurement, at W4b-2.
+
+**W3 redress cap.** W3 at ~265 hand + ~120 regen + the P2-D §5 SIMD
+chain (~120-220 SIMD + ~30-60 VEXT + ~50-90 checkasm) is ~465-635
+hand-equivalent + ~120 regen — ~1.5-2× the W1 ~300-LOC/~85-min-redress
+scale. It plausibly overruns the 75-min redress sub-cap once the §5
+structural-bitmap chain is folded in. W3 is **not** sub-waved: the
+union substrate (A.1-A.5) and the SIMD structural-bitmap producer
+(A.6-A.8 + P2-D §5) form one cascade — splitting them orphans the
+class column from its only producer for the duration of the gap,
+and the SPEC §1 same-wave-consumer non-negotiable forbids that. W3
+instead carries an honest **CHALLENGE-gated redress-extension note**:
+the W3 redress targets the 75-min sub-cap; if the W3 plan's slice
+estimate shows it cannot land in 75 min, the W3 CHALLENGE may grant a
+single redress extension to ≤110 min, recorded in the CHALLENGE
+disposition, with the orchestrator surfacing the extension decision to
+the user per `SKINNY-TRIUMVIRATE.md` §7. W3's risk is **HIGH** — P2-A
+C3 §2.2 warned the folded P2-D §5 chain raises the wave's aggregate
+risk from MEDIUM to HIGH; that escalation is recorded here, in §2, and
+in §6.
 
 Three distinct "same-wave" relations are in play; they are named
 distinctly throughout this SPEC to prevent the V1 conflation:
@@ -555,9 +635,19 @@ same wave; it is NOT a separate candidate). S-P2 source:
 §5. Triumvirate shape: research → plan → **mandatory CHALLENGE**
 (substrate-touching) → redress. LOC ~265 hand + ~120 regen (P2-A §5.9)
 + ~120-220 SIMD `bbnf-simd` chain + ~30-60 VEXT + ~50-90 `scan_structurals`
-checkasm (P2-D §5); risk MEDIUM (the contracting mechanism deletes
-`consume_structural`; the codegen-template structural-walk lowering is
-the novel surface); hard cap ≤90 min.
+checkasm (P2-D §5) — ~465-635 hand-equivalent + ~120 regen aggregate;
+risk **HIGH** — the contracting mechanism deletes `consume_structural`
+and the codegen-template structural-walk lowering is the novel surface,
+and P2-A C3 §2.2 records that folding the P2-D §5 structural-bitmap
+chain in whole raises the wave's aggregate risk from MEDIUM to HIGH
+(the chain is a wave-class substrate body, not a leaf kernel). Hard cap
+≤90 min wall; the 75-min redress sub-cap is the target, with a
+**CHALLENGE-gated redress extension to ≤110 min** admissible if the W3
+plan's slice estimate demonstrates the union substrate + the §5 SIMD
+chain cannot co-land in 75 min (§2.2). W3 is not sub-waved — the
+class column and its sole SIMD producer form one cascade and the SPEC
+§1 same-wave-consumer rule forbids landing the column without the
+producer.
 
 Objective: S-P1 diagnosis #1 — `scan_structurals` is 0.00% self-time;
 the SIMD stage-1 index is discarded and the parser re-discovers
@@ -595,19 +685,24 @@ sonic-strict floors derived live from `skinny/RESULTS.md`):
    Track 1 rows cross the standard-parity floor `ceil(sonic_strict / 1.10)`:
    `twitter` ≥ 17685 (today 13188, sonic 19453, `RESULTS.md:5`);
    `apache_builds` ≥ 14124 (today 11917, sonic 15536, `:12`);
-   `update_center` ≥ 14369 (today 9857, sonic 15806, `:16`);
+   `update_center` ≥ 14370 (today 9857, sonic 15806, `ceil(15806/1.10)`, `:16`);
    `distinct_values` ≥ 15731 (today 8972, sonic 17304, `:39`).
    Plus the structural hot-leaf falsifiers: `consume_structural` ≤ 5%
    self-time on `twitter` / `apache_builds`; `JsonNodeKind::at_cursor`
    ≤ 1% self-time.
 2. **Must-not-regress — the W10b six-row block (binding, P2-A §4.2)** —
-   each `parse_only` Track 1 at `today × 0.98` or `ceil(sonic_strict /
-   1.10)`, whichever higher: `canada` ≥ 15866 (today 16190, sonic
-   12723 — `today × 0.98` binds, `RESULTS.md:10`); `citm_catalog` ≥
-   28631 (today 29215, `:8`); `instruments` ≥ 15865 (today 16189,
-   `:29`); `marine_ik` ≥ 11831 (today 12073, `:26`); `mesh` ≥ 12186
-   (today 12435, `:19`); `numbers` ≥ 17597 (today 17956, `:31`). Any
-   one row below its floor falsifies the model.
+   each `parse_only` Track 1 at `floor(today × 0.98)` or
+   `ceil(sonic_strict / 1.10)`, whichever higher. The `today × 0.98`
+   leg is **floored** uniformly across all six rows — the single
+   rounding convention for the whole W10b block: `canada` ≥ 15866
+   (today 16190, sonic 12723 — `floor(today × 0.98)` binds,
+   `RESULTS.md:10`); `citm_catalog` ≥ 28630 (today 29215,
+   `floor(28630.7)`, `:8`); `instruments` ≥ 15865 (today 16189,
+   `floor(15865.2)`, `:29`); `marine_ik` ≥ 11831 (today 12073,
+   `floor(11831.5)`, `:26`); `mesh` ≥ 12186 (today 12435,
+   `floor(12186.3)`, `:19`); `numbers` ≥ 17596 (today 17956,
+   `floor(17596.9)`, `:31`). Any one row below its floor falsifies the
+   model.
 3. `consume_structural` is deleted from `generated.rs`; the class
    column read is present in `at_cursor` — the same-wave consumer is
    wired same-commit (P2-A §4.4 #1, #2). CH5 falsifier: `rg
@@ -665,14 +760,16 @@ Pre-blocked routes (P3-E §2.4 / §3.2, verbatim):
 
 ## Section 7 — W4 aarch64 Substrate Consumers
 
-W4 is the substrate-consumer bracket, sub-waved into four sub-waves
-W4a-d. Each W4 sub-wave is a fresh triumvirate per `SKINNY-TRIUMVIRATE.md`
+W4 is the substrate-consumer bracket, sub-waved into six sub-waves —
+W4a, the three codec sub-waves W4b-1/W4b-2/W4b-3 (§7.2), W4c, and W4d.
+Each W4 sub-wave is a fresh triumvirate per `SKINNY-TRIUMVIRATE.md`
 §1 (research → plan → mandatory CHALLENGE → redress); each sub-wave's
 redress wires its kernel into the **already-landed W3 union substrate**
-in the same commit (the cascade-lock, §2.2); each sub-wave carries the
-W10b six-row maintain gate. The sub-wave structure is what keeps every
-redress inside the 75-min ceiling — a monolithic W4 would be
-~1,595-1,860 LOC (§2.2).
+in the same commit (the cascade-lock, §2.2); each row-moving sub-wave
+carries the W10b six-row maintain gate. The sub-wave structure is what
+keeps every redress inside the 75-min ceiling — a monolithic W4 would
+be ~1,595-1,860 LOC (§2.2), and the codec alone is ~1,045 net (hence
+the three-way W4b split).
 
 ### Section 7.1 — W4a 32-byte String-Block Widening
 
@@ -743,19 +840,12 @@ Pre-blocked routes (P3-E §2.5 / §3.5, verbatim):
 ### Section 7.2 — W4b `escape_codec_hex_unit` Codec — Conditional Admission
 
 Shortlist candidate C4. S-P2 source: `skv9-p2-E-unicode-escape-codec.md`
-+ `skv9-p2-D-aarch64-asm-opportunities.md` §3. LOC ~1,045 net incl.
-~250 `checkasm_escape_codec.rs` (P2-E §7.4 — eleven slices, ~890 hand +
-~120 regen + ~250 tests − 215 deletion); risk MEDIUM-HIGH (LOW on
-JSON-4 correctness, MEDIUM-HIGH on `unicode_escapes` / `y_string_unicode`
-performance, HIGH on `unicode_mixed`); hard cap ≤90 min.
-
-**Pairing.** W4b is **PAIRED with W4a — strictly adjacent, never
-separable.** P2-E §6.4 is the binding honest verdict: **zero of the
-four uncloseable rows admit on the codec alone.** The codec alone moves
-no row to GO; a standalone codec wave would paper-close. W4b dispatches
-only with W4a landed (W4a-then-W4b adjacency); `unicode_mixed`
-admission is conditional on the W4a string-block widening being live in
-the same redress lineage.
++ `skv9-p2-D-aarch64-asm-opportunities.md` §3. The codec is ~1,045 net
+LOC across the eleven P2-E §7.4 slices (~890 hand + ~120 regen + ~250
+tests − 215 deletion) — ~6.0 h aggregate per-slice cap. One 75-min
+redress cannot land it. W4b is therefore **three sub-waves** —
+W4b-1/W4b-2/W4b-3 — cut along the P2-E §7.4 slice seams (§2.2), each a
+fresh triumvirate inside its own LOC budget and 75-min redress cap.
 
 Objective: S-P1 diagnosis #3 — the unicode-escape codec
 (`read_hex_unit_scalar` + `hex_nibble`, `parse-that-regex/src/lib.rs:945-966`)
@@ -764,26 +854,105 @@ is 38-44% self-time on `y_string_unicode`. W4b lands the
 (JSON-4, CSS L4 variable, JS `\u{}`, TOML-4, TOML-8) and re-bodies the
 already-wired x4 JSON path onto it.
 
-Owner paths (P2-E §7.1 eleven slices):
+**Pairing.** P2-E §6.4 is the binding honest verdict: **zero of the
+four uncloseable rows admit on the codec alone.** The codec alone moves
+no row to GO; a standalone codec wave would paper-close. The
+row-moving sub-wave is **W4b-2** — it carries the fixed-width JSON
+codec bodies and the JSON production consumer — and it is **PAIRED
+with W4a**, strictly adjacent and never separable: `unicode_mixed`
+admission is conditional on the W4a string-block widening being live in
+the same redress lineage. W4b-1 (the parity foundation) and W4b-3 (the
+variable-width breadth) carry no row gate.
 
-| Path | Allowed W4b use |
+#### Section 7.2.1 — W4b-1 `escape_codec` Scalar Reference + Checkasm Harness
+
+Shortlist candidate C4, slices S1 + S6 + `mod.rs` (P2-E §7.1). LOC ~450
+hand incl. ~250 `checkasm_escape_codec.rs`; risk MEDIUM (the const-generic
+kernel surface and the parity-oracle scalar body — LOW on correctness,
+MEDIUM on the const-generic dispatcher shape); hard cap ≤90 min wall /
+75-min redress.
+
+Objective: land the codec parity foundation that every later W4b
+sub-wave is diffed against — the `escape_codec/scalar.rs` reference
+(the parity oracle), the `escape_codec/mod.rs` const-generic kernel
+surface + dispatcher, and the `checkasm_escape_codec.rs` differential
+harness. W4b-1 ships no NEON body and moves no row; it is the
+scalar-reference + checkasm precondition the SK-V5 orphan-kernel
+discipline mandates before any kernel wires.
+
+Owner paths (P2-E §7.1 slices S1, S6, mod.rs):
+
+| Path | Allowed W4b-1 use |
 |---|---|
-| `bbnf-simd/src/aarch64/escape_codec/` (NEW dir module) | `mod.rs`, `scalar.rs`, `hex_x4_neon.rs`, `hex_x8_neon.rs`, `hex_variable_neon.rs`, `surrogate_join.rs`. |
+| `bbnf-simd/src/aarch64/escape_codec/scalar.rs` (NEW) | The scalar reference re-homed from `read_hex_unit_scalar` + `hex_nibble` — the parity oracle for all NEON bodies. |
+| `bbnf-simd/src/aarch64/escape_codec/mod.rs` (NEW) | Const-generic kernel surface + dispatcher; the five-binding parameter shape. |
+| `bbnf-simd/tests/checkasm_escape_codec.rs` (NEW) | Differential parity harness covering all five const-generic bindings; the gate every W4b-2/W4b-3 body must clear. |
+
+Entry gate: W3 closed with `G-W3-UNION-SUBSTRATE` PASS. The W4b-1 plan
+names the const-generic parameter set and the checkasm case enumeration
+(digit-count × alignment × terminator × validity, ~6,000 cases per
+binding, P2-E §7.3).
+
+Exit gate `G-W4b-1-CODEC-HARNESS` passes only if:
+
+1. `escape_codec/scalar.rs` compiles and `cargo test -p bbnf-simd`
+   exercises it as a standalone reference — no NEON body present yet.
+2. `checkasm_escape_codec.rs` compiles and runs green against the
+   scalar reference for every binding; the harness IS the same-wave
+   consumer for the scalar body (the test consumes the reference).
+3. `escape_codec/mod.rs` exposes the const-generic surface for all five
+   bindings; the dispatcher is grammar-neutral by signature.
+4. Section 2.1 generality scan passes — the kernel surface embeds no
+   JSON structural policy; the bindings are opaque const-generic
+   parameters.
+
+W4b-1 moves no row; it has no W10b maintain obligation beyond compiling
+clean (it ships no parse-loop edit). Revert protocol: all three files
+are NEW — revert the files on any failure; W4b-2 cannot dispatch until
+W4b-1 closes (the checkasm harness is W4b-2's admission precondition).
+
+#### Section 7.2.2 — W4b-2 Fixed-Width Codec Bodies + JSON Consumer
+
+Shortlist candidate C4, slices S2 + S3 + S5 + S7 + S8 + S11
+(P2-E §7.1). LOC ~165 net (~150 `hex_x4` + ~140 `hex_x8` + ~50
+`surrogate_join` + ~30 consumer re-body + ~10 sink swap − 215
+deletion); risk MEDIUM-HIGH (LOW on JSON-4 correctness,
+MEDIUM-HIGH on `unicode_escapes` / `y_string_unicode` performance,
+HIGH on `unicode_mixed`); hard cap ≤90 min wall / 75-min redress.
+
+**This is the row-moving W4b sub-wave.** W4b-2 lands the fixed-width
+NEON codec bodies and re-bodies the JSON `unescape_four_unicode_escapes`
+production consumer onto them — the path that actually moves the unicode
+rows. **W4b-2 is PAIRED with W4a — strictly adjacent, never separable**
+(P2-E §6.4): neither the codec nor the string-block widening closes the
+four uncloseable rows alone, so W4b-2 dispatches only with W4a landed.
+
+Objective: land `hex_x4_neon.rs` (JSON-4 + TOML-4 fixed-width body),
+`hex_x8_neon.rs` (TOML-8), and `surrogate_join.rs` (the scalar pair-join
+algebra), re-body the already-wired x4 JSON path at
+`parse-that-regex/src/lib.rs:402`, swap the `runtime/src/grammars/json/sink.rs`
+call site, and delete the superseded `unescape_uxxxx.rs` kernel (−215,
+lands LAST after the consumer is green).
+
+Owner paths (P2-E §7.1 slices S2, S3, S5, S7, S8, S11):
+
+| Path | Allowed W4b-2 use |
+|---|---|
+| `bbnf-simd/src/aarch64/escape_codec/hex_x4_neon.rs` (NEW) | Fixed-4 NEON body — JSON `\u`, TOML `\u`. |
+| `bbnf-simd/src/aarch64/escape_codec/hex_x8_neon.rs` (NEW) | Fixed-8 NEON body — TOML `\U` (compile-validated this sub-wave, no production consumer). |
+| `bbnf-simd/src/aarch64/escape_codec/surrogate_join.rs` (NEW) | Scalar UTF-16 pair-join algebra (JSON Pair binding). |
 | `parse-that-regex/src/lib.rs:402` / `:718-810` | Re-body the already-wired `unescape_four_unicode_escapes` x4 path + the `Some(b'u')` arm onto the kernel — the production consumer. |
 | `runtime/src/grammars/json/sink.rs` | Call-site swap. |
-| `codegen/src/escape_codec/` (NEW sub-module) | Const-generic emission for the five bindings. |
-| `bbnf-css/tests/` | CSS L4 scaffold (`#[cfg(test)]`, compile-only). |
-| `bbnf-simd/tests/checkasm_escape_codec.rs` (NEW) | Parity gate covering all five bindings; lands FIRST. |
 | `bbnf-simd/src/aarch64/unescape_uxxxx.rs` | Superseded kernel removed (−215 LOC, lands LAST after the consumer is green). |
 
-Entry gate: W3 closed with `G-W3-UNION-SUBSTRATE` PASS; W4a closed
-(the paired scanner widening is live). The W4b plan states each
-uncloseable row's `codec_admission_basis` before redress; the checkasm
-file lands FIRST and blocks the wave.
+Entry gate: W4b-1 closed with `G-W4b-1-CODEC-HARNESS` PASS (the scalar
+reference + checkasm harness are live); W4a closed (the paired scanner
+widening is live). The W4b-2 plan states each uncloseable row's
+`codec_admission_basis` before redress.
 
-Exit gate `G-W4b-CODEC` — the conditional-admission rule (P3-C §4,
-P2-E §6, sonic-strict floors live from `skinny/RESULTS.md`). W4b admits
-**per-row, on measurement**:
+Exit gate `G-W4b-2-CODEC` — the conditional-admission rule (P3-C §4,
+P2-E §6, sonic-strict floors live from `skinny/RESULTS.md`). W4b-2
+admits **per-row, on measurement**:
 
 1. `unicode_escapes` Track 1 ≥ 16319 (standard parity, sonic-strict
    18132 × 0.90, `RESULTS.md:35`). Projected 15423 — **NEAR-FAIL 94.5%**
@@ -795,37 +964,43 @@ P2-E §6, sonic-strict floors live from `skinny/RESULTS.md`). W4b admits
 3. `unicode_mixed` Track 1 ≥ 12338 (standard 0.85, sonic-strict 14515,
    `RESULTS.md:33`). The codec touches only ~10% of this row's c/B;
    the codec alone projects 7864 — **FAIL 63.7%**. Admits iff the
-   *combined* W4a string-block + W4b codec measured Mbps clears 12338.
-   If W4a did not land, `unicode_mixed` stays NO-GO and W4b admits
+   *combined* W4a string-block + W4b-2 codec measured Mbps clears 12338.
+   If W4a did not land, `unicode_mixed` stays NO-GO and W4b-2 admits
    codec-contribution-only — never claimed closed by the codec.
-4. `gsoc-2018` Track 1 ≥ 21430 — **no-regression basis** (`baseline
-   21646 − 1%`; codec c/B share ≈ 0%; the row's load is the
-   string-block scanner). Closing `gsoc-2018` is out of scope for the
-   codec.
-5. `escape_codec_hex_unit` carries a scalar reference (`escape_codec/scalar.rs`)
-   and a green `checkasm_escape_codec.rs` across all five bindings.
+4. `gsoc-2018` Track 1 ≥ 21963 — **no-regression basis** (`ceil(live
+   baseline 22184 × 0.99)`, `RESULTS.md:24`; codec c/B share ≈ 0%; the
+   row's load is the string-block scanner). The no-regression floor is
+   derived from the live SK-V9-open `RESULTS.md` figure, the same
+   22184 §7.1 uses for the W4a string-block clause — one baseline per
+   row. Closing `gsoc-2018` is out of scope for the codec.
+5. `hex_x4_neon` / `hex_x8_neon` / `surrogate_join` each clear the
+   `checkasm_escape_codec.rs` harness W4b-1 landed — outcome `K` on any
+   parity miss.
 6. The §3.5 direct-route no-regression gate on `unicode_escapes/direct`,
    `y_string_unicode/direct`, `unicode_mixed/direct` holds — REDRESS
-   82's blocking rows become W4b's admission/no-regression rows.
-7. The W10b six-row maintain gate holds.
-8. Section 2.1 generality scan passes — the five const-generic bindings
-   prove grammar-neutrality (CSS L4 / JS / TOML bindings compile).
+   82's blocking rows become W4b-2's admission/no-regression rows.
+7. The W10b six-row maintain gate holds — W4b-2 re-bodies the JSON
+   unescape hot path; the six floors are §6 exit-gate clause 2.
+8. Section 2.1 generality scan passes — the fixed-width bodies embed no
+   JSON structural policy.
 
-**The honest posture (P2-E §6.4, carried verbatim).** W4b may close
+**The honest posture (P2-E §6.4, carried verbatim).** W4b-2 may close
 with **zero strict unicode-row admissions**. A NEAR-FAIL on
 `unicode_escapes` / `y_string_unicode` is the expected, honestly
 projected outcome — the row stays `S / NO-GO`, the measured codec
 contribution is recorded in REDRESS, the residual routes forward, and
-the wave still admits the codec as a checkasm-verified primitive. That
-is an honest measured outcome, **not a paper-close**. W4b is reverted
-wholesale only on a checkasm parity failure or a W10b WIN-block
-regression — never on a per-row NEAR-MISS.
+the sub-wave still admits the codec body as a checkasm-verified
+primitive. That is an honest measured outcome, **not a paper-close**.
+W4b-2 is reverted wholesale only on a checkasm parity failure or a
+W10b WIN-block regression — never on a per-row NEAR-MISS.
 
-Revert protocol (P2-E §7.1): the checkasm gate (slice S6) lands FIRST
-and blocks the wave. If a NEON body fails parity, revert that body and
-fall back to the scalar reference. If a row's conditional gate fails,
-the row stays NO-GO and the codec contribution is recorded. If the
-W10b block regresses, revert. A W4b revert does not block W4c/W4d.
+Revert protocol (P2-E §7.1): the W4b-1 checkasm harness is the gate; if
+a NEON body fails parity, revert that body and the JSON consumer falls
+back to the scalar reference S1. If a row's conditional gate fails, the
+row stays NO-GO and the codec contribution is recorded. If the W10b
+block regresses, revert the consumer re-body. The −215 deletion lands
+LAST and reverts independently. A W4b-2 revert does not block W4b-3 or
+W4c/W4d.
 
 Pre-blocked routes (P3-E §2.5 / §3.4, verbatim):
 
@@ -838,10 +1013,65 @@ Pre-blocked routes (P3-E §2.5 / §3.4, verbatim):
   the falsification gate is `parse_only` only.
 - REDRESS 64 — no retained Unicode-escape run validator; the kernel is
   pure functional.
-- REDRESS 66-69 + 93 — W4b's gate is `parse_only` only; it does not
+- REDRESS 66-69 + 93 — W4b-2's gate is `parse_only` only; it does not
   enter the direct plane / DirectBuild semantic string facts.
 - REDRESS 88, 89 — orthogonal; the codec is not the prefix-XOR / CTZ
   path.
+
+#### Section 7.2.3 — W4b-3 Variable-Width Const-Generic Bindings + Codegen
+
+Shortlist candidate C4, slices S4 + S9 + S10 (P2-E §7.1). LOC ~340 hand
+(~180 `hex_variable_neon` + ~40 CSS L4 scaffold + ~120 codegen);
+risk MEDIUM (the variable-width body is a code path not present today —
+checkasm covers all 1..6 widths × validity × terminator positions);
+hard cap ≤90 min wall / 75-min redress.
+
+Objective: complete the codec's grammar-neutrality breadth — land the
+variable-width `hex_variable_neon.rs` body (CSS L4 `\HHHHHH`,
+JS `\u{}`), the CSS L4 `#[cfg(test)]` scaffold, and the
+`codegen/src/escape_codec/` const-generic emission for all five
+bindings. W4b-3 ships no production consumer beyond the codegen
+template; CSS L4 and JS remain compile-validated scaffolds (no
+production parse loop, no falsifiability gate).
+
+Owner paths (P2-E §7.1 slices S4, S9, S10):
+
+| Path | Allowed W4b-3 use |
+|---|---|
+| `bbnf-simd/src/aarch64/escape_codec/hex_variable_neon.rs` (NEW) | Variable-width NEON body — CSS L4, JS `\u{}`. |
+| `codegen/src/escape_codec/` (NEW sub-module) | Const-generic emission for the five bindings (directory module per `feedback_directory_modules`). |
+| `bbnf-css/tests/` | CSS L4 scaffold (`#[cfg(test)]`, compile-only). |
+
+Entry gate: W4b-2 closed with `G-W4b-2-CODEC` PASS (the fixed-width
+bodies + checkasm harness are live). The W4b-3 plan names the
+variable-width checkasm extension.
+
+Exit gate `G-W4b-3-CODEC-BINDINGS` passes only if:
+
+1. `hex_variable_neon` clears the `checkasm_escape_codec.rs` harness
+   across all 1..6 widths × validity × terminator positions — outcome
+   `K` on any parity miss.
+2. The `codegen/src/escape_codec/` const-generic emission compiles and
+   the five emitted specialisations are diff-audited; the codegen
+   template is the same-wave consumer for the const-generic surface.
+3. The CSS L4 `#[cfg(test)]` scaffold compiles — the Lock 14 non-JSON
+   binding witness; it carries no production parse loop and no row gate.
+4. Section 2.1 generality scan passes — the five const-generic bindings
+   prove grammar-neutrality (CSS L4 / JS / TOML bindings compile).
+
+W4b-3 moves no row; it carries no W10b maintain obligation beyond
+compiling clean (the variable-width body has no JSON production
+consumer). Revert protocol: all owner paths are NEW files or a NEW
+sub-module — revert on any failure; the hand-written W4b-2 fixed-width
+bodies remain callable. A W4b-3 revert does not block W4c/W4d.
+
+Pre-blocked routes (P3-E §2.5 / §3.4, verbatim):
+
+- REDRESS 82 — the variable-width body is a const-generic primitive
+  binding, not a parser-owned per-quartet classifier; the codegen
+  emission is template-driven, not a JSON-instance.
+- REDRESS 85-87 + Lock 14 — the CSS L4 scaffold carries the non-JSON
+  proof Section 2.1 mandates; no JSON policy enters the codegen shell.
 
 ### Section 7.3 — W4c SHA3 EOR3 Prefix-XOR Ladder
 
@@ -983,10 +1213,11 @@ and the §0.1 close condition is satisfied.
 
 1. `G-W0-TELEMETRY-LOCK` is recorded PASS.
 2. `G-S-P1-RERUN-CONVERGED` is recorded PASS.
-3. `G-BEHAVIOR-RELEASE` passed — W1-W4 (W4a-d) each admitted or
-   rejected with measurement.
+3. `G-BEHAVIOR-RELEASE` passed — W1-W4 (W4a, W4b-1/W4b-2/W4b-3, W4c,
+   W4d) each admitted or rejected with measurement.
 4. `G-W1-TYPED-ADMISSION`, `G-W2-RETAINED-PROOF`, `G-W3-UNION-SUBSTRATE`,
-   `G-W4a-STRING-BLOCK`, `G-W4b-CODEC`, `G-W4c-EOR3`, `G-W4d-CTZ`, and
+   `G-W4a-STRING-BLOCK`, `G-W4b-1-CODEC-HARNESS`, `G-W4b-2-CODEC`,
+   `G-W4b-3-CODEC-BINDINGS`, `G-W4c-EOR3`, `G-W4d-CTZ`, and
    `G-W5-CLOSE` each carry a recorded disposition (PASS or a measured
    REDRESS reject).
 5. The §0.1 close condition holds in full — including clause 6: W4 may

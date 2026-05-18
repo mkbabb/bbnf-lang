@@ -1,6 +1,6 @@
 # SK-V9 P3-C: Per-Wave Falsifiability Gates
 
-Pass: S-P3 Synthesis-Plan. Cycle: V1.
+Pass: S-P3 Synthesis-Plan. Cycle: V3.
 Date: 2026-05-18.
 Scope: For every SK-V9 post-W0 wave in the P3-B manifest, author the
 falsifiability gate — exit gate (named corpus rows + Mbps thresholds),
@@ -72,25 +72,40 @@ aspirational "codec closes 4 rows."
 
 ### §1.4 — The candidate→wave map this gate set assumes
 
-P3-B authors the wave manifest; P3-C gates each wave. The candidate set
-this artefact gates (per the S-P3 prompt's candidate enumeration) maps:
+P3-B authors the wave manifest; the P3-F SPEC §2 carries the canonical
+unified manifest; P3-C gates each wave to that manifest. The post-W0
+sequence is **five behaviour brackets** W1-W5, with W4 the
+substrate-consumer bracket **sub-waved** — W4a, the three codec
+sub-waves W4b-1/W4b-2/W4b-3, W4c, and W4d (P3-F SPEC §2, §7). The
+candidate set maps:
 
 | Wave | Candidate | Primitive class | Row-moving? |
 |---|---|---|---|
 | W0 | telemetry-lock (closed) | none | no — baseline |
-| W1 | P2-C — Apache + CITM typed row-table admission | none (row-table only) | yes — 2 new typed rows |
-| W2 | P2-B — retained class/event grammar + `ValueRef` proof | none (compile-time contract) | **no — proof-only** |
-| W3 | P2-A — union event-model (class column; `consume_structural` deletion) | structural projection | yes — structural-dense rows |
-| W4 | P2-E codec + P2-D §4 string-block widening (paired) | `escape_codec_hex_unit` + `scan_string_special_block_32` | yes — unicode rows |
-| W5 | P2-D §5 aarch64 ASM kernels (EOR3 ladder, CSSC CTZ, structural-bitmap) | SIMD substrate kernels | yes — string-dense rows |
+| W1 | C1 / P2-C — Apache + CITM typed row-table admission | none (row-table only) | yes — 2 new typed rows |
+| W2 | C2 / P2-B — retained class/event grammar + `ValueRef` proof | none (compile-time contract) | **no — proof-only** |
+| W3 | C3 / P2-A union event-model + P2-D §5 structural-bitmap chain | structural projection + SIMD substrate kernels | yes — structural-dense rows |
+| W4a | C5 / P2-D §4 — 32-byte string-block widening | `scan_string_special_block_32` | yes — string-dense rows (paired with W4b-2) |
+| W4b-1 | C4 / P2-E §7.1 S1+S6 — codec scalar reference + checkasm harness | `escape_codec` scalar oracle + parity gate | **no — parity foundation** |
+| W4b-2 | C4 / P2-E §7.1 S2/S3/S5/S7/S8/S11 — fixed-width codec bodies + JSON consumer | `escape_codec_hex_unit` fixed-width NEON | yes — unicode rows (paired with W4a) |
+| W4b-3 | C4 / P2-E §7.1 S4/S9/S10 — variable-width const-generic bindings + codegen | `escape_codec_hex_unit` variable-width NEON | **no — grammar-neutrality breadth** |
+| W4c | C6 / P2-D §5.3.1 — SHA3 EOR3 prefix-XOR ladder | producer-accelerator SIMD kernel | no — accelerates W3's must-improve rows |
+| W4d | C7 / P2-D §4.4 — CSSC CTZ string-mask consumer | consumer-accelerator SIMD kernel | no — accelerates W4a's combined-path gate |
+| W5 | reconciliation | none — docs only | no — close wave |
 
 W3 (union substrate) is the topological precursor: P2-D §3.5/§4.4/§5.4
-and P2-E's union-substrate consumer all block on the union substrate.
-The codec wave W4 is sequenced with the string-block widening **paired
-in the same wave** because P2-E §6.3 makes `unicode_mixed` admission
-conditional on a same-wave per-string-span scanner intervention. P3-B
-owns final sequencing; P3-C's gates are stated against this candidate
-set and re-bind to whatever wave letters P3-B assigns.
+and P2-E's union-substrate consumer all block on the union substrate;
+the P2-D §5 structural-bitmap chain is the structural producer body W3
+itself consumes and is folded into W3, not a separate wave. The codec
+sub-wave **W4b-2** is **PAIRED with W4a** because P2-E §6.3 makes
+`unicode_mixed` admission conditional on a same-wave per-string-span
+scanner intervention; the codec is split three ways (W4b-1/W4b-2/W4b-3)
+because at ~1,045 net LOC it cannot land in one 75-min redress
+(P3-F SPEC §2.2, §7.2). The standalone "aarch64 ASM kernels" wave the
+V1 manifest carried as W5 is dissolved: the EOR3 ladder is W4c, the
+CSSC CTZ is W4d, and the structural-bitmap chain folds into W3 — none
+is a wave of its own, and W5 is the docs-only close wave. P3-C's gates
+are stated against this unified manifest.
 
 ---
 
@@ -116,28 +131,72 @@ Proof-only wave — gate detailed in §3. No row movement.
 
 | Field | Specification |
 |---|---|
-| **Exit gate rows + thresholds** | Structural-dense parse_only Track 1 rows must cross the standard-parity floor (`sonic_strict / 1.10`). Per P2-A §4.1: `twitter` ≥ 17685 (today 13188); `apache_builds` ≥ 14124 (today 11917); `update_center` ≥ 14369 (today 9857); `distinct_values` ≥ 15731 (today 8972). **Plus** the structural hot-leaf falsifiers (P2-A §4.4 #1-2): `consume_structural` self-time ≤ 5% on `twitter` + `apache_builds` post-wave; `JsonNodeKind::at_cursor` ≤ 1% self-time (the per-cursor byte-rediscovery must be deleted, not retained). `gsoc-2018` partially closes (its 51% gap is also unicode-bearing; full closure routes to W4) — `gsoc-2018` is **not** an exit-gate row for W3, only a no-regression row. |
-| **Maintain envelope** | The W10b six-row WIN-block is the **binding** maintain gate (P2-A §4.2, §4.4 #3): `canada` ≥ 15866 (`today × 0.98`; sonic floor binds higher); `citm_catalog` ≥ 28631; `instruments` ≥ `today × 0.98`; `marine_ik` ≥ 11831; `mesh` ≥ 12186; `numbers` ≥ 17597. Any one of the six below its maintain floor falsifies the wave even if every exit row clears — this is the verbatim WIN block the SK-V8 W10/W10b campaign regressed 3-8% even when correctness-green. `citm_catalog` is the load-bearing guard (the most class-write-dense row). Additionally (P2-A §4.4 #4): Track 2 / `path!` / direct-to-struct / SinkOnly rows show no delta beyond noise — the class column touches only retained-view consumers. For parity with the W1 envelope, and so the gate is mechanically checkable, that no-leak clause is bound to the seven GO rows by name: the four typed-GO rows — `twitter`, `update_center`, `mesh`, `marine_ik` `real_typed_struct A / GO` — and the three direct-GO rows — `citm_catalog`, `marine_ik`, `unicode_basic` `direct_to_struct A / GO` — each hold their `A / GO` outcome with no delta beyond noise. |
-| **Revert protocol** | Per P2-A §5: slices A.3/A.4/A.7 are regen output — reverting the codegen-template commit (slice A.5) rolls back four downstream files in one move; `generated.rs` returns to the `consume_structural` shape byte-identically. If the W10b gate fires, revert the `assembler.rs` column-push and keep the `classes` field zero-length (slice A.1 revert) — the substrate compiles with an empty column. **Blocks W4 and W5 if it fully reverts**: P2-D §3.5/§4.4/§5.4 and P2-E's union-substrate consumer all name the union substrate as their same-wave consumer; absent the class column, those slices fall back to REDRESS-rejected parser-owned shapes. A *partial* W3 (class column lands, exit rows NEAR-MISS) does not block W4/W5 — the substrate is the dependency, not the exit-gate Mbps. |
+| **Exit gate rows + thresholds** | Structural-dense parse_only Track 1 rows must cross the standard-parity floor `ceil(sonic_strict / 1.10)`. Per P2-A §4.1, derived live from `skinny/RESULTS.md`: `twitter` ≥ 17685 (today 13188, sonic 19453); `apache_builds` ≥ 14124 (today 11917, sonic 15536); `update_center` ≥ 14370 (today 9857, sonic 15806, `ceil(15806/1.10)`); `distinct_values` ≥ 15731 (today 8972, sonic 17304). **Plus** the structural hot-leaf falsifiers (P2-A §4.4 #1-2): `consume_structural` self-time ≤ 5% on `twitter` + `apache_builds` post-wave; `JsonNodeKind::at_cursor` ≤ 1% self-time (the per-cursor byte-rediscovery must be deleted, not retained). `gsoc-2018` partially closes (its 51% gap is also unicode-bearing; full closure routes to W4) — `gsoc-2018` is **not** an exit-gate row for W3, only a no-regression row. |
+| **Maintain envelope** | The W10b six-row WIN-block is the **binding** maintain gate (P2-A §4.2, §4.4 #3), each row at `floor(today × 0.98)` or `ceil(sonic_strict / 1.10)`, whichever higher — the `today × 0.98` leg floored uniformly across all six rows (the single rounding convention for the block): `canada` ≥ 15866 (today 16190, sonic 12723 — `floor(today × 0.98)` binds; `ceil(12723/1.10)` = 11567 is lower, so the sonic floor does **not** bind here); `citm_catalog` ≥ 28630 (today 29215, `floor(28630.7)`); `instruments` ≥ 15865 (today 16189, `floor(15865.2)`); `marine_ik` ≥ 11831 (today 12073, `floor(11831.5)`); `mesh` ≥ 12186 (today 12435, `floor(12186.3)`); `numbers` ≥ 17596 (today 17956, `floor(17596.9)`). Any one of the six below its maintain floor falsifies the wave even if every exit row clears — this is the verbatim WIN block the SK-V8 W10/W10b campaign regressed 3-8% even when correctness-green. `citm_catalog` is the load-bearing guard (the most class-write-dense row). Additionally (P2-A §4.4 #4): Track 2 / `path!` / direct-to-struct / SinkOnly rows show no delta beyond noise — the class column touches only retained-view consumers. For parity with the W1 envelope, and so the gate is mechanically checkable, that no-leak clause is bound to the seven GO rows by name: the four typed-GO rows — `twitter`, `update_center`, `mesh`, `marine_ik` `real_typed_struct A / GO` — and the three direct-GO rows — `citm_catalog`, `marine_ik`, `unicode_basic` `direct_to_struct A / GO` — each hold their `A / GO` outcome with no delta beyond noise. |
+| **Revert protocol** | Per P2-A §5: slices A.3/A.4/A.7 are regen output — reverting the codegen-template commit (slice A.5) rolls back four downstream files in one move; `generated.rs` returns to the `consume_structural` shape byte-identically. If the W10b gate fires, revert the `assembler.rs` column-push and keep the `classes` field zero-length (slice A.1 revert) — the substrate compiles with an empty column. **Blocks every W4 sub-wave (W4a, W4b-1/W4b-2/W4b-3, W4c, W4d) if it fully reverts**: P2-D §3.5/§4.4/§5.4 and P2-E's union-substrate consumer all name the union substrate as their same-wave consumer; absent the class column, those slices fall back to REDRESS-rejected parser-owned shapes. A *partial* W3 (class column lands, exit rows NEAR-MISS) does not block the W4 sub-waves — the substrate is the dependency, not the exit-gate Mbps. |
 | **Same-wave consumer** | The retained `JsonRoot` view's `JsonNodeKind::at_cursor` (`value.rs:33-46`) is re-bodied to read `tape.class_at(cursor)` instead of the source-byte rediscovery — this IS the production consumer for the class column, landing in the same commit (P2-A §2.4 #2). The byte-rediscovery line is deleted, not left dead. CH5 falsifier: `rg 'consume_structural' skinny/crates/runtime/src/` returns zero matches outside the deletion-commit diff. |
+| **Risk + redress cap** | **HIGH** — P2-A C3 §2.2 records that folding the P2-D §5 structural-bitmap chain in whole raises the wave's aggregate risk MEDIUM→HIGH. W3 at ~465-635 hand-equivalent + ~120 regen plausibly overruns the 75-min redress sub-cap; W3 is **not** sub-waved (the class column and its sole SIMD producer form one cascade — splitting them orphans the column) and instead carries a **CHALLENGE-gated redress extension to ≤110 min**, granted only if the W3 plan's slice estimate shows the substrate + the §5 chain cannot co-land in 75 min (P3-F SPEC §2.2, §6). |
 
-### W4 — Unicode codec + string-block widening, PAIRED (P2-E + P2-D §4)
+## §2a — The W4 sub-wave gate table
+
+W4 is the substrate-consumer bracket, sub-waved into W4a, the three
+codec sub-waves W4b-1/W4b-2/W4b-3, W4c, and W4d (P3-F SPEC §2, §7).
+Each sub-wave carries its own falsifiability gate. The four mandatory
+parts (§1.1) hold per sub-wave; the table below states each.
+
+### W4a — 32-byte String-Block Widening (C5 / P2-D §4)
 
 | Field | Specification |
 |---|---|
-| **Exit gate rows + thresholds** | Conditional-admission rule — see §4 in full. Summary: `unicode_escapes` Track 1 ≥ 16319 (standard parity, sonic 18132 × 0.90); `y_string_unicode` Track 1 ≥ 8270 (W4-precedent structural-hard, sonic 11814 × 0.70); `unicode_mixed` Track 1 ≥ 12338 (standard 0.85, sonic 14515) — **admissible only with the same-wave string-block widening landed**; `gsoc-2018` Track 1 ≥ 21430 (no-regression basis, `21646 − 1%`). The wave admits **per-row**: each row admits iff its *measured* post-wave Mbps clears its threshold. P2-E §6.4 projects zero of four cross the gate on the codec alone — the gate is honest about this (§4). |
-| **Maintain envelope** | The W10b six-row WIN-block at the no-regression floor (`today × 0.98`, sonic floor where higher) — same six rows and floors as W3. The codec + string-block scanner are parse-loop-adjacent edits; CSSC CTZ in P2-D §4.4 carries an explicit **HARD blocking precondition** on exactly these six rows (REDRESS 89 regressed them 3-8%). Additionally the unicode direct-plane rows (`unicode_escapes/direct_to_struct`, `y_string_unicode/direct_to_struct`, `unicode_mixed/direct_to_struct`) must not regress — REDRESS 82's blocking rows become W4's no-regression guard (P2-D §3.5 #3). And because W4 rewires `match_string_at_quote_trusted_utf8`, a path the direct-to-struct projection also reaches, the three direct-GO rows — `citm_catalog`, `marine_ik`, `unicode_basic` `direct_to_struct A / GO` — are restated here as W4 maintain rows, each holding its `A / GO` outcome with no delta beyond noise, exactly as they are gated on W5. |
-| **Revert protocol** | Per P2-E §7.1: the checkasm gate (slice S6) lands FIRST and blocks the wave — no consumer slice proceeds until S6 is green. If a NEON body fails checkasm parity, revert that body (S2-S5) and the JSON consumer falls back to the scalar reference S1. If the bench-row conditional gate fails for a row, that row stays NO-GO and the wave admits codec-contribution-only on it (records the falsified gate in REDRESS). If the W10b WIN-block regresses, revert the CSSC CTZ slice (P2-D §4.4) and the string-block widening producer-rewire. **Does not block W5** — W5's ASM kernels (EOR3, structural-bitmap) are independent of the codec; but W4 itself **blocks on W3** (the union substrate is P2-E's and P2-D §4.4's same-wave consumer). |
-| **Same-wave consumer** | P2-E: one production consumer — the already-wired x4 JSON path `unescape_four_unicode_escapes` (`parse-that-regex/src/lib.rs:402`), re-bodied onto `escape_codec_hex_unit`; plus two scaffolds (CSS L4, TOML — compile-validated `#[cfg(test)]`, no production path, no falsifiability gate). P2-D §4: `scan_string_special_block_32`'s consumer is the existing `match_string_at_quote_trusted_utf8` (`parse-that-regex/src/lib.rs:162`) — wider blocks, not a new call site. The codec checkasm gate (`checkasm_escape_codec.rs`) and string-block checkasm gate (`checkasm_string_block.rs`) are both same-wave admission preconditions per P2-D §6.2.1. |
+| **Exit gate rows + thresholds** | The combined producer + consumer path lifts the string-dense rows. Per P2-D §4 the win is consumer-side mask-handling halving, not producer throughput — so the gate measures the *combined* path, not the block-scan microbench. Target rows `unicode_mixed` (today 6803) and `gsoc-2018` (today 22184) measured against `ceil(sonic_strict / 1.10)`; the W4a plan binds the per-row Mbps floors. `unicode_mixed` admission is shared with W4b-2 (the codec sub-wave) — neither closes it alone (P2-E §6.3). |
+| **Maintain envelope** | The W10b six-row WIN-block at the binding maintain floor — same six rows and floors as W3 (`canada` ≥ 15866, `citm_catalog` ≥ 28630, `instruments` ≥ 15865, `marine_ik` ≥ 11831, `mesh` ≥ 12186, `numbers` ≥ 17596; `floor(today × 0.98)` uniformly). W4a is a string-loop edit. Plus the three unicode direct-plane rows (`unicode_escapes/direct_to_struct`, `y_string_unicode/direct_to_struct`, `unicode_mixed/direct_to_struct`) hold no-regression — `match_string_at_quote_trusted_utf8` is also reached by the direct projection; the three direct-GO rows (`citm_catalog`, `marine_ik`, `unicode_basic` `direct_to_struct A / GO`) hold their `A / GO` with no delta beyond noise. |
+| **Revert protocol** | The `checkasm_string_block.rs` differential lands FIRST and blocks all wiring; if the 32-byte body fails parity, revert the body and the `lib.rs:162` rewire — the 16-byte path is restored. If the combined path does not lift the named rows, the row stays NO-GO and W4a records the measured contribution in REDRESS. If the W10b block regresses, revert the producer rewire. A W4a revert does not block the W4b sub-waves, but W4b-2 is strictly paired with W4a. |
+| **Same-wave consumer** | `scan_string_special_block_32`'s consumer is the existing `match_string_at_quote_trusted_utf8` (`parse-that-regex/src/lib.rs:162`) — wider blocks at the existing producer call site, not a new wrapper. The `checkasm_string_block.rs` differential gate is a same-wave admission precondition (P2-D §6.2.1). |
 
-### W5 — aarch64 ASM substrate kernels (P2-D §5: EOR3 ladder, CSSC CTZ, structural-bitmap)
+### W4b-1 — `escape_codec` Scalar Reference + Checkasm Harness (C4 / P2-E §7.1 S1+S6)
 
 | Field | Specification |
 |---|---|
-| **Exit gate rows + thresholds** | String-dense parse_only Track 1 rows, standard-parity floor: `gsoc-2018` ≥ 41198 (the residual P2-A left open — `sonic 45318 / 1.10`); `github_events` ≥ 21360 / 1.10 = 19418 (today 14302); `random` ≥ 15166 / 1.10 = 13788 (today 9382). **Plus** the hot-leaf falsifiers (P2-D §2.4): `movemask_u8x16` self-time on `gsoc-2018` drops from 30.9% to ≤ 12%; the mask-+-CTZ pipeline (`movemask` + `<u16>::trailing_zeros` + `string_block_scan`) drops from 46.2% combined to ≤ 20% on `gsoc-2018`. The EOR3-ladder slice carries an additional `cargo asm` proof that `veor3q_u8` (not `pmull`) appears under `target-cpu=native` (P2-D §5.3.1). |
-| **Maintain envelope** | The W10b six-row WIN-block — **the binding gate of this wave**, at the no-regression floor (`today × 0.98`, sonic floor where higher). P2-D §5.3.1 and §4.4 both name this exact six-row block as a HARD blocking precondition: the prefix-XOR hot body and the CSSC CTZ consumer are precisely the surfaces W10/W10b proved regress the WIN block 3-8% even correctness-green. No EOR3 body and no CTZ body ships unless `canada`, `citm_catalog`, `instruments`, `marine_ik`, `mesh`, `numbers` all hold their floor. The four typed-GO + three direct-GO rows must also show no delta beyond noise (the substrate kernels touch the parse loop, not the typed/direct projection — a delta there signals a cross-substrate leak). |
-| **Revert protocol** | Per P2-D §5.3.1/§5.4: each kernel ships with a checkasm differential that lands before any wiring; checkasm failure blocks the wave. The EOR3 ladder is gated by the Lock 16 `FEAT_SHA3` host-capability predicate — the scalar shift-XOR ladder remains the unconditional fallback, so reverting the EOR3 body is a predicate-flip, not a parse-loop rollback. If the W10b WIN-block regresses, revert the offending kernel body and fall back to the scalar reference. **A full revert does not block any later wave** — W5 is the terminal behaviour wave; a revert routes the kernel back to S-P2/S-P3 under a fresh REDRESS material-differential. The structural-bitmap chain (P2-D §5.4) blocks on W3 (its only consumer is the union substrate's typed event cursor); if W3 reverted, W5's §5 structural-bitmap slice does not ship and `scan_structurals` stays `blocked_no_consumer`. |
-| **Same-wave consumer** | Per P2-D §6.4: §5.3.1 EOR3 ladder → the union-substrate structural-bitmap producer (W3 substrate); §4.4 CSSC CTZ → the union-substrate string-mask consumer; §5.4 structural-bitmap chain → the union-substrate typed event cursor. Every kernel lands with its hot-path caller in the same commit; the four `blocked_no_consumer` primitives (`BULK_EMIT_COMPRESSED`, `FRAME_PUSH/POP_BOUNDED`, `FSM_DISPATCH_THREADED`) stay blocked — they unlock only with a CollapsedStage codegen consumer, out of scope for SK-V9. |
+| **Exit gate** | **Compile + parity, not Mbps** — W4b-1 ships no NEON body and moves no row; it is the parity foundation the SK-V5 orphan-kernel discipline mandates before any codec body wires. W4b-1 admits iff: `escape_codec/scalar.rs` (the parity oracle re-homed from `read_hex_unit_scalar` + `hex_nibble`) compiles and runs as a standalone reference; `escape_codec/mod.rs` exposes the const-generic kernel surface for all five bindings, grammar-neutral by signature; `checkasm_escape_codec.rs` compiles and runs green against the scalar reference for every binding (digit-count × alignment × terminator × validity, ~6,000 cases per binding, P2-E §7.3). A non-Mbps gate, measurable as a binary compile/parity pass — CH1-admissible. |
+| **Maintain envelope** | Structural, not Mbps — W4b-1 ships no parse-loop edit, so it has no W10b obligation beyond compiling clean. No `RESULTS.md` row moves. |
+| **Revert protocol** | All three owner paths are NEW files — revert the files on any failure. W4b-2 cannot dispatch until W4b-1 closes: the checkasm harness is W4b-2's admission precondition. |
+| **Same-wave consumer** | The `checkasm_escape_codec.rs` harness IS the consumer for the scalar reference body (the test consumes the oracle); `escape_codec/mod.rs`'s dispatcher is consumed by W4b-2/W4b-3 (later sub-waves, not same-commit) — W4b-1's same-wave consumer is the test. |
+
+### W4b-2 — Fixed-Width Codec Bodies + JSON Consumer (C4 / P2-E §7.1 S2/S3/S5/S7/S8/S11)
+
+| Field | Specification |
+|---|---|
+| **Exit gate rows + thresholds** | The conditional-admission rule (§4 in full). This is the **row-moving codec sub-wave**, **PAIRED with W4a** (strictly adjacent, never separable — P2-E §6.4). Summary: `unicode_escapes` Track 1 ≥ 16319 (standard parity, sonic 18132 × 0.90, projected 15423 NEAR-FAIL 94.5%); `y_string_unicode` Track 1 ≥ 8270 (W4-precedent structural-hard, sonic 11814 × 0.70, projected 7837 NEAR-FAIL 94.8%); `unicode_mixed` Track 1 ≥ 12338 (standard 0.85, sonic 14515) — **admissible only with the W4a string-block widening landed**, on the *combined* W4a + W4b-2 measured Mbps; `gsoc-2018` Track 1 ≥ 21963 (no-regression basis, `ceil(live baseline 22184 × 0.99)`, `RESULTS.md:24`). The sub-wave admits **per-row**: each row admits iff its *measured* post-wave Mbps clears its threshold. P2-E §6.4 projects zero of four cross the gate on the codec alone — the gate is honest about this (§4). |
+| **Maintain envelope** | The W10b six-row WIN-block at the binding maintain floor — same six rows and floors as W3 (`floor(today × 0.98)` uniformly). W4b-2 re-bodies the JSON unescape hot path. Plus the three unicode direct-plane rows hold no-regression — REDRESS 82's blocking rows become W4b-2's no-regression guard (P2-D §3.5 #3); and the three direct-GO rows (`citm_catalog`, `marine_ik`, `unicode_basic` `direct_to_struct A / GO`) hold their `A / GO` with no delta beyond noise. |
+| **Revert protocol** | The W4b-1 `checkasm_escape_codec.rs` harness is the gate; if a fixed-width NEON body fails parity, revert that body and the JSON consumer falls back to the scalar reference S1. If a row's conditional gate fails, the row stays NO-GO and the codec contribution is recorded in REDRESS. If the W10b block regresses, revert the consumer re-body. The −215 superseded-kernel deletion lands LAST and reverts independently. W4b-2 reverts wholesale only on a checkasm parity failure or a W10b WIN-block regression — never on a per-row NEAR-MISS. A W4b-2 revert does not block W4b-3 / W4c / W4d. |
+| **Same-wave consumer** | One production consumer — the already-wired x4 JSON path `unescape_four_unicode_escapes` (`parse-that-regex/src/lib.rs:402`), re-bodied onto the `escape_codec_hex_unit` fixed-width kernel, plus the `runtime/src/grammars/json/sink.rs` call-site swap. The W4b-1 `checkasm_escape_codec.rs` gate is the same-wave admission precondition (P2-D §6.2.1). |
+
+### W4b-3 — Variable-Width Const-Generic Bindings + Codegen (C4 / P2-E §7.1 S4/S9/S10)
+
+| Field | Specification |
+|---|---|
+| **Exit gate** | **Compile + parity, not Mbps** — W4b-3 moves no row; it completes the codec's grammar-neutrality breadth. W4b-3 admits iff: `hex_variable_neon.rs` (CSS L4 `\HHHHHH`, JS `\u{}`) clears the `checkasm_escape_codec.rs` harness across all 1..6 widths × validity × terminator positions; the `codegen/src/escape_codec/` const-generic emission compiles and the five emitted specialisations are diff-audited; the CSS L4 `#[cfg(test)]` scaffold compiles (the Lock 14 non-JSON binding witness, no production parse loop, no row gate). A non-Mbps gate, CH1-admissible. |
+| **Maintain envelope** | Structural, not Mbps — W4b-3's variable-width body has no JSON production consumer; no W10b obligation beyond compiling clean. No `RESULTS.md` row moves. |
+| **Revert protocol** | All owner paths are NEW files or a NEW sub-module — revert on any failure; the hand-written W4b-2 fixed-width bodies remain callable. A W4b-3 revert does not block W4c / W4d. |
+| **Same-wave consumer** | The `codegen/src/escape_codec/` template is the same-wave consumer for the const-generic kernel surface; the CSS L4 scaffold is a compile-validated binding witness, not a production consumer. |
+
+### W4c — SHA3 EOR3 Prefix-XOR Ladder (C6 / P2-D §5.3.1)
+
+| Field | Specification |
+|---|---|
+| **Exit gate** | **No row of its own** — W4c is a *producer accelerator*; its speed-up surfaces inside W3's must-improve rows (faster structural-bitmap producer → faster `twitter`/`apache_builds`/etc.). W4c admits iff: the EOR3 ladder carries a green three-way `checkasm_bitmap_prefix_xor_64.rs` differential (vector-vs-scalar-vs-PMULL, outcome `K` on a parity miss); a `cargo asm` proof that `veor3q_u8` (not `pmull`) appears under `-C target-cpu=native` with `FEAT_SHA3` present; the EOR3 path is `FEAT_SHA3`-conditional with the scalar shift-XOR ladder the unconditional fallback. |
+| **Maintain envelope** | The W10b six-row WIN-block — **the binding gate of this sub-wave**, at the binding maintain floor (same six rows / floors as W3). P2-D §5.3.1 names this six-row block as a HARD blocking precondition: the prefix-XOR hot body is the surface W10/W10b proved regresses the WIN block 3-8% even correctness-green. No EOR3 body ships unless all six rows hold. The four typed-GO + three direct-GO rows show no delta beyond noise. |
+| **Revert protocol** | The `checkasm_bitmap_prefix_xor_64.rs` extension lands before the wiring; checkasm failure blocks the sub-wave. Reverting the EOR3 body is a predicate-flip (the scalar ladder is the unconditional fallback), not a parse-loop rollback. If the W10b block regresses, revert to scalar-only. A W4c revert does not block any later sub-wave. |
+| **Same-wave consumer** | The W3 union-substrate structural-bitmap producer — the prefix-XOR turns the quote mask into an inside-string mask inside the structural classifier; wired same-commit. |
+
+### W4d — CSSC CTZ String-Mask Consumer (C7 / P2-D §4.4)
+
+| Field | Specification |
+|---|---|
+| **Exit gate** | **No row of its own** — W4d is a *consumer accelerator*; its contribution surfaces inside W4a's combined-path gate on `gsoc-2018` and `unicode_mixed`. W4d admits iff: a `cargo asm` proof that `ctz` emits under `-C target-cpu=native` (the instruction-selection gate); the CTZ body is host-capability-gated at the non-default call site with the `rbit + clz` fallback unconditional. |
+| **Maintain envelope** | The W10b six-row WIN-block — **the binding HARD blocking precondition** of this sub-wave (same six rows / floors as W3). REDRESS 89 rejected the structurally adjacent CSSC CTZ body precisely on a 3-8% WIN-block regression. The four typed-GO + three direct-GO rows show no delta beyond noise. |
+| **Revert protocol** | W4d's correctness is exercised by W4a's `checkasm_string_block.rs` (the CTZ extract is a sub-step of the 32-byte block scanner's mask consumer) — no separate checkasm file. If the W10b block regresses, revert the CTZ body and fall back to `rbit + clz` — a predicate-flip. W4d is the terminal substrate sub-wave; a revert routes the kernel back under a fresh REDRESS material-differential. |
+| **Same-wave consumer** | The W4a 32-byte block scanner's per-mask first-set extract — the CTZ body replaces the consumer-side `<u16>::trailing_zeros` inside the union-substrate string-mask consumer; wired same-commit. |
 
 ---
 
@@ -232,13 +291,16 @@ consumer that, by design, does not exist for a compile-only artefact.
 
 ---
 
-## §4 — The conditional-admission rule for the unicode rows (W4)
+## §4 — The conditional-admission rule for the unicode rows (W4b-2)
 
 This section is the load-bearing honesty point of P3-C. P2-E §6.4
 established by PMU rederivation that **the unicode codec alone does NOT
 close `unicode_escapes`, `y_string_unicode`, `unicode_mixed`, or
-`gsoc-2018`**. The W4 falsifiability gate must encode the conditional
-rule, not an aspirational "codec closes 4 rows."
+`gsoc-2018`**. The conditional rule below is the exit gate of **W4b-2**
+— the row-moving codec sub-wave, PAIRED with W4a — and it encodes the
+conditional rule, not an aspirational "codec closes 4 rows." W4b-1
+(the parity foundation) and W4b-3 (the variable-width breadth) carry no
+row gate; only W4b-2 moves the unicode rows, and only paired with W4a.
 
 ### §4.1 — The rederived projection (P2-E §6.2, verbatim posture)
 
@@ -250,16 +312,16 @@ onto each row's measured `SK-V9-open` baseline:
 | `unicode_escapes` | 11239 | 36.2% | 15423 | 18132 | 16319 (×0.90 standard) | **NEAR-FAIL 94.5%** |
 | `y_string_unicode` | 5457 | 40.5% | 7837 | 11814 | 8270 (×0.70 W4-precedent) | **NEAR-FAIL 94.8%** |
 | `unicode_mixed` | 7276 | ~10% (folded in validator) | 7864 | 14515 | 12338 (×0.85 standard) | **FAIL 63.7%** |
-| `gsoc-2018` | 21646 | ≈0% | 21646 (unchanged) | 45318 | 21430 (no-regression) | admitted **no-regression only** |
+| `gsoc-2018` | 22184 | ≈0% | 22184 (unchanged) | 45318 | 21963 (no-regression, `ceil(22184×0.99)`) | admitted **no-regression only** |
 
 The codec is a strong contributor on two rows and a non-contributor on
 two. **Zero rows admit on the codec alone at the standard / W4-precedent
-slack.** This is the verbatim P2-E §6.4 verdict and the W4 gate is
+slack.** This is the verbatim P2-E §6.4 verdict and the W4b-2 gate is
 written against it.
 
-### §4.2 — The conditional-admission rule (the W4 exit gate)
+### §4.2 — The conditional-admission rule (the W4b-2 exit gate)
 
-W4 admits **per-row, on measurement**, under these four binding clauses:
+W4b-2 admits **per-row, on measurement**, under these four binding clauses:
 
 1. **`unicode_escapes` / `y_string_unicode` — same-wave conditional.**
    Each admits iff its *measured* post-wave parse_only Track 1 Mbps
@@ -271,80 +333,85 @@ W4 admits **per-row, on measurement**, under these four binding clauses:
    if it NEAR-MISSES, the row stays `S / NO-GO`, the codec records a
    measured contribution in REDRESS, and the residual routes to a
    future tranche. The codec is admitted as a *contributor* to these
-   rows regardless of whether they cross the gate — the wave is not
+   rows regardless of whether they cross the gate — W4b-2 is not
    reverted for a NEAR-MISS, only the row's GO status is withheld.
 
-2. **`unicode_mixed` — admission CONDITIONAL on same-wave pairing.**
+2. **`unicode_mixed` — admission CONDITIONAL on the W4a pairing.**
    The codec touches only ~10% of this row's c/B (it folds into
    `validate_string_escape`). The codec intervention alone projects
    63.7% of threshold — a hard FAIL. Per P2-E §6.3 the row's admission
    is **conditional on a same-wave per-string-span scanner
-   intervention**. The W4 wave therefore PAIRS the P2-E codec with the
-   P2-D §4 string-block widening (`scan_string_special_block_32` +
-   `validate_string_escape` TBL collapse, P2-D §2.2/§2.3) in the **same
-   wave commit**. `unicode_mixed` admits iff the *combined* codec +
-   string-block measured Mbps clears 12338. If the string-block
-   widening does not land in the same wave, `unicode_mixed` stays
-   `NO-GO` and W4 admits codec-contribution-only on this row — it must
-   never be claimed closed by the codec.
+   intervention**. W4b-2 is therefore PAIRED with W4a — the P2-D §4
+   32-byte string-block widening (`scan_string_special_block_32` +
+   `validate_string_escape` TBL collapse, P2-D §2.2/§2.3) — strictly
+   adjacent in the same redress lineage. `unicode_mixed` admits iff the
+   *combined* W4a + W4b-2 measured Mbps clears 12338. If W4a does not
+   land, `unicode_mixed` stays `NO-GO` and W4b-2 admits
+   codec-contribution-only on this row — it must never be claimed
+   closed by the codec.
 
 3. **`gsoc-2018` — no-regression basis only.** The codec share is ≈0%;
    the row's load is the `movemask_u8x16` string-block scanner, a
-   different primitive class. `gsoc-2018` admits in W4 iff its measured
-   Mbps ≥ 21430 (`baseline − 1%`) — i.e. the codec must not regress it.
-   Closing `gsoc-2018` is **out of scope for the codec** and routes to
-   W5 (the P2-D §4 string-block widening + §5 movemask/CTZ work, exit
-   gate ≥ 41198). A W4 gate that claims `gsoc-2018` closure is a
-   paper-close and fails CH6.
+   different primitive class. `gsoc-2018` admits in W4b-2 iff its
+   measured Mbps ≥ 21963 (`ceil(live baseline 22184 × 0.99)`,
+   `RESULTS.md:24`) — i.e. the codec must not regress it. Closing
+   `gsoc-2018` is **out of scope for the codec**; it is W4a's string-
+   block widening and the W4c/W4d ASM accelerators that target the row.
+   A W4b-2 gate that claims `gsoc-2018` closure is a paper-close and
+   fails CH6.
 
-4. **The wave-level rule.** W4 closes (admits as a wave) iff (a) every
-   exit-gate row that admits does so on *measured* Mbps, (b) every row
-   that NEAR-MISSES or FAILS has its honest verdict recorded in REDRESS
-   with the measured contribution, and (c) the W10b WIN-block + the
-   unicode direct-plane rows hold their no-regression floors. W4 does
-   **not** revert wholesale on a per-row NEAR-MISS — the codec is a
-   real, checkasm-verified contribution; it reverts only on a checkasm
-   parity failure or a W10b WIN-block regression.
+4. **The sub-wave-level rule.** W4b-2 closes (admits as a sub-wave) iff
+   (a) every exit-gate row that admits does so on *measured* Mbps, (b)
+   every row that NEAR-MISSES or FAILS has its honest verdict recorded
+   in REDRESS with the measured contribution, and (c) the W10b
+   WIN-block + the unicode direct-plane rows hold their no-regression
+   floors. W4b-2 does **not** revert wholesale on a per-row NEAR-MISS —
+   the codec is a real, checkasm-verified contribution; it reverts only
+   on a checkasm parity failure or a W10b WIN-block regression.
 
-### §4.3 — Why the codec and string-block widening are one wave
+### §4.3 — Why the codec sub-wave W4b-2 is paired with W4a
 
 The S-P3 prompt's same-wave-consumer requirement plus P2-E §6.3's
-conditional rule force the pairing. If the codec and the string-block
-widening were sequenced as two waves:
+conditional rule force the pairing. If the codec body and the
+string-block widening landed unpaired:
 
-- The codec wave would close *zero* rows (per §4.1) — a wave that moves
-  no row to `GO` and whose exit gate is "contribution recorded" is a
-  paper-close under CH6.
-- `unicode_mixed` would have no admission path at all in the codec wave
-  (63.7% FAIL), and the string-block wave alone does not touch the
+- A standalone codec sub-wave would close *zero* rows (per §4.1) — a
+  sub-wave that moves no row to `GO` and whose exit gate is
+  "contribution recorded" is a paper-close under CH6.
+- `unicode_mixed` would have no admission path at all in the codec
+  sub-wave (63.7% FAIL), and W4a alone does not touch the
   codec-dominated `y_string_unicode`.
 
-Pairing them is the only sequencing under which W4 has a non-vacuous
-exit gate. P3-B must therefore manifest the codec + string-block
-widening as **one wave**, not two. The CSSC CTZ slice (P2-D §4.4) and
-the EOR3 / structural-bitmap kernels (P2-D §5) are separable into W5
-because they target different rows (`gsoc-2018`, `github_events`,
-`random`) and carry their own WIN-block blocking precondition.
+Pairing W4b-2 with W4a — strictly adjacent in the same redress
+lineage — is the only sequencing under which the codec has a
+non-vacuous exit gate. The codec is split three ways
+(W4b-1/W4b-2/W4b-3) for LOC reasons (P3-F SPEC §2.2): W4b-1 is the
+parity foundation and W4b-3 the variable-width breadth, neither
+row-moving, so only W4b-2 carries the conditional gate and only W4b-2
+pairs with W4a. The EOR3 ladder (W4c) and the CSSC CTZ (W4d) are
+separate sub-waves — they are producer/consumer accelerators with no
+row of their own, each carrying its own W10b blocking precondition.
 
 ### §4.4 — The conditional rule stated as a falsifier
 
-The W4 gate is falsified — the wave is reverted, not merely a row
-withheld — iff any of:
+The W4b-2 gate is falsified — the sub-wave is reverted, not merely a
+row withheld — iff any of:
 
-1. A NEON codec body or the `scan_string_special_block_32` body fails
-   checkasm parity against its scalar reference (P2-E §7.3 / P2-D
-   §6.2.1). The checkasm gate lands first and blocks all wiring.
+1. A fixed-width NEON codec body fails checkasm parity against its
+   scalar reference under the W4b-1 `checkasm_escape_codec.rs` harness
+   (P2-E §7.3). The harness lands at W4b-1 and blocks all W4b-2 wiring.
 2. Any W10b WIN-block row (`canada`, `citm_catalog`, `instruments`,
-   `marine_ik`, `mesh`, `numbers`) drops below `today × 0.98`.
+   `marine_ik`, `mesh`, `numbers`) drops below `floor(today × 0.98)`.
 3. Any unicode direct-plane row (`unicode_escapes/direct_to_struct`,
    `y_string_unicode/direct_to_struct`, `unicode_mixed/direct_to_struct`)
-   regresses — REDRESS 82's blocking rows are W4's no-regression guard.
-4. The wave claims `gsoc-2018` or `unicode_mixed` closure without the
-   measured combined Mbps clearing the threshold — a paper-close.
+   regresses — REDRESS 82's blocking rows are W4b-2's no-regression
+   guard.
+4. The sub-wave claims `gsoc-2018` or `unicode_mixed` closure without
+   the measured combined Mbps clearing the threshold — a paper-close.
 
 A per-row NEAR-MISS on `unicode_escapes` / `y_string_unicode` is **not**
 a falsifier — it is the expected, honestly-projected outcome; the row
-stays `NO-GO`, the contribution is recorded, and the wave still admits
+stays `NO-GO`, the contribution is recorded, and W4b-2 still admits
 the codec as a verified primitive. This is the conditional-admission
 rule: the codec admits as a *primitive with a measured contribution*;
 the *rows* admit only on measurement clearing their gate.
@@ -405,3 +472,28 @@ Upstream artefacts cited:
 ## §0 — V2 fold
 
 V2 fold: F-AUX surgical touch-up per S-P3 V1 CHALLENGE.
+
+## §0 V3 fold footer
+
+V3 comprehensive integration. P3-C is re-authored to the unified
+P3-F SPEC §2 manifest W1-W5 with W4 sub-waved. Changes: (1) the §1.4
+candidate→wave map replaces the old two-wave shape (W4 = paired
+codec+string-block, W5 = aarch64 ASM kernels) with the unified W1-W5 /
+W4a / W4b-1/W4b-2/W4b-3 / W4c / W4d shape — the standalone "W5 ASM
+kernels" wave is dissolved (EOR3 → W4c, CSSC CTZ → W4d, structural-
+bitmap chain → W3). (2) The §2 W3 gate gains a risk + redress-cap row
+recording the MEDIUM→HIGH escalation P2-A C3 §2.2 warned and the
+CHALLENGE-gated ≤110-min redress extension; the W3 maintain envelope
+extends to the three direct-GO rows. (3) A new §2a per-sub-wave gate
+table covers W4a, W4b-1, W4b-2, W4b-3, W4c, W4d — replacing the old
+§2 "W4 — PAIRED" and "W5 — ASM kernels" gate rows; the un-sourced
+`github_events`/`random` W5 exit rows are removed (W4c/W4d are
+accelerators with no row of their own). (4) §4 rebinds the
+conditional-admission rule to W4b-2 (the row-moving codec sub-wave,
+PAIRED with W4a). (5) Arithmetic: `update_center` W3 floor
+`14369 → 14370`; the W10b maintain block is floored uniformly
+(`floor(today × 0.98)`) — the false "canada sonic floor binds higher"
+parenthetical is corrected (sonic 12723 → `ceil/1.10` = 11567 binds
+lower), `citm_catalog` `28631 → 28630`, `numbers` `17597 → 17596`;
+`gsoc-2018` no-regression base `21646 → 22184` live, floor
+`21430 → 21963`.

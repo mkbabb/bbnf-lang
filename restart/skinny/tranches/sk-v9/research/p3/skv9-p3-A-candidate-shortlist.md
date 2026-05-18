@@ -1,6 +1,6 @@
 # SK-V9 P3-A: Candidate-Intervention Shortlist
 
-Pass: S-P3 Synthesis-Plan. Cycle: V1.
+Pass: S-P3 Synthesis-Plan. Cycle: V3.
 Date: 2026-05-18.
 Scope: Distil the six S-P2 interventions into a ranked shortlist of ≤8
 candidate interventions for SK-V9 waves — each carrying owner paths,
@@ -277,12 +277,14 @@ Rejected for §5.3 use" — it never reached candidate status.
   `twitter` Track 1 `≥ 17685` (sonic-strict/1.10; today 13188);
   `apache_builds ≥ 14124` (today 11917); `gsoc-2018 ≥ 41198` (today
   22184 — partial closure expected, see §4.3 below); `distinct_values
-  ≥ 15731` (today 8972); `update_center ≥ 14369` (today 9857). Hot-leaf:
-  `consume_structural` ≤ 5% self-time, `JsonNodeKind::at_cursor` ≤ 1%.
-  Must-not-regress — the W10b six-row block (P2-A §4.2, binding):
-  `canada ≥ 15866`, `citm_catalog ≥ 28631`, `instruments ≥ today×0.98`,
-  `marine_ik ≥ 11831`, `mesh ≥ 12186`, `numbers ≥ 17597` (each `today ×
-  0.98` or the sonic-strict floor, whichever higher). Falsified if
+  ≥ 15731` (today 8972); `update_center ≥ 14370` (today 9857,
+  `ceil(15806/1.10)`). Hot-leaf: `consume_structural` ≤ 5% self-time,
+  `JsonNodeKind::at_cursor` ≤ 1%. Must-not-regress — the W10b six-row
+  block (P2-A §4.2, binding), each row at `floor(today × 0.98)` or
+  `ceil(sonic_strict / 1.10)`, whichever higher (the `today × 0.98` leg
+  floored uniformly across all six): `canada ≥ 15866`,
+  `citm_catalog ≥ 28630`, `instruments ≥ 15865`, `marine_ik ≥ 11831`,
+  `mesh ≥ 12186`, `numbers ≥ 17596`. Falsified if
   `consume_structural > 5%` on twitter/apache_builds, or any W10b row
   drops below floor, or Track 2 / direct / SinkOnly rows move beyond
   noise, or a JSON symbol leaks into a generic crate.
@@ -442,12 +444,16 @@ Rejected for §5.3 use" — it never reached candidate status.
   MEDIUM on variable-width CSS/JS, **MEDIUM-HIGH on `unicode_escapes` +
   `y_string_unicode` performance** (both NEAR-FAIL — real µop count
   could fall short), HIGH on `unicode_mixed` (does not close alone).
-- **Dependency.** **Depends on C3 (same-wave) + C8.** P2-D §3.5 / §0:
-  the codec broadening blocks on P2-A (C3) landing in the same wave OR
-  fails CH5 — absent C3, the broadening only reduces fall-through in the
-  *parser-owned* helper, the REDRESS-82-rejected shape. P2-D §0 names
-  the cascade-sequencing constraint: the wave may not be split. C8's
-  `checkasm_escape_codec.rs` is a same-wave precondition.
+- **Dependency.** **Cascade-locked to C3; lands as the W4b sub-waves.**
+  P2-D §3.5 / §0: the codec broadening blocks on the P2-A (C3) union
+  substrate existing OR fails CH5 — absent the substrate, the
+  broadening only reduces fall-through in the *parser-owned* helper,
+  the REDRESS-82-rejected shape. Per the P3-F SPEC §2.2 binding reading
+  of P2-D §0, the cascade-lock is satisfied by W3 (the C3 substrate)
+  preceding the W4 sub-waves — it does NOT mean one monolithic wave.
+  C4 is itself ~1,045 net LOC and lands as three sub-waves
+  W4b-1/W4b-2/W4b-3 (P3-F SPEC §7.2). C8's `checkasm_escape_codec.rs`
+  is the W4b-1 admission precondition.
 - **REDRESS pre-blocks.** REDRESS 82 (W4 single-quartet classifier — P2-E
   §5 five-axis differential: primitive class not classifier, const-generic
   template not JSON-instance, one production consumer + two scaffolds,
@@ -561,10 +567,13 @@ Rejected for §5.3 use" — it never reached candidate status.
   must cover the three-way differential. Capability-gated
   (`FEAT_SHA3`), scalar fallback unconditional — the same admissibility
   shape as `digit_mac` (DotProd-gated).
-- **Dependency.** **Depends on C3 (same-wave).** P2-D §5.3.1 / §0: the
-  EOR3 slice blocks on P2-A landing — its only consumer is the §5
-  structural-bitmap producer (C3 scope); absent C3 in the same wave,
-  C6 ships orphaned. Cascade constraint: the wave may not be split.
+- **Dependency.** **Cascade-locked to C3; lands as sub-wave W4c.**
+  P2-D §5.3.1 / §0: the EOR3 ladder blocks on the P2-A (C3) union
+  substrate existing — its only consumer is the §5 structural-bitmap
+  producer (C3 / W3 scope); absent the substrate, C6 ships orphaned.
+  Per the P3-F SPEC §2.2 reading, the cascade-lock is satisfied by W3
+  preceding W4c — W4c wires the EOR3 ladder into the already-landed W3
+  structural-bitmap producer same-commit.
 - **Wave disposition.** C6 lands as **sub-wave W4c** — a fresh
   triumvirate that wires the SHA3 EOR3 prefix-XOR ladder into the
   already-landed W3 union structural-bitmap producer. It is neither
@@ -659,20 +668,22 @@ independent"), and the P2-D §0 cascade-sequencing constraint.
                        (P2-B §5: the proof removes the HANDOFF §5
                         pre-block; C3 becomes eligible to dispatch)
 
-  DEPTH 2 — same-wave with C3 (the cascade-locked block)
+  DEPTH 2 — cascade-locked to C3 (W3 precedes the W4 sub-waves)
   ────────────────────────────────────────────
-                       C3 ──same-wave──► C4  codec broadening
-                          │              C5  32-byte string-block
-                          │              C6  SHA3 EOR3 ladder
-                          └──────────────► (P2-D §0: "P2-A must land in
-                            the same wave as any of these P2-D consumer
-                            slices, or the slices fall back to
-                            REDRESS-rejected parser-owned shapes;
-                            the wave may not be split")
+                       C3 (W3) ──precedes──► C4  codec   (W4b-1/2/3)
+                          │                  C5  32-byte (W4a)
+                          │                  C6  EOR3    (W4c)
+                          └──────────────► (P2-D §0, binding reading
+                            per P3-F SPEC §2.2: a P2-D kernel must not
+                            land WITHOUT the union substrate existing —
+                            satisfied by W3 preceding the W4 sub-waves;
+                            it does NOT mean one monolithic wave. Each
+                            W4 sub-wave wires its kernel into the
+                            already-landed W3 union same-commit.)
 
-  DEPTH 3 — inside the C5 consumer
+  DEPTH 3 — inside the C5 consumer (W4a)
   ────────────────────────────────────────────
-   C3 + C5 ──────► C7  CSSC CTZ string-mask extract
+   C3 + C5 ──────► C7  CSSC CTZ string-mask extract (W4d)
 
   PRECONDITION EDGES (must land BEFORE consumer wiring of their wave)
   ────────────────────────────────────────────
@@ -690,12 +701,18 @@ Reading the graph for P3-B wave sequencing:
 - **C3 cannot precede C2.** The C2 proof is the *necessary* (not
   sufficient) gate; landing C3 first reopens the REDRESS 92 fit-gate
   failure mode that the proof exists to discharge.
-- **C4, C5, C6 are cascade-locked to C3.** They may not be split into a
-  later wave: P2-D §0 is explicit — absent C3 (the union substrate) in
-  the same wave, each falls back to a REDRESS-rejected parser-owned
-  shape and must be held back. P3-B should sequence C3 + C4 + C5 + C6
-  (+ C7) as one cascade-locked behaviour wave (or a tightly-coupled
-  pair), not as independent W{n}.
+- **C4, C5, C6, C7 are cascade-locked to C3.** P2-D §0 is explicit —
+  no P2-D kernel may land *without the union substrate existing*.
+  P3-F SPEC §2.2 gives the binding reading: the cascade-lock is
+  satisfied by **W3 (the C3 union substrate) preceding the W4
+  sub-waves** — it does NOT mean one monolithic redress wave. The C3
+  union event-model is W3; the consumers are the W4 sub-waves W4a (C5
+  string-block), W4b-1/W4b-2/W4b-3 (C4 codec, itself three sub-waves
+  for LOC reasons — §2.2), W4c (C6 EOR3 ladder), W4d (C7 CSSC CTZ).
+  Each W4 sub-wave is a fresh triumvirate that wires its kernel into
+  the already-landed W3 union in the same commit — the consumer
+  exists, no orphan ships. C4's codec moves rows only at the W4b-2
+  sub-wave, strictly paired with W4a.
 - **C8 is not a wave.** Its four test files distribute as same-wave
   preconditions of C4 and C5; `checkasm_digit_mac.rs` ownership is
   carried forward to a future numeric-row wave (P2-D §6.2.1 — no
@@ -777,3 +794,19 @@ revert protocol, never a paper-close.
 ## §0 — V2 fold
 
 V2 fold: F-AUX surgical touch-up per S-P3 V1 CHALLENGE.
+
+## §0 V3 fold footer
+
+V3 comprehensive integration. P3-A is reconciled to the unified P3-F
+SPEC §2 manifest. Changes: (1) the §3 dependency-graph reading text and
+the DEPTH-2 graph block are re-bound to the W4 sub-wave structure — C4
+codec → W4b-1/W4b-2/W4b-3, C5 → W4a, C6 → W4c, C7 → W4d — and the
+P2-D §0 cascade-lock is stated in its disambiguated P3-F SPEC §2.2
+reading ("W3 precedes the W4 sub-waves", not "one monolithic wave");
+the stale "one cascade-locked behaviour wave" / bare "the wave may not
+be split" prose is corrected. (2) Arithmetic: the C3 falsifiability
+gate's `update_center` floor `14369 → 14370` (`ceil(15806/1.10)`); the
+W10b six-row block is floored uniformly (`floor(today × 0.98)`) —
+`citm_catalog` `28631 → 28630`, `numbers` `17597 → 17596`,
+`instruments` stated as `15865`. The C1..C8 shortlist and the per-
+candidate detail are otherwise unchanged.

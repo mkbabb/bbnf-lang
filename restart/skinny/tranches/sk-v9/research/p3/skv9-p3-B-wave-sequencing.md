@@ -1,6 +1,6 @@
 # SK-V9 P3-B: Wave Sequencing
 
-Pass: S-P3 Synthesis-Plan. Cycle: V1.
+Pass: S-P3 Synthesis-Plan. Cycle: V3.
 Date: 2026-05-18.
 Scope: Order the S-P2 / P3-A candidate interventions into a SK-V9
 post-W0 wave manifest W1..W{n}, with per-wave entry gate, wave class,
@@ -17,9 +17,10 @@ per `HARDENING-S-P2-CONVERGED.md`); P3-A shortlist cross-referenced.
 
 ## §1 — Method
 
-S-P3 W0 (SK-V9-open telemetry-lock) is **already CLOSED** — commit
-`90609aee`, run id `sk-v9-open:criterion-fnv64-cd1673844eeea12f`. This
-artefact sequences the post-W0 behavior waves only.
+S-P3 W0 (SK-V9-open telemetry-lock) is **already CLOSED** — close
+artefact `restart/skinny/tranches/sk-v9/research/skv9-W0-close.md`, run
+id `sk-v9-open:criterion-fnv64-cd1673844eeea12f`. This artefact
+sequences the post-W0 behavior waves only.
 
 The candidate pool is the six converged S-P2 artefacts. Five carry
 intervention shapes; P2-F is the SOTA-teardown reference (a dependency
@@ -69,7 +70,8 @@ closed W0. This is inside the ≤12 skinny-bracket ceiling (`ORCHESTRATOR`
 
 ## §2 — The wave manifest
 
-W0 SK-V9-open telemetry-lock is CLOSED (`90609aee`). The Interlock
+W0 SK-V9-open telemetry-lock is CLOSED (close artefact
+`skv9-W0-close.md`). The Interlock
 (fresh S-P1 rerun, SPEC §4) is a pass-internal convergence gate, not a
 behavior wave; `G-S-P1-RERUN-CONVERGED` and `G-BEHAVIOR-RELEASE` are the
 entry conditions for W1 and are assumed satisfied by the time this
@@ -81,18 +83,19 @@ SPEC §5 names — convergence of this pass *is* `G-BEHAVIOR-RELEASE`).
 | **W1** | Apache/CITM measured-row admission | P2-C | W0 closed; `G-S-P1-RERUN-CONVERGED` + `G-BEHAVIOR-RELEASE` (S-P3 convergence) | row-moving (typed GO-count) | research 6 / plan 1 / redress 1; CHALLENGE optional (mechanical, well-understood — skippable per SKINNY-TRIUMVIRATE §4) | research ~30 min / plan ~30 min / redress ~75 min (60 impl + 15 measure); ~135 min wave total (CHALLENGE skipped — no 60–90 min interposition) per `SKINNY-TRIUMVIRATE.md` §7 |
 | **W2** | Retained class/event grammar + `ValueRef` proof | P2-B | W1 closed; SK-V9-open baseline maintained by W1 | proof-only (no `RESULTS.md` row movement) | research 6 / plan 1 / **CHALLENGE mandatory** / redress 1 — first-of-class (new trait + substrate-contract artefact) | research ~30 min / plan ~30 min / CHALLENGE 60–90 min / redress ~75 min; ~195–225 min wave total per `SKINNY-TRIUMVIRATE.md` §7 |
 | **W3** | Union event-model (class-column substrate) | P2-A | W2 closed; **P2-B proof admitted** (the HANDOFF §5 W3 pre-block removed); REDRESS 92 gating clause discharged | row-moving (structural-dense losses) | research 6 / plan 1–2 / **CHALLENGE mandatory** / redress 1 — first-of-class (substrate touch, Lock 1 audit) | research ~30 min / plan ~30 min / CHALLENGE 60–90 min / redress ~75 min; ~195–225 min wave total per `SKINNY-TRIUMVIRATE.md` §7 |
-| **W4** | aarch64 ASM consumers — unicode codec + string-block widening | P2-D + P2-E (paired) | W3 closed; **P2-A union substrate landed** (class column + cursor stream live); five checkasm differential test files authored as same-wave preconditions | row-moving (string-dense + unicode-dense) | research 6 / plan 2 / **CHALLENGE mandatory** / redress 1 — first-of-class (NEON kernels, checkasm parity, Lock 16 host-cap gate) | research ~30 min / plan ~30 min / CHALLENGE 60–90 min / redress ~75 min; ~195–225 min wave total per `SKINNY-TRIUMVIRATE.md` §7 — the codec+string-block pairing exceeds a single 75-min redress, so W4 sub-waves (W4a/W4b/…), each a fresh triumvirate carrying its own ~75-min redress cap |
+| **W4** (sub-waved: W4a, W4b-1/W4b-2/W4b-3, W4c, W4d) | aarch64 substrate consumers — 32-byte string-block widening + unicode codec + EOR3 ladder + CSSC CTZ | P2-D + P2-E | W3 closed; **P2-A union substrate landed** (class column + cursor stream live); the codec scalar reference + checkasm harness authored at W4b-1 as the same-wave precondition | row-moving (string-dense + unicode-dense) — W4a + W4b-2 carry the row gates | each sub-wave research 6 / plan 2 / **CHALLENGE mandatory** / redress 1 — first-of-class (NEON kernels, checkasm parity, Lock 16 host-cap gate) | each sub-wave ≤90 min wall / 75-min redress; W4 is sub-waved into six triumvirates (W4a, the three codec sub-waves W4b-1/W4b-2/W4b-3, W4c, W4d) precisely because the codec+string-block+ASM aggregate exceeds a single 75-min redress and the codec alone is ~1,045 net LOC (P3-F SPEC §2.2) |
 | **W5** | Close + Alpha feedback | none (reconciliation) | W1–W4 each admitted or rejected with measurement | cleanup / telemetry reconciliation | research 1–2 / plan 1 / redress 1; no CHALLENGE (no source-behavior edit) | research ~30 min / plan ~30 min / redress ~75 min; ~135 min wave total (no CHALLENGE — no source-behavior edit) per `SKINNY-TRIUMVIRATE.md` §7 |
 
 Notes on the manifest:
 
-- **No W0 row** is restated here — it is closed. Numbering continues from
-  W1 to keep the post-W0 sequence contiguous and to mirror the SPEC §2
-  placeholder slots (SPEC W1=release, W2=typed, W3=tape, W4=direct,
-  W5=close). P3-F resolves the SPEC-slot rename: the SPEC's W1 "release"
-  slot is consumed by S-P3 convergence itself, so the behavior waves
-  shift to occupy SPEC §6/§7/§8/§9. P3-B's W1–W5 names are the *behavior*
-  sequence; P3-F binds them to SPEC section numbers.
+- **No W0 row** is restated here — it is closed. Numbering continues
+  from W1 to keep the post-W0 sequence contiguous. The P3-F SPEC §2
+  binds the behaviour waves to SPEC section numbers: **W1 → §4**
+  (Apache/CITM admission), W2 → §5 (retained-grammar proof), W3 → §6
+  (union substrate), W4a → §7.1, the codec sub-waves W4b-1/W4b-2/W4b-3
+  → §7.2.1/§7.2.2/§7.2.3, W4c → §7.3, W4d → §7.4, W5 → §8 (close). P3-B's
+  W1–W5 names are the *behaviour* sequence; the P3-F SPEC §2 is the
+  canonical section binding.
 - **The SPEC §8 direct-contract placeholder is NOT scheduled.** No S-P2
   candidate furnishes a direct output / control-path contract; REDRESS
   93 (scalar-parent fold) remains a pre-block with no fresh candidate.
@@ -159,28 +162,36 @@ W10b six-row maintain block (`canada`, `citm_catalog`, `instruments`,
 `marine_ik`, `mesh`, `numbers`) is the binding non-advisory regression
 gate (P2-A §4.2 / §4.4).
 
-### W4 — P2-D + P2-E paired — fourth, gated on W3
+### W4 — substrate consumers, sub-waved — fourth, gated on W3
 
-W4 lands the string/unicode-dense interventions: the P2-E
-`escape_codec_hex_unit` primitive and the P2-D 32-byte string-block
-widening, paired in one redress commit. The pairing is mandatory: P2-E
-§6.4's honest verdict is that zero of the four uncloseable rows admit on
-the codec alone (`unicode_escapes` NEAR-FAIL 94.5%, `y_string_unicode`
-94.8%, `unicode_mixed` FAIL 63.7%, `gsoc-2018` no-regression-basis); the
-admission rule is the "same-wave conditional" — the codec admits only
-*paired with* the per-string-span scanner widening. Its entry gate is
-**W3 closed with the P2-A union substrate landed**: P2-D §3.5 / §4.4
-state the codec broadening and the CSSC CTZ consumer block on P2-A
-landing in the same wave or fail CH5, because their same-wave production
-consumer *is* the P2-A union-substrate tape/event consumer. The five
-checkasm differential test files (P2-D §"five checkasm differential
-test files to author as same-wave preconditions") are authored inside
-W4 as preconditions to the kernel admits — scalar reference + checkasm
-parity before any kernel wires, per SKINNY-TRIUMVIRATE §8 and §10. W4
-carries the largest CHALLENGE surface: NEON kernels, checkasm parity,
-the Lock 16 host-capability gate on SHA3 `veor3q_u8` (see §4), and CH5
-hidden-coupling on the codec offset-tape sink (P2-E §4.3: no retained
-sidecar over `\u` positions).
+W4 lands the string/unicode-dense substrate-consumer interventions —
+the P2-D 32-byte string-block widening, the P2-E `escape_codec_hex_unit`
+codec, the P2-D §5.3.1 EOR3 ladder, and the P2-D §4.4 CSSC CTZ. The
+aggregate is ~1,595-1,860 LOC and cannot land in one 75-min redress, so
+W4 is **sub-waved** into six triumvirates: W4a (32-byte string-block),
+the three codec sub-waves W4b-1/W4b-2/W4b-3 (the codec alone is ~1,045
+net LOC across eleven P2-E §7.4 slices — W4b-1 scalar reference +
+checkasm harness, W4b-2 fixed-width bodies + JSON consumer, W4b-3
+variable-width bindings + codegen), W4c (EOR3 ladder), and W4d (CSSC
+CTZ). The row-moving sub-waves are W4a and W4b-2, and they are
+**strictly paired**: P2-E §6.4's honest verdict is that zero of the
+four uncloseable rows admit on the codec alone (`unicode_escapes`
+NEAR-FAIL 94.5%, `y_string_unicode` 94.8%, `unicode_mixed` FAIL 63.7%,
+`gsoc-2018` no-regression-basis), so the codec sub-wave W4b-2 admits
+rows only *paired with* the W4a per-string-span scanner widening. Each
+W4 sub-wave's entry gate is **W3 closed with the P2-A union substrate
+landed**: P2-D §3.5 / §4.4 state the codec broadening and the CSSC CTZ
+consumer block on the union substrate existing or fail CH5, because
+their same-wave production consumer *is* the W3 union-substrate
+tape/event consumer; the P3-F SPEC §2.2 binding reading is that W3
+preceding the W4 sub-waves satisfies the cascade-lock — it is not one
+monolithic wave. The codec scalar reference + checkasm harness is
+authored at W4b-1 as the W4b-2 admission precondition — scalar
+reference + checkasm parity before any kernel wires, per
+SKINNY-TRIUMVIRATE §8 and §10. Every W4 sub-wave carries a mandatory
+CHALLENGE: NEON kernels, checkasm parity, the Lock 16 host-capability
+gate on SHA3 `veor3q_u8` (see §4), and CH5 hidden-coupling on the codec
+offset-tape sink (P2-E §4.3: no retained sidecar over `\u` positions).
 
 ### W5 — Close + Alpha feedback — last, reconciliation only
 
@@ -274,3 +285,18 @@ conditional, not a default rewire.
 ## §0 — V2 fold
 
 V2 fold: F-AUX surgical touch-up per S-P3 V1 CHALLENGE.
+
+## §0 V3 fold footer
+
+V3 comprehensive integration. P3-B is reconciled to the unified P3-F
+SPEC §2 manifest. Changes: (1) the §2 manifest W4 row and the §3 W4
+dependency-justification prose are re-authored from the old
+"P2-D + P2-E paired in one wave" shape to the sub-waved structure —
+W4a, the three codec sub-waves W4b-1/W4b-2/W4b-3, W4c, W4d — with the
+codec split three ways for LOC reasons (P3-F SPEC §2.2) and the
+row-moving pairing stated as W4a + W4b-2. (2) The §2 SPEC-slot-rename
+note is corrected: the P3-F SPEC §2 binds W1 → §4 (not the false
+§6/§7/§8/§9 prediction the V1 note carried). (3) The W0 close is cited
+by its close artefact `skv9-W0-close.md` rather than the unverifiable
+commit SHA. The topological + risk-graded sequencing rationale and the
+§4 Pass Omega gating verdict are unchanged.

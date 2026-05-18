@@ -2,11 +2,35 @@
 
 Date: 2026-05-18.
 
-Status: G-Alpha is closed by user instruction on 2026-05-18. W0 telemetry-lock
-is closed with `skinny/RESULTS.md` rendered and consumed as `SK-V9-open`.
-SK-V9 S-P1 V2 reran against the W0 baseline and produced fresh samply evidence,
-but hardening blocked convergence because real PMU/cycles-per-byte counters are
-unavailable in the current host context. Behavior waves remain blocked.
+Status (2026-05-18, updated): SK-V9's research + planning track is
+**fully converged**. The PMU blocker that stalled S-P1 V2 was resolved
+— `xcode-select` was switched to the full Xcode toolchain, the Xcode
+licence accepted, and `xctrace` (CPU Counters + Time Profiler) now
+captures real per-symbol PMU data with no sudo. The three skinny passes
+have each converged per `ORCHESTRATOR.md` §3Z:
+
+- **S-P1 Profile** — converged (V3-V6). Real PMU across 17 corpora ×
+  {Track 1, Track 2}; deep hot-leaf attribution; the structural
+  correlation OLS; the substrate-neutral primitive vocabulary.
+  Authority: `research/p1/hardening/HARDENING-S-P1-CONVERGED.md`.
+- **S-P2 Research** — converged (V1-V4). Six intervention designs:
+  union event-model, retained-grammar proof, Apache/CITM admission,
+  aarch64 ASM opportunities, unicode-escape codec, SOTA teardown.
+  Authority: `research/p2/hardening/HARDENING-S-P2-CONVERGED.md`.
+- **S-P3 Synthesis-Plan** — converged (V1-V4). The SK-V9 wave plan.
+  Authority: `research/p3/hardening/HARDENING-S-P3-CONVERGED.md`.
+
+`SPEC.md` and `DISPATCH-PROMPT.md` are the converged S-P3 wave plan,
+promoted from the `research/p3/skv9-p3-F-*` drafts. The W0 telemetry-
+lock remains closed (`SK-V9-open`).
+
+The next phase is the **implementation track**: the wave triumvirate
+executes W1 → W2 → W3 → W4a..W4d → W5 per `SPEC.md`, each a
+research → plan → redress cycle landing measured source change. W1
+(Apache/CITM measured-row admission) is the independent, lowest-risk
+first wave; W3 (union event-model) is the structural fix that deletes
+the scalar `consume_structural` rediscovery pass and wires in the
+discarded SIMD structural index. Behavior waves are unblocked.
 
 ## 1. Read First
 

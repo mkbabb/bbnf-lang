@@ -2,11 +2,12 @@
 
 Date: 2026-05-18.
 
-Status: G-Alpha closed by user on 2026-05-18T05:26:48Z. SK-V8 W0 is closed.
-W1 CostFacts Gate Binding is dispatchable from this packet. W2-W6 require W1
-closure and their own plan/challenge gates before implementation.
+Status: G-Alpha closed by user on 2026-05-18T05:26:48Z. SK-V8 W0 and W1 are
+closed. W2 is the next dispatchable wave after its own research/plan/challenge
+gate. W3-W6 require prior wave dispositions and their own gates before
+implementation.
 
-Next move: SK-V8 W1.
+Next move: SK-V8 W2.
 
 ## 1. Read First
 
@@ -129,8 +130,8 @@ dispatch W0.
 | Wave | Name | Status | Source/edit LOC budget |
 |---|---|---|---|
 | W0 | Baseline Profile And Telemetry Lock | Closed by V11+V12 challenge convergence | 0 production behavior LOC; reauthorized telemetry gate/report/Lock14 scope per SPEC Section 3 accounting; post-V6 folds <=120 report/gate/test/doc LOC |
-| W1 | CostFacts Gate Binding | Dispatchable after W0 closure | 0 parser/generated behavior LOC; <=300 CostFacts/report/gate/test LOC |
-| W2 | Typed Product Plane Expansion | Conditional on W0/W1 plan update | <=650 source/test LOC; generated output and row tables named separately |
+| W1 | CostFacts Gate Binding | Closed by W1 redress commit `c6345e4d` | 0 parser/generated behavior LOC; 272 insertions / 13 deletions in CostFacts/report/gate/test scope |
+| W2 | Typed Product Plane Expansion | Next wave; requires W2 research, plan, challenge, and redress | <=650 source/test LOC; generated output and row tables named separately |
 | W3 | Profile-Selected Parse Candidate — lead candidate: tape ⊕ structural-projection union (S-P2 cohort) | Conditional on W0/W1 challenge | <=450 source/test LOC default; <=650 only with accepted pre-redress fit proof |
 | W4 | Direct Guard Triage | Conditional on W0/W1 plan update | <=300 source/test LOC and <=3 selected rows |
 | W5 | Grammar-Neutral Audit And Lock 14 Preservation | Conditional on W1-W4 close | 0 source LOC default; <=150 named Lock 14 cleanup LOC |
@@ -159,7 +160,18 @@ W0 closure record: V11 accepted 6/6 as the first qualifying cycle after the V10
 reset, and V12 accepted 6/6 as the unchanged second qualifying cycle. The
 closure authority is
 `restart/skinny/tranches/sk-v8/research/wave-0-hardening/V12/HARDENING-W0-V12-CONSOLIDATED.md`.
-W1 is now the active wave.
+W1 closure record: commit `c6345e4d` binds `gate-json --with-cost-facts` to a
+`sk-v8-costfacts-v1` manifest with 15 materialized JSON rules, SK-V8-W1 wave
+ids, evidence sources, and REDRESS refs. The gate has zero gate-level
+`BBNF-COSTFACTS-MISSING-EVIDENCE` diagnostics while preserving producer
+diagnostics for audit visibility. Strict admission now binds native comparator
+ids and rejects lossy, sidecar, and unknown comparator ids as strict anchors.
+W1 left generated/parser/product surfaces and `skinny/RESULTS.md` unchanged.
+The single W1 benchmark refresh attempt was rejected by the W0 run-id strict
+validator after local Criterion metadata drifted, so W1 records no RESULTS
+update.
+
+W2 is now the active wave.
 
 ## 5. Entry Gates
 
@@ -248,7 +260,9 @@ Decision recorded:
 
 - `G-Alpha closed` by user on 2026-05-18T05:26:48Z.
 
-Authority granted: dispatch SK-V8 W0 only.
+Authority granted: dispatch SK-V8 after `G-Alpha closed`, with W0 and W1 now
+closed under their recorded gates.
 
-W1-W6 remain blocked until W0 closes and each later wave satisfies its own
-entry gates, plan/challenge requirements, and dispatch authority.
+W2-W6 remain blocked until each later wave satisfies its own entry gates,
+plan/challenge requirements, prior-wave disposition requirements, and dispatch
+authority.

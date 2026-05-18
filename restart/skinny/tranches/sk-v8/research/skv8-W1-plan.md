@@ -32,8 +32,8 @@ directives, substrate surfaces, or `BackendShape`.
 
 W1 will admit only if the following redress lands and verifies:
 
-1. Complete grammar-neutral CostFacts evidence for every materialized rejected
-   alternative.
+1. Complete gate-level CostFacts evidence for every materialized rejected
+   alternative without modifying Lock 14 frozen generic producer roots.
 2. Make `cargo xtask gate-json --with-cost-facts` compose the normal report gate
    and then validate a SK-V8 W1 CostFacts manifest before success.
 3. Add strict comparator admission id binding so only admitted native strict
@@ -51,7 +51,6 @@ and challenge acceptance.
 
 Implementation owner paths:
 
-- `skinny/crates/passes/src/lib.rs`
 - `skinny/crates/bbnf-bench/src/gate.rs`
 - `skinny/xtask/src/main.rs`
 
@@ -77,19 +76,12 @@ from `gate-json --with-cost-facts` rather than overloading the 38-row W0 table.
 
 ## 4. Exact Intervention
 
-`passes/src/lib.rs`:
+CostFacts producer:
 
-- Keep the existing backend-shape choice order unchanged.
-- Keep all rejected alternatives complete: every non-chosen `BackendShape` must
-  remain present.
-- Preserve REDRESS-72 `RedressBackfill` measurements for the existing
-  string/SinkOnly regression.
-- Add grammar-neutral `StaticAnalysis` evidence to every otherwise-empty
-  rejected alternative. The evidence source ref is a generic CostFacts predicate
-  id, not a JSON/corpus/workload policy.
-- Tighten the missing-evidence diagnostic to require evidence on every rejected
-  alternative. After W1, JSON CostFacts must emit no
-  `BBNF-COSTFACTS-MISSING-EVIDENCE`.
+- Keep `skinny/crates/passes/src/lib.rs` read-only in W1. Lock 14 freezes that
+  generic root, and the W1 gate must not reopen the generic producer.
+- Preserve the existing backend-shape choice order, rejected-alternative set,
+  REDRESS-72 backfill, and producer diagnostics as read-only inputs.
 
 `xtask/src/main.rs`:
 
@@ -107,10 +99,15 @@ from `gate-json --with-cost-facts` rather than overloading the 38-row W0 table.
   - rule key matches `CostFacts.rule_id`
   - chosen shape is nonempty
   - at least four rejected alternatives exist
-  - every rejected alternative has nonempty evidence source and source ref
+  - every rejected alternative has a gate-level evidence source: existing
+    `RedressBackfill` measurements keep their source refs, and otherwise-empty
+    structural rejections are reported as `StaticAnalysis`
   - every rule reports at least one REDRESS reference, using REDRESS-72 where
     present and REDRESS-87 for CostFacts substrate/static evidence
-  - no `BBNF-COSTFACTS-MISSING-EVIDENCE` diagnostic remains
+- Print producer diagnostics separately from gate diagnostics. The existing
+  producer-side `BBNF-COSTFACTS-MISSING-EVIDENCE` remains transparent
+  read-only evidence of pre-W1 measurement gaps, while the W1 gate manifest is
+  the load-bearing evidence consumer.
 - Print the validated JSON manifest. Any validation failure exits non-zero even
   in advisory mode.
 
@@ -128,8 +125,9 @@ W1 admits only if every gate below passes:
 
 1. `W1-costfacts-complete`: `gate-json --with-cost-facts --advisory
    --check-results` exits 0 and emits schema `sk-v8-costfacts-v1`, 15 rule
-   manifest rows, no `none:pre-W1`, no missing rejected-alternative evidence,
-   and no `BBNF-COSTFACTS-MISSING-EVIDENCE`.
+   manifest rows, no `none:pre-W1`, no missing rejected-alternative gate
+   evidence, and no gate diagnostic carrying
+   `BBNF-COSTFACTS-MISSING-EVIDENCE`.
 2. `W1-costfacts-negative`: focused tests reject missing rule id, missing chosen
    shape, missing rejected alternatives, missing evidence source/ref, missing
    REDRESS reference, missing wave id, and producer-only rendering.
@@ -143,9 +141,8 @@ W1 admits only if every gate below passes:
    generated, typed product, direct, Track 2, parity, scan, or materialization
    drift.
 6. `W1-Lock14`: generic scans show no new JSON policy in `ir`, `passes`,
-   `codegen`, runtime, SIMD, or parser templates. Because W1 edits generic
-   `passes`, root non-JSON smoke tests must also pass for CSS L4, Sheets, and
-   BBNF-self projection/accessor coverage.
+   `codegen`, runtime, SIMD, or parser templates, and the Lock 14 frozen roots
+   are clean after the redress commit.
 
 ## 6. Verification Commands
 
@@ -193,7 +190,7 @@ If W1 fails after source edits:
 
 1. Save the rejected source diff to
    `restart/skinny/tranches/sk-v8/research/skv8-W1-rejected.patch`.
-2. Revert `passes`, `xtask`, and `bbnf-bench` changes as one slice.
+2. Revert `xtask` and `bbnf-bench` changes as one slice.
 3. Keep the research and plan artifacts.
 4. Add `skinny/REDRESS.md` entry stating W1 rejected, naming the missing or
    non-neutral evidence class, the failed command, generated-output status, and

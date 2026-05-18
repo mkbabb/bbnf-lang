@@ -2616,3 +2616,37 @@ perturbation.
   scalar body.
 - No benchmark refresh was performed for W10c because the admitted slice is
   test-harness hardening only and has zero production or `RESULTS.md` diff.
+
+## SK-V8 Wave 2 Typed Product Plane Redress
+
+- Item 91 admits the W2 typed product-plane source slice in commit `12aff1e4`.
+  The admitted source/product rows are `apache_builds/real_typed_struct` and
+  `citm_catalog/real_typed_struct`; they are not present as measured rows in
+  the current W0 `skinny/RESULTS.md` manifest.
+- The slice extends only the existing real typed schema/generator path:
+  `skinny/xtask/src/real_typed_schema.rs`,
+  `skinny/crates/bbnf-bench/src/real_typed_struct.rs`, and generated output in
+  `skinny/crates/bbnf-bench/src/generated_real_typed.rs`. It adds no
+  directive, BIR variant, `BackendShape`, substrate surface, sidecar,
+  parser-owned cursor, runtime JSON behavior, or direct digest product claim.
+- `apache_builds` consumes root `mode`, root `nodeName`, and job string fields.
+  `citm_catalog` consumes the events map as keyed entries with `id`, `name`,
+  `subTopicIds`, and `topicIds`, keeping the product proof on string/u64/vector
+  data with generated Track 1 DirectBuild plus serde_json as the
+  Track 2/oracle path and a separate sonic-rs checksum parity lane.
+- `canada/real_typed_struct` is rejected for W2. A full-fixture parity check
+  exposed a generated DirectBuild versus serde checksum mismatch on long
+  decimal coordinate payloads. W2 routes the row out rather than weakening
+  typed proof to length-only or digest-only evidence.
+- Verification completed for the source admission:
+  `cargo xtask regen-real-typed`,
+  `cargo test -p bbnf-bench real_typed -- --nocapture`,
+  `cargo test -p codegen typed_direct -- --nocapture`,
+  `cargo xtask check-real-typed`, `cargo xtask check-json`,
+  `cargo xtask check-conformance`, frozen product-surface diff, and
+  `git diff --check`.
+- `skinny/RESULTS.md` is unchanged. W2 rejects benchmark row-table admission
+  for this wave because the current local Criterion target was already known to
+  trip the W0 run-id validator on metadata drift unrelated to W2 source. W2
+  therefore admits source/product parity only and does not claim six measured
+  `real_typed_struct A / GO` rows.

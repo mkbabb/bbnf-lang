@@ -9,8 +9,8 @@ pre-redress falsified `canada` and routes it out in favor of `citm_catalog`.
 Implement exactly two new `real_typed_struct` fixtures:
 
 1. `apache_builds`: generated typed parser `parse_apache_builds` over root
-   `ApacheBuilds<'i>`, consuming `jobs[].name`, `jobs[].url`, and
-   `jobs[].color`.
+   `ApacheBuilds<'i>`, consuming root `mode`, root `nodeName`,
+   `jobs[].name`, `jobs[].url`, and `jobs[].color`.
 2. `citm_catalog`: generated typed parser `parse_citm_catalog` over root
    `CitmCatalog<'i>`, consuming `events` as keyed entries and selected event
    fields.
@@ -38,14 +38,16 @@ Implementation gates:
 
 Admission gates:
 
-- New Track 1 typed rows parse and checksum-match Track 2, serde, and sonic on
-  both minimal tests and full fixture payloads.
+- New Track 1 typed rows parse and checksum-match the serde_json-backed
+  Track 2/oracle path and the separate sonic-rs strict lane on both minimal
+  tests and full fixture payloads.
 - Existing `twitter`, `update_center`, `mesh`, and `marine_ik` typed parity
   remains green.
 - If a W2 benchmark refresh is attempted, record whether the standard W0
   validator accepts the refreshed report. If it rejects run-id or throughput
-  drift unrelated to W2 source, keep `RESULTS.md` unchanged and route the
-  benchmark surface explicitly instead of weakening W0 validation.
+  drift unrelated to W2 source, keep `RESULTS.md` unchanged, reject benchmark
+  row-table admission for W2, and record the source/product parity evidence
+  explicitly instead of weakening W0 validation.
 
 ## Revert Protocol
 

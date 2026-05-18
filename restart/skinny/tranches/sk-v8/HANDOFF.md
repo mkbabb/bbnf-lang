@@ -3,11 +3,12 @@
 Date: 2026-05-18.
 
 Status: G-Alpha closed by user on 2026-05-18T05:26:48Z. SK-V8 W0 and W1 are
-closed. W2 is the next dispatchable wave after its own research/plan/challenge
-gate. W3-W6 require prior wave dispositions and their own gates before
-implementation.
+closed. W2 has a redress disposition: source/product parity admitted, benchmark
+row-table admission rejected for this wave. W3 is the next dispatchable wave
+after its own research, plan, challenge, and redress gate. W4-W6 require prior
+wave dispositions and their own gates before implementation.
 
-Next move: SK-V8 W2.
+Next move: SK-V8 W3.
 
 ## 1. Read First
 
@@ -131,7 +132,7 @@ dispatch W0.
 |---|---|---|---|
 | W0 | Baseline Profile And Telemetry Lock | Closed by V11+V12 challenge convergence | 0 production behavior LOC; reauthorized telemetry gate/report/Lock14 scope per SPEC Section 3 accounting; post-V6 folds <=120 report/gate/test/doc LOC |
 | W1 | CostFacts Gate Binding | Closed by W1 redress commit `c6345e4d` | 0 parser/generated behavior LOC; 272 insertions / 13 deletions in CostFacts/report/gate/test scope |
-| W2 | Typed Product Plane Expansion | Next wave; requires W2 research, plan, challenge, and redress | <=650 source/test LOC; generated output and row tables named separately |
+| W2 | Typed Product Plane Expansion | Source/product parity admitted by `12aff1e4`; benchmark row-table admission rejected/routed in REDRESS 91; W2 hardening V1 REVISE folds applied before V2 re-challenge | <=650 source/test LOC; generated output and row tables named separately |
 | W3 | Profile-Selected Parse Candidate — lead candidate: tape ⊕ structural-projection union (S-P2 cohort) | Conditional on W0/W1 challenge | <=450 source/test LOC default; <=650 only with accepted pre-redress fit proof |
 | W4 | Direct Guard Triage | Conditional on W0/W1 plan update | <=300 source/test LOC and <=3 selected rows |
 | W5 | Grammar-Neutral Audit And Lock 14 Preservation | Conditional on W1-W4 close | 0 source LOC default; <=150 named Lock 14 cleanup LOC |
@@ -171,7 +172,21 @@ The single W1 benchmark refresh attempt was rejected by the W0 run-id strict
 validator after local Criterion metadata drifted, so W1 records no RESULTS
 update.
 
-W2 is now the active wave.
+W2 disposition record: commit `12aff1e4` adds two generated typed
+source/product rows, `apache_builds` and `citm_catalog`, through the existing
+real typed schema, generated DirectBuild output, serde_json as the
+Track 2/oracle path, a separate sonic-rs parity lane, checksums, and
+full-fixture parity tests. The measured `skinny/RESULTS.md` manifest remains at
+the W0 four `real_typed_struct` rows; W2 does not claim six measured
+`real_typed_struct A / GO` rows. `canada` was falsified during W2 pre-redress on
+full-fixture DirectBuild-vs-serde checksum mismatch over long decimal
+coordinates and is routed in `skinny/REDRESS.md` rather than admitted with
+weakened proof. W2 left parser/runtime/substrate/direct guard surfaces and
+`skinny/RESULTS.md` unchanged; benchmark row-table admission is rejected for
+this wave because the W0 run-id validator was already known to reject local
+Criterion metadata drift unrelated to W2 source.
+
+W3 is now the active wave.
 
 ## 5. Entry Gates
 
@@ -261,8 +276,8 @@ Decision recorded:
 - `G-Alpha closed` by user on 2026-05-18T05:26:48Z.
 
 Authority granted: dispatch SK-V8 after `G-Alpha closed`, with W0 and W1 now
-closed under their recorded gates.
+closed under their recorded gates and W2 disposition recorded in REDRESS 91.
 
-W2-W6 remain blocked until each later wave satisfies its own entry gates,
+W3-W6 remain blocked until each later wave satisfies its own entry gates,
 plan/challenge requirements, prior-wave disposition requirements, and dispatch
 authority.

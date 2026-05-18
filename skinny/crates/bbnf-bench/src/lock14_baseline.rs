@@ -396,12 +396,18 @@ const FROZEN_ROOTS: &[&str] = &[
     "xtask/src/real_typed_schema.rs",
 ];
 
+const W2_TYPED_OWNER_PATHS: &[&str] = &[
+    "crates/bbnf-bench/src/generated_real_typed.rs",
+    "crates/bbnf-bench/src/real_typed_struct.rs",
+    "xtask/src/real_typed_schema.rs",
+];
+
 fn validate_git_freeze(root: &Path) -> Result<(), String> {
     let frozen_status = git_output(root, &git_path_args("status", "--porcelain", FROZEN_ROOTS))?;
     validate_frozen_status_output(&frozen_status)?;
     git_quiet(root, &git_path_args("diff", "--quiet", FROZEN_ROOTS))?;
     if git_quiet(root, &["rev-parse", "--verify", "HEAD^"]).is_ok() {
-        git_quiet(root, &git_diff_from_parent_args())?;
+        validate_parent_frozen_diff(root)?;
     }
     Ok(())
 }
@@ -416,10 +422,51 @@ fn git_path_args(
     args
 }
 
-fn git_diff_from_parent_args() -> Vec<&'static str> {
-    let mut args = vec!["diff", "--quiet", "HEAD^", "--"];
+fn validate_parent_frozen_diff(root: &Path) -> Result<(), String> {
+    let changed_paths = git_parent_changed_paths(root)?;
+    if changed_paths.is_empty() {
+        return Ok(());
+    }
+    let subject = git_output(root, &["log", "-1", "--format=%s"])?;
+    validate_authorized_parent_diff(&changed_paths, &subject).map_err(|error| {
+        format!(
+            "{error}: git diff --quiet HEAD^ -- {}",
+            FROZEN_ROOTS.join(" ")
+        )
+    })
+}
+
+fn git_parent_changed_paths(root: &Path) -> Result<Vec<String>, String> {
+    let mut args = vec!["diff", "--name-only", "HEAD^", "--"];
     args.extend_from_slice(FROZEN_ROOTS);
-    args
+    let output = git_output(root, &args)?;
+    Ok(output
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .map(normalize_git_path)
+        .collect())
+}
+
+fn normalize_git_path(path: &str) -> String {
+    path.strip_prefix("skinny/").unwrap_or(path).to_string()
+}
+
+fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> Result<(), String> {
+    if subject.contains("sk-v8-wave2") {
+        let allowed = changed_paths.iter().all(|path| {
+            W2_TYPED_OWNER_PATHS
+                .iter()
+                .any(|allowed| path.as_str() == *allowed)
+        });
+        if allowed {
+            return Ok(());
+        }
+    }
+    Err(format!(
+        "Lock 14 frozen diff failed for parent paths [{}]",
+        changed_paths.join(", ")
+    ))
 }
 
 fn git_output(root: &Path, args: &[&str]) -> Result<String, String> {
@@ -566,6 +613,42 @@ mod tests {
         assert!(validate_frozen_status_output(" M crates/grammar/src/lib.rs").is_err());
         assert!(validate_frozen_status_output(" M crates/bbnf-simd/build.rs").is_err());
         assert!(validate_frozen_status_output("?? crates/bbnf-simd/ext/x86/new.S").is_err());
+    }
+
+    #[test]
+    fn admits_w2_typed_owner_parent_diff_only_under_w2_scope() {
+        let changed = W2_TYPED_OWNER_PATHS
+            .iter()
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v8-wave2-typed): add typed rows"
+        )
+        .is_ok());
+        assert!(validate_authorized_parent_diff(&changed, "feat(other): move typed rows").is_err());
+    }
+
+    #[test]
+    fn rejects_w2_scope_parent_diff_outside_typed_owner_paths() {
+        let changed = vec![
+            "crates/bbnf-bench/src/generated_real_typed.rs".to_string(),
+            "crates/runtime/src/grammars/json/generated.rs".to_string(),
+        ];
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "fix(sk-v8-wave2-gate): fold typed allowance"
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn normalizes_repo_root_paths_to_skinny_workspace_paths() {
+        assert_eq!(
+            normalize_git_path("skinny/crates/bbnf-bench/src/generated_real_typed.rs"),
+            "crates/bbnf-bench/src/generated_real_typed.rs"
+        );
+        assert_eq!(normalize_git_path("crates/runtime/src/lib.rs"), "crates/runtime/src/lib.rs");
     }
 
     #[test]

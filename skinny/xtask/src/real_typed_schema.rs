@@ -7,7 +7,7 @@ use codegen::direct_schema::{
 pub fn schema() -> DirectSchemaSet {
     DirectSchemaSet {
         module_name: "generated_real_typed".to_string(),
-        schema_hash: "sk-v7-real-typed-v2".to_string(),
+        schema_hash: "sk-v8-real-typed-w2".to_string(),
         roots: vec![
             DirectRootSchema {
                 function_name: "parse_twitter_search".to_string(),

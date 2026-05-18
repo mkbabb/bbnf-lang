@@ -487,7 +487,7 @@ The x4 variant amortises these across 4 quartets, recovering the
 floor at the per-quartet level. A further-optimised variant could
 fold the range tests into a *single* TBL via a 64-entry low-6-bit
 table (the Class A `match_tiny_plain_string` shape per
-`match_tiny_plain_string.rs:79`), but that's a Wave 2+ optimisation;
+`match_tiny_plain_string.rs:81`), but that's a Wave 2+ optimisation;
 the Wave 1 admission is the existing x4 NEON body.
 
 ---
@@ -1114,7 +1114,7 @@ The §3, §4, §5 admission paths each carry a same-wave consumer:
 - `skinny/crates/bbnf-simd/src/aarch64/` — existing aarch64 primitive bodies (file list per §1.3 and §5.1).
 - `skinny/crates/bbnf-simd/src/aarch64/unescape_uxxxx.rs:74` (`unescape_uxxxx_neon`); `:125` (`unescape_uxxxx_x4_neon`); `:201` (`HEX_NIBBLE_LUT`).
 - `skinny/crates/bbnf-simd/src/aarch64/string_block.rs:57` (`scan_string_special_block`); `:14-17` (`interesting_mask`).
-- `skinny/crates/bbnf-simd/src/aarch64/match_tiny_plain_string.rs:79` (`match_tiny_plain_string_neon` — low-6 TBL shape referenced in §3.6).
+- `skinny/crates/bbnf-simd/src/aarch64/match_tiny_plain_string.rs:81` (`match_tiny_plain_string_neon` — low-6 TBL shape referenced in §3.6; line 79 is the `#[cfg]` attribute).
 - `skinny/crates/parse-that-regex/src/lib.rs:284` (`validate_string_escape`); `:162` (`match_string_at_quote_trusted_utf8`); `:945` (`read_hex_unit_scalar`); `:959` (`hex_nibble`); `:547` (`skip_string_plain_trusted`).
 - `restart/locks/LOCKS.md` Lock 1 (substrate union); Lock 14 (grammar generalisation); Lock 16 (grammar-neutral primitive surface).
 

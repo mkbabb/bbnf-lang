@@ -2,10 +2,11 @@
 
 Date: 2026-05-18.
 
-Status: SK-V9 Pass Alpha contract draft materialized. V9 implementation is not
-dispatched. After alpha challenge convergence the orchestrator must present
-G-Alpha, and only after `G-Alpha closed` can skinny passes begin. No
-`SPEC.md` or `DISPATCH-PROMPT.md` exists for SK-V9 from this alpha-F slice.
+Status: G-Alpha is closed by user instruction on 2026-05-18. SK-V9 S-P1 V1
+has been run and challenged. The V1 profile packet is an honest opening gap
+ledger, not a completed S-P1 profile: hardening V1 returned 2/6 ACCEPT and
+requires a recovery W0 telemetry-lock before behavior candidates can proceed.
+No `SPEC.md` or `DISPATCH-PROMPT.md` exists yet.
 
 ## 1. Read First
 
@@ -66,15 +67,17 @@ Alpha cost binding for any later S-P3 plan:
 
 ## 4. Next Move
 
-1. Run alpha challenge on the SK-V9 contract draft.
-2. Fold any REVISE dispositions into the alpha artifacts, `SYNTHESIS.md`, and
-   `HANDOFF.md`.
-3. When alpha challenge converges, present G-Alpha to the user.
-4. If the user returns `G-Alpha revise`, revise the contract and re-challenge.
-5. If the user returns `G-Alpha closed`, the skinny pass sequence may begin.
-   Downstream S-P3 authors the future SK-V9 SPEC from the Section 0 /
-   Section 4.1-Section 4.3 goalset after its own P1/P2 entry conditions are met.
-   No implementation wave dispatches before that downstream plan converges.
+1. Treat G-Alpha as closed.
+2. Fold S-P1 V1 hardening into a recovery-only V2: W0 telemetry-lock is the
+   next executable move; behavior S-P2 candidates are blocked until W0 plus a
+   fresh S-P1 profile rerun exists.
+3. Author the SK-V9 SPEC/DISPATCH with W0 first and behavior waves conditional
+   on W0 plus revised S-P1 convergence.
+4. Execute W0 with `gate-json` as same-wave consumer, no parser/scanner/SIMD/
+   codegen behavior movement, no row admission, and no strict admission from
+   deferred/view-boundary rows.
+5. After W0, rerun S-P1 against the SK-V9-open baseline and only then release
+   behavior S-P2/P3 waves.
 
 ## 5. Pre-Blocked Routes
 
@@ -106,8 +109,8 @@ different, and pass challenge before implementation planning.
 
 ## 6. Close Posture
 
-The SK-V9 contract remains pre-dispatch until G-Alpha. The detailed wave plan
-is intentionally absent here. If a later agent needs wave structure, it must
-wait for `G-Alpha closed` and then run the skinny pass substrate; downstream
-S-P3 creates the future SPEC from the Pass Alpha goalset only after its entry
-conditions are met.
+The SK-V9 contract is post-G-Alpha but pre-behavior. The detailed wave plan
+must now make W0 telemetry-lock explicit and must not dispatch behavior waves
+until W0 and a fresh S-P1 profile rerun close. This resolves the S-P1 V1
+hardening contradiction without treating absence-coded rows as empirical
+ancestry.

@@ -4,7 +4,7 @@ phase: P2 research
 artefact: P2-D
 title: Host-targeted aarch64 ASM/SIMD opportunities for the four uncloseable rows
 date: 2026-05-18
-revision: V2 (S-P2 V1 CHALLENGE fold — F1 wiring fix + F4 cost discipline + F5 Lock-14 + F6 SHA3 differential; see §0)
+revision: V3 (S-P2 V2 CHALLENGE fold — CH3 + CH6 surgical residuals closed; see §0)
 scope: research-only; no code edits; no commits
 lens: host-cap — given the Apple M5 Max + ARMv9.2-A intrinsic surface, which
   per-uncloseable-row primitive class admits a wave-sized intervention that
@@ -815,7 +815,11 @@ multiply* computing the prefix-XOR as a polynomial product. SHA3
 (b) **different latency profile** — PMULL.1Q is 4-cycle latency
 1/cycle throughput; EOR3 is 1-cycle latency, so the carry-chain depth
 through a 3-stage EOR3 ladder is 3 cycles vs PMULL's single-op-4-cycle
-plus the dependent fold; (c) **different primitive shape** — the EOR3
+plus the dependent fold (the EOR3/PMULL latency profile is per ARM DDI
+0487 FEAT_SHA3 / FEAT_PMULL instruction descriptions; M5 Max P-core
+specifics are unpublished by Apple — treat the absolute cycle counts as
+a host-capability-gated estimate, the monotonic *ordering* EOR3 < PMULL
+is the load-bearing claim); (c) **different primitive shape** — the EOR3
 proposal is a *vector shift-XOR ladder* over `uint8x16_t`, an
 algebraic fold of the existing scalar shift-XOR ladder (the production
 default that REDRESS 88 *kept*), whereas PMULL replaced the ladder
@@ -850,7 +854,14 @@ S-P3):**
 The EOR3 slice is **MEDIUM** risk despite the monotonic-µop argument:
 the vector-ladder representation differs from the u64-word scalar
 representation, so the parity oracle must cover the
-vector-vs-scalar-vs-PMULL three-way differential. The slice **blocks
+vector-vs-scalar-vs-PMULL three-way differential. Mirroring the §4.4
+CSSC CTZ slice's falsification posture, the EOR3 candidate's S-P3
+admission carries an explicit no-regression maintain gate on the six
+W10b WIN-block rows (`canada`, `citm_catalog`, `instruments`,
+`marine_ik`, `mesh`, `numbers`) as a hard blocking precondition — the
+prefix-XOR hot body is the surface W10b proved regresses the WIN block
+even when correctness-green, so no EOR3 body ships unless those six
+rows hold. The slice **blocks
 on P2-A** — its only consumer is the §5 structural-bitmap producer,
 which is P2-A union-substrate scope. Final cost-set authored by S-P3.
 
@@ -932,10 +943,12 @@ SK-V3 status quo). Final cost-set authored by S-P3.
 
 ### §5.5 — Material differential against REDRESS 28 + 33
 
-REDRESS 28 admitted the host aarch64 primitive kernels (Class A
+REDRESS 28 (`skinny/REDRESS.md:324-337`) admitted the host aarch64
+primitive kernels (Class A
 `match_tiny_plain_string` NEON, Class B `unescape_uxxxx_neon`) but
 *rejected* active 16-byte tiny-string dispatch — wiring the kernel
-into Track 1/Track 2 regressed `twitter` ~25%. REDRESS 33 refined
+into Track 1/Track 2 regressed `twitter` ~25%. REDRESS 33
+(`skinny/REDRESS.md:394-418`) refined
 the diagnosis: the kernel-versus-call-site mismatch (active call site
 was the 8-byte scalar early-out at `bbnf-simd/src/lib.rs:195`, not the
 B1-attributed hot kernel) is what blocked the parse-G close.
@@ -1036,12 +1049,18 @@ of the broadening, not a follow-up.
 **SK-V9 P2-D dependency:** the §3 and §4 primitives can be admitted on
 the existing checkasm infrastructure IF they ship their per-primitive
 checkasm test (gap §6.2) AND the union-substrate wave provides the
-same-wave consumer. The fuller invariant 2-5 closure is SK-V10+ work
-per the SK-V7 A3 §2 menu and skv6-B2; deferring those does **not**
-block §3/§4 admission because the existing checkasm parity harness
-covers correctness for the same-class primitives already in tree
-(REDRESS 88 + 89 demonstrate the harness works for asm-body
-differentials).
+same-wave consumer. The deferral here is strictly of the *broader
+host-instrumentation infrastructure* — invariants 2-5 (forced feature
+masks, the AAPCS64 ABI-checked-call shim, the async-signal-safe fault
+trampoline, the cycle-counter source-binding) — which is SK-V10+ work
+per the SK-V7 A3 §2 menu and skv6-B2. The *per-primitive checkasm
+tests* are **not** deferred: per §6.2.1 each missing differential is a
+same-wave admission precondition of the wave that broadens / widens /
+wires its primitive, not a follow-up. Deferring the invariant 2-5
+infrastructure does **not** block §3/§4 admission because the existing
+checkasm parity harness covers correctness for the same-class
+primitives already in tree (REDRESS 88 + 89 demonstrate the harness
+works for asm-body differentials).
 
 ### §6.4 — The orphan-rejection rule
 
@@ -1091,7 +1110,7 @@ The §3, §4, §5 admission paths each carry a same-wave consumer:
 - `restart/skinny/tranches/sk-v7/research/skv7-A3-dav1d-esoterica.md` — DAV1D process discipline (§1), ARMv9.2 host inventory (§2), 5-primitive grammar-neutral gap (§4), admissibility predicate (§5), admission gates (§8).
 - `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-2-two-stage-sota.md` — simdjson two-stage architecture (§1.1), asmjson DPDA shape (§1.2), sonic-rs single-pass (§1.3); substrate-ceiling hypothesis.
 - `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-6-lock1-amendment-generalisation.md` — Lock 1 amendment, union substrate, "structural projection IS the tape" sentence (§1.3); Lock 14 binding.
-- `skinny/REDRESS.md` entries 28, 33, 50-55 (pre-blocks for cursors and parser-local SIMD), 60-62 (string-scanner widening), 64 (retained Unicode validator), 66-69 (direct-string materialisers), 82 (W4 unicode quartet classifier), 83 (W5 StringBlock16 tiny probe), 84 (W6 control compaction), 88 (W10 PMULL default body), 89 (W10b CSSC CTZ bulk consumer), 90 (W10c canary).
+- `skinny/REDRESS.md` entries 28 (`REDRESS.md:324-337` — SK-V3 W0/1 host primitive admission, 16-byte tiny-string dispatch rejected), 33 (`REDRESS.md:394-418` — SK-V5 W3 Class A `match_tiny_plain_string` NEON wiring invalidated as the parse-G fix), 50-55 (pre-blocks for cursors and parser-local SIMD), 60-62 (string-scanner widening), 64 (retained Unicode validator), 66-69 (direct-string materialisers), 82 (W4 unicode quartet classifier), 83 (W5 StringBlock16 tiny probe), 84 (W6 control compaction), 88 (W10 PMULL default body), 89 (W10b CSSC CTZ bulk consumer), 90 (W10c canary).
 - `skinny/crates/bbnf-simd/src/aarch64/` — existing aarch64 primitive bodies (file list per §1.3 and §5.1).
 - `skinny/crates/bbnf-simd/src/aarch64/unescape_uxxxx.rs:74` (`unescape_uxxxx_neon`); `:125` (`unescape_uxxxx_x4_neon`); `:201` (`HEX_NIBBLE_LUT`).
 - `skinny/crates/bbnf-simd/src/aarch64/string_block.rs:57` (`scan_string_special_block`); `:14-17` (`interesting_mask`).
@@ -1143,6 +1162,13 @@ materialiser to the P2-A union-substrate tape-cell projection".
   landing OR fails CH5 / stays orphaned" sentence; absent P2-A in the
   same wave, the primitive ships without a production consumer — a
   REDRESS-82-style orphan — and is held back.
+- **Cascade-sequencing constraint** — P2-D's four "block on P2-A
+  landing OR fail CH5" slices (§3 codec broadening, §4.4 CSSC CTZ,
+  §5.3.1 EOR3 ladder, §5.4 dead-SIMD-scanner wiring) collectively
+  create a wave-sequencing constraint S-P3 must honour: P2-A must land
+  in the same wave as any of these P2-D consumer slices, or the slices
+  fall back to REDRESS-rejected parser-owned shapes; the wave may not
+  be split.
 - **DAV1D discipline** — §6.2.1 added: explicit dispatch ownership for
   each missing checkasm test (`checkasm_unescape_uxxxx.rs`,
   `checkasm_string_block.rs`, `checkasm_match_tiny_plain_string.rs`,
@@ -1150,5 +1176,19 @@ materialiser to the P2-A union-substrate tape-cell projection".
   the wave that broadens / widens / wires the primitive, with
   `digit_mac`'s test ownership explicitly carried forward (no
   paper-close to a no-consumer wave).
+
+**V3 fold: CH3 + CH6 surgical residuals closed.** Five surgical edits
+landed against the S-P2 V2 CHALLENGE consolidation
+(`hardening/HARDENING-S-P2-V2-CONSOLIDATED.md` §V3-fold-requirements):
+§5.3.1 gains the explicit six-row W10b no-regression maintain gate
+mirroring §4.4's CSSC CTZ slice (CH3 D-1/D-10); §5.3.1's EOR3 latency
+claim now cites ARM DDI 0487 FEAT_SHA3 / FEAT_PMULL with the M5-Max-
+unpublished caveat (CH6 V2-D-8); §6.3 reworded to distinguish the
+per-primitive checkasm tests (same-wave admission preconditions per
+§6.2.1) from the deferred host-instrumentation infrastructure
+(invariants 2-5); REDRESS 28 + 33 citations now carry explicit
+`skinny/REDRESS.md` line ranges (28 → `:324-337`, 33 → `:394-418`) in
+§5.5 and §8 (CH1 LOW REVISE); this §0 footer records the cascade-
+sequencing constraint S-P3 must honour.
 
 End of report.

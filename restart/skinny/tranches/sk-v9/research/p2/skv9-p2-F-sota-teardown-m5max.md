@@ -1,6 +1,6 @@
 # SK-V9 P2-F: SOTA Competitor Teardown for Parse + Node Speed on Apple M5 Max
 
-Pass: S-P2 Research. Cycle: V1.
+Pass: S-P2 Research. Cycle: V3 (S-P2 V2 CHALLENGE fold — CH3 + CH6 surgical residuals closed; see §0).
 Date: 2026-05-18.
 Scope: per-competitor architecture grounding on aarch64 / Apple M5 Max,
 keyed to V3-V6 PMU evidence; identifies the precise interventions that
@@ -83,9 +83,11 @@ architectures:
    regression, citm c/B = 1.18 (lowest of all 17 rows except gsoc-2018).
    The quote density `q/B` is the dominant coefficient; citm has a
    structurally-deep / value-shallow shape so the per-quote cost stays
-   small. ContainerNext (V9.5 Wave 2 close) eliminates the per-element
-   re-dispatch that simdjson's stage-2 goto-thread requires across each
-   `{`/`}` boundary.
+   small. ContainerNext (V9.5 Wave 2 close — the enum is defined at
+   `skinny/crates/runtime/src/grammars/json/generated.rs:341`, consumed
+   at `:134-135` and emitted by `consume_array_next` at `:348-375`)
+   eliminates the per-element re-dispatch that simdjson's stage-2
+   goto-thread requires across each `{`/`}` boundary.
 3. **Low CPI confirms back-end-bound, not front-end-bound.** Canada
    CPI = 0.127 (8-wide IPC = 7.9), numbers 0.171 (IPC 5.9), mesh 0.135
    (IPC 7.4) — every winning row has CPI well below the 0.25 threshold
@@ -307,7 +309,10 @@ asmjson **can** be cited for:
 
 - *Architectural-pattern evidence* — the 9-state DPDA with PC-as-state
   direct threading, the `BYTE_CLASS_FROM_EQ_SET_64` + `BITMAP_NEXT_SET_BIT`
-  + `FSM_DISPATCH_THREADED` primitive vocabulary (per SK-V7-A2 §6).
+  + `FSM_DISPATCH_THREADED` primitive vocabulary (per SK-V7-A2 §6; the
+  canonical primitive-class taxonomy this report inherits is anchored at
+  `restart/skinny/tranches/sk-v9/research/p1/skv9-p1-v3-B-xctrace-time-profiler.md`
+  §1.5).
 - *Cross-ISA architecture lift* — the CollapsedStage successor route
   (SK-V7-A2 §9) is admissible for the x86 tranche after M5 Max close,
   *not* as an M5 Max beat target.
@@ -347,7 +352,12 @@ the broad-fix admission lacked a cost-fact threshold. **Pattern not
 yet used:** scalar-threshold-as-cost-fact + NEON kernel only where
 LayoutFacts picks it (per SK-V7-A2 §8 admission #6). Expected impact:
 lifts twitter, update_center, apache_builds, github_events typed and
-retained dispatch sites.
+retained dispatch sites. This is a SOTA architecture *lesson*, not an
+admission: the dispatch-site NEON wiring shape it describes is
+pre-blocked by `skinny/REDRESS.md` entry 33 (`REDRESS.md:394-418` —
+Class A `match_tiny_plain_string` NEON at the wrong call site,
+parse-G fix invalidated), and any S-P3 attempt to wire it carries the
+REDRESS-33 material-differential gate.
 
 ### 5.3 yyjson — **`__force_inline` fusion of `\uXXXX` decode into the string-walk loop**
 
@@ -372,7 +382,10 @@ bracket-pair tracking and an enum-tag for state; this pays the function-
 call-boundary tax (per yyjson lesson) and the enum-discriminant branch
 tax. On M5 Max this is admissible only via a hand-authored aarch64 NASM
 path — the V9.5-PSI binding rejects Rust-emitted DPDAs. CollapsedStage
-admission for JSON on aarch64 is the SK-V7 Wave 3 successor work.
+is the fifth `BackendShape` variant defined in the design corpus at
+`restart/ARCHITECTURE.md` §7.3 (`LayoutFacts.backend_shape`, enum at
+`ARCHITECTURE.md:1086`); CollapsedStage admission for JSON on aarch64 is
+the SK-V7 Wave 3 successor work.
 
 ### 5.5 RapidJSON — **(none — not a SOTA competitor on M5 Max)**
 
@@ -657,5 +670,19 @@ This report names competitor architecture, per-corpus position,
 intervention identity, and inter-report dependency. It does not author
 wave classes, cost sets, sequencing, or REDRESS admission shapes —
 those are S-P3 product.
+
+**V3 fold: CH3 + CH6 surgical residuals closed.** Three surgical edits
+landed against the S-P2 V2 CHALLENGE consolidation
+(`hardening/HARDENING-S-P2-V2-CONSOLIDATED.md` §V3-fold-requirements):
+§5.2's sonic-rs `match_tiny_plain_string`-class lesson now inline-cites
+that its dispatch-site NEON wiring shape is pre-blocked by
+`skinny/REDRESS.md` entry 33 (`:394-418`), so the lesson is not mistaken
+for an admission (CH3 fold #2); the §2.1 ContainerNext reference now
+carries the `generated.rs:341` enum definition cite and the §5.4
+CollapsedStage reference is anchored to its `restart/ARCHITECTURE.md`
+§7.3 design-corpus definition (CH6 V2-F-5); and the asmjson §5
+primitive-vocabulary reference now anchors the canonical primitive-class
+taxonomy by path to `skv9-p1-v3-B-xctrace-time-profiler.md` §1.5 (CH2
+item-7 hygiene).
 
 End of report.

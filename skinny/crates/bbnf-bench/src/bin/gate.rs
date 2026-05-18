@@ -3,7 +3,7 @@ use bbnf_bench::lock14_baseline;
 use bbnf_bench::materialization::track_stats;
 use bbnf_bench::metadata::{current_peak_rss_bytes, RowMetadata, TrackTag};
 use bbnf_bench::report::{
-    ComparatorSet, Report, SkV8ComparatorEvidence, SkV8Telemetry, TelemetryRow,
+    sk_v8_open_baseline, ComparatorSet, Report, SkV8ComparatorEvidence, SkV8Telemetry, TelemetryRow,
 };
 use serde_json::Value;
 use std::collections::BTreeSet;
@@ -714,43 +714,47 @@ fn collect_criterion_inputs(
     }
 }
 
-const W0_CRITERION_BENCHES: &[&str] = &[
-    "track1_generated",
-    "track2_handcoded",
-    "sonic_rs_anchor",
-    "sonic_rs_lossy",
-    "simd_json_borrowed",
-    "simd_json_owned",
-    "serde_json",
-    "track1_direct_to_struct",
-    "track2_direct_to_struct",
-    "sonic_rs_direct_to_struct",
-    "serde_json_direct_to_struct",
-    "track1_real_typed_struct",
-    "track2_real_typed_struct",
-    "sonic_rs_real_typed_struct",
-    "serde_json_real_typed_struct",
-];
-
 fn is_w0_criterion_input(relative: &Path, fixture_names: &BTreeSet<&str>) -> bool {
     let parts: Vec<_> = relative
         .components()
         .filter_map(|component| component.as_os_str().to_str())
         .collect();
     match parts.as_slice() {
-        ["simd_structural_scan", bench, "metadata.toml"] => bench
-            .strip_suffix("_simd")
-            .is_some_and(|corpus| fixture_names.contains(corpus)),
+        ["simd_structural_scan", bench, "metadata.toml"] => {
+            bench.strip_suffix("_simd").is_some_and(|corpus| {
+                fixture_names.contains(corpus)
+                    && sk_v8_open_baseline(&format!("json/{corpus}/parse_only/main")).is_some()
+            })
+        }
         ["simd_structural_scan", "canada_simd", "new", "estimates.json"] => {
             fixture_names.contains("canada")
+                && sk_v8_open_baseline("json/canada/parse_only/main").is_some()
         }
         [group, bench, "metadata.toml"] | [group, bench, "new", "estimates.json"] => {
-            group
-                .strip_prefix("json_")
-                .is_some_and(|corpus| fixture_names.contains(corpus))
-                && W0_CRITERION_BENCHES.contains(bench)
+            group.strip_prefix("json_").is_some_and(|corpus| {
+                fixture_names.contains(corpus)
+                    && w0_workload_for_bench(bench).is_some_and(|workload| {
+                        sk_v8_open_baseline(&format!("json/{corpus}/{workload}/main")).is_some()
+                    })
+            })
         }
         _ => false,
+    }
+}
+
+fn w0_workload_for_bench(bench: &str) -> Option<&'static str> {
+    match bench {
+        "track1_generated" | "track2_handcoded" | "sonic_rs_anchor" | "sonic_rs_lossy"
+        | "simd_json_borrowed" | "simd_json_owned" | "serde_json" => Some("parse_only"),
+        "track1_direct_to_struct"
+        | "track2_direct_to_struct"
+        | "sonic_rs_direct_to_struct"
+        | "serde_json_direct_to_struct" => Some("direct_to_struct"),
+        "track1_real_typed_struct"
+        | "track2_real_typed_struct"
+        | "sonic_rs_real_typed_struct"
+        | "serde_json_real_typed_struct" => Some("real_typed_struct"),
+        _ => None,
     }
 }
 
@@ -1765,7 +1769,7 @@ mod tests {
     #[test]
     fn w0_criterion_fingerprint_excludes_derendered_probe_estimates() {
         let root = test_temp_root("criterion-fingerprint");
-        let fixture_names = BTreeSet::from(["twitter"]);
+        let fixture_names = BTreeSet::from(["twitter", "canada"]);
         write_test_file(
             &root.join("json_twitter/track1_generated/new/estimates.json"),
             b"main-estimate-a",
@@ -1784,6 +1788,12 @@ mod tests {
         write_test_file(
             &root.join("json_unvalidated_future/track1_generated/new/estimates.json"),
             b"unvalidated-future-estimate",
+        );
+        assert_eq!(before_probe, criterion_fingerprint(&root, &fixture_names));
+
+        write_test_file(
+            &root.join("json_canada/sonic_rs_real_typed_struct/new/estimates.json"),
+            b"valid-fixture-unvalidated-row",
         );
         assert_eq!(before_probe, criterion_fingerprint(&root, &fixture_names));
 

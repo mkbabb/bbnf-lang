@@ -508,6 +508,18 @@ impl Report {
             let Some(baseline) = sk_v8_open_baseline(row_id) else {
                 return Err(format!("unknown SK-V8-open row_id {row_id}"));
             };
+            if row.outcome_id != baseline.outcome_id {
+                return Err(format!(
+                    "{row_id} outcome moved from SK-V8-open baseline {} to {}",
+                    baseline.outcome_id, row.outcome_id
+                ));
+            }
+            if row.verdict != baseline.verdict {
+                return Err(format!(
+                    "{row_id} verdict moved from SK-V8-open baseline {} to {}",
+                    baseline.verdict, row.verdict
+                ));
+            }
             validate_baseline_delta(row_id, "Track 1", row.track1_mbps, baseline.track1_mbps)?;
             validate_baseline_delta(row_id, "Track 2", row.track2_mbps, baseline.track2_mbps)?;
         }
@@ -633,201 +645,273 @@ impl Report {
 
 pub struct SkV8OpenBaseline {
     pub row_id: &'static str,
+    pub outcome_id: &'static str,
+    pub verdict: &'static str,
     pub track1_mbps: f64,
     pub track2_mbps: f64,
 }
 
+macro_rules! sk_v8_open_baseline {
+    ($row_id:literal, $outcome_id:literal, $verdict:literal, $track1:literal, $track2:literal) => {
+        SkV8OpenBaseline {
+            row_id: $row_id,
+            outcome_id: $outcome_id,
+            verdict: $verdict,
+            track1_mbps: $track1,
+            track2_mbps: $track2,
+        }
+    };
+}
+
 pub const SK_V8_OPEN_BASELINE: &[SkV8OpenBaseline] = &[
-    SkV8OpenBaseline {
-        row_id: "json/twitter/parse_only/main",
-        track1_mbps: 9581.0,
-        track2_mbps: 9741.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/twitter/direct_to_struct/main",
-        track1_mbps: 11859.0,
-        track2_mbps: 9881.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/twitter/real_typed_struct/main",
-        track1_mbps: 15333.0,
-        track2_mbps: 14516.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/citm_catalog/parse_only/main",
-        track1_mbps: 28644.0,
-        track2_mbps: 19214.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/citm_catalog/direct_to_struct/main",
-        track1_mbps: 21151.0,
-        track2_mbps: 19434.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/canada/parse_only/main",
-        track1_mbps: 15497.0,
-        track2_mbps: 12171.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/canada/direct_to_struct/main",
-        track1_mbps: 6586.0,
-        track2_mbps: 9769.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/apache_builds/parse_only/main",
-        track1_mbps: 12694.0,
-        track2_mbps: 11715.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/apache_builds/direct_to_struct/main",
-        track1_mbps: 8306.0,
-        track2_mbps: 7796.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/github_events/parse_only/main",
-        track1_mbps: 10689.0,
-        track2_mbps: 10073.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/github_events/direct_to_struct/main",
-        track1_mbps: 9088.0,
-        track2_mbps: 7337.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/update_center/parse_only/main",
-        track1_mbps: 11926.0,
-        track2_mbps: 9312.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/update_center/direct_to_struct/main",
-        track1_mbps: 7863.0,
-        track2_mbps: 7514.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/update_center/real_typed_struct/main",
-        track1_mbps: 11958.0,
-        track2_mbps: 10367.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/mesh/parse_only/main",
-        track1_mbps: 9367.0,
-        track2_mbps: 10000.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/mesh/direct_to_struct/main",
-        track1_mbps: 8640.0,
-        track2_mbps: 9049.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/mesh/real_typed_struct/main",
-        track1_mbps: 9623.0,
-        track2_mbps: 7674.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/random/parse_only/main",
-        track1_mbps: 10011.0,
-        track2_mbps: 8018.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/random/direct_to_struct/main",
-        track1_mbps: 7751.0,
-        track2_mbps: 6952.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/gsoc-2018/parse_only/main",
-        track1_mbps: 23209.0,
-        track2_mbps: 21857.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/gsoc-2018/direct_to_struct/main",
-        track1_mbps: 15042.0,
-        track2_mbps: 14380.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/marine_ik/parse_only/main",
-        track1_mbps: 13100.0,
-        track2_mbps: 12164.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/marine_ik/direct_to_struct/main",
-        track1_mbps: 9357.0,
-        track2_mbps: 9488.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/marine_ik/real_typed_struct/main",
-        track1_mbps: 11783.0,
-        track2_mbps: 8321.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/instruments/parse_only/main",
-        track1_mbps: 13320.0,
-        track2_mbps: 11351.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/instruments/direct_to_struct/main",
-        track1_mbps: 8494.0,
-        track2_mbps: 8766.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/numbers/parse_only/main",
-        track1_mbps: 12818.0,
-        track2_mbps: 13537.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/numbers/direct_to_struct/main",
-        track1_mbps: 9773.0,
-        track2_mbps: 6966.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/unicode_mixed/parse_only/main",
-        track1_mbps: 6390.0,
-        track2_mbps: 4970.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/unicode_mixed/direct_to_struct/main",
-        track1_mbps: 3596.0,
-        track2_mbps: 3694.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/unicode_escapes/parse_only/main",
-        track1_mbps: 12731.0,
-        track2_mbps: 8521.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/unicode_escapes/direct_to_struct/main",
-        track1_mbps: 4020.0,
-        track2_mbps: 4016.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/unicode_basic/parse_only/main",
-        track1_mbps: 11189.0,
-        track2_mbps: 10040.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/unicode_basic/direct_to_struct/main",
-        track1_mbps: 9363.0,
-        track2_mbps: 8420.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/distinct_values/parse_only/main",
-        track1_mbps: 10279.0,
-        track2_mbps: 6457.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/distinct_values/direct_to_struct/main",
-        track1_mbps: 4438.0,
-        track2_mbps: 4151.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/y_string_unicode/parse_only/main",
-        track1_mbps: 5577.0,
-        track2_mbps: 5480.0,
-    },
-    SkV8OpenBaseline {
-        row_id: "json/y_string_unicode/direct_to_struct/main",
-        track1_mbps: 4828.0,
-        track2_mbps: 3563.0,
-    },
+    sk_v8_open_baseline!("json/twitter/parse_only/main", "S", "NO-GO", 9581.0, 9741.0),
+    sk_v8_open_baseline!(
+        "json/twitter/direct_to_struct/main",
+        "N-direct",
+        "NO-GO",
+        11859.0,
+        9881.0
+    ),
+    sk_v8_open_baseline!(
+        "json/twitter/real_typed_struct/main",
+        "A",
+        "GO",
+        15333.0,
+        14516.0
+    ),
+    sk_v8_open_baseline!(
+        "json/citm_catalog/parse_only/main",
+        "S",
+        "NO-GO",
+        28644.0,
+        19214.0
+    ),
+    sk_v8_open_baseline!(
+        "json/citm_catalog/direct_to_struct/main",
+        "A",
+        "GO",
+        21151.0,
+        19434.0
+    ),
+    sk_v8_open_baseline!(
+        "json/canada/parse_only/main",
+        "L",
+        "NO-GO",
+        15497.0,
+        12171.0
+    ),
+    sk_v8_open_baseline!(
+        "json/canada/direct_to_struct/main",
+        "N-direct",
+        "NO-GO",
+        6586.0,
+        9769.0
+    ),
+    sk_v8_open_baseline!(
+        "json/apache_builds/parse_only/main",
+        "S",
+        "NO-GO",
+        12694.0,
+        11715.0
+    ),
+    sk_v8_open_baseline!(
+        "json/apache_builds/direct_to_struct/main",
+        "N-direct",
+        "NO-GO",
+        8306.0,
+        7796.0
+    ),
+    sk_v8_open_baseline!(
+        "json/github_events/parse_only/main",
+        "S",
+        "NO-GO",
+        10689.0,
+        10073.0
+    ),
+    sk_v8_open_baseline!(
+        "json/github_events/direct_to_struct/main",
+        "N-direct",
+        "NO-GO",
+        9088.0,
+        7337.0
+    ),
+    sk_v8_open_baseline!(
+        "json/update_center/parse_only/main",
+        "S",
+        "NO-GO",
+        11926.0,
+        9312.0
+    ),
+    sk_v8_open_baseline!(
+        "json/update_center/direct_to_struct/main",
+        "N-direct",
+        "NO-GO",
+        7863.0,
+        7514.0
+    ),
+    sk_v8_open_baseline!(
+        "json/update_center/real_typed_struct/main",
+        "A",
+        "GO",
+        11958.0,
+        10367.0
+    ),
+    sk_v8_open_baseline!("json/mesh/parse_only/main", "S", "NO-GO", 9367.0, 10000.0),
+    sk_v8_open_baseline!(
+        "json/mesh/direct_to_struct/main",
+        "N-direct",
+        "NO-GO",
+        8640.0,
+        9049.0
+    ),
+    sk_v8_open_baseline!(
+        "json/mesh/real_typed_struct/main",
+        "A",
+        "GO",
+        9623.0,
+        7674.0
+    ),
+    sk_v8_open_baseline!("json/random/parse_only/main", "S", "NO-GO", 10011.0, 8018.0),
+    sk_v8_open_baseline!(
+        "json/random/direct_to_struct/main",
+        "N-direct",
+        "NO-GO",
+        7751.0,
+        6952.0
+    ),
+    sk_v8_open_baseline!(
+        "json/gsoc-2018/parse_only/main",
+        "S",
+        "NO-GO",
+        23209.0,
+        21857.0
+    ),
+    sk_v8_open_baseline!(
+        "json/gsoc-2018/direct_to_struct/main",
+        "N-direct",
+        "NO-GO",
+        15042.0,
+        14380.0
+    ),
+    sk_v8_open_baseline!(
+        "json/marine_ik/parse_only/main",
+        "S",
+        "NO-GO",
+        13100.0,
+        12164.0
+    ),
+    sk_v8_open_baseline!(
+        "json/marine_ik/direct_to_struct/main",
+        "A",
+        "GO",
+        9357.0,
+        9488.0
+    ),
+    sk_v8_open_baseline!(
+        "json/marine_ik/real_typed_struct/main",
+        "A",
+        "GO",
+        11783.0,
+        8321.0
+    ),
+    sk_v8_open_baseline!(
+        "json/instruments/parse_only/main",
+        "S",
+        "NO-GO",
+        13320.0,
+        11351.0
+    ),
+    sk_v8_open_baseline!(
+        "json/instruments/direct_to_struct/main",
+        "N-direct",
+        "NO-GO",
+        8494.0,
+        8766.0
+    ),
+    sk_v8_open_baseline!(
+        "json/numbers/parse_only/main",
+        "S",
+        "NO-GO",
+        12818.0,
+        13537.0
+    ),
+    sk_v8_open_baseline!(
+        "json/numbers/direct_to_struct/main",
+        "N-direct",
+        "NO-GO",
+        9773.0,
+        6966.0
+    ),
+    sk_v8_open_baseline!(
+        "json/unicode_mixed/parse_only/main",
+        "S",
+        "NO-GO",
+        6390.0,
+        4970.0
+    ),
+    sk_v8_open_baseline!(
+        "json/unicode_mixed/direct_to_struct/main",
+        "N-direct",
+        "NO-GO",
+        3596.0,
+        3694.0
+    ),
+    sk_v8_open_baseline!(
+        "json/unicode_escapes/parse_only/main",
+        "S",
+        "NO-GO",
+        12731.0,
+        8521.0
+    ),
+    sk_v8_open_baseline!(
+        "json/unicode_escapes/direct_to_struct/main",
+        "N-direct",
+        "NO-GO",
+        4020.0,
+        4016.0
+    ),
+    sk_v8_open_baseline!(
+        "json/unicode_basic/parse_only/main",
+        "S",
+        "NO-GO",
+        11189.0,
+        10040.0
+    ),
+    sk_v8_open_baseline!(
+        "json/unicode_basic/direct_to_struct/main",
+        "A",
+        "GO",
+        9363.0,
+        8420.0
+    ),
+    sk_v8_open_baseline!(
+        "json/distinct_values/parse_only/main",
+        "S",
+        "NO-GO",
+        10279.0,
+        6457.0
+    ),
+    sk_v8_open_baseline!(
+        "json/distinct_values/direct_to_struct/main",
+        "N-direct",
+        "NO-GO",
+        4438.0,
+        4151.0
+    ),
+    sk_v8_open_baseline!(
+        "json/y_string_unicode/parse_only/main",
+        "S",
+        "NO-GO",
+        5577.0,
+        5480.0
+    ),
+    sk_v8_open_baseline!(
+        "json/y_string_unicode/direct_to_struct/main",
+        "N-direct",
+        "NO-GO",
+        4828.0,
+        3563.0
+    ),
 ];
 
 pub const SK_V8_SIDECAR_COMPARATORS: &[&str] = &[
@@ -1830,7 +1914,7 @@ mod tests {
             let row = if workload == "parse_only" {
                 TelemetryRow::parse(
                     corpus,
-                    Outcome::KSimdParityHashFail,
+                    gate::parse_outcome_id(baseline.outcome_id).unwrap(),
                     bytes,
                     track1_ns,
                     track2_ns,
@@ -1841,7 +1925,8 @@ mod tests {
                 TelemetryRow::workload(
                     corpus,
                     workload,
-                    None,
+                    (baseline.outcome_id != "A")
+                        .then(|| gate::parse_outcome_id(baseline.outcome_id).unwrap()),
                     bytes,
                     track1_ns,
                     track2_ns,
@@ -1857,7 +1942,27 @@ mod tests {
                 .push(row.with_sk_v8(w0_telemetry(baseline.row_id, output_plane)));
         }
         assert!(report.validate_sk_v8_w0().is_ok());
-        report.rows[0].track1_mbps = Some(SK_V8_OPEN_BASELINE[0].track1_mbps * 1.02);
-        assert!(report.validate_sk_v8_w0().is_err());
+        let mut bad_throughput = report.clone();
+        bad_throughput.rows[0].track1_mbps = Some(SK_V8_OPEN_BASELINE[0].track1_mbps * 1.02);
+        assert!(bad_throughput.validate_sk_v8_w0().is_err());
+
+        let mut bad_parse_outcome = report.clone();
+        let parse = bad_parse_outcome
+            .rows
+            .iter_mut()
+            .find(|row| row.sk_v8.row_id == "json/twitter/parse_only/main")
+            .unwrap();
+        parse.outcome_id = "K".into();
+        assert!(bad_parse_outcome.validate_sk_v8_w0().is_err());
+
+        let mut bad_direct_verdict = report.clone();
+        let direct = bad_direct_verdict
+            .rows
+            .iter_mut()
+            .find(|row| row.sk_v8.row_id == "json/twitter/direct_to_struct/main")
+            .unwrap();
+        direct.outcome_id = "A".into();
+        direct.verdict = "GO".into();
+        assert!(bad_direct_verdict.validate_sk_v8_w0().is_err());
     }
 }

@@ -1,4 +1,5 @@
 use anyhow::{bail, Context, Result};
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -272,17 +273,55 @@ fn gate_json(root: &Path, passthrough: Vec<String>) -> Result<()> {
 }
 
 fn gate_json_cost_facts(root: &Path, passthrough: Vec<String>) -> Result<()> {
-    let unexpected = passthrough
-        .iter()
-        .filter(|arg| *arg != "--with-cost-facts" && *arg != "--advisory")
-        .collect::<Vec<_>>();
-    if !unexpected.is_empty() {
-        bail!(
-            "gate-json --with-cost-facts only accepts --advisory as an additional flag; got {unexpected:?}"
-        );
+    let check_results = validate_cost_facts_flags(&passthrough)?;
+    if check_results {
+        validate_w0_results_snapshot(root)?;
     }
     let source = std::fs::read_to_string(root.join("grammars/json.bbnf"))?;
     let snapshot = codegen::cost_facts_from_source("json", &source)?;
+    let report = cost_facts_gate_report(&snapshot)?;
+    validate_cost_facts_gate_report(&report)?;
+    println!("{}", serde_json::to_string_pretty(&report)?);
+    Ok(())
+}
+
+fn validate_cost_facts_flags(passthrough: &[String]) -> Result<bool> {
+    let mut check_results = false;
+    let mut unexpected = Vec::new();
+    for arg in passthrough {
+        match arg.as_str() {
+            "--with-cost-facts" => {}
+            "--advisory" => {}
+            "--check-results" => check_results = true,
+            _ => unexpected.push(arg.clone()),
+        }
+    }
+    if !unexpected.is_empty() {
+        bail!("gate-json --with-cost-facts accepts only --advisory and --check-results; got {unexpected:?}");
+    }
+    Ok(check_results)
+}
+
+fn validate_w0_results_snapshot(root: &Path) -> Result<()> {
+    let text = std::fs::read_to_string(root.join("RESULTS.md"))
+        .context("gate-json --with-cost-facts --check-results requires RESULTS.md")?;
+    let manifest_rows = text.lines().filter(|line| line.starts_with("| json/")).count();
+    if manifest_rows != 38 {
+        bail!("RESULTS.md SK-V8 manifest row count moved from 38 to {manifest_rows}");
+    }
+    for required in [
+        "SK-V8-open",
+        "sk-v8-open:criterion-fnv64-9a37562ed3d0383a",
+        "none:pre-W1:none:pre-W1:none:pre-W1",
+    ] {
+        if !text.contains(required) {
+            bail!("RESULTS.md missing W0 snapshot marker {required}");
+        }
+    }
+    Ok(())
+}
+
+fn cost_facts_gate_report(snapshot: &codegen::CostFactsSnapshot) -> Result<serde_json::Value> {
     let diagnostics = snapshot
         .diagnostics
         .iter()
@@ -294,14 +333,143 @@ fn gate_json_cost_facts(root: &Path, passthrough: Vec<String>) -> Result<()> {
             })
         })
         .collect::<Vec<_>>();
+    let mut manifest = Vec::new();
+    for (rule_key, facts) in &snapshot.cost_facts {
+        if rule_key != &facts.rule_id.0.to_string() {
+            bail!(
+                "CostFacts rule key {rule_key} does not match rule id {}",
+                facts.rule_id.0
+            );
+        }
+        if facts.rejected.len() < 4 {
+            bail!("CostFacts rule {rule_key} has fewer than four rejected alternatives");
+        }
+        let mut evidence_sources = BTreeSet::new();
+        let mut redress_refs = BTreeSet::new();
+        let mut rejected_alternative_ids = Vec::new();
+        for alternative in &facts.rejected {
+            rejected_alternative_ids.push(format!("{:?}", alternative.shape));
+            if alternative.evidence.is_empty() {
+                evidence_sources.insert("StaticAnalysis".to_string());
+                redress_refs.insert("REDRESS-87".to_string());
+            } else {
+                for measurement in &alternative.evidence {
+                    if measurement.source_ref.trim().is_empty() {
+                        bail!(
+                            "CostFacts rule {rule_key} rejected {:?} has empty source_ref",
+                            alternative.shape
+                        );
+                    }
+                    evidence_sources.insert(format!("{:?}", measurement.source));
+                    if measurement.source_ref.starts_with("REDRESS-") {
+                        redress_refs.insert(
+                            measurement
+                                .source_ref
+                                .split(';')
+                                .next()
+                                .unwrap_or(measurement.source_ref.as_str())
+                                .to_string(),
+                        );
+                    } else {
+                        redress_refs.insert("REDRESS-87".to_string());
+                    }
+                }
+            }
+        }
+        if redress_refs.is_empty() {
+            bail!("CostFacts rule {rule_key} has no REDRESS reference");
+        }
+        manifest.push(serde_json::json!({
+            "grammar": snapshot.grammar.as_str(),
+            "rule_id": rule_key,
+            "chosen_shape": format!("{:?}", facts.chosen),
+            "rejected_alternative_ids": rejected_alternative_ids,
+            "evidence_sources": evidence_sources.into_iter().collect::<Vec<_>>(),
+            "redress_refs": redress_refs.into_iter().collect::<Vec<_>>(),
+            "wave_id": "SK-V8-W1",
+        }));
+    }
     let report = serde_json::json!({
-        "schema": "sk-v7-costfacts-v1",
-        "grammar": snapshot.grammar,
-        "cost_facts": snapshot.cost_facts,
-        "diagnostics": diagnostics,
+        "schema": "sk-v8-costfacts-v1",
+        "grammar": snapshot.grammar.as_str(),
+        "wave_id": "SK-V8-W1",
+        "manifest": manifest,
+        "cost_facts": &snapshot.cost_facts,
+        "diagnostics": [],
+        "producer_diagnostics": diagnostics,
     });
-    println!("{}", serde_json::to_string_pretty(&report)?);
+    validate_cost_facts_gate_report(&report)?;
+    Ok(report)
+}
+
+fn validate_cost_facts_gate_report(report: &serde_json::Value) -> Result<()> {
+    if report.get("schema").and_then(|value| value.as_str()) != Some("sk-v8-costfacts-v1") {
+        bail!("CostFacts gate report has unsupported schema");
+    }
+    if report.get("wave_id").and_then(|value| value.as_str()) != Some("SK-V8-W1") {
+        bail!("CostFacts gate report missing SK-V8-W1 wave id");
+    }
+    let manifest = report
+        .get("manifest")
+        .and_then(|value| value.as_array())
+        .context("CostFacts gate report missing manifest")?;
+    if manifest.is_empty() {
+        bail!("CostFacts gate report manifest is empty");
+    }
+    for entry in manifest {
+        let rule_id = nonempty_json_str(entry, "rule_id")?;
+        nonempty_json_str(entry, "chosen_shape")?;
+        if nonempty_json_array(entry, "rejected_alternative_ids")?.len() < 4 {
+            bail!("CostFacts rule {rule_id} missing rejected alternatives");
+        }
+        nonempty_json_array(entry, "evidence_sources")?;
+        nonempty_json_array(entry, "redress_refs")?;
+        if entry.get("wave_id").and_then(|value| value.as_str()) != Some("SK-V8-W1") {
+            bail!("CostFacts rule {rule_id} missing SK-V8-W1 wave id");
+        }
+    }
+    if let Some(diagnostics) = report.get("diagnostics").and_then(|value| value.as_array()) {
+        for diagnostic in diagnostics {
+            if diagnostic.get("code").and_then(|value| value.as_str())
+                == Some("BBNF-COSTFACTS-MISSING-EVIDENCE")
+            {
+                bail!("CostFacts gate report contains BBNF-COSTFACTS-MISSING-EVIDENCE");
+            }
+        }
+    }
     Ok(())
+}
+
+fn nonempty_json_str<'a>(entry: &'a serde_json::Value, field: &str) -> Result<&'a str> {
+    let value = entry
+        .get(field)
+        .and_then(|value| value.as_str())
+        .with_context(|| format!("CostFacts manifest entry missing {field}"))?;
+    if value.trim().is_empty() || value == "none:pre-W1" {
+        bail!("CostFacts manifest entry has invalid {field}");
+    }
+    Ok(value)
+}
+
+fn nonempty_json_array<'a>(
+    entry: &'a serde_json::Value,
+    field: &str,
+) -> Result<&'a Vec<serde_json::Value>> {
+    let values = entry
+        .get(field)
+        .and_then(|value| value.as_array())
+        .with_context(|| format!("CostFacts manifest entry missing {field}"))?;
+    if values.is_empty()
+        || values
+            .iter()
+            .any(|value| value.as_str().is_some_and(|text| text.trim().is_empty()))
+        || values
+            .iter()
+            .any(|value| value.as_str() == Some("none:pre-W1"))
+    {
+        bail!("CostFacts manifest entry has invalid {field}");
+    }
+    Ok(values)
 }
 
 fn primitive_checkasm(root: &Path) -> Result<()> {
@@ -397,4 +565,69 @@ fn has_skinny_workspace_metadata(manifest: &toml::Value) -> bool {
         .and_then(|bbnf| bbnf.get("grammars"))
         .and_then(|grammars| grammars.get("json"))
         .is_some()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const JSON_GRAMMAR: &str = include_str!("../../grammars/json.bbnf");
+
+    fn report() -> serde_json::Value {
+        let snapshot = codegen::cost_facts_from_source("json", JSON_GRAMMAR).unwrap();
+        cost_facts_gate_report(&snapshot).unwrap()
+    }
+
+    #[test]
+    fn w1_costfacts_accepts_and_rejects_required_manifest_fields() {
+        assert!(validate_cost_facts_flags(&[
+            "--with-cost-facts".into(),
+            "--advisory".into(),
+            "--check-results".into(),
+        ])
+        .unwrap());
+        assert!(validate_cost_facts_flags(&[
+            "--with-cost-facts".into(),
+            "--update-results".into(),
+        ])
+        .is_err());
+
+        let report = report();
+        validate_cost_facts_gate_report(&report).unwrap();
+        assert_eq!(report["manifest"].as_array().unwrap().len(), 15);
+
+        let manifest_fields = [
+            "rule_id",
+            "chosen_shape",
+            "wave_id",
+            "rejected_alternative_ids",
+            "evidence_sources",
+            "redress_refs",
+        ];
+        for field in manifest_fields {
+            let mut bad = report.clone();
+            let entry = bad["manifest"][0].as_object_mut().unwrap();
+            if entry[field].is_array() {
+                entry.insert(field.into(), serde_json::json!([]));
+            } else {
+                entry.remove(field);
+            }
+            assert!(validate_cost_facts_gate_report(&bad).is_err());
+        }
+
+        for mutate in [
+            |bad: &mut serde_json::Value| bad.as_object_mut().unwrap().remove("wave_id").is_some(),
+            |bad: &mut serde_json::Value| {
+                bad["manifest"][0]
+                    .as_object_mut()
+                    .unwrap()
+                    .insert("rule_id".into(), serde_json::json!("none:pre-W1"));
+                true
+            },
+        ] {
+            let mut bad = report.clone();
+            mutate(&mut bad);
+            assert!(validate_cost_facts_gate_report(&bad).is_err());
+        }
+    }
 }

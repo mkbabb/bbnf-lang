@@ -57,6 +57,7 @@ pub const DIRECT_PROJECTION_SONIC_SLACK: f64 = 1.10;
 
 #[derive(Debug, Clone, Copy)]
 pub struct StrictAdmissionEvidence<'a> {
+    pub comparator_id: &'a str,
     pub outcome_id: &'a str,
     pub row_strictness: &'a str,
     pub parse_utf8: &'a str,
@@ -133,6 +134,12 @@ pub fn parse_outcome_id(value: &str) -> Option<Outcome> {
 }
 
 pub fn validate_strict_admission(evidence: &StrictAdmissionEvidence<'_>) -> Result<(), String> {
+    if !matches!(evidence.comparator_id, "sonic_rs_strict" | "serde_json") {
+        return Err(format!(
+            "{} is not an admitted native strict comparator",
+            evidence.comparator_id
+        ));
+    }
     let Some(outcome) = parse_outcome_id(evidence.outcome_id) else {
         return Err(format!("unsupported outcome {}", evidence.outcome_id));
     };
@@ -435,6 +442,7 @@ mod tests {
 
     fn strict_evidence() -> StrictAdmissionEvidence<'static> {
         StrictAdmissionEvidence {
+            comparator_id: "sonic_rs_strict",
             outcome_id: "A",
             row_strictness: "strict",
             parse_utf8: "measured-row",
@@ -445,6 +453,24 @@ mod tests {
             comparator_freshness: "same-run-native",
             sidecar_freshness: "n/a",
             measured_validation_path: "measured-row",
+        }
+    }
+
+    #[test]
+    fn rejects_non_native_comparator_id_as_strict_admission() {
+        assert!(validate_strict_admission(&strict_evidence()).is_ok());
+        for comparator_id in [
+            "sonic_rs_lossy",
+            "simdjson_dom",
+            "yyjson_default",
+            "unknown_sidecar",
+        ] {
+            let mut evidence = strict_evidence();
+            evidence.comparator_id = comparator_id;
+            assert!(
+                validate_strict_admission(&evidence).is_err(),
+                "{comparator_id} must not be strict-admission eligible"
+            );
         }
     }
 

@@ -25,12 +25,12 @@ off on later post-W0 plan augmentations.
 The current gate authority is `skinny/RESULTS.md`. Its own close note says the
 overall outcome remains `N-direct / NoGo`.
 
-Current main-table state:
+Current W0-rendered main-table state:
 
 | Family | Current state |
 |---|---|
-| `parse_only` | 17 rows, all `K / NO-GO` |
-| `direct_to_struct` | 6 `A / GO`, 11 `N-direct / NO-GO` |
+| `parse_only` | 16 `S / NO-GO`, 1 `L / NO-GO` |
+| `direct_to_struct` | 3 `A / GO`, 14 `N-direct / NO-GO` |
 | `real_typed_struct` | 4 `A / GO` |
 
 Every current main row records `Strictness=deferred`,
@@ -38,11 +38,11 @@ Every current main row records `Strictness=deferred`,
 output plane `borrowed view over offset tape vs DOM`; direct rows use `digest`;
 real typed rows use `typed direct`.
 
-The schema-v3 surface exists, but its evidence is incomplete for prescribing
-new kernels. `Delta vs SK-V6` is non-derivable in every current main row, and
-the `Hot leaf` column says `unprofiled in W0b; no kernel prescription from this
-row`. SK-V8 therefore starts by making row evidence executable rather than
-guessing from stale profiles.
+The schema-v3 surface exists, but its pre-W0 evidence was incomplete for
+prescribing new kernels. `Delta vs SK-V6` remains non-derivable in every
+current main row. W0 now renders criterion slope profile artifacts and row-bound
+hot-leaf strings; later behavior waves must still use fresh W0/W1 gates rather
+than stale profile prose.
 
 ## Corrected SK-V7 Diagnosis
 
@@ -71,8 +71,8 @@ Validated SK-V7 outcomes:
 Rejected or demoted SK-V7 outcomes:
 
 - W0 strict comparator repair did not flip the forecast rows. REDRESS 77 says
-  `instruments` and `unicode_basic` stayed W0-era `G / NO-GO`; current
-  schema-v3 rows classify both as `K / NO-GO`.
+  `instruments` and `unicode_basic` stayed W0-era `G / NO-GO`; W0-rendered
+  schema-v3 rows classify both parse rows as `S / NO-GO`.
 - W2 `78d83497` rejected the zero-fallback mantissa-widen assumption; REDRESS
   80 found no current canada fallback pool to eliminate.
 - W4 `17bd39b1` rejected the single-quartet Unicode escape classifier;
@@ -156,10 +156,11 @@ overloaded because one enum hides strict residuals and strict guard wins. V3
 corrects the comparator columns: twitter is -25.1% versus same-run sonic strict
 and -35.8% versus simdjson DOM; citm_catalog is +24.6% versus same-run sonic
 strict and -11.3% versus simdjson DOM. The adjudication is to retire
-`parse_only` from the SOTA scoreboard, keep the 17 rows as substrate-guard
-non-admission telemetry (`K` now, `S` if W0 amends the schema), add
-executable strict-admission refusal rules, and route `tape_vs_tape` only to
-W0/W1 gate-binding telemetry. `tape_vs_tape` is not a W3 production same-wave
+`parse_only` from the SOTA scoreboard, keep all 17 parse rows as
+substrate-guard non-admission telemetry (`S` for admission-capable parse
+outcomes, hard failures such as `L` preserved), add executable
+strict-admission refusal rules, and route `tape_vs_tape` only to W0/W1
+gate-binding telemetry. `tape_vs_tape` is not a W3 production same-wave
 consumer.
 
 SC-6 confirmed the union satisfies Lock 1 only if it replaces the offset-tape
@@ -233,10 +234,10 @@ SK-V8 uses three comparator classes:
 - Sidecar planning signals: simdjson, yyjson, RapidJSON, asmjson, and any
   future domain comparator unless refreshed under the wave's same-run rules.
 
-Twitter parse remains the visible JSON residual: current Track 1 is `15752`
-Mbps versus `21020` sonic-rs strict, `24522` simdjson DOM, and `30931` yyjson.
-But current hot-leaf attribution is explicitly unprofiled, so twitter fusion
-work is a post-W0 candidate, not a W0 prescription.
+Twitter parse remains a visible JSON residual in W0: current Track 1 is `9581`
+Mbps versus `18176` sonic-rs strict, `24522` simdjson DOM, and `30931` yyjson.
+The row now has a W0 profile artifact, but twitter fusion work remains a
+post-W0/W1 candidate, not a W0 prescription.
 
 ## Candidate Posture
 

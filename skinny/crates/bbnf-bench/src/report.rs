@@ -366,8 +366,8 @@ impl TelemetryRow {
                 telemetry.row_id
             ));
         }
-        validate_w0_admission_boundary(self)?;
         validate_comparator_evidence(&telemetry.row_id, &self.workload, &telemetry.comparators)?;
+        validate_w0_admission_boundary(self)?;
         Ok(())
     }
 }
@@ -838,6 +838,8 @@ pub const SK_V8_SIDECAR_COMPARATORS: &[&str] = &[
     "asmjson_avx512",
     "rapidjson_default",
 ];
+const SK_V8_NATIVE_STRICT_COMPARATORS: &[&str] = &["sonic_rs_strict", "serde_json"];
+const SK_V8_NATIVE_FLAW_PROBES: &[&str] = &["sonic_rs_lossy"];
 
 pub fn sk_v8_open_baseline(row_id: &str) -> Option<&'static SkV8OpenBaseline> {
     SK_V8_OPEN_BASELINE
@@ -929,12 +931,10 @@ fn validate_w0_admission_boundary(row: &TelemetryRow) -> Result<(), String> {
     }
 
     let mut last_error = None;
-    for comparator in row
-        .sk_v8
-        .comparators
-        .iter()
-        .filter(|comparator| comparator.value_mbps.is_some())
-    {
+    for comparator in row.sk_v8.comparators.iter().filter(|comparator| {
+        comparator.value_mbps.is_some()
+            && SK_V8_NATIVE_STRICT_COMPARATORS.contains(&comparator.comparator_id.as_str())
+    }) {
         let evidence = StrictAdmissionEvidence {
             outcome_id: &row.outcome_id,
             row_strictness: &row.strictness,
@@ -1014,7 +1014,11 @@ fn validate_comparator_evidence(
                 ));
             }
         }
-        if SK_V8_SIDECAR_COMPARATORS.contains(&comparator.comparator_id.as_str()) {
+        if SK_V8_NATIVE_STRICT_COMPARATORS.contains(&comparator.comparator_id.as_str()) {
+            continue;
+        } else if SK_V8_NATIVE_FLAW_PROBES.contains(&comparator.comparator_id.as_str()) {
+            validate_flaw_probe_comparator(row_id, workload, comparator)?;
+        } else if SK_V8_SIDECAR_COMPARATORS.contains(&comparator.comparator_id.as_str()) {
             validate_sidecar_comparator(row_id, workload, comparator)?;
             match comparator.value_mbps {
                 Some(_) => {
@@ -1044,6 +1048,11 @@ fn validate_comparator_evidence(
                     }
                 }
             }
+        } else {
+            return Err(format!(
+                "{row_id} has unsupported comparator id {}",
+                comparator.comparator_id
+            ));
         }
     }
     validate_native_comparator_source(row_id, workload, comparators, "sonic_rs_strict")?;
@@ -1052,6 +1061,39 @@ fn validate_comparator_evidence(
         if !seen.contains(sidecar) {
             return Err(format!("{row_id} missing sidecar slot {sidecar}"));
         }
+    }
+    Ok(())
+}
+
+fn validate_flaw_probe_comparator(
+    row_id: &str,
+    workload: &str,
+    comparator: &SkV8ComparatorEvidence,
+) -> Result<(), String> {
+    if workload != "parse_only" {
+        return Err(format!(
+            "{row_id} {} is not valid for {workload}",
+            comparator.comparator_id
+        ));
+    }
+    let (corpus, _) = parse_row_id(row_id)?;
+    if comparator.comparator_plane != "DOM"
+        || comparator.comparator_strictness != "permissive"
+        || comparator.comparator_freshness != "same-run-native"
+        || comparator.sidecar_freshness != "n/a"
+        || comparator.value_mbps.is_none()
+    {
+        return Err(format!(
+            "{row_id} {} has invalid flaw-probe evidence",
+            comparator.comparator_id
+        ));
+    }
+    let expected = format!("criterion:json_{corpus}/sonic_rs_lossy/new/estimates.json");
+    if comparator.source_artifact != expected {
+        return Err(format!(
+            "{row_id} {} source {} does not match expected {}",
+            comparator.comparator_id, comparator.source_artifact, expected
+        ));
     }
     Ok(())
 }
@@ -1669,6 +1711,37 @@ mod tests {
             "absence:w0:twitter:parse_only:simdjson_dom".into();
         row.sk_v8.comparators[sidecar_idx].comparator_freshness = "sidecar-same-run".into();
         row.sk_v8.comparators[sidecar_idx].sidecar_freshness = "sidecar-same-run".into();
+        assert!(row.validate_sk_v8_w0().is_err());
+    }
+
+    #[test]
+    fn w0_rejects_unknown_comparator_strict_admission_shape() {
+        let mut row = TelemetryRow::workload(
+            "twitter",
+            "direct_to_struct",
+            None,
+            1_000_000,
+            Some(84_324.14),
+            Some(101_204.33),
+            comparators(),
+            "digest",
+            "none",
+            "PASS",
+            w0_hot_leaf("json/twitter/direct_to_struct/main"),
+        )
+        .with_sk_v8(w0_telemetry("json/twitter/direct_to_struct/main", "digest"));
+        row.strictness = "strict".into();
+        row.parse_utf8 = "measured-row".into();
+        row.sk_v8.measured_validation_path = "measured-row".into();
+        row.sk_v8.comparators.push(SkV8ComparatorEvidence {
+            comparator_id: "unknown_sidecar".into(),
+            comparator_plane: "digest".into(),
+            comparator_strictness: "strict".into(),
+            comparator_freshness: "sidecar-same-run".into(),
+            sidecar_freshness: "sidecar-same-run".into(),
+            value_mbps: Some(12_000.0),
+            source_artifact: "sidecar-profile:unstructured".into(),
+        });
         assert!(row.validate_sk_v8_w0().is_err());
     }
 

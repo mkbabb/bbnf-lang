@@ -28,23 +28,24 @@ Next move: SK-V8 W0.
 
 ## 2. Current Measured State
 
-Current authority is `skinny/RESULTS.md` after SK-V7 W10c. The report remains
-`N-direct / NoGo`.
+Current authority is W0-rendered `skinny/RESULTS.md` after `SK-V8-open`. The
+report remains `N-direct / NoGo`.
 
 | Family | State |
 |---|---|
-| `parse_only` | 17 rows, all `K / NO-GO` |
-| `direct_to_struct` | 6 `A / GO`, 11 `N-direct / NO-GO` |
+| `parse_only` | 16 `S / NO-GO`, 1 `L / NO-GO` |
+| `direct_to_struct` | 3 `A / GO`, 14 `N-direct / NO-GO` |
 | `real_typed_struct` | 4 `A / GO` |
 
 Current telemetry caveats:
 
 - Every current main row uses `Strictness=deferred`.
 - `Delta vs SK-V6` is non-derivable in the current report.
-- `Hot leaf` is a placeholder: `unprofiled in W0b; no kernel prescription from
-  this row`.
-- C++ comparator values are sidecar planning signals unless refreshed under a
-  later same-run/freshness gate.
+- W0 renders criterion slope profile artifacts and non-placeholder hot-leaf
+  bindings for each current main row.
+- C++ comparator values are historical sidecar planning signals. W0 admits no
+  structured sidecar same-run manifest and rejects `sidecar-same-run` claims
+  until a later accepted wave adds a manifest parser and gate.
 
 ## 3. W10 Honesty Note
 

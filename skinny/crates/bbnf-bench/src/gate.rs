@@ -169,9 +169,7 @@ pub fn validate_strict_admission(evidence: &StrictAdmissionEvidence<'_>) -> Resu
     {
         return Err("comparator freshness is not same-run strict evidence".to_string());
     }
-    if evidence.comparator_freshness != "same-run-native"
-        && evidence.sidecar_freshness != "sidecar-same-run"
-    {
+    if evidence.comparator_freshness != "same-run-native" || evidence.sidecar_freshness != "n/a" {
         return Err("comparator freshness is unsupported for strict admission".to_string());
     }
     Ok(())
@@ -491,6 +489,14 @@ mod tests {
         evidence = strict_evidence();
         evidence.comparator_freshness = "historical:sk-v7-sidecar";
         evidence.sidecar_freshness = "historical:sk-v7-sidecar";
+        assert!(validate_strict_admission(&evidence).is_err());
+    }
+
+    #[test]
+    fn rejects_sidecar_same_run_without_structured_manifest() {
+        let mut evidence = strict_evidence();
+        evidence.comparator_freshness = "sidecar-same-run";
+        evidence.sidecar_freshness = "sidecar-same-run";
         assert!(validate_strict_admission(&evidence).is_err());
     }
 }

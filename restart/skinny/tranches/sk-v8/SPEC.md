@@ -72,11 +72,13 @@ SK-V8 uses three comparator classes:
 
 Strict admission is executable, not prose-only: `gate-json` must reject strict
 admission unless the comparator plane matches the row output plane,
-`comparator_strictness=strict`, the comparator is same-run native strict or
-`sidecar_freshness=same-run`, and UTF-8/control/escape validation occurs inside
-the measured row. `Strictness=deferred`, `parse_utf8=view-boundary`, stale
-sidecars, sidecar-only evidence, historical deltas, and plane mismatch are
-guard telemetry only.
+`comparator_strictness=strict`, the comparator is a same-run native strict
+anchor admitted by id, and UTF-8/control/escape validation occurs inside the
+measured row. W0 has no structured sidecar same-run manifest; any
+`sidecar-same-run` claim rejects until a later accepted wave adds a structured
+manifest parser and gate. `Strictness=deferred`, `parse_utf8=view-boundary`,
+stale sidecars, sidecar-only evidence, historical deltas, and plane mismatch
+are guard telemetry only.
 
 ### Section 0.3 - Outcome Enum
 
@@ -92,11 +94,11 @@ N-direct
 S
 ```
 
-`K` and `N-direct` are valid current outcomes. `S` is reserved for explicit
-substrate-guard / non-SOTA spelling if W0 or W1 amends the report schema.
-Until that amendment lands, current `K` parse rows are treated by policy as
-substrate-guard non-admission rows. Neither `K` nor `S` may support strict SOTA
-admission.
+`L`, `N-direct`, and `S` are valid current W0 outcomes. `S` is the explicit
+substrate-guard / non-SOTA spelling for admission-capable parse outcomes; hard
+parse failures such as the current canada SIMD-throughput failure remain
+specific (`L`) instead of being demoted. Neither hard-failure outcomes nor `S`
+may support strict SOTA admission.
 
 ### Section 0.4 - Required Telemetry
 
@@ -145,12 +147,13 @@ rejects the wave.
 
 ### Section 0.5 - Opening Row Goalset
 
-Current main-table state from `skinny/RESULTS.md`:
+Current main-table state from W0-rendered `skinny/RESULTS.md` after
+`SK-V8-open`:
 
 | Family | Current state | SK-V8 posture |
 |---|---|---|
-| `parse_only` | 17 `K / NO-GO` rows | Substrate-guard non-admission. W0 profiles them; W3 may use selected rows as strict guard/behavior evidence only under measured-path predicates. |
-| `direct_to_struct` | 6 `A / GO`, 11 `N-direct / NO-GO` | Digest guard plane. W4 may triage selected misses; direct digest is not typed product proof. |
+| `parse_only` | 16 `S / NO-GO`, 1 `L / NO-GO` | Substrate-guard non-admission plus one hard SIMD-throughput failure. W3 may use selected rows as strict guard/behavior evidence only under measured-path predicates. |
+| `direct_to_struct` | 3 `A / GO`, 14 `N-direct / NO-GO` | Digest guard plane. W4 may triage selected misses; direct digest is not typed product proof. |
 | `real_typed_struct` | 4 `A / GO` | Product plane. W2 must maintain these and may add generated typed rows. |
 
 W0 target for all 38 current rows: capture `SK-V8-open`, populate required
@@ -160,74 +163,30 @@ W2 existing real-typed GO maintain floors, from the current opening rows:
 
 | Row | Current Track 1 | sonic strict | Sonic GO floor | No-regression floor |
 |---|---:|---:|---:|---:|
-| `twitter/real_typed_struct` | 18513 | 15486 | 14079 | 18143 |
-| `update_center/real_typed_struct` | 11879 | 12627 | 11480 | 11642 |
-| `mesh/real_typed_struct` | 9466 | 8696 | 7906 | 9277 |
-| `marine_ik/real_typed_struct` | 12020 | 8750 | 7955 | 11780 |
+| `twitter/real_typed_struct` | 15333 | 13646 | 12406 | 15027 |
+| `update_center/real_typed_struct` | 11958 | 11952 | 10866 | 11719 |
+| `mesh/real_typed_struct` | 9623 | 9305 | 8460 | 9431 |
+| `marine_ik/real_typed_struct` | 11783 | 6951 | 6319 | 11548 |
 
 W2 existing direct GO guard floors:
 
 | Row | Minimum Track 1 Mbps | Minimum Track 2 Mbps |
 |---|---:|---:|
-| `citm_catalog/direct_to_struct` | 18151 | 18151 |
-| `apache_builds/direct_to_struct` | 10111 | 10111 |
-| `mesh/direct_to_struct` | 7990 | 7990 |
-| `marine_ik/direct_to_struct` | 7407 | 7407 |
-| `numbers/direct_to_struct` | 11671 | 11671 |
-| `unicode_basic/direct_to_struct` | 7730 | 7730 |
+| `citm_catalog/direct_to_struct` | 21151 | 19434 |
+| `marine_ik/direct_to_struct` | 9357 | 9488 |
+| `unicode_basic/direct_to_struct` | 9363 | 8420 |
 
-W2 candidate typed seed floors. W2 may select candidate typed rows only from
-this table unless a later accepted S-P3 revision explicitly expands the table.
-The threshold rule is `Track 1 Mbps >= ceil(sonic-rs strict Mbps / 1.10)`.
-If W0 refreshes a strict anchor, W2 must recompute the floor from
-`SK-V8-open` before redress.
+The remaining W2/W3/W4 numeric seed tables from S-P3 are archived pre-W0
+planning data, not dispatch floors. Later W2/W3/W4 plans may select only rows
+named by these candidate lists unless an accepted S-P3 revision expands them,
+but each plan must recompute thresholds from current `SK-V8-open` strict-anchor
+and row telemetry before challenge or redress.
 
-| Candidate row | sonic strict | Minimum Track 1 Mbps |
-|---|---:|---:|
-| `canada/real_typed_struct` | 12421 | 11292 |
-| `numbers/real_typed_struct` | 12838 | 11671 |
-| `unicode_basic/real_typed_struct` | 8502 | 7730 |
-| `citm_catalog/real_typed_struct` | 19966 | 18151 |
-| `apache_builds/real_typed_struct` | 11122 | 10111 |
-
-W3 planning seed floors. These must be recomputed from `SK-V8-open` before W3
-redress if W0 changes the baseline:
-
-| Candidate parse row | Current Track 1 | Minimum Track 1 Mbps |
-|---|---:|---:|
-| `twitter/parse_only` | 15752 | 16225 |
-| `apache_builds/parse_only` | 12482 | 12857 |
-| `update_center/parse_only` | 11193 | 11529 |
-| `github_events/parse_only` | 15198 | 15654 |
-| `gsoc-2018/parse_only` | 23026 | 23717 |
-| `distinct_values/parse_only` | 6655 | 6855 |
-| `y_string_unicode/parse_only` | 6216 | 6403 |
-
-W3 number-heavy and positive substrate-guard planning floors:
-
-| Guard row | Minimum Track 1 Mbps | Minimum Track 2 Mbps |
-|---|---:|---:|
-| `canada/parse_only` | 17410 | 16729 |
-| `mesh/parse_only` | 13980 | 13022 |
-| `numbers/parse_only` | 20197 | 18144 |
-| `marine_ik/parse_only` | 13522 | 12137 |
-
-W4 `N-direct` planning floors use `ceil(sonic-rs strict / 1.10)` for both
-bbnf tracks and must also be recomputed after W0 if the strict anchor changes:
-
-| Candidate direct row | sonic strict | Minimum Track 1 Mbps | Minimum Track 2 Mbps |
-|---|---:|---:|---:|
-| `twitter/direct_to_struct` | 14885 | 13532 | 13532 |
-| `canada/direct_to_struct` | 12421 | 11292 | 11292 |
-| `github_events/direct_to_struct` | 16041 | 14583 | 14583 |
-| `update_center/direct_to_struct` | 11081 | 10074 | 10074 |
-| `random/direct_to_struct` | 8936 | 8124 | 8124 |
-| `gsoc-2018/direct_to_struct` | 23407 | 21280 | 21280 |
-| `instruments/direct_to_struct` | 12673 | 11521 | 11521 |
-| `unicode_mixed/direct_to_struct` | 9679 | 8800 | 8800 |
-| `unicode_escapes/direct_to_struct` | 14028 | 12753 | 12753 |
-| `distinct_values/direct_to_struct` | 11344 | 10313 | 10313 |
-| `y_string_unicode/direct_to_struct` | 9019 | 8200 | 8200 |
+| Wave | Candidate rows retained from S-P3 | Floor status |
+|---|---|---|
+| W2 typed | `canada`, `numbers`, `unicode_basic`, `citm_catalog`, `apache_builds` `real_typed_struct` | Recompute typed same-plane floors from `SK-V8-open`. |
+| W3 parse | `twitter`, `apache_builds`, `update_center`, `github_events`, `gsoc-2018`, `distinct_values`, `y_string_unicode`, plus guard rows `canada`, `mesh`, `numbers`, `marine_ik` | Recompute parse guard/behavior thresholds from `SK-V8-open`. |
+| W4 direct | `twitter`, `canada`, `apache_builds`, `github_events`, `update_center`, `mesh`, `random`, `gsoc-2018`, `instruments`, `numbers`, `unicode_mixed`, `unicode_escapes`, `distinct_values`, `y_string_unicode` `direct_to_struct` | Recompute direct guard floors from `SK-V8-open`. |
 
 ## Section 1 - Non-Negotiables
 
@@ -289,7 +248,7 @@ Rerun ceilings:
 
 | Wave | Focused verification | Rerun ceiling |
 |---|---|---|
-| W0 | report/gate tests, malformed manifest rejection, full-table schema validation | one gate refresh plus one confirm rerun if variance invalidates telemetry |
+| W0 | report/gate tests, malformed sidecar-evidence rejection, full-table schema validation | one gate refresh plus one confirm rerun if variance invalidates telemetry |
 | W1 | CostFacts tests, `gate-json --with-cost-facts`, generated-output diff, full-table maintain | one gate refresh |
 | W2 | typed/product tests, generated diff audit, Track 1/2 independence, full-table maintain | one full gate refresh; second rerun requires REDRESS cost note |
 | W3 | parser/primitive tests, scalar/checkasm if primitive, generated diff audit, full-table maintain | one full gate refresh; second rerun requires REDRESS cost note |
@@ -354,7 +313,8 @@ Tasks:
 2. Add SK-V8 telemetry fields from Section 0.4.
 3. Populate hot leaf, profile artifact, run id, host/build metadata, feature
    mask, sample cost, and `SK-V8-open` delta for every current main row.
-4. Add sidecar freshness validation and malformed-manifest rejection.
+4. Add sidecar freshness/source validation and reject any same-run sidecar
+   claim until a structured sidecar manifest parser exists.
 5. Make `gate-json` reject unsupported outcomes, missing required fields, stale
    sidecar strict claims, and strict admission failing Section 0.2.
 6. Create the Lock 14 baseline allowlist.
@@ -363,11 +323,13 @@ Exit gate:
 
 - All 38 current main rows satisfy Section 0.4.
 - Throughput cells stay within +/-1.0% of `SK-V8-open`.
-- Every current `parse_only` row reports substrate-guard non-admission (`K`, or
-  `S` if W0 amends the schema).
+- Every current `parse_only` row reports substrate-guard non-admission (`S`) or
+  a preserved hard-failure outcome such as `L`.
 - Missing sidecar values have explicit `sidecar_freshness=absent:<reason>`.
-- Populated sidecar values have manifest/freshness coverage.
-- `gate-json` rejects one intentionally malformed sidecar manifest.
+- Populated sidecar values are historical non-manifest planning signals with
+  source/freshness coverage; W0 admits no sidecar same-run manifest.
+- `gate-json` rejects malformed sidecar evidence and any `sidecar-same-run`
+  claim without a structured manifest.
 - No parser, scanner, SIMD, asm, codegen behavior, product-plane behavior, or
   generated parser output change lands.
 
@@ -465,8 +427,8 @@ Entry gate:
 - W2 plan names exact typed rows, host/API schema facts, owner paths,
   thresholds, Track 1 generated path, Track 2/oracle path, and rollback
   boundaries.
-- Selected typed candidates come from the Section 0.5 W2 candidate typed seed
-  table unless a later accepted S-P3 revision expands that table.
+- Selected typed candidates come from the Section 0.5 W2 retained candidate
+  list unless a later accepted S-P3 revision expands that list.
 
 Tasks:
 

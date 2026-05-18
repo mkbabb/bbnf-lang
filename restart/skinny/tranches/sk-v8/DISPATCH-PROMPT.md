@@ -72,8 +72,8 @@ Phase 2 - Plan:
 - Write one wave-0 plan artifact under
   `restart/skinny/tranches/sk-v8/research/`.
 - Include owner paths, `SK-V8-open` capture method, telemetry fields, gate
-  changes, malformed-manifest test, no-behavior-change proof, revert protocol,
-  same-wave consumer, and pre-blocked routes.
+  changes, malformed sidecar-evidence test, no-behavior-change proof, revert
+  protocol, same-wave consumer, and pre-blocked routes.
 
 Phase 3 - Redress:
 
@@ -118,8 +118,8 @@ W2 typed product plane expansion:
 
 - Entry: W0/W1 admitted and W2 plan names exact typed rows and host/API schema
   facts.
-- Candidate typed rows are limited to the SPEC Section 0.5 W2 candidate typed
-  seed table unless a later accepted S-P3 revision expands that table.
+- Candidate typed rows are limited to the SPEC Section 0.5 W2 retained
+  candidate list unless a later accepted S-P3 revision expands that list.
 - Consumer: generated Track 1 typed row plus independent Track 2/oracle.
 - Blocked: direct digest as product proof, benchmark-private parser, hidden
   directive/schema fact, Track 2 coupling.

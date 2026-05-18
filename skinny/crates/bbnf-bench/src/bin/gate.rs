@@ -57,10 +57,22 @@ fn main() -> Result<(), Box<dyn Error>> {
             &rows,
         )
         .map_err(|error| format!("{} metadata invalid: {error}", fixture.name))?;
-        let simd_metadata = read_simd_metadata_row(&criterion_root, &fixture.name);
-        if let Some(row) = simd_metadata.clone() {
-            rows.push(row);
-        }
+        let scalar_offsets = bbnf_bench::scan::structural_offsets_scalar(&fixture.bytes);
+        let simd_offsets = bbnf_bench::scan::structural_offsets_simd(&fixture.bytes);
+        let scalar_hash = bbnf_bench::scan::hash_offsets(&scalar_offsets);
+        let simd_hash = bbnf_bench::scan::hash_offsets(&simd_offsets);
+        let simd_metadata = read_simd_metadata_row(&criterion_root, &fixture.name)?;
+        validate_w0_simd_metadata(
+            &fixture.name,
+            &fixture.sha256,
+            fixture.bytes.len() as u64,
+            &scalar_hash,
+            rows.first()
+                .expect("validated W0 capture metadata rows are nonempty"),
+            &simd_metadata,
+        )
+        .map_err(|error| format!("{} SIMD metadata invalid: {error}", fixture.name))?;
+        rows.push(simd_metadata.clone());
         let estimates = Estimates {
             track1: read_slope_ns(&group, "track1_generated"),
             track2: read_slope_ns(&group, "track2_handcoded"),
@@ -82,14 +94,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         let parity_ok = bbnf_bench::parity::assert_parity(input).is_ok();
         let direct_struct_ok =
             bbnf_bench::direct_struct::assert_direct_struct_parity(input, &fixture.bytes).is_ok();
-        let scalar_offsets = bbnf_bench::scan::structural_offsets_scalar(&fixture.bytes);
-        let simd_offsets = bbnf_bench::scan::structural_offsets_simd(&fixture.bytes);
-        let scalar_hash = bbnf_bench::scan::hash_offsets(&scalar_offsets);
-        let simd_hash = bbnf_bench::scan::hash_offsets(&simd_offsets);
         let simd_parity_ok = scalar_hash == simd_hash
-            && simd_metadata.as_ref().is_some_and(|row| {
-                simd_metadata_hash(row, &fixture.name).as_deref() == Some(&scalar_hash)
-            });
+            && simd_metadata_hash(&simd_metadata, &fixture.name).as_deref() == Some(&scalar_hash);
         let canada_scan_gbps =
             simd_canada_gbps(&criterion_root, &fixture.name, fixture.bytes.len());
         let (fastest_competitor_peak_rss, bbnf_peak_rss) = if include_volatile_probes {
@@ -690,9 +696,44 @@ fn collect_criterion_inputs(root: &Path, dir: &Path, files: &mut Vec<PathBuf>) {
         };
         if matches!(name, "estimates.json" | "metadata.toml") {
             if let Ok(relative) = path.strip_prefix(root) {
-                files.push(relative.to_path_buf());
+                if is_w0_criterion_input(relative) {
+                    files.push(relative.to_path_buf());
+                }
             }
         }
+    }
+}
+
+const W0_CRITERION_BENCHES: &[&str] = &[
+    "track1_generated",
+    "track2_handcoded",
+    "sonic_rs_anchor",
+    "sonic_rs_lossy",
+    "simd_json_borrowed",
+    "simd_json_owned",
+    "serde_json",
+    "track1_direct_to_struct",
+    "track2_direct_to_struct",
+    "sonic_rs_direct_to_struct",
+    "serde_json_direct_to_struct",
+    "track1_real_typed_struct",
+    "track2_real_typed_struct",
+    "sonic_rs_real_typed_struct",
+    "serde_json_real_typed_struct",
+];
+
+fn is_w0_criterion_input(relative: &Path) -> bool {
+    let parts: Vec<_> = relative
+        .components()
+        .filter_map(|component| component.as_os_str().to_str())
+        .collect();
+    match parts.as_slice() {
+        ["simd_structural_scan", bench, "metadata.toml"] => bench.ends_with("_simd"),
+        ["simd_structural_scan", "canada_simd", "new", "estimates.json"] => true,
+        [group, bench, "metadata.toml"] | [group, bench, "new", "estimates.json"] => {
+            group.starts_with("json_") && W0_CRITERION_BENCHES.contains(bench)
+        }
+        _ => false,
     }
 }
 
@@ -1309,15 +1350,76 @@ fn metadata_matches_spec(row: &RowMetadata, spec: MetadataSpec) -> bool {
         && row.output_plane == spec.output_plane
 }
 
-fn read_simd_metadata_row(criterion_root: &Path, fixture: &str) -> Option<RowMetadata> {
-    let text = fs::read_to_string(
-        criterion_root
-            .join("simd_structural_scan")
-            .join(format!("{fixture}_simd"))
-            .join("metadata.toml"),
-    )
-    .ok()?;
-    toml::from_str::<RowMetadata>(&text).ok()
+fn read_simd_metadata_row(criterion_root: &Path, fixture: &str) -> Result<RowMetadata, String> {
+    let path = criterion_root
+        .join("simd_structural_scan")
+        .join(format!("{fixture}_simd"))
+        .join("metadata.toml");
+    let text = fs::read_to_string(&path)
+        .map_err(|error| format!("failed to read {}: {error}", path.display()))?;
+    toml::from_str::<RowMetadata>(&text)
+        .map_err(|error| format!("malformed {}: {error}", path.display()))
+}
+
+fn validate_w0_simd_metadata(
+    fixture: &str,
+    input_sha256: &str,
+    input_bytes: u64,
+    scalar_hash: &str,
+    main_capture: &RowMetadata,
+    row: &RowMetadata,
+) -> Result<(), String> {
+    if !row.required_fields_present() {
+        return Err("missing required metadata fields".to_string());
+    }
+    if row.input_sha256 != input_sha256 {
+        return Err(format!(
+            "{} SIMD metadata has input hash {}, expected {}",
+            fixture, row.input_sha256, input_sha256
+        ));
+    }
+    if row.input_bytes != input_bytes {
+        return Err(format!(
+            "{} SIMD metadata has {} input bytes, expected {}",
+            fixture, row.input_bytes, input_bytes
+        ));
+    }
+    if row.track != TrackTag::SimdScan
+        || row.workload != "cycles_per_byte"
+        || row.materialisation != "structural_offsets"
+        || row.strictness != "strict"
+        || row.output_plane != "offset bitmap"
+        || row.parse_mode != "simd_scan"
+    {
+        return Err("SIMD metadata has unsupported bench semantics".to_string());
+    }
+    if row.cpu_model != main_capture.cpu_model
+        || row.cpu_arch != main_capture.cpu_arch
+        || row.os_kernel != main_capture.os_kernel
+        || row.rustflags != main_capture.rustflags
+        || row.target_cpu != main_capture.target_cpu
+        || row.profile != main_capture.profile
+        || row.bbnf_commit != main_capture.bbnf_commit
+    {
+        return Err("SIMD metadata is from a different capture".to_string());
+    }
+    if row.profile != "bench"
+        || row.rustflags != "-C target-cpu=native"
+        || row.target_cpu != "native"
+        || row.warmup_samples != 3
+        || !same_f64(row.warmup_time_s, 3.0)
+        || row.sample_size != 100
+        || !same_f64(row.measurement_time_s, 5.0)
+        || !same_f64(row.confidence_interval, 0.95)
+        || row.outlier_rejection != "iqr"
+        || row.statistical_method != "bootstrap"
+    {
+        return Err("SIMD metadata has unsupported capture policy".to_string());
+    }
+    if simd_metadata_hash(row, fixture).as_deref() != Some(scalar_hash) {
+        return Err("SIMD metadata parity hash does not match scalar scan".to_string());
+    }
+    Ok(())
 }
 
 fn simd_metadata_hash(row: &RowMetadata, fixture: &str) -> Option<String> {
@@ -1617,6 +1719,58 @@ mod tests {
         assert!(validate_w0_capture_metadata("fixture", "hash", 12, false, &rows).is_err());
     }
 
+    #[test]
+    fn w0_simd_metadata_rejects_capture_and_hash_mismatch() {
+        let main = metadata_rows(false).remove(0);
+        let mut simd = simd_metadata_row(&main);
+        assert!(
+            validate_w0_simd_metadata("fixture", "hash", 12, "scan-hash", &main, &simd).is_ok()
+        );
+
+        simd.bbnf_commit = "other-commit".into();
+        assert!(
+            validate_w0_simd_metadata("fixture", "hash", 12, "scan-hash", &main, &simd).is_err()
+        );
+
+        let mut simd = simd_metadata_row(&main);
+        simd.scalar_parity_hash_twitter = Some("other-hash".into());
+        assert!(
+            validate_w0_simd_metadata("fixture", "hash", 12, "scan-hash", &main, &simd).is_err()
+        );
+
+        let mut simd = simd_metadata_row(&main);
+        simd.sample_size = 50;
+        assert!(
+            validate_w0_simd_metadata("fixture", "hash", 12, "scan-hash", &main, &simd).is_err()
+        );
+    }
+
+    #[test]
+    fn w0_criterion_fingerprint_excludes_derendered_probe_estimates() {
+        let root = test_temp_root("criterion-fingerprint");
+        write_test_file(
+            &root.join("json_twitter/track1_generated/new/estimates.json"),
+            b"main-estimate-a",
+        );
+        write_test_file(
+            &root.join("json_twitter/track1_generated/metadata.toml"),
+            b"main-metadata",
+        );
+        let before_probe = criterion_fingerprint(&root);
+        write_test_file(
+            &root.join("json_probes_twitter/host_call_dispatch_overhead/new/estimates.json"),
+            b"volatile-probe",
+        );
+        assert_eq!(before_probe, criterion_fingerprint(&root));
+
+        write_test_file(
+            &root.join("json_twitter/track1_generated/new/estimates.json"),
+            b"main-estimate-b",
+        );
+        assert_ne!(before_probe, criterion_fingerprint(&root));
+        let _ = fs::remove_dir_all(root);
+    }
+
     fn metadata_rows(real_typed: bool) -> Vec<RowMetadata> {
         required_metadata_specs(real_typed)
             .into_iter()
@@ -1675,5 +1829,44 @@ mod tests {
             peak_rss_bytes: Some(1),
             cold_cache_mode: "warm".into(),
         }
+    }
+
+    fn simd_metadata_row(main: &RowMetadata) -> RowMetadata {
+        let mut row = main.clone();
+        row.track = TrackTag::SimdScan;
+        row.workload = "cycles_per_byte".into();
+        row.strictness = "strict".into();
+        row.parse_utf8 = "none".into();
+        row.escape_complete = "n/a".into();
+        row.flaw_probe = "structural scan parity probe".into();
+        row.output_plane = "offset bitmap".into();
+        row.feature_mask = "Scalar".into();
+        row.api_symbol = "bbnf_bench::scan::structural_offsets_simd".into();
+        row.sidecar_freshness = "same-run".into();
+        row.primitive_status = "checkasm-backed primitive".into();
+        row.hot_leaf = "unprofiled in W0b".into();
+        row.materialisation = "structural_offsets".into();
+        row.parse_mode = "simd_scan".into();
+        row.sample_size = 100;
+        row.measurement_time_s = 5.0;
+        row.scalar_parity_hash_twitter = Some("scan-hash".into());
+        row.arena_writes = None;
+        row.payload_allocations = None;
+        row
+    }
+
+    fn test_temp_root(label: &str) -> PathBuf {
+        let nanos = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let root = env::temp_dir().join(format!("skv8-{label}-{}-{nanos}", std::process::id()));
+        fs::create_dir_all(&root).unwrap();
+        root
+    }
+
+    fn write_test_file(path: &Path, bytes: &[u8]) {
+        fs::create_dir_all(path.parent().unwrap()).unwrap();
+        fs::write(path, bytes).unwrap();
     }
 }

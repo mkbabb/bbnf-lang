@@ -136,7 +136,7 @@ pub fn validate_strict_admission(evidence: &StrictAdmissionEvidence<'_>) -> Resu
     let Some(outcome) = parse_outcome_id(evidence.outcome_id) else {
         return Err(format!("unsupported outcome {}", evidence.outcome_id));
     };
-    if matches!(outcome, Outcome::KSimdParityHashFail) || evidence.outcome_id == "S" {
+    if outcome.verdict() != Verdict::Go {
         return Err(format!(
             "{} is not strict-admission eligible",
             evidence.outcome_id
@@ -457,12 +457,29 @@ mod tests {
     }
 
     #[test]
-    fn rejects_k_or_reserved_s_as_strict_admission() {
-        let mut evidence = strict_evidence();
-        evidence.outcome_id = "K";
-        assert!(validate_strict_admission(&evidence).is_err());
-        evidence.outcome_id = "S";
-        assert!(validate_strict_admission(&evidence).is_err());
+    fn rejects_non_go_outcomes_as_strict_admission() {
+        assert!(validate_strict_admission(&strict_evidence()).is_ok());
+        for outcome_id in [
+            "D",
+            "E",
+            "F-positive",
+            "F-noise",
+            "G",
+            "I",
+            "J",
+            "K",
+            "L",
+            "M",
+            "N-direct",
+            "S",
+        ] {
+            let mut evidence = strict_evidence();
+            evidence.outcome_id = outcome_id;
+            assert!(
+                validate_strict_admission(&evidence).is_err(),
+                "{outcome_id} must not be strict-admission eligible"
+            );
+        }
     }
 
     #[test]

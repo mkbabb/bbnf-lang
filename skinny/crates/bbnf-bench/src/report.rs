@@ -1,4 +1,4 @@
-use crate::gate::{self, Outcome, StrictAdmissionEvidence, Verdict};
+use crate::gate::{self, Outcome, Verdict};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 use std::fs;
@@ -1010,63 +1010,31 @@ fn expected_profile_path(row_id: &str) -> Result<String, String> {
 }
 
 fn validate_w0_admission_boundary(row: &TelemetryRow) -> Result<(), String> {
-    let strict_claim =
-        row.strictness == "strict" || row.sk_v8.measured_validation_path == "measured-row";
-    if !strict_claim {
-        if row.strictness != "deferred" {
-            return Err(format!(
-                "{} has unsupported non-strict strictness {}",
-                row.sk_v8.row_id, row.strictness
-            ));
-        }
-        if row.sk_v8.measured_validation_path != "view-boundary" {
-            return Err(format!(
-                "{} has unsupported non-strict validation path {}",
-                row.sk_v8.row_id, row.sk_v8.measured_validation_path
-            ));
-        }
-        if row.parse_utf8 != "view-boundary" {
-            return Err(format!(
-                "{} has unsupported non-strict parse_utf8 {}",
-                row.sk_v8.row_id, row.parse_utf8
-            ));
-        }
-        if row.escape_complete != "yes" {
-            return Err(format!(
-                "{} has unsupported non-strict escape_complete {}",
-                row.sk_v8.row_id, row.escape_complete
-            ));
-        }
-        return Ok(());
+    if row.strictness != "deferred" {
+        return Err(format!(
+            "{} has unsupported W0 strictness {}",
+            row.sk_v8.row_id, row.strictness
+        ));
     }
-
-    let mut last_error = None;
-    for comparator in row.sk_v8.comparators.iter().filter(|comparator| {
-        comparator.value_mbps.is_some()
-            && SK_V8_NATIVE_STRICT_COMPARATORS.contains(&comparator.comparator_id.as_str())
-    }) {
-        let evidence = StrictAdmissionEvidence {
-            outcome_id: &row.outcome_id,
-            row_strictness: &row.strictness,
-            parse_utf8: &row.parse_utf8,
-            escape_complete: &row.escape_complete,
-            row_output_plane: &row.output_plane,
-            comparator_plane: &comparator.comparator_plane,
-            comparator_strictness: &comparator.comparator_strictness,
-            comparator_freshness: &comparator.comparator_freshness,
-            sidecar_freshness: &comparator.sidecar_freshness,
-            measured_validation_path: &row.sk_v8.measured_validation_path,
-        };
-        match gate::validate_strict_admission(&evidence) {
-            Ok(()) => return Ok(()),
-            Err(error) => last_error = Some(error),
-        }
+    if row.sk_v8.measured_validation_path != "view-boundary" {
+        return Err(format!(
+            "{} has unsupported W0 validation path {}",
+            row.sk_v8.row_id, row.sk_v8.measured_validation_path
+        ));
     }
-    Err(format!(
-        "{} strict admission rejected: {}",
-        row.sk_v8.row_id,
-        last_error.unwrap_or_else(|| "no comparator evidence".to_string())
-    ))
+    if row.parse_utf8 != "view-boundary" {
+        return Err(format!(
+            "{} has unsupported W0 parse_utf8 {}",
+            row.sk_v8.row_id, row.parse_utf8
+        ));
+    }
+    if row.escape_complete != "yes" {
+        return Err(format!(
+            "{} has unsupported W0 escape_complete {}",
+            row.sk_v8.row_id, row.escape_complete
+        ));
+    }
+    Ok(())
 }
 
 fn validate_w0_row_identity(row: &TelemetryRow) -> Result<(), String> {
@@ -1982,5 +1950,17 @@ mod tests {
             row.sk_v8.run_id = "sk-v8-open:test".into();
         }
         assert!(bad_uniform_run_id.validate_sk_v8_w0().is_err());
+
+        let mut bad_strict_hard_failure = report.clone();
+        let canada = bad_strict_hard_failure
+            .rows
+            .iter_mut()
+            .find(|row| row.sk_v8.row_id == "json/canada/parse_only/main")
+            .unwrap();
+        canada.strictness = "strict".into();
+        canada.parse_utf8 = "measured-row".into();
+        canada.output_plane = "DOM".into();
+        canada.sk_v8.measured_validation_path = "measured-row".into();
+        assert!(bad_strict_hard_failure.validate_sk_v8_w0().is_err());
     }
 }

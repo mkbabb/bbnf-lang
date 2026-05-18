@@ -2,15 +2,14 @@
 
 Date: 2026-05-18.
 
-Status: G-Alpha closed by user on 2026-05-18T05:26:48Z. SK-V8 W0, W1, W2, and
-W3 are closed. W2 admits source/product parity and rejects benchmark row-table
-admission for this wave. W3 rejects/routes Tier A implementation on the
-pre-redress fit gate. W4 has a proposed rejection/routing disposition after the
-scalar-parent fold candidate failed the selected row gate, but it remains
-pending hardening convergence. W5-W6 require prior wave dispositions and their
-own gates before implementation.
+Status: G-Alpha closed by user on 2026-05-18T05:26:48Z. SK-V8 W0, W1, W2,
+W3, and W4 are closed. W2 admits source/product parity and rejects benchmark
+row-table admission for this wave. W3 rejects/routes Tier A implementation on
+the pre-redress fit gate. W4 rejects/routes the scalar-parent fold candidate
+after it failed the selected row gate. W5 is the next active wave; W6 requires
+W5 disposition and its own close gate before implementation.
 
-Next move: finish SK-V8 W4 hardening convergence.
+Next move: execute SK-V8 W5 grammar-neutral audit and Lock 14 preservation.
 
 ## 1. Read First
 
@@ -136,8 +135,8 @@ dispatch W0.
 | W1 | CostFacts Gate Binding | Closed by W1 redress commit `c6345e4d` | 0 parser/generated behavior LOC; 272 insertions / 13 deletions in CostFacts/report/gate/test scope |
 | W2 | Typed Product Plane Expansion | Closed by V4+V5 challenge convergence: source/product parity admitted, benchmark row-table admission rejected/routed in REDRESS 91 | <=650 source/test LOC; generated output and row tables named separately |
 | W3 | Profile-Selected Parse Candidate — lead candidate: tape ⊕ structural-projection union (S-P2 cohort) | Rejected/routed by W3 V1 challenge on pre-redress fit gate; no source or RESULTS change | <=450 source/test LOC default; <=650 only with accepted pre-redress fit proof |
-| W4 | Direct Guard Triage | Proposed rejection/routing disposition after V1 challenge and measured scalar-parent fold miss; pending V2/V3 convergence | <=300 source/test LOC and <=3 selected rows |
-| W5 | Grammar-Neutral Audit And Lock 14 Preservation | Conditional on W1-W4 close | 0 source LOC default; <=150 named Lock 14 cleanup LOC |
+| W4 | Direct Guard Triage | Closed by V3+V4 challenge convergence: scalar-parent fold rejected/routed in REDRESS 93; no source or RESULTS change | <=300 source/test LOC and <=3 selected rows |
+| W5 | Grammar-Neutral Audit And Lock 14 Preservation | Active after W1-W4 close | 0 source LOC default; <=150 named Lock 14 cleanup LOC |
 | W6 | Close And Alpha Feedback | Conditional on all prior dispositions | 0 source LOC; docs/RESULTS/REDRESS/HANDOFF/SPEC reconciliation only |
 
 W0 is telemetry-only. If W0 changes parser, scanner, SIMD, asm, codegen
@@ -223,10 +222,12 @@ then failed the selected-row gate: Apache cleared sonic/1.10, but random still
 missed and numbers Track 2 regressed by +6.3287% time in Criterion. The patch
 was reverted, `skinny/RESULTS.md` remains unchanged, no Lock 14 allowance was
 added, and the remaining direct digest misses route to a later direct output
-contract or control-path tranche. This is the proposed disposition pending
-V2/V3 hardening convergence.
+contract or control-path tranche. W4 V3 accepted 6/6 as the first qualifying
+cycle after V2 REVISE, and W4 V4 accepted 6/6 as the unchanged second
+qualifying cycle. The closure authority is
+`restart/skinny/tranches/sk-v8/research/wave-4-hardening/V4/HARDENING-W4-V4-CONSOLIDATED.md`.
 
-W4 hardening convergence is now the active work.
+W5 grammar-neutral audit and Lock 14 preservation is now the active work.
 
 ## 5. Entry Gates
 
@@ -316,10 +317,9 @@ Decision recorded:
 - `G-Alpha closed` by user on 2026-05-18T05:26:48Z.
 
 Authority granted: dispatch SK-V8 after `G-Alpha closed`, with W0 and W1 now
-closed under their recorded gates, W2 and W3 dispositions recorded in REDRESS
-91 and 92, and W4's proposed disposition recorded in REDRESS 93 pending
-hardening convergence.
+closed under their recorded gates, W2, W3, and W4 dispositions recorded in
+REDRESS 91, 92, and 93, and W4 closed by V3+V4 hardening convergence.
 
-W4-W6 remain blocked until each later wave satisfies its own entry gates,
+W5-W6 remain blocked until each later wave satisfies its own entry gates,
 plan/challenge requirements, prior-wave disposition requirements, and dispatch
 authority.

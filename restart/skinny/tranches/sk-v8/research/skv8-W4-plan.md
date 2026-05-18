@@ -2,7 +2,7 @@
 
 Date: 2026-05-18.
 
-Status: W4 plan challenged and rejected/routed after V1 measurement.
+Status: W4 closed as rejected/routed after V3+V4 hardening convergence.
 
 ## Scope
 
@@ -108,5 +108,5 @@ and saved the rejected patch at
 native Criterion falsified the selected three-row gate: `apache_builds` cleared
 sonic/1.10, while `random` remained below sonic/1.10 and `numbers` Track 2
 regressed by +6.3287% time. The source patch was reverted, `skinny/RESULTS.md`
-remains unchanged, and W4 closes only as a rejected/routed direct guard triage
-after V2/V3 hardening accepts this disposition.
+remains unchanged, and W4 closes as a rejected/routed direct guard triage after
+V3+V4 hardening accepted this disposition.

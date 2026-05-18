@@ -24,7 +24,7 @@ Sources read:
 - SK-V8 close head for this ledger: `32870fea`
   (`docs(sk-v8-wave6-close): close SK-V8 after V2 convergence`).
 - Current measured authority remains the W0-rendered `skinny/RESULTS.md`
-  (`skinny/RESULTS.md:3-40`;
+  (`skinny/RESULTS.md:3-42`;
   `restart/skinny/tranches/sk-v8/HANDOFF.md:250-260`).
 - Overall outcome remains `N-direct / NoGo`.
 - Main-row state is unchanged by W1-W6:
@@ -40,7 +40,7 @@ Sources read:
   (`skinny/REDRESS.md:2620-2659`).
 - Every current main row still records `Strictness=deferred` and
   `parse_utf8=view-boundary`; parse rows are substrate-guard non-admission
-  telemetry, not strict SOTA admissions (`skinny/RESULTS.md:3-40`).
+  telemetry, not strict SOTA admissions (`skinny/RESULTS.md:3-42`).
 
 Primary close authorities:
 

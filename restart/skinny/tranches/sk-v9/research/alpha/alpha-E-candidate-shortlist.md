@@ -23,7 +23,7 @@ Baseline facts carried forward:
 - `skinny/RESULTS.md` remains the SK-V8 W0 report authority with 38
   `SK-V8-open` manifest rows and four measured `real_typed_struct A / GO`
   rows: `twitter`, `update_center`, `mesh`, and `marine_ik`
-  (`skinny/RESULTS.md:3-40`).
+  (`skinny/RESULTS.md:3-42`).
 - W2 admitted only Apache/CITM source/product typed parity. Apache/CITM are not
   measured `RESULTS.md` real-typed rows yet (`skinny/REDRESS.md:2620-2659`).
 - W3 was rejected/routed before source because scanner structural positions and

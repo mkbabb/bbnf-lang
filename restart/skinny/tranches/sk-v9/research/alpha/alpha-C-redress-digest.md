@@ -27,7 +27,7 @@ generated-output, benchmark-row, `skinny/RESULTS.md`, or `skinny/REDRESS.md`
 change. `skinny/RESULTS.md` remains the W0-rendered authority with 38
 `SK-V8-open` manifest rows, four measured `real_typed_struct A / GO` rows, and
 overall `N-direct / NoGo` (`restart/skinny/tranches/sk-v8/HANDOFF.md:250-260`;
-`skinny/RESULTS.md:3-40`).
+`skinny/RESULTS.md:3-42`).
 
 The SK-V8 behavior-wave REDRESS ledger is:
 

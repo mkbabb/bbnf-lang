@@ -21,22 +21,22 @@ Every `n/a` means no value is present in final SK-V8 RESULTS.
 
 - Final `skinny/RESULTS.md` is the row-value authority. SK-V8 W6 states that
   W6 made no RESULTS change, so the W0-rendered 38-row `SK-V8-open` table is
-  still the close-state authority (`skinny/RESULTS.md:3-40`;
+  still the close-state authority (`skinny/RESULTS.md:3-42`;
   `restart/skinny/tranches/sk-v8/HANDOFF.md:250-260`).
 - Current bbnf rows all report `Strictness=deferred`,
   `parse_utf8=view-boundary`, and `escape_complete=yes`
-  (`skinny/RESULTS.md:3-40`).
+  (`skinny/RESULTS.md:3-42`).
 - `sonic-rs strict` and `serde_json` are same-run native Rust comparators.
   They are the only complete 38-row comparator columns
-  (`skinny/RESULTS.md:3-40`).
+  (`skinny/RESULTS.md:3-42`).
 - `sonic-rs lossy` is same-run but permissive and is a flaw probe only. It is
-  populated only on the 17 `parse_only` rows (`skinny/RESULTS.md:3-40`).
+  populated only on the 17 `parse_only` rows (`skinny/RESULTS.md:3-42`).
 - C++ comparators (`simdjson DOM`, `yyjson default`, `RapidJSON default`) are
   historical sidecar planning signals when populated. They are absent on all
   direct and real-typed rows and on several parse rows
-  (`skinny/RESULTS.md:3-40`).
+  (`skinny/RESULTS.md:3-42`).
 - `simdjson On Demand`, `asmjson SWAR`, and `asmjson AVX-512` have no Mbps
-  values in final SK-V8 RESULTS (`skinny/RESULTS.md:3-40`).
+  values in final SK-V8 RESULTS (`skinny/RESULTS.md:3-42`).
 - Strict admission remains strict-vs-strict, same-run, matching output plane,
   with measured validation inside the row. Deferred bbnf strictness, lossy
   comparators, sidecar values, historical freshness, and output-plane mismatch

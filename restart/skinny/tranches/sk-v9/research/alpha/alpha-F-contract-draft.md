@@ -30,7 +30,7 @@ SK-V8 closed honestly and did not dispatch SK-V9. W6 confirms:
 
 - `skinny/RESULTS.md` remains the W0-rendered authority with 38 `SK-V8-open`
   manifest rows and overall `N-direct / NoGo`
-  (`skinny/RESULTS.md:3-40`).
+  (`skinny/RESULTS.md:3-42`).
 - W2 admitted Apache/CITM source/product parity only; benchmark row-table
   admission was rejected and routed in REDRESS 91
   (`skinny/REDRESS.md:2620-2659`).

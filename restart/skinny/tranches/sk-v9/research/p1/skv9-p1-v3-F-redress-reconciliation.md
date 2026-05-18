@@ -460,6 +460,15 @@ Diff-shaped. NOT applied here. All edits below assume the V3 sibling
 artefacts have committed and the V3 CHALLENGE consolidation is in flight or
 landed (P1-V3-F is one of the siblings; this report is its commit).
 
+**Edit-dispatch hard cap (V5 fold per CH4-D29 / CH4-V21).** The full
+batch of 19 surgical edits below carries a single dispatch hard cap of
+**≤30 minutes total**. Each individual edit is a single-paragraph
+single-list-row in-place modification with no source compilation cost;
+the batch is sequenced commits SPEC.md (8) → HANDOFF.md (6) →
+DISPATCH-PROMPT.md (5) so partial-batch progress can land safely. Revert
+protocol: single `git revert` on the batch commit; the underlying V3
+evidence is unaffected.
+
 **Edit count (V4-folded).** §4.1 SPEC.md enumerates 9 labelled Edit entries
 (A through I); Edit E is an explicit deferral decision (do not edit §0.3
 in this pass) and is not a surgical edit. Counting actual surgical edits:

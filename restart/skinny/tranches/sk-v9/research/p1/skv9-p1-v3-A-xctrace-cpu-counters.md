@@ -234,11 +234,14 @@ The top-5 self-time symbols per parse-only row from V2 samply remain:
 Source: `/tmp/skv9-p1-rerun/profile-summary-top5.md`, the V2 samply
 aggregator.
 
-The agreement is unambiguous: every parse-only Track 1 row, including
-the string-heavy and unicode-heavy rows the dispatch said to load-bear,
-has the same hot leaf at ~95-99% self-time. cycles/B varies across rows
-even though the hot symbol does not — that delta is *within* the fused
-`dispatch_value` body and is what S-P2 needs to break apart at a
+The V2 baseline (superseded; see §4 and P1-V3-B §3.4): every parse-only
+Track 1 row appears to share the same hot leaf at ~95-99% self-time. That
+~95-99% figure is a frame-pointer-coalescing artefact of the samply
+mode-I capture; xctrace Time Profiler with DWARF resolves the inlined
+leaves and falsifies the single-symbol attribution. cycles/B varies
+across rows even though the V2 hot-symbol label did not — that delta is
+*within* the fused `dispatch_value` body and is what S-P2 needs to break
+apart at a
 sub-symbol granularity. Samply alone cannot do that; PMU + sub-leaf
 sample correlation is the only mechanical path.
 

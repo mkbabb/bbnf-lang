@@ -1155,6 +1155,33 @@ Time Profiler traces under `/tmp/skv9-xctrace-v3/p1b-tp/` and the same
 P1-V3-A PMU rows at `/tmp/skv9-xctrace-v3/pmu_rows.tsv`. No
 re-capture, no re-measurement, no number revised.
 
+**V5 fold — re-capture wall cost (CH4-V05/V19/V20):** A full V5+ S-P1
+re-capture across 17 corpora × {track1, track2} carries the following
+deterministic wall costs on the SK-V9 host (Apple M5 Max, 12P+6E, full
+Xcode 26.0, `target-cpu=native`):
+- **xctrace CPU Counters template** (P1-V3-A path): ~12 min wall for
+  34 captures (0.5-3 s steady-state per launch + xctrace startup
+  overhead).
+- **xctrace Time Profiler template** (this report's path): ~22 min wall
+  for 34 captures (longer per-launch sampling + per-symbol DWARF
+  export via `xcrun xctrace export`).
+- **`lto=fat` cold-link cost**: ~3-5 min one-time when the probe
+  binary's profile changes (the V3 probe was built with default
+  release LTO; a future `lto=fat` rebuild adds this one-time cost
+  before either xctrace template re-captures).
+- **Aggregate**: ~37-39 min wall for a full re-capture cycle; an
+  isolated CPU Counters re-capture is ~12 min; an isolated TP
+  re-capture is ~22 min.
+
+**V5 fold — `aggregate.py` reproducibility (CH4-V23):** The TP-symbols
+aggregator script lives at `/tmp/skv9-xctrace-v3/aggregate.py` (already
+on disk). Re-running it against the captured `.trace` bundles
+deterministically regenerates `exports/<corpus>__<track>.symbols.json`.
+The script is reproducible-by-instruction: `aggregate.py` reads the
+exported `.xml` from `xcrun xctrace export --type tabular --output
+<out> --input <trace>` and bucketises by symbol; the buckets are the
+per-symbol self-time tables surfaced in §2-§3 of this report.
+
 Specifically preserved:
 
 - `scan_structurals` 0.00% self-time on 34/34 rows (§3.1) — unchanged;

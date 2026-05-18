@@ -713,8 +713,10 @@ cycle sink is the escape-codec hex-unit primitive (B §3.2 last bullet),
 *not* the string scanner. Per §3.2:
 
 - y_string_unicode/t1: escape-codec c/B = 2.31; per-string-span c/B =
-  1.00; structural walker c/B = 0.42. The escape-codec class is the
-  largest single cycle sink in the entire 34-row table.
+  1.00; structural walker c/B = 0.42. The escape-codec class is among
+  the largest single cycle sinks in the 34-row table (distinct_values/t1
+  per-string-span at 3.850 × 0.619 = 2.38 c/B is marginally larger;
+  cf. CH1 V4 A4-9 / C4-5 hedges).
 - y_string_unicode/t2: escape-codec hex-unit = 43.9% self-time;
   per-string-span scanner = 7.5%. Same shape, tighter ratio.
 

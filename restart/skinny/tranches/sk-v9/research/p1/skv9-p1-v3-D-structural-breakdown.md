@@ -22,6 +22,34 @@ script + R²/residuals committed per F5 at
 `/tmp/skv9-xctrace-v3/regression.py` with output
 `/tmp/skv9-xctrace-v3/regression_output.json`.
 
+**V3 publication errors enumerated (V5 fold per CH6-D):** The V4 fold
+revealed eight load-bearing V3 errors in this report that the
+regression-script commit surfaced and corrected:
+
+1. **OLS coefficient `a` (per-quote)**: V3 published 8.64; real fit
+   1.079. ~8× over-stated.
+2. **OLS coefficient `b` (per-number)**: V3 published 1.47; real fit
+   0.184. ~8× over-stated.
+3. **OLS intercept `c`**: V3 published 0.410; real fit 0.051. ~8×
+   over-stated.
+4. **R² absent in V3**: V4 publishes 0.371 (modest fit; coefficient `b`
+   is not statistically significant at p=0.545).
+5. **"10% per-quote cut clears 7/11 LOSS rows" forecast**: V3 derived
+   from inflated coefficients; gone in V4. Real picture: 4 of 11
+   (unicode_mixed, unicode_escapes, y_string_unicode, gsoc-2018) cannot
+   be closed by a delimiter-only intervention because the throughput
+   gap exceeds the entire delimiter contribution.
+6. **"25% covers 9/11" forecast**: V3-derived; superseded.
+7. **OLS sign-convention provenance gap**: V3 lacked the script that
+   produced the coefficients; V4 commits it, reproducible bit-for-bit.
+8. **Per-row residual table absent in V3**: V4 publishes per-row
+   residuals showing the four uncloseable rows exceed 130-460% of the
+   regression's full per-byte budget — a hypothesis-sized finding, not
+   a wave-sized intervention.
+
+This enumeration mirrors P1-V3-C §6's V2-shallowness item list and
+satisfies the V4 CH6 residual MEDIUM disposition.
+
 ## §1 The correlation table (all 17 corpora)
 
 Columns (definitions):

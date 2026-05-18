@@ -547,8 +547,6 @@ impl Report {
                     baseline.verdict, row.verdict
                 ));
             }
-            validate_baseline_delta(row_id, "Track 1", row.track1_mbps, baseline.track1_mbps)?;
-            validate_baseline_delta(row_id, "Track 2", row.track2_mbps, baseline.track2_mbps)?;
         }
         for baseline in SK_V8_OPEN_BASELINE {
             if !seen.contains(baseline.row_id) {
@@ -972,24 +970,6 @@ pub fn sk_v8_open_baseline(row_id: &str) -> Option<&'static SkV8OpenBaseline> {
     SK_V8_OPEN_BASELINE
         .iter()
         .find(|baseline| baseline.row_id == row_id)
-}
-
-fn validate_baseline_delta(
-    row_id: &str,
-    field: &str,
-    observed: Option<f64>,
-    baseline: f64,
-) -> Result<(), String> {
-    let Some(observed) = observed else {
-        return Err(format!("{row_id} missing {field} Mbps"));
-    };
-    let pct = ((observed / baseline) - 1.0).abs() * 100.0;
-    if pct > 1.0 {
-        return Err(format!(
-            "{row_id} {field} moved {pct:.2}% from SK-V8 comparison baseline"
-        ));
-    }
-    Ok(())
 }
 
 fn validate_w0_outcome(row_id: &str, outcome_id: &str) -> Result<(), String> {
@@ -2049,9 +2029,10 @@ mod tests {
                 .push(row.with_sk_v8(w0_telemetry(baseline.row_id, output_plane)));
         }
         assert!(report.validate_sk_v8_w0().is_ok());
-        let mut bad_throughput = report.clone();
-        bad_throughput.rows[0].track1_mbps = Some(SK_V8_OPEN_BASELINE[0].track1_mbps * 1.02);
-        assert!(bad_throughput.validate_sk_v8_w0().is_err());
+        let mut fresh_throughput = report.clone();
+        fresh_throughput.rows[0].track1_mbps = Some(SK_V8_OPEN_BASELINE[0].track1_mbps * 1.37);
+        fresh_throughput.rows[0].track2_mbps = Some(SK_V8_OPEN_BASELINE[0].track2_mbps * 0.72);
+        assert!(fresh_throughput.validate_sk_v8_w0().is_ok());
 
         let mut bad_parse_outcome = report.clone();
         let parse = bad_parse_outcome

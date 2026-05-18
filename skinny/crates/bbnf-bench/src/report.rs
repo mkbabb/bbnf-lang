@@ -316,7 +316,7 @@ impl TelemetryRow {
         ];
         for (field, value) in required_text {
             if value.trim().is_empty() {
-                return Err(format!("{} missing SK-V8 W0 {field}", telemetry.row_id));
+                return Err(format!("{} missing SK-V9 W0 {field}", telemetry.row_id));
             }
         }
         if telemetry.grammar_id != "json" || telemetry.domain != "json_bench" {
@@ -327,16 +327,16 @@ impl TelemetryRow {
         }
         validate_w0_row_identity(self)?;
         validate_w0_outcome(&telemetry.row_id, &self.outcome_id)?;
-        if telemetry.wave_id != "SK-V8-open" || telemetry.sk_v8_open_delta != "baseline" {
+        if telemetry.wave_id != "SK-V9-open" || telemetry.sk_v8_open_delta != "baseline" {
             return Err(format!(
-                "{} is not marked as SK-V8-open baseline",
+                "{} is not marked as SK-V9-open baseline",
                 telemetry.row_id
             ));
         }
-        if telemetry.run_id != SK_V8_OPEN_RUN_ID {
+        if !is_skv9_open_run_id(&telemetry.run_id) {
             return Err(format!(
-                "{} run_id moved from SK-V8-open baseline {} to {}",
-                telemetry.row_id, SK_V8_OPEN_RUN_ID, telemetry.run_id
+                "{} has invalid SK-V9-open run_id {}",
+                telemetry.row_id, telemetry.run_id
             ));
         }
         if telemetry.sample_count == 0 {
@@ -391,7 +391,7 @@ impl SkV8Telemetry {
             costfacts_chosen_shape: "none:pre-W1".to_string(),
             costfacts_rejected_alternative_ids: vec!["none:pre-W1".to_string()],
             redress_entry: "none".to_string(),
-            wave_id: "SK-V8-open".to_string(),
+            wave_id: "SK-V9-open".to_string(),
             run_id: "test-run".to_string(),
             sk_v8_open_delta: "baseline".to_string(),
             substrate_surface: output_plane.to_string(),
@@ -494,30 +494,41 @@ impl Report {
     pub fn validate_sk_v8_w0(&self) -> Result<(), String> {
         if self.rows.len() != SK_V8_OPEN_BASELINE.len() {
             return Err(format!(
-                "SK-V8 W0 expected {} main rows, saw {}",
+                "SK-V9 W0 expected {} main rows, saw {}",
                 SK_V8_OPEN_BASELINE.len(),
                 self.rows.len()
             ));
         }
         let mut seen = BTreeSet::new();
+        let mut run_id = None::<String>;
         for row in &self.rows {
             row.validate_sk_v8_w0()?;
             let row_id = row.sk_v8.row_id.as_str();
             if !seen.insert(row_id) {
-                return Err(format!("duplicate SK-V8 W0 row_id {row_id}"));
+                return Err(format!("duplicate SK-V9 W0 row_id {row_id}"));
+            }
+            match &run_id {
+                Some(expected) if expected != &row.sk_v8.run_id => {
+                    return Err(format!(
+                        "{row_id} run_id {} differs from report run_id {}",
+                        row.sk_v8.run_id, expected
+                    ));
+                }
+                Some(_) => {}
+                None => run_id = Some(row.sk_v8.run_id.clone()),
             }
             let Some(baseline) = sk_v8_open_baseline(row_id) else {
-                return Err(format!("unknown SK-V8-open row_id {row_id}"));
+                return Err(format!("unknown SK-V8 comparison row_id {row_id}"));
             };
             if row.outcome_id != baseline.outcome_id {
                 return Err(format!(
-                    "{row_id} outcome moved from SK-V8-open baseline {} to {}",
+                    "{row_id} outcome moved from SK-V8 comparison baseline {} to {}",
                     baseline.outcome_id, row.outcome_id
                 ));
             }
             if row.verdict != baseline.verdict {
                 return Err(format!(
-                    "{row_id} verdict moved from SK-V8-open baseline {} to {}",
+                    "{row_id} verdict moved from SK-V8 comparison baseline {} to {}",
                     baseline.verdict, row.verdict
                 ));
             }
@@ -526,7 +537,10 @@ impl Report {
         }
         for baseline in SK_V8_OPEN_BASELINE {
             if !seen.contains(baseline.row_id) {
-                return Err(format!("missing SK-V8-open row_id {}", baseline.row_id));
+                return Err(format!(
+                    "missing SK-V8 comparison row_id {}",
+                    baseline.row_id
+                ));
             }
         }
         Ok(())
@@ -573,8 +587,8 @@ impl Report {
             ));
         }
         if !self.rows.is_empty() {
-            out.push_str("\n## SK-V8 W0 Telemetry Manifest\n\n");
-            out.push_str("| Row id | Grammar | Domain | Wave | Run id | Validation | Profile artifact | Sample cost | Sample count | Build flags | Host triple | Feature mask | CostFacts | Redress | SK-V8-open delta | Substrate | Structural projection | Cardinality | Consumer | Track 2 | Comparator evidence |\n");
+            out.push_str("\n## SK-V9 W0 Telemetry Manifest\n\n");
+            out.push_str("| Row id | Grammar | Domain | Wave | Run id | Validation | Profile artifact | Sample cost | Sample count | Build flags | Host triple | Feature mask | CostFacts | Redress | Delta vs SK-V8 | Substrate | Structural projection | Cardinality | Consumer | Track 2 | Comparator evidence |\n");
             out.push_str("|---|---|---|---|---|---|---|---|---:|---|---|---|---|---|---|---|---|---|---|---|---|\n");
             for row in &self.rows {
                 let telemetry = &row.sk_v8;
@@ -652,7 +666,17 @@ pub struct SkV8OpenBaseline {
     pub track2_mbps: f64,
 }
 
-pub const SK_V8_OPEN_RUN_ID: &str = "sk-v8-open:criterion-fnv64-9a37562ed3d0383a";
+pub const SK_V9_OPEN_RUN_ID_PREFIX: &str = "sk-v9-open:criterion-fnv64-";
+
+fn is_skv9_open_run_id(run_id: &str) -> bool {
+    let Some(suffix) = run_id.strip_prefix(SK_V9_OPEN_RUN_ID_PREFIX) else {
+        return false;
+    };
+    suffix.len() == 16
+        && suffix
+            .bytes()
+            .all(|byte| matches!(byte, b'0'..=b'9' | b'a'..=b'f'))
+}
 
 macro_rules! sk_v8_open_baseline {
     ($row_id:literal, $outcome_id:literal, $verdict:literal, $track1:literal, $track2:literal) => {
@@ -946,7 +970,7 @@ fn validate_baseline_delta(
     let pct = ((observed / baseline) - 1.0).abs() * 100.0;
     if pct > 1.0 {
         return Err(format!(
-            "{row_id} {field} moved {pct:.2}% from SK-V8-open baseline"
+            "{row_id} {field} moved {pct:.2}% from SK-V8 comparison baseline"
         ));
     }
     Ok(())
@@ -1381,7 +1405,7 @@ fn parse_row_id(row_id: &str) -> Result<(&str, &str), String> {
     let workload = parts.next();
     let suffix = parts.next();
     if grammar != Some("json") || corpus.is_none() || workload.is_none() || suffix != Some("main") {
-        return Err(format!("{row_id} is not a valid SK-V8 row id"));
+        return Err(format!("{row_id} is not a valid SK-V9 row id"));
     }
     Ok((corpus.unwrap(), workload.unwrap()))
 }
@@ -1497,6 +1521,8 @@ fn throughput_mbps(bytes: u64, ns: Option<f64>) -> Option<f64> {
 mod tests {
     use super::*;
 
+    const TEST_SK_V9_OPEN_RUN_ID: &str = "sk-v9-open:criterion-fnv64-0123456789abcdef";
+
     fn comparators() -> ComparatorSet {
         ComparatorSet {
             sonic_strict_mbps: Some(11_915.0),
@@ -1591,8 +1617,8 @@ mod tests {
             costfacts_chosen_shape: "none:pre-W1".into(),
             costfacts_rejected_alternative_ids: vec!["none:pre-W1".into()],
             redress_entry: "none".into(),
-            wave_id: "SK-V8-open".into(),
-            run_id: SK_V8_OPEN_RUN_ID.into(),
+            wave_id: "SK-V9-open".into(),
+            run_id: TEST_SK_V9_OPEN_RUN_ID.into(),
             sk_v8_open_delta: "baseline".into(),
             substrate_surface: substrate_surface.into(),
             structural_projection_status: structural_projection_status.into(),
@@ -1680,7 +1706,7 @@ mod tests {
         ));
         report.rows.push(row);
         let markdown = report.render_markdown();
-        assert!(markdown.contains("## SK-V8 W0 Telemetry Manifest"));
+        assert!(markdown.contains("## SK-V9 W0 Telemetry Manifest"));
         assert!(markdown.contains("json/twitter/parse_only/main"));
         assert!(markdown.contains("none:pre-W1"));
         assert!(markdown.contains("absent:not-collected-for-test"));
@@ -2029,14 +2055,19 @@ mod tests {
         assert!(bad_direct_verdict.validate_sk_v8_w0().is_err());
 
         let mut bad_single_run_id = report.clone();
-        bad_single_run_id.rows[0].sk_v8.run_id = "sk-v8-open:test".into();
+        bad_single_run_id.rows[0].sk_v8.run_id = "sk-v9-open:test".into();
         assert!(bad_single_run_id.validate_sk_v8_w0().is_err());
 
         let mut bad_uniform_run_id = report.clone();
         for row in &mut bad_uniform_run_id.rows {
-            row.sk_v8.run_id = "sk-v8-open:test".into();
+            row.sk_v8.run_id = "sk-v9-open:test".into();
         }
         assert!(bad_uniform_run_id.validate_sk_v8_w0().is_err());
+
+        let mut bad_mixed_valid_run_id = report.clone();
+        bad_mixed_valid_run_id.rows[0].sk_v8.run_id =
+            "sk-v9-open:criterion-fnv64-fedcba9876543210".into();
+        assert!(bad_mixed_valid_run_id.validate_sk_v8_w0().is_err());
 
         let mut bad_strict_hard_failure = report.clone();
         let canada = bad_strict_hard_failure

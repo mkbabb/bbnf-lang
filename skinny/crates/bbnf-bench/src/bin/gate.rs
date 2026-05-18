@@ -50,6 +50,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let run_facts = RunFacts::probe(&criterion_root, &fixture_names);
     let mut report = Report::new("Skinny JSON Bench Results");
     let mut outcomes = Vec::new();
+    let mut report_capture_identity = None;
 
     for fixture in fixtures {
         let group = criterion_root.join(format!("json_{}", fixture.name));
@@ -62,6 +63,14 @@ fn main() -> Result<(), Box<dyn Error>> {
             &rows,
         )
         .map_err(|error| format!("{} metadata invalid: {error}", fixture.name))?;
+        let main_capture = rows
+            .first()
+            .expect("validated W0 capture metadata rows are nonempty");
+        validate_report_capture_identity(
+            &mut report_capture_identity,
+            &fixture.name,
+            main_capture,
+        )?;
         let scalar_offsets = bbnf_bench::scan::structural_offsets_scalar(&fixture.bytes);
         let simd_offsets = bbnf_bench::scan::structural_offsets_simd(&fixture.bytes);
         let scalar_hash = bbnf_bench::scan::hash_offsets(&scalar_offsets);
@@ -72,8 +81,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             &fixture.sha256,
             fixture.bytes.len() as u64,
             &scalar_hash,
-            rows.first()
-                .expect("validated W0 capture metadata rows are nonempty"),
+            main_capture,
             &simd_metadata,
         )
         .map_err(|error| format!("{} SIMD metadata invalid: {error}", fixture.name))?;
@@ -313,7 +321,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             .to_string(),
     );
     report.notes.push(
-        "SK-V8 W0 telemetry: gate-json consumes the manifest below; native Rust comparators are same-run, C++ sidecars are historical or explicitly absent and never strict anchors in W0."
+        "SK-V9 W0 telemetry: gate-json consumes the manifest below; native Rust comparators are same-run, C++ sidecars are historical or explicitly absent and never strict anchors in W0."
             .to_string(),
     );
     if let Err(error) = report
@@ -388,7 +396,7 @@ impl RunFacts {
         let target_cpu = parse_target_cpu(&rustflags).unwrap_or_else(|| "default".to_string());
         Self {
             run_id: format!(
-                "sk-v8-open:criterion-fnv64-{}",
+                "sk-v9-open:criterion-fnv64-{}",
                 criterion_fingerprint(criterion_root, fixture_names)
             ),
             host_triple: host_triple.clone(),
@@ -486,7 +494,7 @@ fn w0_telemetry(
         costfacts_chosen_shape: "none:pre-W1".to_string(),
         costfacts_rejected_alternative_ids: vec!["none:pre-W1".to_string()],
         redress_entry: "none".to_string(),
-        wave_id: "SK-V8-open".to_string(),
+        wave_id: "SK-V9-open".to_string(),
         run_id: run_facts.run_id.clone(),
         sk_v8_open_delta: "baseline".to_string(),
         substrate_surface: substrate_surface.to_string(),
@@ -1102,6 +1110,15 @@ fn validate_w0_capture_metadata(
                 fixture, row.api_symbol, row.input_bytes, input_bytes
             ));
         }
+        if row.profile != "bench"
+            || row.rustflags != "-C target-cpu=native"
+            || row.target_cpu != "native"
+        {
+            return Err(format!(
+                "{} has unsupported native W0 capture policy",
+                row.api_symbol
+            ));
+        }
         capture.validate_same_capture(row)?;
     }
     for spec in required_metadata_specs(real_typed_expected) {
@@ -1110,6 +1127,49 @@ fn validate_w0_capture_metadata(
         }
     }
     Ok(())
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct ReportCaptureIdentity {
+    cpu_model: String,
+    cpu_arch: String,
+    os_kernel: String,
+    rustflags: String,
+    target_cpu: String,
+    profile: String,
+    bbnf_commit: String,
+}
+
+impl ReportCaptureIdentity {
+    fn from_row(row: &RowMetadata) -> Self {
+        Self {
+            cpu_model: row.cpu_model.clone(),
+            cpu_arch: row.cpu_arch.clone(),
+            os_kernel: row.os_kernel.clone(),
+            rustflags: row.rustflags.clone(),
+            target_cpu: row.target_cpu.clone(),
+            profile: row.profile.clone(),
+            bbnf_commit: row.bbnf_commit.clone(),
+        }
+    }
+}
+
+fn validate_report_capture_identity(
+    expected: &mut Option<ReportCaptureIdentity>,
+    fixture: &str,
+    row: &RowMetadata,
+) -> Result<(), String> {
+    let current = ReportCaptureIdentity::from_row(row);
+    match expected {
+        Some(expected) if expected != &current => Err(format!(
+            "{fixture} metadata is from a different report-wide capture"
+        )),
+        Some(_) => Ok(()),
+        slot @ None => {
+            *slot = Some(current);
+            Ok(())
+        }
+    }
 }
 
 fn w0_real_typed_metadata_expected(fixture: &str) -> bool {
@@ -1743,6 +1803,22 @@ mod tests {
         let mut rows = metadata_rows(false);
         rows[1].target_cpu = "other-cpu".into();
         assert!(validate_w0_capture_metadata("fixture", "hash", 12, false, &rows).is_err());
+
+        let mut rows = metadata_rows(false);
+        rows[0].rustflags.clear();
+        assert!(validate_w0_capture_metadata("fixture", "hash", 12, false, &rows).is_err());
+    }
+
+    #[test]
+    fn w0_report_capture_identity_rejects_cross_fixture_drift() {
+        let row = metadata_rows(false).remove(0);
+        let mut identity = None;
+        validate_report_capture_identity(&mut identity, "fixture-a", &row).unwrap();
+        validate_report_capture_identity(&mut identity, "fixture-b", &row).unwrap();
+
+        let mut other = row.clone();
+        other.bbnf_commit = "other-commit".into();
+        assert!(validate_report_capture_identity(&mut identity, "fixture-c", &other).is_err());
     }
 
     #[test]

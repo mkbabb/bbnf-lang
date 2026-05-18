@@ -305,18 +305,42 @@ fn validate_cost_facts_flags(passthrough: &[String]) -> Result<bool> {
 fn validate_w0_results_snapshot(root: &Path) -> Result<()> {
     let text = std::fs::read_to_string(root.join("RESULTS.md"))
         .context("gate-json --with-cost-facts --check-results requires RESULTS.md")?;
-    let manifest_rows = text.lines().filter(|line| line.starts_with("| json/")).count();
+    let manifest_rows = text
+        .lines()
+        .filter(|line| line.starts_with("| json/"))
+        .count();
     if manifest_rows != 38 {
-        bail!("RESULTS.md SK-V8 manifest row count moved from 38 to {manifest_rows}");
+        bail!("RESULTS.md SK-V9 manifest row count moved from 38 to {manifest_rows}");
     }
-    for required in [
-        "SK-V8-open",
-        "sk-v8-open:criterion-fnv64-9a37562ed3d0383a",
-        "none:pre-W1:none:pre-W1:none:pre-W1",
-    ] {
+    for required in ["SK-V9-open", "none:pre-W1:none:pre-W1:none:pre-W1"] {
         if !text.contains(required) {
             bail!("RESULTS.md missing W0 snapshot marker {required}");
         }
+    }
+    let mut run_ids = BTreeSet::new();
+    for line in text.lines().filter(|line| line.starts_with("| json/")) {
+        let Some(offset) = line.find("sk-v9-open:criterion-fnv64-") else {
+            bail!("RESULTS.md manifest row missing SK-V9 run id");
+        };
+        let end = offset + "sk-v9-open:criterion-fnv64-".len() + 16;
+        let Some(run_id) = line.get(offset..end) else {
+            bail!("RESULTS.md manifest row has truncated SK-V9 run id");
+        };
+        if !run_id
+            .strip_prefix("sk-v9-open:criterion-fnv64-")
+            .is_some_and(|suffix| {
+                suffix.len() == 16
+                    && suffix
+                        .bytes()
+                        .all(|byte| matches!(byte, b'0'..=b'9' | b'a'..=b'f'))
+            })
+        {
+            bail!("RESULTS.md manifest row has malformed SK-V9 run id `{run_id}`");
+        }
+        run_ids.insert(run_id);
+    }
+    if run_ids.len() != 1 {
+        bail!("RESULTS.md SK-V9 manifest run id is not uniform: {run_ids:?}");
     }
     Ok(())
 }

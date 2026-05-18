@@ -130,12 +130,14 @@ fn main() -> Result<(), Box<dyn Error>> {
         });
         let outcome = w0_parse_non_admission(classified_outcome);
         outcomes.push(outcome);
-        let direct_outcome = gate::classify_direct_projection(&DirectProjectionInput {
+        let classified_direct_outcome = gate::classify_direct_projection(&DirectProjectionInput {
             correctness_ok: direct_struct_ok,
             track1_ns: estimates.direct_track1,
             track2_ns: estimates.direct_track2,
             sonic_rs_ns: estimates.direct_sonic,
         });
+        let (direct_outcome, direct_w0_clamped) =
+            w0_direct_non_admission(&fixture.name, classified_direct_outcome);
         if let Some(outcome) = direct_outcome {
             outcomes.push(outcome);
         }
@@ -169,6 +171,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         let direct_signal = direct_workload_signal(
             direct_struct_ok,
             direct_outcome,
+            direct_w0_clamped,
             fixture.bytes.len() as u64,
             estimates.direct_track1,
             estimates.direct_track2,
@@ -779,6 +782,7 @@ fn fnv1a(mut hash: u64, bytes: &[u8]) -> u64 {
 fn direct_workload_signal(
     correctness_ok: bool,
     outcome: Option<Outcome>,
+    w0_no_admission_clamp: bool,
     bytes: u64,
     track1_ns: Option<f64>,
     track2_ns: Option<f64>,
@@ -786,6 +790,17 @@ fn direct_workload_signal(
 ) -> String {
     if !correctness_ok {
         return "FAIL digest mismatch".to_string();
+    }
+    if w0_no_admission_clamp {
+        let track1 = throughput_mbps(bytes, track1_ns);
+        let track2 = throughput_mbps(bytes, track2_ns);
+        let sonic = throughput_mbps(bytes, sonic_ns);
+        return format!(
+            "NO-GO W0 no-admission clamp; fresh direct guard passes are not behavior evidence in W0; Track 1 {}, Track 2 {}, sonic {} Mbps",
+            format_mbps(track1),
+            format_mbps(track2),
+            format_mbps(sonic)
+        );
     }
     if outcome == Some(Outcome::NDirectProjectionFailure) {
         let track1 = throughput_mbps(bytes, track1_ns);
@@ -800,6 +815,16 @@ fn direct_workload_signal(
         );
     }
     "PASS correctness green; sonic shape parity; throughput within gate".to_string()
+}
+
+fn w0_direct_non_admission(corpus: &str, classified: Option<Outcome>) -> (Option<Outcome>, bool) {
+    let row_id = format!("json/{corpus}/direct_to_struct/main");
+    if classified.is_none()
+        && sk_v8_open_baseline(&row_id).is_some_and(|baseline| baseline.verdict == "NO-GO")
+    {
+        return (Some(Outcome::NDirectProjectionFailure), true);
+    }
+    (classified, false)
 }
 
 fn classify_real_typed_projection(
@@ -1775,6 +1800,19 @@ mod tests {
         assert_eq!(
             w0_parse_non_admission(Outcome::GSubstrateFailure),
             Outcome::SSubstrateGuardNonAdmission
+        );
+    }
+
+    #[test]
+    fn w0_direct_non_admission_clamps_fresh_guard_passes() {
+        assert_eq!(
+            w0_direct_non_admission("apache_builds", None),
+            (Some(Outcome::NDirectProjectionFailure), true)
+        );
+        assert_eq!(w0_direct_non_admission("citm_catalog", None), (None, false));
+        assert_eq!(
+            w0_direct_non_admission("apache_builds", Some(Outcome::IParityOracleFail)),
+            (Some(Outcome::IParityOracleFail), false)
         );
     }
 

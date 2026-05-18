@@ -11,8 +11,11 @@ authority_inputs:
   - restart/skinny/tranches/sk-v7/research/skv7-A2-sota-strict-beat.md
   - restart/skinny/tranches/sk-v7/research/skv7-A3-dav1d-esoterica.md
   - restart/skinny/tranches/sk-v7/SYNTHESIS.md
-  - skinny/crates/runtime/src/tape/{mod,assembler}.rs
-  - skinny/crates/runtime/src/grammars/json/{scan,generated,parser}.rs
+  - skinny/crates/runtime/src/tape/mod.rs
+  - skinny/crates/runtime/src/tape/assembler.rs
+  - skinny/crates/runtime/src/grammars/json/scan.rs
+  - skinny/crates/runtime/src/grammars/json/generated.rs
+  - skinny/crates/runtime/src/grammars/json/parser.rs
 external_anchors:
   - "Langdale & Lemire, 'Parsing Gigabytes of JSON per Second', VLDB Journal 2019 (arXiv:1902.08318)"
   - "simdjson source: src/generic/stage1, src/generic/stage2, On Demand iterator"

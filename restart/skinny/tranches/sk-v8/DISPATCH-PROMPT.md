@@ -216,7 +216,7 @@ Current state:
 - W10 PMULL and W10b CTZ/bulk are rejected.
 - W10c B6 stack-canary Stage 1 is admitted.
 - S-P2 V6 and V7 form the two qualifying ACCEPT cycles.
-- S-P3 folded plan exists.
+- S-P3 V4 and V5 form the two qualifying ACCEPT cycles.
 - G-Alpha is not yet closed.
 
 No implementation dispatch until the user signs off with `G-Alpha closed`.

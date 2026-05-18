@@ -8,8 +8,12 @@ Authority:
 - `skinny/REDRESS.md` items 77-90.
 - SK-V7 commit chain through `56e66ef5 feat(sk-v7-wave10c): admit B6 stack-canary Stage 1`.
 - Alpha cohort under `restart/skinny/tranches/sk-v8/research/alpha/`.
-- Alpha hardening V1 under
-  `restart/skinny/tranches/sk-v8/research/alpha-hardening/V1/`.
+- Alpha hardening V2 under
+  `restart/skinny/tranches/sk-v8/research/alpha-hardening/V2/`.
+- S-P2 convergence under
+  `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V7-CONSOLIDATED.md`.
+- S-P3 convergence under
+  `restart/skinny/tranches/sk-v8/research/p3/hardening/HARDENING-S-P3-V5-CONSOLIDATED.md`.
 
 This synthesis is the post-SK-V7 Pass Alpha output for the SK-V8 tranche. It is
 not an SK-V8 implementation dispatch by itself. G-Alpha user sign-off is
@@ -103,8 +107,7 @@ as the first qualifying cycle after V5 REVISE. On 2026-05-18 the user
 authorized an exceptional V7 challenge, not a convergence shortcut. V7 ACCEPTed
 6/6
 (`research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V7-CONSOLIDATED.md`),
-forming the second consecutive qualifying ACCEPT cycle. S-P2 is converged and
-ready for S-P3 Synthesis-Plan.
+forming the second consecutive qualifying ACCEPT cycle. S-P2 is converged.
 
 The offset-tape is not a ceiling by write amplification. SC-1 found that
 allocated-tape-byte amplification anti-correlates with loss — the highest-ratio
@@ -195,9 +198,10 @@ validation proof, and challenge acceptance.
 
 S-P2 challenge convergence is now closed. V1, V2, V3, and V4 did not converge;
 V5 reached the hard ceiling with CH4 REVISE; V6 and V7 then returned consecutive
-6/6 ACCEPT cycles under explicit user over-ceiling authorization. The
-orchestrator may dispatch S-P3 Synthesis-Plan, but may not dispatch any SK-V8
-implementation wave from S-P2 alone.
+6/6 ACCEPT cycles under explicit user over-ceiling authorization. S-P3
+Synthesis-Plan also converged after V4 and V5 returned consecutive 6/6 ACCEPT
+cycles with minimum confidence 96. The orchestrator may present G-Alpha, but may
+not dispatch any SK-V8 implementation wave before `G-Alpha closed`.
 
 The SK-V8 thesis:
 

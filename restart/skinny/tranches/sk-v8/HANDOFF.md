@@ -2,11 +2,12 @@
 
 Date: 2026-05-18.
 
-Status: SK-V8 Pass Alpha packet materialized. G-Alpha sign-off is required
-before dispatch. If G-Alpha closes, only W0 is dispatchable from this packet.
-W1-W6 require W0 closure and plan augmentation before implementation.
+Status: SK-V8 Pass Alpha packet materialized; S-P2 and S-P3 are converged.
+G-Alpha sign-off is required before dispatch. If G-Alpha closes, only W0 is
+dispatchable from this packet. W1-W6 require W0 closure and plan augmentation
+before implementation.
 
-S-P2 next-move: ready-for-S-P3.
+Next move: G-Alpha decision.
 
 ## 1. Read First
 
@@ -15,11 +16,16 @@ S-P2 next-move: ready-for-S-P3.
 3. `restart/skinny/tranches/sk-v8/DISPATCH-PROMPT.md`
 4. `restart/skinny/tranches/sk-v8/research/alpha/`
 5. `restart/skinny/tranches/sk-v8/research/alpha-hardening/V1/`
-6. `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/` (the S-P2 substrate-ceiling cohort, SC-1..SC-6)
-7. `skinny/RESULTS.md`
-8. `skinny/REDRESS.md`
-9. `restart/prompts/skinny/PASS-2-RESEARCH.md` + `PASS-3-SYNTHESIS-PLAN.md`
-10. `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`
+6. `restart/skinny/tranches/sk-v8/research/alpha-hardening/V2/CONSOLIDATED.md`
+7. `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/` (the S-P2 substrate-ceiling cohort, SC-1..SC-6)
+8. `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V7-CONSOLIDATED.md`
+9. `restart/skinny/tranches/sk-v8/research/p3/`
+10. `restart/skinny/tranches/sk-v8/research/p3/hardening/HARDENING-S-P3-V5-CONSOLIDATED.md`
+11. `restart/skinny/tranches/sk-v8/research/g-alpha/G-ALPHA-PRESENTATION.md`
+12. `skinny/RESULTS.md`
+13. `skinny/REDRESS.md`
+14. `restart/prompts/skinny/PASS-2-RESEARCH.md` + `PASS-3-SYNTHESIS-PLAN.md`
+15. `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`
 
 ## 2. Current Measured State
 
@@ -83,8 +89,10 @@ as the first qualifying cycle after V5 REVISE. On 2026-05-18 the user
 authorized an exceptional V7 challenge, not a convergence shortcut. V7 ACCEPTed
 6/6
 (`research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V7-CONSOLIDATED.md`),
-forming the second consecutive qualifying ACCEPT cycle. S-P2 is converged and
-ready for S-P3 Synthesis-Plan. The cohort does not change the
+forming the second consecutive qualifying ACCEPT cycle. S-P2 is converged;
+S-P3 convergence is recorded in
+`restart/skinny/tranches/sk-v8/research/p3/hardening/HARDENING-S-P3-V5-CONSOLIDATED.md`.
+The cohort does not change the
 G-Alpha-W0-only constraint; it nominates a lead W3 hypothesis so W0 telemetry
 confirms or falsifies the finding executably rather than discovering it from
 scratch. SC-1..SC-6 authorize no W3 plan by themselves: W3 remains blocked on
@@ -94,6 +102,27 @@ challenge acceptance. `tape_vs_tape` is W0/W1 telemetry only, not a W3
 production consumer. For this packet it is explicitly a routed residual, not
 default W0/W1 scope; adding it later requires a named owner/LOC/test/rerun plan
 before it can consume wave budget.
+
+## 3b. S-P3 Convergence
+
+S-P3 Synthesis-Plan is converged. The live wave packet is
+`restart/skinny/tranches/sk-v8/SPEC.md` plus
+`restart/skinny/tranches/sk-v8/DISPATCH-PROMPT.md`, with P3-A through P3-F
+under `restart/skinny/tranches/sk-v8/research/p3/`.
+
+Challenge history:
+
+- V1 and V2 exposed hardening folds for W2 seed traceability, LOC/time gates,
+  and exact citations.
+- V3 returned CH1 REVISE for broad SPEC/HANDOFF/RESULTS/REDRESS citation
+  bundles.
+- V4 folded exact traceability and returned 6/6 ACCEPT, minimum confidence 96.
+- V5 re-challenged the unchanged V4-folded packet and returned 6/6 ACCEPT,
+  minimum confidence 96.
+
+`research/p3/hardening/HARDENING-S-P3-V5-CONSOLIDATED.md` is the convergence
+authority. It closes S-P3 planning only. It does not close G-Alpha and does not
+dispatch W0.
 
 ## 4. Dispatch Posture
 

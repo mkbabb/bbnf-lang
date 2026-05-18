@@ -93,8 +93,9 @@ Risk:
   helper increases call/branch pressure and loses whole-row throughput.
 
 Revert protocol:
-- Save the rejected patch as `restart/skinny/tranches/sk-v8/research/<wave>/`
-  evidence before reverting source.
+- Save the rejected patch as evidence under
+  `restart/skinny/tranches/sk-v8/research/`, using the active wave naming
+  pattern, before reverting source.
 - Revert runtime/template/gate changes together so generated and source paths do
   not diverge.
 - Restore pre-wave RESULTS values unless the wave keeps a separate rejected

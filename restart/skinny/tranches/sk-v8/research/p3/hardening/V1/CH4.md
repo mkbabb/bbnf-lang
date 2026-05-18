@@ -4,7 +4,7 @@ Title: SK-V8 S-P3 V1 cost-governance review.
 
 Scope: `restart/prompts/ORCHESTRATOR.md`,
 `restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md`,
-`restart/prompts/skinny/PASS-ALPHA.md`,
+`restart/prompts/pass-contracts/PASS-ALPHA.md`,
 `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`, P3-A through
 P3-F, live `restart/skinny/tranches/sk-v8/SPEC.md`,
 `restart/skinny/tranches/sk-v8/DISPATCH-PROMPT.md`,

@@ -2,9 +2,10 @@
 
 Date: 2026-05-18.
 
-Status: S-P3 folded planning packet. This file is not an implementation
+Status: S-P3 converged planning packet. This file is not an implementation
 dispatch. It folds the converged S-P2 substrate-ceiling cohort, P3-A through
-P3-E, and the existing Alpha packet into a conditional W0-W6 wave plan.
+P3-E, P3 hardening through V5, and the existing Alpha packet into a conditional
+W0-W6 wave plan.
 
 Authority:
 
@@ -15,6 +16,7 @@ Authority:
 - `restart/skinny/tranches/sk-v8/research/p3/p3c-falsifiability-gates.md`
 - `restart/skinny/tranches/sk-v8/research/p3/p3d-telemetry-schema.md`
 - `restart/skinny/tranches/sk-v8/research/p3/p3e-preblocked-ledger.md`
+- `restart/skinny/tranches/sk-v8/research/p3/hardening/HARDENING-S-P3-V5-CONSOLIDATED.md`
 - `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-1-offset-tape-teardown.md`
 - `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-2-two-stage-sota.md`
 - `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-3-union-substrate-design.md`

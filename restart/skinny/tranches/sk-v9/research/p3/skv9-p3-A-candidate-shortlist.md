@@ -275,10 +275,14 @@ Rejected for §5.3 use" — it never reached candidate status.
   `parse_object` etc.) consuming the index by move.
 - **Falsifiability gate (P2-A §4).** Must-improve (P2-A §4.1):
   `twitter` Track 1 `≥ 17685` (sonic-strict/1.10; today 13188);
-  `apache_builds ≥ 14124` (today 11917); `gsoc-2018 ≥ 41198` (today
-  22184 — partial closure expected, see §4.3 below); `distinct_values
+  `apache_builds ≥ 14124` (today 11917); `distinct_values
   ≥ 15731` (today 8972); `update_center ≥ 14370` (today 9857,
-  `ceil(15806/1.10)`). Hot-leaf: `consume_structural` ≤ 5% self-time,
+  `ceil(15806/1.10)`). `gsoc-2018` does **not** bind the W3 exit gate
+  (F-spec §6, P3-C §2): its throughput gap exceeds the per-delimiter
+  budget, so the union substrate alone cannot lift it to
+  sonic-strict/1.10 — gsoc-2018 carries a no-regression-only clause at
+  W3 and its partial improvement is recorded, not gated (see §4.3).
+  Hot-leaf: `consume_structural` ≤ 5% self-time,
   `JsonNodeKind::at_cursor` ≤ 1%. Must-not-regress — the W10b six-row
   block (P2-A §4.2, binding), each row at `floor(today × 0.98)` or
   `ceil(sonic_strict / 1.10)`, whichever higher (the `today × 0.98` leg
@@ -727,7 +731,7 @@ Reading the graph for P3-B wave sequencing:
 |---|---|---|---|
 | C1 | **Row-moving** | Yes — admits 2 new measured `real_typed_struct A / GO` rows (`apache_builds`, `citm_catalog`); maintains the 4 existing typed GO guards. | Measured typed row-table admission. |
 | C2 | **Proof-only** | **No** — P2-B §1.1 explicit: "no row in `skinny/RESULTS.md` moves." | A compile-time contract (`EventGrammar` trait + `ValueRef` proof) that removes one HANDOFF §5 pre-block and makes C3 eligible. |
-| C3 | **Row-moving** | Yes — must-improve `twitter`, `apache_builds`, `gsoc-2018` (partial), `distinct_values`, `update_center` from `S / NO-GO` toward `≥ sonic`; maintains the W10b six-row WIN block. | The structural fix: union event-model, `consume_structural` deleted. |
+| C3 | **Row-moving** | Yes — must-improve `twitter`, `apache_builds`, `distinct_values`, `update_center` from `S / NO-GO` toward `≥ sonic`; `gsoc-2018` no-regression-only (gap exceeds the per-delimiter budget — does not bind the W3 gate); maintains the W10b six-row WIN block. | The structural fix: union event-model, `consume_structural` deleted. |
 | C4 | **Row-moving (conditional)** | Conditionally — `unicode_escapes` + `y_string_unicode` NEAR-FAIL (94.5% / 94.8%); admission is the §6.4 same-wave conditional rule (admits iff *measured* Mbps clears the gate). `gsoc-2018` no-regression-only. | The `\uXXXX` codec; closes (conditionally) up to 2 unicode rows. |
 | C5 | **Row-moving (conditional)** | Conditionally — *contributes* to `unicode_mixed`'s closure (P2-E §6.3 binds its `≥ 12,338` gate to a same-wave scanner intervention = C5) and to `gsoc-2018`. Does not close a row alone. | The 32-byte string-block scanner widening. |
 | C6 | **Row-contributing** | **No row of its own** — a producer accelerator; its speed-up surfaces inside C3's must-improve rows. Carries a W10b six-row no-regression gate. | SHA3 EOR3 prefix-XOR ladder (faster structural producer). |

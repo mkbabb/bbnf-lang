@@ -1,12 +1,14 @@
 # SK-V8 P3-F: SPEC/DISPATCH Draft Fold
 
-Pass: S-P3 Synthesis-Plan. Cycle: V2 fold after V1 challenge.
+Pass: S-P3 Synthesis-Plan. Cycle: V3 citation fold after V2 challenge.
 Date: 2026-05-18.
 Scope: fold P3-A through P3-E into
-`restart/skinny/tranches/sk-v8/SPEC.md` and
-`restart/skinny/tranches/sk-v8/DISPATCH-PROMPT.md`.
-Output: this file, `restart/skinny/tranches/sk-v8/SPEC.md`, and
-`restart/skinny/tranches/sk-v8/DISPATCH-PROMPT.md`.
+`SPEC Sections 0.1-0.5, 2, and 3-11` and
+`DISPATCH sections Wave Manifest, Conditional Gates, and Entry Condition`.
+Output: this file, `SPEC Sections 0.1-0.5, 2, and 3-11`, and
+`DISPATCH sections Wave Manifest, Conditional Gates, and Entry Condition`.
+Traceability note: inline citations use stable section labels. Concrete local paths are retained in Sources; when a table row names a RESULTS row or REDRESS id, that row/id is the resolving anchor.
+
 
 ## Synthesis
 
@@ -71,6 +73,13 @@ The folded SPEC preserves:
 | CH4 cost | Folded. SPEC, DISPATCH, and HANDOFF now carry per-wave source/edit LOC budgets as a conjunctive gate with the 90-minute implementation/redress cap. W3 now has a mandatory pre-redress split gate covering source/test LOC, generated LOC, gate/report LOC, docs/RESULTS/REDRESS edits, and the revert slice. |
 | CH2, CH3, CH5, CH6 | Preserved. Their ACCEPT findings remain binding: no relaxed generality, regression, hidden-coupling, or paper-close language was introduced by the V2 fold. |
 
+## V2 Hardening Fold
+
+| Challenge | Disposition |
+|---|---|
+| CH1 correctness | Folded for V3. P3-A through P3-F now use stable section labels for material inline claims, retain concrete local paths in Sources, and state that RESULTS rows and REDRESS ids are resolving anchors. The V3 fold avoids stale line numbers without leaving material claims as repeated bare file paths. |
+| CH2, CH3, CH4, CH5, CH6 | Preserved. Their V2 ACCEPT findings remain binding; the citation fold does not change W2 seed gates, LOC/time budgets, W3 split gates, dispatch lock, pre-block coverage, Lock 14, or same-wave-consumer requirements. |
+
 ## Residual Risks
 
 - W3 Tier A may still be too broad for one 90-minute implementation/redress
@@ -92,7 +101,7 @@ the per-wave entry gates.
 ## Required Folds If REVISE
 
 - Reconcile any P3-C threshold changes back into
-  `restart/skinny/tranches/sk-v8/SPEC.md`.
+  `SPEC Sections 0.1-0.5, 2, and 3-11`.
 - Recompute W2/W3/W4 row floors after W0 if `SK-V8-open` changes the seed
   values.
 - Split W3 if Tier A cannot be implemented, measured, reported, and reverted

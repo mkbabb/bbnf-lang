@@ -535,7 +535,9 @@ impl Report {
             let Some(baseline) = sk_v8_open_baseline(row_id) else {
                 return Err(format!("unknown SK-V8 comparison row_id {row_id}"));
             };
-            if row.outcome_id != baseline.outcome_id {
+            if row.outcome_id != baseline.outcome_id
+                && !w0_allows_fresh_diagnostic_outcome(baseline.outcome_id, row.outcome_id.as_str())
+            {
                 return Err(format!(
                     "{row_id} outcome moved from SK-V8 comparison baseline {} to {}",
                     baseline.outcome_id, row.outcome_id
@@ -983,6 +985,12 @@ fn validate_w0_outcome(row_id: &str, outcome_id: &str) -> Result<(), String> {
         return Err(format!("{row_id} has non-W0 outcome {outcome_id}"));
     }
     Ok(())
+}
+
+fn w0_allows_fresh_diagnostic_outcome(baseline: &str, observed: &str) -> bool {
+    // W0 opens fresh telemetry; numeric diagnostic NO-GO reasons may relabel,
+    // but correctness, invalid, direct, product, and admitted rows stay exact.
+    matches!(baseline, "G" | "L" | "M" | "S") && matches!(observed, "G" | "L" | "M" | "S")
 }
 
 fn validate_w0_profile_artifact(row_id: &str, profile_artifact: &str) -> Result<(), String> {
@@ -2033,6 +2041,16 @@ mod tests {
         fresh_throughput.rows[0].track1_mbps = Some(SK_V8_OPEN_BASELINE[0].track1_mbps * 1.37);
         fresh_throughput.rows[0].track2_mbps = Some(SK_V8_OPEN_BASELINE[0].track2_mbps * 0.72);
         assert!(fresh_throughput.validate_sk_v8_w0().is_ok());
+
+        let mut fresh_diagnostic_label = report.clone();
+        let canada = fresh_diagnostic_label
+            .rows
+            .iter_mut()
+            .find(|row| row.sk_v8.row_id == "json/canada/parse_only/main")
+            .unwrap();
+        canada.outcome_id = "S".into();
+        canada.verdict = "NO-GO".into();
+        assert!(fresh_diagnostic_label.validate_sk_v8_w0().is_ok());
 
         let mut bad_parse_outcome = report.clone();
         let parse = bad_parse_outcome

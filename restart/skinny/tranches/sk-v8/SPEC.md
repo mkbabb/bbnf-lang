@@ -1,45 +1,62 @@
-# Implementation Packet SK-V8
+# SK-V8 SPEC - S-P3 Wave Plan
 
-Date: 2026-05-17.
+Date: 2026-05-18.
 
-Workspace: `/Users/mkbabb/Programming/bbnf-lang/skinny`.
+Status: S-P3 folded planning packet. This file is not an implementation
+dispatch. It folds the converged S-P2 substrate-ceiling cohort, P3-A through
+P3-E, and the existing Alpha packet into a conditional W0-W6 wave plan.
 
 Authority:
 
-- `restart/skinny/tranches/sk-v8/SYNTHESIS.md`.
-- Alpha cohort under `restart/skinny/tranches/sk-v8/research/alpha/`.
-- Alpha hardening V1 under
-  `restart/skinny/tranches/sk-v8/research/alpha-hardening/V1/`.
-- `skinny/RESULTS.md` and `skinny/REDRESS.md`.
-- `restart/prompts/pass-contracts/PASS-ALPHA.md`.
-- `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`.
+- `restart/skinny/tranches/sk-v8/SYNTHESIS.md`
+- `restart/skinny/tranches/sk-v8/HANDOFF.md`
+- `restart/skinny/tranches/sk-v8/research/p3/p3a-candidate-shortlist.md`
+- `restart/skinny/tranches/sk-v8/research/p3/p3b-wave-sequencing.md`
+- `restart/skinny/tranches/sk-v8/research/p3/p3c-falsifiability-gates.md`
+- `restart/skinny/tranches/sk-v8/research/p3/p3d-telemetry-schema.md`
+- `restart/skinny/tranches/sk-v8/research/p3/p3e-preblocked-ledger.md`
+- `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-1-offset-tape-teardown.md`
+- `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-2-two-stage-sota.md`
+- `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-3-union-substrate-design.md`
+- `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-4-string-plane-gap.md`
+- `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-5-k-classification-adjudication.md`
+- `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-6-lock1-amendment-generalisation.md`
+- `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V7-CONSOLIDATED.md`
+- `restart/skinny/tranches/sk-v8/research/alpha/`
+- `skinny/RESULTS.md`
+- `skinny/REDRESS.md`
+
+Dispatch lock:
+
+- No SK-V8 implementation wave dispatches from S-P3 itself.
+- G-Alpha user signoff remains required before any SK-V8 wave dispatch.
+- `G-Alpha closed` initially dispatches W0 only.
+- W1-W6 are conditionally gated by this packet, but each remains blocked until
+  W0 closes, the wave plan names exact owner paths and row gates, required
+  challenge accepts, and the orchestrator/user dispatches that wave.
 
 ## Section 0 - Close Condition And Goalset
-
-SK-V8 does not start from a green SK-V7 performance close. It starts from a
-measured `N-direct / NoGo` report with incomplete hot-leaf and delta telemetry.
-The first close condition is therefore observability, not a speculative parser
-rewrite.
 
 ### Section 0.1 - Global Close Condition
 
 SK-V8 closes only when all of these are true:
 
 1. W0 creates a checked `SK-V8-open` baseline with no placeholder hot leaves.
-2. Every main row has a profile artifact path, run id, host/build metadata,
-   cycles-per-byte or equivalent sample cost, and delta versus `SK-V8-open`.
-3. `gate-json` rejects rows missing required SK-V8 telemetry after W0.
-4. CostFacts chosen/rejected route evidence is consumed by the gate before any
+2. Every current main row has required profile, comparator, run, host, build,
+   cost, freshness, and delta telemetry.
+3. `gate-json` rejects rows missing required SK-V8 telemetry.
+4. W1 makes CostFacts and strict comparator evidence gate-consumed before any
    behavior wave can admit route quality.
-5. All four current `real_typed_struct` GO rows maintain GO.
-6. Any new typed product row uses generated Track 1 plus a structurally
-   independent Track 2 or oracle.
+5. The four current `real_typed_struct` GO rows maintain GO.
+6. Any new typed product row uses generated Track 1 plus structurally
+   independent Track 2 or oracle proof.
 7. Any parse/direct behavior wave either meets its named row threshold and
-   full-table maintain gate or is rejected with REDRESS evidence.
-8. No pre-blocked route is reopened without fresh profile evidence, same-wave
-   consumer, and challenge acceptance.
+   full-table maintain gate or rejects with REDRESS evidence.
+8. No pre-blocked route reopens without fresh W0 evidence, same-wave consumer,
+   REDRESS citation, no-regression gate, and challenge acceptance.
 9. Lock 14 and Lock 15 gates pass at every wave close.
-10. `RESULTS.md`, `REDRESS.md`, and `HANDOFF.md` agree at close.
+10. `skinny/RESULTS.md`, `skinny/REDRESS.md`, and
+    `restart/skinny/tranches/sk-v8/HANDOFF.md` agree at close.
 
 ### Section 0.2 - Comparator Classes
 
@@ -47,17 +64,21 @@ SK-V8 uses three comparator classes:
 
 | Class | Examples | Admission use |
 |---|---|---|
-| Same-run strict anchor | sonic-rs strict, serde_json | May support strict admission if output plane matches. |
+| Same-run strict anchor | sonic-rs strict, serde_json where output plane matches | May support strict admission if row output plane matches and validation occurs in the measured row. |
 | Same-run flaw probe | sonic-rs lossy, permissive rows | Planning only; never strict admission. |
-| Sidecar planning signal | simdjson, yyjson, RapidJSON, asmjson unless refreshed under same-run rules | Planning only until freshness and output-plane rules are satisfied. |
+| Sidecar planning signal | simdjson, yyjson, RapidJSON, asmjson unless refreshed under same-run rules | Planning only until freshness, strictness, and output-plane rules are satisfied. |
 
-Direct and typed workload rows compare only to sonic-rs strict and serde_json
-unless W0 or a later telemetry wave adds same-run C++ product-plane evidence.
+Strict admission is executable, not prose-only: `gate-json` must reject strict
+admission unless the comparator plane matches the row output plane,
+`comparator_strictness=strict`, the comparator is same-run native strict or
+`sidecar_freshness=same-run`, and UTF-8/control/escape validation occurs inside
+the measured row. `Strictness=deferred`, `parse_utf8=view-boundary`, stale
+sidecars, sidecar-only evidence, historical deltas, and plane mismatch are
+guard telemetry only.
 
 ### Section 0.3 - Outcome Enum
 
-SK-V8 extends the current schema-v3 outcome enum to match existing
-`skinny/RESULTS.md` rows and to make substrate-guard telemetry explicit:
+The current schema supports:
 
 ```text
 A
@@ -69,26 +90,32 @@ N-direct
 S
 ```
 
-`K` and `N-direct` are current, valid outcomes. `S` is the post-W0
-substrate-guard / non-SOTA spelling for `parse_only` rows if W0 amends the
-report schema; until then current `K` parse rows are treated as substrate-guard
-non-admission rows by policy. `gate-json` must reject any other outcome after
-W0 unless the enum is deliberately amended in REDRESS and the SPEC. Neither
-`K` nor `S` may support strict SOTA admission.
+`K` and `N-direct` are valid current outcomes. `S` is reserved for explicit
+substrate-guard / non-SOTA spelling if W0 or W1 amends the report schema.
+Until that amendment lands, current `K` parse rows are treated by policy as
+substrate-guard non-admission rows. Neither `K` nor `S` may support strict SOTA
+admission.
 
 ### Section 0.4 - Required Telemetry
 
-The existing schema-v3 surface remains required. SK-V8 adds required fields
-after W0:
+The rendered `skinny/RESULTS.md` table may keep the existing 26-column schema
+surface. SK-V8 adds required report/gate fields after W0; they may be rendered
+as columns, a gate-consumed manifest, or a gate-consumed JSON payload, but they
+must be consumed by `gate-json` in the same wave.
+
+Required fields:
 
 ```text
+row_id
 grammar_id
 domain
 comparator_id
 comparator_plane
 comparator_strictness
+comparator_freshness
+measured_validation_path
 Profile artifact
-Cycles per byte
+Cycles per byte or equivalent sample cost
 Sample count
 Build flags
 Host triple
@@ -101,182 +128,172 @@ Wave id
 Run id
 Sidecar freshness
 SK-V8-open delta
+substrate_surface
+structural_projection_status
+substrate_cardinality
+same_wave_consumer_class
+track2_independence_status
 ```
 
-Every emitted field must be consumed by `gate-json` in the same wave. Emitting
-a profile path, sidecar manifest, CostFacts id, or freshness field without
-validation is a producer-only artifact and fails the wave.
-
-`gate-json` is the JSON instance of a grammar-aware report contract. The
-rendered JSON table may keep JSON-specific comparator columns, but internal
-telemetry must model comparator evidence as `(grammar_id, domain,
-comparator_id, comparator_plane, comparator_strictness, run_id,
-sidecar_freshness)`. Non-JSON domains require their own strict anchors or an
-explicit absence-of-strict-comparator reason.
-
-Executable strict-admission refusal rule: `gate-json` rejects strict admission
-unless the comparator plane matches the row's output plane,
-`comparator_strictness=strict`, `sidecar_freshness=same-run` or the comparator
-is a same-run native strict anchor, and UTF-8/control/escape validation occurred
-inside the measured row. `Strictness=deferred`, `parse_utf8=view-boundary`,
-stale sidecars, C++ sidecar-only evidence, or plane mismatch may appear only as
-guard telemetry.
-
-`tape_vs_tape` is a routed residual, not default SK-V8 W0/W1 scope. SC-5 prices
-it as a possible 120-180 LOC comparator-plane augmentation, but this SPEC does
-not assign that work to W0 or W1. W0/W1 stay limited to the manifested
-schema/refusal/CostFacts work unless a later accepted plan explicitly adds
-owner files, tests, LOC, and the extra gate refresh. In every state,
-`tape_vs_tape` is telemetry only: it is not current SOTA admission evidence and
-cannot satisfy W3's production same-wave consumer.
+Every emitted field must be consumed by `gate-json` in the same wave. Missing
+required fields, unsupported outcome, strictness mismatch, stale sidecar,
+producer-only telemetry, W0 behavior drift, missing W1 CostFacts, W3 side
+substrate, W3 telemetry substitution, Lock 14 generic leak, or cap overflow
+rejects the wave.
 
 ### Section 0.5 - Opening Row Goalset
 
-W0 has the only dispatchable per-row target before G-Alpha: every current row
-must become telemetry-bound and maintain throughput within the telemetry-only
-budget. Later behavior targets are provisional until W0 closes.
+Current main-table state from `skinny/RESULTS.md`:
 
-| Row | Current state | W0 target | Later posture |
-|---|---|---|---|
-| twitter parse_only | K/NO-GO, 15752 T1, 12285 T2, 21020 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard only; non-SOTA residual until W0 names hot leaf and plane-matched strict validation. |
-| citm_catalog parse_only | K/NO-GO, 31784 T1, 20817 T2, 25509 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard only; strict win evidence is diagnostic, not admission while validation is deferred. |
-| canada parse_only | K/NO-GO, 17765 T1, 17070 T2, 13885 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard row for parser changes; not SOTA admission. |
-| apache_builds parse_only | K/NO-GO, 12482 T1, 12151 T2, 17381 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard only; candidate work requires later plane-matched gate. |
-| github_events parse_only | K/NO-GO, 15198 T1, 13046 T2, 23034 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard only; candidate work requires later plane-matched gate. |
-| update_center parse_only | K/NO-GO, 11193 T1, 9227 T2, 19684 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard only; candidate work requires later plane-matched gate. |
-| mesh parse_only | K/NO-GO, 14265 T1, 13287 T2, 11754 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard row for numeric/bitmap changes; not SOTA admission. |
-| random parse_only | K/NO-GO, 9838 T1, 7804 T2, 15457 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard only. |
-| gsoc-2018 parse_only | K/NO-GO, 23026 T1, 21881 T2, 49292 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard only. |
-| marine_ik parse_only | K/NO-GO, 13797 T1, 12384 T2, 10070 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard for typed/numeric changes; not SOTA admission. |
-| instruments parse_only | K/NO-GO, 18038 T1, 11678 T2, 16312 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard for control/key changes; not SOTA admission. |
-| numbers parse_only | K/NO-GO, 20609 T1, 18514 T2, 13626 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard for numeric/bitmap changes; not SOTA admission. |
-| unicode_mixed parse_only | K/NO-GO, 8035 T1, 7698 T2, 16180 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard; do not reopen W4/W5 shape without new evidence. |
-| unicode_escapes parse_only | K/NO-GO, 12042 T1, 11146 T2, 18415 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard; do not reopen REDRESS 82 as-is. |
-| unicode_basic parse_only | K/NO-GO, 11416 T1, 10653 T2, 15596 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard only. |
-| distinct_values parse_only | K/NO-GO, 6655 T1, 5633 T2, 17148 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard; do not reopen W5 shape without new evidence. |
-| y_string_unicode parse_only | K/NO-GO, 6216 T1, 6038 T2, 13537 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Substrate guard; do not reopen REDRESS 82 as-is. |
-| twitter direct_to_struct | N-direct/NO-GO, 11832 T1, 10986 T2, 14885 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Guard row; not typed product proof. |
-| citm_catalog direct_to_struct | A/GO, 21438 T1, 20280 T2, 19966 sonic | Profile-bound; maintain GO | Guard row. |
-| canada direct_to_struct | N-direct/NO-GO, 10773 T1, 10296 T2, 12421 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Guard row; no stale EL fallback assumption. |
-| apache_builds direct_to_struct | A/GO, 11116 T1, 10187 T2, 11122 sonic | Profile-bound; maintain GO | Guard row. |
-| github_events direct_to_struct | N-direct/NO-GO, 12270 T1, 11366 T2, 16041 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Guard row. |
-| update_center direct_to_struct | N-direct/NO-GO, 8401 T1, 7667 T2, 11081 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Guard row. |
-| mesh direct_to_struct | A/GO, 8259 T1, 8483 T2, 8789 sonic | Profile-bound; maintain GO | Guard row. |
-| random direct_to_struct | N-direct/NO-GO, 7727 T1, 7123 T2, 8936 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Guard row. |
-| gsoc-2018 direct_to_struct | N-direct/NO-GO, 15097 T1, 14306 T2, 23407 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Guard row. |
-| marine_ik direct_to_struct | A/GO, 8943 T1, 9151 T2, 8147 sonic | Profile-bound; maintain GO | Guard row. |
-| instruments direct_to_struct | N-direct/NO-GO, 11972 T1, 11086 T2, 12673 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Guard row. |
-| numbers direct_to_struct | A/GO, 12615 T1, 12362 T2, 12838 sonic | Profile-bound; maintain GO | Guard row. |
-| unicode_mixed direct_to_struct | N-direct/NO-GO, 4579 T1, 4431 T2, 9679 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Guard row. |
-| unicode_escapes direct_to_struct | N-direct/NO-GO, 4866 T1, 4973 T2, 14028 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Guard row. |
-| unicode_basic direct_to_struct | A/GO, 8576 T1, 8059 T2, 8502 sonic | Profile-bound; maintain GO | Guard row. |
-| distinct_values direct_to_struct | N-direct/NO-GO, 6105 T1, 5362 T2, 11344 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Guard row. |
-| y_string_unicode direct_to_struct | N-direct/NO-GO, 5029 T1, 3766 T2, 9019 sonic | Profile-bound; no throughput move beyond +/-1.0 percent | Guard row. |
-| twitter real_typed_struct | A/GO, 18513 T1, 16193 T2, 15486 sonic | Profile-bound; maintain GO | Product-plane guard. |
-| update_center real_typed_struct | A/GO, 11879 T1, 10451 T2, 12627 sonic | Profile-bound; maintain GO | Product-plane guard. |
-| mesh real_typed_struct | A/GO, 9466 T1, 8089 T2, 8696 sonic | Profile-bound; maintain GO | Product-plane guard. |
-| marine_ik real_typed_struct | A/GO, 12020 T1, 9630 T2, 8750 sonic | Profile-bound; maintain GO | Product-plane guard. |
+| Family | Current state | SK-V8 posture |
+|---|---|---|
+| `parse_only` | 17 `K / NO-GO` rows | Substrate-guard non-admission. W0 profiles them; W3 may use selected rows as strict guard/behavior evidence only under measured-path predicates. |
+| `direct_to_struct` | 6 `A / GO`, 11 `N-direct / NO-GO` | Digest guard plane. W4 may triage selected misses; direct digest is not typed product proof. |
+| `real_typed_struct` | 4 `A / GO` | Product plane. W2 must maintain these and may add generated typed rows. |
+
+W0 target for all 38 current rows: capture `SK-V8-open`, populate required
+telemetry, and keep every throughput cell within +/-1.0% of the captured seed.
+
+W2 existing real-typed GO maintain floors, from the current opening rows:
+
+| Row | Current Track 1 | sonic strict | Sonic GO floor | No-regression floor |
+|---|---:|---:|---:|---:|
+| `twitter/real_typed_struct` | 18513 | 15486 | 14079 | 18143 |
+| `update_center/real_typed_struct` | 11879 | 12627 | 11480 | 11642 |
+| `mesh/real_typed_struct` | 9466 | 8696 | 7906 | 9277 |
+| `marine_ik/real_typed_struct` | 12020 | 8750 | 7955 | 11780 |
+
+W3 planning seed floors. These must be recomputed from `SK-V8-open` before W3
+redress if W0 changes the baseline:
+
+| Candidate parse row | Current Track 1 | Minimum Track 1 Mbps |
+|---|---:|---:|
+| `twitter/parse_only` | 15752 | 16225 |
+| `apache_builds/parse_only` | 12482 | 12857 |
+| `update_center/parse_only` | 11193 | 11529 |
+| `github_events/parse_only` | 15198 | 15654 |
+| `gsoc-2018/parse_only` | 23026 | 23717 |
+| `distinct_values/parse_only` | 6655 | 6855 |
+| `y_string_unicode/parse_only` | 6216 | 6403 |
+
+W3 number-heavy and positive substrate-guard planning floors:
+
+| Guard row | Minimum Track 1 Mbps | Minimum Track 2 Mbps |
+|---|---:|---:|
+| `canada/parse_only` | 17410 | 16729 |
+| `mesh/parse_only` | 13980 | 13022 |
+| `numbers/parse_only` | 20197 | 18144 |
+| `marine_ik/parse_only` | 13522 | 12137 |
+
+W4 `N-direct` planning floors use `ceil(sonic-rs strict / 1.10)` for both
+bbnf tracks and must also be recomputed after W0 if the strict anchor changes:
+
+| Candidate direct row | sonic strict | Minimum Track 1 Mbps | Minimum Track 2 Mbps |
+|---|---:|---:|---:|
+| `twitter/direct_to_struct` | 14885 | 13532 | 13532 |
+| `canada/direct_to_struct` | 12421 | 11292 | 11292 |
+| `github_events/direct_to_struct` | 16041 | 14583 | 14583 |
+| `update_center/direct_to_struct` | 11081 | 10074 | 10074 |
+| `random/direct_to_struct` | 8936 | 8124 | 8124 |
+| `gsoc-2018/direct_to_struct` | 23407 | 21280 | 21280 |
+| `instruments/direct_to_struct` | 12673 | 11521 | 11521 |
+| `unicode_mixed/direct_to_struct` | 9679 | 8800 | 8800 |
+| `unicode_escapes/direct_to_struct` | 14028 | 12753 | 12753 |
+| `distinct_values/direct_to_struct` | 11344 | 10313 | 10313 |
+| `y_string_unicode/direct_to_struct` | 9019 | 8200 | 8200 |
 
 ## Section 1 - Non-Negotiables
 
 - No new BBNF directives.
 - No new BIR variant.
-- No new substrate without a same-wave consumer.
+- No new `BackendShape` variant.
+- No `UnionTape`.
+- No new substrate surface; W3 is representation replacement inside one
+  retained `Tape`, not a new substrate.
+- No new public substrate API.
+- No parser-owned structural cursor/facts.
+- No parallel or sidecar substrate.
 - No JSON policy in generic crates.
-- Scalar reference and checkasm before any primitive wiring.
-- Strict-vs-strict only for strict admission.
-- Sidecar/permissive rows are flaw probes or planning signals.
-- Research, plan, and redress remain distinct commits per wave.
+- No strict admission except strict-vs-strict on a matching output plane.
+- No stale sidecar, permissive, lossy, historical, or view-boundary evidence as
+  strict admission.
+- No primitive, kernel, generated path, or substrate representation without a
+  same-wave hot-path consumer.
+- Scalar reference and checkasm parity are required before primitive wiring.
+- Research, plan, challenge when required, and redress remain distinct phases.
 - Every miss becomes REDRESS evidence or an explicit routed residual.
-- No SK-V8 implementation wave dispatches before G-Alpha.
-- After G-Alpha, only W0 dispatches from this packet.
+- No deferrals: a wave cannot close on "wired", "advisory", "future consumer",
+  "integrated", or "paper close" language without measured evidence.
 
-## Section 2 - Wave Manifest
+## Section 2 - Wave Manifest, Caps, And Reruns
 
-| Wave | Section | Name | Dispatch status | Hard cap |
+| Wave | Section | Name | Initial dispatch status | Implementation/redress cap |
 |---|---|---|---|---:|
-| W0 | Section 3 | Baseline Profile And Telemetry Lock | Dispatchable after G-Alpha | 180 min |
-| W1 | Section 4 | CostFacts Gate Binding | Conditional on W0 close | 240 min |
-| W2 | Section 5 | Typed Product Plane Expansion | Conditional on W0/W1 plan update | 300 min |
-| W3 | Section 6 | Profile-Selected Parse Candidate | Conditional on W0/W1 challenge | 300 min |
-| W4 | Section 7 | Direct Guard Triage | Conditional on W0/W1 plan update | 240 min |
-| W5 | Section 8 | Grammar-Neutral Audit And Lock 14 Preservation | Conditional on W1-W4 close | 180 min |
-| W6 | Section 9 | Close And Alpha Feedback | Conditional on all prior dispositions | 120 min |
+| W0 | Section 3 | Baseline Profile And Telemetry Lock | Dispatchable only after G-Alpha | <=90 min |
+| W1 | Section 4 | CostFacts And Comparator Gate Binding | Conditional on W0 close | <=90 min |
+| W2 | Section 5 | Typed Product Plane Expansion | Conditional on W0/W1 close | <=90 min |
+| W3 | Section 6 | Tier A Tape Plus Structural-Projection Union | Conditional on W0/W1 close and challenge | <=90 min |
+| W4 | Section 7 | Direct Guard Triage | Conditional on W0/W1 and W2/W3 disposition or route | <=90 min |
+| W5 | Section 8 | Grammar-Neutral Audit And Lock 14 Preservation | Conditional on W1-W4 dispositions | <=90 min |
+| W6 | Section 9 | Close And Alpha Feedback | Conditional on W0-W5 dispositions | <=90 min |
 
-Default phase caps per wave:
+Phase caps:
 
 | Phase | Cap |
 |---|---:|
 | Research | 30 min per agent, max 6 agents |
 | Plan | 30 min |
-| Redress | Wave-specific remainder |
-| Challenge | 90 min when required |
+| Challenge | 90 min when first-of-class, substrate-touching, primitive, or high-risk |
+| Implementation/redress | 90 min maximum, including source edits, generation, verification, RESULTS/REDRESS updates, and rollback |
 
-Hard caps are inclusive wall-clock budgets. Research, plan, implementation,
-verification, generated-output review, RESULTS refresh, REDRESS, and doc update
-all count against the wave hard cap. Parallel research agents count by elapsed
-wall-clock, not summed agent-minutes.
+If a planned implementation cannot fit the 90-minute redress cap, the plan must
+split before dispatch or return REVISE. Older 120-300 minute hard caps are not
+dispatch authority for SK-V8.
 
-Source LOC caps:
+Rerun ceilings:
 
-| Wave | Source LOC cap | Generated / RESULTS cost |
-|---|---:|---|
-| W0 | 350 | Outside source LOC cap, inside review and verification budget |
-| W1 | 300 | Outside source LOC cap, inside review and verification budget |
-| W2 | 650 | Generated output outside source LOC cap but byte-diff audited |
-| W3 | 450 default, 650 only if template parity is in the W3 plan | Generated output outside source LOC cap but byte-diff audited |
-| W4 | 300 | RESULTS refresh inside verification budget |
-| W5 | 0 by default, 150 only for a named Lock 14 fix | Zero generated drift unless fixing routed drift |
-| W6 | 0 source LOC except docs/REDRESS/HANDOFF/SPEC updates | RESULTS/REDRESS reconciliation inside close budget |
-
-Verification and rerun ceilings:
-
-| Wave | Focused verification | Full bench / gate rerun ceiling |
+| Wave | Focused verification | Rerun ceiling |
 |---|---|---|
-| W0 | report/gate tests, malformed-manifest rejection, full-table schema validation, `git diff --check` | one gate refresh plus one confirm rerun if variance invalidates telemetry |
-| W1 | CostFacts unit tests, gate-json with CostFacts, generated-output diff check, full-table maintain check | one gate refresh |
-| W2 | typed/product tests named by plan, generated-output diff audit, Track 1/2 independence proof, full-table maintain check | one full gate refresh; second rerun requires REDRESS cost note |
-| W3 | parser/primitive tests named by plan, scalar/checkasm if primitive, generated-output diff audit, full-table maintain check | one full gate refresh; second rerun requires REDRESS cost note |
-| W4 | direct guard tests named by plan, Track 1/2 independence proof, full-table maintain check | one full gate refresh |
-| W5 | Lock 14 grep/audit, generated-output zero-diff, RESULTS zero-diff unless fixing routed drift | no performance rerun unless a fix moved source |
-| W6 | close-honesty checklist, doc checks, RESULTS/REDRESS/HANDOFF reconciliation | no performance rerun |
+| W0 | report/gate tests, malformed manifest rejection, full-table schema validation | one gate refresh plus one confirm rerun if variance invalidates telemetry |
+| W1 | CostFacts tests, `gate-json --with-cost-facts`, generated-output diff, full-table maintain | one gate refresh |
+| W2 | typed/product tests, generated diff audit, Track 1/2 independence, full-table maintain | one full gate refresh; second rerun requires REDRESS cost note |
+| W3 | parser/primitive tests, scalar/checkasm if primitive, generated diff audit, full-table maintain | one full gate refresh; second rerun requires REDRESS cost note |
+| W4 | direct guard tests, Track 1/2 independence, full-table maintain | one full gate refresh |
+| W5 | Lock 14 grep/audit, generated-output zero-diff, RESULTS zero-diff unless fixing drift | no performance rerun unless source moved |
+| W6 | close-honesty checklist and document reconciliation | no performance rerun |
 
-Extra reruns beyond the ceiling are not retry room. They become REDRESS cost
-evidence or require plan augmentation.
+Extra reruns beyond the ceiling are REDRESS cost evidence, not retry room.
 
-## Section 2.1 - Generality And Lock 14 Gate
+### Section 2.1 - Generality And Lock 14 Gate
 
-Every wave has this exit gate, with extra checks when generic crates are edited:
+Every wave has this exit gate, with extra checks when generic crates are
+edited:
 
 - Public API scan: no new public JSON-named API appears in generic crates.
 - Grammar branch scan: no generic branch selects behavior by JSON grammar name,
-  JSON corpus name, JSON object/array role, or JSON field name.
+  corpus name, object/array role, field name, string role, or layout role.
 - Primitive/table scan: no generic primitive, SIMD table, or classifier embeds
   JSON structural policy unless it is generated byte-set data plus opaque class
-  ordinals with a scalar reference and same-wave consumer.
-- Role/fact interpretation boundary: generic code may store and search
-  generated structural-class ordinals or opaque fact ids, but event-role,
-  recovery, layout, record-boundary, indentation, and reused-punctuation meaning
-  is interpreted only inside generated grammar modules keyed by parser state plus
-  class/byte.
+  ordinals with scalar reference and same-wave consumer.
+- Role/fact boundary: generic code may store and search generated structural
+  class ordinals or opaque fact ids, but event-role, recovery, layout,
+  record-boundary, indentation, and reused-punctuation meaning live only inside
+  generated grammar modules keyed by parser state plus class/byte.
 - Template/provider boundary: JSON-specific templates/providers remain
-  per-grammar surfaces. Generic codegen may consume grammar-derived facts, not
+  per-grammar surfaces. Generic codegen consumes grammar-derived facts, not
   hard-coded JSON policy under neutral names.
-- Non-JSON proof: generic CostFacts, codegen, runtime, SIMD, or
-  parser-template edits must prove CSS L4, Sheets, and BBNF-self do not require
-  JSON structural roles to compile, lower, cost, or run. Acceptable proof is a
-  no-op dry run, focused test, or explicit unchanged-output audit named by the
-  plan.
+- Non-JSON proof: CSS L4, Sheets, and BBNF-self must compile, lower, cost, or
+  run without JSON structural roles for any generic CostFacts, codegen, runtime,
+  SIMD, or parser-template edit. Acceptable proof is a named no-op dry run,
+  focused test, or unchanged-output audit.
 
-W0 also creates the Lock 14 baseline allowlist. Allowed JSON-specific surfaces
-are grammar inputs, generated JSON output, per-grammar providers/templates,
-tests, and host/API schema facts. The audit scope includes REDRESS 36, 37, and
-38 concerns: generic-crate JSON residue, detached scanner surfaces, JSON
-structural alphabets, JSON binding helpers, and public `Json*` generic APIs.
+Allowed JSON-specific surfaces are grammar inputs, generated JSON output,
+per-grammar providers/templates, tests, and host/API schema facts. The audit
+must cover REDRESS 36, 37, and 38 residue clusters and renamed JSON policy.
 
 ## Section 3 - W0 Baseline Profile And Telemetry Lock
 
-### Owner paths
+Owner paths:
 
 - `skinny/crates/bbnf-bench/`
 - `skinny/xtask/src/`
@@ -284,51 +301,56 @@ structural alphabets, JSON binding helpers, and public `Json*` generic APIs.
 - `restart/skinny/tranches/sk-v8/research/wave-0-*.md`
 - `skinny/REDRESS.md` only if W0 rejects.
 
-### Tasks
+Doc links: `restart/skinny/tranches/sk-v8/research/p3/p3c-falsifiability-gates.md`,
+`restart/skinny/tranches/sk-v8/research/p3/p3d-telemetry-schema.md`,
+`restart/skinny/tranches/sk-v8/research/p3/p3e-preblocked-ledger.md`,
+`skinny/RESULTS.md`, `skinny/REDRESS.md`.
 
-1. Capture the current `skinny/RESULTS.md` as `SK-V8-open`.
+Entry gate:
+
+- G-Alpha is closed by the user.
+- `skinny/RESULTS.md` is the SK-V7 close baseline.
+- W0 plan names the `SK-V8-open` capture method and no-behavior-change proof.
+
+Tasks:
+
+1. Capture the current report as `SK-V8-open`.
 2. Add SK-V8 telemetry fields from Section 0.4.
 3. Populate hot leaf, profile artifact, run id, host/build metadata, feature
-   mask, and c/B or equivalent sample cost for every current main row.
-4. Add sidecar freshness validation and at least one malformed-manifest test.
-5. Make `gate-json` reject placeholder hot leaves, missing profile artifacts,
-   missing `SK-V8-open` deltas, missing run ids, unsupported outcomes, and any
-   strict-admission claim whose comparator plane, strictness, freshness, or
-   measured-row validation fails Section 0.4.
-6. Refresh `skinny/RESULTS.md` only through the checked gate.
+   mask, sample cost, and `SK-V8-open` delta for every current main row.
+4. Add sidecar freshness validation and malformed-manifest rejection.
+5. Make `gate-json` reject unsupported outcomes, missing required fields, stale
+   sidecar strict claims, and strict admission failing Section 0.2.
+6. Create the Lock 14 baseline allowlist.
 
-### Exit gate
+Exit gate:
 
 - All 38 current main rows satisfy Section 0.4.
-- Missing sidecar values are allowed only when the row records an explicit
-  `sidecar_freshness=absent:<reason>` non-admission value; populated sidecar
-  cells require manifest coverage.
-- Every current `parse_only` row is reported as substrate-guard non-admission
-  telemetry (`K` under the current schema or `S` if W0 amends the schema).
-  No `parse_only` row may count toward strict SOTA admission while
-  `Strictness=deferred` or `parse_utf8=view-boundary`.
-- W0 creates the Lock 14 baseline allowlist from Section 2.1.
-- Throughput cells move no more than +/-1.0 percent versus `SK-V8-open`.
+- Throughput cells stay within +/-1.0% of `SK-V8-open`.
+- Every current `parse_only` row reports substrate-guard non-admission (`K`, or
+  `S` if W0 amends the schema).
+- Missing sidecar values have explicit `sidecar_freshness=absent:<reason>`.
+- Populated sidecar values have manifest/freshness coverage.
 - `gate-json` rejects one intentionally malformed sidecar manifest.
-- No parser, scanner, SIMD, asm, codegen behavior, or product-plane behavior
-  changes land.
-- W0 produces a research artifact naming the profile command, artifact paths,
-  host, build flags, and row coverage.
+- No parser, scanner, SIMD, asm, codegen behavior, product-plane behavior, or
+  generated parser output change lands.
 
-### Revert protocol
+Same-wave consumer: `gate-json` consumes every emitted telemetry field and
+rejects malformed/missing evidence in the same W0 slice.
 
-If any required telemetry field cannot be populated or validated, revert
-report/gate/schema changes together, restore the opening RESULTS schema, commit
-a W0 redress rejection, and record the missing profiler or bench path in
-`skinny/REDRESS.md`.
+Pre-blocked routes: all behavior routes, all `skinny/` parser/codegen/runtime
+changes, stale sidecars as anchors, row-close claims from schema completion,
+and any source edit not required for telemetry/gate/report validation.
 
-### Downstream effect
+Revert protocol: revert report/gate/schema/RESULTS changes as one slice,
+restore the opening RESULTS schema, and record a W0 REDRESS rejection naming
+the missing profiler, gate, or row.
 
-W0 rejection blocks W1-W6.
+Downstream effect: W0 rejection blocks W1-W6.
 
-## Section 4 - W1 CostFacts Gate Binding
+## Section 4 - W1 CostFacts And Comparator Gate Binding
 
-### Owner paths
+Owner paths:
 
 - `skinny/crates/ir/src/cost.rs`
 - `skinny/crates/passes/`
@@ -338,265 +360,426 @@ W0 rejection blocks W1-W6.
 - `skinny/RESULTS.md`
 - `skinny/REDRESS.md` if rejected.
 
-### Entry gate
+Doc links: `restart/skinny/tranches/sk-v8/research/p3/p3c-falsifiability-gates.md`,
+`restart/skinny/tranches/sk-v8/research/p3/p3d-telemetry-schema.md`,
+`restart/skinny/tranches/sk-v8/research/p3/p3e-preblocked-ledger.md`,
+`skinny/REDRESS.md` item 87.
 
-- W0 is admitted.
+Entry gate:
+
+- W0 admitted.
 - `SK-V8-open` telemetry exists for every current main row.
 
-### Tasks
+Tasks:
 
-1. Bind CostFacts rule ids, chosen shape, rejected alternatives, evidence
+1. Bind CostFacts rule ids, chosen shape, rejected alternative ids, evidence
    source, wave id, and REDRESS reference into the gate report.
-2. Make `gate-json --with-cost-facts` reject missing evidence after W1.
-3. Keep CostFacts types grammar-neutral.
-4. Do not change parser behavior or generated JSON output unless the W1 plan
-   explicitly names a behavior consumer and challenge accepts it.
+2. Bind comparator id, plane, strictness, freshness, and measured-validation
+   path into strict-admission refusal.
+3. Make `gate-json --with-cost-facts` reject missing evidence after W1.
+4. Keep CostFacts and comparator/report fields grammar-neutral.
+5. Keep generated JSON output and parser behavior unchanged unless a separate
+   challenged behavior consumer is accepted.
 
-### Exit gate
+Exit gate:
 
 - Every materialized JSON rule reports chosen shape, rejected alternatives,
   evidence source, REDRESS references, and wave id.
-- `gate-json --with-cost-facts` rejects missing evidence.
+- `gate-json --with-cost-facts` rejects missing CostFacts evidence.
+- Strict admission fails closed on plane/strictness/freshness/measured-path
+  mismatch.
 - Generic CostFacts paths contain no JSON policy.
-- Generic CostFacts/report fields use the grammar-aware comparator fields from
-  Section 0.4.
-- Non-JSON proof from Section 2.1 passes for CostFacts, codegen, and report
-  edits.
-- Full-table throughput maintain holds within +/-1.0 percent unless a W1 plan
-  names a stricter no-throughput-change gate.
+- Non-JSON proof from Section 2.1 passes.
+- Full-table maintain holds within +/-1.0% of `SK-V8-open`.
 
-### Revert protocol
+Same-wave consumer: `gate-json --with-cost-facts` and the strict-admission gate
+consume the CostFacts/comparator fields emitted by the report.
 
-Revert CostFacts report/gate changes together. Keep read-only audit evidence in
-the wave research artifact. Record a REDRESS entry naming the missing fact
-class. W1 rejection blocks behavior waves.
+Pre-blocked routes: behavior changes, CostFacts-as-performance claims, global
+route-fact policy ignoring rejected alternatives, generic JSON policy, generated
+output drift, and producer-only CostFacts/telemetry.
+
+Revert protocol: revert CostFacts/report/gate changes together, keep read-only
+audit evidence in the wave research artifact, and add REDRESS naming the
+missing or non-neutral fact class.
+
+Downstream effect: W1 rejection blocks W2-W6 behavior waves.
 
 ## Section 5 - W2 Typed Product Plane Expansion
 
-### Dispatch status
-
-Conditional. W2 may not dispatch until W0 and W1 close and a W2 plan update
-names exact typed rows, host/API schema facts, owner paths, and row thresholds.
-
-### Allowed owner path families
+Owner paths:
 
 - `skinny/crates/codegen/`
 - `skinny/crates/bbnf-bench/`
-- `skinny/crates/runtime/` only for generated typed runtime consumers named in
+- `skinny/crates/runtime/` only for generated typed runtime consumers named by
   the W2 plan.
 - `skinny/RESULTS.md`
-- generated real-typed bench outputs named in the W2 plan.
+- generated real-typed bench outputs named by the W2 plan.
+- `skinny/REDRESS.md` if rejected.
 
-### Exit gate
+Doc links: `restart/skinny/tranches/sk-v8/research/p3/p3a-candidate-shortlist.md`,
+`restart/skinny/tranches/sk-v8/research/p3/p3c-falsifiability-gates.md`,
+`restart/skinny/tranches/sk-v8/research/p3/p3d-telemetry-schema.md`,
+`restart/skinny/tranches/sk-v8/research/p3/p3e-preblocked-ledger.md`,
+`skinny/REDRESS.md` items 71 and 81.
 
+Entry gate:
+
+- W0 and W1 admitted.
+- W2 plan names exact typed rows, host/API schema facts, owner paths,
+  thresholds, Track 1 generated path, Track 2/oracle path, and rollback
+  boundaries.
+
+Tasks:
+
+1. Add at least two generated typed product rows from explicit host/API schema
+   facts, or reject with REDRESS.
+2. Preserve all four existing real-typed GO rows and existing direct GO guard
+   rows.
+3. Prove Track 2/oracle structural independence.
+4. Keep direct digest rows as guard rows, not typed product proof.
+
+Exit gate:
+
+- At least two new generated typed rows pass their declared same-plane gate.
 - Existing `twitter`, `update_center`, `mesh`, and `marine_ik`
-  `real_typed_struct` rows maintain GO.
-- Existing `direct_to_struct` GO rows maintain GO.
-- All 38 current main rows compare against `SK-V8-open`.
-- Non-target parse/direct rows stay within the W2 plan budget; any row outside
-  budget rejects W2 with REDRESS evidence.
-- W2 plan names the full-table maintain budget before implementation.
-- At least two new generated typed rows pass their declared same-plane gate, or
-  W2 is rejected with REDRESS evidence.
+  `real_typed_struct` rows maintain GO and Section 0.5 floors.
+- Existing direct GO rows maintain GO.
+- Every non-target parse/direct/typed row is no worse than -2.0% Track 1 and
+  Track 2 versus `SK-V8-open`, with no correctness or verdict downgrade.
 - Track 1 is generated from grammar facts plus explicit host/API schema facts.
-- Track 2 or oracle is structurally independent and does not call generated
-  Track 1, generated SinkOnly, generated typed helpers, or a shared
-  benchmark-private parser.
-- Direct digest rows do not count as typed product proof.
+- Track 2/oracle does not call generated Track 1, generated SinkOnly,
+  generated typed helpers, or a shared benchmark-private parser.
+- Lock 14 and non-JSON proof pass if generic code changed.
 
-### Revert protocol
+Same-wave consumer: every new typed row has a generated Track 1 product-plane
+consumer and an independent Track 2/oracle proof in the same wave.
 
-Revert row additions or leave them disabled only with explicit rejected status.
-Restore generated outputs if behavior changed. Preserve generated diff audit
+Pre-blocked routes: hand typed sinks as product proof, hidden schema directives,
+direct digest as typed proof, capacity prescan, Track 2 coupling, retained or
+direct routes reopened through typed Vec admission, benchmark-private parser,
+and generic JSON schema facts.
+
+Revert protocol: revert row additions, generated outputs, host/API schema facts,
+gate changes, RESULTS changes, and bench wiring as one slice unless failed rows
+are left explicitly disabled with rejected status. Preserve generated diff audit
 and row table in research, and add REDRESS.
 
-## Section 6 - W3 Profile-Selected Parse Candidate
+Downstream effect: W2 disposition informs W4 direct guard triage.
 
-### Dispatch status
+## Section 6 - W3 Tier A Tape Plus Structural-Projection Union
 
-Conditional. W3 may not dispatch until W0 and W1 close, then a fresh plan names
-one parse candidate, exact owner paths, exact rows, and challenge proves it is
-not a renamed REDRESS 82, 83, 84, 88, or 89 route.
+Owner paths:
 
-### Lead Hypothesis
+W3 is not pre-authorized beyond its plan. The W3 plan must name exact files
+before implementation and start from SC-3's Tier A owner/cost table. Expected
+owner families include:
 
-The S-P2 substrate-ceiling cohort
-(`research/p2-substrate-ceiling/SC-1..SC-6`) nominates the lead W3 hypothesis:
-the tape ⊕ structural-projection union. bbnf already produces a stage-1 SIMD
-structural index (`scan_structurals`) and discards it via the no-op
-`attach_structural_index`; the recursive-descent parser then re-discovers
-structural bytes and delimiter boundaries in a scalar pass. The V3 fold splits
-the hypothesis into two scopes:
+- `skinny/crates/bbnf-simd/`
+- `skinny/crates/runtime/src/tape/`
+- `skinny/crates/runtime/src/grammars/json/scan.rs`
+- `skinny/crates/runtime/src/grammars/json/generated.rs`
+- `skinny/crates/runtime/src/grammars/json/parser.rs`
+- `skinny/crates/runtime/src/grammars/json/view.rs`
+- `skinny/crates/runtime/src/grammars/json/value.rs`
+- `skinny/crates/codegen/src/json_templates/`
+- generated JSON output named by the plan
+- `skinny/crates/bbnf-bench/`
+- `skinny/RESULTS.md`
+- `skinny/REDRESS.md` if rejected.
 
-- Tier A: structural-class cursor migration. Retain the stage-1 index inside the
-  single `Tape`, add a scan-written opaque structural-class ordinal column, and
-  migrate generated retained JSON Track 1 parsing plus retained view/`ValueRef`
-  to consume that cursor in the same wave. Tier A deletes structural
-  rediscovery; it does not claim string-boundary closure.
-- Tier B: string-boundary / quote-backslash-parity / CostFacts-template union.
-  Any reusable string-boundary facts, quote/backslash/parity masks, string
-  density gates, CostFacts-template selection, or non-JSON production migration
-  require their own owner paths, LOC budget, strict rows, and challenge proof.
+Doc links: `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-1-offset-tape-teardown.md`,
+`restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-2-two-stage-sota.md`,
+`restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-3-union-substrate-design.md`,
+`restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-4-string-plane-gap.md`,
+`restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-5-k-classification-adjudication.md`,
+`restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-6-lock1-amendment-generalisation.md`,
+`restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V7-CONSOLIDATED.md`,
+and `restart/skinny/tranches/sk-v8/research/p3/`.
 
-The candidate remains subtractive only if it replaces the old offset append path
-with one retained `Tape`; a retained structural projection added beside the old
-append path is a sidecar and fails Lock 1. SC-3 now prices Tier A as the only
-S-P3-ready W3 candidate; SC-4's string-density evidence is diagnostic telemetry,
-not an admission gate.
+Entry gate:
 
-This nomination does not select W3. W3 selection requires W0/W1 closure, a
-fresh plan naming exact owner paths, same-wave production consumer, revert
-protocol, measurement thresholds, pre-blocked routes, and challenge acceptance.
-Telemetry or comparator rows such as a future `tape_vs_tape` gate may consume
-gate/report work, but they do not satisfy the production same-wave consumer
-requirement for a parser or substrate primitive.
+- W0 and W1 admitted.
+- Fresh W3 plan names one parse candidate, exact owner files, selected rows,
+  same-wave production consumer, revert protocol, measured-path proof, Lock 1
+  fork, scalar/checkasm requirements, and pre-block differences.
+- Challenge accepts that the plan is not a renamed REDRESS 50-55, 60-72,
+  82-84, 88, or 89 route.
+- W3 either waits for Pass Omega ratification of SC-6-L1-R1 or proves it
+  satisfies Lock 1 as written and routes the Omega residual.
 
-This nomination also does not advance S-P2. V1, V2, V3, and V4 S-P2 hardening
-did not converge. V5 reached the pass hard ceiling with CH4 REVISE
-(`research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V5-CONSOLIDATED.md`).
-The user revised the hard-ceiling instruction on 2026-05-17 by authorizing an
-exceptional V6 challenge. V6 ACCEPTed 6/6
-(`research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V6-CONSOLIDATED.md`),
-as the first qualifying cycle after V5 REVISE. On 2026-05-18 the user
-authorized an exceptional V7 challenge, not a convergence shortcut. V7 ACCEPTed
-6/6
-(`research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V7-CONSOLIDATED.md`),
-forming the second consecutive qualifying ACCEPT cycle. S-P2 is converged and
-ready for S-P3 Synthesis-Plan.
+Lead hypothesis:
 
-This candidate touches the substrate, so its challenge carries an extra burden
-(see exit gate). It must either follow Pass Omega ratification of the SC-6-L1-R1
-Lock 1 refinement, or prove at challenge that it satisfies Lock 1 as written.
+The only S-P2-ready W3 shape is Tier A structural-class cursor migration. It
+retains the stage-1 structural index inside one `Tape`, adds scan-written
+opaque structural-class ordinals, migrates generated retained JSON Track 1
+parsing plus retained view/`ValueRef` to consume that cursor, and deletes
+scalar structural rediscovery. Tier A does not claim string-boundary closure,
+quote/backslash/parity closure, CostFacts-template parity, non-JSON production
+migration, or direct/SinkOnly/path closure.
 
-### Owner paths
+The structural projection is admissible only as representation replacement
+inside the singular retained `Tape`. It fails if it is retained beside the old
+offset append path or if a parser-owned cursor/fact slot survives.
 
-Not pre-authorized beyond the W3 plan. The W3 plan must name exact files before
-implementation and must start from SC-3's Tier A owner/cost table. If paths
-under `scan.rs`, parser templates, `bbnf-simd`, or parse-that scanners are
-included, the plan must prove the change is consumed in the same retained JSON
-parser/tape loop or explicitly expand scope with same-wave direct/SinkOnly/path
-owners and tests. `path!`, retained-view, direct/SinkOnly, generated Track 1,
-and Track 2 must be marked touched or proven untouched.
+Exit gate:
 
-### Exit gate
+- W3 selects at least two structural-heavy parse rows and crosses the declared
+  post-W0 thresholds.
+- All 38 current main rows maintain no worse than -2.0% Track 1 and Track 2
+  versus `SK-V8-open`, unless the accepted W3 plan sets stricter guards.
+- Measured rows prove strict validation, comparator evidence, structural cursor
+  work, and admitted tape facts occurred inside the measured row.
+- Exactly one retained tape survives; old offset append API and parser-owned
+  cursor/fact slots are absent.
+- Generated JSON retained parser is the Tier A production consumer.
+  `tape_vs_tape`, direct/SinkOnly rows, `path!`, and Track 2 are audit rows or
+  residuals, not the Tier A production consumer.
+- Scalar oracle and checkasm parity pass before primitive wiring.
+- Retained view/`ValueRef` parity and Track 2 independence proof pass.
+- Lock 14 and non-JSON proof pass.
+- `parse_only` status remains substrate-guard non-admission unless a separate
+  schema/gate amendment proves plane-matched strict eligibility.
 
-- Selected parse rows cross the declared threshold.
-- All 38 current main rows respect the W3 maintain budget; default is no Track
-  1 or Track 2 regression worse than -2.0 percent.
-- Selected rows must prove strict validation, comparator evidence, structural
-  cursor work, and admitted tape facts occurred in the measured row, not in a
-  view-boundary, post-parse, sidecar, or comparator-only path.
-- Generic-code edits pass the Section 2.1 generality and Lock 14 gate.
-- Any primitive has scalar reference and checkasm parity before wiring.
-- Any source-byte second scan, retained cursor, aux table, density cache, or
-  sidecar event vector that runs alongside the offset tape fails Lock 1. A
-  structural projection passes Lock 1 only if it replaces the offset-tape
-  outright — substrate cardinality stays at one, the scalar rediscovery pass is
-  deleted, and no producer runs in parallel. The union candidate must
-  demonstrate this at challenge: a retained projection added beside the existing
-  tape is a sidecar and fails; a projection that becomes the tape passes.
+Same-wave consumer: generated JSON retained Track 1 parsing, plus retained
+view/`ValueRef` as touched or proven-untouched per plan. No telemetry-only row
+counts.
 
-### Revert protocol
+Pre-blocked routes: new directive, BIR variant, `BackendShape`, `UnionTape`,
+public substrate API, sidecar event vector, retained cursor, aux table, density
+cache, parser-owned class/fact slot, second source scan, old offset append path,
+Tier B string-boundary/parity, CostFacts-template union, `tape_vs_tape` as
+consumer, unconditional PMULL/CTZ, object-pair value-byte carry, StringBlock16
+tiny probe, single-quartet Unicode classifier, and local string/materialization
+families.
 
-Revert runtime/template/generated/gate/RESULTS changes as one slice. Save the
-rejected patch under the wave research directory. Add REDRESS naming target and
-guard rows. Rejection blocks further parse candidates until challenge accepts a
-new frame.
+Revert protocol: revert runtime/tape, SIMD, codegen templates, generated JSON
+output, retained view/value, gate, RESULTS, and REDRESS changes as one slice.
+Save the rejected patch under the wave research directory and add REDRESS
+naming target rows and guard rows.
+
+Downstream effect: W3 rejection blocks further parse candidates until challenge
+accepts a new frame. W4 may proceed only after W3 is admitted, rejected, or
+explicitly routed/blocked.
 
 ## Section 7 - W4 Direct Guard Triage
 
-### Dispatch status
+Owner paths:
 
-Conditional. W4 may not dispatch until W0 and W1 close and the W4 plan names
-selected direct guard rows and exact owner paths.
+- Exact owner paths named by the W4 plan.
+- Likely families: `skinny/crates/codegen/`, generated direct JSON output,
+  `skinny/crates/bbnf-bench/`, `skinny/RESULTS.md`, and `skinny/REDRESS.md` if
+  rejected.
 
-### Exit gate
+Doc links: `restart/skinny/tranches/sk-v8/research/p3/p3a-candidate-shortlist.md`,
+`restart/skinny/tranches/sk-v8/research/p3/p3b-wave-sequencing.md`,
+`restart/skinny/tranches/sk-v8/research/p3/p3c-falsifiability-gates.md`,
+`restart/skinny/tranches/sk-v8/research/p3/p3e-preblocked-ledger.md`,
+`restart/skinny/tranches/sk-v8/research/alpha/alpha-C-redress-digest.md`,
+and `skinny/REDRESS.md` items 54/55 and 66-72.
 
-- Selected `N-direct` rows either close under digest guard rules or are routed
-  as guard residuals.
-- No direct digest result is presented as product-plane SOTA proof.
-- Track 1 and Track 2 remain structurally independent.
-- Full-table maintain holds under the W4 plan budget.
-- Generic-code edits pass the Section 2.1 generality and Lock 14 gate.
+Entry gate:
 
-### Revert protocol
+- W0 and W1 admitted.
+- W2 and W3 have admitted, rejected, or been explicitly routed, or W3 is
+  explicitly blocked before W4.
+- W4 plan selects one to three `N-direct` rows and names strict direct
+  thresholds, Track 1/Track 2 independence proof, owner paths, and residual
+  routing.
 
-Revert behavior changes. Keep a triage report that routes residuals. Add
-REDRESS if a behavior candidate was attempted and failed.
+Tasks:
+
+1. Triage selected direct digest rows under direct guard rules.
+2. Preserve Track 1/Track 2 structural independence.
+3. Route residual direct rows honestly without presenting digest as product
+   plane proof.
+
+Exit gate:
+
+- Every selected row meets Track 1 and Track 2 floors from the W4 plan.
+- Correctness parity, sonic-rs strict same-run anchor, and measured validation
+  path are present for each selected row.
+- Track 2 does not call generated SinkOnly, generated typed helpers, generated
+  Track 1, or a shared benchmark-private parser.
+- All non-target rows are no worse than -2.0% Track 1 and Track 2 versus
+  `SK-V8-open`; existing direct GO and real-typed GO rows maintain GO.
+- Lock 14 and non-JSON proof pass if generic code changed.
+
+Same-wave consumer: selected direct rows consume generated Track 1 direct or
+SinkOnly work and independent Track 2 proof in the same wave.
+
+Pre-blocked routes: sink-local decoded stats, quote-source streaming hash,
+direct source-hook folding, parser-owned scratch, byte-output unescape, semantic
+string fact hashing for the current digest workload, raw f64 shortcut, stale
+canada mantissa widening, Track 2 coupling, direct cap-16 reruns, and digest as
+typed product proof.
+
+Revert protocol: revert behavior changes, generated outputs, bench wiring,
+RESULTS, and gate changes as one slice. Keep a direct-triage report that routes
+residuals and add REDRESS for failed behavior attempts.
+
+Downstream effect: W4 disposition feeds W5 audit and W6 close.
 
 ## Section 8 - W5 Grammar-Neutral Audit And Lock 14 Preservation
 
-### Owner paths
+Owner paths:
 
 - `restart/skinny/tranches/sk-v8/research/`
-- source paths only if a W5 plan names a small cleanup.
+- source paths only if a W5 plan names a small Lock 14 cleanup.
+- `skinny/RESULTS.md` only if fixing a recorded drift.
+- generated output only if fixing a recorded drift.
 
-### Entry gate
+Doc links: `restart/skinny/tranches/sk-v8/research/p3/p3a-candidate-shortlist.md`,
+`restart/skinny/tranches/sk-v8/research/p3/p3c-falsifiability-gates.md`,
+`restart/skinny/tranches/sk-v8/research/p3/p3e-preblocked-ledger.md`,
+`restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-6-lock1-amendment-generalisation.md`,
+and `skinny/REDRESS.md` items 36-38, 85, and 86.
+
+Entry gate:
 
 - W1-W4 have admitted, rejected, or been explicitly routed.
 
-### Exit gate
+Tasks:
+
+1. Audit generic crates for JSON policy, renamed JSON residue, and hidden role
+   semantics.
+2. Reconcile REDRESS 36, 37, and 38 clusters.
+3. Prove CSS L4, Sheets, and BBNF-self implications for any generic edit.
+4. Fix only named Lock 14 drift if still inside the 90-minute and 150 source
+   LOC cleanup cap.
+
+Exit gate:
 
 - No JSON policy enters generic crates.
-- Allowed JSON surfaces are grammar inputs, generated JSON output,
+- Allowed JSON surfaces remain grammar inputs, generated JSON output,
   per-grammar templates/providers, tests, and host/API schema facts.
-- Grep/audit covers renamed JSON policy, not only old symbol names.
-- Audit covers REDRESS 36, 37, and 38 Lock 14 residue clusters.
-- CSS L4, Sheets, and BBNF-self implications from Section 2.1 are reconciled.
+- Grep/audit covers renamed JSON policy, not only old names.
+- Public API scan, grammar-branch scan, primitive/table scan, role/fact
+  boundary, template/provider boundary, and non-JSON proof pass.
 - Generated JSON output and `skinny/RESULTS.md` have zero behavior drift unless
-  W5 explicitly fixed a prior wave and recorded it.
+  W5 explicitly fixed prior routed drift and recorded it.
 
-### Revert protocol
+Same-wave consumer: the audit gate itself, or a named Lock 14 cleanup consumed
+by existing codegen/runtime tests in the same W5 slice.
 
-Fix drift inside W5 if in bounds. Otherwise revert the offending wave slice or
-mark close blocked with a named owner. W5 rejection blocks W6 close.
+Pre-blocked routes: generic JSON public APIs, grammar-name branches,
+`StructuralAlphabet::json`, `skip_json`, `match_json`, `unescape_json`,
+`StrictJson`, renamed JSON helpers, generated behavior drift disguised as
+audit, and performance claims from cleanup.
+
+Revert protocol: fix drift inside W5 only if in named scope and cap. Otherwise
+revert the offending wave slice or mark close blocked with exact owner paths.
+
+Downstream effect: W5 rejection blocks W6 close.
 
 ## Section 9 - W6 Close And Alpha Feedback
 
-### Owner paths
+Owner paths:
 
 - `restart/skinny/tranches/sk-v8/HANDOFF.md`
-- `restart/skinny/tranches/sk-v8/research/wave-6-close.md`
+- a future wave-6 close artifact under `restart/skinny/tranches/sk-v8/research/`
 - `skinny/REDRESS.md` only if close reconciliation needs a redress entry.
+- `skinny/RESULTS.md` only if reconciling a documented mismatch without source
+  behavior change.
 
-### Exit gate
+Doc links: `restart/skinny/tranches/sk-v8/research/p3/p3c-falsifiability-gates.md`,
+`restart/skinny/tranches/sk-v8/research/p3/p3e-preblocked-ledger.md`,
+`restart/skinny/tranches/sk-v8/HANDOFF.md`, `skinny/RESULTS.md`, and
+`skinny/REDRESS.md`.
+
+Entry gate:
+
+- W0-W5 each have admitted, rejected, or routed status.
+- Their REDRESS/RESULTS/HANDOFF updates are present.
+
+Tasks:
+
+1. Reconcile every wave disposition.
+2. Ensure `skinny/RESULTS.md`, `skinny/REDRESS.md`, and
+   `restart/skinny/tranches/sk-v8/HANDOFF.md` agree.
+3. Route residuals to SK-V9 or Pass Omega.
+4. Feed Alpha/S-P3 lessons back into the close note.
+
+Exit gate:
 
 - Every SK-V8 wave has admitted, rejected, or routed status.
-- `RESULTS.md`, `REDRESS.md`, and `HANDOFF.md` agree.
-- No open brittleness window remains.
-- Residuals name SK-V9 or Pass Omega destinations.
+- Final row/status artifacts match latest wave evidence and `SK-V8-open`
+  deltas.
+- Current real-typed GO rows still maintain GO.
+- Any W2-added typed row status agrees with W2 REDRESS and RESULTS.
+- Any W3/W4 behavior target status agrees across REDRESS, RESULTS, and HANDOFF.
+- No accepted source change lacks profile artifact, row threshold, REDRESS id,
+  Lock 14 proof, or same-wave consumer proof.
+- SC-6-L1-R1 is either ratified, proven under Lock 1 as written, or routed to
+  Pass Omega as a residual.
 
-### Revert protocol
+Same-wave consumer: close checklist and document reconciliation.
 
-No source revert by default. Reopen the producing wave or mark close blocked
-with a close-honesty mismatch list.
+Pre-blocked routes: paper close, missing REDRESS, missing RESULTS rows,
+unresolved Lock 1/Omega fork, strict admission from sidecar/permissive evidence,
+PMULL/CTZ/B6 canary as performance evidence, architecture analogy without row
+data, and dropping falsifier rows.
+
+Revert protocol: no source revert by default. Reopen the producing wave or mark
+close blocked with a mismatch list naming file paths, rows, and missing
+evidence.
 
 ## Section 10 - Pre-Blocked Routes
 
-Do not reopen these without fresh W0 evidence, same-wave consumer, scalar
-reference/checkasm where relevant, no-regression gate, REDRESS citation, and
-challenge acceptance:
+Every wave inherits this route ledger. A route may reopen only with fresh W0
+evidence, same-wave consumer, scalar/checkasm where relevant, no-regression
+gate, REDRESS citation, and challenge acceptance.
 
-- REDRESS 28+33: Class A NEON tiny-string wiring as parse close.
-- REDRESS 50-55: SK-V5 UTF-8 fusion routes.
-- REDRESS 60-72: SK-V6 retained-parse and direct-materialization rejected
-  families, including sidecar producers and digest/Track 2 cap-16 routes.
-- REDRESS 80: stale canada mantissa-widen/fallback-elimination assumption.
-- REDRESS 82: single-quartet Unicode escape classifier.
-- REDRESS 83: generated-retained StringBlock16 tiny probe.
-- REDRESS 84: object-pair value-byte control compaction.
-- REDRESS 88: PMULL prefix-XOR as default hot production body.
-- REDRESS 89: CSSC CTZ next-bit plus bulk production consumer.
-- Historical blocked routes in `skinny/REDRESS.md`: function-pointer dispatch,
-  pair-token fusion, 12-byte token churn, separator elision, generic SWAR
-  whitespace, capacity prescan, EventCursor or other sidecar prepass, raw f64
-  shortcut, and orphan primitive admission.
+Global blocks:
 
-## Section 11 - G-Alpha
+- New directive, BIR variant, substrate surface, `BackendShape`, `UnionTape`,
+  public substrate API, parser-owned cursor/facts, sidecar substrate, and
+  parallel substrate.
+- Generic JSON policy in generic crates, including renamed helper policy.
+- Sidecar/permissive/lossy/stale comparator evidence as strict admission.
+- `tape_vs_tape`, `parse_only`, or telemetry rows as W3 production consumer.
+- Orphan primitives, checkasm-only admission, and harness-only hardening as
+  performance proof.
+- Track 1/Track 2 coupling or benchmark-private parsers.
+- Automatic implementation dispatch.
+
+Specific REDRESS and Alpha blocks:
+
+- REDRESS 16, 17, 18, 25: pair-token fusion, function-pointer dispatch,
+  skipless/12-byte width churn, separator/generic alternates as-is.
+- REDRESS 28+33: Class A NEON/TBL tiny-string wiring as parse close.
+- REDRESS 36-38, 85-86: Lock 14 residue, old JSON helpers, generic JSON
+  branches, and `StructuralAlphabet::json`.
+- REDRESS 49-55: no-allocation visitor, parse-time aux side tables,
+  EventCursor, parser-local structural-mask cursor, decoded stats sink, and
+  quote-source fused string materializer.
+- REDRESS 59-65, 72/83: retained string-boundary collapse, always-wide or
+  delayed-wide scanning, Unicode validator/classifier retries, object/key carry,
+  global/direct/Track 2 cap-16, generated-retained StringBlock16 tiny probe.
+- REDRESS 66-72, 80: direct source-hook/materialization families, parser-owned
+  scratch, byte-output unescape, semantic string facts, hand typed sinks as
+  proof, stale mantissa widening, and raw f64 shortcut.
+- REDRESS 74-79, 81, 87: architecture/comparator/CostFacts evidence can be
+  cited only under their admitted boundaries; they do not authorize behavior by
+  analogy.
+- REDRESS 82-84: single-quartet Unicode classifier, StringBlock16 tiny probe,
+  object-pair value-byte control compaction.
+- REDRESS 88-90: PMULL prefix-XOR default hot body, CTZ/bulk production
+  consumer, and B6 canary hardening as performance evidence.
+- Alpha-E bitmap density-gated route remains reserve research only; it is not
+  in W0-W6 unless a future plan challenges it.
+- Tier B string-boundary / quote-backslash-parity / CostFacts-template union is
+  blocked from W3 Tier A by default.
+
+## Section 11 - G-Alpha And Dispatch Scope
 
 This packet is suitable for G-Alpha review with a limited dispatch scope:
 
 - `G-Alpha closed` authorizes W0 only.
-- W1-W6 remain conditional and require W0 closure plus plan augmentation before
-  dispatch.
-- `G-Alpha revise` returns to Alpha hardening with named revisions.
+- W1-W6 remain conditional. They require W0 closure, a wave plan with exact
+  owner paths and gates, required challenge acceptance, and orchestrator/user
+  dispatch before redress.
+- `G-Alpha revise` returns to the named packet sections.
+
+No SK-V8 implementation wave dispatches before G-Alpha. No W3 implementation
+dispatches from S-P2 or S-P3 alone.

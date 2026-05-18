@@ -76,13 +76,13 @@ entry conditions for W1 and are assumed satisfied by the time this
 manifest dispatches (S-P3 itself is the revised S-P2/S-P3 release that
 SPEC §5 names — convergence of this pass *is* `G-BEHAVIOR-RELEASE`).
 
-| Wave | Name | Candidate | Entry gate | Class | Triumvirate shape |
-|---|---|---|---|---|---|
-| **W1** | Apache/CITM measured-row admission | P2-C | W0 closed; `G-S-P1-RERUN-CONVERGED` + `G-BEHAVIOR-RELEASE` (S-P3 convergence) | row-moving (typed GO-count) | research 6 / plan 1 / redress 1; CHALLENGE optional (mechanical, well-understood — skippable per SKINNY-TRIUMVIRATE §4) |
-| **W2** | Retained class/event grammar + `ValueRef` proof | P2-B | W1 closed; SK-V9-open baseline maintained by W1 | proof-only (no `RESULTS.md` row movement) | research 6 / plan 1 / **CHALLENGE mandatory** / redress 1 — first-of-class (new trait + substrate-contract artefact) |
-| **W3** | Union event-model (class-column substrate) | P2-A | W2 closed; **P2-B proof admitted** (the HANDOFF §5 W3 pre-block removed); REDRESS 92 gating clause discharged | row-moving (structural-dense losses) | research 6 / plan 1–2 / **CHALLENGE mandatory** / redress 1 — first-of-class (substrate touch, Lock 1 audit) |
-| **W4** | aarch64 ASM consumers — unicode codec + string-block widening | P2-D + P2-E (paired) | W3 closed; **P2-A union substrate landed** (class column + cursor stream live); five checkasm differential test files authored as same-wave preconditions | row-moving (string-dense + unicode-dense) | research 6 / plan 2 / **CHALLENGE mandatory** / redress 1 — first-of-class (NEON kernels, checkasm parity, Lock 16 host-cap gate) |
-| **W5** | Close + Alpha feedback | none (reconciliation) | W1–W4 each admitted or rejected with measurement | cleanup / telemetry reconciliation | research 1–2 / plan 1 / redress 1; no CHALLENGE (no source-behavior edit) |
+| Wave | Name | Candidate | Entry gate | Class | Triumvirate shape | Hard cap (per-wave triumvirate) |
+|---|---|---|---|---|---|---|
+| **W1** | Apache/CITM measured-row admission | P2-C | W0 closed; `G-S-P1-RERUN-CONVERGED` + `G-BEHAVIOR-RELEASE` (S-P3 convergence) | row-moving (typed GO-count) | research 6 / plan 1 / redress 1; CHALLENGE optional (mechanical, well-understood — skippable per SKINNY-TRIUMVIRATE §4) | research ~30 min / plan ~30 min / redress ~75 min (60 impl + 15 measure); ~135 min wave total (CHALLENGE skipped — no 60–90 min interposition) per `SKINNY-TRIUMVIRATE.md` §7 |
+| **W2** | Retained class/event grammar + `ValueRef` proof | P2-B | W1 closed; SK-V9-open baseline maintained by W1 | proof-only (no `RESULTS.md` row movement) | research 6 / plan 1 / **CHALLENGE mandatory** / redress 1 — first-of-class (new trait + substrate-contract artefact) | research ~30 min / plan ~30 min / CHALLENGE 60–90 min / redress ~75 min; ~195–225 min wave total per `SKINNY-TRIUMVIRATE.md` §7 |
+| **W3** | Union event-model (class-column substrate) | P2-A | W2 closed; **P2-B proof admitted** (the HANDOFF §5 W3 pre-block removed); REDRESS 92 gating clause discharged | row-moving (structural-dense losses) | research 6 / plan 1–2 / **CHALLENGE mandatory** / redress 1 — first-of-class (substrate touch, Lock 1 audit) | research ~30 min / plan ~30 min / CHALLENGE 60–90 min / redress ~75 min; ~195–225 min wave total per `SKINNY-TRIUMVIRATE.md` §7 |
+| **W4** | aarch64 ASM consumers — unicode codec + string-block widening | P2-D + P2-E (paired) | W3 closed; **P2-A union substrate landed** (class column + cursor stream live); five checkasm differential test files authored as same-wave preconditions | row-moving (string-dense + unicode-dense) | research 6 / plan 2 / **CHALLENGE mandatory** / redress 1 — first-of-class (NEON kernels, checkasm parity, Lock 16 host-cap gate) | research ~30 min / plan ~30 min / CHALLENGE 60–90 min / redress ~75 min; ~195–225 min wave total per `SKINNY-TRIUMVIRATE.md` §7 — the codec+string-block pairing exceeds a single 75-min redress, so W4 sub-waves (W4a/W4b/…), each a fresh triumvirate carrying its own ~75-min redress cap |
+| **W5** | Close + Alpha feedback | none (reconciliation) | W1–W4 each admitted or rejected with measurement | cleanup / telemetry reconciliation | research 1–2 / plan 1 / redress 1; no CHALLENGE (no source-behavior edit) | research ~30 min / plan ~30 min / redress ~75 min; ~135 min wave total (no CHALLENGE — no source-behavior edit) per `SKINNY-TRIUMVIRATE.md` §7 |
 
 Notes on the manifest:
 
@@ -270,3 +270,7 @@ conditional, not a default rewire.
   role separation.
 - `restart/prompts/ORCHESTRATOR.md` — §3Z convergence + ≤12-wave ceiling;
   §6 G-Omega / G-Alpha gates; §8 non-negotiables.
+
+## §0 — V2 fold
+
+V2 fold: F-AUX surgical touch-up per S-P3 V1 CHALLENGE.

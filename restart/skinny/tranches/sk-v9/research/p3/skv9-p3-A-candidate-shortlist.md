@@ -565,6 +565,13 @@ Rejected for §5.3 use" — it never reached candidate status.
   EOR3 slice blocks on P2-A landing — its only consumer is the §5
   structural-bitmap producer (C3 scope); absent C3 in the same wave,
   C6 ships orphaned. Cascade constraint: the wave may not be split.
+- **Wave disposition.** C6 lands as **sub-wave W4c** — a fresh
+  triumvirate that wires the SHA3 EOR3 prefix-XOR ladder into the
+  already-landed W3 union structural-bitmap producer. It is neither
+  dropped nor deferred: the W4 sub-wave structure (W4a string-block,
+  W4b codec, W4c EOR3, W4d CTZ) gives each cascade-locked consumer its
+  own ~75-min redress cap while preserving the same-wave-consumer rule
+  against the W3 substrate.
 - **REDRESS pre-blocks.** REDRESS 88 (W10 PMULL prefix-XOR default body
   — P2-D §5.3.1 three-axis differential: different intrinsic [EOR3
   3-way XOR, no carryless multiply], different latency profile
@@ -617,6 +624,13 @@ Rejected for §5.3 use" — it never reached candidate status.
   that makes the CTZ extract non-orphan is C3 scope; and it operates
   inside C5's 32-byte block scanner consumer. Deepest dependency of any
   candidate.
+- **Wave disposition.** C7 lands as **sub-wave W4d** — a fresh
+  triumvirate that wires the CSSC CTZ string-mask first-set extract into
+  the W4a 32-byte block scanner consumer over the already-landed W3
+  union string-mask substrate. It is neither dropped nor deferred: as
+  the leaf optimisation it is the last W4 sub-wave, admitted under the
+  W10b six-row maintain gate, with W4a (string-block) as its strict
+  predecessor.
 - **REDRESS pre-blocks.** REDRESS 89 (W10b CSSC CTZ bulk consumer — P2-D
   §4.4 differential: different call site, different failure profile).
   HANDOFF §5 ("CTZ/bulk production rewires as default hot paths"
@@ -759,3 +773,7 @@ revert protocol, never a paper-close.
   sonic-strict Mbps.
 - `skinny/REDRESS.md` — entries 28, 33, 50-55, 60-72, 82-84, 88-93 (the
   pre-blocked routes each candidate must not re-open).
+
+## §0 — V2 fold
+
+V2 fold: F-AUX surgical touch-up per S-P3 V1 CHALLENGE.

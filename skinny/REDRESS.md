@@ -2657,3 +2657,34 @@ perturbation.
   source/product parity rows until a later accepted benchmark row-table wave.
   The standard checked report path can still fail on the already recorded W0
   run-id drift, but no longer fails first on missing Apache/CITM metadata.
+
+## SK-V8 Wave 3 Tape Plus Structural-Projection Redress
+
+- Item 92 rejects/routes W3 Tier A implementation for SK-V8 before source
+  redress. The scanner/tape event model is not isomorphic: the scanner retains
+  structural punctuation plus real quotes, while the current retained tape is a
+  generated parser event stream containing container opens/closes, opening
+  quotes, number starts, and literal starts. Retained view/`ValueRef` traversal
+  depends on that event stream.
+- The selected W3 target rows were `twitter/parse_only` and
+  `apache_builds/parse_only`; the guard rows were `canada/parse_only`,
+  `mesh/parse_only`, `numbers/parse_only`, and `marine_ik/parse_only`.
+  No row-table admission is made for W3.
+- W3 does not reopen REDRESS 51 or 53 cursor routes, sidecar producers, parser
+  owned structural cursors/facts, `tape_vs_tape` as production consumer,
+  `UnionTape`, a new `BackendShape`, a new BIR variant, a new directive, a
+  public substrate API, or Tier B string-boundary/quote-backslash/parity work.
+- No source patch or rejected patch artifact exists for W3 because the accepted
+  plan failed the pre-redress fit gate. The required owner surface spans SIMD,
+  JSON scan, tape layout, generated retained parser, retained view/value,
+  codegen templates, bench parity/materialization/gate code, and row reporting,
+  exceeding the W3 LOC and 90-minute caps.
+- Verification for the rejection/routing plan:
+  `cargo test -p bbnf-bench offset_stream_tracks_verified_source_events -- --nocapture`,
+  `cargo test -p bbnf-bench counts_json_lazy_tape_materialization_shape -- --nocapture`,
+  `git diff --exit-code HEAD -- skinny/RESULTS.md`, and `git diff --check`.
+  `skinny/RESULTS.md` remains unchanged.
+- The routed SK-V9/Pass Omega precursor is to define the retained class/event
+  grammar including numbers/literals and string quote ownership, prove the
+  retained `ValueRef` cursor contract over that grammar, and only then reopen a
+  measured structural-heavy parse row wave.

@@ -2,13 +2,14 @@
 
 Date: 2026-05-18.
 
-Status: G-Alpha closed by user on 2026-05-18T05:26:48Z. SK-V8 W0, W1, and W2
-are closed. W2 admits source/product parity and rejects benchmark row-table
-admission for this wave. W3 is the next dispatchable wave after its own
-research, plan, challenge, and redress gate. W4-W6 require prior wave
-dispositions and their own gates before implementation.
+Status: G-Alpha closed by user on 2026-05-18T05:26:48Z. SK-V8 W0, W1, W2, and
+W3 are closed. W2 admits source/product parity and rejects benchmark row-table
+admission for this wave. W3 rejects/routes Tier A implementation on the
+pre-redress fit gate. W4 is the next active wave under its own research, plan,
+challenge, and redress gates. W5-W6 require prior wave dispositions and their
+own gates before implementation.
 
-Next move: SK-V8 W3.
+Next move: SK-V8 W4.
 
 ## 1. Read First
 
@@ -133,7 +134,7 @@ dispatch W0.
 | W0 | Baseline Profile And Telemetry Lock | Closed by V11+V12 challenge convergence | 0 production behavior LOC; reauthorized telemetry gate/report/Lock14 scope per SPEC Section 3 accounting; post-V6 folds <=120 report/gate/test/doc LOC |
 | W1 | CostFacts Gate Binding | Closed by W1 redress commit `c6345e4d` | 0 parser/generated behavior LOC; 272 insertions / 13 deletions in CostFacts/report/gate/test scope |
 | W2 | Typed Product Plane Expansion | Closed by V4+V5 challenge convergence: source/product parity admitted, benchmark row-table admission rejected/routed in REDRESS 91 | <=650 source/test LOC; generated output and row tables named separately |
-| W3 | Profile-Selected Parse Candidate — lead candidate: tape ⊕ structural-projection union (S-P2 cohort) | Conditional on W0/W1 challenge | <=450 source/test LOC default; <=650 only with accepted pre-redress fit proof |
+| W3 | Profile-Selected Parse Candidate — lead candidate: tape ⊕ structural-projection union (S-P2 cohort) | Rejected/routed by W3 V1 challenge on pre-redress fit gate; no source or RESULTS change | <=450 source/test LOC default; <=650 only with accepted pre-redress fit proof |
 | W4 | Direct Guard Triage | Conditional on W0/W1 plan update | <=300 source/test LOC and <=3 selected rows |
 | W5 | Grammar-Neutral Audit And Lock 14 Preservation | Conditional on W1-W4 close | 0 source LOC default; <=150 named Lock 14 cleanup LOC |
 | W6 | Close And Alpha Feedback | Conditional on all prior dispositions | 0 source LOC; docs/RESULTS/REDRESS/HANDOFF/SPEC reconciliation only |
@@ -194,7 +195,22 @@ W2 hardening V4 accepted 6/6 as the first qualifying post-fold cycle and V5
 accepted 6/6 as the second. The closure authority is
 `restart/skinny/tranches/sk-v8/research/wave-2-hardening/V5/HARDENING-W2-V5-CONSOLIDATED.md`.
 
-W3 is now the active wave.
+W3 disposition record: W3 research and plan found that the scanner structural
+index and current retained tape are not the same event model. The scanner
+retains structural punctuation plus real quotes; the retained tape is a
+generated parser event stream containing container opens/closes, opening
+quotes, number starts, and literal starts. W3 V1 accepted 6/6 that Tier A
+cannot be implemented as a bounded SK-V8 storage swap without a split retained
+class/event grammar and `ValueRef` cursor-contract proof. W3 has no source
+patch, no rejected patch artifact, no `skinny/RESULTS.md` change, and no
+row-table admission. The closure authority is
+`restart/skinny/tranches/sk-v8/research/wave-3-hardening/V1/HARDENING-W3-V1-CONSOLIDATED.md`.
+The routed SK-V9/Pass Omega precursor is to define the retained class/event
+grammar, including numbers/literals and string quote ownership, prove the
+retained `ValueRef` cursor contract over that grammar, and only then reopen a
+measured structural-heavy parse row wave.
+
+W4 is now the active wave.
 
 ## 5. Entry Gates
 

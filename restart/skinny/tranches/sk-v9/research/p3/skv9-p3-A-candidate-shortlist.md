@@ -1,6 +1,6 @@
 # SK-V9 P3-A: Candidate-Intervention Shortlist
 
-Pass: S-P3 Synthesis-Plan. Cycle: V3.
+Pass: S-P3 Synthesis-Plan. Cycle: V4.
 Date: 2026-05-18.
 Scope: Distil the six S-P2 interventions into a ranked shortlist of ≤8
 candidate interventions for SK-V9 waves — each carrying owner paths,
@@ -281,7 +281,8 @@ Rejected for §5.3 use" — it never reached candidate status.
   (F-spec §6, P3-C §2): its throughput gap exceeds the per-delimiter
   budget, so the union substrate alone cannot lift it to
   sonic-strict/1.10 — gsoc-2018 carries a no-regression-only clause at
-  W3 and its partial improvement is recorded, not gated (see §4.3).
+  W3 and its partial improvement is recorded, not gated (the W3 gate
+  binds only the four named must-improve rows above).
   Hot-leaf: `consume_structural` ≤ 5% self-time,
   `JsonNodeKind::at_cursor` ≤ 1%. Must-not-regress — the W10b six-row
   block (P2-A §4.2, binding), each row at `floor(today × 0.98)` or
@@ -814,3 +815,14 @@ W10b six-row block is floored uniformly (`floor(today × 0.98)`) —
 `citm_catalog` `28631 → 28630`, `numbers` `17597 → 17596`,
 `instruments` stated as `15865`. The C1..C8 shortlist and the per-
 candidate detail are otherwise unchanged.
+
+## §0 V4 fold footer
+
+V4 fold per S-P3 V3 CHALLENGE CH1 (the lone surviving defect). The C3
+falsifiability gate (§2.2) and the candidate-classification table (§4)
+removed `gsoc-2018` from the W3 must-improve list — gsoc-2018's
+throughput gap exceeds the per-delimiter budget, so the union substrate
+alone cannot lift it; it carries a no-regression-only clause at W3,
+consistent with F-spec §6 and P3-C §2. The dangling `§4.3`
+cross-reference was replaced with a non-dangling clause. Cycle stamp
+bumped to V4.

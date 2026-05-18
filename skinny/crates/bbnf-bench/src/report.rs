@@ -352,12 +352,7 @@ impl TelemetryRow {
             &self.hot_leaf,
             &telemetry.profile_artifact,
         )?;
-        if telemetry.costfacts_rejected_alternative_ids.is_empty() {
-            return Err(format!(
-                "{} missing CostFacts rejected alternatives",
-                telemetry.row_id
-            ));
-        }
+        validate_w0_manifest_semantics(self)?;
         if telemetry.same_wave_consumer_class != "gate_only" {
             return Err(format!(
                 "{} has unsupported same-wave consumer class",
@@ -1009,6 +1004,120 @@ fn expected_profile_path(row_id: &str) -> Result<String, String> {
     Ok(format!("json_{corpus}/{bench}/new/estimates.json"))
 }
 
+fn validate_w0_manifest_semantics(row: &TelemetryRow) -> Result<(), String> {
+    let telemetry = &row.sk_v8;
+    if telemetry.costfacts_rule_id != "none:pre-W1"
+        || telemetry.costfacts_chosen_shape != "none:pre-W1"
+        || telemetry.costfacts_rejected_alternative_ids.len() != 1
+        || telemetry.costfacts_rejected_alternative_ids[0] != "none:pre-W1"
+    {
+        return Err(format!(
+            "{} has unsupported W0 CostFacts sentinel",
+            telemetry.row_id
+        ));
+    }
+    if telemetry.redress_entry != "none" {
+        return Err(format!(
+            "{} has unsupported W0 redress entry {}",
+            telemetry.row_id, telemetry.redress_entry
+        ));
+    }
+    if telemetry.track2_independence_status != "independent_verified" {
+        return Err(format!(
+            "{} has unsupported Track 2 independence status {}",
+            telemetry.row_id, telemetry.track2_independence_status
+        ));
+    }
+    validate_w0_build_metadata(telemetry)?;
+    validate_w0_substrate_tuple(row)?;
+    Ok(())
+}
+
+fn validate_w0_build_metadata(telemetry: &SkV8Telemetry) -> Result<(), String> {
+    for required in [
+        "profile=bench",
+        "rustflags=-C target-cpu=native",
+        "target_cpu=native",
+    ] {
+        if !telemetry
+            .build_flags
+            .split(';')
+            .any(|part| part == required)
+        {
+            return Err(format!(
+                "{} build_flags missing {required}",
+                telemetry.row_id
+            ));
+        }
+    }
+    let (host, rest) = telemetry
+        .host_triple
+        .split_once(';')
+        .ok_or_else(|| format!("{} host_triple missing arch/cpu facts", telemetry.row_id))?;
+    if !host.contains('-')
+        || !rest.split(';').any(|part| part.starts_with("arch="))
+        || !rest.split(';').any(|part| part.starts_with("cpu="))
+    {
+        return Err(format!(
+            "{} host_triple is not structured W0 host metadata",
+            telemetry.row_id
+        ));
+    }
+    for required_prefix in ["arch=", "os=", "simd="] {
+        if !telemetry
+            .feature_mask
+            .split(';')
+            .any(|part| part.starts_with(required_prefix))
+        {
+            return Err(format!(
+                "{} feature_mask missing {required_prefix}",
+                telemetry.row_id
+            ));
+        }
+    }
+    if !telemetry
+        .feature_mask
+        .split(';')
+        .any(|part| part == "target_cpu=native")
+    {
+        return Err(format!(
+            "{} feature_mask missing target_cpu=native",
+            telemetry.row_id
+        ));
+    }
+    Ok(())
+}
+
+fn validate_w0_substrate_tuple(row: &TelemetryRow) -> Result<(), String> {
+    let expected = match row.workload.as_str() {
+        "parse_only" => (
+            "borrowed_view_over_offset_tape",
+            "discarded_after_capacity",
+            "one",
+        ),
+        "direct_to_struct" => ("sink_only_digest", "n/a", "zero_or_inert"),
+        "real_typed_struct" => ("typed_direct_projection", "n/a", "zero_or_inert"),
+        _ => {
+            return Err(format!(
+                "{} has unsupported W0 workload {}",
+                row.sk_v8.row_id, row.workload
+            ))
+        }
+    };
+    let actual = (
+        row.sk_v8.substrate_surface.as_str(),
+        row.sk_v8.structural_projection_status.as_str(),
+        row.sk_v8.substrate_cardinality.as_str(),
+    );
+    if actual != expected {
+        return Err(format!(
+            "{} substrate tuple {:?} does not match W0 workload {:?}",
+            row.sk_v8.row_id, actual, expected
+        ));
+    }
+    Ok(())
+}
+
 fn validate_w0_admission_boundary(row: &TelemetryRow) -> Result<(), String> {
     if row.strictness != "deferred" {
         return Err(format!(
@@ -1485,7 +1594,19 @@ mod tests {
         evidence
     }
 
-    fn w0_telemetry(row_id: &str, output_plane: &str) -> SkV8Telemetry {
+    fn w0_telemetry(row_id: &str, _output_plane: &str) -> SkV8Telemetry {
+        let (_, workload) = parse_row_id(row_id).unwrap();
+        let (substrate_surface, structural_projection_status, substrate_cardinality) =
+            match workload {
+                "parse_only" => (
+                    "borrowed_view_over_offset_tape",
+                    "discarded_after_capacity",
+                    "one",
+                ),
+                "direct_to_struct" => ("sink_only_digest", "n/a", "zero_or_inert"),
+                "real_typed_struct" => ("typed_direct_projection", "n/a", "zero_or_inert"),
+                _ => unreachable!(),
+            };
         SkV8Telemetry {
             row_id: row_id.into(),
             grammar_id: "json".into(),
@@ -1497,9 +1618,9 @@ mod tests {
             ),
             sample_cost: "ns_per_byte=1.000000;track1_ns=1.00;bytes=1".into(),
             sample_count: 100,
-            build_flags: "profile=bench;rustflags=<empty>;target_cpu=default".into(),
-            host_triple: "aarch64-apple-darwin".into(),
-            feature_mask: "arch=aarch64;simd=Scalar".into(),
+            build_flags: "profile=bench;rustflags=-C target-cpu=native;target_cpu=native".into(),
+            host_triple: "aarch64-apple-darwin;arch=aarch64;cpu=Apple M5 Max".into(),
+            feature_mask: "arch=aarch64;os=macos;simd=Scalar;target_cpu=native".into(),
             costfacts_rule_id: "none:pre-W1".into(),
             costfacts_chosen_shape: "none:pre-W1".into(),
             costfacts_rejected_alternative_ids: vec!["none:pre-W1".into()],
@@ -1507,9 +1628,9 @@ mod tests {
             wave_id: "SK-V8-open".into(),
             run_id: SK_V8_OPEN_RUN_ID.into(),
             sk_v8_open_delta: "baseline".into(),
-            substrate_surface: output_plane.into(),
-            structural_projection_status: "n/a".into(),
-            substrate_cardinality: "zero_or_inert".into(),
+            substrate_surface: substrate_surface.into(),
+            structural_projection_status: structural_projection_status.into(),
+            substrate_cardinality: substrate_cardinality.into(),
             same_wave_consumer_class: "gate_only".into(),
             track2_independence_status: "independent_verified".into(),
             comparators: w0_evidence(row_id),
@@ -1962,5 +2083,40 @@ mod tests {
         canada.output_plane = "DOM".into();
         canada.sk_v8.measured_validation_path = "measured-row".into();
         assert!(bad_strict_hard_failure.validate_sk_v8_w0().is_err());
+
+        let mut bad_costfacts = report.clone();
+        bad_costfacts.rows[0].sk_v8.costfacts_rule_id = "future:rule".into();
+        assert!(bad_costfacts.validate_sk_v8_w0().is_err());
+
+        let mut bad_costfacts_alternative = report.clone();
+        bad_costfacts_alternative.rows[0]
+            .sk_v8
+            .costfacts_rejected_alternative_ids = vec!["other".into()];
+        assert!(bad_costfacts_alternative.validate_sk_v8_w0().is_err());
+
+        let mut bad_redress = report.clone();
+        bad_redress.rows[0].sk_v8.redress_entry = "REDRESS-1".into();
+        assert!(bad_redress.validate_sk_v8_w0().is_err());
+
+        let mut bad_track2 = report.clone();
+        bad_track2.rows[0].sk_v8.track2_independence_status = "unverified".into();
+        assert!(bad_track2.validate_sk_v8_w0().is_err());
+
+        let mut bad_build = report.clone();
+        bad_build.rows[0].sk_v8.build_flags =
+            "profile=bench;rustflags=<empty>;target_cpu=default".into();
+        assert!(bad_build.validate_sk_v8_w0().is_err());
+
+        let mut bad_host = report.clone();
+        bad_host.rows[0].sk_v8.host_triple = "aarch64-apple-darwin".into();
+        assert!(bad_host.validate_sk_v8_w0().is_err());
+
+        let mut bad_feature = report.clone();
+        bad_feature.rows[0].sk_v8.feature_mask = "arch=aarch64;simd=Scalar".into();
+        assert!(bad_feature.validate_sk_v8_w0().is_err());
+
+        let mut bad_substrate = report.clone();
+        bad_substrate.rows[0].sk_v8.substrate_surface = "side_substrate".into();
+        assert!(bad_substrate.validate_sk_v8_w0().is_err());
     }
 }

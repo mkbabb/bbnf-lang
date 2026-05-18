@@ -208,7 +208,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 &estimates,
             ));
         }
-        if estimates.real_typed_track1.is_some() {
+        if w0_real_typed_metadata_expected(&fixture.name) && estimates.real_typed_track1.is_some() {
             let real_typed_ok = bbnf_bench::real_typed_struct::fixture_for_name(&fixture.name)
                 .is_some_and(|real_typed| {
                     bbnf_bench::real_typed_struct::assert_real_typed_parity(

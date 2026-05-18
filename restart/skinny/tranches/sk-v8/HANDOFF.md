@@ -2,11 +2,11 @@
 
 Date: 2026-05-18.
 
-Status: G-Alpha closed by user on 2026-05-18T05:26:48Z. SK-V8 W0 and W1 are
-closed. W2 has a redress disposition: source/product parity admitted, benchmark
-row-table admission rejected for this wave. W3 is the next dispatchable wave
-after its own research, plan, challenge, and redress gate. W4-W6 require prior
-wave dispositions and their own gates before implementation.
+Status: G-Alpha closed by user on 2026-05-18T05:26:48Z. SK-V8 W0, W1, and W2
+are closed. W2 admits source/product parity and rejects benchmark row-table
+admission for this wave. W3 is the next dispatchable wave after its own
+research, plan, challenge, and redress gate. W4-W6 require prior wave
+dispositions and their own gates before implementation.
 
 Next move: SK-V8 W3.
 
@@ -132,7 +132,7 @@ dispatch W0.
 |---|---|---|---|
 | W0 | Baseline Profile And Telemetry Lock | Closed by V11+V12 challenge convergence | 0 production behavior LOC; reauthorized telemetry gate/report/Lock14 scope per SPEC Section 3 accounting; post-V6 folds <=120 report/gate/test/doc LOC |
 | W1 | CostFacts Gate Binding | Closed by W1 redress commit `c6345e4d` | 0 parser/generated behavior LOC; 272 insertions / 13 deletions in CostFacts/report/gate/test scope |
-| W2 | Typed Product Plane Expansion | Source/product parity admitted by `12aff1e4`; benchmark row-table admission rejected/routed in REDRESS 91; W2 hardening V1 REVISE folds applied before V2 re-challenge | <=650 source/test LOC; generated output and row tables named separately |
+| W2 | Typed Product Plane Expansion | Closed by V4+V5 challenge convergence: source/product parity admitted, benchmark row-table admission rejected/routed in REDRESS 91 | <=650 source/test LOC; generated output and row tables named separately |
 | W3 | Profile-Selected Parse Candidate — lead candidate: tape ⊕ structural-projection union (S-P2 cohort) | Conditional on W0/W1 challenge | <=450 source/test LOC default; <=650 only with accepted pre-redress fit proof |
 | W4 | Direct Guard Triage | Conditional on W0/W1 plan update | <=300 source/test LOC and <=3 selected rows |
 | W5 | Grammar-Neutral Audit And Lock 14 Preservation | Conditional on W1-W4 close | 0 source LOC default; <=150 named Lock 14 cleanup LOC |
@@ -190,6 +190,9 @@ from the source fixture map rather than W0 measured baseline rows. That fold is
 scoped to the report gate: Apache/CITM source/product fixtures no longer
 require unadmitted Criterion metadata rows, and the W0 run-id strict validator
 remains intact.
+W2 hardening V4 accepted 6/6 as the first qualifying post-fold cycle and V5
+accepted 6/6 as the second. The closure authority is
+`restart/skinny/tranches/sk-v8/research/wave-2-hardening/V5/HARDENING-W2-V5-CONSOLIDATED.md`.
 
 W3 is now the active wave.
 

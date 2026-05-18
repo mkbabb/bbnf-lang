@@ -128,7 +128,7 @@ dispatch W0.
 
 | Wave | Name | Status | Source/edit LOC budget |
 |---|---|---|---|
-| W0 | Baseline Profile And Telemetry Lock | Dispatchable after G-Alpha | 0 production behavior LOC; <=350 report/gate/schema/test/doc LOC |
+| W0 | Baseline Profile And Telemetry Lock | Dispatchable after G-Alpha | 0 production behavior LOC; reauthorized telemetry gate/report/Lock14 scope per SPEC Section 3 accounting; post-V6 folds <=120 report/gate/test/doc LOC |
 | W1 | CostFacts Gate Binding | Conditional on W0 close | 0 parser/generated behavior LOC; <=300 CostFacts/report/gate/test LOC |
 | W2 | Typed Product Plane Expansion | Conditional on W0/W1 plan update | <=650 source/test LOC; generated output and row tables named separately |
 | W3 | Profile-Selected Parse Candidate — lead candidate: tape ⊕ structural-projection union (S-P2 cohort) | Conditional on W0/W1 challenge | <=450 source/test LOC default; <=650 only with accepted pre-redress fit proof |
@@ -144,6 +144,16 @@ source edits, generation, verification, RESULTS/REDRESS updates, and rollback.
 Generated outputs must be named, diff-audited, and included in the revert
 slice. Any plan that exceeds either its LOC budget or the 90-minute cap must
 split before dispatch or return REVISE.
+
+W0 V7 cost fold: CH4 V6 rejected the old `<=350` cap as stale after the
+implemented telemetry gate reached 3532 insertions / 253 deletions across
+`skinny/RESULTS.md`, `skinny/crates/bbnf-bench/src/bin/gate.rs`,
+`skinny/crates/bbnf-bench/src/gate.rs`, `skinny/crates/bbnf-bench/src/lib.rs`,
+`skinny/crates/bbnf-bench/src/lock14_baseline.rs`,
+`skinny/crates/bbnf-bench/src/report.rs`, and `skinny/xtask/src/main.rs` from
+baseline `0bd16f6d` to V6 target `6c0bc15d`. W0 remains admissible only if the
+frozen behavior-surface diff stays empty and rollback is commit-sliced through
+the W0 implementation commits named in SPEC Section 3 plus any post-V6 fold.
 
 ## 5. Entry Gates
 

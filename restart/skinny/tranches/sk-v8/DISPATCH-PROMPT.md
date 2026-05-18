@@ -34,7 +34,7 @@ Read in order:
 
 | Wave | SPEC section | Title | Dispatch status | Source/edit LOC budget | Implementation/redress cap |
 |---|---|---|---|---|---:|
-| W0 | Section 3 | Baseline Profile And Telemetry Lock | After G-Alpha | 0 production behavior LOC; <=350 report/gate/schema/test/doc LOC | <=90 min |
+| W0 | Section 3 | Baseline Profile And Telemetry Lock | After G-Alpha | 0 production behavior LOC; reauthorized telemetry gate/report/Lock14 scope per SPEC Section 3 accounting; post-V6 folds <=120 report/gate/test/doc LOC | <=90 min |
 | W1 | Section 4 | CostFacts And Comparator Gate Binding | Conditional after W0 | 0 parser/generated behavior LOC; <=300 CostFacts/report/gate/test LOC | <=90 min |
 | W2 | Section 5 | Typed Product Plane Expansion | Conditional after W0/W1 | <=650 source/test LOC; generated output and row tables named separately | <=90 min |
 | W3 | Section 6 | Tier A Tape Plus Structural-Projection Union | Conditional after W0/W1 and challenge | <=450 source/test LOC default; <=650 only with accepted pre-redress fit proof | <=90 min |
@@ -52,6 +52,13 @@ LOC budgets are conjunctive with the 90-minute cap. Generated outputs must be
 named, diff-audited, and included in the revert slice; they do not excuse source
 budget overflow. A plan over either limit returns REVISE or splits before
 redress.
+
+W0 V7 cost fold: the old `<=350` W0 cap is superseded only for the already
+measured telemetry gate/report/Lock14 slice recorded in SPEC Section 3. The
+authorized W0 implementation scope is 3532 insertions / 253 deletions across the
+seven named W0 files from `0bd16f6d` to `6c0bc15d`, with no frozen behavior
+surface diff. Any post-V6 fold is limited to exact run-id binding and focused
+tests unless a later challenge identifies a critical W0 gate defect.
 
 ## W0 Dispatch Protocol
 

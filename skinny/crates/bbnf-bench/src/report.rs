@@ -333,6 +333,12 @@ impl TelemetryRow {
                 telemetry.row_id
             ));
         }
+        if telemetry.run_id != SK_V8_OPEN_RUN_ID {
+            return Err(format!(
+                "{} run_id moved from SK-V8-open baseline {} to {}",
+                telemetry.row_id, SK_V8_OPEN_RUN_ID, telemetry.run_id
+            ));
+        }
         if telemetry.sample_count == 0 {
             return Err(format!("{} missing sample_count", telemetry.row_id));
         }
@@ -650,6 +656,8 @@ pub struct SkV8OpenBaseline {
     pub track1_mbps: f64,
     pub track2_mbps: f64,
 }
+
+pub const SK_V8_OPEN_RUN_ID: &str = "sk-v8-open:criterion-fnv64-9a37562ed3d0383a";
 
 macro_rules! sk_v8_open_baseline {
     ($row_id:literal, $outcome_id:literal, $verdict:literal, $track1:literal, $track2:literal) => {
@@ -1529,7 +1537,7 @@ mod tests {
             costfacts_rejected_alternative_ids: vec!["none:pre-W1".into()],
             redress_entry: "none".into(),
             wave_id: "SK-V8-open".into(),
-            run_id: "sk-v8-open:test".into(),
+            run_id: SK_V8_OPEN_RUN_ID.into(),
             sk_v8_open_delta: "baseline".into(),
             substrate_surface: output_plane.into(),
             structural_projection_status: "n/a".into(),
@@ -1964,5 +1972,15 @@ mod tests {
         direct.outcome_id = "A".into();
         direct.verdict = "GO".into();
         assert!(bad_direct_verdict.validate_sk_v8_w0().is_err());
+
+        let mut bad_single_run_id = report.clone();
+        bad_single_run_id.rows[0].sk_v8.run_id = "sk-v8-open:test".into();
+        assert!(bad_single_run_id.validate_sk_v8_w0().is_err());
+
+        let mut bad_uniform_run_id = report.clone();
+        for row in &mut bad_uniform_run_id.rows {
+            row.sk_v8.run_id = "sk-v8-open:test".into();
+        }
+        assert!(bad_uniform_run_id.validate_sk_v8_w0().is_err());
     }
 }

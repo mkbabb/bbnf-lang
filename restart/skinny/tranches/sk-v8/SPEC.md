@@ -215,7 +215,7 @@ and row telemetry before challenge or redress.
 
 | Wave | Section | Name | Initial dispatch status | Source/edit LOC budget | Implementation/redress cap |
 |---|---|---|---|---|---:|
-| W0 | Section 3 | Baseline Profile And Telemetry Lock | Dispatchable only after G-Alpha | 0 production behavior LOC; <=350 report/gate/schema/test/doc LOC | <=90 min |
+| W0 | Section 3 | Baseline Profile And Telemetry Lock | Dispatchable only after G-Alpha | 0 production behavior LOC; reauthorized telemetry gate/report/Lock14 scope per Section 3 accounting; post-V6 folds <=120 report/gate/test/doc LOC | <=90 min |
 | W1 | Section 4 | CostFacts And Comparator Gate Binding | Conditional on W0 close | 0 parser/generated behavior LOC; <=300 CostFacts/report/gate/test LOC | <=90 min |
 | W2 | Section 5 | Typed Product Plane Expansion | Conditional on W0/W1 close | <=650 source/test LOC; generated output and row tables named separately | <=90 min |
 | W3 | Section 6 | Tier A Tape Plus Structural-Projection Union | Conditional on W0/W1 close and challenge | <=450 source/test LOC default; <=650 only with accepted pre-redress fit proof | <=90 min |
@@ -319,6 +319,30 @@ Tasks:
    sidecar strict claims, and strict admission failing Section 0.2.
 6. Create the Lock 14 baseline allowlist.
 
+V7 cost accounting and rollback fold:
+
+- CH4 V6 rejected the original `<=350` W0 report/gate/schema/test/doc cap as
+  no longer descriptive of the implemented W0 gate. The reauthorized W0 scope is
+  the measured telemetry gate/report/Lock 14 slice from baseline `0bd16f6d` to
+  V6 target `6c0bc15d`: `skinny/RESULTS.md` 95 insertions / 173 deletions,
+  `skinny/crates/bbnf-bench/src/bin/gate.rs` 1215 / 69,
+  `skinny/crates/bbnf-bench/src/gate.rs` 159 / 2,
+  `skinny/crates/bbnf-bench/src/lib.rs` 1 / 0,
+  `skinny/crates/bbnf-bench/src/lock14_baseline.rs` 611 / 0,
+  `skinny/crates/bbnf-bench/src/report.rs` 1431 / 4, and
+  `skinny/xtask/src/main.rs` 20 / 5; total: 3532 insertions and 253 deletions
+  across 7 W0 files.
+- That larger scope is admitted only because it is behavior-frozen: the
+  grammar input, runtime JSON/tape, SIMD, codegen, generated/product helpers,
+  Track 2, parity, scan, and materialization frozen-surface diff from
+  `0bd16f6d..HEAD` must remain empty at W0 close.
+- Post-V6 folding may add only the exact run-id binding and its focused tests
+  unless a later challenge names a new critical W0 gate defect.
+- Rollback is commit-sliced, not hand-edited: revert the W0 implementation
+  commits `6d8cb701`, `cb0fdba0`, `61d5d304`, `077aadad`, `0c49fabd`, and
+  `6c0bc15d` together, then revert any post-V6 W0 fold commit, restore the
+  opening `skinny/RESULTS.md`, and keep hardening docs as history/evidence.
+
 Exit gate:
 
 - All 38 current main rows satisfy Section 0.4.
@@ -340,9 +364,10 @@ Pre-blocked routes: all behavior routes, all `skinny/` parser/codegen/runtime
 changes, stale sidecars as anchors, row-close claims from schema completion,
 and any source edit not required for telemetry/gate/report validation.
 
-Revert protocol: revert report/gate/schema/RESULTS changes as one slice,
-restore the opening RESULTS schema, and record a W0 REDRESS rejection naming
-the missing profiler, gate, or row.
+Revert protocol: revert the W0 implementation commits named in the V7 cost
+accounting together, then revert any post-V6 W0 fold commit, restore the
+opening RESULTS schema, and record a W0 REDRESS rejection naming the missing
+profiler, gate, or row.
 
 Downstream effect: W0 rejection blocks W1-W6.
 

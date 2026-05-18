@@ -11,15 +11,20 @@ Lock 14 frozen roots remain out of scope unless a W2 plan names and challenges
 them. The admissible product proof is generated Track 1 typed DirectBuild plus
 independent Track 2, serde, and sonic typed parity.
 
-The smallest candidate set is `apache_builds` plus `canada`.
+The smallest candidate set is `apache_builds` plus `citm_catalog`.
 
 - `apache_builds` is an object root with a stable `jobs` array of 875 Jenkins
   job records. A useful schema only needs `jobs[].name`, `jobs[].url`, and
   `jobs[].color`; other root fields can be skipped by the existing unknown-field
   policy.
-- `canada` is an object-root GeoJSON fixture with one feature and a polygon
-  coordinate plane. A useful schema can consume `type`, `features[].type`,
-  `features[].geometry.type`, and `coordinates: Vec<Vec<Vec<f64>>>`.
+- `canada` was falsified during W2 pre-redress: a full-fixture parity check
+  exposed generated DirectBuild vs serde checksum divergence on long decimal
+  coordinate payloads. It is routed out of W2 rather than weakening typed
+  equality to length-only proof.
+- `citm_catalog` is an object root with event maps. A useful schema can consume
+  `events` as keyed entries with `id`, `name`, `subTopicIds`, and `topicIds`,
+  staying on string/u64/vector product data and avoiding the Canada float
+  materialization mismatch.
 
 Both candidates use existing fixture facts, existing DirectBuild schema
 machinery, and existing benchmark loops. They do not require a new directive,

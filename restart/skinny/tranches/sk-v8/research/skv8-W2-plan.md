@@ -1,7 +1,8 @@
 # SK-V8 W2 Plan: Typed Product Plane Expansion
 
 Date: 2026-05-18.
-Authority: W0 and W1 closed; W2 research selected `apache_builds` and `canada`.
+Authority: W0 and W1 closed; W2 research selected `apache_builds`; W2
+pre-redress falsified `canada` and routes it out in favor of `citm_catalog`.
 
 ## Plan
 
@@ -10,9 +11,9 @@ Implement exactly two new `real_typed_struct` fixtures:
 1. `apache_builds`: generated typed parser `parse_apache_builds` over root
    `ApacheBuilds<'i>`, consuming `jobs[].name`, `jobs[].url`, and
    `jobs[].color`.
-2. `canada`: generated typed parser `parse_canada` over root `Canada<'i>`,
-   consuming GeoJSON `type`, `features[].type`, `geometry.type`, and polygon
-   `coordinates: Vec<Vec<Vec<f64>>>`.
+2. `citm_catalog`: generated typed parser `parse_citm_catalog` over root
+   `CitmCatalog<'i>`, consuming `events` as keyed entries and selected event
+   fields.
 
 No parser/runtime/tape/direct-digest/substrate source is in scope. W2 may edit
 only:
@@ -37,7 +38,8 @@ Implementation gates:
 
 Admission gates:
 
-- New Track 1 typed rows parse and checksum-match Track 2, serde, and sonic.
+- New Track 1 typed rows parse and checksum-match Track 2, serde, and sonic on
+  both minimal tests and full fixture payloads.
 - Existing `twitter`, `update_center`, `mesh`, and `marine_ik` typed parity
   remains green.
 - If a W2 benchmark refresh is attempted, record whether the standard W0

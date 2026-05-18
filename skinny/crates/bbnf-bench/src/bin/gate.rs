@@ -26,6 +26,12 @@ fn main() -> Result<(), Box<dyn Error>> {
         .iter()
         .skip(1)
         .any(|arg| arg == "--include-volatile-probes");
+    if update_results && include_volatile_probes {
+        return Err(
+            "--include-volatile-probes cannot be combined with --update-results or --write-results"
+                .into(),
+        );
+    }
 
     let criterion_root = env::var_os("CARGO_TARGET_DIR")
         .map(PathBuf::from)
@@ -42,7 +48,15 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     for fixture in fixtures {
         let group = criterion_root.join(format!("json_{}", fixture.name));
-        let mut rows = read_metadata_rows(&group);
+        let mut rows = read_metadata_rows(&group)?;
+        validate_w0_capture_metadata(
+            &fixture.name,
+            &fixture.sha256,
+            fixture.bytes.len() as u64,
+            bbnf_bench::real_typed_struct::fixture_for_name(&fixture.name).is_some(),
+            &rows,
+        )
+        .map_err(|error| format!("{} metadata invalid: {error}", fixture.name))?;
         let simd_metadata = read_simd_metadata_row(&criterion_root, &fixture.name);
         if let Some(row) = simd_metadata.clone() {
             rows.push(row);
@@ -950,8 +964,9 @@ impl Estimates {
     }
 }
 
-fn read_metadata_rows(group: &Path) -> Vec<RowMetadata> {
-    [
+fn read_metadata_rows(group: &Path) -> Result<Vec<RowMetadata>, String> {
+    let mut rows = Vec::new();
+    for bench in [
         "track1_generated",
         "track2_handcoded",
         "sonic_rs_anchor",
@@ -969,9 +984,329 @@ fn read_metadata_rows(group: &Path) -> Vec<RowMetadata> {
         "serde_json_real_typed_struct",
     ]
     .into_iter()
-    .filter_map(|bench| fs::read_to_string(group.join(bench).join("metadata.toml")).ok())
-    .filter_map(|text| toml::from_str::<RowMetadata>(&text).ok())
-    .collect()
+    {
+        let path = group.join(bench).join("metadata.toml");
+        if !path.exists() {
+            continue;
+        }
+        let text = fs::read_to_string(&path)
+            .map_err(|error| format!("failed to read {}: {error}", path.display()))?;
+        let row = toml::from_str::<RowMetadata>(&text)
+            .map_err(|error| format!("malformed {}: {error}", path.display()))?;
+        rows.push(row);
+    }
+    Ok(rows)
+}
+
+#[derive(Clone, Copy)]
+struct MetadataSpec {
+    label: &'static str,
+    track: TrackTag,
+    workload: &'static str,
+    materialisation: &'static str,
+    competitor_crate: Option<&'static str>,
+    competitor_version: Option<&'static str>,
+    strictness: &'static str,
+    output_plane: &'static str,
+}
+
+fn validate_w0_capture_metadata(
+    fixture: &str,
+    input_sha256: &str,
+    input_bytes: u64,
+    real_typed_expected: bool,
+    rows: &[RowMetadata],
+) -> Result<(), String> {
+    if rows.is_empty() {
+        return Err("missing Criterion metadata rows".to_string());
+    }
+    let capture = CaptureMetadata::from_row(&rows[0]);
+    for row in rows {
+        if !row.required_fields_present() {
+            return Err(format!(
+                "{} has missing required metadata fields",
+                row.api_symbol
+            ));
+        }
+        if row.input_sha256 != input_sha256 {
+            return Err(format!(
+                "{} {} metadata has input hash {}, expected {}",
+                fixture, row.api_symbol, row.input_sha256, input_sha256
+            ));
+        }
+        if row.input_bytes != input_bytes {
+            return Err(format!(
+                "{} {} metadata has {} input bytes, expected {}",
+                fixture, row.api_symbol, row.input_bytes, input_bytes
+            ));
+        }
+        capture.validate_same_capture(row)?;
+    }
+    for spec in required_metadata_specs(real_typed_expected) {
+        if !rows.iter().any(|row| metadata_matches_spec(row, spec)) {
+            return Err(format!("missing coherent metadata for {}", spec.label));
+        }
+    }
+    Ok(())
+}
+
+#[derive(Clone)]
+struct CaptureMetadata<'a> {
+    cpu_model: &'a str,
+    cpu_arch: &'a str,
+    os_kernel: &'a str,
+    rustflags: &'a str,
+    target_cpu: &'a str,
+    profile: &'a str,
+    bbnf_commit: &'a str,
+    warmup_samples: u32,
+    warmup_time_s: f64,
+    sample_size: u32,
+    measurement_time_s: f64,
+    confidence_interval: f64,
+    outlier_rejection: &'a str,
+    statistical_method: &'a str,
+}
+
+impl<'a> CaptureMetadata<'a> {
+    fn from_row(row: &'a RowMetadata) -> Self {
+        Self {
+            cpu_model: &row.cpu_model,
+            cpu_arch: &row.cpu_arch,
+            os_kernel: &row.os_kernel,
+            rustflags: &row.rustflags,
+            target_cpu: &row.target_cpu,
+            profile: &row.profile,
+            bbnf_commit: &row.bbnf_commit,
+            warmup_samples: row.warmup_samples,
+            warmup_time_s: row.warmup_time_s,
+            sample_size: row.sample_size,
+            measurement_time_s: row.measurement_time_s,
+            confidence_interval: row.confidence_interval,
+            outlier_rejection: &row.outlier_rejection,
+            statistical_method: &row.statistical_method,
+        }
+    }
+
+    fn validate_same_capture(&self, row: &RowMetadata) -> Result<(), String> {
+        if self.cpu_model != row.cpu_model
+            || self.cpu_arch != row.cpu_arch
+            || self.os_kernel != row.os_kernel
+            || self.rustflags != row.rustflags
+            || self.target_cpu != row.target_cpu
+            || self.profile != row.profile
+            || self.bbnf_commit != row.bbnf_commit
+            || self.warmup_samples != row.warmup_samples
+            || !same_f64(self.warmup_time_s, row.warmup_time_s)
+            || self.sample_size != row.sample_size
+            || !same_f64(self.measurement_time_s, row.measurement_time_s)
+            || !same_f64(self.confidence_interval, row.confidence_interval)
+            || self.outlier_rejection != row.outlier_rejection
+            || self.statistical_method != row.statistical_method
+        {
+            return Err(format!(
+                "{} metadata is from a mixed Criterion capture",
+                row.api_symbol
+            ));
+        }
+        Ok(())
+    }
+}
+
+fn same_f64(left: f64, right: f64) -> bool {
+    left.is_finite() && right.is_finite() && (left - right).abs() <= f64::EPSILON
+}
+
+fn required_metadata_specs(real_typed_expected: bool) -> Vec<MetadataSpec> {
+    let mut specs = vec![
+        spec(
+            "track1_generated",
+            TrackTag::Track1Generated,
+            "parse_only",
+            "typed_root_over_tape",
+            None,
+            None,
+            "deferred",
+            "borrowed view over offset tape",
+        ),
+        spec(
+            "track2_handcoded",
+            TrackTag::Track2Handcoded,
+            "parse_only",
+            "typed_root_over_tape",
+            None,
+            None,
+            "deferred",
+            "borrowed view over offset tape",
+        ),
+        spec(
+            "sonic_rs_anchor",
+            TrackTag::Competitor,
+            "parse_only",
+            "eager_typed",
+            Some("sonic-rs"),
+            Some("0.5.8"),
+            "strict",
+            "DOM",
+        ),
+        spec(
+            "sonic_rs_lossy",
+            TrackTag::Competitor,
+            "parse_only",
+            "eager_typed_lossy",
+            Some("sonic-rs"),
+            Some("0.5.8"),
+            "permissive",
+            "DOM",
+        ),
+        spec(
+            "simd_json_borrowed",
+            TrackTag::Competitor,
+            "parse_only",
+            "borrowed",
+            Some("simd-json"),
+            Some("0.13.11"),
+            "strict",
+            "DOM",
+        ),
+        spec(
+            "simd_json_owned",
+            TrackTag::Competitor,
+            "parse_only",
+            "owned",
+            Some("simd-json"),
+            Some("0.13.11"),
+            "strict",
+            "DOM",
+        ),
+        spec(
+            "serde_json",
+            TrackTag::Competitor,
+            "parse_only",
+            "eager_owned",
+            Some("serde_json"),
+            Some("workspace"),
+            "strict",
+            "DOM",
+        ),
+        spec(
+            "track1_direct_to_struct",
+            TrackTag::Track1Generated,
+            "direct_to_struct",
+            "direct_to_struct",
+            None,
+            None,
+            "deferred",
+            "digest",
+        ),
+        spec(
+            "track2_direct_to_struct",
+            TrackTag::Track2Handcoded,
+            "direct_to_struct",
+            "direct_to_struct",
+            None,
+            None,
+            "deferred",
+            "digest",
+        ),
+        spec(
+            "sonic_rs_direct_to_struct",
+            TrackTag::Competitor,
+            "direct_to_struct",
+            "direct_to_struct",
+            Some("sonic-rs"),
+            Some("0.5.8"),
+            "strict",
+            "digest",
+        ),
+        spec(
+            "serde_json_direct_to_struct",
+            TrackTag::Competitor,
+            "direct_to_struct",
+            "direct_to_struct",
+            Some("serde_json"),
+            Some("workspace"),
+            "strict",
+            "digest",
+        ),
+    ];
+    if real_typed_expected {
+        specs.extend([
+            spec(
+                "track1_real_typed_struct",
+                TrackTag::Track1Generated,
+                "real_typed_struct",
+                "real_typed_struct",
+                None,
+                None,
+                "deferred",
+                "typed direct",
+            ),
+            spec(
+                "track2_real_typed_struct",
+                TrackTag::Track2Handcoded,
+                "real_typed_struct",
+                "real_typed_struct",
+                None,
+                None,
+                "deferred",
+                "typed direct",
+            ),
+            spec(
+                "sonic_rs_real_typed_struct",
+                TrackTag::Competitor,
+                "real_typed_struct",
+                "real_typed_struct",
+                Some("sonic-rs"),
+                Some("0.5.8"),
+                "strict",
+                "typed direct",
+            ),
+            spec(
+                "serde_json_real_typed_struct",
+                TrackTag::Competitor,
+                "real_typed_struct",
+                "real_typed_struct",
+                Some("serde_json"),
+                Some("workspace"),
+                "strict",
+                "typed direct",
+            ),
+        ]);
+    }
+    specs
+}
+
+fn spec(
+    label: &'static str,
+    track: TrackTag,
+    workload: &'static str,
+    materialisation: &'static str,
+    competitor_crate: Option<&'static str>,
+    competitor_version: Option<&'static str>,
+    strictness: &'static str,
+    output_plane: &'static str,
+) -> MetadataSpec {
+    MetadataSpec {
+        label,
+        track,
+        workload,
+        materialisation,
+        competitor_crate,
+        competitor_version,
+        strictness,
+        output_plane,
+    }
+}
+
+fn metadata_matches_spec(row: &RowMetadata, spec: MetadataSpec) -> bool {
+    row.track == spec.track
+        && row.workload == spec.workload
+        && row.materialisation == spec.materialisation
+        && row.competitor_crate.as_deref() == spec.competitor_crate
+        && row.competitor_version.as_deref() == spec.competitor_version
+        && row.strictness == spec.strictness
+        && row.output_plane == spec.output_plane
 }
 
 fn read_simd_metadata_row(criterion_root: &Path, fixture: &str) -> Option<RowMetadata> {
@@ -1245,5 +1580,100 @@ mod tests {
             w0_parse_non_admission(Outcome::GSubstrateFailure),
             Outcome::SSubstrateGuardNonAdmission
         );
+    }
+
+    #[test]
+    fn w0_capture_metadata_accepts_coherent_required_rows() {
+        let rows = metadata_rows(false);
+        validate_w0_capture_metadata("fixture", "hash", 12, false, &rows).unwrap();
+    }
+
+    #[test]
+    fn w0_capture_metadata_rejects_fixture_mismatch() {
+        let mut rows = metadata_rows(false);
+        rows[0].input_sha256 = "other".into();
+        assert!(validate_w0_capture_metadata("fixture", "hash", 12, false, &rows).is_err());
+
+        let mut rows = metadata_rows(false);
+        rows[0].input_bytes = 13;
+        assert!(validate_w0_capture_metadata("fixture", "hash", 12, false, &rows).is_err());
+    }
+
+    #[test]
+    fn w0_capture_metadata_rejects_mixed_capture() {
+        let mut rows = metadata_rows(false);
+        rows[1].bbnf_commit = "other-commit".into();
+        assert!(validate_w0_capture_metadata("fixture", "hash", 12, false, &rows).is_err());
+
+        let mut rows = metadata_rows(false);
+        rows[1].target_cpu = "other-cpu".into();
+        assert!(validate_w0_capture_metadata("fixture", "hash", 12, false, &rows).is_err());
+    }
+
+    #[test]
+    fn w0_capture_metadata_rejects_missing_required_bench() {
+        let mut rows = metadata_rows(false);
+        rows.retain(|row| row.materialisation != "eager_typed");
+        assert!(validate_w0_capture_metadata("fixture", "hash", 12, false, &rows).is_err());
+    }
+
+    fn metadata_rows(real_typed: bool) -> Vec<RowMetadata> {
+        required_metadata_specs(real_typed)
+            .into_iter()
+            .map(metadata_row)
+            .collect()
+    }
+
+    fn metadata_row(spec: MetadataSpec) -> RowMetadata {
+        RowMetadata {
+            schema_version: bbnf_bench::metadata::SCHEMA_VERSION.into(),
+            cpu_model: "cpu".into(),
+            cpu_arch: "arch".into(),
+            os_kernel: "kernel".into(),
+            rustflags: "-C target-cpu=native".into(),
+            target_cpu: "native".into(),
+            profile: "bench".into(),
+            input_sha256: "hash".into(),
+            input_bytes: 12,
+            competitor_crate: spec.competitor_crate.map(str::to_string),
+            competitor_version: spec.competitor_version.map(str::to_string),
+            bbnf_commit: "commit".into(),
+            warmup_samples: 3,
+            warmup_time_s: 3.0,
+            sample_size: 100,
+            measurement_time_s: 5.0,
+            confidence_interval: 0.95,
+            outlier_rejection: "iqr".into(),
+            statistical_method: "bootstrap".into(),
+            track: spec.track,
+            workload: spec.workload.into(),
+            strictness: spec.strictness.into(),
+            parse_utf8: if spec.track == TrackTag::Competitor {
+                "scan-boundary".into()
+            } else {
+                "view-boundary".into()
+            },
+            escape_complete: "yes".into(),
+            flaw_probe: "none".into(),
+            output_plane: spec.output_plane.into(),
+            feature_mask: "feature".into(),
+            api_symbol: spec.label.into(),
+            sidecar_freshness: "same-run".into(),
+            primitive_status: "test".into(),
+            hot_leaf: "leaf".into(),
+            materialisation: spec.materialisation.into(),
+            parse_mode: "mode".into(),
+            source_ownership: "borrowed".into(),
+            allocator: "mimalloc".into(),
+            plan_variant: "variant".into(),
+            host_call_mode: "none".into(),
+            arena_writes: None,
+            payload_allocations: None,
+            scalar_parity_hash_twitter: None,
+            scalar_parity_hash_citm: None,
+            scalar_parity_hash_canada: None,
+            peak_rss_bytes: Some(1),
+            cold_cache_mode: "warm".into(),
+        }
     }
 }

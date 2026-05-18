@@ -380,7 +380,12 @@ const FROZEN_ROOTS: &[&str] = &[
     "crates/ir/src",
     "crates/passes/src",
     "crates/codegen/src",
+    "crates/grammar/src",
+    "crates/bbnf/src",
     "crates/bbnf-simd/src",
+    "crates/bbnf-simd/build.rs",
+    "crates/bbnf-simd/ext",
+    "crates/parse-that-regex/src",
     "crates/bbnf-bench/src/direct_struct.rs",
     "crates/bbnf-bench/src/real_typed_struct.rs",
     "crates/bbnf-bench/src/generated_real_typed.rs",
@@ -558,6 +563,26 @@ mod tests {
         assert!(validate_frozen_status_output("").is_ok());
         assert!(validate_frozen_status_output(" M crates/runtime/src/tape/mod.rs").is_err());
         assert!(validate_frozen_status_output("?? crates/runtime/src/union_tape.rs").is_err());
+        assert!(validate_frozen_status_output(" M crates/grammar/src/lib.rs").is_err());
+        assert!(validate_frozen_status_output(" M crates/bbnf-simd/build.rs").is_err());
+        assert!(validate_frozen_status_output("?? crates/bbnf-simd/ext/x86/new.S").is_err());
+    }
+
+    #[test]
+    fn frozen_roots_cover_directive_and_asm_surfaces() {
+        for root in [
+            "crates/grammar/src",
+            "crates/bbnf/src",
+            "crates/bbnf-simd/build.rs",
+            "crates/bbnf-simd/ext",
+            "crates/parse-that-regex/src",
+        ] {
+            assert!(FROZEN_ROOTS.contains(&root), "{root} is not frozen");
+        }
+        let status_args = git_path_args("status", "--porcelain", FROZEN_ROOTS).join(" ");
+        assert!(status_args.contains("crates/grammar/src"));
+        assert!(status_args.contains("crates/bbnf-simd/build.rs"));
+        assert!(status_args.contains("crates/bbnf-simd/ext"));
     }
 
     #[test]

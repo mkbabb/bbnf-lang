@@ -325,6 +325,7 @@ impl TelemetryRow {
                 telemetry.row_id
             ));
         }
+        validate_w0_row_identity(self)?;
         validate_w0_outcome(&telemetry.row_id, &self.outcome_id)?;
         if telemetry.wave_id != "SK-V8-open" || telemetry.sk_v8_open_delta != "baseline" {
             return Err(format!(
@@ -958,6 +959,17 @@ fn validate_w0_admission_boundary(row: &TelemetryRow) -> Result<(), String> {
     ))
 }
 
+fn validate_w0_row_identity(row: &TelemetryRow) -> Result<(), String> {
+    let (corpus, workload) = parse_row_id(&row.sk_v8.row_id)?;
+    if row.corpus != corpus || row.workload != workload {
+        return Err(format!(
+            "{} does not match rendered row {}/{}",
+            row.sk_v8.row_id, row.corpus, row.workload
+        ));
+    }
+    Ok(())
+}
+
 fn validate_comparator_evidence(
     row_id: &str,
     workload: &str,
@@ -1003,6 +1015,7 @@ fn validate_comparator_evidence(
             }
         }
         if SK_V8_SIDECAR_COMPARATORS.contains(&comparator.comparator_id.as_str()) {
+            validate_sidecar_comparator(row_id, workload, comparator)?;
             match comparator.value_mbps {
                 Some(_) => {
                     if comparator.sidecar_freshness.starts_with("absent:") {
@@ -1043,6 +1056,56 @@ fn validate_comparator_evidence(
     Ok(())
 }
 
+fn validate_sidecar_comparator(
+    row_id: &str,
+    workload: &str,
+    comparator: &SkV8ComparatorEvidence,
+) -> Result<(), String> {
+    let (corpus, _) = parse_row_id(row_id)?;
+    if comparator.comparator_plane != "DOM" {
+        return Err(format!(
+            "{row_id} {} sidecar plane {} is not DOM",
+            comparator.comparator_id, comparator.comparator_plane
+        ));
+    }
+    if comparator.comparator_strictness != "strict" {
+        return Err(format!(
+            "{row_id} {} sidecar strictness {} is not strict",
+            comparator.comparator_id, comparator.comparator_strictness
+        ));
+    }
+    if comparator.comparator_freshness != comparator.sidecar_freshness {
+        return Err(format!(
+            "{row_id} {} sidecar freshness mismatch",
+            comparator.comparator_id
+        ));
+    }
+    if comparator.sidecar_freshness == "sidecar-same-run" {
+        return Err(format!(
+            "{row_id} {} claims sidecar-same-run without structured manifest",
+            comparator.comparator_id
+        ));
+    }
+    let expected_source = if comparator.value_mbps.is_some() {
+        format!(
+            "sidecar-profile:sk-v7-cpp:{corpus}:{}",
+            comparator.comparator_id
+        )
+    } else {
+        format!(
+            "absence:w0:{corpus}:{workload}:{}",
+            comparator.comparator_id
+        )
+    };
+    if comparator.source_artifact != expected_source {
+        return Err(format!(
+            "{row_id} {} source {} does not match expected {}",
+            comparator.comparator_id, comparator.source_artifact, expected_source
+        ));
+    }
+    Ok(())
+}
+
 fn validate_native_comparator_source(
     row_id: &str,
     workload: &str,
@@ -1054,19 +1117,49 @@ fn validate_native_comparator_source(
         .find(|entry| entry.comparator_id == comparator_id)
         .ok_or_else(|| format!("{row_id} missing native comparator {comparator_id}"))?;
     let (corpus, _) = parse_row_id(row_id)?;
-    let expected_bench = match (comparator_id, workload) {
-        ("sonic_rs_strict", "parse_only") => "sonic_rs_anchor",
-        ("sonic_rs_strict", "direct_to_struct") => "sonic_rs_direct_to_struct",
-        ("sonic_rs_strict", "real_typed_struct") => "sonic_rs_real_typed_struct",
-        ("serde_json", "parse_only") => "serde_json",
-        ("serde_json", "direct_to_struct") => "serde_json_direct_to_struct",
-        ("serde_json", "real_typed_struct") => "serde_json_real_typed_struct",
+    let (expected_bench, expected_plane) = match (comparator_id, workload) {
+        ("sonic_rs_strict", "parse_only") => ("sonic_rs_anchor", "DOM"),
+        ("sonic_rs_strict", "direct_to_struct") => ("sonic_rs_direct_to_struct", "digest"),
+        ("sonic_rs_strict", "real_typed_struct") => ("sonic_rs_real_typed_struct", "typed direct"),
+        ("serde_json", "parse_only") => ("serde_json", "DOM"),
+        ("serde_json", "direct_to_struct") => ("serde_json_direct_to_struct", "digest"),
+        ("serde_json", "real_typed_struct") => ("serde_json_real_typed_struct", "typed direct"),
         _ => {
             return Err(format!(
                 "{row_id} has unsupported comparator/workload {comparator_id}/{workload}"
             ))
         }
     };
+    if comparator.comparator_plane != expected_plane {
+        return Err(format!(
+            "{row_id} {} plane {} does not match expected {}",
+            comparator.comparator_id, comparator.comparator_plane, expected_plane
+        ));
+    }
+    if comparator.comparator_strictness != "strict" {
+        return Err(format!(
+            "{row_id} {} is not a strict native comparator",
+            comparator.comparator_id
+        ));
+    }
+    if comparator.comparator_freshness != "same-run-native" {
+        return Err(format!(
+            "{row_id} {} freshness {} is not same-run-native",
+            comparator.comparator_id, comparator.comparator_freshness
+        ));
+    }
+    if comparator.sidecar_freshness != "n/a" {
+        return Err(format!(
+            "{row_id} {} native comparator has sidecar freshness {}",
+            comparator.comparator_id, comparator.sidecar_freshness
+        ));
+    }
+    if comparator.value_mbps.is_none() {
+        return Err(format!(
+            "{row_id} {} missing native comparator Mbps",
+            comparator.comparator_id
+        ));
+    }
     let expected = format!("criterion:json_{corpus}/{expected_bench}/new/estimates.json");
     if comparator.source_artifact != expected {
         return Err(format!(
@@ -1266,7 +1359,7 @@ mod tests {
                 comparator_freshness: "absent:not-collected-for-test".into(),
                 sidecar_freshness: "absent:not-collected-for-test".into(),
                 value_mbps: None,
-                source_artifact: format!("absence:w0:test:{id}"),
+                source_artifact: format!("absence:w0:{corpus}:{workload}:{id}"),
             });
         }
         evidence
@@ -1435,6 +1528,29 @@ mod tests {
     }
 
     #[test]
+    fn w0_rejects_row_id_rendered_identity_mismatch() {
+        let mut row = TelemetryRow::workload(
+            "twitter",
+            "direct_to_struct",
+            None,
+            1_000_000,
+            Some(84_324.14),
+            Some(101_204.33),
+            comparators(),
+            "digest",
+            "none",
+            "PASS",
+            w0_hot_leaf("json/twitter/direct_to_struct/main"),
+        )
+        .with_sk_v8(w0_telemetry("json/twitter/direct_to_struct/main", "digest"));
+        row.sk_v8.row_id = "json/twitter/parse_only/main".into();
+        row.sk_v8.profile_artifact =
+            "criterion-slope-profile:json_twitter/track1_generated/new/estimates.json".into();
+        row.hot_leaf = w0_hot_leaf("json/twitter/parse_only/main");
+        assert!(row.validate_sk_v8_w0().is_err());
+    }
+
+    #[test]
     fn w0_rejects_unsupported_outcome_and_strict_view_boundary_claim() {
         let mut row = TelemetryRow::workload(
             "twitter",
@@ -1483,6 +1599,76 @@ mod tests {
             .find(|entry| entry.comparator_id == "sonic_rs_strict")
             .unwrap();
         sonic.source_artifact = "criterion:json_twitter/sonic_rs_anchor/new/estimates.json".into();
+        assert!(row.validate_sk_v8_w0().is_err());
+    }
+
+    #[test]
+    fn w0_rejects_native_comparator_semantic_mismatch() {
+        let mut row = TelemetryRow::workload(
+            "twitter",
+            "direct_to_struct",
+            None,
+            1_000_000,
+            Some(84_324.14),
+            Some(101_204.33),
+            comparators(),
+            "digest",
+            "none",
+            "PASS",
+            w0_hot_leaf("json/twitter/direct_to_struct/main"),
+        )
+        .with_sk_v8(w0_telemetry("json/twitter/direct_to_struct/main", "digest"));
+        let sonic_idx = row
+            .sk_v8
+            .comparators
+            .iter()
+            .position(|entry| entry.comparator_id == "sonic_rs_strict")
+            .unwrap();
+        row.sk_v8.comparators[sonic_idx].comparator_plane = "DOM".into();
+        assert!(row.validate_sk_v8_w0().is_err());
+
+        row.sk_v8.comparators[sonic_idx].comparator_plane = "digest".into();
+        row.sk_v8.comparators[sonic_idx].comparator_freshness = "historical:old".into();
+        assert!(row.validate_sk_v8_w0().is_err());
+
+        row.sk_v8.comparators[sonic_idx].comparator_freshness = "same-run-native".into();
+        row.sk_v8.comparators[sonic_idx].sidecar_freshness = "historical:old".into();
+        assert!(row.validate_sk_v8_w0().is_err());
+
+        row.sk_v8.comparators[sonic_idx].sidecar_freshness = "n/a".into();
+        row.sk_v8.comparators[sonic_idx].value_mbps = None;
+        assert!(row.validate_sk_v8_w0().is_err());
+    }
+
+    #[test]
+    fn w0_rejects_sidecar_source_and_freshness_mismatch() {
+        let mut row = TelemetryRow::parse(
+            "twitter",
+            Outcome::KSimdParityHashFail,
+            631_515,
+            Some(320_728.80),
+            Some(410_427.35),
+            comparators(),
+            w0_hot_leaf("json/twitter/parse_only/main"),
+        )
+        .with_sk_v8(w0_telemetry(
+            "json/twitter/parse_only/main",
+            "borrowed_view_over_offset_tape",
+        ));
+        let sidecar_idx = row
+            .sk_v8
+            .comparators
+            .iter()
+            .position(|entry| entry.comparator_id == "simdjson_dom")
+            .unwrap();
+        row.sk_v8.comparators[sidecar_idx].source_artifact =
+            "absence:w0:wrong:parse_only:simdjson_dom".into();
+        assert!(row.validate_sk_v8_w0().is_err());
+
+        row.sk_v8.comparators[sidecar_idx].source_artifact =
+            "absence:w0:twitter:parse_only:simdjson_dom".into();
+        row.sk_v8.comparators[sidecar_idx].comparator_freshness = "sidecar-same-run".into();
+        row.sk_v8.comparators[sidecar_idx].sidecar_freshness = "sidecar-same-run".into();
         assert!(row.validate_sk_v8_w0().is_err());
     }
 

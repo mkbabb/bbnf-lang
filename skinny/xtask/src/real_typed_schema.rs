@@ -20,6 +20,16 @@ pub fn schema() -> DirectSchemaSet {
                 type_id: "UpdateCenter".to_string(),
             },
             DirectRootSchema {
+                function_name: "parse_apache_builds".to_string(),
+                rust_type: "crate::real_typed_struct::ApacheBuilds<'i>".to_string(),
+                type_id: "ApacheBuilds".to_string(),
+            },
+            DirectRootSchema {
+                function_name: "parse_citm_catalog".to_string(),
+                rust_type: "crate::real_typed_struct::CitmCatalog<'i>".to_string(),
+                type_id: "CitmCatalog".to_string(),
+            },
+            DirectRootSchema {
                 function_name: "parse_mesh".to_string(),
                 rust_type: "crate::real_typed_struct::Mesh".to_string(),
                 type_id: "Mesh".to_string(),
@@ -42,6 +52,49 @@ pub fn schema() -> DirectSchemaSet {
                 vec![
                     default("id", "id", opt(u64_ty())),
                     default("text", "text", opt(string())),
+                ],
+            ),
+            struct_ty(
+                "ApacheBuilds",
+                "crate::real_typed_struct::ApacheBuilds<'i>",
+                vec![
+                    default("mode", "mode", opt(string())),
+                    default("nodeName", "node_name", opt(string())),
+                    default("jobs", "jobs", vec_with_capacity(ty("ApacheJob"), 875)),
+                ],
+            ),
+            struct_ty(
+                "ApacheJob",
+                "crate::real_typed_struct::ApacheJob<'i>",
+                vec![
+                    default("name", "name", opt(string())),
+                    default("url", "url", opt(string())),
+                    default("color", "color", opt(string())),
+                ],
+            ),
+            struct_ty(
+                "CitmCatalog",
+                "crate::real_typed_struct::CitmCatalog<'i>",
+                vec![default(
+                    "events",
+                    "events",
+                    map_entries(
+                        "crate::real_typed_struct::CitmEventEntry<'i>",
+                        "key",
+                        "value",
+                        184,
+                        ty("CitmEvent"),
+                    ),
+                )],
+            ),
+            struct_ty(
+                "CitmEvent",
+                "crate::real_typed_struct::CitmEvent<'i>",
+                vec![
+                    default("id", "id", opt(u64_ty())),
+                    default("name", "name", opt(string())),
+                    default("subTopicIds", "sub_topic_ids", vec(u64_ty())),
+                    default("topicIds", "topic_ids", vec(u64_ty())),
                 ],
             ),
             struct_ty(

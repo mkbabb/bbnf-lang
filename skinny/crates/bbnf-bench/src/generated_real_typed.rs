@@ -50,6 +50,28 @@ pub fn parse_update_center<'i>(input: &'i str) -> Result<crate::real_typed_struc
     }
 }
 
+pub fn parse_apache_builds<'i>(input: &'i str) -> Result<crate::real_typed_struct::ApacheBuilds<'i>, DirectBuildError<'i>> {
+    let mut parser = DirectParser::new(input);
+    let output = parse_type_apache_builds(&mut parser)?;
+    parser.ws();
+    if parser.cursor == parser.bytes.len() {
+        Ok(output)
+    } else {
+        Err(parser.error("trailing characters"))
+    }
+}
+
+pub fn parse_citm_catalog<'i>(input: &'i str) -> Result<crate::real_typed_struct::CitmCatalog<'i>, DirectBuildError<'i>> {
+    let mut parser = DirectParser::new(input);
+    let output = parse_type_citm_catalog(&mut parser)?;
+    parser.ws();
+    if parser.cursor == parser.bytes.len() {
+        Ok(output)
+    } else {
+        Err(parser.error("trailing characters"))
+    }
+}
+
 pub fn parse_mesh<'i>(input: &'i str) -> Result<crate::real_typed_struct::Mesh, DirectBuildError<'i>> {
     let mut parser = DirectParser::new(input);
     let output = parse_type_mesh(&mut parser)?;
@@ -140,6 +162,180 @@ fn parse_type_tweet<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typ
         return Ok(crate::real_typed_struct::Tweet {
             id: id.unwrap_or_default(),
             text: text.unwrap_or_default(),
+        });
+    }
+}
+
+fn parse_type_apache_builds<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::ApacheBuilds<'i>, DirectBuildError<'i>> {
+    parser.ws();
+    parser.expect(b'{')?;
+    let mut mode: Option<Option<Cow<'i, str>>> = None;
+    let mut node_name: Option<Option<Cow<'i, str>>> = None;
+    let mut jobs: Option<Vec<crate::real_typed_struct::ApacheJob<'i>>> = None;
+    parser.ws();
+    if parser.take(b'}') {
+        return Ok(crate::real_typed_struct::ApacheBuilds {
+            mode: mode.unwrap_or_default(),
+            node_name: node_name.unwrap_or_default(),
+            jobs: jobs.unwrap_or_default(),
+        });
+    }
+    loop {
+        let key = parser.parse_string()?;
+        parser.ws();
+        parser.expect(b':')?;
+        parser.ws();
+        match key.as_ref() {
+            "mode" => {
+                mode = Some(parse_option_scalar_string(parser)?);
+            }
+            "nodeName" => {
+                node_name = Some(parse_option_scalar_string(parser)?);
+            }
+            "jobs" => {
+                jobs = Some(parse_vec_cap_875_type_apache_job(parser)?);
+            }
+            _ => parser.skip_value()?,
+        }
+        parser.ws();
+        if parser.take(b',') {
+            parser.ws();
+            continue;
+        }
+        parser.expect(b'}')?;
+        return Ok(crate::real_typed_struct::ApacheBuilds {
+            mode: mode.unwrap_or_default(),
+            node_name: node_name.unwrap_or_default(),
+            jobs: jobs.unwrap_or_default(),
+        });
+    }
+}
+
+fn parse_type_apache_job<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::ApacheJob<'i>, DirectBuildError<'i>> {
+    parser.ws();
+    parser.expect(b'{')?;
+    let mut name: Option<Option<Cow<'i, str>>> = None;
+    let mut url: Option<Option<Cow<'i, str>>> = None;
+    let mut color: Option<Option<Cow<'i, str>>> = None;
+    parser.ws();
+    if parser.take(b'}') {
+        return Ok(crate::real_typed_struct::ApacheJob {
+            name: name.unwrap_or_default(),
+            url: url.unwrap_or_default(),
+            color: color.unwrap_or_default(),
+        });
+    }
+    loop {
+        let key = parser.parse_string()?;
+        parser.ws();
+        parser.expect(b':')?;
+        parser.ws();
+        match key.as_ref() {
+            "name" => {
+                name = Some(parse_option_scalar_string(parser)?);
+            }
+            "url" => {
+                url = Some(parse_option_scalar_string(parser)?);
+            }
+            "color" => {
+                color = Some(parse_option_scalar_string(parser)?);
+            }
+            _ => parser.skip_value()?,
+        }
+        parser.ws();
+        if parser.take(b',') {
+            parser.ws();
+            continue;
+        }
+        parser.expect(b'}')?;
+        return Ok(crate::real_typed_struct::ApacheJob {
+            name: name.unwrap_or_default(),
+            url: url.unwrap_or_default(),
+            color: color.unwrap_or_default(),
+        });
+    }
+}
+
+fn parse_type_citm_catalog<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::CitmCatalog<'i>, DirectBuildError<'i>> {
+    parser.ws();
+    parser.expect(b'{')?;
+    let mut events: Option<Vec<crate::real_typed_struct::CitmEventEntry<'i>>> = None;
+    parser.ws();
+    if parser.take(b'}') {
+        return Ok(crate::real_typed_struct::CitmCatalog {
+            events: events.unwrap_or_default(),
+        });
+    }
+    loop {
+        let key = parser.parse_string()?;
+        parser.ws();
+        parser.expect(b':')?;
+        parser.ws();
+        match key.as_ref() {
+            "events" => {
+                events = Some(parse_map_entries_crate_real_typed_struct_citm_event_entry_i_type_citm_event(parser)?);
+            }
+            _ => parser.skip_value()?,
+        }
+        parser.ws();
+        if parser.take(b',') {
+            parser.ws();
+            continue;
+        }
+        parser.expect(b'}')?;
+        return Ok(crate::real_typed_struct::CitmCatalog {
+            events: events.unwrap_or_default(),
+        });
+    }
+}
+
+fn parse_type_citm_event<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::CitmEvent<'i>, DirectBuildError<'i>> {
+    parser.ws();
+    parser.expect(b'{')?;
+    let mut id: Option<Option<u64>> = None;
+    let mut name: Option<Option<Cow<'i, str>>> = None;
+    let mut sub_topic_ids: Option<Vec<u64>> = None;
+    let mut topic_ids: Option<Vec<u64>> = None;
+    parser.ws();
+    if parser.take(b'}') {
+        return Ok(crate::real_typed_struct::CitmEvent {
+            id: id.unwrap_or_default(),
+            name: name.unwrap_or_default(),
+            sub_topic_ids: sub_topic_ids.unwrap_or_default(),
+            topic_ids: topic_ids.unwrap_or_default(),
+        });
+    }
+    loop {
+        let key = parser.parse_string()?;
+        parser.ws();
+        parser.expect(b':')?;
+        parser.ws();
+        match key.as_ref() {
+            "id" => {
+                id = Some(parse_option_scalar_u64(parser)?);
+            }
+            "name" => {
+                name = Some(parse_option_scalar_string(parser)?);
+            }
+            "subTopicIds" => {
+                sub_topic_ids = Some(parse_vec_cap_none_scalar_u64(parser)?);
+            }
+            "topicIds" => {
+                topic_ids = Some(parse_vec_cap_none_scalar_u64(parser)?);
+            }
+            _ => parser.skip_value()?,
+        }
+        parser.ws();
+        if parser.take(b',') {
+            parser.ws();
+            continue;
+        }
+        parser.expect(b'}')?;
+        return Ok(crate::real_typed_struct::CitmEvent {
+            id: id.unwrap_or_default(),
+            name: name.unwrap_or_default(),
+            sub_topic_ids: sub_topic_ids.unwrap_or_default(),
+            topic_ids: topic_ids.unwrap_or_default(),
         });
     }
 }
@@ -580,6 +776,56 @@ fn parse_option_scalar_string<'i>(parser: &mut DirectParser<'i>) -> Result<Optio
         Ok(None)
     } else {
         Ok(Some(parser.parse_string()?))
+    }
+}
+
+fn parse_vec_cap_875_type_apache_job<'i>(parser: &mut DirectParser<'i>) -> Result<Vec<crate::real_typed_struct::ApacheJob<'i>>, DirectBuildError<'i>> {
+    let mut out: Vec<crate::real_typed_struct::ApacheJob<'i>> = Vec::with_capacity(875);
+    parser.ws();
+    parser.expect(b'[')?;
+    parser.ws();
+    if parser.take(b']') { return Ok(out); }
+    loop {
+        out.push(parse_type_apache_job(parser)?);
+        parser.ws();
+        if parser.take(b',') { parser.ws(); continue; }
+        parser.expect(b']')?;
+        return Ok(out);
+    }
+}
+
+fn parse_map_entries_crate_real_typed_struct_citm_event_entry_i_type_citm_event<'i>(parser: &mut DirectParser<'i>) -> Result<Vec<crate::real_typed_struct::CitmEventEntry<'i>>, DirectBuildError<'i>> {
+    let mut out: Vec<crate::real_typed_struct::CitmEventEntry<'i>> = Vec::with_capacity(184);
+    parser.ws();
+    parser.expect(b'{')?;
+    parser.ws();
+    if parser.take(b'}') { return Ok(out); }
+    loop {
+        let key = parser.parse_string()?;
+        parser.ws();
+        parser.expect(b':')?;
+        parser.ws();
+        let value = parse_type_citm_event(parser)?;
+        out.push(crate::real_typed_struct::CitmEventEntry { key: key, value: value });
+        parser.ws();
+        if parser.take(b',') { parser.ws(); continue; }
+        parser.expect(b'}')?;
+        return Ok(out);
+    }
+}
+
+fn parse_vec_cap_none_scalar_u64<'i>(parser: &mut DirectParser<'i>) -> Result<Vec<u64>, DirectBuildError<'i>> {
+    let mut out: Vec<u64> = Vec::with_capacity(0);
+    parser.ws();
+    parser.expect(b'[')?;
+    parser.ws();
+    if parser.take(b']') { return Ok(out); }
+    loop {
+        out.push(parser.parse_u64()?);
+        parser.ws();
+        if parser.take(b',') { parser.ws(); continue; }
+        parser.expect(b']')?;
+        return Ok(out);
     }
 }
 

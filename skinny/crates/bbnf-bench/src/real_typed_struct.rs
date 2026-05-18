@@ -9,6 +9,8 @@ use crate::direct_struct::DirectStructError;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RealTypedFixture {
     Twitter,
+    ApacheBuilds,
+    CitmCatalog,
     UpdateCenter,
     Mesh,
     MarineIk,
@@ -26,6 +28,50 @@ pub struct Tweet<'a> {
     pub id: Option<u64>,
     #[serde(default, borrow)]
     pub text: Option<Cow<'a, str>>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ApacheBuilds<'a> {
+    #[serde(default, borrow)]
+    pub mode: Option<Cow<'a, str>>,
+    #[serde(default, borrow, rename = "nodeName")]
+    pub node_name: Option<Cow<'a, str>>,
+    #[serde(default, borrow)]
+    pub jobs: Vec<ApacheJob<'a>>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ApacheJob<'a> {
+    #[serde(default, borrow)]
+    pub name: Option<Cow<'a, str>>,
+    #[serde(default, borrow)]
+    pub url: Option<Cow<'a, str>>,
+    #[serde(default, borrow)]
+    pub color: Option<Cow<'a, str>>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CitmCatalog<'a> {
+    #[serde(default, borrow, deserialize_with = "deserialize_citm_event_entries")]
+    pub events: Vec<CitmEventEntry<'a>>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CitmEvent<'a> {
+    #[serde(default)]
+    pub id: Option<u64>,
+    #[serde(default, borrow)]
+    pub name: Option<Cow<'a, str>>,
+    #[serde(default, rename = "subTopicIds")]
+    pub sub_topic_ids: Vec<u64>,
+    #[serde(default, rename = "topicIds")]
+    pub topic_ids: Vec<u64>,
+}
+
+#[derive(Debug)]
+pub struct CitmEventEntry<'a> {
+    pub key: Cow<'a, str>,
+    pub value: CitmEvent<'a>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -126,6 +172,8 @@ pub struct MarineGeometryData {
 
 pub enum RealTypedOutput<'a> {
     Twitter(TwitterSearch<'a>),
+    ApacheBuilds(ApacheBuilds<'a>),
+    CitmCatalog(CitmCatalog<'a>),
     UpdateCenter(UpdateCenter<'a>),
     Mesh(Mesh),
     MarineIk(MarineIk),
@@ -134,6 +182,8 @@ pub enum RealTypedOutput<'a> {
 pub fn fixture_for_name(name: &str) -> Option<RealTypedFixture> {
     match name {
         "twitter" => Some(RealTypedFixture::Twitter),
+        "apache_builds" | "apache-builds" => Some(RealTypedFixture::ApacheBuilds),
+        "citm_catalog" | "citm-catalog" => Some(RealTypedFixture::CitmCatalog),
         "update_center" | "update-center" => Some(RealTypedFixture::UpdateCenter),
         "mesh" => Some(RealTypedFixture::Mesh),
         "marine_ik" | "marine-ik" => Some(RealTypedFixture::MarineIk),
@@ -180,6 +230,12 @@ pub fn track1_typed<'a>(
         RealTypedFixture::Twitter => crate::generated_real_typed::parse_twitter_search(input)
             .map(RealTypedOutput::Twitter)
             .map_err(|error| DirectStructError::Parse(error.to_string())),
+        RealTypedFixture::ApacheBuilds => crate::generated_real_typed::parse_apache_builds(input)
+            .map(RealTypedOutput::ApacheBuilds)
+            .map_err(|error| DirectStructError::Parse(error.to_string())),
+        RealTypedFixture::CitmCatalog => crate::generated_real_typed::parse_citm_catalog(input)
+            .map(RealTypedOutput::CitmCatalog)
+            .map_err(|error| DirectStructError::Parse(error.to_string())),
         RealTypedFixture::UpdateCenter => crate::generated_real_typed::parse_update_center(input)
             .map(RealTypedOutput::UpdateCenter)
             .map_err(|error| DirectStructError::Parse(error.to_string())),
@@ -207,6 +263,12 @@ pub fn serde_typed<'a>(
         RealTypedFixture::Twitter => serde_json::from_slice::<TwitterSearch<'a>>(bytes)
             .map(RealTypedOutput::Twitter)
             .map_err(|error| DirectStructError::Serde(error.to_string())),
+        RealTypedFixture::ApacheBuilds => serde_json::from_slice::<ApacheBuilds<'a>>(bytes)
+            .map(RealTypedOutput::ApacheBuilds)
+            .map_err(|error| DirectStructError::Serde(error.to_string())),
+        RealTypedFixture::CitmCatalog => serde_json::from_slice::<CitmCatalog<'a>>(bytes)
+            .map(RealTypedOutput::CitmCatalog)
+            .map_err(|error| DirectStructError::Serde(error.to_string())),
         RealTypedFixture::UpdateCenter => serde_json::from_slice::<UpdateCenter<'a>>(bytes)
             .map(RealTypedOutput::UpdateCenter)
             .map_err(|error| DirectStructError::Serde(error.to_string())),
@@ -226,6 +288,12 @@ pub fn sonic_typed<'a>(
     match fixture {
         RealTypedFixture::Twitter => sonic_rs::from_slice::<TwitterSearch<'a>>(bytes)
             .map(RealTypedOutput::Twitter)
+            .map_err(|error| DirectStructError::Sonic(error.to_string())),
+        RealTypedFixture::ApacheBuilds => sonic_rs::from_slice::<ApacheBuilds<'a>>(bytes)
+            .map(RealTypedOutput::ApacheBuilds)
+            .map_err(|error| DirectStructError::Sonic(error.to_string())),
+        RealTypedFixture::CitmCatalog => sonic_rs::from_slice::<CitmCatalog<'a>>(bytes)
+            .map(RealTypedOutput::CitmCatalog)
             .map_err(|error| DirectStructError::Sonic(error.to_string())),
         RealTypedFixture::UpdateCenter => sonic_rs::from_slice::<UpdateCenter<'a>>(bytes)
             .map(RealTypedOutput::UpdateCenter)
@@ -258,6 +326,8 @@ pub fn assert_real_typed_parity(input: &str, bytes: &[u8], fixture: RealTypedFix
 pub fn typed_checksum(output: &RealTypedOutput<'_>) -> u64 {
     match output {
         RealTypedOutput::Twitter(value) => checksum_twitter(value),
+        RealTypedOutput::ApacheBuilds(value) => checksum_apache_builds(value),
+        RealTypedOutput::CitmCatalog(value) => checksum_citm_catalog(value),
         RealTypedOutput::UpdateCenter(value) => checksum_update_center(value),
         RealTypedOutput::Mesh(value) => checksum_mesh(value),
         RealTypedOutput::MarineIk(value) => checksum_marine_ik(value),
@@ -276,6 +346,41 @@ fn checksum_tweet(value: &Tweet<'_>) -> u64 {
     let mut hash = 0x7477656574;
     hash = fold_opt_u64(hash, value.id);
     fold_opt_str(hash, &value.text)
+}
+
+fn checksum_apache_builds(value: &ApacheBuilds<'_>) -> u64 {
+    let mut hash = 0x617061636865;
+    hash = fold_opt_str(hash, &value.mode);
+    hash = fold_opt_str(hash, &value.node_name);
+    hash = mix(hash, value.jobs.len() as u64);
+    for job in &value.jobs {
+        hash = mix(hash, checksum_apache_job(job));
+    }
+    hash
+}
+
+fn checksum_apache_job(value: &ApacheJob<'_>) -> u64 {
+    let mut hash = 0x6170616368656a6f;
+    hash = fold_opt_str(hash, &value.name);
+    hash = fold_opt_str(hash, &value.url);
+    fold_opt_str(hash, &value.color)
+}
+
+fn checksum_citm_catalog(value: &CitmCatalog<'_>) -> u64 {
+    let mut hash = mix(0x6369746d, value.events.len() as u64);
+    for event in &value.events {
+        hash = mix(hash, hash_str(event.key.as_ref()));
+        hash = mix(hash, checksum_citm_event(&event.value));
+    }
+    hash
+}
+
+fn checksum_citm_event(value: &CitmEvent<'_>) -> u64 {
+    let mut hash = 0x6369746d657665;
+    hash = fold_opt_u64(hash, value.id);
+    hash = fold_opt_str(hash, &value.name);
+    hash = fold_u64_slice(hash, &value.sub_topic_ids);
+    fold_u64_slice(hash, &value.topic_ids)
 }
 
 fn checksum_update_center(value: &UpdateCenter<'_>) -> u64 {
@@ -364,6 +469,14 @@ fn fold_opt_u64(hash: u64, value: Option<u64>) -> u64 {
     value.map_or_else(|| mix(hash, 0), |value| mix(hash, value))
 }
 
+fn fold_u64_slice(mut hash: u64, values: &[u64]) -> u64 {
+    hash = mix(hash, values.len() as u64);
+    for value in values {
+        hash = mix(hash, *value);
+    }
+    hash
+}
+
 fn fold_nested_f64_slice(mut hash: u64, values: &[Vec<f64>]) -> u64 {
     hash = mix(hash, values.len() as u64);
     for value in values {
@@ -431,6 +544,36 @@ where
     deserializer.deserialize_map(PluginEntriesVisitor)
 }
 
+fn deserialize_citm_event_entries<'de, D>(
+    deserializer: D,
+) -> Result<Vec<CitmEventEntry<'de>>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    struct CitmEventEntriesVisitor;
+
+    impl<'de> Visitor<'de> for CitmEventEntriesVisitor {
+        type Value = Vec<CitmEventEntry<'de>>;
+
+        fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+            formatter.write_str("a CITM event object map")
+        }
+
+        fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+        where
+            A: MapAccess<'de>,
+        {
+            let mut entries = Vec::with_capacity(map.size_hint().unwrap_or(0));
+            while let Some((key, value)) = map.next_entry::<Cow<'de, str>, CitmEvent<'de>>()? {
+                entries.push(CitmEventEntry { key, value });
+            }
+            Ok(entries)
+        }
+    }
+
+    deserializer.deserialize_map(CitmEventEntriesVisitor)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -447,6 +590,32 @@ mod tests {
         let input = br#"{"connectionCheckUrl":"http://example.test/","core":{"buildDate":"today","name":"core","sha1":"abc","url":"http://u","version":"1"},"id":"default","plugins":{"p":{"buildDate":"today","dependencies":[{"name":"dep","optional":true,"version":"1"}],"developers":[{"developerId":"dev","email":"dev@example.test","name":"Dev"}],"excerpt":"e","gav":"g","labels":["a","b"],"name":"p","releaseTimestamp":"now","requiredCore":"1","scm":"git","sha1":"s","title":"P","url":"http://p","version":"1","wiki":"http://w"}},"signature":{"digest":"d","signature":"s"},"updateCenterVersion":"1"}"#;
         let text = std::str::from_utf8(input).unwrap();
         assert_real_typed_parity(text, input, RealTypedFixture::UpdateCenter);
+    }
+
+    #[test]
+    fn generated_apache_builds_typed_parser_matches_sidecars() {
+        let input = br#"{"mode":"NORMAL","nodeName":"","jobs":[{"name":"Abdera-trunk","url":"https://builds.apache.org/job/Abdera-trunk/","color":"blue"}],"overallLoad":{},"views":[]}"#;
+        let text = std::str::from_utf8(input).unwrap();
+        assert_real_typed_parity(text, input, RealTypedFixture::ApacheBuilds);
+    }
+
+    #[test]
+    fn generated_citm_catalog_typed_parser_matches_sidecars() {
+        let input = br#"{"events":{"138586341":{"id":138586341,"name":"30th Anniversary Tour","subTopicIds":[337184269],"topicIds":[324846099]}}}"#;
+        let text = std::str::from_utf8(input).unwrap();
+        assert_real_typed_parity(text, input, RealTypedFixture::CitmCatalog);
+    }
+
+    #[test]
+    fn w2_full_real_typed_fixtures_match_sidecars() {
+        for (name, fixture) in [
+            ("apache_builds", RealTypedFixture::ApacheBuilds),
+            ("citm_catalog", RealTypedFixture::CitmCatalog),
+        ] {
+            let bytes = std::fs::read(locate_fixture(name)).unwrap();
+            let text = std::str::from_utf8(&bytes).unwrap();
+            assert_real_typed_parity(text, &bytes, fixture);
+        }
     }
 
     #[test]

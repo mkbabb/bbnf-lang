@@ -6,6 +6,8 @@ Status: SK-V8 Pass Alpha packet materialized. G-Alpha sign-off is required
 before dispatch. If G-Alpha closes, only W0 is dispatchable from this packet.
 W1-W6 require W0 closure and plan augmentation before implementation.
 
+S-P2 next-move: ready-for-S-P3.
+
 ## 1. Read First
 
 1. `restart/skinny/tranches/sk-v8/SYNTHESIS.md`
@@ -77,11 +79,12 @@ hard ceiling with CH4 REVISE
 The user revised the hard-ceiling instruction on 2026-05-17 by authorizing an
 exceptional V6 challenge. V6 ACCEPTed 6/6
 (`research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V6-CONSOLIDATED.md`),
-but it is only the first qualifying cycle after V5 REVISE. S-P2 still cannot
-dispatch S-P3 unless the user pins S-P2 final or explicitly authorizes another
-over-ceiling cycle. On 2026-05-18 the user authorized continuing through SK-V8
-in totality; this is recorded as authorization for an exceptional V7 challenge,
-not as a convergence shortcut. The cohort does not change the
+as the first qualifying cycle after V5 REVISE. On 2026-05-18 the user
+authorized an exceptional V7 challenge, not a convergence shortcut. V7 ACCEPTed
+6/6
+(`research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V7-CONSOLIDATED.md`),
+forming the second consecutive qualifying ACCEPT cycle. S-P2 is converged and
+ready for S-P3 Synthesis-Plan. The cohort does not change the
 G-Alpha-W0-only constraint; it nominates a lead W3 hypothesis so W0 telemetry
 confirms or falsifies the finding executably rather than discovering it from
 scratch. SC-1..SC-6 authorize no W3 plan by themselves: W3 remains blocked on

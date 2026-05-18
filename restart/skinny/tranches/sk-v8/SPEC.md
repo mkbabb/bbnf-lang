@@ -457,11 +457,12 @@ did not converge. V5 reached the pass hard ceiling with CH4 REVISE
 The user revised the hard-ceiling instruction on 2026-05-17 by authorizing an
 exceptional V6 challenge. V6 ACCEPTed 6/6
 (`research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V6-CONSOLIDATED.md`),
-but it is only the first qualifying cycle after V5 REVISE. S-P2 still cannot
-dispatch S-P3 unless the user pins S-P2 final or explicitly authorizes another
-over-ceiling cycle. On 2026-05-18 the user authorized continuing through SK-V8
-in totality; this is recorded as authorization for an exceptional V7 challenge,
-not as a convergence shortcut.
+as the first qualifying cycle after V5 REVISE. On 2026-05-18 the user
+authorized an exceptional V7 challenge, not a convergence shortcut. V7 ACCEPTed
+6/6
+(`research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V7-CONSOLIDATED.md`),
+forming the second consecutive qualifying ACCEPT cycle. S-P2 is converged and
+ready for S-P3 Synthesis-Plan.
 
 This candidate touches the substrate, so its challenge carries an extra burden
 (see exit gate). It must either follow Pass Omega ratification of the SC-6-L1-R1

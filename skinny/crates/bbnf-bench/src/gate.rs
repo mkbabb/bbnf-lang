@@ -59,6 +59,8 @@ pub const DIRECT_PROJECTION_SONIC_SLACK: f64 = 1.10;
 pub struct StrictAdmissionEvidence<'a> {
     pub outcome_id: &'a str,
     pub row_strictness: &'a str,
+    pub parse_utf8: &'a str,
+    pub escape_complete: &'a str,
     pub row_output_plane: &'a str,
     pub comparator_plane: &'a str,
     pub comparator_strictness: &'a str,
@@ -145,6 +147,12 @@ pub fn validate_strict_admission(evidence: &StrictAdmissionEvidence<'_>) -> Resu
     }
     if evidence.comparator_strictness != "strict" {
         return Err("comparator strictness is not strict".to_string());
+    }
+    if evidence.parse_utf8 != "measured-row" {
+        return Err("UTF-8 validation is not measured-row".to_string());
+    }
+    if evidence.escape_complete != "yes" {
+        return Err("escape validation is incomplete".to_string());
     }
     if normalize_plane(evidence.row_output_plane) != normalize_plane(evidence.comparator_plane) {
         return Err("row/comparator output plane mismatch".to_string());
@@ -431,6 +439,8 @@ mod tests {
         StrictAdmissionEvidence {
             outcome_id: "A",
             row_strictness: "strict",
+            parse_utf8: "measured-row",
+            escape_complete: "yes",
             row_output_plane: "digest",
             comparator_plane: "digest",
             comparator_strictness: "strict",
@@ -464,6 +474,12 @@ mod tests {
         assert!(validate_strict_admission(&evidence).is_err());
         evidence = strict_evidence();
         evidence.measured_validation_path = "view-boundary";
+        assert!(validate_strict_admission(&evidence).is_err());
+        evidence = strict_evidence();
+        evidence.parse_utf8 = "view-boundary";
+        assert!(validate_strict_admission(&evidence).is_err());
+        evidence = strict_evidence();
+        evidence.escape_complete = "no";
         assert!(validate_strict_admission(&evidence).is_err());
     }
 

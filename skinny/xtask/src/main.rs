@@ -224,11 +224,10 @@ fn bench_json(root: &Path, passthrough: Vec<String>) -> Result<()> {
     let status = command.status().context("failed to spawn cargo bench")?;
     if status.success() {
         if full_run {
-            let gate_args = if advisory {
-                vec!["--advisory".to_string()]
-            } else {
-                Vec::new()
-            };
+            let mut gate_args = vec!["--update-results".to_string()];
+            if advisory {
+                gate_args.push("--advisory".to_string());
+            }
             gate_json(root, gate_args)
         } else {
             Ok(())
@@ -241,6 +240,22 @@ fn bench_json(root: &Path, passthrough: Vec<String>) -> Result<()> {
 fn gate_json(root: &Path, passthrough: Vec<String>) -> Result<()> {
     if passthrough.iter().any(|arg| arg == "--with-cost-facts") {
         return gate_json_cost_facts(root, passthrough);
+    }
+    let unexpected = passthrough
+        .iter()
+        .filter(|arg| {
+            !matches!(
+                arg.as_str(),
+                "--advisory"
+                    | "--check-results"
+                    | "--update-results"
+                    | "--write-results"
+                    | "--include-volatile-probes"
+            )
+        })
+        .collect::<Vec<_>>();
+    if !unexpected.is_empty() {
+        bail!("gate-json got unsupported arguments {unexpected:?}");
     }
     let status = Command::new("cargo")
         .current_dir(root)

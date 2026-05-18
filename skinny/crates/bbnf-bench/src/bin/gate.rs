@@ -18,6 +18,14 @@ fn main() -> Result<(), Box<dyn Error>> {
         return rss_probe_main(&args[2..]);
     }
     let advisory = args.iter().skip(1).any(|arg| arg == "--advisory");
+    let update_results = args
+        .iter()
+        .skip(1)
+        .any(|arg| matches!(arg.as_str(), "--update-results" | "--write-results"));
+    let include_volatile_probes = args
+        .iter()
+        .skip(1)
+        .any(|arg| arg == "--include-volatile-probes");
 
     let criterion_root = env::var_os("CARGO_TARGET_DIR")
         .map(PathBuf::from)
@@ -70,8 +78,11 @@ fn main() -> Result<(), Box<dyn Error>> {
             });
         let canada_scan_gbps =
             simd_canada_gbps(&criterion_root, &fixture.name, fixture.bytes.len());
-        let (fastest_competitor_peak_rss, bbnf_peak_rss) =
-            peak_rss_bounds(&fixture, estimates.fastest_anchor().map(|anchor| anchor.0));
+        let (fastest_competitor_peak_rss, bbnf_peak_rss) = if include_volatile_probes {
+            peak_rss_bounds(&fixture, estimates.fastest_anchor().map(|anchor| anchor.0))
+        } else {
+            (None, None)
+        };
         let classified_outcome = gate::classify(&ThresholdInput {
             schema_ok: gate::validate_schema(&rows) && estimates.required_present(),
             parity_ok: parity_ok && direct_struct_ok,
@@ -222,13 +233,15 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .with_sk_v8(typed_telemetry),
             );
         }
-        push_probe_rows(
-            &mut report,
-            &criterion_root,
-            &fixture.name,
-            fixture.bytes.len() as u64,
-            estimates.track1,
-        );
+        if include_volatile_probes {
+            push_probe_rows(
+                &mut report,
+                &criterion_root,
+                &fixture.name,
+                fixture.bytes.len() as u64,
+                estimates.track1,
+            );
+        }
         if let Some(note) = arena_counter_note(&rows, &fixture.name) {
             report.notes.push(note);
         }
@@ -285,12 +298,21 @@ fn main() -> Result<(), Box<dyn Error>> {
         report
             .notes
             .push(format!("Schema/W0 validation failure: {error}."));
-        report.write_markdown(&results_path)?;
         println!("{}", report.render_markdown());
         std::process::exit(exit_code_for_verdict(Verdict::Invalid));
     }
-    report.write_markdown(&results_path)?;
-    println!("{}", report.render_markdown());
+    let rendered = report.render_markdown();
+    if update_results {
+        report.write_markdown(&results_path)?;
+    } else if fs::read_to_string(&results_path).ok().as_deref() != Some(rendered.as_str()) {
+        eprintln!(
+            "{} is stale; rerun `cargo xtask gate-json --update-results{}` to rewrite it.",
+            results_path.display(),
+            if advisory { " --advisory" } else { "" }
+        );
+        std::process::exit(exit_code_for_verdict(Verdict::Invalid));
+    }
+    println!("{rendered}");
     let exit_outcome = if advisory {
         hard_failure
     } else {
@@ -316,7 +338,11 @@ fn exit_code_for_verdict(verdict: Verdict) -> i32 {
 
 fn w0_parse_non_admission(outcome: Outcome) -> Outcome {
     match outcome {
-        Outcome::IParityOracleFail | Outcome::JSchemaFail | Outcome::KSimdParityHashFail => outcome,
+        Outcome::IParityOracleFail
+        | Outcome::JSchemaFail
+        | Outcome::KSimdParityHashFail
+        | Outcome::LSimdThroughputFail
+        | Outcome::MMemoryResidencyFail => outcome,
         _ => Outcome::SSubstrateGuardNonAdmission,
     }
 }
@@ -331,14 +357,15 @@ struct RunFacts {
 
 impl RunFacts {
     fn probe(criterion_root: &Path) -> Self {
-        let git = command_output("git", &["rev-parse", "--short", "HEAD"])
-            .unwrap_or_else(|| "unknown".to_string());
         let host_triple = rustc_host_triple()
             .unwrap_or_else(|| format!("{}-{}", std::env::consts::ARCH, std::env::consts::OS));
         let rustflags = env::var("RUSTFLAGS").unwrap_or_default();
         let target_cpu = parse_target_cpu(&rustflags).unwrap_or_else(|| "default".to_string());
         Self {
-            run_id: format!("sk-v8-open:{git}:{}", criterion_root.display()),
+            run_id: format!(
+                "sk-v8-open:criterion-fnv64-{}",
+                criterion_fingerprint(criterion_root)
+            ),
             host_triple: host_triple.clone(),
             build_flags: format!(
                 "profile={};rustflags={};target_cpu={target_cpu}",
@@ -457,6 +484,20 @@ fn w0_comparator_evidence(
     } else {
         output_plane
     };
+    let (sonic_bench, serde_bench, lossy_bench) = match workload {
+        "parse_only" => ("sonic_rs_anchor", "serde_json", Some("sonic_rs_lossy")),
+        "direct_to_struct" => (
+            "sonic_rs_direct_to_struct",
+            "serde_json_direct_to_struct",
+            None,
+        ),
+        "real_typed_struct" => (
+            "sonic_rs_real_typed_struct",
+            "serde_json_real_typed_struct",
+            None,
+        ),
+        _ => ("sonic_rs_anchor", "serde_json", None),
+    };
     let mut evidence = vec![
         comparator_evidence(
             "sonic_rs_strict",
@@ -465,7 +506,7 @@ fn w0_comparator_evidence(
             "same-run-native",
             "n/a",
             comparators.sonic_strict_mbps,
-            &format!("criterion:json_{corpus}/sonic_rs_anchor/new/estimates.json"),
+            &format!("criterion:json_{corpus}/{sonic_bench}/new/estimates.json"),
         ),
         comparator_evidence(
             "serde_json",
@@ -474,10 +515,10 @@ fn w0_comparator_evidence(
             "same-run-native",
             "n/a",
             comparators.serde_json_mbps,
-            &format!("criterion:json_{corpus}/serde_json/new/estimates.json"),
+            &format!("criterion:json_{corpus}/{serde_bench}/new/estimates.json"),
         ),
     ];
-    if comparators.sonic_lossy_mbps.is_some() {
+    if let Some(lossy_bench) = lossy_bench.filter(|_| comparators.sonic_lossy_mbps.is_some()) {
         evidence.push(comparator_evidence(
             "sonic_rs_lossy",
             native_plane,
@@ -485,7 +526,7 @@ fn w0_comparator_evidence(
             "same-run-native",
             "n/a",
             comparators.sonic_lossy_mbps,
-            &format!("criterion:json_{corpus}/sonic_rs_lossy/new/estimates.json"),
+            &format!("criterion:json_{corpus}/{lossy_bench}/new/estimates.json"),
         ));
     }
     for (id, value) in [
@@ -548,12 +589,12 @@ fn substrate_facts(workload: &str) -> (&'static str, &'static str, &'static str)
 }
 
 fn w0_profile_artifact(corpus: &str, bench_name: &str) -> String {
-    format!("criterion:json_{corpus}/{bench_name}/new/estimates.json")
+    format!("criterion-slope-profile:json_{corpus}/{bench_name}/new/estimates.json")
 }
 
 fn w0_hot_leaf(corpus: &str, bench_name: &str) -> String {
     format!(
-        "{};hot-leaf=criterion-slope;row=json/{corpus}/{}/main",
+        "{};hot-leaf=criterion-slope-profile;row=json/{corpus}/{}/main",
         w0_profile_artifact(corpus, bench_name),
         workload_for_bench(bench_name)
     )
@@ -602,6 +643,54 @@ fn parse_target_cpu(rustflags: &str) -> Option<String> {
         }
     }
     None
+}
+
+fn criterion_fingerprint(root: &Path) -> String {
+    let mut files = Vec::new();
+    collect_criterion_inputs(root, root, &mut files);
+    files.sort();
+    let mut hash = FNV_OFFSET_BASIS;
+    for relative in files {
+        hash = fnv1a(hash, relative.as_os_str().to_string_lossy().as_bytes());
+        hash = fnv1a(hash, b"\0");
+        if let Ok(bytes) = fs::read(root.join(&relative)) {
+            hash = fnv1a(hash, &bytes);
+        }
+        hash = fnv1a(hash, b"\0");
+    }
+    format!("{hash:016x}")
+}
+
+fn collect_criterion_inputs(root: &Path, dir: &Path, files: &mut Vec<PathBuf>) {
+    let Ok(entries) = fs::read_dir(dir) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            collect_criterion_inputs(root, &path, files);
+            continue;
+        }
+        let Some(name) = path.file_name().and_then(|name| name.to_str()) else {
+            continue;
+        };
+        if matches!(name, "estimates.json" | "metadata.toml") {
+            if let Ok(relative) = path.strip_prefix(root) {
+                files.push(relative.to_path_buf());
+            }
+        }
+    }
+}
+
+const FNV_OFFSET_BASIS: u64 = 0xcbf29ce484222325;
+const FNV_PRIME: u64 = 0x100000001b3;
+
+fn fnv1a(mut hash: u64, bytes: &[u8]) -> u64 {
+    for byte in bytes {
+        hash ^= u64::from(*byte);
+        hash = hash.wrapping_mul(FNV_PRIME);
+    }
+    hash
 }
 
 fn direct_workload_signal(
@@ -1116,4 +1205,45 @@ fn readme_target_ns(name: &str) -> f64 {
 
 fn workspace_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn w0_parse_non_admission_preserves_hard_failures() {
+        assert_eq!(
+            w0_parse_non_admission(Outcome::IParityOracleFail),
+            Outcome::IParityOracleFail
+        );
+        assert_eq!(
+            w0_parse_non_admission(Outcome::JSchemaFail),
+            Outcome::JSchemaFail
+        );
+        assert_eq!(
+            w0_parse_non_admission(Outcome::KSimdParityHashFail),
+            Outcome::KSimdParityHashFail
+        );
+        assert_eq!(
+            w0_parse_non_admission(Outcome::LSimdThroughputFail),
+            Outcome::LSimdThroughputFail
+        );
+        assert_eq!(
+            w0_parse_non_admission(Outcome::MMemoryResidencyFail),
+            Outcome::MMemoryResidencyFail
+        );
+    }
+
+    #[test]
+    fn w0_parse_non_admission_demotes_admission_capable_parse_outcomes() {
+        assert_eq!(
+            w0_parse_non_admission(Outcome::ABeatAndParity),
+            Outcome::SSubstrateGuardNonAdmission
+        );
+        assert_eq!(
+            w0_parse_non_admission(Outcome::GSubstrateFailure),
+            Outcome::SSubstrateGuardNonAdmission
+        );
+    }
 }

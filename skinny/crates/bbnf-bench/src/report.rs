@@ -1,4 +1,4 @@
-use crate::gate::{Outcome, Verdict};
+use crate::gate::{self, Outcome, StrictAdmissionEvidence, Verdict};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 use std::fs;
@@ -325,6 +325,7 @@ impl TelemetryRow {
                 telemetry.row_id
             ));
         }
+        validate_w0_outcome(&telemetry.row_id, &self.outcome_id)?;
         if telemetry.wave_id != "SK-V8-open" || telemetry.sk_v8_open_delta != "baseline" {
             return Err(format!(
                 "{} is not marked as SK-V8-open baseline",
@@ -338,13 +339,12 @@ impl TelemetryRow {
         {
             return Err(format!("{} missing sample_cost", telemetry.row_id));
         }
-        if self.hot_leaf.contains("unprofiled") || telemetry.profile_artifact.contains("unprofiled")
-        {
-            return Err(format!(
-                "{} still has placeholder hot leaf",
-                telemetry.row_id
-            ));
-        }
+        validate_w0_profile_artifact(&telemetry.row_id, &telemetry.profile_artifact)?;
+        validate_w0_hot_leaf(
+            &telemetry.row_id,
+            &self.hot_leaf,
+            &telemetry.profile_artifact,
+        )?;
         if telemetry.costfacts_rejected_alternative_ids.is_empty() {
             return Err(format!(
                 "{} missing CostFacts rejected alternatives",
@@ -357,13 +357,16 @@ impl TelemetryRow {
                 telemetry.row_id
             ));
         }
-        if self.workload == "parse_only" && !matches!(self.outcome_id.as_str(), "K" | "S") {
+        if self.workload == "parse_only"
+            && !matches!(self.outcome_id.as_str(), "I" | "J" | "K" | "L" | "M" | "S")
+        {
             return Err(format!(
                 "{} parse row admitted outside substrate guard",
                 telemetry.row_id
             ));
         }
-        validate_comparator_evidence(&telemetry.row_id, &telemetry.comparators)?;
+        validate_w0_admission_boundary(self)?;
+        validate_comparator_evidence(&telemetry.row_id, &self.workload, &telemetry.comparators)?;
         Ok(())
     }
 }
@@ -859,8 +862,105 @@ fn validate_baseline_delta(
     Ok(())
 }
 
+fn validate_w0_outcome(row_id: &str, outcome_id: &str) -> Result<(), String> {
+    if gate::parse_outcome_id(outcome_id).is_none() {
+        return Err(format!("{row_id} has unsupported outcome {outcome_id}"));
+    }
+    if !matches!(
+        outcome_id,
+        "A" | "C" | "G" | "I" | "J" | "K" | "L" | "M" | "N-direct" | "S"
+    ) {
+        return Err(format!("{row_id} has non-W0 outcome {outcome_id}"));
+    }
+    Ok(())
+}
+
+fn validate_w0_profile_artifact(row_id: &str, profile_artifact: &str) -> Result<(), String> {
+    let Some(rest) = profile_artifact.strip_prefix("criterion-slope-profile:") else {
+        return Err(format!("{row_id} missing criterion slope profile artifact"));
+    };
+    let expected = expected_profile_path(row_id)?;
+    if rest != expected {
+        return Err(format!(
+            "{row_id} profile artifact {rest} does not match expected {expected}"
+        ));
+    }
+    Ok(())
+}
+
+fn validate_w0_hot_leaf(
+    row_id: &str,
+    hot_leaf: &str,
+    profile_artifact: &str,
+) -> Result<(), String> {
+    if hot_leaf.contains("unprofiled") || hot_leaf.contains("criterion-slope;") {
+        return Err(format!("{row_id} still has placeholder hot leaf"));
+    }
+    let expected = format!("{profile_artifact};hot-leaf=criterion-slope-profile;row={row_id}");
+    if hot_leaf != expected {
+        return Err(format!("{row_id} hot leaf does not match profile artifact"));
+    }
+    Ok(())
+}
+
+fn expected_profile_path(row_id: &str) -> Result<String, String> {
+    let (corpus, workload) = parse_row_id(row_id)?;
+    let bench = match workload {
+        "parse_only" => "track1_generated",
+        "direct_to_struct" => "track1_direct_to_struct",
+        "real_typed_struct" => "track1_real_typed_struct",
+        _ => return Err(format!("{row_id} has unsupported workload {workload}")),
+    };
+    Ok(format!("json_{corpus}/{bench}/new/estimates.json"))
+}
+
+fn validate_w0_admission_boundary(row: &TelemetryRow) -> Result<(), String> {
+    let strict_claim =
+        row.strictness == "strict" || row.sk_v8.measured_validation_path == "measured-row";
+    if !strict_claim {
+        if row.sk_v8.measured_validation_path != "view-boundary" {
+            return Err(format!(
+                "{} has unsupported non-strict validation path {}",
+                row.sk_v8.row_id, row.sk_v8.measured_validation_path
+            ));
+        }
+        return Ok(());
+    }
+
+    let mut last_error = None;
+    for comparator in row
+        .sk_v8
+        .comparators
+        .iter()
+        .filter(|comparator| comparator.value_mbps.is_some())
+    {
+        let evidence = StrictAdmissionEvidence {
+            outcome_id: &row.outcome_id,
+            row_strictness: &row.strictness,
+            parse_utf8: &row.parse_utf8,
+            escape_complete: &row.escape_complete,
+            row_output_plane: &row.output_plane,
+            comparator_plane: &comparator.comparator_plane,
+            comparator_strictness: &comparator.comparator_strictness,
+            comparator_freshness: &comparator.comparator_freshness,
+            sidecar_freshness: &comparator.sidecar_freshness,
+            measured_validation_path: &row.sk_v8.measured_validation_path,
+        };
+        match gate::validate_strict_admission(&evidence) {
+            Ok(()) => return Ok(()),
+            Err(error) => last_error = Some(error),
+        }
+    }
+    Err(format!(
+        "{} strict admission rejected: {}",
+        row.sk_v8.row_id,
+        last_error.unwrap_or_else(|| "no comparator evidence".to_string())
+    ))
+}
+
 fn validate_comparator_evidence(
     row_id: &str,
+    workload: &str,
     comparators: &[SkV8ComparatorEvidence],
 ) -> Result<(), String> {
     if comparators.is_empty() {
@@ -933,12 +1033,60 @@ fn validate_comparator_evidence(
             }
         }
     }
+    validate_native_comparator_source(row_id, workload, comparators, "sonic_rs_strict")?;
+    validate_native_comparator_source(row_id, workload, comparators, "serde_json")?;
     for sidecar in SK_V8_SIDECAR_COMPARATORS {
         if !seen.contains(sidecar) {
             return Err(format!("{row_id} missing sidecar slot {sidecar}"));
         }
     }
     Ok(())
+}
+
+fn validate_native_comparator_source(
+    row_id: &str,
+    workload: &str,
+    comparators: &[SkV8ComparatorEvidence],
+    comparator_id: &str,
+) -> Result<(), String> {
+    let comparator = comparators
+        .iter()
+        .find(|entry| entry.comparator_id == comparator_id)
+        .ok_or_else(|| format!("{row_id} missing native comparator {comparator_id}"))?;
+    let (corpus, _) = parse_row_id(row_id)?;
+    let expected_bench = match (comparator_id, workload) {
+        ("sonic_rs_strict", "parse_only") => "sonic_rs_anchor",
+        ("sonic_rs_strict", "direct_to_struct") => "sonic_rs_direct_to_struct",
+        ("sonic_rs_strict", "real_typed_struct") => "sonic_rs_real_typed_struct",
+        ("serde_json", "parse_only") => "serde_json",
+        ("serde_json", "direct_to_struct") => "serde_json_direct_to_struct",
+        ("serde_json", "real_typed_struct") => "serde_json_real_typed_struct",
+        _ => {
+            return Err(format!(
+                "{row_id} has unsupported comparator/workload {comparator_id}/{workload}"
+            ))
+        }
+    };
+    let expected = format!("criterion:json_{corpus}/{expected_bench}/new/estimates.json");
+    if comparator.source_artifact != expected {
+        return Err(format!(
+            "{row_id} {} source {} does not match expected {}",
+            comparator.comparator_id, comparator.source_artifact, expected
+        ));
+    }
+    Ok(())
+}
+
+fn parse_row_id(row_id: &str) -> Result<(&str, &str), String> {
+    let mut parts = row_id.split('/');
+    let grammar = parts.next();
+    let corpus = parts.next();
+    let workload = parts.next();
+    let suffix = parts.next();
+    if grammar != Some("json") || corpus.is_none() || workload.is_none() || suffix != Some("main") {
+        return Err(format!("{row_id} is not a valid SK-V8 row id"));
+    }
+    Ok((corpus.unwrap(), workload.unwrap()))
 }
 
 fn format_comparator_evidence(comparators: &[SkV8ComparatorEvidence]) -> String {
@@ -1066,25 +1214,48 @@ mod tests {
         }
     }
 
-    fn w0_evidence() -> Vec<SkV8ComparatorEvidence> {
+    fn w0_evidence(row_id: &str) -> Vec<SkV8ComparatorEvidence> {
+        let (corpus, workload) = parse_row_id(row_id).unwrap();
+        let sonic_bench = match workload {
+            "parse_only" => "sonic_rs_anchor",
+            "direct_to_struct" => "sonic_rs_direct_to_struct",
+            "real_typed_struct" => "sonic_rs_real_typed_struct",
+            _ => unreachable!(),
+        };
+        let serde_bench = match workload {
+            "parse_only" => "serde_json",
+            "direct_to_struct" => "serde_json_direct_to_struct",
+            "real_typed_struct" => "serde_json_real_typed_struct",
+            _ => unreachable!(),
+        };
+        let native_plane = match workload {
+            "parse_only" => "DOM",
+            "direct_to_struct" => "digest",
+            "real_typed_struct" => "typed direct",
+            _ => unreachable!(),
+        };
         let mut evidence = vec![
             SkV8ComparatorEvidence {
                 comparator_id: "sonic_rs_strict".into(),
-                comparator_plane: "DOM".into(),
+                comparator_plane: native_plane.into(),
                 comparator_strictness: "strict".into(),
                 comparator_freshness: "same-run-native".into(),
                 sidecar_freshness: "n/a".into(),
                 value_mbps: Some(11_915.0),
-                source_artifact: "criterion:json_twitter/sonic_rs_anchor/new/estimates.json".into(),
+                source_artifact: format!(
+                    "criterion:json_{corpus}/{sonic_bench}/new/estimates.json"
+                ),
             },
             SkV8ComparatorEvidence {
                 comparator_id: "serde_json".into(),
-                comparator_plane: "DOM".into(),
+                comparator_plane: native_plane.into(),
                 comparator_strictness: "strict".into(),
                 comparator_freshness: "same-run-native".into(),
                 sidecar_freshness: "n/a".into(),
                 value_mbps: Some(10_000.0),
-                source_artifact: "criterion:json_twitter/serde_json/new/estimates.json".into(),
+                source_artifact: format!(
+                    "criterion:json_{corpus}/{serde_bench}/new/estimates.json"
+                ),
             },
         ];
         for id in SK_V8_SIDECAR_COMPARATORS {
@@ -1107,7 +1278,10 @@ mod tests {
             grammar_id: "json".into(),
             domain: "json_bench".into(),
             measured_validation_path: "view-boundary".into(),
-            profile_artifact: format!("criterion:{row_id}/new/estimates.json"),
+            profile_artifact: format!(
+                "criterion-slope-profile:{}",
+                expected_profile_path(row_id).unwrap()
+            ),
             sample_cost: "ns_per_byte=1.000000;track1_ns=1.00;bytes=1".into(),
             sample_count: 100,
             build_flags: "profile=bench;rustflags=<empty>;target_cpu=default".into(),
@@ -1125,8 +1299,16 @@ mod tests {
             substrate_cardinality: "zero_or_inert".into(),
             same_wave_consumer_class: "gate_only".into(),
             track2_independence_status: "independent_verified".into(),
-            comparators: w0_evidence(),
+            comparators: w0_evidence(row_id),
         }
+    }
+
+    fn w0_hot_leaf(row_id: &str) -> String {
+        let profile = format!(
+            "criterion-slope-profile:{}",
+            expected_profile_path(row_id).unwrap()
+        );
+        format!("{profile};hot-leaf=criterion-slope-profile;row={row_id}")
     }
 
     #[test]
@@ -1190,7 +1372,7 @@ mod tests {
             Some(320_728.80),
             Some(410_427.35),
             comparators(),
-            "criterion:json_twitter/track1_generated/new/estimates.json;hot-leaf=criterion-slope;row=json/twitter/parse_only/main",
+            w0_hot_leaf("json/twitter/parse_only/main"),
         )
         .with_sk_v8(w0_telemetry(
             "json/twitter/parse_only/main",
@@ -1213,7 +1395,7 @@ mod tests {
             Some(320_728.80),
             Some(410_427.35),
             comparators(),
-            "criterion:json_twitter/track1_generated/new/estimates.json;hot-leaf=criterion-slope;row=json/twitter/parse_only/main",
+            w0_hot_leaf("json/twitter/parse_only/main"),
         )
         .with_sk_v8(w0_telemetry(
             "json/twitter/parse_only/main",
@@ -1235,7 +1417,7 @@ mod tests {
             Some(320_728.80),
             Some(410_427.35),
             comparators(),
-            "criterion:json_twitter/track1_generated/new/estimates.json;hot-leaf=criterion-slope;row=json/twitter/parse_only/main",
+            w0_hot_leaf("json/twitter/parse_only/main"),
         )
         .with_sk_v8(w0_telemetry(
             "json/twitter/parse_only/main",
@@ -1249,6 +1431,78 @@ mod tests {
             .unwrap();
         sidecar.value_mbps = Some(100.0);
         sidecar.sidecar_freshness = "absent:not-collected".into();
+        assert!(row.validate_sk_v8_w0().is_err());
+    }
+
+    #[test]
+    fn w0_rejects_unsupported_outcome_and_strict_view_boundary_claim() {
+        let mut row = TelemetryRow::workload(
+            "twitter",
+            "direct_to_struct",
+            None,
+            1_000_000,
+            Some(84_324.14),
+            Some(101_204.33),
+            comparators(),
+            "digest",
+            "none",
+            "PASS",
+            w0_hot_leaf("json/twitter/direct_to_struct/main"),
+        )
+        .with_sk_v8(w0_telemetry("json/twitter/direct_to_struct/main", "digest"));
+        row.outcome_id = "F-positive".into();
+        assert!(row.validate_sk_v8_w0().is_err());
+
+        row.outcome_id = "A".into();
+        row.strictness = "strict".into();
+        row.sk_v8.measured_validation_path = "measured-row".into();
+        row.parse_utf8 = "view-boundary".into();
+        assert!(row.validate_sk_v8_w0().is_err());
+    }
+
+    #[test]
+    fn w0_rejects_native_comparator_source_mismatch() {
+        let mut row = TelemetryRow::workload(
+            "twitter",
+            "direct_to_struct",
+            None,
+            1_000_000,
+            Some(84_324.14),
+            Some(101_204.33),
+            comparators(),
+            "digest",
+            "none",
+            "PASS",
+            w0_hot_leaf("json/twitter/direct_to_struct/main"),
+        )
+        .with_sk_v8(w0_telemetry("json/twitter/direct_to_struct/main", "digest"));
+        let sonic = row
+            .sk_v8
+            .comparators
+            .iter_mut()
+            .find(|entry| entry.comparator_id == "sonic_rs_strict")
+            .unwrap();
+        sonic.source_artifact = "criterion:json_twitter/sonic_rs_anchor/new/estimates.json".into();
+        assert!(row.validate_sk_v8_w0().is_err());
+    }
+
+    #[test]
+    fn w0_rejects_profile_placeholder_shape() {
+        let mut row = TelemetryRow::parse(
+            "twitter",
+            Outcome::KSimdParityHashFail,
+            631_515,
+            Some(320_728.80),
+            Some(410_427.35),
+            comparators(),
+            "criterion:json_twitter/track1_generated/new/estimates.json;hot-leaf=criterion-slope;row=json/twitter/parse_only/main",
+        )
+        .with_sk_v8(w0_telemetry(
+            "json/twitter/parse_only/main",
+            "borrowed_view_over_offset_tape",
+        ));
+        row.sk_v8.profile_artifact =
+            "criterion:json_twitter/track1_generated/new/estimates.json".into();
         assert!(row.validate_sk_v8_w0().is_err());
     }
 
@@ -1278,7 +1532,7 @@ mod tests {
                     track1_ns,
                     track2_ns,
                     comparators(),
-                    "criterion:test;hot-leaf=criterion-slope",
+                    w0_hot_leaf(baseline.row_id),
                 )
             } else {
                 TelemetryRow::workload(
@@ -1292,7 +1546,7 @@ mod tests {
                     output_plane,
                     "none",
                     "PASS",
-                    "criterion:test;hot-leaf=criterion-slope",
+                    w0_hot_leaf(baseline.row_id),
                 )
             };
             report

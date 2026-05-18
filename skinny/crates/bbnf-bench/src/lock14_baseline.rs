@@ -1,5 +1,6 @@
 use std::collections::BTreeSet;
 use std::path::Path;
+use std::process::Command;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AllowlistEntry {
@@ -215,6 +216,48 @@ pub const ALLOWLIST: &[AllowlistEntry] = &[
         "template",
     ),
     entry(
+        "crates/runtime/src/lib.rs",
+        "generic_surface",
+        "read_only",
+        "runtime_api",
+    ),
+    entry(
+        "crates/runtime/src/tape/mod.rs",
+        "generic_surface",
+        "read_only",
+        "runtime_tape",
+    ),
+    entry(
+        "crates/ir/src/lib.rs",
+        "generic_surface",
+        "read_only",
+        "bir_backend_shape",
+    ),
+    entry(
+        "crates/passes/src/lib.rs",
+        "generic_surface",
+        "read_only",
+        "passes",
+    ),
+    entry(
+        "crates/codegen/src/lib.rs",
+        "generic_surface",
+        "read_only",
+        "codegen_api",
+    ),
+    entry(
+        "crates/codegen/src/lower/mod.rs",
+        "generic_surface",
+        "read_only",
+        "codegen_lowering",
+    ),
+    entry(
+        "crates/bbnf-simd/src/lib.rs",
+        "generic_surface",
+        "read_only",
+        "simd_scanner",
+    ),
+    entry(
         "crates/test-fixtures/src/lib.rs",
         "test_fixture",
         "read_only",
@@ -291,7 +334,10 @@ const fn entry(
 }
 
 pub fn validate(root: &Path) -> Result<(), String> {
-    validate_entries(ALLOWLIST, root, true)
+    validate_entries(ALLOWLIST, root, true)?;
+    validate_git_freeze(root)?;
+    validate_backend_shape_surface(root)?;
+    Ok(())
 }
 
 fn validate_entries(
@@ -326,6 +372,120 @@ fn validate_entries(
     Ok(())
 }
 
+const FROZEN_ROOTS: &[&str] = &[
+    "grammars",
+    "test_data",
+    "crates/test-fixtures",
+    "crates/runtime/src",
+    "crates/ir/src",
+    "crates/passes/src",
+    "crates/codegen/src",
+    "crates/bbnf-simd/src",
+    "crates/bbnf-bench/src/direct_struct.rs",
+    "crates/bbnf-bench/src/real_typed_struct.rs",
+    "crates/bbnf-bench/src/generated_real_typed.rs",
+    "crates/bbnf-bench/src/track2",
+    "crates/bbnf-bench/src/parity.rs",
+    "crates/bbnf-bench/src/scan.rs",
+    "crates/bbnf-bench/src/materialization.rs",
+    "xtask/src/real_typed_schema.rs",
+];
+
+fn validate_git_freeze(root: &Path) -> Result<(), String> {
+    let frozen_status = git_output(root, &git_path_args("status", "--porcelain", FROZEN_ROOTS))?;
+    validate_frozen_status_output(&frozen_status)?;
+    git_quiet(root, &git_path_args("diff", "--quiet", FROZEN_ROOTS))?;
+    if git_quiet(root, &["rev-parse", "--verify", "HEAD^"]).is_ok() {
+        git_quiet(root, &git_diff_from_parent_args())?;
+    }
+    Ok(())
+}
+
+fn git_path_args(
+    command: &'static str,
+    mode: &'static str,
+    paths: &[&'static str],
+) -> Vec<&'static str> {
+    let mut args = vec![command, mode, "--"];
+    args.extend_from_slice(paths);
+    args
+}
+
+fn git_diff_from_parent_args() -> Vec<&'static str> {
+    let mut args = vec!["diff", "--quiet", "HEAD^", "--"];
+    args.extend_from_slice(FROZEN_ROOTS);
+    args
+}
+
+fn git_output(root: &Path, args: &[&str]) -> Result<String, String> {
+    let output = Command::new("git")
+        .current_dir(root)
+        .args(args)
+        .output()
+        .map_err(|error| format!("failed to run git {}: {error}", args.join(" ")))?;
+    if !output.status.success() {
+        return Err(format!("git {} failed", args.join(" ")));
+    }
+    String::from_utf8(output.stdout)
+        .map(|text| text.trim().to_string())
+        .map_err(|error| format!("git output was not UTF-8: {error}"))
+}
+
+fn git_quiet(root: &Path, args: &[&str]) -> Result<(), String> {
+    let output = Command::new("git")
+        .current_dir(root)
+        .args(args)
+        .output()
+        .map_err(|error| format!("failed to run git {}: {error}", args.join(" ")))?;
+    if output.status.success() {
+        Ok(())
+    } else {
+        Err(format!(
+            "Lock 14 frozen diff failed: git {}",
+            args.join(" ")
+        ))
+    }
+}
+
+fn validate_frozen_status_output(output: &str) -> Result<(), String> {
+    if output.trim().is_empty() {
+        return Ok(());
+    }
+    Err(format!("Lock 14 frozen roots are dirty: {output}"))
+}
+
+fn validate_backend_shape_surface(root: &Path) -> Result<(), String> {
+    let source = std::fs::read_to_string(root.join("crates/ir/src/lib.rs"))
+        .map_err(|error| format!("failed to read BackendShape surface: {error}"))?;
+    for variant in [
+        "EagerTape",
+        "OffsetTape",
+        "EventTape",
+        "SinkOnly",
+        "CollapsedStage",
+    ] {
+        if !source.contains(&format!("    {variant},")) {
+            return Err(format!("BackendShape missing expected variant {variant}"));
+        }
+    }
+    let backend_shape_body = source
+        .split("pub enum BackendShape {")
+        .nth(1)
+        .and_then(|rest| rest.split('}').next())
+        .ok_or_else(|| "BackendShape enum not found".to_string())?;
+    let variants = backend_shape_body
+        .lines()
+        .filter(|line| line.trim().ends_with(','))
+        .count();
+    if variants != 5 {
+        return Err(format!("BackendShape variant count changed to {variants}"));
+    }
+    if source.contains("UnionTape") || source.contains("union_tape") {
+        return Err("Lock 14 forbids UnionTape in IR surface".to_string());
+    }
+    Ok(())
+}
+
 fn is_allowed_class(class: &str) -> bool {
     matches!(
         class,
@@ -335,6 +495,7 @@ fn is_allowed_class(class: &str) -> bool {
             | "generated_typed_output"
             | "per_grammar_template"
             | "test_fixture"
+            | "generic_surface"
             | "bench_gate_schema"
             | "host_api_schema_fact"
     )
@@ -390,5 +551,36 @@ mod tests {
             "generated",
         )];
         assert!(validate_entries(&entries, Path::new("."), false).is_err());
+    }
+
+    #[test]
+    fn rejects_frozen_status_output() {
+        assert!(validate_frozen_status_output("").is_ok());
+        assert!(validate_frozen_status_output(" M crates/runtime/src/tape/mod.rs").is_err());
+        assert!(validate_frozen_status_output("?? crates/runtime/src/union_tape.rs").is_err());
+    }
+
+    #[test]
+    fn rejects_backend_shape_variant_drift() {
+        let source = r#"
+pub enum BackendShape {
+    EagerTape,
+    OffsetTape,
+    EventTape,
+    SinkOnly,
+    CollapsedStage,
+    UnionTape,
+}
+"#;
+        let variants = source
+            .split("pub enum BackendShape {")
+            .nth(1)
+            .and_then(|rest| rest.split('}').next())
+            .unwrap()
+            .lines()
+            .filter(|line| line.trim().ends_with(','))
+            .count();
+        assert_ne!(variants, 5);
+        assert!(source.contains("UnionTape"));
     }
 }

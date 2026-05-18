@@ -1,6 +1,6 @@
 # Handoff SK-V8
 
-Date: 2026-05-17.
+Date: 2026-05-18.
 
 Status: SK-V8 Pass Alpha packet materialized. G-Alpha sign-off is required
 before dispatch. If G-Alpha closes, only W0 is dispatchable from this packet.
@@ -97,18 +97,24 @@ before it can consume wave budget.
 
 ## 4. Dispatch Posture
 
-| Wave | Name | Status |
-|---|---|---|
-| W0 | Baseline Profile And Telemetry Lock | Dispatchable after G-Alpha |
-| W1 | CostFacts Gate Binding | Conditional on W0 close |
-| W2 | Typed Product Plane Expansion | Conditional on W0/W1 plan update |
-| W3 | Profile-Selected Parse Candidate — lead candidate: tape ⊕ structural-projection union (S-P2 cohort) | Conditional on W0/W1 challenge |
-| W4 | Direct Guard Triage | Conditional on W0/W1 plan update |
-| W5 | Grammar-Neutral Audit And Lock 14 Preservation | Conditional on W1-W4 close |
-| W6 | Close And Alpha Feedback | Conditional on all prior dispositions |
+| Wave | Name | Status | Source/edit LOC budget |
+|---|---|---|---|
+| W0 | Baseline Profile And Telemetry Lock | Dispatchable after G-Alpha | 0 production behavior LOC; <=350 report/gate/schema/test/doc LOC |
+| W1 | CostFacts Gate Binding | Conditional on W0 close | 0 parser/generated behavior LOC; <=300 CostFacts/report/gate/test LOC |
+| W2 | Typed Product Plane Expansion | Conditional on W0/W1 plan update | <=650 source/test LOC; generated output and row tables named separately |
+| W3 | Profile-Selected Parse Candidate — lead candidate: tape ⊕ structural-projection union (S-P2 cohort) | Conditional on W0/W1 challenge | <=450 source/test LOC default; <=650 only with accepted pre-redress fit proof |
+| W4 | Direct Guard Triage | Conditional on W0/W1 plan update | <=300 source/test LOC and <=3 selected rows |
+| W5 | Grammar-Neutral Audit And Lock 14 Preservation | Conditional on W1-W4 close | 0 source LOC default; <=150 named Lock 14 cleanup LOC |
+| W6 | Close And Alpha Feedback | Conditional on all prior dispositions | 0 source LOC; docs/RESULTS/REDRESS/HANDOFF/SPEC reconciliation only |
 
 W0 is telemetry-only. If W0 changes parser, scanner, SIMD, asm, codegen
 behavior, or product-plane behavior, reject it.
+
+Every implementation/redress slice is also capped at 90 minutes, including
+source edits, generation, verification, RESULTS/REDRESS updates, and rollback.
+Generated outputs must be named, diff-audited, and included in the revert
+slice. Any plan that exceeds either its LOC budget or the 90-minute cap must
+split before dispatch or return REVISE.
 
 ## 5. Entry Gates
 

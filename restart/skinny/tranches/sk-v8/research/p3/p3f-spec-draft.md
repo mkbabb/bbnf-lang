@@ -1,6 +1,6 @@
 # SK-V8 P3-F: SPEC/DISPATCH Draft Fold
 
-Pass: S-P3 Synthesis-Plan. Cycle: V1.
+Pass: S-P3 Synthesis-Plan. Cycle: V2 fold after V1 challenge.
 Date: 2026-05-18.
 Scope: fold P3-A through P3-E into
 `restart/skinny/tranches/sk-v8/SPEC.md` and
@@ -60,14 +60,23 @@ The folded SPEC preserves:
   API, parser-owned cursor/facts, or parallel substrate;
 - no deferrals in gates;
 - same-wave consumer for every primitive, substrate, or generated path;
-- implementation/redress hard cap of 90 minutes per wave slice.
+- implementation/redress hard cap of 90 minutes per wave slice;
+- explicit per-wave source/edit LOC budgets in SPEC, DISPATCH, and HANDOFF.
+
+## V1 Hardening Fold
+
+| Challenge | Disposition |
+|---|---|
+| CH1 correctness | Folded. SPEC Section 0.5 now carries the W2 candidate typed seed table and constrains W2 selection to that table unless a later accepted S-P3 revision expands it. Local P3 references were normalized away from stale line-number citations. Future wave artifacts use naming patterns under concrete directories rather than unresolved wildcard links. |
+| CH4 cost | Folded. SPEC, DISPATCH, and HANDOFF now carry per-wave source/edit LOC budgets as a conjunctive gate with the 90-minute implementation/redress cap. W3 now has a mandatory pre-redress split gate covering source/test LOC, generated LOC, gate/report LOC, docs/RESULTS/REDRESS edits, and the revert slice. |
+| CH2, CH3, CH5, CH6 | Preserved. Their ACCEPT findings remain binding: no relaxed generality, regression, hidden-coupling, or paper-close language was introduced by the V2 fold. |
 
 ## Residual Risks
 
 - W3 Tier A may still be too broad for one 90-minute implementation/redress
   slice once scalar oracle, checkasm, generated audit, retained view parity, and
-  gate refresh are counted. The SPEC requires split or REVISE before redress if
-  it cannot fit.
+  gate refresh are counted. The SPEC now requires a LOC/time fit estimate and
+  split or REVISE before redress if it cannot fit.
 - Seed Mbps floors are planning floors only. After W0 creates `SK-V8-open`, the
   implementing wave must recompute thresholds from same-run strict anchors.
 - `parse_only` remains substrate-guard non-admission unless an explicit schema
@@ -115,4 +124,4 @@ the per-wave entry gates.
 
 Self-verdict: ACCEPT.
 
-Confidence: 93%.
+Confidence: 96%.

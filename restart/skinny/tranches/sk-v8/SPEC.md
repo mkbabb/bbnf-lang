@@ -163,6 +163,31 @@ W2 existing real-typed GO maintain floors, from the current opening rows:
 | `mesh/real_typed_struct` | 9466 | 8696 | 7906 | 9277 |
 | `marine_ik/real_typed_struct` | 12020 | 8750 | 7955 | 11780 |
 
+W2 existing direct GO guard floors:
+
+| Row | Minimum Track 1 Mbps | Minimum Track 2 Mbps |
+|---|---:|---:|
+| `citm_catalog/direct_to_struct` | 18151 | 18151 |
+| `apache_builds/direct_to_struct` | 10111 | 10111 |
+| `mesh/direct_to_struct` | 7990 | 7990 |
+| `marine_ik/direct_to_struct` | 7407 | 7407 |
+| `numbers/direct_to_struct` | 11671 | 11671 |
+| `unicode_basic/direct_to_struct` | 7730 | 7730 |
+
+W2 candidate typed seed floors. W2 may select candidate typed rows only from
+this table unless a later accepted S-P3 revision explicitly expands the table.
+The threshold rule is `Track 1 Mbps >= ceil(sonic-rs strict Mbps / 1.10)`.
+If W0 refreshes a strict anchor, W2 must recompute the floor from
+`SK-V8-open` before redress.
+
+| Candidate row | sonic strict | Minimum Track 1 Mbps |
+|---|---:|---:|
+| `canada/real_typed_struct` | 12421 | 11292 |
+| `numbers/real_typed_struct` | 12838 | 11671 |
+| `unicode_basic/real_typed_struct` | 8502 | 7730 |
+| `citm_catalog/real_typed_struct` | 19966 | 18151 |
+| `apache_builds/real_typed_struct` | 11122 | 10111 |
+
 W3 planning seed floors. These must be recomputed from `SK-V8-open` before W3
 redress if W0 changes the baseline:
 
@@ -227,15 +252,23 @@ bbnf tracks and must also be recomputed after W0 if the strict anchor changes:
 
 ## Section 2 - Wave Manifest, Caps, And Reruns
 
-| Wave | Section | Name | Initial dispatch status | Implementation/redress cap |
-|---|---|---|---|---:|
-| W0 | Section 3 | Baseline Profile And Telemetry Lock | Dispatchable only after G-Alpha | <=90 min |
-| W1 | Section 4 | CostFacts And Comparator Gate Binding | Conditional on W0 close | <=90 min |
-| W2 | Section 5 | Typed Product Plane Expansion | Conditional on W0/W1 close | <=90 min |
-| W3 | Section 6 | Tier A Tape Plus Structural-Projection Union | Conditional on W0/W1 close and challenge | <=90 min |
-| W4 | Section 7 | Direct Guard Triage | Conditional on W0/W1 and W2/W3 disposition or route | <=90 min |
-| W5 | Section 8 | Grammar-Neutral Audit And Lock 14 Preservation | Conditional on W1-W4 dispositions | <=90 min |
-| W6 | Section 9 | Close And Alpha Feedback | Conditional on W0-W5 dispositions | <=90 min |
+| Wave | Section | Name | Initial dispatch status | Source/edit LOC budget | Implementation/redress cap |
+|---|---|---|---|---|---:|
+| W0 | Section 3 | Baseline Profile And Telemetry Lock | Dispatchable only after G-Alpha | 0 production behavior LOC; <=350 report/gate/schema/test/doc LOC | <=90 min |
+| W1 | Section 4 | CostFacts And Comparator Gate Binding | Conditional on W0 close | 0 parser/generated behavior LOC; <=300 CostFacts/report/gate/test LOC | <=90 min |
+| W2 | Section 5 | Typed Product Plane Expansion | Conditional on W0/W1 close | <=650 source/test LOC; generated output and row tables named separately | <=90 min |
+| W3 | Section 6 | Tier A Tape Plus Structural-Projection Union | Conditional on W0/W1 close and challenge | <=450 source/test LOC default; <=650 only with accepted pre-redress fit proof | <=90 min |
+| W4 | Section 7 | Direct Guard Triage | Conditional on W0/W1 and W2/W3 disposition or route | <=300 source/test LOC and <=3 selected rows | <=90 min |
+| W5 | Section 8 | Grammar-Neutral Audit And Lock 14 Preservation | Conditional on W1-W4 dispositions | 0 source LOC default; <=150 named Lock 14 cleanup LOC | <=90 min |
+| W6 | Section 9 | Close And Alpha Feedback | Conditional on W0-W5 dispositions | 0 source LOC; docs/RESULTS/REDRESS/HANDOFF/SPEC reconciliation only | <=90 min |
+
+LOC budgets are conjunctive with the 90-minute cap and rerun ceilings. They
+count hand-edited source, tests, gate/report/schema code, and hand-written doc
+or result edits named by the row. Generated outputs do not consume the source
+LOC budget, but every generated file must be named, diff-audited, and included
+in the revert slice. A wave plan that exceeds either its LOC budget or the
+90-minute implementation/redress cap must split before dispatch or return
+REVISE.
 
 Phase caps:
 
@@ -298,7 +331,8 @@ Owner paths:
 - `skinny/crates/bbnf-bench/`
 - `skinny/xtask/src/`
 - `skinny/RESULTS.md`
-- `restart/skinny/tranches/sk-v8/research/wave-0-*.md`
+- `restart/skinny/tranches/sk-v8/research/` using the
+  `wave-0-<topic>.md` naming pattern.
 - `skinny/REDRESS.md` only if W0 rejects.
 
 Doc links: `restart/skinny/tranches/sk-v8/research/p3/p3c-falsifiability-gates.md`,
@@ -429,6 +463,8 @@ Entry gate:
 - W2 plan names exact typed rows, host/API schema facts, owner paths,
   thresholds, Track 1 generated path, Track 2/oracle path, and rollback
   boundaries.
+- Selected typed candidates come from the Section 0.5 W2 candidate typed seed
+  table unless a later accepted S-P3 revision expands that table.
 
 Tasks:
 
@@ -503,6 +539,10 @@ Entry gate:
 - Fresh W3 plan names one parse candidate, exact owner files, selected rows,
   same-wave production consumer, revert protocol, measured-path proof, Lock 1
   fork, scalar/checkasm requirements, and pre-block differences.
+- The exact W3 plan estimates touched source/test LOC, generated LOC,
+  gate/report LOC, docs/RESULTS/REDRESS edits, and the revert slice. If the
+  estimate exceeds the W3 LOC budget or the 90-minute implementation/redress
+  cap, W3 must split before dispatch or return REVISE.
 - Challenge accepts that the plan is not a renamed REDRESS 50-55, 60-72,
   82-84, 88, or 89 route.
 - W3 either waits for Pass Omega ratification of SC-6-L1-R1 or proves it

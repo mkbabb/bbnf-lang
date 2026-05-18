@@ -32,21 +32,26 @@ Read in order:
 
 ## Wave Manifest
 
-| Wave | SPEC section | Title | Dispatch status | Implementation/redress cap |
-|---|---|---|---|---:|
-| W0 | Section 3 | Baseline Profile And Telemetry Lock | After G-Alpha | <=90 min |
-| W1 | Section 4 | CostFacts And Comparator Gate Binding | Conditional after W0 | <=90 min |
-| W2 | Section 5 | Typed Product Plane Expansion | Conditional after W0/W1 | <=90 min |
-| W3 | Section 6 | Tier A Tape Plus Structural-Projection Union | Conditional after W0/W1 and challenge | <=90 min |
-| W4 | Section 7 | Direct Guard Triage | Conditional after W0/W1 and W2/W3 disposition | <=90 min |
-| W5 | Section 8 | Grammar-Neutral Audit And Lock 14 Preservation | Conditional after W1-W4 dispositions | <=90 min |
-| W6 | Section 9 | Close And Alpha Feedback | Conditional after W0-W5 dispositions | <=90 min |
+| Wave | SPEC section | Title | Dispatch status | Source/edit LOC budget | Implementation/redress cap |
+|---|---|---|---|---|---:|
+| W0 | Section 3 | Baseline Profile And Telemetry Lock | After G-Alpha | 0 production behavior LOC; <=350 report/gate/schema/test/doc LOC | <=90 min |
+| W1 | Section 4 | CostFacts And Comparator Gate Binding | Conditional after W0 | 0 parser/generated behavior LOC; <=300 CostFacts/report/gate/test LOC | <=90 min |
+| W2 | Section 5 | Typed Product Plane Expansion | Conditional after W0/W1 | <=650 source/test LOC; generated output and row tables named separately | <=90 min |
+| W3 | Section 6 | Tier A Tape Plus Structural-Projection Union | Conditional after W0/W1 and challenge | <=450 source/test LOC default; <=650 only with accepted pre-redress fit proof | <=90 min |
+| W4 | Section 7 | Direct Guard Triage | Conditional after W0/W1 and W2/W3 disposition | <=300 source/test LOC and <=3 selected rows | <=90 min |
+| W5 | Section 8 | Grammar-Neutral Audit And Lock 14 Preservation | Conditional after W1-W4 dispositions | 0 source LOC default; <=150 named Lock 14 cleanup LOC | <=90 min |
+| W6 | Section 9 | Close And Alpha Feedback | Conditional after W0-W5 dispositions | 0 source LOC; docs/RESULTS/REDRESS/HANDOFF/SPEC reconciliation only | <=90 min |
 
 Research is capped at 30 minutes per agent, max 6 agents. Plan synthesis is
 capped at 30 minutes. Challenge is capped at 90 minutes when required.
 Implementation/redress is capped at 90 minutes inclusive of source edits,
 generation, verification, RESULTS/REDRESS updates, and rollback. If the slice
 cannot fit, split before dispatch or return REVISE.
+
+LOC budgets are conjunctive with the 90-minute cap. Generated outputs must be
+named, diff-audited, and included in the revert slice; they do not excuse source
+budget overflow. A plan over either limit returns REVISE or splits before
+redress.
 
 ## W0 Dispatch Protocol
 
@@ -55,8 +60,8 @@ W0 is telemetry-only. It may touch only the W0 owner paths in SPEC Section 3.
 Phase 1 - Research:
 
 - Dispatch 1-6 parallel research agents.
-- Each writes one artifact under
-  `restart/skinny/tranches/sk-v8/research/wave-0-*.md`.
+- Each writes one artifact under `restart/skinny/tranches/sk-v8/research/`
+  using the `wave-0-<topic>.md` naming pattern.
 - Hard cap 30 min per agent.
 - Commit form, if a commit is requested by the user:
   `docs(sk-v8-wave0-research): archive baseline telemetry cohort`.
@@ -113,6 +118,8 @@ W2 typed product plane expansion:
 
 - Entry: W0/W1 admitted and W2 plan names exact typed rows and host/API schema
   facts.
+- Candidate typed rows are limited to the SPEC Section 0.5 W2 candidate typed
+  seed table unless a later accepted S-P3 revision expands that table.
 - Consumer: generated Track 1 typed row plus independent Track 2/oracle.
 - Blocked: direct digest as product proof, benchmark-private parser, hidden
   directive/schema fact, Track 2 coupling.
@@ -121,6 +128,10 @@ W3 Tier A tape plus structural-projection union:
 
 - Entry: W0/W1 admitted; fresh W3 plan; challenge ACCEPT; Lock 1 fork resolved
   or routed.
+- Pre-redress fit gate: the exact W3 plan estimates touched source/test LOC,
+  generated LOC, gate/report LOC, docs/RESULTS/REDRESS edits, and the revert
+  slice. If the estimate exceeds the W3 LOC budget or 90-minute cap, split or
+  return REVISE before implementation.
 - Consumer: generated JSON retained parser consuming retained `Tape`
   positions/classes in the same wave.
 - Blocked: Tier B string-boundary/parity, `tape_vs_tape` as production

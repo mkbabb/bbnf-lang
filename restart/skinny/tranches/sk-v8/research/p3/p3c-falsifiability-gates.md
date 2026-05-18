@@ -9,31 +9,31 @@ Candidate pool: research/p2/ post-CHALLENGE survivors.
 
 ## §1 - Synthesis
 
-P3-C is a gate-binding artifact, not an implementation dispatch. The controlling S-P3 prompt assigns P3-C the named-row Mbps thresholds, full-table maintain budgets, exit gates, and revert protocols; unmeasurable gates are rejected (`restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md:56-63`). The same prompt requires W0 to lock `SK-V8-open`, same-row falsifiability, same-wave consumers, and no hypothesis transfer (`restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md:231-260`).
+P3-C is a gate-binding artifact, not an implementation dispatch. The controlling S-P3 prompt assigns P3-C the named-row Mbps thresholds, full-table maintain budgets, exit gates, and revert protocols; unmeasurable gates are rejected (`restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md`). The same prompt requires W0 to lock `SK-V8-open`, same-row falsifiability, same-wave consumers, and no hypothesis transfer (`restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md`).
 
-The current authority is the SK-V8 wave manifest W0-W6 in `restart/skinny/tranches/sk-v8/SPEC.md` and `restart/skinny/tranches/sk-v8/HANDOFF.md` (`restart/skinny/tranches/sk-v8/SPEC.md:194-204`, `restart/skinny/tranches/sk-v8/HANDOFF.md:102-108`). The adjacent P3-B wave sequencing artifact matches that seven-wave shape and orders W4 after W2/W3 disposition or explicit routing. This file binds that full W0-W6 plan for P3-C; if P3-F later changes the wave set, it must reconcile this file before dispatch.
+The current authority is the SK-V8 wave manifest W0-W6 in `restart/skinny/tranches/sk-v8/SPEC.md` and `restart/skinny/tranches/sk-v8/HANDOFF.md` (`restart/skinny/tranches/sk-v8/SPEC.md`, `restart/skinny/tranches/sk-v8/HANDOFF.md`). The adjacent P3-B wave sequencing artifact matches that seven-wave shape and orders W4 after W2/W3 disposition or explicit routing. This file binds that full W0-W6 plan for P3-C; if P3-F later changes the wave set, it must reconcile this file before dispatch.
 
-S-P2 governance is closed only for synthesis planning. V6 and V7 are the two consecutive qualifying ACCEPT cycles; V7 explicitly authorizes S-P3 synthesis but no SK-V8 implementation wave, W3 redress, or G-Alpha close (`restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V7-CONSOLIDATED.md:13-20`). The accepted boundaries that carry into these gates are: strict-vs-strict admission only, Tier A structural-class cursor migration only, Tier B separate, Lock 14 grammar-neutrality, no new directive/BIR/BackendShape/UnionTape/public substrate API/parser-owned cursor/facts/parallel substrate, and `tape_vs_tape` as telemetry rather than W3 production consumer (`restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V7-CONSOLIDATED.md:44-64`).
+S-P2 governance is closed only for synthesis planning. V6 and V7 are the two consecutive qualifying ACCEPT cycles; V7 explicitly authorizes S-P3 synthesis but no SK-V8 implementation wave, W3 redress, or G-Alpha close (`restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V7-CONSOLIDATED.md`). The accepted boundaries that carry into these gates are: strict-vs-strict admission only, Tier A structural-class cursor migration only, Tier B separate, Lock 14 grammar-neutrality, no new directive/BIR/BackendShape/UnionTape/public substrate API/parser-owned cursor/facts/parallel substrate, and `tape_vs_tape` as telemetry rather than W3 production consumer (`restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V7-CONSOLIDATED.md`).
 
-Current opening rows are still `N-direct / NoGo`: 17 `parse_only` `K/NO-GO`, 6 `direct_to_struct` `A/GO` plus 11 `N-direct/NO-GO`, and 4 `real_typed_struct` `A/GO` (`restart/skinny/tranches/sk-v8/SYNTHESIS.md:19-41`). All current rows have deferred strictness and unprofiled hot leaves, so W0 is observability, not a parser prescription. Current row values in `skinny/RESULTS.md:5-42` are the seed values below; post-W0, `SK-V8-open` replaces them as the authoritative before value.
+Current opening rows are still `N-direct / NoGo`: 17 `parse_only` `K/NO-GO`, 6 `direct_to_struct` `A/GO` plus 11 `N-direct/NO-GO`, and 4 `real_typed_struct` `A/GO` (`restart/skinny/tranches/sk-v8/SYNTHESIS.md`). All current rows have deferred strictness and unprofiled hot leaves, so W0 is observability, not a parser prescription. Current row values in `skinny/RESULTS.md` are the seed values below; post-W0, `SK-V8-open` replaces them as the authoritative before value.
 
 Implementation cap normalization: every W0-W6 redress/implementation dispatch is capped at 90 minutes wall clock inclusive of source edits, generation, bench, RESULTS/REDRESS updates, and rollback. Research, plan, and challenge phases keep their pass-level caps, but no implementation slice may rely on any older 120-300 minute wave cap copied from a pre-P3 SPEC. A candidate that cannot be implemented, measured, and either admitted or reverted inside 90 minutes must be split in plan or marked REVISE before redress.
 
 Global gate predicates for every wave:
 
-- Strict admission uses same-run strict anchors only: sonic-rs strict or serde_json where output planes match. Sonic lossy, permissive rows, C++ sidecars, historical deltas, and stale sidecars are planning signals only (`restart/skinny/tranches/sk-v8/SPEC.md:44-55`, `restart/skinny/tranches/sk-v8/SPEC.md:117-123`).
-- `parse_only` rows remain substrate-guard non-admission rows (`K`, or `S` if W0 amends schema). They cannot support strict SOTA admission while strictness is deferred or UTF-8 validation is view-boundary (`restart/skinny/tranches/sk-v8/SPEC.md:72-77`, `restart/skinny/tranches/sk-v8/SPEC.md:306-309`; SC-5 at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-5-k-classification-adjudication.md:179-216`).
-- Any emitted telemetry field must be consumed by `gate-json` in the same wave; producer-only profile paths, freshness fields, or CostFacts ids fail (`restart/skinny/tranches/sk-v8/SPEC.md:79-108`).
-- Lock 14 passes every wave: no generic crate gains JSON-named public API, JSON grammar/corpus/role branches, JSON structural policy, or hand-coded per-grammar runtime behavior; generic edits need CSS L4, Sheets, and BBNF-self proof (`restart/skinny/tranches/sk-v8/SPEC.md:247-275`).
-- No new directive, BIR variant, substrate, public `UnionTape`, `BackendShape` variant, sidecar substrate, parser-owned structural cursor/facts, or consumer-later primitive is admitted (`restart/skinny/tranches/sk-v8/SPEC.md:180-192`; `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-3-union-substrate-design.md:407-423`, `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-3-union-substrate-design.md:528-543`).
-- Any primitive or kernel requires scalar reference, checkasm parity, same-wave hot-path consumer, named bench rows, and `samply` symbol-path proof. Missing consumer is an orphan kernel and must be rejected (`restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md:177-188`).
-- A miss creates REDRESS evidence. No wave closes on "wired", "integrated", "advisory only", or future-wave promise without a measured row threshold and revert protocol (`restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md:140-145`).
+- Strict admission uses same-run strict anchors only: sonic-rs strict or serde_json where output planes match. Sonic lossy, permissive rows, C++ sidecars, historical deltas, and stale sidecars are planning signals only (`restart/skinny/tranches/sk-v8/SPEC.md`, `restart/skinny/tranches/sk-v8/SPEC.md`).
+- `parse_only` rows remain substrate-guard non-admission rows (`K`, or `S` if W0 amends schema). They cannot support strict SOTA admission while strictness is deferred or UTF-8 validation is view-boundary (`restart/skinny/tranches/sk-v8/SPEC.md`, `restart/skinny/tranches/sk-v8/SPEC.md`; SC-5 at `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-5-k-classification-adjudication.md`).
+- Any emitted telemetry field must be consumed by `gate-json` in the same wave; producer-only profile paths, freshness fields, or CostFacts ids fail (`restart/skinny/tranches/sk-v8/SPEC.md`).
+- Lock 14 passes every wave: no generic crate gains JSON-named public API, JSON grammar/corpus/role branches, JSON structural policy, or hand-coded per-grammar runtime behavior; generic edits need CSS L4, Sheets, and BBNF-self proof (`restart/skinny/tranches/sk-v8/SPEC.md`).
+- No new directive, BIR variant, substrate, public `UnionTape`, `BackendShape` variant, sidecar substrate, parser-owned structural cursor/facts, or consumer-later primitive is admitted (`restart/skinny/tranches/sk-v8/SPEC.md`; `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-3-union-substrate-design.md`, `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-3-union-substrate-design.md`).
+- Any primitive or kernel requires scalar reference, checkasm parity, same-wave hot-path consumer, named bench rows, and `samply` symbol-path proof. Missing consumer is an orphan kernel and must be rejected (`restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`).
+- A miss creates REDRESS evidence. No wave closes on "wired", "integrated", "advisory only", or future-wave promise without a measured row threshold and revert protocol (`restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md`).
 
 ## §2 - Deliverable
 
 ### W0 - Baseline Profile And Telemetry Lock
 
-Entry gate: G-Alpha is closed by the user; `skinny/RESULTS.md` is the SK-V7 close baseline; no behavior wave is dispatchable before W0 admits (`restart/skinny/tranches/sk-v8/HANDOFF.md:115-127`).
+Entry gate: G-Alpha is closed by the user; `skinny/RESULTS.md` is the SK-V7 close baseline; no behavior wave is dispatchable before W0 admits (`restart/skinny/tranches/sk-v8/HANDOFF.md`).
 
 Hard cap: 90 minutes implementation plus measurement and rollback.
 
@@ -41,14 +41,14 @@ Named rows and thresholds:
 
 | Row set | Gate |
 |---|---|
-| All 38 current main rows in `skinny/RESULTS.md:5-42` | W0 captures `SK-V8-open`; every throughput cell must stay within +/-1.0% of the captured seed value. |
+| All 38 current main rows in `skinny/RESULTS.md` | W0 captures `SK-V8-open`; every throughput cell must stay within +/-1.0% of the captured seed value. |
 | 17 `parse_only` rows | Must report substrate-guard non-admission (`K`, or `S` if W0 amends schema), not strict SOTA GO. |
 | Four current `real_typed_struct` GO rows | `twitter`, `update_center`, `mesh`, `marine_ik` retain GO status and telemetry; no row may lose independent oracle proof. |
 | Sidecar cells | Populated values require manifest/freshness coverage; missing values require explicit `sidecar_freshness=absent:<reason>`. |
 
 Exit gate:
 
-- All 38 rows have `grammar_id`, `domain`, comparator id/plane/strictness, profile artifact, sample cost or cycles/byte, sample count, build flags, host triple, feature mask, run id, wave id, sidecar freshness, and `SK-V8-open` delta (`restart/skinny/tranches/sk-v8/SPEC.md:79-104`, `restart/skinny/tranches/sk-v8/SPEC.md:300-317`).
+- All 38 rows have `grammar_id`, `domain`, comparator id/plane/strictness, profile artifact, sample cost or cycles/byte, sample count, build flags, host triple, feature mask, run id, wave id, sidecar freshness, and `SK-V8-open` delta (`restart/skinny/tranches/sk-v8/SPEC.md`, `restart/skinny/tranches/sk-v8/SPEC.md`).
 - `gate-json` rejects placeholder hot leaves, missing profile artifacts, missing run ids, missing deltas, malformed sidecar manifest, unsupported outcome, and any strict-admission row whose comparator plane/strictness/freshness/measured-row validation fails.
 - Lock 14 baseline allowlist is created.
 - No parser, scanner, SIMD, asm, codegen behavior, product-plane behavior, or generated parser output change lands.
@@ -63,7 +63,7 @@ Revert protocol: revert W0 report/gate/schema/RESULTS changes as one slice, rest
 
 ### W1 - CostFacts Gate Binding
 
-Entry gate: W0 admitted and every current main row has `SK-V8-open` telemetry (`restart/skinny/tranches/sk-v8/SPEC.md:329-345`).
+Entry gate: W0 admitted and every current main row has `SK-V8-open` telemetry (`restart/skinny/tranches/sk-v8/SPEC.md`).
 
 Hard cap: 90 minutes implementation plus measurement and rollback.
 
@@ -78,7 +78,7 @@ Named rows and thresholds:
 Exit gate:
 
 - `gate-json --with-cost-facts` rejects missing CostFacts evidence.
-- Generic CostFacts/report fields use grammar-aware comparator fields; no generic CostFacts path contains JSON policy (`restart/skinny/tranches/sk-v8/SPEC.md:346-366`).
+- Generic CostFacts/report fields use grammar-aware comparator fields; no generic CostFacts path contains JSON policy (`restart/skinny/tranches/sk-v8/SPEC.md`).
 - Generated JSON output and parser behavior remain unchanged unless a separate W1 behavior consumer was explicitly challenged and accepted. Default W1 is no behavior change.
 
 Negative gates and aborts:
@@ -91,11 +91,11 @@ Revert protocol: revert CostFacts report/gate changes together, keep read-only a
 
 ### W2 - Typed Product Plane Expansion
 
-Entry gate: W0 and W1 admitted; W2 plan names exact typed rows, host/API schema facts, owner paths, Track 1 generated path, independent Track 2/oracle path, thresholds, and rollback boundaries (`restart/skinny/tranches/sk-v8/SPEC.md:374-405`).
+Entry gate: W0 and W1 admitted; W2 plan names exact typed rows, host/API schema facts, owner paths, Track 1 generated path, independent Track 2/oracle path, thresholds, and rollback boundaries (`restart/skinny/tranches/sk-v8/SPEC.md`).
 
 Hard cap: 90 minutes implementation plus measurement and rollback. A W2 plan selecting more rows than can be generated, independently verified, and benched in 90 minutes must split.
 
-Strict threshold rule: a selected typed/product row must be within 1.10x sonic-rs strict time, expressed as `Track 1 Mbps >= ceil(sonic-rs strict Mbps / 1.10)`. If the W0 sonic strict anchor changes, recompute from W0; the seed floors below are from `skinny/RESULTS.md:5-42`.
+Strict threshold rule: a selected typed/product row must be within 1.10x sonic-rs strict time, expressed as `Track 1 Mbps >= ceil(sonic-rs strict Mbps / 1.10)`. If the W0 sonic strict anchor changes, recompute from W0; the seed floors below are from `skinny/RESULTS.md`.
 
 Existing real-typed GO maintain floors. Both floors apply: the sonic floor preserves GO status, and the no-regression floor preserves the W2 full-table maintain budget for current GO rows.
 
@@ -147,11 +147,11 @@ Revert protocol: revert row additions, generated outputs, host/API schema facts,
 
 ### W3 - Profile-Selected Parse Candidate
 
-Entry gate: W0 and W1 admitted; W3 plan names one parse candidate, exact owner files, exact rows, same-wave production consumer, revert protocol, Lock 1 fork, scalar/checkasm requirements, and challenge acceptance proving it is not a renamed REDRESS 82/83/84/88/89 route (`restart/skinny/tranches/sk-v8/SPEC.md:413-470`).
+Entry gate: W0 and W1 admitted; W3 plan names one parse candidate, exact owner files, exact rows, same-wave production consumer, revert protocol, Lock 1 fork, scalar/checkasm requirements, and challenge acceptance proving it is not a renamed REDRESS 82/83/84/88/89 route (`restart/skinny/tranches/sk-v8/SPEC.md`).
 
 Hard cap: 90 minutes implementation plus measurement and rollback. Tier A may proceed only if the selected slice fits 90 minutes. Tier B string-boundary/parity/CostFacts-template work is not folded into Tier A.
 
-Candidate boundary: the only S-P2-ready W3 shape is Tier A structural-class cursor migration: retain the stage-1 index inside one `Tape`, add scan-written opaque class ordinals, migrate generated retained JSON Track 1 parsing plus retained view/`ValueRef`, and delete scalar structural rediscovery. Tier A does not claim string-boundary closure (`restart/skinny/tranches/sk-v8/SPEC.md:421-452`; `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-3-union-substrate-design.md:414-431`).
+Candidate boundary: the only S-P2-ready W3 shape is Tier A structural-class cursor migration: retain the stage-1 index inside one `Tape`, add scan-written opaque class ordinals, migrate generated retained JSON Track 1 parsing plus retained view/`ValueRef`, and delete scalar structural rediscovery. Tier A does not claim string-boundary closure (`restart/skinny/tranches/sk-v8/SPEC.md`; `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-3-union-substrate-design.md`).
 
 Primary row threshold rule: the W3 plan must select at least two structural-heavy parse rows from the table below. Each selected row must hit `Track 1 Mbps >= ceil(SK-V8-open Track 1 * 1.03)`, show the scalar structural rediscovery hot leaf removed or below the W3 plan's declared sample-cost floor, and keep strict validation inside the measured row. Current seed floors:
 
@@ -178,9 +178,9 @@ Exit gate:
 
 - Selected parse rows cross their declared thresholds.
 - All 38 current main rows respect the W3 maintain budget: default no Track 1 or Track 2 regression worse than -2.0% versus `SK-V8-open`.
-- The measured rows prove strict validation, comparator evidence, structural cursor work, and admitted tape facts occurred inside the measured row, not in view-boundary, post-parse, sidecar, or comparator-only paths (`restart/skinny/tranches/sk-v8/SPEC.md:481-497`).
-- Exactly one retained tape survives. A structural projection passes only if it replaces the offset-tape append path; it fails if retained beside old offset construction. The old offset append API, parser-owned cursor/fact slots, and surviving `StructuralIndex` query API must be absent (`restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-6-lock1-amendment-generalisation.md:145-184`, `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-6-lock1-amendment-generalisation.md:641-655`).
-- Generated JSON retained parser is the Tier A production consumer. `tape_vs_tape`, direct/SinkOnly rows, `path!`, and Track 2 are touched/proven-untouched audit rows, not Tier A production consumers (`restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-3-union-substrate-design.md:416-423`).
+- The measured rows prove strict validation, comparator evidence, structural cursor work, and admitted tape facts occurred inside the measured row, not in view-boundary, post-parse, sidecar, or comparator-only paths (`restart/skinny/tranches/sk-v8/SPEC.md`).
+- Exactly one retained tape survives. A structural projection passes only if it replaces the offset-tape append path; it fails if retained beside old offset construction. The old offset append API, parser-owned cursor/fact slots, and surviving `StructuralIndex` query API must be absent (`restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-6-lock1-amendment-generalisation.md`, `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-6-lock1-amendment-generalisation.md`).
+- Generated JSON retained parser is the Tier A production consumer. `tape_vs_tape`, direct/SinkOnly rows, `path!`, and Track 2 are touched/proven-untouched audit rows, not Tier A production consumers (`restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-3-union-substrate-design.md`).
 - Scalar oracle and checkasm parity pass before primitive wiring.
 - Retained view/`ValueRef` parity and Track 2 independence proof pass.
 - Lock 14 and non-JSON proofs pass.
@@ -198,7 +198,7 @@ Revert protocol: revert runtime/tape, SIMD, codegen templates, generated JSON ou
 
 ### W4 - Direct Guard Triage
 
-Entry gate: W0 and W1 admitted; W2 and W3 have admitted, rejected, or been explicitly routed, or W3 is explicitly blocked before W4; W4 plan names one to three selected `N-direct` rows, exact owner paths, strict direct thresholds, Track 1/Track 2 independence proof, and residual routing (`restart/skinny/tranches/sk-v8/SPEC.md:506-525`). More than three selected rows exceeds the 90-minute implementation cap and must split.
+Entry gate: W0 and W1 admitted; W2 and W3 have admitted, rejected, or been explicitly routed, or W3 is explicitly blocked before W4; W4 plan names one to three selected `N-direct` rows, exact owner paths, strict direct thresholds, Track 1/Track 2 independence proof, and residual routing (`restart/skinny/tranches/sk-v8/SPEC.md`). More than three selected rows exceeds the 90-minute implementation cap and must split.
 
 Hard cap: 90 minutes implementation plus measurement and rollback.
 
@@ -236,7 +236,7 @@ Revert protocol: revert behavior changes, generated outputs, bench wiring, RESUL
 
 ### W5 - Grammar-Neutral Audit And Lock 14 Preservation
 
-Entry gate: W1-W4 have admitted, rejected, or been explicitly routed (`restart/skinny/tranches/sk-v8/SPEC.md:527-552`).
+Entry gate: W1-W4 have admitted, rejected, or been explicitly routed (`restart/skinny/tranches/sk-v8/SPEC.md`).
 
 Hard cap: 90 minutes implementation plus measurement and rollback. Default source LOC cap is 0; a W5 plan may allow up to 150 source LOC only for a named Lock 14 fix.
 
@@ -265,7 +265,7 @@ Revert protocol: fix drift inside W5 only if still inside the named scope and ca
 
 ### W6 - Close And Alpha Feedback
 
-Entry gate: W0-W5 each have admitted, rejected, or routed status and their REDRESS/RESULTS/HANDOFF updates are present (`restart/skinny/tranches/sk-v8/SPEC.md:554-572`).
+Entry gate: W0-W5 each have admitted, rejected, or routed status and their REDRESS/RESULTS/HANDOFF updates are present (`restart/skinny/tranches/sk-v8/SPEC.md`).
 
 Hard cap: 90 minutes close reconciliation. No source edits by default.
 
@@ -309,19 +309,19 @@ The gates above are measurable from the bench because every numeric rule is eith
 
 Post-W0 recalculation rule: if W0 refreshes any same-run strict anchor or bbnf Track 1/Track 2 value, P3-F or the per-wave plan must recompute thresholds from `SK-V8-open` before redress. Copying seed thresholds after W0 changed the baseline is a gate failure.
 
-Variance rule: a row below floor fails. A second confirm rerun is allowed only within the wave's rerun ceiling and 90-minute implementation cap. Extra reruns are REDRESS cost evidence, not retry room (`restart/skinny/tranches/sk-v8/SPEC.md:232-245`).
+Variance rule: a row below floor fails. A second confirm rerun is allowed only within the wave's rerun ceiling and 90-minute implementation cap. Extra reruns are REDRESS cost evidence, not retry room (`restart/skinny/tranches/sk-v8/SPEC.md`).
 
 Artifact binding:
 
-- Current row seed values: `skinny/RESULTS.md:5-42`.
-- Current direct NO-GO rule: direct rows require both bbnf tracks within 1.10x sonic-rs time (`skinny/RESULTS.md:153-212`).
-- Track 2 independence authority: `skinny/RESULTS.md:216-219`.
-- Sidecar planning-only authority: `skinny/RESULTS.md:219`.
-- Lazy tape/materialization and structural scan notes: `skinny/RESULTS.md:153-215`.
+- Current row seed values: `skinny/RESULTS.md`.
+- Current direct NO-GO rule: direct rows require both bbnf tracks within 1.10x sonic-rs time (`skinny/RESULTS.md`).
+- Track 2 independence authority: `skinny/RESULTS.md`.
+- Sidecar planning-only authority: `skinny/RESULTS.md`.
+- Lazy tape/materialization and structural scan notes: `skinny/RESULTS.md`.
 
 ## §4 - Pre-Blocked Routes
 
-Every wave inherits the SK-V8 pre-block list in `restart/skinny/tranches/sk-v8/SPEC.md:574-593`, `restart/skinny/tranches/sk-v8/HANDOFF.md:145-155`, and the adjacent P3-E pre-block ledger when P3-F folds the packet. A wave may reopen a listed route only with fresh W0 evidence, same-wave consumer, scalar/checkasm where relevant, no-regression gate, REDRESS citation, and challenge acceptance. Default is closed.
+Every wave inherits the SK-V8 pre-block list in `restart/skinny/tranches/sk-v8/SPEC.md`, `restart/skinny/tranches/sk-v8/HANDOFF.md`, and the adjacent P3-E pre-block ledger when P3-F folds the packet. A wave may reopen a listed route only with fresh W0 evidence, same-wave consumer, scalar/checkasm where relevant, no-regression gate, REDRESS citation, and challenge acceptance. Default is closed.
 
 Per-wave pre-blocks:
 
@@ -337,33 +337,33 @@ Per-wave pre-blocks:
 
 Specific REDRESS anchors:
 
-- REDRESS 28 and 33 keep Class A tiny-string NEON wiring out of parse close (`skinny/REDRESS.md:324-337`, `skinny/REDRESS.md:394-410`).
-- REDRESS 50-55 reject parse-time aux side tables, event cursors, parser-local structural cursors, decoded-string stats sinks, and quote-source fused string materializers (`skinny/REDRESS.md:715-844`).
-- REDRESS 80 rejects stale canada mantissa-widen/fallback assumptions; W4/W2 may not claim raw float shortcut closure without fresh row evidence (`skinny/REDRESS.md:2215-2248`).
-- REDRESS 82-84 reject single-quartet unicode, generated StringBlock16 tiny probe, and object-pair value-byte control compaction (`skinny/REDRESS.md:2285-2316`, `skinny/REDRESS.md:2318-2348`, `skinny/REDRESS.md:2358-2395`).
-- REDRESS 88 and 89 reject PMULL prefix-XOR default hot body and CTZ/bulk production consumer after parse-row regressions (`skinny/REDRESS.md:2508-2585`).
-- REDRESS 90 admits B6 stack-canary Stage 1 only and keeps bitmap bodies rejected (`skinny/REDRESS.md:2587-2618`).
+- REDRESS 28 and 33 keep Class A tiny-string NEON wiring out of parse close (`skinny/REDRESS.md`, `skinny/REDRESS.md`).
+- REDRESS 50-55 reject parse-time aux side tables, event cursors, parser-local structural cursors, decoded-string stats sinks, and quote-source fused string materializers (`skinny/REDRESS.md`).
+- REDRESS 80 rejects stale canada mantissa-widen/fallback assumptions; W4/W2 may not claim raw float shortcut closure without fresh row evidence (`skinny/REDRESS.md`).
+- REDRESS 82-84 reject single-quartet unicode, generated StringBlock16 tiny probe, and object-pair value-byte control compaction (`skinny/REDRESS.md`, `skinny/REDRESS.md`, `skinny/REDRESS.md`).
+- REDRESS 88 and 89 reject PMULL prefix-XOR default hot body and CTZ/bulk production consumer after parse-row regressions (`skinny/REDRESS.md`).
+- REDRESS 90 admits B6 stack-canary Stage 1 only and keeps bitmap bodies rejected (`skinny/REDRESS.md`).
 
 ## §5 - Sources
 
 - `restart/prompts/ORCHESTRATOR.md` - CH1-CH6/§3W, §3Z convergence, strict profile-first non-negotiables.
-- `restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md:56-63`, `:120-145`, `:231-260` - P3-C scope, challenge lenses, SK-V8 axes.
-- `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md:41-75`, `:112-125`, `:177-208` - wave plan/redress, challenge, same-wave consumer, role separation.
+- `restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md` - P3-C scope, challenge lenses, SK-V8 axes.
+- `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md` - wave plan/redress, challenge, same-wave consumer, role separation.
 - `restart/skinny/tranches/sk-v8/research/p3/p3b-wave-sequencing.md` - adjacent P3-B W0-W6 ordering and W4 disposition dependency.
 - `restart/skinny/tranches/sk-v8/research/p3/p3e-preblocked-ledger.md` - adjacent P3-E route ledger to be folded by P3-F.
-- `restart/skinny/tranches/sk-v8/SYNTHESIS.md:19-41`, `:91-171`, `:184-199`, `:224-248` - opening state, S-P2 convergence, candidate posture.
-- `restart/skinny/tranches/sk-v8/SPEC.md:24-131`, `:180-275`, `:277-572`, `:574-602` - close condition, comparator/telemetry, wave gates, pre-blocks, G-Alpha.
-- `restart/skinny/tranches/sk-v8/HANDOFF.md:5-9`, `:56-94`, `:102-155` - S-P3 readiness, W0-only dispatch, substrate finding, entry/exit/pre-blocks.
+- `restart/skinny/tranches/sk-v8/SYNTHESIS.md` - opening state, S-P2 convergence, candidate posture.
+- `restart/skinny/tranches/sk-v8/SPEC.md` - close condition, comparator/telemetry, wave gates, pre-blocks, G-Alpha.
+- `restart/skinny/tranches/sk-v8/HANDOFF.md` - S-P3 readiness, W0-only dispatch, substrate finding, entry/exit/pre-blocks.
 - `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-1-offset-tape-teardown.md` - offset tape is not the ceiling; structural rediscovery is the defect.
 - `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-2-two-stage-sota.md` - Tier A/Tier B split and strict row posture.
-- `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-3-union-substrate-design.md:407-480`, `:528-565` - Tier A owner/cost/consumer/risk gates.
+- `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-3-union-substrate-design.md` - Tier A owner/cost/consumer/risk gates.
 - `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-4-string-plane-gap.md` - string-plane evidence remains diagnostic until separately gated.
-- `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-5-k-classification-adjudication.md:179-255` - parse_only demotion and strict-admission refusal.
-- `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-6-lock1-amendment-generalisation.md:145-184`, `:641-703` - Lock 1 fork, sidecar drift, grammar-neutral ordinals, Omega residual.
-- `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V7-CONSOLIDATED.md:13-20`, `:44-69` - V6/V7 governance and preserved S-P3 boundaries.
+- `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-5-k-classification-adjudication.md` - parse_only demotion and strict-admission refusal.
+- `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-6-lock1-amendment-generalisation.md` - Lock 1 fork, sidecar drift, grammar-neutral ordinals, Omega residual.
+- `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V7-CONSOLIDATED.md` - V6/V7 governance and preserved S-P3 boundaries.
 - `restart/skinny/tranches/sk-v8/research/alpha/` - Alpha row extraction, comparator matrix, REDRESS digest, candidate posture, draft wave contract.
-- `skinny/RESULTS.md:5-42`, `:153-219` - authoritative row values, direct threshold rule, Track 2 independence, sidecar provenance.
-- `skinny/REDRESS.md:324-337`, `:394-410`, `:715-844`, `:2358-2395`, `:2508-2618` - pre-blocked routes and rejected/admitted SK-V7 evidence.
+- `skinny/RESULTS.md` - authoritative row values, direct threshold rule, Track 2 independence, sidecar provenance.
+- `skinny/REDRESS.md` - pre-blocked routes and rejected/admitted SK-V7 evidence.
 
 ## §6 - Self-Verdict
 

@@ -17,26 +17,30 @@ Sources read:
 - `restart/skinny/tranches/sk-v8/research/wave-6-hardening/V2/HARDENING-W6-V2-CONSOLIDATED.md`
 - `skinny/RESULTS.md`
 - `skinny/REDRESS.md`
-- recent git log through `32870fea`
+- recent git log through SK-V8 close head `32870fea`
 
 ## 1. Current Measured Authority
 
-- HEAD for this ledger: `32870fea`
+- SK-V8 close head for this ledger: `32870fea`
   (`docs(sk-v8-wave6-close): close SK-V8 after V2 convergence`).
-- Current measured authority remains the W0-rendered `skinny/RESULTS.md`.
+- Current measured authority remains the W0-rendered `skinny/RESULTS.md`
+  (`skinny/RESULTS.md:3-40`;
+  `restart/skinny/tranches/sk-v8/HANDOFF.md:250-260`).
 - Overall outcome remains `N-direct / NoGo`.
 - Main-row state is unchanged by W1-W6:
   - `parse_only`: 16 `S / NO-GO`, 1 `L / NO-GO`.
   - `direct_to_struct`: 3 `A / GO`, 14 `N-direct / NO-GO`.
   - `real_typed_struct`: 4 `A / GO`.
 - The four measured real-typed `A / GO` rows remain `twitter`,
-  `update_center`, `mesh`, and `marine_ik`.
+  `update_center`, `mesh`, and `marine_ik` (`skinny/RESULTS.md:7`,
+  `skinny/RESULTS.md:18`, `skinny/RESULTS.md:21`, `skinny/RESULTS.md:28`).
 - W2's `apache_builds/real_typed_struct` and
   `citm_catalog/real_typed_struct` are source/product parity rows only; they
-  are not measured `skinny/RESULTS.md` rows in SK-V8.
+  are not measured `skinny/RESULTS.md` rows in SK-V8
+  (`skinny/REDRESS.md:2620-2659`).
 - Every current main row still records `Strictness=deferred` and
   `parse_utf8=view-boundary`; parse rows are substrate-guard non-admission
-  telemetry, not strict SOTA admissions.
+  telemetry, not strict SOTA admissions (`skinny/RESULTS.md:3-40`).
 
 Primary close authorities:
 

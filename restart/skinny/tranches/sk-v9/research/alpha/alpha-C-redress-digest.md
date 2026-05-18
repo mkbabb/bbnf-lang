@@ -26,20 +26,22 @@ SK-V8 closed by W6 V1+V2 hardening convergence. The W6 close admits no source,
 generated-output, benchmark-row, `skinny/RESULTS.md`, or `skinny/REDRESS.md`
 change. `skinny/RESULTS.md` remains the W0-rendered authority with 38
 `SK-V8-open` manifest rows, four measured `real_typed_struct A / GO` rows, and
-overall `N-direct / NoGo`.
+overall `N-direct / NoGo` (`restart/skinny/tranches/sk-v8/HANDOFF.md:250-260`;
+`skinny/RESULTS.md:3-40`).
 
 The SK-V8 behavior-wave REDRESS ledger is:
 
 - REDRESS 91: W2 typed product-plane source/product parity admitted; benchmark
-  row-table admission and `canada/real_typed_struct` rejected/routed.
+  row-table admission and `canada/real_typed_struct` rejected/routed
+  (`skinny/REDRESS.md:2620-2659`).
 - REDRESS 92: W3 Tier A tape plus structural projection rejected/routed before
-  source redress.
+  source redress (`skinny/REDRESS.md:2661-2690`).
 - REDRESS 93: W4 Track 2 scalar-parent fold rejected/routed after selected-row
-  falsification.
+  falsification (`skinny/REDRESS.md:2692-2729`).
 
 W5 needs no REDRESS entry because it admitted only a named Lock 14
 provider-boundary cleanup with no generated-output, performance, row-table, or
-`RESULTS.md` claim.
+`RESULTS.md` claim (`restart/skinny/tranches/sk-v8/HANDOFF.md:235-248`).
 
 ## SK-V8 Disposition Classification
 
@@ -222,6 +224,7 @@ no-regression gate, REDRESS citation, and challenge acceptance.
 | REDRESS 28+33 and 72/83 | Old Class A tiny-string NEON/TBL wiring, global cap-16 policy, generated-retained `StringBlock16` wrapper. | Different current hot boundary, scalar/checkasm parity, same-wave generated consumer, plane-specific CostFacts, and no Track 1/Track 2 guard regressions. |
 | REDRESS 50-55 | Parse-time aux/projection side tables, EventCursor/byte-class/structural-mask cursors, sink-local decoded stats, quote-source streaming hash. | Single-substrate scanner/tape/event consumption or a materially different product representation; no parser-owned side tables or digest-only retries. |
 | REDRESS 60-72 | Retained string boundary collapse, wide/delayed-wide scanners, Unicode validator, object next-key carry, direct source-hook folding, parser-owned decoded scratch, byte-output unescape, semantic string facts, hand-authored typed sinks, global cap-16. | Reopen only with fresh profile ownership and a different output/materialization contract. Host/API typed schemas may extend product-plane work; benchmark-private hand parsers and hidden directives remain invalid proof. |
+| REDRESS 73 | Generated retained array next-byte helper-shape transfer to hand Track 2. | Future Track 2, retained-control, or direct-control work must profile the hand parser's code layout directly. Do not assume generated helper shape transfers monotonically to the hand comparator. |
 | REDRESS 80 | Zero-fallback Eisel-Lemire mantissa widening or raw `parse::<f64>()` shortcuts. | Current-head numeric attribution shows a material fallback/overflow/ambiguous pool, exact parity holds, and numeric direct guard rows hold. |
 | REDRESS 82 | Single-quartet Unicode escape classifier. | Broader Unicode/string fact with hot-leaf proof, parse and direct threshold tables, and Track 2 guard evidence. |
 | REDRESS 84 and REDRESS 65 | Object key/value-byte carry and object-pair control compaction. | Fresh PC-level evidence names a different same-row control owner; do not retry key/next-byte carry under a helper rename. |

@@ -14,6 +14,7 @@ Authority:
 - `restart/skinny/tranches/sk-v8/HANDOFF.md`
 - `restart/skinny/tranches/sk-v8/research/skv8-W6-close-and-alpha-feedback.md`
 - `restart/skinny/tranches/sk-v8/research/wave-6-hardening/V2/HARDENING-W6-V2-CONSOLIDATED.md`
+- `restart/skinny/tranches/sk-v9/research/alpha/alpha-C-redress-digest.md`
 - `skinny/RESULTS.md`
 - `skinny/REDRESS.md` entries 91, 92, and 93
 
@@ -33,13 +34,22 @@ Current main-table state:
 | `direct_to_struct` | 3 `A / GO`, 14 `N-direct / NO-GO` | Digest guard plane; direct misses need a direct output contract or control-path tranche before renewed triage. |
 | `real_typed_struct` | 4 `A / GO` | Product plane; current GO rows must maintain, and Apache/CITM may enter only through fresh measured row-table admission. |
 
-W6 routes exactly three SK-V9 Alpha planning candidates:
+W6 routes exactly three SK-V9 Alpha behavior candidates. Alpha-E also names two
+non-behavior gate prerequisites; those are telemetry/report enablers, not extra
+row-moving implementation goals:
 
 | Candidate | W6 source | SK-V9 posture |
 |---|---|---|
 | Typed row-table admission | REDRESS 91 and W6 Alpha Feedback | Apache/CITM are source/product parity rows only in SK-V8; SK-V9 may measure them only with fresh run-id/metadata validation and row evidence. |
 | Structural parse precursor | REDRESS 92 and W6 Alpha Feedback | Define retained class/event grammar and prove the retained `ValueRef` cursor contract before reopening any structural-heavy parse wave. |
 | Direct output/control path | REDRESS 93 and W6 Alpha Feedback | Direct digest misses route to a direct output contract or control-path tranche; digest-only evidence remains guard-plane evidence. |
+
+Gate-only Alpha-E prerequisites:
+
+| Prerequisite | Scope | Boundary |
+|---|---|---|
+| Comparator sidecar same-run manifest | Evidence ingestion for same-run comparator freshness where runnable. | Cannot produce parser data, retained tape data, row output, substrate, or strict admission by itself. DOM sidecars cannot admit digest or typed-direct rows. |
+| SK-V9-open telemetry/gate refresh | Refresh report/gate run identity and required Alpha telemetry fields. | Behavior-frozen; cannot move throughput cells or admit Apache/CITM rows without the measured typed-row gate. |
 
 Pass Omega remains separate. SC-6-L1-R1, broad lock amendments, canonical path
 cleanup, and top-level surface refresh are not SK-V9 skinny defaults. Omega may
@@ -93,6 +103,45 @@ If SK-V9 is later authorized, the cycle closes only when:
 | Retained class/event grammar precursor | Define class/event grammar over numbers, literals, container events, and string quote ownership, then prove retained `ValueRef` cursor contract. | Accepted proof artifact plus selected-row thresholds from Section 4.1 before any implementation wave. | REDRESS/routes structural candidate; no parser/tape source admission. |
 | Direct output/control path | Make direct rows product-contract-capable or keep them as guard rows. | Selected direct rows must meet both Track 1 and Track 2 direct floors and full-table maintain; digest alone is not product proof. | REDRESS routes direct misses; scalar-parent fold remains rejected. |
 
+### Section 0.4 Alpha Scope And Cost Matrix
+
+This matrix binds Alpha-E candidates for G-Alpha without creating a SK-V9
+`SPEC.md`, `DISPATCH-PROMPT.md`, or wave dispatch.
+
+| Candidate | G-Alpha status | LOC budget | Risk | Downstream alignment | Same-wave consumer | Hard cap | Expected row effect |
+|---|---|---:|---|---|---|---|---|
+| Apache/CITM typed row-table admission | Behavior candidate | 300 | Medium | Future measured-row tranche | `gate-json` consumes run-id, metadata, checksums, selected comparator, and row rendering | <=90 min implementation/redress; split before dispatch if exceeded | May add measured Apache/CITM `real_typed_struct` rows only after strict gate evidence |
+| Retained class/event grammar plus `ValueRef` proof | Proof precursor | 450 | High | Future proof tranche before any structural parse implementation | `ValueRef` cursor proof consumes the grammar | <=90 min implementation/redress; split before dispatch if production consumer does not fit | No `RESULTS.md` row movement unless a later capped generated retained Track 1 consumer lands in the same accepted wave |
+| Direct output/control-path contract | Behavior candidate | 600 | High | Future direct contract or control-path tranche | Gate/report row classifier consumes the product/control contract | <=90 min implementation/redress; split before dispatch if exceeded | May move selected direct guard rows only under direct floors and full-table maintain |
+| Comparator sidecar same-run manifest | Gate prerequisite | 500 | Medium-high | Future telemetry/report tranche | `gate-json` parses and validates the manifest | <=90 min implementation/redress; split before dispatch if exceeded | No behavior or throughput movement; fills freshness/plane cells only |
+| SK-V9-open telemetry/gate refresh | Gate prerequisite | 450 | Medium | Future W0-style telemetry tranche | `gate-json` produces and consumes the SK-V9-open manifest | <=90 min implementation/redress; split before dispatch if exceeded | No behavior movement; measured row additions require their own accepted candidate gate |
+
+Any future S-P3 wave plan that exceeds the LOC budget or the <=90 minute
+implementation/redress cap returns REVISE before dispatch.
+
+## Alpha Generality And Lock 14 Gate
+
+Any SK-V9 candidate that touches generic CostFacts, codegen, runtime, SIMD,
+tape, parser-template, report, or gate surfaces must carry a Lock 14 proof at
+Alpha/S-P3 boundary. The proof must include:
+
+- Public API scan: no new public substrate API, directive, BIR variant,
+  `BackendShape`, `UnionTape`, or grammar-specific role leakage.
+- Grammar branch scan: any grammar-specific policy remains per-grammar or
+  generated-provider local.
+- Primitive/table scan: no JSON-only primitive, byte-class table, comparator
+  registry, or CostFacts rule becomes a generic default without non-JSON proof.
+- Role/fact boundary check: structural roles, facts, and comparator semantics
+  remain grammar-owned, not parser-owned side state.
+- Template/provider boundary check: generated templates and provider modules
+  keep JSON policy out of generic crates.
+- Non-JSON proof: CSS L4, Sheets, and BBNF-self compile/lower/cost/run, or the
+  candidate is demoted to per-grammar JSON-only scope before implementation
+  planning.
+
+The retained class/event grammar remains per-grammar/generated unless this
+non-JSON proof promotes it to a generic abstraction.
+
 ## Section 4.1 Per-Row Close Conditions
 
 The tables below are Pass Alpha goalset gates, not wave dispatches. S-P3 may
@@ -100,9 +149,11 @@ select a subset, but any selected row must use these floors or a stricter
 accepted floor.
 
 Parse rows use `max(ceil(SK-V8-open Track1 * 1.10), ceil(sonic_strict / 1.10))`
-as the minimum selected-row guard threshold. `parse_only` remains
-non-admission unless a future accepted gate changes the output plane and strict
-validation posture.
+as the minimum selected-row guard threshold. The retained class/event route is
+proof-only at Alpha depth: `parse_only` rows remain non-admission and
+`skinny/RESULTS.md` remains unchanged unless future S-P3 first defines a capped
+implementation wave with a same-wave generated retained Track 1 consumer,
+output-plane validation, strict validation posture, and challenge acceptance.
 
 | Row | Current | Target if S-P3 selects row | Candidate | Fallback |
 |---|---|---|---|---|
@@ -191,10 +242,15 @@ Comparator requirements:
 ## Section 4.3 Telemetry Binding
 
 `skinny/RESULTS.md` and any gate-consumed manifest for SK-V9 must carry this
-schema. `gate-json` must reject any row missing required fields.
+schema. `gate-json` is the JSON instance of the grammar-aware report contract;
+generic report/gate code must not encode JSON comparator policy as the universal
+schema. CSS, Sheets, and BBNF-self comparator anchors are domain-specific or
+explicitly absent. `gate-json` must reject any row missing required fields.
 
 | Column | Type | Required |
 |---|---|---|
+| grammar_id | string | yes |
+| domain | string | yes |
 | Corpus | string | yes |
 | Workload | enum (`parse_only`, `direct_to_struct`, `real_typed_struct`, `parse_full_traversal`, `path_lookup`, `unicode_string_float`, `memory`, `cycles_per_byte`) | yes |
 | Outcome | enum (`A`, `C`, `G`, `K`, `L`, `N-direct`, `S`) | yes |
@@ -227,6 +283,11 @@ schema. `gate-json` must reject any row missing required fields.
 | CostFacts ids | chosen/rejected ids or explicit `none` | yes |
 | Redress entry | id or `none` | yes |
 | Sidecar freshness | enum/string (`same-run-native`, `same-run-sidecar`, `historical`, `absent`) | yes |
+| comparator_id | string or structured list | yes |
+| comparator_plane | string or structured list | yes |
+| comparator_strictness | string or structured list | yes |
+| comparator_freshness | string or structured list | yes |
+| measured_validation_path | string | yes |
 | Substrate surface | string | yes |
 | Structural projection status | string | yes |
 | Substrate cardinality | enum/string (`one`, `parallel`, `n/a`) | yes |
@@ -244,6 +305,11 @@ goalset rather than relabeling rejected routes.
 Do not reopen without fresh measured evidence, same-wave consumer, explicit
 row thresholds, REDRESS citation, and challenge acceptance:
 
+- The full prior pre-block ledger in
+  `restart/skinny/tranches/sk-v9/research/alpha/alpha-C-redress-digest.md` is
+  binding by reference. Any candidate touching a rejected ownership boundary
+  must cite the REDRESS item and pass a changed-shape proof before
+  implementation planning.
 - REDRESS 91 row-table overclaim: Apache/CITM are not measured SK-V8 rows.
 - REDRESS 91 `canada/real_typed_struct` checksum mismatch.
 - REDRESS 92 W3 Tier A implementation before retained class/event grammar and
@@ -251,6 +317,10 @@ row thresholds, REDRESS citation, and challenge acceptance:
 - REDRESS 93 Track 2 scalar-parent fold, including renamed parent-digest folds
   without W4/V9-aware checked gate, full-table maintain, and independent Track
   2 digest-arithmetic backstop.
+- REDRESS 73 helper-shape transfer: generated retained array continuation
+  shape must not be assumed to transfer monotonically to hand Track 2 or direct
+  control paths; future Track 2/control work must profile the hand parser's
+  code layout directly.
 - Sidecar substrate, parser-owned cursor/fact slots, `UnionTape`, new
   `BackendShape`, new directive/BIR, public substrate API, and `tape_vs_tape`
   as production consumer.

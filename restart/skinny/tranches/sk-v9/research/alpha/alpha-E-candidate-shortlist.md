@@ -22,15 +22,32 @@ Baseline facts carried forward:
 
 - `skinny/RESULTS.md` remains the SK-V8 W0 report authority with 38
   `SK-V8-open` manifest rows and four measured `real_typed_struct A / GO`
-  rows: `twitter`, `update_center`, `mesh`, and `marine_ik`.
+  rows: `twitter`, `update_center`, `mesh`, and `marine_ik`
+  (`skinny/RESULTS.md:3-40`).
 - W2 admitted only Apache/CITM source/product typed parity. Apache/CITM are not
-  measured `RESULTS.md` real-typed rows yet.
+  measured `RESULTS.md` real-typed rows yet (`skinny/REDRESS.md:2620-2659`).
 - W3 was rejected/routed before source because scanner structural positions and
-  retained `ValueRef` tape events are not isomorphic.
+  retained `ValueRef` tape events are not isomorphic
+  (`skinny/REDRESS.md:2661-2690`).
 - W4 was rejected/routed after the hand Track 2 scalar-parent fold failed the
-  selected native Criterion row gate.
+  selected native Criterion row gate (`skinny/REDRESS.md:2692-2729`).
 - W5 admitted only the named Lock 14 provider-boundary cleanup and makes no
-  performance or row-table claim.
+  performance or row-table claim
+  (`restart/skinny/tranches/sk-v8/HANDOFF.md:235-248`).
+
+Candidate-local admission boundary:
+
+- No candidate may present a new row as strict SOTA admission while bbnf-side
+  validation remains `Strictness=deferred` or `parse_utf8=view-boundary`.
+  If an accepted future wave does not change the measured validation path and
+  gate semantics, the row signal must remain a non-strict product/guard signal.
+- Every candidate gate must render `Strictness`, `parse_utf8`,
+  `escape_complete`, output plane, comparator id, comparator strictness,
+  comparator freshness, and measured validation path in the row telemetry.
+- Generic CostFacts, codegen, runtime, SIMD, tape, parser-template, report, or
+  gate edits require Lock 14 proof: public API scan, grammar branch scan,
+  primitive/table scan, role/fact boundary check, template/provider boundary
+  check, and CSS L4 / Sheets / BBNF-self non-JSON compile/lower/cost/run proof.
 
 ## 1. Typed measured row-table admission for Apache/CITM
 
@@ -84,11 +101,15 @@ Falsifiability gates:
   >= `sonic_rs_real_typed_struct / 1.10`. Track 2 remains a structural oracle
   and must preserve checksum parity and coherent metadata rather than being used
   as a SOTA speed floor.
-- `typed_existing_go_maintain`: current measured typed rows remain GO:
-  `twitter` Track 1 >= 12405 Mbps, `update_center` Track 1 >= 10865 Mbps,
-  `mesh` Track 1 >= 8459 Mbps, and `marine_ik` Track 1 >= 6319 Mbps. Their
-  Track 2/oracle rows must stay checksum-correct and no worse than -2.0%
-  throughput versus the SK-V8-open values.
+- `typed_existing_go_maintain`: current measured typed rows remain GO under the
+  master maintain floors: `twitter` Track 1 >= 15027 Mbps, `update_center`
+  Track 1 >= 11719 Mbps, `mesh` Track 1 >= 9431 Mbps, and `marine_ik`
+  Track 1 >= 11548 Mbps. Their Track 2/oracle rows must stay checksum-correct
+  and no worse than -2.0% throughput versus the SK-V8-open values.
+- `typed_strict_boundary`: Apache/CITM may not be presented as strict SOTA
+  admissions unless the same accepted wave supplies strict bbnf-side validation
+  or a measured validation path accepted by the strict comparator gate. Without
+  that, any admitted rows remain explicitly non-strict product-plane rows.
 - `typed_no_source_only_admission`: if the checked report path rejects run-id,
   mixed-capture, missing metadata, or missing selected comparator evidence,
   `skinny/RESULTS.md` remains unchanged and the wave records rejection/routing.
@@ -181,9 +202,13 @@ Falsifiability gates:
   landed, `skinny/RESULTS.md` remains unchanged.
 - Optional implementation gate if the proof and consumer land together:
   `twitter/parse_only` Track 1 >= 16524 Mbps and
-  `apache_builds/parse_only` Track 1 >= 15367 Mbps; W3 guard rows maintain
+  `apache_builds/parse_only` Track 1 >= 15368 Mbps; W3 guard rows maintain
   within -2.0% of SK-V8-open for `canada/parse_only`, `mesh/parse_only`,
   `numbers/parse_only`, and `marine_ik/parse_only`.
+- `retained_strict_boundary`: proof-only artifacts do not create GO/SOTA rows.
+  A future row-moving retained wave must supply same-wave generated retained
+  Track 1 consumption, strict validation posture, output-plane validation, and
+  grammar-aware comparator telemetry.
 
 LOC budget:
 
@@ -205,6 +230,8 @@ Pre-blocked route notes:
   substrates, `UnionTape`, a second tape, or a renamed side substrate.
 - Do not claim parse-row movement from proof-only artifacts.
 - Do not hide JSON-specific policy in generic crates; Lock 14 remains binding.
+- Do not reopen REDRESS 73 by assuming generated retained helper shape transfers
+  monotonically to hand Track 2; profile the hand parser's code layout directly.
 
 ## 3. Direct output/control-path contract
 
@@ -269,6 +296,10 @@ Falsifiability gates:
   control path, at least one typed product row must checksum-match serde_json
   and sonic-rs on the `typed direct` plane. A digest-only row cannot satisfy
   this gate.
+- `direct_strict_boundary`: direct rows cannot become strict product admissions
+  while `Strictness=deferred`, `parse_utf8=view-boundary`, or digest output
+  remains the measured plane. Without a changed measured validation path, they
+  remain guard/control-path rows.
 
 LOC budget:
 
@@ -287,10 +318,12 @@ Pre-blocked route notes:
 - Do not reopen REDRESS 72 cap-16 direct routing, REDRESS 80 mantissa widening,
   REDRESS 84 object-pair value-byte compaction, or REDRESS 93 scalar-parent
   folding under another name.
+- Do not reopen REDRESS 73 by transferring generated retained helper shape to
+  hand Track 2 or control paths without direct hand-parser profiling.
 - Do not couple Track 2 to generated SinkOnly or generated Track 1.
 - Do not make direct digest evidence a typed product claim.
 
-## 4. Comparator/sidecar same-run manifest
+## 4. Comparator same-run evidence manifest
 
 Reason to shortlist: PASS-ALPHA requires strict comparator deltas against
 sonic-rs strict, simdjson DOM/On Demand, yyjson, asmjson, RapidJSON, and
@@ -299,14 +332,17 @@ W1 blocks sidecar/permissive/historical evidence from strict admission. A
 same-run manifest is justified if SK-V9 wants comparator deltas beyond native
 Rust anchors.
 
+Scope: gate-only evidence ingestion. This candidate must not produce parser
+data, retained tape data, row output, substrate, or strict admission by itself.
+
 Owner paths:
 
 - `skinny/crates/bbnf-bench/src/report.rs`
 - `skinny/crates/bbnf-bench/src/gate.rs`
 - `skinny/crates/bbnf-bench/src/bin/gate.rs`
 - `skinny/crates/bbnf-bench/src/metadata.rs`
-- optional new sidecar manifest module path, to be named only by a later
-  challenged wave
+- manifest parsing in an existing report/gate module or a later named module;
+  either way it remains evidence ingestion only
 - `skinny/xtask/src/main.rs`
 - optional checked-in sidecar manifest/provenance path under `skinny/` only if
   the wave names it and the gate consumes it
@@ -331,6 +367,9 @@ Same-wave consumer plan:
 - The selected admission comparator id must be bound in the report/gate path.
   Presence of a valid native anchor in the same row must not validate a sidecar
   or permissive comparator.
+- Comparator manifest ingestion may support admission only when the row also
+  carries measured bbnf validation, same-run freshness, same output plane, and
+  strictness-declared comparator evidence consumed by the gate.
 
 Falsifiability gates:
 
@@ -341,6 +380,8 @@ Falsifiability gates:
   reject.
 - `sidecar_plane_strictness_gate`: DOM sidecars cannot admit digest or
   `typed direct` rows; lossy/permissive comparators remain flaw probes only.
+- `sidecar_evidence_only`: sidecar evidence cannot act as a producer,
+  substrate, row output source, retained tape source, or strict shortcut.
 - `sidecar_malformed_fixture`: at least one malformed manifest fixture must
   fail in a focused test.
 - `sidecar_refresh_rows`: if SK-V9 refreshes parse sidecars, begin with named
@@ -369,6 +410,8 @@ Pre-blocked route notes:
 - Do not use sidecar evidence to admit digest or typed rows unless the output
   plane matches exactly.
 - Do not make sidecar-only values strict anchors without a structured manifest.
+  Even with a structured manifest, bbnf measured validation in the row remains
+  mandatory.
 
 ## 5. W0 telemetry/gate refresh for SK-V9-open
 
@@ -377,6 +420,10 @@ row-table admission exposed a practical SK-V9 need: row admission must own
 run-id/metadata validation instead of fighting the frozen SK-V8 opening capture.
 If SK-V9 wants new measured rows or same-run sidecars, it needs a refreshed
 opening manifest/gate mode without weakening W0's fail-closed behavior.
+
+Scope: gate-only report refresh. This candidate must not change parser,
+scanner, SIMD, asm, codegen, generated output, product behavior, or row
+throughput.
 
 Owner paths:
 
@@ -423,6 +470,9 @@ Falsifiability gates:
 - `skv9_check_results_mode`: `cargo xtask gate-json --advisory --check-results`
   must compare against the chosen SK-V9-open run id rather than silently falling
   back to the SK-V8 frozen capture.
+- `skv9_strict_boundary`: telemetry refresh cannot turn deferred/view-boundary
+  rows into strict SOTA admissions. It may only make the validation state
+  explicit unless a separate accepted behavior wave changes that state.
 
 LOC budget:
 
@@ -447,7 +497,8 @@ Pre-blocked route notes:
 - W3 Tier A production implementation as a storage-only swap is not shortlisted;
   it must pass the retained class/event grammar and `ValueRef` proof first.
 - W4 scalar-parent folding is not shortlisted; REDRESS 93 already falsified it.
-- PMULL, CTZ, bulk bitmap, tiny-string, Unicode escape, cap-16 direct, and
+- PMULL, CTZ, bulk bitmap, tiny-string, Unicode escape, REDRESS 73 helper-shape
+  transfer, cap-16 direct, and
   object-pair value-byte routes remain pre-blocked unless a later alpha/challenge
   names a changed measurement framing and fresh gates.
 - Pass Omega residuals such as SC-6-L1-R1, broad lock amendments, canonical path

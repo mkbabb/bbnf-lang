@@ -24,6 +24,19 @@ Corpus coverage: 17/17 for both tracks (34/34 traces captured).
 Processor Trace coverage: 0/3 — BLOCKED by Apple toolchain library skew
 (see §4).
 
+Corpus-name canonical mapping (V4 fold note): the on-disk fixture file
+is `update-center.json` (hyphen); the trace bundles under
+`/tmp/skv9-xctrace-v3/p1b-tp/`, the `exports/` symbol files, and this
+report's tables all use `update_center` (underscore) to match
+`skinny/RESULTS.md` row identity and the P1-V3-A `pmu_rows.tsv`
+join-key. P1-V3-A's TSV consumes the disk-file spelling (`update-center`)
+in one column for fixture-path provenance. An aggregator joining A's
+PMU rows and B's symbol exports on corpus name must normalise on the
+underscore form (the column-key form `skinny/RESULTS.md` uses); the
+hyphenated form is fixture-path provenance only. The §6 reproduction
+script handles the mapping in its `corpus_paths.txt` block (see line
+beginning `update_center …/update-center.json`).
+
 ## §1 — Capture methodology
 
 ### 1.1 Template, sampling rate, repeat count
@@ -106,12 +119,35 @@ resolves the id/ref graph for `<binary>`, `<frame>`, and `<backtrace>`
 nodes, picks the topmost frame whose binary name is `xctrace_probe`
 (filtering dyld/libsystem frames out of attribution but keeping their
 share visible as `process_share < 100%`), demangles via `rustfilt`, and
-sums weights into a per-symbol counter and a per-class counter (the
-class taxonomy is the substrate-neutral primitive vocabulary `S-P1` is
-producing: `string_tiny_scan` / `string_full_scan` / `number_digit_scan`
-/ `scan_structurals` / `simd_movemask` / `consume_structural` / …). The
-classifier is grammar-neutral by construction (it matches symbol
-substrings, not JSON-role names) per CH2 GENERALITY.
+sums weights into a per-symbol counter and a per-class counter.
+
+The class taxonomy is the **canonical substrate-neutral primitive
+vocabulary** the S-P1 cohort produces (V4 fold under Lock 14 / Lock 16
+admissibility): every JSON-named symbol surfaced in §2 resolves to
+exactly one of the following primitive classes, each parameterised
+against the per-grammar StructuralAlphabet
+(`restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-6-lock1-amendment-generalisation.md`
+§4) so the same vocabulary admits CSS L4, Sheets, and BBNF-self when
+those grammars land in skinny:
+
+| Primitive class | What the byte loop does | JSON realisation | Generalisation |
+|---|---|---|---|
+| `per-string-span scanner` (= `string_tiny_scan` / `string_full_scan`) | Scan from an opener delimiter byte to a closing delimiter byte, classifying interior bytes against an escape set | JSON `"…"`, capped (`with_cap::<16>`) and uncapped (`match_string_at_quote_trusted_utf8`) | CSS L4 `"…"` + `'…'` + `url(…)`; Sheets `"…"` with `""` escape; BBNF-self string literals — each grammar's StructuralAlphabet enumerates its delimiter set, codegen instantiates the scanner per delimiter |
+| `escape_codec_hex_unit` (= `unicode_escape_hex`) | Decode one hex-quartet → utf-8 codec call, possibly composing two halves of a surrogate pair | JSON `\uXXXX` (4 hex digits, surrogate-pair join, no terminator) | CSS L4 `\HHHHHH` (1..6 hex digits, no surrogate, whitespace-or-non-hex terminator); JS `\u{HHHHHH}`; TOML `\uHHHH` + `\UHHHHHHHH`. See §3.4 for full parameter set |
+| `structural-element walker` (= `consume_structural` / `dispatch_value` / `parse_value_at` / `object_walk` / `array_walk`) | Advance the cursor over one StructuralAlphabet ordinal and ladder into the next dispatch | JSON `{` `}` `[` `]` `:` `,` walks via `consume_container_next` / `consume_array_next` / `dispatch_value` / `parse_value_at` | CSS L4 `{` `}` block-walk + `;` declaration-terminator walk; any grammar with structural-element ordinals admits the same walker shape |
+| `number-digit parser` (= `number_digit_scan` / `number_scan` / `number_swar_digits`) | Scan a contiguous digit run + accumulate via SWAR multiply-add | `parse_that_regex::number::scan_digit_run` + `match_number_span_from_first` + `NumberParts::push_*_digits` | CSS L4 `<number>` + `<integer>` + `<percentage>` + `<dimension>`; Sheets numeric cells; BBNF-self integer literals — same FSM, same SWAR digit folder |
+| `traversal-dispatch` (= `dispatch_value` / `string_dispatch`) | Demux on one StructuralAlphabet ordinal byte to one of N typed sub-parsers | JSON `dispatch_value` (8 arms: object / array / string / number / true / false / null / error); `parse_string` / `parse_key_colon` as one-byte sub-dispatchers | Any grammar with a tagged-union root admits a structurally identical dispatch — CSS L4's component-value dispatcher is the analogue. The class is one of *route shape*, not JSON-role identity |
+| `simd_movemask` + `string_block_scan` (string-plane SIMD helpers) | Convert a 16/32/64-byte block-compare result into a single mask word and emit positions | `bbnf_simd::aarch64::movemask::movemask_u8x16` + `parse_that_regex::skip_string_plain_trusted` | All grammars with delimited-span scanners share the mask helpers; Lock 16 already admits these as grammar-neutral primitives |
+| `whitespace_skip` (= byte-class skip) | Advance the cursor over a fixed byte-set (the grammar's whitespace class) | `parse_that_regex::skip_ascii_whitespace` | Every grammar with declarative whitespace admits the same byte-class skip primitive (CSS whitespace is wider; same shape) |
+
+The classifier is grammar-neutral by construction (it matches symbol
+substrings, not JSON-role names) per CH2 GENERALITY: each per-symbol
+table row in §2 carries a `Class` column whose label is one of the
+classes above. The JSON-named symbols (`match_tiny_plain_string_with_cap::<16>`,
+`read_hex_unit_scalar`, `dispatch_value`, …) are the **per-grammar
+realisations** of those classes; on a future CSS L4 capture the same
+classifier will surface CSS-named symbols under the *same* class
+labels.
 
 The full top-15 self-time list per (corpus, track) is at
 `/tmp/skv9-xctrace-v3/exports/<corpus>__<track>.symbols.json` along with
@@ -126,13 +162,57 @@ runs the aggregator.
 For each (corpus, track) the table below names the top-8 symbols by
 self-time, with `%self` as the per-row percentage of in-process
 self-time (samples whose leaf is the `xctrace_probe` binary), the
-primitive class assigned by the substrate-neutral classifier, the
-Rust-demangled symbol, and the source `file:line` xctrace surfaced.
-`samples_process` is the in-process sample count, `process_share` the
-fraction of samples landing in `xctrace_probe`. Cells with empty source
-indicate xctrace's DWARF did not emit a `<source>` element for the
-sampled PC (typically inlined call sites without an inlined-frame
-record); the symbol is still resolvable from the demangled name.
+primitive class assigned by the substrate-neutral classifier (see §1.5
+canonical primitive vocabulary), the Rust-demangled symbol, and the
+source `file:line` xctrace surfaced. `samples_process` is the in-process
+sample count, `process_share` the fraction of samples landing in
+`xctrace_probe`. Cells with empty source indicate xctrace's DWARF did
+not emit a `<source>` element for the sampled PC (typically inlined call
+sites without an inlined-frame record); the symbol is still resolvable
+from the demangled name.
+
+The `Class` column labels are the §1.5 canonical primitive-class names.
+First-occurrence resolution of the JSON-named symbols against their
+primitive classes (one tag per section; the same mapping applies to
+every per-row repetition below):
+
+- `match_tiny_plain_string_with_cap::<16>` (Track 1) and
+  `bbnf_bench::track2::json::match_tiny_plain_string` (Track 2) — both
+  realise the `per-string-span scanner` primitive class
+  (`string_tiny_scan` variant: cap-bounded scalar fast-path; CSS L4,
+  Sheets, BBNF-self each instantiate the same scanner with their own
+  StructuralAlphabet delimiter set, codegen-emitted per delimiter).
+- `parse_that_regex::match_string_at_quote_trusted_utf8` — realises the
+  `per-string-span scanner` primitive class (`string_full_scan`
+  variant: uncapped SIMD-block scanner).
+- `parse_that_regex::read_hex_unit_scalar` + `parse_that_regex::hex_nibble`
+  — both realise the `escape_codec_hex_unit` primitive class
+  parameterised `{hex_digit_count=4, surrogate_join_policy=pair,
+  terminator_policy='\u'-fixed-width}` for JSON; see §3.4.
+- `runtime::generated_json::generated::consume_container_next` +
+  `consume_array_next` + `consume_structural` — realise the
+  `structural-element walker` primitive class (per-grammar
+  StructuralAlphabet ordinal walker).
+- `runtime::generated_json::generated::dispatch_value` +
+  `parse_key_colon` + `parse_string` (and the Track 2 `Parser::parse_value_at`
+  / `parse_key_colon` / `parse_string` analogues) — realise the
+  `traversal-dispatch` primitive class (tagged-union root demux on
+  StructuralAlphabet ordinal).
+- `parse_that_regex::number::scan_digit_run` +
+  `match_number_span_from_first` + `NumberParts::push_two_digits` /
+  `push_four_digits` / `push_eight_digits` + `is_four_ascii_digits`
+  — realise the `number-digit parser` primitive class (digit-FSM +
+  SWAR digit folder).
+- `bbnf_simd::aarch64::movemask::movemask_u8x16` +
+  `parse_that_regex::skip_string_plain_trusted` — realise the
+  `simd_movemask` + `string_block_scan` string-plane SIMD helpers
+  (Lock 16 grammar-neutral primitives).
+- `parse_that_regex::skip_ascii_whitespace` — realises the
+  `whitespace_skip` byte-class skip primitive (any grammar whose
+  whitespace class is fixed admits the same primitive).
+- `parse_that_regex::validate_string_escape` — realises the
+  per-string-span scanner's *escape-validation* inner predicate
+  (codegen-emitted from the grammar's escape set).
 
 
 #### twitter / track1
@@ -649,6 +729,17 @@ inside the *string* fast-path's 16-byte block scanner
 primitive name carries two callsites, and only the string-scan callsite
 fires on parse_only. The SC-1 claim is exact at the symbol level.
 
+**Substrate-shape generalisation (CH2 GENERALITY fold)**: this is **not**
+a JSON-specific verdict. For any grammar whose generated parse_only
+surface re-derives StructuralAlphabet ordinals inside the fused
+`structural-element walker` body (the recursive-descent dispatcher), the
+SIMD structural-scan output is structurally unconsumed and will exhibit
+the same 0.00% `scan_structurals` self-time. CSS L4 / Sheets / BBNF-self
+generated parse_only surfaces will reproduce the verdict under the
+identical lowering shape. The diagnostic generalises to the
+`structural-scan-output non-fusion` class; the JSON-corpus rows are the
+JSON realisation.
+
 ### 3.2 SC-4 claim — string scanner pair carries ~75% of self-time on
 loss corpora
 
@@ -659,9 +750,15 @@ rows).
 
 **Verdict — PARTIALLY CONFIRMED, with the dispatch ratio reversed**. The
 SK-V8-named ~75% combined share materialises only on the most
-string-saturated rows; the asymmetry between the tiny path and the full
-NEON path is the inverse of SK-V7's claim — the tiny scalar path
-dominates, the full SIMD scanner is in the tail. Per Time Profiler:
+string-saturated rows; the asymmetry between the tiny path
+(`string_tiny_scan` variant of the `per-string-span scanner` primitive
+class — JSON realisations `match_tiny_plain_string_with_cap::<16>` on
+Track 1 and `bbnf_bench::track2::json::match_tiny_plain_string` on
+Track 2) and the full NEON path (`string_full_scan` variant — JSON
+realisation `parse_that_regex::match_string_at_quote_trusted_utf8`) is
+the inverse of SK-V7's claim: the tiny-variant scalar realisation
+dominates, the full-variant SIMD realisation is in the tail. Per Time
+Profiler:
 
 | Corpus            | tiny `match_tiny_plain_string` % | full `match_string_at_quote` % | tiny+full % | full string family % |
 |---|---:|---:|---:|---:|
@@ -688,35 +785,55 @@ dominates, the full SIMD scanner is in the tail. Per Time Profiler:
 The 75% figure is closely approached on **distinct_values** (67.5%) and
 **update_center / apache_builds / random** (~55–63%) but the
 distribution between tiny and full is essentially "everything is tiny."
-The full SIMD fallback `match_string_at_quote_trusted_utf8` is only
-significant on unicode_mixed/escapes (10–20% — where the SIMD block
-correctly absorbs long plain runs) and never exceeds 20% on any row.
+The full SIMD fallback `match_string_at_quote_trusted_utf8`
+(`string_full_scan` realisation) is only significant on
+unicode_mixed/escapes (10–20% — where the SIMD block correctly absorbs
+long plain runs) and never exceeds 20% on any row.
 
 For **gsoc-2018** and **y_string_unicode** (two corpora SC-4 named), the
 string-family share is much lower than 75% (36% and 18% respectively).
 The remaining self-time on these rows points elsewhere:
 
-- **gsoc-2018**: `simd_movemask::movemask_u8x16` is the **largest**
-  symbol at 30.9% (track 1) and 29.9% (track 2). The mask primitive is
-  itself the hot leaf — the string block scanner reduces to one mask
-  load per 16-byte block, called frequently because gsoc-2018 has many
-  long strings. This is a SIMD primitive that is structurally part of
-  the string scanner family but is not the same symbol as either
-  `match_tiny_plain_string` or `match_string_at_quote_trusted_utf8`.
+- **gsoc-2018**: `simd_movemask::movemask_u8x16` (string-plane SIMD
+  helper, Lock 16 grammar-neutral primitive) is the **largest** symbol
+  at 30.9% (track 1) and 29.9% (track 2). The mask primitive is itself
+  the hot leaf — the string block scanner reduces to one mask load per
+  16-byte block, called frequently because gsoc-2018 has many long
+  strings. This is a SIMD primitive that is structurally part of the
+  per-string-span scanner family but is not the same symbol as either
+  the `string_tiny_scan` or `string_full_scan` realisations.
 - **y_string_unicode**: the dominant pair is
   `parse_that_regex::read_hex_unit_scalar` (19.0%) +
-  `parse_that_regex::hex_nibble` (19.2%) = **38.2%** unicode escape
-  decoding (track 1; track 2 is 43.9%). This is a primitive class
-  SC-4's framing did not isolate. y_string_unicode is 99%+ short
-  6-byte `\uXXXX` strings, and the bottleneck is the
-  `\uXXXX → u16 → utf-8` codec, not the string scanner.
+  `parse_that_regex::hex_nibble` (19.2%) = **38.2%** of the
+  `escape_codec_hex_unit` primitive class
+  (track 1; track 2 is 43.9%). This is a primitive class SC-4's framing
+  did not isolate. y_string_unicode is 99%+ short 6-byte `\uXXXX`
+  strings, and the bottleneck is the `escape_codec_hex_unit` codec
+  (parameters `{hex_digit_count=4, surrogate_join_policy=pair,
+  terminator_policy='\u'-fixed-width}`), not the per-string-span
+  scanner. See §3.4 for the full parameter set + cross-grammar
+  instantiations.
 
 **Revised hot-leaf statement**: the SK-V7 §3.4 "string scanner pair
 ~75%" framing is correct for the densely-keyed object corpora
 (distinct_values, update_center, apache_builds, twitter on track 1) but
-the bottleneck symbol on the *unicode* and *escape* rows is the
-unicode-escape codec (`read_hex_unit_scalar` + `hex_nibble`), not the
-string scanner. S-P2 must enumerate this as a distinct primitive class.
+the bottleneck primitive class on the *unicode* and *escape* rows is
+`escape_codec_hex_unit` (JSON realisations `read_hex_unit_scalar` +
+`hex_nibble`), not `per-string-span scanner`. S-P2 must enumerate the
+two as distinct primitive classes; the §1.5 vocabulary already
+separates them.
+
+**Substrate-shape generalisation (CH2 GENERALITY fold)**: the
+`per-string-span scanner` primitive class spans every grammar whose
+StructuralAlphabet enumerates one or more string-delimiter bytes. CSS L4
+admits three (`"`, `'`, `url(`) and will surface three per-delimiter
+realisations; Sheets admits one (`"`) with internal `""` escape; BBNF-
+self admits one string-literal class. The verdict shape — *the
+`per-string-span scanner` primitive carries 50–70% of self-time on
+delimited-span-heavy corpora* — generalises by inspection; the JSON
+`q_frac ≥ 0.726` rows are the JSON instantiation of the
+delimited-span-fraction admission predicate. SC-6 §4.1's per-grammar
+string-delimiter byte set is the binding citation.
 
 ### 3.3 SC-1 claim — `consume_structural` carries the structural-walk cost
 
@@ -774,6 +891,43 @@ The substrate-neutral conclusion: P1-A's `dispatch_value 95.6 – 99.6%`
 row cannot be used by S-P2 as a primitive antecedent. The xctrace
 self-time table replaces it on the same baseline (commit `90609aee`,
 same fixtures, same probe binary, same build flags).
+
+### 3.5 `escape_codec_hex_unit` primitive class (Lock 14 reframe)
+
+The y_string_unicode bottleneck pair `read_hex_unit_scalar` +
+`hex_nibble` (§3.2 last bullet; 38.2% / 43.9% combined on track 1 /
+track 2) realises a **substrate-neutral primitive class**, not a
+JSON-specific symbol. Per Lock 14
+(`restart/locks/LOCKS.md`) + Lock 16 admissibility +
+SC-6 §4 cross-grammar StructuralAlphabet generalisation, the class is:
+
+**`escape_codec_hex_unit`** — parse a hex-digit-encoded escape sequence
+into a utf-8 byte sequence, with the following parameters:
+
+| Parameter | Domain | JSON value | CSS L4 value | JS `\u{}` value | TOML `\U` value |
+|---|---|---|---|---|---|
+| `hex_digit_count` | fixed-width N or range `[lo, hi]` | `4` (fixed) | `[1, 6]` (range) | `[1, 6]` (range, `{}`-bounded) | `8` (fixed for `\U`); `4` (fixed for `\u`) |
+| `surrogate_join_policy` | `none` / `pair` / `range-check` | `pair` (`\uD800-DBFF` followed by `\uDC00-DFFF`) | `none` (code-point direct) | `range-check` (code-point validated) | `none` |
+| `terminator_policy` | `fixed-width` / `delimiter` / `whitespace-or-non-hex` | `fixed-width` (consume exactly 4 hex digits) | `whitespace-or-non-hex` (consume up to 6, terminate on the first non-hex byte or a whitespace) | `delimiter` (terminate on `}`) | `fixed-width` (4 or 8) |
+| `target_encoding` | `utf-8` / `utf-16` / `utf-32` | `utf-8` | `utf-8` | `utf-8` | `utf-8` |
+
+JSON's `\uXXXX` decoder thus instantiates `escape_codec_hex_unit{4,
+pair, fixed-width, utf-8}` — the SK-V7 / SC-4 framing of the kernel as
+"the unicode-escape codec for JSON" is the JSON-specific projection of
+the substrate-neutral class. The `bbnf-simd/src/aarch64/unescape_uxxxx.rs`
+NEON kernel realises the JSON instantiation under codegen-emitted
+parameter binding; the same kernel admits CSS L4's `\HHHHHH` after
+parameter binding `{[1,6], none, whitespace-or-non-hex, utf-8}`. Lock 16
+admissibility means the kernel is preserved as a grammar-neutral
+primitive even when the JSON-bound wiring is the only currently active
+consumer.
+
+The S-P2 / S-P3 wave that targets this class (V10
+unicode-validation kernel, per CH2 §4.2 fold) operates on the
+**class**, not on the JSON realisation: a single kernel parameterised
+against the four columns above; codegen emits the per-grammar binding.
+Future grammars (CSS L4, JS-like, TOML, BBNF-self) inherit the same
+kernel.
 
 ## §4 — Processor Trace contrast (BLOCKED)
 
@@ -980,3 +1134,41 @@ different numbers but the same primitive vocabulary.
 | `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-1-offset-tape-teardown.md` | §3.1 + §3.3 claim source |
 | `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-4-string-plane-gap.md` | §3.2 claim source |
 | `restart/skinny/tranches/sk-v9/research/p1/skv9-p1-v3-A-xctrace-cpu-counters.md` | P1-V3-A cross-validation companion |
+| `restart/skinny/tranches/sk-v8/research/p2-substrate-ceiling/SC-6-lock1-amendment-generalisation.md` | StructuralAlphabet abstraction (§1.5 + §3.2 + §3.5 generalisation binding) |
+| `restart/locks/LOCKS.md` | Lock 1 substrate union; Lock 14 grammar-neutrality; Lock 16 grammar-neutral primitive surface |
+
+## §0 — V4 fold footer
+
+V4 fold: Lock-14 primitive-class promotion; classifier vocabulary
+canonicalised; substantive PMU + Time Profiler findings unchanged.
+
+The V4 edits to this report are scoped to the captioning + framing
+layer (§1.5 canonical primitive vocabulary table; §2 first-occurrence
+JSON-symbol→primitive-class mapping; §3.1 substrate-shape
+generalisation sentence; §3.2 per-string-span scanner reframe; §3.5
+`escape_codec_hex_unit` primitive class with cross-grammar parameter
+table; §1 corpus-name canonical mapping note). The evidence layer is
+unchanged: every (corpus, track) %self number, every
+`samples_process` / `process_share` row, every SC-1 / SC-4 verdict,
+every cross-validation derivation in §5 stands on the same xctrace
+Time Profiler traces under `/tmp/skv9-xctrace-v3/p1b-tp/` and the same
+P1-V3-A PMU rows at `/tmp/skv9-xctrace-v3/pmu_rows.tsv`. No
+re-capture, no re-measurement, no number revised.
+
+Specifically preserved:
+
+- `scan_structurals` 0.00% self-time on 34/34 rows (§3.1) — unchanged;
+  promoted to substrate-shape claim spanning grammars whose generated
+  parse_only re-derives StructuralAlphabet ordinals.
+- 47–67% per-string-span-scanner self-time on dense-key losses
+  (distinct_values 61.9% / 63.1%; update_center 54.7% / 46.0%;
+  apache_builds 56.0% / 45.0%; per §3.2 table) — unchanged; classified
+  as the `per-string-span scanner` primitive class realised by the
+  JSON `string_tiny_scan` variant.
+- y_string_unicode `read_hex_unit_scalar` + `hex_nibble` 38.2% / 43.9%
+  bottleneck (§3.2 last bullet, §3.5) — unchanged; classified as the
+  `escape_codec_hex_unit` primitive class with full cross-grammar
+  parameter set.
+- Samply mode-I `dispatch_value` 95.6–99.6% falsified as
+  frame-pointer-coalescing artefact via xctrace DWARF inlined-frame
+  walk (§3.4) — unchanged.

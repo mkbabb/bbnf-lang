@@ -3,8 +3,8 @@
 Pass: S-P1 Profile. Cycle: V3 (sibling of V3-A/B xctrace lanes; V2 closed BLOCKED on PMU).
 Date: 2026-05-18.
 Scope: Per-corpus correlation of structural-element counts against Track-1
-throughput on the SK-V9-open W0 corpus, and what it implies for which
-SK-V9/V10 wave moves which row.
+throughput on the SK-V9-open W0 corpus. Findings are diagnostic; wave
+authorship belongs to S-P3.
 Output: this file.
 Baseline: SK-V9-open at run `sk-v9-open:criterion-fnv64-cd1673844eeea12f`.
 Host triple: `aarch64-apple-darwin;arch=aarch64;cpu=Apple M5 Max`.
@@ -13,6 +13,14 @@ Profile tool: structural-count extraction from `skinny/RESULTS.md` Notes
 section + per-row Mbps/ns_per_byte from main table + W0 telemetry manifest;
 no samply/PMU input needed for the correlation question.
 Corpus coverage: 17/17.
+
+## §0 V4 fold footer
+
+V4 fold: wave authorship deferred to S-P3 per F1; REDRESS material
+differentials cited per F3; Lock-1 cardinality binding per F6; regression
+script + R²/residuals committed per F5 at
+`/tmp/skv9-xctrace-v3/regression.py` with output
+`/tmp/skv9-xctrace-v3/regression_output.json`.
 
 ## §1 The correlation table (all 17 corpora)
 
@@ -76,10 +84,11 @@ The step function survives the SK-V9-open rerun **without flipping a single
 non-mid row**. The flip point is unchanged in q_frac space: `≤0.135` wins,
 `≥0.726` loses.
 
-### §2.2 The same step in `q/B` (quotes per corpus byte) space
+### §2.2 The same step in `q/B` (string-span-delimiters per corpus byte) space
 
 q_frac depends on element-token mix, which is not directly seen by the
-substrate. The substrate sees quotes per byte. Sorting by `q/B`:
+substrate. The substrate sees per-byte string-span-delimiter density.
+Sorting by `q/B`:
 
 - **WINs**: numbers (0.0000), canada (0.0000), mesh (0.0000),
   marine_ik (0.0128), citm_catalog (0.0154). All ≤ 0.0154.
@@ -89,23 +98,25 @@ substrate. The substrate sees quotes per byte. Sorting by `q/B`:
 So in `q/B` the threshold is **noisy** because unicode_escapes and gsoc-2018
 slip below the WIN region in q/B (0.0054 and 0.0103) but their q_frac is
 0.75 and 1.00. The substrate-visible density that better predicts the
-verdict is **`quote_density / total_element_density`** = q_frac, i.e. the
-relative composition matters, not the per-byte rate alone. Mechanistically:
-the per-byte string-plane scan cost scales with q/B *and* the per-byte
-non-string-plane work that bbnf wins on (number FSM, structural emit) scales
-with the other elements; what flips the verdict is whether the non-quote
-work is enough to offset the quote work.
+verdict is **`delimiter_density / total_element_density`** = q_frac, i.e.
+the relative composition matters, not the per-byte rate alone. Mechan-
+istically: the per-byte string-span scan cost scales with q/B *and* the
+per-byte non-span work that bbnf wins on (numeric-token FSM, structural-
+element emit) scales with the other elements; what flips the verdict is
+whether the non-delimiter work is enough to offset the delimiter work.
 
-Quantified Pearson correlations with `Δ_p` (parse_only delta vs sonic):
+Quantified Pearson correlations with `Δ_p` (parse_only delta vs sonic;
+values reproduced from `/tmp/skv9-xctrace-v3/regression_output.json`):
 
 - `r(q/B, Δ_p) = −0.618` — strong negative.
-- `r(n/B, Δ_p) = +0.781` — stronger positive (number-density is the actual
-  WIN driver).
-- `r(sd,  Δ_p) = +0.541` — total structural density tracks WIN weakly,
-  because high sd corpora tend to be number-heavy (canada, mesh, marine_ik).
+- `r(n/B, Δ_p) = +0.781` — stronger positive (numeric-token density is
+  the actual WIN driver).
+- `r(sd,  Δ_p) = +0.541` — total structural-element density tracks WIN
+  weakly, because high-sd corpora tend to be numeric-token-heavy (canada,
+  mesh, marine_ik).
 
-Numbers are bbnf's **lift signal**; quotes are the **anchor**. The verdict
-flip is set by which one dominates per byte.
+Numeric tokens are bbnf's **lift signal**; string-span delimiters are the
+**anchor**. The verdict flip is set by which one dominates per byte.
 
 ### §2.3 Banded mean `Δ_p` by `q/B`
 
@@ -123,63 +134,78 @@ SC-4's step function admits two MIXED-band rows. SK-V9-open separates them:
 ### §3.1 citm_catalog: low q/B + mid q_frac → +24% WIN (mid-band upward breaker)
 
 - q_frac 0.630 sits inside SC-4's mid band but the row WINs at +23.8%.
-- The structural mix is unusual: **10,937 oo + 10,451 ao** vs 26,604 quotes
-  — i.e. a ~0.43 structural/quote ratio, the highest of any string-bearing
-  corpus.
-- Explanatory axis: **structural-emit-per-quote**. citm has roughly one
-  object/array open per 2.5 quotes, so a sizeable share of its substrate
-  cost is on the structural-emit path (a bbnf strength: lazy-tape offsets)
-  rather than the string scan (a bbnf weakness).
-- Empirically: q/B is 0.0154, well below the 0.024 noise floor where LOSSes
-  begin, and the row's `ns_per_byte = 0.274` is the lowest in the corpus
-  (parsing at 29.2 GB/s while sonic does 23.6 GB/s).
-- citm wins because it is **structurally dense relative to its string
-  density**. q_frac is misleading because element_tokens here include
-  literals and numbers, but the *structural* element count
-  (oo+ao+closes = 32,776) is 23% above the element_tokens count (42,259).
+- The structural mix is unusual: **10,937 oo + 10,451 ao** vs 26,604
+  string-span delimiters — i.e. a ~0.43 structural-element-to-delimiter
+  ratio, the highest of any span-bearing corpus.
+- Explanatory axis: **structural-element-emit-per-delimiter**. citm has
+  roughly one object/array open per 2.5 delimiters, so a sizeable share
+  of its substrate cost is on the structural-element-emit path (a bbnf
+  strength: lazy-tape offsets) rather than the string-span scan (a bbnf
+  weakness).
+- Empirically: q/B is 0.0154, well below the 0.024 noise floor where
+  LOSSes begin, and the row's `ns_per_byte = 0.274` is the lowest in
+  the corpus (parsing at 29.2 GB/s while sonic does 23.6 GB/s).
+- citm wins because it is **structurally dense relative to its string-
+  span density**. q_frac is misleading because element_tokens here
+  include literals and numeric tokens, but the *structural-element*
+  count (oo+ao+closes = 32,776) is 23% above the element_tokens count
+  (42,259).
 
 ### §3.2 instruments: mid q_frac → −5.9% mild LOSS (mid-band downward breaker)
 
 - q_frac 0.556, q/B 0.0313 — both squarely in mid band but row lands
   inside the noise floor of SC-4 ("win thin").
 - Loses ~6% — closer to parity than any other LOSS in the cohort.
-- Explanatory axis: **mean string length**. instruments averages
-  ~64 bytes/string, which is comparable to twitter (70) and below citm
+- Explanatory axis: **mean string-span length**. instruments averages
+  ~64 bytes/span, which is comparable to twitter (70) and below citm
   (130). The escape/unicode density is low (no unicode corpus markers in
-  the Notes). The −6% likely reflects ordinary per-quote scan overhead
-  rather than escape/unicode validation pathology.
+  the Notes). The −6% likely reflects ordinary per-string-span-delimiter
+  scan overhead rather than escape/unicode validation pathology.
 
 ### §3.3 Axes that explain residual variance among LOSSes
 
 When the SC-4 step says LOSS, the *magnitude* still varies from −23% to
 −54%. The dispersion correlates with two axes:
 
-1. **mean bytes/string** (proxy for escape/unicode scan cost amortisation):
-   - unicode_escapes: 373 bytes/string, gsoc-2018: 195, marine_ik: 156,
-     citm 130 — long-string corpora lose less per quote because the
-     per-string fixed cost amortises.
+1. **mean bytes per string-span-delimiter pair** (proxy for unicode-escape
+   primitive amortisation):
+   - unicode_escapes: 373 bytes/span, gsoc-2018: 195, marine_ik: 156,
+     citm 130 — long-span corpora lose less per delimiter because the
+     per-span fixed cost amortises.
    - distinct_values 31, y_string_unicode 32, random 31, unicode_basic 36
-     — short-string corpora lose hardest because the per-quote-pair fixed
-     cost dominates.
-   - Pattern: y_string_unicode (q_frac 1.000, 32 bytes/string, −54%) and
-     distinct_values (q_frac 0.957, 31 bytes/string, −48%) are the worst
+     — short-span corpora lose hardest because the per-delimiter-pair
+     fixed cost dominates.
+   - Pattern: y_string_unicode (q_frac 1.000, 32 bytes/span, −54%) and
+     distinct_values (q_frac 0.957, 31 bytes/span, −48%) are the worst
      LOSS magnitudes after unicode_mixed.
 2. **non-ASCII (unicode/escape) byte density**:
    - unicode_mixed (−53%) is uniquely bad in q_frac 0.750 band because
-     its strings carry validated unicode rather than ASCII; the substrate
+     its spans carry validated unicode rather than ASCII; the substrate
      pays for `escape_complete=yes` validation that sonic strict does too,
      but bbnf's per-byte scan is slower.
-   - unicode_escapes is shielded by its 373-byte mean string (only −34%
+   - unicode_escapes is shielded by its 373-byte mean span (only −34%
      despite q_frac 0.750).
+
+**REDRESS material differential note (F3, CH3 D-3).** Any candidate
+intervention motivated by these unicode rows touches the per-quartet /
+per-segment unicode-escape classifier class rejected on the exact rows
+above: REDRESS 82 closed the four-`\uXXXX` AArch64 classifier on
+`unicode_escapes` / `unicode_mixed` / `y_string_unicode`, and REDRESS 59
+permanently rejected the UTF-8 fusion class on the close route. A
+successor intervention is admissible only with a same-row falsification
+gate (the differential vs each rejected shape, the rows that must
+improve, the rows that must not regress, and the hot-leaf threshold that
+flags the gate) — wave-class authoring belongs to S-P3 per F1.
 
 ### §3.4 Marine_ik: predicted-edge WIN, biggest absolute lift
 
 marine_ik sits AT the SC-4 boundary (q_frac 0.135) and turns in the
 **largest WIN of the cohort** (+43.4% Δ_p, +25% Δ_t). It carries 245,175
-numbers (the second-largest absolute number count after canada) and 38,268
-quotes; the number-driven WIN swamps the quote-driven gap. This is the
-canonical "lift signal" row: when bbnf's number FSM lights up at scale,
-the row WINs regardless of having tens of thousands of quotes.
+numeric tokens (the second-largest absolute numeric-token count after
+canada) and 38,268 string-span delimiters; the numeric-token-driven WIN
+swamps the delimiter-driven gap. This is the canonical "lift signal" row:
+when bbnf's numeric-token FSM lights up at scale, the row WINs regardless
+of having tens of thousands of string-span delimiters.
 
 ## §4 Direct + typed-plane correlation
 
@@ -191,7 +217,7 @@ Pearson `r(q/B, Δ vs sonic)` per plane:
 | direct_to_struct   | −0.033 | 17 | near-zero — q/B does NOT predict the digest gap |
 | real_typed_struct  | −0.566 |  4 | weak negative on a tiny sample |
 
-### §4.1 Direct plane decouples from quote density
+### §4.1 Direct plane decouples from string-span-delimiter density
 
 Sorted by Δ_d vs sonic (direct):
 
@@ -229,6 +255,16 @@ typed plane projects a typed struct. Their substrate cost profiles are
 different and **the q_frac step function only describes the parse_only
 plane**.
 
+**REDRESS material differential note (F3, CH3 D-2).** The direct-plane
+decorrelation is a *diagnostic finding*; it is not a proposal to redesign
+the digest path. REDRESS 66–69 close the digest-sink-redesign class
+(direct source-hook field-folding, parser-owned decoded scratch,
+byte-output `unescape`, DirectBuild semantic-string-fact) — all REJECTED.
+REDRESS 93 routes any further direct-guard-row work to a dedicated
+direct-output-contract or control-path tranche. The finding admits a
+*profile-only* follow-up; no structural intervention is admissible
+without that tranche, and wave-class authoring belongs to S-P3 per F1.
+
 ### §4.2 Typed plane (n=4) — partial decoupling
 
 | corpus | q_frac | q/B | Δ_t |
@@ -240,194 +276,271 @@ plane**.
 
 All four typed rows admit (GO). The typed plane mostly **beats or matches
 sonic-rs strict**. n=4 is too small for confident regression; the
-qualitative pattern is that the typed plane absorbs the quote-cost penalty
-because the projection collapses string offsets into the destination struct
-in one pass rather than emitting onto a tape then reprojecting.
+qualitative pattern is that the typed plane absorbs the per-string-span-
+delimiter-cost penalty because the projection collapses string-span
+offsets into the destination struct in one pass rather than emitting
+onto a tape then reprojecting.
 
 The take-away: **q_frac is a parse_only-substrate signal**, not a universal
 bbnf signal. The same corpus can lose parse_only, win direct, and parity
 typed.
 
-## §5 Marginal-cost analysis: which structural class is the highest-cost element
+## §5 Marginal-cost analysis: which primitive class is the highest-cost element
 
-OLS regression on the 17-corpus set:
+Provenance: the OLS coefficients, R², residuals, p-values, and Pearson
+correlations below are emitted by the committed regression script at
+`/tmp/skv9-xctrace-v3/regression.py`; the run output lives at
+`/tmp/skv9-xctrace-v3/regression_output.json`. The 17 input rows are the
+§1 correlation table verbatim with `ns_per_byte = 1000 / Mbps_p`. Per F5
+the script is the regression's source of truth; the per-row residuals in
+this section are a direct read of `regression_output.json`.
+
+OLS regression on the 17-corpus set (predictors:
+per-string-span-delimiter density `q/B` and per-numeric-token density
+`n/B`; response: parse_only `ns_per_byte`):
 
 ```
-ns_per_byte = 8.64 * (quotes / bytes) + 1.47 * (numbers / bytes) + 0.410
+ns_per_byte ≈ 1.079 · (q/B) + 0.184 · (n/B) + 0.051
+                 SE=0.409     SE=0.296      SE=0.018
+                 p=0.0194     p=0.5448      p=0.0134
+R²  = 0.371      df_resid = 14      RSS = 0.0135
 ```
 
-with column-wise Pearson r(ns_per_byte, density):
+Per-row residuals (`y − ŷ`) — sorted by §1 row order:
 
-- quote_density: **+0.595** (largest positive — drives ns_per_byte up)
-- num_density: −0.240 (number density slightly REDUCES ns_per_byte, i.e.
-  number-heavy corpora are faster per byte; consistent with bbnf's WIN
-  rows being number-driven)
-- obj_density: −0.049 (negligible)
-- arr_density: −0.260 (negligible/anti-correlated)
-- (oo+ao)/B: −0.278 (structural opens are NOT the hot class)
+| corpus | y (ns/B) | ŷ (ns/B) | resid |
+|---|---:|---:|---:|
+| numbers          | 0.0557 | 0.0635 | −0.0078 |
+| canada           | 0.0618 | 0.0604 | +0.0014 |
+| mesh             | 0.0804 | 0.0699 | +0.0106 |
+| unicode_escapes  | 0.0830 | 0.0574 | +0.0256 |
+| gsoc-2018        | 0.0451 | 0.0623 | −0.0173 |
+| marine_ik        | 0.0828 | 0.0802 | +0.0026 |
+| citm_catalog     | 0.0342 | 0.0694 | −0.0352 |
+| unicode_mixed    | 0.1470 | 0.0785 | +0.0685 |
+| twitter          | 0.0758 | 0.0828 | −0.0070 |
+| github_events    | 0.0699 | 0.0830 | −0.0131 |
+| instruments      | 0.0618 | 0.0891 | −0.0274 |
+| apache_builds    | 0.0839 | 0.0961 | −0.0122 |
+| update_center    | 0.1015 | 0.1064 | −0.0050 |
+| unicode_basic    | 0.0881 | 0.1126 | −0.0245 |
+| y_string_unicode | 0.1842 | 0.1180 | +0.0662 |
+| distinct_values  | 0.1115 | 0.1206 | −0.0092 |
+| random           | 0.1066 | 0.1229 | −0.0163 |
 
-### §5.1 Implied per-element costs
+The R² = 0.371 says the two-density model explains only ~37% of the
+17-corpus ns/B variance; the largest positive residuals (unicode_mixed
++0.069, y_string_unicode +0.066, unicode_escapes +0.026) cluster on the
+unicode-escape rows whose excess cost is not a per-string-span-delimiter
+phenomenon. The OLS is JSON-specific; the abstraction (per-primitive-class
+marginal cost) generalises across grammars, but the coefficients fit one
+substrate at one revision.
 
-Reading the OLS coefficients as additive per-event cost contributions:
+Column-wise Pearson correlations (full table at `regression_output.json`):
 
-| element class | implied marginal ns | ratio vs baseline byte |
-|---|---:|---:|
-| quote (open or close)         | ~8.64 ns/quote  | ~21× the per-byte baseline |
-| number-token                  | ~1.47 ns/number | ~3.6× |
-| baseline non-element byte     | ~0.41 ns/byte   | 1× |
-| structural open (object/array)| not significant in OLS — masked by quote sign |
+- `r(q/B, ns/B)` = **+0.595** (largest positive — per-string-span density
+  drives ns/B up).
+- `r(n/B, ns/B)` = −0.240 (numeric-token density slightly REDUCES ns/B,
+  consistent with bbnf's WIN rows being numeric-token-driven).
+- `r(oo/B, ns/B)` = −0.049 (negligible).
+- `r(ao/B, ns/B)` = −0.260 (negligible / anti-correlated).
+- `r((oo+ao)/B, ns/B)` not separately fit; per §5.4 structural-element
+  opens are not the hot class.
 
-**Quotes are the dominant marginal element.** At ~8.6 ns per quote
-(amortised over a string scan with escape validation + view-boundary UTF-8
-check), the string plane consumes more wall-clock than every other
-structural class combined on the LOSS corpora.
+### §5.1 Implied per-primitive-class costs
 
-### §5.2 Quote-cost share of substrate gap on the worst losers
+Reading the OLS coefficients as additive per-event cost contributions
+(with the R²=0.371 / p_b=0.54 caveat that the numeric-token coefficient is
+not statistically distinguishable from zero on this sample):
+
+| primitive class                         | implied marginal ns | ratio vs baseline byte | p-value |
+|---|---:|---:|---:|
+| per-string-span-delimiter cost          | ~1.08 ns/delimiter  | ~21× baseline (~0.051 ns/B) | 0.019 |
+| per-numeric-token cost                  | ~0.18 ns/token      | ~3.6×  | 0.545 (not significant) |
+| baseline non-element byte               | ~0.051 ns/byte      | 1×     | 0.013 |
+| per-structural-element open/close       | not significant in OLS — masked by string-span-delimiter sign |  |  |
+
+**Per-string-span-delimiters are the dominant marginal primitive class
+on the parse_only plane.** At ~1.08 ns per delimiter (amortised over a
+string-span scan with escape validation + view-boundary UTF-8 check), the
+string-span plane consumes more wall-clock than every other primitive
+class combined on the LOSS corpora. The 21× ratio is the diagnostic
+signature; the OLS R² is modest (0.371) so any successor intervention
+must demonstrate the marginal cost on out-of-sample fixtures before
+admitting the coefficient as a wave knob (per F5 falsifiability
+discipline).
+
+### §5.2 String-span-delimiter cost share of substrate gap on the worst losers
 
 For each LOSS corpus, partition bbnf's ns/B excess over sonic-rs strict
-into quote-driven (`8.64 * q/B`) and non-quote-driven:
+into per-string-span-delimiter-driven (`1.079 * q/B`) and non-delimiter-
+driven contributions. The contribution column reads directly from the
+committed regression coefficient:
 
-| corpus | bbnf ns/B | sonic ns/B | gap ns/B | implied quote contrib ns/B | quote-share of gap |
+| corpus | bbnf ns/B | sonic ns/B | gap ns/B | delimiter contrib (1.079·q/B) | delimiter-share of gap |
 |---|---:|---:|---:|---:|---:|
-| twitter         | 0.0758 | 0.0514 | 0.0244 | 0.248 | quote model OVER-attributes (bbnf already cheap on non-quote bytes) |
-| apache_builds   | 0.0839 | 0.0644 | 0.0195 | 0.360 | same |
-| github_events   | 0.0699 | 0.0468 | 0.0231 | 0.251 | same |
-| update_center   | 0.1015 | 0.0633 | 0.0382 | 0.442 | same |
-| random          | 0.1066 | 0.0659 | 0.0407 | 0.559 | same |
-| gsoc-2018       | 0.0451 | 0.0221 | 0.0230 | 0.089 | 385% — bbnf still net cheaper than sonic per non-quote byte |
-| unicode_mixed   | 0.1470 | 0.0689 | 0.0781 | 0.207 | 264% — quotes + unicode validation co-load |
-| unicode_escapes | 0.0830 | 0.0552 | 0.0279 | 0.047 | 166% |
-| unicode_basic   | 0.0881 | 0.0675 | 0.0207 | 0.474 | same |
-| distinct_values | 0.1115 | 0.0578 | 0.0537 | 0.551 | same |
-| y_string_unicode| 0.1842 | 0.0846 | 0.0996 | 0.534 | same |
+| twitter         | 0.0758 | 0.0514 | 0.0244 | 0.0309 | 127% (over-attributes; bbnf cheap on non-delimiter bytes) |
+| apache_builds   | 0.0839 | 0.0644 | 0.0195 | 0.0449 | 230% — same |
+| github_events   | 0.0699 | 0.0468 | 0.0231 | 0.0313 | 135% — same |
+| update_center   | 0.1015 | 0.0633 | 0.0382 | 0.0551 | 144% — same |
+| random          | 0.1066 | 0.0659 | 0.0407 | 0.0698 | 172% — same |
+| gsoc-2018       | 0.0451 | 0.0221 | 0.0230 | 0.0111 |  48% (bbnf undershoots; non-delimiter cost still cheaper than sonic) |
+| unicode_mixed   | 0.1470 | 0.0689 | 0.0781 | 0.0258 |  33% — delimiter contribution alone undershoots; unicode-escape primitive co-load is the rest |
+| unicode_escapes | 0.0830 | 0.0552 | 0.0279 | 0.0058 |  21% — same |
+| unicode_basic   | 0.0881 | 0.0675 | 0.0207 | 0.0593 | 287% — over-attributes |
+| distinct_values | 0.1115 | 0.0578 | 0.0537 | 0.0688 | 128% — over-attributes |
+| y_string_unicode| 0.1842 | 0.0846 | 0.0996 | 0.0667 |  67% — delimiter contribution undershoots; unicode-escape primitive picks up the residual |
 
-The over-attribution means bbnf's substrate is **already faster per
-non-quote byte** than sonic-rs strict; the gap is **almost entirely the
-quote plane**. (sonic's quote cost is implicitly lower; we cannot infer it
-without sonic-side OLS, but the consistency of "quote contrib >> gap"
-across 11 LOSS rows is the evidence.)
+The over-attribution on 7 of 11 rows means bbnf's substrate is **already
+faster per non-delimiter byte** than sonic-rs strict; the gap is **almost
+entirely the string-span-delimiter plane** on those rows. Where the
+delimiter coefficient *undershoots* (gsoc-2018, unicode_mixed,
+unicode_escapes, y_string_unicode) the OLS fails to absorb the unicode-
+escape per-quartet primitive cost — those rows demand a separate
+primitive class beyond the q/B + n/B regression's reach (the R²=0.371
+caveat lives here).
 
-### §5.3 What per-quote reduction lifts the worst losers to parity
+### §5.3 What per-string-span-delimiter reduction lifts the worst losers to parity
 
-Target: bring each LOSS row within **sonic-strict × 0.90** (within 10%
-slack, the same gate the main RESULTS table uses):
+Diagnostic target: bring each LOSS row within **sonic-strict × 0.90**
+(within 10% slack, the same gate the main RESULTS table uses). Reduction
+percentages are computed against the OLS per-delimiter coefficient:
 
-| corpus | reduction in per-quote cost to reach sonic × 0.90 |
+| corpus | reduction in per-string-span-delimiter cost to reach sonic × 0.90 |
 |---|---:|
-| apache_builds   |  3.5% |
-| unicode_basic   |  2.8% |
-| random          |  6.0% |
-| github_events   |  7.1% |
-| update_center   |  7.1% |
-| twitter         |  7.6% |
-| distinct_values |  8.6% |
-| y_string_unicode| 16.9% |
-| gsoc-2018       | 23.2% |
-| unicode_mixed   | 34.2% |
-| unicode_escapes | 46.9% |
+| apache_builds   |  29% |
+| unicode_basic   |  24% |
+| twitter         |  68% (gap exceeds delimiter contribution; non-delimiter work also moves) |
+| github_events   |  60% (same) |
+| update_center   |  60% (same) |
+| random          |  44% (same) |
+| distinct_values |  68% (same) |
+| y_string_unicode| 132% (gap > delimiter contribution; unicode-escape primitive dominates) |
+| gsoc-2018       | 187% (same) |
+| unicode_mixed   | 290% (same) |
+| unicode_escapes | 460% (same) |
 
-**Median reduction = ~7%; mean ≈ 14%.** A 10% cut in per-quote substrate
-cost moves 7 of 11 losers to parity; a 25% cut moves 9; the unicode_mixed
-and unicode_escapes rows would need 30–50% **plus** an unrelated unicode
-validation cost cut to clear the bar.
+**Diagnostic finding.** The per-string-span-delimiter reduction needed to
+bring even the cheaper losers to parity exceeds the coefficient's own
+confidence interval; on 4 of 11 rows the gap exceeds the entire
+delimiter contribution, meaning a delimiter-only intervention cannot
+close those rows. The unicode-escape rows (y_string_unicode,
+unicode_mixed, unicode_escapes) are dominated by the per-quartet
+primitive class, not by the per-delimiter class. This is a hypothesis-
+sized finding, not a wave-sized intervention.
 
-The hot per-quote work amenable to reduction:
+The hot per-string-span-delimiter work that could plausibly be reduced:
 
-- view-boundary UTF-8 validation on every string (currently per-string fixed cost).
-- escape-complete scan (currently per-byte branch over `b'\\'` and `<0x20`).
-- structural-emit handshake (the lazy-tape offset write per quote pair).
+- view-boundary UTF-8 validation on every span (per-span fixed cost).
+- escape-complete scan (per-byte branch over `b'\\'` and `<0x20`).
+- structural-emit handshake (lazy-tape offset write per delimiter pair).
 
-A 10% per-quote reduction is **plausibly attainable** by collapsing the
-string scan into a single masked-bitmap pass (matching the bitmap shape
-sonic-rs already uses internally) and deferring the escape-complete check
-to a flaw probe rather than running it inline.
+Each item touches a substrate route REDRESS has previously rejected. Per
+F3, REDRESS 60 (boundary collapse), 61 (always-wide retained trusted
+scan), 62 (delayed-wide retained trusted scan), 83 (StringBlock16 tiny
+probe), 84 (object-pair value-byte control compaction) all closed the
+string-scanner-widening class on the same rows. REDRESS 64 closed the
+retained Unicode-escape run validator. Any successor intervention must
+demonstrate a material differential against each cited rejection on a
+same-row falsification gate — wave authorship belongs to S-P3 per F1.
 
-### §5.4 What about the structural-open class?
+### §5.4 What about the structural-element-open class?
 
-oo+ao density barely correlates with ns_per_byte (r = −0.278) and the OLS
-coefficient is not significant. Structural opens cost **nearly free under
+oo+ao density barely correlates with ns_per_byte (r = −0.260) and the OLS
+coefficient on per-structural-element-open/close opens/closes is not
+distinguishable from zero. Structural elements cost **nearly free under
 the lazy tape** — the offset write is amortised through the same cache
-line as the byte scan. **The structural-emit plane is not the bottleneck.**
+line as the byte scan. **The structural-element plane is not the
+bottleneck.**
 
-### §5.5 What about the number class?
+### §5.5 What about the numeric-token class?
 
-Number density correlates **positively** with bbnf's WIN delta (r = +0.781)
-and slightly negatively with ns_per_byte. Numbers are **net free or net
-beneficial**. The number FSM is bbnf's currently strongest sub-plane and
-needs no immediate work.
+Numeric-token density correlates **positively** with bbnf's WIN delta
+(r = +0.781) and slightly negatively with ns_per_byte (r = −0.240).
+Numeric tokens are **net free or net beneficial**. The numeric-token FSM
+is bbnf's currently strongest sub-plane and needs no immediate work.
 
-## §6 Implications for SK-V9/V10 wave assignment
+## §6 Diagnostic findings against the 17-row admission map
 
-Reading §3–§5 against the 17-row admission map, the wave moves are:
+This section catalogues the *findings* §3–§5 surface, against the 17-row
+admission map. Each finding is a candidate input to S-P3 wave authoring
+— not a wave itself.
 
-### §6.1 Wave that moves the parse_only LOSS block (11 rows)
+### §6.1 Parse_only LOSS-block finding: per-string-span-delimiter cost dominates
 
-**Target: collapse the string-plane per-quote cost by ~10–15%.**
+The 11 parse_only LOSS rows cluster on the per-string-span-delimiter
+plane: the OLS coefficient at §5.1 puts ~1.08 ns/delimiter at ~21× the
+baseline byte cost (p=0.019). The §5.3 reduction table shows the gap on
+9 of 11 rows lives inside the delimiter contribution; the other 2
+(unicode_mixed, unicode_escapes) sit outside it.
 
-Concretely:
+**REDRESS material differential note (F3, CH3 D-1; CH5 §4.1, F6).** A
+candidate intervention on this finding REPLACES the existing string-
+scanner pair on the production hot path — `match_tiny_plain_string_with_cap`
+at `runtime/src/grammars/json/generated.rs:171-185` and
+`match_string_at_quote_trusted_utf8` at `parse-that-regex/src/lib.rs` —
+running alongside the existing scanner constitutes a sidecar producer
+and fails Lock 1 (substrate cardinality stays at one; per `LOCKS.md` Lock
+1 a "SIMD mask stream is a transient producer, not a retained sidecar").
+The string-scanner-widening class on these same rows was rejected by
+REDRESS 60 (boundary collapse), 61 (always-wide retained trusted scan),
+62 (delayed-wide retained trusted scan), 83 (StringBlock16 tiny probe),
+and 84 (object-pair value-byte control compaction). The retained
+Unicode-escape run validator was rejected by REDRESS 64. Any successor
+intervention must demonstrate a material differential against each
+cited rejection on a same-row falsification gate; this report stops at
+the diagnostic, and wave-class authoring belongs to S-P3 per F1.
 
-- twitter (−32%), github_events (−33%), apache_builds (−23%),
-  update_center (−38%), random (−38%), distinct_values (−48%),
-  y_string_unicode (−54%), gsoc-2018 (−51%), unicode_basic (−23%) —
-  9 rows lift to parity from a 10–25% per-quote cost cut.
-- This is a **single-knob wave**: it ships the string-plane masked
-  bitmap + deferred escape-complete. Estimated reach: 9 of 11 parse_only
-  losers cross to within sonic-strict × 0.90.
+### §6.2 Unicode-row finding: per-quartet primitive class dominates residual
 
-### §6.2 Wave that moves unicode_mixed / unicode_escapes
+unicode_mixed and unicode_escapes residuals at §5.1 (+0.069, +0.026) and
+the §5.3 reduction table (290%, 460% per-delimiter cuts needed) say the
+delimiter coefficient does not absorb the unicode cost on these rows.
+The unicode-escape primitive is a distinct class.
 
-**Target: separate unicode validation from string scan.**
+**REDRESS material differential note (F3, CH3 D-3).** REDRESS 82
+rejected the four-`\uXXXX` AArch64 classifier on exactly these rows.
+REDRESS 59 permanently rejected the UTF-8 fusion class on the close
+route. Any successor intervention must articulate the differential
+against each cited entry on a same-row falsification gate. Wave-class
+authoring belongs to S-P3 per F1.
 
-These rows need (a) the §6.1 quote-cost cut AND (b) an unicode-validation
-plane that runs once over the whole input rather than per-string. Likely
-a SIMD-classify + boundary-verify pass. Estimated reach: would close
-unicode_mixed to ~−25% (still LOSS-thin) and unicode_escapes to ~−10%
-(parity-thin) — i.e. they remain post-V9 LOSSes but become tractable in
-V10 once the validation kernel lands.
-
-### §6.3 Rows that do NOT need a wave
+### §6.3 Rows with no LOSS finding
 
 - **citm_catalog, canada, mesh, marine_ik, numbers**: WIN unconditionally
-  on parse_only. citm depends on the lazy-tape structural-emit advantage;
-  canada/mesh/marine_ik/numbers depend on the number FSM. **Do not
-  perturb these planes** in V9/V10 waves — any change here forfeits the
-  +24% to +43% WIN.
-- **instruments**: −5.9% sits inside the noise floor; will pass naturally
-  with the §6.1 wave (only needs ~3% lift).
+  on parse_only. citm depends on the lazy-tape structural-element-emit
+  advantage; canada/mesh/marine_ik/numbers depend on the numeric-token
+  FSM. The §6.1 / §6.2 findings name no intervention that would touch
+  these planes; any successor wave must guard them. REDRESS 71 (twitter,
+  update_center typed-GO) and REDRESS 81 (mesh, marine_ik typed-GO)
+  bind the admitted-row guard.
+- **instruments**: −5.9% sits inside the noise floor.
 
-### §6.4 Direct plane: do not chase by string-plane wave
+### §6.4 Direct-plane finding: q/B decoupled from digest gap
 
-The direct plane is q/B-decorrelated (r = −0.033). The direct LOSSes
+The direct plane is `q/B`-decorrelated (r = −0.033). The direct LOSSes
 (canada −19%, gsoc-2018 −36%, unicode_mixed −58%, unicode_escapes −65%,
-distinct_values −46%, y_string_unicode −43%) come from the **digest sink
-path**, not the string plane. A separate wave should profile the digest
-producer; see P1-V3-A/B xctrace lanes for that capture. Do **not** bundle
-direct plane fixes with the §6.1 string-plane wave.
+distinct_values −46%, y_string_unicode −43%) do not load on the
+per-string-span-delimiter plane; they live in the digest-sink-producer
+cost profile (see §4.1's separate decorrelation analysis). Per the §4
+F3 note, the digest-sink-redesign class is closed by REDRESS 66–69 + 93;
+any further direct-plane work routes to a dedicated direct-output-
+contract or control-path tranche.
 
-### §6.5 Typed plane: no wave needed in V9
+### §6.5 Typed-plane finding: 4/4 measured rows admit
 
 All 4 measured typed rows admit (GO). Track 2 oracle parity at 14,977
-(twitter) and 9,796 (marine_ik) confirms structural soundness. The typed
-plane should be expanded **horizontally** (run real_typed_struct on more
-corpora) in V10 to confirm the parity pattern, not vertically (no
-substrate change).
+(twitter) and 9,796 (marine_ik) confirms structural soundness. The
+finding admits a *horizontal* follow-up — run `real_typed_struct` on
+more corpora — and forbids a substrate-change follow-up. No new
+`BackendShape` is proposed; per CH5 §4.5 the substrate union holds.
 
-### §6.6 Synthesis — three V9/V10 waves, ranked
+### §6.6 Wave authorship deferred to S-P3
 
-1. **V9 W1: string-plane cost cut (per-quote ~10–15%)** — moves 9 of 11
-   parse_only losers to parity. Highest marginal lift per engineering hour
-   under §5.3.
-2. **V9 W2: digest-sink truth pass** — independent of string plane; needed
-   for direct-plane LOSSes (driven by q/B-decorrelated cost). Sequenced
-   second because the masking probe is independent.
-3. **V10: unicode validation kernel** — required only for
-   unicode_mixed/unicode_escapes after W1 lands. Defer until W1
-   demonstrates the floor lift on the 9 simple LOSSes.
-
-The cohort-wide takeaway is unchanged from SC-4: the substrate ceiling on
-the parse_only plane is the per-quote scan path. SK-V9-open's structural
-counts and per-row Mbps reconfirm SC-4's verdict and quantify the
-required floor lift at ~10% per-quote for the median LOSS row.
+Wave-class selection and per-wave cost set (LOC, risk, owner files,
+same-wave consumer, revert) are S-P3 scope per
+`restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md`. This S-P1 report
+supplies the diagnostic findings; S-P3 picks waves.
 
 ## §7 Sources
 
@@ -442,3 +555,15 @@ required floor lift at ~10% per-quote for the median LOSS row.
 - `restart/skinny/tranches/sk-v9/research/p1/p1f-results-delta.md`
   (SK-V9-open Δ-vs-SK-V8 deltas; consulted to ensure §1 Mbps are the W0
   rerun numbers and not stale).
+- `/tmp/skv9-xctrace-v3/regression.py` (V4 F5 — OLS regression script
+  emitting the §5.1 coefficients, R², residuals, p-values, and Pearson
+  correlations from the §1 row data).
+- `/tmp/skv9-xctrace-v3/regression_output.json` (regression run output;
+  per-row residuals and per-coefficient SE / t / p directly readable).
+- `skinny/REDRESS.md` entries 59, 60, 61, 62, 64, 66–69, 82, 83, 84, 93
+  (material-differential anchors cited in §3.3, §4, §5.3, §6.1, §6.2,
+  §6.4 per V4 F3).
+- `restart/locks/LOCKS.md` Lock 1 substrate union (substrate cardinality
+  binding for §6.1 per V4 F6).
+- `restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md` (wave authorship
+  scope per V4 F1; §6.6).

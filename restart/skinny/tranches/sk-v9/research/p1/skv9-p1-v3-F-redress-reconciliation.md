@@ -14,6 +14,14 @@ Disposition: propose-only.
 
 ---
 
+## §0 — V4 fold footer
+
+V4 fold: PASS-1-PROFILE edit dropped per orchestrator scope; edit-count
+reconciled; strictness-plane assertion explicit; SUPERSEDED reasoning
+expanded.
+
+---
+
 ## §1 — Contract Reconciliation: Does The Contract Admit xctrace c/B?
 
 ### §1.1 — Verbatim contract clauses
@@ -95,8 +103,8 @@ contract weakening is required.
 
 The current language is already correct but reads as if xctrace itself were
 the blocker rather than the host's missing Xcode. To preempt future
-misreading, add the following clarification near SPEC §4 and PASS-1-PROFILE
-§3 CH1 (propose-only — see §4 for diff shape):
+misreading, add the following clarification near SPEC §4 (propose-only —
+see §4.1 Edit I for diff shape):
 
 > Direct hardware-counter reads — `perf` on Linux, `xctrace` with the
 > `cpu-counters` template on macOS (full Xcode required), or privileged
@@ -106,11 +114,30 @@ misreading, add the following clarification near SPEC §4 and PASS-1-PROFILE
 > not tool-by-tool.
 
 This preserves the no-estimation discipline and is non-weakening; it only
-disambiguates the source surface.
+disambiguates the source surface. PASS-1-PROFILE.md amendments are Pass
+Omega scope per `ORCHESTRATOR.md` §7 (prompts are read-only contracts; only
+Pass Omega CRUD amends them post-G-Omega); the parallel PASS-1-PROFILE
+clarification is queued for Omega input, not SK-V9 dispatch.
 
 ---
 
 ## §2 — REDRESS Ledger Reconciliation Table
+
+**Strictness-plane assertion.** Every comparator delta carried into this
+reconciliation — the Apache/CITM measured-row references in REDRESS 91, the
+Canada scan-floor admit in REDRESS 56, the SK-V7 W0/W0b sonic-strict repair
+admits in REDRESS 77/78, the per-corpus direct-plane and parse-plane Δ
+values surfaced under §3 — is sourced from S-P1 evidence rows whose
+strictness plane is `strictness=strict, freshness=same-run-native` per the
+`SK-V9-open` manifest at `sk-v9-open:criterion-fnv64-cd1673844eeea12f`.
+Sidecar, permissive, `utf8_lossy`, or cross-run rows appear in REDRESS only
+as flaw-probe artefacts (REDRESS 75 sonic `utf8_lossy` ineligibility; REDRESS
+77 strict-feature repair predicate) and are explicitly NOT treated as
+behavior-admission ancestors in any STILL-LOAD-BEARING entry. The
+strict-vs-strict-same-run discipline holds across V3 evidence: V3 P1-V3-A
+PMU rows, P1-V3-B xctrace TP per-row tables, and P1-V3-D structural
+correlation all draw from the same `SK-V9-open` strict-plane rows; no
+permissive/sidecar comparator is consumed as truth anywhere in this manifest.
 
 Status vocabulary:
 
@@ -290,7 +317,53 @@ relevant.
 - SUPERSEDED: 7 entries (35, 36, 37, 38, 46, 49, 70) — each one closed by
   a later monotonic admission or rejection that owns the live constraint.
   Provenance lines remain in REDRESS unchanged; what changed is whether the
-  entry itself binds today.
+  entry itself binds today. Per-citation supersession-chain reasoning:
+    - **35** (Codegen lowerer scaffolding gap IDENTIFIED) → closed by **40**
+      (generated `SinkOnly` is Track 1 direct-to-struct), **48** (SinkOnly
+      lowerer consumes BIR), **71** (generated typed DirectBuild from
+      host/API schema ADMIT), and **81** (capacity-hinted numeric Vec
+      real-typed expansion ADMIT). The admits land the concrete generator
+      path the IDENTIFIED scaffolding gap diagnosed; 35's "gap" shape is a
+      diagnosis, the admit chain's shape is a delivered generator, so the
+      admits supersede the diagnosis without contradicting it.
+    - **36** (JSON-hardcoded scalar references in `bbnf-simd` IDENTIFIED) →
+      closed by **85** (Lock 14 Phase A+B neutralization ADMIT) and **86**
+      (Lock 14 Phase C+D codegen shell ADMIT). The admits neutralize the
+      grammar-name leaks and lock the fence; 36 diagnosed JSON-name presence
+      in a generic crate, the admits remove the JSON-name presence under the
+      Lock 14 fence, so the admits' fence shape supersedes the diagnosis.
+    - **37** (`bbnf-simd/src/lib.rs` JSON god-module status IDENTIFIED) →
+      closed by **85, 86** (same Lock 14 Phase A-D chain as 36). 37
+      diagnosed god-module structure; the admits refactor structure into the
+      generic-crate codegen shell, so the admits' codegen-shell shape
+      supersedes the god-module diagnosis.
+    - **38** (`crates/simd-scan/` fossil status IDENTIFIED) → superseded by
+      the SK-V6/V7 crate restructure (workspace member removed pre-SK-V7;
+      verified live at the filesystem layer per P1-V3-E §2.7 spot-check —
+      directory does not exist on disk). 38's fossil shape is "directory
+      exists, unused"; the restructure's shape is "directory removed", so
+      the restructure supersedes the diagnosis by deleting the artefact.
+    - **46** (Direct-number / context-sink redress) → superseded by **71**
+      (generated typed DirectBuild ADMIT covering mesh + marine_ik) and
+      **81** (capacity-hinted numeric Vec real-typed expansion ADMIT). 46's
+      shape is a context-sink number-redress proposal; 71/81's admits are
+      typed-path generators that land the direct-number outcome at row
+      level (`real_typed_struct A / GO` on numeric corpora), so the typed
+      admits supersede the context-sink proposal.
+    - **49** (Generated source-hook string ADMIT, direct) → superseded by
+      **66** (direct source-hook field-layout materializer REJECTED). 49's
+      admit retains the source-hook surface but 66 closes the field-layout
+      route that consumed it; class re-rejected by 66 means the surface
+      exists but the route is closed, so 66's class rejection supersedes
+      49's admit as the binding constraint (the admit is no longer a
+      forward producer).
+    - **70** (First `real_typed_struct` attempt REJECTED) → superseded by
+      **71** (generated typed DirectBuild from host/API schema ADMIT). 70's
+      reject shape is "first attempt failed on architectural grounds"; 71's
+      admit shape is "second attempt landed under the host/API schema
+      lesson", so 71's admit supersedes 70's reject as the binding
+      constraint (the architectural lesson is preserved in 70 but the
+      live producer is 71).
 - HISTORICAL: ~14 entries (preamble facts 1/3, 12, 24, 27, 29, 31, 44, 45,
   52, plus the three preamble bullets) — preserved for chain-of-evidence
   reading; live constraint owned elsewhere.
@@ -386,6 +459,15 @@ language and HANDOFF §2 / §4 — see §4 below).
 Diff-shaped. NOT applied here. All edits below assume the V3 sibling
 artefacts have committed and the V3 CHALLENGE consolidation is in flight or
 landed (P1-V3-F is one of the siblings; this report is its commit).
+
+**Edit count (V4-folded).** §4.1 SPEC.md enumerates 9 labelled Edit entries
+(A through I); Edit E is an explicit deferral decision (do not edit §0.3
+in this pass) and is not a surgical edit. Counting actual surgical edits:
+SPEC.md §4.1 = 8 (A, B, C, D, F, G, H, I); HANDOFF.md §4.2 = 6 (A-F);
+DISPATCH-PROMPT.md §4.3 = 5 (A-E). **Total: 19 actual surgical edits.** No
+edit proposes to amend `restart/prompts/skinny/PASS-1-PROFILE.md` or any
+other pass-prompt surface, since prompts are out of orchestrator scope per
+`ORCHESTRATOR.md` §7 (Pass Omega CRUD scope only).
 
 ### §4.1 — `restart/skinny/tranches/sk-v9/SPEC.md`
 
@@ -719,19 +801,26 @@ HANDOFF §5 for the full umbrella ledger).
 
 ### §4.4 — Edit set summary
 
-- **SPEC.md** — 8 surgical edits (status, authority, dispatch lock, §0.2
-  table, §1 non-negotiables clarifier, §2 manifest, §4 V3 path, §4
-  precision clause).
-- **HANDOFF.md** — 6 surgical edits (status, read-first, §2, §4 next-move,
-  §5 umbrella additions, §6 close posture).
-- **DISPATCH-PROMPT.md** — 5 surgical edits (preamble, required reading,
-  wave manifest, conditional release, always-blocked cross-ref).
+- **SPEC.md** — 8 surgical edits (Edits A, B, C, D, F, G, H, I: status,
+  authority, dispatch lock, §0.2 table, §1 non-negotiables clarifier, §2
+  manifest, §4 V3 path, §4 precision clause). Edit E in §4.1 is an explicit
+  deferral decision (do not amend §0.3 telemetry in this pass) and is
+  enumerated only for completeness; it is NOT a surgical edit.
+- **HANDOFF.md** — 6 surgical edits (Edits A-F: status, read-first, §2, §4
+  next-move, §5 umbrella additions, §6 close posture).
+- **DISPATCH-PROMPT.md** — 5 surgical edits (Edits A-E: preamble, required
+  reading, wave manifest, conditional release, always-blocked cross-ref).
 
-Total: 19 surgical edits across the three documents. Each is a paragraph- or
-list-level replacement; none touch source. None weaken the discipline; the
-edits update V2 BLOCKED language to V3 IN-FLIGHT language, add the V3
-evidence root by reference, and surface class umbrellas already in REDRESS
-but not in §5.
+Total: **19 actual surgical edits** across the three documents (8 + 6 + 5).
+The earlier V3 rollup that read "19" was numerically correct but reasoned
+under the wrong frame (it counted SPEC Edit E silently); the V4 fold
+reconfirms 19 by explicitly excluding the deferral as a non-edit. No edit
+crosses into `restart/prompts/` scope; PASS-1-PROFILE.md amendments are
+Pass Omega CRUD scope per `ORCHESTRATOR.md` §7. Each surgical edit is a
+paragraph- or list-level replacement; none touch source. None weaken the
+discipline; the edits update V2 BLOCKED language to V3 IN-FLIGHT language,
+add the V3 evidence root by reference, and surface class umbrellas already
+in REDRESS but not in §5.
 
 ---
 
@@ -905,10 +994,13 @@ them.
 - **HANDOFF §5 is correct but incomplete.** Add four class umbrellas to
   cover string-scan / direct-receiver / bench-private-hand / PMU-as-producer
   classes already rejected ~20 times in REDRESS. (§3.)
-- **19 surgical doc edits proposed.** SPEC.md (8), HANDOFF.md (6),
-  DISPATCH-PROMPT.md (5). All paragraph/list level. All replace V2-BLOCKED
-  language with V3-IN-FLIGHT language and surface class umbrellas already
-  in REDRESS. Propose-only; not applied. (§4.)
+- **19 actual surgical doc edits proposed.** SPEC.md (8), HANDOFF.md (6),
+  DISPATCH-PROMPT.md (5). SPEC §4.1 Edit E is a deferral decision and is
+  not counted as a surgical edit. All proposed edits are paragraph/list
+  level. All replace V2-BLOCKED language with V3-IN-FLIGHT language and
+  surface class umbrellas already in REDRESS. No edit crosses into
+  `restart/prompts/` scope; PASS-1-PROFILE.md amendments are Pass Omega
+  CRUD scope per `ORCHESTRATOR.md` §7. Propose-only; not applied. (§4.)
 - **G-S-P1-RERUN-CONVERGED bar** is six evidence artefacts (§5.1) + V3
   CHALLENGE consolidation at ≥95% ACCEPT × 2 consecutive cycles (§5.2) +
   contract-truth checks (§5.3). The two-consecutive requirement means V3

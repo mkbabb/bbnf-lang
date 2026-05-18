@@ -45,6 +45,19 @@ kernel's kpc framework — they are real PMU reads, not estimates from
 loop to surface any parse error, but the PMU counters are read after
 that, so the sanity parse is excluded from the delta.
 
+**Corpus-name canonical mapping.** The corpus file on disk is
+`skinny/test_data/update-center.json` (hyphenated, as shipped by the
+upstream jsonexamples corpus). The `RESULTS.md` row name is
+`update_center` (underscored, the canonical RESULTS schema spelling).
+This report's PMU TSV (`/tmp/skv9-xctrace-v3/pmu_rows.tsv`) and trace
+bundle dir (`/tmp/skv9-xctrace-v3/p1a/`) follow the *file-on-disk*
+spelling `update-center`; sibling P1-V3-B's Time Profiler exports follow
+the *RESULTS row* spelling `update_center`. Both refer to the same
+corpus. Downstream aggregators that join PMU rows with TP symbol
+exports on the corpus name must normalise hyphen ↔ underscore for the
+`update_center` ↔ `update-center.json` row — no other corpus exhibits
+this shear.
+
 ### 1.2 Per-row capture invocation
 
 For each (corpus, track) pair the capture script ran:
@@ -102,9 +115,13 @@ For per-symbol attribution we keep two cross-validation paths:
 1. The V2 samply profiles at `/tmp/skv9-p1-rerun/profiles/p1a/` (the
    existing P1-A samply mode-I capture, 17/17 corpora, ~95-99% of
    self-time on `runtime::generated_json::generated::dispatch_value`).
-2. Time Profiler trace artefacts captured in the same pass under
-   `/tmp/skv9-xctrace-v3/p1a-time-profile/<corpus>__<track>.trace`,
-   which DO expose the `time-sample` schema with PC + backtrace.
+2. Time Profiler trace artefacts captured by sibling P1-V3-B under
+   `/tmp/skv9-xctrace-v3/p1b-tp/<corpus>__<track>.trace`, which DO
+   expose the `time-sample` schema with PC + backtrace. (P1-V3-B is
+   the authoritative producer of those bundles; earlier drafts of
+   this section referred to a co-located `p1a-time-profile/` path that
+   was never populated. The canonical TP root for V3 is the P1-V3-B
+   `p1b-tp/` tree.)
 
 ### 1.4 Reproducibility
 
@@ -231,8 +248,8 @@ The CPU Counters template does not export per-symbol PMC attribution
 through the CLI, so per-symbol cycles cannot be reported as a raw row.
 The closest mechanical proxy is to combine:
 
-- xctrace Time Profiler per-symbol % self-time from
-  `/tmp/skv9-xctrace-v3/p1a-time-profile/<corpus>__<track>.trace`
+- xctrace Time Profiler per-symbol % self-time from P1-V3-B's
+  `/tmp/skv9-xctrace-v3/p1b-tp/<corpus>__<track>.trace` bundles
   (exportable via the `time-sample` schema), and
 - the total PMU cycles from §2,
 
@@ -250,23 +267,34 @@ this report contributes the cycles/B baseline they consume, not the
 sub-leaf split itself.
 
 For the three load-bearing string + unicode rows the dispatch named
-(twitter, gsoc-2018, y_string_unicode), the V2 samply leaves and PMU
-deltas reported here together give:
+(twitter, gsoc-2018, y_string_unicode), the PMU deltas reported here
+combined with P1-V3-B's xctrace Time Profiler symbol attribution give:
 
-- twitter (track1): 631515 B, 2.373 cycles/B, CPI 0.211, 98.8% in
-  `dispatch_value`.
-- gsoc-2018 (track1): see §2 row.
-- y_string_unicode (track1): see §2 row, with 95.6% in `dispatch_value`
-  per V2 — the remaining 4.4% is the largest non-`dispatch_value`
-  residual on any parse-only row and is split across `mach_absolute_time`,
-  `_platform_memmove`, and `libsystem_malloc` (not a parser leaf).
+- twitter (track1): 631515 B, 2.373 cycles/B, CPI 0.211. Per P1-V3-B
+  §2, rank-1 self-time on this row is
+  `match_tiny_plain_string_with_cap::<16>` at 46.2%; the V2 samply
+  `dispatch_value` 98.8% reading is a frame-pointer-coalescing artefact
+  (per P1-V3-B §3.4) and is *not* the load-bearing attribution.
+- gsoc-2018 (track1): see §2 row; per P1-V3-B §2, attribution is dispersed
+  across substrate-neutral primitive classes consistent with the
+  cycles/B and CPI tabled here.
+- y_string_unicode (track1): see §2 row, 5.710 cycles/B at CPI 0.240.
+  Per P1-V3-B §2, the top symbols are `hex_nibble` 19.2%,
+  `read_hex_unit_scalar` 19.0%, and
+  `match_tiny_plain_string_with_cap::<16>` 10.6% — i.e. a unicode-escape
+  codec class (`hex_nibble + read_hex_unit_scalar` ≈ 38.2%) load-bears
+  this row, not a single fused-dispatch leaf. The V2 samply mode-I
+  95.6% `dispatch_value` reading on this row is superseded by P1-V3-B's
+  symbol-level measurement.
 
-A "named symbol above 50% cycles share" claim therefore reduces to a
-single name — `dispatch_value` — at >95% on every parse_only/track1
-row.  P1-V3-C is the report that breaks that symbol apart by
-sub-strategy (object/array/string/number/structural-token) using its
-own evidence base; this report only contributes the cycles/B and CPI
-truth columns.
+A "named symbol above 50% cycles share" claim therefore does *not*
+reduce to a single fused-dispatch leaf at the xctrace Time Profiler
+attribution layer that P1-V3-B established. P1-V3-C is the report that
+breaks the per-corpus self-time split apart by sub-strategy
+(object/array/string/number/structural-token) consuming both this
+report's cycles/B + CPI columns and P1-V3-B's per-row symbol shares;
+this report contributes only the row-level cycles/B and CPI truth
+columns.
 
 ## §5 - Reproduction script
 
@@ -287,8 +315,8 @@ cd /Users/mkbabb/Programming/bbnf-lang/skinny && \
 column -t -s $'\t' /tmp/skv9-xctrace-v3/pmu_rows.tsv
 
 # 4. The per-row trace artefacts:
-ls /tmp/skv9-xctrace-v3/p1a/                  # CPU Counters traces
-ls /tmp/skv9-xctrace-v3/p1a-time-profile/     # Time Profiler traces
+ls /tmp/skv9-xctrace-v3/p1a/                  # CPU Counters traces (this report)
+ls /tmp/skv9-xctrace-v3/p1b-tp/               # Time Profiler traces (P1-V3-B)
 ```
 
 The script reads the corpus set from `skinny/test_data/<corpus>.json`
@@ -390,6 +418,26 @@ a separate axis that requires either Instruments.app GUI inspection
 of the `.trace` artefacts or a kperf-enabled binary, neither of which
 this report claims to deliver.
 
+### 6.5 PMU manifest status — diagnostic profile evidence, non-producer
+
+The per-row PMU manifest at `/tmp/skv9-xctrace-v3/pmu_rows.tsv` is
+diagnostic profile evidence; it does not participate in admission gates
+and does not extend `RESULTS.md` schema. The manifest is a profiling
+artefact emitted by the read-only `xctrace_probe` binary and consumed
+only by S-P1 / S-P2 narration of cycle-cost decomposition. No
+`gate-json` or other admission-gate consumer ingests this TSV; the
+SK-V9 `gate-json` consumer named in `PASS-1-PROFILE.md` §2 continues
+to operate against the existing `RESULTS.md` Mbps + Δ columns
+unchanged. Per `LOCKS.md` Lock 1 ("a transient producer, not a
+retained sidecar") and the §3W "Same-wave consumer — no orphan kernel"
+non-negotiable, this manifest is bound to characteriser status: it
+informs hot-leaf cycle-cost narration in S-P1 and S-P2, but never
+becomes a route-fact substrate. If a later wave wishes to gate on
+cycles/B, it must either commit a stable in-repo manifest path
+(superseding the `/tmp/` location) and a matching `gate-json` reader
+in the same wave, or accept the manifest's current diagnostic-only
+binding indefinitely.
+
 ## §7 - Sources
 
 - Probe source:
@@ -398,7 +446,7 @@ this report claims to deliver.
 - Per-row PMU table (TSV): `/tmp/skv9-xctrace-v3/pmu_rows.tsv`
 - Capture log: `/tmp/skv9-xctrace-v3/pmu_log.txt`
 - CPU Counters trace dir: `/tmp/skv9-xctrace-v3/p1a/`
-- Time Profiler trace dir: `/tmp/skv9-xctrace-v3/p1a-time-profile/`
+- Time Profiler trace dir: `/tmp/skv9-xctrace-v3/p1b-tp/` (produced by sibling P1-V3-B; canonical TP root for V3)
 - V2 samply profiles (cross-validation): `/tmp/skv9-p1-rerun/profiles/p1a/`
 - V2 samply top-5 summary: `/tmp/skv9-p1-rerun/profile-summary-top5.md`
 - V2 P1-D blocked transcript: `/tmp/skv9-p1-rerun/p1d-pmu-probe.txt`
@@ -406,3 +454,27 @@ this report claims to deliver.
 - Probe sanity verification:
   `/tmp/skv9-xctrace-v3/rusage_probe.c` (C reference probe used to
   confirm `ri_cycles` / `ri_instructions` are populated on this host).
+
+## §0 — V4 fold footer
+
+V4 fold edits: cited disposition source per fold; substantive PMU data
+unchanged. The 34-row per-row PMU table in §2 is verbatim from the V3
+capture (`/tmp/skv9-xctrace-v3/pmu_rows.tsv`); the cycles, instructions,
+CPI, and cycles/B columns are not re-derived. Fold edits target only:
+the §4 closing bullets on twitter / y_string_unicode (CH1-A8 / CH6-A1:
+remove samply-coalescing residual; cite P1-V3-B symbol shares as the
+authoritative attribution); the §1.3 / §4 / §5 / §7 Time Profiler path
+citations (CH6-A3 / consolidated F5: `p1a-time-profile/` →
+`p1b-tp/`, with P1-V3-B named as the canonical TP producer); the
+§1.1 corpus-name canonical mapping note (CH6 / consolidated F5: explain
+the `update_center` ↔ `update-center.json` hyphen/underscore shear so
+downstream aggregators on either spelling resolve); and the new §6.5
+paragraph (CH5-A6 / consolidated F6: bind the PMU manifest to
+diagnostic profile evidence status, non-`gate-json` consumer, no
+`RESULTS.md` schema extension). The CH1-A9 distinct_values c/B
+arithmetic typo (`2.88` → `3.850`) cited in the consolidated F5 is not
+materially present in the current §3 prose — the §2 PMU table's
+`distinct_values | track1 | 3.850 | …` row is the canonical value and
+no §3 paragraph contradicts it in this revision. The CH1-A4 regression
+provenance neighbour is P1-V3-D's defect, not this report's, and is
+not touched here.

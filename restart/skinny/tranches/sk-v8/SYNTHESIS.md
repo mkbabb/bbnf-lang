@@ -101,7 +101,9 @@ exceptional V6 challenge. V6 ACCEPTed 6/6
 (`research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V6-CONSOLIDATED.md`),
 but it is only the first qualifying cycle after V5 REVISE. S-P2 still cannot
 dispatch S-P3 unless the user pins S-P2 final or explicitly authorizes another
-over-ceiling cycle.
+over-ceiling cycle. On 2026-05-18 the user authorized continuing through SK-V8
+in totality; this is recorded as authorization for an exceptional V7 challenge,
+not as a convergence shortcut.
 
 The offset-tape is not a ceiling by write amplification. SC-1 found that
 allocated-tape-byte amplification anti-correlates with loss — the highest-ratio
@@ -193,9 +195,8 @@ validation proof, and challenge acceptance.
 S-P2 also remains blocked on its own challenge convergence. V1, V2, V3, and V4
 did not converge; V5 reached the hard ceiling with CH4 REVISE; V6 ACCEPTed but
 is only the first qualifying cycle after V5 REVISE. The orchestrator may not
-dispatch S-P3 unless the user explicitly pins S-P2 final or explicitly
-authorizes an additional over-ceiling cycle needed for two consecutive
-qualifying ACCEPT cycles.
+dispatch S-P3 unless V7 returns a second consecutive qualifying ACCEPT cycle,
+or unless the user explicitly pins S-P2 final.
 
 The SK-V8 thesis:
 

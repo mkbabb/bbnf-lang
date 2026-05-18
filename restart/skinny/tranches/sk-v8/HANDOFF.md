@@ -79,7 +79,9 @@ exceptional V6 challenge. V6 ACCEPTed 6/6
 (`research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V6-CONSOLIDATED.md`),
 but it is only the first qualifying cycle after V5 REVISE. S-P2 still cannot
 dispatch S-P3 unless the user pins S-P2 final or explicitly authorizes another
-over-ceiling cycle. The cohort does not change the
+over-ceiling cycle. On 2026-05-18 the user authorized continuing through SK-V8
+in totality; this is recorded as authorization for an exceptional V7 challenge,
+not as a convergence shortcut. The cohort does not change the
 G-Alpha-W0-only constraint; it nominates a lead W3 hypothesis so W0 telemetry
 confirms or falsifies the finding executably rather than discovering it from
 scratch. SC-1..SC-6 authorize no W3 plan by themselves: W3 remains blocked on

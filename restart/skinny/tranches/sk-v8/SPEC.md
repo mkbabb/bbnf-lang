@@ -459,7 +459,9 @@ exceptional V6 challenge. V6 ACCEPTed 6/6
 (`research/p2-substrate-ceiling/hardening/HARDENING-S-P2-V6-CONSOLIDATED.md`),
 but it is only the first qualifying cycle after V5 REVISE. S-P2 still cannot
 dispatch S-P3 unless the user pins S-P2 final or explicitly authorizes another
-over-ceiling cycle.
+over-ceiling cycle. On 2026-05-18 the user authorized continuing through SK-V8
+in totality; this is recorded as authorization for an exceptional V7 challenge,
+not as a convergence shortcut.
 
 This candidate touches the substrate, so its challenge carries an extra burden
 (see exit gate). It must either follow Pass Omega ratification of the SC-6-L1-R1

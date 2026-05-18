@@ -2,9 +2,10 @@
 
 Date: 2026-05-18.
 
-Status: post-G-Alpha and post-W0 telemetry-lock. G-Alpha is closed by user
-instruction, W0 closed `G-W0-TELEMETRY-LOCK`, and S-P1 V1 did not converge.
-The next executable step is a fresh post-W0 S-P1 rerun. Behavior waves remain
+Status: post-G-Alpha, post-W0 telemetry-lock, and post-S-P1-V2-BLOCKED.
+G-Alpha is closed by user instruction, W0 closed `G-W0-TELEMETRY-LOCK`, and
+S-P1 V2 produced fresh samply evidence but failed convergence because real
+PMU/cycles-per-byte counters are unavailable on this host. Behavior waves remain
 conditional placeholders until S-P1 rerun convergence and
 `G-BEHAVIOR-RELEASE`.
 
@@ -14,6 +15,7 @@ Authority:
 - `restart/skinny/tranches/sk-v9/HANDOFF.md`
 - `restart/skinny/tranches/sk-v9/research/p1/`
 - `restart/skinny/tranches/sk-v9/research/p1/hardening/HARDENING-S-P1-V1-CONSOLIDATED.md`
+- `restart/skinny/tranches/sk-v9/research/p1/hardening/HARDENING-S-P1-V2-CONSOLIDATED.md`
 - `restart/skinny/tranches/sk-v9/research/skv9-W0-r1-gate-report-baseline.md`
 - `restart/skinny/tranches/sk-v9/research/skv9-W0-r2-criterion-metadata.md`
 - `restart/skinny/tranches/sk-v9/research/skv9-W0-r3-diagnostic-fences.md`
@@ -30,7 +32,9 @@ Dispatch lock:
 - W0 telemetry-lock is closed:
   `sk-v9-open:criterion-fnv64-cd1673844eeea12f`.
 - S-P1 V1 is an opening gap ledger, not a completed profile.
-- The fresh S-P1 rerun is the only currently executable next step.
+- S-P1 V2 is a partial fresh profile, blocked by absent real PMU/cycles.
+- The current executable next step is P1-D PMU/cycles repair or an explicit
+  S-P1 contract revision; no behavior wave is dispatchable.
 - W1+ behavior waves require `G-S-P1-RERUN-CONVERGED`,
   `G-BEHAVIOR-RELEASE`, and a fresh S-P2/S-P3 revision before dispatch.
 
@@ -59,7 +63,7 @@ SK-V9 closes only when all of these are true:
 | Candidate | Initial SK-V9 status | Release gate |
 |---|---|---|
 | SK-V9-open telemetry/gate refresh | Closed in W0 | `G-W0-TELEMETRY-LOCK` PASS |
-| Fresh S-P1 profile rerun | Executable next, not a behavior wave | `G-S-P1-RERUN-CONVERGED` |
+| Fresh S-P1 profile rerun | V2 blocked on P1-D PMU/cycles | `G-S-P1-RERUN-CONVERGED` |
 | Apache/CITM measured typed row admission | Blocked placeholder | W0 plus S-P1 rerun plus revised S-P2/S-P3 typed plan |
 | Retained tape plus structural projection | Blocked placeholder | W0 plus S-P1 rerun plus Lock 14 and proof-first challenge |
 | Direct output/control-path proof | Blocked placeholder | W0 plus S-P1 rerun plus direct contract plan |
@@ -157,7 +161,7 @@ manifest in the same wave.
 | Wave | Section | Name | Dispatch status | Owner budget | Hard cap |
 |---|---|---|---|---|---:|
 | W0 | Section 3 | SK-V9-open Telemetry-Lock Recovery | Closed | Telemetry/report/gate docs and focused gate code only | <=90 min |
-| Interlock | Section 4 | Fresh S-P1 Rerun | Executable next | Profile artifacts and S-P1 research/hardening docs | <=90 min |
+| Interlock | Section 4 | Fresh S-P1 Rerun | Blocked on P1-D PMU/cycles | Profile artifacts and S-P1 research/hardening docs | <=90 min |
 | W1 | Section 5 | Revised S-P2/S-P3 Candidate Release | Blocked placeholder | Research/plan docs only until release | <=90 min |
 | W2 | Section 6 | Typed Row Admission Candidate | Blocked placeholder | Exact typed owner paths only after release | <=90 min |
 | W3 | Section 7 | Tape Plus Structural-Projection Candidate | Blocked placeholder | Exact retained tape owner paths only after release | <=90 min |
@@ -226,13 +230,20 @@ revert the W0 source/report slice and record REDRESS. Do not close W0 by prose.
 
 ## Section 4 - Fresh S-P1 Rerun Interlock
 
-After W0, rerun S-P1 against SK-V9-open evidence. The rerun must not use absent
+Status: V2 BLOCKED. Close artifact:
+`restart/skinny/tranches/sk-v9/research/p1/hardening/HARDENING-S-P1-V2-CONSOLIDATED.md`.
+
+After W0, S-P1 reran against SK-V9-open evidence. The rerun must not use absent
 telemetry, stale SK-V4/SK-V8 fused evidence, source-eligible-only typed rows, or
 sidecar-historical-only comparators as behavior ancestors.
 
 `G-S-P1-RERUN-CONVERGED` passes only if a hardening consolidation records
 convergence and names fresh evidence for any behavior candidate. Otherwise W1+
 remains blocked.
+
+Current blocker: P1-D has no real PMU/cycles source. `perf` is absent, `xctrace`
+requires full Xcode, and `powermetrics` requires unavailable superuser access.
+Do not estimate c/B from Criterion `ns_per_byte`.
 
 ## Section 5 - Revised S-P2/S-P3 Candidate Release
 

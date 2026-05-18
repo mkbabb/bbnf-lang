@@ -4,9 +4,9 @@ Date: 2026-05-18.
 
 Status: G-Alpha is closed by user instruction on 2026-05-18. W0 telemetry-lock
 is closed with `skinny/RESULTS.md` rendered and consumed as `SK-V9-open`.
-SK-V9 S-P1 V1 remains an honest opening gap ledger, not a completed S-P1
-profile. Behavior waves remain blocked until a fresh post-W0 S-P1 profile rerun
-converges and `G-BEHAVIOR-RELEASE` passes.
+SK-V9 S-P1 V2 reran against the W0 baseline and produced fresh samply evidence,
+but hardening blocked convergence because real PMU/cycles-per-byte counters are
+unavailable in the current host context. Behavior waves remain blocked.
 
 ## 1. Read First
 
@@ -19,17 +19,18 @@ converges and `G-BEHAVIOR-RELEASE` passes.
 7. `restart/skinny/tranches/sk-v9/research/alpha/alpha-F-contract-draft.md`
 8. `restart/skinny/tranches/sk-v9/research/alpha/alpha-C-redress-digest.md`
 9. `restart/skinny/tranches/sk-v9/research/p1/hardening/HARDENING-S-P1-V1-CONSOLIDATED.md`
-10. `restart/skinny/tranches/sk-v9/research/skv9-W0-r1-gate-report-baseline.md`
-11. `restart/skinny/tranches/sk-v9/research/skv9-W0-r2-criterion-metadata.md`
-12. `restart/skinny/tranches/sk-v9/research/skv9-W0-r3-diagnostic-fences.md`
-13. `restart/skinny/tranches/sk-v9/research/skv9-W0-r4-typed-direct-fences.md`
-14. `restart/skinny/tranches/sk-v9/research/skv9-W0-r5-lock14-redress.md`
-15. `restart/skinny/tranches/sk-v9/research/skv9-W0-r6-spec-dispatch-shape.md`
-16. `restart/skinny/tranches/sk-v8/HANDOFF.md`
-17. `restart/skinny/tranches/sk-v8/research/skv8-W6-close-and-alpha-feedback.md`
-18. `restart/skinny/tranches/sk-v8/research/wave-6-hardening/V2/HARDENING-W6-V2-CONSOLIDATED.md`
-19. `skinny/RESULTS.md`
-20. `skinny/REDRESS.md` entries 91, 92, and 93
+10. `restart/skinny/tranches/sk-v9/research/p1/hardening/HARDENING-S-P1-V2-CONSOLIDATED.md`
+11. `restart/skinny/tranches/sk-v9/research/skv9-W0-r1-gate-report-baseline.md`
+12. `restart/skinny/tranches/sk-v9/research/skv9-W0-r2-criterion-metadata.md`
+13. `restart/skinny/tranches/sk-v9/research/skv9-W0-r3-diagnostic-fences.md`
+14. `restart/skinny/tranches/sk-v9/research/skv9-W0-r4-typed-direct-fences.md`
+15. `restart/skinny/tranches/sk-v9/research/skv9-W0-r5-lock14-redress.md`
+16. `restart/skinny/tranches/sk-v9/research/skv9-W0-r6-spec-dispatch-shape.md`
+17. `restart/skinny/tranches/sk-v8/HANDOFF.md`
+18. `restart/skinny/tranches/sk-v8/research/skv8-W6-close-and-alpha-feedback.md`
+19. `restart/skinny/tranches/sk-v8/research/wave-6-hardening/V2/HARDENING-W6-V2-CONSOLIDATED.md`
+20. `skinny/RESULTS.md`
+21. `skinny/REDRESS.md` entries 91, 92, and 93
 
 ## 2. Current State
 
@@ -51,6 +52,14 @@ All current main rows remain `Strictness=deferred`. Native Rust comparators are
 same-run in the W0 report; C++ sidecars are historical or absent unless a later
 accepted gate creates a structured same-run sidecar manifest. Structural scan,
 masking probes, PMU, and cycles surfaces remain diagnostic non-producers.
+
+S-P1 V2 partial profile state:
+
+- 106 fresh samply profile/sidecar pairs exist under `/tmp/skv9-p1-rerun`.
+- P1-A/P1-B/P1-C/P1-E/P1-F have fresh SK-V9-open evidence.
+- P1-D is blocked: `perf` absent, `xctrace` requires full Xcode, and
+  `powermetrics` requires superuser access unavailable to this run.
+- `HARDENING-S-P1-V2-CONSOLIDATED.md` records 4/6 ACCEPT and BLOCKED.
 
 ## 3. Candidate Boundaries
 
@@ -82,14 +91,15 @@ Alpha cost binding for any later S-P3 plan:
 
 ## 4. Next Move
 
-1. Treat G-Alpha and `G-W0-TELEMETRY-LOCK` as closed.
-2. Rerun S-P1 against the SK-V9-open baseline:
-   `sk-v9-open:criterion-fnv64-cd1673844eeea12f`.
-3. Challenge S-P1 to convergence; do not use absent samply/PMU/cycles rows,
-   stale SK-V4/SK-V8 fused evidence, source-eligible-only typed rows, or
-   Criterion-slope-only hot leaves as behavior ancestry.
-4. Only after `G-S-P1-RERUN-CONVERGED`, rerun/revise S-P2 and S-P3 before any
-   W1+ behavior dispatch.
+1. Treat G-Alpha, `G-W0-TELEMETRY-LOCK`, and S-P1 V2 partial samply evidence as
+   recorded.
+2. Do not dispatch S-P2 or W1+ behavior waves; `G-S-P1-RERUN-CONVERGED` did not
+   pass.
+3. Resolve the P1-D PMU/cycles blocker by providing a real counter source
+   (`perf`, full-Xcode `xctrace`, privileged `powermetrics`, or an accepted
+   contract amendment). Do not estimate c/B from ns/B.
+4. After P1-D is repaired, rerun/challenge S-P1 to convergence before any
+   revised S-P2/S-P3 or behavior dispatch.
 
 ## 5. Pre-Blocked Routes
 
@@ -121,8 +131,8 @@ different, and pass challenge before implementation planning.
 
 ## 6. Close Posture
 
-The SK-V9 contract is post-G-Alpha and post-W0, but still pre-behavior. W0
-closed the telemetry-lock; it did not admit rows, strictness, parser behavior,
-scanner behavior, SIMD behavior, codegen behavior, generated output, or typed
-product shortcuts. Behavior waves must not dispatch until fresh S-P1 rerun
-convergence and `G-BEHAVIOR-RELEASE`.
+The SK-V9 contract is post-G-Alpha, post-W0, and post-S-P1-V2-BLOCKED, but
+still pre-behavior. W0 closed the telemetry-lock; S-P1 V2 produced useful fresh
+samply evidence but did not converge because P1-D PMU/cycles is blocked.
+Behavior waves must not dispatch until S-P1 convergence and
+`G-BEHAVIOR-RELEASE`.

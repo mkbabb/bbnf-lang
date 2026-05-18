@@ -2,7 +2,7 @@
 
 Date: 2026-05-18.
 
-Status: research complete; no source drift found.
+Status: V1 hardening fold applied; named provider-boundary cleanup added.
 
 ## Entry State
 
@@ -97,27 +97,81 @@ W7/W8 Lock 14 residue suites:
 
 ## Findings
 
-1. No W5 source cleanup is warranted. The audit found no active forbidden old
-   JSON helper names, no `StructuralAlphabet::json()`, no `UnionTape`, no
-   `BackendShape::Union`/`BackendShape::Json`, and no source or generated
-   output drift.
-2. REDRESS 36-38 remain historical violation records, not live blockers:
+1. The initial W5 audit found no active forbidden old JSON helper names, no
+   `StructuralAlphabet::json()`, no `UnionTape`, no
+   `BackendShape::Union`/`BackendShape::Json`, and no generated output or
+   `RESULTS.md` drift.
+2. V1 hardening found one named Lock 14 provider-boundary cleanup: the JSON
+   profile guard and JSON template/runtime includes belonged in a per-grammar
+   provider surface, not in the generic `codegen/src/lib.rs` surface.
+3. REDRESS 36-38 remain historical violation records, not live blockers:
    REDRESS 85 and REDRESS 86 record the admitted neutralization work and the
    current tests still pass.
-3. The non-JSON proof burden is satisfied for a no-source W5 close by unchanged
-   output over all nine root grammars. No W5 generic edit exists that would
-   require a new CSS L4 / Sheets / BBNF-self source proof.
-4. W5 should plan a no-source audit close. It must not claim performance
-   movement, must not update `skinny/RESULTS.md`, and must not add a REDRESS
-   item unless the plan or challenge discovers a concrete mismatch.
+4. The non-JSON proof burden remains satisfied by unchanged output over all
+   nine root grammars. The W5 cleanup is a provider-boundary/allowlist change
+   and does not alter generated output.
+5. W5 must not claim performance movement, must not update
+   `skinny/RESULTS.md`, and must not add a REDRESS item unless V2/V3 challenge
+   discovers a concrete mismatch.
+
+## V1 Hardening Fold
+
+W5 V1 hardening returned CH1 and CH2 REVISE.
+
+CH1 accepted the measured audit but required reproducible command context and
+current anchors:
+
+- `bbnf-bench`, skinny `xtask check-*`, and skinny package tests must be run
+  from `skinny/`.
+- Root `cargo xtask regen --check`, repo-path `git diff`, and repo-path `rg`
+  must be run from the repository root.
+- W5 uses current `skinny/RESULTS.md` anchors: W0 manifest rows at
+  `skinny/RESULTS.md:46-85` and report/Track 2 authority at
+  `skinny/RESULTS.md:138-141`.
+
+CH2 found one live provider-boundary residue: `skinny/crates/codegen/src/lib.rs`
+contained the JSON runtime-profile guard and JSON template/runtime includes
+while also being classified as `generic_surface` by the Lock 14 baseline. The
+fold is a named W5 Lock 14 cleanup, not a performance change:
+
+- `skinny/crates/codegen/src/lib.rs` now delegates JSON provider material to
+  `json_provider`.
+- `skinny/crates/codegen/src/json_provider.rs` owns the JSON profile guard and
+  template/runtime includes as a per-grammar provider surface.
+- `skinny/crates/bbnf-bench/src/lock14_baseline.rs` adds
+  `per_grammar_provider` and authorizes only W5 parent diffs for
+  `crates/codegen/src/lib.rs` plus `crates/codegen/src/json_provider.rs`.
+- The generic codegen scan for `grammar_name == "json"`, `backend.grammar_name`,
+  `include_str!("json_templates`, and `runtime/src/grammars/json`, excluding
+  the provider/template files, returns no matches.
+- Provider residency remains explicit: `runtime/src/grammars/json` references
+  are confined to the new provider module and xtask generated-output tooling.
+
+Post-fold checks:
+
+- `cargo test -p parse-that-regex -p passes -p codegen -p ir` passed:
+  codegen 6 tests, ir 3 tests, parse-that-regex 22 tests, passes 8 tests, and
+  doc-tests all green.
+- `cargo xtask check-json`, `cargo xtask check-real-typed`, and
+  `cargo xtask check-conformance` passed; conformance again accepted 21 valid
+  fixtures and rejected 7 invalid fixtures.
+- Root `cargo xtask regen --check` passed with `clean (9 of 9 grammars
+  matched)`.
+- Zero-drift diff over `RESULTS.md`, generated JSON/typed output, direct guard
+  source, IR, passes, parse-that-regex, SIMD, runtime, skinny bbnf, and xtask
+  owner paths returned clean.
 
 ## Recommended Plan
 
-Proceed to a W5 plan with source LOC budget 0:
+Proceed to a W5 V2 plan with a named Lock 14 cleanup:
 
 - same-wave consumer: the W5 audit gate itself;
-- no source, generated output, or `RESULTS.md` edit;
+- source owner paths:
+  `skinny/crates/codegen/src/lib.rs`,
+  `skinny/crates/codegen/src/json_provider.rs`, and
+  `skinny/crates/bbnf-bench/src/lock14_baseline.rs`;
+- no generated output or `RESULTS.md` edit;
 - verification commands: the scans and checks listed above;
-- hardening challenge: review the no-source audit close for Lock 14,
-  REDRESS 36-38/85/86 consistency, no hidden generic JSON policy, and no
-  paper close.
+- hardening challenge: review the provider-boundary cleanup for Lock 14,
+  REDRESS 36-38/85/86 consistency, no hidden generic JSON policy, no generated
+  drift, and no paper close.

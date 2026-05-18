@@ -186,6 +186,12 @@ pub const ALLOWLIST: &[AllowlistEntry] = &[
         "generated",
     ),
     entry(
+        "crates/codegen/src/json_provider.rs",
+        "per_grammar_provider",
+        "read_only",
+        "provider",
+    ),
+    entry(
         "crates/codegen/src/json_templates/generated.rs",
         "per_grammar_template",
         "read_only",
@@ -402,6 +408,11 @@ const W2_TYPED_OWNER_PATHS: &[&str] = &[
     "xtask/src/real_typed_schema.rs",
 ];
 
+const W5_LOCK14_OWNER_PATHS: &[&str] = &[
+    "crates/codegen/src/lib.rs",
+    "crates/codegen/src/json_provider.rs",
+];
+
 fn validate_git_freeze(root: &Path) -> Result<(), String> {
     let frozen_status = git_output(root, &git_path_args("status", "--porcelain", FROZEN_ROOTS))?;
     validate_frozen_status_output(&frozen_status)?;
@@ -456,6 +467,16 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
     if subject.contains("sk-v8-wave2") {
         let allowed = changed_paths.iter().all(|path| {
             W2_TYPED_OWNER_PATHS
+                .iter()
+                .any(|allowed| path.as_str() == *allowed)
+        });
+        if allowed {
+            return Ok(());
+        }
+    }
+    if subject.contains("sk-v8-wave5") {
+        let allowed = changed_paths.iter().all(|path| {
+            W5_LOCK14_OWNER_PATHS
                 .iter()
                 .any(|allowed| path.as_str() == *allowed)
         });
@@ -545,6 +566,7 @@ fn is_allowed_class(class: &str) -> bool {
             | "fixture_input"
             | "generated_json_output"
             | "generated_typed_output"
+            | "per_grammar_provider"
             | "per_grammar_template"
             | "test_fixture"
             | "generic_surface"
@@ -643,12 +665,29 @@ mod tests {
     }
 
     #[test]
+    fn admits_w5_lock14_provider_parent_diff_only_under_w5_scope() {
+        let changed = W5_LOCK14_OWNER_PATHS
+            .iter()
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "fix(sk-v8-wave5-lock14): isolate json provider"
+        )
+        .is_ok());
+        assert!(validate_authorized_parent_diff(&changed, "fix(other): isolate provider").is_err());
+    }
+
+    #[test]
     fn normalizes_repo_root_paths_to_skinny_workspace_paths() {
         assert_eq!(
             normalize_git_path("skinny/crates/bbnf-bench/src/generated_real_typed.rs"),
             "crates/bbnf-bench/src/generated_real_typed.rs"
         );
-        assert_eq!(normalize_git_path("crates/runtime/src/lib.rs"), "crates/runtime/src/lib.rs");
+        assert_eq!(
+            normalize_git_path("crates/runtime/src/lib.rs"),
+            "crates/runtime/src/lib.rs"
+        );
     }
 
     #[test]

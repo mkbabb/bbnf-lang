@@ -2,7 +2,7 @@
 
 Date: 2026-05-18.
 
-Status: planned as no-source audit close.
+Status: V1 hardening fold; planned as named Lock 14 provider-boundary cleanup.
 
 ## Entry Gate
 
@@ -21,12 +21,19 @@ Owner paths:
 - `restart/skinny/tranches/sk-v8/research/skv8-W5-plan.md`
 - W5 hardening artifacts under
   `restart/skinny/tranches/sk-v8/research/wave-5-hardening/`
+- `skinny/crates/codegen/src/lib.rs`
+- `skinny/crates/codegen/src/json_provider.rs`
+- `skinny/crates/bbnf-bench/src/lock14_baseline.rs`
 - `restart/skinny/tranches/sk-v8/HANDOFF.md` only after challenge accepts the
-  no-source close.
+  close.
 
-Source, generated output, and `skinny/RESULTS.md` owner paths are explicitly
-out of scope. W5 research found no named Lock 14 drift to fix, so the source
-LOC budget is 0.
+Generated output and `skinny/RESULTS.md` owner paths are explicitly out of
+scope. W5 V1 found one named Lock 14 provider-boundary drift: JSON provider
+logic lived in `codegen/src/lib.rs`, which the Lock 14 baseline classifies as a
+generic surface. The fold moves that logic to `codegen/src/json_provider.rs`,
+adds a `per_grammar_provider` allowlist class, and authorizes only the
+`sk-v8-wave5` parent diff for `codegen/src/lib.rs` plus `json_provider.rs`.
+The source/test insertion count is <=150 LOC.
 
 ## Falsifiability Gate
 
@@ -56,20 +63,31 @@ W5 passes only if all of the following hold:
    BackendShape::Json
    ```
 
-2. Allowed JSON surfaces remain confined to grammar inputs, generated JSON
+2. Grammar-name branch and provider-residency scans pass:
+
+   ```text
+   rg -n 'grammar_name == "json"|backend\.grammar_name|include_str!\("json_templates|runtime/src/grammars/json' skinny/crates/codegen/src -g '*.rs' --glob '!json_provider.rs' --glob '!json_templates/**'
+   rg -n 'emit_from_source\("json"\)|runtime/src/grammars/json' skinny/crates/codegen/src skinny/xtask/src -g '*.rs'
+   ```
+
+   The first command must return no matches. The second command may return only
+   test, generated-output tooling, or `json_provider.rs` lines.
+3. Allowed JSON surfaces remain confined to grammar inputs, generated JSON
    output, per-grammar templates/providers, tests, and host/API schema facts.
-3. REDRESS 36-38 remain reconciled by REDRESS 85 and REDRESS 86; the
+4. REDRESS 36-38 remain reconciled by REDRESS 85 and REDRESS 86; the
    W7/W8-era Lock 14 unit suites still pass.
-4. `skinny/RESULTS.md`, generated JSON output, generated typed output, direct
+5. `skinny/RESULTS.md`, generated JSON output, generated typed output, direct
    guard source, and generic crate surfaces have zero diff from HEAD.
-5. Root `cargo xtask regen --check` remains clean for non-JSON grammars,
+6. Root `cargo xtask regen --check` remains clean for non-JSON grammars,
    including CSS L4, Google Sheets, and BBNF-self generated output.
-6. W5 makes no performance claim and performs no row-table refresh.
+7. W5 makes no performance claim and performs no row-table refresh.
 
 ## Verification Commands
 
-Run before hardening and again before W5 close if any document fold changes
-the audit claim:
+Run before hardening and again before W5 close if any source or document fold
+changes the audit claim.
+
+From `skinny/`:
 
 ```text
 cargo test -p bbnf-bench lock14_baseline -- --nocapture
@@ -77,12 +95,21 @@ cargo xtask check-json
 cargo xtask check-real-typed
 cargo xtask check-conformance
 cargo test -p parse-that-regex -p passes -p codegen -p ir
+```
+
+From the repository root:
+
+```text
 cargo xtask regen --check
 git diff --exit-code HEAD -- skinny/RESULTS.md skinny/crates/runtime/src/grammars/json skinny/crates/codegen/src/json_templates skinny/crates/bbnf-bench/src/generated_real_typed.rs skinny/crates/bbnf-bench/src/direct_struct.rs skinny/crates/ir/src skinny/crates/codegen/src skinny/crates/passes/src skinny/crates/parse-that-regex/src skinny/crates/bbnf-simd/src skinny/crates/runtime/src skinny/crates/bbnf/src skinny/xtask/src
 rg -n '\b(StrictJson|StrictJsonTrustedUtf8|JsonStringMatch|JsonNumberMatch|skip_json|match_json|unescape_json|shapes_for_json|nominate_json|materialization_for_rule|descriptor_for_rule|rule_by_name\("json"\)|MissingEntry\("json"\)|StructuralAlphabet::json|UnionTape|union_tape|BackendShape::Union|BackendShape::Json)\b' skinny/crates/parse-that-regex/src skinny/crates/passes/src skinny/crates/codegen/src skinny/crates/ir/src skinny/crates/bbnf-simd/src skinny/crates/runtime/src skinny/crates/bbnf/src skinny/xtask/src --glob '!skinny/crates/runtime/src/grammars/json/**' --glob '!skinny/crates/codegen/src/json_templates/**'
+rg -n 'grammar_name == "json"|backend\.grammar_name|include_str!\("json_templates|runtime/src/grammars/json' skinny/crates/codegen/src -g '*.rs' --glob '!json_provider.rs' --glob '!json_templates/**'
+rg -n 'emit_from_source\("json"\)|runtime/src/grammars/json' skinny/crates/codegen/src skinny/xtask/src -g '*.rs'
 ```
 
-The `rg` command is expected to return no matches with exit code 1.
+The first two `rg` commands are expected to return no matches with exit code 1.
+The provider-residency command is expected to return only test,
+generated-output tooling, or `json_provider.rs` lines.
 
 ## Hardening Plan
 
@@ -98,10 +125,10 @@ Run a W5 CH1-CH6 challenge against this no-source audit close:
   Track 1/Track 2 coupling is introduced.
 - CH6: no paper close; W5 closes on live command evidence, not assertion.
 
-If the first hardening cycle returns a qualifying ACCEPT, re-challenge the
-unchanged packet once more. W5 may close only after two consecutive qualifying
-ACCEPT cycles or a specific orchestrator-approved narrower rule for this
-no-source audit wave.
+V1 returned CH1 and CH2 REVISE. V2 must challenge the folded provider-boundary
+cleanup and the cwd-qualified verification plan. If V2 returns a qualifying
+ACCEPT, re-challenge the unchanged packet once more. W5 may close only after
+two consecutive qualifying ACCEPT cycles.
 
 ## Revert And Redress
 

@@ -6,6 +6,7 @@ use bbnf_bench::report::{
     ComparatorSet, Report, SkV8ComparatorEvidence, SkV8Telemetry, TelemetryRow,
 };
 use serde_json::Value;
+use std::collections::BTreeSet;
 use std::env;
 use std::error::Error;
 use std::fs;
@@ -41,8 +42,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     if let Err(error) = lock14_baseline::validate(&workspace_root()) {
         return Err(format!("Lock 14 baseline validation failed: {error}").into());
     }
-    let run_facts = RunFacts::probe(&criterion_root);
     let fixtures = test_fixtures::load_available_bench_fixtures()?;
+    let fixture_names = fixtures
+        .iter()
+        .map(|fixture| fixture.name.as_str())
+        .collect::<BTreeSet<_>>();
+    let run_facts = RunFacts::probe(&criterion_root, &fixture_names);
     let mut report = Report::new("Skinny JSON Bench Results");
     let mut outcomes = Vec::new();
 
@@ -376,7 +381,7 @@ struct RunFacts {
 }
 
 impl RunFacts {
-    fn probe(criterion_root: &Path) -> Self {
+    fn probe(criterion_root: &Path, fixture_names: &BTreeSet<&str>) -> Self {
         let host_triple = rustc_host_triple()
             .unwrap_or_else(|| format!("{}-{}", std::env::consts::ARCH, std::env::consts::OS));
         let rustflags = env::var("RUSTFLAGS").unwrap_or_default();
@@ -384,7 +389,7 @@ impl RunFacts {
         Self {
             run_id: format!(
                 "sk-v8-open:criterion-fnv64-{}",
-                criterion_fingerprint(criterion_root)
+                criterion_fingerprint(criterion_root, fixture_names)
             ),
             host_triple: host_triple.clone(),
             build_flags: format!(
@@ -665,9 +670,9 @@ fn parse_target_cpu(rustflags: &str) -> Option<String> {
     None
 }
 
-fn criterion_fingerprint(root: &Path) -> String {
+fn criterion_fingerprint(root: &Path, fixture_names: &BTreeSet<&str>) -> String {
     let mut files = Vec::new();
-    collect_criterion_inputs(root, root, &mut files);
+    collect_criterion_inputs(root, root, fixture_names, &mut files);
     files.sort();
     let mut hash = FNV_OFFSET_BASIS;
     for relative in files {
@@ -681,14 +686,19 @@ fn criterion_fingerprint(root: &Path) -> String {
     format!("{hash:016x}")
 }
 
-fn collect_criterion_inputs(root: &Path, dir: &Path, files: &mut Vec<PathBuf>) {
+fn collect_criterion_inputs(
+    root: &Path,
+    dir: &Path,
+    fixture_names: &BTreeSet<&str>,
+    files: &mut Vec<PathBuf>,
+) {
     let Ok(entries) = fs::read_dir(dir) else {
         return;
     };
     for entry in entries.flatten() {
         let path = entry.path();
         if path.is_dir() {
-            collect_criterion_inputs(root, &path, files);
+            collect_criterion_inputs(root, &path, fixture_names, files);
             continue;
         }
         let Some(name) = path.file_name().and_then(|name| name.to_str()) else {
@@ -696,7 +706,7 @@ fn collect_criterion_inputs(root: &Path, dir: &Path, files: &mut Vec<PathBuf>) {
         };
         if matches!(name, "estimates.json" | "metadata.toml") {
             if let Ok(relative) = path.strip_prefix(root) {
-                if is_w0_criterion_input(relative) {
+                if is_w0_criterion_input(relative, fixture_names) {
                     files.push(relative.to_path_buf());
                 }
             }
@@ -722,16 +732,23 @@ const W0_CRITERION_BENCHES: &[&str] = &[
     "serde_json_real_typed_struct",
 ];
 
-fn is_w0_criterion_input(relative: &Path) -> bool {
+fn is_w0_criterion_input(relative: &Path, fixture_names: &BTreeSet<&str>) -> bool {
     let parts: Vec<_> = relative
         .components()
         .filter_map(|component| component.as_os_str().to_str())
         .collect();
     match parts.as_slice() {
-        ["simd_structural_scan", bench, "metadata.toml"] => bench.ends_with("_simd"),
-        ["simd_structural_scan", "canada_simd", "new", "estimates.json"] => true,
+        ["simd_structural_scan", bench, "metadata.toml"] => bench
+            .strip_suffix("_simd")
+            .is_some_and(|corpus| fixture_names.contains(corpus)),
+        ["simd_structural_scan", "canada_simd", "new", "estimates.json"] => {
+            fixture_names.contains("canada")
+        }
         [group, bench, "metadata.toml"] | [group, bench, "new", "estimates.json"] => {
-            group.starts_with("json_") && W0_CRITERION_BENCHES.contains(bench)
+            group
+                .strip_prefix("json_")
+                .is_some_and(|corpus| fixture_names.contains(corpus))
+                && W0_CRITERION_BENCHES.contains(bench)
         }
         _ => false,
     }
@@ -1748,6 +1765,7 @@ mod tests {
     #[test]
     fn w0_criterion_fingerprint_excludes_derendered_probe_estimates() {
         let root = test_temp_root("criterion-fingerprint");
+        let fixture_names = BTreeSet::from(["twitter"]);
         write_test_file(
             &root.join("json_twitter/track1_generated/new/estimates.json"),
             b"main-estimate-a",
@@ -1756,18 +1774,24 @@ mod tests {
             &root.join("json_twitter/track1_generated/metadata.toml"),
             b"main-metadata",
         );
-        let before_probe = criterion_fingerprint(&root);
+        let before_probe = criterion_fingerprint(&root, &fixture_names);
         write_test_file(
             &root.join("json_probes_twitter/host_call_dispatch_overhead/new/estimates.json"),
             b"volatile-probe",
         );
-        assert_eq!(before_probe, criterion_fingerprint(&root));
+        assert_eq!(before_probe, criterion_fingerprint(&root, &fixture_names));
+
+        write_test_file(
+            &root.join("json_unvalidated_future/track1_generated/new/estimates.json"),
+            b"unvalidated-future-estimate",
+        );
+        assert_eq!(before_probe, criterion_fingerprint(&root, &fixture_names));
 
         write_test_file(
             &root.join("json_twitter/track1_generated/new/estimates.json"),
             b"main-estimate-b",
         );
-        assert_ne!(before_probe, criterion_fingerprint(&root));
+        assert_ne!(before_probe, criterion_fingerprint(&root, &fixture_names));
         let _ = fs::remove_dir_all(root);
     }
 

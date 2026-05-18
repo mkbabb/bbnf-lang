@@ -921,10 +921,28 @@ fn validate_w0_admission_boundary(row: &TelemetryRow) -> Result<(), String> {
     let strict_claim =
         row.strictness == "strict" || row.sk_v8.measured_validation_path == "measured-row";
     if !strict_claim {
+        if row.strictness != "deferred" {
+            return Err(format!(
+                "{} has unsupported non-strict strictness {}",
+                row.sk_v8.row_id, row.strictness
+            ));
+        }
         if row.sk_v8.measured_validation_path != "view-boundary" {
             return Err(format!(
                 "{} has unsupported non-strict validation path {}",
                 row.sk_v8.row_id, row.sk_v8.measured_validation_path
+            ));
+        }
+        if row.parse_utf8 != "view-boundary" {
+            return Err(format!(
+                "{} has unsupported non-strict parse_utf8 {}",
+                row.sk_v8.row_id, row.parse_utf8
+            ));
+        }
+        if row.escape_complete != "yes" {
+            return Err(format!(
+                "{} has unsupported non-strict escape_complete {}",
+                row.sk_v8.row_id, row.escape_complete
             ));
         }
         return Ok(());
@@ -1615,6 +1633,32 @@ mod tests {
         row.strictness = "strict".into();
         row.sk_v8.measured_validation_path = "measured-row".into();
         row.parse_utf8 = "view-boundary".into();
+        assert!(row.validate_sk_v8_w0().is_err());
+    }
+
+    #[test]
+    fn w0_rejects_deferred_validation_semantic_drift() {
+        let mut row = TelemetryRow::workload(
+            "twitter",
+            "direct_to_struct",
+            None,
+            1_000_000,
+            Some(84_324.14),
+            Some(101_204.33),
+            comparators(),
+            "digest",
+            "none",
+            "PASS",
+            w0_hot_leaf("json/twitter/direct_to_struct/main"),
+        )
+        .with_sk_v8(w0_telemetry("json/twitter/direct_to_struct/main", "digest"));
+        assert!(row.validate_sk_v8_w0().is_ok());
+
+        row.parse_utf8 = "none".into();
+        assert!(row.validate_sk_v8_w0().is_err());
+
+        row.parse_utf8 = "view-boundary".into();
+        row.escape_complete = "n/a".into();
         assert!(row.validate_sk_v8_w0().is_err());
     }
 

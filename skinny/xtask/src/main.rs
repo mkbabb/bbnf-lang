@@ -219,6 +219,7 @@ fn bench_json(root: &Path, passthrough: Vec<String>) -> Result<()> {
         .arg("bench")
         .arg("-p")
         .arg("bbnf-bench");
+    apply_bench_output_env(&mut command, root);
     if !full_run {
         command.arg("--").args(&criterion_args);
     }
@@ -258,17 +259,39 @@ fn gate_json(root: &Path, passthrough: Vec<String>) -> Result<()> {
     if !unexpected.is_empty() {
         bail!("gate-json got unsupported arguments {unexpected:?}");
     }
-    let status = Command::new("cargo")
+    let mut command = Command::new("cargo");
+    command
         .current_dir(root)
         .args(["run", "-p", "bbnf-bench", "--bin", "gate"])
         .arg("--")
-        .args(passthrough)
-        .status()
-        .context("failed to spawn bench gate")?;
+        .args(passthrough);
+    apply_bench_output_env(&mut command, root);
+    let status = command.status().context("failed to spawn bench gate")?;
     if status.success() {
         Ok(())
     } else {
         bail!("bench gate failed with status {status}")
+    }
+}
+
+fn apply_bench_output_env(command: &mut Command, root: &Path) {
+    if let Some(target_dir) = normalized_env_path(root, "CARGO_TARGET_DIR") {
+        command.env("CARGO_TARGET_DIR", &target_dir);
+        if std::env::var_os("CRITERION_HOME").is_none() {
+            command.env("CRITERION_HOME", target_dir.join("criterion"));
+        }
+    }
+    if let Some(criterion_home) = normalized_env_path(root, "CRITERION_HOME") {
+        command.env("CRITERION_HOME", criterion_home);
+    }
+}
+
+fn normalized_env_path(root: &Path, key: &str) -> Option<PathBuf> {
+    let path = PathBuf::from(std::env::var_os(key)?);
+    if path.is_absolute() {
+        Some(path)
+    } else {
+        Some(root.join(path))
     }
 }
 
@@ -316,6 +339,9 @@ fn validate_w0_results_snapshot(root: &Path) -> Result<()> {
         if !text.contains(required) {
             bail!("RESULTS.md missing W0 snapshot marker {required}");
         }
+    }
+    if !text.contains("structural_scan+masking_probes+pmu+cycles:nonproducer") {
+        bail!("RESULTS.md missing W0 diagnostic nonproducer marker");
     }
     let mut run_ids = BTreeSet::new();
     for line in text.lines().filter(|line| line.starts_with("| json/")) {

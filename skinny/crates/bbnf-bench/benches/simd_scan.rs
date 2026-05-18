@@ -62,6 +62,12 @@ fn write_simd_row(
 }
 
 fn metadata_path(corpus: &str) -> PathBuf {
+    if let Some(path) = env::var_os("CRITERION_HOME") {
+        return PathBuf::from(path)
+            .join("simd_structural_scan")
+            .join(format!("{corpus}_simd"))
+            .join("metadata.toml");
+    }
     env::var_os("CARGO_TARGET_DIR")
         .map(PathBuf::from)
         .unwrap_or_else(|| {

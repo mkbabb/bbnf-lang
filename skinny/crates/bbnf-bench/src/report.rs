@@ -58,12 +58,13 @@ pub struct SkV8Telemetry {
     pub redress_entry: String,
     pub wave_id: String,
     pub run_id: String,
-    pub sk_v8_open_delta: String,
+    pub sk_v9_open_delta: String,
     pub substrate_surface: String,
     pub structural_projection_status: String,
     pub substrate_cardinality: String,
     pub same_wave_consumer_class: String,
     pub track2_independence_status: String,
+    pub diagnostic_nonproducer_status: String,
     pub comparators: Vec<SkV8ComparatorEvidence>,
 }
 
@@ -295,7 +296,7 @@ impl TelemetryRow {
             ("redress_entry", telemetry.redress_entry.as_str()),
             ("wave_id", telemetry.wave_id.as_str()),
             ("run_id", telemetry.run_id.as_str()),
-            ("sk_v8_open_delta", telemetry.sk_v8_open_delta.as_str()),
+            ("sk_v9_open_delta", telemetry.sk_v9_open_delta.as_str()),
             ("substrate_surface", telemetry.substrate_surface.as_str()),
             (
                 "structural_projection_status",
@@ -313,6 +314,10 @@ impl TelemetryRow {
                 "track2_independence_status",
                 telemetry.track2_independence_status.as_str(),
             ),
+            (
+                "diagnostic_nonproducer_status",
+                telemetry.diagnostic_nonproducer_status.as_str(),
+            ),
         ];
         for (field, value) in required_text {
             if value.trim().is_empty() {
@@ -327,9 +332,17 @@ impl TelemetryRow {
         }
         validate_w0_row_identity(self)?;
         validate_w0_outcome(&telemetry.row_id, &self.outcome_id)?;
-        if telemetry.wave_id != "SK-V9-open" || telemetry.sk_v8_open_delta != "baseline" {
+        if telemetry.wave_id != "SK-V9-open" || telemetry.sk_v9_open_delta != "baseline" {
             return Err(format!(
                 "{} is not marked as SK-V9-open baseline",
+                telemetry.row_id
+            ));
+        }
+        if telemetry.diagnostic_nonproducer_status
+            != "structural_scan+masking_probes+pmu+cycles:nonproducer"
+        {
+            return Err(format!(
+                "{} has unsupported diagnostic nonproducer status",
                 telemetry.row_id
             ));
         }
@@ -393,12 +406,14 @@ impl SkV8Telemetry {
             redress_entry: "none".to_string(),
             wave_id: "SK-V9-open".to_string(),
             run_id: "test-run".to_string(),
-            sk_v8_open_delta: "baseline".to_string(),
+            sk_v9_open_delta: "baseline".to_string(),
             substrate_surface: output_plane.to_string(),
             structural_projection_status: "n/a".to_string(),
             substrate_cardinality: "zero_or_inert".to_string(),
             same_wave_consumer_class: "gate_only".to_string(),
             track2_independence_status: "independent_verified".to_string(),
+            diagnostic_nonproducer_status: "structural_scan+masking_probes+pmu+cycles:nonproducer"
+                .to_string(),
             comparators: Vec::new(),
         }
     }
@@ -588,12 +603,12 @@ impl Report {
         }
         if !self.rows.is_empty() {
             out.push_str("\n## SK-V9 W0 Telemetry Manifest\n\n");
-            out.push_str("| Row id | Grammar | Domain | Wave | Run id | Validation | Profile artifact | Sample cost | Sample count | Build flags | Host triple | Feature mask | CostFacts | Redress | Delta vs SK-V8 | Substrate | Structural projection | Cardinality | Consumer | Track 2 | Comparator evidence |\n");
-            out.push_str("|---|---|---|---|---|---|---|---|---:|---|---|---|---|---|---|---|---|---|---|---|---|\n");
+            out.push_str("| Row id | Grammar | Domain | Wave | Run id | Validation | Profile artifact | Sample cost | Sample count | Build flags | Host triple | Feature mask | CostFacts | Redress | SK-V9-open delta | Substrate | Structural projection | Cardinality | Consumer | Track 2 | Diagnostic nonproducer | Comparator evidence |\n");
+            out.push_str("|---|---|---|---|---|---|---|---|---:|---|---|---|---|---|---|---|---|---|---|---|---|---|\n");
             for row in &self.rows {
                 let telemetry = &row.sk_v8;
                 out.push_str(&format!(
-                    "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |\n",
+                    "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |\n",
                     cell(&telemetry.row_id),
                     cell(&telemetry.grammar_id),
                     cell(&telemetry.domain),
@@ -613,12 +628,13 @@ impl Report {
                         telemetry.costfacts_rejected_alternative_ids.join(",")
                     )),
                     cell(&telemetry.redress_entry),
-                    cell(&telemetry.sk_v8_open_delta),
+                    cell(&telemetry.sk_v9_open_delta),
                     cell(&telemetry.substrate_surface),
                     cell(&telemetry.structural_projection_status),
                     cell(&telemetry.substrate_cardinality),
                     cell(&telemetry.same_wave_consumer_class),
                     cell(&telemetry.track2_independence_status),
+                    cell(&telemetry.diagnostic_nonproducer_status),
                     cell(&format_comparator_evidence(&telemetry.comparators))
                 ));
             }
@@ -1619,12 +1635,14 @@ mod tests {
             redress_entry: "none".into(),
             wave_id: "SK-V9-open".into(),
             run_id: TEST_SK_V9_OPEN_RUN_ID.into(),
-            sk_v8_open_delta: "baseline".into(),
+            sk_v9_open_delta: "baseline".into(),
             substrate_surface: substrate_surface.into(),
             structural_projection_status: structural_projection_status.into(),
             substrate_cardinality: substrate_cardinality.into(),
             same_wave_consumer_class: "gate_only".into(),
             track2_independence_status: "independent_verified".into(),
+            diagnostic_nonproducer_status: "structural_scan+masking_probes+pmu+cycles:nonproducer"
+                .into(),
             comparators: w0_evidence(row_id),
         }
     }
@@ -1727,9 +1745,9 @@ mod tests {
             "json/twitter/parse_only/main",
             "borrowed_view_over_offset_tape",
         ));
-        row.sk_v8.sk_v8_open_delta.clear();
+        row.sk_v8.sk_v9_open_delta.clear();
         assert!(row.validate_sk_v8_w0().is_err());
-        row.sk_v8.sk_v8_open_delta = "baseline".into();
+        row.sk_v8.sk_v9_open_delta = "baseline".into();
         row.sk_v8.profile_artifact = "unprofiled".into();
         assert!(row.validate_sk_v8_w0().is_err());
     }

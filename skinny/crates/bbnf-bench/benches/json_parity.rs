@@ -495,6 +495,12 @@ fn write_row(host: &HostFacts, fixture: &JsonFixture, bench_name: &str, facts: B
 }
 
 fn metadata_path(corpus: &str, bench_name: &str) -> PathBuf {
+    if let Some(path) = env::var_os("CRITERION_HOME") {
+        return PathBuf::from(path)
+            .join(format!("json_{corpus}"))
+            .join(bench_name)
+            .join("metadata.toml");
+    }
     env::var_os("CARGO_TARGET_DIR")
         .map(PathBuf::from)
         .unwrap_or_else(|| {

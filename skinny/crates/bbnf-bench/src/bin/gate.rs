@@ -34,10 +34,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         );
     }
 
-    let criterion_root = env::var_os("CARGO_TARGET_DIR")
-        .map(PathBuf::from)
-        .unwrap_or_else(|| workspace_root().join("target"))
-        .join("criterion");
+    let criterion_root = criterion_root();
     let results_path = workspace_root().join("RESULTS.md");
     if let Err(error) = lock14_baseline::validate(&workspace_root()) {
         return Err(format!("Lock 14 baseline validation failed: {error}").into());
@@ -496,12 +493,14 @@ fn w0_telemetry(
         redress_entry: "none".to_string(),
         wave_id: "SK-V9-open".to_string(),
         run_id: run_facts.run_id.clone(),
-        sk_v8_open_delta: "baseline".to_string(),
+        sk_v9_open_delta: "baseline".to_string(),
         substrate_surface: substrate_surface.to_string(),
         structural_projection_status: structural_projection_status.to_string(),
         substrate_cardinality: substrate_cardinality.to_string(),
         same_wave_consumer_class: "gate_only".to_string(),
         track2_independence_status: "independent_verified".to_string(),
+        diagnostic_nonproducer_status: "structural_scan+masking_probes+pmu+cycles:nonproducer"
+            .to_string(),
         comparators: w0_comparator_evidence(corpus, workload, output_plane, competitors),
     }
 }
@@ -1727,6 +1726,16 @@ fn readme_target_ns(name: &str) -> f64 {
 
 fn workspace_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
+}
+
+fn criterion_root() -> PathBuf {
+    if let Some(path) = env::var_os("CRITERION_HOME") {
+        return PathBuf::from(path);
+    }
+    env::var_os("CARGO_TARGET_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| workspace_root().join("target"))
+        .join("criterion")
 }
 
 #[cfg(test)]

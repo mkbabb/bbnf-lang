@@ -2,12 +2,11 @@
 
 Date: 2026-05-18.
 
-Status: SK-V8 Pass Alpha packet materialized; S-P2 and S-P3 are converged.
-G-Alpha sign-off is required before dispatch. If G-Alpha closes, only W0 is
+Status: G-Alpha closed by user on 2026-05-18T05:26:48Z. SK-V8 W0 is
 dispatchable from this packet. W1-W6 require W0 closure and plan augmentation
 before implementation.
 
-Next move: G-Alpha decision.
+Next move: SK-V8 W0.
 
 ## 1. Read First
 
@@ -219,9 +218,11 @@ Reconcile task state, process state, and artifact mtimes before reporting
 
 ## 10. G-Alpha Decision
 
-The next user decision is:
+Decision recorded:
 
-- `G-Alpha closed`: dispatch SK-V8 W0.
-- `G-Alpha revise`: revise the named packet sections.
+- `G-Alpha closed` by user on 2026-05-18T05:26:48Z.
 
-No SK-V8 implementation wave should dispatch before that decision.
+Authority granted: dispatch SK-V8 W0 only.
+
+W1-W6 remain blocked until W0 closes and each later wave satisfies its own
+entry gates, plan/challenge requirements, and dispatch authority.

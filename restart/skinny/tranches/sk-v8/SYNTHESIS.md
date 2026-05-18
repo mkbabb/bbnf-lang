@@ -273,10 +273,9 @@ rediscovery, leaving one retained `Tape`, and routing the Omega residual
 explicitly. Omega ratification is the cleaner route; the SK-V8 wave does not
 amend `LOCKS.md` itself.
 
-## G-Alpha Posture
+## G-Alpha Decision
 
-This packet may be presented for G-Alpha with the following constraint:
+G-Alpha closed by user on 2026-05-18T05:26:48Z with the following constraint:
 
-- `G-Alpha closed` authorizes SK-V8 W0 only.
+- SK-V8 W0 is authorized.
 - W1-W6 require W0 closure plus plan augmentation before dispatch.
-- `G-Alpha revise` returns to Alpha hardening with named revisions.

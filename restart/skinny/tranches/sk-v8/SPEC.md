@@ -31,8 +31,8 @@ Authority:
 Dispatch lock:
 
 - No SK-V8 implementation wave dispatches from S-P3 itself.
-- G-Alpha user signoff remains required before any SK-V8 wave dispatch.
-- `G-Alpha closed` initially dispatches W0 only.
+- G-Alpha closed by user on 2026-05-18T05:26:48Z.
+- Current dispatch authority covers W0 only.
 - W1-W6 are conditionally gated by this packet, but each remains blocked until
   W0 closes, the wave plan names exact owner paths and row gates, required
   challenge accepts, and the orchestrator/user dispatches that wave.
@@ -815,13 +815,11 @@ Specific REDRESS and Alpha blocks:
 
 ## Section 11 - G-Alpha And Dispatch Scope
 
-This packet is suitable for G-Alpha review with a limited dispatch scope:
+G-Alpha closed on 2026-05-18T05:26:48Z with limited dispatch scope:
 
-- `G-Alpha closed` authorizes W0 only.
+- W0 is authorized.
 - W1-W6 remain conditional. They require W0 closure, a wave plan with exact
   owner paths and gates, required challenge acceptance, and orchestrator/user
   dispatch before redress.
-- `G-Alpha revise` returns to the named packet sections.
 
-No SK-V8 implementation wave dispatches before G-Alpha. No W3 implementation
-dispatches from S-P2 or S-P3 alone.
+No W3 implementation dispatches from S-P2 or S-P3 alone.

@@ -3,10 +3,10 @@
 This is the implementation-agent dispatch contract for skinny iteration SK-V8.
 It binds to the SK-V8 packet at `restart/skinny/tranches/sk-v8/`.
 
-Do not dispatch any SK-V8 implementation wave from S-P3 alone. G-Alpha user
-signoff is still required. If G-Alpha closes, dispatch W0 only. W1-W6 are
-conditional: they require W0 close, a fresh wave plan with exact owner paths and
-row gates, required challenge acceptance, and orchestrator/user dispatch.
+Do not dispatch any SK-V8 implementation wave from S-P3 alone. G-Alpha closed
+by user on 2026-05-18T05:26:48Z, so W0 is dispatchable. W1-W6 are conditional:
+they require W0 close, a fresh wave plan with exact owner paths and row gates,
+required challenge acceptance, and orchestrator/user dispatch.
 
 ## Required Reading
 
@@ -217,6 +217,6 @@ Current state:
 - W10c B6 stack-canary Stage 1 is admitted.
 - S-P2 V6 and V7 form the two qualifying ACCEPT cycles.
 - S-P3 V4 and V5 form the two qualifying ACCEPT cycles.
-- G-Alpha is not yet closed.
+- G-Alpha closed by user on 2026-05-18T05:26:48Z.
 
-No implementation dispatch until the user signs off with `G-Alpha closed`.
+Implementation dispatch authority currently covers W0 only.

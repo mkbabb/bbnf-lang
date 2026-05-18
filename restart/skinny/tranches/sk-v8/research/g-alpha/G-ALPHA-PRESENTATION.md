@@ -77,9 +77,11 @@ Required W0 close signal: all 38 current main rows have required telemetry and e
 
 ## G-Alpha Choice
 
-The mandatory user gate has two valid outcomes:
+Decision recorded:
 
-- `G-Alpha closed`: dispatch SK-V8 W0 only.
-- `G-Alpha revise`: revise the named packet sections before any SK-V8 wave dispatch.
+- `G-Alpha closed` by user on 2026-05-18T05:26:48Z.
 
-No SK-V8 implementation wave dispatches before this decision.
+Authority granted: dispatch SK-V8 W0 only.
+
+W1-W6 remain blocked until W0 closes and each later wave satisfies its own
+entry gates, plan/challenge requirements, and dispatch authority.

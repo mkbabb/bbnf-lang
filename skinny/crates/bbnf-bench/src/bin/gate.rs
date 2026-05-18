@@ -58,7 +58,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             &fixture.name,
             &fixture.sha256,
             fixture.bytes.len() as u64,
-            bbnf_bench::real_typed_struct::fixture_for_name(&fixture.name).is_some(),
+            w0_real_typed_metadata_expected(&fixture.name),
             &rows,
         )
         .map_err(|error| format!("{} metadata invalid: {error}", fixture.name))?;
@@ -1112,6 +1112,10 @@ fn validate_w0_capture_metadata(
     Ok(())
 }
 
+fn w0_real_typed_metadata_expected(fixture: &str) -> bool {
+    sk_v8_open_baseline(&format!("json/{fixture}/real_typed_struct/main")).is_some()
+}
+
 #[derive(Clone)]
 struct CaptureMetadata<'a> {
     cpu_model: &'a str,
@@ -1709,6 +1713,14 @@ mod tests {
     fn w0_capture_metadata_accepts_coherent_required_rows() {
         let rows = metadata_rows(false);
         validate_w0_capture_metadata("fixture", "hash", 12, false, &rows).unwrap();
+    }
+
+    #[test]
+    fn w0_real_typed_metadata_expectation_uses_measured_baseline_not_source_fixtures() {
+        assert!(w0_real_typed_metadata_expected("twitter"));
+        assert!(w0_real_typed_metadata_expected("update_center"));
+        assert!(!w0_real_typed_metadata_expected("apache_builds"));
+        assert!(!w0_real_typed_metadata_expected("citm_catalog"));
     }
 
     #[test]

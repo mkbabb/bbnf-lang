@@ -2650,3 +2650,10 @@ perturbation.
   trip the W0 run-id validator on metadata drift unrelated to W2 source. W2
   therefore admits source/product parity only and does not claim six measured
   `real_typed_struct A / GO` rows.
+- W2 hardening V3 exposed and folded one checked-report mismatch: source-only
+  typed fixtures must not make the W0 report gate require unadmitted Criterion
+  `real_typed_struct` metadata rows. The gate now derives real typed metadata
+  requirements from the W0 measured baseline rows, so Apache/CITM remain
+  source/product parity rows until a later accepted benchmark row-table wave.
+  The standard checked report path can still fail on the already recorded W0
+  run-id drift, but no longer fails first on missing Apache/CITM metadata.

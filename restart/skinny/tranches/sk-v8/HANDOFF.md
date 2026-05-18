@@ -184,7 +184,12 @@ coordinates and is routed in `skinny/REDRESS.md` rather than admitted with
 weakened proof. W2 left parser/runtime/substrate/direct guard surfaces and
 `skinny/RESULTS.md` unchanged; benchmark row-table admission is rejected for
 this wave because the W0 run-id validator was already known to reject local
-Criterion metadata drift unrelated to W2 source.
+Criterion metadata drift unrelated to W2 source. W2 hardening V3 then found
+that the standard checked report gate was deriving required real typed metadata
+from the source fixture map rather than W0 measured baseline rows. That fold is
+scoped to the report gate: Apache/CITM source/product fixtures no longer
+require unadmitted Criterion metadata rows, and the W0 run-id strict validator
+remains intact.
 
 W3 is now the active wave.
 

@@ -6,19 +6,31 @@ Status: G-Alpha is closed by user instruction on 2026-05-18. SK-V9 S-P1 V1
 has been run and challenged. The V1 profile packet is an honest opening gap
 ledger, not a completed S-P1 profile: hardening V1 returned 2/6 ACCEPT and
 requires a recovery W0 telemetry-lock before behavior candidates can proceed.
-No `SPEC.md` or `DISPATCH-PROMPT.md` exists yet.
+`SPEC.md`, `DISPATCH-PROMPT.md`, and the W0 plan now exist. Their dispatch
+authority is W0 only; behavior waves remain blocked until W0 plus a fresh S-P1
+profile rerun converge.
 
 ## 1. Read First
 
 1. `restart/prompts/pass-contracts/PASS-ALPHA.md`
 2. `restart/skinny/tranches/sk-v9/SYNTHESIS.md`
-3. `restart/skinny/tranches/sk-v9/research/alpha/alpha-F-contract-draft.md`
-4. `restart/skinny/tranches/sk-v9/research/alpha/alpha-C-redress-digest.md`
-5. `restart/skinny/tranches/sk-v8/HANDOFF.md`
-6. `restart/skinny/tranches/sk-v8/research/skv8-W6-close-and-alpha-feedback.md`
-7. `restart/skinny/tranches/sk-v8/research/wave-6-hardening/V2/HARDENING-W6-V2-CONSOLIDATED.md`
-8. `skinny/RESULTS.md`
-9. `skinny/REDRESS.md` entries 91, 92, and 93
+3. `restart/skinny/tranches/sk-v9/SPEC.md`
+4. `restart/skinny/tranches/sk-v9/DISPATCH-PROMPT.md`
+5. `restart/skinny/tranches/sk-v9/research/skv9-W0-plan.md`
+6. `restart/skinny/tranches/sk-v9/research/alpha/alpha-F-contract-draft.md`
+7. `restart/skinny/tranches/sk-v9/research/alpha/alpha-C-redress-digest.md`
+8. `restart/skinny/tranches/sk-v9/research/p1/hardening/HARDENING-S-P1-V1-CONSOLIDATED.md`
+9. `restart/skinny/tranches/sk-v9/research/skv9-W0-r1-gate-report-baseline.md`
+10. `restart/skinny/tranches/sk-v9/research/skv9-W0-r2-criterion-metadata.md`
+11. `restart/skinny/tranches/sk-v9/research/skv9-W0-r3-diagnostic-fences.md`
+12. `restart/skinny/tranches/sk-v9/research/skv9-W0-r4-typed-direct-fences.md`
+13. `restart/skinny/tranches/sk-v9/research/skv9-W0-r5-lock14-redress.md`
+14. `restart/skinny/tranches/sk-v9/research/skv9-W0-r6-spec-dispatch-shape.md`
+15. `restart/skinny/tranches/sk-v8/HANDOFF.md`
+16. `restart/skinny/tranches/sk-v8/research/skv8-W6-close-and-alpha-feedback.md`
+17. `restart/skinny/tranches/sk-v8/research/wave-6-hardening/V2/HARDENING-W6-V2-CONSOLIDATED.md`
+18. `skinny/RESULTS.md`
+19. `skinny/REDRESS.md` entries 91, 92, and 93
 
 ## 2. Current State
 
@@ -71,12 +83,10 @@ Alpha cost binding for any later S-P3 plan:
 2. Fold S-P1 V1 hardening into a recovery-only V2: W0 telemetry-lock is the
    next executable move; behavior S-P2 candidates are blocked until W0 plus a
    fresh S-P1 profile rerun exists.
-3. Author the SK-V9 SPEC/DISPATCH with W0 first and behavior waves conditional
-   on W0 plus revised S-P1 convergence.
-4. Execute W0 with `gate-json` as same-wave consumer, no parser/scanner/SIMD/
+3. Execute W0 with `gate-json` as same-wave consumer, no parser/scanner/SIMD/
    codegen behavior movement, no row admission, and no strict admission from
    deferred/view-boundary rows.
-5. After W0, rerun S-P1 against the SK-V9-open baseline and only then release
+4. After W0, rerun S-P1 against the SK-V9-open baseline and only then release
    behavior S-P2/P3 waves.
 
 ## 5. Pre-Blocked Routes
@@ -109,8 +119,8 @@ different, and pass challenge before implementation planning.
 
 ## 6. Close Posture
 
-The SK-V9 contract is post-G-Alpha but pre-behavior. The detailed wave plan
-must now make W0 telemetry-lock explicit and must not dispatch behavior waves
-until W0 and a fresh S-P1 profile rerun close. This resolves the S-P1 V1
-hardening contradiction without treating absence-coded rows as empirical
-ancestry.
+The SK-V9 contract is post-G-Alpha and W0-dispatchable, but still pre-behavior.
+The detailed wave plan makes W0 telemetry-lock explicit and must not dispatch
+behavior waves until W0 and a fresh S-P1 profile rerun close. This resolves the
+S-P1 V1 hardening contradiction without treating absence-coded rows as
+empirical ancestry.

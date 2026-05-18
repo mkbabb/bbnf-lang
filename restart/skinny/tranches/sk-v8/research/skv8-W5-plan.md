@@ -2,7 +2,7 @@
 
 Date: 2026-05-18.
 
-Status: V3 hardening fold applied; ready for V4 challenge.
+Status: closed by V4+V5 hardening convergence.
 
 ## Entry Gate
 
@@ -133,10 +133,9 @@ V1 returned CH1 and CH2 REVISE. V2 challenged the folded provider-boundary
 cleanup and the cwd-qualified verification plan, then returned CH1 REVISE for
 stale no-source/no-generic-edit language and missing exact REDRESS anchors.
 V3 challenged that fold and returned CH1 REVISE because the audit-scope
-REDRESS assertion still lacked inline spans. V4 must challenge the folded
-documentation and unchanged source packet. If V4 returns a qualifying ACCEPT,
-re-challenge the unchanged packet once more. W5 may close only after two
-consecutive qualifying ACCEPT cycles.
+REDRESS assertion still lacked inline spans. V4 accepted 6/6 with minimum
+confidence 95 as the first qualifying cycle after V3. V5 re-challenged the
+unchanged packet and accepted 6/6 with minimum confidence 95, closing W5.
 
 ## Revert And Redress
 

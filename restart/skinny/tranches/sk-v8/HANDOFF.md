@@ -3,13 +3,14 @@
 Date: 2026-05-18.
 
 Status: G-Alpha closed by user on 2026-05-18T05:26:48Z. SK-V8 W0, W1, W2,
-W3, and W4 are closed. W2 admits source/product parity and rejects benchmark
-row-table admission for this wave. W3 rejects/routes Tier A implementation on
-the pre-redress fit gate. W4 rejects/routes the scalar-parent fold candidate
-after it failed the selected row gate. W5 is the next active wave; W6 requires
-W5 disposition and its own close gate before implementation.
+W3, W4, and W5 are closed. W2 admits source/product parity and rejects
+benchmark row-table admission for this wave. W3 rejects/routes Tier A
+implementation on the pre-redress fit gate. W4 rejects/routes the scalar-parent
+fold candidate after it failed the selected row gate. W5 admits only the named
+Lock 14 provider-boundary cleanup and leaves generated output and
+`skinny/RESULTS.md` unchanged. W6 is the next active wave.
 
-Next move: execute SK-V8 W5 grammar-neutral audit and Lock 14 preservation.
+Next move: execute SK-V8 W6 close and Alpha feedback reconciliation.
 
 ## 1. Read First
 
@@ -136,8 +137,8 @@ dispatch W0.
 | W2 | Typed Product Plane Expansion | Closed by V4+V5 challenge convergence: source/product parity admitted, benchmark row-table admission rejected/routed in REDRESS 91 | <=650 source/test LOC; generated output and row tables named separately |
 | W3 | Profile-Selected Parse Candidate — lead candidate: tape ⊕ structural-projection union (S-P2 cohort) | Rejected/routed by W3 V1 challenge on pre-redress fit gate; no source or RESULTS change | <=450 source/test LOC default; <=650 only with accepted pre-redress fit proof |
 | W4 | Direct Guard Triage | Closed by V3+V4 challenge convergence: scalar-parent fold rejected/routed in REDRESS 93; no source or RESULTS change | <=300 source/test LOC and <=3 selected rows |
-| W5 | Grammar-Neutral Audit And Lock 14 Preservation | Active after W1-W4 close | 0 source LOC default; <=150 named Lock 14 cleanup LOC |
-| W6 | Close And Alpha Feedback | Conditional on all prior dispositions | 0 source LOC; docs/RESULTS/REDRESS/HANDOFF/SPEC reconciliation only |
+| W5 | Grammar-Neutral Audit And Lock 14 Preservation | Closed by V4+V5 challenge convergence: named Lock 14 provider-boundary cleanup admitted; no generated output or RESULTS change | 0 source LOC default; <=150 named Lock 14 cleanup LOC |
+| W6 | Close And Alpha Feedback | Active after W0-W5 close | 0 source LOC; docs/RESULTS/REDRESS/HANDOFF/SPEC reconciliation only |
 
 W0 is telemetry-only. If W0 changes parser, scanner, SIMD, asm, codegen
 behavior, or product-plane behavior, reject it.
@@ -227,7 +228,22 @@ cycle after V2 REVISE, and W4 V4 accepted 6/6 as the unchanged second
 qualifying cycle. The closure authority is
 `restart/skinny/tranches/sk-v8/research/wave-4-hardening/V4/HARDENING-W4-V4-CONSOLIDATED.md`.
 
-W5 grammar-neutral audit and Lock 14 preservation is now the active work.
+W5 disposition record: W5 V1 found a live provider-boundary residue in
+`skinny/crates/codegen/src/lib.rs`: JSON profile guard and JSON template/runtime
+includes lived in a surface classified as generic by Lock 14. Commit `6e159f5c`
+folded that residue by moving the provider material to
+`skinny/crates/codegen/src/json_provider.rs`, adding the
+`per_grammar_provider` allowlist class, and authorizing only W5 owner-path
+parent diffs for `crates/codegen/src/lib.rs` plus
+`crates/codegen/src/json_provider.rs`. V2 and V3 rejected documentation
+posture until the packet carried the named cleanup posture and exact REDRESS
+anchors. V4 accepted 6/6 as the first qualifying cycle after V3, and V5
+accepted 6/6 as the unchanged second qualifying cycle. The closure authority is
+`restart/skinny/tranches/sk-v8/research/wave-5-hardening/V5/HARDENING-W5-V5-CONSOLIDATED.md`.
+W5 makes no performance claim, refreshes no row table, and leaves generated
+output and `skinny/RESULTS.md` unchanged.
+
+W6 close and Alpha feedback is now the active work.
 
 ## 5. Entry Gates
 
@@ -320,6 +336,6 @@ Authority granted: dispatch SK-V8 after `G-Alpha closed`, with W0 and W1 now
 closed under their recorded gates, W2, W3, and W4 dispositions recorded in
 REDRESS 91, 92, and 93, and W4 closed by V3+V4 hardening convergence.
 
-W5-W6 remain blocked until each later wave satisfies its own entry gates,
-plan/challenge requirements, prior-wave disposition requirements, and dispatch
-authority.
+W6 remains blocked on its own close gate, plan/challenge requirements, and
+document reconciliation. No SK-V9 dispatch is authorized by SK-V8 close; SK-V9
+may only be planned through the skinny/pass and Alpha substrate after W6 closes.

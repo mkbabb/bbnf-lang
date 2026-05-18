@@ -2,7 +2,8 @@
 
 Date: 2026-05-18.
 
-Status: V1 hardening fold applied; named provider-boundary cleanup added.
+Status: closed by V4+V5 hardening convergence; named provider-boundary cleanup
+admitted.
 
 ## Entry State
 
@@ -192,9 +193,13 @@ the audit-scope REDRESS assertion still named the REDRESS 36-38/85/86
 reconciliation without inline spans. The fold keeps source unchanged and adds
 the exact anchors directly to every active W5 REDRESS reconciliation assertion.
 
-## Recommended Plan
+## V4/V5 Closure
 
-Proceed to a W5 V4 challenge with the named Lock 14 cleanup:
+W5 V4 accepted 6/6 with minimum confidence 95 as the first qualifying cycle
+after V3. W5 V5 re-challenged the unchanged packet and accepted 6/6 with
+minimum confidence 95. W5 is closed.
+
+The closure admits the named Lock 14 cleanup only:
 
 - same-wave consumer: the W5 audit gate itself;
 - source owner paths:
@@ -203,8 +208,5 @@ Proceed to a W5 V4 challenge with the named Lock 14 cleanup:
   `skinny/crates/bbnf-bench/src/lock14_baseline.rs`;
 - no generated output or `RESULTS.md` edit;
 - verification commands: the scans and checks listed above;
-- hardening challenge: review the provider-boundary cleanup for Lock 14,
-  REDRESS 36-38 (`skinny/REDRESS.md:460-515`), REDRESS 85
-  (`skinny/REDRESS.md:2399-2427`), and REDRESS 86
-  (`skinny/REDRESS.md:2431-2464`) consistency, no hidden generic JSON policy,
-  no generated drift, and no paper close.
+- hardening authority:
+  `restart/skinny/tranches/sk-v8/research/wave-5-hardening/V5/HARDENING-W5-V5-CONSOLIDATED.md`.

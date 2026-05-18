@@ -1,7 +1,10 @@
 use bbnf_bench::gate::{self, DirectProjectionInput, Outcome, ThresholdInput, Verdict};
+use bbnf_bench::lock14_baseline;
 use bbnf_bench::materialization::track_stats;
 use bbnf_bench::metadata::{current_peak_rss_bytes, RowMetadata, TrackTag};
-use bbnf_bench::report::{ComparatorSet, Report};
+use bbnf_bench::report::{
+    ComparatorSet, Report, SkV8ComparatorEvidence, SkV8Telemetry, TelemetryRow,
+};
 use serde_json::Value;
 use std::env;
 use std::error::Error;
@@ -21,6 +24,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         .unwrap_or_else(|| workspace_root().join("target"))
         .join("criterion");
     let results_path = workspace_root().join("RESULTS.md");
+    if let Err(error) = lock14_baseline::validate(&workspace_root()) {
+        return Err(format!("Lock 14 baseline validation failed: {error}").into());
+    }
+    let run_facts = RunFacts::probe(&criterion_root);
     let fixtures = test_fixtures::load_available_bench_fixtures()?;
     let mut report = Report::new("Skinny JSON Bench Results");
     let mut outcomes = Vec::new();
@@ -65,7 +72,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             simd_canada_gbps(&criterion_root, &fixture.name, fixture.bytes.len());
         let (fastest_competitor_peak_rss, bbnf_peak_rss) =
             peak_rss_bounds(&fixture, estimates.fastest_anchor().map(|anchor| anchor.0));
-        let outcome = gate::classify(&ThresholdInput {
+        let classified_outcome = gate::classify(&ThresholdInput {
             schema_ok: gate::validate_schema(&rows) && estimates.required_present(),
             parity_ok: parity_ok && direct_struct_ok,
             simd_parity_ok,
@@ -80,6 +87,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             fastest_competitor_peak_rss,
             bbnf_peak_rss,
         });
+        let outcome = w0_parse_non_admission(classified_outcome);
         outcomes.push(outcome);
         let direct_outcome = gate::classify_direct_projection(&DirectProjectionInput {
             correctness_ok: direct_struct_ok,
@@ -90,32 +98,67 @@ fn main() -> Result<(), Box<dyn Error>> {
         if let Some(outcome) = direct_outcome {
             outcomes.push(outcome);
         }
-        report.push_row(
-            fixture.name.clone(),
-            outcome,
+        let parse_comparators =
+            parse_comparators(fixture.bytes.len() as u64, &fixture.name, &estimates);
+        let parse_hot_leaf = w0_hot_leaf(&fixture.name, "track1_generated");
+        let parse_telemetry = w0_telemetry(
+            &fixture.name,
+            "parse_only",
+            "borrowed view over offset tape vs DOM",
             fixture.bytes.len() as u64,
             estimates.track1,
-            estimates.track2,
-            parse_comparators(fixture.bytes.len() as u64, &fixture.name, &estimates),
+            &parse_comparators,
+            &rows,
+            &run_facts,
+            "track1_generated",
         );
-        report.push_workload_row(
-            &fixture.name,
-            "direct_to_struct",
+        report.rows.push(
+            TelemetryRow::parse(
+                fixture.name.clone(),
+                outcome,
+                fixture.bytes.len() as u64,
+                estimates.track1,
+                estimates.track2,
+                parse_comparators,
+                parse_hot_leaf,
+            )
+            .with_sk_v8(parse_telemetry),
+        );
+        let direct_comparators = direct_comparators(fixture.bytes.len() as u64, &estimates);
+        let direct_signal = direct_workload_signal(
+            direct_struct_ok,
             direct_outcome,
             fixture.bytes.len() as u64,
             estimates.direct_track1,
             estimates.direct_track2,
-            direct_comparators(fixture.bytes.len() as u64, &estimates),
+            estimates.direct_sonic,
+        );
+        let direct_telemetry = w0_telemetry(
+            &fixture.name,
+            "direct_to_struct",
             "digest",
-            "generated Track 1 SinkOnly vs independent hand Track 2 SinkOnly; UTF-8 remains view-boundary",
-            direct_workload_signal(
-                direct_struct_ok,
+            fixture.bytes.len() as u64,
+            estimates.direct_track1,
+            &direct_comparators,
+            &rows,
+            &run_facts,
+            "track1_direct_to_struct",
+        );
+        report.rows.push(
+            TelemetryRow::workload(
+                &fixture.name,
+                "direct_to_struct",
                 direct_outcome,
                 fixture.bytes.len() as u64,
                 estimates.direct_track1,
                 estimates.direct_track2,
-                estimates.direct_sonic,
-            ),
+                direct_comparators,
+                "digest",
+                "generated Track 1 SinkOnly vs independent hand Track 2 SinkOnly; UTF-8 remains view-boundary",
+                direct_signal,
+                w0_hot_leaf(&fixture.name, "track1_direct_to_struct"),
+            )
+            .with_sk_v8(direct_telemetry),
         );
         if direct_outcome == Some(Outcome::NDirectProjectionFailure) {
             report.notes.push(direct_projection_note(
@@ -142,24 +185,41 @@ fn main() -> Result<(), Box<dyn Error>> {
             if let Some(outcome) = real_typed_outcome {
                 outcomes.push(outcome);
             }
-            report.push_workload_row(
-                &fixture.name,
-                "real_typed_struct",
+            let typed_comparators = real_typed_comparators(fixture.bytes.len() as u64, &estimates);
+            let typed_signal = real_typed_workload_signal(
+                real_typed_ok,
                 real_typed_outcome,
                 fixture.bytes.len() as u64,
                 estimates.real_typed_track1,
                 estimates.real_typed_track2,
-                real_typed_comparators(fixture.bytes.len() as u64, &estimates),
+                estimates.real_typed_sonic,
+            );
+            let typed_telemetry = w0_telemetry(
+                &fixture.name,
+                "real_typed_struct",
                 "typed direct",
-                "generated Track 1 consumes host/API output schema; Track 2 is a structural oracle, not the SOTA gate; UTF-8 remains view-boundary",
-                real_typed_workload_signal(
-                    real_typed_ok,
+                fixture.bytes.len() as u64,
+                estimates.real_typed_track1,
+                &typed_comparators,
+                &rows,
+                &run_facts,
+                "track1_real_typed_struct",
+            );
+            report.rows.push(
+                TelemetryRow::workload(
+                    &fixture.name,
+                    "real_typed_struct",
                     real_typed_outcome,
                     fixture.bytes.len() as u64,
                     estimates.real_typed_track1,
                     estimates.real_typed_track2,
-                    estimates.real_typed_sonic,
-                ),
+                    typed_comparators,
+                    "typed direct",
+                    "generated Track 1 consumes host/API output schema; Track 2 is a structural oracle, not the SOTA gate; UTF-8 remains view-boundary",
+                    typed_signal,
+                    w0_hot_leaf(&fixture.name, "track1_real_typed_struct"),
+                )
+                .with_sk_v8(typed_telemetry),
             );
         }
         push_probe_rows(
@@ -215,13 +275,16 @@ fn main() -> Result<(), Box<dyn Error>> {
             .to_string(),
     );
     report.notes.push(
-        "Schema v3 sidecar provenance: sonic-rs strict/lossy and serde_json rows are same-run; C++ simdjson, yyjson, RapidJSON, and asmjson columns come only from documented sidecar profile artefacts when populated and do not count as same-run strict anchors."
+        "SK-V8 W0 telemetry: gate-json consumes the manifest below; native Rust comparators are same-run, C++ sidecars are historical or explicitly absent and never strict anchors in W0."
             .to_string(),
     );
-    if let Err(error) = report.validate_schema_v3() {
+    if let Err(error) = report
+        .validate_schema_v3()
+        .and_then(|_| report.validate_sk_v8_w0())
+    {
         report
             .notes
-            .push(format!("Schema v3 validation failure: {error}."));
+            .push(format!("Schema/W0 validation failure: {error}."));
         report.write_markdown(&results_path)?;
         println!("{}", report.render_markdown());
         std::process::exit(exit_code_for_verdict(Verdict::Invalid));
@@ -249,6 +312,296 @@ fn exit_code_for_verdict(verdict: Verdict) -> i32 {
         Verdict::Invalid => 2,
         Verdict::NoGo => 5,
     }
+}
+
+fn w0_parse_non_admission(outcome: Outcome) -> Outcome {
+    match outcome {
+        Outcome::IParityOracleFail | Outcome::JSchemaFail | Outcome::KSimdParityHashFail => outcome,
+        _ => Outcome::SSubstrateGuardNonAdmission,
+    }
+}
+
+#[derive(Debug, Clone)]
+struct RunFacts {
+    run_id: String,
+    host_triple: String,
+    build_flags: String,
+    feature_mask: String,
+}
+
+impl RunFacts {
+    fn probe(criterion_root: &Path) -> Self {
+        let git = command_output("git", &["rev-parse", "--short", "HEAD"])
+            .unwrap_or_else(|| "unknown".to_string());
+        let host_triple = rustc_host_triple()
+            .unwrap_or_else(|| format!("{}-{}", std::env::consts::ARCH, std::env::consts::OS));
+        let rustflags = env::var("RUSTFLAGS").unwrap_or_default();
+        let target_cpu = parse_target_cpu(&rustflags).unwrap_or_else(|| "default".to_string());
+        Self {
+            run_id: format!("sk-v8-open:{git}:{}", criterion_root.display()),
+            host_triple: host_triple.clone(),
+            build_flags: format!(
+                "profile={};rustflags={};target_cpu={target_cpu}",
+                env::var("PROFILE").unwrap_or_else(|_| "bench".to_string()),
+                if rustflags.is_empty() {
+                    "<empty>"
+                } else {
+                    &rustflags
+                }
+            ),
+            feature_mask: format!(
+                "arch={};os={};simd={:?};target_cpu={target_cpu}",
+                std::env::consts::ARCH,
+                std::env::consts::OS,
+                bbnf_simd::active_backend()
+            ),
+        }
+    }
+}
+
+fn w0_telemetry(
+    corpus: &str,
+    workload: &str,
+    output_plane: &str,
+    bytes: u64,
+    track1_ns: Option<f64>,
+    competitors: &ComparatorSet,
+    rows: &[RowMetadata],
+    run_facts: &RunFacts,
+    bench_name: &str,
+) -> SkV8Telemetry {
+    let row_id = format!("json/{corpus}/{workload}/main");
+    let metadata = rows
+        .iter()
+        .find(|row| row.workload == workload && row.track == TrackTag::Track1Generated);
+    let build_flags = metadata
+        .map(|row| {
+            format!(
+                "profile={};rustflags={};target_cpu={}",
+                row.profile,
+                if row.rustflags.is_empty() {
+                    "<empty>"
+                } else {
+                    row.rustflags.as_str()
+                },
+                row.target_cpu
+            )
+        })
+        .unwrap_or_else(|| run_facts.build_flags.clone());
+    let host_triple = metadata
+        .map(|row| {
+            format!(
+                "{};arch={};cpu={}",
+                run_facts.host_triple, row.cpu_arch, row.cpu_model
+            )
+        })
+        .unwrap_or_else(|| run_facts.host_triple.clone());
+    let feature_mask = metadata
+        .map(|row| {
+            if row.feature_mask == "n/a" {
+                run_facts.feature_mask.clone()
+            } else {
+                row.feature_mask.clone()
+            }
+        })
+        .unwrap_or_else(|| run_facts.feature_mask.clone());
+    let sample_count = metadata
+        .map(|row| row.sample_size as u64)
+        .unwrap_or_default();
+    let sample_cost = track1_ns
+        .filter(|ns| bytes > 0 && ns.is_finite() && *ns > 0.0)
+        .map(|ns| {
+            format!(
+                "ns_per_byte={:.6};track1_ns={ns:.2};bytes={bytes}",
+                ns / bytes as f64
+            )
+        })
+        .unwrap_or_else(|| "n/a".to_string());
+    let (substrate_surface, structural_projection_status, substrate_cardinality) =
+        substrate_facts(workload);
+    SkV8Telemetry {
+        row_id: row_id.clone(),
+        grammar_id: "json".to_string(),
+        domain: "json_bench".to_string(),
+        measured_validation_path: "view-boundary".to_string(),
+        profile_artifact: w0_profile_artifact(corpus, bench_name),
+        sample_cost,
+        sample_count,
+        build_flags,
+        host_triple,
+        feature_mask,
+        costfacts_rule_id: "none:pre-W1".to_string(),
+        costfacts_chosen_shape: "none:pre-W1".to_string(),
+        costfacts_rejected_alternative_ids: vec!["none:pre-W1".to_string()],
+        redress_entry: "none".to_string(),
+        wave_id: "SK-V8-open".to_string(),
+        run_id: run_facts.run_id.clone(),
+        sk_v8_open_delta: "baseline".to_string(),
+        substrate_surface: substrate_surface.to_string(),
+        structural_projection_status: structural_projection_status.to_string(),
+        substrate_cardinality: substrate_cardinality.to_string(),
+        same_wave_consumer_class: "gate_only".to_string(),
+        track2_independence_status: "independent_verified".to_string(),
+        comparators: w0_comparator_evidence(corpus, workload, output_plane, competitors),
+    }
+}
+
+fn w0_comparator_evidence(
+    corpus: &str,
+    workload: &str,
+    output_plane: &str,
+    comparators: &ComparatorSet,
+) -> Vec<SkV8ComparatorEvidence> {
+    let native_plane = if workload == "parse_only" {
+        "DOM"
+    } else {
+        output_plane
+    };
+    let mut evidence = vec![
+        comparator_evidence(
+            "sonic_rs_strict",
+            native_plane,
+            "strict",
+            "same-run-native",
+            "n/a",
+            comparators.sonic_strict_mbps,
+            &format!("criterion:json_{corpus}/sonic_rs_anchor/new/estimates.json"),
+        ),
+        comparator_evidence(
+            "serde_json",
+            native_plane,
+            "strict",
+            "same-run-native",
+            "n/a",
+            comparators.serde_json_mbps,
+            &format!("criterion:json_{corpus}/serde_json/new/estimates.json"),
+        ),
+    ];
+    if comparators.sonic_lossy_mbps.is_some() {
+        evidence.push(comparator_evidence(
+            "sonic_rs_lossy",
+            native_plane,
+            "permissive",
+            "same-run-native",
+            "n/a",
+            comparators.sonic_lossy_mbps,
+            &format!("criterion:json_{corpus}/sonic_rs_lossy/new/estimates.json"),
+        ));
+    }
+    for (id, value) in [
+        ("simdjson_dom", comparators.simdjson_dom_mbps),
+        ("simdjson_ondemand", comparators.simdjson_ondemand_mbps),
+        ("yyjson_default", comparators.yyjson_default_mbps),
+        ("asmjson_swar", comparators.asmjson_swar_mbps),
+        ("asmjson_avx512", comparators.asmjson_avx512_mbps),
+        ("rapidjson_default", comparators.rapidjson_default_mbps),
+    ] {
+        let (freshness, source) = if value.is_some() {
+            (
+                "historical:sk-v7-sidecar-profile".to_string(),
+                format!("sidecar-profile:sk-v7-cpp:{corpus}:{id}"),
+            )
+        } else {
+            (
+                format!("absent:not-collected-for-{workload}"),
+                format!("absence:w0:{corpus}:{workload}:{id}"),
+            )
+        };
+        evidence.push(comparator_evidence(
+            id, "DOM", "strict", &freshness, &freshness, value, &source,
+        ));
+    }
+    evidence
+}
+
+fn comparator_evidence(
+    comparator_id: &str,
+    comparator_plane: &str,
+    comparator_strictness: &str,
+    comparator_freshness: &str,
+    sidecar_freshness: &str,
+    value_mbps: Option<f64>,
+    source_artifact: &str,
+) -> SkV8ComparatorEvidence {
+    SkV8ComparatorEvidence {
+        comparator_id: comparator_id.to_string(),
+        comparator_plane: comparator_plane.to_string(),
+        comparator_strictness: comparator_strictness.to_string(),
+        comparator_freshness: comparator_freshness.to_string(),
+        sidecar_freshness: sidecar_freshness.to_string(),
+        value_mbps,
+        source_artifact: source_artifact.to_string(),
+    }
+}
+
+fn substrate_facts(workload: &str) -> (&'static str, &'static str, &'static str) {
+    match workload {
+        "parse_only" => (
+            "borrowed_view_over_offset_tape",
+            "discarded_after_capacity",
+            "one",
+        ),
+        "direct_to_struct" => ("sink_only_digest", "n/a", "zero_or_inert"),
+        "real_typed_struct" => ("typed_direct_projection", "n/a", "zero_or_inert"),
+        _ => ("unknown", "unknown", "unknown"),
+    }
+}
+
+fn w0_profile_artifact(corpus: &str, bench_name: &str) -> String {
+    format!("criterion:json_{corpus}/{bench_name}/new/estimates.json")
+}
+
+fn w0_hot_leaf(corpus: &str, bench_name: &str) -> String {
+    format!(
+        "{};hot-leaf=criterion-slope;row=json/{corpus}/{}/main",
+        w0_profile_artifact(corpus, bench_name),
+        workload_for_bench(bench_name)
+    )
+}
+
+fn workload_for_bench(bench_name: &str) -> &str {
+    match bench_name {
+        "track1_direct_to_struct" => "direct_to_struct",
+        "track1_real_typed_struct" => "real_typed_struct",
+        _ => "parse_only",
+    }
+}
+
+fn rustc_host_triple() -> Option<String> {
+    command_output("rustc", &["-vV"]).and_then(|text| {
+        text.lines()
+            .find_map(|line| line.strip_prefix("host:"))
+            .map(str::trim)
+            .map(str::to_string)
+    })
+}
+
+fn command_output(program: &str, args: &[&str]) -> Option<String> {
+    let output = Command::new(program).args(args).output().ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    String::from_utf8(output.stdout)
+        .ok()
+        .map(|text| text.trim().to_string())
+}
+
+fn parse_target_cpu(rustflags: &str) -> Option<String> {
+    let mut words = rustflags.split_whitespace();
+    while let Some(word) = words.next() {
+        if word == "-C" {
+            if let Some(value) = words
+                .next()
+                .and_then(|next| next.strip_prefix("target-cpu="))
+            {
+                return Some(value.to_string());
+            }
+        }
+        if let Some(value) = word.strip_prefix("-Ctarget-cpu=") {
+            return Some(value.to_string());
+        }
+    }
+    None
 }
 
 fn direct_workload_signal(
@@ -450,11 +803,17 @@ fn peak_rss_note(
     anchor: Option<&str>,
 ) -> Option<String> {
     Some(format!(
-        "{corpus} peak RSS subprocess probes: bbnf={} bytes, S anchor {}={} bytes.",
-        bbnf?,
+        "{corpus} peak RSS subprocess probes: bbnf<={}, S anchor {}<={}.",
+        format_rss_mib(bbnf?),
         anchor.unwrap_or("competitor"),
-        competitor?
+        format_rss_mib(competitor?)
     ))
+}
+
+fn format_rss_mib(bytes: u64) -> String {
+    let bucket_bytes = 2 * 1_048_576;
+    let bucket_mib = bytes.div_ceil(bucket_bytes) * 2;
+    format!("{bucket_mib} MiB")
 }
 
 #[derive(Default)]

@@ -16,6 +16,7 @@ pub enum Outcome {
     LSimdThroughputFail,
     MMemoryResidencyFail,
     NDirectProjectionFailure,
+    SSubstrateGuardNonAdmission,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -54,6 +55,18 @@ pub struct DirectProjectionInput {
 
 pub const DIRECT_PROJECTION_SONIC_SLACK: f64 = 1.10;
 
+#[derive(Debug, Clone, Copy)]
+pub struct StrictAdmissionEvidence<'a> {
+    pub outcome_id: &'a str,
+    pub row_strictness: &'a str,
+    pub row_output_plane: &'a str,
+    pub comparator_plane: &'a str,
+    pub comparator_strictness: &'a str,
+    pub comparator_freshness: &'a str,
+    pub sidecar_freshness: &'a str,
+    pub measured_validation_path: &'a str,
+}
+
 impl Outcome {
     pub fn verdict(self) -> Verdict {
         match self {
@@ -70,7 +83,8 @@ impl Outcome {
             | Outcome::KSimdParityHashFail
             | Outcome::LSimdThroughputFail
             | Outcome::MMemoryResidencyFail
-            | Outcome::NDirectProjectionFailure => Verdict::NoGo,
+            | Outcome::NDirectProjectionFailure
+            | Outcome::SSubstrateGuardNonAdmission => Verdict::NoGo,
         }
     }
 
@@ -90,8 +104,69 @@ impl Outcome {
             Outcome::LSimdThroughputFail => "L",
             Outcome::MMemoryResidencyFail => "M",
             Outcome::NDirectProjectionFailure => "N-direct",
+            Outcome::SSubstrateGuardNonAdmission => "S",
         }
     }
+}
+
+pub fn parse_outcome_id(value: &str) -> Option<Outcome> {
+    Some(match value {
+        "A" => Outcome::ABeatAndParity,
+        "B" => Outcome::BBeatSubstrateParityCodegen,
+        "C" => Outcome::CSubstrateParityCodegenAcceptable,
+        "D" => Outcome::DSubstrateParityCodegenGap,
+        "E" => Outcome::ESubstrateParityCodegenFailure,
+        "F-positive" => Outcome::FPositive,
+        "F-noise" => Outcome::FNoise,
+        "G" => Outcome::GSubstrateFailure,
+        "I" => Outcome::IParityOracleFail,
+        "J" => Outcome::JSchemaFail,
+        "K" => Outcome::KSimdParityHashFail,
+        "L" => Outcome::LSimdThroughputFail,
+        "M" => Outcome::MMemoryResidencyFail,
+        "N-direct" => Outcome::NDirectProjectionFailure,
+        "S" => Outcome::SSubstrateGuardNonAdmission,
+        _ => return None,
+    })
+}
+
+pub fn validate_strict_admission(evidence: &StrictAdmissionEvidence<'_>) -> Result<(), String> {
+    let Some(outcome) = parse_outcome_id(evidence.outcome_id) else {
+        return Err(format!("unsupported outcome {}", evidence.outcome_id));
+    };
+    if matches!(outcome, Outcome::KSimdParityHashFail) || evidence.outcome_id == "S" {
+        return Err(format!(
+            "{} is not strict-admission eligible",
+            evidence.outcome_id
+        ));
+    }
+    if evidence.row_strictness != "strict" {
+        return Err("row strictness is not strict".to_string());
+    }
+    if evidence.comparator_strictness != "strict" {
+        return Err("comparator strictness is not strict".to_string());
+    }
+    if normalize_plane(evidence.row_output_plane) != normalize_plane(evidence.comparator_plane) {
+        return Err("row/comparator output plane mismatch".to_string());
+    }
+    if evidence.measured_validation_path != "measured-row" {
+        return Err("validation path is not measured-row".to_string());
+    }
+    if evidence.comparator_freshness.starts_with("stale:")
+        || evidence.comparator_freshness.starts_with("historical:")
+        || evidence.comparator_freshness.starts_with("absent:")
+        || evidence.sidecar_freshness.starts_with("stale:")
+        || evidence.sidecar_freshness.starts_with("historical:")
+        || evidence.sidecar_freshness.starts_with("absent:")
+    {
+        return Err("comparator freshness is not same-run strict evidence".to_string());
+    }
+    if evidence.comparator_freshness != "same-run-native"
+        && evidence.sidecar_freshness != "sidecar-same-run"
+    {
+        return Err("comparator freshness is unsupported for strict admission".to_string());
+    }
+    Ok(())
 }
 
 pub fn validate_schema(rows: &[RowMetadata]) -> bool {
@@ -113,6 +188,14 @@ pub fn validate_schema(rows: &[RowMetadata]) -> bool {
             TrackTag::SimdScan => row.has_scalar_parity_hash(),
             _ => true,
         })
+}
+
+fn normalize_plane(value: &str) -> String {
+    value
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .to_ascii_lowercase()
 }
 
 pub fn classify(input: &ThresholdInput) -> Outcome {
@@ -226,7 +309,8 @@ fn severity(outcome: Outcome) -> u8 {
         Outcome::LSimdThroughputFail => 10,
         Outcome::MMemoryResidencyFail => 11,
         Outcome::GSubstrateFailure => 12,
-        Outcome::NDirectProjectionFailure => 13,
+        Outcome::SSubstrateGuardNonAdmission => 13,
+        Outcome::NDirectProjectionFailure => 14,
     }
 }
 
@@ -341,5 +425,56 @@ mod tests {
             sonic_rs_ns: Some(300.0),
         };
         assert_eq!(classify_direct_projection(&input), None);
+    }
+
+    fn strict_evidence() -> StrictAdmissionEvidence<'static> {
+        StrictAdmissionEvidence {
+            outcome_id: "A",
+            row_strictness: "strict",
+            row_output_plane: "digest",
+            comparator_plane: "digest",
+            comparator_strictness: "strict",
+            comparator_freshness: "same-run-native",
+            sidecar_freshness: "n/a",
+            measured_validation_path: "measured-row",
+        }
+    }
+
+    #[test]
+    fn rejects_unsupported_outcome_id() {
+        assert!(parse_outcome_id("Q").is_none());
+        let mut evidence = strict_evidence();
+        evidence.outcome_id = "Q";
+        assert!(validate_strict_admission(&evidence).is_err());
+    }
+
+    #[test]
+    fn rejects_k_or_reserved_s_as_strict_admission() {
+        let mut evidence = strict_evidence();
+        evidence.outcome_id = "K";
+        assert!(validate_strict_admission(&evidence).is_err());
+        evidence.outcome_id = "S";
+        assert!(validate_strict_admission(&evidence).is_err());
+    }
+
+    #[test]
+    fn rejects_deferred_view_boundary_strict_claim() {
+        let mut evidence = strict_evidence();
+        evidence.row_strictness = "deferred";
+        assert!(validate_strict_admission(&evidence).is_err());
+        evidence = strict_evidence();
+        evidence.measured_validation_path = "view-boundary";
+        assert!(validate_strict_admission(&evidence).is_err());
+    }
+
+    #[test]
+    fn rejects_strict_plane_mismatch_and_stale_sidecar() {
+        let mut evidence = strict_evidence();
+        evidence.comparator_plane = "DOM";
+        assert!(validate_strict_admission(&evidence).is_err());
+        evidence = strict_evidence();
+        evidence.comparator_freshness = "historical:sk-v7-sidecar";
+        evidence.sidecar_freshness = "historical:sk-v7-sidecar";
+        assert!(validate_strict_admission(&evidence).is_err());
     }
 }

@@ -1,5 +1,6 @@
 use crate::gate::{Outcome, Verdict};
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeSet;
 use std::fs;
 use std::io;
 use std::path::Path;
@@ -29,6 +30,44 @@ pub struct ComparatorSet {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct SkV8ComparatorEvidence {
+    pub comparator_id: String,
+    pub comparator_plane: String,
+    pub comparator_strictness: String,
+    pub comparator_freshness: String,
+    pub sidecar_freshness: String,
+    pub value_mbps: Option<f64>,
+    pub source_artifact: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct SkV8Telemetry {
+    pub row_id: String,
+    pub grammar_id: String,
+    pub domain: String,
+    pub measured_validation_path: String,
+    pub profile_artifact: String,
+    pub sample_cost: String,
+    pub sample_count: u64,
+    pub build_flags: String,
+    pub host_triple: String,
+    pub feature_mask: String,
+    pub costfacts_rule_id: String,
+    pub costfacts_chosen_shape: String,
+    pub costfacts_rejected_alternative_ids: Vec<String>,
+    pub redress_entry: String,
+    pub wave_id: String,
+    pub run_id: String,
+    pub sk_v8_open_delta: String,
+    pub substrate_surface: String,
+    pub structural_projection_status: String,
+    pub substrate_cardinality: String,
+    pub same_wave_consumer_class: String,
+    pub track2_independence_status: String,
+    pub comparators: Vec<SkV8ComparatorEvidence>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct TelemetryRow {
     pub corpus: String,
     pub workload: String,
@@ -48,6 +87,7 @@ pub struct TelemetryRow {
     pub delta_vs_yyjson: Option<f64>,
     pub hot_leaf: String,
     pub signal: String,
+    pub sk_v8: SkV8Telemetry,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -145,16 +185,20 @@ impl TelemetryRow {
         hot_leaf: impl Into<String>,
         signal: impl Into<String>,
     ) -> Self {
+        let corpus = corpus.into();
+        let workload = workload.into();
+        let output_plane = output_plane.into();
         Self {
-            corpus: corpus.into(),
-            workload: workload.into(),
+            sk_v8: SkV8Telemetry::placeholder(&corpus, &workload, &output_plane),
+            corpus,
+            workload,
             outcome_id,
             verdict,
             strictness: strictness.into(),
             parse_utf8: parse_utf8.into(),
             escape_complete: escape_complete.into(),
             flaw_probe: flaw_probe.into(),
-            output_plane: output_plane.into(),
+            output_plane,
             track1_mbps,
             track2_mbps,
             delta_vs_skv6: "n/a (no machine-readable SK-V6 baseline in W0b)".to_string(),
@@ -165,6 +209,11 @@ impl TelemetryRow {
             hot_leaf: hot_leaf.into(),
             signal: signal.into(),
         }
+    }
+
+    pub fn with_sk_v8(mut self, sk_v8: SkV8Telemetry) -> Self {
+        self.sk_v8 = sk_v8;
+        self
     }
 
     fn validate_schema_v3(&self) -> Result<(), String> {
@@ -221,6 +270,132 @@ impl TelemetryRow {
             ));
         }
         Ok(())
+    }
+
+    fn validate_sk_v8_w0(&self) -> Result<(), String> {
+        let telemetry = &self.sk_v8;
+        let required_text = [
+            ("row_id", telemetry.row_id.as_str()),
+            ("grammar_id", telemetry.grammar_id.as_str()),
+            ("domain", telemetry.domain.as_str()),
+            (
+                "measured_validation_path",
+                telemetry.measured_validation_path.as_str(),
+            ),
+            ("profile_artifact", telemetry.profile_artifact.as_str()),
+            ("sample_cost", telemetry.sample_cost.as_str()),
+            ("build_flags", telemetry.build_flags.as_str()),
+            ("host_triple", telemetry.host_triple.as_str()),
+            ("feature_mask", telemetry.feature_mask.as_str()),
+            ("costfacts_rule_id", telemetry.costfacts_rule_id.as_str()),
+            (
+                "costfacts_chosen_shape",
+                telemetry.costfacts_chosen_shape.as_str(),
+            ),
+            ("redress_entry", telemetry.redress_entry.as_str()),
+            ("wave_id", telemetry.wave_id.as_str()),
+            ("run_id", telemetry.run_id.as_str()),
+            ("sk_v8_open_delta", telemetry.sk_v8_open_delta.as_str()),
+            ("substrate_surface", telemetry.substrate_surface.as_str()),
+            (
+                "structural_projection_status",
+                telemetry.structural_projection_status.as_str(),
+            ),
+            (
+                "substrate_cardinality",
+                telemetry.substrate_cardinality.as_str(),
+            ),
+            (
+                "same_wave_consumer_class",
+                telemetry.same_wave_consumer_class.as_str(),
+            ),
+            (
+                "track2_independence_status",
+                telemetry.track2_independence_status.as_str(),
+            ),
+        ];
+        for (field, value) in required_text {
+            if value.trim().is_empty() {
+                return Err(format!("{} missing SK-V8 W0 {field}", telemetry.row_id));
+            }
+        }
+        if telemetry.grammar_id != "json" || telemetry.domain != "json_bench" {
+            return Err(format!(
+                "{} has unsupported grammar/domain",
+                telemetry.row_id
+            ));
+        }
+        if telemetry.wave_id != "SK-V8-open" || telemetry.sk_v8_open_delta != "baseline" {
+            return Err(format!(
+                "{} is not marked as SK-V8-open baseline",
+                telemetry.row_id
+            ));
+        }
+        if telemetry.sample_count == 0 {
+            return Err(format!("{} missing sample_count", telemetry.row_id));
+        }
+        if telemetry.sample_cost.contains("n/a") || !telemetry.sample_cost.contains("ns_per_byte=")
+        {
+            return Err(format!("{} missing sample_cost", telemetry.row_id));
+        }
+        if self.hot_leaf.contains("unprofiled") || telemetry.profile_artifact.contains("unprofiled")
+        {
+            return Err(format!(
+                "{} still has placeholder hot leaf",
+                telemetry.row_id
+            ));
+        }
+        if telemetry.costfacts_rejected_alternative_ids.is_empty() {
+            return Err(format!(
+                "{} missing CostFacts rejected alternatives",
+                telemetry.row_id
+            ));
+        }
+        if telemetry.same_wave_consumer_class != "gate_only" {
+            return Err(format!(
+                "{} has unsupported same-wave consumer class",
+                telemetry.row_id
+            ));
+        }
+        if self.workload == "parse_only" && !matches!(self.outcome_id.as_str(), "K" | "S") {
+            return Err(format!(
+                "{} parse row admitted outside substrate guard",
+                telemetry.row_id
+            ));
+        }
+        validate_comparator_evidence(&telemetry.row_id, &telemetry.comparators)?;
+        Ok(())
+    }
+}
+
+impl SkV8Telemetry {
+    fn placeholder(corpus: &str, workload: &str, output_plane: &str) -> Self {
+        let row_id = format!("json/{corpus}/{workload}/main");
+        Self {
+            row_id: row_id.clone(),
+            grammar_id: "json".to_string(),
+            domain: "json_bench".to_string(),
+            measured_validation_path: "view-boundary".to_string(),
+            profile_artifact: format!("criterion:unbound;row={row_id}"),
+            sample_cost: "ns_per_byte=1.000000".to_string(),
+            sample_count: 1,
+            build_flags: "profile=test;rustflags=;target_cpu=default".to_string(),
+            host_triple: "test-host".to_string(),
+            feature_mask: "test".to_string(),
+            costfacts_rule_id: "none:pre-W1".to_string(),
+            costfacts_chosen_shape: "none:pre-W1".to_string(),
+            costfacts_rejected_alternative_ids: vec!["none:pre-W1".to_string()],
+            redress_entry: "none".to_string(),
+            wave_id: "SK-V8-open".to_string(),
+            run_id: "test-run".to_string(),
+            sk_v8_open_delta: "baseline".to_string(),
+            substrate_surface: output_plane.to_string(),
+            structural_projection_status: "n/a".to_string(),
+            substrate_cardinality: "zero_or_inert".to_string(),
+            same_wave_consumer_class: "gate_only".to_string(),
+            track2_independence_status: "independent_verified".to_string(),
+            comparators: Vec::new(),
+        }
     }
 }
 
@@ -311,6 +486,35 @@ impl Report {
         Ok(())
     }
 
+    pub fn validate_sk_v8_w0(&self) -> Result<(), String> {
+        if self.rows.len() != SK_V8_OPEN_BASELINE.len() {
+            return Err(format!(
+                "SK-V8 W0 expected {} main rows, saw {}",
+                SK_V8_OPEN_BASELINE.len(),
+                self.rows.len()
+            ));
+        }
+        let mut seen = BTreeSet::new();
+        for row in &self.rows {
+            row.validate_sk_v8_w0()?;
+            let row_id = row.sk_v8.row_id.as_str();
+            if !seen.insert(row_id) {
+                return Err(format!("duplicate SK-V8 W0 row_id {row_id}"));
+            }
+            let Some(baseline) = sk_v8_open_baseline(row_id) else {
+                return Err(format!("unknown SK-V8-open row_id {row_id}"));
+            };
+            validate_baseline_delta(row_id, "Track 1", row.track1_mbps, baseline.track1_mbps)?;
+            validate_baseline_delta(row_id, "Track 2", row.track2_mbps, baseline.track2_mbps)?;
+        }
+        for baseline in SK_V8_OPEN_BASELINE {
+            if !seen.contains(baseline.row_id) {
+                return Err(format!("missing SK-V8-open row_id {}", baseline.row_id));
+            }
+        }
+        Ok(())
+    }
+
     pub fn render_markdown(&self) -> String {
         let mut out = String::new();
         out.push_str("# ");
@@ -351,6 +555,43 @@ impl Report {
                 row.signal
             ));
         }
+        if !self.rows.is_empty() {
+            out.push_str("\n## SK-V8 W0 Telemetry Manifest\n\n");
+            out.push_str("| Row id | Grammar | Domain | Wave | Run id | Validation | Profile artifact | Sample cost | Sample count | Build flags | Host triple | Feature mask | CostFacts | Redress | SK-V8-open delta | Substrate | Structural projection | Cardinality | Consumer | Track 2 | Comparator evidence |\n");
+            out.push_str("|---|---|---|---|---|---|---|---|---:|---|---|---|---|---|---|---|---|---|---|---|---|\n");
+            for row in &self.rows {
+                let telemetry = &row.sk_v8;
+                out.push_str(&format!(
+                    "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |\n",
+                    cell(&telemetry.row_id),
+                    cell(&telemetry.grammar_id),
+                    cell(&telemetry.domain),
+                    cell(&telemetry.wave_id),
+                    cell(&telemetry.run_id),
+                    cell(&telemetry.measured_validation_path),
+                    cell(&telemetry.profile_artifact),
+                    cell(&telemetry.sample_cost),
+                    telemetry.sample_count,
+                    cell(&telemetry.build_flags),
+                    cell(&telemetry.host_triple),
+                    cell(&telemetry.feature_mask),
+                    cell(&format!(
+                        "{}:{}:{}",
+                        telemetry.costfacts_rule_id,
+                        telemetry.costfacts_chosen_shape,
+                        telemetry.costfacts_rejected_alternative_ids.join(",")
+                    )),
+                    cell(&telemetry.redress_entry),
+                    cell(&telemetry.sk_v8_open_delta),
+                    cell(&telemetry.substrate_surface),
+                    cell(&telemetry.structural_projection_status),
+                    cell(&telemetry.substrate_cardinality),
+                    cell(&telemetry.same_wave_consumer_class),
+                    cell(&telemetry.track2_independence_status),
+                    cell(&format_comparator_evidence(&telemetry.comparators))
+                ));
+            }
+        }
         if !self.probe_rows.is_empty() {
             out.push_str("\n## Masking Probes\n\n");
             out.push_str("| Corpus | Probe | Mbps | ns/iter | vs Track 1 | Signal |\n");
@@ -384,6 +625,343 @@ impl Report {
         }
         fs::write(path, self.render_markdown())
     }
+}
+
+pub struct SkV8OpenBaseline {
+    pub row_id: &'static str,
+    pub track1_mbps: f64,
+    pub track2_mbps: f64,
+}
+
+pub const SK_V8_OPEN_BASELINE: &[SkV8OpenBaseline] = &[
+    SkV8OpenBaseline {
+        row_id: "json/twitter/parse_only/main",
+        track1_mbps: 9581.0,
+        track2_mbps: 9741.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/twitter/direct_to_struct/main",
+        track1_mbps: 11859.0,
+        track2_mbps: 9881.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/twitter/real_typed_struct/main",
+        track1_mbps: 15333.0,
+        track2_mbps: 14516.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/citm_catalog/parse_only/main",
+        track1_mbps: 28644.0,
+        track2_mbps: 19214.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/citm_catalog/direct_to_struct/main",
+        track1_mbps: 21151.0,
+        track2_mbps: 19434.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/canada/parse_only/main",
+        track1_mbps: 15497.0,
+        track2_mbps: 12171.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/canada/direct_to_struct/main",
+        track1_mbps: 6586.0,
+        track2_mbps: 9769.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/apache_builds/parse_only/main",
+        track1_mbps: 12694.0,
+        track2_mbps: 11715.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/apache_builds/direct_to_struct/main",
+        track1_mbps: 8306.0,
+        track2_mbps: 7796.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/github_events/parse_only/main",
+        track1_mbps: 10689.0,
+        track2_mbps: 10073.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/github_events/direct_to_struct/main",
+        track1_mbps: 9088.0,
+        track2_mbps: 7337.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/update_center/parse_only/main",
+        track1_mbps: 11926.0,
+        track2_mbps: 9312.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/update_center/direct_to_struct/main",
+        track1_mbps: 7863.0,
+        track2_mbps: 7514.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/update_center/real_typed_struct/main",
+        track1_mbps: 11958.0,
+        track2_mbps: 10367.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/mesh/parse_only/main",
+        track1_mbps: 9367.0,
+        track2_mbps: 10000.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/mesh/direct_to_struct/main",
+        track1_mbps: 8640.0,
+        track2_mbps: 9049.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/mesh/real_typed_struct/main",
+        track1_mbps: 9623.0,
+        track2_mbps: 7674.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/random/parse_only/main",
+        track1_mbps: 10011.0,
+        track2_mbps: 8018.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/random/direct_to_struct/main",
+        track1_mbps: 7751.0,
+        track2_mbps: 6952.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/gsoc-2018/parse_only/main",
+        track1_mbps: 23209.0,
+        track2_mbps: 21857.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/gsoc-2018/direct_to_struct/main",
+        track1_mbps: 15042.0,
+        track2_mbps: 14380.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/marine_ik/parse_only/main",
+        track1_mbps: 13100.0,
+        track2_mbps: 12164.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/marine_ik/direct_to_struct/main",
+        track1_mbps: 9357.0,
+        track2_mbps: 9488.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/marine_ik/real_typed_struct/main",
+        track1_mbps: 11783.0,
+        track2_mbps: 8321.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/instruments/parse_only/main",
+        track1_mbps: 13320.0,
+        track2_mbps: 11351.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/instruments/direct_to_struct/main",
+        track1_mbps: 8494.0,
+        track2_mbps: 8766.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/numbers/parse_only/main",
+        track1_mbps: 12818.0,
+        track2_mbps: 13537.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/numbers/direct_to_struct/main",
+        track1_mbps: 9773.0,
+        track2_mbps: 6966.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/unicode_mixed/parse_only/main",
+        track1_mbps: 6390.0,
+        track2_mbps: 4970.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/unicode_mixed/direct_to_struct/main",
+        track1_mbps: 3596.0,
+        track2_mbps: 3694.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/unicode_escapes/parse_only/main",
+        track1_mbps: 12731.0,
+        track2_mbps: 8521.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/unicode_escapes/direct_to_struct/main",
+        track1_mbps: 4020.0,
+        track2_mbps: 4016.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/unicode_basic/parse_only/main",
+        track1_mbps: 11189.0,
+        track2_mbps: 10040.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/unicode_basic/direct_to_struct/main",
+        track1_mbps: 9363.0,
+        track2_mbps: 8420.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/distinct_values/parse_only/main",
+        track1_mbps: 10279.0,
+        track2_mbps: 6457.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/distinct_values/direct_to_struct/main",
+        track1_mbps: 4438.0,
+        track2_mbps: 4151.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/y_string_unicode/parse_only/main",
+        track1_mbps: 5577.0,
+        track2_mbps: 5480.0,
+    },
+    SkV8OpenBaseline {
+        row_id: "json/y_string_unicode/direct_to_struct/main",
+        track1_mbps: 4828.0,
+        track2_mbps: 3563.0,
+    },
+];
+
+pub const SK_V8_SIDECAR_COMPARATORS: &[&str] = &[
+    "simdjson_dom",
+    "simdjson_ondemand",
+    "yyjson_default",
+    "asmjson_swar",
+    "asmjson_avx512",
+    "rapidjson_default",
+];
+
+pub fn sk_v8_open_baseline(row_id: &str) -> Option<&'static SkV8OpenBaseline> {
+    SK_V8_OPEN_BASELINE
+        .iter()
+        .find(|baseline| baseline.row_id == row_id)
+}
+
+fn validate_baseline_delta(
+    row_id: &str,
+    field: &str,
+    observed: Option<f64>,
+    baseline: f64,
+) -> Result<(), String> {
+    let Some(observed) = observed else {
+        return Err(format!("{row_id} missing {field} Mbps"));
+    };
+    let pct = ((observed / baseline) - 1.0).abs() * 100.0;
+    if pct > 1.0 {
+        return Err(format!(
+            "{row_id} {field} moved {pct:.2}% from SK-V8-open baseline"
+        ));
+    }
+    Ok(())
+}
+
+fn validate_comparator_evidence(
+    row_id: &str,
+    comparators: &[SkV8ComparatorEvidence],
+) -> Result<(), String> {
+    if comparators.is_empty() {
+        return Err(format!("{row_id} missing comparator evidence"));
+    }
+    let mut seen = BTreeSet::new();
+    for comparator in comparators {
+        if !seen.insert(comparator.comparator_id.as_str()) {
+            return Err(format!(
+                "{row_id} duplicate comparator evidence {}",
+                comparator.comparator_id
+            ));
+        }
+        for (field, value) in [
+            ("comparator_plane", comparator.comparator_plane.as_str()),
+            (
+                "comparator_strictness",
+                comparator.comparator_strictness.as_str(),
+            ),
+            (
+                "comparator_freshness",
+                comparator.comparator_freshness.as_str(),
+            ),
+            ("sidecar_freshness", comparator.sidecar_freshness.as_str()),
+            ("source_artifact", comparator.source_artifact.as_str()),
+        ] {
+            if value.trim().is_empty() {
+                return Err(format!(
+                    "{row_id} {} missing {field}",
+                    comparator.comparator_id
+                ));
+            }
+        }
+        if let Some(value) = comparator.value_mbps {
+            if !value.is_finite() || value <= 0.0 {
+                return Err(format!(
+                    "{row_id} {} has invalid Mbps",
+                    comparator.comparator_id
+                ));
+            }
+        }
+        if SK_V8_SIDECAR_COMPARATORS.contains(&comparator.comparator_id.as_str()) {
+            match comparator.value_mbps {
+                Some(_) => {
+                    if comparator.sidecar_freshness.starts_with("absent:") {
+                        return Err(format!(
+                            "{row_id} populated {} is marked absent",
+                            comparator.comparator_id
+                        ));
+                    }
+                    if !(comparator.sidecar_freshness.starts_with("historical:")
+                        || comparator.sidecar_freshness == "sidecar-same-run")
+                    {
+                        return Err(format!(
+                            "{row_id} populated {} lacks sidecar freshness",
+                            comparator.comparator_id
+                        ));
+                    }
+                }
+                None => {
+                    if !comparator.sidecar_freshness.starts_with("absent:")
+                        || comparator.sidecar_freshness == "absent:"
+                    {
+                        return Err(format!(
+                            "{row_id} absent {} lacks absent:<reason>",
+                            comparator.comparator_id
+                        ));
+                    }
+                }
+            }
+        }
+    }
+    for sidecar in SK_V8_SIDECAR_COMPARATORS {
+        if !seen.contains(sidecar) {
+            return Err(format!("{row_id} missing sidecar slot {sidecar}"));
+        }
+    }
+    Ok(())
+}
+
+fn format_comparator_evidence(comparators: &[SkV8ComparatorEvidence]) -> String {
+    comparators
+        .iter()
+        .map(|comparator| {
+            format!(
+                "{}[plane={},strictness={},freshness={},sidecar={},mbps={},source={}]",
+                comparator.comparator_id,
+                comparator.comparator_plane,
+                comparator.comparator_strictness,
+                comparator.comparator_freshness,
+                comparator.sidecar_freshness,
+                format_optional(comparator.value_mbps),
+                comparator.source_artifact
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("; ")
+}
+
+fn cell(value: &str) -> String {
+    value.replace('|', "\\|").replace('\n', " ")
 }
 
 fn parse_signal(outcome: Outcome) -> String {
@@ -488,6 +1066,69 @@ mod tests {
         }
     }
 
+    fn w0_evidence() -> Vec<SkV8ComparatorEvidence> {
+        let mut evidence = vec![
+            SkV8ComparatorEvidence {
+                comparator_id: "sonic_rs_strict".into(),
+                comparator_plane: "DOM".into(),
+                comparator_strictness: "strict".into(),
+                comparator_freshness: "same-run-native".into(),
+                sidecar_freshness: "n/a".into(),
+                value_mbps: Some(11_915.0),
+                source_artifact: "criterion:json_twitter/sonic_rs_anchor/new/estimates.json".into(),
+            },
+            SkV8ComparatorEvidence {
+                comparator_id: "serde_json".into(),
+                comparator_plane: "DOM".into(),
+                comparator_strictness: "strict".into(),
+                comparator_freshness: "same-run-native".into(),
+                sidecar_freshness: "n/a".into(),
+                value_mbps: Some(10_000.0),
+                source_artifact: "criterion:json_twitter/serde_json/new/estimates.json".into(),
+            },
+        ];
+        for id in SK_V8_SIDECAR_COMPARATORS {
+            evidence.push(SkV8ComparatorEvidence {
+                comparator_id: (*id).into(),
+                comparator_plane: "DOM".into(),
+                comparator_strictness: "strict".into(),
+                comparator_freshness: "absent:not-collected-for-test".into(),
+                sidecar_freshness: "absent:not-collected-for-test".into(),
+                value_mbps: None,
+                source_artifact: format!("absence:w0:test:{id}"),
+            });
+        }
+        evidence
+    }
+
+    fn w0_telemetry(row_id: &str, output_plane: &str) -> SkV8Telemetry {
+        SkV8Telemetry {
+            row_id: row_id.into(),
+            grammar_id: "json".into(),
+            domain: "json_bench".into(),
+            measured_validation_path: "view-boundary".into(),
+            profile_artifact: format!("criterion:{row_id}/new/estimates.json"),
+            sample_cost: "ns_per_byte=1.000000;track1_ns=1.00;bytes=1".into(),
+            sample_count: 100,
+            build_flags: "profile=bench;rustflags=<empty>;target_cpu=default".into(),
+            host_triple: "aarch64-apple-darwin".into(),
+            feature_mask: "arch=aarch64;simd=Scalar".into(),
+            costfacts_rule_id: "none:pre-W1".into(),
+            costfacts_chosen_shape: "none:pre-W1".into(),
+            costfacts_rejected_alternative_ids: vec!["none:pre-W1".into()],
+            redress_entry: "none".into(),
+            wave_id: "SK-V8-open".into(),
+            run_id: "sk-v8-open:test".into(),
+            sk_v8_open_delta: "baseline".into(),
+            substrate_surface: output_plane.into(),
+            structural_projection_status: "n/a".into(),
+            substrate_cardinality: "zero_or_inert".into(),
+            same_wave_consumer_class: "gate_only".into(),
+            track2_independence_status: "independent_verified".into(),
+            comparators: w0_evidence(),
+        }
+    }
+
     #[test]
     fn renders_schema_v3_header_and_parse_workload() {
         let mut report = Report::new("Skinny JSON Bench");
@@ -537,5 +1178,129 @@ mod tests {
         assert!(markdown.contains("## Masking Probes"));
         assert!(markdown
             .contains("| twitter | host_call_eager_decode | 11749 | 430000.00 | 90.7% | PASS |"));
+    }
+
+    #[test]
+    fn w0_manifest_renders_required_fields() {
+        let mut report = Report::new("Skinny JSON Bench");
+        let row = TelemetryRow::parse(
+            "twitter",
+            Outcome::KSimdParityHashFail,
+            631_515,
+            Some(320_728.80),
+            Some(410_427.35),
+            comparators(),
+            "criterion:json_twitter/track1_generated/new/estimates.json;hot-leaf=criterion-slope;row=json/twitter/parse_only/main",
+        )
+        .with_sk_v8(w0_telemetry(
+            "json/twitter/parse_only/main",
+            "borrowed_view_over_offset_tape",
+        ));
+        report.rows.push(row);
+        let markdown = report.render_markdown();
+        assert!(markdown.contains("## SK-V8 W0 Telemetry Manifest"));
+        assert!(markdown.contains("json/twitter/parse_only/main"));
+        assert!(markdown.contains("none:pre-W1"));
+        assert!(markdown.contains("absent:not-collected-for-test"));
+    }
+
+    #[test]
+    fn w0_schema_rejects_missing_delta_or_profile() {
+        let mut row = TelemetryRow::parse(
+            "twitter",
+            Outcome::KSimdParityHashFail,
+            631_515,
+            Some(320_728.80),
+            Some(410_427.35),
+            comparators(),
+            "criterion:json_twitter/track1_generated/new/estimates.json;hot-leaf=criterion-slope;row=json/twitter/parse_only/main",
+        )
+        .with_sk_v8(w0_telemetry(
+            "json/twitter/parse_only/main",
+            "borrowed_view_over_offset_tape",
+        ));
+        row.sk_v8.sk_v8_open_delta.clear();
+        assert!(row.validate_sk_v8_w0().is_err());
+        row.sk_v8.sk_v8_open_delta = "baseline".into();
+        row.sk_v8.profile_artifact = "unprofiled".into();
+        assert!(row.validate_sk_v8_w0().is_err());
+    }
+
+    #[test]
+    fn w0_rejects_malformed_sidecar_evidence() {
+        let mut row = TelemetryRow::parse(
+            "twitter",
+            Outcome::KSimdParityHashFail,
+            631_515,
+            Some(320_728.80),
+            Some(410_427.35),
+            comparators(),
+            "criterion:json_twitter/track1_generated/new/estimates.json;hot-leaf=criterion-slope;row=json/twitter/parse_only/main",
+        )
+        .with_sk_v8(w0_telemetry(
+            "json/twitter/parse_only/main",
+            "borrowed_view_over_offset_tape",
+        ));
+        let sidecar = row
+            .sk_v8
+            .comparators
+            .iter_mut()
+            .find(|entry| entry.comparator_id == "simdjson_dom")
+            .unwrap();
+        sidecar.value_mbps = Some(100.0);
+        sidecar.sidecar_freshness = "absent:not-collected".into();
+        assert!(row.validate_sk_v8_w0().is_err());
+    }
+
+    #[test]
+    fn w0_report_accepts_exact_opening_baseline() {
+        let mut report = Report::new("Skinny JSON Bench");
+        for baseline in SK_V8_OPEN_BASELINE {
+            let mut parts = baseline.row_id.split('/');
+            let _grammar = parts.next().unwrap();
+            let corpus = parts.next().unwrap();
+            let workload = parts.next().unwrap();
+            let bytes = 1_000_000u64;
+            let track1_ns = Some(bytes as f64 * 8_000.0 / baseline.track1_mbps);
+            let track2_ns = Some(bytes as f64 * 8_000.0 / baseline.track2_mbps);
+            let output_plane = if workload == "parse_only" {
+                "borrowed view over offset tape vs DOM"
+            } else if workload == "real_typed_struct" {
+                "typed direct"
+            } else {
+                "digest"
+            };
+            let row = if workload == "parse_only" {
+                TelemetryRow::parse(
+                    corpus,
+                    Outcome::KSimdParityHashFail,
+                    bytes,
+                    track1_ns,
+                    track2_ns,
+                    comparators(),
+                    "criterion:test;hot-leaf=criterion-slope",
+                )
+            } else {
+                TelemetryRow::workload(
+                    corpus,
+                    workload,
+                    None,
+                    bytes,
+                    track1_ns,
+                    track2_ns,
+                    comparators(),
+                    output_plane,
+                    "none",
+                    "PASS",
+                    "criterion:test;hot-leaf=criterion-slope",
+                )
+            };
+            report
+                .rows
+                .push(row.with_sk_v8(w0_telemetry(baseline.row_id, output_plane)));
+        }
+        assert!(report.validate_sk_v8_w0().is_ok());
+        report.rows[0].track1_mbps = Some(SK_V8_OPEN_BASELINE[0].track1_mbps * 1.02);
+        assert!(report.validate_sk_v8_w0().is_err());
     }
 }

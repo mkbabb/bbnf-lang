@@ -2,13 +2,11 @@
 
 Date: 2026-05-18.
 
-Status: G-Alpha is closed by user instruction on 2026-05-18. SK-V9 S-P1 V1
-has been run and challenged. The V1 profile packet is an honest opening gap
-ledger, not a completed S-P1 profile: hardening V1 returned 2/6 ACCEPT and
-requires a recovery W0 telemetry-lock before behavior candidates can proceed.
-`SPEC.md`, `DISPATCH-PROMPT.md`, and the W0 plan now exist. Their dispatch
-authority is W0 only; behavior waves remain blocked until W0 plus a fresh S-P1
-profile rerun converge.
+Status: G-Alpha is closed by user instruction on 2026-05-18. W0 telemetry-lock
+is closed with `skinny/RESULTS.md` rendered and consumed as `SK-V9-open`.
+SK-V9 S-P1 V1 remains an honest opening gap ledger, not a completed S-P1
+profile. Behavior waves remain blocked until a fresh post-W0 S-P1 profile rerun
+converges and `G-BEHAVIOR-RELEASE` passes.
 
 ## 1. Read First
 
@@ -17,37 +15,42 @@ profile rerun converge.
 3. `restart/skinny/tranches/sk-v9/SPEC.md`
 4. `restart/skinny/tranches/sk-v9/DISPATCH-PROMPT.md`
 5. `restart/skinny/tranches/sk-v9/research/skv9-W0-plan.md`
-6. `restart/skinny/tranches/sk-v9/research/alpha/alpha-F-contract-draft.md`
-7. `restart/skinny/tranches/sk-v9/research/alpha/alpha-C-redress-digest.md`
-8. `restart/skinny/tranches/sk-v9/research/p1/hardening/HARDENING-S-P1-V1-CONSOLIDATED.md`
-9. `restart/skinny/tranches/sk-v9/research/skv9-W0-r1-gate-report-baseline.md`
-10. `restart/skinny/tranches/sk-v9/research/skv9-W0-r2-criterion-metadata.md`
-11. `restart/skinny/tranches/sk-v9/research/skv9-W0-r3-diagnostic-fences.md`
-12. `restart/skinny/tranches/sk-v9/research/skv9-W0-r4-typed-direct-fences.md`
-13. `restart/skinny/tranches/sk-v9/research/skv9-W0-r5-lock14-redress.md`
-14. `restart/skinny/tranches/sk-v9/research/skv9-W0-r6-spec-dispatch-shape.md`
-15. `restart/skinny/tranches/sk-v8/HANDOFF.md`
-16. `restart/skinny/tranches/sk-v8/research/skv8-W6-close-and-alpha-feedback.md`
-17. `restart/skinny/tranches/sk-v8/research/wave-6-hardening/V2/HARDENING-W6-V2-CONSOLIDATED.md`
-18. `skinny/RESULTS.md`
-19. `skinny/REDRESS.md` entries 91, 92, and 93
+6. `restart/skinny/tranches/sk-v9/research/skv9-W0-close.md`
+7. `restart/skinny/tranches/sk-v9/research/alpha/alpha-F-contract-draft.md`
+8. `restart/skinny/tranches/sk-v9/research/alpha/alpha-C-redress-digest.md`
+9. `restart/skinny/tranches/sk-v9/research/p1/hardening/HARDENING-S-P1-V1-CONSOLIDATED.md`
+10. `restart/skinny/tranches/sk-v9/research/skv9-W0-r1-gate-report-baseline.md`
+11. `restart/skinny/tranches/sk-v9/research/skv9-W0-r2-criterion-metadata.md`
+12. `restart/skinny/tranches/sk-v9/research/skv9-W0-r3-diagnostic-fences.md`
+13. `restart/skinny/tranches/sk-v9/research/skv9-W0-r4-typed-direct-fences.md`
+14. `restart/skinny/tranches/sk-v9/research/skv9-W0-r5-lock14-redress.md`
+15. `restart/skinny/tranches/sk-v9/research/skv9-W0-r6-spec-dispatch-shape.md`
+16. `restart/skinny/tranches/sk-v8/HANDOFF.md`
+17. `restart/skinny/tranches/sk-v8/research/skv8-W6-close-and-alpha-feedback.md`
+18. `restart/skinny/tranches/sk-v8/research/wave-6-hardening/V2/HARDENING-W6-V2-CONSOLIDATED.md`
+19. `skinny/RESULTS.md`
+20. `skinny/REDRESS.md` entries 91, 92, and 93
 
 ## 2. Current State
 
-SK-V8 is closed by W6 V1+V2 hardening convergence. W6 made no source,
-generated-output, benchmark-row, `skinny/RESULTS.md`, or `skinny/REDRESS.md`
-change. The current benchmark authority is still the W0-rendered
-`skinny/RESULTS.md` report:
+SK-V8 is closed by W6 V1+V2 hardening convergence. SK-V9 W0 is now closed as a
+telemetry-lock recovery. The current benchmark authority is the W0-rendered
+`skinny/RESULTS.md` `SK-V9-open` report:
+
+```text
+sk-v9-open:criterion-fnv64-cd1673844eeea12f
+```
 
 | Family | State |
 |---|---|
-| `parse_only` | 16 `S / NO-GO`, 1 `L / NO-GO` |
+| `parse_only` | 17 `S / NO-GO` |
 | `direct_to_struct` | 3 `A / GO`, 14 `N-direct / NO-GO` |
 | `real_typed_struct` | 4 `A / GO` |
 
 All current main rows remain `Strictness=deferred`. Native Rust comparators are
 same-run in the W0 report; C++ sidecars are historical or absent unless a later
-accepted gate creates a structured same-run sidecar manifest.
+accepted gate creates a structured same-run sidecar manifest. Structural scan,
+masking probes, PMU, and cycles surfaces remain diagnostic non-producers.
 
 ## 3. Candidate Boundaries
 
@@ -79,15 +82,14 @@ Alpha cost binding for any later S-P3 plan:
 
 ## 4. Next Move
 
-1. Treat G-Alpha as closed.
-2. Fold S-P1 V1 hardening into a recovery-only V2: W0 telemetry-lock is the
-   next executable move; behavior S-P2 candidates are blocked until W0 plus a
-   fresh S-P1 profile rerun exists.
-3. Execute W0 with `gate-json` as same-wave consumer, no parser/scanner/SIMD/
-   codegen behavior movement, no row admission, and no strict admission from
-   deferred/view-boundary rows.
-4. After W0, rerun S-P1 against the SK-V9-open baseline and only then release
-   behavior S-P2/P3 waves.
+1. Treat G-Alpha and `G-W0-TELEMETRY-LOCK` as closed.
+2. Rerun S-P1 against the SK-V9-open baseline:
+   `sk-v9-open:criterion-fnv64-cd1673844eeea12f`.
+3. Challenge S-P1 to convergence; do not use absent samply/PMU/cycles rows,
+   stale SK-V4/SK-V8 fused evidence, source-eligible-only typed rows, or
+   Criterion-slope-only hot leaves as behavior ancestry.
+4. Only after `G-S-P1-RERUN-CONVERGED`, rerun/revise S-P2 and S-P3 before any
+   W1+ behavior dispatch.
 
 ## 5. Pre-Blocked Routes
 
@@ -119,8 +121,8 @@ different, and pass challenge before implementation planning.
 
 ## 6. Close Posture
 
-The SK-V9 contract is post-G-Alpha and W0-dispatchable, but still pre-behavior.
-The detailed wave plan makes W0 telemetry-lock explicit and must not dispatch
-behavior waves until W0 and a fresh S-P1 profile rerun close. This resolves the
-S-P1 V1 hardening contradiction without treating absence-coded rows as
-empirical ancestry.
+The SK-V9 contract is post-G-Alpha and post-W0, but still pre-behavior. W0
+closed the telemetry-lock; it did not admit rows, strictness, parser behavior,
+scanner behavior, SIMD behavior, codegen behavior, generated output, or typed
+product shortcuts. Behavior waves must not dispatch until fresh S-P1 rerun
+convergence and `G-BEHAVIOR-RELEASE`.

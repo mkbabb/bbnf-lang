@@ -3,9 +3,11 @@
 This is the implementation-agent dispatch contract for skinny iteration SK-V9.
 It binds to the SK-V9 packet at `restart/skinny/tranches/sk-v9/`.
 
-G-Alpha is closed. S-P1 V1 did not converge and is only an opening gap ledger.
-The initial dispatch is W0 only. Do not dispatch behavior waves until
-`G-W0-TELEMETRY-LOCK`, `G-S-P1-RERUN-CONVERGED`, and `G-BEHAVIOR-RELEASE` pass.
+G-Alpha is closed. W0 telemetry-lock is closed under
+`sk-v9-open:criterion-fnv64-cd1673844eeea12f`. S-P1 V1 did not converge and is
+only an opening gap ledger. The next executable step is a fresh post-W0 S-P1
+rerun. Do not dispatch behavior waves until `G-S-P1-RERUN-CONVERGED` and
+`G-BEHAVIOR-RELEASE` pass.
 
 ## Required Reading
 
@@ -20,31 +22,35 @@ Read in order:
 7. `restart/skinny/tranches/sk-v9/HANDOFF.md`.
 8. `restart/skinny/tranches/sk-v9/research/p1/`.
 9. `restart/skinny/tranches/sk-v9/research/p1/hardening/HARDENING-S-P1-V1-CONSOLIDATED.md`.
-10. `restart/skinny/tranches/sk-v9/research/skv9-W0-r1-gate-report-baseline.md`.
-11. `restart/skinny/tranches/sk-v9/research/skv9-W0-r2-criterion-metadata.md`.
-12. `restart/skinny/tranches/sk-v9/research/skv9-W0-r3-diagnostic-fences.md`.
-13. `restart/skinny/tranches/sk-v9/research/skv9-W0-r4-typed-direct-fences.md`.
-14. `restart/skinny/tranches/sk-v9/research/skv9-W0-r5-lock14-redress.md`.
-15. `restart/skinny/tranches/sk-v9/research/skv9-W0-r6-spec-dispatch-shape.md`.
-16. `skinny/RESULTS.md`.
-17. `skinny/REDRESS.md`.
+10. `restart/skinny/tranches/sk-v9/research/skv9-W0-close.md`.
+11. `restart/skinny/tranches/sk-v9/research/skv9-W0-r1-gate-report-baseline.md`.
+12. `restart/skinny/tranches/sk-v9/research/skv9-W0-r2-criterion-metadata.md`.
+13. `restart/skinny/tranches/sk-v9/research/skv9-W0-r3-diagnostic-fences.md`.
+14. `restart/skinny/tranches/sk-v9/research/skv9-W0-r4-typed-direct-fences.md`.
+15. `restart/skinny/tranches/sk-v9/research/skv9-W0-r5-lock14-redress.md`.
+16. `restart/skinny/tranches/sk-v9/research/skv9-W0-r6-spec-dispatch-shape.md`.
+17. `skinny/RESULTS.md`.
+18. `skinny/REDRESS.md`.
 
 ## Wave Manifest
 
 | Wave | SPEC section | Title | Dispatch status | Hard cap |
 |---|---|---|---|---:|
-| W0 | Section 3 | SK-V9-open Telemetry-Lock Recovery | Dispatchable now | <=90 min |
-| Interlock | Section 4 | Fresh S-P1 Rerun | Conditional after W0 | <=90 min |
+| W0 | Section 3 | SK-V9-open Telemetry-Lock Recovery | Closed | <=90 min |
+| Interlock | Section 4 | Fresh S-P1 Rerun | Executable next | <=90 min |
 | W1 | Section 5 | Revised S-P2/S-P3 Candidate Release | Blocked placeholder | <=90 min |
 | W2 | Section 6 | Typed Row Admission Candidate | Blocked placeholder | <=90 min |
 | W3 | Section 7 | Tape Plus Structural-Projection Candidate | Blocked placeholder | <=90 min |
 | W4 | Section 8 | Direct Contract Candidate | Blocked placeholder | <=90 min |
 | W5 | Section 9 | Close And Alpha Feedback | Blocked placeholder | <=90 min |
 
-If requested wave is not W0 and `G-BEHAVIOR-RELEASE` is not PASS, refuse
+If a requested wave is W1+ and `G-BEHAVIOR-RELEASE` is not PASS, refuse
 dispatch and record why. A placeholder section is not dispatch authority.
 
 ## W0 Protocol
+
+W0 is closed. Do not redispatch W0 unless a later challenge finds a concrete
+telemetry-lock defect and names a revert/redress slice.
 
 W0 is telemetry-only. It may update run identity, report labels, manifest
 validation, replay metadata, diagnostic fences, and the existing RESULTS marker
@@ -99,8 +105,8 @@ Phase 3 - Redress:
 
 ## Conditional Release
 
-After W0, run a fresh S-P1 profile cycle over the SK-V9-open baseline. Challenge
-it. If hardening does not converge, W1+ remains blocked.
+Run a fresh S-P1 profile cycle over the SK-V9-open baseline. Challenge it. If
+hardening does not converge, W1+ remains blocked.
 
 After S-P1 convergence, rerun or revise S-P2/S-P3 against fresh evidence. Only
 then may a behavior wave receive a specific dispatch prompt. Behavior dispatch

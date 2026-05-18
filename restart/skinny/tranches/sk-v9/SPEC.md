@@ -2,10 +2,11 @@
 
 Date: 2026-05-18.
 
-Status: post-G-Alpha skinny packet. G-Alpha is closed by user instruction, but
-S-P1 V1 did not converge. This SPEC therefore opens SK-V9 with one executable
-wave: W0 telemetry-lock recovery. Behavior waves are listed as conditional
-placeholders only until W0 closes and a fresh post-W0 S-P1 rerun converges.
+Status: post-G-Alpha and post-W0 telemetry-lock. G-Alpha is closed by user
+instruction, W0 closed `G-W0-TELEMETRY-LOCK`, and S-P1 V1 did not converge.
+The next executable step is a fresh post-W0 S-P1 rerun. Behavior waves remain
+conditional placeholders until S-P1 rerun convergence and
+`G-BEHAVIOR-RELEASE`.
 
 Authority:
 
@@ -19,16 +20,19 @@ Authority:
 - `restart/skinny/tranches/sk-v9/research/skv9-W0-r4-typed-direct-fences.md`
 - `restart/skinny/tranches/sk-v9/research/skv9-W0-r5-lock14-redress.md`
 - `restart/skinny/tranches/sk-v9/research/skv9-W0-r6-spec-dispatch-shape.md`
+- `restart/skinny/tranches/sk-v9/research/skv9-W0-close.md`
 - `skinny/RESULTS.md`
 - `skinny/REDRESS.md`
 
 Dispatch lock:
 
 - G-Alpha is closed.
+- W0 telemetry-lock is closed:
+  `sk-v9-open:criterion-fnv64-cd1673844eeea12f`.
 - S-P1 V1 is an opening gap ledger, not a completed profile.
-- W0 is the only currently dispatchable wave.
-- W1+ behavior waves require `G-W0-TELEMETRY-LOCK`,
-  `G-S-P1-RERUN-CONVERGED`, and a fresh S-P2/S-P3 revision before dispatch.
+- The fresh S-P1 rerun is the only currently executable next step.
+- W1+ behavior waves require `G-S-P1-RERUN-CONVERGED`,
+  `G-BEHAVIOR-RELEASE`, and a fresh S-P2/S-P3 revision before dispatch.
 
 ## Section 0 - Close Condition And Goalset
 
@@ -54,8 +58,8 @@ SK-V9 closes only when all of these are true:
 
 | Candidate | Initial SK-V9 status | Release gate |
 |---|---|---|
-| SK-V9-open telemetry/gate refresh | W0 dispatchable | `G-W0-TELEMETRY-LOCK` |
-| Fresh S-P1 profile rerun | Interlock after W0, not a behavior wave | `G-S-P1-RERUN-CONVERGED` |
+| SK-V9-open telemetry/gate refresh | Closed in W0 | `G-W0-TELEMETRY-LOCK` PASS |
+| Fresh S-P1 profile rerun | Executable next, not a behavior wave | `G-S-P1-RERUN-CONVERGED` |
 | Apache/CITM measured typed row admission | Blocked placeholder | W0 plus S-P1 rerun plus revised S-P2/S-P3 typed plan |
 | Retained tape plus structural projection | Blocked placeholder | W0 plus S-P1 rerun plus Lock 14 and proof-first challenge |
 | Direct output/control-path proof | Blocked placeholder | W0 plus S-P1 rerun plus direct contract plan |
@@ -63,10 +67,11 @@ SK-V9 closes only when all of these are true:
 
 ### Section 0.3 - Opening Baseline
 
-The opening benchmark authority remains the current W0-rendered 38-row JSON
-report. W0 may relabel and consume that authority as `SK-V9-open`; it may not
-add rows, move throughput cells as behavior evidence, upgrade outcomes, upgrade
-verdicts, or convert deferred/view-boundary evidence into strict admission.
+The opening benchmark authority is now the W0-rendered 38-row JSON report under
+`sk-v9-open:criterion-fnv64-cd1673844eeea12f`. W0 consumed that authority as
+`SK-V9-open`; it did not add rows, move throughput cells as behavior evidence,
+upgrade verdicts, or convert deferred/view-boundary evidence into strict
+admission.
 
 Opening row families:
 
@@ -151,8 +156,8 @@ manifest in the same wave.
 
 | Wave | Section | Name | Dispatch status | Owner budget | Hard cap |
 |---|---|---|---|---|---:|
-| W0 | Section 3 | SK-V9-open Telemetry-Lock Recovery | Dispatchable now | Telemetry/report/gate docs and focused gate code only | <=90 min |
-| Interlock | Section 4 | Fresh S-P1 Rerun | Conditional after W0 | Profile artifacts and S-P1 research/hardening docs | <=90 min |
+| W0 | Section 3 | SK-V9-open Telemetry-Lock Recovery | Closed | Telemetry/report/gate docs and focused gate code only | <=90 min |
+| Interlock | Section 4 | Fresh S-P1 Rerun | Executable next | Profile artifacts and S-P1 research/hardening docs | <=90 min |
 | W1 | Section 5 | Revised S-P2/S-P3 Candidate Release | Blocked placeholder | Research/plan docs only until release | <=90 min |
 | W2 | Section 6 | Typed Row Admission Candidate | Blocked placeholder | Exact typed owner paths only after release | <=90 min |
 | W3 | Section 7 | Tape Plus Structural-Projection Candidate | Blocked placeholder | Exact retained tape owner paths only after release | <=90 min |
@@ -163,6 +168,9 @@ Behavior placeholders are not dispatch authority. Any W1+ behavior attempt
 before `G-BEHAVIOR-RELEASE` returns REVISE without source edits.
 
 ## Section 3 - W0 Telemetry-Lock Recovery
+
+Status: closed. Close artifact:
+`restart/skinny/tranches/sk-v9/research/skv9-W0-close.md`.
 
 Objective: make the opening telemetry self-consistent as `SK-V9-open`, consume
 it with `gate-json`, and freeze all behavior surfaces.

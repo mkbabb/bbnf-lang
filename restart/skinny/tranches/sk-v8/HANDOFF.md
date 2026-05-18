@@ -2,11 +2,11 @@
 
 Date: 2026-05-18.
 
-Status: G-Alpha closed by user on 2026-05-18T05:26:48Z. SK-V8 W0 is
-dispatchable from this packet. W1-W6 require W0 closure and plan augmentation
-before implementation.
+Status: G-Alpha closed by user on 2026-05-18T05:26:48Z. SK-V8 W0 is closed.
+W1 CostFacts Gate Binding is dispatchable from this packet. W2-W6 require W1
+closure and their own plan/challenge gates before implementation.
 
-Next move: SK-V8 W0.
+Next move: SK-V8 W1.
 
 ## 1. Read First
 
@@ -128,8 +128,8 @@ dispatch W0.
 
 | Wave | Name | Status | Source/edit LOC budget |
 |---|---|---|---|
-| W0 | Baseline Profile And Telemetry Lock | Dispatchable after G-Alpha | 0 production behavior LOC; reauthorized telemetry gate/report/Lock14 scope per SPEC Section 3 accounting; post-V6 folds <=120 report/gate/test/doc LOC |
-| W1 | CostFacts Gate Binding | Conditional on W0 close | 0 parser/generated behavior LOC; <=300 CostFacts/report/gate/test LOC |
+| W0 | Baseline Profile And Telemetry Lock | Closed by V11+V12 challenge convergence | 0 production behavior LOC; reauthorized telemetry gate/report/Lock14 scope per SPEC Section 3 accounting; post-V6 folds <=120 report/gate/test/doc LOC |
+| W1 | CostFacts Gate Binding | Dispatchable after W0 closure | 0 parser/generated behavior LOC; <=300 CostFacts/report/gate/test LOC |
 | W2 | Typed Product Plane Expansion | Conditional on W0/W1 plan update | <=650 source/test LOC; generated output and row tables named separately |
 | W3 | Profile-Selected Parse Candidate — lead candidate: tape ⊕ structural-projection union (S-P2 cohort) | Conditional on W0/W1 challenge | <=450 source/test LOC default; <=650 only with accepted pre-redress fit proof |
 | W4 | Direct Guard Triage | Conditional on W0/W1 plan update | <=300 source/test LOC and <=3 selected rows |
@@ -155,6 +155,12 @@ baseline `0bd16f6d` to V6 target `6c0bc15d`. W0 remains admissible only if the
 frozen behavior-surface diff stays empty and rollback is commit-sliced through
 the W0 implementation commits named in SPEC Section 3 plus any post-V6 fold.
 
+W0 closure record: V11 accepted 6/6 as the first qualifying cycle after the V10
+reset, and V12 accepted 6/6 as the unchanged second qualifying cycle. The
+closure authority is
+`restart/skinny/tranches/sk-v8/research/wave-0-hardening/V12/HARDENING-W0-V12-CONSOLIDATED.md`.
+W1 is now the active wave.
+
 ## 5. Entry Gates
 
 W0 entry:
@@ -165,9 +171,18 @@ W0 entry:
 - W0 creates the Lock 14 baseline allowlist: grammar inputs, generated JSON
   output, per-grammar providers/templates, tests, and host/API schema facts.
 
-W1-W6 entry:
+W1 entry:
 
-- W0 admitted.
+- W0 admitted by V11+V12 challenge convergence.
+- Every current main row has `SK-V8-open` telemetry in `skinny/RESULTS.md`.
+- W1 must keep generated JSON output and parser behavior unchanged unless a
+  separate challenged behavior consumer is accepted.
+- `gate-json --with-cost-facts` must become the same-wave consumer for
+  CostFacts evidence and must reject missing evidence after W1.
+
+W2-W6 entry:
+
+- W0 and W1 admitted.
 - The wave plan names exact owner paths, row gates, pre-blocked routes, revert
   protocol, and same-wave consumer.
 - High-risk behavior waves receive challenge acceptance before redress.

@@ -1008,42 +1008,28 @@ fn validate_w0_manifest_semantics(row: &TelemetryRow) -> Result<(), String> {
     let telemetry = &row.sk_v8;
     if telemetry.costfacts_rule_id != "none:pre-W1"
         || telemetry.costfacts_chosen_shape != "none:pre-W1"
-        || telemetry.costfacts_rejected_alternative_ids.len() != 1
-        || telemetry.costfacts_rejected_alternative_ids[0] != "none:pre-W1"
+        || telemetry.costfacts_rejected_alternative_ids.as_slice() != ["none:pre-W1"]
+        || telemetry.redress_entry != "none"
+        || telemetry.track2_independence_status != "independent_verified"
     {
         return Err(format!(
-            "{} has unsupported W0 CostFacts sentinel",
+            "{} has unsupported W0 manifest sentinel",
             telemetry.row_id
         ));
     }
-    if telemetry.redress_entry != "none" {
-        return Err(format!(
-            "{} has unsupported W0 redress entry {}",
-            telemetry.row_id, telemetry.redress_entry
-        ));
-    }
-    if telemetry.track2_independence_status != "independent_verified" {
-        return Err(format!(
-            "{} has unsupported Track 2 independence status {}",
-            telemetry.row_id, telemetry.track2_independence_status
-        ));
-    }
-    validate_w0_build_metadata(telemetry)?;
-    validate_w0_substrate_tuple(row)?;
-    Ok(())
-}
-
-fn validate_w0_build_metadata(telemetry: &SkV8Telemetry) -> Result<(), String> {
+    let has_exact = |value: &str, expected: &str| value.split(';').any(|part| part == expected);
+    let has_nonempty = |value: &str, prefix: &str| {
+        value.split(';').any(|part| {
+            part.strip_prefix(prefix)
+                .is_some_and(|tail| !tail.trim().is_empty())
+        })
+    };
     for required in [
         "profile=bench",
         "rustflags=-C target-cpu=native",
         "target_cpu=native",
     ] {
-        if !telemetry
-            .build_flags
-            .split(';')
-            .any(|part| part == required)
-        {
+        if !has_exact(&telemetry.build_flags, required) {
             return Err(format!(
                 "{} build_flags missing {required}",
                 telemetry.row_id
@@ -1054,56 +1040,32 @@ fn validate_w0_build_metadata(telemetry: &SkV8Telemetry) -> Result<(), String> {
         .host_triple
         .split_once(';')
         .ok_or_else(|| format!("{} host_triple missing arch/cpu facts", telemetry.row_id))?;
-    if !host.contains('-')
-        || !rest.split(';').any(|part| part.starts_with("arch="))
-        || !rest.split(';').any(|part| part.starts_with("cpu="))
+    if host.trim().is_empty()
+        || !host.contains('-')
+        || !has_nonempty(rest, "arch=")
+        || !has_nonempty(rest, "cpu=")
     {
         return Err(format!(
             "{} host_triple is not structured W0 host metadata",
             telemetry.row_id
         ));
     }
-    for required_prefix in ["arch=", "os=", "simd="] {
-        if !telemetry
-            .feature_mask
-            .split(';')
-            .any(|part| part.starts_with(required_prefix))
-        {
-            return Err(format!(
-                "{} feature_mask missing {required_prefix}",
-                telemetry.row_id
-            ));
-        }
-    }
-    if !telemetry
-        .feature_mask
-        .split(';')
-        .any(|part| part == "target_cpu=native")
+    if ["arch=", "os=", "simd="]
+        .iter()
+        .any(|prefix| !has_nonempty(&telemetry.feature_mask, prefix))
+        || !has_exact(&telemetry.feature_mask, "target_cpu=native")
     {
         return Err(format!(
-            "{} feature_mask missing target_cpu=native",
+            "{} feature_mask is not structured W0 feature metadata",
             telemetry.row_id
         ));
     }
-    Ok(())
-}
-
-fn validate_w0_substrate_tuple(row: &TelemetryRow) -> Result<(), String> {
-    let expected = match row.workload.as_str() {
-        "parse_only" => (
-            "borrowed_view_over_offset_tape",
-            "discarded_after_capacity",
-            "one",
-        ),
-        "direct_to_struct" => ("sink_only_digest", "n/a", "zero_or_inert"),
-        "real_typed_struct" => ("typed_direct_projection", "n/a", "zero_or_inert"),
-        _ => {
-            return Err(format!(
-                "{} has unsupported W0 workload {}",
-                row.sk_v8.row_id, row.workload
-            ))
-        }
-    };
+    let expected = w0_substrate_tuple(&row.workload).ok_or_else(|| {
+        format!(
+            "{} has unsupported W0 workload {}",
+            row.sk_v8.row_id, row.workload
+        )
+    })?;
     let actual = (
         row.sk_v8.substrate_surface.as_str(),
         row.sk_v8.structural_projection_status.as_str(),
@@ -1116,6 +1078,19 @@ fn validate_w0_substrate_tuple(row: &TelemetryRow) -> Result<(), String> {
         ));
     }
     Ok(())
+}
+
+fn w0_substrate_tuple(workload: &str) -> Option<(&'static str, &'static str, &'static str)> {
+    Some(match workload {
+        "parse_only" => (
+            "borrowed_view_over_offset_tape",
+            "discarded_after_capacity",
+            "one",
+        ),
+        "direct_to_struct" => ("sink_only_digest", "n/a", "zero_or_inert"),
+        "real_typed_struct" => ("typed_direct_projection", "n/a", "zero_or_inert"),
+        _ => return None,
+    })
 }
 
 fn validate_w0_admission_boundary(row: &TelemetryRow) -> Result<(), String> {
@@ -1597,16 +1572,7 @@ mod tests {
     fn w0_telemetry(row_id: &str, _output_plane: &str) -> SkV8Telemetry {
         let (_, workload) = parse_row_id(row_id).unwrap();
         let (substrate_surface, structural_projection_status, substrate_cardinality) =
-            match workload {
-                "parse_only" => (
-                    "borrowed_view_over_offset_tape",
-                    "discarded_after_capacity",
-                    "one",
-                ),
-                "direct_to_struct" => ("sink_only_digest", "n/a", "zero_or_inert"),
-                "real_typed_struct" => ("typed_direct_projection", "n/a", "zero_or_inert"),
-                _ => unreachable!(),
-            };
+            w0_substrate_tuple(workload).unwrap();
         SkV8Telemetry {
             row_id: row_id.into(),
             grammar_id: "json".into(),
@@ -2084,39 +2050,22 @@ mod tests {
         canada.sk_v8.measured_validation_path = "measured-row".into();
         assert!(bad_strict_hard_failure.validate_sk_v8_w0().is_err());
 
-        let mut bad_costfacts = report.clone();
-        bad_costfacts.rows[0].sk_v8.costfacts_rule_id = "future:rule".into();
-        assert!(bad_costfacts.validate_sk_v8_w0().is_err());
-
-        let mut bad_costfacts_alternative = report.clone();
-        bad_costfacts_alternative.rows[0]
-            .sk_v8
-            .costfacts_rejected_alternative_ids = vec!["other".into()];
-        assert!(bad_costfacts_alternative.validate_sk_v8_w0().is_err());
-
-        let mut bad_redress = report.clone();
-        bad_redress.rows[0].sk_v8.redress_entry = "REDRESS-1".into();
-        assert!(bad_redress.validate_sk_v8_w0().is_err());
-
-        let mut bad_track2 = report.clone();
-        bad_track2.rows[0].sk_v8.track2_independence_status = "unverified".into();
-        assert!(bad_track2.validate_sk_v8_w0().is_err());
-
-        let mut bad_build = report.clone();
-        bad_build.rows[0].sk_v8.build_flags =
-            "profile=bench;rustflags=<empty>;target_cpu=default".into();
-        assert!(bad_build.validate_sk_v8_w0().is_err());
-
-        let mut bad_host = report.clone();
-        bad_host.rows[0].sk_v8.host_triple = "aarch64-apple-darwin".into();
-        assert!(bad_host.validate_sk_v8_w0().is_err());
-
-        let mut bad_feature = report.clone();
-        bad_feature.rows[0].sk_v8.feature_mask = "arch=aarch64;simd=Scalar".into();
-        assert!(bad_feature.validate_sk_v8_w0().is_err());
-
-        let mut bad_substrate = report.clone();
-        bad_substrate.rows[0].sk_v8.substrate_surface = "side_substrate".into();
-        assert!(bad_substrate.validate_sk_v8_w0().is_err());
+        let reject = |mutate: fn(&mut TelemetryRow)| {
+            let mut bad = report.clone();
+            mutate(&mut bad.rows[0]);
+            assert!(bad.validate_sk_v8_w0().is_err());
+        };
+        reject(|row| row.sk_v8.costfacts_rule_id = "future:rule".into());
+        reject(|row| row.sk_v8.costfacts_rejected_alternative_ids = vec!["other".into()]);
+        reject(|row| row.sk_v8.redress_entry = "REDRESS-1".into());
+        reject(|row| row.sk_v8.track2_independence_status = "unverified".into());
+        reject(|row| {
+            row.sk_v8.build_flags = "profile=bench;rustflags=<empty>;target_cpu=default".into()
+        });
+        reject(|row| row.sk_v8.host_triple = "aarch64-apple-darwin".into());
+        reject(|row| row.sk_v8.host_triple = "aarch64-apple-darwin;arch=;cpu=".into());
+        reject(|row| row.sk_v8.feature_mask = "arch=aarch64;simd=Scalar".into());
+        reject(|row| row.sk_v8.feature_mask = "arch=;os=;simd=;target_cpu=native".into());
+        reject(|row| row.sk_v8.substrate_surface = "side_substrate".into());
     }
 }

@@ -23,8 +23,10 @@ Required W5 surfaces from SPEC Section 8 and P3-C:
 - allowed JSON surfaces remain grammar inputs, generated JSON output,
   per-grammar templates/providers, tests, and host/API schema facts;
 - renamed JSON policy is audited, not only old symbol names;
-- REDRESS 36, 37, and 38 residue clusters remain neutralized by REDRESS 85
-  and 86;
+- REDRESS 36, 37, and 38 residue clusters
+  (`skinny/REDRESS.md:460-515`) remain neutralized by REDRESS 85
+  (`skinny/REDRESS.md:2399-2427`) and REDRESS 86
+  (`skinny/REDRESS.md:2431-2464`);
 - generated JSON output and `skinny/RESULTS.md` have zero behavior drift by
   default;
 - CSS L4, Sheets, and BBNF-self proof is required for generic edits. W5 touches
@@ -92,8 +94,10 @@ W7/W8 Lock 14 residue suites:
 - `cargo test -p parse-that-regex -p passes -p codegen -p ir` passed:
   codegen 6 tests, ir 3 tests, parse-that-regex 22 tests, passes 8 tests, and
   doc-tests all green.
-- These tests cover the previously admitted neutralizations from REDRESS 85 and
-  86: grammar-neutral string/number matchers, structure-derived
+- These tests cover the previously admitted neutralizations from REDRESS 85
+  (`skinny/REDRESS.md:2399-2427`) and REDRESS 86
+  (`skinny/REDRESS.md:2431-2464`): grammar-neutral string/number matchers,
+  structure-derived
   materialization, generated direct build roles under renamed rule tests,
   `StructuralAlphabet::json()` removal, and generic nullability handling.
 
@@ -106,11 +110,10 @@ W7/W8 Lock 14 residue suites:
 2. V1 hardening found one named Lock 14 provider-boundary cleanup: the JSON
    profile guard and JSON template/runtime includes belonged in a per-grammar
    provider surface, not in the generic `codegen/src/lib.rs` surface.
-3. REDRESS 36-38 remain historical violation records, not live blockers:
-   `skinny/REDRESS.md:460-515` records the old Lock 14 violations, while
-   `skinny/REDRESS.md:2399-2427` and `skinny/REDRESS.md:2431-2464` record the
-   admitted REDRESS 85 and 86 neutralization work. The current tests still
-   pass.
+3. REDRESS 36-38 (`skinny/REDRESS.md:460-515`) remain historical violation
+   records, not live blockers. REDRESS 85 (`skinny/REDRESS.md:2399-2427`) and
+   REDRESS 86 (`skinny/REDRESS.md:2431-2464`) record the admitted
+   neutralization work. The current tests still pass.
 4. The non-JSON proof burden remains satisfied by unchanged output over all
    nine root grammars. The W5 cleanup is a provider-boundary/allowlist change
    and does not alter generated output.
@@ -194,5 +197,7 @@ Proceed to a W5 V3 challenge with the named Lock 14 cleanup:
 - no generated output or `RESULTS.md` edit;
 - verification commands: the scans and checks listed above;
 - hardening challenge: review the provider-boundary cleanup for Lock 14,
-  REDRESS 36-38/85/86 consistency, no hidden generic JSON policy, no generated
-  drift, and no paper close.
+  REDRESS 36-38 (`skinny/REDRESS.md:460-515`), REDRESS 85
+  (`skinny/REDRESS.md:2399-2427`), and REDRESS 86
+  (`skinny/REDRESS.md:2431-2464`) consistency, no hidden generic JSON policy,
+  no generated drift, and no paper close.

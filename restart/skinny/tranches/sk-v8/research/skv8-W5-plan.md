@@ -74,10 +74,10 @@ W5 passes only if all of the following hold:
    test, generated-output tooling, or `json_provider.rs` lines.
 3. Allowed JSON surfaces remain confined to grammar inputs, generated JSON
    output, per-grammar templates/providers, tests, and host/API schema facts.
-4. REDRESS 36-38 remain reconciled by REDRESS 85 and REDRESS 86; the
-   resolving anchors are `skinny/REDRESS.md:460-515`,
-   `skinny/REDRESS.md:2399-2427`, and `skinny/REDRESS.md:2431-2464`, and the
-   W7/W8-era Lock 14 unit suites still pass.
+4. REDRESS 36-38 (`skinny/REDRESS.md:460-515`) remain reconciled by
+   REDRESS 85 (`skinny/REDRESS.md:2399-2427`) and REDRESS 86
+   (`skinny/REDRESS.md:2431-2464`), and the W7/W8-era Lock 14 unit suites
+   still pass.
 5. `skinny/RESULTS.md`, generated JSON output, generated typed output, direct
    guard source, and generic crate surfaces have zero diff from HEAD.
 6. Root `cargo xtask regen --check` remains clean for non-JSON grammars,

@@ -4,6 +4,7 @@ phase: P2 research
 artefact: P2-D
 title: Host-targeted aarch64 ASM/SIMD opportunities for the four uncloseable rows
 date: 2026-05-18
+revision: V2 (S-P2 V1 CHALLENGE fold — F1 wiring fix + F4 cost discipline + F5 Lock-14 + F6 SHA3 differential; see §0)
 scope: research-only; no code edits; no commits
 lens: host-cap — given the Apple M5 Max + ARMv9.2-A intrinsic surface, which
   per-uncloseable-row primitive class admits a wave-sized intervention that
@@ -151,11 +152,38 @@ and 43.9% (track 2) self-time. The corpus is 99%+ short 6-byte
 The NEON kernel `unescape_uxxxx_neon` at
 `skinny/crates/bbnf-simd/src/aarch64/unescape_uxxxx.rs:74` is already
 implemented (per Wave 1 admission kernel), and the four-quartet variant
-`unescape_uxxxx_x4_neon` at `:125` exists. **Neither is wired into the
-parse-that-regex hot path.** REDRESS 82 rejected a previous wiring
-attempt as a *parser-owned per-quartet helper* under W4
-falsifiability. The substrate change in SK-V9 P2 (union substrate /
-P2-A scope) is what shifts the wiring framing: see §3 and §7.
+`unescape_uxxxx_x4_neon` at `:125` exists. **Both ARE wired**: the x4
+kernel is consumed at `parse-that-regex/src/lib.rs:402` inside
+`unescape_four_unicode_escapes` (lines 384-459), itself dispatched
+from the `Some(b'u')` arm of the string-unescape inner loop at
+`parse-that-regex/src/lib.rs:778`. The current wiring shape is the
+**opportunistic-x4** batcher: the wrapper hard-requires four
+consecutive `\uXXXX` escapes packed back-to-back (24 bytes of
+`\u????\u????\u????\u????`); on any non-quartet shape — mixed escapes,
+single quartets, or surrogate splits — the dispatch falls through to
+the per-quartet scalar `decode_unicode_escape` path (P2-E §1.2).
+
+The corpus-realistic shape on `y_string_unicode` is 99%+ short 6-byte
+`"\uXXXX"` strings (single quartet per string), so the x4 batcher
+**rarely engages**; `unicode_mixed` likewise contains mixed-escape
+patterns that don't admit the 24-byte back-to-back quartet shape. The
+REDRESS 82 material differential is therefore NOT "wire it" (it is
+wired) but rather:
+
+1. **Broaden x4-only batching to all-quartet handling.** Replace the
+   strict 24-byte back-to-back precondition with a per-quartet kernel
+   dispatch that admits single-quartet, mixed-escape, and surrogate-
+   split inputs (i.e. use `unescape_uxxxx_neon` as the per-quartet
+   fast path when x4 doesn't apply, instead of falling through to
+   `decode_unicode_escape` scalar).
+2. **Change consumer cardinality.** The current consumer is the
+   `unescape_string` materialiser (parser-owned scratch buffer). The
+   SK-V9 wave-class shift (union substrate / P2-A scope) opens a
+   second consumer at the tape-cell projection layer: the codec runs
+   **once per retained tape cell** on the substrate's primary write
+   path, not on every byte traversal.
+
+See §3 and §7 for the V9-W{n} material differentials this requires.
 
 ### §2.2 — `unicode_escapes` (q_frac 0.750, 373 bytes/span, Δ_p −33.6%)
 
@@ -296,11 +324,12 @@ roughly 28 µops + 4 conditional branches; the conditional branches
 are the dominant cost because the four hex bytes are *independently*
 mispredictable.
 
-### §3.2 — NEON kernel (already in tree, unwired)
+### §3.2 — NEON kernel (in tree; x4 variant already wired)
 
 `bbnf-simd/src/aarch64/unescape_uxxxx.rs:74`
 (`unescape_uxxxx_neon`) is implemented per Wave 1 admission. The
-intrinsic shape:
+per-quartet kernel is **not** wired (only the x4 variant is consumed,
+per §2.1 and §3.3). The intrinsic shape:
 
 ```rust
 let bytes = vld1q_lane_u8::<0..3>(...);          // 4-byte load into low 4 lanes
@@ -330,17 +359,26 @@ which is *uniformly taken* on valid input (predicted perfectly). The
 `vminvq_u8` horizontal-reduce takes the place of the 4-way OR of the
 scalar version.
 
-### §3.3 — The x4 variant (already in tree)
+### §3.3 — The x4 variant (already in tree AND wired, opportunistically)
 
 `unescape_uxxxx_x4_neon` at `:125` decodes **four consecutive
 quartets** in one 16-byte vector: a single `vld1q_u8` loads 16 bytes,
 the same TBL + range-tests fire once over all four quartets, and the
 output is `[u32; 4]`. Per-quartet µop count: 1 LOAD + 1 AND + 1 TBL +
 6 CMP/AND + 2 OR + 1 ADD + 1 STORE = **~13 µops total for FOUR
-quartets**, i.e. ~3.25 µops per quartet. This is the load-bearing
-amortisation: `y_string_unicode`'s 38% self-time class would land at
-~10-12% on a wired x4 path, with the remaining cost being the loop
-plumbing.
+quartets**, i.e. ~3.25 µops per quartet. The kernel is consumed at
+`parse-that-regex/src/lib.rs:402` inside `unescape_four_unicode_escapes`
+(lines 384-459); the wrapper packs 24 contiguous bytes
+(`\u????\u????\u????\u????`) into a 16-byte stack buffer and calls the
+kernel, returning `Some(_)` only when all four `\u` prefixes match.
+
+The **load-bearing amortisation** lives at the per-quartet level when
+the x4 path engages — but the engagement frequency is the binding
+question. `y_string_unicode`'s 38% self-time class would land at
+~10-12% IF every quartet ran through x4; the corpus-realistic shape
+(single-quartet strings; mixed escapes; surrogate splits) means most
+quartets fall through to the scalar `decode_unicode_escape`. The §3.5
+material differential addresses this gap.
 
 ### §3.4 — Cross-grammar generalisation (per P1-V3-B §3.5)
 
@@ -369,7 +407,7 @@ SK-V7 A3 §1 the data-vs-code split puts class-LUTs and terminator
 policy in codegen-emitted `.data` tables, the macro body stays
 grammar-neutral.
 
-### §3.5 — Wiring proposal (material differential vs REDRESS 82)
+### §3.5 — Codec broadening proposal (material differential vs REDRESS 82)
 
 REDRESS 82's W4 candidate moved the scalar `\uXXXX` decoder into
 `unicode/escape_decode.rs`, reused the existing
@@ -379,26 +417,63 @@ falsifiability gate failed on `unicode_escapes/direct_to_struct`
 (39.4% of sonic) and `y_string_unicode/direct_to_struct` (regressed
 6.6% on track 2).
 
-The SK-V9 proposal differs structurally on three axes:
+The SK-V9 proposal differs structurally — but the differential is NOT
+"wire the kernel" (the x4 kernel is already wired at
+`parse-that-regex/src/lib.rs:402`, per §2.1 + §3.3). The differential
+is **broadening the kernel's engagement shape and rebinding the
+consumer**:
 
-1. **x4 batching, not per-quartet.** The wired call site uses
-   `unescape_uxxxx_x4_neon` over four consecutive `\uXXXX` quartets at
-   the call site — the corpus-realistic shape on
-   `y_string_unicode` where keys/values are dominated by 4-6 quartet
-   runs. The W4 candidate only used the per-quartet kernel.
+1. **All-quartet handling, not opportunistic-x4-only.** Current shape:
+   x4 batcher engages only on four back-to-back `\uXXXX` quartets;
+   single quartets and mixed-escape spans (the y_string_unicode and
+   unicode_mixed dominant shapes) fall through to the scalar
+   `decode_unicode_escape`. SK-V9 proposal: thread the per-quartet
+   NEON kernel (`unescape_uxxxx_neon` at `unescape_uxxxx.rs:74`) into
+   the fall-through path, so EVERY `\uXXXX` quartet — single, paired,
+   surrogate-split, or batched — runs through a vector body. The x4
+   variant remains the fast path when back-to-back quartets are
+   detected; the per-quartet NEON kernel covers the remainder. The W4
+   candidate only used the per-quartet kernel — but at a parser-owned
+   helper site that REDRESS 82 rejected.
 2. **Same-wave union-substrate consumer (P2-A scope).** The wiring
    lives in the union-substrate's typed event/tape consumer, not in
    the parser-owned scalar string materialiser. Per SK-V7 A3 §8 and
    REDRESS 82 the "parser-owned per-quartet helper" was the rejected
    shape; the union-substrate primary write path is materially
    different (per SC-6 §1.3 the structural projection becomes the
-   substrate; the codec runs **once per retained tape cell**).
+   substrate; the codec runs **once per retained tape cell**, not
+   once per byte-traversal step).
 3. **Falsification gate against `direct_to_struct`.** REDRESS 82
    failed because `unicode_escapes/direct` regressed. The SK-V9
    proposal **must** include the direct-route digest gate on
    `unicode_escapes` + `y_string_unicode` + `unicode_mixed` as a
    blocking precondition — REDRESS 82's blocking rows become SK-V9's
    admission rows.
+
+**Same-wave consumer binding (CH3 / no-orphan):** the §3 codec
+broadening's same-wave consumer is the **P2-A union substrate**
+typed-event / tape consumer. The codec proposal **blocks on P2-A
+landing in the same wave OR fails CH5**: if P2-A doesn't land
+simultaneously, the codec broadening ships as a primitive without its
+production consumer — a REDRESS-82-style orphan — and must be held
+back. The codec's own §3.5 wiring is in `parse-that-regex/src/lib.rs`
+(already populated by the existing x4 wrapper); broadening alone, in
+the absence of the union substrate, only reduces fall-through traffic
+in the *parser-owned* helper, which is the shape REDRESS 82 rejected.
+
+**Preliminary LOC envelope + risk class (final cost-set authored by
+S-P3):**
+
+| Slice | LOC envelope | Risk class | Notes |
+| --- | --- | --- | --- |
+| Per-quartet NEON fallback wire (extend `unescape_four_unicode_escapes` to dispatch single-quartet to `unescape_uxxxx_neon`) | 30-60 LOC in `parse-that-regex/src/lib.rs` | LOW | Existing kernel; only the wrapper-dispatch logic changes. Direct route falsification gate is the binding pre-block. |
+| Union-substrate codec consumer (per-tape-cell projection) | 80-150 LOC in P2-A union-substrate crate | MEDIUM | Co-developed with P2-A; depends on tape-cell projection shape, which P2-A authors. |
+| Direct-route gate harness (`unicode_escapes/direct`, `y_string_unicode/direct`, `unicode_mixed/direct` no-regression CI guard) | 20-40 LOC in `crates/bbnf-bench/` | LOW | Hardness, not codepath. |
+
+LOC and risk are **preliminary**; the final cost-set is authored by
+S-P3 per HARDENING §5 ("PMULL/CTZ default rewires" pre-block applies
+to PMULL/CTZ direct re-admission, not to wave-internal codec
+broadening, but the same S-P3 cost-authoring discipline binds).
 
 ### §3.6 — Three-ops-per-nibble floor
 
@@ -423,6 +498,37 @@ The `simd_movemask` symbol carries 30.9% (gsoc-2018/t1), 29.9% (t2);
 adding `<u16>::trailing_zeros` (10.5%, gsoc-2018/t1) and
 `string_block_scan` (4.8%) the mask-+-CTZ pipeline carries
 46.2% combined self-time on the most string-heavy long-span corpus.
+
+### §4.0 — Lock-14 framing: a per-string-span-scanner primitive
+
+The §4 widening is presented below in JSON terms (the aarch64 NEON
+quote-scan over the JSON string content), but the primitive class it
+belongs to is **grammar-neutral**. The 32-byte block-scan is a
+*per-string-span-scanner* primitive: it consumes a byte run delimited
+by a configurable terminator, an escape byte, a control limit, and a
+non-ASCII threshold, and returns a class-mask. None of those four
+parameters is JSON-specific. The same primitive admits across every
+grammar that scans a delimited string span:
+
+- **CSS L4 string scan** — the `"`/`'` delimited string token, with
+  CSS escape semantics (`\` + hex run, `\` + newline continuation).
+- **Sheets cell-text scan** — quoted cell text in a formula or a CSV
+  cell; the terminator and escape bytes differ, the block-scan body
+  does not.
+- **BBNF-self string-literal scan** — the grammar metalanguage's own
+  `"..."` / `'...'` terminal literals, scanned by the self-hosted
+  BBNF front-end.
+
+Per Lock 14 (substrate-neutral primitive vocabulary) and SK-V7 A3 §1
+the data-vs-code split puts the four scan parameters
+(`terminator`, `escape`, `control_limit`, `non_ascii_threshold`) in
+the codegen-emitted `.data` slot; the 32-byte NEON block-scan body
+stays grammar-neutral. The widening is therefore admitted as a Lock-14
+primitive-vocabulary entry — `scan_string_special_block_32` — not as a
+JSON-specific helper. The same-wave JSON consumer
+(`match_string_at_quote_trusted_utf8`) is the *first* consumer; the
+CSS L4 / Sheets / BBNF-self consumers are later-wave admissions of the
+same primitive against their own `.data` parameter rows.
 
 ### §4.1 — Current 16-byte path
 
@@ -533,6 +639,22 @@ Structural differential of the SK-V9 proposal:
    sidecar primitive, no parallel substrate (Lock 1 compliance per
    SC-6).
 
+**Preliminary LOC envelope + risk class (final cost-set authored by
+S-P3):**
+
+| Slice | LOC envelope | Risk class | Same-wave consumer |
+| --- | --- | --- | --- |
+| `scan_string_special_block_32` 32-byte NEON body + scalar oracle | 60-110 LOC in `bbnf-simd/src/aarch64/string_block.rs` + `scalar/string_block.rs` | MEDIUM | `match_string_at_quote_trusted_utf8` (`parse-that-regex/src/lib.rs:162`) |
+| `checkasm_string_block.rs` differential gate | 40-70 LOC in `bbnf-simd/tests/` | LOW | n/a (test harness) |
+| `match_string_at_quote_trusted_utf8` producer-site rewire to 32-byte block + scalar tail | 30-60 LOC in `parse-that-regex/src/lib.rs` | MEDIUM | self |
+| `interesting`-mask producer-side OR-fold (move the `t\|e\|c\|n` collapse from `StringSpecialBlock::interesting_mask` consumer into the producer) | 15-30 LOC in `bbnf-simd/src/aarch64/string_block.rs` | LOW | the same `match_string_at_quote_trusted_utf8` |
+
+LOC and risk are **preliminary**; the final cost-set is authored by
+S-P3. The widening's binding risk is the µop-neutral-per-byte finding
+in §4.2 — the win is consumer-side mask-handling halving, not
+producer-side throughput, so the falsification gate must measure the
+*combined* producer + consumer path, not the block-scan microbench.
+
 ### §4.4 — Consumer-side CSSC CTZ admission gate
 
 The `<u16>::trailing_zeros` 10.5% on gsoc-2018/t1 is the consumer-side
@@ -559,6 +681,23 @@ material differential for the SK-V9 P2 proposal:
    (P2-A scope), not the structural-scan bulk-emit pipeline. The W10b
    regression was scoped to the bitmap consumer; the string-mask
    consumer is a separate call site with its own µop budget.
+
+**Preliminary LOC envelope + risk class (final cost-set authored by
+S-P3):**
+
+| Slice | LOC envelope | Risk class | Same-wave consumer |
+| --- | --- | --- | --- |
+| CSSC CTZ body at the string-mask first-set extract (`ctz` under `-C target-cpu=native`) + `cargo asm` proof | 15-35 LOC in `bbnf-simd/src/aarch64/` mask consumer | HIGH | union-substrate string-mask consumer (P2-A scope) |
+
+Risk is **HIGH** because REDRESS 89 already rejected the structurally
+adjacent CSSC CTZ body — the differential (different call site,
+different failure profile, LOSS-rows-under-guard) is plausible but
+unproven; the falsification gate against the W10b six-row WIN block
+(`canada`, `citm_catalog`, `instruments`, `marine_ik`, `mesh`,
+`numbers`) is a hard blocking precondition. **This slice blocks on
+P2-A landing** — the string-mask consumer that makes the CTZ extract
+non-orphan is P2-A union-substrate scope; absent P2-A in the same
+wave, this slice does not ship. Final cost-set authored by S-P3.
 
 ---
 
@@ -666,6 +805,55 @@ carryless multiply. The hot-leaf failure mode that broke PMULL on
 SHA3 EOR3 is 1-cycle latency); the proposal here trades 6 cheap µops
 for 3 1-cycle µops, monotonically faster.
 
+**Why SHA3 EOR3 is structurally different from REDRESS 88 (not a
+PMULL wrapper).** REDRESS 88 rejected `vmull_p64` / `vmull_high_p64`
+as the default body of `bitmap_prefix_xor_64`: a *64-bit carryless
+multiply* computing the prefix-XOR as a polynomial product. SHA3
+`veor3q_u8` is a categorically different primitive on three axes:
+(a) **different intrinsic** — EOR3 is a 3-input bitwise XOR on a
+128-bit vector, no multiply, no polynomial-field arithmetic;
+(b) **different latency profile** — PMULL.1Q is 4-cycle latency
+1/cycle throughput; EOR3 is 1-cycle latency, so the carry-chain depth
+through a 3-stage EOR3 ladder is 3 cycles vs PMULL's single-op-4-cycle
+plus the dependent fold; (c) **different primitive shape** — the EOR3
+proposal is a *vector shift-XOR ladder* over `uint8x16_t`, an
+algebraic fold of the existing scalar shift-XOR ladder (the production
+default that REDRESS 88 *kept*), whereas PMULL replaced the ladder
+entirely with a carryless-multiply identity. EOR3 does not wrap,
+re-admit, or substitute for PMULL; it accelerates the ladder REDRESS
+88 left in place. The REDRESS-88 escape-heavy-row failure mode
+(PMULL retire latency) is structurally inapplicable because no PMULL
+op exists in the EOR3 chain.
+
+**Lock 16 admissibility caveat.** SHA3 (`FEAT_SHA3`) is a host
+capability — `veor3q_u8` is unavailable on hosts without it. Per Lock
+16 (grammar-neutral primitive admissibility predicate) the EOR3
+variant is **gated by the host-capability admissibility predicate**:
+the EOR3 body is admitted only when the host-cap survey (§1.1) reports
+`FEAT_SHA3=1`, and the scalar shift-XOR ladder remains the
+unconditional fallback. The EOR3 variant is therefore a
+*capability-conditional specialisation* of the scalar primitive, not a
+new default — it does not change `bitmap_prefix_xor_64`'s default
+body, it adds an SHA3-gated faster path under the Lock 16 predicate.
+This is the same admissibility shape as `digit_mac` (DotProd-gated)
+and the AES gadget — host-cap-conditional, predicate-guarded, scalar
+fallback unconditional.
+
+**Preliminary LOC envelope + risk class (final cost-set authored by
+S-P3):**
+
+| Slice | LOC envelope | Risk class | Same-wave consumer |
+| --- | --- | --- | --- |
+| Vector `uint8x16_t` shift-XOR ladder with `veor3q_u8` 3-stage fold + Lock-16 SHA3 admissibility gate | 40-80 LOC in `bbnf-simd/src/aarch64/bitmap_prefix_xor_64.rs` | MEDIUM | §5 union-substrate structural-bitmap producer (P2-A scope) |
+| `checkasm` differential extension covering the EOR3 path under forced `FEAT_SHA3` mask | 20-40 LOC in `bbnf-simd/tests/checkasm_bitmap_prefix_xor_64.rs` | LOW | n/a (test harness) |
+
+The EOR3 slice is **MEDIUM** risk despite the monotonic-µop argument:
+the vector-ladder representation differs from the u64-word scalar
+representation, so the parity oracle must cover the
+vector-vs-scalar-vs-PMULL three-way differential. The slice **blocks
+on P2-A** — its only consumer is the §5 structural-bitmap producer,
+which is P2-A union-substrate scope. Final cost-set authored by S-P3.
+
 #### §5.3.2 — AESE-based byte-class shuffle
 
 `vaeseq_u8` (FEAT_AES) is the AES single-round S-box transform; on
@@ -722,6 +910,25 @@ the structural projection IS the tape" — the union-substrate
 collapses the bitmap and the tape into one queryable object. This is
 the *same-wave consumer* for `scan_structurals` that has been
 "blocked_no_consumer" since SK-V3.
+
+**Preliminary LOC envelope + risk class (final cost-set authored by
+S-P3):**
+
+| Slice | LOC envelope | Risk class | Same-wave consumer |
+| --- | --- | --- | --- |
+| Structural-bitmap chain (4-register TBL classify + quote/escape/backslash mask via existing `classify_tbl4` + `byte_class_from_table_64`) | 120-220 LOC in `bbnf-simd/src/aarch64/` (new `scan_structurals` body) | HIGH | P2-A union-substrate typed event cursor |
+| VEXT cross-chunk carry propagation (`vextq_u8` carry-in) | 30-60 LOC in the structural-bitmap chain | MEDIUM | self (chain-internal) |
+| `bulk_emit_positions_64` consumer wire into the typed event cursor | 60-120 LOC in P2-A union-substrate crate | HIGH | P2-A typed event cursor |
+| `scan_structurals` end-to-end checkasm + corpus-parity gate | 50-90 LOC in `bbnf-simd/tests/` | LOW | n/a (test harness) |
+
+The entire §5 dead-SIMD-scanner wiring is **HIGH** risk: it is a
+wave-class substrate replacement (the recursive-descent parser is
+*replaced*, not augmented), and REDRESS 28 + 33 + 50-55 ring-fence
+several adjacent shapes. The §5 chain has **no production consumer
+absent P2-A** — `scan_structurals` has been `blocked_no_consumer`
+since SK-V3 precisely because no consumer exists. The whole of §5
+**blocks on P2-A landing OR the §5 primitives stay orphaned** (the
+SK-V3 status quo). Final cost-set authored by S-P3.
 
 ### §5.5 — Material differential against REDRESS 28 + 33
 
@@ -793,10 +1000,28 @@ covered by a same-named checkasm test:
 referenced in the convergence audit). The SK-V9 P2-D admission gate
 is: **before wiring any new primitive into a hot path, the primitive
 ships a `checkasm_<name>.rs` differential test**. The Wave 1 admission
-kernel `unescape_uxxxx_x4_neon` is currently in-tree but has neither
-a checkasm test (the REDRESS 82 wave attempted one but was rejected
-with the whole patch — the test went out with it) nor an alignment
-sweep.
+kernel `unescape_uxxxx_x4_neon` is currently in-tree AND wired (per
+§2.1 + §3.3) but has neither a checkasm test (the REDRESS 82 wave
+attempted one but was rejected with the whole patch — the test went
+out with it) nor an alignment sweep. **A wired primitive without a
+checkasm differential is a standing DAV1D-discipline violation**, and
+the §3 codec broadening cannot land on top of an untested kernel.
+
+### §6.2.1 — Dispatch ownership for the missing checkasm tests
+
+Each missing differential test is assigned an explicit authoring wave;
+no test is left ownerless. The admission rule is: **the wave that
+broadens / widens / wires the primitive authors the primitive's
+checkasm test as part of the same wave** — the test is a precondition
+of the broadening, not a follow-up.
+
+| Missing test | Primitive | Authoring wave | Rationale |
+| --- | --- | --- | --- |
+| `checkasm_unescape_uxxxx.rs` | `unescape_uxxxx_neon` + `_scalar` + `unescape_uxxxx_x4_neon` + `join_surrogate_pair_neon` | **§3 codec-broadening wave** (V9-W{n}, blocks on P2-A) | The §3 all-quartet broadening threads `unescape_uxxxx_neon` into the fall-through path; the kernel is currently wired-but-untested. The broadening wave authors the checkasm differential as its admission precondition. The test must cover all three NEON entry points plus the scalar oracle, with the alignment sweep REDRESS 82's rejected patch never landed. |
+| `checkasm_string_block.rs` | `scan_string_special_block` + `_scalar` (and the new `_32` variant) | **§4 string-block-widening wave** | The §4 widening adds `scan_string_special_block_32`; the same wave authors the checkasm test covering both the existing 16-byte body and the new 32-byte body against the scalar oracle. Listed as a §4.3 LOC slice already. |
+| `checkasm_match_tiny_plain_string.rs` | `match_tiny_plain_string_neon` + `_scalar` | **§3 codec-broadening wave** (co-located) | Currently only indirectly covered by `classifier_parity.rs`; no standalone differential. The §3 wave touches the adjacent string-tiny-scan path and authors the standalone test in the same dispatch. |
+| `checkasm_digit_mac.rs` | `digit_mac` (DotProd) | **deferred — no §3-§5 consumer in this wave; ownership assigned to the first SK-V9+ wave that wires `digit_mac` into a numeric-token consumer** | `digit_mac` is not on any §3/§4/§5 critical path; assigning its test to a no-consumer wave would be a paper-close. Ownership is explicitly carried forward, not dropped: the wave that wires `digit_mac` (a future numeric-row close) authors the test. |
+| `checkasm_movemask.rs` (standalone differential) | `movemask::movemask_u8x16` | **§4 string-block-widening wave** | `movemask_u8x16` is the mask helper inside the §4-widened block scanner; the §4 wave authors a standalone movemask differential rather than relying on the implicit per-primitive coverage. |
 
 ### §6.3 — The five-invariant gate (SK-V7 A3 §1, restated)
 
@@ -849,7 +1074,7 @@ The §3, §4, §5 admission paths each carry a same-wave consumer:
 | REDRESS 60-62 (boundary collapse, always/delayed-wide retained trusted scan)         | §4 32-byte string-block scan (widens the producer, not the retained boundary)                | The widening is producer-side per-block, not a retained scanner; same-row gate applies but the structural shape is different (per-block widening replaces per-call-pattern). |
 | REDRESS 64 (retained Unicode-escape run validator)                                   | §3 `escape_codec_hex_unit` x4 (per-quartet batched, not a retained validator)                | No validator state; the x4 NEON kernel is pure functional (no carry across `\uXXXX` runs except surrogate join, which is scalar postprocess). |
 | REDRESS 66-69 (direct source-hook field-folding, parser-owned decoded scratch, byte-output unescape, DirectBuild semantic strings) | not proposed in §3-§5; SK-V9 P2 stays on parse_only + retained-tape plane            | Per-row diagnosis (§2) attributes the gap to `escape_codec_hex_unit` and `string_block_scan`, not direct-route shape. P1-V3-D §6.4 routes any further direct-plane work to REDRESS 93's dedicated tranche. |
-| REDRESS 82 (W4 single-quartet Unicode escape classifier)                             | §3 x4 batched + union-substrate consumer (not per-quartet parser-owned)                      | Three axes per §3.5: x4 batching, union-substrate consumer (not parser), direct-route falsification gate added.                              |
+| REDRESS 82 (W4 single-quartet Unicode escape classifier)                             | §3 all-quartet broadening + union-substrate consumer (the x4 kernel is ALREADY wired at `lib.rs:402`)  | The differential is NOT "wire the kernel" — `unescape_uxxxx_x4_neon` is already consumed at `parse-that-regex/src/lib.rs:402` inside `unescape_four_unicode_escapes`. Three axes per §3.5: broaden opportunistic-x4-only to all-quartet handling (thread `unescape_uxxxx_neon` into the fall-through), rebind consumer cardinality to the union-substrate tape-cell projection, direct-route falsification gate added. |
 | REDRESS 83 (W5 generated-retained StringBlock16 tiny probe)                          | §4 32-byte at `match_string_at_quote_trusted_utf8` (long-span path, not tiny path)            | Different call site (full-scan, not tiny-probe); widening replaces the producer at the call site, not a wrapper layered on the consumer.    |
 | REDRESS 84 (W6 object-pair value-byte control compaction)                            | not proposed                                                                                  | n/a — control-boundary economics, not in §3-§5 scope.                                                                                       |
 | REDRESS 88 (W10 PMULL prefix-XOR default body)                                       | §5.3.1 SHA3 EOR3 fold (not PMULL; vector shift-XOR ladder over uint8x16 with EOR3 collapse)  | Different intrinsic (EOR3 1-cycle vs PMULL 4-cycle); different primitive shape (vector ladder vs 64-bit carryless mult); the failure mode (PMULL retire latency on M5 Max P-core escape-heavy rows) is structurally inapplicable. |
@@ -873,5 +1098,57 @@ The §3, §4, §5 admission paths each carry a same-wave consumer:
 - `skinny/crates/bbnf-simd/src/aarch64/match_tiny_plain_string.rs:79` (`match_tiny_plain_string_neon` — low-6 TBL shape referenced in §3.6).
 - `skinny/crates/parse-that-regex/src/lib.rs:284` (`validate_string_escape`); `:162` (`match_string_at_quote_trusted_utf8`); `:945` (`read_hex_unit_scalar`); `:959` (`hex_nibble`); `:547` (`skip_string_plain_trusted`).
 - `restart/locks/LOCKS.md` Lock 1 (substrate union); Lock 14 (grammar generalisation); Lock 16 (grammar-neutral primitive surface).
+
+---
+
+## §0 — V2-fold footer (S-P2 V1 CHALLENGE dispositions)
+
+This report was folded against the S-P2 V1 CHALLENGE consolidation
+(`hardening/HARDENING-S-P2-V1-CONSOLIDATED.md`, F1 + F4 + F5 + F6).
+
+**Critical wiring fix (F1 / CH6-D-1, load-bearing).** V1 §2.1 claimed
+`unescape_uxxxx_x4_neon` is "neither wired into the parse-that-regex
+hot path". **This was wrong.** The x4 kernel IS wired and consumed at
+`parse-that-regex/src/lib.rs:402`, inside `unescape_four_unicode_escapes`
+(lines 384-459), dispatched from the `Some(b'u')` arm of the
+string-unescape inner loop at `lib.rs:778`. P2-E §1.2 correctly
+identified the consumer. §2.1, §3.2, §3.3, §3.5, and the §7 REDRESS 82
+row are all reframed: the REDRESS 82 material differential is **not**
+"wire the kernel" but "broaden the opportunistic-x4-only batcher to
+all-quartet handling (thread `unescape_uxxxx_neon` into the
+mixed-escape / single-quartet / surrogate-split fall-through) and
+rebind the consumer cardinality from the parser-owned `unescape_string`
+materialiser to the P2-A union-substrate tape-cell projection".
+
+**Other V2-fold edits:**
+- **F4** — per-opportunity preliminary LOC envelope + risk class
+  (LOW/MEDIUM/HIGH) + "final cost-set authored by S-P3" deferral +
+  named same-wave consumer added to §3.5 (codec broadening), §4.3
+  (string-block widening), §4.4 (CSSC CTZ), §5.3.1 (SHA3 EOR3 ladder),
+  §5.4 (dead-SIMD-scanner wiring).
+- **F5** — §4.0 added: the 32-byte block-scan reframed as a
+  grammar-neutral *per-string-span-scanner* Lock-14 primitive
+  (`scan_string_special_block_32`), with CSS L4 / Sheets cell-text /
+  BBNF-self string-literal scan named as later-wave consumers of the
+  same primitive against their own `.data` parameter rows.
+- **F6** — §5.3.1 expanded: SHA3 `veor3q_u8` is structurally distinct
+  from REDRESS 88 (different intrinsic — 3-way XOR not carryless
+  multiply; different latency profile — 1-cycle vs 4-cycle; different
+  primitive shape — vector ladder fold not polynomial substitution),
+  and is gated by the Lock 16 host-capability admissibility predicate
+  (`FEAT_SHA3`), with the scalar shift-XOR ladder as the unconditional
+  fallback.
+- **CH3 no-orphan** — §3.5 codec broadening, §4.4 CSSC CTZ, §5.4
+  dead-SIMD-scanner wiring each carry an explicit "blocks on P2-A
+  landing OR fails CH5 / stays orphaned" sentence; absent P2-A in the
+  same wave, the primitive ships without a production consumer — a
+  REDRESS-82-style orphan — and is held back.
+- **DAV1D discipline** — §6.2.1 added: explicit dispatch ownership for
+  each missing checkasm test (`checkasm_unescape_uxxxx.rs`,
+  `checkasm_string_block.rs`, `checkasm_match_tiny_plain_string.rs`,
+  `checkasm_digit_mac.rs`, `checkasm_movemask.rs`), each assigned to
+  the wave that broadens / widens / wires the primitive, with
+  `digit_mac`'s test ownership explicitly carried forward (no
+  paper-close to a no-consumer wave).
 
 End of report.

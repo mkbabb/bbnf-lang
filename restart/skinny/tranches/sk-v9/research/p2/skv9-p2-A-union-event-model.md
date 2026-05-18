@@ -1,7 +1,11 @@
 # SK-V9 P2-A: Union Event-Model — W3 Fit-Gate Diagnosis + Alternate Design
 
-Pass: S-P2 Research. Cycle: V1.
+Pass: S-P2 Research. Cycle: V2.
 Date: 2026-05-18.
+
+§0 — V2 fold: F4 per-slice cost discipline + F5 Lock-14 surgical +
+CH3/CH5 REVISEs addressed; substrate cardinality discipline reinforced.
+
 Scope: Diagnose SK-V8 W3 fit-gate rejection (REDRESS 92) and design an
 alternate event-model that admits the union substrate (the retained SIMD
 structural index IS the tape) without re-opening pre-blocked routes.
@@ -187,6 +191,22 @@ producer*, exactly as Lock 1 already permits ("A SIMD mask stream is a
 transient producer, not a retained sidecar"). The tape gains a class
 column; the offset column's cardinality is unchanged.
 
+**`StructuralIndex` lifetime is explicit and bounded** (per CH3 A-2
+falsifier tightening): the `StructuralIndex` value is produced inside
+`parse(input)` at the call to `bbnf_simd::scan_dispatch`, is consumed
+by move by the parser walker, and is dropped at the end of the parse
+frame. It is *never* stored as a field on `Tape`, on `ParserState`'s
+public surface (the walker's `idx: u32` cursor is the only retained
+walker state — it is an integer ordinal into a value that no longer
+exists once parse returns), or on any sidecar; it is never `Send`
+across; it carries no `'static` lifetime and is never named on a
+public substrate API. Cardinality of retained allocations stays at
+one (the tape); the structural index has no retained allocation. The
+grep falsifier: `rg -n 'StructuralIndex' skinny/crates/runtime/src/`
+must return matches only inside the parser body (consumed by move),
+never inside `tape/`, never as a struct field type on a retained
+struct, never as a public re-export from `runtime::tape::*`.
+
 ### §2.2 — Data layout
 
 ```
@@ -211,12 +231,52 @@ grammar modules carry the meaning. For JSON the ordinal set is the
 existing `JsonNodeKind` minus the byte-rediscovered `*Separator` arms
 (those become parser-internal walk state, not view cursors).
 
-LOC: tape grows by `~+1 byte / cursor`. For `twitter` (~30 KiB
-offsets at 4 bytes/cursor) that is `~+8 KiB`, recovering all of it (and
-more) by deleting `at_cursor`'s per-cursor random-access source-byte
-read on traversal — the hot leaf hidden from S-P1's static-byte hot-
-leaf taxonomy because it is amortised across view operations rather
-than the parse loop.
+**`BackendShape` instance disposition** (per CH3 A-4 REVISE): the
+five-variant `BackendShape` enum (`OffsetTape`, `EagerTape`,
+`SinkOnly`, `Hybrid`, `Empty` — `bbnf-codegen/src/backend_shape.rs`)
+is **unchanged at the variant level**. The class column is a
+representation refinement of the `OffsetTape` variant only: the
+`OffsetTape` runtime struct (`runtime/src/tape/mod.rs::Tape`) gains
+the `classes: Vec<u8>` column; the variant's *identity* in the enum
+is unchanged, and `derive_backend_shape`'s decision tree (which
+inspects grammar metadata to assign one of the five variants) has
+no new branch. The other four variants are untouched: `EagerTape`,
+`SinkOnly`, `Hybrid`, `Empty` carry no class column because they do
+not carry an offset column either; only `OffsetTape` projects to a
+retained cursor stream that needs a co-indexed class column. The
+falsifier: `rg -n 'enum BackendShape' bbnf-codegen/src/` returns one
+match before and after; the diff at that line is byte-identical.
+HANDOFF §5 ("no new `BackendShape`") is honoured because the
+representation refinement is interior to `OffsetTape`'s runtime
+struct, not a sixth enum variant.
+
+**Per-grammar tape cost is codegen output, not substrate change**
+(per CH3 A-8 / CH3 R-3 REVISE): the `+1 byte / cursor` storage cost
+materialises only for grammars whose `derive_backend_shape` assigns
+`OffsetTape`. Grammars routed to `EagerTape` / `SinkOnly` / `Hybrid`
+/ `Empty` pay no storage cost because they carry no offset column
+to co-index against. The class-column allocation is emitted by the
+per-grammar codegen template — the generic `runtime/src/tape/` crate
+exposes `class_at(cursor) -> u8` and a `push_offset_with_class`
+builder API, but does NOT allocate the column. The codegen-emitted
+`runtime/src/grammars/<grammar>/parser.rs` template constructs the
+column at parse entry and pushes into it at each `emit_event_offset`
+call site. Grammars opting out of the column (or whose
+`BackendShape` is not `OffsetTape`) emit a `parser.rs` that never
+references `classes`. The substrate is grammar-neutral; the storage
+cost is per-grammar codegen output. The five-grammar enumeration
+(JSON / CSS L4 / Sheets / BBNF-self / empty-alphabet) in §3 names
+which grammars instantiate `OffsetTape` and therefore pay the
+`+1 byte / cursor`; the empty-alphabet case is routed to `EagerTape`
+and pays nothing.
+
+LOC: tape grows by `~+1 byte / cursor` *for grammars that emit an
+OffsetTape backend*. For `twitter` (~30 KiB offsets at 4 bytes/cursor)
+that is `~+8 KiB`, recovering all of it (and more) by deleting
+`at_cursor`'s per-cursor random-access source-byte read on traversal
+— the hot leaf hidden from S-P1's static-byte hot-leaf taxonomy
+because it is amortised across view operations rather than the parse
+loop.
 
 ### §2.3 — Primitive interface
 
@@ -228,16 +288,23 @@ alphabet** (seven bytes for JSON), not the parser-event class set
 (seven ordinals: `ObjectOpen`/etc.). These are *different* opaque ids
 in different domains, and the mapping is generated:
 
+The "Mapping site" column below names the generic primitive-class
+template form (per P1-V3-B §1.5 / Lock 16 Layer-1 vocabulary) and, in
+parentheses, the JSON codegen output symbol that the grammar's
+template materialises. The generic substrate sees only the primitive
+class + ordinal; the JSON-role symbol name is a per-grammar
+codegen-emitted instance, not a substrate API.
+
 | Structural class (scanner) | Parser-event class (tape) | Mapping site |
 |---|---|---|
-| `{` → s1 | `ObjectOpen` → e1 | `parse_object` entry: emit e1 at the s1 position |
-| `}` → s2 | `ObjectClose` → e2 | `parse_object` close: emit e2 at the s2 position |
-| `[` → s3 | `ArrayOpen` → e3 | analogous |
-| `]` → s4 | `ArrayClose` → e4 | analogous |
-| `:` → s5 | (none — walk only) | `parse_member` advances index cursor, no tape emit |
-| `,` → s6 | (none — walk only) | `parse_container_next` advances index cursor, no tape emit |
-| `"` → s7 | `String` (on the *opening* `"` only) → e5 | `parse_string` entry: emit e5 at the first s7; second s7 advances index cursor only |
-| (no structural class — digits, `t`/`f`/`n`) | `Number` → e6 / `Literal` → e7 | `parse_value_at` reads `index.positions[i+1] - 1`-ish gap; the first non-whitespace byte between two structural positions is the scalar anchor; emit e6/e7 at that byte's offset |
+| `{` → s1 | `ObjectOpen` → e1 | `walk_container_at_class(ContainerOpenOrdinal)` (JSON codegen output: `parse_object` entry): emit e1 at the s1 position |
+| `}` → s2 | `ObjectClose` → e2 | `walk_container_close(ContainerCloseOrdinal)` (JSON codegen output: `parse_object` close): emit e2 at the s2 position |
+| `[` → s3 | `ArrayOpen` → e3 | analogous (JSON codegen output: `parse_array` entry) |
+| `]` → s4 | `ArrayClose` → e4 | analogous (JSON codegen output: `parse_array` close) |
+| `:` → s5 | (none — walk only) | `walk_member_separator(MemberSeparatorOrdinal)` (JSON codegen output: `parse_member`): advances index cursor, no tape emit |
+| `,` → s6 | (none — walk only) | `walk_element_separator(ElementSeparatorOrdinal)` (JSON codegen output: `parse_container_next`): advances index cursor, no tape emit |
+| `"` → s7 | `String` (on the *opening* `"` only) → e5 | `walk_string_open(StringOpenOrdinal)` (JSON codegen output: `parse_string` entry): emit e5 at the first s7; second s7 advances index cursor only |
+| (no structural class — digits, `t`/`f`/`n`) | `Number` → e6 / `Literal` → e7 | `walk_scalar_anchor(ScalarAnchorClass)` (JSON codegen output: `parse_value_at`): reads `index.positions[i+1] - 1`-ish gap; the first non-whitespace byte between two structural positions is the scalar anchor; emit e6/e7 at that byte's offset |
 
 The crucial admissibility move: the SIMD scanner does *not* need
 digits/`t`/`f`/`n` in its alphabet. The parser walks the structural
@@ -277,28 +344,58 @@ constraints
    view re-traversal. No `path!` semantics change. Track 2 untouched
    (it consumes the same `JsonRoot` API).
 
-### §2.5 — How `consume_structural` is removed (or shrunk)
+### §2.5 — How `consume_structural` is deleted
 
-Today `consume_structural` (`generated.rs:292-306`) is the per-byte
-scalar rediscovery. Under the alternate model, the parser consults the
-structural index instead: `parse_object` reads
-`index.positions[idx]`, asserts `index.classes[idx] == s1` (the `{`
-structural class), advances `idx`, and emits `(positions[idx-1], e1)`
-into the tape. Whitespace between structural bytes is *implicit* — it
-is the gap between `positions[i]` and `positions[i+1]`. No
-`skip_ascii_whitespace` walk; no per-byte structural fallback.
+Today `consume_structural`
+(`skinny/crates/runtime/src/grammars/json/generated.rs:292-306`) is
+the per-byte scalar rediscovery. Under the alternate model, this
+function is **deleted** — the deletion lands at
+`generated.rs:292-306` (regen output; the codegen template is
+`skinny/crates/codegen/src/json_templates/parser.rs`), and the
+parser walker (`walk_container_at_class` / JSON codegen output
+`parse_object`) consults the structural index instead. The walker
+reads `index.positions[idx]`, asserts `index.classes[idx] == s1`
+(the `{` structural class), advances `idx`, and emits
+`(positions[idx-1], e1)` into the tape. Whitespace between
+structural bytes is *implicit* — it is the gap between
+`positions[i]` and `positions[i+1]`. No `skip_ascii_whitespace`
+walk; no per-byte structural fallback; no second producer of
+structural positions. **Cardinality of structural-position
+producers stays at one**: the SIMD scanner emits the index, the
+parser consumes it by move, the parser does not re-scan the input
+for structural bytes.
 
-The exception is the scalar-anchor case (`Number`, `Literal`). There
-the parser still reads bytes from `input[positions[i-1]+1 ..
-positions[i]]` to locate the first non-whitespace byte. The cost is
-*linear in scalar count*, not linear in input size as today. On
-number-heavy corpora (`canada`, `mesh`, `numbers`) the per-scalar cost
-is unchanged (today's scalar number scanner already pays it); on
-string-dense corpora (`twitter`, `apache_builds`, `gsoc-2018`) the
-*structural-fallback* path inside `consume_structural` is eliminated,
-which is where the 47–67% string-scanner self-time
-(`match_tiny_plain_string` + `match_string_at_quote`) reaches its
-shelf.
+The CH5 R-CH5-1 falsifier (verbatim): the production hot path
+contains zero callers of `consume_structural` after the wave
+commit. The deletion is verified by
+`rg -n 'consume_structural' skinny/crates/runtime/src/`
+returning zero matches outside the wave's deletion-commit diff. The
+codegen template (`json_templates/parser.rs`) likewise loses the
+`consume_structural` emission; `rg -n 'consume_structural'
+skinny/crates/codegen/src/` returns zero matches after regen.
+
+The exception is the scalar-anchor case (`walk_scalar_anchor` —
+classes `Number`, `Literal`). There the parser still reads bytes
+from `input[positions[i-1]+1 .. positions[i]]` to locate the first
+non-whitespace byte. The cost is *linear in scalar count*, not
+linear in input size as today. On number-heavy corpora (`canada`,
+`mesh`, `numbers`) the per-scalar cost is unchanged (today's scalar
+number scanner already pays it); on string-dense corpora
+(`twitter`, `apache_builds`, `gsoc-2018`) the *structural-fallback*
+path inside `consume_structural` is eliminated, which is where the
+47–67% string-scanner self-time (`match_tiny_plain_string` +
+`match_string_at_quote`) reaches its shelf.
+
+**Generic-template / JSON-codegen-output naming convention.** The
+prose above names walker functions in the generic primitive-class
+template form (`walk_container_at_class(ContainerOpenOrdinal)`,
+`walk_scalar_anchor(ScalarAnchorClass)`, etc.) — these are the
+generic template lowerings that codegen instantiates per grammar.
+The JSON codegen output names them `parse_object` / `parse_array`
+/ `parse_string` / `parse_value_at` / `parse_member` /
+`parse_container_next`. The generic substrate (`runtime/src/tape/`)
+sees only the primitive class + class ordinal; the JSON-role
+symbol names live entirely inside the JSON-grammar codegen output.
 
 ## §3 — Cross-grammar admission
 
@@ -372,15 +469,34 @@ keyed to the per-corpus parse_only rows from
 | distinct_values | 8972 | 15731 | ≥ 15731 | as gsoc-2018; dense-key structural-heavy. |
 | update_center | 9857 | 14369 | ≥ 14369 | structural rediscovery deletion. |
 
-### §4.2 — Must-not-regress (number-heavy wins + neutral guards)
+### §4.2 — Must-not-regress: the W10b six-row block (binding)
 
-| Corpus | Track 1 today | Floor (max(today, sonic-strict)) | Notes |
-|---|---:|---:|---|
-| canada | 16190 | ≥ 15871 (-2.0% maintain) | scalar number scanner untouched; class column +1 byte/cursor RSS only. |
-| mesh | 12435 | ≥ 12186 (-2.0%) | as canada. |
-| marine_ik | 12073 | ≥ 11831 (-2.0%) | as canada. |
-| numbers | 17956 | ≥ 17597 (-2.0%) | as canada. |
-| citm_catalog | 29215 | ≥ 28631 (-2.0%) | structural-dense object skeleton; class column write is the only added work in the parse loop. |
+The six-row block `canada`, `citm_catalog`, `instruments`,
+`marine_ik`, `mesh`, `numbers` is the verbatim WIN-row set that the
+SK-V8 W10 + W10b campaign (REDRESS 88 + 89) proved fragile: even a
+correctness-green, checkasm-passing prefix-XOR/CTZ rewire dropped
+those six rows 3–8%. P2-A's class-column write is a parse-loop edit
+and therefore must carry an explicit no-regression gate on exactly
+that block. The **maintain envelope** is per-row `≥ -2.0%` against
+today's Track 1, AND `≥ sonic-strict` where the row is a win today
+— whichever is the higher floor binds. Any row in this block
+dropping below `today × 0.98` falsifies the model (see §4.4 #3).
+
+| Corpus | Track 1 today | Maintain floor (`today × 0.98`) | sonic-strict guard | Notes |
+|---|---:|---:|---:|---|
+| canada | 16190 | ≥ 15866 | ≥ 15871 (sonic floor binds) | scalar number scanner untouched; class column +1 byte/cursor RSS only. |
+| citm_catalog | 29215 | ≥ 28631 | structural-dense win | structural-dense object skeleton; class-column write is the only added work in the parse loop. The most class-write-dense row in the block — the load-bearing W10b guard. |
+| instruments | (W10b WIN row; current Track 1 from `skinny/RESULTS.md`) | ≥ `today × 0.98` | structural+number mixed | mixed structural/number; the class-write density is mid-range. Named explicitly because the W10b campaign regressed it. |
+| marine_ik | 12073 | ≥ 11831 | ≥ 11831 (sonic floor binds) | scalar number scanner untouched. |
+| mesh | 12435 | ≥ 12186 | ≥ 12186 (sonic floor binds) | scalar number scanner untouched. |
+| numbers | 17956 | ≥ 17597 | ≥ 17597 (sonic floor binds) | scalar number scanner untouched. |
+
+The W10b six-row gate is a *binding* admission gate, not advisory:
+the model is falsified (§4.4 #3) if any one of the six drops below
+its maintain floor, even where the must-improve rows (§4.1) all
+clear. The class-column write must pay for itself on the
+structural-dense rows (`citm_catalog`, `instruments`) or be reverted
+per §5's revert protocol.
 
 ### §4.3 — Out of scope (string-scanner + escape codec)
 
@@ -409,10 +525,14 @@ The model is falsified if any of:
 2. Class column read in `at_cursor` not present, i.e. the per-cursor
    source-byte rediscovery survives in `value.rs`. (Means the same-
    wave consumer wasn't wired.)
-3. `canada` / `mesh` / `numbers` / `marine_ik` regress > -2.0%.
-   (Means the +1 byte/cursor write is paying more than the
-   structural-deletion saves — implausible per the column-write cost
-   model but must be measured.)
+3. Any row in the W10b six-row block (`canada`, `citm_catalog`,
+   `instruments`, `marine_ik`, `mesh`, `numbers`) drops below its
+   §4.2 maintain floor (`today × 0.98`, or the sonic-strict floor
+   where higher). (Means the +1 byte/cursor write is paying more
+   than the structural-deletion saves — implausible per the
+   column-write cost model but must be measured; this is the
+   verbatim WIN-row block the W10/W10b campaign regressed 3–8%, so
+   it is the binding regression gate, not advisory.)
 4. Track 2 / `path!` / direct-to-struct / SinkOnly rows show any
    delta beyond noise. (Means a cross-substrate leak; the alternate
    model touches only retained-view consumers.)
@@ -423,31 +543,134 @@ The model is falsified if any of:
    (Means the cursor/class split wasn't preserved — the W3 conflation
    re-emerged.)
 
-## §5 — LOC + risk envelope (S-P3 owns final cost set)
+## §5 — Per-slice cost discipline (S-P3 owns final cost set)
 
-Order-of-magnitude only.
+Order-of-magnitude only. The aggregate of ~265 hand + ~120 regen LOC
+is decomposed into eight per-slice rows, each carrying a preliminary
+minute cap (per ORCHESTRATOR §9 — preliminary; S-P3's P3-B finalises
+wave-level caps) and a one-sentence revert protocol (modelled on
+P2-C §4.3 — if the §4 falsifiability gate fires, the wave halts at the
+redress phase, records the falsified gate in REDRESS, and routes back
+to S-P2/S-P3 without admitting the slice). The four load-bearing
+slices the V2 fold names explicitly are (a) class-column add, (b)
+`consume_structural` removal, (c) `at_cursor` class-read, (d)
+emit-site class write — these are slices A.1, A.3-deletion-half,
+A.4, and A.3-emit-half / A.2 below.
 
-| Slice | Hand LOC | Generated-regen LOC | Risk |
-|---|---:|---:|---|
-| `runtime/src/tape/{mod,assembler}.rs`: add `classes: Vec<u8>`, `class_at`, `push_offset_with_class`, drop `push_plain_offset` once codegen migrated. | +60 / -20 | n/a | LOW — additive column; existing API survives. |
-| `runtime/src/grammars/json/parser.rs`: `emit_plain_offset` → `emit_event_offset(offset, class)`; structural-index field. | +15 (template) | +0 regen | LOW — one site. |
-| `runtime/src/grammars/json/generated.rs`: each `emit_plain_offset` callsite passes a class ordinal; `consume_structural` deleted; `parse_object`/`parse_array`/etc. walk the structural index instead. | n/a | +80 / -50 regen | MEDIUM — regenerated; codegen template carries the structural-walk lowering. |
-| `runtime/src/grammars/json/value.rs::JsonNodeKind::at_cursor`: byte-rediscovery → class-column read. | n/a | +5 / -15 regen | LOW — pure consumer swap. |
-| `codegen/src/json_templates/{generated,parser,view,value}.rs`: emit the class column write, the structural-walk lowering, the `class_at` read. | +120 templates | n/a | MEDIUM — the structural-walk lowering is the new mechanism; checkasm-style parity tests required. |
-| `bbnf-simd/src/lib.rs`: producer already emits positions; class is a parallel `Vec<u8>` co-written under the structural-alphabet's class table (already exists at `StructuralAlphabet::class_table`, `lib.rs:41`). | +20 | n/a | LOW — additive. |
-| `runtime/src/grammars/json/scan.rs`: stop discarding the index; surface a move-consume API to the parser. | n/a | +10 / -5 regen | LOW. |
-| `bbnf-bench/src/parity.rs`: class-column parity assert; structural-index move-consumed assert. | +30 | n/a | LOW — telemetry only. |
+### §5.1 — Slice A.1 — class-column add (substrate)
+
+`runtime/src/tape/{mod,assembler}.rs`: add `classes: Vec<u8>`,
+`class_at(cursor) -> u8`, `push_offset_with_class`; drop
+`push_plain_offset` once codegen migrated.
+LOC: +60 / -20 hand. Risk: **LOW** — additive column; existing API
+survives until the codegen migration completes.
+Minute cap: **~30 min** (hand-LOC 30–100 band).
+Revert: if the §4.2 W10b gate fires, revert the `assembler.rs`
+column-push and keep the `classes` field unused (zero-length) — the
+substrate compiles with an empty column; the slice is rolled back
+without disturbing the offset column.
+
+### §5.2 — Slice A.2 — emit-site rename (parser template)
+
+`runtime/src/grammars/json/parser.rs`: `emit_plain_offset` →
+`emit_event_offset(offset, class)`; structural-index field on the
+walker (the move-consumed `idx: u32` cursor, per §2.1).
+LOC: +15 hand (template). Risk: **LOW** — one call-site rename.
+Minute cap: **~15 min** (hand-LOC ≤ 30 band).
+Revert: revert the template rename; `emit_plain_offset` is restored
+and the class argument is dropped at the call site.
+
+### §5.3 — Slice A.3 — `consume_structural` removal + emit-site class write (regen)
+
+`runtime/src/grammars/json/generated.rs` (regen): each
+`emit_plain_offset` callsite passes a class ordinal; `consume_structural`
+(`generated.rs:292-306`) is deleted; the walker (`parse_object` /
+`parse_array` / etc. as JSON codegen output) walks the structural
+index instead. This slice has two halves — the **removal half**
+(delete `consume_structural`, −50 regen LOC) and the **emit-write
+half** (class ordinal at each emit site, +80 regen LOC).
+LOC: +80 / -50 regen. Risk: **MEDIUM** — regenerated; the codegen
+template carries the structural-walk lowering.
+Minute cap: **~10 min regen + verification** (regen slice; the
+hand-LOC for the lowering lives in slice A.5's template).
+Revert: revert the codegen-template commit (slice A.5) and regen;
+`generated.rs` returns to the `consume_structural` shape byte-identically.
+
+### §5.4 — Slice A.4 — `at_cursor` class-read (consumer, regen)
+
+`runtime/src/grammars/json/value.rs::JsonNodeKind::at_cursor`:
+byte-rediscovery (`value.rs:33-46`) → class-column read. This IS the
+same-wave production consumer for slice A.1.
+LOC: +5 / -15 regen. Risk: **LOW** — pure consumer swap.
+Minute cap: **~10 min regen + verification**.
+Revert: revert the codegen-template commit and regen; `at_cursor`
+returns to the source-byte match.
+
+### §5.5 — Slice A.5 — codegen template (hand)
+
+`codegen/src/json_templates/{generated,parser,view,value}.rs`: emit
+the class-column write, the structural-walk lowering, the `class_at`
+read. This is the novel-mechanism slice — the structural-walk
+lowering is new codegen surface.
+LOC: +120 hand (templates). Risk: **MEDIUM** — the structural-walk
+lowering is the new mechanism; checkasm-style parity tests required
+(slice A.8).
+Minute cap: **~45–60 min** (hand-LOC > 100 band; checkasm parity
+counted in slice A.8).
+Revert: revert the four template files; regen restores every
+downstream `generated.rs` / `parser.rs` / `value.rs` byte-identically
+(slices A.3, A.4 roll back automatically with this revert).
+
+### §5.6 — Slice A.6 — SIMD producer move-consume API (hand)
+
+`bbnf-simd/src/lib.rs`: the producer already emits positions; the
+class is a co-written `Vec<u8>` under the structural-alphabet's class
+table (already exists at `StructuralAlphabet::class_table`, `lib.rs:41`).
+LOC: +20 hand. Risk: **LOW** — additive.
+Minute cap: **~15 min** (hand-LOC ≤ 30 band).
+Revert: revert the 20 lines; the producer returns to discarding the
+class table.
+
+### §5.7 — Slice A.7 — scan.rs index surfacing (regen)
+
+`runtime/src/grammars/json/scan.rs`: stop discarding the index;
+surface a move-consume API to the parser.
+LOC: +10 / -5 regen. Risk: **LOW**.
+Minute cap: **~10 min regen + verification**.
+Revert: revert the codegen-template commit and regen; `scan.rs`
+returns to discarding the index (the `attach_structural_index` no-op
+shape).
+
+### §5.8 — Slice A.8 — bench parity asserts (hand)
+
+`bbnf-bench/src/parity.rs`: class-column parity assert;
+structural-index move-consumed assert.
+LOC: +30 hand. Risk: **LOW** — telemetry only.
+Minute cap: **~15 min** (hand-LOC ≤ 30 band).
+Revert: revert the parity asserts; the bench loses the class-column
+telemetry but the parse path is unaffected.
+
+### §5.9 — Aggregate
 
 Hand source LOC: **~265** (templates + tape + tests). Regenerated
-output: **~120 LOC net**, ~120 LOC added, ~70 LOC deleted (mainly
+output: **~120 LOC net** (~120 LOC added, ~70 LOC deleted — mainly
 `consume_structural` and `at_cursor`'s byte match). Total well inside
 the W3 default 450 LOC budget; the exceptional 650 LOC budget covers
-any expansion in the same wave.
+any expansion in the same wave. Aggregate preliminary minute cap:
+**~155 min** (sum of per-slice caps); the W3 plan-cited 90-minute
+ceiling applies to the *core mechanism* slices (A.1–A.5); the
+ancillary slices (A.6–A.8) can sequence in a follow-on commit if the
+core lands clean. S-P3's P3-B owns the final wave-level cap and
+sequence; the per-slice caps above are the preliminary input.
 
 **Risk: medium-low.** The mechanism is a *contracting* one (it
 *deletes* `consume_structural` and shrinks `at_cursor`) and the cursor
 scheme is preserved row-for-row. The novel surface is the codegen
-template emitting the structural-walk lowering, which is bounded.
+template emitting the structural-walk lowering (slice A.5), which is
+bounded. The cohort-level revert protocol: because slices A.3, A.4,
+A.7 are regen output, reverting the codegen-template commit (A.5)
+rolls back four downstream files in one move; the hand slices (A.1,
+A.2, A.6, A.8) revert independently.
 
 ## §6 — REDRESS pre-block citations: routes the alternate design must
 NOT re-open
@@ -520,14 +743,43 @@ every previously-rejected route. The cited entries:
 
 The blanket pre-blocks REDRESS 92 enumerated (`skinny/REDRESS.md:
 2673-2676`) must be checked: the alternate model introduces
-**no new `BackendShape` variant** (Lock 1 R2 in SC-6: the union is
-representation of `OffsetTape`, not a sixth shape), **no new BIR
-variant**, **no new directive**, **no public substrate API**, **no
-parser-owned structural cursor/facts**, **no `tape_vs_tape` as
+**no new `BackendShape` variant** (Lock 1 R2 in SC-6: the class
+column is a representation refinement of the `OffsetTape` variant's
+runtime struct — only `OffsetTape` is touched; `EagerTape`,
+`SinkOnly`, `Hybrid`, `Empty` are unaffected; `derive_backend_shape`
+gains no branch — see §2.2), **no new BIR variant**, **no new
+directive**, **no public substrate API** (the generic
+`runtime/src/tape/` crate exposes only `class_at`/`push_offset_with_class`
+over an opaque `Vec<u8>`; the class meaning lives in per-grammar
+codegen output), **no parser-owned structural cursor/facts** (the
+`StructuralIndex` is consumed by move, lifetime ≤ one `parse(input)`,
+never named on a retained struct — see §2.1), **no `tape_vs_tape` as
 production consumer** (the production consumer is `JsonRoot` view's
 `at_cursor`), **no `UnionTape` public type**, and **no Tier B
 string-boundary/quote-backslash/parity work** (those route to the
 separate string-scanner and unicode-escape designs).
+
+**Codegen-directory naming carve-out (Lock 14).** The §5 LOC table
+names `codegen/src/json_templates/{generated,parser,view,value}.rs`
+as a touched directory. The `json_templates/` directory is a
+**per-grammar codegen-emitted instance** — it is the JSON grammar's
+template set, the codegen analogue of a per-grammar declaration
+crate (`crates/<grammar>/`), which Lock 14 explicitly permits. It is
+not a "JSON-specific exception" carved into a generic crate: the
+generic codegen mechanism lives in `codegen/src/lib.rs` and the
+shared template infrastructure; `json_templates/` is the
+instantiation of that mechanism for the JSON grammar, exactly as
+`css_l4_templates/` would be for CSS L4. Adding the class-column
+emission to `json_templates/` is a per-grammar codegen-instance
+edit, not a generic-crate `match grammar { Json => … }` arm. The
+Lock 14 verification (`rg` for grammar names in *generic* crate
+paths) is satisfied because `json_templates/` is a per-grammar
+codegen-instance directory, not a generic-crate path. The directory
+name carries grammar identity precisely because it is the
+per-grammar instance; the generic mechanism it instantiates carries
+none. No directory rename is a precondition; the carve-out is the
+standing Lock 14 disposition for per-grammar codegen-instance
+directories.
 
 ## §7 — Sources
 

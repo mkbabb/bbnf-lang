@@ -1,6 +1,6 @@
 # SK-V9 P2-E: Unicode-escape codec primitive (`escape_codec_hex_unit`)
 
-Pass: S-P2 Research. Cycle: V1.
+Pass: S-P2 Research. Cycle: V2.
 Date: 2026-05-18.
 Scope: Design the `escape_codec_hex_unit` cross-grammar primitive — scalar
 reference + NEON SIMD body + same-wave consumer wiring + falsifiability
@@ -332,14 +332,36 @@ gates the NEON body against the scalar reference on every commit.
 
 Per Lock-16 admissibility + the `same-wave-consumer rule` from P2-B and
 CH4 of the S-P2 CHALLENGE wave, the primitive lands with a live
-consumer in the same wave commit. P2-E names two consumers, JSON
-load-bearing and CSS L4 sketch.
+consumer in the same wave commit. The wave carries two distinct
+consumer kinds, and per CH2 F5 the two must not be conflated:
 
-### 4.1 JSON consumer (the wave's primary target)
+- **Production consumer** — a code path on the live parse hot loop
+  that the bench harness reaches. P2-E's production consumer is the
+  JSON materialiser `unescape_string` at
+  `parse-that-regex/src/lib.rs:718-810`, specifically the existing
+  already-wired `unescape_four_unicode_escapes` x4 path at
+  `parse-that-regex/src/lib.rs:402` (CH6-E-2: this call site is
+  verified in-tree; it IS the production consumer, not a scaffold).
+  The wave commit re-bodies this existing production path onto the
+  `escape_codec_hex_unit` kernel; it does not introduce a new
+  consumer.
+- **Scaffold** — a compile-only `#[cfg(test)]` test in a `/tests/`
+  directory that exercises a const-generic binding for parity /
+  compile-validation, with no live parse-loop reach. P2-E's scaffold
+  is the CSS L4 binding (§4.2) and the TOML `\u` / `\U` bindings
+  (§4.4): both ship as compile-validated codegen output, neither
+  enters a production parse loop in this wave.
+
+P2-E therefore names **one production consumer** (the already-wired x4
+JSON path) and **two scaffolds** (CSS L4, TOML). The Lock-14
+generality demonstration (§4.2) is carried by the scaffolds; the
+falsifiability gate (§6) is carried by the production consumer alone.
+
+### 4.1 JSON consumer (the wave's primary production target)
 
 `unescape_string` at `parse-that-regex/src/lib.rs:718-810` is the
-consumer. The wave commit replaces the existing `Some(b'u')` arm
-(lines 775-786) with a call to the codegen-emitted
+production consumer. The wave commit replaces the existing `Some(b'u')`
+arm (lines 775-786) with a call to the codegen-emitted
 `escape_codec_hex_unit::<4, Pair, FixedWidth>` kernel. The arm
 becomes:
 
@@ -368,25 +390,28 @@ test (the existing condition: four `\u` openers in 24 bytes).
 site is on the validate path (not the materialise hot path) but
 shares the same body for parity.
 
-Per-row impact (informed by the V3-C self-time table):
-- **y_string_unicode/t1**: scalar pair was 38.2% of self-time;
-  kernel reduces that to ~7-8% (5× front-end reduction) →
-  estimated parse_only Mbps lift from 5,428 to ~9,000-10,500
-  (see §6 falsifiability gate).
-- **unicode_escapes/t1**: scalar pair was 33.6% of self-time;
-  kernel reduces that to ~6-7% → estimated parse_only Mbps lift
-  from 12,047 to ~17,000-19,500 (would close the −33.6% gap vs
-  sonic-strict 18,132).
-- **unicode_mixed/t1**: scalar pair is not a top-8 leaf
-  (string-escape validator is 20.1%, string-scanner is 15.2%);
-  the kernel lifts the validator (which calls the codec on every
-  `\u`) by ~half of its 20.1% — about 10pt back. Not a parity
-  intervention on its own; must compose with a same-row scanner
-  knob to close (see §6).
-- **gsoc-2018/t1**: scalar pair is not a top-8 leaf; the row
-  loads on `movemask_u8x16` (30.9%) — the per-string-span
-  scanner. The codec primitive does not move this row on its
-  own; admission is conditional on a same-wave scanner pairing.
+Per-row impact (rederived from the PMU TSV + V3-C §3 per-class c/B
+table — see §6.2 for the full arithmetic):
+- **y_string_unicode/t1**: escape-codec class = 2.312 c/B of the
+  5.710 row total (40.5%); a 75% codec reduction lifts parse_only
+  Mbps from the TSV baseline 5,457 to a projected ~7,837 — a
+  NEAR-FAIL at 94.8% of the 0.70 W4-precedent gate.
+- **unicode_escapes/t1**: escape-codec class = 1.088 c/B of the
+  3.007 row total (36.2%); a 75% codec reduction lifts parse_only
+  Mbps from the TSV baseline 11,239 to a projected ~15,423 — a
+  NEAR-FAIL at 94.5% of the 0.90 standard gate (the V1 PASS does
+  not survive the PMU rederivation).
+- **unicode_mixed/t1**: the codec does not surface as a separate
+  V3-C `esc-hex` leaf; the `\u`-decode work folds into
+  `validate_string_escape` (V3-C §2.1 rank 2 = 20.1%). The
+  codec-attributable share is ~10% of the 4.634 row c/B; the kernel
+  lifts the row from 7,276 to ~7,864 Mbps — a FAIL at 63.7% of the
+  0.85 gate. Not a parity intervention on its own; must compose
+  with a same-row scanner knob to close (see §6).
+- **gsoc-2018/t1**: the codec is not a top-8 leaf; the row loads on
+  `movemask_u8x16` (30.9%) — the per-string-span scanner. The codec
+  primitive does not move this row (codec share ≈0%); admission is
+  on the no-regression basis only.
 
 ### 4.2 CSS L4 consumer sketch (Lock-14 same-wave generality demonstration)
 
@@ -421,10 +446,23 @@ fn decode_css_unicode(bytes: &[u8], slash: usize)
 The sketch establishes Lock-14 generality without requiring a
 second performance gate — the CSS L4 binding ships the codegen
 template + scalar reference + a unit test in the same wave; the
-CSS L4 SIMD body lands when CSS-side benches demand it. This is
-the minimum same-wave consumer needed to refute the "JSON-overfit"
-CH2 GENERALITY charge: a second grammar's parser explicitly calls
-the same kernel under a different parameter binding.
+CSS L4 SIMD body lands when CSS-side benches demand it.
+
+Per CH2 F5 (E.4), the CSS L4 consumer ships explicitly as a
+**scaffold**, not a production consumer. The SK-V9 wave lands a
+`#[cfg(test)]`-gated test in `bbnf-css/tests/` demonstrating the
+const-generic binding compiles and passes a unit test against the
+scalar reference; the CSS L4 production tokeniser
+(`bbnf-css/src/tokenizer/escape.rs`) wires the kernel into the live
+`consume_escaped` path in a later CSS-side wave, once the CSS L4
+`.bbnf` source authors the `unicode_escape` rule with
+`→ escape_codec_hex_unit{Range(1,6), None, WhitespaceOrNonHex, Utf8}`.
+This is the minimum same-wave demonstration needed to refute the
+"JSON-overfit" CH2 GENERALITY charge: a second grammar's codegen
+output explicitly emits a call to the same kernel under a different
+parameter binding, parity-checked at compile time. The scaffold does
+not carry a falsifiability gate (§6) — only the JSON production
+consumer does.
 
 ### 4.3 What the consumer plan does NOT add
 
@@ -438,6 +476,31 @@ the same kernel under a different parameter binding.
   (and remains JSON policy in the JSON consumer, not in the
   primitive crate).
 
+### 4.4 TOML `\u` / `\U` binding disposition (no production consumer this wave)
+
+The §2 parameter table enumerates two TOML bindings —
+`toml_u4 → escape_codec_hex_unit{4, None, FixedWidth, Utf8}` and
+`toml_u8 → escape_codec_hex_unit{8, None, FixedWidth, Utf8}` — to
+exercise the const-generic surface (fixed-4 and fixed-8 digit widths,
+`SurrogatePolicy::None`). Per CH4 F4 (E.4): **TOML `\u` and `\U`
+variants have no production consumer in this wave.** There is no TOML
+grammar admitted as an SK-V9 target; `bbnf` ships no TOML parser hot
+path the bindings could wire into.
+
+Disposition: the TOML bindings ship as **compile-time validation
+only** — the codegen template emits the `hex_x4_neon` (TOML `\u`,
+shared with JSON) and `hex_x8_neon` (TOML `\U`) specialisations, and
+the checkasm parity test (§7) covers both against the scalar
+reference, but neither binding enters a production parse loop. The
+const-generic emission is dead unless a TOML grammar source is
+loaded, so this is not an orphan kernel cost: `hex_x4_neon` is
+already live via the JSON consumer, and `hex_x8_neon` adds ~140 LOC
+of compile-validated-but-unwired body whose only same-wave consumer
+is the checkasm gate. The TOML production consumer wires after Pass
+Omega admits TOML as a target grammar; until then the binding is a
+parity-green, grammar-generic primitive available to that future
+grammar.
+
 ## §5 — REDRESS 82 differential
 
 REDRESS 82 (`skinny/REDRESS.md:2285-2316`) rejected the SK-V7 W4
@@ -446,9 +509,9 @@ P2-E (per CH3 REGRESSION):
 
 | Axis | REDRESS 82 (W4 single-quartet classifier) | P2-E `escape_codec_hex_unit` |
 |---|---|---|
-| **Primitive shape** | A *classifier* that consumed one quartet at a time, wrapping `unescape_uxxxx_neon` in `parse-that-regex/src/unicode/escape_decode.rs`. The kernel decoded one quartet; the wrapper added per-quartet validation. | A *full hex-decoder primitive class* with three free parameters (digit count, surrogate policy, terminator policy). Single-quartet and 4-quartet and 8-digit bindings collapse to the same const-generic body. |
+| **Primitive shape** | A *parser-owned, per-quartet classifier* that consumed one quartet at a time, wrapping `unescape_uxxxx_neon` in `parse-that-regex/src/unicode/escape_decode.rs`. The kernel decoded one quartet; the parser owned the per-quartet validation loop. | A *full hex-decoder primitive class* with three free parameters (digit count, surrogate policy, terminator policy). The decoder owns the full decode (TBL → fold → guard → surrogate join); the parser calls it once per escape. Single-quartet and 4-quartet and 8-digit bindings collapse to the same const-generic body. Primitive class (full hex-decoder), NOT classifier (single-quartet). |
 | **Hot path entered** | The *dispatch hot path*: each `\u` triggered a primitive call from the materialiser, with no batching. | The *unescape materialiser hot path*: 4-quartet bindings remain available for the y_string_unicode-dense case; single-quartet binding only fires when the 4-quartet pre-filter rejects. |
-| **Same-wave consumer** | Only the JSON materialiser. No CSS / TOML / JS consumer. | Two grammars: JSON load-bearing + CSS L4 codegen template sketch with unit test. Lock-14 grammar-neutrality demonstrated by inspection. |
+| **Same-wave consumer** | Only the JSON materialiser. No CSS / TOML / JS consumer. | One production consumer (the already-wired x4 JSON path at `lib.rs:402`) + two scaffolds (CSS L4 + TOML, compile-validated `#[cfg(test)]` codegen output). Lock-14 grammar-neutrality demonstrated by scaffold inspection. |
 | **Surrogate policy** | Implicit Pair (JSON-only). | Explicit `SurrogatePolicy` const-generic parameter; Pair / None / RangeCheck. CSS / TOML / JS bindings dead-code-eliminate the join branch. |
 | **Terminator policy** | Implicit FixedWidth (JSON-only). | Explicit `Terminator` const-generic; FixedWidth / Delimiter(byte) / WhitespaceOrNonHex. CSS / JS bindings emit a different inner loop. |
 | **Per-quartet cost** | Kernel call overhead (per-quartet function boundary + validation wrapper) competed with the body savings — net 0 on the dense rows and a regression on the sparse rows. | Const-generic specialisation: 4-quartet binding amortises kernel-boundary cost over 4 quartets; single-quartet binding inlines to the same ~7-µop body the wrapper added overhead onto. |
@@ -457,12 +520,24 @@ P2-E (per CH3 REGRESSION):
 
 The differential is on five orthogonal axes:
 1. **Shape**: primitive class (with parameter freedom), not classifier
-   wrapper.
-2. **Surface**: full hex-decoder (TBL + class + fold + guard), not
-   per-quartet kernel wrapping.
+   wrapper. REDRESS 82 was a *parser-owned, per-quartet classifier* —
+   it consumed one `\uXXXX` quartet at a time and the parser owned the
+   per-quartet validation loop. P2-E's `escape_codec_hex_unit` is a
+   **primitive class — a full hex-decoder**, not a single-quartet
+   classifier: one kernel that loads the digit run, decodes via TBL,
+   folds, range-guards, and (under `SurrogatePolicy::Pair`) joins a
+   second quartet, all inside the primitive boundary. The parser owns
+   no per-quartet loop; it calls the decoder once per escape and
+   receives `(char, next_cursor)`. The distinction is "primitive class
+   (full hex-decoder), NOT classifier (single-quartet)".
+2. **Surface**: full hex-decoder (TBL + class + fold + guard + optional
+   surrogate join), not a per-quartet classifier wrapper that the
+   parser drives.
 3. **Genericity**: const-generic codegen template, not JSON
    instantiation.
-4. **Consumer cardinality**: two grammars same-wave, not one.
+4. **Consumer cardinality**: one production consumer (the already-wired
+   x4 JSON path, §4.1) plus two scaffolds (CSS L4 + TOML, §4.2 / §4.4)
+   same-wave — not REDRESS 82's single parser-owned classifier.
 5. **Evidence**: P1-V3 xctrace Time Profiler (not the SK-V6 samply
    coalesced view that the W4 attempt was sized against).
 
@@ -473,102 +548,194 @@ falsification gate." This section satisfies that requirement.
 
 ## §6 — Falsifiability gate (per-row Mbps thresholds)
 
-### 6.1 Baseline (current bbnf, parse_only)
+### 6.1 Baseline — rederived from `/tmp/skv9-xctrace-v3/pmu_rows.tsv` (F2)
 
-From `skinny/RESULTS.md` lines 1-50 + V3-D §1 correlation table:
+The V1 §6.1 c/B baseline column (`0.354 / 0.628 / 0.787 / 0.193`) was
+rejected under CH6-E-3: those numbers do not reconcile to any column
+of the PMU TSV. The V2 baseline below is rederived **directly from
+`/tmp/skv9-xctrace-v3/pmu_rows.tsv`**, citing the `cycles_per_byte`
+and `ns_per_byte` columns verbatim. Mbps follows the TSV's own
+megabit convention `Mbps = 8000 / ns_per_byte` (verified against the
+TSV `mbps` column: unicode_escapes/t1 `8000 / 0.711821 = 11,238.8`,
+matching the TSV row to one place).
 
-| Corpus | Track 1 bbnf Mbps | Track 2 bbnf Mbps | sonic-rs strict Mbps | bytes | q/B |
+The four uncloseable rows, TSV columns verbatim (track 1 unless noted):
+
+| Corpus / track | TSV `cycles_per_byte` | TSV `ns_per_byte` | TSV `mbps` | bytes | implied host clock (c/B ÷ ns/B) |
 |---|---:|---:|---:|---:|---:|
-| unicode_escapes | 12,047 | 11,412 | 18,132 | 1,050,797 | 0.011 |
-| unicode_mixed | 6,803 | 6,979 | 14,515 | 1,053,086 | 0.040 |
-| y_string_unicode | 5,428 | 5,602 | 11,814 | 35,601 | 0.062 |
-| gsoc-2018 | 22,184 | 20,910 | 45,318 | 3,327,831 | 0.013 |
+| unicode_escapes / t1 | 3.006864 | 0.711821 | 11,238.780 | 1,050,797 | 4.224 GHz |
+| unicode_mixed / t1 | 4.633713 | 1.099530 | 7,275.839 | 1,053,086 | 4.214 GHz |
+| y_string_unicode / t1 | 5.709799 | 1.465919 | 5,457.328 | 35,601 | 3.895 GHz |
+| gsoc-2018 / t1 | 1.543720 | 0.369581 | 21,646.136 | 3,327,831 | 4.177 GHz |
+| gsoc-2018 / t2 | 1.605891 | 0.390459 | 20,488.699 | 3,327,831 | 4.114 GHz |
 
-PMU cycles/byte (from V3-A; reproducing the load-bearing values per
-F2):
+The implied host clock is the lossless `cycles_per_byte ÷ ns_per_byte`
+ratio per row (~4.0–4.2 GHz Apple M5 Max P-core; the spread is
+xctrace measurement noise across runs). Each row's projection below
+uses that row's exact ratio so the c/B → ns/B → Mbps inversion is
+lossless and self-consistent with the TSV.
 
-| Corpus | bbnf c/B (Track 1) | sonic-strict c/B |
-|---|---:|---:|
-| unicode_escapes | 0.354 | 0.236 |
-| unicode_mixed | 0.628 | 0.294 |
-| y_string_unicode | 0.787 | 0.362 |
-| gsoc-2018 | 0.193 | 0.094 |
+sonic-rs strict comparators (from `skinny/RESULTS.md`, the
+falsifiability targets): unicode_escapes 18,132 Mbps; unicode_mixed
+14,515 Mbps; y_string_unicode 11,814 Mbps; gsoc-2018 45,318 Mbps.
 
-### 6.2 Projected Mbps under the §3 kernel
+### 6.2 Codec c/B share + projected Mbps under the §3 kernel (F2 rederivation)
 
-The kernel reduces the `escape_codec_hex_unit` primitive class
-self-time per V3-C; project the row Mbps lift via:
+The escape codec's share of each row is taken from the **P1-V3-C §3
+per-class cycle-accounting table** (the `esc-hex` column, which splits
+each row's TSV `cycles_per_byte` across primitive classes), cross-read
+against the P1-V3-B §3.4 / §3.5 per-symbol self-time data. Cited
+verbatim:
 
-```
-ns/B_new ≈ ns/B_old − (codec_share_old × ns/B_old) × (1 − speedup⁻¹)
-```
+- **y_string_unicode / t1**: V3-C §3 escape-codec class = **2.312 c/B**
+  of the 5.710 row total = **40.5%** of the row. V3-B §3.2 / §3.5
+  corroborates: `hex_nibble` 19.2% + `read_hex_unit_scalar` 19.0% =
+  **38.2%** self-time on the codec pair (the c/B share and the
+  self-time share agree inside xctrace noise).
+- **unicode_escapes / t1**: V3-C §3 escape-codec class = **1.088 c/B**
+  of the 3.007 row total = **36.2%** of the row. V3-B §3.5 / V3-C §2.1
+  corroborates: `read_hex_unit_scalar` 23.7% + `hex_nibble` 9.9% =
+  **33.6%** self-time.
+- **unicode_mixed / t1**: V3-C §3 escape-codec `esc-hex` column = 0.000
+  c/B — the codec work on this row does **not** surface as a separate
+  `esc-hex` leaf; it folds into `validate_string_escape` (V3-C §2.1
+  rank 2 = 20.1% self-time, `parse-that-regex/src/lib.rs:285`). The
+  `\u`-decode reachable fraction of that validator is conservatively
+  ~half (the validator also handles `\n \t \"` etc. single-byte
+  escapes), giving a codec-attributable share of **~10%** of the
+  4.634 row c/B = **0.463 c/B**.
+- **gsoc-2018 / t1 + t2**: V3-C §3 escape-codec `esc-hex` column =
+  0.000 c/B; the codec is not a top-8 leaf. The row's c/B is dominated
+  by `simd_movemask` (V3-B §3.2: 30.9% on `movemask_u8x16`) — the
+  per-string-span scanner, a different primitive class. Codec share
+  ≈ **0%**.
 
-with `speedup = 5×` (the front-end uop ratio §3.2 §3.3 §3.4 derives:
-6-7 NEON µops vs ~30 scalar µops per quartet). The codec share comes
-from V3-C self-time tables; the projection assumes the kernel-
-external work (string scanner, dispatch, validator) is unchanged.
+The SIMD codec collapses the scalar ~28 µops/quartet (§1.4 / §3) to
+~6-7 µops/quartet — a **~75% reduction at the codec class**. The
+projection therefore sets `SIMD codec c/B = scalar codec c/B × 0.25`
+and `codec savings = scalar codec c/B × 0.75`; the kernel-external
+work (string scanner, dispatch, validator's non-`\u` arms) is
+unchanged.
 
-| Corpus | codec share (V3-C) | ns/B_old | ns/B_new (projected) | Mbps new | sonic threshold | gate verdict |
-|---|---:|---:|---:|---:|---:|---|
-| y_string_unicode | 38.2% (t1) + 43.9% (t2) → use 38.2% on t1 | 0.184 | 0.184 × (1 − 0.382 × 0.8) = 0.128 | **7,810** | 11,814 × 0.70 = **8,270** | **NEAR-FAIL** at 94.5% of threshold (admission requires +6%) |
-| unicode_escapes | 33.6% (t1: 23.7% + 9.9%) | 0.083 | 0.083 × (1 − 0.336 × 0.8) = 0.061 | **16,400** | 18,132 × 0.90 = **16,320** | **PASS** at 100.5% of threshold |
-| unicode_mixed | ~25% codec share (escape-validator 20.1% + half of 9.7% Option::copied tail) | 0.147 | 0.147 × (1 − 0.25 × 0.8) = 0.118 | **8,480** | 14,515 × 0.85 = **12,340** | **FAIL** at 68.7% of threshold |
-| gsoc-2018 | < 5% codec share (codec not in top-8) | 0.045 | 0.045 (essentially unchanged) | **22,200** | 45,318 × 0.50 = **22,660** | **NEAR-FAIL** at 98% of threshold |
+| Corpus | scalar codec c/B (V3-C §3) | SIMD codec c/B (×0.25) | codec savings (×0.75) | row c/B new | host clock | ns/B new | Mbps new |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| unicode_escapes / t1 | 1.088 | 0.272 | 0.816 | 3.007 − 0.816 = **2.191** | 4.224 GHz | 2.191 ÷ 4.224 = **0.5187** | 8000 ÷ 0.5187 = **15,423** |
+| y_string_unicode / t1 | 2.312 | 0.578 | 1.734 | 5.710 − 1.734 = **3.976** | 3.895 GHz | 3.976 ÷ 3.895 = **1.0208** | 8000 ÷ 1.0208 = **7,837** |
+| unicode_mixed / t1 | 0.463 | 0.116 | 0.347 | 4.634 − 0.347 = **4.287** | 4.214 GHz | 4.287 ÷ 4.214 = **1.0173** | 8000 ÷ 1.0173 = **7,864** |
+| gsoc-2018 / t1 | ~0.000 | ~0.000 | ~0.000 | 1.544 (unchanged) | 4.177 GHz | 0.3696 (unchanged) | **21,646** (unchanged) |
 
-### 6.3 Per-row admission thresholds
+Per-row falsifiability verdict (the §6.4 admission rule — 70% slack
+for structurally-hard rows per W4 precedent — applied below):
 
-| Corpus | sonic-strict | bbnf parse_only target | Mbps target | rationale |
+| Corpus | Mbps new | sonic-strict | threshold | gate verdict |
 |---|---:|---:|---:|---|
-| **unicode_escapes** | 18,132 | × 0.90 | **≥ 16,320 Mbps** | Standard parity threshold; row crosses on the codec alone per §6.2 projection. Hard admission gate. |
-| **y_string_unicode** | 11,814 | × 0.70 | **≥ 8,270 Mbps** | Reduced threshold per the W4 REDRESS 82 row (which used 70%); recognises the row is structurally hard (99% short-string corpus, max ratio of codec work to other-work). Admission gate. |
-| **unicode_mixed** | 14,515 | × 0.85 | **≥ 12,340 Mbps** | Standard threshold; the codec intervention alone does NOT close this row (§6.2: 68.7%). The row requires a same-wave pairing with the per-string-span scanner. The codec is admitted as a *contributor*; the row admission is conditional on the W-stage scanner work landing in the same wave. |
-| **gsoc-2018** | 45,318 | × 0.50 | **≥ 22,660 Mbps** | Heavily reduced threshold; the row's load is on the movemask scanner (V3-B §3.2 last bullet: 30.9% on `movemask_u8x16`), not the codec. Codec is essentially neutral here (§6.2 unchanged at 22,200, 2pt below the 50% threshold). The codec is admitted as *not regressing* this row; admission gate is `Mbps_new ≥ 22,184 − 1%` (no regression vs current bbnf), not a sonic-relative gate. |
+| unicode_escapes | 15,423 | 18,132 | × 0.90 = 16,319 | **NEAR-FAIL** at 94.5% of threshold (rederivation drops it below the V1 100.5% PASS) |
+| y_string_unicode | 7,837 | 11,814 | × 0.70 = 8,270 | **NEAR-FAIL** at 94.8% of the 70%-slack threshold |
+| unicode_mixed | 7,864 | 14,515 | × 0.85 = 12,338 | **FAIL** at 63.7% of threshold |
+| gsoc-2018 | 21,646 | 45,318 | × 0.50 = 22,659 | **FAIL (no-regression basis)** at 95.5% of the 50% slack threshold; admitted on the no-regression rule (§6.3) — Mbps unchanged vs 21,646 baseline, codec neutral |
+
+### 6.3 Per-row admission thresholds + the 70% slack rule
+
+**The slack rule (stated before the projection, per CH6-E-4).** A row
+admits at one of two slack levels against the sonic-rs strict
+comparator:
+
+- **Standard slack — 0.90 of sonic-strict.** The default falsifiability
+  gate for any row whose dominant cycle sink is the primitive under
+  design.
+- **W4-precedent slack — 0.70 of sonic-strict.** Applied **only** to a
+  row that is *structurally hard* by a primary-source criterion: the
+  row's corpus shape forces the maximum ratio of codec work to
+  kernel-external work, so even an ideal codec leaves the row
+  codec-bound. The precedent is the SK-V7 W4 REDRESS 82 gate, which
+  used 0.70 on `y_string_unicode/parse_only` for exactly this reason.
+  Only `y_string_unicode` qualifies — V3-C §3 shows it at 40.5% codec
+  c/B, the highest single-class share in the 17-corpus table, on a
+  corpus that is 99%+ short 6-byte `\uXXXX` strings.
+- **No-regression basis.** A row whose codec share is ≈0% (the codec
+  is not its bottleneck) is not gated against a sonic-relative
+  threshold at all; it admits iff `Mbps_new ≥ Mbps_baseline − 1%`.
+
+| Corpus | sonic-strict | slack basis | Mbps target | rationale |
+|---|---:|---|---:|---|
+| **unicode_escapes** | 18,132 | × 0.90 standard | **≥ 16,319 Mbps** | Codec is the dominant single class (36.2% c/B); standard parity gate applies. |
+| **y_string_unicode** | 11,814 | × 0.70 W4-precedent | **≥ 8,270 Mbps** | Structurally hard by the V3-C §3 primary-source criterion (40.5% codec c/B, highest in the table; 99% short-string corpus). The 0.70 slack is fixed by the W4 precedent *before* §6.2 — it is not retrofitted to admit a near-miss. |
+| **unicode_mixed** | 14,515 | × 0.85 standard | **≥ 12,338 Mbps** | Codec share is only ~10% c/B (folded into `validate_string_escape`); the row's cycle budget is split across the scanner + validator + dispatch. The codec intervention alone does NOT close this row (§6.2: 63.7%). The row admission is conditional on a same-wave per-string-span scanner intervention. |
+| **gsoc-2018** | 45,318 | no-regression basis | **≥ 21,430 Mbps** (= 21,646 − 1%) | Codec share ≈0%; the row's load is `movemask_u8x16` (V3-B §3.2: 30.9%), a different primitive class. The codec is admitted as *not regressing* this row; closing it is out of scope and routes to a scanner-side primitive. |
 
 ### 6.4 Honest verdict (per `feedback_accurate_perf_narrative`)
 
-The codec primitive on its own:
-- **Closes** unicode_escapes (admission verdict PASS).
-- **Approaches but does not reliably cross** y_string_unicode (projects
-  to 94.5% of the 70% threshold; the 5× speedup factor is the
-  expected best case under NEON µop counting, real measurement
-  could be 4× or 6×, putting the row at 80%-110% of threshold).
-- **Does not close** unicode_mixed on its own (68.7%); the row needs
-  the codec + a scanner-side intervention paired in the same wave to
-  reach 85% of sonic.
-- **Does not affect** gsoc-2018 in a measurable direction; the row's
-  bottleneck is the per-string-span scanner movemask, which is a
-  different primitive class entirely (per V3-B §3.2). The codec is
-  admitted as not-regressing this row; closing the row is out of
-  scope for the codec primitive and routes to a separate P2-E /
-  P2-D / P2-C scanner-side primitive.
+The F2 rederivation from the actual PMU TSV materially **downgrades
+the V1 verdicts.** The V1 §6.2 table — built on the fabricated
+`0.354 / 0.628 / 0.787 / 0.193` c/B column CH6-E-3 rejected — claimed
+unicode_escapes PASS at 100.5%, y_string_unicode NEAR-FAIL at 94.5%,
+unicode_mixed FAIL at 68.7%, gsoc-2018 NEAR-FAIL at 98%. The rederived
+table is harsher:
 
-Two of the four uncloseable rows admit on the codec alone; one
-admits conditionally with a paired same-wave scanner knob; one is
-out of scope for the codec primitive and shifts to another P2
-primitive owner. This is the load-bearing falsification posture
-P2-E carries into S-P3.
+- **unicode_escapes — NEAR-FAIL at 94.5%** of the 0.90 threshold
+  (15,423 vs the 16,319 gate). The V1 PASS does not survive
+  rederivation: the codec is 36.2% of the row, and a 75% codec
+  reduction lifts the row to 15,423 Mbps — short of the standard
+  parity gate by ~900 Mbps. The codec is a strong contributor but
+  does **not** close this row on its own.
+- **y_string_unicode — NEAR-FAIL at 94.8%** of the 0.70 W4-precedent
+  threshold (7,837 vs the 8,270 gate). The codec class is 40.5% of
+  the row's c/B; collapsing it 75% yields 7,837 Mbps — still ~430
+  Mbps below the structurally-hard gate. The ~75% reduction is the
+  expected best case under NEON µop counting; a measured 70% or 80%
+  puts the row at ~90%-100% of threshold.
+- **unicode_mixed — FAIL at 63.7%** of the 0.85 threshold (7,864 vs
+  the 12,338 gate). The codec touches only ~10% of this row's c/B;
+  the intervention alone cannot close it. The row needs the codec
+  paired with a same-wave per-string-span scanner intervention.
+- **gsoc-2018 — admitted on the no-regression basis.** Codec share
+  ≈0%; Mbps unchanged at 21,646, clearing the `baseline − 1%` gate.
+  The row's bottleneck is the movemask scanner, a different primitive
+  class; closing it is out of scope for the codec.
+
+Rederived posture: **zero of the four rows admit on the codec alone**
+at the standard / W4-precedent slack. unicode_escapes and
+y_string_unicode both NEAR-FAIL (94.5% / 94.8%) — the codec is a
+strong contributor that approaches but does not reliably cross either
+gate; admission is a **same-wave conditional rule**: the codec admits
+iff the measured post-wave Mbps clears the gate, with the projection
+flagged as the expected-best-case bound (CH6-E-4 conditional-admission
+rule). unicode_mixed FAILs and needs a paired scanner knob. gsoc-2018
+admits only as not-regressing. This is the honest falsification
+posture P2-E carries into S-P3 — materially more conservative than the
+V1 fabricated-PMU table.
 
 ## §7 — LOC + risk + checkasm parity
 
-### 7.1 LOC envelope
+### 7.1 Per-slice LOC + minute cap + revert + same-wave consumer (F4)
 
-| Artefact | LOC | Notes |
-|---|---:|---|
-| `crates/bbnf-simd/src/aarch64/escape_codec/mod.rs` | ~80 | const-generic kernel surface + dispatcher |
-| `crates/bbnf-simd/src/aarch64/escape_codec/scalar.rs` | ~120 | scalar reference, parameter-bound per binding |
-| `crates/bbnf-simd/src/aarch64/escape_codec/hex_x4_neon.rs` | ~150 | fixed-4-digit NEON body (JSON + TOML `\u`) |
-| `crates/bbnf-simd/src/aarch64/escape_codec/hex_x8_neon.rs` | ~140 | fixed-8-digit NEON body (TOML `\U`) |
-| `crates/bbnf-simd/src/aarch64/escape_codec/hex_variable_neon.rs` | ~180 | variable-width NEON body (CSS L4 + JS `\u{}`) |
-| `crates/bbnf-simd/src/aarch64/escape_codec/surrogate_join.rs` | ~50 | scalar pair-join algebra |
-| `crates/bbnf-simd/tests/checkasm_escape_codec.rs` | ~250 | per-binding parity tests (4 bindings × ~60 LOC each) |
-| `crates/parse-that-regex/src/lib.rs` consumer edit | ~30 | replace the `Some(b'u')` arm + 4-quartet path |
-| `crates/runtime/src/grammars/json/sink.rs` consumer edit | ~10 | trivial — call site swap |
-| Existing kernel removal at `unescape_uxxxx.rs` | −215 | superseded by `escape_codec/hex_x4_neon.rs` |
-| CSS L4 consumer sketch at `crates/bbnf-css/src/tokenizer/escape.rs` | ~40 | codegen-emitted binding + unit test |
-| codegen template at `crates/codegen/src/escape_codec_template.rs` | ~120 | const-generic emission for the four bindings |
-| **Net new LOC (excluding tests)** | **+775** | |
-| **Net new LOC (including tests + checkasm)** | **+1,025** | |
-| **Net deletion** | **−245** | superseded existing kernel + W4-attempt residue |
+Per CH4 F4, every slice carries an explicit per-slice LOC, minute cap,
+one-sentence revert protocol, and named same-wave consumer. The wave
+decomposes into **six implementation slices** — five const-generic
+kernel bodies (one of which is the scalar reference, parity oracle for
+all the rest) plus the checkasm differential gate — followed by the
+consumer-wiring + codegen + cleanup slices.
+
+| # | Slice | LOC | Minute cap | Revert protocol | Same-wave consumer |
+|---|---|---:|---:|---|---|
+| S1 | `escape_codec/scalar.rs` — scalar reference (parity oracle for S2-S5) | ~120 | 30 min | Self-contained new file; revert the file on failure. | S6 checkasm gate (the oracle every NEON body is diffed against). |
+| S2 | `escape_codec/hex_x4_neon.rs` — fixed-4 NEON body (JSON `\u`, TOML `\u`) | ~150 | 35 min | New file; if checkasm S6 fails parity, revert S2 and the JSON consumer falls back to S1 scalar. | S7 JSON production consumer (`unescape_string` x4 path). |
+| S3 | `escape_codec/hex_x8_neon.rs` — fixed-8 NEON body (TOML `\U`) | ~140 | 30 min | New file; revert on parity failure — no production consumer depends on it (TOML is scaffold-only per §4.4). | S6 checkasm gate only (TOML is compile-validation-only this wave, §4.4). |
+| S4 | `escape_codec/hex_variable_neon.rs` — variable-width NEON body (CSS L4, JS `\u{}`) | ~180 | 40 min | New file; revert on parity failure — CSS L4 / JS are scaffold-only. | S6 checkasm gate + S9 CSS L4 scaffold. |
+| S5 | `escape_codec/surrogate_join.rs` — scalar pair-join algebra | ~50 | 15 min | New file; revert on failure — S2 falls back to the §3.4 scalar join inline. | S7 JSON production consumer (Pair binding). |
+| S6 | `bbnf-simd/tests/checkasm_escape_codec.rs` — per-binding parity gate | ~250 | 40 min | New test file; lands BEFORE any consumer wiring (CH6-E-1 prerequisite). Revert blocks the wave — no consumer slice proceeds until S6 is green. | S1-S5 (the test IS the consumer for the kernel bodies). |
+| S7 | `parse-that-regex/src/lib.rs` — re-body the existing x4 + `Some(b'u')` arm onto the kernel | ~30 | 25 min | Edit to existing file; revert the diff and the existing scalar + `unescape_uxxxx` path is restored intact. | Production parse loop (the bench harness reaches it). |
+| S8 | `runtime/src/grammars/json/sink.rs` — call-site swap | ~10 | 10 min | Trivial diff; revert restores the prior call site. | Production JSON sink. |
+| S9 | `bbnf-css/tests/` — CSS L4 scaffold (`#[cfg(test)]` binding + parity unit test) | ~40 | 20 min | New `#[cfg(test)]` file; revert removes the scaffold, no production path affected. | Scaffold (compile-validation only, §4.2). |
+| S10 | `codegen/src/escape_codec/` template module — const-generic emission for the five bindings | ~120 | 30 min | New sub-module (directory module per `feedback_directory_modules`); revert removes the emission, hand-written S2-S5 bodies remain callable. | S7 + S8 (JSON) + S9 (CSS L4). |
+| S11 | Existing kernel removal at `unescape_uxxxx.rs` (superseded by S2) | −215 | 15 min | Deletion slice; revert restores the file. Lands LAST, only after S7 is green. | Self (the removal is the consumer migration). |
+| `escape_codec/mod.rs` | const-generic kernel surface + dispatcher (lands with S1) | ~80 | folded into S1 cap | — | — |
+
+- **Net new LOC (excluding tests)**: ~890 hand-written + ~120 regen = **~1,010**.
+- **Net new LOC (including tests + checkasm)**: **~1,260**.
+- **Net deletion**: **−215** (the superseded `unescape_uxxxx.rs` kernel + W4-attempt residue).
+- **Net of deletion**: **~1,045**.
+- **Total minute budget**: ~6.0 h across the eleven slices; the wave hard cap rolls these per-slice caps into the S-P3-authored wave manifest. P2-E does not author the wave sequence — it supplies the per-slice cost set.
 
 ### 7.2 Risk envelope
 
@@ -576,8 +743,9 @@ P2-E carries into S-P3.
 |---|---|---|
 | **Correctness — single quartet** | LOW | scalar reference + checkasm parity at every commit; UTF-16 surrogate pair-join is bit-identical algebra. |
 | **Correctness — variable digit (CSS L4 / JS)** | MEDIUM | new code path not present today; checkasm parity covers all 1..6 widths × valid + invalid hex × terminator positions. |
-| **Performance — y_string_unicode** | MEDIUM-HIGH | §6.2 projects at 94.5% of threshold; real µop count could fall short. Mitigation: P2-E names the row at 70% threshold (not 85%) per the W4 precedent + the row's structural hardness. The projection's 5× factor is the kernel-body ratio; the row's *other* time (dispatch, scanner) is unchanged, so a smaller speedup still moves the row materially. |
-| **Performance — unicode_mixed** | HIGH | row does not close on the codec alone (§6.2: 68.7%). Mitigation: explicit conditional admission tied to a same-wave scanner intervention. If no scanner intervention lands the same wave, the row stays NO-GO and the wave admits codec-only on the other three rows. |
+| **Performance — y_string_unicode** | MEDIUM-HIGH | §6.2 (PMU-rederived) projects 7,837 Mbps — NEAR-FAIL at 94.8% of the 0.70 W4-precedent threshold. Real µop count could fall short. Mitigation: P2-E names the row at 0.70 (not 0.90) per the W4 precedent + the V3-C §3 structural-hardness criterion (40.5% codec c/B, fixed before the projection). The ~75% codec reduction is the kernel-body best case; the row's kernel-external time (dispatch, scanner) is unchanged, so a smaller measured reduction still moves the row materially. Admission is the §6.4 same-wave conditional rule. |
+| **Performance — unicode_escapes** | MEDIUM-HIGH | §6.2 (PMU-rederived) projects 15,423 Mbps — NEAR-FAIL at 94.5% of the 0.90 standard threshold. The V1 PASS at 100.5% was an artefact of the rejected fabricated c/B column; the row does not close on the codec alone. Mitigation: same-wave conditional admission — admits iff measured Mbps clears 16,319. |
+| **Performance — unicode_mixed** | HIGH | row does not close on the codec alone (§6.2 rederived: 63.7%). Mitigation: explicit conditional admission tied to a same-wave per-string-span scanner intervention. If no scanner intervention lands the same wave, the row stays NO-GO and the wave admits codec-contribution-only on this row. |
 | **Performance — gsoc-2018** | LOW (out of scope) | row admission is no-regression, not parity-cross. |
 | **Maintenance — const-generic explosion** | MEDIUM | five bindings (JSON `\u`, TOML `\u`, TOML `\U`, CSS L4 `\HHHHHH`, JS `\u{}`) emit five specialisations. Code-size growth is bounded by the binding count (5 × ~250 LOC body ≈ 1.3KB on hot path); LTO inliner should fold each call site once. Mitigation: codegen template is a single file; per-binding bodies share Layer-0 substrate. |
 | **Lock 1 (substrate union)** | NONE | the codec is a transient producer over a borrowed view; no retained sidecar, no second source scan, no parallel substrate. |
@@ -624,13 +792,14 @@ requires.
 
 | Axis | Value |
 |---|---|
-| LOC (new + tests) | ~1,025 |
-| LOC (net of deletion) | ~780 |
+| LOC (new + tests) | ~1,260 |
+| LOC (net of deletion) | ~1,045 |
+| Slices | 11 (S1-S11, §7.1) — per-slice minute caps total ~6.0 h |
 | Bindings | 5 const-generic specialisations |
-| Consumers same-wave | 2 (JSON load-bearing, CSS L4 sketch) |
-| Falsifiability gate rows | 4 (2 admit on codec alone, 1 conditional, 1 out-of-scope-but-no-regression) |
-| Risk envelope | LOW on JSON-4, MEDIUM on variable-width CSS / JS, MEDIUM-HIGH on y_string_unicode performance, LOW on locks |
-| Wave dispatch shape | One owner (the codec primitive), one same-wave consumer pair, one checkasm gate, one bench-row admission gate. |
+| Consumers same-wave | 1 production (already-wired x4 JSON path) + 2 scaffolds (CSS L4, TOML) |
+| Falsifiability gate rows | 4 — PMU-rederived: 0 admit on the codec alone; unicode_escapes + y_string_unicode NEAR-FAIL (94.5% / 94.8%, same-wave conditional admission); unicode_mixed FAIL (63.7%, conditional on a paired scanner knob); gsoc-2018 admitted no-regression-only |
+| Risk envelope | LOW on JSON-4 correctness, MEDIUM on variable-width CSS / JS, MEDIUM-HIGH on unicode_escapes + y_string_unicode performance, LOW on locks |
+| Wave dispatch shape | One owner (the codec primitive), one production consumer + two scaffolds, one checkasm gate (lands first), one bench-row conditional-admission gate. |
 
 ## §8 — Sources
 
@@ -732,3 +901,46 @@ requires.
   `feedback_pluggable_components`, `feedback_general_infra_crates`,
   `feedback_directory_modules`, `feedback_accurate_perf_narrative`
   — the project-memory voice items the design respects.
+
+## §0 — V2 fold footer: PMU rederivation
+
+This V2 cycle folds the S-P2 V1 CHALLENGE dispositions against P2-E:
+
+- **F2 — PMU rederivation (load-bearing, CH6-E-3 REJECT).** §6.1 and
+  §6.2 are rebuilt from `/tmp/skv9-xctrace-v3/pmu_rows.tsv` directly.
+  The V1 baseline c/B column (`0.354 / 0.628 / 0.787 / 0.193`) was
+  fabricated or mis-sourced — it reconciles to no TSV column. The V2
+  §6.1 cites the TSV `cycles_per_byte` and `ns_per_byte` columns
+  verbatim for the four uncloseable rows; §6.2 derives the codec c/B
+  from the P1-V3-C §3 per-class cycle-accounting table (`esc-hex`
+  column: unicode_escapes 1.088 c/B / 36.2%, y_string_unicode 2.312
+  c/B / 40.5%, unicode_mixed ~0.463 c/B / ~10% folded into the
+  validator, gsoc-2018 ≈0%), projects the 75%-codec-reduction Mbps via
+  the lossless per-row `c/B → ns/B → Mbps` inversion, and recomputes
+  every PASS/NEAR-FAIL/FAIL verdict.
+- **§6.4 admission rule (CH6-E-4).** The 0.70 W4-precedent slack is now
+  stated *before* the projection and bound to a primary-source
+  structural-hardness criterion (V3-C §3: y_string_unicode is the
+  only qualifying row at 40.5% codec c/B).
+- **F4 — per-slice cost discipline (CH4 12/12 REVISE).** §7.1 rebuilt
+  as an eleven-slice table with per-slice LOC + minute cap + revert
+  protocol + named same-wave consumer. §4.4 dispositions the TOML
+  `\u` / `\U` bindings as compile-time validation only — no production
+  consumer this wave, consumer wires after Pass Omega admits TOML.
+- **F5 — scaffold-vs-production-consumer (CH2 5/6 ACCEPT, 1 REVISE).**
+  §4 distinguishes the production consumer (the already-wired x4 JSON
+  path at `parse-that-regex/src/lib.rs:402`) from the scaffolds (CSS
+  L4 + TOML, compile-validated `#[cfg(test)]` codegen output).
+- **CH3 consumer differential (4/5 ACCEPT, REDRESS 82 weak).** §5
+  tightened: REDRESS 82 was a parser-owned per-quartet *classifier*;
+  P2-E is a *primitive class — a full hex-decoder*, NOT a
+  single-quartet classifier.
+
+**New per-row admission verdicts after rederivation** (V1 → V2):
+unicode_escapes PASS 100.5% → **NEAR-FAIL 94.5%**; y_string_unicode
+NEAR-FAIL 94.5% → **NEAR-FAIL 94.8%**; unicode_mixed FAIL 68.7% →
+**FAIL 63.7%**; gsoc-2018 NEAR-FAIL 98% → **admitted no-regression
+basis only**. The honest posture: zero of four rows admit on the codec
+alone — the codec is a strong contributor that approaches but does not
+reliably cross the gate; admission is the §6.4 same-wave conditional
+rule.

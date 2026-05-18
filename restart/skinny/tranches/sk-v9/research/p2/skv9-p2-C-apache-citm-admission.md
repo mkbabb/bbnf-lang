@@ -98,6 +98,33 @@ A typed `real_typed_struct A / GO` row at the full SOTA-strict gate requires
 the artefact set below. Every item is mechanically enforced; each citation
 is to the producer (gate/report) and the consumer (admission test).
 
+### §2.0 — Per-slice LOC + minute sub-budgets
+
+The aggregate envelope (300 LOC, ≤90 min, per HANDOFF §3 row 1) decomposes
+across five disjoint artefact slices. The sub-budgets below are preliminary
+(S-P3 P3-B finalises wave-level caps); the discipline is that every slice
+carries its own LOC + minute ceiling and its own one-sentence revert
+protocol. Cap policy follows the CH4 §4.1 schedule: hand-LOC ≤30 → ~15
+min; 30-100 → ~30 min; >100 → ~45-60 min; regen → ~10 min plus the
+codegen-template hand-LOC.
+
+| Slice | Artefact surface | LOC sub-budget | Minute sub-cap | Same-wave consumer | Revert protocol |
+|---|---|---:|---:|---|---|
+| **(a) Baseline manifest edits** | `report.rs:709` `SK_V8_OPEN_BASELINE` — add Apache + CITM rows; possibly rename constant to `SK_V9_OPEN_BASELINE` under the wave-id bump path (§2.3) | ~30 hand (2 `sk_v8_open_baseline!` entries × ~7 lines + optional constant rename) | ~15 min | gate (telemetry; not a parse-loop consumer) | If the baseline-vs-measured slack check at `validate_w0_admission_boundary` fires, revert the two new entries; the four existing typed GO rows act as guards and must hold their A/GO outcome unchanged |
+| **(b) Gate test flips** | `gate.rs:1820-1831` regression test `w0_real_typed_metadata_expectation_uses_measured_baseline_not_source_fixtures` — flip Apache/CITM assertions from `!w0_real_typed_metadata_expected(...)` to `w0_real_typed_metadata_expected(...)` | ~10 hand (2 assertion edits + comment refresh) | ~15 min | self (the test IS the consumer for the baseline-fixture contract) | If the test refuses to compile or the assertion flip exposes a baseline/fixture drift, revert both assertions to `!expected` and route back to S-P2/S-P3 |
+| **(c) RESULTS table promotions** | `skinny/RESULTS.md` — promoted row block (two new `real_typed_struct A / GO` rows + two new schema-v3 telemetry rows); refreshed run-id across the whole file | ~120 (4 row block + 2 schema-v3 telemetry rows ≈ 70 lines + run-id refresh across ~50 lines) | ~30 min | self (the row IS the artefact) | If `cargo xtask gate-json --advisory --check-results` fails after promotion, revert RESULTS.md to the pre-promotion run-id snapshot |
+| **(d) REDRESS entry** | `skinny/REDRESS.md` — new entry `## SK-V9 Wave {n} Apache+CITM Typed Row-Table Admission Redress` recording the promotion, the fresh run-id, the no-regression guard against the four existing typed GO rows, the structurally-independent Track 2/oracle claim, and the per-row throughput | ~80 (single entry, ~80 lines of prose modelled on REDRESS 91's shape) | ~15 min | docs (not a runtime consumer) | If any §4.3 falsifiability gate fires, the REDRESS entry's "promotion" framing is replaced by a "falsification report" framing and the promotion itself is reverted |
+| **(e) HANDOFF + LOCKS reflections** | `restart/skinny/tranches/sk-v9/HANDOFF.md` §3 row 1 — move candidate from "may admit" to "admitted under SK-V9 W{n}"; `restart/locks/LOCKS.md` (Lock 14) — add `sk-v9-real-typed-w{n}` parent-diff allowance entry scoped to the seven owner paths | ~15 (HANDOFF state-update ~5 lines + Lock 14 allowance ~10 lines) | ~10 min | scoped to seven owner paths | If Lock 14 `cargo test -p bbnf-bench lock14_baseline` fails, revert the LOCKS.md allowance and route the wave through Lock 14 amendment instead |
+| **Aggregate** | five slices | **~255 hand + run-id refresh** ≈ **~300 total** | **~85 min** ≤ 90 min | gate + self + docs + scoped Lock allowance | per §4.3 close: halt at redress, record falsified gate, route back to S-P2/S-P3 without admitting |
+
+The sub-budgets sum within the HANDOFF envelope (300 LOC, ≤90 min) with a
+small minute-margin (~5 min) preserved for the verification matrix at
+§2.9. The Criterion capture artefacts under
+`skinny/crates/bbnf-bench/target/skv9-w{n}/criterion/` are not LOC-bearing
+(capture is the artefact, not source); the capture's minute budget is
+the row-bench wall-clock and runs out-of-band of the five-slice
+authoring window.
+
 ### 2.1 Row-baseline admission
 
 The row identity must be added to `SK_V8_OPEN_BASELINE`
@@ -246,6 +273,26 @@ DirectBuild visits tape positions and projects field-by-field; serde
 walks a parser-decoded value stream. They share no scanner, no parser,
 no allocator, and no codegen template.
 
+**JSON-specificity of the "structurally independent" definition.** The
+claim "Track 2 oracle is structurally independent" is, as stated here, a
+JSON-internal definition: it is satisfied by `serde_json::from_slice`
+because serde walks a JSON-decoded value stream that shares no
+implementation surface with the generated DirectBuild typed parser.
+`serde_json` is the JSON oracle and has no cross-grammar equivalent —
+there is no `serde_json` for CSS L4 or Sheets. A future non-JSON typed
+admission wave (per §5.1) therefore cannot inherit this oracle; it must
+nominate a per-grammar independent typed parser whose oracle shape is
+appropriate to that grammar. The methodology body does not commit to any
+particular oracle engine — the structural-independence criterion (shares
+no scanner, no parser, no allocator, no codegen template with Track 1) is
+the invariant, and each grammar's row-table wave selects an oracle that
+satisfies it. Cross-grammar tracks may use oracle shapes that look
+nothing like a serde value-stream fold: CSS L4 may use a `lightningcss`
+`Visitor` walk over a decoded stylesheet AST; Sheets may use a
+cell-by-cell reference CSV parser; TOML may use a `taplo` AST walker. The
+oracle's *shape* is grammar-dependent; the oracle's *independence
+property* is the grammar-neutral invariant the methodology binds.
+
 ### 2.8 PMU evidence for the typed track
 
 **Pre-block.** The S-P1 PMU table at `/tmp/skv9-xctrace-v3/pmu_rows.tsv`
@@ -343,15 +390,21 @@ validation and measured rows before claiming six measured
 
 ### 4.1 Owner files
 
-| File | Reason for ownership |
-|---|---|
-| `skinny/crates/bbnf-bench/src/report.rs:709` (`SK_V8_OPEN_BASELINE`) | Add the two new rows. Possibly rename the constant to `SK_V9_OPEN_BASELINE` if W{n} bumps the wave id (§2.3). |
-| `skinny/crates/bbnf-bench/src/bin/gate.rs:1820-1831` (regression test `w0_real_typed_metadata_expectation_uses_measured_baseline_not_source_fixtures`) | Flip the Apache/CITM assertions from `!w0_real_typed_metadata_expected(...)` to `w0_real_typed_metadata_expected(...)`. |
-| `skinny/RESULTS.md` | Promoted row block (two new `real_typed_struct A / GO` rows + two new schema-v3 telemetry rows). Run-id refreshed across the whole file. |
-| `skinny/crates/bbnf-bench/target/skv9-w{n}/criterion/` | Fresh same-run Criterion capture across 21+2 rows × 4 typed Criterion ids. |
-| `skinny/REDRESS.md` | New entry: `## SK-V9 Wave {n} Apache+CITM Typed Row-Table Admission Redress` — records the promotion, the fresh run-id, the no-regression guard against the four existing typed GO rows, the structurally-independent Track 2/oracle claim, and the per-row throughput. Supersedes REDRESS 91's "not measured rows" clause for these two rows only; REDRESS 91 remains binding for `canada/real_typed_struct`. |
-| `restart/skinny/tranches/sk-v9/HANDOFF.md` §3 row 1 | Move the candidate from "may admit" to "admitted under SK-V9 W{n}." |
-| `restart/locks/LOCKS.md` (Lock 14) | Add `sk-v9-real-typed-w{n}` parent-diff allowance entry scoped to the seven owner paths above (no source under `runtime/`, no `bbnf-simd`, no `codegen` outside the already-frozen typed schema). |
+Per §2.0 the seven owner paths cluster into five disjoint artefact
+slices. The table below carries the slice label + per-file LOC sub-budget
++ minute sub-cap from §2.0; rationale prose carries the reason-for-ownership
+for each path within its slice.
+
+| Slice | File | LOC sub-budget | Minute sub-cap | Reason for ownership |
+|---|---|---:|---:|---|
+| (a) baseline | `skinny/crates/bbnf-bench/src/report.rs:709` (`SK_V8_OPEN_BASELINE`) | ~30 | ~15 min | Add the two new rows. Possibly rename the constant to `SK_V9_OPEN_BASELINE` if W{n} bumps the wave id (§2.3). |
+| (b) gate test | `skinny/crates/bbnf-bench/src/bin/gate.rs:1820-1831` (regression test `w0_real_typed_metadata_expectation_uses_measured_baseline_not_source_fixtures`) | ~10 | ~15 min | Flip the Apache/CITM assertions from `!w0_real_typed_metadata_expected(...)` to `w0_real_typed_metadata_expected(...)`. |
+| (c) RESULTS | `skinny/RESULTS.md` | ~120 | ~30 min | Promoted row block (two new `real_typed_struct A / GO` rows + two new schema-v3 telemetry rows). Run-id refreshed across the whole file. |
+| (capture, out-of-band) | `skinny/crates/bbnf-bench/target/skv9-w{n}/criterion/` | non-LOC | wall-clock | Fresh same-run Criterion capture across 21+2 rows × 4 typed Criterion ids. The capture is the artefact (not source); minute budget runs out-of-band of the five-slice authoring window. |
+| (d) REDRESS | `skinny/REDRESS.md` | ~80 | ~15 min | New entry: `## SK-V9 Wave {n} Apache+CITM Typed Row-Table Admission Redress` — records the promotion, the fresh run-id, the no-regression guard against the four existing typed GO rows, the structurally-independent Track 2/oracle claim, and the per-row throughput. Supersedes REDRESS 91's "not measured rows" clause for these two rows only; REDRESS 91 remains binding for `canada/real_typed_struct`. |
+| (e) HANDOFF | `restart/skinny/tranches/sk-v9/HANDOFF.md` §3 row 1 | ~5 | ~5 min | Move the candidate from "may admit" to "admitted under SK-V9 W{n}." |
+| (e) LOCKS | `restart/locks/LOCKS.md` (Lock 14) | ~10 | ~5 min | Add `sk-v9-real-typed-w{n}` parent-diff allowance entry scoped to the seven owner paths above (no source under `runtime/`, no `bbnf-simd`, no `codegen` outside the already-frozen typed schema). |
+| **Aggregate** | seven paths (five slices) | **~255 hand** ≈ **~300 total with run-id refresh** | **~85 min** ≤ 90 min | within the HANDOFF §3 row 1 envelope; ~5 min margin preserved for the §2.9 verification matrix |
 
 Out of scope (must remain untouched, per REDRESS 91 + alpha-C-redress-digest):
 - `skinny/crates/runtime/`, `skinny/crates/bbnf-simd/`, `skinny/crates/codegen/`
@@ -435,6 +488,46 @@ admitted under the same shape (source/product parity first, then a
 measured-row wave). It does not generalise to canada (REDRESS 91
 blocker), random (synthetic), numbers (stressor), or the unicode/string
 corpora (scanner probes, not products).
+
+### §5.1 — Cross-grammar transposition: the generic pattern
+
+The seven owner-file shape (baseline constant + gate regression test +
+RESULTS.md row block + Criterion capture + REDRESS entry + HANDOFF
+state-update + Lock 14 parent-diff allowance) is grammar-neutral by
+construction. The generalisation rule, stated abstractly: *any grammar
+whose host-API schema admits a fact-typed Track 1 product plane can use
+this methodology to promote a measured `<grammar>_real_typed_struct A /
+GO` row, provided source/product parity is already established and the
+Track 2/oracle is structurally independent at the implementation level.*
+
+A future CSS L4 / Sheets / TOML / BBNF-self typed-product row-table wave
+under SK-V{N>9} replicates the shape with `<grammar>_real_typed_struct`
+row ids and a `sk-v{N>9}-<grammar>-real-typed-w{n}` schema identity. The
+methodology does not require codegen-side changes to admit non-JSON
+typed product planes; the codegen-emitted DirectBuild path is grammar-
+neutral by Lock 14 (the substrate carries zero grammar-specific code),
+and the per-grammar binding lives entirely in the grammar metadata +
+generated typed-schema set.
+
+Cross-grammar examples (illustrative; not in scope for SK-V9 skinny):
+
+| Grammar | Host-API equivalent (Track 1 source) | Track 2/oracle candidate |
+|---|---|---|
+| **CSS L4** | `lightningcss` visitor pattern (Rust): the `Visitor` trait over `StyleSheet<'i>` produces a fact-typed accessor onto declarations, selectors, at-rules; the typed product plane is `Stylesheet<'i>` with `Vec<Rule<'i>>` and per-rule typed views | a second CSS parser walking a parser-decoded AST stream (e.g., `cssparser`'s tokenizer + AST visitor) — structurally independent from the lightningcss visit |
+| **Sheets (CSV/spreadsheet)** | cell-by-cell typed access: each cell carries a `CellValue<'i>` (number / string / boolean / formula / blank); the typed product plane is `Sheet<'i>` with `Vec<Row<'i>>` and per-cell typed dispatch | a second CSV parser (e.g., a recursive-descent reference walker) producing the same `CellValue<'i>` stream from independent scan |
+| **TOML** | `toml-rs`'s `de::from_slice::<T>()` Owned/Borrowed typed plane; the typed product is `Document<'i>` with table/array/value typed views | a second TOML parser (e.g., `taplo` AST walker) producing the same typed values from an independent parse |
+| **BBNF-self** | the grammar AST itself is a typed-product plane: `Grammar<'i>` with `Vec<Rule<'i>>` and per-rule typed payloads | the prior BBNF lexer + parser pair produces the same AST from an independent scanner — already exercised in the bootstrap loop |
+
+The corresponding `*_real_typed_struct` row ids would be
+`css_l4_<corpus>/real_typed_struct/main`,
+`sheets_<corpus>/real_typed_struct/main`, etc. Each grammar's row-table
+wave authors its own seven owner-file slice set, its own falsifiability
+gates against that grammar's strict-anchor comparator (e.g.,
+`lightningcss_strict` for CSS L4 in place of `sonic_rs_strict` for JSON),
+and its own Lock 14 schema identity under
+`sk-v{N>9}-<grammar>-real-typed-w{n}`. The methodology body — slice
+shape, capture envelope, run-id provenance, telemetry-row schema,
+falsifiability gate structure — transposes verbatim.
 
 Per S-P1 V3-C structural breakdown (`skv9-p1-v3-D-structural-breakdown.md`):
 the typed plane's leverage is highest where the tiny-key scanner
@@ -571,3 +664,50 @@ External / internal documents cited:
     outcome whitelist; admission-boundary helper.
 25. `restart/locks/LOCKS.md` Lock 1 + Lock 14 — substrate union;
     frozen-root parent-diff scope.
+
+## §0 — V2 fold footer
+
+Cycle: V2. Date: 2026-05-18. This artefact carries the V2 fold of the
+S-P2 V1 CHALLENGE dispositions against P2-C. P2-C entered V2 as the
+cleanest cohort report (CH1 100%, CH3 100%, CH4 3 ACCEPT + 4 REVISE,
+CH6 100%); the folds are surgical and the load-bearing claims of §1
+(REDRESS 91 differential), §3 (per-row specifics), §4 (wave shape),
+§6 (pre-block citations), and §7 (sources) are preserved verbatim.
+
+Folds applied, per `HARDENING-S-P2-V1-CONSOLIDATED.md` F4 + F5:
+
+- **F4 — per-slice LOC break-out (CH4 §2.3 rows C.1-C.3, C.5; CH4 §4.1).**
+  New §2.0 decomposes the aggregate 300 LOC / ≤90 min HANDOFF envelope
+  into five disjoint artefact slices — (a) baseline manifest edits,
+  (b) gate test flips, (c) RESULTS table promotions, (d) REDRESS entry,
+  (e) HANDOFF + LOCKS reflections — each with an LOC sub-budget, a
+  minute sub-cap, a same-wave consumer, and a one-sentence revert
+  protocol. §4.1's owner-files table is restated against the same
+  five-slice clustering with per-file LOC + minute sub-caps. The
+  sub-budgets sum to ~255 hand-LOC + run-id refresh ≈ 300 total at
+  ~85 min, within the HANDOFF envelope with a ~5 min margin for the
+  §2.9 verification matrix.
+
+- **F5 — cross-grammar transposition prose (CH2 §2.3 row C.4).** New
+  §5.1 reframes the §5 closing generalisation from a JSON-corpus
+  enumeration into the GENERIC pattern: any grammar whose host-API
+  schema admits a fact-typed Track 1 product plane can use the
+  methodology. CSS L4 (lightningcss `Visitor`), Sheets (cell-by-cell
+  `CellValue<'i>` typed access), TOML (`toml-rs` typed plane), and
+  BBNF-self (the grammar AST as typed product) are named as
+  cross-grammar examples — illustrative, not in scope for the SK-V9
+  skinny iteration.
+
+- **F5 — Track-2 oracle JSON-specificity acknowledgment (CH2 §2.3
+  row C.5).** §2.7 gains a paragraph stating that "Track 2 oracle is
+  structurally independent" is a JSON-internal definition satisfied by
+  `serde_json`'s value-stream fold; cross-grammar waves cannot inherit
+  the JSON oracle and must nominate a per-grammar independent typed
+  parser. The structural-independence *property* (shares no scanner,
+  parser, allocator, or codegen template with Track 1) is the
+  grammar-neutral invariant; the oracle's *shape* is grammar-dependent
+  (lightningcss visit, reference CSV cell parser, taplo AST walk).
+
+No architectural reshape; no change to §1's REDRESS 91 posture, §3's
+Apache/CITM per-row throughput tables, §4.2/§4.3's dispatch sequence and
+falsifiability gates, §6's pre-block citations, or §7's source list.

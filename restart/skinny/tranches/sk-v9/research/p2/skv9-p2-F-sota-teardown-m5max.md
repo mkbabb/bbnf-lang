@@ -267,24 +267,19 @@ sonic-rs's non-typed Value path pays. No SOTA C++/Rust parser carries
 bbnf's DirectBuild equivalent — this is bbnf's structural lead and the
 room to widen it is real.
 
-**Room to widen the lead.** Three concrete moves:
-
-1. **Mesh + marine_ik DirectBuild row admission.** Mesh is already at
-   +4.6%; marine_ik at +25.2%. Adding the remaining N-direct rows
-   (apache_builds, github_events, citm_catalog, instruments) as
-   `real_typed_struct` workloads with corresponding typed Rust structs
-   would extend the typed-plane PASS set from 4 to 8 rows.
-2. **Per-field NEON tiny-string equality at the DirectBuild dispatch.**
-   The field-name match arm chain inside DirectBuild currently uses
-   scalar string comparison. Wiring the Lock-16-admitted Class A
-   `match_tiny_plain_string` here (per SK-V7-A2 §8 admission #6 — the
-   cost-fact threshold form) would lift the twitter typed lead from
-   +0.7% to comfortably above +10%.
-3. **Direct fusion of `\uXXXX` decode into the field-fact emit.**
-   yyjson's pattern applied at the DirectBuild step: no separate
-   unescape pass, the codepoint accumulator writes directly into the
-   typed `String` field. This closes the gap on unicode-bearing typed
-   structs (twitter has substantial unicode in screen_name fields).
+**The lead is REDRESS-bound territory.** The typed product plane
+currently leads on 4 rows; any widening that touches the dispatch hot
+path or typed materialiser is REDRESS-bound and requires S-P3
+differential authoring. Specifically: wiring Class A NEON
+`match_tiny_plain_string` at the DirectBuild field-name match arm chain
+is the REDRESS 33 rejected shape, and fusing `\uXXXX` decode into the
+field-fact emit is REDRESS 66-69 territory (the direct string/Unicode
+close declared exhausted under the current strict digest workload).
+Both moves silently reopen pre-blocked routes and risk the 4 typed-GO
+rows. This synthesis names the structural lead as a finding only; the
+question of whether — and under what fresh-evidence framing — the lead
+can be widened belongs to S-P3 with explicit material-differential
+gates per `skinny/REDRESS.md` entries 33 and 66-69.
 
 ---
 
@@ -445,8 +440,16 @@ parse_only LOSS rows, **4 cannot be closed by a delimiter-only
 intervention** (unicode_mixed, unicode_escapes, y_string_unicode,
 gsoc-2018). The throughput gap on those rows exceeds 130-460% of the
 regression's full per-byte budget. Strictly beating sonic + simdjson +
-yyjson on *every row* requires three coordinated interventions, in the
-prescribed sequence.
+yyjson on *every row* requires three coordinated interventions.
+
+**An unowned-route gap.** The Class A NEON tiny-string scanner is
+pre-blocked by REDRESS 28+33, yet neither P2-A nor P2-D resolves its
+owner: P2-A's union substrate does not address the tiny-string scanner
+at all, and P2-D names the kernel but defers it to consumer wiring
+without authoring an admission shape. This synthesis records the gap
+and states that S-P3 must resolve the owner — assign the tiny-string
+scanner to a named wave under an explicit REDRESS 28+33 material-
+differential gate, or formally retire the route.
 
 ### 7.1 Intervention I — **Consume the stage-1 index (P2-A union substrate, Tier A)**
 
@@ -494,57 +497,66 @@ y_string_unicode + unicode_mixed strictly above yyjson because bbnf's
 DirectBuild + structural-tape substrate avoids yyjson's per-element
 allocator round-trip on the typed plane.
 
-**Same-wave consumer.** The retained-parse string match path *and* the
-DirectBuild field-fact emit site for unicode-bearing typed structs.
+**Same-wave consumer.** The `parse-that-regex` unescape hot path only,
+per P2-E §4 — the codec wires into the existing
+`unescape_four_unicode_escapes` consumer site. It does *not* extend to
+a DirectBuild field-fact emit site: that expansion is REDRESS 66-69
+territory (the direct string/Unicode close exhausted under the current
+strict digest workload) and is not opened by this synthesis.
 
 **Architecture neutrality.** The codec is grammar-neutral by Lock 14:
 JSON's `\uXXXX`, CSS L4's `\HEX*` escape, BBNF-self's `\u` literals all
 share the same primitive shape. P2-F admits this as a per-grammar
 template surface over a grammar-neutral hex-decode primitive.
 
-### 7.3 Intervention III — **Cost-fact-gated NEON tiny-string equality + ASM next-bit consumer (P2-D ASM opportunities)**
+### 7.3 Intervention III — **P2-D ASM kernel opportunities (admission shapes deferred)**
 
-**What it does.** Two coordinated kernel admissions:
+P2-D names a family of aarch64 ASM kernel opportunities — Class A
+`match_tiny_plain_string` NEON equality and `BITMAP_NEXT_SET_BIT` /
+CSSC `CTZ` next-structural seek — that bear on the per-object-key
+dispatch cost (Intervention I addresses string boundaries; this
+intervention class addresses field recognition).
 
-1. **`match_tiny_plain_string` cost-fact + NEON wiring.** Per SK-V7-A2
-   §8 admission #6: the scalar threshold becomes a cost fact in
-   LayoutFacts; the NEON `vqtbl1q_u8` kernel is selected only where
-   the cost model picks it. Consumer: the retained dispatch hot leaf
-   *and* the DirectBuild field-name match arm chain.
-2. **`BITMAP_NEXT_SET_BIT` consumer wiring.** The Layer-1 macro is
-   admitted under Lock 16; the consumer is the retained-parse next-
-   structural seek (where the offset-tape cursor advances). On
-   ARMv9.0 the CSSC `CTZ` instruction is one-cycle integer; the
-   primitive form on M5 Max is a scalar `bits.trailing_zeros() as u32`
-   guarded by a `bbnf::cssc_ctz` cfg flag. Per SK-V7-A2 §8 admission
-   #4/#5 + P1-V3-B Layer-1 macro vocabulary.
+This synthesis does *not* author the admission shapes for those
+kernels. A Class A `match_tiny_plain_string` cost-fact wired at the
+field-name match arm chain is the REDRESS 33 rejected shape, and
+broadening the P2-D §4.4 narrow string-mask consumer into a bulk
+consumer is REDRESS 89 territory. **Admission shapes for P2-D ASM
+kernels are authored by S-P3 with explicit REDRESS material-
+differential gates.**
 
-**Why it works.** Closes the per-object-key dispatch cost (Intervention
-I addresses string boundaries; Intervention III addresses field
-recognition). Together they eliminate the per-key branch-misprediction
-that update_center CPI 0.248 and apache_builds CPI 0.228 evidence.
+### 7.4 Inter-report dependency graph
 
-**Expected closures.** twitter, update_center typed-plane PASS rows
-move from borderline to comfortable margins (≥ +10% above sonic). The
-field-name match arm chain runs at NEON throughput, not scalar.
+This synthesis does *not* author a wave sequence or a cumulative impact
+projection. Wave-class authorship and per-wave cost-set authoring
+belongs to S-P3 per `restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md`
+(P3-B wave sequencing, P3-C cost authoring). This synthesis names
+dependency only.
 
-**Same-wave consumer.** The DirectBuild dispatch and the retained-
-parse next-structural seek. Both consumers ship with the kernel.
+The dependency graph below records which P2 research findings a given
+intervention rests on — the arrow `A ← B` reads "A depends on B; B must
+land first":
 
-### 7.4 Sequencing and >SOTA target
+- **Intervention I (consume the stage-1 index)** ← **P2-A** (union
+  substrate, Tier A — the retained offset/class tape that I consumes)
+  ← **P2-B** (the grammar-neutral substrate contract P2-A's union
+  rests on). The chain is `I ← P2-A ← P2-B`.
+- **Intervention II (fused `\uXXXX` codec)** ← **P2-E** (the unicode-
+  codec design, parameterised at codegen time as a per-grammar
+  template surface over the grammar-neutral hex-decode primitive).
+  Intervention II also ← **P2-A** to the extent the codec's offset-tape
+  sink consumes the retained-tape substrate. The chain is `II ← P2-E`
+  with a secondary edge `II ← P2-A`.
+- **Intervention III (P2-D ASM kernel class)** ← **P2-D** (the named
+  ASM opportunities) ← **P2-A** (the retained tape that the next-
+  structural seek kernel cursors over). The chain is `III ← P2-D ←
+  P2-A`. Admission shapes are deferred to S-P3 per §7.3.
 
-The interventions land in the order: **I → II → III**. Each ships with
-its same-wave consumer per Lock 14; each has scalar oracle parity in
-the corresponding `tests/checkasm_*` harness; none re-opens a REDRESS-
-pre-blocked route. The cumulative impact:
-
-| Row class | Current (max LOSS) | After I | After I+II | After I+II+III | vs SOTA target |
-|---|---|---|---|---|---|
-| Number-heavy (5 rows) | maintain WIN | maintain WIN | maintain WIN | maintain WIN | >sonic ✓; >yyjson ✓ |
-| String/key-dense (7 rows) | -23% to -51% | -5% to -15% | -3% to -10% | **>sonic + ≥ simdjson NEON** | typed-plane lead widens to +10-15% |
-| Unicode-heavy (5 rows) | -23% to -54% | -15% to -35% | **>sonic** | **>sonic + > yyjson on twitter-class** | the four uncloseable rows close |
-| Borderline (instruments) | -5.9% | +5-10% | +8-12% | +12% | comfortable PASS |
-| Typed plane (4 rows) | already ≥sonic | maintain | strengthen | **+10-15% above sonic** | the DirectBuild lead widens |
+**No cost set.** This dependency graph carries no per-slice minute
+caps, no LOC budget, and no cumulative throughput projection — S-P3
+owns the cost-set authoring (P3-C) and the wave sequencing (P3-B). The
+graph states ordering *necessity* (substrate before consumer), not a
+wave plan.
 
 **The >SOTA gate.** On Apple M5 Max, strictly above sonic-rs +
 simdjson NEON + yyjson on every row, on both parse_only and
@@ -606,5 +618,44 @@ External authoritative anchors:
   documented Apple Silicon specs).
 - RFC 8259 — strict JSON: four whitespace bytes (space, HT, LF, CR);
   strings escape `"`, `\`, C0 controls U+0000–U+001F.
+
+---
+
+## §0 — V2 fold: synthesis-overreach walk-back
+
+The V1 CHALLENGE found this report's §7 had drifted into S-P3
+synthesis-plan scope (the S-P1 V4 CH4 failure mode recurring) and had
+silently reopened pre-blocked routes. The V2 fold walks all of it back:
+
+- **§7.4 reframed as an inter-report dependency graph.** V1 §7.4
+  authored a four-stage sequencing table plus a cumulative
+  throughput-impact projection — that is P3-B wave sequencing and P3-C
+  cost authoring, owned by S-P3 per
+  `restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md`. §7.4 now records
+  only dependency (`I ← P2-A ← P2-B`; `II ← P2-E`, secondary `II ←
+  P2-A`; `III ← P2-D ← P2-A`) and carries no cost set.
+- **§7.2 DirectBuild expansion stripped.** V1 §7.2 wired the fused
+  `\uXXXX` codec at a "DirectBuild field-fact emit site" — REDRESS
+  66-69 territory. The codec now wires at the `parse-that-regex`
+  unescape hot path only, per P2-E §4.
+- **§7.3 admission shapes stripped.** V1 §7.3 admission 1 was the
+  REDRESS 33 rejected `match_tiny_plain_string` shape; admission 2
+  broadened P2-D §4.4 into REDRESS 89 bulk-consumer territory. §7.3
+  now defers all P2-D ASM admission shapes to S-P3 under explicit
+  REDRESS material-differential gates.
+- **§3 "Room to widen the lead" walked back.** V1 §3 proposed Class A
+  NEON at the DirectBuild dispatch and `\uXXXX` fusion into the typed
+  materialiser — silently reopening REDRESS 33 + 66-69 and risking the
+  4 typed-GO rows. §3 now states only that any widening touching the
+  dispatch hot path or typed materialiser is REDRESS-bound and
+  requires S-P3 differential authoring.
+- **§7 owner gap recorded.** The Class A NEON tiny-string scanner is
+  pre-blocked by REDRESS 28+33 with no owner across P2-A and P2-D;
+  §7's preamble now names the gap and assigns its resolution to S-P3.
+
+This report names competitor architecture, per-corpus position,
+intervention identity, and inter-report dependency. It does not author
+wave classes, cost sets, sequencing, or REDRESS admission shapes —
+those are S-P3 product.
 
 End of report.

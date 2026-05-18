@@ -1,7 +1,9 @@
 # SK-V9 P2-B: Retained class/event grammar + `ValueRef` cursor proof
 
-Pass: S-P2 Research. Cycle: V1.
+Pass: S-P2 Research. Cycle: V1 → V2 fold.
 Date: 2026-05-18.
+
+§0 — V2 fold: AnyGrammar declaration + per-slice cost + cfg-gate location.
 Scope: Design the proof artefact for a retained class/event grammar plus a
 `ValueRef<'tape, 'src>` cursor — the SK-V9 HANDOFF §3 candidate that REDRESS 92
 named as "the retained class/event grammar plus retained `ValueRef` cursor
@@ -63,7 +65,7 @@ for this candidate.
 | `skinny/crates/runtime/src/tape/event_grammar_tests.rs` (NEW, `tests/` for the runtime crate per `feedback_no_inline_tests`) | Compile-only proof: a `phantom_borrow_check<G: EventGrammar>` function, the JSON instance witness, and the non-JSON instance witness. `#[test]` bodies are *type assertions* (`fn _assert<T: EventGrammar>() {}`), not runtime-executed parser code. | ~80 |
 | `skinny/crates/runtime/src/grammars/json/event_grammar_witness.rs` (NEW) | The narrow JSON `EventGrammar` instance — opaque class ordinals only, no `match grammar` arm, no production hot-path call site. Sits alongside `generated.rs` *as a sibling proof file*, not replacing it. | ~120 |
 | `skinny/crates/runtime/src/grammars/css_l4_witness/event_grammar_witness.rs` (NEW) *or* `skinny/crates/runtime/src/grammars/sheets_witness/event_grammar_witness.rs` (NEW) | The Lock-14 non-JSON instance. The grammar directory is named `*_witness` to telegraph that no production parser, scanner, or runtime body lands. | ~80 |
-| `skinny/crates/runtime/src/lib.rs` (TOUCHED) | One `pub mod tape;` already exports the substrate; add `pub use tape::event_grammar::EventGrammar;` and the two witness modules behind `#[cfg(test)]` or a `proof` feature so the witnesses cannot be linked into release. | ~5 |
+| `skinny/crates/runtime/src/lib.rs` (TOUCHED) | One `pub mod tape;` already exports the substrate; add `pub use tape::event_grammar::EventGrammar;` and the two witness modules behind `#[cfg(test)]` or a `proof` feature so the witnesses cannot be linked into release. The `cfg(any(test, feature = "proof"))` gate is applied **once, at the parent `pub mod sheets_witness;` / `pub mod json::event_grammar_witness;` declaration in `lib.rs`** — never per-file inside the witness modules themselves. Per-file gating is rejected: it produces duplicated attributes, makes feature drift silent (one file gated, sibling un-gated), and breaks `rg` audits keyed on the parent declaration line. R-CH5-2 binds the gate to the parent `pub mod` site; see also §5.1. | ~5 |
 | `restart/skinny/tranches/sk-v9/research/p2/` (this file) | The design artefact; no source. | n/a (research) |
 
 Total source LOC: ~395, comfortably inside HANDOFF's 450 LOC envelope.
@@ -194,6 +196,113 @@ const _: fn() = _proof_compiles::<SheetsEventGrammar>;
 That `const _: fn() = …` pair *is* the proof. The compiler refusing to
 emit either line is the proof's failure mode; passing them is the
 acceptance verdict.
+
+### §1.5 — `AnyGrammar` — the empty-grammar default instance
+
+`ValueRef<'tape, 'src, G: EventGrammar = AnyGrammar>` carries
+`AnyGrammar` as its default type parameter. The default exists for two
+purposes: (a) it preserves the *renaming-only* property of the cursor
+field-layout change (today's `ValueRef<…, K = AnyKind>` becomes
+`ValueRef<…, G: EventGrammar = AnyGrammar>` and existing call sites at
+`view.rs:25`, `:71`, `:189` continue to compile by writing
+`ValueRef<'_, '_>` exactly as they do today, with no turbofish or
+witness mention); (b) it furnishes the `EventGrammar` impl that
+*empty-alphabet user grammars* substitute into `ValueRef`'s generic
+slot when no structural alphabet is declared.
+
+The declaration:
+
+```rust
+// skinny/crates/runtime/src/tape/event_grammar.rs
+
+/// The empty-alphabet `EventGrammar` instance. `AnyGrammar` carries
+/// `STRUCTURAL_CLASS_COUNT = 0` and a uninhabited `FactId`; it is the
+/// default `G` parameter for `ValueRef<'tape, 'src, G: EventGrammar =
+/// AnyGrammar>`. Empty-alphabet user grammars (whitespace-significant,
+/// regex-shape) route to `EagerTape` via `derive_backend_shape` step 4
+/// (see P2-A §3.4 and SC-6 §4.5) — `AnyGrammar` is the
+/// `EventGrammar`-side witness that those grammars *have no structural
+/// projection*, so the retained-tape contract is vacuously satisfied.
+pub struct AnyGrammar;
+
+/// The uninhabited fact-id type for `AnyGrammar`. Construction is
+/// impossible, so `admits_fact` is vacuously false for every value
+/// (the function body cannot be reached).
+#[derive(Copy, Clone, Eq, Ord, PartialEq, PartialOrd)]
+pub enum AnyGrammarFactId {}
+
+impl EventGrammar for AnyGrammar {
+    const STRUCTURAL_CLASS_COUNT: u8 = 0;
+    type FactId = AnyGrammarFactId;
+    fn admits_fact(_id: Self::FactId) -> bool {
+        // Unreachable: AnyGrammarFactId is uninhabited. The match-on-!
+        // form (`match _id {}`) discharges the return without a body.
+        match _id {}
+    }
+    // `admits_class` uses the default body and returns `false` for every
+    // input because `STRUCTURAL_CLASS_COUNT = 0` makes the
+    // `class != 0 && class <= 0` predicate vacuously false.
+}
+```
+
+**Fields:** zero (unit struct). `AnyGrammar` carries no data; its
+identity is purely type-level. The `: 'static` bound on the trait is
+satisfied trivially.
+
+**Compile-time predicates under generic substitution:**
+
+- `<AnyGrammar as EventGrammar>::STRUCTURAL_CLASS_COUNT` evaluates to
+  the constant `0u8` at every monomorphisation site. Any `const`
+  context (array length, `static` initialiser, `if-let-const`) that
+  depends on it sees `0`, not a deferred value.
+- `<AnyGrammar as EventGrammar>::admits_class(c)` is a `const fn` (or
+  inline `fn`) returning `false` for every `c: u8`; the optimiser
+  reduces it to `false` at every call site.
+- `<AnyGrammar as EventGrammar>::FactId` is uninhabited, so any code
+  path that consumes a `FactRecord<AnyGrammar>` is statically dead —
+  the binary-search storage layer (`Vec<FactRecord<G>>`) is
+  type-checked but never executed for `G = AnyGrammar` because no
+  `AnyGrammarFactId` value can be constructed to insert.
+
+**Behaviour under generic substitution:**
+
+- A consumer writing `ValueRef<'tape, 'src>` (omitting the third
+  parameter) gets `ValueRef<'tape, 'src, AnyGrammar>` and observes the
+  same 12-byte stack footprint as today's `ValueRef<…, K = AnyKind>`.
+  The variance discipline (`PhantomData<fn() -> G>`) makes
+  `ValueRef<…, AnyGrammar>` *not* assignable from
+  `ValueRef<…, JsonEventGrammar>` — so even though `AnyGrammar`
+  vacuously admits nothing, a JSON cursor cannot be downcast through
+  the default. This is the load-bearing property: the default exists
+  for call-site brevity, not for cross-grammar smuggling.
+- A consumer writing `ValueRef<'_, '_, JsonEventGrammar>` gets the
+  JSON-parameterised cursor; the `AnyGrammar` default does not
+  shadow or compete with explicit witness substitution.
+- A consumer writing `ValueRef<'_, '_, SheetsEventGrammar>` gets the
+  Sheets-parameterised cursor; same.
+
+**Empty-alphabet user-grammar route.** Per P2-A §3.4 (cross-link
+**verbatim**: "Per SC-6 §4.5, an empty structural alphabet routes to
+`EagerTape` through `derive_backend_shape` step 4"), an empty
+structural alphabet bypasses the retained-tape substrate entirely and
+routes to `EagerTape`. `AnyGrammar` is the `EventGrammar`-side
+counterpart of that routing: it is the trait instance that *empty
+user grammars present* if a downstream consumer ever asks "what
+`EventGrammar` does this empty grammar implement?", and the answer is
+"the vacuously-satisfied one, because there is no structural
+projection to validate." The `derive_backend_shape` step-4 branch
+remains the operational discriminant; `AnyGrammar` exists only so that
+`ValueRef`'s type-system contract is total (every grammar has *some*
+`EventGrammar` instance, even if it is the empty one).
+
+The proof tests include a third witness line:
+
+```rust
+const _: fn() = _proof_compiles::<AnyGrammar>;
+```
+
+— so the `AnyGrammar` instance is compile-tested alongside the JSON
+and Sheets witnesses. Acceptance requires all three lines compile.
 
 ---
 
@@ -520,7 +629,16 @@ the workspace. The CSS L4 alternative would have the same property.
 
 The same-wave-consumer rule applies to artefacts that *land in the parse
 hot path*. The proof's artefacts are gated behind `#[cfg(any(test, feature
-= "proof"))]` and excluded from `cargo bench -p bbnf-bench`; they cannot
+= "proof"))]`, and — per R-CH5-2 — that gate is applied **once at the
+parent `pub mod` declaration in `lib.rs`** (the `pub mod
+sheets_witness;` and `pub mod event_grammar_witness;` lines), never as
+a per-file `#![cfg(…)]` inner attribute inside each witness module.
+Single parent-gate placement is load-bearing: it makes the gate a
+single audit point (`rg '#\[cfg.*proof' skinny/crates/runtime/src/lib.rs`
+finds it), eliminates the silent-drift failure mode where one witness
+file is gated and a sibling is not, and keeps the witness module
+bodies free of attribute boilerplate. The witnesses are thereby
+excluded from `cargo bench -p bbnf-bench`; they cannot
 be observed by any production caller. CH5 HIDDEN COUPLING — "does any
 candidate introduce a parallel substrate, a sidecar producer, a renamed
 scanner, or a Track 1 ≡ Track 2 dishonesty?" — verdicts ACCEPT for the
@@ -540,16 +658,30 @@ does not exist for compile-only artefacts.
 
 ## §6 — LOC + risk envelope
 
-### §6.1 LOC budget
+### §6.1 LOC budget — per-slice break-out
 
-| Item | LOC (source) |
-|---|---:|
-| `tape/event_grammar.rs` (trait + cursor `PhantomData` rename) | ~110 |
-| `tape/event_grammar_tests.rs` (type-level proof functions) | ~80 |
-| `grammars/json/event_grammar_witness.rs` | ~120 |
-| `grammars/sheets_witness/event_grammar_witness.rs` (or CSS L4) | ~80 |
-| `runtime/src/lib.rs` `cfg`-gated re-exports | ~5 |
-| **Total source** | **~395** |
+The proof decomposes into five implementation slices. The LOC budget
+binds *each slice*, not just the aggregate, to address F4 per-slice
+cost discipline. A slice that overruns its cap is the load-bearing
+revert unit — the proof reverts that slice (only) and re-plans before
+proceeding.
+
+| # | Slice | Owner file(s) | LOC cap | Revert protocol |
+|---:|---|---|---:|---|
+| S1 | **Trait declaration** — `EventGrammar` trait + `AnyGrammar` default instance + `AnyGrammarFactId` uninhabited type (§1.3, §1.5). No `impl` for any concrete grammar; no consumer hookup. | `tape/event_grammar.rs` (NEW) | ≤110 | If overruns, defer `AnyGrammar` impl body to S5 and revert trait to the four-method minimum (`STRUCTURAL_CLASS_COUNT`, `FactId`, `admits_fact`, `admits_class`); do not add methods. |
+| S2 | **Witness 1 — JSON** — `JsonEventGrammar` unit struct + `JsonFactId` repr-transparent ordinal + single `impl EventGrammar`. No `match grammar` arm, no scanner edit, no `generated.rs` touch. | `grammars/json/event_grammar_witness.rs` (NEW) | ≤120 | If overruns, the witness is too rich — strip to `STRUCTURAL_CLASS_COUNT = 7` + one `admits_fact` arm + trait `impl`; cut documentation comments. The five-line `impl` body in §1.4 is the load-bearing minimum. |
+| S3 | **Witness 2 — Sheets (or CSS L4)** — `SheetsEventGrammar` unit struct + `SheetsFactId` ordinal + single `impl`. No scanner, no parser, no class-table data. | `grammars/sheets_witness/event_grammar_witness.rs` (NEW) + `grammars/sheets_witness/mod.rs` (NEW, declares the witness module only) | ≤80 | If overruns, swap to CSS L4 (smaller surface — `STRUCTURAL_CLASS_COUNT = 10`, single admitted fact id, no doubled-quote escape rule to comment); CSS L4 has an extant grammar source and a smaller doc surface. |
+| S4 | **`ValueRef` parameterisation** — rename `K = AnyKind` to `G: EventGrammar = AnyGrammar` on `ValueRef<'doc, 'input: 'doc, …>`; update `PhantomData<fn() -> K>` to `PhantomData<fn() -> G>`; preserve 12-byte stack footprint. Existing consumers at `view.rs:25, :71, :189` and `mod.rs:171-217` continue to compile via the `AnyGrammar` default (zero call-site edits expected). | `tape/mod.rs` (TOUCHED, ~20 lines moved); `view.rs` (UNCHANGED — confirmed compile-clean against default) | ≤30 | If overruns, the rename is leaking to call sites — back out and reattempt with an `pub type ValueRef<'doc, 'input> = ValueRefGen<'doc, 'input, AnyGrammar>` alias rather than a parameter default. |
+| S5 | **`cfg` gating + proof tests** — `event_grammar_tests.rs` with the three `const _: fn() = _proof_compiles::<…>` lines (JSON, Sheets, AnyGrammar); `lib.rs` re-exports under `#[cfg(any(test, feature = "proof"))]` at the **parent `pub mod` declaration site** (not per-file inside the witnesses). | `tape/event_grammar_tests.rs` (NEW) + `lib.rs` (TOUCHED, ~5 lines) | ≤85 | If overruns, the proof test surface is too rich — strip to the three `const _` lines and zero other test bodies; the type-level proof does not need runtime assertions. |
+| | **Total source** | | **≤425** | (margin: 25 LOC inside HANDOFF 450) |
+
+Aggregate cap reconciliation: ≤110 + ≤120 + ≤80 + ≤30 + ≤85 = ≤425
+LOC, fitting inside the HANDOFF 450 envelope with 25 LOC margin
+(versus V1's 55 LOC margin — the difference is the S4
+`ValueRef` parameterisation slice's ~30 LOC, made explicit in V2
+rather than absorbed silently into `tape/event_grammar.rs`).
+
+Per-slice time caps are stated in §6.3.
 
 Margin: 55 LOC inside the HANDOFF 450 LOC envelope. The envelope is *not*
 expanded by Lock 14 audit additions (the `rg` commands are documentation,
@@ -575,17 +707,22 @@ witnesses.
 
 ### §6.3 Time envelope
 
-HANDOFF binds ≤90 min implementation/redress. The proof breakdown:
+HANDOFF binds ≤90 min implementation/redress. Per-slice caps, aligned
+to the §6.1 five-slice break-out:
 
-- Trait declaration + `ValueRef` `PhantomData` rename: ~15 min.
-- JSON witness: ~10 min.
-- Sheets (or CSS L4) witness: ~10 min.
-- Type-level proof tests: ~15 min.
-- `cargo check -p runtime` + `cargo test -p runtime event_grammar`: ~5 min.
-- `rg` Lock 14 audits + commit message: ~10 min.
-- Buffer for borrow-checker errors on the variance discipline: ~25 min.
+- S1 trait declaration + `AnyGrammar` instance: ≤15 min.
+- S2 JSON witness: ≤10 min.
+- S3 Sheets (or CSS L4) witness: ≤10 min.
+- S4 `ValueRef` parameterisation (`K → G` rename): ≤10 min.
+- S5 type-level proof tests + `cfg` gating: ≤15 min.
+- `cargo check -p runtime` + `cargo test -p runtime event_grammar`: ≤5 min.
+- `rg` Lock 14 audits + commit message: ≤10 min.
+- Buffer for borrow-checker errors on the variance discipline: ≤15 min.
 
-Total: ~90 min, sized to fit the cap without overrun.
+Total: ≤90 min, sized to fit the cap without overrun. A slice that
+hits 0.9× its cap triggers the §6.1 revert protocol for that slice;
+at the cap, the slice halts and is re-planned before the proof
+proceeds.
 
 ---
 
@@ -652,6 +789,10 @@ Total: ~90 min, sized to fit the cap without overrun.
 - `restart/ARCHITECTURE.md` §7.3 lines 1060-1098 — `BackendShape` enum +
   `derive_backend_shape` algorithm; the proof binds itself to *not*
   introducing a sixth `BackendShape` variant.
+- `restart/skinny/tranches/sk-v9/research/p2/skv9-p2-A-union-event-model.md`
+  §3.4 — empty-alphabet grammars route to `EagerTape` through
+  `derive_backend_shape` step 4; the cross-link §1.5 binds the
+  `AnyGrammar` empty-grammar instance to (per SC-6 §4.5).
 - Feedback memory: `feedback_generated_files_clean_regen` — generated files
   are always output of fresh regen; the proof's separation of witness
   files from generated files preserves this.

@@ -1,13 +1,13 @@
 # SK-V8 P3-F: SPEC/DISPATCH Draft Fold
 
-Pass: S-P3 Synthesis-Plan. Cycle: V3 citation fold after V2 challenge.
+Pass: S-P3 Synthesis-Plan. Cycle: V4 exact traceability fold after V3 challenge.
 Date: 2026-05-18.
 Scope: fold P3-A through P3-E into
-`SPEC Sections 0.1-0.5, 2, and 3-11` and
+`SPEC Section 0.1 - Global Close Condition`, `SPEC Section 0.2 - Comparator Classes`, `SPEC Section 0.3 - Outcome Enum`, `SPEC Section 0.4 - Required Telemetry`, `SPEC Section 0.5 - Opening Row Goalset`, `SPEC Section 2 - Wave Manifest, Caps, And Reruns`, `SPEC Section 2.1 - Generality And Lock 14 Gate`, `SPEC Section 3 - W0 Baseline Profile And Telemetry Lock`, `SPEC Section 4 - W1 CostFacts And Comparator Gate Binding`, `SPEC Section 5 - W2 Typed Product Plane Expansion`, `SPEC Section 6 - W3 Tier A Tape Plus Structural-Projection Union`, `SPEC Section 7 - W4 Direct Guard Triage`, `SPEC Section 8 - W5 Grammar-Neutral Audit And Lock 14 Preservation`, `SPEC Section 9 - W6 Close And Alpha Feedback`, `SPEC Section 10 - Pre-Blocked Routes`, and `SPEC Section 11 - G-Alpha And Dispatch Scope` and
 `DISPATCH sections Wave Manifest, Conditional Gates, and Entry Condition`.
-Output: this file, `SPEC Sections 0.1-0.5, 2, and 3-11`, and
+Output: this file, `SPEC Section 0.1 - Global Close Condition`, `SPEC Section 0.2 - Comparator Classes`, `SPEC Section 0.3 - Outcome Enum`, `SPEC Section 0.4 - Required Telemetry`, `SPEC Section 0.5 - Opening Row Goalset`, `SPEC Section 2 - Wave Manifest, Caps, And Reruns`, `SPEC Section 2.1 - Generality And Lock 14 Gate`, `SPEC Section 3 - W0 Baseline Profile And Telemetry Lock`, `SPEC Section 4 - W1 CostFacts And Comparator Gate Binding`, `SPEC Section 5 - W2 Typed Product Plane Expansion`, `SPEC Section 6 - W3 Tier A Tape Plus Structural-Projection Union`, `SPEC Section 7 - W4 Direct Guard Triage`, `SPEC Section 8 - W5 Grammar-Neutral Audit And Lock 14 Preservation`, `SPEC Section 9 - W6 Close And Alpha Feedback`, `SPEC Section 10 - Pre-Blocked Routes`, and `SPEC Section 11 - G-Alpha And Dispatch Scope`, and
 `DISPATCH sections Wave Manifest, Conditional Gates, and Entry Condition`.
-Traceability note: inline citations use stable section labels. Concrete local paths are retained in Sources; when a table row names a RESULTS row or REDRESS id, that row/id is the resolving anchor.
+Traceability note: inline citations use exact SPEC/HANDOFF section labels or current file:line anchors. RESULTS row claims resolve to `skinny/RESULTS.md:3-42`; Track 2 independence resolves to `skinny/RESULTS.md:217-218`; named REDRESS ids resolve to `skinny/REDRESS.md`, with cited live spans `skinny/REDRESS.md:1214-1219`, `skinny/REDRESS.md:1301-1312`, and `skinny/REDRESS.md:1331-2605`.
 
 
 ## Synthesis
@@ -80,6 +80,13 @@ The folded SPEC preserves:
 | CH1 correctness | Folded for V3. P3-A through P3-F now use stable section labels for material inline claims, retain concrete local paths in Sources, and state that RESULTS rows and REDRESS ids are resolving anchors. The V3 fold avoids stale line numbers without leaving material claims as repeated bare file paths. |
 | CH2, CH3, CH4, CH5, CH6 | Preserved. Their V2 ACCEPT findings remain binding; the citation fold does not change W2 seed gates, LOC/time budgets, W3 split gates, dispatch lock, pre-block coverage, Lock 14, or same-wave-consumer requirements. |
 
+## V3 Hardening Fold
+
+| Challenge | Disposition |
+|---|---|
+| CH1 correctness | Folded for V4. P3-A through P3-F now resolve material SPEC and HANDOFF citations to exact section labels and resolve mutable RESULTS/REDRESS row claims through current file:line anchors. The fold removes the broad multi-section SPEC/HANDOFF bundles and generic RESULTS/REDRESS placeholders CH1 rejected. |
+| CH2, CH3, CH4, CH5, CH6 | Preserved. Their V3 ACCEPT findings remain binding; the exact-traceability fold does not alter G-Alpha/W0 dispatch lock, W2 seed gates, W3 Tier A/Tier B split, 90-minute/LOC gates, strict-vs-strict comparator discipline, Lock 14 neutrality, no-new-surface constraints, or pre-blocked route coverage. |
+
 ## Residual Risks
 
 - W3 Tier A may still be too broad for one 90-minute implementation/redress
@@ -101,7 +108,7 @@ the per-wave entry gates.
 ## Required Folds If REVISE
 
 - Reconcile any P3-C threshold changes back into
-  `SPEC Sections 0.1-0.5, 2, and 3-11`.
+  `SPEC Section 0.1 - Global Close Condition`, `SPEC Section 0.2 - Comparator Classes`, `SPEC Section 0.3 - Outcome Enum`, `SPEC Section 0.4 - Required Telemetry`, `SPEC Section 0.5 - Opening Row Goalset`, `SPEC Section 2 - Wave Manifest, Caps, And Reruns`, `SPEC Section 2.1 - Generality And Lock 14 Gate`, `SPEC Section 3 - W0 Baseline Profile And Telemetry Lock`, `SPEC Section 4 - W1 CostFacts And Comparator Gate Binding`, `SPEC Section 5 - W2 Typed Product Plane Expansion`, `SPEC Section 6 - W3 Tier A Tape Plus Structural-Projection Union`, `SPEC Section 7 - W4 Direct Guard Triage`, `SPEC Section 8 - W5 Grammar-Neutral Audit And Lock 14 Preservation`, `SPEC Section 9 - W6 Close And Alpha Feedback`, `SPEC Section 10 - Pre-Blocked Routes`, and `SPEC Section 11 - G-Alpha And Dispatch Scope`.
 - Recompute W2/W3/W4 row floors after W0 if `SK-V8-open` changes the seed
   values.
 - Split W3 if Tier A cannot be implemented, measured, reported, and reverted

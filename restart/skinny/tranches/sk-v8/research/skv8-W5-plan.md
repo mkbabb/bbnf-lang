@@ -2,7 +2,7 @@
 
 Date: 2026-05-18.
 
-Status: V1 hardening fold; planned as named Lock 14 provider-boundary cleanup.
+Status: V3 hardening fold applied; ready for V4 challenge.
 
 ## Entry Gate
 
@@ -129,12 +129,14 @@ Run a W5 CH1-CH6 challenge against this named Lock 14 provider-boundary cleanup:
   Track 1/Track 2 coupling is introduced.
 - CH6: no paper close; W5 closes on live command evidence, not assertion.
 
-V1 returned CH1 and CH2 REVISE. V2 must challenge the folded provider-boundary
-cleanup and the cwd-qualified verification plan. V2 returned CH1 REVISE for
+V1 returned CH1 and CH2 REVISE. V2 challenged the folded provider-boundary
+cleanup and the cwd-qualified verification plan, then returned CH1 REVISE for
 stale no-source/no-generic-edit language and missing exact REDRESS anchors.
-V3 must challenge the folded documentation and unchanged source packet. If V3
-returns a qualifying ACCEPT, re-challenge the unchanged packet once more. W5
-may close only after two consecutive qualifying ACCEPT cycles.
+V3 challenged that fold and returned CH1 REVISE because the audit-scope
+REDRESS assertion still lacked inline spans. V4 must challenge the folded
+documentation and unchanged source packet. If V4 returns a qualifying ACCEPT,
+re-challenge the unchanged packet once more. W5 may close only after two
+consecutive qualifying ACCEPT cycles.
 
 ## Revert And Redress
 

@@ -118,8 +118,8 @@ W7/W8 Lock 14 residue suites:
    nine root grammars. The W5 cleanup is a provider-boundary/allowlist change
    and does not alter generated output.
 5. W5 must not claim performance movement, must not update
-   `skinny/RESULTS.md`, and must not add a REDRESS item unless V2/V3 challenge
-   discovers a concrete mismatch.
+   `skinny/RESULTS.md`, and must not add a REDRESS item unless a later
+   challenge discovers a concrete mismatch.
 
 ## V1 Hardening Fold
 
@@ -185,9 +185,16 @@ The fold keeps the code unchanged and clarifies that:
 - REDRESS reconciliation anchors resolve to `skinny/REDRESS.md:460-515`,
   `skinny/REDRESS.md:2399-2427`, and `skinny/REDRESS.md:2431-2464`.
 
+## V3 Hardening Fold
+
+W5 V3 hardening returned CH1 REVISE and five ACCEPT results. CH1 found that
+the audit-scope REDRESS assertion still named the REDRESS 36-38/85/86
+reconciliation without inline spans. The fold keeps source unchanged and adds
+the exact anchors directly to every active W5 REDRESS reconciliation assertion.
+
 ## Recommended Plan
 
-Proceed to a W5 V3 challenge with the named Lock 14 cleanup:
+Proceed to a W5 V4 challenge with the named Lock 14 cleanup:
 
 - same-wave consumer: the W5 audit gate itself;
 - source owner paths:

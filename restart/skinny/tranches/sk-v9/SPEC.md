@@ -677,7 +677,7 @@ Owner paths (P2-A §5 eight slices + the P2-D §5 chain):
 | `codegen/src/json_templates/{generated,parser,view,value}.rs` | A.5 | Class-column emission + structural-walk lowering — the novel-mechanism slice. |
 | `bbnf-simd/src/lib.rs` + `bbnf-simd/src/aarch64/` | A.6 | Surface the structural index by move-consume; the P2-D §5 structural-bitmap chain (TBL classify, quote/escape/backslash mask, VEXT carry). |
 | `runtime/src/grammars/json/scan.rs` | A.7 | Regen: stop discarding the index; move-consume API. |
-| `bbnf-simd/tests/checkasm_scan_structurals.rs` (NEW) + `bbnf-bench/src/{parity,track2/json}.rs` | A.8 | `scan_structurals` end-to-end checkasm + corpus-parity gate; class-column parity + structural-index move-consumed asserts. `track2/json.rs` is owned only to write benchmark-oracle class bytes after `at_cursor` switches to class reads. |
+| `runtime/tests/checkasm_scan_structurals.rs` (NEW) + `bbnf-bench/src/{parity,track2/json}.rs` | A.8 | JSON `scan_structurals` end-to-end parity + corpus-parity gate; class-column parity + structural-index move-consumed asserts. `track2/json.rs` is owned only to write benchmark-oracle class bytes after `at_cursor` switches to class reads. Lower primitive checkasm remains in the existing `bbnf-simd` harnesses. |
 
 Entry gate: W2 closed with `G-W2-RETAINED-PROOF` PASS — the proof
 unblocks the union reopen; the REDRESS 92 gating clause is discharged.

@@ -43,9 +43,10 @@ Redress owner paths:
   positions-only `StructuralIndex` producer; use it as the transient parser
   input. Source changes here are allowed only if the scan/checkasm harness
   needs a public parity helper.
-- `skinny/crates/bbnf-simd/tests/checkasm_scan_structurals.rs` (new):
-  end-to-end JSON structural scan parity over alignment, generated random
-  strings, and at least one corpus fixture.
+- `skinny/crates/runtime/tests/checkasm_scan_structurals.rs` (new):
+  end-to-end JSON structural scan parity over generated random strings and at
+  least one corpus fixture. This runtime-side location avoids a dependency
+  cycle and keeps JSON policy out of `bbnf-simd`.
 - `skinny/crates/bbnf-bench/src/parity.rs`: compare class streams in addition
   to offsets/flags and keep materialization parity.
 - `skinny/crates/bbnf-bench/src/track2/json.rs`: write the same JSON event
@@ -77,7 +78,7 @@ corrections above. Load-bearing implementation checks:
 - `cargo test -p runtime` passes.
 - `cargo test -p bbnf-bench parity materialization -- --nocapture` passes, or
   the exact parity/materialization test names replacing that filter pass.
-- `cargo test -p bbnf-simd --test checkasm_scan_structurals -- --nocapture`
+- `cargo test -p runtime --test checkasm_scan_structurals -- --nocapture`
   passes.
 - Native Criterion with `RUSTFLAGS="-C target-cpu=native"` measures the W3
   must-improve rows and the W10b maintain block against SPEC floors. Any W10b
@@ -107,3 +108,5 @@ whole wave. W3 has no partial admission.
 - Accept or reject the ≤110-minute redress extension.
 - Confirm that parser-event scalar classes in the tape do not violate the
   structural-only SIMD alphabet constraint.
+- Confirm that JSON scan parity belongs in `runtime/tests`, while generic
+  primitive parity remains in the existing `bbnf-simd` checkasm harnesses.

@@ -2,11 +2,12 @@
 
 Date: 2026-05-19.
 
-Status: G-Alpha is presented and W0 refreshed the SK-V11-open native baseline
-from HEAD `3ce75df4`. This file remains the goalset and contract surface for
-S-P1/S-P2/S-P3. It is not source implementation authority. `SPEC.md` and
-`DISPATCH-PROMPT.md` are not created by this pass; S-P3 owns them after
-SK-V11 S-P1 and S-P2 converge.
+Status: G-Alpha is presented, W0 refreshed the SK-V11-open native baseline
+from HEAD `3ce75df4`, and S-P1 Profile converged under
+`restart/skinny/tranches/sk-v11/research/p1/hardening/HARDENING-S-P1-CONVERGED.md`.
+This file remains the goalset and contract surface for S-P2/S-P3. It is not
+source implementation authority. `SPEC.md` and `DISPATCH-PROMPT.md` are not
+created by this pass; S-P3 owns them after SK-V11 S-P2 converges.
 
 ## Authority
 

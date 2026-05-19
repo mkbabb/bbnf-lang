@@ -2,11 +2,13 @@
 
 Date: 2026-05-19.
 
-Status: G-Alpha is presented and W0 refreshed the SK-V11-open native baseline
-from HEAD `3ce75df4`. SK-V11 is ready for S-P1 Profile dispatch under
-`restart/prompts/skinny/PASS-1-PROFILE.md`. This handoff does not authorize
+Status: G-Alpha is presented, W0 refreshed the SK-V11-open native baseline
+from HEAD `3ce75df4`, and S-P1 Profile converged under
+`restart/skinny/tranches/sk-v11/research/p1/hardening/HARDENING-S-P1-CONVERGED.md`.
+SK-V11 is ready for S-P2 Research dispatch under
+`restart/prompts/skinny/PASS-2-RESEARCH.md`. This handoff does not authorize
 source work and does not create `SPEC.md` or `DISPATCH-PROMPT.md`; S-P3 owns
-those files after S-P1 and S-P2 converge.
+those files after S-P2 converges.
 
 ## 1. Read First
 
@@ -84,20 +86,20 @@ that S-P1/S-P2 identify on the JSON direct residual surface.
 
 ## 4. Next Move
 
-Next move: ready-for-S-P1.
+Next move: ready-for-S-P2.
 
-S-P1 must run full orchestration per `PASS-1-PROFILE.md`:
+S-P1 converged with two consecutive six-of-six ACCEPT cycles. S-P2 must run
+full orchestration per `PASS-2-RESEARCH.md`:
 
-- P1-A samply mode I over all 17 JSON corpora;
-- P1-B samply mode II over direct and typed rows, with direct residual rows
-  isolated;
-- P1-C masking probes and structural-scan-only paths, diagnostic only;
-- P1-D xctrace CPU Counters plus Time Profiler PMU and cycles-per-byte;
-- P1-E hot-leaf attribution for every residual direct row and guard row;
-- P1-F `RESULTS.md` extraction and delta from SK-V10 close;
+- P2-A strict SOTA comparator teardown;
+- P2-B dav1d/FFmpeg scalar-oracle and checkasm process;
+- P2-C aarch64 instruction inventory and REDRESS-blocked routes;
+- P2-D substrate/tape audit preserving Lock 1 and refusing W3;
+- P2-E parse-that/bbnf-simd primitive gaps tied to direct residual hot leaves;
+- P2-F grammar-neutral abstraction for CSS L4 / Sheets / BBNF-self;
 - CHALLENGE CH1-CH6, folded until convergence per ORCHESTRATOR Section 3Z.
 
-S-P1 writes under `restart/skinny/tranches/sk-v11/research/p1/` and edits no
+S-P2 writes under `restart/skinny/tranches/sk-v11/research/p2/` and edits no
 source.
 
 ## 5. S-P2/S-P3 Expectations
@@ -116,8 +118,7 @@ existing bench invocations. Durable micro-proof harness or production changes
 land only in the S-P3-authored wave packet.
 
 S-P3 then writes the SK-V11 `SPEC.md` and `DISPATCH-PROMPT.md`. It must not
-derive a wave plan directly from this Alpha-F draft without S-P1 and S-P2
-convergence.
+derive a wave plan directly from this Alpha-F draft without S-P2 convergence.
 
 ## 6. Refusal Conditions
 
@@ -144,4 +145,4 @@ Refuse any dispatch that:
 SK-V11 is born from the SK-V10 measured close, not from an untested W3 repair.
 The close target is direct plane `GO` or measured direct fixpoint plus one
 admitted non-JSON grammar intervention. The implementation packet does not
-exist yet; the immediate work is S-P1 Profile with full orchestration.
+exist yet; the immediate work is S-P2 Research with full orchestration.

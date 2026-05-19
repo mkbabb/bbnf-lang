@@ -9,7 +9,7 @@ dispatch SK-V10 implementation waves.
 ## Source Boundary
 
 - Binding measured table: `skinny/RESULTS.md:3-44`.
-- Binding manifest table: `skinny/RESULTS.md:46-86`.
+- Binding manifest table: `skinny/RESULTS.md:46-89`.
 - W3 falsification authority: `skinny/REDRESS.md` entries 96, 97, and 98.
 - Current contract posture: `restart/skinny/tranches/sk-v9/HANDOFF.md` and
   `restart/skinny/tranches/sk-v9/research/alpha/alpha-G-dispatch-sk-v10.md`.

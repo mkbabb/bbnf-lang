@@ -3,11 +3,17 @@
 Date: 2026-05-19.
 
 Role: PASS-ALPHA alpha-B competitor delta extraction. The only current
-SOTA-bearing comparison plane is `real_typed_struct` typed direct. Parse-only
-and direct digest rows remain guard or planning evidence unless a later SK-V10
-gate changes their validation/output plane.
+SOTA-bearing comparison plane is `real_typed_struct` typed direct under the
+current deferred/view-boundary validation path. Parse-only and direct digest
+rows remain guard or planning evidence unless a later SK-V10 gate changes their
+validation/output plane.
 
-## Typed Strict-Vs-Strict Deltas
+## Typed Comparator Deltas Under The Deferred Gate
+
+The sonic-rs anchor is typed strict. The bbnf rows remain
+`Strictness=deferred` and `parse_utf8=view-boundary`; this table is not a
+strict-admission claim until `gate-json` consumes a measured-row strictness and
+validation-path change.
 
 | Corpus | bbnf Track 1 | sonic-rs strict | serde_json | Delta vs sonic | Delta vs serde | Status |
 |---|---:|---:|---:|---:|---:|---|

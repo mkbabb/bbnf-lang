@@ -54,6 +54,8 @@ Alpha CHALLENGE should reject this contract if it finds:
 - any parse-only row scored as SOTA admission under `S / NO-GO`;
 - any kernel/substrate candidate scoped without same-host micro proof;
 - any Canada typed shortcut;
+- any generic-crate, codegen, or runtime-outside-json edit that leaks JSON
+  policy or lacks a named CSS L4 / Sheets / BBNF-self proof;
 - any typed candidate lacking generated/serde/sonic parity and same-run typed
   comparator evidence;
 - any sidecar freshness claim that becomes behavior movement by implication.

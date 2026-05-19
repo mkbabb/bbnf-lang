@@ -31,7 +31,7 @@ Alpha closes only when:
 3. The contract records W3 as retired by REDRESS 98.
 4. No parse-only row is used as a SOTA admission while it remains `S / NO-GO`.
 5. The candidate shortlist names direct-plane work as the primary JSON frontier,
-   typed-plane generalization as the cheap product-plane extension, and
+   typed-plane generalization as a bounded product-plane extension, and
    existing-substrate W4 kernels only behind a micro-prove-first gate.
 6. The orchestrator records `G-ALPHA-SK-V10` closed before S-P1/S-P2/S-P3
    dispatch.
@@ -65,9 +65,11 @@ The SK-V8 -> SK-V9 substrate-ceiling thesis was tested and falsified. REDRESS
 every W3 must-improve row and every W10b maintain row. REDRESS 98 retires
 `G-W3-UNION-SUBSTRATE`.
 
-The typed product plane is validated. W1 measured real typed rows, and the
-largest live strict-vs-strict typed win is `citm_catalog` at +59.1% versus
-sonic-rs typed strict.
+The typed product plane is validated under the current deferred/view-boundary
+typed-product gate. W1 measured real typed rows, and the largest live same-run
+typed comparator delta is `citm_catalog` at +59.1% versus sonic-rs typed
+strict. That is not a strict-admission claim for bbnf until `gate-json`
+consumes a measured-row strictness and validation-path change.
 
 The parse-plane SOTA target is retired for SK-V10. `parse_only` stays a
 diagnostic substrate-guard family while rows remain `S / NO-GO`; it is not a
@@ -105,6 +107,10 @@ remaining JSON pool with a plausible product boundary: 14 direct rows are still
 | Existing-substrate unicode/string kernel pair | behavior/kernel | may help direct/typed unicode-heavy rows only after micro-prove-first |
 | Comparator and telemetry refresh | gate-only | no behavior movement without same-wave row gate |
 
+Every candidate carries its initial LOC budget, hard cap, same-wave consumer,
+and failure disposition in Alpha-E. S-P3 may tighten those budgets and gates; it
+may not loosen them without CHALLENGE.
+
 ## Section 5 - Pre-Blocked Routes
 
 - W3 union/event substrate under any renamed framing.
@@ -113,6 +119,9 @@ remaining JSON pool with a plausible product boundary: 14 direct rows are still
 - Apache/CITM-style admission by analogy for any other row.
 - Parse-only SOTA close under borrowed-view/deferred-strictness rows.
 - Direct digest relabeled as typed product proof.
+- JSON policy leaks in generic crates, codegen, or runtime outside JSON; any
+  such edit requires a grammar-neutral proof and named CSS L4 / Sheets /
+  BBNF-self non-JSON evidence.
 - PMU, cycles, structural-scan, or masking probes as producers.
 - Any substrate/kernel wave entering S-P3 without an isolated same-host
   micro-benchmark proving the primitive gain first.

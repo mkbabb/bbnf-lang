@@ -15,7 +15,7 @@ admissions, rejects, retirements, and pre-blocks for SK-V10.
 | 97 | W3 allocation-free streaming cursor | REJECT | second faithful measurement against same thesis |
 | 98 | W3 gate retirement | RETIRE | hard pre-block for SK-V10 |
 
-Citation: `skinny/REDRESS.md:2731-2940`.
+Citation: `skinny/REDRESS.md:2731-2950`.
 
 ## Admissions
 

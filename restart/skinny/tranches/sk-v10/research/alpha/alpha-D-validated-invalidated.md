@@ -11,7 +11,7 @@ forward into SK-V10 and the hypotheses that must be retired.
 |---|---|---|
 | Typed measured-row admission | REDRESS 94; Apache/CITM rows in `skinny/RESULTS.md:10`, `:15` | Product-plane row-table work is the primary SOTA path. |
 | Retained grammar proof | REDRESS 95; W2 proof docs | The proof remains a correctness constraint, but it is not a row-moving gate. |
-| Strict row-table provenance | W1 required same-run run id, comparator plane, Track 1/Track 2/oracle parity | Future typed rows need the same gate, not source-only evidence. |
+| Typed row-table provenance | W1 required same-run run id, comparator plane, Track 1/Track 2/oracle parity | Future typed rows need the same gate, not source-only evidence; bbnf strictness remains deferred until the gate changes. |
 | REDRESS honesty | W3 V1/V2 patches were saved and reverted after measurement | Failed waves can close as measured rejects without corrupting the next tranche. |
 
 ## Invalidated
@@ -53,7 +53,7 @@ plane before S-P3 wave scoping.
   parity failures.
 - Direct output/control-path contract, still separate from typed product proof.
 - Same-run C++ sidecar manifest, gate-only unless downstream S-P3 creates a
-  measured strict comparator gate.
+  measured comparator gate.
 
 ## Alpha Verdict
 

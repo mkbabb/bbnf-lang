@@ -5,7 +5,7 @@ Date: 2026-05-19.
 Status: Pass Alpha draft created after SK-V9 REDRESS 98. SK-V10 has not yet
 entered S-P1/S-P2/S-P3. W3 union substrate is retired as falsified. The primary
 JSON frontier is `direct_to_struct`; typed product-plane generalization is the
-cheap second route; parse-only SOTA is retired from the close target.
+bounded second route; parse-only SOTA is retired from the close target.
 
 ## 1. Read First
 
@@ -71,6 +71,8 @@ Refuse dispatch if a requested wave:
 - treats parse-only `S / NO-GO` rows as SOTA admissions;
 - scopes a substrate/kernel wave without same-host micro-proof;
 - admits Canada typed rows without full fixture proof;
+- edits generic crates, codegen, or runtime outside JSON with JSON-only policy
+  or without a named CSS L4 / Sheets / BBNF-self proof;
 - edits source before S-P3 names owner paths, gates, and revert protocol;
 - weakens `gate-json` to admit missing comparator/run-id/provenance evidence.
 

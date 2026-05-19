@@ -8,6 +8,69 @@ use std::env;
 use std::path::PathBuf;
 use std::time::Instant;
 
+#[repr(C)]
+#[derive(Default, Clone, Copy)]
+struct RusageInfoV5 {
+    ri_uuid: [u8; 16],
+    ri_user_time: u64,
+    ri_system_time: u64,
+    ri_pkg_idle_wkups: u64,
+    ri_interrupt_wkups: u64,
+    ri_pageins: u64,
+    ri_wired_size: u64,
+    ri_resident_size: u64,
+    ri_phys_footprint: u64,
+    ri_proc_start_abstime: u64,
+    ri_proc_exit_abstime: u64,
+    ri_child_user_time: u64,
+    ri_child_system_time: u64,
+    ri_child_pkg_idle_wkups: u64,
+    ri_child_interrupt_wkups: u64,
+    ri_child_pageins: u64,
+    ri_child_elapsed_abstime: u64,
+    ri_diskio_bytesread: u64,
+    ri_diskio_byteswritten: u64,
+    ri_cpu_time_qos_default: u64,
+    ri_cpu_time_qos_maintenance: u64,
+    ri_cpu_time_qos_background: u64,
+    ri_cpu_time_qos_utility: u64,
+    ri_cpu_time_qos_legacy: u64,
+    ri_cpu_time_qos_user_initiated: u64,
+    ri_cpu_time_qos_user_interactive: u64,
+    ri_billed_system_time: u64,
+    ri_serviced_system_time: u64,
+    ri_logical_writes: u64,
+    ri_lifetime_max_phys_footprint: u64,
+    ri_instructions: u64,
+    ri_cycles: u64,
+    ri_billed_energy: u64,
+    ri_serviced_energy: u64,
+    ri_interval_max_phys_footprint: u64,
+    ri_runnable_time: u64,
+    ri_flags: u64,
+}
+
+const RUSAGE_INFO_V5: i32 = 5;
+
+extern "C" {
+    fn proc_pid_rusage(pid: libc::pid_t, flavor: i32, buffer: *mut u8) -> i32;
+}
+
+fn read_rusage_v5() -> RusageInfoV5 {
+    let mut ri = RusageInfoV5::default();
+    let rc = unsafe {
+        proc_pid_rusage(
+            libc::getpid(),
+            RUSAGE_INFO_V5,
+            (&mut ri) as *mut RusageInfoV5 as *mut u8,
+        )
+    };
+    if rc != 0 {
+        panic!("proc_pid_rusage failed rc={rc}");
+    }
+    ri
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     let iters: usize = args.get(1).and_then(|s| s.parse().ok()).unwrap_or(10_000);
@@ -34,6 +97,7 @@ fn main() {
     }
 
     eprintln!("profile-direct: starting timed loop");
+    let ri_before = read_rusage_v5();
     let start = Instant::now();
     let mut checksum = 0_u64;
     for _ in 0..iters {
@@ -45,12 +109,41 @@ fn main() {
         );
     }
     let elapsed = start.elapsed();
+    let ri_after = read_rusage_v5();
     let total_bytes = (bytes.len() as u128) * (iters as u128);
     let mbps = (total_bytes as f64 * 8.0) / (elapsed.as_secs_f64() * 1_000_000.0);
+    let cycles = ri_after.ri_cycles - ri_before.ri_cycles;
+    let instructions = ri_after.ri_instructions - ri_before.ri_instructions;
+    let user_time_ns = ri_after.ri_user_time - ri_before.ri_user_time;
+    let system_time_ns = ri_after.ri_system_time - ri_before.ri_system_time;
+    let ns_per_byte = elapsed.as_nanos() as f64 / total_bytes as f64;
+    let cycles_per_byte = cycles as f64 / total_bytes as f64;
+    let cpi = if instructions == 0 {
+        0.0
+    } else {
+        cycles as f64 / instructions as f64
+    };
     eprintln!(
         "profile-direct: {iters} iters in {:.2}s -> {:.0} Mbps (digest cksum {checksum})",
         elapsed.as_secs_f64(),
         mbps
+    );
+    println!(
+        "PROBE_RESULT corpus={} corpus_bytes={} iters={} mode={} elapsed_s={:.6} ns_per_byte={:.6} mbps={:.3} cycles={} instructions={} cycles_per_byte={:.6} cpi={:.6} user_ns={} system_ns={} checksum={}",
+        corpus,
+        bytes.len(),
+        iters,
+        mode,
+        elapsed.as_secs_f64(),
+        ns_per_byte,
+        mbps,
+        cycles,
+        instructions,
+        cycles_per_byte,
+        cpi,
+        user_time_ns,
+        system_time_ns,
+        checksum
     );
 }
 

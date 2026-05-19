@@ -191,17 +191,20 @@ Direct residual synthesis:
   and movemask dominated on both tracks. Track 2 swaps generated `tiny_string`
   for `hand_tiny`, but the primitive class stays the same.
 - Numeric direct rows (`canada`, `mesh`, `numbers`, `marine_ik` as a guard)
-  are digit-scan plus array-walk rows. `numbers` is W0-clamped: Track 1 clears
-  the seed floor in the W0 table, but Track 2 remains short and the row is
-  still `N-direct / NO-GO`.
+  are `number_digit_span` plus `sequence_element_dispatch` /
+  `container_dispatch` rows. `numbers` is W0-clamped: Track 1 clears the seed
+  floor in the W0 table, but Track 2 remains short and the row is still
+  `N-direct / NO-GO`.
 - Unicode rows are a separate closure surface. `unicode_mixed`,
   `unicode_escapes`, and `y_string_unicode` burn time in `full_string`,
-  `unescape`, `validate_escape`, and hex decode rather than in object/tape
-  traversal. Their PMU costs are the highest direct rows here:
+  `unescape`, `validate_escape`, and hex decode rather than in
+  `container_dispatch` / tape traversal. Their PMU costs are the highest
+  direct rows here:
   `unicode_mixed` is 9.04/9.22 c/B and `y_string_unicode` is 9.91/11.49 c/B.
 - `instruments` is W0-clamped even though both W0 throughput numbers clear the
-  seed floor. The hot leaves are ordinary string/whitespace/object leaves; the
-  row needs behavior-wave provenance, not a retrospective W0 admission.
+  seed floor. The hot leaves are ordinary `bounded_plain_string_scan`,
+  `ascii_whitespace_skip`, and `container_dispatch` leaves; the row needs
+  behavior-wave provenance, not a retrospective W0 admission.
 
 ### Direct guard rows
 
@@ -221,8 +224,8 @@ Guard synthesis:
   maintain row, not a direct closure row.
 - `apache_builds` exposes hash/arithmetic and tiny-string cost but is already
   admitted. Treat it as a regression sentinel for digest-side changes.
-- `marine_ik` is the numeric/array guard. It shares the numeric leaf family
-  with `canada`, `mesh`, and `numbers`.
+- `marine_ik` is the numeric/sequence-dispatch guard. It shares the numeric
+  leaf family with `canada`, `mesh`, and `numbers`.
 - `unicode_basic` is the unicode guard that does not look like
   `unicode_mixed` or `unicode_escapes`: it is mostly tiny/plain string and
   bit-position work, not escape materialization.
@@ -303,8 +306,9 @@ The profile adds attribution:
   or string policy; it is digit scan plus sequence/container dispatch and
   copy, matching the numeric direct family.
 - `instruments` is W0-clamped even though W0 throughput clears both seed
-  floors. Its hot leaves are ordinary string/whitespace/object leaves. It
-  cannot be admitted from W0 capture alone.
+  floors. Its hot leaves are ordinary `bounded_plain_string_scan`,
+  `ascii_whitespace_skip`, and `container_dispatch` leaves. It cannot be
+  admitted from W0 capture alone.
 - No observation here reopens the SK-V9 W3 union/event/class-column/sidecar
   substrate family. REDRESS 50, 51, 53, 96, 97, 98, and 102 keep sidecar,
   cursor, class-column, streaming-cursor, retired-W3, and parse-only-firewall

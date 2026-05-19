@@ -555,7 +555,9 @@ routed the precursor: define the retained class/event grammar including
 numbers/literals and string quote ownership, prove the retained
 `ValueRef` cursor contract over it. W2 lands that proof — a
 *compile-time* `EventGrammar` trait, an `AnyGrammar` default, a
-`ValueRef<'tape, 'src, G>` cursor, and JSON + Sheets witnesses behind
+`ValueRef<'tape, 'src, K, G>` cursor where `K` remains the existing
+node-kind marker and `G` is the retained event-grammar marker, plus
+JSON + Sheets witnesses behind
 `#[cfg(any(test, feature = "proof"))]`. Proof-only depth: **zero
 `RESULTS.md` row movement**, zero generated output, zero production
 consumer. The proof exists to unblock the W3 union reopen.
@@ -568,7 +570,7 @@ Owner paths (P2-B §1.2 / §6.1):
 | `skinny/crates/runtime/src/tape/event_grammar_tests.rs` (NEW, in `tests/`) | The `_proof_compiles` triple + the negative `ValueRef<'static, 'static, …>` compile-fail test. |
 | `skinny/crates/runtime/src/grammars/json/event_grammar_witness.rs` (NEW) | JSON `impl EventGrammar`. |
 | `skinny/crates/runtime/src/grammars/sheets_witness/event_grammar_witness.rs` + `mod.rs` (NEW) | Sheets `impl EventGrammar` — the Lock 14 non-JSON witness. |
-| `skinny/crates/runtime/src/tape/mod.rs` (TOUCHED, ~20 lines) | `ValueRef` `K = AnyKind` → `G: EventGrammar = AnyGrammar`. |
+| `skinny/crates/runtime/src/tape/mod.rs` (TOUCHED, ~25 lines) | Preserve `ValueRef` `K = AnyKind` as the node-kind marker and add `G: EventGrammar = AnyGrammar` as a fourth zero-sized retained-grammar marker. |
 | `skinny/crates/runtime/src/lib.rs` (TOUCHED, ~5 lines) | Re-exports behind one `#[cfg(any(test, feature = "proof"))]` at the parent `pub mod` site. |
 | `skinny/crates/runtime/Cargo.toml` (TOUCHED, 1 line) | Declare the `proof` feature named by the cfg gate; no dependency or default-feature change. |
 
@@ -587,11 +589,12 @@ Exit gate `G-W2-RETAINED-PROOF` passes only if (P3-C §3.1):
    `cargo check -p runtime --features proof` is green.
 2. The three `const _: fn() = _proof_compiles::<G>` witness lines for
    `JsonEventGrammar`, `SheetsEventGrammar`, and `AnyGrammar` all
-   compile; the negative `ValueRef<'static, 'static, JsonEventGrammar>`
-   test is rejected by the borrow checker.
+   compile; the negative
+   `ValueRef<'static, 'static, AnyKind, JsonEventGrammar>` test is rejected
+   by the borrow checker.
 3. The default build `cargo build -p runtime` is behavior-identical to the
    pre-W2 build — witness modules are fully behind `cfg`, and the only default
-   surface change is the zero-sized `ValueRef` marker bound/default rename.
+   surface change is the added zero-sized `ValueRef` grammar marker/default.
 4. The Lock 14 `rg` audits (P2-B §3.3) report every `admits_fact` /
    `admits_class` match inside `event_grammar.rs`, a witness file, or
    the proof test — never in generic substrate source.
@@ -605,13 +608,13 @@ Maintain envelope: structural, not Mbps — no `RESULTS.md` row moves;
 no edit to `generated.rs`/`scan.rs`/`parser.rs`/`value.rs`/templates;
 the witness files excluded from the release library (P3-C §3.2).
 
-Revert protocol (P2-B §6.1): five slices (S1 trait, S2 JSON witness,
-S3 Sheets witness, S4 `ValueRef` parameterisation, S5 cfg gating +
-proof tests), each its own revert unit. If S4 leaks to call sites,
-back out and reattempt with a `pub type` alias. A failed proof (any
-`const _` line refuses to compile) reverts the whole wave — there is
-no partial proof. A failed W2 blocks W3: the W3 class-column design
-would otherwise re-open REDRESS 92.
+Revert protocol (P2-B §6.1, amended by W2 CHALLENGE): five slices (S1 trait,
+S2 JSON witness, S3 Sheets witness, S4 `ValueRef` fourth-marker
+parameterisation, S5 cfg gating + proof tests), each its own revert unit. If
+S4 leaks to generated view call sites, back out and reattempt with a wrapper
+alias. A failed proof (any `const _` line refuses to compile) reverts the whole
+wave — there is no partial proof. A failed W2 blocks W3: the W3 class-column
+design would otherwise re-open REDRESS 92.
 
 Pre-blocked routes (P3-E §2.3 / §3.2, verbatim):
 

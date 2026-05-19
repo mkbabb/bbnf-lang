@@ -8,12 +8,14 @@ Inputs: `restart/skinny/tranches/sk-v9/SPEC.md` Section 5;
 Intervention: land the proof-only retained class/event grammar contract that
 REDRESS 92 routed before W3 can reopen structural-heavy parse changes. W2 adds
 `EventGrammar`, an `AnyGrammar` default, JSON and Sheets compile-only
-witnesses, and proof tests for `ValueRef<'tape, 'src, G>`.
+witnesses, and proof tests for `ValueRef<'tape, 'src, K, G>`.
 
 ## Owner Paths
 
 The plan folds one owner-table correction into `SPEC.md`: Section 5 names
 `#[cfg(any(test, feature = "proof"))]`, but `runtime` has no `proof` feature.
+The first CHALLENGE pass additionally rejected the direct `K -> G`
+replacement because current generated JSON views use `K` as node-kind identity.
 The redress owner list is therefore:
 
 - `skinny/crates/runtime/src/tape/event_grammar.rs` (new):
@@ -25,9 +27,10 @@ The redress owner list is therefore:
 - `skinny/crates/runtime/src/grammars/sheets_witness/mod.rs` and
   `skinny/crates/runtime/src/grammars/sheets_witness/event_grammar_witness.rs`
   (new): non-JSON Lock 14 witness.
-- `skinny/crates/runtime/src/tape/mod.rs`: add the event-grammar module and
-  change `ValueRef<'doc, 'input, K = AnyKind>` to
-  `ValueRef<'doc, 'input, G: EventGrammar = AnyGrammar>`.
+- `skinny/crates/runtime/src/tape/mod.rs`: add the event-grammar module,
+  preserve `ValueRef<'doc, 'input, K = AnyKind>` as the existing node-kind
+  marker, and add `G: EventGrammar = AnyGrammar` as a fourth zero-sized
+  retained event-grammar marker.
 - `skinny/crates/runtime/src/lib.rs`: add parent `cfg(any(test, feature =
   "proof"))` module declarations for the two witnesses.
 - `skinny/crates/runtime/Cargo.toml`: declare `proof = []`; no dependency,
@@ -45,8 +48,8 @@ benchmark crate, fixture, or parser/scanner source path is owned by W2.
   succeeds, including the three compile witnesses:
   `JsonEventGrammar`, `SheetsEventGrammar`, and `AnyGrammar`.
 - The negative proof fixture attempts to construct
-  `ValueRef<'static, 'static, JsonEventGrammar>` from a local tape and is
-  rejected by the borrow checker.
+  `ValueRef<'static, 'static, AnyKind, JsonEventGrammar>` from a local tape
+  and is rejected by the borrow checker.
 - `cargo build -p runtime` succeeds without `proof`; witness modules are cfg
   excluded from the default library.
 - `git diff --exit-code HEAD -- skinny/RESULTS.md` stays clean.
@@ -67,8 +70,8 @@ The mandatory W2 CHALLENGE must accept or reject:
 - The no-dependency negative proof harness, which invokes a temporary cargo
   check against `runtime` with `features = ["proof"]` and expects failure.
 - The "behavior-identical default build" wording: byte-identical output is not
-  credible after changing a public generic bound, but no default witness module
-  or production parser path is linked.
+  credible after changing public generic parameters, but no default witness
+  module or production parser path is linked.
 
 ## Revert Protocol
 
@@ -79,9 +82,9 @@ Five slices map to the P2-B plan:
 - S2 JSON witness: revert only the JSON witness and its parent cfg declaration.
 - S3 Sheets witness: revert only the `sheets_witness` directory and its parent
   cfg declaration.
-- S4 `ValueRef` parameterization: revert the generic bound/default rename in
-  `tape/mod.rs`. If call-site edits become necessary, stop redress and revise
-  to an alias design.
+- S4 `ValueRef` parameterization: revert the fourth marker/default addition in
+  `tape/mod.rs`. If generated-view call-site edits become necessary, stop
+  redress and revise to a wrapper alias design.
 - S5 cfg/tests: revert `event_grammar_tests.rs` and `proof = []`.
 
 A failed proof reverts the whole wave; W2 has no partial admission and blocks

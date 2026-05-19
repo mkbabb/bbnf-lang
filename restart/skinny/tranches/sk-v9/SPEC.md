@@ -677,7 +677,7 @@ Owner paths (P2-A §5 eight slices + the P2-D §5 chain):
 | `codegen/src/json_templates/{generated,parser,view,value}.rs` | A.5 | Class-column emission + structural-walk lowering — the novel-mechanism slice. |
 | `bbnf-simd/src/lib.rs` + `bbnf-simd/src/aarch64/` | A.6 | Surface the structural index by move-consume; the P2-D §5 structural-bitmap chain (TBL classify, quote/escape/backslash mask, VEXT carry). |
 | `runtime/src/grammars/json/scan.rs` | A.7 | Regen: stop discarding the index; move-consume API. |
-| `bbnf-simd/tests/checkasm_scan_structurals.rs` (NEW) + `bbnf-bench/src/parity.rs` | A.8 | `scan_structurals` end-to-end checkasm + corpus-parity gate; class-column parity + structural-index move-consumed asserts. |
+| `bbnf-simd/tests/checkasm_scan_structurals.rs` (NEW) + `bbnf-bench/src/{parity,track2/json}.rs` | A.8 | `scan_structurals` end-to-end checkasm + corpus-parity gate; class-column parity + structural-index move-consumed asserts. `track2/json.rs` is owned only to write benchmark-oracle class bytes after `at_cursor` switches to class reads. |
 
 Entry gate: W2 closed with `G-W2-RETAINED-PROOF` PASS — the proof
 unblocks the union reopen; the REDRESS 92 gating clause is discharged.
@@ -716,9 +716,10 @@ sonic-strict floors derived live from `skinny/RESULTS.md`):
    outside the deletion-commit diff.
 4. Track 2 / `path!` / direct-to-struct / SinkOnly rows show no delta
    beyond noise (no cross-substrate leak — P2-A §4.4 #4).
-5. The class column carries only structural ordinals the SIMD producer
-   can fill; no `Number`/`Literal` ordinal leaks into the structural
-   alphabet (P2-A §4.4 #6).
+5. The retained tape class column carries parser-event ordinals, including
+   scalar anchors. The SIMD structural alphabet remains structural-only; no
+   `Number`/`Literal` ordinal leaks into the structural index producer
+   (P2-A §4.4 #6).
 6. checkasm parity is green for the `scan_structurals` chain (A.8).
 7. Section 2.1 generality scan passes — no JSON-named symbol enters a
    generic crate (P2-A §4.4 #5); the CSS L4 / Sheets / BBNF-self union

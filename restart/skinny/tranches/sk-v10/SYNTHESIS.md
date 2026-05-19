@@ -11,9 +11,10 @@ direct contract is closed under REDRESS 100. W2 direct row-table reclamation is
 closed under REDRESS 101. W3 parse-only firewall is closed under REDRESS 102.
 W4 `instruments` typed product admission is rejected under REDRESS 103. W5
 root-type typed generalization proof is closed under REDRESS 104. W6
-`github_events` root typed row admission is closed under REDRESS 105. SK-V10
-implementation is dispatched by `SPEC.md` and `DISPATCH-PROMPT.md`; W7 is the
-next live wave.
+`github_events` root typed row admission is closed under REDRESS 105. W7
+full-string primitive micro-proof is rejected under REDRESS 106. SK-V10
+implementation is dispatched by `SPEC.md` and `DISPATCH-PROMPT.md`; W8 is the
+next live wave only for an escape/segment primitive independent of W7.
 
 ## Authority
 
@@ -33,7 +34,7 @@ next live wave.
 - `restart/skinny/tranches/sk-v10/research/p2/p2g-candidate-ledger.md`
 - `restart/skinny/tranches/sk-v10/research/p2/hardening/HARDENING-S-P2-V1-CONSOLIDATED.md`
 - `skinny/RESULTS.md`
-- `skinny/REDRESS.md` entries 94-105
+- `skinny/REDRESS.md` entries 94-106
 
 ## Section 0 - Alpha Close Condition
 
@@ -59,7 +60,7 @@ frozen `SK-V9-open` run id.
 |---|---:|---|
 | `parse_only` | 17 | all `S / NO-GO`; planning evidence only |
 | `direct_to_struct` | 17 | 5 `A / GO` digest rows, 12 `N-direct / NO-GO`; primary SK-V10 JSON frontier |
-| `real_typed_struct` | 6 | all `A / GO`; primary product-plane SOTA surface |
+| `real_typed_struct` | 7 | all `A / GO`; primary product-plane SOTA surface |
 
 Typed product rows:
 
@@ -71,6 +72,7 @@ Typed product rows:
 | `update_center` | 11847 | 12501 | -5.2%, still GO under 1.10 ns slack |
 | `mesh` | 10032 | 9270 | +8.2% |
 | `marine_ik` | 10728 | 8105 | +32.4% |
+| `github_events` | 12827 | 12695 | +1.0% |
 
 ## Section 2 - Corrected Diagnosis
 
@@ -184,6 +186,13 @@ both clear the W6 floor of 11541 Mbps under the same-run sonic-rs typed
 comparator at 12695 Mbps. The row is strict measured-row evidence consumed by
 `gate-json` under REDRESS 105.
 
+W7 rejected the full-string primitive micro-proof. Scalar/reference parity and
+strict checkasm parity passed, but the caller-level microbench measured
+aggregate `0.774x` versus the required `1.08x` on `unicode_mixed`,
+`unicode_escapes`, and `unicode_basic`. The rejected proof patch is saved at
+`/tmp/skv10-waveW7-rejected.patch`; no production caller or `RESULTS.md` row
+changed.
+
 ## Section 7 - Micro-Prove-First Gate
 
 No substrate or kernel intervention reaches S-P3 wave-scoping until it has a
@@ -197,7 +206,8 @@ win before integration. The micro proof must name:
 5. failure threshold that rejects the candidate before source redress.
 
 Profile-first remains necessary for target selection. It is no longer
-sufficient for dispatch.
+sufficient for dispatch. W7 is the live example: primitive parity was green,
+but caller-level throughput failed, so the route is not available for W9.
 
 ## Section 8 - Omega And Totality Routing
 
@@ -213,5 +223,5 @@ CSS L4 / Sheets / BBNF-self generalization is the unexercised thesis risk.
 
 This file does not independently authorize source work. `G-ALPHA-SK-V10`, S-P1
 Profile, S-P2 Research, S-P3 Synthesis-Plan, W0, W1, W2, W3, W5, and W6 are
-closed; W4 is rejected with measurement. Wave implementation proceeds only
-through the current `SPEC.md` and `DISPATCH-PROMPT.md` entry gates.
+closed; W4 and W7 are rejected with measurement. Wave implementation proceeds
+only through the current `SPEC.md` and `DISPATCH-PROMPT.md` entry gates.

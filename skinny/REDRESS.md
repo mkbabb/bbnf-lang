@@ -3146,3 +3146,25 @@ perturbation.
   and the row-level typed gate is consumed.
 - W7 is now the next dispatchable wave. W7 remains proof-only unless
   CHALLENGE accepts exactly one string primitive micro-proof plan.
+
+## SK-V10 Wave 7 Full String Primitive Micro-Proof
+
+- Item 106 rejects W7 under `G-W7-STRING-MICROPROOF`. The selected
+  `C5-full-string-proof` route tested the existing
+  `match_string_at_quote_trusted_utf8` caller against a scalar-only mirror on
+  `unicode_mixed`, `unicode_escapes`, and `unicode_basic`.
+- Scalar/reference parity passed, and strict checkasm parity passed:
+  `string_special_block_matches_scalar_reference` and
+  `BBNF_SIMD_STRICT=1 sk_v3_intrinsic_parity_aarch64` were both green.
+- The caller microbench falsified the proof threshold. Aggregate speedup was
+  `0.774x` versus the required `1.08x`. Per-slice results were:
+  `unicode_mixed` `0.471x`, `unicode_escapes` `1.315x`, and `unicode_basic`
+  `0.604x`.
+- The failure is caller-level, not primitive correctness. The NEON string
+  special block helps `unicode_escapes` in isolation but regresses the mixed
+  and basic representative slices enough that the aggregate proof fails.
+- The rejected proof patch is saved at `/tmp/skv10-waveW7-rejected.patch`.
+  The proof source and microbench manifest were reverted; no production caller,
+  generated parser, SIMD primitive body, or `RESULTS.md` row remains changed.
+- W9 cannot consume W7. W8 may still dispatch only with an escape/segment
+  primitive whose entry gate does not depend on an accepted W7 string proof.

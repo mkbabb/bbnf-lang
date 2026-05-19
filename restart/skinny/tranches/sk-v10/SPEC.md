@@ -179,9 +179,9 @@ block:
 | W4 | 7 | `C2` | `instruments` Typed Product Admission | Rejected - REDRESS 103 | None; typed row did not move | 160-260 source/generated + 40-80 gate LOC | MEDIUM | <=90 min |
 | W5 | 8 | `C3` | Root-Type Typed Generalization Proof | Closed - REDRESS 104 | Proof-only | 220-420 source/generated + 60-120 test/gate LOC | MEDIUM-HIGH | <=90 min |
 | W6 | 9 | `C3` | Root Typed Row Admission | Closed - REDRESS 105 | `github_events` typed row admitted | 160-260 source/generated + 40-80 gate LOC per corpus | MEDIUM-HIGH | <=90 min |
-| W7 | 10 | `C4` or `C5` | String Primitive Micro-Proof | Dispatchable - W3 firewall closed; CHALLENGE before redress | Proof-only | 90-260 proof LOC | MEDIUM-HIGH | <=90 min |
-| W8 | 11 | `C6` or `C7` | Escape/Segment Micro-Proof | Conditional on relevant W7 proof if needed + CHALLENGE | Proof-only | 90-260 proof LOC | HIGH | <=90 min |
-| W9 | 12 | proven `C4`-`C7` | Existing-Call-Site Kernel Production | Conditional on relevant W7 or W8 proof + CHALLENGE | Direct/typed only | 220-420 source/bench/gate LOC | HIGH | <=90 min |
+| W7 | 10 | `C4` or `C5` | String Primitive Micro-Proof | Rejected - REDRESS 106 | Proof-only; no accepted proof | 90-260 proof LOC | MEDIUM-HIGH | <=90 min |
+| W8 | 11 | `C6` or `C7` | Escape/Segment Micro-Proof | Dispatchable only for a primitive independent of W7 + CHALLENGE | Proof-only | 90-260 proof LOC | HIGH | <=90 min |
+| W9 | 12 | proven `C4`-`C7` | Existing-Call-Site Kernel Production | Conditional on accepted W8 or replacement proof + CHALLENGE | Direct/typed only | 220-420 source/bench/gate LOC | HIGH | <=90 min |
 | W10 | 13 | `C1` follow-on | Direct Residual Behavior Tranche | Conditional on W2 + W3 + CHALLENGE | Direct only, <=3 rows | 320 source/gate LOC; 420 only with CHALLENGE | HIGH | <=90 min |
 | Close | 14 | `C11`, docs | SK-V10 Close Accounting | Conditional on all dispatched waves | None | 80-160 docs/gate LOC | LOW | <=90 min |
 
@@ -189,21 +189,25 @@ Manifest rules:
 
 1. W0 is closed under REDRESS 99, W1 is closed under REDRESS 100, W2 is closed
    under REDRESS 101, W3 is closed under REDRESS 102, W4 is rejected under
-   REDRESS 103, W5 is closed under REDRESS 104, and W6 is closed under REDRESS
-   105. W7 is the next dispatchable wave. W8-W10 and Close are conditional
-   until their entry gates pass.
+   REDRESS 103, W5 is closed under REDRESS 104, W6 is closed under REDRESS
+   105, and W7 is rejected under REDRESS 106. W8 is the next dispatchable wave
+   only for a primitive whose entry gate does not depend on an accepted W7
+   proof. W9-W10 and Close are conditional until their entry gates pass.
 2. W1 must exist before W2 or W10 can move direct rows. A direct row gate
    without W1 is a REVISE.
 3. W3 is a firewall, not the retired W3 implementation route.
 4. W4 was the first bounded typed row movement and rejected honestly when the
    independent Track 2/oracle missed the W4 floor. W5 proved root typing only;
    W6 consumed that proof and admitted `github_events/real_typed_struct`.
-5. W7 and W8 are deliberately proof-only micro waves. A production caller
-   lands only in W9.
-6. W9 production wiring does not inherit any W3 entry gate. It consumes exactly
-   one relevant accepted W7 or W8 proof for the exact primitive and caller.
-   `C8` digit/number and `C9` whitespace/class work do not have final SK-V10
-   proof waves and cannot feed W9 without a future SPEC/CHALLENGE amendment.
+5. W7 and W8 are deliberately proof-only micro waves. W7 failed its caller
+   microbench threshold and cannot feed W9. A production caller lands only in
+   W9 after an accepted W8 proof, or after a future SPEC/CHALLENGE amendment
+   supplies a different accepted proof.
+6. W9 production wiring does not inherit any W3 entry gate. Because W7 failed,
+   W9 consumes exactly one relevant accepted W8 proof for the exact primitive
+   and caller, or a future SPEC/CHALLENGE accepted replacement proof. `C8`
+   digit/number and `C9` whitespace/class work do not have final SK-V10 proof
+   waves and cannot feed W9 without a future SPEC/CHALLENGE amendment.
 7. W10 is direct residual work, not a route to REDRESS 73 helper-transfer,
    REDRESS 93 scalar-parent folding, or W3.
 8. `C10` and `C13` are inventory-only on the Apple aarch64 host. `C14` and
@@ -607,10 +611,11 @@ Owner paths:
   unless the same wave owns generator input and regeneration)
 - `restart/skinny/tranches/sk-v10/research/p3/escape-segment-proof/`
 
-Entry gate: W7 is closed if the selected primitive depends on string proof;
-otherwise W3 firewall is closed. CHALLENGE accepts exactly one escape or
-segment primitive family, caller, scalar oracle, representative slices, feature
-gate, and failure threshold.
+Entry gate: an accepted W7 proof exists if the selected primitive depends on
+string proof; W7 rejection does not satisfy that dependency. Otherwise the W3
+firewall is closed. CHALLENGE accepts exactly one escape or segment primitive
+family, caller, scalar oracle, representative slices, feature gate, and failure
+threshold.
 
 Tasks:
 
@@ -644,12 +649,13 @@ from REDRESS 88/89.
 
 ## 12. W9 - Existing-Call-Site Kernel Production
 
-Candidates: only a relevant accepted W7 or W8 `C4`-`C7` primitive; row-gated
-direct/typed movement only if measured.
+Candidates: only a relevant accepted W8 `C6`-`C7` primitive, or a future
+SPEC/CHALLENGE accepted replacement proof for `C4`-`C7`; row-gated direct/typed
+movement only if measured.
 
 Owner paths:
 
-- The exact W7 or W8 primitive owner paths
+- The exact W8 or replacement-proof primitive owner paths
 - The exact existing JSON direct or typed caller named by the proof
 - `skinny/crates/bbnf-bench/src/direct_struct.rs`
 - `skinny/crates/bbnf-bench/src/real_typed_struct.rs`
@@ -658,10 +664,11 @@ Owner paths:
 - `skinny/RESULTS.md`
 - `skinny/REDRESS.md`
 
-Entry gate: the relevant accepted W7 or W8 proof is closed for the exact
-primitive and caller. CHALLENGE accepts production wiring, and the wave names
-exactly one current caller such as `match_string_at_quote_trusted_utf8`,
-`validate_unicode_escape_run`, `decode_unicode_escape`, or `unescape_string`.
+Entry gate: the relevant accepted W8 or replacement proof is closed for the
+exact primitive and caller. CHALLENGE accepts production wiring, and the wave
+names exactly one current caller such as `validate_unicode_escape_run`,
+`decode_unicode_escape`, or `unescape_string`. W7's rejected
+`match_string_at_quote_trusted_utf8` proof cannot feed W9.
 
 Tasks:
 
@@ -687,8 +694,8 @@ Exit gate `G-W9-KERNEL-PRODUCTION`:
 
 Revert protocol: revert primitive wiring, generated caller changes, gates, and
 RESULTS as one slice on any parity failure, W10b maintain miss, missing caller,
-or row-floor miss. The prior W7/W8 proof artifact remains only if it was already
-accepted independently and is behavior-free.
+or row-floor miss. The prior W8 or replacement proof artifact remains only if
+it was already accepted independently and is behavior-free.
 
 Pre-blocked routes: no W3 consumer; no orphan primitive; no PMULL/CTZ default;
 no parse-only SOTA close; no generic JSON policy leak.

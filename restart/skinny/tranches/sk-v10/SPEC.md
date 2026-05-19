@@ -459,6 +459,7 @@ Owner paths:
 - `skinny/crates/bbnf-bench/src/real_typed_struct.rs`
 - `skinny/crates/bbnf-bench/src/generated_real_typed.rs`
 - `skinny/crates/bbnf-bench/benches/json_parity.rs`
+- `skinny/crates/bbnf-bench/src/lock14_baseline.rs`
 - `restart/skinny/tranches/sk-v10/research/p3/root-typed-proof/`
 
 Entry gate: W4 is admitted or rejected and the proof names target roots:

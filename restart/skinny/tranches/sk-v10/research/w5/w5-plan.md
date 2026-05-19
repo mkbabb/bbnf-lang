@@ -33,6 +33,7 @@ This is a root-model and proof wave only. No `RESULTS.md` row moves, and no
 - `skinny/xtask/src/real_typed_schema.rs`
 - `skinny/crates/bbnf-bench/src/real_typed_struct.rs`
 - `skinny/crates/bbnf-bench/src/generated_real_typed.rs`
+- `skinny/crates/bbnf-bench/src/lock14_baseline.rs`
 - `restart/skinny/tranches/sk-v10/research/p3/root-typed-proof/`
 - `skinny/REDRESS.md`
 - SK-V10 close documents for wave status only.
@@ -55,6 +56,9 @@ This is a root-model and proof wave only. No `RESULTS.md` row moves, and no
 - Add `real_typed_struct.rs` tests that parse the synthetic array and map roots
   with generated Track 1, serde_json, and sonic-rs typed sidecars and compare
   checksums.
+- Extend the Lock 14 parent-diff authorizer for exactly the W5 frozen owner
+  paths. Without this, `gate-json` cannot validate the committed W5 proof
+  state even though the frozen-root diff is authorized by SPEC Section 8.
 - Add `research/p3/root-typed-proof/ROOT-TYPED-PROOF.md` with the proof facts.
 
 ## Section 2.1 / Lock 14

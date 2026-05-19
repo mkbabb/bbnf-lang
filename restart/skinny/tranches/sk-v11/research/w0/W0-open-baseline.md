@@ -25,7 +25,7 @@ table.
 
 | Family | SK-V11-open state | S-P1 role |
 |---|---|---|
-| `parse_only` | 17 `S / NO-GO` | diagnostic-only profile coverage |
+| `parse_only` | 16 `S / NO-GO`, 1 `L / NO-GO` | diagnostic-only profile coverage |
 | `direct_to_struct` | 4 `A / GO`, 13 `N-direct / NO-GO` | primary closure surface |
 | `real_typed_struct` | 7 `A / GO` | guard surface |
 
@@ -83,4 +83,6 @@ Typed guard rows:
 
 S-P1 profiles all 17 corpora. It must isolate the 13 direct residual rows,
 the four direct guard rows, and the seven typed guard rows. Parse-only remains
-diagnostic and cannot become a SOTA close target.
+diagnostic and cannot become a SOTA close target. The lone `L / NO-GO` parse
+row is `canada`; this does not change the parse-plane concession because every
+parse-only row is out of the SK-V11 SOTA target.

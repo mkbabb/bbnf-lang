@@ -91,7 +91,7 @@ baseline (`/tmp/skv11-open-criterion-3ce75df`,
 
 | Family | SK-V11-open state | SK-V11 role |
 |---|---|---|
-| `parse_only` | 17 `S / NO-GO` | diagnostic concession; not a SOTA target |
+| `parse_only` | 16 `S / NO-GO`, 1 `L / NO-GO` | diagnostic concession; not a SOTA target |
 | `direct_to_struct` | 4 `A / GO`, 13 `N-direct / NO-GO` | primary JSON closure target |
 | `real_typed_struct` | 7 `A / GO` | product-plane guard and credibility surface |
 

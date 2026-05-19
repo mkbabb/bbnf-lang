@@ -33,7 +33,7 @@ SK-V11-open is the measured authority:
 
 | Family | State | Role in SK-V11 |
 |---|---|---|
-| `parse_only` | 17 `S / NO-GO` | diagnostic concession; no SOTA target |
+| `parse_only` | 16 `S / NO-GO`, 1 `L / NO-GO` | diagnostic concession; no SOTA target |
 | `direct_to_struct` | 4 `A / GO`, 13 `N-direct / NO-GO` | primary JSON closure target |
 | `real_typed_struct` | 7 `A / GO` | guard and product-plane credibility surface |
 

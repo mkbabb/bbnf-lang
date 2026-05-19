@@ -11,7 +11,7 @@ reopen W3 or any union substrate route.
 
 ## Owner Paths
 
-Initial owner paths are exactly SPEC Section 9:
+Initial owner paths were exactly SPEC Section 9:
 
 - `skinny/crates/codegen/src/direct_schema.rs`
 - `skinny/crates/codegen/src/typed_direct.rs`
@@ -24,10 +24,14 @@ Initial owner paths are exactly SPEC Section 9:
 - `skinny/RESULTS.md`
 - `skinny/REDRESS.md`
 
-If CHALLENGE finds that Lock 14 cannot validate the W6 frozen parent diff with
-this list alone, the wave must take a plan-revision commit before redress. No
-source edit may use an owner path outside this list until CHALLENGE accepts the
-revision.
+CHALLENGE accepted one required revision before redress. Add this
+gate-validation owner path:
+
+- `skinny/crates/bbnf-bench/src/lock14_baseline.rs`
+
+The Lock 14 edit may only add an exact SK-V10 W6 allowance for the W6 frozen
+typed owner paths. It may not authorize generic runtime, grammar, parser
+substrate, W3, or non-W6 source paths.
 
 ## Implementation Shape
 
@@ -103,3 +107,10 @@ regression:
 - No root row moves without the W5 proof.
 - No W3, union substrate, parser-owned class column, or parse-only SOTA claim.
 - No generic JSON policy leak into codegen/runtime outside the W5 root model.
+
+## Plan Revision - CHALLENGE W6
+
+Accepted revision: include `skinny/crates/bbnf-bench/src/lock14_baseline.rs`
+as a gate-validation owner path. Redress must add an exact W6 parent-diff
+allowance covering the selected `github_events` typed row source slice and must
+keep all other frozen roots locked.

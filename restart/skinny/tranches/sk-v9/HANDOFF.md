@@ -3,8 +3,10 @@
 Date: 2026-05-19.
 
 Status (2026-05-19, updated): SK-V9's research + planning track is
-**fully converged**, implementation W1 and W2 are admitted, and two W3
-redress candidates are rejected with measurement. The PMU blocker
+**fully converged**, implementation W1 and W2 are admitted, two W3
+redress candidates are rejected with measurement, and W3 V3 CHALLENGE
+has rejected the only remaining mechanically distinct class-lane-only
+route as non-admissible under the current gate. The PMU blocker
 that stalled S-P1 V2 was resolved
 — `xcode-select` was switched to the full Xcode toolchain, the Xcode
 licence accepted, and `xctrace` (CPU Counters + Time Profiler) now
@@ -36,11 +38,14 @@ removed the full structural-position vector and used an allocation-free
 streaming cursor over the aarch64 scanner, but it also missed every W3
 must-improve row and every W10b maintain floor. REDRESS 97 records that reject,
 and the rejected patch is saved at `/tmp/skv9-waveW3-v2-rejected.patch`.
+W3 V3 researched the remaining emit-site class-lane-only route; CHALLENGE
+V4 rejected it for source redress because it cannot satisfy the current
+parse-only producer gate.
 
 The implementation track is blocked at W3. W4a..W4d remain conditional on a
-closed W3 union substrate, so the next live work is a revised W3
-research/plan/CHALLENGE/redress cycle with a materially different integration
-surface than both rejected parse-loop scanner/cursor shapes.
+closed W3 union substrate. The next live action is an orchestrator/user
+decision: amend or split W3, resequence SK-V9 around another shortlist route,
+or retire the current W3 gate. Do not dispatch W4 under the current state.
 
 ## 1. Read First
 
@@ -78,14 +83,19 @@ surface than both rejected parse-loop scanner/cursor shapes.
 32. `restart/skinny/tranches/sk-v9/research/skv9-W3-research-v2.md`
 33. `restart/skinny/tranches/sk-v9/research/skv9-W3-plan-v2.md`
 34. `restart/skinny/tranches/sk-v9/research/skv9-W3-challenge-v3.md`
-35. `skinny/REDRESS.md` entries 96 and 97
+35. `restart/skinny/tranches/sk-v9/research/skv9-W3-research-v3.md`
+36. `restart/skinny/tranches/sk-v9/research/skv9-W3-plan-v3.md`
+37. `restart/skinny/tranches/sk-v9/research/skv9-W3-challenge-v4.md`
+38. `skinny/REDRESS.md` entries 96 and 97
 
 ## 2. Current State
 
 SK-V8 is closed by W6 V1+V2 hardening convergence. SK-V9 W0 is closed as a
 telemetry-lock recovery, W1 is closed as a measured row-table admission, W2 is
 closed as a retained grammar proof, and the first two W3 source candidates are
-rejected.
+rejected. W3 V3 CHALLENGE rejects class-lane-only source redress under the
+current W3 gate, so SK-V9 is blocked at W3 pending orchestrator/user
+adjudication.
 The current benchmark authority is the W1-rendered `skinny/RESULTS.md`
 `SK-V9-open` report:
 
@@ -152,6 +162,12 @@ W3 reject facts:
 - It also missed all W10b maintain floors:
   canada 8293 / 15866, citm_catalog 9997 / 28630, instruments 7305 / 15865,
   marine_ik 5540 / 11831, mesh 6835 / 12186, and numbers 9542 / 17596 Mbps.
+- W3 V3 research found the only remaining materially distinct source shape:
+  emit-site class-lane-only. It is mechanically feasible as a future
+  preparatory proof slice, but it is parser-produced, preserves scalar
+  delimiter discovery, carries no same-wave structural producer, and cannot
+  plausibly move the current `track1_generated` parse-only floors. CHALLENGE
+  V4 rejects it as current-W3 source redress authority and records the blocker.
 
 ## 3. Candidate Boundaries
 
@@ -163,7 +179,7 @@ gate-only enablers and cannot dispatch row-moving implementation.
 |---|---|
 | Apache/CITM measured typed rows | Admitted by SK-V9 W1 / REDRESS 94 with fresh run-id/metadata validation and six measured `real_typed_struct A / GO` rows. |
 | Retained class/event grammar and `ValueRef` cursor proof | Admitted by SK-V9 W2 / REDRESS 95. |
-| Union class-column substrate | First SK-V9 W3 redress rejected by REDRESS 96; V2 streaming-cursor redress rejected by REDRESS 97. The rejected patches are `/tmp/skv9-waveW3-rejected.patch` and `/tmp/skv9-waveW3-v2-rejected.patch`; W3 remains open and W4 remains blocked. |
+| Union class-column substrate | First SK-V9 W3 redress rejected by REDRESS 96; V2 streaming-cursor redress rejected by REDRESS 97; V3 class-lane-only route rejected by CHALLENGE V4 as non-admissible under the current gate. The rejected patches are `/tmp/skv9-waveW3-rejected.patch` and `/tmp/skv9-waveW3-v2-rejected.patch`; W3 remains open and W4 remains blocked. |
 | Direct output/control-path contract | REDRESS 93 rejected scalar-parent folding. Direct digest misses remain guard-plane rows until a direct output contract or control-path tranche exists. |
 | Comparator sidecar same-run manifest | Gate-only evidence ingestion. It cannot produce parser data, retained tape data, row output, substrate, or strict admission by itself. |
 | SK-V9-open telemetry/gate refresh | Gate-only report refresh. It cannot move throughput cells, admit Apache/CITM measured rows, or alter parser/scanner/SIMD/codegen behavior. |
@@ -185,14 +201,14 @@ Alpha cost binding for any later S-P3 plan:
 ## 4. Next Move
 
 1. Treat G-Alpha, `G-W0-TELEMETRY-LOCK`, `G-S-P1-RERUN-CONVERGED`,
-   `G-W1-TYPED-ADMISSION`, `G-W2-RETAINED-PROOF`, REDRESS 96, and REDRESS 97
-   as recorded.
-2. Replan W3 before any W4 dispatch. The rejected shapes now include both a
-   full structural-position vector inside `parse` and an allocation-free
-   streaming cursor inside `parse`; a revised plan needs a materially different
-   integration surface that does not add a scanner/cursor pass to retained
-   parsing, and must pass CHALLENGE before redress.
-3. Preserve the W1 boundary: Apache/CITM measured typed rows are admitted;
+   `G-W1-TYPED-ADMISSION`, `G-W2-RETAINED-PROOF`, REDRESS 96, REDRESS 97, and
+   W3 CHALLENGE V4 as recorded.
+2. Do not dispatch W4. The cascade-lock still requires a closed W3 union
+   substrate.
+3. Escalate W3 to orchestrator/user decision. The available choices are:
+   amend or split W3, resequence SK-V9 around another shortlist route, or
+   retire the current `G-W3-UNION-SUBSTRATE` gate.
+4. Preserve the W1 boundary: Apache/CITM measured typed rows are admitted;
    Canada typed and direct guard-plane claims remain blocked.
 
 ## 5. Pre-Blocked Routes
@@ -227,9 +243,11 @@ different, and pass challenge before implementation planning.
 ## 6. Close Posture
 
 The SK-V9 contract is post-G-Alpha, post-W0, post-S-P1/S-P2/S-P3
-convergence, post-W1, post-W2, and post-two-W3-rejects. W1 admitted the
-row-table-only Apache/CITM measured typed rows. W2 admitted the retained
-grammar proof. REDRESS 96 rejects the first W3 source shape, and REDRESS 97
-rejects the V2 streaming-cursor source shape. The next live dependency is still
-W3 union-substrate acceptance; all W4 sub-waves remain blocked behind that
-cascade order.
+convergence, post-W1, post-W2, post-two-W3-redress-rejects, and post-W3 V3
+CHALLENGE blocker. W1 admitted the row-table-only Apache/CITM measured typed
+rows. W2 admitted the retained grammar proof. REDRESS 96 rejects the first W3
+source shape, REDRESS 97 rejects the V2 streaming-cursor source shape, and
+CHALLENGE V4 rejects the class-lane-only route as non-admissible under the
+current W3 gate. The next live dependency is still W3 union-substrate
+acceptance, but it now needs orchestrator/user adjudication before any further
+source redress; all W4 sub-waves remain blocked behind that cascade order.

@@ -2791,3 +2791,58 @@ perturbation.
   `git diff --check`. The negative proof fixture constructs
   `ValueRef<'static, 'static, AnyKind, JsonEventGrammar>` from a local tape and
   is rejected by the borrow checker.
+
+## SK-V9 Wave 3 Union Event-Model Class-Column Redress
+
+- Item 96 rejects the W3 class-column + move-consumed structural-index
+  implementation. The attempted source patch added a co-indexed event-class
+  byte column to `runtime::tape`, rewired generated JSON parsing to consume
+  `scan_structurals` positions, changed `JsonNodeKind::at_cursor` to read the
+  class column instead of rediscovering source bytes, updated codegen
+  templates, added a runtime scan parity harness, and taught Track 2/parity to
+  write and compare class bytes.
+- Correctness checks were green before measurement:
+  `cargo test --manifest-path skinny/Cargo.toml -p runtime --test checkasm_scan_structurals -- --nocapture`,
+  `cargo test --manifest-path skinny/Cargo.toml -p runtime -- --nocapture`,
+  `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench parity -- --nocapture`,
+  `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench materialization -- --nocapture`,
+  `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench track2 -- --nocapture`,
+  `cargo test --manifest-path skinny/Cargo.toml -p codegen`, and
+  `cargo check --manifest-path skinny/Cargo.toml -p runtime --features proof`.
+  The W3 deletion invariant also held in the attempted patch:
+  `rg -n "consume_structural" skinny/crates/runtime/src skinny/crates/codegen/src`
+  returned no matches.
+- Binding native Criterion was run with
+  `RUSTFLAGS="-C target-cpu=native" CRITERION_HOME=/tmp/skv9-w3-criterion cargo xtask bench-json --advisory`.
+  The full benchmark capture completed, but `gate-json --update-results
+  --advisory` correctly refused to render while Lock 14 frozen roots were dirty
+  with the uncommitted W3 source patch. `skinny/RESULTS.md` therefore remains
+  unchanged; the measured evidence below is extracted from the completed
+  `/tmp/skv9-w3-criterion` Criterion slopes using the same
+  `bytes * 8000 / ns` formula as `gate-json`.
+- The implementation falsified every W3 must-improve row and every binding
+  W10b maintain row:
+
+  | Row | Floor | Track 1 Mbps | Track 2 Mbps | Sonic strict Mbps | Status |
+  |---|---:|---:|---:|---:|---|
+  | twitter | 17685 | 9284 | 12081 | 20772 | FAIL |
+  | apache_builds | 14124 | 7700 | 12254 | 16870 | FAIL |
+  | update_center | 14370 | 6854 | 9199 | 19513 | FAIL |
+  | distinct_values | 15731 | 6229 | 6174 | 17931 | FAIL |
+  | canada | 15866 | 11221 | 15978 | 13402 | FAIL |
+  | citm_catalog | 28630 | 13611 | 20624 | 25428 | FAIL |
+  | instruments | 15865 | 9539 | 11932 | 19773 | FAIL |
+  | marine_ik | 11831 | 8012 | 11778 | 9702 | FAIL |
+  | mesh | 12186 | 10087 | 12510 | 11797 | FAIL |
+  | numbers | 17596 | 13407 | 18681 | 13585 | FAIL |
+
+- The standalone SIMD scan benches stayed fast, so the failure is not a scalar
+  reference or scan parity failure. The falsifier is the integration shape:
+  allocating and move-consuming a full structural-position vector inside
+  `parse` adds enough parse-loop cost to miss the W3 rows and trip the W10b
+  no-regression block.
+- The rejected patch is saved at `/tmp/skv9-waveW3-rejected.patch` (1274
+  patch lines). The source tree was restored after saving the artifact. W3 is
+  not admitted, the W3 dependency remains open, and all W4 sub-waves remain
+  blocked until a revised W3 plan lands a substrate without the measured
+  parse-loop regression.

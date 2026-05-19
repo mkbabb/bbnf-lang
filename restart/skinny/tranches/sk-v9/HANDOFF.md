@@ -3,7 +3,8 @@
 Date: 2026-05-19.
 
 Status (2026-05-19, updated): SK-V9's research + planning track is
-**fully converged**, and implementation W1 and W2 are admitted. The PMU blocker
+**fully converged**, implementation W1 and W2 are admitted, and the first W3
+redress candidate is rejected with measurement. The PMU blocker
 that stalled S-P1 V2 was resolved
 — `xcode-select` was switched to the full Xcode toolchain, the Xcode
 licence accepted, and `xctrace` (CPU Counters + Time Profiler) now
@@ -26,13 +27,16 @@ promoted from the `research/p3/skv9-p3-F-*` drafts. The W0 telemetry-
 lock remains closed (`SK-V9-open`). W1 closed the REDRESS 91 row-table
 gap for Apache/CITM measured typed rows only. W2 closed the REDRESS 92
 proof precursor with a retained `EventGrammar` contract and split-marker
-`ValueRef<'doc, 'input, K, G>` cursor proof.
+`ValueRef<'doc, 'input, K, G>` cursor proof. The first W3 redress attempt
+deleted `consume_structural`, added the class-column substrate, and wired in a
+move-consumed `scan_structurals` index, but it missed every W3 must-improve row
+and every W10b maintain floor. REDRESS 96 records the reject, and the rejected
+patch is saved at `/tmp/skv9-waveW3-rejected.patch`.
 
-The implementation track now proceeds W3 → W4a..W4d → W5 per `SPEC.md`,
-each a research → plan → CHALLENGE where required → redress cycle landing
-measured source change. W3 (union event-model) is the next dispatch: it is the
-structural fix that deletes the scalar `consume_structural` rediscovery pass
-and wires in the discarded SIMD structural index.
+The implementation track is blocked at W3. W4a..W4d remain conditional on a
+closed W3 union substrate, so the next live work is a revised W3
+research/plan/CHALLENGE/redress cycle that avoids the measured allocation and
+parse-loop regression.
 
 ## 1. Read First
 
@@ -58,17 +62,23 @@ and wires in the discarded SIMD structural index.
 20. `skinny/RESULTS.md`
 21. `restart/skinny/tranches/sk-v9/research/skv9-W1-research.md`
 22. `restart/skinny/tranches/sk-v9/research/skv9-W1-plan.md`
-23. `skinny/REDRESS.md` entries 91, 92, 93, 94, and 95
+23. `skinny/REDRESS.md` entries 91, 92, 93, 94, 95, and 96
 24. `restart/skinny/tranches/sk-v9/research/skv9-W2-research.md`
 25. `restart/skinny/tranches/sk-v9/research/skv9-W2-plan.md`
 26. `restart/skinny/tranches/sk-v9/research/skv9-W2-challenge.md`
 27. `restart/skinny/tranches/sk-v9/research/skv9-W2-challenge-v2.md`
+28. `restart/skinny/tranches/sk-v9/research/skv9-W3-research.md`
+29. `restart/skinny/tranches/sk-v9/research/skv9-W3-plan.md`
+30. `restart/skinny/tranches/sk-v9/research/skv9-W3-challenge.md`
+31. `restart/skinny/tranches/sk-v9/research/skv9-W3-challenge-v2.md`
+32. `skinny/REDRESS.md` entry 96
 
 ## 2. Current State
 
 SK-V8 is closed by W6 V1+V2 hardening convergence. SK-V9 W0 is closed as a
-telemetry-lock recovery, W1 is closed as a measured row-table admission, and
-W2 is closed as a retained grammar proof.
+telemetry-lock recovery, W1 is closed as a measured row-table admission, W2 is
+closed as a retained grammar proof, and the first W3 source candidate is
+rejected.
 The current benchmark authority is the W1-rendered `skinny/RESULTS.md`
 `SK-V9-open` report:
 
@@ -106,6 +116,22 @@ W2 admission facts:
   `ValueRef<'doc, 'input, K = AnyKind, G: EventGrammar = AnyGrammar>`.
 - The proof moved zero rows and left `skinny/RESULTS.md` unchanged.
 
+W3 reject facts:
+
+- The attempted class-column substrate passed local correctness and scan parity
+  tests, and the attempted generated parser contained no `consume_structural`
+  symbol.
+- Native Criterion was captured under `/tmp/skv9-w3-criterion` with
+  `RUSTFLAGS="-C target-cpu=native"`. `gate-json` refused to write a report
+  while Lock 14 frozen roots were dirty with the uncommitted source candidate,
+  so `skinny/RESULTS.md` remains the W1-rendered baseline.
+- The attempted integration missed all W3 must-improve floors:
+  twitter 9284 / 17685, apache_builds 7700 / 14124, update_center 6854 / 14370,
+  and distinct_values 6229 / 15731 Mbps.
+- It also missed all W10b maintain floors:
+  canada 11221 / 15866, citm_catalog 13611 / 28630, instruments 9539 / 15865,
+  marine_ik 8012 / 11831, mesh 10087 / 12186, and numbers 13407 / 17596 Mbps.
+
 ## 3. Candidate Boundaries
 
 SK-V9 Alpha may carry only the three W6 residual behavior routes. Alpha-E also
@@ -115,7 +141,8 @@ gate-only enablers and cannot dispatch row-moving implementation.
 | Candidate | Boundary |
 |---|---|
 | Apache/CITM measured typed rows | Admitted by SK-V9 W1 / REDRESS 94 with fresh run-id/metadata validation and six measured `real_typed_struct A / GO` rows. |
-| Retained class/event grammar and `ValueRef` cursor proof | Admitted by SK-V9 W2 / REDRESS 95. W3 may now reopen the structural-heavy union event model under its own measured gate. |
+| Retained class/event grammar and `ValueRef` cursor proof | Admitted by SK-V9 W2 / REDRESS 95. |
+| Union class-column substrate | First SK-V9 W3 redress rejected by REDRESS 96. The rejected patch is `/tmp/skv9-waveW3-rejected.patch`; W3 remains open and W4 remains blocked. |
 | Direct output/control-path contract | REDRESS 93 rejected scalar-parent folding. Direct digest misses remain guard-plane rows until a direct output contract or control-path tranche exists. |
 | Comparator sidecar same-run manifest | Gate-only evidence ingestion. It cannot produce parser data, retained tape data, row output, substrate, or strict admission by itself. |
 | SK-V9-open telemetry/gate refresh | Gate-only report refresh. It cannot move throughput cells, admit Apache/CITM measured rows, or alter parser/scanner/SIMD/codegen behavior. |
@@ -136,12 +163,13 @@ Alpha cost binding for any later S-P3 plan:
 
 ## 4. Next Move
 
-1. Treat G-Alpha, `G-W0-TELEMETRY-LOCK`, `G-S-P1-RERUN-CONVERGED`, and
-   `G-W1-TYPED-ADMISSION` as recorded.
-2. Dispatch W3 next: union event-model plus class-column substrate.
-3. Run the mandatory W3 CHALLENGE before redress; W3 carries the HIGH-risk
-   extension adjudication named by `SPEC.md` Section 6.
-4. Preserve the W1 boundary: Apache/CITM measured typed rows are admitted;
+1. Treat G-Alpha, `G-W0-TELEMETRY-LOCK`, `G-S-P1-RERUN-CONVERGED`,
+   `G-W1-TYPED-ADMISSION`, `G-W2-RETAINED-PROOF`, and REDRESS 96 as recorded.
+2. Replan W3 before any W4 dispatch. The rejected shape used a full
+   structural-position vector inside `parse`; a revised plan needs a materially
+   different integration surface, likely allocation-free or fused with the
+   existing parser walk, and must pass CHALLENGE before redress.
+3. Preserve the W1 boundary: Apache/CITM measured typed rows are admitted;
    Canada typed and direct guard-plane claims remain blocked.
 
 ## 5. Pre-Blocked Routes
@@ -176,7 +204,8 @@ different, and pass challenge before implementation planning.
 ## 6. Close Posture
 
 The SK-V9 contract is post-G-Alpha, post-W0, post-S-P1/S-P2/S-P3
-convergence, post-W1, and post-W2. W1 admitted the row-table-only Apache/CITM
-measured typed rows. W2 admitted the retained grammar proof. The next live
-dependency is W3 union-substrate acceptance; all W4 sub-waves remain blocked
-behind that cascade order.
+convergence, post-W1, post-W2, and post-W3-reject. W1 admitted the
+row-table-only Apache/CITM measured typed rows. W2 admitted the retained
+grammar proof. REDRESS 96 rejects the first W3 source shape. The next live
+dependency is still W3 union-substrate acceptance; all W4 sub-waves remain
+blocked behind that cascade order.

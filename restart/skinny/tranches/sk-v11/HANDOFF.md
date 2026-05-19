@@ -2,8 +2,8 @@
 
 Date: 2026-05-19.
 
-Status: Pass Alpha V1 alpha-F draft is materialized. SK-V11 is ready for
-G-Alpha presentation and then S-P1 Profile dispatch under
+Status: G-Alpha is presented and W0 refreshed the SK-V11-open native baseline
+from HEAD `3ce75df4`. SK-V11 is ready for S-P1 Profile dispatch under
 `restart/prompts/skinny/PASS-1-PROFILE.md`. This handoff does not authorize
 source work and does not create `SPEC.md` or `DISPATCH-PROMPT.md`; S-P3 owns
 those files after S-P1 and S-P2 converge.
@@ -29,35 +29,38 @@ those files after S-P1 and S-P2 converge.
 
 ## 2. Current State
 
-SK-V10 close is the measured authority:
+SK-V11-open is the measured authority:
 
 | Family | State | Role in SK-V11 |
 |---|---|---|
 | `parse_only` | 17 `S / NO-GO` | diagnostic concession; no SOTA target |
-| `direct_to_struct` | 6 `A / GO`, 11 `N-direct / NO-GO` | primary JSON closure target |
+| `direct_to_struct` | 4 `A / GO`, 13 `N-direct / NO-GO` | primary JSON closure target |
 | `real_typed_struct` | 7 `A / GO` | guard and product-plane credibility surface |
 
-Overall remains `N-direct / NoGo` at SK-V10 close
-(`restart/skinny/tranches/sk-v10/research/close/close-redress.md:45`).
+Overall remains `N-direct / NoGo` at W0
+(`sk-v9-open:criterion-fnv64-c8d7e0468358f98c`).
 
-The 11 direct residual rows to profile first are:
+The 13 direct residual rows to profile first are:
 
 | Row | Track 1 | Track 2 | sonic direct | Seed floor |
 |---|---:|---:|---:|---:|
-| `twitter` | 11905 | 10968 | 15244 | 13859 |
-| `canada` | 10590 | 10286 | 12157 | 11052 |
-| `github_events` | 12439 | 11430 | 16206 | 14733 |
-| `update_center` | 8425 | 7620 | 11186 | 10170 |
-| `mesh` | 8562 | 8596 | 9422 | 8566 |
-| `random` | 7887 | 7132 | 8948 | 8135 |
-| `gsoc-2018` | 15056 | 14534 | 23437 | 21307 |
-| `unicode_mixed` | 4700 | 4556 | 10480 | 9528 |
-| `unicode_escapes` | 5069 | 5222 | 14147 | 12861 |
-| `distinct_values` | 6303 | 5654 | 11978 | 10890 |
-| `y_string_unicode` | 5067 | 3746 | 9211 | 8374 |
+| `twitter` | 11613 | 10816 | 15113 | 13740 |
+| `canada` | 10316 | 9819 | 11700 | 10637 |
+| `github_events` | 11918 | 10596 | 14743 | 13403 |
+| `update_center` | 8187 | 7474 | 11064 | 10059 |
+| `mesh` | 8561 | 8652 | 9542 | 8675 |
+| `random` | 7693 | 6949 | 8665 | 7878 |
+| `gsoc-2018` | 2665 | 2578 | 4110 | 3737 |
+| `instruments` | 11569 | 10736 | 9865 | 8969 |
+| `numbers` | 4479 | 2366 | 2667 | 2425 |
+| `unicode_mixed` | 3753 | 2427 | 2846 | 2588 |
+| `unicode_escapes` | 1345 | 1341 | 3785 | 3441 |
+| `distinct_values` | 1750 | 1625 | 2923 | 2658 |
+| `y_string_unicode` | 1983 | 1029 | 4344 | 3950 |
 
-W0 must refresh or reaffirm these floors from SK-V11-open before behavior
-waves dispatch.
+`instruments`, `numbers`, and `unicode_mixed` are W0-clamped planning rows:
+fresh numbers may clear one or both floors, but admission still requires a
+behavior wave with measured provenance.
 
 ## 3. Bound Axes
 
@@ -81,7 +84,7 @@ that S-P1/S-P2 identify on the JSON direct residual surface.
 
 ## 4. Next Move
 
-Next move: ready-for-S-P1 after G-Alpha presentation or user pin.
+Next move: ready-for-S-P1.
 
 S-P1 must run full orchestration per `PASS-1-PROFILE.md`:
 

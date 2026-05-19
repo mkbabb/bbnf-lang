@@ -3056,3 +3056,26 @@ perturbation.
   `CRITERION_HOME=target/skv9-w1/criterion RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --with-cost-facts --check-results`.
 - W4 may now dispatch as typed-product work. W4 cannot name W3 as a consumer or
   substrate dependency.
+
+## SK-V10 Wave 4 `instruments` Typed Product Admission
+
+- Item 103 rejects W4 under `G-W4-INSTRUMENTS-TYPED`. The implemented source
+  slice added `instruments/real_typed_struct` as a generated typed product row
+  with independent Track 2/oracle, serde_json typed, sonic-rs typed, checksum,
+  `gate-json`, report validation, and exact Lock 14 owner-path authorization.
+- The row was falsified by measurement: generated Track 1 measured 20678 Mbps,
+  independent Track 2 measured 12127 Mbps, sonic-rs typed strict measured
+  15940 Mbps, and serde_json typed measured 12119 Mbps. The W4 floor was
+  `ceil(15940 / 1.10) = 14491` Mbps. Track 1 passed; Track 2 missed
+  `12127 < 14491`.
+- The gate failure was consumed by `gate-json`:
+  `json/instruments/real_typed_struct/main W4 typed contract admits only
+  A / GO, saw N-direct / NO-GO`.
+- The rejected patch is saved at `/tmp/skv10-waveW4-rejected.patch`.
+  `RESULTS.md` is unchanged: no typed row moved, `real_typed_struct` remains
+  6 `A / GO`, `direct_to_struct` remains 5 `A / GO` and 12
+  `N-direct / NO-GO`, and `parse_only` remains 17 `S / NO-GO`.
+- The routed finding is that fixed object-root typed admission is not enough
+  for `instruments`; the independent oracle cost dominates the W4 contract.
+  W5 may still dispatch because its entry gate accepts a W4 admission or a W4
+  measured rejection.

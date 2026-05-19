@@ -11,7 +11,8 @@ union substrate is retired as falsified. The primary JSON frontier is
 route; parse-only SOTA is retired from the close target. W0 telemetry freeze is
 closed under REDRESS 99, W1 direct contract is closed under REDRESS 100, W2
 direct row-table reclamation is closed under REDRESS 101, and W3 parse-only
-firewall is closed under REDRESS 102; W4 is the next live dispatch.
+firewall is closed under REDRESS 102. W4 `instruments` typed product admission
+is rejected under REDRESS 103; W5 is the next live dispatch.
 
 ## 1. Read First
 
@@ -21,7 +22,7 @@ firewall is closed under REDRESS 102; W4 is the next live dispatch.
 4. `restart/skinny/tranches/sk-v9/SPEC.md`
 5. `restart/skinny/tranches/sk-v9/DISPATCH-PROMPT.md`
 6. `skinny/RESULTS.md`
-7. `skinny/REDRESS.md` entries 94-102
+7. `skinny/REDRESS.md` entries 94-103
 8. `restart/skinny/tranches/sk-v10/SYNTHESIS.md`
 9. `restart/skinny/tranches/sk-v10/research/alpha/alpha-A-results-extraction.md`
 10. `restart/skinny/tranches/sk-v10/research/alpha/alpha-B-competitor-deltas.md`
@@ -62,6 +63,10 @@ firewall is closed under REDRESS 102; W4 is the next live dispatch.
 45. `restart/skinny/tranches/sk-v10/research/w3/w3-research.md`
 46. `restart/skinny/tranches/sk-v10/research/w3/w3-plan.md`
 47. `restart/skinny/tranches/sk-v10/research/w3/w3-redress.md`
+48. `restart/skinny/tranches/sk-v10/research/w4/w4-research.md`
+49. `restart/skinny/tranches/sk-v10/research/w4/w4-plan.md`
+50. `restart/skinny/tranches/sk-v10/research/w4/hardening/CHALLENGE-W4-CONSOLIDATED.md`
+51. `restart/skinny/tranches/sk-v10/research/w4/w4-redress.md`
 
 ## 2. Current State
 
@@ -75,7 +80,7 @@ Current `skinny/RESULTS.md` state:
 |---|---|
 | `parse_only` | 17 `S / NO-GO` |
 | `direct_to_struct` | 5 `A / GO`, 12 `N-direct / NO-GO` |
-| `real_typed_struct` | 6 `A / GO` |
+| `real_typed_struct` | 6 `A / GO`; W4 `instruments` rejected by Track 2 floor miss |
 
 ## 3. Candidate Boundaries
 
@@ -92,10 +97,9 @@ Current `skinny/RESULTS.md` state:
 
 ## 4. Next Move
 
-1. Dispatch W4, `instruments` Typed Product Admission, from SPEC Section 7.
-2. Move only the `instruments/real_typed_struct` row if the generated typed
-   parser, serde_json typed comparator, sonic-rs typed comparator, and
-   independent Track 2/oracle proof satisfy the Section 7 gate.
+1. Dispatch W5, Root-Type Typed Generalization Proof, from SPEC Section 8.
+2. Prove root-array and numeric-string-keyed map roots without moving rows; W6
+   may consume the proof only if W5 closes.
 
 ## 5. Refusal Conditions
 
@@ -115,6 +119,6 @@ Refuse dispatch if a requested wave:
 
 SK-V10 Alpha, S-P1 Profile, S-P2 Research, S-P3 Synthesis-Plan, W0 telemetry
 freeze, W1 direct contract, W2 direct reclamation, and W3 parse-only firewall
-are closed. The next live work is W4. No direct row movement is authorized
-unless it satisfies the REDRESS 100 contract and the Section 0.2 numeric
-floors.
+are closed, and W4 is rejected under REDRESS 103. The next live work is W5. No
+direct row movement is authorized unless it satisfies the REDRESS 100 contract
+and the Section 0.2 numeric floors.

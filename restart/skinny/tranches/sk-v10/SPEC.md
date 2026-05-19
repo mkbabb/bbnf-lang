@@ -12,7 +12,9 @@ SOTA surface; direct digest rows are the primary JSON frontier; parse-only rows
 remain diagnostic `S / NO-GO`. REDRESS 96, 97, and 98 retire the W3
 union-substrate thesis. REDRESS 101 admits the W2 direct row-table reclamation
 for `apache_builds` and `numbers`. REDRESS 102 closes W3 as a proof-only
-parse firewall. No SK-V10 wave may reopen W3 through a rename.
+parse firewall. REDRESS 103 rejects W4 after the `instruments` independent
+Track 2 typed oracle missed the W4 floor. No SK-V10 wave may reopen W3 through
+a rename.
 
 ## 0. Close Condition And Goalset
 
@@ -168,8 +170,8 @@ block:
 | W1 | 4 | `C1` | Direct Output/Control-Path Contract | Closed - REDRESS 100 | None | 180-320 docs/gate LOC | HIGH | <=90 min |
 | W2 | 5 | `C1` | Direct Row-Table Reclamation | Closed - REDRESS 101 | Direct only; zero behavior source | 120-240 gate/report LOC | MEDIUM | <=90 min |
 | W3 | 6 | firewall | W3 And Parse-Only Firewall | Closed - REDRESS 102 | None | 80-160 docs/gate LOC | LOW | <=90 min |
-| W4 | 7 | `C2` | `instruments` Typed Product Admission | Dispatchable - W3 closed | One typed row | 160-260 source/generated + 40-80 gate LOC | MEDIUM | <=90 min |
-| W5 | 8 | `C3` | Root-Type Typed Generalization Proof | Conditional on W4 disposition | Proof-only | 220-420 source/generated + 60-120 test/gate LOC | MEDIUM-HIGH | <=90 min |
+| W4 | 7 | `C2` | `instruments` Typed Product Admission | Rejected - REDRESS 103 | None; typed row did not move | 160-260 source/generated + 40-80 gate LOC | MEDIUM | <=90 min |
+| W5 | 8 | `C3` | Root-Type Typed Generalization Proof | Dispatchable - W4 disposition closed | Proof-only | 220-420 source/generated + 60-120 test/gate LOC | MEDIUM-HIGH | <=90 min |
 | W6 | 9 | `C3` | Root Typed Row Admission | Conditional on W5 proof | One typed row per slice | 160-260 source/generated + 40-80 gate LOC per corpus | MEDIUM-HIGH | <=90 min |
 | W7 | 10 | `C4` or `C5` | String Primitive Micro-Proof | Conditional on W3 close + CHALLENGE | Proof-only | 90-260 proof LOC | MEDIUM-HIGH | <=90 min |
 | W8 | 11 | `C6` or `C7` | Escape/Segment Micro-Proof | Conditional on relevant W7 proof if needed + CHALLENGE | Proof-only | 90-260 proof LOC | HIGH | <=90 min |
@@ -180,13 +182,14 @@ block:
 Manifest rules:
 
 1. W0 is closed under REDRESS 99, W1 is closed under REDRESS 100, W2 is closed
-   under REDRESS 101, and W3 is closed under REDRESS 102. W4 is the next
-   dispatchable wave. W5-W10 and Close are conditional until their entry gates
-   pass.
+   under REDRESS 101, W3 is closed under REDRESS 102, and W4 is rejected under
+   REDRESS 103. W5 is the next dispatchable wave. W6-W10 and Close are
+   conditional until their entry gates pass.
 2. W1 must exist before W2 or W10 can move direct rows. A direct row gate
    without W1 is a REVISE.
 3. W3 is a firewall, not the retired W3 implementation route.
-4. W4 is the first bounded typed row movement. W5 is proof-only unless W6
+4. W4 was the first bounded typed row movement and rejected honestly when the
+   independent Track 2/oracle missed the W4 floor. W5 is proof-only unless W6
    consumes its proof with typed comparator rows.
 5. W7 and W8 are deliberately proof-only micro waves. A production caller
    lands only in W9.

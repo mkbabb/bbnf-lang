@@ -9,8 +9,9 @@ Status: Pass Alpha closed for SK-V9 -> SK-V10 under
 confirmation challenge. W0 telemetry freeze is closed under REDRESS 99. W1
 direct contract is closed under REDRESS 100. W2 direct row-table reclamation is
 closed under REDRESS 101. W3 parse-only firewall is closed under REDRESS 102.
-SK-V10 implementation is dispatched by `SPEC.md` and `DISPATCH-PROMPT.md`; W4
-is the next live wave.
+W4 `instruments` typed product admission is rejected under REDRESS 103. SK-V10
+implementation is dispatched by `SPEC.md` and `DISPATCH-PROMPT.md`; W5 is the
+next live wave.
 
 ## Authority
 
@@ -30,7 +31,7 @@ is the next live wave.
 - `restart/skinny/tranches/sk-v10/research/p2/p2g-candidate-ledger.md`
 - `restart/skinny/tranches/sk-v10/research/p2/hardening/HARDENING-S-P2-V1-CONSOLIDATED.md`
 - `skinny/RESULTS.md`
-- `skinny/REDRESS.md` entries 94-98
+- `skinny/REDRESS.md` entries 94-103
 
 ## Section 0 - Alpha Close Condition
 
@@ -163,8 +164,11 @@ their Section 0.2 floors. The remaining twelve direct rows stay
 `N-direct / NO-GO`.
 
 W3 closed as a parse-only firewall. No row moved. The active packet keeps W3
-aliases and parse-only SOTA claims as refusal routes, and W4 may now dispatch
-without naming W3 as a consumer.
+aliases and parse-only SOTA claims as refusal routes.
+
+W4 rejected `instruments/real_typed_struct` after the independent Track 2 typed
+oracle missed the W4 floor: Track 1 20678 Mbps, Track 2 12127 Mbps, sonic-rs
+typed 15940 Mbps, floor 14491 Mbps. No row moved; W5 may now dispatch.
 
 ## Section 7 - Micro-Prove-First Gate
 

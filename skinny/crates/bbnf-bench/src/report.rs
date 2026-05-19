@@ -517,10 +517,34 @@ impl Report {
         let mut seen = BTreeSet::new();
         let mut run_id = None::<String>;
         for row in &self.rows {
-            row.validate_sk_v8_w0()?;
             let row_id = row.sk_v8.row_id.as_str();
             if !seen.insert(row_id) {
                 return Err(format!("duplicate SK-V9 W0 row_id {row_id}"));
+            }
+            let Some(baseline) = sk_v8_open_baseline(row_id) else {
+                return Err(format!("unknown SK-V8 comparison row_id {row_id}"));
+            };
+            if direct_contract_row_changed(row, baseline) {
+                validate_direct_row_movement(row, baseline)?;
+            } else {
+                row.validate_sk_v8_w0()?;
+                if row.outcome_id != baseline.outcome_id
+                    && !w0_allows_fresh_diagnostic_outcome(
+                        baseline.outcome_id,
+                        row.outcome_id.as_str(),
+                    )
+                {
+                    return Err(format!(
+                        "{row_id} outcome moved from SK-V8 comparison baseline {} to {}",
+                        baseline.outcome_id, row.outcome_id
+                    ));
+                }
+                if row.verdict != baseline.verdict {
+                    return Err(format!(
+                        "{row_id} verdict moved from SK-V8 comparison baseline {} to {}",
+                        baseline.verdict, row.verdict
+                    ));
+                }
             }
             match &run_id {
                 Some(expected) if expected != &row.sk_v8.run_id => {
@@ -531,23 +555,6 @@ impl Report {
                 }
                 Some(_) => {}
                 None => run_id = Some(row.sk_v8.run_id.clone()),
-            }
-            let Some(baseline) = sk_v8_open_baseline(row_id) else {
-                return Err(format!("unknown SK-V8 comparison row_id {row_id}"));
-            };
-            if row.outcome_id != baseline.outcome_id
-                && !w0_allows_fresh_diagnostic_outcome(baseline.outcome_id, row.outcome_id.as_str())
-            {
-                return Err(format!(
-                    "{row_id} outcome moved from SK-V8 comparison baseline {} to {}",
-                    baseline.outcome_id, row.outcome_id
-                ));
-            }
-            if row.verdict != baseline.verdict {
-                return Err(format!(
-                    "{row_id} verdict moved from SK-V8 comparison baseline {} to {}",
-                    baseline.verdict, row.verdict
-                ));
             }
         }
         for baseline in SK_V8_OPEN_BASELINE {
@@ -1005,6 +1012,79 @@ fn w0_allows_fresh_diagnostic_outcome(baseline: &str, observed: &str) -> bool {
     // W0 opens fresh telemetry; numeric diagnostic NO-GO reasons may relabel,
     // but correctness, invalid, direct, product, and admitted rows stay exact.
     matches!(baseline, "G" | "L" | "M" | "S") && matches!(observed, "G" | "L" | "M" | "S")
+}
+
+fn direct_contract_row_changed(row: &TelemetryRow, baseline: &SkV8OpenBaseline) -> bool {
+    baseline.outcome_id == "N-direct"
+        && row.workload == "direct_to_struct"
+        && (row.outcome_id != baseline.outcome_id || row.verdict != baseline.verdict)
+}
+
+fn validate_direct_row_movement(
+    row: &TelemetryRow,
+    baseline: &SkV8OpenBaseline,
+) -> Result<(), String> {
+    let row_id = row.sk_v8.row_id.as_str();
+    if baseline.outcome_id != "N-direct" || row.workload != "direct_to_struct" {
+        return Err(format!("{row_id} is not a direct contract row"));
+    }
+    row.validate_schema_v3()?;
+    validate_w0_row_identity(row)?;
+    validate_w0_outcome(row_id, &row.outcome_id)?;
+    if row.outcome_id != "A" || row.verdict != "GO" {
+        return Err(format!(
+            "{row_id} direct contract admits only A / GO, saw {} / {}",
+            row.outcome_id, row.verdict
+        ));
+    }
+    if row.output_plane != "digest" {
+        return Err(format!(
+            "{row_id} direct contract output plane {} is not digest",
+            row.output_plane
+        ));
+    }
+    if row.strictness != "strict" {
+        return Err(format!(
+            "{row_id} direct contract strictness {} is not strict",
+            row.strictness
+        ));
+    }
+    if row.parse_utf8 != "measured-row" || row.sk_v8.measured_validation_path != "measured-row" {
+        return Err(format!(
+            "{row_id} direct contract is not measured-row validated"
+        ));
+    }
+    if row.escape_complete != "yes" {
+        return Err(format!(
+            "{row_id} direct contract has incomplete escape validation"
+        ));
+    }
+    if row.sk_v8.track2_independence_status != "independent_verified" {
+        return Err(format!(
+            "{row_id} direct contract lacks Track 2 independence"
+        ));
+    }
+    if row.sk_v8.same_wave_consumer_class == "gate_only" {
+        return Err(format!("{row_id} direct contract has only a gate consumer"));
+    }
+    if row.sk_v8.redress_entry == "none" {
+        return Err(format!("{row_id} direct contract lacks REDRESS provenance"));
+    }
+    if row.sk_v8.wave_id == "SK-V9-open" {
+        return Err(format!(
+            "{row_id} direct contract still uses SK-V9-open wave id"
+        ));
+    }
+    if row.sk_v8.run_id.trim().is_empty() || !is_skv9_open_run_id(&row.sk_v8.run_id) {
+        return Err(format!(
+            "{row_id} direct contract has invalid run_id {}",
+            row.sk_v8.run_id
+        ));
+    }
+    validate_w0_profile_artifact(row_id, &row.sk_v8.profile_artifact)?;
+    validate_w0_hot_leaf(row_id, &row.hot_leaf, &row.sk_v8.profile_artifact)?;
+    validate_comparator_evidence(row_id, &row.workload, &row.sk_v8.comparators)?;
+    Ok(())
 }
 
 fn validate_w0_profile_artifact(row_id: &str, profile_artifact: &str) -> Result<(), String> {
@@ -1657,6 +1737,68 @@ mod tests {
         format!("{profile};hot-leaf=criterion-slope-profile;row={row_id}")
     }
 
+    fn opening_report() -> Report {
+        let mut report = Report::new("Skinny JSON Bench");
+        for baseline in SK_V8_OPEN_BASELINE {
+            let mut parts = baseline.row_id.split('/');
+            let _grammar = parts.next().unwrap();
+            let corpus = parts.next().unwrap();
+            let workload = parts.next().unwrap();
+            let bytes = 1_000_000u64;
+            let track1_ns = Some(bytes as f64 * 8_000.0 / baseline.track1_mbps);
+            let track2_ns = Some(bytes as f64 * 8_000.0 / baseline.track2_mbps);
+            let output_plane = if workload == "parse_only" {
+                "borrowed view over offset tape vs DOM"
+            } else if workload == "real_typed_struct" {
+                "typed direct"
+            } else {
+                "digest"
+            };
+            let row = if workload == "parse_only" {
+                TelemetryRow::parse(
+                    corpus,
+                    gate::parse_outcome_id(baseline.outcome_id).unwrap(),
+                    bytes,
+                    track1_ns,
+                    track2_ns,
+                    comparators(),
+                    w0_hot_leaf(baseline.row_id),
+                )
+            } else {
+                TelemetryRow::workload(
+                    corpus,
+                    workload,
+                    (baseline.outcome_id != "A")
+                        .then(|| gate::parse_outcome_id(baseline.outcome_id).unwrap()),
+                    bytes,
+                    track1_ns,
+                    track2_ns,
+                    comparators(),
+                    output_plane,
+                    "none",
+                    "PASS",
+                    w0_hot_leaf(baseline.row_id),
+                )
+            };
+            report
+                .rows
+                .push(row.with_sk_v8(w0_telemetry(baseline.row_id, output_plane)));
+        }
+        report
+    }
+
+    fn admit_twitter_direct(row: &mut TelemetryRow) {
+        row.outcome_id = "A".into();
+        row.verdict = "GO".into();
+        row.strictness = "strict".into();
+        row.parse_utf8 = "measured-row".into();
+        row.output_plane = "digest".into();
+        row.sk_v8.measured_validation_path = "measured-row".into();
+        row.sk_v8.same_wave_consumer_class = "gate_json_direct_contract".into();
+        row.sk_v8.redress_entry = "REDRESS-100".into();
+        row.sk_v8.wave_id = "SK-V10-W2".into();
+    }
+
     #[test]
     fn renders_schema_v3_header_and_parse_workload() {
         let mut report = Report::new("Skinny JSON Bench");
@@ -2003,53 +2145,63 @@ mod tests {
     }
 
     #[test]
-    fn w0_report_accepts_exact_opening_baseline() {
-        let mut report = Report::new("Skinny JSON Bench");
-        for baseline in SK_V8_OPEN_BASELINE {
-            let mut parts = baseline.row_id.split('/');
-            let _grammar = parts.next().unwrap();
-            let corpus = parts.next().unwrap();
-            let workload = parts.next().unwrap();
-            let bytes = 1_000_000u64;
-            let track1_ns = Some(bytes as f64 * 8_000.0 / baseline.track1_mbps);
-            let track2_ns = Some(bytes as f64 * 8_000.0 / baseline.track2_mbps);
-            let output_plane = if workload == "parse_only" {
-                "borrowed view over offset tape vs DOM"
-            } else if workload == "real_typed_struct" {
-                "typed direct"
-            } else {
-                "digest"
-            };
-            let row = if workload == "parse_only" {
-                TelemetryRow::parse(
-                    corpus,
-                    gate::parse_outcome_id(baseline.outcome_id).unwrap(),
-                    bytes,
-                    track1_ns,
-                    track2_ns,
-                    comparators(),
-                    w0_hot_leaf(baseline.row_id),
-                )
-            } else {
-                TelemetryRow::workload(
-                    corpus,
-                    workload,
-                    (baseline.outcome_id != "A")
-                        .then(|| gate::parse_outcome_id(baseline.outcome_id).unwrap()),
-                    bytes,
-                    track1_ns,
-                    track2_ns,
-                    comparators(),
-                    output_plane,
-                    "none",
-                    "PASS",
-                    w0_hot_leaf(baseline.row_id),
-                )
-            };
-            report
+    fn direct_contract_accepts_complete_n_direct_movement() {
+        let mut report = opening_report();
+        let direct = report
+            .rows
+            .iter_mut()
+            .find(|row| row.sk_v8.row_id == "json/twitter/direct_to_struct/main")
+            .unwrap();
+        admit_twitter_direct(direct);
+        assert!(report.validate_sk_v8_w0().is_ok());
+    }
+
+    #[test]
+    fn direct_contract_rejects_incomplete_movement() {
+        let reject = |mutate: fn(&mut TelemetryRow)| {
+            let mut report = opening_report();
+            let direct = report
                 .rows
-                .push(row.with_sk_v8(w0_telemetry(baseline.row_id, output_plane)));
-        }
+                .iter_mut()
+                .find(|row| row.sk_v8.row_id == "json/twitter/direct_to_struct/main")
+                .unwrap();
+            admit_twitter_direct(direct);
+            mutate(direct);
+            assert!(report.validate_sk_v8_w0().is_err());
+        };
+
+        reject(|row| row.output_plane = "DOM".into());
+        reject(|row| row.strictness = "deferred".into());
+        reject(|row| row.parse_utf8 = "view-boundary".into());
+        reject(|row| row.sk_v8.measured_validation_path = "view-boundary".into());
+        reject(|row| row.sk_v8.same_wave_consumer_class = "gate_only".into());
+        reject(|row| row.sk_v8.redress_entry = "none".into());
+        reject(|row| row.sk_v8.wave_id = "SK-V9-open".into());
+        reject(|row| row.sk_v8.track2_independence_status = "unverified".into());
+        reject(|row| {
+            let sonic = row
+                .sk_v8
+                .comparators
+                .iter_mut()
+                .find(|entry| entry.comparator_id == "sonic_rs_strict")
+                .unwrap();
+            sonic.comparator_plane = "DOM".into();
+        });
+        reject(|row| {
+            let sonic = row
+                .sk_v8
+                .comparators
+                .iter_mut()
+                .find(|entry| entry.comparator_id == "sonic_rs_strict")
+                .unwrap();
+            sonic.source_artifact =
+                "criterion:json_twitter/sonic_rs_anchor/new/estimates.json".into();
+        });
+    }
+
+    #[test]
+    fn w0_report_accepts_exact_opening_baseline() {
+        let report = opening_report();
         assert!(report.validate_sk_v8_w0().is_ok());
         let mut fresh_throughput = report.clone();
         fresh_throughput.rows[0].track1_mbps = Some(SK_V8_OPEN_BASELINE[0].track1_mbps * 1.37);

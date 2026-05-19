@@ -162,8 +162,8 @@ block:
 | Wave | Section | Candidate ids | Title | Dispatch status | Row movement | Budget | Risk | Redress cap |
 |---|---|---|---|---|---|---:|---|---:|
 | W0 | 3 | `C12` | SK-V10-open Telemetry Freeze | Closed - REDRESS 99 | None | 120-240 gate/report LOC | LOW-MEDIUM | <=90 min |
-| W1 | 4 | `C1` | Direct Output/Control-Path Contract | Dispatchable - W0 closed | None | 180-320 docs/gate LOC | HIGH | <=90 min |
-| W2 | 5 | `C1` | Direct Row-Table Reclamation | Conditional on W1 close | Direct only; zero behavior source | 120-240 gate/report LOC | MEDIUM | <=90 min |
+| W1 | 4 | `C1` | Direct Output/Control-Path Contract | Closed - REDRESS 100 | None | 180-320 docs/gate LOC | HIGH | <=90 min |
+| W2 | 5 | `C1` | Direct Row-Table Reclamation | Dispatchable - W1 closed | Direct only; zero behavior source | 120-240 gate/report LOC | MEDIUM | <=90 min |
 | W3 | 6 | firewall | W3 And Parse-Only Firewall | Conditional on W2 close | None | 80-160 docs/gate LOC | LOW | <=90 min |
 | W4 | 7 | `C2` | `instruments` Typed Product Admission | Conditional on W3 close | One typed row | 160-260 source/generated + 40-80 gate LOC | MEDIUM | <=90 min |
 | W5 | 8 | `C3` | Root-Type Typed Generalization Proof | Conditional on W4 disposition | Proof-only | 220-420 source/generated + 60-120 test/gate LOC | MEDIUM-HIGH | <=90 min |
@@ -176,8 +176,9 @@ block:
 
 Manifest rules:
 
-1. W0 is closed under REDRESS 99. W1 is the next dispatchable wave. W2-W10 and
-   Close are conditional until their entry gates pass.
+1. W0 is closed under REDRESS 99 and W1 is closed under REDRESS 100. W2 is the
+   next dispatchable wave. W3-W10 and Close are conditional until their entry
+   gates pass.
 2. W1 must exist before W2 or W10 can move direct rows. A direct row gate
    without W1 is a REVISE.
 3. W3 is a firewall, not the retired W3 implementation route.

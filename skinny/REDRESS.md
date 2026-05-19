@@ -2974,3 +2974,28 @@ perturbation.
 - The default `skinny/target/criterion` cache was rejected before redress for
   non-native W0 metadata and is not the SK-V10 opening authority. Future W0/W1
   validation must name the intended `CRITERION_HOME` explicitly.
+
+## SK-V10 Wave 1 Direct Output Contract
+
+- Item 100 admits W1 under `G-W1-DIRECT-CONTRACT`. The wave is contract-only:
+  it moves no `RESULTS.md` rows and changes no parser/runtime behavior.
+- Redress added a direct row movement predicate to
+  `skinny/crates/bbnf-bench/src/report.rs`. Unchanged W0 rows still validate
+  through the inherited W0 baseline checks. A baseline `N-direct / NO-GO`
+  direct row may move only as `A / GO` and only with digest output plane,
+  strict row semantics, measured-row validation, `independent_verified` Track 2
+  status, non-gate-only consumer, REDRESS provenance, non-SK-V9-open wave id,
+  and same-run native direct comparator evidence sourced from the
+  `sonic_rs_direct_to_struct` and `serde_json_direct_to_struct` Criterion
+  benches.
+- Negative tests cover output-plane mismatch, deferred/view-boundary movement,
+  gate-only consumer, missing REDRESS, missing Track 2 independence, stale wave
+  id, direct comparator plane mismatch, and wrong comparator source.
+- Evidence passed:
+  `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench direct_contract -- --nocapture`,
+  `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench report::tests -- --nocapture`,
+  `CRITERION_HOME=target/skv9-w1/criterion RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --advisory`,
+  and
+  `CRITERION_HOME=target/skv9-w1/criterion RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --with-cost-facts --check-results`.
+- W2 may now re-evaluate direct rows, but it must still satisfy the Section 0.2
+  direct floors for both generated Track 1 and independent Track 2/oracle.

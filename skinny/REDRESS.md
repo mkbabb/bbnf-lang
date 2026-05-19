@@ -3194,3 +3194,29 @@ perturbation.
 - W8 moves no `RESULTS.md` row and wires no new production behavior. W9 may
   consume W8 only for `unescape_uxxxx_x4_neon` in the current
   `unescape_string` caller with production row gates measured in W9.
+
+## SK-V10 Wave 9 Existing Escape Production Rejection
+
+- Item 108 rejects W9 under `G-W9-KERNEL-PRODUCTION`. The accepted W8 C6 proof
+  remains valid, but its exact `unescape_string` caller already consumed
+  `unescape_uxxxx_x4_neon` before W9. Redress did not add a cosmetic wrapper,
+  constant, or feature re-gate to claim same-commit integration.
+- No production source, generated parser, gate, report, or `RESULTS.md` row was
+  changed. `/tmp/skv10-waveW9-rejected.patch` is an empty marker because no
+  source patch was attempted.
+- Evidence passed:
+  `RUSTFLAGS="-C target-cpu=native" cargo test --manifest-path skinny/Cargo.toml -p bbnf-simd unescape_uxxxx_x4_matches_scalar -- --nocapture`,
+  `BBNF_SIMD_STRICT=1 RUSTFLAGS="-C target-cpu=native" cargo test --manifest-path skinny/Cargo.toml -p bbnf-simd sk_v3_intrinsic_parity_aarch64 -- --nocapture`,
+  and
+  `RUSTFLAGS="-C target-cpu=native" cargo test --manifest-path skinny/Cargo.toml -p parse-that-regex unescape -- --nocapture`.
+- Targeted direct Criterion evidence under `/tmp/skv10-w9-criterion` failed the
+  Section 0.2 direct floors:
+
+  | Corpus | Track 1 Mbps | Track 2 Mbps | sonic direct Mbps | serde direct Mbps | Floor | Outcome |
+  |---|---:|---:|---:|---:|---:|---|
+  | `unicode_escapes` | 5207 | 5234 | 14315 | 5195 | 12527 | FAIL |
+  | `y_string_unicode` | 5096 | 3723 | 8851 | 7555 | 8027 | FAIL |
+
+- W8 stays proof-only. W9 moves no rows and does not authorize future
+  production reuse of the accepted proof without a new SPEC/CHALLENGE route
+  naming a real source delta.

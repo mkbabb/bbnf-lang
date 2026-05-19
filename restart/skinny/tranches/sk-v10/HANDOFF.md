@@ -15,9 +15,9 @@ firewall is closed under REDRESS 102. W4 `instruments` typed product admission
 is rejected under REDRESS 103, and W5 root-type typed generalization proof is
 closed under REDRESS 104. W6 `github_events` root typed row admission is closed
 under REDRESS 105. W7 full-string primitive micro-proof is rejected under
-REDRESS 106. W8 hex escape micro-proof is closed under REDRESS 107; W9 is the
-next live dispatch for the exact accepted C6 `unescape_string` proof, subject
-to CHALLENGE.
+REDRESS 106. W8 hex escape micro-proof is closed under REDRESS 107. W9
+existing-call-site kernel production is rejected under REDRESS 108; W10 is the
+next live dispatch, subject to CHALLENGE.
 
 ## 1. Read First
 
@@ -27,7 +27,7 @@ to CHALLENGE.
 4. `restart/skinny/tranches/sk-v9/SPEC.md`
 5. `restart/skinny/tranches/sk-v9/DISPATCH-PROMPT.md`
 6. `skinny/RESULTS.md`
-7. `skinny/REDRESS.md` entries 94-107
+7. `skinny/REDRESS.md` entries 94-108
 8. `restart/skinny/tranches/sk-v10/SYNTHESIS.md`
 9. `restart/skinny/tranches/sk-v10/research/alpha/alpha-A-results-extraction.md`
 10. `restart/skinny/tranches/sk-v10/research/alpha/alpha-B-competitor-deltas.md`
@@ -90,6 +90,10 @@ to CHALLENGE.
 67. `restart/skinny/tranches/sk-v10/research/w8/hardening/CHALLENGE-W8-CONSOLIDATED.md`
 68. `restart/skinny/tranches/sk-v10/research/p3/escape-segment-proof/W8-ESCAPE-MICROPROOF.md`
 69. `restart/skinny/tranches/sk-v10/research/w8/w8-redress.md`
+70. `restart/skinny/tranches/sk-v10/research/w9/w9-research.md`
+71. `restart/skinny/tranches/sk-v10/research/w9/w9-plan.md`
+72. `restart/skinny/tranches/sk-v10/research/w9/hardening/CHALLENGE-W9-CONSOLIDATED.md`
+73. `restart/skinny/tranches/sk-v10/research/w9/w9-redress.md`
 
 ## 2. Current State
 
@@ -112,7 +116,7 @@ Current `skinny/RESULTS.md` state:
 | Direct output/control-path contract | Primary JSON frontier. Required before any direct digest row is promoted beyond guard-plane evidence; S-P1 must profile direct rows specifically. |
 | `instruments` typed product admission | First typed generalization target; fixed top-level object shape fits the current typed DirectBuild schema model. |
 | Root-type typed generalization | Required before `github_events` and `gsoc-2018` typed rows, because their root shapes are not current named-struct roots. |
-| Existing-substrate unicode/string kernels | May target current string/unescape call sites only; W3 cannot be named as consumer; must pass micro-prove-first before production. W7 full-string proof failed and cannot feed W9; W8 C6 hex escape proof passed for `unescape_string`. |
+| Existing-substrate unicode/string kernels | May target current string/unescape call sites only; W3 cannot be named as consumer; must pass micro-prove-first before production. W7 full-string proof failed; W8 C6 hex escape proof passed for `unescape_string`; W9 rejected production consumption because the caller was already wired and row floors failed. |
 | Same-run sidecar freshness manifest | Gate-only evidence ingestion; no behavior movement by itself. |
 | SK-V10 telemetry refresh | Gate-only baseline refresh; no row movement without same-wave behavior gate. |
 | Pass Omega lock amendment | Route substrate-ceiling falsification into a lock amendment so future SK cycles do not reopen W3 without micro-proof and a live output-plane target. |
@@ -120,13 +124,13 @@ Current `skinny/RESULTS.md` state:
 
 ## 4. Next Move
 
-1. Dispatch W9, Existing-Call-Site Kernel Production, from SPEC Section 12.
-2. Consume only the accepted W8 C6 proof for `unescape_uxxxx_x4_neon` in the
-   current `unescape_string` caller unless SPEC/CHALLENGE accepts a replacement
-   proof.
-3. Run CHALLENGE before redress and reject any plan that widens beyond one
-   primitive, one caller, one output plane, and one target row set.
-4. Preserve W10b maintain floors and leave parse-only rows `S / NO-GO`.
+1. Dispatch W10, Direct Residual Behavior Tranche, from SPEC Section 13.
+2. Select exactly one direct-output/control mechanism and at most three target
+   rows.
+3. Run CHALLENGE before redress and reject helper-transfer, scalar-parent fold,
+   W3, parse-only, and direct-vs-typed relabeling routes.
+4. Preserve direct guard rows, typed guard rows if report output is refreshed,
+   and leave parse-only rows `S / NO-GO`.
 
 ## 5. Refusal Conditions
 
@@ -147,7 +151,7 @@ Refuse dispatch if a requested wave:
 SK-V10 Alpha, S-P1 Profile, S-P2 Research, S-P3 Synthesis-Plan, W0 telemetry
 freeze, W1 direct contract, W2 direct reclamation, and W3 parse-only firewall
 are closed, W4 is rejected under REDRESS 103, W5 is closed under REDRESS 104,
-W6 is closed under REDRESS 105, W7 is rejected under REDRESS 106, and W8 is
-closed under REDRESS 107. The next live work is W9 for the accepted C6
-`unescape_string` proof. No direct row movement is authorized unless it
+W6 is closed under REDRESS 105, W7 is rejected under REDRESS 106, W8 is closed
+under REDRESS 107, and W9 is rejected under REDRESS 108. The next live work is
+W10 direct residual behavior. No direct row movement is authorized unless it
 satisfies the REDRESS 100 contract and the Section 0.2 numeric floors.

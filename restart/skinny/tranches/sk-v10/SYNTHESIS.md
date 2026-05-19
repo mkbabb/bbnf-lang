@@ -13,9 +13,9 @@ W4 `instruments` typed product admission is rejected under REDRESS 103. W5
 root-type typed generalization proof is closed under REDRESS 104. W6
 `github_events` root typed row admission is closed under REDRESS 105. W7
 full-string primitive micro-proof is rejected under REDRESS 106. W8 hex escape
-micro-proof is closed under REDRESS 107. SK-V10 implementation is dispatched
-by `SPEC.md` and `DISPATCH-PROMPT.md`; W9 is the next live wave for the exact
-accepted C6 `unescape_string` proof.
+micro-proof is closed under REDRESS 107. W9 existing-call-site kernel
+production is rejected under REDRESS 108. SK-V10 implementation is dispatched
+by `SPEC.md` and `DISPATCH-PROMPT.md`; W10 is the next live wave.
 
 ## Authority
 
@@ -35,7 +35,7 @@ accepted C6 `unescape_string` proof.
 - `restart/skinny/tranches/sk-v10/research/p2/p2g-candidate-ledger.md`
 - `restart/skinny/tranches/sk-v10/research/p2/hardening/HARDENING-S-P2-V1-CONSOLIDATED.md`
 - `skinny/RESULTS.md`
-- `skinny/REDRESS.md` entries 94-107
+- `skinny/REDRESS.md` entries 94-108
 
 ## Section 0 - Alpha Close Condition
 
@@ -201,6 +201,13 @@ fixed-width Unicode escape slices. `unicode_mixed` was recorded as zero
 eligible because its `\u` text is escaped-backslash data, not JSON Unicode
 escape syntax. No production caller or `RESULTS.md` row changed.
 
+W9 rejected production consumption of W8. The exact `unescape_string` caller
+already consumed `unescape_uxxxx_x4_neon` before W9, so there was no legitimate
+same-commit source delta. Fresh targeted direct measurements also missed
+Section 0.2 floors: `unicode_escapes` 5207 / 5234 Mbps versus 12527, and
+`y_string_unicode` 5096 / 3723 Mbps versus 8027. No production caller or
+`RESULTS.md` row changed.
+
 ## Section 7 - Micro-Prove-First Gate
 
 No substrate or kernel intervention reaches S-P3 wave-scoping until it has a
@@ -217,7 +224,8 @@ Profile-first remains necessary for target selection. It is no longer
 sufficient for dispatch. W7 is the live example: primitive parity was green,
 but caller-level throughput failed, so the route is not available for W9.
 W8 is the corresponding accepted route: caller-level throughput cleared the
-threshold, but production row movement is still deferred to W9.
+threshold, but W9 shows that a proof for an already-wired caller is not row
+movement and cannot satisfy same-commit production integration by wording alone.
 
 ## Section 8 - Omega And Totality Routing
 
@@ -233,6 +241,6 @@ CSS L4 / Sheets / BBNF-self generalization is the unexercised thesis risk.
 
 This file does not independently authorize source work. `G-ALPHA-SK-V10`, S-P1
 Profile, S-P2 Research, S-P3 Synthesis-Plan, W0, W1, W2, W3, W5, and W6 are
-closed; W8 is proof-closed; W4 and W7 are rejected with measurement. Wave
+closed; W8 is proof-closed; W4, W7, and W9 are rejected with measurement. Wave
 implementation proceeds only through the current `SPEC.md` and
 `DISPATCH-PROMPT.md` entry gates.

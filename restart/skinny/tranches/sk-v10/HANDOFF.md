@@ -5,10 +5,11 @@ Date: 2026-05-19.
 Status: S-P1 Profile closed after V1 hardening under
 `HARDENING-S-P1-V1-CONSOLIDATED`. S-P2 Research closed after V1 hardening under
 `HARDENING-S-P2-V1-CONSOLIDATED`; `p2g-candidate-ledger.md` is the post-CHALLENGE
-candidate-pool authority. W3 union substrate is retired as falsified. The
-primary JSON frontier is `direct_to_struct`; typed product-plane generalization
-is the bounded second route; parse-only SOTA is retired from the close target.
-SK-V10 is ready for S-P3 Synthesis-Plan.
+candidate-pool authority. S-P3 closed through V3 confirmation challenge. W3
+union substrate is retired as falsified. The primary JSON frontier is
+`direct_to_struct`; typed product-plane generalization is the bounded second
+route; parse-only SOTA is retired from the close target. W0 telemetry freeze is
+closed under REDRESS 99; W1 is the next live dispatch.
 
 ## 1. Read First
 
@@ -18,7 +19,7 @@ SK-V10 is ready for S-P3 Synthesis-Plan.
 4. `restart/skinny/tranches/sk-v9/SPEC.md`
 5. `restart/skinny/tranches/sk-v9/DISPATCH-PROMPT.md`
 6. `skinny/RESULTS.md`
-7. `skinny/REDRESS.md` entries 94-98
+7. `skinny/REDRESS.md` entries 94-99
 8. `restart/skinny/tranches/sk-v10/SYNTHESIS.md`
 9. `restart/skinny/tranches/sk-v10/research/alpha/alpha-A-results-extraction.md`
 10. `restart/skinny/tranches/sk-v10/research/alpha/alpha-B-competitor-deltas.md`
@@ -43,6 +44,12 @@ SK-V10 is ready for S-P3 Synthesis-Plan.
 29. `restart/skinny/tranches/sk-v10/research/p2/p2f-grammar-neutral.md`
 30. `restart/skinny/tranches/sk-v10/research/p2/p2g-candidate-ledger.md`
 31. `restart/skinny/tranches/sk-v10/research/p2/hardening/HARDENING-S-P2-V1-CONSOLIDATED.md`
+32. `restart/skinny/tranches/sk-v10/SPEC.md`
+33. `restart/skinny/tranches/sk-v10/DISPATCH-PROMPT.md`
+34. `restart/skinny/tranches/sk-v10/research/p3/hardening/HARDENING-S-P3-V3-CONSOLIDATED.md`
+35. `restart/skinny/tranches/sk-v10/research/w0/w0-research.md`
+36. `restart/skinny/tranches/sk-v10/research/w0/w0-plan.md`
+37. `restart/skinny/tranches/sk-v10/research/w0/w0-redress.md`
 
 ## 2. Current State
 
@@ -73,9 +80,8 @@ Current `skinny/RESULTS.md` state:
 
 ## 4. Next Move
 
-1. Dispatch S-P3 to author a measurable SK-V10 `SPEC.md` and
-   `DISPATCH-PROMPT.md`.
-2. Implement source waves only after their fresh entry gates pass.
+1. Dispatch W1, the Direct Output/Control-Path Contract, from SPEC Section 4.
+2. Keep direct row movement blocked until W1 closes.
 
 ## 5. Refusal Conditions
 
@@ -93,6 +99,6 @@ Refuse dispatch if a requested wave:
 
 ## 6. Close Posture
 
-SK-V10 Alpha, S-P1 Profile, and S-P2 Research are closed. The next live work is
-S-P3 Synthesis-Plan. No source implementation is authorized before S-P3 names
-owner paths, gates, and revert protocol.
+SK-V10 Alpha, S-P1 Profile, S-P2 Research, S-P3 Synthesis-Plan, and W0
+telemetry freeze are closed. The next live work is W1. No direct row movement
+is authorized before W1 closes the output/control-path contract.

@@ -5,9 +5,10 @@ SK-V10. It binds to the SK-V10 packet at
 `restart/skinny/tranches/sk-v10/` and to the wave plan in
 `restart/skinny/tranches/sk-v10/SPEC.md`.
 
-G-Alpha is closed. S-P1 Profile and S-P2 Research are closed. S-P3 is the
-authority for this dispatch contract. Source work is authorized only
-wave-by-wave after the requested wave's SPEC entry gate passes.
+G-Alpha is closed. S-P1 Profile, S-P2 Research, and S-P3 Synthesis-Plan are
+closed. W0 telemetry freeze is closed under REDRESS 99. Source work is
+authorized only wave-by-wave after the requested wave's SPEC entry gate
+passes; W1 is the next live dispatch.
 
 REDRESS 96, 97, and 98 retire the W3 union/event/class-column substrate
 thesis. No implementation agent may reopen it through a renamed W3, a
@@ -36,15 +37,19 @@ Read in order:
     - `research/p3/p3d-telemetry-schema.md`.
     - `research/p3/p3e-preblocked-ledger.md`.
     - `research/p3/p3f-spec-draft.md`.
-12. `skinny/RESULTS.md`.
-13. `skinny/REDRESS.md`.
+12. The W0 close artefacts:
+    - `research/w0/w0-research.md`.
+    - `research/w0/w0-plan.md`.
+    - `research/w0/w0-redress.md`.
+13. `skinny/RESULTS.md`.
+14. `skinny/REDRESS.md`.
 
 ## Wave Manifest
 
 | Wave | SPEC section | Title | Candidate ids | Dispatch status | Budget | Redress cap |
 |---|---|---|---|---|---:|---:|
-| W0 | Section 3 | SK-V10-open Telemetry Freeze | `C12` | Initial gate-only wave | 120-240 gate/report LOC | <=90 min |
-| W1 | Section 4 | Direct Output/Control-Path Contract | `C1` | Conditional on W0 close | 180-320 docs/gate LOC | <=90 min |
+| W0 | Section 3 | SK-V10-open Telemetry Freeze | `C12` | Closed - REDRESS 99 | 120-240 gate/report LOC | <=90 min |
+| W1 | Section 4 | Direct Output/Control-Path Contract | `C1` | Dispatchable - W0 closed | 180-320 docs/gate LOC | <=90 min |
 | W2 | Section 5 | Direct Row-Table Reclamation | `C1` | Conditional on W1 close | 120-240 gate/report LOC | <=90 min |
 | W3 | Section 6 | W3 And Parse-Only Firewall | firewall | Conditional on W2 close | 80-160 docs/gate LOC | <=90 min |
 | W4 | Section 7 | `instruments` Typed Product Admission | `C2` | Conditional on W3 close | 160-260 source/generated + 40-80 gate LOC | <=90 min |

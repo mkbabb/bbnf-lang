@@ -5,9 +5,10 @@ Date: 2026-05-19.
 Status: Pass Alpha closed for SK-V9 -> SK-V10 under
 `G-ALPHA-SK-V10`; S-P1 Profile closed under
 `HARDENING-S-P1-V1-CONSOLIDATED`; S-P2 Research closed under
-`HARDENING-S-P2-V1-CONSOLIDATED`. SK-V10 implementation is not dispatched by
-this file. The skinny pass sequence may now run S-P3; source implementation
-remains blocked until S-P3 authors `SPEC.md` and `DISPATCH-PROMPT.md`.
+`HARDENING-S-P2-V1-CONSOLIDATED`; S-P3 Synthesis-Plan closed through V3
+confirmation challenge. W0 telemetry freeze is closed under REDRESS 99. SK-V10
+implementation is dispatched by `SPEC.md` and `DISPATCH-PROMPT.md`; W1 is the
+next live wave.
 
 ## Authority
 
@@ -144,6 +145,10 @@ render workload, output plane, comparator id, comparator strictness, comparator
 freshness, Track 1/Track 2 Mbps, same-run run id, measured validation path,
 same-wave consumer class, and REDRESS entry.
 
+W0 closed the opening telemetry freeze without row movement. The opening run id
+remains `sk-v9-open:criterion-fnv64-a1e8a51ae806d386`, and the cost-facts
+snapshot gate now expects the 40-row SK-V10 opening manifest.
+
 ## Section 7 - Micro-Prove-First Gate
 
 No substrate or kernel intervention reaches S-P3 wave-scoping until it has a
@@ -171,6 +176,7 @@ CSS L4 / Sheets / BBNF-self generalization is the unexercised thesis risk.
 
 ## Section 9 - Dispatch Boundary
 
-This file does not authorize source work. `G-ALPHA-SK-V10`, S-P1 Profile, and
-S-P2 Research are closed; S-P3 must still write the measurable wave plan before
-implementation.
+This file does not independently authorize source work. `G-ALPHA-SK-V10`, S-P1
+Profile, S-P2 Research, S-P3 Synthesis-Plan, and W0 are closed. Wave
+implementation proceeds only through the current `SPEC.md` and
+`DISPATCH-PROMPT.md` entry gates.

@@ -2948,3 +2948,29 @@ perturbation.
   falsification into the SK-V10 contract, retire W3 from the candidate
   shortlist, carry REDRESS 96/97/98 as pre-blocks, and resequence around
   typed-plane and existing-substrate work.
+
+## SK-V10 Wave 0 Telemetry Freeze
+
+- Item 99 admits W0 as a gate-only telemetry freeze under
+  `G-W0-TELEMETRY-FREEZE`. The opening authority remains the W1-rendered
+  SK-V9 snapshot in `skinny/RESULTS.md` with run id
+  `sk-v9-open:criterion-fnv64-a1e8a51ae806d386`; W0 does not mint a new
+  criterion identity.
+- Redress changed only the cost-facts RESULTS snapshot guard in
+  `skinny/xtask/src/main.rs`: the manifest row-count invariant is now the
+  SK-V10 opening surface of 40 rows instead of the stale pre-W1 38-row
+  surface. The gate still requires the existing snapshot markers, malformed
+  run-id rejection, uniform run id, diagnostic nonproducer marker, cost-facts
+  validation, and the inherited schema/report consumers.
+- W0 moved no rows. `RESULTS.md` remains 17 `parse_only S / NO-GO` rows, 17
+  `direct_to_struct` rows with 3 `A / GO` and 14 `N-direct / NO-GO`, and 6
+  `real_typed_struct A / GO` rows.
+- Evidence passed against the frozen capture:
+  `CRITERION_HOME=target/skv9-w1/criterion RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --advisory`
+  and
+  `CRITERION_HOME=target/skv9-w1/criterion RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --with-cost-facts --check-results`.
+  The rendered artefacts are saved at `/tmp/skv10-w0-gate-json-advisory.md`
+  and `/tmp/skv10-w0-cost-facts.json`.
+- The default `skinny/target/criterion` cache was rejected before redress for
+  non-native W0 metadata and is not the SK-V10 opening authority. Future W0/W1
+  validation must name the intended `CRITERION_HOME` explicitly.

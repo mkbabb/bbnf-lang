@@ -326,14 +326,19 @@ fn validate_cost_facts_flags(passthrough: &[String]) -> Result<bool> {
 }
 
 fn validate_w0_results_snapshot(root: &Path) -> Result<()> {
+    const SK_V10_OPENING_MANIFEST_ROWS: usize = 40;
+
     let text = std::fs::read_to_string(root.join("RESULTS.md"))
         .context("gate-json --with-cost-facts --check-results requires RESULTS.md")?;
     let manifest_rows = text
         .lines()
         .filter(|line| line.starts_with("| json/"))
         .count();
-    if manifest_rows != 38 {
-        bail!("RESULTS.md SK-V9 manifest row count moved from 38 to {manifest_rows}");
+    if manifest_rows != SK_V10_OPENING_MANIFEST_ROWS {
+        bail!(
+            "RESULTS.md SK-V10 opening manifest row count moved from {} to {manifest_rows}",
+            SK_V10_OPENING_MANIFEST_ROWS
+        );
     }
     for required in ["SK-V9-open", "none:pre-W1:none:pre-W1:none:pre-W1"] {
         if !text.contains(required) {

@@ -2,10 +2,11 @@
 
 Date: 2026-05-19.
 
-Status: Pass Alpha draft created after SK-V9 REDRESS 98. SK-V10 has not yet
-entered S-P1/S-P2/S-P3. W3 union substrate is retired as falsified. The primary
-JSON frontier is `direct_to_struct`; typed product-plane generalization is the
-bounded second route; parse-only SOTA is retired from the close target.
+Status: Pass Alpha closed under `G-ALPHA-SK-V10` after SK-V9 REDRESS 98.
+SK-V10 is ready for S-P1 Profile. W3 union substrate is retired as falsified.
+The primary JSON frontier is `direct_to_struct`; typed product-plane
+generalization is the bounded second route; parse-only SOTA is retired from the
+close target.
 
 ## 1. Read First
 
@@ -23,6 +24,8 @@ bounded second route; parse-only SOTA is retired from the close target.
 12. `restart/skinny/tranches/sk-v10/research/alpha/alpha-D-validated-invalidated.md`
 13. `restart/skinny/tranches/sk-v10/research/alpha/alpha-E-candidate-shortlist.md`
 14. `restart/skinny/tranches/sk-v10/research/alpha/alpha-F-contract-draft.md`
+15. `restart/skinny/tranches/sk-v10/research/alpha-hardening/V1/CONSOLIDATED.md`
+16. `restart/skinny/tranches/sk-v10/research/g-alpha/G-ALPHA-PRESENTATION.md`
 
 ## 2. Current State
 
@@ -53,14 +56,11 @@ Current `skinny/RESULTS.md` state:
 
 ## 4. Next Move
 
-1. Run Alpha CHALLENGE on Alpha-A through Alpha-F.
-2. Fold any accepted challenge revisions.
-3. Present/record `G-ALPHA-SK-V10`.
-4. Dispatch S-P1 Profile only after Alpha closes, with `direct_to_struct` as
+1. Dispatch S-P1 Profile, with `direct_to_struct` as
    the first profiling target.
-5. Dispatch S-P2/S-P3 to author a measurable SK-V10 `SPEC.md` and
+2. Dispatch S-P2/S-P3 to author a measurable SK-V10 `SPEC.md` and
    `DISPATCH-PROMPT.md`.
-6. Implement source waves only after their fresh entry gates pass.
+3. Implement source waves only after their fresh entry gates pass.
 
 ## 5. Refusal Conditions
 
@@ -78,5 +78,6 @@ Refuse dispatch if a requested wave:
 
 ## 6. Close Posture
 
-SK-V10 Alpha is open. The next close gate is Alpha CHALLENGE convergence and
-`G-ALPHA-SK-V10`; no source implementation is authorized before that point.
+SK-V10 Alpha is closed. The next live work is S-P1 Profile. No source
+implementation is authorized before S-P3 names owner paths, gates, and revert
+protocol.

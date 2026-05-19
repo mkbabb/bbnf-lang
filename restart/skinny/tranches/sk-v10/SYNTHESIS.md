@@ -2,10 +2,10 @@
 
 Date: 2026-05-19.
 
-Status: Pass Alpha contract draft for SK-V9 -> SK-V10. SK-V10 implementation
-is not dispatched by this file. After Alpha challenge convergence the
-orchestrator may present `G-ALPHA-SK-V10`; only after that gate closes may the
-skinny pass sequence author `SPEC.md` and `DISPATCH-PROMPT.md`.
+Status: Pass Alpha closed for SK-V9 -> SK-V10 under
+`G-ALPHA-SK-V10`. SK-V10 implementation is not dispatched by this file. The
+skinny pass sequence may now run S-P1/S-P2/S-P3; source implementation remains
+blocked until S-P3 authors `SPEC.md` and `DISPATCH-PROMPT.md`.
 
 ## Authority
 
@@ -19,6 +19,8 @@ skinny pass sequence author `SPEC.md` and `DISPATCH-PROMPT.md`.
 - `restart/skinny/tranches/sk-v10/research/alpha/alpha-C-redress-digest.md`
 - `restart/skinny/tranches/sk-v10/research/alpha/alpha-D-validated-invalidated.md`
 - `restart/skinny/tranches/sk-v10/research/alpha/alpha-E-candidate-shortlist.md`
+- `restart/skinny/tranches/sk-v10/research/alpha-hardening/V1/CONSOLIDATED.md`
+- `restart/skinny/tranches/sk-v10/research/g-alpha/G-ALPHA-PRESENTATION.md`
 - `skinny/RESULTS.md`
 - `skinny/REDRESS.md` entries 94-98
 
@@ -34,7 +36,8 @@ Alpha closes only when:
    typed-plane generalization as a bounded product-plane extension, and
    existing-substrate W4 kernels only behind a micro-prove-first gate.
 6. The orchestrator records `G-ALPHA-SK-V10` closed before S-P1/S-P2/S-P3
-   dispatch.
+   dispatch. This is closed by
+   `research/g-alpha/G-ALPHA-PRESENTATION.md`.
 
 ## Section 1 - Current Measured State
 

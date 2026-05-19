@@ -12,7 +12,8 @@ route; parse-only SOTA is retired from the close target. W0 telemetry freeze is
 closed under REDRESS 99, W1 direct contract is closed under REDRESS 100, W2
 direct row-table reclamation is closed under REDRESS 101, and W3 parse-only
 firewall is closed under REDRESS 102. W4 `instruments` typed product admission
-is rejected under REDRESS 103; W5 is the next live dispatch.
+is rejected under REDRESS 103, and W5 root-type typed generalization proof is
+closed under REDRESS 104; W6 is the next live dispatch.
 
 ## 1. Read First
 
@@ -22,7 +23,7 @@ is rejected under REDRESS 103; W5 is the next live dispatch.
 4. `restart/skinny/tranches/sk-v9/SPEC.md`
 5. `restart/skinny/tranches/sk-v9/DISPATCH-PROMPT.md`
 6. `skinny/RESULTS.md`
-7. `skinny/REDRESS.md` entries 94-103
+7. `skinny/REDRESS.md` entries 94-104
 8. `restart/skinny/tranches/sk-v10/SYNTHESIS.md`
 9. `restart/skinny/tranches/sk-v10/research/alpha/alpha-A-results-extraction.md`
 10. `restart/skinny/tranches/sk-v10/research/alpha/alpha-B-competitor-deltas.md`
@@ -67,6 +68,11 @@ is rejected under REDRESS 103; W5 is the next live dispatch.
 49. `restart/skinny/tranches/sk-v10/research/w4/w4-plan.md`
 50. `restart/skinny/tranches/sk-v10/research/w4/hardening/CHALLENGE-W4-CONSOLIDATED.md`
 51. `restart/skinny/tranches/sk-v10/research/w4/w4-redress.md`
+52. `restart/skinny/tranches/sk-v10/research/w5/w5-research.md`
+53. `restart/skinny/tranches/sk-v10/research/w5/w5-plan.md`
+54. `restart/skinny/tranches/sk-v10/research/w5/hardening/CHALLENGE-W5-CONSOLIDATED.md`
+55. `restart/skinny/tranches/sk-v10/research/w5/w5-redress.md`
+56. `restart/skinny/tranches/sk-v10/research/p3/root-typed-proof/ROOT-TYPED-PROOF.md`
 
 ## 2. Current State
 
@@ -97,9 +103,9 @@ Current `skinny/RESULTS.md` state:
 
 ## 4. Next Move
 
-1. Dispatch W5, Root-Type Typed Generalization Proof, from SPEC Section 8.
-2. Prove root-array and numeric-string-keyed map roots without moving rows; W6
-   may consume the proof only if W5 closes.
+1. Dispatch W6, Root Typed Row Admission, from SPEC Section 9.
+2. Select one root-unblocked corpus, `github_events` before `gsoc-2018` unless
+   CHALLENGE reverses the order.
 
 ## 5. Refusal Conditions
 
@@ -119,6 +125,6 @@ Refuse dispatch if a requested wave:
 
 SK-V10 Alpha, S-P1 Profile, S-P2 Research, S-P3 Synthesis-Plan, W0 telemetry
 freeze, W1 direct contract, W2 direct reclamation, and W3 parse-only firewall
-are closed, and W4 is rejected under REDRESS 103. The next live work is W5. No
-direct row movement is authorized unless it satisfies the REDRESS 100 contract
-and the Section 0.2 numeric floors.
+are closed, W4 is rejected under REDRESS 103, and W5 is closed under REDRESS
+104. The next live work is W6. No direct row movement is authorized unless it
+satisfies the REDRESS 100 contract and the Section 0.2 numeric floors.

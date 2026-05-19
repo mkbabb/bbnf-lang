@@ -170,6 +170,67 @@ pub struct MarineGeometryData {
     pub faces: Vec<u32>,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct W5ArrayEvent<'a> {
+    #[serde(default)]
+    pub id: Option<u64>,
+    #[serde(default, borrow)]
+    pub actor: Option<Cow<'a, str>>,
+    #[serde(default)]
+    pub public: Option<bool>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct W5MapMetric<'a> {
+    #[serde(default)]
+    pub count: Option<u64>,
+    #[serde(default, borrow)]
+    pub label: Option<Cow<'a, str>>,
+}
+
+#[derive(Debug)]
+pub struct W5MapMetricEntry<'a> {
+    pub key: Cow<'a, str>,
+    pub value: W5MapMetric<'a>,
+}
+
+#[cfg(test)]
+#[derive(Debug)]
+struct W5MapMetricEntries<'a>(Vec<W5MapMetricEntry<'a>>);
+
+#[cfg(test)]
+impl<'de> Deserialize<'de> for W5MapMetricEntries<'de> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct W5MapMetricEntriesVisitor;
+
+        impl<'de> Visitor<'de> for W5MapMetricEntriesVisitor {
+            type Value = W5MapMetricEntries<'de>;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                formatter.write_str("a W5 map-entry root object")
+            }
+
+            fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+            where
+                A: MapAccess<'de>,
+            {
+                let mut entries = Vec::with_capacity(map.size_hint().unwrap_or(0));
+                while let Some((key, value)) =
+                    map.next_entry::<Cow<'de, str>, W5MapMetric<'de>>()?
+                {
+                    entries.push(W5MapMetricEntry { key, value });
+                }
+                Ok(W5MapMetricEntries(entries))
+            }
+        }
+
+        deserializer.deserialize_map(W5MapMetricEntriesVisitor)
+    }
+}
+
 pub enum RealTypedOutput<'a> {
     Twitter(TwitterSearch<'a>),
     ApacheBuilds(ApacheBuilds<'a>),
@@ -458,6 +519,31 @@ fn checksum_marine_geometry_data(value: &MarineGeometryData) -> u64 {
     fold_u32_slice(hash, &value.faces)
 }
 
+#[cfg(test)]
+fn checksum_w5_array_events(values: &[W5ArrayEvent<'_>]) -> u64 {
+    let mut hash = mix(0x77356172726179, values.len() as u64);
+    for value in values {
+        hash = fold_opt_u64(hash, value.id);
+        hash = fold_opt_str(hash, &value.actor);
+        hash = match value.public {
+            Some(value) => mix(hash, value as u64),
+            None => mix(hash, 0xff),
+        };
+    }
+    hash
+}
+
+#[cfg(test)]
+fn checksum_w5_map_entries(values: &[W5MapMetricEntry<'_>]) -> u64 {
+    let mut hash = mix(0x77356d6170, values.len() as u64);
+    for entry in values {
+        hash = mix(hash, hash_str(entry.key.as_ref()));
+        hash = fold_opt_u64(hash, entry.value.count);
+        hash = fold_opt_str(hash, &entry.value.label);
+    }
+    hash
+}
+
 fn fold_opt_str(hash: u64, value: &Option<Cow<'_, str>>) -> u64 {
     match value {
         Some(value) => mix(hash, hash_str(value.as_ref())),
@@ -616,6 +702,43 @@ mod tests {
             let text = std::str::from_utf8(&bytes).unwrap();
             assert_real_typed_parity(text, &bytes, fixture);
         }
+    }
+
+    #[test]
+    fn w5_generated_array_root_probe_matches_sidecars() {
+        let input =
+            br#"[{"id":1,"actor":"octo","public":true},{"id":2,"actor":"hub","public":false}]"#;
+        let text = std::str::from_utf8(input).unwrap();
+        let generated = crate::generated_real_typed::parse_w5_array_root_probe(text).unwrap();
+        let serde = serde_json::from_slice::<Vec<W5ArrayEvent<'_>>>(input).unwrap();
+        let sonic = sonic_rs::from_slice::<Vec<W5ArrayEvent<'_>>>(input).unwrap();
+        let checksums = [
+            checksum_w5_array_events(&generated),
+            checksum_w5_array_events(&serde),
+            checksum_w5_array_events(&sonic),
+        ];
+        assert_eq!(checksums[0], checksums[1], "generated/serde mismatch");
+        assert_eq!(checksums[0], checksums[2], "generated/sonic mismatch");
+    }
+
+    #[test]
+    fn w5_generated_map_entry_root_probe_matches_sidecars() {
+        let input = br#"{"101":{"count":2,"label":"small"},"202":{"count":7,"label":"large"}}"#;
+        let text = std::str::from_utf8(input).unwrap();
+        let generated = crate::generated_real_typed::parse_w5_map_entry_root_probe(text).unwrap();
+        let serde = serde_json::from_slice::<W5MapMetricEntries<'_>>(input)
+            .unwrap()
+            .0;
+        let sonic = sonic_rs::from_slice::<W5MapMetricEntries<'_>>(input)
+            .unwrap()
+            .0;
+        let checksums = [
+            checksum_w5_map_entries(&generated),
+            checksum_w5_map_entries(&serde),
+            checksum_w5_map_entries(&sonic),
+        ];
+        assert_eq!(checksums[0], checksums[1], "generated/serde mismatch");
+        assert_eq!(checksums[0], checksums[2], "generated/sonic mismatch");
     }
 
     #[test]

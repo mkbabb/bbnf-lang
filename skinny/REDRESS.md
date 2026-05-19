@@ -3079,3 +3079,26 @@ perturbation.
   for `instruments`; the independent oracle cost dominates the W4 contract.
   W5 may still dispatch because its entry gate accepts a W4 admission or a W4
   measured rejection.
+
+## SK-V10 Wave 5 Root-Type Typed Generalization Proof
+
+- Item 104 admits W5 under `G-W5-ROOT-TYPED-PROOF`. `DirectRootSchema` now
+  carries `DirectTypeRef`, preserving existing struct roots through
+  `DirectRootSchema::struct_root` and adding collection roots through
+  `DirectRootSchema::typed_root`.
+- The typed renderer now collects helpers from root-level `DirectTypeRef`
+  values before rendering public root functions. Root functions parse through
+  the same `Renderer::parse_expr` path as field values, so array and map-entry
+  roots use the existing typed DirectBuild helper machinery.
+- Generated proof roots were added without registering any bench row:
+  `parse_w5_array_root_probe` returns
+  `Vec<crate::real_typed_struct::W5ArrayEvent<'i>>`, and
+  `parse_w5_map_entry_root_probe` returns
+  `Vec<crate::real_typed_struct::W5MapMetricEntry<'i>>`.
+- The proof roots pass checksum parity against serde_json and sonic-rs typed
+  sidecars. `RESULTS.md` is unchanged; no row moved and no typed product
+  admission is claimed by W5.
+- W6 may now select one root-unblocked typed row, with `github_events` before
+  `gsoc-2018` unless CHALLENGE reverses the order. W6 still must provide
+  full-fixture generated Track 1, independent Track 2/oracle, serde_json typed,
+  sonic-rs typed, checksum parity, and typed floor evidence.

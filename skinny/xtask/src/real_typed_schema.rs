@@ -7,38 +7,50 @@ use codegen::direct_schema::{
 pub fn schema() -> DirectSchemaSet {
     DirectSchemaSet {
         module_name: "generated_real_typed".to_string(),
-        schema_hash: "sk-v8-real-typed-w2".to_string(),
+        schema_hash: "sk-v10-w5-root-typed".to_string(),
         roots: vec![
-            DirectRootSchema {
-                function_name: "parse_twitter_search".to_string(),
-                rust_type: "crate::real_typed_struct::TwitterSearch<'i>".to_string(),
-                type_id: "TwitterSearch".to_string(),
-            },
-            DirectRootSchema {
-                function_name: "parse_update_center".to_string(),
-                rust_type: "crate::real_typed_struct::UpdateCenter<'i>".to_string(),
-                type_id: "UpdateCenter".to_string(),
-            },
-            DirectRootSchema {
-                function_name: "parse_apache_builds".to_string(),
-                rust_type: "crate::real_typed_struct::ApacheBuilds<'i>".to_string(),
-                type_id: "ApacheBuilds".to_string(),
-            },
-            DirectRootSchema {
-                function_name: "parse_citm_catalog".to_string(),
-                rust_type: "crate::real_typed_struct::CitmCatalog<'i>".to_string(),
-                type_id: "CitmCatalog".to_string(),
-            },
-            DirectRootSchema {
-                function_name: "parse_mesh".to_string(),
-                rust_type: "crate::real_typed_struct::Mesh".to_string(),
-                type_id: "Mesh".to_string(),
-            },
-            DirectRootSchema {
-                function_name: "parse_marine_ik".to_string(),
-                rust_type: "crate::real_typed_struct::MarineIk".to_string(),
-                type_id: "MarineIk".to_string(),
-            },
+            DirectRootSchema::struct_root(
+                "parse_twitter_search",
+                "crate::real_typed_struct::TwitterSearch<'i>",
+                "TwitterSearch",
+            ),
+            DirectRootSchema::struct_root(
+                "parse_update_center",
+                "crate::real_typed_struct::UpdateCenter<'i>",
+                "UpdateCenter",
+            ),
+            DirectRootSchema::struct_root(
+                "parse_apache_builds",
+                "crate::real_typed_struct::ApacheBuilds<'i>",
+                "ApacheBuilds",
+            ),
+            DirectRootSchema::struct_root(
+                "parse_citm_catalog",
+                "crate::real_typed_struct::CitmCatalog<'i>",
+                "CitmCatalog",
+            ),
+            DirectRootSchema::struct_root("parse_mesh", "crate::real_typed_struct::Mesh", "Mesh"),
+            DirectRootSchema::struct_root(
+                "parse_marine_ik",
+                "crate::real_typed_struct::MarineIk",
+                "MarineIk",
+            ),
+            DirectRootSchema::typed_root(
+                "parse_w5_array_root_probe",
+                "Vec<crate::real_typed_struct::W5ArrayEvent<'i>>",
+                vec_with_capacity(ty("W5ArrayEvent"), 2),
+            ),
+            DirectRootSchema::typed_root(
+                "parse_w5_map_entry_root_probe",
+                "Vec<crate::real_typed_struct::W5MapMetricEntry<'i>>",
+                map_entries(
+                    "crate::real_typed_struct::W5MapMetricEntry<'i>",
+                    "key",
+                    "value",
+                    2,
+                    ty("W5MapMetric"),
+                ),
+            ),
         ],
         types: vec![
             struct_ty(
@@ -228,6 +240,23 @@ pub fn schema() -> DirectSchemaSet {
                     default("faces", "faces", vec_with_capacity(u32_ty(), 74_087)),
                 ],
             ),
+            struct_ty(
+                "W5ArrayEvent",
+                "crate::real_typed_struct::W5ArrayEvent<'i>",
+                vec![
+                    default("id", "id", opt(u64_ty())),
+                    default("actor", "actor", opt(string())),
+                    default("public", "public", opt(bool_ty())),
+                ],
+            ),
+            struct_ty(
+                "W5MapMetric",
+                "crate::real_typed_struct::W5MapMetric<'i>",
+                vec![
+                    default("count", "count", opt(u64_ty())),
+                    default("label", "label", opt(string())),
+                ],
+            ),
         ],
     }
 }
@@ -293,6 +322,10 @@ fn u64_ty() -> DirectTypeRef {
 
 fn u32_ty() -> DirectTypeRef {
     DirectTypeRef::Scalar(DirectScalar::U32)
+}
+
+fn bool_ty() -> DirectTypeRef {
+    DirectTypeRef::Scalar(DirectScalar::Bool)
 }
 
 fn f64_ty() -> DirectTypeRef {

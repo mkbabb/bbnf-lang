@@ -12,7 +12,33 @@ pub struct DirectSchemaSet {
 pub struct DirectRootSchema {
     pub function_name: String,
     pub rust_type: String,
-    pub type_id: String,
+    pub ty: DirectTypeRef,
+}
+
+impl DirectRootSchema {
+    pub fn struct_root(
+        function_name: impl Into<String>,
+        rust_type: impl Into<String>,
+        type_id: impl Into<String>,
+    ) -> Self {
+        Self::typed_root(
+            function_name,
+            rust_type,
+            DirectTypeRef::Type(type_id.into()),
+        )
+    }
+
+    pub fn typed_root(
+        function_name: impl Into<String>,
+        rust_type: impl Into<String>,
+        ty: DirectTypeRef,
+    ) -> Self {
+        Self {
+            function_name: function_name.into(),
+            rust_type: rust_type.into(),
+            ty,
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -138,12 +164,11 @@ impl DirectSchemaSet {
             if !is_ident(&root.function_name) {
                 return Err(format!("invalid root function `{}`", root.function_name));
             }
-            if !types.contains_key(root.type_id.as_str()) {
-                return Err(format!(
-                    "root `{}` references missing type `{}`",
-                    root.function_name, root.type_id
-                ));
+            if root.rust_type.trim().is_empty() {
+                return Err(format!("root `{}` has empty rust type", root.function_name));
             }
+            validate_type_ref(&root.ty, &types)
+                .map_err(|error| format!("root `{}` {error}", root.function_name))?;
         }
         for ty in &self.types {
             match &ty.kind {

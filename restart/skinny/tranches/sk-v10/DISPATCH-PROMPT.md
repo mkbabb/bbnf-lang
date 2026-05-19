@@ -9,9 +9,10 @@ G-Alpha is closed. S-P1 Profile, S-P2 Research, and S-P3 Synthesis-Plan are
 closed. W0 telemetry freeze is closed under REDRESS 99. W1 direct contract is
 closed under REDRESS 100. W2 direct row-table reclamation is closed under
 REDRESS 101. W3 parse-only firewall is closed under REDRESS 102. W4
-`instruments` typed product admission is rejected under REDRESS 103. Source
-work is authorized only wave-by-wave after the requested wave's SPEC entry gate
-passes; W5 is the next live dispatch.
+`instruments` typed product admission is rejected under REDRESS 103. W5
+root-type typed generalization proof is closed under REDRESS 104. Source work
+is authorized only wave-by-wave after the requested wave's SPEC entry gate
+passes; W6 is the next live dispatch.
 
 REDRESS 96, 97, and 98 retire the W3 union/event/class-column substrate
 thesis. No implementation agent may reopen it through a renamed W3, a
@@ -69,8 +70,8 @@ Read in order:
 | W2 | Section 5 | Direct Row-Table Reclamation | `C1` | Closed - REDRESS 101 | 120-240 gate/report LOC | <=90 min |
 | W3 | Section 6 | W3 And Parse-Only Firewall | firewall | Closed - REDRESS 102 | 80-160 docs/gate LOC | <=90 min |
 | W4 | Section 7 | `instruments` Typed Product Admission | `C2` | Rejected - REDRESS 103 | 160-260 source/generated + 40-80 gate LOC | <=90 min |
-| W5 | Section 8 | Root-Type Typed Generalization Proof | `C3` | Dispatchable - W4 disposition closed | 220-420 source/generated + 60-120 test/gate LOC | <=90 min |
-| W6 | Section 9 | Root Typed Row Admission | `C3` | Conditional on W5 proof | 160-260 source/generated + 40-80 gate LOC per corpus | <=90 min |
+| W5 | Section 8 | Root-Type Typed Generalization Proof | `C3` | Closed - REDRESS 104 | 220-420 source/generated + 60-120 test/gate LOC | <=90 min |
+| W6 | Section 9 | Root Typed Row Admission | `C3` | Dispatchable - W5 proof closed | 160-260 source/generated + 40-80 gate LOC per corpus | <=90 min |
 | W7 | Section 10 | String Primitive Micro-Proof | `C4` or `C5` | Conditional on W3 close + CHALLENGE | 90-260 proof LOC | <=90 min |
 | W8 | Section 11 | Escape/Segment Micro-Proof | `C6` or `C7` | Conditional on relevant W7 proof if needed + CHALLENGE | 90-260 proof LOC | <=90 min |
 | W9 | Section 12 | Existing-Call-Site Kernel Production | proven `C4`-`C7` | Conditional on relevant W7 or W8 proof + CHALLENGE | 220-420 source/bench/gate LOC | <=90 min |
@@ -79,7 +80,8 @@ Read in order:
 
 The dependency order is firm. W1 must precede W2 and W10. W3 is a firewall
 only and never dispatches a W3 substrate. W4 rejected with measurement and no
-typed row movement. W7 and W8 are proof-only micro waves. W9 is the only kernel
+typed row movement. W5 proved array and map-entry typed roots but moved no
+row. W7 and W8 are proof-only micro waves. W9 is the only kernel
 production wave and may consume only the relevant accepted W7 or W8 proof for
 the exact `C4`-`C7` primitive and existing call site. `C8` and `C9` cannot feed
 W9 without a future SPEC/CHALLENGE amendment. A wave whose SPEC entry gate is

@@ -9,8 +9,9 @@ Status: Pass Alpha closed for SK-V9 -> SK-V10 under
 confirmation challenge. W0 telemetry freeze is closed under REDRESS 99. W1
 direct contract is closed under REDRESS 100. W2 direct row-table reclamation is
 closed under REDRESS 101. W3 parse-only firewall is closed under REDRESS 102.
-W4 `instruments` typed product admission is rejected under REDRESS 103. SK-V10
-implementation is dispatched by `SPEC.md` and `DISPATCH-PROMPT.md`; W5 is the
+W4 `instruments` typed product admission is rejected under REDRESS 103. W5
+root-type typed generalization proof is closed under REDRESS 104. SK-V10
+implementation is dispatched by `SPEC.md` and `DISPATCH-PROMPT.md`; W6 is the
 next live wave.
 
 ## Authority
@@ -31,7 +32,7 @@ next live wave.
 - `restart/skinny/tranches/sk-v10/research/p2/p2g-candidate-ledger.md`
 - `restart/skinny/tranches/sk-v10/research/p2/hardening/HARDENING-S-P2-V1-CONSOLIDATED.md`
 - `skinny/RESULTS.md`
-- `skinny/REDRESS.md` entries 94-103
+- `skinny/REDRESS.md` entries 94-104
 
 ## Section 0 - Alpha Close Condition
 
@@ -168,7 +169,12 @@ aliases and parse-only SOTA claims as refusal routes.
 
 W4 rejected `instruments/real_typed_struct` after the independent Track 2 typed
 oracle missed the W4 floor: Track 1 20678 Mbps, Track 2 12127 Mbps, sonic-rs
-typed 15940 Mbps, floor 14491 Mbps. No row moved; W5 may now dispatch.
+typed 15940 Mbps, floor 14491 Mbps. No row moved.
+
+W5 closed the root-type proof. Typed DirectBuild roots now carry
+`DirectTypeRef`, and synthetic generated array/map-entry roots pass
+serde_json/sonic checksum parity. No row moved; W6 may now select one
+root-unblocked typed row.
 
 ## Section 7 - Micro-Prove-First Gate
 

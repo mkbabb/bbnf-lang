@@ -49,11 +49,11 @@ impl std::error::Error for DirectBuildError<'_> {}
     for root in &schema.roots {
         let fn_name = &root.function_name;
         let type_name = &root.rust_type;
-        let parser_fn = renderer.type_fn(&root.type_id)?;
+        let parser_expr = renderer.parse_expr_with_parser(&root.ty, "&mut parser")?;
         out.push_str(&format!(
             r#"pub fn {fn_name}<'i>(input: &'i str) -> Result<{type_name}, DirectBuildError<'i>> {{
     let mut parser = DirectParser::new(input);
-    let output = {parser_fn}(&mut parser)?;
+    let output = {parser_expr}?;
     parser.ws();
     if parser.cursor == parser.bytes.len() {{
         Ok(output)
@@ -143,6 +143,9 @@ impl<'a> Renderer<'a> {
                 .types
                 .insert(ty.type_id.as_str(), ty.rust_type.as_str());
         }
+        for root in &program.schema.roots {
+            renderer.collect_helpers(&root.ty);
+        }
         for ty in &program.schema.types {
             match &ty.kind {
                 DirectTypeKind::Struct { fields, .. } => {
@@ -189,18 +192,22 @@ impl<'a> Renderer<'a> {
     }
 
     fn parse_expr(&self, ty: &DirectTypeRef) -> Result<String, String> {
+        self.parse_expr_with_parser(ty, "parser")
+    }
+
+    fn parse_expr_with_parser(&self, ty: &DirectTypeRef, parser: &str) -> Result<String, String> {
         match ty {
-            DirectTypeRef::Type(type_id) => Ok(format!("{}(parser)", self.type_fn(type_id)?)),
-            DirectTypeRef::Scalar(DirectScalar::String) => Ok("parser.parse_string()".to_string()),
-            DirectTypeRef::Scalar(DirectScalar::Bool) => Ok("parser.parse_bool()".to_string()),
-            DirectTypeRef::Scalar(DirectScalar::I64) => Ok("parser.parse_i64()".to_string()),
-            DirectTypeRef::Scalar(DirectScalar::U64) => Ok("parser.parse_u64()".to_string()),
-            DirectTypeRef::Scalar(DirectScalar::U32) => Ok("parser.parse_u32()".to_string()),
-            DirectTypeRef::Scalar(DirectScalar::F64) => Ok("parser.parse_f64()".to_string()),
+            DirectTypeRef::Type(type_id) => Ok(format!("{}({parser})", self.type_fn(type_id)?)),
+            DirectTypeRef::Scalar(DirectScalar::String) => Ok(format!("{parser}.parse_string()")),
+            DirectTypeRef::Scalar(DirectScalar::Bool) => Ok(format!("{parser}.parse_bool()")),
+            DirectTypeRef::Scalar(DirectScalar::I64) => Ok(format!("{parser}.parse_i64()")),
+            DirectTypeRef::Scalar(DirectScalar::U64) => Ok(format!("{parser}.parse_u64()")),
+            DirectTypeRef::Scalar(DirectScalar::U32) => Ok(format!("{parser}.parse_u32()")),
+            DirectTypeRef::Scalar(DirectScalar::F64) => Ok(format!("{parser}.parse_f64()")),
             DirectTypeRef::Vec { .. }
             | DirectTypeRef::MapString(_)
             | DirectTypeRef::MapEntriesVec { .. }
-            | DirectTypeRef::Option(_) => Ok(format!("{}(parser)", self.helper_name(ty)?)),
+            | DirectTypeRef::Option(_) => Ok(format!("{}({parser})", self.helper_name(ty)?)),
         }
     }
 

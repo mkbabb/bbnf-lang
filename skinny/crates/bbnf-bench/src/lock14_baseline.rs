@@ -413,6 +413,15 @@ const W5_LOCK14_OWNER_PATHS: &[&str] = &[
     "crates/codegen/src/json_provider.rs",
 ];
 
+const SK_V10_W5_ROOT_TYPED_OWNER_PATHS: &[&str] = &[
+    "crates/codegen/src/direct_schema.rs",
+    "crates/codegen/src/lib.rs",
+    "crates/codegen/src/typed_direct.rs",
+    "crates/bbnf-bench/src/generated_real_typed.rs",
+    "crates/bbnf-bench/src/real_typed_struct.rs",
+    "xtask/src/real_typed_schema.rs",
+];
+
 fn validate_git_freeze(root: &Path) -> Result<(), String> {
     let frozen_status = git_output(root, &git_path_args("status", "--porcelain", FROZEN_ROOTS))?;
     validate_frozen_status_output(&frozen_status)?;
@@ -477,6 +486,16 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
     if subject.contains("sk-v8-wave5") {
         let allowed = changed_paths.iter().all(|path| {
             W5_LOCK14_OWNER_PATHS
+                .iter()
+                .any(|allowed| path.as_str() == *allowed)
+        });
+        if allowed {
+            return Ok(());
+        }
+    }
+    if subject.contains("sk-v10-waveW5") {
+        let allowed = changed_paths.iter().all(|path| {
+            SK_V10_W5_ROOT_TYPED_OWNER_PATHS
                 .iter()
                 .any(|allowed| path.as_str() == *allowed)
         });
@@ -676,6 +695,24 @@ mod tests {
         )
         .is_ok());
         assert!(validate_authorized_parent_diff(&changed, "fix(other): isolate provider").is_err());
+    }
+
+    #[test]
+    fn admits_sk_v10_w5_root_typed_parent_diff_only_under_w5_scope() {
+        let changed = SK_V10_W5_ROOT_TYPED_OWNER_PATHS
+            .iter()
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v10-waveW5): prove root typed schema"
+        )
+        .is_ok());
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v10-waveW6): admit root typed row"
+        )
+        .is_err());
     }
 
     #[test]

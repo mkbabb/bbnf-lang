@@ -365,11 +365,11 @@ mod tests {
         DirectSchemaSet {
             module_name: "tiny_typed".to_string(),
             schema_hash: "test-schema".to_string(),
-            roots: vec![DirectRootSchema {
-                function_name: "parse_tiny".to_string(),
-                rust_type: "crate::TinyRoot<'i>".to_string(),
-                type_id: "TinyRoot".to_string(),
-            }],
+            roots: vec![DirectRootSchema::struct_root(
+                "parse_tiny",
+                "crate::TinyRoot<'i>",
+                "TinyRoot",
+            )],
             types: vec![DirectTypeSchema {
                 type_id: "TinyRoot".to_string(),
                 rust_type: "crate::TinyRoot<'i>".to_string(),
@@ -398,6 +398,77 @@ mod tests {
                 },
             }],
         }
+    }
+
+    #[test]
+    fn emits_typed_direct_collection_roots() {
+        let schema = DirectSchemaSet {
+            module_name: "root_typed".to_string(),
+            schema_hash: "test-root-schema".to_string(),
+            roots: vec![
+                DirectRootSchema::typed_root(
+                    "parse_array_root",
+                    "Vec<crate::ArrayEvent<'i>>",
+                    DirectTypeRef::Vec {
+                        inner: Box::new(DirectTypeRef::Type("ArrayEvent".to_string())),
+                        capacity_hint: Some(2),
+                    },
+                ),
+                DirectRootSchema::typed_root(
+                    "parse_map_root",
+                    "Vec<crate::MapEntry<'i>>",
+                    DirectTypeRef::MapEntriesVec {
+                        entry_rust_type: "crate::MapEntry<'i>".to_string(),
+                        key_field: "key".to_string(),
+                        value_field: "value".to_string(),
+                        capacity_hint: Some(2),
+                        value: Box::new(DirectTypeRef::Type("MapValue".to_string())),
+                    },
+                ),
+            ],
+            types: vec![
+                DirectTypeSchema {
+                    type_id: "ArrayEvent".to_string(),
+                    rust_type: "crate::ArrayEvent<'i>".to_string(),
+                    kind: DirectTypeKind::Struct {
+                        unknown_fields: UnknownFieldPolicy::Skip,
+                        ignored_fields: Vec::new(),
+                        fields: vec![DirectFieldSchema {
+                            key_literal: "name".to_string(),
+                            rust_field: "name".to_string(),
+                            ty: DirectTypeRef::Scalar(DirectScalar::String),
+                            presence: PresencePolicy::Default,
+                            duplicate: DuplicatePolicy::LastWins,
+                        }],
+                    },
+                },
+                DirectTypeSchema {
+                    type_id: "MapValue".to_string(),
+                    rust_type: "crate::MapValue<'i>".to_string(),
+                    kind: DirectTypeKind::Struct {
+                        unknown_fields: UnknownFieldPolicy::Skip,
+                        ignored_fields: Vec::new(),
+                        fields: vec![DirectFieldSchema {
+                            key_literal: "count".to_string(),
+                            rust_field: "count".to_string(),
+                            ty: DirectTypeRef::Scalar(DirectScalar::U64),
+                            presence: PresencePolicy::Default,
+                            duplicate: DuplicatePolicy::LastWins,
+                        }],
+                    },
+                },
+            ],
+        };
+
+        let emitted = emit_typed_from_source("json", JSON_GRAMMAR, &schema).unwrap();
+        let generated = emitted.get("root_typed.rs").unwrap();
+
+        assert!(generated.contains("pub fn parse_array_root"));
+        assert!(generated.contains("pub fn parse_map_root"));
+        assert!(generated.contains("parse_vec_cap_2_type_array_event"));
+        assert!(generated.contains("parse_map_entries_crate_map_entry"));
+        assert!(!generated.contains("JsonSink"));
+        assert!(!generated.contains("serde_json::Value"));
     }
 
     fn strip_direct_builds(expr: &mut BackendExpr) {

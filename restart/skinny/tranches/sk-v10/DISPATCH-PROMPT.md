@@ -7,8 +7,9 @@ SK-V10. It binds to the SK-V10 packet at
 
 G-Alpha is closed. S-P1 Profile, S-P2 Research, and S-P3 Synthesis-Plan are
 closed. W0 telemetry freeze is closed under REDRESS 99. W1 direct contract is
-closed under REDRESS 100. Source work is authorized only wave-by-wave after the
-requested wave's SPEC entry gate passes; W2 is the next live dispatch.
+closed under REDRESS 100. W2 direct row-table reclamation is closed under
+REDRESS 101. Source work is authorized only wave-by-wave after the requested
+wave's SPEC entry gate passes; W3 is the next live dispatch.
 
 REDRESS 96, 97, and 98 retire the W3 union/event/class-column substrate
 thesis. No implementation agent may reopen it through a renamed W3, a
@@ -46,8 +47,12 @@ Read in order:
     - `research/w1/w1-plan.md`.
     - `research/w1/hardening/CHALLENGE-W1-CONSOLIDATED.md`.
     - `research/w1/w1-redress.md`.
-14. `skinny/RESULTS.md`.
-15. `skinny/REDRESS.md`.
+14. The W2 close artefacts:
+    - `research/w2/w2-research.md`.
+    - `research/w2/w2-plan.md`.
+    - `research/w2/w2-redress.md`.
+15. `skinny/RESULTS.md`.
+16. `skinny/REDRESS.md`.
 
 ## Wave Manifest
 
@@ -55,8 +60,8 @@ Read in order:
 |---|---|---|---|---|---:|---:|
 | W0 | Section 3 | SK-V10-open Telemetry Freeze | `C12` | Closed - REDRESS 99 | 120-240 gate/report LOC | <=90 min |
 | W1 | Section 4 | Direct Output/Control-Path Contract | `C1` | Closed - REDRESS 100 | 180-320 docs/gate LOC | <=90 min |
-| W2 | Section 5 | Direct Row-Table Reclamation | `C1` | Dispatchable - W1 closed | 120-240 gate/report LOC | <=90 min |
-| W3 | Section 6 | W3 And Parse-Only Firewall | firewall | Conditional on W2 close | 80-160 docs/gate LOC | <=90 min |
+| W2 | Section 5 | Direct Row-Table Reclamation | `C1` | Closed - REDRESS 101 | 120-240 gate/report LOC | <=90 min |
+| W3 | Section 6 | W3 And Parse-Only Firewall | firewall | Dispatchable - W2 closed | 80-160 docs/gate LOC | <=90 min |
 | W4 | Section 7 | `instruments` Typed Product Admission | `C2` | Conditional on W3 close | 160-260 source/generated + 40-80 gate LOC | <=90 min |
 | W5 | Section 8 | Root-Type Typed Generalization Proof | `C3` | Conditional on W4 disposition | 220-420 source/generated + 60-120 test/gate LOC | <=90 min |
 | W6 | Section 9 | Root Typed Row Admission | `C3` | Conditional on W5 proof | 160-260 source/generated + 40-80 gate LOC per corpus | <=90 min |

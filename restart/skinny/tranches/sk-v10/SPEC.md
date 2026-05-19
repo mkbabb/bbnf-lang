@@ -10,7 +10,9 @@ this SPEC and `DISPATCH-PROMPT.md` converge through S-P3 CHALLENGE.
 SK-V10 inherits the SK-V9 empirical result: typed product rows are the banked
 SOTA surface; direct digest rows are the primary JSON frontier; parse-only rows
 remain diagnostic `S / NO-GO`. REDRESS 96, 97, and 98 retire the W3
-union-substrate thesis. No SK-V10 wave may reopen it through a rename.
+union-substrate thesis. REDRESS 101 admits the W2 direct row-table reclamation
+for `apache_builds` and `numbers`. No SK-V10 wave may reopen W3 through a
+rename.
 
 ## 0. Close Condition And Goalset
 
@@ -26,9 +28,10 @@ SK-V10 closes only when all of these are true:
 4. The six current `real_typed_struct A / GO` rows are preserved unless a
    same-wave gate records a measured REDRESS disposition: `twitter`,
    `citm_catalog`, `apache_builds`, `update_center`, `mesh`, and `marine_ik`.
-5. The three current `direct_to_struct A / GO` guard rows are preserved unless
-   a same-wave direct gate records a measured REDRESS disposition:
-   `citm_catalog`, `marine_ik`, and `unicode_basic`.
+5. The current `direct_to_struct A / GO` rows are preserved unless a same-wave
+   direct gate records a measured REDRESS disposition: the three opening guard
+   rows `citm_catalog`, `marine_ik`, and `unicode_basic`, plus the W2-admitted
+   `apache_builds` and `numbers` rows.
 6. Parse-only remains outside the SOTA close target while rows are
    `S / NO-GO`. Parse-only throughput, PMU, cycles, masking probes, and
    structural scans are diagnostic non-producers.
@@ -54,14 +57,14 @@ SK-V10 closes only when all of these are true:
 
 ### 0.1 Opening Row Surface
 
-The opening measured authority is the W1-rendered SK-V9-open report in
-`skinny/RESULTS.md` unless W0 refreshes it. The current run id is
-`sk-v9-open:criterion-fnv64-a1e8a51ae806d386`.
+The opening measured authority was the W1-rendered SK-V9-open report. W2
+reclaimed direct rows by re-rendering `skinny/RESULTS.md` over the same frozen
+run id, `sk-v9-open:criterion-fnv64-a1e8a51ae806d386`.
 
-| Family | Count | Opening posture | SK-V10 role |
+| Family | Count | Current posture | SK-V10 role |
 |---|---:|---|---|
 | `parse_only` | 17 | all `S / NO-GO` | diagnostic only |
-| `direct_to_struct` | 17 | 3 `A / GO`, 14 `N-direct / NO-GO` | primary JSON frontier |
+| `direct_to_struct` | 17 | 5 `A / GO`, 12 `N-direct / NO-GO` | primary JSON frontier |
 | `real_typed_struct` | 6 | all `A / GO` | product-plane SOTA surface |
 
 ### 0.2 Shared Numeric Floors
@@ -163,8 +166,8 @@ block:
 |---|---|---|---|---|---|---:|---|---:|
 | W0 | 3 | `C12` | SK-V10-open Telemetry Freeze | Closed - REDRESS 99 | None | 120-240 gate/report LOC | LOW-MEDIUM | <=90 min |
 | W1 | 4 | `C1` | Direct Output/Control-Path Contract | Closed - REDRESS 100 | None | 180-320 docs/gate LOC | HIGH | <=90 min |
-| W2 | 5 | `C1` | Direct Row-Table Reclamation | Dispatchable - W1 closed | Direct only; zero behavior source | 120-240 gate/report LOC | MEDIUM | <=90 min |
-| W3 | 6 | firewall | W3 And Parse-Only Firewall | Conditional on W2 close | None | 80-160 docs/gate LOC | LOW | <=90 min |
+| W2 | 5 | `C1` | Direct Row-Table Reclamation | Closed - REDRESS 101 | Direct only; zero behavior source | 120-240 gate/report LOC | MEDIUM | <=90 min |
+| W3 | 6 | firewall | W3 And Parse-Only Firewall | Dispatchable - W2 closed | None | 80-160 docs/gate LOC | LOW | <=90 min |
 | W4 | 7 | `C2` | `instruments` Typed Product Admission | Conditional on W3 close | One typed row | 160-260 source/generated + 40-80 gate LOC | MEDIUM | <=90 min |
 | W5 | 8 | `C3` | Root-Type Typed Generalization Proof | Conditional on W4 disposition | Proof-only | 220-420 source/generated + 60-120 test/gate LOC | MEDIUM-HIGH | <=90 min |
 | W6 | 9 | `C3` | Root Typed Row Admission | Conditional on W5 proof | One typed row per slice | 160-260 source/generated + 40-80 gate LOC per corpus | MEDIUM-HIGH | <=90 min |
@@ -176,9 +179,9 @@ block:
 
 Manifest rules:
 
-1. W0 is closed under REDRESS 99 and W1 is closed under REDRESS 100. W2 is the
-   next dispatchable wave. W3-W10 and Close are conditional until their entry
-   gates pass.
+1. W0 is closed under REDRESS 99, W1 is closed under REDRESS 100, and W2 is
+   closed under REDRESS 101. W3 is the next dispatchable wave. W4-W10 and Close
+   are conditional until their entry gates pass.
 2. W1 must exist before W2 or W10 can move direct rows. A direct row gate
    without W1 is a REVISE.
 3. W3 is a firewall, not the retired W3 implementation route.

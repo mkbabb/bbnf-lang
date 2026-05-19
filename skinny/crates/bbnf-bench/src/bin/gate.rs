@@ -136,8 +136,14 @@ fn main() -> Result<(), Box<dyn Error>> {
             track2_ns: estimates.direct_track2,
             sonic_rs_ns: estimates.direct_sonic,
         });
-        let (direct_outcome, direct_w0_clamped) =
-            w0_direct_non_admission(&fixture.name, classified_direct_outcome);
+        let direct_decision = direct_row_decision(
+            &fixture.name,
+            classified_direct_outcome,
+            fixture.bytes.len() as u64,
+            estimates.direct_track1,
+            estimates.direct_track2,
+        );
+        let direct_outcome = direct_decision.outcome;
         if let Some(outcome) = direct_outcome {
             outcomes.push(outcome);
         }
@@ -171,7 +177,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         let direct_signal = direct_workload_signal(
             direct_struct_ok,
             direct_outcome,
-            direct_w0_clamped,
+            direct_decision.w0_clamped,
+            direct_decision.w2_reclaimed,
             fixture.bytes.len() as u64,
             estimates.direct_track1,
             estimates.direct_track2,
@@ -188,22 +195,24 @@ fn main() -> Result<(), Box<dyn Error>> {
             &run_facts,
             "track1_direct_to_struct",
         );
-        report.rows.push(
-            TelemetryRow::workload(
-                &fixture.name,
-                "direct_to_struct",
-                direct_outcome,
-                fixture.bytes.len() as u64,
-                estimates.direct_track1,
-                estimates.direct_track2,
-                direct_comparators,
-                "digest",
-                "generated Track 1 SinkOnly vs independent hand Track 2 SinkOnly; UTF-8 remains view-boundary",
-                direct_signal,
-                w0_hot_leaf(&fixture.name, "track1_direct_to_struct"),
-            )
-            .with_sk_v8(direct_telemetry),
-        );
+        let mut direct_row = TelemetryRow::workload(
+            &fixture.name,
+            "direct_to_struct",
+            direct_outcome,
+            fixture.bytes.len() as u64,
+            estimates.direct_track1,
+            estimates.direct_track2,
+            direct_comparators,
+            "digest",
+            "generated Track 1 SinkOnly vs independent hand Track 2 SinkOnly; UTF-8 remains view-boundary",
+            direct_signal,
+            w0_hot_leaf(&fixture.name, "track1_direct_to_struct"),
+        )
+        .with_sk_v8(direct_telemetry);
+        if direct_decision.w2_reclaimed {
+            mark_w2_direct_reclamation(&mut direct_row);
+        }
+        report.rows.push(direct_row);
         if direct_outcome == Some(Outcome::NDirectProjectionFailure) {
             report.notes.push(direct_projection_note(
                 &fixture.name,
@@ -783,6 +792,7 @@ fn direct_workload_signal(
     correctness_ok: bool,
     outcome: Option<Outcome>,
     w0_no_admission_clamp: bool,
+    w2_reclaimed: bool,
     bytes: u64,
     track1_ns: Option<f64>,
     track2_ns: Option<f64>,
@@ -790,6 +800,17 @@ fn direct_workload_signal(
 ) -> String {
     if !correctness_ok {
         return "FAIL digest mismatch".to_string();
+    }
+    if w2_reclaimed {
+        let track1 = throughput_mbps(bytes, track1_ns);
+        let track2 = throughput_mbps(bytes, track2_ns);
+        let sonic = throughput_mbps(bytes, sonic_ns);
+        return format!(
+            "PASS W2 direct row reclamation; strict measured-row contract; Track 1 {}, Track 2 {}, sonic {} Mbps",
+            format_mbps(track1),
+            format_mbps(track2),
+            format_mbps(sonic)
+        );
     }
     if w0_no_admission_clamp {
         let track1 = throughput_mbps(bytes, track1_ns);
@@ -817,14 +838,81 @@ fn direct_workload_signal(
     "PASS correctness green; sonic shape parity; throughput within gate".to_string()
 }
 
-fn w0_direct_non_admission(corpus: &str, classified: Option<Outcome>) -> (Option<Outcome>, bool) {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct DirectRowDecision {
+    outcome: Option<Outcome>,
+    w0_clamped: bool,
+    w2_reclaimed: bool,
+}
+
+fn direct_row_decision(
+    corpus: &str,
+    classified: Option<Outcome>,
+    bytes: u64,
+    track1_ns: Option<f64>,
+    track2_ns: Option<f64>,
+) -> DirectRowDecision {
     let row_id = format!("json/{corpus}/direct_to_struct/main");
     if classified.is_none()
         && sk_v8_open_baseline(&row_id).is_some_and(|baseline| baseline.verdict == "NO-GO")
     {
-        return (Some(Outcome::NDirectProjectionFailure), true);
+        if w2_direct_reclamation_passes(corpus, bytes, track1_ns, track2_ns) {
+            return DirectRowDecision {
+                outcome: None,
+                w0_clamped: false,
+                w2_reclaimed: true,
+            };
+        }
+        return DirectRowDecision {
+            outcome: Some(Outcome::NDirectProjectionFailure),
+            w0_clamped: true,
+            w2_reclaimed: false,
+        };
     }
-    (classified, false)
+    DirectRowDecision {
+        outcome: classified,
+        w0_clamped: false,
+        w2_reclaimed: false,
+    }
+}
+
+fn w2_direct_reclamation_passes(
+    corpus: &str,
+    bytes: u64,
+    track1_ns: Option<f64>,
+    track2_ns: Option<f64>,
+) -> bool {
+    let Some(floor) = w2_direct_reclamation_floor(corpus) else {
+        return false;
+    };
+    let (Some(track1), Some(track2)) = (
+        throughput_mbps(bytes, track1_ns),
+        throughput_mbps(bytes, track2_ns),
+    ) else {
+        return false;
+    };
+    track1 >= floor && track2 >= floor
+}
+
+fn w2_direct_reclamation_floor(corpus: &str) -> Option<f64> {
+    match corpus {
+        "apache_builds" => Some(10_020.0),
+        "numbers" => Some(11_788.0),
+        _ => None,
+    }
+}
+
+fn mark_w2_direct_reclamation(row: &mut TelemetryRow) {
+    row.strictness = "strict".to_string();
+    row.parse_utf8 = "measured-row".to_string();
+    row.flaw_probe =
+        "generated Track 1 SinkOnly vs independent hand Track 2 SinkOnly; UTF-8 measured in row"
+            .to_string();
+    row.sk_v8.measured_validation_path = "measured-row".to_string();
+    row.sk_v8.same_wave_consumer_class = "gate_json_direct_contract".to_string();
+    row.sk_v8.redress_entry = "REDRESS-101".to_string();
+    row.sk_v8.wave_id = "SK-V10-W2".to_string();
+    row.sk_v8.sk_v9_open_delta = "direct-reclaimed".to_string();
 }
 
 fn classify_real_typed_projection(
@@ -1804,15 +1892,56 @@ mod tests {
     }
 
     #[test]
-    fn w0_direct_non_admission_clamps_fresh_guard_passes() {
+    fn w2_direct_reclamation_admits_only_floor_pass_clamped_rows() {
         assert_eq!(
-            w0_direct_non_admission("apache_builds", None),
-            (Some(Outcome::NDirectProjectionFailure), true)
+            direct_row_decision(
+                "apache_builds",
+                None,
+                1_000_000,
+                Some(750_000.0),
+                Some(760_000.0)
+            ),
+            DirectRowDecision {
+                outcome: None,
+                w0_clamped: false,
+                w2_reclaimed: true,
+            }
         );
-        assert_eq!(w0_direct_non_admission("citm_catalog", None), (None, false));
         assert_eq!(
-            w0_direct_non_admission("apache_builds", Some(Outcome::IParityOracleFail)),
-            (Some(Outcome::IParityOracleFail), false)
+            direct_row_decision("twitter", None, 1_000_000, Some(800_000.0), Some(850_000.0)),
+            DirectRowDecision {
+                outcome: Some(Outcome::NDirectProjectionFailure),
+                w0_clamped: true,
+                w2_reclaimed: false,
+            }
+        );
+        assert_eq!(
+            direct_row_decision(
+                "citm_catalog",
+                None,
+                1_000_000,
+                Some(800_000.0),
+                Some(850_000.0)
+            ),
+            DirectRowDecision {
+                outcome: None,
+                w0_clamped: false,
+                w2_reclaimed: false,
+            }
+        );
+        assert_eq!(
+            direct_row_decision(
+                "apache_builds",
+                Some(Outcome::IParityOracleFail),
+                1_000_000,
+                Some(800_000.0),
+                Some(850_000.0)
+            ),
+            DirectRowDecision {
+                outcome: Some(Outcome::IParityOracleFail),
+                w0_clamped: false,
+                w2_reclaimed: false,
+            }
         );
     }
 

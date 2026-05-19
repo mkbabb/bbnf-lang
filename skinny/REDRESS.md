@@ -2999,3 +2999,40 @@ perturbation.
   `CRITERION_HOME=target/skv9-w1/criterion RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --with-cost-facts --check-results`.
 - W2 may now re-evaluate direct rows, but it must still satisfy the Section 0.2
   direct floors for both generated Track 1 and independent Track 2/oracle.
+
+## SK-V10 Wave 2 Direct Row-Table Reclamation
+
+- Item 101 admits W2 under `G-W2-DIRECT-RECLAMATION`. The wave moves only
+  direct digest rows and changes no parser/runtime behavior.
+- `apache_builds/direct_to_struct` moved from `N-direct / NO-GO` to
+  `A / GO`: Track 1 11157 Mbps and independent Track 2 10145 Mbps both clear
+  the Section 0.2 floor of 10020 Mbps under the same-run sonic-rs direct
+  comparator at 11021 Mbps.
+- `numbers/direct_to_struct` moved from `N-direct / NO-GO` to `A / GO`:
+  Track 1 12182 Mbps and independent Track 2 11803 Mbps both clear the Section
+  0.2 floor of 11788 Mbps under the same-run sonic-rs direct comparator at
+  12966 Mbps.
+- The renderer emits the W1 direct contract fields for both rows:
+  `strictness=strict`, `parse_utf8=measured-row`,
+  `measured_validation_path=measured-row`,
+  `same_wave_consumer_class=gate_json_direct_contract`,
+  `redress_entry=REDRESS-101`, and `wave_id=SK-V10-W2`.
+- `report.rs` now rejects any changed baseline `N-direct / NO-GO` direct row
+  whose Track 1 or Track 2 Mbps is below its Section 0.2 direct floor. The W2
+  numeric gate is therefore consumed by `gate-json` in the same wave.
+- Routed remainder remains `N-direct / NO-GO`: `twitter`, `canada`,
+  `github_events`, `update_center`, `mesh`, `random`, `gsoc-2018`,
+  `instruments`, `unicode_mixed`, `unicode_escapes`, `distinct_values`, and
+  `y_string_unicode`.
+- Direct guard floors hold: `citm_catalog` 21129 >= 18145, `marine_ik` 9205 >=
+  7575, `unicode_basic` 8973 >= 7841. Typed guard floors hold: `twitter` 18302
+  >= 14424, `citm_catalog` 35102 >= 20053, `apache_builds` 8174 >= 7373,
+  `update_center` 11847 >= 11365, `mesh` 10032 >= 8428, `marine_ik` 10728 >=
+  7369.
+- Evidence passed:
+  `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench w2_direct -- --nocapture`,
+  `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench direct_contract -- --nocapture`,
+  `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench report::tests -- --nocapture`,
+  `CRITERION_HOME=target/skv9-w1/criterion RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --update-results --advisory`,
+  and
+  `CRITERION_HOME=target/skv9-w1/criterion RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --with-cost-facts --check-results`.

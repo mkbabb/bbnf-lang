@@ -1037,6 +1037,19 @@ fn validate_direct_row_movement(
             row.outcome_id, row.verdict
         ));
     }
+    let Some(floor) = sk_v10_direct_floor(&row.corpus) else {
+        return Err(format!("{row_id} has no SK-V10 direct floor"));
+    };
+    let (Some(track1), Some(track2)) = (row.track1_mbps, row.track2_mbps) else {
+        return Err(format!(
+            "{row_id} direct contract lacks Track 1/Track 2 Mbps"
+        ));
+    };
+    if track1 < floor || track2 < floor {
+        return Err(format!(
+            "{row_id} direct contract floor miss: Track 1 {track1:.0}, Track 2 {track2:.0}, floor {floor:.0}"
+        ));
+    }
     if row.output_plane != "digest" {
         return Err(format!(
             "{row_id} direct contract output plane {} is not digest",
@@ -1085,6 +1098,26 @@ fn validate_direct_row_movement(
     validate_w0_hot_leaf(row_id, &row.hot_leaf, &row.sk_v8.profile_artifact)?;
     validate_comparator_evidence(row_id, &row.workload, &row.sk_v8.comparators)?;
     Ok(())
+}
+
+fn sk_v10_direct_floor(corpus: &str) -> Option<f64> {
+    match corpus {
+        "twitter" => Some(13_840.0),
+        "canada" => Some(10_977.0),
+        "apache_builds" => Some(10_020.0),
+        "github_events" => Some(14_364.0),
+        "update_center" => Some(10_160.0),
+        "mesh" => Some(8_916.0),
+        "random" => Some(7_734.0),
+        "gsoc-2018" => Some(20_980.0),
+        "instruments" => Some(11_086.0),
+        "numbers" => Some(11_788.0),
+        "unicode_mixed" => Some(9_314.0),
+        "unicode_escapes" => Some(12_527.0),
+        "distinct_values" => Some(10_022.0),
+        "y_string_unicode" => Some(8_027.0),
+        _ => None,
+    }
 }
 
 fn validate_w0_profile_artifact(row_id: &str, profile_artifact: &str) -> Result<(), String> {
@@ -1787,15 +1820,17 @@ mod tests {
         report
     }
 
-    fn admit_twitter_direct(row: &mut TelemetryRow) {
+    fn admit_direct_contract(row: &mut TelemetryRow) {
         row.outcome_id = "A".into();
         row.verdict = "GO".into();
+        row.track1_mbps = Some(12_000.0);
+        row.track2_mbps = Some(12_000.0);
         row.strictness = "strict".into();
         row.parse_utf8 = "measured-row".into();
         row.output_plane = "digest".into();
         row.sk_v8.measured_validation_path = "measured-row".into();
         row.sk_v8.same_wave_consumer_class = "gate_json_direct_contract".into();
-        row.sk_v8.redress_entry = "REDRESS-100".into();
+        row.sk_v8.redress_entry = "REDRESS-101".into();
         row.sk_v8.wave_id = "SK-V10-W2".into();
     }
 
@@ -2150,9 +2185,9 @@ mod tests {
         let direct = report
             .rows
             .iter_mut()
-            .find(|row| row.sk_v8.row_id == "json/twitter/direct_to_struct/main")
+            .find(|row| row.sk_v8.row_id == "json/apache_builds/direct_to_struct/main")
             .unwrap();
-        admit_twitter_direct(direct);
+        admit_direct_contract(direct);
         assert!(report.validate_sk_v8_w0().is_ok());
     }
 
@@ -2163,9 +2198,9 @@ mod tests {
             let direct = report
                 .rows
                 .iter_mut()
-                .find(|row| row.sk_v8.row_id == "json/twitter/direct_to_struct/main")
+                .find(|row| row.sk_v8.row_id == "json/apache_builds/direct_to_struct/main")
                 .unwrap();
-            admit_twitter_direct(direct);
+            admit_direct_contract(direct);
             mutate(direct);
             assert!(report.validate_sk_v8_w0().is_err());
         };
@@ -2197,6 +2232,18 @@ mod tests {
             sonic.source_artifact =
                 "criterion:json_twitter/sonic_rs_anchor/new/estimates.json".into();
         });
+    }
+
+    #[test]
+    fn direct_contract_rejects_floor_miss() {
+        let mut report = opening_report();
+        let direct = report
+            .rows
+            .iter_mut()
+            .find(|row| row.sk_v8.row_id == "json/twitter/direct_to_struct/main")
+            .unwrap();
+        admit_direct_contract(direct);
+        assert!(report.validate_sk_v8_w0().is_err());
     }
 
     #[test]

@@ -7,8 +7,9 @@ Status: Pass Alpha closed for SK-V9 -> SK-V10 under
 `HARDENING-S-P1-V1-CONSOLIDATED`; S-P2 Research closed under
 `HARDENING-S-P2-V1-CONSOLIDATED`; S-P3 Synthesis-Plan closed through V3
 confirmation challenge. W0 telemetry freeze is closed under REDRESS 99. W1
-direct contract is closed under REDRESS 100. SK-V10 implementation is
-dispatched by `SPEC.md` and `DISPATCH-PROMPT.md`; W2 is the next live wave.
+direct contract is closed under REDRESS 100. W2 direct row-table reclamation is
+closed under REDRESS 101. SK-V10 implementation is dispatched by `SPEC.md` and
+`DISPATCH-PROMPT.md`; W3 is the next live wave.
 
 ## Authority
 
@@ -47,13 +48,13 @@ Alpha closes only when:
 
 ## Section 1 - Current Measured State
 
-The current result authority is `skinny/RESULTS.md`, W1-rendered
-`SK-V9-open`.
+The current result authority is `skinny/RESULTS.md`, W2-rendered over the
+frozen `SK-V9-open` run id.
 
 | Family | Count | State |
 |---|---:|---|
 | `parse_only` | 17 | all `S / NO-GO`; planning evidence only |
-| `direct_to_struct` | 17 | 3 `A / GO` digest guard rows, 14 `N-direct / NO-GO`; primary SK-V10 JSON frontier |
+| `direct_to_struct` | 17 | 5 `A / GO` digest rows, 12 `N-direct / NO-GO`; primary SK-V10 JSON frontier |
 | `real_typed_struct` | 6 | all `A / GO`; primary product-plane SOTA surface |
 
 Typed product rows:
@@ -155,6 +156,11 @@ with strict digest-plane measured-row evidence, independent Track 2 status,
 REDRESS provenance, non-gate-only consumer, and same-run native direct
 comparator sources.
 
+W2 closed direct row-table reclamation. `apache_builds` and `numbers` moved to
+direct `A / GO` because both generated Track 1 and independent Track 2 cleared
+their Section 0.2 floors. The remaining twelve direct rows stay
+`N-direct / NO-GO`.
+
 ## Section 7 - Micro-Prove-First Gate
 
 No substrate or kernel intervention reaches S-P3 wave-scoping until it has a
@@ -183,6 +189,6 @@ CSS L4 / Sheets / BBNF-self generalization is the unexercised thesis risk.
 ## Section 9 - Dispatch Boundary
 
 This file does not independently authorize source work. `G-ALPHA-SK-V10`, S-P1
-Profile, S-P2 Research, S-P3 Synthesis-Plan, W0, and W1 are closed. Wave
+Profile, S-P2 Research, S-P3 Synthesis-Plan, W0, W1, and W2 are closed. Wave
 implementation proceeds only through the current `SPEC.md` and
 `DISPATCH-PROMPT.md` entry gates.

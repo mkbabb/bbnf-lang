@@ -9,8 +9,9 @@ candidate-pool authority. S-P3 closed through V3 confirmation challenge. W3
 union substrate is retired as falsified. The primary JSON frontier is
 `direct_to_struct`; typed product-plane generalization is the bounded second
 route; parse-only SOTA is retired from the close target. W0 telemetry freeze is
-closed under REDRESS 99 and W1 direct contract is closed under REDRESS 100; W2
-is the next live dispatch.
+closed under REDRESS 99, W1 direct contract is closed under REDRESS 100, and
+W2 direct row-table reclamation is closed under REDRESS 101; W3 is the next
+live dispatch.
 
 ## 1. Read First
 
@@ -20,7 +21,7 @@ is the next live dispatch.
 4. `restart/skinny/tranches/sk-v9/SPEC.md`
 5. `restart/skinny/tranches/sk-v9/DISPATCH-PROMPT.md`
 6. `skinny/RESULTS.md`
-7. `skinny/REDRESS.md` entries 94-100
+7. `skinny/REDRESS.md` entries 94-101
 8. `restart/skinny/tranches/sk-v10/SYNTHESIS.md`
 9. `restart/skinny/tranches/sk-v10/research/alpha/alpha-A-results-extraction.md`
 10. `restart/skinny/tranches/sk-v10/research/alpha/alpha-B-competitor-deltas.md`
@@ -55,6 +56,9 @@ is the next live dispatch.
 39. `restart/skinny/tranches/sk-v10/research/w1/w1-plan.md`
 40. `restart/skinny/tranches/sk-v10/research/w1/hardening/CHALLENGE-W1-CONSOLIDATED.md`
 41. `restart/skinny/tranches/sk-v10/research/w1/w1-redress.md`
+42. `restart/skinny/tranches/sk-v10/research/w2/w2-research.md`
+43. `restart/skinny/tranches/sk-v10/research/w2/w2-plan.md`
+44. `restart/skinny/tranches/sk-v10/research/w2/w2-redress.md`
 
 ## 2. Current State
 
@@ -67,7 +71,7 @@ Current `skinny/RESULTS.md` state:
 | Family | State |
 |---|---|
 | `parse_only` | 17 `S / NO-GO` |
-| `direct_to_struct` | 3 `A / GO`, 14 `N-direct / NO-GO` |
+| `direct_to_struct` | 5 `A / GO`, 12 `N-direct / NO-GO` |
 | `real_typed_struct` | 6 `A / GO` |
 
 ## 3. Candidate Boundaries
@@ -85,9 +89,10 @@ Current `skinny/RESULTS.md` state:
 
 ## 4. Next Move
 
-1. Dispatch W2, Direct Row-Table Reclamation, from SPEC Section 5.
-2. Move only direct rows that satisfy REDRESS 100 and the Section 0.2 direct
-   floors on both generated Track 1 and independent Track 2/oracle.
+1. Dispatch W3, W3 And Parse-Only Firewall, from SPEC Section 6.
+2. Keep W3 proof-only. It may enforce the parse-only firewall and close the
+   retired-substrate boundary, but it may not implement or rename a W3
+   substrate.
 
 ## 5. Refusal Conditions
 
@@ -106,6 +111,6 @@ Refuse dispatch if a requested wave:
 ## 6. Close Posture
 
 SK-V10 Alpha, S-P1 Profile, S-P2 Research, S-P3 Synthesis-Plan, W0 telemetry
-freeze, and W1 direct contract are closed. The next live work is W2. No direct
-row movement is authorized unless it satisfies the REDRESS 100 contract and the
-W2 numeric floors.
+freeze, W1 direct contract, and W2 direct reclamation are closed. The next live
+work is W3. No direct row movement is authorized unless it satisfies the
+REDRESS 100 contract and the Section 0.2 numeric floors.

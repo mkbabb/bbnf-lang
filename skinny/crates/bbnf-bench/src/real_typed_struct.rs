@@ -11,6 +11,7 @@ pub enum RealTypedFixture {
     Twitter,
     ApacheBuilds,
     CitmCatalog,
+    GithubEvents,
     UpdateCenter,
     Mesh,
     MarineIk,
@@ -112,6 +113,72 @@ pub struct Plugin<'a> {
 pub struct PluginEntry<'a> {
     pub key: Cow<'a, str>,
     pub value: Plugin<'a>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GithubEvent<'a> {
+    #[serde(default, borrow, rename = "type")]
+    pub event_type: Option<Cow<'a, str>>,
+    #[serde(default, borrow)]
+    pub created_at: Option<Cow<'a, str>>,
+    #[serde(default, borrow)]
+    pub id: Option<Cow<'a, str>>,
+    #[serde(default)]
+    pub public: Option<bool>,
+    #[serde(default, borrow)]
+    pub actor: Option<GithubActor<'a>>,
+    #[serde(default, borrow)]
+    pub repo: Option<GithubRepo<'a>>,
+    #[serde(default, borrow)]
+    pub org: Option<GithubActor<'a>>,
+    #[serde(default, borrow)]
+    pub payload: Option<GithubPayload<'a>>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GithubActor<'a> {
+    #[serde(default)]
+    pub id: Option<u64>,
+    #[serde(default, borrow)]
+    pub login: Option<Cow<'a, str>>,
+    #[serde(default, borrow)]
+    pub url: Option<Cow<'a, str>>,
+    #[serde(default, borrow)]
+    pub avatar_url: Option<Cow<'a, str>>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GithubRepo<'a> {
+    #[serde(default)]
+    pub id: Option<u64>,
+    #[serde(default, borrow)]
+    pub name: Option<Cow<'a, str>>,
+    #[serde(default, borrow)]
+    pub url: Option<Cow<'a, str>>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GithubPayload<'a> {
+    #[serde(default, borrow)]
+    pub action: Option<Cow<'a, str>>,
+    #[serde(default, borrow, rename = "ref")]
+    pub ref_name: Option<Cow<'a, str>>,
+    #[serde(default, borrow)]
+    pub ref_type: Option<Cow<'a, str>>,
+    #[serde(default)]
+    pub push_id: Option<u64>,
+    #[serde(default)]
+    pub size: Option<u64>,
+    #[serde(default)]
+    pub distinct_size: Option<u64>,
+    #[serde(default, borrow)]
+    pub head: Option<Cow<'a, str>>,
+    #[serde(default, borrow)]
+    pub before: Option<Cow<'a, str>>,
+    #[serde(default, borrow)]
+    pub description: Option<Cow<'a, str>>,
+    #[serde(default, borrow)]
+    pub master_branch: Option<Cow<'a, str>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -235,6 +302,7 @@ pub enum RealTypedOutput<'a> {
     Twitter(TwitterSearch<'a>),
     ApacheBuilds(ApacheBuilds<'a>),
     CitmCatalog(CitmCatalog<'a>),
+    GithubEvents(Vec<GithubEvent<'a>>),
     UpdateCenter(UpdateCenter<'a>),
     Mesh(Mesh),
     MarineIk(MarineIk),
@@ -245,6 +313,7 @@ pub fn fixture_for_name(name: &str) -> Option<RealTypedFixture> {
         "twitter" => Some(RealTypedFixture::Twitter),
         "apache_builds" | "apache-builds" => Some(RealTypedFixture::ApacheBuilds),
         "citm_catalog" | "citm-catalog" => Some(RealTypedFixture::CitmCatalog),
+        "github_events" | "github-events" => Some(RealTypedFixture::GithubEvents),
         "update_center" | "update-center" => Some(RealTypedFixture::UpdateCenter),
         "mesh" => Some(RealTypedFixture::Mesh),
         "marine_ik" | "marine-ik" => Some(RealTypedFixture::MarineIk),
@@ -297,6 +366,9 @@ pub fn track1_typed<'a>(
         RealTypedFixture::CitmCatalog => crate::generated_real_typed::parse_citm_catalog(input)
             .map(RealTypedOutput::CitmCatalog)
             .map_err(|error| DirectStructError::Parse(error.to_string())),
+        RealTypedFixture::GithubEvents => crate::generated_real_typed::parse_github_events(input)
+            .map(RealTypedOutput::GithubEvents)
+            .map_err(|error| DirectStructError::Parse(error.to_string())),
         RealTypedFixture::UpdateCenter => crate::generated_real_typed::parse_update_center(input)
             .map(RealTypedOutput::UpdateCenter)
             .map_err(|error| DirectStructError::Parse(error.to_string())),
@@ -330,6 +402,9 @@ pub fn serde_typed<'a>(
         RealTypedFixture::CitmCatalog => serde_json::from_slice::<CitmCatalog<'a>>(bytes)
             .map(RealTypedOutput::CitmCatalog)
             .map_err(|error| DirectStructError::Serde(error.to_string())),
+        RealTypedFixture::GithubEvents => serde_json::from_slice::<Vec<GithubEvent<'a>>>(bytes)
+            .map(RealTypedOutput::GithubEvents)
+            .map_err(|error| DirectStructError::Serde(error.to_string())),
         RealTypedFixture::UpdateCenter => serde_json::from_slice::<UpdateCenter<'a>>(bytes)
             .map(RealTypedOutput::UpdateCenter)
             .map_err(|error| DirectStructError::Serde(error.to_string())),
@@ -355,6 +430,9 @@ pub fn sonic_typed<'a>(
             .map_err(|error| DirectStructError::Sonic(error.to_string())),
         RealTypedFixture::CitmCatalog => sonic_rs::from_slice::<CitmCatalog<'a>>(bytes)
             .map(RealTypedOutput::CitmCatalog)
+            .map_err(|error| DirectStructError::Sonic(error.to_string())),
+        RealTypedFixture::GithubEvents => sonic_rs::from_slice::<Vec<GithubEvent<'a>>>(bytes)
+            .map(RealTypedOutput::GithubEvents)
             .map_err(|error| DirectStructError::Sonic(error.to_string())),
         RealTypedFixture::UpdateCenter => sonic_rs::from_slice::<UpdateCenter<'a>>(bytes)
             .map(RealTypedOutput::UpdateCenter)
@@ -389,6 +467,7 @@ pub fn typed_checksum(output: &RealTypedOutput<'_>) -> u64 {
         RealTypedOutput::Twitter(value) => checksum_twitter(value),
         RealTypedOutput::ApacheBuilds(value) => checksum_apache_builds(value),
         RealTypedOutput::CitmCatalog(value) => checksum_citm_catalog(value),
+        RealTypedOutput::GithubEvents(value) => checksum_github_events(value),
         RealTypedOutput::UpdateCenter(value) => checksum_update_center(value),
         RealTypedOutput::Mesh(value) => checksum_mesh(value),
         RealTypedOutput::MarineIk(value) => checksum_marine_ik(value),
@@ -474,6 +553,67 @@ fn checksum_plugin(value: &Plugin<'_>) -> u64 {
     fold_opt_str(hash, &value.version)
 }
 
+fn checksum_github_events(values: &[GithubEvent<'_>]) -> u64 {
+    let mut hash = mix(0x676974687562, values.len() as u64);
+    for value in values {
+        hash = mix(hash, checksum_github_event(value));
+    }
+    hash
+}
+
+fn checksum_github_event(value: &GithubEvent<'_>) -> u64 {
+    let mut hash = 0x67686576656e74;
+    hash = fold_opt_str(hash, &value.event_type);
+    hash = fold_opt_str(hash, &value.created_at);
+    hash = fold_opt_str(hash, &value.id);
+    hash = fold_opt_bool(hash, value.public);
+    hash = match &value.actor {
+        Some(actor) => mix(hash, checksum_github_actor(actor)),
+        None => mix(hash, 0),
+    };
+    hash = match &value.repo {
+        Some(repo) => mix(hash, checksum_github_repo(repo)),
+        None => mix(hash, 0),
+    };
+    hash = match &value.org {
+        Some(org) => mix(hash, checksum_github_actor(org)),
+        None => mix(hash, 0),
+    };
+    match &value.payload {
+        Some(payload) => mix(hash, checksum_github_payload(payload)),
+        None => mix(hash, 0),
+    }
+}
+
+fn checksum_github_actor(value: &GithubActor<'_>) -> u64 {
+    let mut hash = 0x67686163746f72;
+    hash = fold_opt_u64(hash, value.id);
+    hash = fold_opt_str(hash, &value.login);
+    hash = fold_opt_str(hash, &value.url);
+    fold_opt_str(hash, &value.avatar_url)
+}
+
+fn checksum_github_repo(value: &GithubRepo<'_>) -> u64 {
+    let mut hash = 0x67687265706f;
+    hash = fold_opt_u64(hash, value.id);
+    hash = fold_opt_str(hash, &value.name);
+    fold_opt_str(hash, &value.url)
+}
+
+fn checksum_github_payload(value: &GithubPayload<'_>) -> u64 {
+    let mut hash = 0x67687061796c;
+    hash = fold_opt_str(hash, &value.action);
+    hash = fold_opt_str(hash, &value.ref_name);
+    hash = fold_opt_str(hash, &value.ref_type);
+    hash = fold_opt_u64(hash, value.push_id);
+    hash = fold_opt_u64(hash, value.size);
+    hash = fold_opt_u64(hash, value.distinct_size);
+    hash = fold_opt_str(hash, &value.head);
+    hash = fold_opt_str(hash, &value.before);
+    hash = fold_opt_str(hash, &value.description);
+    fold_opt_str(hash, &value.master_branch)
+}
+
 fn checksum_mesh(value: &Mesh) -> u64 {
     let mut hash = mix(0x6d657368, value.batches.len() as u64);
     for batch in &value.batches {
@@ -553,6 +693,10 @@ fn fold_opt_str(hash: u64, value: &Option<Cow<'_, str>>) -> u64 {
 
 fn fold_opt_u64(hash: u64, value: Option<u64>) -> u64 {
     value.map_or_else(|| mix(hash, 0), |value| mix(hash, value))
+}
+
+fn fold_opt_bool(hash: u64, value: Option<bool>) -> u64 {
+    value.map_or_else(|| mix(hash, 0xff), |value| mix(hash, value as u64))
 }
 
 fn fold_u64_slice(mut hash: u64, values: &[u64]) -> u64 {
@@ -693,6 +837,13 @@ mod tests {
     }
 
     #[test]
+    fn generated_github_events_typed_parser_matches_sidecars() {
+        let input = br#"[{"type":"PushEvent","created_at":"2013-01-10T07:58:30Z","actor":{"id":138052,"login":"jathanism","url":"https://api.github.com/users/jathanism","avatar_url":"https://secure.gravatar.com/avatar/a"},"repo":{"id":6357414,"name":"jathanism/trigger","url":"https://api.github.com/repos/jathanism/trigger"},"public":true,"payload":{"distinct_size":1,"ref":"refs/heads/main","push_id":134107894,"head":"05570a","before":"000000","size":1},"id":"1234567890","org":{"id":1,"login":"org","url":"https://api.github.com/orgs/org","avatar_url":"https://secure.gravatar.com/avatar/o"}}]"#;
+        let text = std::str::from_utf8(input).unwrap();
+        assert_real_typed_parity(text, input, RealTypedFixture::GithubEvents);
+    }
+
+    #[test]
     fn w2_full_real_typed_fixtures_match_sidecars() {
         for (name, fixture) in [
             ("apache_builds", RealTypedFixture::ApacheBuilds),
@@ -702,6 +853,13 @@ mod tests {
             let text = std::str::from_utf8(&bytes).unwrap();
             assert_real_typed_parity(text, &bytes, fixture);
         }
+    }
+
+    #[test]
+    fn w6_full_github_events_typed_fixture_matches_sidecars() {
+        let bytes = std::fs::read(locate_fixture("github_events")).unwrap();
+        let text = std::str::from_utf8(&bytes).unwrap();
+        assert_real_typed_parity(text, &bytes, RealTypedFixture::GithubEvents);
     }
 
     #[test]

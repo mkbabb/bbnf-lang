@@ -422,6 +422,12 @@ const SK_V10_W5_ROOT_TYPED_OWNER_PATHS: &[&str] = &[
     "xtask/src/real_typed_schema.rs",
 ];
 
+const SK_V10_W6_ROOT_TYPED_OWNER_PATHS: &[&str] = &[
+    "crates/bbnf-bench/src/generated_real_typed.rs",
+    "crates/bbnf-bench/src/real_typed_struct.rs",
+    "xtask/src/real_typed_schema.rs",
+];
+
 fn validate_git_freeze(root: &Path) -> Result<(), String> {
     let frozen_status = git_output(root, &git_path_args("status", "--porcelain", FROZEN_ROOTS))?;
     validate_frozen_status_output(&frozen_status)?;
@@ -496,6 +502,16 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
     if subject.contains("sk-v10-waveW5") {
         let allowed = changed_paths.iter().all(|path| {
             SK_V10_W5_ROOT_TYPED_OWNER_PATHS
+                .iter()
+                .any(|allowed| path.as_str() == *allowed)
+        });
+        if allowed {
+            return Ok(());
+        }
+    }
+    if subject.contains("sk-v10-waveW6") {
+        let allowed = changed_paths.iter().all(|path| {
+            SK_V10_W6_ROOT_TYPED_OWNER_PATHS
                 .iter()
                 .any(|allowed| path.as_str() == *allowed)
         });
@@ -711,6 +727,26 @@ mod tests {
         assert!(validate_authorized_parent_diff(
             &changed,
             "feat(sk-v10-waveW6): admit root typed row"
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn admits_sk_v10_w6_root_typed_parent_diff_under_w6_scope() {
+        let changed = SK_V10_W6_ROOT_TYPED_OWNER_PATHS
+            .iter()
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v10-waveW6): admit github events root typed row"
+        )
+        .is_ok());
+        let mut outside = changed.clone();
+        outside.push("crates/runtime/src/grammars/json/generated.rs".into());
+        assert!(validate_authorized_parent_diff(
+            &outside,
+            "feat(sk-v10-waveW6): admit github events root typed row"
         )
         .is_err());
     }

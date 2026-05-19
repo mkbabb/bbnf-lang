@@ -507,43 +507,42 @@ impl Report {
     }
 
     pub fn validate_sk_v8_w0(&self) -> Result<(), String> {
-        if self.rows.len() != SK_V8_OPEN_BASELINE.len() {
-            return Err(format!(
-                "SK-V9 W0 expected {} main rows, saw {}",
-                SK_V8_OPEN_BASELINE.len(),
-                self.rows.len()
-            ));
-        }
         let mut seen = BTreeSet::new();
         let mut run_id = None::<String>;
+        let mut w6_github_events_typed_seen = false;
         for row in &self.rows {
             let row_id = row.sk_v8.row_id.as_str();
             if !seen.insert(row_id) {
                 return Err(format!("duplicate SK-V9 W0 row_id {row_id}"));
             }
-            let Some(baseline) = sk_v8_open_baseline(row_id) else {
-                return Err(format!("unknown SK-V8 comparison row_id {row_id}"));
-            };
-            if direct_contract_row_changed(row, baseline) {
-                validate_direct_row_movement(row, baseline)?;
+            if row_id == W6_GITHUB_EVENTS_TYPED_ROW_ID {
+                validate_w6_github_events_typed_row(row)?;
+                w6_github_events_typed_seen = true;
             } else {
-                row.validate_sk_v8_w0()?;
-                if row.outcome_id != baseline.outcome_id
-                    && !w0_allows_fresh_diagnostic_outcome(
-                        baseline.outcome_id,
-                        row.outcome_id.as_str(),
-                    )
-                {
-                    return Err(format!(
-                        "{row_id} outcome moved from SK-V8 comparison baseline {} to {}",
-                        baseline.outcome_id, row.outcome_id
-                    ));
-                }
-                if row.verdict != baseline.verdict {
-                    return Err(format!(
-                        "{row_id} verdict moved from SK-V8 comparison baseline {} to {}",
-                        baseline.verdict, row.verdict
-                    ));
+                let Some(baseline) = sk_v8_open_baseline(row_id) else {
+                    return Err(format!("unknown SK-V8 comparison row_id {row_id}"));
+                };
+                if direct_contract_row_changed(row, baseline) {
+                    validate_direct_row_movement(row, baseline)?;
+                } else {
+                    row.validate_sk_v8_w0()?;
+                    if row.outcome_id != baseline.outcome_id
+                        && !w0_allows_fresh_diagnostic_outcome(
+                            baseline.outcome_id,
+                            row.outcome_id.as_str(),
+                        )
+                    {
+                        return Err(format!(
+                            "{row_id} outcome moved from SK-V8 comparison baseline {} to {}",
+                            baseline.outcome_id, row.outcome_id
+                        ));
+                    }
+                    if row.verdict != baseline.verdict {
+                        return Err(format!(
+                            "{row_id} verdict moved from SK-V8 comparison baseline {} to {}",
+                            baseline.verdict, row.verdict
+                        ));
+                    }
                 }
             }
             match &run_id {
@@ -557,6 +556,13 @@ impl Report {
                 None => run_id = Some(row.sk_v8.run_id.clone()),
             }
         }
+        let expected_rows = SK_V8_OPEN_BASELINE.len() + usize::from(w6_github_events_typed_seen);
+        if self.rows.len() != expected_rows {
+            return Err(format!(
+                "SK-V9 W0 expected {expected_rows} main rows, saw {}",
+                self.rows.len()
+            ));
+        }
         for baseline in SK_V8_OPEN_BASELINE {
             if !seen.contains(baseline.row_id) {
                 return Err(format!(
@@ -565,6 +571,7 @@ impl Report {
                 ));
             }
         }
+        validate_existing_typed_maintain_floors(self)?;
         Ok(())
     }
 
@@ -1098,6 +1105,142 @@ fn validate_direct_row_movement(
     validate_w0_hot_leaf(row_id, &row.hot_leaf, &row.sk_v8.profile_artifact)?;
     validate_comparator_evidence(row_id, &row.workload, &row.sk_v8.comparators)?;
     Ok(())
+}
+
+const W6_GITHUB_EVENTS_TYPED_ROW_ID: &str = "json/github_events/real_typed_struct/main";
+
+fn validate_w6_github_events_typed_row(row: &TelemetryRow) -> Result<(), String> {
+    let row_id = row.sk_v8.row_id.as_str();
+    row.validate_schema_v3()?;
+    validate_w0_row_identity(row)?;
+    validate_w0_outcome(row_id, &row.outcome_id)?;
+    if row.outcome_id != "A" || row.verdict != "GO" {
+        return Err(format!(
+            "{row_id} W6 typed contract admits only A / GO, saw {} / {}",
+            row.outcome_id, row.verdict
+        ));
+    }
+    if row.corpus != "github_events" || row.workload != "real_typed_struct" {
+        return Err(format!("{row_id} is not the W6 github_events typed row"));
+    }
+    if row.output_plane != "typed direct" {
+        return Err(format!(
+            "{row_id} W6 typed output plane {} is not typed direct",
+            row.output_plane
+        ));
+    }
+    if row.strictness != "strict" {
+        return Err(format!(
+            "{row_id} W6 typed strictness {} is not strict",
+            row.strictness
+        ));
+    }
+    if row.parse_utf8 != "measured-row" || row.sk_v8.measured_validation_path != "measured-row" {
+        return Err(format!(
+            "{row_id} W6 typed row is not measured-row validated"
+        ));
+    }
+    if row.escape_complete != "yes" {
+        return Err(format!(
+            "{row_id} W6 typed row has incomplete escape validation"
+        ));
+    }
+    if row.sk_v8.track2_independence_status != "independent_verified" {
+        return Err(format!("{row_id} W6 typed row lacks Track 2 independence"));
+    }
+    if row.sk_v8.same_wave_consumer_class != "gate_json_typed_contract" {
+        return Err(format!(
+            "{row_id} W6 typed row consumer {} is not gate_json_typed_contract",
+            row.sk_v8.same_wave_consumer_class
+        ));
+    }
+    if row.sk_v8.redress_entry != "REDRESS-105" || row.sk_v8.wave_id != "SK-V10-W6" {
+        return Err(format!("{row_id} W6 typed row lacks REDRESS/W6 provenance"));
+    }
+    if row.sk_v8.sk_v9_open_delta != "typed-row-added" {
+        return Err(format!(
+            "{row_id} W6 typed row delta {} is not typed-row-added",
+            row.sk_v8.sk_v9_open_delta
+        ));
+    }
+    if row.sk_v8.run_id.trim().is_empty() || !is_skv9_open_run_id(&row.sk_v8.run_id) {
+        return Err(format!(
+            "{row_id} W6 typed row has invalid run_id {}",
+            row.sk_v8.run_id
+        ));
+    }
+    let expected = w0_substrate_tuple(&row.workload).ok_or_else(|| {
+        format!(
+            "{row_id} has unsupported W6 typed workload {}",
+            row.workload
+        )
+    })?;
+    let actual = (
+        row.sk_v8.substrate_surface.as_str(),
+        row.sk_v8.structural_projection_status.as_str(),
+        row.sk_v8.substrate_cardinality.as_str(),
+    );
+    if actual != expected {
+        return Err(format!(
+            "{row_id} W6 typed row substrate tuple {:?} does not match {:?}",
+            actual, expected
+        ));
+    }
+    let (Some(track1), Some(track2), Some(sonic)) = (
+        row.track1_mbps,
+        row.track2_mbps,
+        row.competitors.sonic_strict_mbps,
+    ) else {
+        return Err(format!(
+            "{row_id} W6 typed row lacks Track 1, Track 2, or sonic Mbps"
+        ));
+    };
+    let floor = (sonic / 1.10).ceil();
+    if track1 < floor || track2 < floor {
+        return Err(format!(
+            "{row_id} W6 typed floor miss: Track 1 {track1:.0}, Track 2 {track2:.0}, floor {floor:.0}"
+        ));
+    }
+    validate_w0_profile_artifact(row_id, &row.sk_v8.profile_artifact)?;
+    validate_w0_hot_leaf(row_id, &row.hot_leaf, &row.sk_v8.profile_artifact)?;
+    validate_comparator_evidence(row_id, &row.workload, &row.sk_v8.comparators)?;
+    Ok(())
+}
+
+fn validate_existing_typed_maintain_floors(report: &Report) -> Result<(), String> {
+    for row in &report.rows {
+        if row.workload != "real_typed_struct" {
+            continue;
+        }
+        let Some(floor) = sk_v10_typed_maintain_floor(&row.corpus) else {
+            continue;
+        };
+        let Some(track1) = row.track1_mbps else {
+            return Err(format!(
+                "{} missing typed maintain Track 1",
+                row.sk_v8.row_id
+            ));
+        };
+        if track1 < floor {
+            return Err(format!(
+                "{} typed maintain floor miss: Track 1 {track1:.0}, floor {floor:.0}",
+                row.sk_v8.row_id
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn sk_v10_typed_maintain_floor(corpus: &str) -> Option<f64> {
+    match corpus {
+        "twitter" => Some(14_424.0),
+        "citm_catalog" => Some(20_053.0),
+        "apache_builds" => Some(7_373.0),
+        "update_center" => Some(11_365.0),
+        "mesh" => Some(8_428.0),
+        "marine_ik" => Some(7_369.0),
+        _ => None,
+    }
 }
 
 fn sk_v10_direct_floor(corpus: &str) -> Option<f64> {
@@ -1668,6 +1811,10 @@ mod tests {
         }
     }
 
+    fn ns_for_mbps(bytes: u64, mbps: f64) -> f64 {
+        bytes as f64 * 8_000.0 / mbps
+    }
+
     fn w0_evidence(row_id: &str) -> Vec<SkV8ComparatorEvidence> {
         let (corpus, workload) = parse_row_id(row_id).unwrap();
         let sonic_bench = match workload {
@@ -1832,6 +1979,38 @@ mod tests {
         row.sk_v8.same_wave_consumer_class = "gate_json_direct_contract".into();
         row.sk_v8.redress_entry = "REDRESS-101".into();
         row.sk_v8.wave_id = "SK-V10-W2".into();
+    }
+
+    fn w6_github_events_typed_row(track1_mbps: f64, track2_mbps: f64) -> TelemetryRow {
+        let bytes = 1_000_000u64;
+        let row_id = W6_GITHUB_EVENTS_TYPED_ROW_ID;
+        let mut row = TelemetryRow::workload(
+            "github_events",
+            "real_typed_struct",
+            None,
+            bytes,
+            Some(ns_for_mbps(bytes, track1_mbps)),
+            Some(ns_for_mbps(bytes, track2_mbps)),
+            comparators(),
+            "typed direct",
+            "generated Track 1 consumes host/API output schema; Track 2 is an independent typed oracle",
+            "PASS W6 github_events typed admission",
+            w0_hot_leaf(row_id),
+        )
+        .with_sk_v8(w0_telemetry(row_id, "typed direct"));
+        admit_w6_typed_contract(&mut row);
+        row
+    }
+
+    fn admit_w6_typed_contract(row: &mut TelemetryRow) {
+        row.strictness = "strict".into();
+        row.parse_utf8 = "measured-row".into();
+        row.output_plane = "typed direct".into();
+        row.sk_v8.measured_validation_path = "measured-row".into();
+        row.sk_v8.same_wave_consumer_class = "gate_json_typed_contract".into();
+        row.sk_v8.redress_entry = "REDRESS-105".into();
+        row.sk_v8.wave_id = "SK-V10-W6".into();
+        row.sk_v8.sk_v9_open_delta = "typed-row-added".into();
     }
 
     #[test]
@@ -2243,6 +2422,50 @@ mod tests {
             .find(|row| row.sk_v8.row_id == "json/twitter/direct_to_struct/main")
             .unwrap();
         admit_direct_contract(direct);
+        assert!(report.validate_sk_v8_w0().is_err());
+    }
+
+    #[test]
+    fn w6_typed_contract_accepts_complete_github_events_row() {
+        let mut report = opening_report();
+        report
+            .rows
+            .push(w6_github_events_typed_row(12_000.0, 12_000.0));
+        assert!(report.validate_sk_v8_w0().is_ok());
+    }
+
+    #[test]
+    fn w6_typed_contract_rejects_incomplete_github_events_row() {
+        let reject = |mutate: fn(&mut TelemetryRow)| {
+            let mut report = opening_report();
+            report
+                .rows
+                .push(w6_github_events_typed_row(12_000.0, 12_000.0));
+            let typed = report
+                .rows
+                .iter_mut()
+                .find(|row| row.sk_v8.row_id == W6_GITHUB_EVENTS_TYPED_ROW_ID)
+                .unwrap();
+            mutate(typed);
+            assert!(report.validate_sk_v8_w0().is_err());
+        };
+
+        reject(|row| row.output_plane = "DOM".into());
+        reject(|row| row.strictness = "deferred".into());
+        reject(|row| row.parse_utf8 = "view-boundary".into());
+        reject(|row| row.sk_v8.measured_validation_path = "view-boundary".into());
+        reject(|row| row.sk_v8.same_wave_consumer_class = "gate_only".into());
+        reject(|row| row.sk_v8.redress_entry = "none".into());
+        reject(|row| row.sk_v8.wave_id = "SK-V9-open".into());
+        reject(|row| row.sk_v8.track2_independence_status = "unverified".into());
+    }
+
+    #[test]
+    fn w6_typed_contract_rejects_track2_floor_miss() {
+        let mut report = opening_report();
+        report
+            .rows
+            .push(w6_github_events_typed_row(12_000.0, 10_000.0));
         assert!(report.validate_sk_v8_w0().is_err());
     }
 

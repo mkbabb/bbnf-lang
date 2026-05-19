@@ -10,8 +10,9 @@ confirmation challenge. W0 telemetry freeze is closed under REDRESS 99. W1
 direct contract is closed under REDRESS 100. W2 direct row-table reclamation is
 closed under REDRESS 101. W3 parse-only firewall is closed under REDRESS 102.
 W4 `instruments` typed product admission is rejected under REDRESS 103. W5
-root-type typed generalization proof is closed under REDRESS 104. SK-V10
-implementation is dispatched by `SPEC.md` and `DISPATCH-PROMPT.md`; W6 is the
+root-type typed generalization proof is closed under REDRESS 104. W6
+`github_events` root typed row admission is closed under REDRESS 105. SK-V10
+implementation is dispatched by `SPEC.md` and `DISPATCH-PROMPT.md`; W7 is the
 next live wave.
 
 ## Authority
@@ -32,7 +33,7 @@ next live wave.
 - `restart/skinny/tranches/sk-v10/research/p2/p2g-candidate-ledger.md`
 - `restart/skinny/tranches/sk-v10/research/p2/hardening/HARDENING-S-P2-V1-CONSOLIDATED.md`
 - `skinny/RESULTS.md`
-- `skinny/REDRESS.md` entries 94-104
+- `skinny/REDRESS.md` entries 94-105
 
 ## Section 0 - Alpha Close Condition
 
@@ -149,9 +150,11 @@ render workload, output plane, comparator id, comparator strictness, comparator
 freshness, Track 1/Track 2 Mbps, same-run run id, measured validation path,
 same-wave consumer class, and REDRESS entry.
 
-W0 closed the opening telemetry freeze without row movement. The opening run id
-remains `sk-v9-open:criterion-fnv64-a1e8a51ae806d386`, and the cost-facts
-snapshot gate now expects the 40-row SK-V10 opening manifest.
+W0 closed the opening telemetry freeze without row movement. W6 refreshed the
+current `RESULTS.md` authority over one coherent native Criterion root with run
+id `sk-v9-open:criterion-fnv64-91b28e519f0fea1d`. The inherited opening
+snapshot remains a 40-row surface, and the cost-facts snapshot gate now accepts
+that surface plus the single W6 github_events typed row.
 
 W1 closed the direct output/control-path contract. Direct row movement now has
 an executable report predicate: baseline `N-direct / NO-GO` rows may move only
@@ -173,8 +176,13 @@ typed 15940 Mbps, floor 14491 Mbps. No row moved.
 
 W5 closed the root-type proof. Typed DirectBuild roots now carry
 `DirectTypeRef`, and synthetic generated array/map-entry roots pass
-serde_json/sonic checksum parity. No row moved; W6 may now select one
-root-unblocked typed row.
+serde_json/sonic checksum parity. No row moved.
+
+W6 closed root typed row admission. `github_events/real_typed_struct` moved to
+typed `A / GO`: Track 1 12827 Mbps and independent Track 2/oracle 12645 Mbps
+both clear the W6 floor of 11541 Mbps under the same-run sonic-rs typed
+comparator at 12695 Mbps. The row is strict measured-row evidence consumed by
+`gate-json` under REDRESS 105.
 
 ## Section 7 - Micro-Prove-First Gate
 
@@ -204,6 +212,6 @@ CSS L4 / Sheets / BBNF-self generalization is the unexercised thesis risk.
 ## Section 9 - Dispatch Boundary
 
 This file does not independently authorize source work. `G-ALPHA-SK-V10`, S-P1
-Profile, S-P2 Research, S-P3 Synthesis-Plan, W0, W1, W2, and W3 are closed. Wave
-implementation proceeds only through the current `SPEC.md` and
-`DISPATCH-PROMPT.md` entry gates.
+Profile, S-P2 Research, S-P3 Synthesis-Plan, W0, W1, W2, W3, W5, and W6 are
+closed; W4 is rejected with measurement. Wave implementation proceeds only
+through the current `SPEC.md` and `DISPATCH-PROMPT.md` entry gates.

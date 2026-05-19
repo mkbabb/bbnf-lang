@@ -327,6 +327,7 @@ fn validate_cost_facts_flags(passthrough: &[String]) -> Result<bool> {
 
 fn validate_w0_results_snapshot(root: &Path) -> Result<()> {
     const SK_V10_OPENING_MANIFEST_ROWS: usize = 40;
+    const SK_V10_W6_MANIFEST_ROWS: usize = 41;
 
     let text = std::fs::read_to_string(root.join("RESULTS.md"))
         .context("gate-json --with-cost-facts --check-results requires RESULTS.md")?;
@@ -334,11 +335,20 @@ fn validate_w0_results_snapshot(root: &Path) -> Result<()> {
         .lines()
         .filter(|line| line.starts_with("| json/"))
         .count();
-    if manifest_rows != SK_V10_OPENING_MANIFEST_ROWS {
-        bail!(
-            "RESULTS.md SK-V10 opening manifest row count moved from {} to {manifest_rows}",
-            SK_V10_OPENING_MANIFEST_ROWS
-        );
+    let has_w6_github_events_typed = text.lines().any(|line| {
+        line.starts_with("| json/github_events/real_typed_struct/main |")
+            && line.contains("| SK-V10-W6 |")
+            && line.contains("| REDRESS-105 |")
+            && line.contains("| typed-row-added |")
+            && line.contains("| gate_json_typed_contract |")
+    });
+    let expected_rows = if has_w6_github_events_typed {
+        SK_V10_W6_MANIFEST_ROWS
+    } else {
+        SK_V10_OPENING_MANIFEST_ROWS
+    };
+    if manifest_rows != expected_rows {
+        bail!("RESULTS.md SK-V10 manifest row count expected {expected_rows}, saw {manifest_rows}");
     }
     for required in ["SK-V9-open", "none:pre-W1:none:pre-W1:none:pre-W1"] {
         if !text.contains(required) {
@@ -684,5 +694,31 @@ mod tests {
             mutate(&mut bad);
             assert!(validate_cost_facts_gate_report(&bad).is_err());
         }
+    }
+
+    #[test]
+    fn w6_costfacts_snapshot_accepts_single_github_events_typed_row() {
+        let root = std::env::temp_dir().join(format!(
+            "skv10-w6-costfacts-{}-{}",
+            std::process::id(),
+            "results"
+        ));
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(&root).unwrap();
+
+        let run_id = "sk-v9-open:criterion-fnv64-91b28e519f0fea1d";
+        let mut rows = Vec::new();
+        for idx in 0..40 {
+            rows.push(format!(
+                "| json/baseline_{idx}/parse_only/main | json | json_bench | SK-V9-open | {run_id} | view-boundary | criterion-slope-profile:json_baseline_{idx}/track1_generated/new/estimates.json | ns_per_byte=1.0 | 100 | profile=bench;rustflags=-C target-cpu=native;target_cpu=native | aarch64-apple-darwin | arch=aarch64;os=macos;simd=Scalar;target_cpu=native | none:pre-W1:none:pre-W1:none:pre-W1 | none | baseline | borrowed_view_over_offset_tape | discarded_after_capacity | one | gate_only | independent_verified | structural_scan+masking_probes+pmu+cycles:nonproducer | sonic_rs_strict[plane=DOM,strictness=strict,freshness=same-run-native,sidecar=n/a,mbps=1,source=criterion:json_baseline_{idx}/sonic_rs_anchor/new/estimates.json] |"
+            ));
+        }
+        rows.push(format!(
+            "| json/github_events/real_typed_struct/main | json | json_bench | SK-V10-W6 | {run_id} | measured-row | criterion-slope-profile:json_github_events/track1_real_typed_struct/new/estimates.json | ns_per_byte=0.623701;track1_ns=40622.88;bytes=65132 | 100 | profile=bench;rustflags=-C target-cpu=native;target_cpu=native | aarch64-apple-darwin | arch=aarch64;os=macos;simd=Scalar;target_cpu=native | none:pre-W1:none:pre-W1:none:pre-W1 | REDRESS-105 | typed-row-added | typed_direct_projection | n/a | zero_or_inert | gate_json_typed_contract | independent_verified | structural_scan+masking_probes+pmu+cycles:nonproducer | sonic_rs_strict[plane=typed direct,strictness=strict,freshness=same-run-native,sidecar=n/a,mbps=12695,source=criterion:json_github_events/sonic_rs_real_typed_struct/new/estimates.json] |"
+        ));
+        std::fs::write(root.join("RESULTS.md"), rows.join("\n")).unwrap();
+
+        validate_w0_results_snapshot(&root).unwrap();
+        let _ = std::fs::remove_dir_all(&root);
     }
 }

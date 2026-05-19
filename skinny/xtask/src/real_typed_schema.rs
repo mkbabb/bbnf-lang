@@ -7,7 +7,7 @@ use codegen::direct_schema::{
 pub fn schema() -> DirectSchemaSet {
     DirectSchemaSet {
         module_name: "generated_real_typed".to_string(),
-        schema_hash: "sk-v10-w5-root-typed".to_string(),
+        schema_hash: "sk-v10-w6-github-events".to_string(),
         roots: vec![
             DirectRootSchema::struct_root(
                 "parse_twitter_search",
@@ -28,6 +28,11 @@ pub fn schema() -> DirectSchemaSet {
                 "parse_citm_catalog",
                 "crate::real_typed_struct::CitmCatalog<'i>",
                 "CitmCatalog",
+            ),
+            DirectRootSchema::typed_root(
+                "parse_github_events",
+                "Vec<crate::real_typed_struct::GithubEvent<'i>>",
+                vec_with_capacity(ty("GithubEvent"), 30),
             ),
             DirectRootSchema::struct_root("parse_mesh", "crate::real_typed_struct::Mesh", "Mesh"),
             DirectRootSchema::struct_root(
@@ -168,6 +173,56 @@ pub fn schema() -> DirectSchemaSet {
                 ignored("sha1", DirectSkipKind::String),
                 ignored("wiki", DirectSkipKind::String),
             ]),
+            struct_ty(
+                "GithubEvent",
+                "crate::real_typed_struct::GithubEvent<'i>",
+                vec![
+                    default("type", "event_type", opt(string())),
+                    default("created_at", "created_at", opt(string())),
+                    default("id", "id", opt(string())),
+                    default("public", "public", opt(bool_ty())),
+                    default("actor", "actor", opt(ty("GithubActor"))),
+                    default("repo", "repo", opt(ty("GithubRepo"))),
+                    default("org", "org", opt(ty("GithubActor"))),
+                    default("payload", "payload", opt(ty("GithubPayload"))),
+                ],
+            ),
+            struct_ty(
+                "GithubActor",
+                "crate::real_typed_struct::GithubActor<'i>",
+                vec![
+                    default("id", "id", opt(u64_ty())),
+                    default("login", "login", opt(string())),
+                    default("url", "url", opt(string())),
+                    default("avatar_url", "avatar_url", opt(string())),
+                ],
+            )
+            .with_ignored_fields(vec![ignored("gravatar_id", DirectSkipKind::String)]),
+            struct_ty(
+                "GithubRepo",
+                "crate::real_typed_struct::GithubRepo<'i>",
+                vec![
+                    default("id", "id", opt(u64_ty())),
+                    default("name", "name", opt(string())),
+                    default("url", "url", opt(string())),
+                ],
+            ),
+            struct_ty(
+                "GithubPayload",
+                "crate::real_typed_struct::GithubPayload<'i>",
+                vec![
+                    default("action", "action", opt(string())),
+                    default("ref", "ref_name", opt(string())),
+                    default("ref_type", "ref_type", opt(string())),
+                    default("push_id", "push_id", opt(u64_ty())),
+                    default("size", "size", opt(u64_ty())),
+                    default("distinct_size", "distinct_size", opt(u64_ty())),
+                    default("head", "head", opt(string())),
+                    default("before", "before", opt(string())),
+                    default("description", "description", opt(string())),
+                    default("master_branch", "master_branch", opt(string())),
+                ],
+            ),
             struct_ty(
                 "Mesh",
                 "crate::real_typed_struct::Mesh",

@@ -14,7 +14,8 @@ union-substrate thesis. REDRESS 101 admits the W2 direct row-table reclamation
 for `apache_builds` and `numbers`. REDRESS 102 closes W3 as a proof-only
 parse firewall. REDRESS 103 rejects W4 after the `instruments` independent
 Track 2 typed oracle missed the W4 floor. REDRESS 104 closes W5 as a
-root-typed proof with no row movement. No SK-V10 wave may reopen W3 through a
+root-typed proof with no row movement. REDRESS 105 admits W6 for
+`github_events/real_typed_struct`. No SK-V10 wave may reopen W3 through a
 rename.
 
 ## 0. Close Condition And Goalset
@@ -62,13 +63,17 @@ SK-V10 closes only when all of these are true:
 
 The opening measured authority was the W1-rendered SK-V9-open report. W2
 reclaimed direct rows by re-rendering `skinny/RESULTS.md` over the same frozen
-run id, `sk-v9-open:criterion-fnv64-a1e8a51ae806d386`.
+run id, `sk-v9-open:criterion-fnv64-a1e8a51ae806d386`. W6 then refreshed the
+native report over one coherent Criterion root with run id
+`sk-v9-open:criterion-fnv64-91b28e519f0fea1d`, retaining the inherited
+SK-V9-open run-id grammar for baseline rows while adding one `SK-V10-W6`
+typed row.
 
 | Family | Count | Current posture | SK-V10 role |
 |---|---:|---|---|
 | `parse_only` | 17 | all `S / NO-GO` | diagnostic only |
 | `direct_to_struct` | 17 | 5 `A / GO`, 12 `N-direct / NO-GO` | primary JSON frontier |
-| `real_typed_struct` | 6 | all `A / GO` | product-plane SOTA surface |
+| `real_typed_struct` | 7 | all `A / GO` | product-plane SOTA surface |
 
 ### 0.2 Shared Numeric Floors
 
@@ -173,8 +178,8 @@ block:
 | W3 | 6 | firewall | W3 And Parse-Only Firewall | Closed - REDRESS 102 | None | 80-160 docs/gate LOC | LOW | <=90 min |
 | W4 | 7 | `C2` | `instruments` Typed Product Admission | Rejected - REDRESS 103 | None; typed row did not move | 160-260 source/generated + 40-80 gate LOC | MEDIUM | <=90 min |
 | W5 | 8 | `C3` | Root-Type Typed Generalization Proof | Closed - REDRESS 104 | Proof-only | 220-420 source/generated + 60-120 test/gate LOC | MEDIUM-HIGH | <=90 min |
-| W6 | 9 | `C3` | Root Typed Row Admission | Dispatchable - W5 proof closed | One typed row per slice | 160-260 source/generated + 40-80 gate LOC per corpus | MEDIUM-HIGH | <=90 min |
-| W7 | 10 | `C4` or `C5` | String Primitive Micro-Proof | Conditional on W3 close + CHALLENGE | Proof-only | 90-260 proof LOC | MEDIUM-HIGH | <=90 min |
+| W6 | 9 | `C3` | Root Typed Row Admission | Closed - REDRESS 105 | `github_events` typed row admitted | 160-260 source/generated + 40-80 gate LOC per corpus | MEDIUM-HIGH | <=90 min |
+| W7 | 10 | `C4` or `C5` | String Primitive Micro-Proof | Dispatchable - W3 firewall closed; CHALLENGE before redress | Proof-only | 90-260 proof LOC | MEDIUM-HIGH | <=90 min |
 | W8 | 11 | `C6` or `C7` | Escape/Segment Micro-Proof | Conditional on relevant W7 proof if needed + CHALLENGE | Proof-only | 90-260 proof LOC | HIGH | <=90 min |
 | W9 | 12 | proven `C4`-`C7` | Existing-Call-Site Kernel Production | Conditional on relevant W7 or W8 proof + CHALLENGE | Direct/typed only | 220-420 source/bench/gate LOC | HIGH | <=90 min |
 | W10 | 13 | `C1` follow-on | Direct Residual Behavior Tranche | Conditional on W2 + W3 + CHALLENGE | Direct only, <=3 rows | 320 source/gate LOC; 420 only with CHALLENGE | HIGH | <=90 min |
@@ -183,16 +188,16 @@ block:
 Manifest rules:
 
 1. W0 is closed under REDRESS 99, W1 is closed under REDRESS 100, W2 is closed
-   under REDRESS 101, W3 is closed under REDRESS 102, and W4 is rejected under
-   REDRESS 103, and W5 is closed under REDRESS 104. W6 is the next
-   dispatchable wave. W7-W10 and Close are
-   conditional until their entry gates pass.
+   under REDRESS 101, W3 is closed under REDRESS 102, W4 is rejected under
+   REDRESS 103, W5 is closed under REDRESS 104, and W6 is closed under REDRESS
+   105. W7 is the next dispatchable wave. W8-W10 and Close are conditional
+   until their entry gates pass.
 2. W1 must exist before W2 or W10 can move direct rows. A direct row gate
    without W1 is a REVISE.
 3. W3 is a firewall, not the retired W3 implementation route.
 4. W4 was the first bounded typed row movement and rejected honestly when the
    independent Track 2/oracle missed the W4 floor. W5 proved root typing only;
-   W6 may consume that proof with typed comparator rows.
+   W6 consumed that proof and admitted `github_events/real_typed_struct`.
 5. W7 and W8 are deliberately proof-only micro waves. A production caller
    lands only in W9.
 6. W9 production wiring does not inherit any W3 entry gate. It consumes exactly
@@ -378,6 +383,7 @@ Owner paths:
 - `restart/skinny/tranches/sk-v10/HANDOFF.md`
 - `restart/skinny/tranches/sk-v10/SYNTHESIS.md`
 - `skinny/crates/bbnf-bench/src/bin/gate.rs`
+- `skinny/xtask/src/main.rs`
 - `skinny/RESULTS.md`
 - `skinny/REDRESS.md`
 

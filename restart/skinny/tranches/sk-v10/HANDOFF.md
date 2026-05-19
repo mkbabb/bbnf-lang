@@ -13,7 +13,8 @@ closed under REDRESS 99, W1 direct contract is closed under REDRESS 100, W2
 direct row-table reclamation is closed under REDRESS 101, and W3 parse-only
 firewall is closed under REDRESS 102. W4 `instruments` typed product admission
 is rejected under REDRESS 103, and W5 root-type typed generalization proof is
-closed under REDRESS 104; W6 is the next live dispatch.
+closed under REDRESS 104. W6 `github_events` root typed row admission is closed
+under REDRESS 105; W7 is the next live dispatch.
 
 ## 1. Read First
 
@@ -23,7 +24,7 @@ closed under REDRESS 104; W6 is the next live dispatch.
 4. `restart/skinny/tranches/sk-v9/SPEC.md`
 5. `restart/skinny/tranches/sk-v9/DISPATCH-PROMPT.md`
 6. `skinny/RESULTS.md`
-7. `skinny/REDRESS.md` entries 94-104
+7. `skinny/REDRESS.md` entries 94-105
 8. `restart/skinny/tranches/sk-v10/SYNTHESIS.md`
 9. `restart/skinny/tranches/sk-v10/research/alpha/alpha-A-results-extraction.md`
 10. `restart/skinny/tranches/sk-v10/research/alpha/alpha-B-competitor-deltas.md`
@@ -86,7 +87,7 @@ Current `skinny/RESULTS.md` state:
 |---|---|
 | `parse_only` | 17 `S / NO-GO` |
 | `direct_to_struct` | 5 `A / GO`, 12 `N-direct / NO-GO` |
-| `real_typed_struct` | 6 `A / GO`; W4 `instruments` rejected by Track 2 floor miss |
+| `real_typed_struct` | 7 `A / GO`; W4 `instruments` rejected by Track 2 floor miss, W6 `github_events` admitted |
 
 ## 3. Candidate Boundaries
 
@@ -103,9 +104,10 @@ Current `skinny/RESULTS.md` state:
 
 ## 4. Next Move
 
-1. Dispatch W6, Root Typed Row Admission, from SPEC Section 9.
-2. Select one root-unblocked corpus, `github_events` before `gsoc-2018` unless
-   CHALLENGE reverses the order.
+1. Dispatch W7, String Primitive Micro-Proof, from SPEC Section 10.
+2. Select exactly one of `C4-tiny-string-proof` or `C5-full-string-proof`.
+3. Run CHALLENGE before redress and reject any plan that combines W7 proof with
+   W9 production wiring.
 
 ## 5. Refusal Conditions
 
@@ -125,6 +127,7 @@ Refuse dispatch if a requested wave:
 
 SK-V10 Alpha, S-P1 Profile, S-P2 Research, S-P3 Synthesis-Plan, W0 telemetry
 freeze, W1 direct contract, W2 direct reclamation, and W3 parse-only firewall
-are closed, W4 is rejected under REDRESS 103, and W5 is closed under REDRESS
-104. The next live work is W6. No direct row movement is authorized unless it
-satisfies the REDRESS 100 contract and the Section 0.2 numeric floors.
+are closed, W4 is rejected under REDRESS 103, W5 is closed under REDRESS 104,
+and W6 is closed under REDRESS 105. The next live work is W7. No direct row
+movement is authorized unless it satisfies the REDRESS 100 contract and the
+Section 0.2 numeric floors.

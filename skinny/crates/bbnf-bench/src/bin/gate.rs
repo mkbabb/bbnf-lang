@@ -235,13 +235,21 @@ fn main() -> Result<(), Box<dyn Error>> {
                 estimates.real_typed_track1,
                 estimates.real_typed_sonic,
             );
-            if let Some(outcome) = real_typed_outcome {
+            let typed_decision = real_typed_row_decision(
+                &fixture.name,
+                real_typed_outcome,
+                fixture.bytes.len() as u64,
+                estimates.real_typed_track1,
+                estimates.real_typed_track2,
+                estimates.real_typed_sonic,
+            );
+            if let Some(outcome) = typed_decision.outcome {
                 outcomes.push(outcome);
             }
             let typed_comparators = real_typed_comparators(fixture.bytes.len() as u64, &estimates);
             let typed_signal = real_typed_workload_signal(
                 real_typed_ok,
-                real_typed_outcome,
+                typed_decision.outcome,
                 fixture.bytes.len() as u64,
                 estimates.real_typed_track1,
                 estimates.real_typed_track2,
@@ -258,22 +266,24 @@ fn main() -> Result<(), Box<dyn Error>> {
                 &run_facts,
                 "track1_real_typed_struct",
             );
-            report.rows.push(
-                TelemetryRow::workload(
-                    &fixture.name,
-                    "real_typed_struct",
-                    real_typed_outcome,
-                    fixture.bytes.len() as u64,
-                    estimates.real_typed_track1,
-                    estimates.real_typed_track2,
-                    typed_comparators,
-                    "typed direct",
-                    "generated Track 1 consumes host/API output schema; Track 2 is a structural oracle, not the SOTA gate; UTF-8 remains view-boundary",
-                    typed_signal,
-                    w0_hot_leaf(&fixture.name, "track1_real_typed_struct"),
-                )
-                .with_sk_v8(typed_telemetry),
-            );
+            let mut typed_row = TelemetryRow::workload(
+                &fixture.name,
+                "real_typed_struct",
+                typed_decision.outcome,
+                fixture.bytes.len() as u64,
+                estimates.real_typed_track1,
+                estimates.real_typed_track2,
+                typed_comparators,
+                "typed direct",
+                "generated Track 1 consumes host/API output schema; Track 2 is a structural oracle, not the SOTA gate; UTF-8 remains view-boundary",
+                typed_signal,
+                w0_hot_leaf(&fixture.name, "track1_real_typed_struct"),
+            )
+            .with_sk_v8(typed_telemetry);
+            if typed_decision.w6_github_events_added {
+                mark_w6_github_events_typed_admission(&mut typed_row);
+            }
+            report.rows.push(typed_row);
         }
         if include_volatile_probes {
             push_probe_rows(
@@ -915,6 +925,75 @@ fn mark_w2_direct_reclamation(row: &mut TelemetryRow) {
     row.sk_v8.sk_v9_open_delta = "direct-reclaimed".to_string();
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct RealTypedRowDecision {
+    outcome: Option<Outcome>,
+    w6_github_events_added: bool,
+}
+
+fn real_typed_row_decision(
+    corpus: &str,
+    classified: Option<Outcome>,
+    bytes: u64,
+    track1_ns: Option<f64>,
+    track2_ns: Option<f64>,
+    sonic_ns: Option<f64>,
+) -> RealTypedRowDecision {
+    if corpus == "github_events" {
+        if classified.is_none()
+            && w6_github_events_typed_passes(bytes, track1_ns, track2_ns, sonic_ns)
+        {
+            return RealTypedRowDecision {
+                outcome: None,
+                w6_github_events_added: true,
+            };
+        }
+        return RealTypedRowDecision {
+            outcome: Some(classified.unwrap_or(Outcome::NDirectProjectionFailure)),
+            w6_github_events_added: false,
+        };
+    }
+    RealTypedRowDecision {
+        outcome: classified,
+        w6_github_events_added: false,
+    }
+}
+
+fn w6_github_events_typed_passes(
+    bytes: u64,
+    track1_ns: Option<f64>,
+    track2_ns: Option<f64>,
+    sonic_ns: Option<f64>,
+) -> bool {
+    let track1 = throughput_mbps(bytes, track1_ns);
+    let track2 = throughput_mbps(bytes, track2_ns);
+    let sonic = throughput_mbps(bytes, sonic_ns);
+    let (Some(track1), Some(track2), Some(sonic)) = (track1, track2, sonic) else {
+        return false;
+    };
+    let floor = (sonic / 1.10).ceil();
+    track1 >= floor && track2 >= floor
+}
+
+fn mark_w6_github_events_typed_admission(row: &mut TelemetryRow) {
+    row.strictness = "strict".to_string();
+    row.parse_utf8 = "measured-row".to_string();
+    row.flaw_probe =
+        "generated Track 1 typed product vs independent serde Track 2/oracle; UTF-8 measured in row"
+            .to_string();
+    row.signal = format!(
+        "PASS W6 github_events root typed admission; Track 1 {}, Track 2 oracle {}, sonic {} Mbps",
+        format_mbps(row.track1_mbps),
+        format_mbps(row.track2_mbps),
+        format_mbps(row.competitors.sonic_strict_mbps)
+    );
+    row.sk_v8.measured_validation_path = "measured-row".to_string();
+    row.sk_v8.same_wave_consumer_class = "gate_json_typed_contract".to_string();
+    row.sk_v8.redress_entry = "REDRESS-105".to_string();
+    row.sk_v8.wave_id = "SK-V10-W6".to_string();
+    row.sk_v8.sk_v9_open_delta = "typed-row-added".to_string();
+}
+
 fn classify_real_typed_projection(
     correctness_ok: bool,
     track1_ns: Option<f64>,
@@ -948,8 +1027,7 @@ fn real_typed_workload_signal(
     let sonic = throughput_mbps(bytes, sonic_ns);
     if outcome == Some(Outcome::NDirectProjectionFailure) {
         return format!(
-            "NO-GO generated typed output > sonic-rs * {:.2} ns slack; correctness PASS; Track 1 {}, Track 2 oracle {}, sonic {} Mbps",
-            gate::DIRECT_PROJECTION_SONIC_SLACK,
+            "NO-GO generated typed output or Track 2 oracle missed sonic-rs / 1.10 floor; correctness PASS; Track 1 {}, Track 2 oracle {}, sonic {} Mbps",
             format_mbps(track1),
             format_mbps(track2),
             format_mbps(sonic)
@@ -1286,6 +1364,7 @@ fn validate_report_capture_identity(
 
 fn w0_real_typed_metadata_expected(fixture: &str) -> bool {
     sk_v8_open_baseline(&format!("json/{fixture}/real_typed_struct/main")).is_some()
+        || fixture == "github_events"
 }
 
 #[derive(Clone)]
@@ -1946,6 +2025,52 @@ mod tests {
     }
 
     #[test]
+    fn w6_github_events_typed_admits_only_track1_track2_floor_pass() {
+        assert_eq!(
+            real_typed_row_decision(
+                "github_events",
+                None,
+                1_000_000,
+                Some(500_000.0),
+                Some(520_000.0),
+                Some(550_000.0),
+            ),
+            RealTypedRowDecision {
+                outcome: None,
+                w6_github_events_added: true,
+            }
+        );
+        assert_eq!(
+            real_typed_row_decision(
+                "github_events",
+                None,
+                1_000_000,
+                Some(500_000.0),
+                Some(700_000.0),
+                Some(550_000.0),
+            ),
+            RealTypedRowDecision {
+                outcome: Some(Outcome::NDirectProjectionFailure),
+                w6_github_events_added: false,
+            }
+        );
+        assert_eq!(
+            real_typed_row_decision(
+                "github_events",
+                Some(Outcome::IParityOracleFail),
+                1_000_000,
+                Some(500_000.0),
+                Some(520_000.0),
+                Some(550_000.0),
+            ),
+            RealTypedRowDecision {
+                outcome: Some(Outcome::IParityOracleFail),
+                w6_github_events_added: false,
+            }
+        );
+    }
+
+    #[test]
     fn w0_capture_metadata_accepts_coherent_required_rows() {
         let rows = metadata_rows(false);
         validate_w0_capture_metadata("fixture", "hash", 12, false, &rows).unwrap();
@@ -1957,6 +2082,7 @@ mod tests {
         assert!(w0_real_typed_metadata_expected("update_center"));
         assert!(w0_real_typed_metadata_expected("apache_builds"));
         assert!(w0_real_typed_metadata_expected("citm_catalog"));
+        assert!(w0_real_typed_metadata_expected("github_events"));
     }
 
     #[test]

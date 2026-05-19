@@ -3102,3 +3102,47 @@ perturbation.
   `gsoc-2018` unless CHALLENGE reverses the order. W6 still must provide
   full-fixture generated Track 1, independent Track 2/oracle, serde_json typed,
   sonic-rs typed, checksum parity, and typed floor evidence.
+
+## SK-V10 Wave 6 Root Typed Row Admission
+
+- Item 105 admits W6 under `G-W6-ROOT-TYPED-ROW`. The wave moves exactly one
+  typed product row, `github_events/real_typed_struct`, and does not move any
+  parse-only or direct digest row.
+- W6 consumes the W5 root model by registering `parse_github_events` as a
+  `Vec<crate::real_typed_struct::GithubEvent<'i>>` typed root. The generated
+  parser, independent Track 2/oracle, serde_json typed sidecar, and sonic-rs
+  typed sidecar share full-fixture checksum parity.
+- The measured row clears the W6 floor: Track 1 12827 Mbps, independent Track
+  2/oracle 12645 Mbps, sonic-rs typed strict 12695 Mbps, and serde_json typed
+  12592 Mbps. The W6 floor is `ceil(12695 / 1.10) = 11541`, so both Track 1
+  and Track 2 pass.
+- `gate-json` consumes the row as strict measured-row evidence with
+  `wave_id=SK-V10-W6`, `redress_entry=REDRESS-105`,
+  `same_wave_consumer_class=gate_json_typed_contract`, and
+  `sk_v9_open_delta=typed-row-added`.
+- The cost-facts RESULTS snapshot consumer now accepts either the inherited
+  40-row opening surface or that surface plus the single W6 github_events typed
+  row. It still validates the uniform SK-V9 run-id grammar and W0 diagnostic
+  nonproducer markers.
+- Existing typed maintain rows remained above their Section 0.2 floors in the
+  same rendered report: `twitter` 18777, `citm_catalog` 36655,
+  `apache_builds` 8532, `update_center` 12113, `mesh` 9827, and `marine_ik`
+  12262 Mbps.
+- Evidence passed:
+  `cargo xtask regen-real-typed`,
+  `cargo xtask check-real-typed`,
+  `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench w6_ -- --nocapture`,
+  `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench generated_github_events_typed_parser_matches_sidecars -- --nocapture`,
+  `cargo test --manifest-path skinny/Cargo.toml -p xtask w6_costfacts_snapshot_accepts_single_github_events_typed_row -- --nocapture`,
+  a full native `json_parity` Criterion run under
+  `skinny/target/skv10-w6/criterion`, a full native `simd_scan` run under the
+  same root, and
+  `CRITERION_HOME=skinny/target/skv10-w6/criterion RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --advisory --check-results`,
+  plus
+  `CRITERION_HOME=skinny/target/skv10-w6/criterion RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --with-cost-facts --check-results`.
+- The non-advisory `gate-json --update-results` command wrote the W6
+  `RESULTS.md` snapshot and then exited 5 because the global report remains
+  `N-direct / NoGo`. That is not a W6 row failure; the advisory check passed
+  and the row-level typed gate is consumed.
+- W7 is now the next dispatchable wave. W7 remains proof-only unless
+  CHALLENGE accepts exactly one string primitive micro-proof plan.

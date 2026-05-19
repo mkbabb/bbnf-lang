@@ -2,11 +2,11 @@
 
 Date: 2026-05-19.
 
-Status: Pass Alpha closed under `G-ALPHA-SK-V10` after SK-V9 REDRESS 98.
-SK-V10 is ready for S-P1 Profile. W3 union substrate is retired as falsified.
+Status: S-P1 Profile closed after V1 hardening under
+`HARDENING-S-P1-V1-CONSOLIDATED`. W3 union substrate is retired as falsified.
 The primary JSON frontier is `direct_to_struct`; typed product-plane
 generalization is the bounded second route; parse-only SOTA is retired from the
-close target.
+close target. SK-V10 is ready for S-P2 Research.
 
 ## 1. Read First
 
@@ -26,6 +26,13 @@ close target.
 14. `restart/skinny/tranches/sk-v10/research/alpha/alpha-F-contract-draft.md`
 15. `restart/skinny/tranches/sk-v10/research/alpha-hardening/V1/CONSOLIDATED.md`
 16. `restart/skinny/tranches/sk-v10/research/g-alpha/G-ALPHA-PRESENTATION.md`
+17. `restart/skinny/tranches/sk-v10/research/p1/p1a-samply-mode-1.md`
+18. `restart/skinny/tranches/sk-v10/research/p1/p1b-samply-mode-2.md`
+19. `restart/skinny/tranches/sk-v10/research/p1/p1c-samply-mode-3.md`
+20. `restart/skinny/tranches/sk-v10/research/p1/p1d-pmu-cycles.md`
+21. `restart/skinny/tranches/sk-v10/research/p1/p1e-hot-leaf-attribution.md`
+22. `restart/skinny/tranches/sk-v10/research/p1/p1f-results-delta.md`
+23. `restart/skinny/tranches/sk-v10/research/p1/hardening/HARDENING-S-P1-V1-CONSOLIDATED.md`
 
 ## 2. Current State
 
@@ -56,9 +63,8 @@ Current `skinny/RESULTS.md` state:
 
 ## 4. Next Move
 
-1. Dispatch S-P1 Profile, with `direct_to_struct` as
-   the first profiling target.
-2. Dispatch S-P2/S-P3 to author a measurable SK-V10 `SPEC.md` and
+1. Dispatch S-P2 Research, grounded in the accepted S-P1 profile packet.
+2. Dispatch S-P3 to author a measurable SK-V10 `SPEC.md` and
    `DISPATCH-PROMPT.md`.
 3. Implement source waves only after their fresh entry gates pass.
 

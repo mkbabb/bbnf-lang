@@ -40,7 +40,7 @@ Symbol classes are grammar-neutral when possible: `string_tiny_scan`,
 | `string_tiny_scan` | `twitter`, `github_events`, `instruments`, `update_center`, `apache_builds`, `distinct_values`, `unicode_basic`; typed `twitter`, `apache_builds`, `update_center` | `runtime/src/grammars/json/generated.rs:171`; `bbnf-bench/src/generated_real_typed.rs:1345`; generator `codegen/src/typed_direct.rs:635` |
 | `string_full_scan` | `unicode_mixed`, `unicode_escapes`, Track 2 `unicode_basic` | `parse-that-regex/src/lib.rs:162`; `direct_struct.rs:541` caller |
 | `string_escape` / `unicode_escape_hex` | `unicode_escapes`, `unicode_mixed`, `y_string_unicode` | `parse-that-regex/src/lib.rs:718`, `:945`, `:961` |
-| `number_digit_scan` / `number_scan` | `canada`, `mesh`, `numbers`, `marine_ik`, typed `mesh`, typed `marine_ik` | `parse-that-regex/src/number/mod.rs:106`, `:127` |
+| `number_digit_scan` / `number_scan` | `canada`, `mesh`, `numbers`, `marine_ik`, typed `mesh`, typed `marine_ik` | `parse-that-regex/src/number/mod.rs:106`, `:38` |
 | `whitespace_skip` | `citm_catalog`, `random`, `mesh`, `marine_ik`, typed `citm_catalog` | `parse-that-regex/src/lib.rs:113` |
 | `array_walk` / `object_walk` | numeric and mixed rows where generated direct dispatch remains visible after primitive leaves | `runtime/src/grammars/json/generated.rs:468`, `:508` |
 | `simd_movemask` | `gsoc-2018`, secondary on `twitter`, `github_events`, `update_center` | `bbnf-simd/src/aarch64/movemask.rs:4` |

@@ -3,9 +3,11 @@
 Date: 2026-05-19.
 
 Status: Pass Alpha closed for SK-V9 -> SK-V10 under
-`G-ALPHA-SK-V10`. SK-V10 implementation is not dispatched by this file. The
-skinny pass sequence may now run S-P1/S-P2/S-P3; source implementation remains
-blocked until S-P3 authors `SPEC.md` and `DISPATCH-PROMPT.md`.
+`G-ALPHA-SK-V10`; S-P1 Profile closed under
+`HARDENING-S-P1-V1-CONSOLIDATED`. SK-V10 implementation is not dispatched by
+this file. The skinny pass sequence may now run S-P2/S-P3; source
+implementation remains blocked until S-P3 authors `SPEC.md` and
+`DISPATCH-PROMPT.md`.
 
 ## Authority
 
@@ -21,6 +23,7 @@ blocked until S-P3 authors `SPEC.md` and `DISPATCH-PROMPT.md`.
 - `restart/skinny/tranches/sk-v10/research/alpha/alpha-E-candidate-shortlist.md`
 - `restart/skinny/tranches/sk-v10/research/alpha-hardening/V1/CONSOLIDATED.md`
 - `restart/skinny/tranches/sk-v10/research/g-alpha/G-ALPHA-PRESENTATION.md`
+- `restart/skinny/tranches/sk-v10/research/p1/hardening/HARDENING-S-P1-V1-CONSOLIDATED.md`
 - `skinny/RESULTS.md`
 - `skinny/REDRESS.md` entries 94-98
 
@@ -164,6 +167,6 @@ CSS L4 / Sheets / BBNF-self generalization is the unexercised thesis risk.
 
 ## Section 9 - Dispatch Boundary
 
-This file dispatches Alpha CHALLENGE only. It does not authorize source work.
-After `G-ALPHA-SK-V10` closes, S-P1/S-P2/S-P3 must write the measurable wave
-plan before implementation.
+This file does not authorize source work. `G-ALPHA-SK-V10` and S-P1 Profile
+are closed; S-P2/S-P3 must still write the measurable wave plan before
+implementation.

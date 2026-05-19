@@ -19,7 +19,8 @@ Commands:
 ```bash
 git status --short --branch
 git log --oneline --max-count=12 -- skinny/RESULTS.md
-python3 <main-table extractor> skinny/RESULTS.md
+python3 restart/skinny/tranches/sk-v10/research/p1/tools/extract_results_main_table.py \
+  skinny/RESULTS.md /tmp/skv10-p1/results-main.csv
 ```
 
 The extractor parsed the main RESULTS table only. The SK-V10 Alpha contract

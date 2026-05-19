@@ -16,6 +16,8 @@ Criterion root: `/tmp/skv10-p1/mode3-criterion`.
 Commands:
 
 ```sh
+cd /Users/mkbabb/Programming/bbnf-lang/skinny
+
 CRITERION_HOME=/tmp/skv10-p1/mode3-criterion \
 RUSTFLAGS="-C target-cpu=native" \
 cargo bench -p bbnf-bench --bench json_parity -- json/probes --quiet
@@ -23,6 +25,10 @@ cargo bench -p bbnf-bench --bench json_parity -- json/probes --quiet
 CRITERION_HOME=/tmp/skv10-p1/mode3-criterion \
 RUSTFLAGS="-C target-cpu=native" \
 cargo bench -p bbnf-bench --bench simd_scan -- simd/structural_scan --quiet
+
+cd /Users/mkbabb/Programming/bbnf-lang
+python3 restart/skinny/tranches/sk-v10/research/p1/tools/extract_mode3_criterion.py \
+  /tmp/skv10-p1/mode3-criterion
 ```
 
 Mode III is not a row-admission bench. It is a masking probe set:
@@ -38,8 +44,11 @@ Mode III is not a row-admission bench. It is a masking probe set:
   primitive is fast in isolation, but SK-V9 REDRESS 96-98 prove that
   materializing the scan as a union/class substrate regresses the parse path.
 
-Throughput below is computed from each Criterion mean point estimate and the
-input byte count recorded in the same run's `metadata.toml`.
+Throughput below is computed as megabits per second using
+`bytes * 8_000 / mean_ns`, where `mean_ns` is the Criterion mean point estimate
+from `new/estimates.json` and `bytes` is the Criterion throughput count from
+the paired `new/benchmark.json`. This matches the SK JSON ledger's Mbps unit;
+there is no hidden batch factor.
 
 ## Section 2 - Decode And Scalar Masking
 
@@ -125,8 +134,9 @@ consumes it, not just the primitive alone.
 
 - `/tmp/skv10-p1/mode3-criterion/json_probes_*/`
 - `/tmp/skv10-p1/mode3-criterion/simd_structural_scan/`
-- `skinny/benches/json_parity.rs`
-- `skinny/benches/simd_scan.rs`
+- `skinny/crates/bbnf-bench/benches/json_parity.rs`
+- `skinny/crates/bbnf-bench/benches/simd_scan.rs`
+- `restart/skinny/tranches/sk-v10/research/p1/tools/extract_mode3_criterion.py`
 - `restart/skinny/tranches/sk-v10/research/p1/p1b-samply-mode-2.md`
 - `restart/skinny/tranches/sk-v10/research/p1/p1d-pmu-cycles.md`
 - `restart/skinny/tranches/sk-v10/research/p1/p1e-hot-leaf-attribution.md`

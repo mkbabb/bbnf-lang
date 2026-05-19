@@ -37,6 +37,11 @@ xcrun xctrace record \
 xcrun xctrace export \
   --input /tmp/skv10-p1/direct-xctrace/traces/<corpus>__<mode>.trace \
   --xpath '/trace-toc/run[@number="1"]/data/table[@schema="time-profile"]'
+
+python3 /Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v10/research/p1/tools/summarize_xctrace_time_profile.py \
+  --trace-dir /tmp/skv10-p1/direct-xctrace/traces \
+  --output-dir /tmp/skv10-p1/direct-xctrace/exports \
+  --process-binary profile_direct
 ```
 
 Modes:
@@ -56,6 +61,12 @@ accepted as hot-leaf evidence for the product plane, but not as a strict
 cold-per-parse Criterion replacement. P1-C owns Criterion masking probes; P1-D
 owns parse-lane PMU/cycles evidence and records the direct/typed PMU gap
 honestly.
+
+`xcrun xctrace record` exits with code 54 when a `--time-limit` capture reaches
+the requested window. Those captures are accepted only when the corresponding
+trace bundle and per-row log exist under `/tmp/skv10-p1/direct-xctrace/` and
+the export contains process samples. The accepted `rc=54` rows are visible in
+`/tmp/skv10-p1/direct-xctrace/capture.log`.
 
 ## Section 2 - Findings
 
@@ -77,7 +88,7 @@ Full export summary: `/tmp/skv10-p1/direct-xctrace/exports/summary.json`.
 | `marine_ik` | 2001 | 19.9% `array_walk` `parse_array_element_at_direct` (`generated.rs:508`); 14.8% `number_digit_scan` `scan_digit_run` (`number/mod.rs:106`); 13.4% `whitespace_skip` `skip_ascii_whitespace` (`parse-that-regex/src/lib.rs:113`) |
 | `instruments` | 2004 | 31.6% `string_tiny_scan` `match_tiny_plain_string_with_cap::<8>` (`generated.rs:171`); 16.5% `whitespace_skip` `skip_ascii_whitespace` (`parse-that-regex/src/lib.rs:113`); 8.9% `object_walk` `parse_object_value_at_direct` (`generated.rs:468`) |
 | `numbers` | 2007 | 25.7% `number_digit_scan` `scan_digit_run` (`number/mod.rs:106`); 16.5% `array_walk` `parse_array_element_at_direct` (`generated.rs:508`); 9.3% `memcpy` `core::ptr::copy_nonoverlapping` |
-| `unicode_mixed` | 2002 | 23.8% `string_full_scan` `match_string_at_quote_trusted_utf8` (`parse-that-regex/src/lib.rs:162`); 17.5% `string_escape` `unescape_string` (`parse-that-regex/src/lib.rs:718`); 12.7% `string_escape` `validate_string_escape` (`parse-that-regex/src/lib.rs:310`) |
+| `unicode_mixed` | 2002 | 23.8% `string_full_scan` `match_string_at_quote_trusted_utf8` (`parse-that-regex/src/lib.rs:162`); 17.5% `string_escape` `unescape_string` (`parse-that-regex/src/lib.rs:718`); 12.7% `string_escape` `validate_string_escape` (`parse-that-regex/src/lib.rs:284`) |
 | `unicode_escapes` | 2006 | 23.4% `string_escape` `unescape_string` (`parse-that-regex/src/lib.rs:718`); 18.2% `string_full_scan` `match_string_at_quote_trusted_utf8` (`parse-that-regex/src/lib.rs:162`); 11.2% `unicode_escape_hex` `read_hex_unit_scalar` (`parse-that-regex/src/lib.rs:945`) |
 | `unicode_basic` | 1998 | 15.5% `string_tiny_scan` `match_tiny_plain_string_with_cap::<8>` (`generated.rs:171`); 11.8% `other` `<u16>::trailing_zeros`; 10.9% `whitespace_skip` `skip_ascii_whitespace` (`parse-that-regex/src/lib.rs:113`) |
 | `distinct_values` | 1994 | 19.8% `string_tiny_scan` `match_tiny_plain_string_with_cap::<8>` (`generated.rs:171`); 15.7% `whitespace_skip` `skip_ascii_whitespace` (`parse-that-regex/src/lib.rs:113`); 12.5% `direct_struct` `JsonDirectDigest::fold_string_scalar` (`skinny/crates/bbnf-bench/src/direct_struct.rs:123`) |
@@ -91,8 +102,8 @@ Full export summary: `/tmp/skv10-p1/direct-xctrace/exports/summary.json`.
 | `citm_catalog` | 800 | 31.0% `whitespace_skip`; 17.9% `DirectParser::skip_plain_string_end` (`generated_real_typed.rs:1359`); 10.4% `DirectParser::skip_value` (`generated_real_typed.rs:1273`) |
 | `apache_builds` | 1999 | 30.4% `DirectParser::tiny_plain_string_end` (`generated_real_typed.rs:1345`; generator template `typed_direct.rs:635`); 25.0% pointer equality; 7.9% `whitespace_skip` |
 | `update_center` | 1994 | 30.0% `DirectParser::skip_plain_string_end` (`generated_real_typed.rs:1359`); 15.4% `DirectParser::tiny_plain_string_end` (`generated_real_typed.rs:1345`); 12.6% pointer equality |
-| `mesh` | 1996 | 16.5% `number_digit_scan`; 13.8% `number_scan` `match_number_span_from_first` (`parse-that-regex/src/number/mod.rs:127`); 9.8% `whitespace_skip` |
-| `marine_ik` | 1997 | 16.7% `whitespace_skip`; 15.9% `number_digit_scan`; 13.4% `number_scan` `match_number_span_from_first` (`number/mod.rs:127`) |
+| `mesh` | 1996 | 16.5% `number_digit_scan`; 13.8% `number_scan` `match_number_span_from_first` (`parse-that-regex/src/number/mod.rs:38`); 9.8% `whitespace_skip` |
+| `marine_ik` | 1997 | 16.7% `whitespace_skip`; 15.9% `number_digit_scan`; 13.4% `number_scan` `match_number_span_from_first` (`number/mod.rs:38`) |
 
 Track 2 profiles are captured for independence checking. The full Track 2
 tables live in `/tmp/skv10-p1/direct-xctrace/exports/summary.json`. The

@@ -2727,3 +2727,40 @@ perturbation.
   Track 2 digest-arithmetic backstop. Remaining direct digest misses route to a
   later direct-output-contract or control-path research tranche; digest evidence
   remains guard-plane only and is not product proof.
+
+## SK-V9 Wave 1 Apache/CITM Measured Typed-Row Admission
+
+- Item 94 admits the W1 row-table slice for
+  `apache_builds/real_typed_struct` and `citm_catalog/real_typed_struct`.
+  The admitted commit expands the measured baseline whitelist only; it does not
+  change parser, runtime, SIMD, codegen, fixture, direct-output, or generic
+  grammar behavior.
+- Fresh native Criterion evidence is rendered into `skinny/RESULTS.md` under
+  run id `sk-v9-open:criterion-fnv64-a1e8a51ae806d386`, with artifacts under
+  `skinny/target/skv9-w1/criterion/`. The capture used
+  `RUSTFLAGS="-C target-cpu=native"` and the manifest carries
+  `target_cpu=native` in `build_flags` and `feature_mask`.
+- Apache admits at 8174 Mbps Track 1 versus 8110 Mbps sonic-rs typed strict
+  (`ceil(8110 / 1.10) = 7373` floor). Track 2/oracle evidence is independent
+  at 6728 Mbps, and `assert_real_typed_parity` remains the product proof.
+- CITM admits at 35102 Mbps Track 1 versus 22058 Mbps sonic-rs typed strict
+  (`ceil(22058 / 1.10) = 20053` floor). Track 2/oracle evidence is independent
+  at 19143 Mbps, and `assert_real_typed_parity` remains the product proof.
+- The four pre-existing measured typed rows maintain `A / GO` above their
+  sonic/1.10 floors: twitter 18302, update_center 11847, mesh 10032, and
+  marine_ik 10728 Mbps. The direct guard envelope also holds:
+  `apache_builds/direct_to_struct` stays `N-direct / NO-GO`, and
+  `citm_catalog/direct_to_struct` stays `A / GO`.
+- REDRESS 91's deferred row-table gap is now closed for Apache and CITM only.
+  `canada/real_typed_struct` stays rejected pending the full-fixture
+  DirectBuild-vs-serde checksum proof; no direct digest row is relabeled as
+  typed product proof.
+- Verification completed for the admission:
+  `RUSTFLAGS="-C target-cpu=native" CRITERION_HOME=target/skv9-w1/criterion cargo xtask gate-json --advisory --update-results`
+  rendered the promoted report; the W1 close checks were
+  `cargo test -p bbnf-bench lock14_baseline -- --nocapture`,
+  `cargo test -p bbnf-bench real_typed -- --nocapture`,
+  `cargo xtask check-real-typed`, `cargo xtask check-json`,
+  `cargo xtask check-conformance`,
+  `RUSTFLAGS="-C target-cpu=native" CRITERION_HOME=target/skv9-w1/criterion cargo xtask gate-json --advisory --check-results`,
+  and `git diff --check`.

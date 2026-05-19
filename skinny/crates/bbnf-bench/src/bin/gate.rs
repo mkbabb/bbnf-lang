@@ -1826,8 +1826,8 @@ mod tests {
     fn w0_real_typed_metadata_expectation_uses_measured_baseline_not_source_fixtures() {
         assert!(w0_real_typed_metadata_expected("twitter"));
         assert!(w0_real_typed_metadata_expected("update_center"));
-        assert!(!w0_real_typed_metadata_expected("apache_builds"));
-        assert!(!w0_real_typed_metadata_expected("citm_catalog"));
+        assert!(w0_real_typed_metadata_expected("apache_builds"));
+        assert!(w0_real_typed_metadata_expected("citm_catalog"));
     }
 
     #[test]

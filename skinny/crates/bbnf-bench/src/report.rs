@@ -737,6 +737,13 @@ pub const SK_V8_OPEN_BASELINE: &[SkV8OpenBaseline] = &[
         19434.0
     ),
     sk_v8_open_baseline!(
+        "json/citm_catalog/real_typed_struct/main",
+        "A",
+        "GO",
+        35102.0,
+        19143.0
+    ),
+    sk_v8_open_baseline!(
         "json/canada/parse_only/main",
         "L",
         "NO-GO",
@@ -763,6 +770,13 @@ pub const SK_V8_OPEN_BASELINE: &[SkV8OpenBaseline] = &[
         "NO-GO",
         8306.0,
         7796.0
+    ),
+    sk_v8_open_baseline!(
+        "json/apache_builds/real_typed_struct/main",
+        "A",
+        "GO",
+        8174.0,
+        6728.0
     ),
     sk_v8_open_baseline!(
         "json/github_events/parse_only/main",

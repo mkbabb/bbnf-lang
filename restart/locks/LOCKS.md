@@ -1,3 +1,21 @@
+# SK-V9 Scoped Lock 14 Allowances
+
+- `sk-v9-real-typed-w1` permits the SK-V9 W1 parent diff only for the
+  Apache/CITM measured typed row-table admission. The scoped owner paths are
+  `skinny/crates/bbnf-bench/src/report.rs`,
+  `skinny/crates/bbnf-bench/src/bin/gate.rs`, `skinny/RESULTS.md`,
+  `skinny/crates/bbnf-bench/target/skv9-w1/criterion/` (out-of-band capture),
+  `skinny/REDRESS.md`, `restart/skinny/tranches/sk-v9/HANDOFF.md`, and this
+  `restart/locks/LOCKS.md` allowance text.
+- The allowance does not authorize grammar, runtime, codegen, SIMD, fixture,
+  direct-output, generated typed-output, or generic-crate behavior changes.
+  `canada/real_typed_struct` remains blocked pending the full-fixture
+  DirectBuild-vs-serde checksum proof.
+- Evidence: `skinny/RESULTS.md` run id
+  `sk-v9-open:criterion-fnv64-a1e8a51ae806d386`, Apache
+  `real_typed_struct A / GO` at 8174 Mbps, and CITM
+  `real_typed_struct A / GO` at 35102 Mbps.
+
 # Hardening pass — plan set
 
 You are auditing a freshly drafted plan set for the bbnf-lang BA-restart. The plan composes BA / BB / BC (and optionally BD+) tranches that re-architect the parser fleet from first principles toward grammar-agnostic, multi-backend, sonic-class direct-to-struct parsing.

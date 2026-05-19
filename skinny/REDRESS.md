@@ -2764,3 +2764,30 @@ perturbation.
   `cargo xtask check-conformance`,
   `RUSTFLAGS="-C target-cpu=native" CRITERION_HOME=target/skv9-w1/criterion cargo xtask gate-json --advisory --check-results`,
   and `git diff --check`.
+
+## SK-V9 Wave 2 Retained Class/Event Grammar Proof
+
+- Item 95 admits the W2 proof-only precursor routed by REDRESS 92. The wave
+  adds `EventGrammar`, the empty `AnyGrammar` default, JSON and Sheets
+  witness-local event grammars, and a fourth zero-sized `ValueRef`
+  event-grammar marker while preserving the existing `K = AnyKind` node-kind
+  marker used by generated retained JSON views.
+- W2 recorded two CHALLENGE passes. The first rejected the direct `K -> G`
+  route because current generated views instantiate
+  `ValueRef<'doc, 'input, RootKind/ObjectKind/...>`. The revised plan split
+  the axes as `ValueRef<'doc, 'input, K, G>`, and the second CHALLENGE accepted
+  that route for redress.
+- The proof is structural only. It changes no parser/scanner control path, no
+  generated JSON runtime file, no codegen template, no fixture, no benchmark
+  crate, and no `skinny/RESULTS.md` row. W3 is now unblocked to reopen the
+  union class-column substrate under its own measured gate.
+- Verification completed for the admission:
+  `cargo check -p runtime --features proof`,
+  `cargo test -p runtime event_grammar --features proof -- --nocapture`,
+  `cargo build -p runtime`,
+  `git diff --exit-code HEAD -- skinny/RESULTS.md`,
+  `rg -n 'admits_(fact|class)|STRUCTURAL_CLASS_COUNT|FactId' skinny/crates/runtime/src`,
+  `rg 'event_grammar|event_grammar_witness' skinny/crates/bbnf-bench/`, and
+  `git diff --check`. The negative proof fixture constructs
+  `ValueRef<'static, 'static, AnyKind, JsonEventGrammar>` from a local tape and
+  is rejected by the borrow checker.

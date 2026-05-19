@@ -3,7 +3,7 @@
 Date: 2026-05-19.
 
 Status (2026-05-19, updated): SK-V9's research + planning track is
-**fully converged**, and implementation W1 is admitted. The PMU blocker
+**fully converged**, and implementation W1 and W2 are admitted. The PMU blocker
 that stalled S-P1 V2 was resolved
 — `xcode-select` was switched to the full Xcode toolchain, the Xcode
 licence accepted, and `xctrace` (CPU Counters + Time Profiler) now
@@ -24,15 +24,15 @@ have each converged per `ORCHESTRATOR.md` §3Z:
 `SPEC.md` and `DISPATCH-PROMPT.md` are the converged S-P3 wave plan,
 promoted from the `research/p3/skv9-p3-F-*` drafts. The W0 telemetry-
 lock remains closed (`SK-V9-open`). W1 closed the REDRESS 91 row-table
-gap for Apache/CITM measured typed rows only.
+gap for Apache/CITM measured typed rows only. W2 closed the REDRESS 92
+proof precursor with a retained `EventGrammar` contract and split-marker
+`ValueRef<'doc, 'input, K, G>` cursor proof.
 
-The implementation track now proceeds W2 → W3 → W4a..W4d → W5 per
-`SPEC.md`, each a research → plan → CHALLENGE where required → redress
-cycle landing measured source change. W2 (retained class/event grammar
-plus `ValueRef` proof) is the next dispatch and must pass its proof
-CHALLENGE before W3 can open. W3 (union event-model) is the structural
-fix that deletes the scalar `consume_structural` rediscovery pass and
-wires in the discarded SIMD structural index.
+The implementation track now proceeds W3 → W4a..W4d → W5 per `SPEC.md`,
+each a research → plan → CHALLENGE where required → redress cycle landing
+measured source change. W3 (union event-model) is the next dispatch: it is the
+structural fix that deletes the scalar `consume_structural` rediscovery pass
+and wires in the discarded SIMD structural index.
 
 ## 1. Read First
 
@@ -58,12 +58,17 @@ wires in the discarded SIMD structural index.
 20. `skinny/RESULTS.md`
 21. `restart/skinny/tranches/sk-v9/research/skv9-W1-research.md`
 22. `restart/skinny/tranches/sk-v9/research/skv9-W1-plan.md`
-23. `skinny/REDRESS.md` entries 91, 92, 93, and 94
+23. `skinny/REDRESS.md` entries 91, 92, 93, 94, and 95
+24. `restart/skinny/tranches/sk-v9/research/skv9-W2-research.md`
+25. `restart/skinny/tranches/sk-v9/research/skv9-W2-plan.md`
+26. `restart/skinny/tranches/sk-v9/research/skv9-W2-challenge.md`
+27. `restart/skinny/tranches/sk-v9/research/skv9-W2-challenge-v2.md`
 
 ## 2. Current State
 
 SK-V8 is closed by W6 V1+V2 hardening convergence. SK-V9 W0 is closed as a
-telemetry-lock recovery, and W1 is closed as a measured row-table admission.
+telemetry-lock recovery, W1 is closed as a measured row-table admission, and
+W2 is closed as a retained grammar proof.
 The current benchmark authority is the W1-rendered `skinny/RESULTS.md`
 `SK-V9-open` report:
 
@@ -93,6 +98,14 @@ W1 admission facts:
 - `canada/real_typed_struct` remains absent/rejected. W1 admits Apache and
   CITM only.
 
+W2 admission facts:
+
+- `EventGrammar`, `AnyGrammar`, JSON and Sheets witnesses, and proof tests are
+  admitted under `G-W2-RETAINED-PROOF`.
+- `ValueRef` now has separate zero-sized node-kind and event-grammar axes:
+  `ValueRef<'doc, 'input, K = AnyKind, G: EventGrammar = AnyGrammar>`.
+- The proof moved zero rows and left `skinny/RESULTS.md` unchanged.
+
 ## 3. Candidate Boundaries
 
 SK-V9 Alpha may carry only the three W6 residual behavior routes. Alpha-E also
@@ -102,7 +115,7 @@ gate-only enablers and cannot dispatch row-moving implementation.
 | Candidate | Boundary |
 |---|---|
 | Apache/CITM measured typed rows | Admitted by SK-V9 W1 / REDRESS 94 with fresh run-id/metadata validation and six measured `real_typed_struct A / GO` rows. |
-| Retained class/event grammar and `ValueRef` cursor proof | REDRESS 92 rejected SK-V8 W3 before source redress. No structural-heavy parse implementation reopens until the retained grammar and cursor proof are accepted. |
+| Retained class/event grammar and `ValueRef` cursor proof | Admitted by SK-V9 W2 / REDRESS 95. W3 may now reopen the structural-heavy union event model under its own measured gate. |
 | Direct output/control-path contract | REDRESS 93 rejected scalar-parent folding. Direct digest misses remain guard-plane rows until a direct output contract or control-path tranche exists. |
 | Comparator sidecar same-run manifest | Gate-only evidence ingestion. It cannot produce parser data, retained tape data, row output, substrate, or strict admission by itself. |
 | SK-V9-open telemetry/gate refresh | Gate-only report refresh. It cannot move throughput cells, admit Apache/CITM measured rows, or alter parser/scanner/SIMD/codegen behavior. |
@@ -116,7 +129,7 @@ Alpha cost binding for any later S-P3 plan:
 | Candidate | LOC budget | Hard cap | Row effect before future S-P3 |
 |---|---:|---|---|
 | Apache/CITM typed row-table admission | 300 | <=90 min implementation/redress, split before dispatch if exceeded | Closed by W1 / REDRESS 94 |
-| Retained class/event grammar plus `ValueRef` proof | 450 | <=90 min implementation/redress, split before dispatch if production consumer does not fit | Proof-only; no `RESULTS.md` row movement at Alpha depth |
+| Retained class/event grammar plus `ValueRef` proof | 450 | <=90 min implementation/redress, split before dispatch if production consumer does not fit | Closed by W2 / REDRESS 95; proof-only, no `RESULTS.md` row movement |
 | Direct output/control-path contract | 600 | <=90 min implementation/redress, split before dispatch if exceeded | May move direct guard rows only under future accepted direct contract gates |
 | Comparator sidecar same-run manifest | 500 | <=90 min implementation/redress, split before dispatch if exceeded | No behavior movement; freshness/plane fields only |
 | SK-V9-open telemetry/gate refresh | 450 | <=90 min implementation/redress, split before dispatch if exceeded | No behavior movement; row additions require their own accepted gate |
@@ -125,9 +138,9 @@ Alpha cost binding for any later S-P3 plan:
 
 1. Treat G-Alpha, `G-W0-TELEMETRY-LOCK`, `G-S-P1-RERUN-CONVERGED`, and
    `G-W1-TYPED-ADMISSION` as recorded.
-2. Dispatch W2 next: retained class/event grammar plus `ValueRef` proof.
-3. Run the mandatory W2 CHALLENGE before redress. W3 remains blocked until W2
-   proof acceptance.
+2. Dispatch W3 next: union event-model plus class-column substrate.
+3. Run the mandatory W3 CHALLENGE before redress; W3 carries the HIGH-risk
+   extension adjudication named by `SPEC.md` Section 6.
 4. Preserve the W1 boundary: Apache/CITM measured typed rows are admitted;
    Canada typed and direct guard-plane claims remain blocked.
 
@@ -141,8 +154,8 @@ acceptance:
   fresh measured row-table admission. No Canada/direct row inherits it.
 - `canada/real_typed_struct` without full-fixture DirectBuild-vs-serde checksum
   proof.
-- W3 structural implementation without retained class/event grammar plus
-  retained `ValueRef` cursor proof.
+- W3 structural implementation outside the accepted W2 retained grammar plus
+  retained `ValueRef` cursor proof boundary.
 - W4 scalar-parent fold or renamed parent-digest fold without a V9-aware checked
   gate, full-table maintain proof, and independent Track 2 digest-arithmetic
   backstop.
@@ -163,6 +176,7 @@ different, and pass challenge before implementation planning.
 ## 6. Close Posture
 
 The SK-V9 contract is post-G-Alpha, post-W0, post-S-P1/S-P2/S-P3
-convergence, and post-W1. W1 admitted the row-table-only Apache/CITM
-measured typed rows. The next live dependency is W2 proof acceptance; W3 and
-all W4 sub-waves remain blocked behind that proof/cascade order.
+convergence, post-W1, and post-W2. W1 admitted the row-table-only Apache/CITM
+measured typed rows. W2 admitted the retained grammar proof. The next live
+dependency is W3 union-substrate acceptance; all W4 sub-waves remain blocked
+behind that cascade order.

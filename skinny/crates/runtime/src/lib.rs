@@ -3,6 +3,14 @@ pub mod tape;
 #[path = "grammars/json/mod.rs"]
 pub mod generated_json;
 
+#[cfg(any(test, feature = "proof"))]
+#[path = "grammars/json/event_grammar_witness.rs"]
+pub mod json_event_grammar_witness;
+
+#[cfg(any(test, feature = "proof"))]
+#[path = "grammars/sheets_witness/mod.rs"]
+pub mod sheets_witness;
+
 pub mod grammars {
     pub use crate::generated_json as json;
 }

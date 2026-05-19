@@ -570,8 +570,10 @@ Owner paths (P2-B §1.2 / §6.1):
 | `skinny/crates/runtime/src/grammars/sheets_witness/event_grammar_witness.rs` + `mod.rs` (NEW) | Sheets `impl EventGrammar` — the Lock 14 non-JSON witness. |
 | `skinny/crates/runtime/src/tape/mod.rs` (TOUCHED, ~20 lines) | `ValueRef` `K = AnyKind` → `G: EventGrammar = AnyGrammar`. |
 | `skinny/crates/runtime/src/lib.rs` (TOUCHED, ~5 lines) | Re-exports behind one `#[cfg(any(test, feature = "proof"))]` at the parent `pub mod` site. |
+| `skinny/crates/runtime/Cargo.toml` (TOUCHED, 1 line) | Declare the `proof` feature named by the cfg gate; no dependency or default-feature change. |
 
-All proof files are `cfg`-gated; the default build is byte-identical.
+Witness proof files are `cfg`-gated; the default build keeps production parser
+behavior identical.
 No file under `grammars/json/parser.rs|generated.rs|scan.rs|value.rs`
 or `codegen/` is touched.
 
@@ -581,14 +583,15 @@ states the proof is compile-time and names the `cfg` isolation.
 Exit gate `G-W2-RETAINED-PROOF` passes only if (P3-C §3.1):
 
 1. The `EventGrammar` trait compiles, is grammar-neutral by signature
-   (no `match grammar` arm, no role enum), and `cargo check -p runtime`
-   is green.
+   (no `match grammar` arm, no role enum), and
+   `cargo check -p runtime --features proof` is green.
 2. The three `const _: fn() = _proof_compiles::<G>` witness lines for
    `JsonEventGrammar`, `SheetsEventGrammar`, and `AnyGrammar` all
    compile; the negative `ValueRef<'static, 'static, JsonEventGrammar>`
    test is rejected by the borrow checker.
-3. The default build `cargo build -p runtime` is byte-identical to the
-   pre-W2 build — the proof is fully behind `cfg`.
+3. The default build `cargo build -p runtime` is behavior-identical to the
+   pre-W2 build — witness modules are fully behind `cfg`, and the only default
+   surface change is the zero-sized `ValueRef` marker bound/default rename.
 4. The Lock 14 `rg` audits (P2-B §3.3) report every `admits_fact` /
    `admits_class` match inside `event_grammar.rs`, a witness file, or
    the proof test — never in generic substrate source.

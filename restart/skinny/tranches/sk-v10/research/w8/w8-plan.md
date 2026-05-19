@@ -103,3 +103,19 @@ microbench below `1.08x`:
 - REDRESS 83 StringBlock16 tiny wrapper remains closed.
 - PMULL/CTZ defaults from REDRESS 88/89 remain closed.
 - W8 cannot combine proof with W9 production wiring.
+
+## Plan Revision - Redress Fixture Fact
+
+Redress discovery: `unicode_mixed` contains no valid JSON `\uXXXX` raw string
+contents for the C6 caller. Its `\u` text is escaped-backslash data such as
+literal `\\u`, so `unescape_string` must not treat it as Unicode escape syntax.
+
+Revised measurement rule:
+
+- report `unicode_mixed` as a zero-eligible guard slice;
+- run the C6 caller microbench aggregate threshold over the two eligible
+  fixed-width Unicode escape slices, `unicode_escapes` and
+  `y_string_unicode`;
+- keep the threshold at `>=1.08x`;
+- preserve all differential cases for invalid hex, lone surrogate, surrogate
+  pair, non-contiguous escapes, and escaped-backslash `\\u` data.

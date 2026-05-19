@@ -75,3 +75,20 @@ Redress may proceed without a plan revision. It must:
    `restart/skinny/tranches/sk-v10/research/p3/escape-segment-proof/`.
 5. Record PASS only if aggregate observed speedup is `>=1.08x`.
 6. Leave `skinny/RESULTS.md` unchanged.
+
+## CHALLENGE Addendum - Fixture Eligibility Revision
+
+Disposition: ACCEPT PLAN REVISION.
+
+Redress found that `unicode_mixed` has no valid JSON `\uXXXX` string contents
+for the C6 caller. This is not a reason to synthesize an artificial mixed row
+or to treat escaped-backslash `\\u` data as a Unicode escape. The revised gate
+must report `unicode_mixed` as zero eligible for C6 and run the aggregate
+microbench threshold over the two eligible fixed-width Unicode escape slices:
+`unicode_escapes` and `y_string_unicode`.
+
+The addendum preserves CH4 because the benchmark remains caller-level and
+threshold-bearing. It preserves CH2 because JSON escape policy still lives in
+the caller/proof artifact. Redress must include an escaped-backslash `\\u`
+differential case so the zero-eligible `unicode_mixed` finding is covered by
+policy parity rather than ignored.

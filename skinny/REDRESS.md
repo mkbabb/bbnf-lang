@@ -3168,3 +3168,29 @@ perturbation.
   generated parser, SIMD primitive body, or `RESULTS.md` row remains changed.
 - W9 cannot consume W7. W8 may still dispatch only with an escape/segment
   primitive whose entry gate does not depend on an accepted W7 string proof.
+
+## SK-V10 Wave 8 Hex Escape Micro-Proof
+
+- Item 107 admits W8 under `G-W8-ESCAPE-SEGMENT-MICROPROOF`. The selected
+  `C6-hex-escape-proof` route proves the existing `unescape_string` caller
+  through `unescape_four_unicode_escapes` and the current
+  `unescape_uxxxx_x4_neon` primitive.
+- The proof artifact is
+  `restart/skinny/tranches/sk-v10/research/p3/escape-segment-proof/W8-ESCAPE-MICROPROOF.md`.
+  It records run id `sk-v10-w8-escape-microproof`, host
+  `aarch64-apple-darwin`, flags `-C opt-level=3 -C target-cpu=native`,
+  feature gate `target_arch=aarch64`, sample count 25, scalar oracle
+  `unescape_uxxxx_scalar + scalar JSON surrogate policy`, and threshold
+  `>=1.08x`.
+- The caller microbench cleared threshold: aggregate `1.268x`. Per-slice:
+  `unicode_escapes` `2.636x`, `y_string_unicode` `0.943x`, and
+  `unicode_mixed` zero eligible because its `\u` text is escaped-backslash
+  data, not valid JSON Unicode escape syntax.
+- Evidence passed:
+  `cargo test --manifest-path skinny/Cargo.toml -p bbnf-simd unescape_uxxxx_x4_matches_scalar -- --nocapture`,
+  `BBNF_SIMD_STRICT=1 RUSTFLAGS="-C target-cpu=native" cargo test --manifest-path skinny/Cargo.toml -p bbnf-simd sk_v3_intrinsic_parity_aarch64 -- --nocapture`,
+  and
+  `RUSTFLAGS="-C target-cpu=native" cargo test --manifest-path skinny/Cargo.toml -p parse-that-regex unescape -- --nocapture`.
+- W8 moves no `RESULTS.md` row and wires no new production behavior. W9 may
+  consume W8 only for `unescape_uxxxx_x4_neon` in the current
+  `unescape_string` caller with production row gates measured in W9.

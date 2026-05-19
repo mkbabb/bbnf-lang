@@ -12,10 +12,11 @@ REDRESS 101. W3 parse-only firewall is closed under REDRESS 102. W4
 `instruments` typed product admission is rejected under REDRESS 103. W5
 root-type typed generalization proof is closed under REDRESS 104. W6
 `github_events` root typed row admission is closed under REDRESS 105. W7
-full-string primitive micro-proof is rejected under REDRESS 106. Source work is
-authorized only wave-by-wave after the requested wave's SPEC entry gate passes;
-W8 is the next live dispatch only for an escape/segment primitive independent
-of W7.
+full-string primitive micro-proof is rejected under REDRESS 106. W8 hex escape
+micro-proof is closed under REDRESS 107. Source work is authorized only
+wave-by-wave after the requested wave's SPEC entry gate passes; W9 is the next
+live dispatch for the exact W8 C6 `unescape_string` proof, subject to
+CHALLENGE.
 
 REDRESS 96, 97, and 98 retire the W3 union/event/class-column substrate
 thesis. No implementation agent may reopen it through a renamed W3, a
@@ -66,6 +67,7 @@ Read in order:
     - `research/w5/w5-redress.md`.
     - `research/w6/w6-redress.md`.
     - `research/w7/w7-redress.md`.
+    - `research/w8/w8-redress.md`.
 17. `skinny/RESULTS.md`.
 18. `skinny/REDRESS.md`.
 
@@ -81,8 +83,8 @@ Read in order:
 | W5 | Section 8 | Root-Type Typed Generalization Proof | `C3` | Closed - REDRESS 104 | 220-420 source/generated + 60-120 test/gate LOC | <=90 min |
 | W6 | Section 9 | Root Typed Row Admission | `C3` | Closed - REDRESS 105 | 160-260 source/generated + 40-80 gate LOC per corpus | <=90 min |
 | W7 | Section 10 | String Primitive Micro-Proof | `C4` or `C5` | Rejected - REDRESS 106 | 90-260 proof LOC | <=90 min |
-| W8 | Section 11 | Escape/Segment Micro-Proof | `C6` or `C7` | Dispatchable only for a primitive independent of W7 + CHALLENGE | 90-260 proof LOC | <=90 min |
-| W9 | Section 12 | Existing-Call-Site Kernel Production | proven `C4`-`C7` | Conditional on accepted W8 or replacement proof + CHALLENGE | 220-420 source/bench/gate LOC | <=90 min |
+| W8 | Section 11 | Escape/Segment Micro-Proof | `C6` | Closed - REDRESS 107 | 90-260 proof LOC | <=90 min |
+| W9 | Section 12 | Existing-Call-Site Kernel Production | proven `C6` | Dispatchable for W8 C6 `unescape_string` proof + CHALLENGE | 220-420 source/bench/gate LOC | <=90 min |
 | W10 | Section 13 | Direct Residual Behavior Tranche | `C1` follow-on | Conditional on W2 + W3 + CHALLENGE | 320 source/gate LOC; 420 only with CHALLENGE | <=90 min |
 | Close | Section 14 | SK-V10 Close Accounting | `C11`, docs | Conditional on W0-W10 dispositions | 80-160 docs/gate LOC | <=90 min |
 
@@ -91,13 +93,12 @@ only and never dispatches a W3 substrate. W4 rejected with measurement and no
 typed row movement. W5 proved array and map-entry typed roots but moved no
 row. W6 admitted `github_events/real_typed_struct`. W7 rejected the
 `C5-full-string-proof` route under REDRESS 106 and cannot feed W9. W8 remains a
-proof-only micro wave only for a primitive whose entry gate does not depend on
-an accepted W7 proof. W9 is the only kernel
-production wave and may consume only the relevant accepted W8 proof, or a
-future SPEC/CHALLENGE accepted replacement proof, for
-the exact `C4`-`C7` primitive and existing call site. `C8` and `C9` cannot feed
-W9 without a future SPEC/CHALLENGE amendment. A wave whose SPEC entry gate is
-not PASS must be refused with the reason recorded.
+proof-only micro wave and accepted C6 for `unescape_uxxxx_x4_neon` in
+`unescape_string` under REDRESS 107. W9 is the only kernel production wave and
+may consume only that exact accepted W8 proof, or a future SPEC/CHALLENGE
+accepted replacement proof, for the exact `C4`-`C7` primitive and existing call
+site. `C8` and `C9` cannot feed W9 without a future SPEC/CHALLENGE amendment. A
+wave whose SPEC entry gate is not PASS must be refused with the reason recorded.
 
 ## Per-Wave Triumvirate Protocol
 

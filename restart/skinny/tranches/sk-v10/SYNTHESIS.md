@@ -12,9 +12,10 @@ closed under REDRESS 101. W3 parse-only firewall is closed under REDRESS 102.
 W4 `instruments` typed product admission is rejected under REDRESS 103. W5
 root-type typed generalization proof is closed under REDRESS 104. W6
 `github_events` root typed row admission is closed under REDRESS 105. W7
-full-string primitive micro-proof is rejected under REDRESS 106. SK-V10
-implementation is dispatched by `SPEC.md` and `DISPATCH-PROMPT.md`; W8 is the
-next live wave only for an escape/segment primitive independent of W7.
+full-string primitive micro-proof is rejected under REDRESS 106. W8 hex escape
+micro-proof is closed under REDRESS 107. SK-V10 implementation is dispatched
+by `SPEC.md` and `DISPATCH-PROMPT.md`; W9 is the next live wave for the exact
+accepted C6 `unescape_string` proof.
 
 ## Authority
 
@@ -34,7 +35,7 @@ next live wave only for an escape/segment primitive independent of W7.
 - `restart/skinny/tranches/sk-v10/research/p2/p2g-candidate-ledger.md`
 - `restart/skinny/tranches/sk-v10/research/p2/hardening/HARDENING-S-P2-V1-CONSOLIDATED.md`
 - `skinny/RESULTS.md`
-- `skinny/REDRESS.md` entries 94-106
+- `skinny/REDRESS.md` entries 94-107
 
 ## Section 0 - Alpha Close Condition
 
@@ -193,6 +194,13 @@ aggregate `0.774x` versus the required `1.08x` on `unicode_mixed`,
 `/tmp/skv10-waveW7-rejected.patch`; no production caller or `RESULTS.md` row
 changed.
 
+W8 closed the hex escape micro-proof. The accepted C6 proof measured current
+`unescape_string` through `unescape_four_unicode_escapes` against a scalar-only
+mirror and cleared the `1.08x` threshold with aggregate `1.268x` on eligible
+fixed-width Unicode escape slices. `unicode_mixed` was recorded as zero
+eligible because its `\u` text is escaped-backslash data, not JSON Unicode
+escape syntax. No production caller or `RESULTS.md` row changed.
+
 ## Section 7 - Micro-Prove-First Gate
 
 No substrate or kernel intervention reaches S-P3 wave-scoping until it has a
@@ -208,6 +216,8 @@ win before integration. The micro proof must name:
 Profile-first remains necessary for target selection. It is no longer
 sufficient for dispatch. W7 is the live example: primitive parity was green,
 but caller-level throughput failed, so the route is not available for W9.
+W8 is the corresponding accepted route: caller-level throughput cleared the
+threshold, but production row movement is still deferred to W9.
 
 ## Section 8 - Omega And Totality Routing
 
@@ -223,5 +233,6 @@ CSS L4 / Sheets / BBNF-self generalization is the unexercised thesis risk.
 
 This file does not independently authorize source work. `G-ALPHA-SK-V10`, S-P1
 Profile, S-P2 Research, S-P3 Synthesis-Plan, W0, W1, W2, W3, W5, and W6 are
-closed; W4 and W7 are rejected with measurement. Wave implementation proceeds
-only through the current `SPEC.md` and `DISPATCH-PROMPT.md` entry gates.
+closed; W8 is proof-closed; W4 and W7 are rejected with measurement. Wave
+implementation proceeds only through the current `SPEC.md` and
+`DISPATCH-PROMPT.md` entry gates.

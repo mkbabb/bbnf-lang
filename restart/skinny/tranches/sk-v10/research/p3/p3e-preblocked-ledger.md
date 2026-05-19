@@ -61,6 +61,11 @@ Disposition vocabulary:
 
 ## Per-Wave Pre-Blocks
 
+V1 CHALLENGE fold: the final dispatch numbering is the top-level SPEC W0-W10
+manifest. This ledger's global pre-blocks are binding as written; the scoped
+sections below are aligned to the final SPEC wave numbers and candidate
+families. Older compressed draft aliases are not dispatch identifiers.
+
 ### W0 - Clamps And Dispatch Hygiene
 
 Allowed scope: contract clamps, row-disposition invariants, and gate refusal
@@ -86,11 +91,13 @@ Material differential:
   `gate-json` in the same wave and all current row dispositions are preserved.
   Any missing consumer reverts the field and records REDRESS.
 
-### W1 - Direct Output/Control-Path Contract
+### W1 / W2 / W10 - Direct Output/Control-Path Contract And Direct Movement
 
-Allowed scope: `C1-direct-output-contract`, contract-only or row-gated direct
-work after S-P3 binds output equivalence, independent Track 2/oracle status,
-sonic direct strict comparator, same-run run id, and `gate-json` consumer.
+Allowed scope: `C1-direct-output-contract`. W1 is contract-only, W2 is
+zero-behavior direct row-table reclamation, and W10 is the direct residual
+behavior tranche after CHALLENGE. All direct movement requires output
+equivalence, independent Track 2/oracle status, sonic direct strict comparator,
+same-run run id, and `gate-json` consumer.
 
 Pre-blocks:
 
@@ -116,7 +123,25 @@ Material differential:
   `ceil(sonic_direct / 1.10)`, and a revert path that leaves all direct rows
   unchanged on any missing comparator/run-id/provenance field.
 
-### W2 - `instruments` Typed Product Admission
+### W3 - W3 And Parse-Only Firewall
+
+Allowed scope: governance and gate refusal only. No behavior row moves.
+
+Pre-blocks:
+
+- W3/union/event substrate, retained class column, `UnionTape`, structural
+  cursor, parser-owned structural projection, class-lane-only fallback, and W4
+  cascade-lock remain retired by REDRESS 96-98.
+- Parse-only rows remain diagnostic `S / NO-GO` and cannot satisfy SK-V10 SOTA.
+- PASS-3 tape/direct runtime identity is not a skinny W3 implementation route.
+
+Material differential:
+
+- None inside SK-V10. A future reconsideration requires new Alpha/S-P3
+  authority, same-host micro-proof, live output-plane target, and proof that
+  the route is not another REDRESS 96/97 shape.
+
+### W4 - `instruments` Typed Product Admission
 
 Allowed scope: `C2-instruments-typed-admission`, one new
 `real_typed_struct` row if full typed product proof exists.
@@ -138,7 +163,7 @@ Material differential:
   `apache_builds`, `update_center`, `mesh`, `marine_ik`) must maintain their
   typed gates.
 
-### W3 - Root-Type Typed Generalization
+### W5 / W6 - Root-Type Typed Generalization And Row Admission
 
 Allowed scope: `C3-root-typed-generalization`, proof-only root model work for
 `github_events` top-level arrays and `gsoc-2018` map roots unless the same wave
@@ -146,8 +171,8 @@ also supplies full typed comparator rows.
 
 Pre-blocks:
 
-- Do not reopen W3/union because this wave number is W3. The root-type W3 is a
-  typed schema/codegen proof, not the retired W3 union/event substrate.
+- Do not reopen W3/union. Root-type work is typed schema/codegen proof and
+  optional typed row admission, not the retired W3 union/event substrate.
 - JSON-specific root policy may not leak into generic codegen or runtime.
 - No `RESULTS.md` row moves in a root-only proof wave.
 - Handwritten per-corpus shortcuts are blocked; root arrays and map-entry roots
@@ -161,10 +186,10 @@ Material differential:
   parity. Row movement needs a paired typed row gate with same-run comparator
   evidence.
 
-### W4 - Existing-Substrate Unicode/String Kernel Pair
+### W7 / W8 / W9 - Existing-Substrate Unicode/String Kernel Proof And Production
 
-Allowed scope: `C4`, `C5`, `C6`, `C7`, and `C9` only as proof-first or
-row-gated work against current call sites such as
+Allowed scope: `C4`, `C5`, `C6`, and `C7` only as proof-first or row-gated
+work against current call sites such as
 `match_string_at_quote_trusted_utf8`, `validate_unicode_escape_run`,
 `decode_unicode_escape`, or `unescape_string`. W3 cannot be a caller.
 
@@ -204,7 +229,7 @@ Material differential:
   floors for `canada`, `citm_catalog`, `instruments`, `marine_ik`, `mesh`, and
   `numbers`.
 
-### W5 - Comparator And Telemetry Refresh
+### W0 / Close - Comparator, Telemetry, And Close Refresh
 
 Allowed scope: `C12-telemetry-refresh`, SK-V10-open report identity, optional
 same-run sidecar freshness manifest, and `gate-json` schema consumption.

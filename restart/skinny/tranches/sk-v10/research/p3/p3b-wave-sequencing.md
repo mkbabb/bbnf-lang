@@ -31,9 +31,11 @@ implementation; it constrains the later `SPEC.md` and `DISPATCH-PROMPT.md`.
 5. Lock 14 remains binding. Generic crate, codegen, or runtime-outside-JSON
    edits require grammar-neutral proof plus named CSS L4 / Sheets / BBNF-self
    evidence. JSON-only wins stay inside JSON/bench owner paths.
-6. Every wave has a hard cap of 90 minutes research, 90 minutes plan, and 90
-   minutes redress. Hitting the cap without the entry/exit evidence records a
-   REDRESS rejection or proof-only close; it does not extend the wave.
+6. Every wave has a redress execution cap of 90 minutes. Pre-redress research
+   and plan phases use the dispatch protocol caps of 30 minutes per agent, and
+   CHALLENGE uses its 60-90 minute wall cap when required. Hitting the redress
+   cap without the entry/exit evidence records a REDRESS rejection or
+   proof-only close; it does not extend the wave.
 
 ## Owner Families
 
@@ -49,7 +51,7 @@ implementation; it constrains the later `SPEC.md` and `DISPATCH-PROMPT.md`.
 
 ## Sequence
 
-| Wave | Name | Depends on | Owner family | Entry gate | Hard cap | Status |
+| Wave | Name | Depends on | Owner family | Entry gate | Redress cap / budget | Status |
 |---|---|---|---|---|---|---|
 | W0 | SK-V10-open telemetry freeze | SK-V10 handoff + S-P2 V1 accepted | Gate/report | Current state is reproduced: 17 parse `S / NO-GO`, 3 direct `A / GO`, 14 direct `N-direct / NO-GO`, 6 typed `A / GO`; any emitted schema field is consumed by `gate-json`. | 120-240 gate/report LOC; no parser/runtime source. | Gate-only; no row movement. |
 | W1 | Direct output/control-path contract | W0 | Direct output + Gate/report | Direct output equivalence, independent Track 2/oracle status, sonic direct comparator semantics, row floors, and revert protocol are named. Digest rows are not typed proof. | 180-320 docs/gate LOC; no source optimization. | Proof-only contract; no row movement. |
@@ -60,7 +62,7 @@ implementation; it constrains the later `SPEC.md` and `DISPATCH-PROMPT.md`.
 | W6 | Root typed row admission | W5 | Typed product + Gate/report | One root-unblocked corpus at a time (`github_events` before `gsoc-2018` unless CHALLENGE reverses order) has same-wave generated typed, Track 2/oracle, serde typed, sonic typed, checksum parity, and typed floor evidence. | Per corpus: 160-260 source/generated LOC plus 40-80 gate/report LOC. | Row-moving for typed rows only. |
 | W7 | String primitive micro-proof | W3 | Kernel proof | Exactly one of `C4-tiny-string-proof` or `C5-full-string-proof` is selected; scalar oracle, representative slices, host flags, checkasm/microbench, failure threshold, and current caller are named. | 90-260 proof LOC; no production caller wiring. | Proof-only. |
 | W8 | Escape/segment micro-proof | W7 | Kernel proof | Exactly one of `C6-hex-escape-proof` or `C7-string-segment-fold` is selected; JSON slash/`\u`/surrogate policy remains generated-template owned; scalar/checkasm/microbench proof passes. | 90-260 proof LOC; no production caller wiring. | Proof-only. |
-| W9 | Existing-call-site kernel production | W7 + W8 | Kernel proof + Runtime consumer + Gate/report | Only a W7/W8-proven primitive can wire into `match_string_at_quote_trusted_utf8`, `validate_unicode_escape_run`, `decode_unicode_escape`, or `unescape_string`; W10b maintain floors hold for `canada`, `citm_catalog`, `instruments`, `marine_ik`, `mesh`, and `numbers`. | 350-650 LOC total across W7-W9; production slice consumes only the remaining cap. | Row-moving only for direct/typed rows with same-wave gates; parse-only stays `S / NO-GO`. |
+| W9 | Existing-call-site kernel production | relevant W7 or W8 proof | Kernel proof + Runtime consumer + Gate/report | Only the relevant accepted W7 or W8 proof for the exact `C4`-`C7` primitive and caller can wire into `match_string_at_quote_trusted_utf8`, `validate_unicode_escape_run`, `decode_unicode_escape`, or `unescape_string`; W10b maintain floors hold for `canada`, `citm_catalog`, `instruments`, `marine_ik`, `mesh`, and `numbers`. | 220-420 source/bench/gate LOC; split if more than one primitive, caller, plane, or target set is needed. | Row-moving only for direct/typed rows with same-wave gates; parse-only stays `S / NO-GO`. |
 | W10 | Direct residual behavior tranche | W2 + W3 | Direct output + Gate/report | One direct-output/control mechanism and at most three direct target rows are named; REDRESS 73 helper-transfer and REDRESS 93 scalar-parent-fold routes remain blocked; same-run Track 1, Track 2/oracle, and sonic direct evidence meet W1 contract. | 320 source/gate LOC, or 420 total only if CHALLENGE accepts the broader C1 cap. | Row-moving for direct rows only; otherwise REDRESS reject. |
 | Close | SK-V10 close accounting | All dispatched waves closed | S-P3 governance + Gate/report | Every wave is admitted, proof-closed, or REDRESS-rejected; no open source patch; `RESULTS.md` row dispositions match the accepted evidence; `gate-json` rejects missing comparator/run-id/provenance evidence. | 80-160 docs/gate LOC; zero behavior source. | Gate-only close. |
 
@@ -72,9 +74,12 @@ implementation; it constrains the later `SPEC.md` and `DISPATCH-PROMPT.md`.
   direct contract, but it must preserve all existing typed `A / GO` rows.
 - W5 must precede W6 because `github_events` and `gsoc-2018` are root-shape
   blocked. W5 by itself cannot edit `RESULTS.md`.
-- W7 and W8 are proof-only micro waves. W9 cannot dispatch if either proof is
-  missing, stale-host, scalar-only without checkasm where required, or lacking
-  a current production caller.
+- W7 and W8 are proof-only micro waves. W9 cannot dispatch if the relevant
+  W7 or W8 proof for the exact primitive and caller is missing, stale-host,
+  scalar-only without checkasm where required, lacking a threshold-clearing
+  caller microbench artifact, or lacking a current production caller. W8
+  additionally depends on W7 only when its selected primitive names a string
+  proof dependency.
 - W10 is deliberately after the W3 firewall so direct residual work cannot
   inherit the retired W4 cascade-lock through W3.
 

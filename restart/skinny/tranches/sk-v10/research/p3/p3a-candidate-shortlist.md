@@ -104,6 +104,12 @@ below are computed from the current sonic typed Mbps under the existing
 
 Shortlist count: 8.
 
+V1 CHALLENGE fold: the final SK-V10 SPEC dispatches only the proof families
+that have explicit proof waves. `C8-digit-number-proof` remains useful
+shortlist evidence, but it is routed out of the W0-W10 executable plan until a
+future SPEC/CHALLENGE amendment adds a dedicated proof wave. `C9` remains
+unshortlisted maintain-only and cannot feed W9.
+
 ### 1. `C1-direct-output-contract`
 
 Status: `row-gated` or contract-only, depending on SPEC wave.
@@ -385,7 +391,8 @@ decoded stats as proof.
 
 ### 8. `C8-digit-number-proof`
 
-Status: `proof-only` first; row-gated only after proof.
+Status: routed out of the final W0-W10 executable plan. It remains proof-first
+evidence for a future amendment; it cannot feed W9 in SK-V10 V2.
 
 Owner paths:
 

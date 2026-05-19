@@ -1,7 +1,7 @@
 # SK-V10 SPEC
 
 Pass: S-P3 Synthesis-Plan.
-Cycle: V1 draft.
+Cycle: V2 challenge-fold.
 Date: 2026-05-19.
 Scope: binding SK-V10 wave plan after G-Alpha, S-P1 Profile, and S-P2
 Research closed. Source implementation is authorized only wave-by-wave after
@@ -133,7 +133,7 @@ block:
 - No Canada typed shortcut through digest, length, coordinate count, schema
   shape, partial fixture, or numeric primitive proof.
 - No behavior source change before the relevant wave names owner paths, entry
-  gate, exit gate, maintain floors, same-wave consumer, hard cap, and revert
+  gate, exit gate, maintain floors, same-wave consumer, redress cap, and revert
   protocol.
 - No kernel or primitive ships without scalar reference, checkasm or equivalent
   parity, target-host feature gate, representative corpus windows, microbench,
@@ -159,20 +159,20 @@ block:
 
 ## 2. Wave Manifest
 
-| Wave | Section | Candidate ids | Title | Dispatch status | Row movement | Risk | Hard cap |
-|---|---|---|---|---|---|---|---:|
-| W0 | 3 | `C12` | SK-V10-open Telemetry Freeze | Initial gate-only wave | None | LOW-MEDIUM | <=90 min |
-| W1 | 4 | `C1` | Direct Output/Control-Path Contract | Conditional on W0 close | None | HIGH | <=90 min |
-| W2 | 5 | `C1` | Direct Row-Table Reclamation | Conditional on W1 close | Direct only; zero behavior source | MEDIUM | <=90 min |
-| W3 | 6 | firewall | W3 And Parse-Only Firewall | Conditional on W2 close | None | LOW | <=90 min |
-| W4 | 7 | `C2` | `instruments` Typed Product Admission | Conditional on W3 close | One typed row | MEDIUM | <=90 min |
-| W5 | 8 | `C3` | Root-Type Typed Generalization Proof | Conditional on W4 disposition | Proof-only | MEDIUM-HIGH | <=90 min |
-| W6 | 9 | `C3` | Root Typed Row Admission | Conditional on W5 proof | One typed row per slice | MEDIUM-HIGH | <=90 min |
-| W7 | 10 | `C4` or `C5` | String Primitive Micro-Proof | Conditional on W3 close + CHALLENGE | Proof-only | MEDIUM-HIGH | <=90 min |
-| W8 | 11 | `C6` or `C7` | Escape/Segment Micro-Proof | Conditional on W7 as needed + CHALLENGE | Proof-only | HIGH | <=90 min |
-| W9 | 12 | proven `C4`-`C9` | Existing-Call-Site Kernel Production | Conditional on W7/W8 proof + CHALLENGE | Direct/typed only | HIGH | <=90 min |
-| W10 | 13 | `C1` follow-on | Direct Residual Behavior Tranche | Conditional on W2 + W3 + CHALLENGE | Direct only, <=3 rows | HIGH | <=90 min |
-| Close | 14 | `C11`, docs | SK-V10 Close Accounting | Conditional on all dispatched waves | None | LOW | <=90 min |
+| Wave | Section | Candidate ids | Title | Dispatch status | Row movement | Budget | Risk | Redress cap |
+|---|---|---|---|---|---|---:|---|---:|
+| W0 | 3 | `C12` | SK-V10-open Telemetry Freeze | Initial gate-only wave | None | 120-240 gate/report LOC | LOW-MEDIUM | <=90 min |
+| W1 | 4 | `C1` | Direct Output/Control-Path Contract | Conditional on W0 close | None | 180-320 docs/gate LOC | HIGH | <=90 min |
+| W2 | 5 | `C1` | Direct Row-Table Reclamation | Conditional on W1 close | Direct only; zero behavior source | 120-240 gate/report LOC | MEDIUM | <=90 min |
+| W3 | 6 | firewall | W3 And Parse-Only Firewall | Conditional on W2 close | None | 80-160 docs/gate LOC | LOW | <=90 min |
+| W4 | 7 | `C2` | `instruments` Typed Product Admission | Conditional on W3 close | One typed row | 160-260 source/generated + 40-80 gate LOC | MEDIUM | <=90 min |
+| W5 | 8 | `C3` | Root-Type Typed Generalization Proof | Conditional on W4 disposition | Proof-only | 220-420 source/generated + 60-120 test/gate LOC | MEDIUM-HIGH | <=90 min |
+| W6 | 9 | `C3` | Root Typed Row Admission | Conditional on W5 proof | One typed row per slice | 160-260 source/generated + 40-80 gate LOC per corpus | MEDIUM-HIGH | <=90 min |
+| W7 | 10 | `C4` or `C5` | String Primitive Micro-Proof | Conditional on W3 close + CHALLENGE | Proof-only | 90-260 proof LOC | MEDIUM-HIGH | <=90 min |
+| W8 | 11 | `C6` or `C7` | Escape/Segment Micro-Proof | Conditional on relevant W7 proof if needed + CHALLENGE | Proof-only | 90-260 proof LOC | HIGH | <=90 min |
+| W9 | 12 | proven `C4`-`C7` | Existing-Call-Site Kernel Production | Conditional on relevant W7 or W8 proof + CHALLENGE | Direct/typed only | 220-420 source/bench/gate LOC | HIGH | <=90 min |
+| W10 | 13 | `C1` follow-on | Direct Residual Behavior Tranche | Conditional on W2 + W3 + CHALLENGE | Direct only, <=3 rows | 320 source/gate LOC; 420 only with CHALLENGE | HIGH | <=90 min |
+| Close | 14 | `C11`, docs | SK-V10 Close Accounting | Conditional on all dispatched waves | None | 80-160 docs/gate LOC | LOW | <=90 min |
 
 Manifest rules:
 
@@ -185,12 +185,51 @@ Manifest rules:
    consumes its proof with typed comparator rows.
 5. W7 and W8 are deliberately proof-only micro waves. A production caller
    lands only in W9.
-6. W9 production wiring does not inherit any W3 entry gate. Its consumers must
-   be existing direct, typed, string, unescape, number, or whitespace callers.
+6. W9 production wiring does not inherit any W3 entry gate. It consumes exactly
+   one relevant accepted W7 or W8 proof for the exact primitive and caller.
+   `C8` digit/number and `C9` whitespace/class work do not have final SK-V10
+   proof waves and cannot feed W9 without a future SPEC/CHALLENGE amendment.
 7. W10 is direct residual work, not a route to REDRESS 73 helper-transfer,
    REDRESS 93 scalar-parent folding, or W3.
 8. `C10` and `C13` are inventory-only on the Apple aarch64 host. `C14` and
    `C15` are rejected.
+
+Cap semantics: the manifest cap is the redress execution cap for the source or
+gate slice. Research is capped by the dispatch protocol at 30 minutes per agent,
+plan at 30 minutes per agent, and CHALLENGE at 60-90 minutes when required. If
+the plan cannot fit the named budget and redress cap, it must split the wave or
+record a REDRESS rejection; the cap is not extended by moving work into a
+future promise.
+
+### 2.1 Generality And Lock 14 Gate
+
+Every wave touching a generic crate, codegen, `bbnf-simd`, `parse-that-regex`,
+or runtime outside the generated JSON template must pass this gate before
+redress can close:
+
+- The plan names the owner path class and whether generic behavior changes.
+- Any generic behavior edit names the grammar-neutral abstraction it exposes:
+  byte sets, class tables, masks, offsets, digit accumulators, or caller-owned
+  policy structs. JSON quote, slash, `\u`, surrogate, number, whitespace,
+  output, and row semantics remain in generated per-grammar templates.
+- A generic/codegen/runtime-outside-JSON behavior edit carries a named CSS L4,
+  Sheets, or BBNF-self proof. "No generic behavior changed" is allowed only
+  when the diff shows no generic, codegen, or runtime-outside-JSON behavior
+  edit, such as docs or fixture-only proof work.
+- Generated files are read-only evidence unless the same wave also owns the
+  generator or schema input and the regeneration command. Generated output may
+  be committed only as regenerated output, not as a hand patch.
+- On proof failure, the generic/codegen/runtime edit is reverted and REDRESS
+  records the missing non-JSON proof or generated-boundary violation.
+
+### 2.2 Track 2 Independence Gate
+
+Direct and typed row movement requires a Track 2/oracle proof. Track 2 may not
+call generated Track 1, generated SinkOnly helpers, generated typed helpers, or
+benchmark-private shared parser code. If `gate-json` cannot mechanically prove
+the dependency boundary, the wave plan must include an audit artifact naming
+the Track 2 source path, the generated/helper paths checked, and the forbidden
+dependencies that were absent.
 
 ## 3. W0 - SK-V10-open Telemetry Freeze
 
@@ -262,6 +301,10 @@ Exit gate `G-W1-DIRECT-CONTRACT`:
 - `gate-json` rejects direct row movement if output plane, comparator plane,
   strictness, same-run run id, validation path, Track 2 independence, or
   provenance is absent or mixed.
+- Track 2 independence satisfies Section 2.2: the oracle does not call
+  generated Track 1, generated SinkOnly helpers, generated typed helpers, or
+  benchmark-private shared parser code, and the audit artifact exists if the
+  gate cannot prove that boundary mechanically.
 - No `RESULTS.md` row moves.
 - Existing direct and typed guard rows remain unchanged.
 
@@ -303,6 +346,7 @@ Exit gate `G-W2-DIRECT-RECLAMATION`:
 - Every admitted direct row meets its Section 0.2 floor on Track 1 and Track 2.
 - Direct guard rows meet their direct maintain floors.
 - Typed guard rows meet their typed maintain floors if the report is refreshed.
+- Track 2 independence satisfies Section 2.2 for every moved direct row.
 - `gate-json` rejects stale, mixed-run, missing oracle, missing comparator, or
   output-plane-mismatched evidence.
 
@@ -383,6 +427,7 @@ Exit gate `G-W4-INSTRUMENTS-TYPED`:
 - All typed checksums match.
 - Generated Track 1 and independent Track 2/oracle both meet
   `ceil(same-run sonic_typed / 1.10)`.
+- Track 2/oracle independence satisfies Section 2.2.
 - Existing typed maintain floors in Section 0.2 hold.
 - Direct digest evidence for `instruments` remains direct-plane evidence only.
 
@@ -423,8 +468,11 @@ Exit gate `G-W5-ROOT-TYPED-PROOF`:
   policy in generic crates.
 - Generated roots preserve full-fixture checksum parity against serde_json and
   sonic-rs typed evidence.
-- Lock 14 proof names CSS L4, Sheets, or BBNF-self impact, or proves no
-  generic behavior changed.
+- Any edit to `skinny/crates/codegen/src/direct_schema.rs`,
+  `skinny/crates/codegen/src/typed_direct.rs`, or other generic/codegen/runtime
+  behavior passes Section 2.1 with a named CSS L4, Sheets, or BBNF-self proof.
+  A no-generic-behavior-changed proof is valid only when the diff contains no
+  generic/codegen/runtime-outside-JSON behavior edit.
 - No `RESULTS.md` row moves.
 
 Revert protocol: revert root-model, codegen, generated proof, and test changes
@@ -467,6 +515,7 @@ Exit gate `G-W6-ROOT-TYPED-ROW`:
 - Full-fixture checksums match.
 - Generated Track 1 and independent Track 2/oracle both meet
   `ceil(same-run sonic_typed / 1.10)`.
+- Track 2/oracle independence satisfies Section 2.2.
 - Existing typed maintain floors in Section 0.2 hold.
 
 Revert protocol: revert schema, generated typed code, bench wiring, gate
@@ -485,9 +534,11 @@ Owner paths:
 
 - `skinny/crates/bbnf-simd/src/aarch64/string_block.rs`
 - `skinny/crates/parse-that-regex/src/lib.rs`
-- `skinny/crates/runtime/src/grammars/json/generated.rs`
+- `skinny/crates/runtime/src/grammars/json/generated.rs` (read-only evidence
+  unless the same wave owns generator input and regeneration)
 - `skinny/crates/codegen/src/typed_direct.rs`
-- `skinny/crates/bbnf-bench/src/generated_real_typed.rs`
+- `skinny/crates/bbnf-bench/src/generated_real_typed.rs` (read-only evidence
+  unless the same wave owns generator input and regeneration)
 - `restart/skinny/tranches/sk-v10/research/p3/string-primitive-proof/`
 
 Entry gate: W3 firewall is closed and CHALLENGE accepts exactly one string
@@ -499,17 +550,24 @@ Tasks:
 - Add or refine a scalar oracle.
 - Add checkasm or equivalent differential parity.
 - Add same-host caller microbench for the named existing call site.
+- Treat generated artifacts as read-only call-site evidence unless the wave
+  also owns the generator/schema input and regeneration command.
 - Do not wire production caller behavior.
 
 Exit gate `G-W7-STRING-MICROPROOF`:
 
 - Scalar oracle and differential harness pass.
-- Microbench proves the selected primitive at the named cap and plane.
+- The caller microbench artifact clears the predeclared threshold and records
+  observed value, threshold, run id, host triple, build flags, feature gate,
+  representative corpus slices, sample count, scalar oracle identity, and
+  differential harness identity.
+- Any generic/codegen/runtime-outside-JSON behavior edit passes Section 2.1.
 - The current caller is identified but not production-wired.
 - No `RESULTS.md` row moves.
 
 Revert protocol: revert proof, harness, and microbench changes as one slice;
-record REDRESS with scalar parity or microbench miss.
+record REDRESS with scalar parity failure or observed microbench value versus
+threshold.
 
 Pre-blocked routes: REDRESS 28/33 active retained tiny-string NEON wiring;
 REDRESS 60-62 retained string widening routes; REDRESS 72 global cap-16
@@ -524,9 +582,11 @@ Owner paths:
 
 - `skinny/crates/bbnf-simd/src/aarch64/unescape_uxxxx.rs`
 - `skinny/crates/parse-that-regex/src/lib.rs`
-- `skinny/crates/runtime/src/grammars/json/generated.rs`
+- `skinny/crates/runtime/src/grammars/json/generated.rs` (read-only evidence
+  unless the same wave owns generator input and regeneration)
 - `skinny/crates/bbnf-bench/src/direct_struct.rs`
-- `skinny/crates/bbnf-bench/src/generated_real_typed.rs`
+- `skinny/crates/bbnf-bench/src/generated_real_typed.rs` (read-only evidence
+  unless the same wave owns generator input and regeneration)
 - `restart/skinny/tranches/sk-v10/research/p3/escape-segment-proof/`
 
 Entry gate: W7 is closed if the selected primitive depends on string proof;
@@ -540,17 +600,24 @@ Tasks:
 - Preserve JSON slash, `\u`, and surrogate policy in generated per-grammar
   templates.
 - Add same-host caller microbench.
+- Treat generated artifacts as read-only call-site evidence unless the wave
+  also owns the generator/schema input and regeneration command.
 - Do not wire production caller behavior.
 
 Exit gate `G-W8-ESCAPE-SEGMENT-MICROPROOF`:
 
 - Scalar oracle and differential harness pass.
-- Microbench proves the selected primitive against the named current caller.
-- No generic JSON policy leaks.
+- The caller microbench artifact clears the predeclared threshold and records
+  observed value, threshold, run id, host triple, build flags, feature gate,
+  representative corpus slices, sample count, scalar oracle identity, and
+  differential harness identity.
+- Any generic/codegen/runtime-outside-JSON behavior edit passes Section 2.1;
+  JSON policy remains in generated templates.
 - No `RESULTS.md` row moves.
 
 Revert protocol: revert proof, harness, and microbench changes as one slice;
-record REDRESS with scalar parity, policy, or microbench miss.
+record REDRESS with scalar parity failure, policy leak, or observed microbench
+value versus threshold.
 
 Pre-blocked routes: REDRESS 64 retained Unicode-escape run validation as
 shipped; REDRESS 66-69 scratch/materialization routes; REDRESS 82 per-quartet
@@ -559,12 +626,12 @@ from REDRESS 88/89.
 
 ## 12. W9 - Existing-Call-Site Kernel Production
 
-Candidates: only a W7/W8-proven `C4`-`C9` primitive; row-gated direct/typed
-movement only if measured.
+Candidates: only a relevant accepted W7 or W8 `C4`-`C7` primitive; row-gated
+direct/typed movement only if measured.
 
 Owner paths:
 
-- The exact W7/W8 primitive owner paths
+- The exact W7 or W8 primitive owner paths
 - The exact existing JSON direct or typed caller named by the proof
 - `skinny/crates/bbnf-bench/src/direct_struct.rs`
 - `skinny/crates/bbnf-bench/src/real_typed_struct.rs`
@@ -573,8 +640,9 @@ Owner paths:
 - `skinny/RESULTS.md`
 - `skinny/REDRESS.md`
 
-Entry gate: W7/W8 proof is closed, CHALLENGE accepts production wiring, and the
-wave names exactly one current caller such as `match_string_at_quote_trusted_utf8`,
+Entry gate: the relevant accepted W7 or W8 proof is closed for the exact
+primitive and caller. CHALLENGE accepts production wiring, and the wave names
+exactly one current caller such as `match_string_at_quote_trusted_utf8`,
 `validate_unicode_escape_run`, `decode_unicode_escape`, or `unescape_string`.
 
 Tasks:
@@ -583,19 +651,26 @@ Tasks:
 - Preserve scalar fallback and target-feature gating.
 - Measure affected direct or typed rows with fresh same-run Criterion.
 - Preserve W10b maintain floors.
+- Limit the dispatch to exactly one proven primitive, exactly one existing
+  production caller, exactly one consumer plane, and one row-moving target set.
+  Split the wave if both direct and typed rows would move or if gate/report
+  updates exceed the manifest budget.
 
 Exit gate `G-W9-KERNEL-PRODUCTION`:
 
 - Scalar fallback and differential parity remain green.
 - The named production caller consumes the primitive in the same commit.
+- Any generic/codegen/runtime-outside-JSON behavior edit passes Section 2.1.
 - Affected direct rows meet Section 0.2 direct floors on Track 1 and Track 2,
   or affected typed rows meet the typed row gate.
+- Track 2/oracle independence satisfies Section 2.2 for any row movement.
 - W10b maintain floors all hold.
 - Parse-only rows remain `S / NO-GO` even if they improve.
 
 Revert protocol: revert primitive wiring, generated caller changes, gates, and
 RESULTS as one slice on any parity failure, W10b maintain miss, missing caller,
-or row-floor miss unless CHALLENGE pre-authorized proof-only close.
+or row-floor miss. The prior W7/W8 proof artifact remains only if it was already
+accepted independently and is behavior-free.
 
 Pre-blocked routes: no W3 consumer; no orphan primitive; no PMULL/CTZ default;
 no parse-only SOTA close; no generic JSON policy leak.
@@ -627,6 +702,7 @@ Exit gate `G-W10-DIRECT-RESIDUAL`:
 
 - Every selected direct row meets its Section 0.2 direct floor on Track 1 and
   independent Track 2/oracle under one same-run strict direct comparator plane.
+- Track 2/oracle independence satisfies Section 2.2.
 - Direct guard floors hold.
 - Typed guard floors hold if the report is refreshed.
 - No REDRESS 73, REDRESS 93, W3, sidecar, scratch, or parse-only route is

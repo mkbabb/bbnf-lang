@@ -140,7 +140,7 @@ metadata, and `gate-json` consumption.
 - No Canada typed shortcut through digest, length, coordinate count, schema
   shape, partial fixture, or numeric primitive proof.
 - No behavior source change before the SPEC names owner paths, entry gate,
-  exit gate, maintain floors, same-wave consumer, hard cap, and revert
+  exit gate, maintain floors, same-wave consumer, redress cap, and revert
   protocol.
 - No kernel or primitive ships without scalar reference, checkasm/differential
   parity, target-host feature gate, representative corpus windows, microbench,
@@ -172,7 +172,7 @@ P3-C and P3-E group several gates under W4/W5-style headings, but the SPEC
 should preserve P3-B's W0-W10 plus Close topology and bind the P3-C/P3-E gates
 to the matching waves below.
 
-| Wave | Draft SPEC section | Candidate ids | Title | Dispatch status | Row movement | Source/edit budget | Risk | Hard cap |
+| Wave | Draft SPEC section | Candidate ids | Title | Dispatch status | Row movement | Source/edit budget | Risk | Redress cap |
 |---|---|---|---|---|---|---:|---|---:|
 | W0 | Section 3 | `C12` | SK-V10-open Telemetry Freeze | Gate-only after S-P3 convergence | None; preserves all current dispositions | 120-240 gate/report LOC | LOW-MEDIUM | <=90 min |
 | W1 | Section 4 | `C1` | Direct Output/Control-Path Contract | Conditional on W0 close | Contract-only | 180-320 docs/gate LOC | HIGH | <=90 min |
@@ -181,10 +181,10 @@ to the matching waves below.
 | W4 | Section 7 | `C2` | `instruments` Typed Product Admission | Conditional on W3 firewall | May add one typed `A / GO` row | 160-260 source/generated + 40-80 gate LOC | MEDIUM | <=90 min |
 | W5 | Section 8 | `C3` | Root-Type Typed Generalization Proof | Conditional on W4 disposition | Proof-only by default | 220-420 source/generated + 60-120 test/gate LOC | MEDIUM-HIGH | <=90 min |
 | W6 | Section 9 | `C3` | Root Typed Row Admission | Conditional on W5 proof | One root-unblocked typed row at a time | 160-260 source/generated + 40-80 gate LOC per corpus | MEDIUM-HIGH | <=90 min |
-| W7 | Section 10 | `C4` or `C5` | String Primitive Micro-Proof | Conditional on W3 firewall + CHALLENGE | Proof-only | 90-260 proof LOC | MEDIUM-HIGH | <=90 min / 75-min redress |
-| W8 | Section 11 | `C6` or `C7` | Escape/Segment Micro-Proof | Conditional on W7 as needed + CHALLENGE | Proof-only | 90-260 proof LOC | HIGH | <=90 min / 75-min redress |
-| W9 | Section 12 | proven `C4`-`C9` | Existing-Call-Site Kernel Production | Conditional on W7/W8 proof and CHALLENGE | Direct/typed rows only with same-wave gates; parse-only stays `S / NO-GO` | 350-650 LOC total across W7-W9; split if cap fails | HIGH | <=90 min / 75-min redress |
-| W10 | Section 13 | `C1` follow-on | Direct Residual Behavior Tranche | Conditional on W2 + W3 | At most three direct target rows per slice | 320 source/gate LOC, or 420 only with CHALLENGE | HIGH | <=90 min / 75-min redress |
+| W7 | Section 10 | `C4` or `C5` | String Primitive Micro-Proof | Conditional on W3 firewall + CHALLENGE | Proof-only | 90-260 proof LOC | MEDIUM-HIGH | <=90 min |
+| W8 | Section 11 | `C6` or `C7` | Escape/Segment Micro-Proof | Conditional on relevant W7 proof if needed + CHALLENGE | Proof-only | 90-260 proof LOC | HIGH | <=90 min |
+| W9 | Section 12 | proven `C4`-`C7` | Existing-Call-Site Kernel Production | Conditional on relevant W7 or W8 proof and CHALLENGE | Direct/typed rows only with same-wave gates; parse-only stays `S / NO-GO` | 220-420 source/bench/gate LOC; split if more than one primitive, caller, plane, or target set is needed | HIGH | <=90 min |
+| W10 | Section 13 | `C1` follow-on | Direct Residual Behavior Tranche | Conditional on W2 + W3 | At most three direct target rows per slice | 320 source/gate LOC, or 420 only with CHALLENGE | HIGH | <=90 min |
 | Close | Section 14 | `C11`, docs | SK-V10 Close Accounting | Conditional on all dispatched waves | None beyond accepted wave dispositions | 80-160 docs/gate LOC | LOW | <=90 min |
 
 Manifest rules:
@@ -201,8 +201,10 @@ Manifest rules:
    not combine multiple primitive families, scalar oracle, checkasm, microbench,
    and multiple production consumers unless CHALLENGE accepts the combined cost
    and the redress slice still fits 75 minutes.
-6. W9 production wiring does not inherit any W3 entry gate. Its consumers must
-   be existing direct/typed/string/unescape/number/whitespace callers.
+6. W9 production wiring does not inherit any W3 entry gate. It consumes exactly
+   one relevant accepted W7 or W8 proof for an exact `C4`-`C7` primitive and
+   caller. `C8` and `C9` cannot feed W9 without a future SPEC/CHALLENGE
+   amendment.
 7. Any W9 production wiring touching parse loop or aarch64 SIMD carries the
    W10b maintain block. A single maintain-floor miss falsifies the wave.
 8. W10 is a direct residual behavior tranche, not a license to reopen
@@ -250,7 +252,7 @@ back to the SPEC rather than restating detailed thresholds in two places.
     - W3: P3-B/P3-E firewall and REDRESS 96-98.
     - W4: `p2g` C2 plus Alpha-E Candidate 2.
     - W5-W6: `p2g` C3 plus P2-F root generalization verdicts.
-    - W7-W9: the relevant `p2g` C4-C9 row plus P2-B/P2-C/P2-E process and
+    - W7-W9: the relevant `p2g` C4-C7 row plus P2-B/P2-C/P2-E process and
       primitive evidence.
     - W10: `p2g` C1 plus P3-C direct residual gates and P3-E direct pre-blocks.
     - Close: `p2g` C11, Synthesis Omega/Totality routing, RESULTS/REDRESS.
@@ -264,7 +266,7 @@ Include the integrated SPEC wave table with columns:
 
 ```text
 Wave | SPEC section | Candidate id | Title | Dispatch status |
-Entry gate | Row movement | Owner paths | Hard cap
+Entry gate | Row movement | Owner paths | Redress cap
 ```
 
 The prompt should say: if the requested wave's SPEC entry gate is not PASS,
@@ -276,7 +278,7 @@ authority.
 - Phase 1 Research: read-only; write artefacts under
   `restart/skinny/tranches/sk-v10/research/`; no source edits.
 - Phase 2 Plan: select one SPEC intervention; name owner paths, gates, LOC,
-  hard cap, same-wave consumer, micro-proof/checkasm requirements, maintain
+  redress cap, same-wave consumer, micro-proof/checkasm requirements, maintain
   floors, and revert protocol.
 - Phase 2.5 CHALLENGE: mandatory for W5-W10 when they touch source, for W7-W9
   primitive/kernel proof or production, and for any first-of-class source or
@@ -307,7 +309,7 @@ The dispatch prompt should refuse any request that:
 
 - Every wave ends in PASS, measured REDRESS reject, or explicit route-out.
 - A gate that cannot be made measurable returns REVISE before source work.
-- A wave that exhausts its hard cap halts with the current artefact and asks for
+- A wave that exhausts its redress cap halts with the current artefact and asks for
   an extension or split.
 - The bracket closes only after W0-W10 and Close dispositions are reflected consistently
   in RESULTS, REDRESS, SPEC, DISPATCH-PROMPT, HANDOFF, and Synthesis.

@@ -41,26 +41,27 @@ Read in order:
 
 ## Wave Manifest
 
-| Wave | SPEC section | Title | Candidate ids | Dispatch status | Hard cap |
-|---|---|---|---|---|---:|
-| W0 | Section 3 | SK-V10-open Telemetry Freeze | `C12` | Initial gate-only wave | <=90 min |
-| W1 | Section 4 | Direct Output/Control-Path Contract | `C1` | Conditional on W0 close | <=90 min |
-| W2 | Section 5 | Direct Row-Table Reclamation | `C1` | Conditional on W1 close | <=90 min |
-| W3 | Section 6 | W3 And Parse-Only Firewall | firewall | Conditional on W2 close | <=90 min |
-| W4 | Section 7 | `instruments` Typed Product Admission | `C2` | Conditional on W3 close | <=90 min |
-| W5 | Section 8 | Root-Type Typed Generalization Proof | `C3` | Conditional on W4 disposition | <=90 min |
-| W6 | Section 9 | Root Typed Row Admission | `C3` | Conditional on W5 proof | <=90 min |
-| W7 | Section 10 | String Primitive Micro-Proof | `C4` or `C5` | Conditional on W3 close + CHALLENGE | <=90 min |
-| W8 | Section 11 | Escape/Segment Micro-Proof | `C6` or `C7` | Conditional on W7 as needed + CHALLENGE | <=90 min |
-| W9 | Section 12 | Existing-Call-Site Kernel Production | proven `C4`-`C9` | Conditional on W7/W8 proof + CHALLENGE | <=90 min |
-| W10 | Section 13 | Direct Residual Behavior Tranche | `C1` follow-on | Conditional on W2 + W3 + CHALLENGE | <=90 min |
-| Close | Section 14 | SK-V10 Close Accounting | `C11`, docs | Conditional on W0-W10 dispositions | <=90 min |
+| Wave | SPEC section | Title | Candidate ids | Dispatch status | Budget | Redress cap |
+|---|---|---|---|---|---:|---:|
+| W0 | Section 3 | SK-V10-open Telemetry Freeze | `C12` | Initial gate-only wave | 120-240 gate/report LOC | <=90 min |
+| W1 | Section 4 | Direct Output/Control-Path Contract | `C1` | Conditional on W0 close | 180-320 docs/gate LOC | <=90 min |
+| W2 | Section 5 | Direct Row-Table Reclamation | `C1` | Conditional on W1 close | 120-240 gate/report LOC | <=90 min |
+| W3 | Section 6 | W3 And Parse-Only Firewall | firewall | Conditional on W2 close | 80-160 docs/gate LOC | <=90 min |
+| W4 | Section 7 | `instruments` Typed Product Admission | `C2` | Conditional on W3 close | 160-260 source/generated + 40-80 gate LOC | <=90 min |
+| W5 | Section 8 | Root-Type Typed Generalization Proof | `C3` | Conditional on W4 disposition | 220-420 source/generated + 60-120 test/gate LOC | <=90 min |
+| W6 | Section 9 | Root Typed Row Admission | `C3` | Conditional on W5 proof | 160-260 source/generated + 40-80 gate LOC per corpus | <=90 min |
+| W7 | Section 10 | String Primitive Micro-Proof | `C4` or `C5` | Conditional on W3 close + CHALLENGE | 90-260 proof LOC | <=90 min |
+| W8 | Section 11 | Escape/Segment Micro-Proof | `C6` or `C7` | Conditional on relevant W7 proof if needed + CHALLENGE | 90-260 proof LOC | <=90 min |
+| W9 | Section 12 | Existing-Call-Site Kernel Production | proven `C4`-`C7` | Conditional on relevant W7 or W8 proof + CHALLENGE | 220-420 source/bench/gate LOC | <=90 min |
+| W10 | Section 13 | Direct Residual Behavior Tranche | `C1` follow-on | Conditional on W2 + W3 + CHALLENGE | 320 source/gate LOC; 420 only with CHALLENGE | <=90 min |
+| Close | Section 14 | SK-V10 Close Accounting | `C11`, docs | Conditional on W0-W10 dispositions | 80-160 docs/gate LOC | <=90 min |
 
 The dependency order is firm. W1 must precede W2 and W10. W3 is a firewall
 only and never dispatches a W3 substrate. W7 and W8 are proof-only micro waves.
-W9 is the only kernel production wave and may consume only a W7/W8-proven
-primitive at an existing call site. A wave whose SPEC entry gate is not PASS
-must be refused with the reason recorded.
+W9 is the only kernel production wave and may consume only the relevant accepted
+W7 or W8 proof for the exact `C4`-`C7` primitive and existing call site. `C8`
+and `C9` cannot feed W9 without a future SPEC/CHALLENGE amendment. A wave whose
+SPEC entry gate is not PASS must be refused with the reason recorded.
 
 ## Per-Wave Triumvirate Protocol
 
@@ -88,9 +89,11 @@ mandatory CHALLENGE, and Redress each land as distinct artefacts and commits.
 
 ### Phase 2.5 - CHALLENGE
 
-CHALLENGE is mandatory for W1, W4, W5, W6, W7, W8, W9, and W10. It is optional
-for W0, W2, W3, and Close unless the plan touches gate semantics outside the
-SPEC text.
+CHALLENGE is mandatory for W1, W4, W5, W6, W7, W8, W9, and W10. It is also
+mandatory for any first-of-class source edit and for any generic-crate,
+codegen, `bbnf-simd`, `parse-that-regex`, or runtime-outside-JSON edit. It is
+optional for W0, W2, W3, and Close only when the plan stays inside the already
+accepted gate semantics and avoids those source classes.
 
 Six lenses apply:
 
@@ -150,6 +153,24 @@ Load-bearing facts:
   serde_json typed, sonic-rs typed, full-fixture checksum parity, same-run
   Criterion metadata, and `ceil(same-run sonic_typed / 1.10)` for Track 1 and
   Track 2/oracle.
+- W7 and W8 proof-only closure requires a threshold-clearing caller microbench
+  artifact with observed value, threshold, run id, host triple, build flags,
+  feature gate, representative corpus slices, sample count, scalar oracle
+  identity, and differential harness identity. A miss records observed value
+  versus threshold in REDRESS.
+- W9 is limited to exactly one proven primitive, exactly one existing
+  production caller, exactly one consumer plane, and one row-moving target set.
+  Split the wave if both direct and typed rows would move or if gate/report
+  updates exceed the manifest budget.
+- Track 2 may not call generated Track 1, generated SinkOnly helpers, generated
+  typed helpers, or benchmark-private shared parser code. If `gate-json` cannot
+  prove that boundary, the wave must carry an audit artifact naming the checked
+  paths.
+- Generated artifacts are read-only evidence unless the same wave owns the
+  generator/schema input and regeneration command. Generated output may be
+  committed only as regenerated output, never as a hand patch.
+- Generic/codegen/runtime-outside-JSON behavior edits must pass SPEC Section
+  2.1 with named CSS L4, Sheets, or BBNF-self proof.
 - Parse-only rows never close SK-V10 SOTA while `S / NO-GO`.
 - W3 reopen claims fail closed under REDRESS 98.
 
@@ -194,7 +215,9 @@ processes, artefact mtimes, and dirty worktree state. Keep research, plan,
 CHALLENGE, redress, and close artefacts in distinct commits. Stage only the
 intended slice and preserve unrelated worktree state.
 
-Every dispatch carries an explicit minute cap. At 0.9x the cap the agent
+Every dispatch carries an explicit redress minute cap from the manifest.
+Research is capped at 30 minutes per agent, plan at 30 minutes per agent, and
+CHALLENGE at 60-90 minutes when required. At 0.9x the redress cap the agent
 commits or records a REDRESS rejection; at the cap it halts and surfaces the
 extension decision.
 

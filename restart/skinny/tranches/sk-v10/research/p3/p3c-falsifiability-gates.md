@@ -127,6 +127,25 @@ above applies in addition to this maintain block.
 
 ## Section 3 - Plausible Wave Gates
 
+V1 CHALLENGE fold: this file now uses the final SPEC W0-W10 numbering. Earlier
+draft headings compressed typed and primitive gates; those aliases are not
+dispatch identifiers. The authoritative map is:
+
+| Final wave | Gate family in this file |
+|---|---|
+| W0 | Comparator and telemetry refresh |
+| W1 | Direct output/control-path contract |
+| W2 | Direct row-table reclamation |
+| W3 | W3 and parse-only firewall |
+| W4 | `instruments` typed product admission |
+| W5 | Root-type typed generalization proof |
+| W6 | Root typed row admission |
+| W7 | String primitive micro-proof (`C4` or `C5`) |
+| W8 | Escape/segment micro-proof (`C6` or `C7`) |
+| W9 | Existing-call-site kernel production for a proven `C4`-`C7` primitive |
+| W10 | Direct residual behavior tranche |
+| Close | Rejected, inventory, and close accounting |
+
 ### W0 - Comparator And Telemetry Refresh
 
 Candidate ids: `C12-telemetry-refresh`; gate-only.
@@ -155,7 +174,7 @@ Revert protocol: revert report/schema/gate field changes as one slice, leave
 `RESULTS.md` dispositions unchanged, and record REDRESS naming the missing
 consumer or malformed evidence.
 
-### W1 - Direct Output/Control-Path Contract
+### W1 / W2 / W10 - Direct Output/Control-Path Contract And Reclamation
 
 Candidate ids: `C1-direct-output-contract`; contract-only or row-gated.
 
@@ -163,7 +182,7 @@ Entry gate: the wave names direct output equivalence, independent Track 2/oracle
 status, comparator anchor semantics, exact owner paths, selected corpus rows,
 and whether the wave is contract-only or row-moving.
 
-Contract-only close gate:
+W1 contract-only close gate:
 
 - Direct output/control equivalence is executable in `gate-json`.
 - Track 1 generated direct, independent Track 2/oracle, sonic direct strict,
@@ -171,10 +190,14 @@ Contract-only close gate:
   missing.
 - No `RESULTS.md` row moves.
 
-Row-moving close gate:
+W2 row-moving close gate:
 
 - Every selected direct row meets its Section 2 direct floor on both Track 1
   and Track 2/oracle under the same run id.
+- Track 2/oracle does not call generated Track 1, generated SinkOnly helpers,
+  generated typed helpers, or benchmark-private shared parser code. If
+  `gate-json` cannot prove this mechanically, the wave carries an audit
+  artifact naming the Track 2 source path and checked generated/helper paths.
 - Existing direct GO guard rows keep their Section 2 direct maintain floors.
 - Existing typed GO rows keep their Section 2 typed maintain floors if the
   measured report is refreshed.
@@ -195,7 +218,24 @@ Row-moving failure reverts direct behavior, generated output, bench wiring,
 left disabled with rejected status; record REDRESS with target rows and missed
 floors.
 
-### W2 - `instruments` Typed Product Admission
+### W3 - W3 And Parse-Only Firewall
+
+Candidate ids: firewall only; no behavior source and no row movement.
+
+Entry gate: W2 is closed and the direct contract is live.
+
+Exit gate:
+
+- Audit shows no dispatch route through W3 union/event substrate, class column,
+  streaming cursor, `UnionTape`, or W4 cascade-lock.
+- Parse-only SOTA claims reject while rows remain `S / NO-GO`.
+- PASS-3 tape/direct identity remains distinct from the retired skinny W3
+  implementation route.
+
+Revert protocol: revert firewall docs/gate edits and record REDRESS naming the
+missed alias or rejected gate.
+
+### W4 - `instruments` Typed Product Admission
 
 Candidate ids: `C2-instruments-typed-admission`; row-gated.
 
@@ -225,7 +265,7 @@ changes, and `RESULTS.md` as one slice; preserve the rejected patch and checksum
 table in research; record REDRESS with `instruments` still absent from admitted
 `real_typed_struct` rows.
 
-### W3 - Root-Type Typed Generalization
+### W5 / W6 - Root-Type Typed Generalization And Row Admission
 
 Candidate ids: `C3-root-typed-generalization`; proof-only unless paired with a
 typed row gate.
@@ -238,7 +278,10 @@ Proof-only close gate:
 - `DirectRootSchema` or successor root model represents `Vec<T>` and map-entry
   roots without JSON-specific policy in generic code.
 - Generated roots preserve full-fixture generated/serde/sonic checksum parity.
-- Lock 14 proof names non-JSON effect, or proves no generic behavior changed.
+- Any edit to `direct_schema.rs`, `typed_direct.rs`, or other generic/codegen/
+  runtime-outside-JSON behavior carries named CSS L4, Sheets, or BBNF-self
+  proof. A no-generic-behavior-changed proof is valid only when the diff shows
+  no such behavior edit.
 - No `RESULTS.md` row moves.
 
 Paired row-moving gate:
@@ -262,11 +305,10 @@ and record the blocker. For paired row failure, keep only the pre-authorized
 proof-only slice; otherwise revert root-model, generated output, bench/gate,
 and `RESULTS.md` together and record REDRESS.
 
-### W4 - Primitive Micro-Proof Waves
+### W7 / W8 - Primitive Micro-Proof Waves
 
 Candidate ids: `C4-tiny-string-proof`, `C5-full-string-proof`,
-`C6-hex-escape-proof`, `C7-string-segment-fold`, `C8-digit-number-proof`, and
-`C9-whitespace-class-skip`.
+`C6-hex-escape-proof`, and `C7-string-segment-fold`.
 
 Entry gate: one primitive family, one call-site proof, and one consumer plane
 are named. The plan must name scalar oracle, checkasm target where applicable,
@@ -278,8 +320,9 @@ Proof-only close gate:
 - Scalar reference passes.
 - Checkasm/parity passes for any SIMD/ASM or lane-class primitive.
 - Caller microbench on representative slices clears the declared threshold.
-- The proof artifact records host triple, CPU, target flags, feature gate,
-  corpus slices, sample metadata, run id, scalar oracle, and failure threshold.
+- The proof artifact records observed value, threshold, host triple, CPU,
+  target flags, feature gate, corpus slices, sample metadata, run id, scalar
+  oracle, and differential harness identity.
 - No production caller wiring and no `RESULTS.md` movement occur.
 
 Per-candidate constraints:
@@ -290,8 +333,8 @@ Per-candidate constraints:
 | `C5` full string | Caller-supplied class policy and current direct/typed string caller required. Parse-only rows cannot admit SOTA. |
 | `C6` hex escape | Hex decode/classify only. Grammar templates own slash/introducer, `\\u`, surrogate policy, CSS termination, and Sheets quote-doubling. |
 | `C7` segment fold | One output plane only. Direct digest movement cannot admit typed rows; typed evidence cannot move direct rows. |
-| `C8` digit/number | Split grammar-neutral digit masks/accumulators from generated grammar-owned number policy. Canada typed remains blocked without full-fixture proof. |
-| `C9` whitespace/class skip | Maintain-only unless paired with exact current caller, caller-owned class table, and the Section 2 W10b maintain floors. |
+| `C8` digit/number | No final SK-V10 proof wave in V2; it cannot feed W9 without a future SPEC/CHALLENGE amendment. |
+| `C9` whitespace/class skip | Maintain-only and unshortlisted for final W9; it cannot feed W9 without a future SPEC/CHALLENGE amendment. |
 
 Negative gates:
 
@@ -304,21 +347,23 @@ Revert protocol: proof-only failure leaves no source behavior. Production
 wiring attempted without a prior proof must be reverted and recorded as
 REDRESS before any row is considered.
 
-### W5 - Existing-Substrate Production Kernel Wiring
+### W9 - Existing-Substrate Production Kernel Wiring
 
-Candidate ids: production follow-on for `C4`, `C5`, `C6`, `C7`, `C8`, or `C9`;
-row-gated only after W4 proof.
+Candidate ids: production follow-on for a relevant accepted `C4`, `C5`, `C6`,
+or `C7`; row-gated only after the W7 or W8 proof for the exact primitive and
+caller.
 
-Entry gate: the relevant W4 proof has passed, and the wave names exactly one
+Entry gate: the relevant W7 or W8 proof has passed, and the wave names exactly one
 current production caller such as `match_string_at_quote_trusted_utf8`,
-`validate_unicode_escape_run`, `decode_unicode_escape`, `unescape_string`, a
-generated direct number caller, or an exact whitespace caller. W3 is not a
-consumer.
+`validate_unicode_escape_run`, `decode_unicode_escape`, or `unescape_string`.
+W3 is not a consumer.
 
 Exit gate:
 
-- The production caller is the same consumer proven in W4.
+- The production caller is the same consumer proven in W7 or W8.
 - Scalar/reference and checkasm parity remain green after integration.
+- The dispatch contains exactly one proven primitive, exactly one existing
+  caller, exactly one consumer plane, and one row-moving target set.
 - Target direct rows meet their Section 2 direct floors if row movement is
   claimed.
 - The Section 2 W10b maintain block holds for every aarch64 SIMD/string/
@@ -341,7 +386,7 @@ gate/report changes, and `RESULTS.md` as one slice; save the rejected patch in
 research; record REDRESS with target rows, maintain rows, and exact failing
 threshold.
 
-### W6 - Rejected And Inventory Routes
+### W10 / Close - Direct Residual, Rejected, And Inventory Routes
 
 Candidate ids: `C10-byte-class-movemask`, `C11-tape-economy-contract`,
 `C13-x86-secondary-isa`, `C14-redress-blocked-structural`, and

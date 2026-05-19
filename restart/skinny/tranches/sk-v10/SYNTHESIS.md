@@ -8,8 +8,9 @@ Status: Pass Alpha closed for SK-V9 -> SK-V10 under
 `HARDENING-S-P2-V1-CONSOLIDATED`; S-P3 Synthesis-Plan closed through V3
 confirmation challenge. W0 telemetry freeze is closed under REDRESS 99. W1
 direct contract is closed under REDRESS 100. W2 direct row-table reclamation is
-closed under REDRESS 101. SK-V10 implementation is dispatched by `SPEC.md` and
-`DISPATCH-PROMPT.md`; W3 is the next live wave.
+closed under REDRESS 101. W3 parse-only firewall is closed under REDRESS 102.
+SK-V10 implementation is dispatched by `SPEC.md` and `DISPATCH-PROMPT.md`; W4
+is the next live wave.
 
 ## Authority
 
@@ -161,6 +162,10 @@ direct `A / GO` because both generated Track 1 and independent Track 2 cleared
 their Section 0.2 floors. The remaining twelve direct rows stay
 `N-direct / NO-GO`.
 
+W3 closed as a parse-only firewall. No row moved. The active packet keeps W3
+aliases and parse-only SOTA claims as refusal routes, and W4 may now dispatch
+without naming W3 as a consumer.
+
 ## Section 7 - Micro-Prove-First Gate
 
 No substrate or kernel intervention reaches S-P3 wave-scoping until it has a
@@ -189,6 +194,6 @@ CSS L4 / Sheets / BBNF-self generalization is the unexercised thesis risk.
 ## Section 9 - Dispatch Boundary
 
 This file does not independently authorize source work. `G-ALPHA-SK-V10`, S-P1
-Profile, S-P2 Research, S-P3 Synthesis-Plan, W0, W1, and W2 are closed. Wave
+Profile, S-P2 Research, S-P3 Synthesis-Plan, W0, W1, W2, and W3 are closed. Wave
 implementation proceeds only through the current `SPEC.md` and
 `DISPATCH-PROMPT.md` entry gates.

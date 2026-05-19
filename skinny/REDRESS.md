@@ -3036,3 +3036,23 @@ perturbation.
   `CRITERION_HOME=target/skv9-w1/criterion RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --update-results --advisory`,
   and
   `CRITERION_HOME=target/skv9-w1/criterion RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --with-cost-facts --check-results`.
+
+## SK-V10 Wave 3 Parse-Only Firewall
+
+- Item 102 admits W3 under `G-W3-PARSE-FIREWALL`. W3 is proof-only and closes
+  no behavior source, generated output, benchmark body, or row movement.
+- The active packet audit found no live dispatch route through W3
+  union/event substrate, retained class column, `UnionTape`, structural or
+  streaming cursor, class-lane-only route, parser-owned structural projection,
+  or W4-through-W3 cascade-lock. Hits in SPEC, DISPATCH, HANDOFF, and
+  SYNTHESIS are refusal, pre-block, or diagnostic references only.
+- The result table audit found 17 `parse_only` rows and no parse row outside
+  `S / NO-GO`.
+- The existing report validator rejects parse-only SOTA movement. Evidence:
+  `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench w0_report_accepts_exact_opening_baseline -- --nocapture`
+  passed; that test mutates a parse row to `A / GO` and expects validation
+  failure.
+- Frozen gate evidence passed:
+  `CRITERION_HOME=target/skv9-w1/criterion RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --with-cost-facts --check-results`.
+- W4 may now dispatch as typed-product work. W4 cannot name W3 as a consumer or
+  substrate dependency.

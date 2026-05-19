@@ -1,6 +1,6 @@
 # SK-V11 P1-B: Direct And Real-Typed Product-Plane Profile
 
-Pass: S-P1 Profile. Cycle: V1.
+Pass: S-P1 Profile. Cycle: V2 fold.
 Date: 2026-05-19.
 Scope: product-plane profiling for `direct_to_struct` Track 1/Track 2 and
 `real_typed_struct` Track 1/Track 2 on the SK-V11-open JSON baseline.
@@ -16,6 +16,31 @@ Profiler"`, `xcrun xctrace record --template "CPU Counters"`, and
 Corpus coverage: `direct_to_struct` 17/17 corpora x Track 1/Track 2;
 `real_typed_struct` 7/7 guard corpora x Track 1/Track 2. `parse_only` is not a
 product-plane target in this artifact.
+
+Shared capture provenance:
+
+- Run id: `sk-v9-open:criterion-fnv64-c8d7e0468358f98c`.
+- Capture root: `/tmp/skv11-p1`; W0 Criterion root:
+  `/tmp/skv11-open-criterion-3ce75df`.
+- Host/toolchain: `aarch64-apple-darwin;arch=aarch64;cpu=Apple M5 Max`;
+  `rustc 1.96.0-nightly (02c7f9bec 2026-04-10)`, LLVM 22.1.2.
+- Source SHA for `xctrace_probe` and `profile_direct`: `3ce75df4`, the last
+  behavior/probe source commit before profiling. Documentation/results freeze:
+  `9c8da194`. This V2 fold edits docs only.
+- Build profile: release with debug symbols, `RUSTFLAGS="-C target-cpu=native"`,
+  target directory `/tmp/skv11-profile-target-9c8da194`.
+- Binary paths:
+  `/tmp/skv11-profile-target-9c8da194/release/xctrace_probe` and
+  `/tmp/skv11-profile-target-9c8da194/release/profile_direct`.
+
+Exact build command:
+
+```bash
+cd /Users/mkbabb/Programming/bbnf-lang/skinny
+CARGO_TARGET_DIR=/tmp/skv11-profile-target-9c8da194 \
+RUSTFLAGS="-C target-cpu=native" \
+  cargo build --release -p bbnf-bench --bin xctrace_probe --bin profile_direct
+```
 
 ## Section 1 - Method
 
@@ -82,12 +107,28 @@ Notation:
 - `T1` is generated Track 1. `T2` is the independent hand-coded Track 2.
 - Percentages are `pct_of_process_time` from xctrace Time Profiler exports.
 - Source abbreviations resolve to the symbol plus file:line below.
+- Canonical primitive names are grammar-neutral; implementation-specific JSON,
+  hand, generated, typed, or serde symbols are evidence members under those
+  primitives, not separate generic claims.
+
+Canonical primitive bridge:
+
+| Canonical primitive | Evidence members in this artifact |
+|---|---|
+| `bounded_plain_string_scan` | `tiny_string`, `hand_tiny`, `typed_tiny`, `typed_skip_plain`, `plain_string`, `hand_string` |
+| `string_escape_decode` | `full_string`, `unescape`, `validate_escape`, `validate_unicode` |
+| `unicode_escape_hex_decode` | `hex_unit`, `hex_nibble` |
+| `number_digit_span` | `digits`, `number_span`, `serde_decimal`, `serde_integer` |
+| `ascii_whitespace_skip` | `ws`, `skip_spaces`, `serde_ws` |
+| `simd_movemask` | `movemask` |
+| `container_dispatch` | `container_dispatch_object`, `sequence_element_dispatch`, `hand_value`, generated direct container functions |
+| `output_digest_hash` | `fold_string`, `u64_add`, typed hash/state compare support |
 
 Hot-leaf source map:
 
 - `tiny_string`: `runtime::generated_json::generated::match_tiny_plain_string_with_cap::<8>` at `skinny/crates/runtime/src/grammars/json/generated.rs:171`.
-- `object_walk`: `runtime::generated_json::generated::parse_object_value_at_direct::<JsonDigestSink>` at `skinny/crates/runtime/src/grammars/json/generated.rs:468`.
-- `array_walk`: `runtime::generated_json::generated::parse_array_element_at_direct::<JsonDigestSink>` at `skinny/crates/runtime/src/grammars/json/generated.rs:508`.
+- `container_dispatch_object`: `runtime::generated_json::generated::parse_object_value_at_direct::<JsonDigestSink>` at `skinny/crates/runtime/src/grammars/json/generated.rs:468`.
+- `sequence_element_dispatch`: `runtime::generated_json::generated::parse_array_element_at_direct::<JsonDigestSink>` at `skinny/crates/runtime/src/grammars/json/generated.rs:508`.
 - `hand_tiny`: `<bbnf_bench::direct_struct::hand::HandParser>::tiny_plain_string` at `skinny/crates/bbnf-bench/src/direct_struct.rs:565`.
 - `hand_string`: `<bbnf_bench::direct_struct::hand::HandParser>::string` at `skinny/crates/bbnf-bench/src/direct_struct.rs:541`.
 - `hand_value`: `<bbnf_bench::direct_struct::hand::HandParser>::value` at `skinny/crates/bbnf-bench/src/direct_struct.rs:460`.
@@ -130,14 +171,14 @@ not admissions.
 | Corpus | W0 state | Criterion Mbps T1/T2/sonic | PMU c/B T1/T2 | T1 hot leaves | T2 hot leaves |
 |---|---|---:|---:|---|---|
 | `twitter` | residual | 11613 / 10816 / 15113 | 3.79 / 4.02 | 20.0% `tiny_string`; 17.6% `ws`; 14.5% `movemask` | 18.7% `hand_tiny`; 14.7% `ws`; 10.5% `movemask` |
-| `canada` | residual | 10316 / 9819 / 11700 | 3.31 / 3.50 | 23.7% `digits`; 14.2% `array_walk`; 11.8% `copy` | 21.6% `digits`; 10.8% `ws`; 10.4% `copy` |
+| `canada` | residual | 10316 / 9819 / 11700 | 3.31 / 3.50 | 23.7% `digits`; 14.2% `sequence_element_dispatch`; 11.8% `copy` | 21.6% `digits`; 10.8% `ws`; 10.4% `copy` |
 | `github_events` | residual | 11918 / 10596 / 14743 | 2.90 / 3.11 | 24.4% `tiny_string`; 15.2% `movemask`; 13.6% `ws` | 19.9% `hand_tiny`; 14.3% `movemask`; 9.7% `ws` |
 | `update_center` | residual | 8187 / 7474 / 11064 | 4.81 / 5.74 | 26.3% `tiny_string`; 10.0% `movemask`; 7.9% `u64_add` | 22.3% `hand_tiny`; 12.3% `plain_string`; 10.9% `movemask` |
-| `mesh` | near-floor residual | 8561 / 8652 / 9542 | 5.41 / 5.35 | 21.9% `array_walk`; 14.4% `digits`; 12.7% `ws` | 20.8% `ws`; 18.3% `digits`; 8.3% `copy` |
+| `mesh` | near-floor residual | 8561 / 8652 / 9542 | 5.41 / 5.35 | 21.9% `sequence_element_dispatch`; 14.4% `digits`; 12.7% `ws` | 20.8% `ws`; 18.3% `digits`; 8.3% `copy` |
 | `random` | near-floor residual | 7693 / 6949 / 8665 | 5.56 / 5.98 | 23.8% `tiny_string`; 17.9% `ws`; 6.6% `option_copied` | 20.2% `hand_tiny`; 16.9% `ws`; 8.5% `u64_add` |
 | `gsoc-2018` | residual | 2665 / 2578 / 4110 | 3.11 / 3.23 | 22.9% `movemask`; 12.9% `split_checked`; 9.1% `tiny_string` | 21.6% `movemask`; 15.9% `plain_string`; 12.7% `split_checked` |
-| `instruments` | W0-clamped non-admission | 11569 / 10736 / 9865 | 3.63 / 3.84 | 15.7% `tiny_string`; 15.7% `ws`; 12.4% `object_walk` | 19.7% `ws`; 13.1% `hand_tiny`; 7.7% `option_copied` |
-| `numbers` | W0-clamped, T2 still short | 4479 / 2366 / 2667 | 3.79 / 3.95 | 26.8% `digits`; 13.4% `array_walk`; 10.1% `copy` | 27.5% `digits`; 11.5% `ws`; 9.8% `copy` |
+| `instruments` | W0-clamped non-admission | 11569 / 10736 / 9865 | 3.63 / 3.84 | 15.7% `tiny_string`; 15.7% `ws`; 12.4% `container_dispatch_object` | 19.7% `ws`; 13.1% `hand_tiny`; 7.7% `option_copied` |
+| `numbers` | W0-clamped, T2 still short | 4479 / 2366 / 2667 | 3.79 / 3.95 | 26.8% `digits`; 13.4% `sequence_element_dispatch`; 10.1% `copy` | 27.5% `digits`; 11.5% `ws`; 9.8% `copy` |
 | `unicode_mixed` | W0-clamped, T2 still short | 3753 / 2427 / 2846 | 9.04 / 9.22 | 28.0% `full_string`; 20.3% `unescape`; 12.9% `validate_escape` | 26.4% `full_string`; 18.4% `unescape`; 13.8% `validate_escape` |
 | `unicode_escapes` | residual | 1345 / 1341 / 3785 | 7.20 / 7.24 | 25.1% `unescape`; 22.1% `full_string`; 10.3% `hex_unit` | 23.4% `unescape`; 22.0% `full_string`; 9.0% `hex_unit` |
 | `distinct_values` | residual | 1750 / 1625 / 2923 | 5.53 / 6.17 | 22.1% `tiny_string`; 15.8% `ws`; 11.6% `fold_string` | 19.4% `hand_tiny`; 16.5% `ws`; 9.0% `option_copied` |
@@ -171,7 +212,7 @@ bound any S-P2/S-P3 primitive that touches product-plane direct code.
 |---|---|---:|---:|---|---|
 | `citm_catalog` | direct guard | 18563 / 17787 / 15530 | 2.05 / 2.15 | 25.9% `ws`; 14.3% `tiny_string`; 10.5% `copy` | 25.6% `ws`; 13.6% `hand_tiny`; 8.1% `skip_spaces` |
 | `apache_builds` | direct guard | 11254 / 10189 / 10995 | 3.85 / 4.22 | 18.4% `u64_add`; 14.6% `tiny_string`; 11.6% `ws` | 15.2% `u64_add`; 14.1% `hand_tiny`; 12.7% `ws` |
-| `marine_ik` | direct guard | 8938 / 9437 / 8473 | 4.91 / 4.91 | 17.3% `digits`; 16.3% `array_walk`; 11.2% `ws` | 17.8% `digits`; 15.1% `ws`; 7.9% `number_span` |
+| `marine_ik` | direct guard | 8938 / 9437 / 8473 | 4.91 / 4.91 | 17.3% `digits`; 16.3% `sequence_element_dispatch`; 11.2% `ws` | 17.8% `digits`; 15.1% `ws`; 7.9% `number_span` |
 | `unicode_basic` | direct guard | 2299 / 2227 / 2353 | 3.84 / 4.30 | 15.7% `tiny_string`; 11.0% `ws`; 10.8% `u16_tz` | 15.7% `hand_tiny`; 12.7% `plain_string`; 11.4% `hand_string` |
 
 Guard synthesis:
@@ -230,8 +271,8 @@ The profile adds attribution:
 
 - Direct string residuals map to `tiny_string`, `hand_tiny`, `plain_string`,
   `ws`, and `movemask`.
-- Direct numeric residuals map to `digits`, `number_span`, `array_walk`, and
-  `copy`.
+- Direct numeric residuals map to `digits`, `number_span`,
+  `sequence_element_dispatch`/`container_dispatch`, and `copy`.
 - Direct unicode residuals map to `full_string`, `unescape`,
   `validate_escape`, `hex_unit`, and `hex_nibble`.
 - Typed guards map to typed direct string skip, numeric scan, and serde_json
@@ -241,7 +282,8 @@ The profile adds attribution:
 
 - The samply JSON profiles are raw `symbolicated=false` captures. Their
   `.json.syms.json` files exist and resolve frames, but inlined direct leaves
-  often collapse to container functions such as `object_walk` or `array_walk`.
+  often collapse to container functions such as `container_dispatch_object` or
+  `sequence_element_dispatch`.
   The xctrace `*.symbols.json` exports resolve the actionable scanner leaves
   more clearly, so this file uses xctrace for the tables and cites samply as
   profile coverage/source material.
@@ -258,13 +300,15 @@ The profile adds attribution:
   hot leaves in full string scan and escape validation. Treat it separately
   from `unicode_basic`.
 - `numbers` is W0-clamped and Track 2 still short. Its hot leaf is not unicode
-  or string policy; it is digit scan plus array walk/copy, matching the
-  numeric direct family.
+  or string policy; it is digit scan plus sequence/container dispatch and
+  copy, matching the numeric direct family.
 - `instruments` is W0-clamped even though W0 throughput clears both seed
   floors. Its hot leaves are ordinary string/whitespace/object leaves. It
   cannot be admitted from W0 capture alone.
 - No observation here reopens the SK-V9 W3 union/event/class-column/sidecar
-  substrate family. Product-plane leaves are in the existing generated direct
+  substrate family. REDRESS 50, 51, 53, 96, 97, 98, and 102 keep sidecar,
+  cursor, class-column, streaming-cursor, retired-W3, and parse-only-firewall
+  routes closed. Product-plane leaves are in the existing generated direct
   parser, hand Track 2 parser, parse-that-regex primitives, digest folding, and
   typed direct parser.
 

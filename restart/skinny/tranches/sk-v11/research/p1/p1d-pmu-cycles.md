@@ -1,6 +1,6 @@
 # SK-V11 P1-D: PMU And Cycles-Per-Byte
 
-Pass: S-P1 Profile. Cycle: V1.
+Pass: S-P1 Profile. Cycle: V2 fold.
 Date: 2026-05-19.
 Scope: fresh PMU counters and cycles-per-byte for parse, direct, and typed
 guard lanes.
@@ -14,6 +14,31 @@ Profile tool: `proc_pid_rusage(RUSAGE_INFO_V5)` counters emitted by
 --template "CPU Counters"` trace bundles.
 Corpus coverage: parse Track 1/Track 2 17/17; direct Track 1/Track 2 17/17;
 typed guard Track 1/Track 2 7/7.
+
+Shared capture provenance:
+
+- Run id: `sk-v9-open:criterion-fnv64-c8d7e0468358f98c`.
+- Capture root: `/tmp/skv11-p1`; W0 Criterion root:
+  `/tmp/skv11-open-criterion-3ce75df`.
+- Host/toolchain: `aarch64-apple-darwin;arch=aarch64;cpu=Apple M5 Max`;
+  `rustc 1.96.0-nightly (02c7f9bec 2026-04-10)`, LLVM 22.1.2.
+- Source SHA for `xctrace_probe` and `profile_direct`: `3ce75df4`, the last
+  behavior/probe source commit before profiling. Documentation/results freeze:
+  `9c8da194`. This V2 fold edits docs only.
+- Build profile: release with debug symbols, `RUSTFLAGS="-C target-cpu=native"`,
+  target directory `/tmp/skv11-profile-target-9c8da194`.
+- Binary paths:
+  `/tmp/skv11-profile-target-9c8da194/release/xctrace_probe` and
+  `/tmp/skv11-profile-target-9c8da194/release/profile_direct`.
+
+Exact build command:
+
+```bash
+cd /Users/mkbabb/Programming/bbnf-lang/skinny
+CARGO_TARGET_DIR=/tmp/skv11-profile-target-9c8da194 \
+RUSTFLAGS="-C target-cpu=native" \
+  cargo build --release -p bbnf-bench --bin xctrace_probe --bin profile_direct
+```
 
 ## Section 1 - Method
 
@@ -209,7 +234,10 @@ Wide-issue evidence:
 - `canada` has low CPI on both parse and direct (parse Track 1 0.119, direct
   Track 1 0.117), but direct still costs 3.313/3.495 c/B because it retires
   roughly 28 instructions/B. The host is issuing widely; the target pressure
-  is work per byte and data movement, not a retained sidecar cursor.
+  is work per byte and data movement, not a retained sidecar cursor. REDRESS
+  50, 51, 53, 96, 97, 98, and 102 remain the hard pre-blocks for sidecar,
+  cursor, class-column, streaming-cursor, retired-W3, and parse-only-firewall
+  routes.
 
 Capture anomalies:
 

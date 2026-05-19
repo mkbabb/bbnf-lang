@@ -1,6 +1,6 @@
 # SK-V11 P1-F: RESULTS Extraction And Delta
 
-Pass: S-P1 Profile. Cycle: V1.
+Pass: S-P1 Profile. Cycle: V2 fold.
 Date: 2026-05-19.
 Scope: extract every live `skinny/RESULTS.md` main row, compare each row to
 SK-V10 close where the close snapshot is available, classify current outcomes,
@@ -12,6 +12,31 @@ Host triple: `aarch64-apple-darwin;arch=aarch64;cpu=Apple M5 Max`.
 Build flags: `profile=bench;rustflags=-C target-cpu=native;target_cpu=native`.
 Profile tool: RESULTS extraction plus git snapshot diff, not samply.
 Corpus coverage: 17/17 corpora; 41/41 main rows; 41/41 telemetry manifest rows.
+
+Shared capture provenance:
+
+- Run id: `sk-v9-open:criterion-fnv64-c8d7e0468358f98c`.
+- Capture root: `/tmp/skv11-p1`; W0 Criterion root:
+  `/tmp/skv11-open-criterion-3ce75df`.
+- Host/toolchain: `aarch64-apple-darwin;arch=aarch64;cpu=Apple M5 Max`;
+  `rustc 1.96.0-nightly (02c7f9bec 2026-04-10)`, LLVM 22.1.2.
+- Source SHA for `xctrace_probe` and `profile_direct`: `3ce75df4`, the last
+  behavior/probe source commit before profiling. Documentation/results freeze:
+  `9c8da194`. This V2 fold edits docs only.
+- Build profile: release with debug symbols, `RUSTFLAGS="-C target-cpu=native"`,
+  target directory `/tmp/skv11-profile-target-9c8da194`.
+- Binary paths:
+  `/tmp/skv11-profile-target-9c8da194/release/xctrace_probe` and
+  `/tmp/skv11-profile-target-9c8da194/release/profile_direct`.
+
+Exact build command for the sibling P1 PMU/xctrace binaries:
+
+```bash
+cd /Users/mkbabb/Programming/bbnf-lang/skinny
+CARGO_TARGET_DIR=/tmp/skv11-profile-target-9c8da194 \
+RUSTFLAGS="-C target-cpu=native" \
+  cargo build --release -p bbnf-bench --bin xctrace_probe --bin profile_direct
+```
 
 ## Section 1 - Method
 

@@ -1,18 +1,44 @@
-# SK-V11 P1-C: samply mode III masking probes and structural scan
+# SK-V11 P1-C: W0 Criterion masking probes and structural scan
 
-Pass: S-P1 Profile. Cycle: V1.
+Pass: S-P1 Profile. Cycle: V2 fold.
 Date: 2026-05-19.
-Scope: Mode III diagnostic masking probes (`host_call_eager_decode`,
+Scope: W0 Criterion diagnostic masking probes (`host_call_eager_decode`,
 `alternate_scalar_plan`, `cold_first_parse`) plus structural-scan-only and
 lazy-tape W0 evidence.
 Output: this file.
-Baseline: SK-V11-open (`3ce75df4`).
+Baseline: SK-V11-open (`3ce75df4`), run id
+`sk-v9-open:criterion-fnv64-c8d7e0468358f98c`.
 Host triple: `aarch64-apple-darwin`; host facts record Apple M5 Max.
 Build flags: `profile=bench; rustflags=-C target-cpu=native; target_cpu=native`.
 Profile tool: Criterion.rs W0 diagnostic artefacts under
 `/tmp/skv11-open-criterion-3ce75df`; no new samply call-stack capture is
 claimed in this artefact.
 Corpus coverage: 17/17 JSON corpora.
+
+Shared capture provenance:
+
+- Run id: `sk-v9-open:criterion-fnv64-c8d7e0468358f98c`.
+- Capture root: `/tmp/skv11-p1`; W0 Criterion root:
+  `/tmp/skv11-open-criterion-3ce75df`.
+- Host/toolchain: `aarch64-apple-darwin;arch=aarch64;cpu=Apple M5 Max`;
+  `rustc 1.96.0-nightly (02c7f9bec 2026-04-10)`, LLVM 22.1.2.
+- Source SHA for `xctrace_probe` and `profile_direct`: `3ce75df4`, the last
+  behavior/probe source commit before profiling. Documentation/results freeze:
+  `9c8da194`. This V2 fold edits docs only.
+- Build profile: release with debug symbols, `RUSTFLAGS="-C target-cpu=native"`,
+  target directory `/tmp/skv11-profile-target-9c8da194`.
+- Binary paths:
+  `/tmp/skv11-profile-target-9c8da194/release/xctrace_probe` and
+  `/tmp/skv11-profile-target-9c8da194/release/profile_direct`.
+
+Exact build command for the sibling P1 PMU/xctrace binaries:
+
+```bash
+cd /Users/mkbabb/Programming/bbnf-lang/skinny
+CARGO_TARGET_DIR=/tmp/skv11-profile-target-9c8da194 \
+RUSTFLAGS="-C target-cpu=native" \
+  cargo build --release -p bbnf-bench --bin xctrace_probe --bin profile_direct
+```
 
 ## Section 1 - Method
 
@@ -168,8 +194,13 @@ W0 captures are planning evidence, not behavior-wave admissions.
    `gsoc-2018` 8545), which is diagnostic substrate evidence only.
 
 No behavior route is proposed here. The W3 union/event/class-column/
-streaming-cursor/class-lane/sidecar substrate family remains pre-blocked, and
-Mode III diagnostics do not reopen it.
+streaming-cursor/class-lane/sidecar substrate family remains pre-blocked by
+REDRESS 50, 51, 53, 96, 97, and 98, and the REDRESS 102 parse-only firewall
+prevents diagnostic parse evidence from admitting product rows. REDRESS 54,
+55, 60-62, 64, 66-69, 72, 82, and 83 pre-block eager decode,
+materialization, retained string-boundary, single-quartet, and StringBlock16
+routes unless S-P2/S-P3 records a material differential with measured product
+consumer evidence.
 
 ## Section 5 - Sources
 

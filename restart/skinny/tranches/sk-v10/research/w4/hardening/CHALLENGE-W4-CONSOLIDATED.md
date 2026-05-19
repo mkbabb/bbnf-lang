@@ -57,7 +57,9 @@ cursor, direct semantic facts, or shared bench-private parser. The same-wave
 consumer is the existing typed bench and gate/report contract.
 
 Redress requirement: no new telemetry field, no new outcome variant, and no
-new public substrate API.
+new public substrate API. The Lock 14 parent-diff authorizer may be extended
+only for the W4 typed-schema owner paths already touched by this plan; it may
+not authorize generic codegen/runtime diffs.
 
 ## CH6 Anti-Paper-Close - ACCEPT
 
@@ -84,5 +86,7 @@ contract fields.
 - Same-run native sonic-rs typed and serde_json typed comparator evidence is
   present.
 - Existing typed guard rows preserve SPEC Section 0.2 maintain floors.
+- Lock 14 accepts the committed W4 typed-schema diff by subject and exact owner
+  path, not by weakening the frozen-root set.
 - If any accepted condition fails, W4 records a REDRESS reject instead of
   admitting the row.

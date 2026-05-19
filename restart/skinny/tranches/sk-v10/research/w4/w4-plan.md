@@ -28,6 +28,7 @@ Owner paths:
 - `skinny/crates/bbnf-bench/benches/json_parity.rs`
 - `skinny/crates/bbnf-bench/src/report.rs`
 - `skinny/crates/bbnf-bench/src/bin/gate.rs`
+- `skinny/crates/bbnf-bench/src/lock14_baseline.rs`
 - `skinny/RESULTS.md`
 - `skinny/REDRESS.md`
 
@@ -61,6 +62,10 @@ generic-codegen root-shape work, or aarch64 kernel code is in scope.
     `ceil(same-run sonic_typed / 1.10)`.
 - Preserve all opening rows and existing typed maintain floors from SPEC
   Section 0.2.
+- Update the Lock 14 parent-diff authorizer for the same typed-schema owner
+  paths. Without this, `gate-json` cannot validate a committed W4 source state
+  because `real_typed_struct.rs`, `generated_real_typed.rs`, and
+  `real_typed_schema.rs` are frozen roots.
 
 ## CHALLENGE Requirement
 

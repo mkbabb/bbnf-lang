@@ -1,6 +1,6 @@
 # SK-V10 P3-F: SPEC/DISPATCH Draft Support
 
-Pass: S-P3 Synthesis-Plan. Cycle: V1 support draft.
+Pass: S-P3 Synthesis-Plan. Cycle: V1 support draft, folded by V2.
 Date: 2026-05-19.
 Scope: draft the SK-V10 SPEC Section 0 close condition, wave manifest,
 non-negotiables, and DISPATCH-PROMPT outline for main integration.

@@ -1,6 +1,6 @@
 # SK-V10 P3-D: Telemetry Schema Binding
 
-Pass: S-P3 Synthesis-Plan. Cycle: V1.
+Pass: S-P3 Synthesis-Plan. Cycle: V1 support, folded by V2.
 Date: 2026-05-19.
 Scope: bind the SK-V10 telemetry schema, outcome enum, gate-json rejection
 rules, run-id and comparator evidence, and new-column policy before any SK-V10

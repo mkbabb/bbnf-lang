@@ -105,9 +105,11 @@ Six lenses apply:
 - CH6 anti-paper-close.
 
 A REJECT disposition returns the wave to plan. No redress starts until
-CHALLENGE accepts. For W7-W9, CHALLENGE must reject any plan that combines
-multiple primitive families, missing scalar oracle, missing checkasm or
-differential parity, absent caller microbench, or absent production consumer.
+CHALLENGE accepts. For W7 and W8, CHALLENGE must reject any plan that combines
+multiple primitive families, misses scalar oracle, misses checkasm or
+differential parity, lacks an identified existing caller, or lacks a
+threshold-bearing caller microbench. For W9, CHALLENGE must also reject any
+plan lacking same-commit production consumer wiring.
 
 ### Phase 3 - Redress
 

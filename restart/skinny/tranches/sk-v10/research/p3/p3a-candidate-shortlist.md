@@ -1,6 +1,6 @@
 # SK-V10 P3-A: Candidate Shortlist
 
-Pass: S-P3 Synthesis-Plan. Cycle: V1.
+Pass: S-P3 Synthesis-Plan. Cycle: V1 support, folded by V2.
 Date: 2026-05-19.
 Output: this file.
 Scope: shortlist the SK-V10 S-P3 candidate pool before `SPEC.md` and
@@ -104,7 +104,7 @@ below are computed from the current sonic typed Mbps under the existing
 
 Shortlist count: 8.
 
-V1 CHALLENGE fold: the final SK-V10 SPEC dispatches only the proof families
+V2 CHALLENGE fold: the final SK-V10 SPEC dispatches only the proof families
 that have explicit proof waves. `C8-digit-number-proof` remains useful
 shortlist evidence, but it is routed out of the W0-W10 executable plan until a
 future SPEC/CHALLENGE amendment adds a dedicated proof wave. `C9` remains

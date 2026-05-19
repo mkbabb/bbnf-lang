@@ -1,6 +1,6 @@
 # SK-V10 P3-C: Falsifiability Gates
 
-Pass: S-P3 Synthesis-Plan. Cycle: V1.
+Pass: S-P3 Synthesis-Plan. Cycle: V1 support, folded by V2.
 Date: 2026-05-19.
 Scope: concrete falsifiability gates for plausible SK-V10 waves.
 Output: this file.
@@ -127,7 +127,7 @@ above applies in addition to this maintain block.
 
 ## Section 3 - Plausible Wave Gates
 
-V1 CHALLENGE fold: this file now uses the final SPEC W0-W10 numbering. Earlier
+V2 CHALLENGE fold: this file now uses the final SPEC W0-W10 numbering. Earlier
 draft headings compressed typed and primitive gates; those aliases are not
 dispatch identifiers. The authoritative map is:
 

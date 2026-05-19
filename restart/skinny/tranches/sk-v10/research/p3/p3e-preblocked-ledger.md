@@ -61,7 +61,7 @@ Disposition vocabulary:
 
 ## Per-Wave Pre-Blocks
 
-V1 CHALLENGE fold: the final dispatch numbering is the top-level SPEC W0-W10
+V2 CHALLENGE fold: the final dispatch numbering is the top-level SPEC W0-W10
 manifest. This ledger's global pre-blocks are binding as written; the scoped
 sections below are aligned to the final SPEC wave numbers and candidate
 families. Older compressed draft aliases are not dispatch identifiers.

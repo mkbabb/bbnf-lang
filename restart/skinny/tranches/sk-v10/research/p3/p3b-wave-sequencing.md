@@ -114,5 +114,5 @@ Refuse or REDRESS-reject any proposed wave that:
 - moves Canada typed without full-fixture generated/serde/sonic parity;
 - edits generic crates or runtime outside JSON without Lock 14 non-JSON proof;
 - combines multiple primitive families, checkasm, microbench, and multiple
-  production consumers in one 90-minute wave;
+  production consumers in one redress-capped wave;
 - emits telemetry not consumed by `gate-json` in the same wave.

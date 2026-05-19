@@ -790,4 +790,4 @@ Track 2 coupling, stale strict anchors, strict plane mismatch, deferred
 validation admission, wrong strict comparator, parse-only SOTA claims, direct
 digest as typed proof, and W3 reopen claims.
 
-No new column is authorized by SK-V10 S-P3 V1.
+No new column is authorized by SK-V10 S-P3 V2.

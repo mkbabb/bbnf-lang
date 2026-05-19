@@ -4,10 +4,10 @@ Date: 2026-05-19.
 
 Status: Pass Alpha closed for SK-V9 -> SK-V10 under
 `G-ALPHA-SK-V10`; S-P1 Profile closed under
-`HARDENING-S-P1-V1-CONSOLIDATED`. SK-V10 implementation is not dispatched by
-this file. The skinny pass sequence may now run S-P2/S-P3; source
-implementation remains blocked until S-P3 authors `SPEC.md` and
-`DISPATCH-PROMPT.md`.
+`HARDENING-S-P1-V1-CONSOLIDATED`; S-P2 Research closed under
+`HARDENING-S-P2-V1-CONSOLIDATED`. SK-V10 implementation is not dispatched by
+this file. The skinny pass sequence may now run S-P3; source implementation
+remains blocked until S-P3 authors `SPEC.md` and `DISPATCH-PROMPT.md`.
 
 ## Authority
 
@@ -24,6 +24,8 @@ implementation remains blocked until S-P3 authors `SPEC.md` and
 - `restart/skinny/tranches/sk-v10/research/alpha-hardening/V1/CONSOLIDATED.md`
 - `restart/skinny/tranches/sk-v10/research/g-alpha/G-ALPHA-PRESENTATION.md`
 - `restart/skinny/tranches/sk-v10/research/p1/hardening/HARDENING-S-P1-V1-CONSOLIDATED.md`
+- `restart/skinny/tranches/sk-v10/research/p2/p2g-candidate-ledger.md`
+- `restart/skinny/tranches/sk-v10/research/p2/hardening/HARDENING-S-P2-V1-CONSOLIDATED.md`
 - `skinny/RESULTS.md`
 - `skinny/REDRESS.md` entries 94-98
 
@@ -114,8 +116,10 @@ remaining JSON pool with a plausible product boundary: 14 direct rows are still
 | Comparator and telemetry refresh | gate-only | no behavior movement without same-wave row gate |
 
 Every candidate carries its initial LOC budget, hard cap, same-wave consumer,
-and failure disposition in Alpha-E. S-P3 may tighten those budgets and gates; it
-may not loosen them without CHALLENGE.
+and failure disposition in Alpha-E. S-P2 V1 hardening adds
+`p2g-candidate-ledger.md` as the canonical post-CHALLENGE candidate-pool
+authority: aliases outside that ledger are inventory-only for SK-V10. S-P3 may
+tighten budgets and gates; it may not loosen them without CHALLENGE.
 
 ## Section 5 - Pre-Blocked Routes
 
@@ -167,6 +171,6 @@ CSS L4 / Sheets / BBNF-self generalization is the unexercised thesis risk.
 
 ## Section 9 - Dispatch Boundary
 
-This file does not authorize source work. `G-ALPHA-SK-V10` and S-P1 Profile
-are closed; S-P2/S-P3 must still write the measurable wave plan before
+This file does not authorize source work. `G-ALPHA-SK-V10`, S-P1 Profile, and
+S-P2 Research are closed; S-P3 must still write the measurable wave plan before
 implementation.

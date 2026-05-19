@@ -7,6 +7,23 @@ Output: this file.
 P1 hot-leaf antecedents: `string_tiny_scan`, `string_full_scan`, `string_escape` / `unicode_escape_hex`, `number_digit_scan` / `number_scan`, `whitespace_skip`, `simd_movemask`, `direct_struct` digest fold, and direct/typed maintain rows from P1-E.
 Lock surface: both Lock 1 and Lock 14.
 
+## V1 Challenge Fold
+
+`p2g-candidate-ledger.md` is the post-CHALLENGE S-P3 eligibility authority. This
+file is an instruction inventory unless the ledger marks a canonical candidate
+`row-gated` or `proof-only`. Non-current-host x86 rows are
+`inventory-only, not S-P3 eligible for SK-V10` on the Apple aarch64 host.
+`CSSC_CTZ_NEXT_SET_BIT`, PMULL/VPCLMUL default prefix-XOR, mask-next/bulk emit,
+and retained structural cursor routes remain REDRESS-blocked unless a later
+accepted Alpha/S-P3 contract supplies a different current-host row gate.
+
+Host anchor repair: the host triple is
+`restart/skinny/tranches/sk-v10/research/p1/p1e-hot-leaf-attribution.md:10`;
+the accepted hot-leaf class map is lines 40-47. Broad Arm/Intel links below are
+source inventory only. Any wave keeping an instruction claim as implementation
+authority must cite instruction-specific Arm DDI 0602 or Intel Intrinsics/ISA
+entries in its S-P3 plan.
+
 ## §1 — Findings (concrete; file:line on bbnf claims, citation on external claims)
 
 1. The current host is aarch64 Apple M5 Max, so AArch64 is the primary inventory target, not an x86 backport exercise. P1-E records `aarch64-apple-darwin;arch=aarch64;cpu=Apple M5 Max` and names the product-plane hot leaves: string tiny/full scan, escape/hex decode, number scan, whitespace, movemask, array/object walk, and digest fold (`restart/skinny/tranches/sk-v10/research/p1/p1e-hot-leaf-attribution.md:1`, `:40`-`:47`).
@@ -38,7 +55,7 @@ Lock surface: both Lock 1 and Lock 14.
 | Candidate | Shape | Arch route | P1 antecedent | Scalar-ref status | Checkasm status | Same-wave consumer note | REDRESS disposition |
 |---|---|---|---|---|---|---|---|
 | `BYTE_CLASS_FROM_EQ_SET_64_AVX512BW` | 64-byte set membership mask for up to eight bytes. | AVX-512 BW `vpbroadcastb` + `vpcmpeqb` + `korq` + `kmovq`; asm body exists. | Generic byte-class, string/structural classification. | Existing scalar reference in `scalar/byte_class_from_eq_set_64.rs`. | Existing dedicated checkasm path. | Secondary host route; same-wave consumer must be grammar-neutral scanner or product caller. | Not a SK-V10 row mover on Apple host. |
-| `AVX2_CLASSIFY_32` | 32-byte structural or byte-class classifier. | AVX2 `vpshufb`/compare/movemask. | Same as AArch64 table classify. | Scalar ref in module. | Body scaffold is `unimplemented!()`, so no production checkasm. | Use only for future x86 host wave. | Secondary; avoid JSON-hardcoded classifiers from REDRESS 36. |
+| `AVX2_CLASSIFY_32` | 32-byte structural or byte-class classifier. | AVX2 `vpshufb`/compare/movemask. | Same as AArch64 table classify. | Scalar ref in module. | Body scaffold is `unimplemented!()`, so no production checkasm. | Inventory-only for SK-V10; not eligible on the current Apple aarch64 host. | Secondary; avoid JSON-hardcoded classifiers from REDRESS 36. |
 | `AVX512_VBMI2_OR_BITALG_CLASSIFY_64` | 64-byte classify to k-mask, optionally multi-class in one pass. | VBMI2/BITALG `vpshufbitqmb`, k-mask residency. | `simd_movemask`, string/structural classification. | Scalar classify refs exist. | Bodies are scaffolded; no production checkasm. | Future x86-specific same-wave scanner/caller only. | Blocked from substrate route by REDRESS 96-98. |
 | `AVX512_VBMI2_COMPRESS_POSITIONS` | Emit structural positions by compressing indices under k-mask. | VBMI2 `vpcompressd` / `vpcompressb`. | Structural emit / `compact_mask`; not primary P1 product leaf except movemask. | Scalar `bulk_emit_positions_64_scalar`. | Scaffold only. | Must be scanner-local and same-wave consumed; not a retained structural vector. | W3 blocks retained sidecar/vector consumption. |
 | `AVX512_KMASK_FUSE_ESCAPE` | Keep quote/backslash/control/string masks in k-registers for mask algebra. | AVX-512 F k-mask `kandnq`, `korq`, `kxorq`, `kortestq`, shifts. | String full scan / escape propagation. | Existing scalar mask algebra in `escape_mask_64`. | Scaffold only. | Future x86 string scanner only; no row movement on aarch64. | Not blocked if caller-local; blocked if used to recreate W3. |

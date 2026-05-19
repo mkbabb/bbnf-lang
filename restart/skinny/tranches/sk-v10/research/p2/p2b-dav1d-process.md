@@ -7,6 +7,33 @@ Output: this file.
 P1 hot-leaf antecedents: `string_tiny_scan`, `string_full_scan`, `string_escape`, `unicode_escape_hex`, `number_digit_scan`, `whitespace_skip`, `array_walk`, `object_walk`, `simd_movemask`, `alloc`.
 Lock surface: both Lock 1 and Lock 14.
 
+## V1 Challenge Fold
+
+`p2g-candidate-ledger.md` is the post-CHALLENGE eligibility authority for S-P3.
+The primitive names in this file are process evidence and alias vocabulary until
+that ledger marks a canonical candidate `row-gated` or `proof-only`.
+`mask_next_and_emit_positions_64` is demoted to REDRESS-blocked inventory for
+SK-V10 because its current antecedent is trailing-zero visibility rather than an
+accepted product-plane hot-leaf class. X86-only or future-host process examples
+are inventory-only on the Apple aarch64 host.
+
+P1 anchor repairs: the direct row routes in finding 3 also use
+`p1e-hot-leaf-attribution.md:55` (`canada` digit scan), `:58`
+(`update_center` tiny string), `:59` (`mesh` digit/array), and `:64`
+(`numbers` digit scan), plus the existing anchors for `twitter`,
+`github_events`, `gsoc-2018`, `instruments`, `unicode_mixed`, and
+`unicode_escapes`. `whitespace_skip_mask_64` is grounded in the class-map at
+`p1e-hot-leaf-attribution.md:44` and the `mesh` direct profile at
+`p1b-samply-mode-2.md:85`.
+
+Process citation repair: DAV1D checkasm process claims are background unless a
+wave plan carries pinned source anchors. The pinned dav1d 1.5.1 source
+`3060ebf8dd26952579373084984daf70a54f5368/tests/checkasm/checkasm.c` lists DSP
+families at lines 69-95, CPU flag families at lines 98-128, CPU flag iteration
+at lines 814-868, and buffer overwrite checks at lines 1110-1128. FFmpeg
+checkasm process claims remain anchored to the 8.0 doxygen `checkasm.c` and
+`checkasm.h` sources cited below.
+
 ## §1 — Findings (concrete; file:line on bbnf claims, citation on external claims)
 
 1. SK-V10 is authorized for S-P2 research but not source implementation. The
@@ -131,9 +158,10 @@ Lock surface: both Lock 1 and Lock 14.
    `checkasm.h` declares buffer comparison helpers and padded overwrite checks
    for candidate-vs-reference validation (FFmpeg `checkasm.h`, trunk source
    around lines 448-483). dav1d runs a checkasm matrix over per-DSP families and
-   CPU flags; its current main registers x86 SSE/AVX/AVX-512 and ARM
-   NEON/DOTPROD/I8MM/SVE/SVE2 variants before invoking `checkasm_main`
-   (dav1d `tests/checkasm/checkasm.c`, master raw source). The 2025 dav1d
+   CPU flags; the pinned dav1d 1.5.1 source registers DSP families and x86 /
+   ARM feature families before iterating CPU flags
+   (`3060ebf8dd26952579373084984daf70a54f5368/tests/checkasm/checkasm.c`,
+   lines 69-128 and 814-868). The 2025 dav1d
    checkasm migration rationale also names more robust runtime scaling, outlier
    rejection, variance reporting, and maintainability as goals (VideoLAN dav1d
    MR !1812).
@@ -161,13 +189,13 @@ wave:
 
 | Candidate | Shape | Scalar-ref status | Arch | P1 antecedent | Admission verdict |
 |---|---|---|---|---|---|
-| `tiny_plain_string_first_special_64` | Given a source window, quote byte, escape byte, and per-grammar stop-set table, return first stop offset plus mask for up to 64 bytes; consumer must be an existing direct/typed string scanner. | Existing scalar anchors cover tiny-string membership/first-match in the SK-V3 checkasm compile anchors, but S-P3 would need a fresh 64-byte scalar oracle for the exact return shape. | AArch64 NEON first; x86 AVX2/AVX-512 only if P2-C finds a host route. | `string_tiny_scan` on `twitter`, `github_events`, `update_center`, `instruments`, `distinct_values`; P1-E lines 53, 57, 58, 63, 68. | Conditionally admissible. Admit only with scalar oracle + checkasm + same-wave direct/typed string caller. Reject if framed as a parser sidecar or W3 consumer. |
+| `tiny_plain_string_first_special_64` | Given a source window, caller-owned delimiter/escape byte sets, and per-grammar stop-set table, return first stop offset plus mask for up to 64 bytes; consumer must be an existing direct/typed string scanner. | Existing scalar anchors cover tiny-string membership/first-match in the SK-V3 checkasm compile anchors; `p2g-candidate-ledger.md` marks this proof-only until the exact scalar oracle, checkasm target, row gate, and caller are named. | AArch64 NEON first; x86 routes are inventory-only for SK-V10. | `string_tiny_scan` on `twitter`, `github_events`, `update_center`, `instruments`, `distinct_values`; P1-E lines 53, 57, 58, 63, 68. | Conditionally admissible. Admit only with scalar oracle + checkasm + same-wave direct/typed string caller. Reject if framed as a parser sidecar or W3 consumer. |
 | `string_full_scan_escape_control_64` | For a 64-byte block, produce quote, backslash, control, and optional non-ASCII masks without materializing decoded output. | Partial scalar ingredients exist in table/equality-class and prefix-mask primitives; exact multi-mask scalar oracle must be written first. | AArch64 NEON or x86 AVX2/AVX-512. | `string_full_scan`, `string_escape` on `unicode_mixed`, `unicode_escapes`, `y_string_unicode`; P1-E lines 65-69. | Conditionally admissible. It must reduce existing string/unescape caller work and must not route through eager decoded scratch, which P1-C rejects. |
 | `unicode_escape_hex4_decode` | Decode exactly four ASCII hex bytes to a 16-bit code unit and validity mask; optional paired-surrogate helper remains scalar unless checkasm proves a vector shape. | Existing scalar anchor for `unescape_uxxxx_scalar` is compile-checked, but S-P3 must bind it to a bbnf-simd scalar module and exact differential harness. | AArch64 NEON table/nibble path; x86 SSSE3/AVX2 nibble table if host-relevant. | `unicode_escape_hex` on `unicode_escapes`, `unicode_mixed`; P1-E lines 42, 66. | Conditionally admissible for existing unescape call sites only. Reject any decoded-string arena or scratch route under REDRESS 66-69. |
 | `number_digit_run_classify_64` | Return digit mask, first non-digit offset, and optional decimal/exponent class masks for a 64-byte number scan window. | Scalar oracle would be simple byte-class + state sketch, but no current same-wave consumer is proven. | AArch64 NEON; x86 AVX2/AVX-512. | `number_digit_scan` on `canada`, `mesh`, `numbers`, `marine_ik`; P1-E lines 55, 59, 64, 62. | Research-only / not admitted by P2-B. The hot leaf is real, but Canada typed is pre-blocked and numeric rows need caller proof; reject if proposed from isolated scan speed alone. |
 | `whitespace_skip_mask_64` | Produce ASCII whitespace mask and next non-whitespace offset for grammar-provided whitespace set. | Scalar oracle trivial; checkasm feasible. | AArch64 NEON; x86 AVX2/AVX-512. | `whitespace_skip` on `citm_catalog`, `random`, `mesh`, `marine_ik`, `instruments`; P1-E lines 54, 60, 62, 63. | Maintain-only unless paired with a same-wave direct/typed caller. Reject as a standalone primitive because `citm_catalog` is already a maintain row and W10-style regressions are barred. |
 | `structural_movemask_64` / `byte_class_from_eq_set_64` extension | Produce structural membership masks for grammar-provided byte sets; current x86 AVX-512 BW equality-set shape already exists. | Strong. `byte_class_from_eq_set_64_scalar` is the executable spec and current tests enforce bit parity. | Existing x86 AVX-512 BW wrapper; AArch64 equivalent only if scalar/checkasm/consumer exists. | `simd_movemask` on `gsoc-2018`, secondary on `twitter`, `github_events`, `update_center`; P1-E lines 46, 61. | Reject as a product wave unless the consumer is typed-root/direct-output work, not W3. Current P1-C says structural scan speed alone cannot reopen W3. |
-| `mask_next_and_emit_positions_64` | Fuse next-set-bit and bulk position emission for dense masks while preserving canonical tape offset writes. | Existing scalar oracles for `bitmap_next_set_bit_scalar` and `bulk_emit_positions_64_scalar` exist; fused shape would need a new scalar oracle. | AArch64 NEON/CSSC CTZ if available; x86 BMI2/AVX2. | Secondary bit/emit leaves on structural and unicode rows; P1-E records trailing-zero visibility on `unicode_basic` and movemask visibility on `gsoc-2018`. | Usually reject for SK-V10. REDRESS already pre-blocks next-bit bulk consumer and sidecar routes; admit only if a live direct/typed consumer avoids any second source scan. |
+| `mask_next_and_emit_positions_64` | Fuse next-set-bit and bulk position emission for dense masks while preserving canonical tape offset writes. | Existing scalar oracles for `bitmap_next_set_bit_scalar` and `bulk_emit_positions_64_scalar` exist, but the fused shape is not S-P3 eligible. | AArch64 NEON/CSSC CTZ if available; x86 BMI2/AVX2. | Demoted to REDRESS-blocked inventory: no accepted SK-V10 P1 hot-leaf class plus live direct/typed consumer currently justifies it. | Reject for SK-V10. REDRESS already pre-blocks next-bit bulk consumer and sidecar routes. |
 | `allocation_elision_string_materializer` | Not a SIMD primitive; changes direct field materialization semantics or output contract. | Scalar reference would be product-level, not bbnf-simd. | N/A. | `alloc` on `y_string_unicode`; P1-E lines 47, 84-88. | Reject from P2-B. P1-C shows eager decode is slower, and REDRESS 66-69 exhaust direct source-hook/scratch families under the current digest workload. Route to P2-D/P2-E if the output contract changes. |
 | `array_object_walk_dispatch_hint` | Not an ASM primitive; a control-path or generated-code change for object/array walking. | Product-level scalar/control oracle required outside bbnf-simd. | N/A. | `array_walk` / `object_walk` on numeric and mixed rows; P1-E lines 45, 62. | Reject from bbnf-simd admission. It may be S-P3 direct-output work, but it is not a dav1d-style leaf kernel unless reduced to a grammar-neutral byte/mask primitive with a same-wave consumer. |
 

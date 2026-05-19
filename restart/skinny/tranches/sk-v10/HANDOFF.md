@@ -3,10 +3,12 @@
 Date: 2026-05-19.
 
 Status: S-P1 Profile closed after V1 hardening under
-`HARDENING-S-P1-V1-CONSOLIDATED`. W3 union substrate is retired as falsified.
-The primary JSON frontier is `direct_to_struct`; typed product-plane
-generalization is the bounded second route; parse-only SOTA is retired from the
-close target. SK-V10 is ready for S-P2 Research.
+`HARDENING-S-P1-V1-CONSOLIDATED`. S-P2 Research closed after V1 hardening under
+`HARDENING-S-P2-V1-CONSOLIDATED`; `p2g-candidate-ledger.md` is the post-CHALLENGE
+candidate-pool authority. W3 union substrate is retired as falsified. The
+primary JSON frontier is `direct_to_struct`; typed product-plane generalization
+is the bounded second route; parse-only SOTA is retired from the close target.
+SK-V10 is ready for S-P3 Synthesis-Plan.
 
 ## 1. Read First
 
@@ -33,6 +35,14 @@ close target. SK-V10 is ready for S-P2 Research.
 21. `restart/skinny/tranches/sk-v10/research/p1/p1e-hot-leaf-attribution.md`
 22. `restart/skinny/tranches/sk-v10/research/p1/p1f-results-delta.md`
 23. `restart/skinny/tranches/sk-v10/research/p1/hardening/HARDENING-S-P1-V1-CONSOLIDATED.md`
+24. `restart/skinny/tranches/sk-v10/research/p2/p2a-sota-teardown.md`
+25. `restart/skinny/tranches/sk-v10/research/p2/p2b-dav1d-process.md`
+26. `restart/skinny/tranches/sk-v10/research/p2/p2c-arch-esoterica.md`
+27. `restart/skinny/tranches/sk-v10/research/p2/p2d-substrate-tape.md`
+28. `restart/skinny/tranches/sk-v10/research/p2/p2e-parse-that-gaps.md`
+29. `restart/skinny/tranches/sk-v10/research/p2/p2f-grammar-neutral.md`
+30. `restart/skinny/tranches/sk-v10/research/p2/p2g-candidate-ledger.md`
+31. `restart/skinny/tranches/sk-v10/research/p2/hardening/HARDENING-S-P2-V1-CONSOLIDATED.md`
 
 ## 2. Current State
 
@@ -63,10 +73,9 @@ Current `skinny/RESULTS.md` state:
 
 ## 4. Next Move
 
-1. Dispatch S-P2 Research, grounded in the accepted S-P1 profile packet.
-2. Dispatch S-P3 to author a measurable SK-V10 `SPEC.md` and
+1. Dispatch S-P3 to author a measurable SK-V10 `SPEC.md` and
    `DISPATCH-PROMPT.md`.
-3. Implement source waves only after their fresh entry gates pass.
+2. Implement source waves only after their fresh entry gates pass.
 
 ## 5. Refusal Conditions
 
@@ -84,6 +93,6 @@ Refuse dispatch if a requested wave:
 
 ## 6. Close Posture
 
-SK-V10 Alpha is closed. The next live work is S-P1 Profile. No source
-implementation is authorized before S-P3 names owner paths, gates, and revert
-protocol.
+SK-V10 Alpha, S-P1 Profile, and S-P2 Research are closed. The next live work is
+S-P3 Synthesis-Plan. No source implementation is authorized before S-P3 names
+owner paths, gates, and revert protocol.

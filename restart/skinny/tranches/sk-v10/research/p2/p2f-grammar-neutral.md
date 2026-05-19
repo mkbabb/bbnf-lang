@@ -7,6 +7,15 @@ Output: this file.
 P1 hot-leaf antecedents: `string_tiny_scan`, `string_full_scan`, `string_escape`, `unicode_escape_hex`, `number_digit_scan`, `number_scan`, `whitespace_skip`, `direct_struct`, `array_walk`, `object_walk`, `simd_movemask`, and `alloc`.
 Lock surface: Lock 14, with Lock 1 refusal checks where a candidate could reopen W3 or a parallel substrate.
 
+## V1 Challenge Fold
+
+`p2g-candidate-ledger.md` is the post-CHALLENGE S-P3 eligibility authority.
+This file supplies Lock 14 verdicts; it does not by itself make a candidate
+row-moving. `Comparator / telemetry refresh` is gate-only evidence schema, not
+a behavior or primitive candidate because it has no S-P1 hot-leaf antecedent.
+`instruments` typed admission remains a JSON product row only and cannot be
+cited as CSS/Sheets/BBNF-self proof.
+
 ## §1 — Findings (concrete; file:line on bbnf claims, citation on external claims)
 
 1. Lock 14 is the governing test. Generic crates must carry zero grammar-specific modules, public types, feature flags, or `match grammar` arms; per-grammar deviations belong in grammar source, metadata, or generated per-grammar runtime output only (`restart/locks/LOCKS.md:78`). Alpha-E repeats this as a hard SK-V10 gate: generic-crate, codegen, or runtime-outside-JSON edits require named CSS L4 / Sheets / BBNF-self proof, and JSON-only wins do not prove the generator thesis (`restart/skinny/tranches/sk-v10/research/alpha/alpha-E-candidate-shortlist.md:19-21`).

@@ -31,6 +31,11 @@ Lock surface: Lock 1 primary; Lock 14 secondary where any contract surface must 
 - Scalar-ref status: existing scalar reference is the current `TapeBuilder`/view path plus materialization report. A future micro-proof must compare logical bytes, allocated bytes, flag bytes, payload bytes, and Track 1/Track 2 row Mbps against the current report before integration.
 - Arch: scalar memory/layout contract; architecture-specific prefetch or store hints belong to P2-C/P2-E only after a same-host microbench.
 - P1 antecedent: capacity pressure is grounded in lazy materialization ratios from `skinny/RESULTS.md:95` through `skinny/RESULTS.md:141`, not in a new hot-leaf symbol. Therefore this is a contract surface, not an optimization primitive by itself.
+- V1 fold: C1 is proof-only / invariant-only and is not S-P3 primitive
+  shortlisting authority. `BBNF_CAPACITY_PLAN=exact|oneshot-simd` and any
+  `scan_structurals` capacity pre-scan are diagnostic/env-only for SK-V10 row
+  movement unless a later accepted CH5 change explicitly admits a second source
+  pass. Row movement uses the default one-pass production plan.
 
 ### C2 — Direct Product-Plane Contract
 
@@ -41,14 +46,30 @@ Lock surface: Lock 1 primary; Lock 14 secondary where any contract surface must 
 
 ### C3 — Existing-Substrate Container Walk Contract
 
-- Shape: specialize generated direct object/array walk and scalar-in-container sink calls without changing retained tape shape. The contract is "same source cursor, same sink event stream, no retained sidecar." This is the admissible substrate-adjacent target for `array_walk` and `object_walk`.
+- Shape: specialize generated direct object/array walk and scalar-in-container
+  calls without changing retained tape shape. The admissible contract is "same
+  source cursor, exact named consumer plane, no retained sidecar." The consumer
+  plane must be one of: retained `TapeBuilder` offset writes, generated direct
+  `JsonSink` callbacks, real typed generated `DirectParser` field writers, or
+  independent hand Track 2 parser/oracle. These planes are not interchangeable.
 - Scalar-ref status: current hand direct parser is the scalar oracle for direct digest; retained parse Track 2 remains the oracle for retained tape rows. Any S-P3 primitive must have a checkasm-style scalar reference and a same-wave generated consumer.
 - Arch: scalar first; SIMD/ASM only if P2-C/P2-E prove a grammar-neutral caller primitive.
-- P1 antecedent: `array_walk` / `object_walk` on `canada`, `mesh`, `marine_ik`, `citm_catalog`, and `instruments` in P1-E (`restart/skinny/tranches/sk-v10/research/p1/p1e-hot-leaf-attribution.md:45`, `restart/skinny/tranches/sk-v10/research/p1/p1e-hot-leaf-attribution.md:60`).
+- P1 antecedent: `array_walk` / `object_walk` on `canada`, `mesh`,
+  `marine_ik`, `citm_catalog`, and `instruments` in P1-E
+  (`restart/skinny/tranches/sk-v10/research/p1/p1e-hot-leaf-attribution.md:45`,
+  `restart/skinny/tranches/sk-v10/research/p1/p1e-hot-leaf-attribution.md:59`,
+  `:62`, `:63`) and P1-B row anchors
+  (`restart/skinny/tranches/sk-v10/research/p1/p1b-samply-mode-2.md:80-81`,
+  `:85`, `:88`, `:89`).
 
 ### C4 — Existing-Substrate String/Unicode Lazy Decode Contract
 
-- Shape: keep escaped-string work behind the current source-span and flag contract; improve only the string/escape leaf consumed by direct or retained views. No decoded scratch column, semantic-fact sidecar, receiver shortcut, or eager decode plane is admissible without a material differential.
+- Shape: keep escaped-string work behind the current source-span and flag
+  contract; improve only the string/escape leaf consumed by the exact named
+  direct, typed, or retained caller. No decoded scratch column, semantic-fact
+  sidecar, receiver shortcut, or eager decode plane is admissible without a
+  material differential. Direct digest movement cannot admit typed rows, and
+  typed product parity cannot admit direct digest rows.
 - Scalar-ref status: scalar reference exists in `parse-that-regex` string/unescape paths and current direct Track 2 string handling. A future primitive must prove byte-exact parity against that scalar path and avoid eager decoded-value materialization.
 - Arch: scalar + optional SIMD/string primitive; architecture selection belongs to P2-C/P2-E.
 - P1 antecedent: `string_full_scan`, `string_escape`, `unicode_escape_hex`, and `alloc` on `unicode_mixed`, `unicode_escapes`, and `y_string_unicode` (`restart/skinny/tranches/sk-v10/research/p1/p1e-hot-leaf-attribution.md:41`, `restart/skinny/tranches/sk-v10/research/p1/p1e-hot-leaf-attribution.md:65`, `restart/skinny/tranches/sk-v10/research/p1/p1e-hot-leaf-attribution.md:84`). P1-C rejects eager decode as 1.93x to 5.71x slower (`restart/skinny/tranches/sk-v10/research/p1/p1c-samply-mode-3.md:77`).

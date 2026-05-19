@@ -30,6 +30,17 @@ is floored uniformly — `citm_catalog` `28631 → 28630`, `numbers`
 `17597 → 17596`. The G-Gate enumerates `G-W4b-1-CODEC-HARNESS` /
 `G-W4b-2-CODEC` / `G-W4b-3-CODEC-BINDINGS` in place of `G-W4b-CODEC`.
 
+§0 V4 fold footer — REDRESS 98 supersession. W3 is retired as a
+falsified hypothesis, not blocked pending another implementation. REDRESS 96
+and REDRESS 97 measured faithful correctness-green union-substrate
+implementations and both missed every W3 must-improve row plus every W10b
+maintain floor; CHALLENGE V4 rejected class-lane-only as a paper-close. The
+old cascade-lock is abrogated for SK-V9. W4 no longer dispatches as a W3 union
+consumer; any surviving W4 work must be re-planned against existing
+offset-tape/string/unescape call sites with its own scalar reference, checkasm,
+same-wave consumer, W10b maintain gate, and REDRESS 98 pre-block. W5 is
+superseded by Pass Alpha dispatch for SK-V9 -> SK-V10.
+
 ---
 
 # SK-V9 Dispatch Prompt
@@ -44,10 +55,11 @@ G-Alpha is closed. W0 telemetry-lock is closed under
 six-of-six lenses against the fresh PMU table at
 `/tmp/skv9-xctrace-v3/pmu_rows.tsv`; `G-S-P1-RERUN-CONVERGED` is
 recorded PASS. S-P2 Research converged; S-P3 distilled the six
-interventions into the C1..C8 shortlist and sequenced them W1-W5. The
-behaviour waves are dispatchable in the SPEC Section 2 dependency
-order. A wave is dispatch authority only after its own SPEC entry gate
-passes.
+interventions into the C1..C8 shortlist and sequenced them W1-W5. W1 and W2
+closed; W3 is now retired by REDRESS 98. The only current dispatch authority is
+the REDRESS 98 resequence: typed-plane work and existing-substrate W4 work may
+advance only after fresh SPEC/Alpha gates are written. A historical W3 or old
+cascade-lock entry gate is not dispatch authority.
 
 ## Required Reading
 
@@ -71,14 +83,17 @@ Read in order:
 11. The S-P2 report owning the dispatched wave:
     - W1 → `research/p2/skv9-p2-C-apache-citm-admission.md`.
     - W2 → `research/p2/skv9-p2-B-retained-grammar-proof.md`.
-    - W3 → `research/p2/skv9-p2-A-union-event-model.md` +
-      `skv9-p2-D-aarch64-asm-opportunities.md` §5.
-    - W4a → `research/p2/skv9-p2-D-aarch64-asm-opportunities.md` §4.
+    - W3 → retired; read `skinny/REDRESS.md` entries 96-98 and
+      `research/skv9-W3-challenge-v4.md` as pre-block evidence.
+    - W4a → `research/p2/skv9-p2-D-aarch64-asm-opportunities.md` §4,
+      re-scoped to the existing string-scanner call site only.
     - W4b-1 / W4b-2 / W4b-3 → `research/p2/skv9-p2-E-unicode-escape-codec.md`
       (§7.1 eleven-slice table — W4b-1 = S1/S6, W4b-2 = S2/S3/S5/S7/S8/S11,
       W4b-3 = S4/S9/S10) + `skv9-p2-D-aarch64-asm-opportunities.md` §3.
-    - W4c → `research/p2/skv9-p2-D-aarch64-asm-opportunities.md` §5.3.1.
-    - W4d → `research/p2/skv9-p2-D-aarch64-asm-opportunities.md` §4.4.
+    - W4c → retired with W3 unless a future Alpha/S-P3 contract names a
+      non-union consumer.
+    - W4d → `research/p2/skv9-p2-D-aarch64-asm-opportunities.md` §4.4,
+      re-scoped to any admitted existing-substrate W4a consumer.
 12. `restart/skinny/tranches/sk-v9/research/skv9-W0-close.md`.
 13. `skinny/RESULTS.md`.
 14. `skinny/REDRESS.md`.
@@ -90,43 +105,22 @@ Read in order:
 | W0 | Section 3 | SK-V9-open Telemetry-Lock Recovery | — | Closed | — |
 | W1 | Section 4 | Apache/CITM Measured Typed-Row Admission | C1 | Dispatchable — independent | ≤90 min |
 | W2 | Section 5 | Retained Class/Event Grammar + `ValueRef` Proof | C2 | Conditional on W1 close + proof CHALLENGE | ≤90 min |
-| W3 | Section 6 | Union Event-Model — Class-Column Substrate | C3 (+ §5 chain) | Conditional on W2 proof acceptance | ≤90 min wall / redress 75-min target, ≤110-min CHALLENGE-gated extension |
-| W4a | Section 7.1 | 32-byte String-Block Widening | C5 | Conditional on W3 close (cascade-lock) | ≤90 min wall / 75-min redress |
-| W4b-1 | Section 7.2.1 | `escape_codec` Scalar Reference + Checkasm Harness | C4 (S1/S6) | Conditional on W3 close — lands FIRST, blocks the W4b chain | ≤90 min wall / 75-min redress |
-| W4b-2 | Section 7.2.2 | Fixed-Width Codec Bodies + JSON Consumer | C4 (S2/S3/S5/S7/S8/S11) | PAIRED with W4a; conditional on W4b-1 close — the row-moving sub-wave | ≤90 min wall / 75-min redress |
+| W3 | Section 6 | Union Event-Model — Class-Column Substrate | C3 (+ §5 chain) | **Retired by REDRESS 98 — no further SK-V9 dispatch** | — |
+| W4a | Section 7.1 | 32-byte String-Block Widening | C5 | Replan required: existing string-scanner call site; no W3 dependency | ≤90 min wall / 75-min redress |
+| W4b-1 | Section 7.2.1 | `escape_codec` Scalar Reference + Checkasm Harness | C4 (S1/S6) | Replan required: existing unescape/codec substrate — lands FIRST if retained | ≤90 min wall / 75-min redress |
+| W4b-2 | Section 7.2.2 | Fixed-Width Codec Bodies + JSON Consumer | C4 (S2/S3/S5/S7/S8/S11) | PAIRED with existing-substrate W4a if retained; conditional on W4b-1 close | ≤90 min wall / 75-min redress |
 | W4b-3 | Section 7.2.3 | Variable-Width Const-Generic Bindings + Codegen | C4 (S4/S9/S10) | Conditional on W4b-2 close | ≤90 min wall / 75-min redress |
-| W4c | Section 7.3 | SHA3 EOR3 Prefix-XOR Ladder | C6 | Conditional on W3 close | ≤90 min wall / 75-min redress |
-| W4d | Section 7.4 | CSSC CTZ String-Mask Consumer | C7 | Conditional on W3 close + W4a close | ≤90 min wall / 75-min redress |
-| W5 | Section 8 | Close And Alpha Feedback | — | Conditional on W1-W4 dispositions | ≤90 min |
+| W4c | Section 7.3 | SHA3 EOR3 Prefix-XOR Ladder | C6 | Retired with W3 unless a future non-union consumer is specified | ≤90 min wall / 75-min redress |
+| W4d | Section 7.4 | CSSC CTZ String-Mask Consumer | C7 | Replan required after W4a; no union-substrate consumer | ≤90 min wall / 75-min redress |
+| W5 | Section 8 | Close And Alpha Feedback | — | Superseded by Pass Alpha dispatch | ≤90 min |
 
-The dependency order is firm (`HARDENING-S-P2-CONVERGED.md`,
-P3-B §2-§3): W1 is fully independent and lands first among behaviour
-waves; the W2 proof unblocks W3; the W3 union substrate is the
-cascade-locked consumer base for the W4 sub-waves. W4 is **sub-waved**
-— W4a, the three codec sub-waves W4b-1/W4b-2/W4b-3, W4c, and W4d are
-six separate triumvirates. The sub-wave structure exists because a
-monolithic codec+string-block+ASM wave is ~1,595-1,860 LOC and cannot
-complete in a 75-min redress (SPEC §2.2); the codec alone is ~1,045
-net LOC across eleven P2-E §7.4 slices, so the codec is itself split
-three ways along the slice seams. W3 is not sub-waved — the union
-substrate and its sole SIMD producer are one cascade — but at ~465-635
-hand-equivalent + ~120 regen it plausibly overruns the 75-min redress;
-W3 carries a CHALLENGE-gated redress extension to ≤110 min (SPEC §2.2,
-§6). If a requested wave's SPEC entry gate is not PASS, refuse dispatch
-and record why. A conditional section is not dispatch authority until
-its entry gate passes.
-
-**The cascade-lock (SPEC §2.2).** P2-D §0 forbids a P2-D kernel
-landing *without the union substrate existing*. This is satisfied by
-W3 preceding the W4 sub-waves — by the time any W4 sub-wave dispatches
-the W3 union class column is landed and live. It does NOT mean one
-monolithic wave. Each W4 sub-wave's redress commit wires its kernel
-into the already-landed W3 union **in the same commit**: the consumer
-exists, the caller is wired same-commit, no orphan ships. The
-row-moving codec sub-wave **W4b-2** is additionally **strictly paired
-with W4a** — it dispatches only with W4a landed, because neither the
-codec nor the string-block widening closes the four
-uncloseable rows alone (P2-E §6.4).
+REDRESS 98 supersedes the original dependency order. W1 is closed. W2 is
+closed. W3 is retired and must not be forced a fourth time under a renamed
+gate. The old cascade-lock is void because its substrate was the falsified
+candidate. W4a/W4b/W4d may be reintroduced only by a fresh plan against
+existing call sites; W4c is retired with W3 unless a new non-union consumer is
+specified. If a requested wave cites the old W3 cascade-lock, refuse dispatch
+and record REDRESS 98 as the reason.
 
 ## Per-Wave Triumvirate Protocol
 
@@ -136,9 +130,9 @@ Every wave — and every W4 sub-wave — is one triumvirate per
 ### Phase 1 — Research (read-only)
 
 - Up to six parallel research agents on disjoint scope rows; 30 min
-  cap each. For W1-W4 the S-P2 report owning the wave plus the P3-A..E
-  cohort is the archived research; new research lands only if a wave
-  blocker is discovered.
+  cap each. For admitted W1/W2 and any re-scoped W4 work, the S-P2 report
+  owning the wave plus the P3-A..E cohort is archived research; new research
+  lands only if a wave blocker is discovered.
 - Research writes one artefact per agent under
   `restart/skinny/tranches/sk-v9/research/` and edits no source.
 - Commit: `docs(sk-v9-wave{W}-research): archive {scope} cohort`.
@@ -155,21 +149,16 @@ Every wave — and every W4 sub-wave — is one triumvirate per
 - Plan agents edit no source.
 - Commit: `docs(sk-v9-wave{W}-plan): select {intervention}`.
 
-### Phase 2.5 — CHALLENGE (mandatory for W2, W3, W4a, W4b-1, W4b-2, W4b-3, W4c, W4d)
+### Phase 2.5 — CHALLENGE (mandatory for W2 and any re-scoped W4 source wave)
 
 - Six-lens adversarial review of the plan per `SKINNY-TRIUMVIRATE.md`
   §4 (CH1 correctness, CH2 generality/Lock 14, CH3 regression/REDRESS,
   CH4 cost, CH5 hidden coupling, CH6 anti-paper-close). 90 min wall.
-- CHALLENGE is mandatory for W2 (first-of-class proof surface), W3
-  (substrate-touching), and each of W4a/W4b-1/W4b-2/W4b-3/W4c/W4d
-  (each lands a SIMD/ASM kernel or its parity harness). CHALLENGE is
-  optional for W1 (mechanical baseline-whitelist expansion) and skipped
-  for W5 (docs reconciliation).
-- The W3 CHALLENGE additionally adjudicates the redress-extension: if
-  the W3 plan's slice estimate shows the union substrate + the P2-D §5
-  SIMD chain cannot co-land in the 75-min redress sub-cap, the
-  CHALLENGE may grant a single extension to ≤110 min, recorded in the
-  CHALLENGE disposition (SPEC §2.2, §6).
+- CHALLENGE is mandatory for any re-scoped W4 source wave because each lands a
+  SIMD/ASM kernel, parity harness, or production caller. CHALLENGE is optional
+  for W1 and skipped for pure docs reconciliation.
+- W3 CHALLENGE authority is closed by CHALLENGE V4 and REDRESS 98. No new W3
+  CHALLENGE may grant a redress extension in SK-V9.
 - A REJECT disposition routes the wave back to plan; the wave does not
   reach redress until CHALLENGE accepts.
 
@@ -178,12 +167,13 @@ Every wave — and every W4 sub-wave — is one triumvirate per
 - One redress agent — single implementation thread per wave; no
   shared-file races. 75-min redress cap (60 impl + 15 measure). Each W4
   sub-wave — including each of W4b-1/W4b-2/W4b-3 — gets its own 75-min
-  redress; that is the point of the sub-wave structure. W3 alone may
-  carry a CHALLENGE-granted extension to ≤110 min (above).
+  redress; that is the point of the sub-wave structure. The old W3 extension
+  authority is closed by REDRESS 98.
 - The redress agent implements only the SPEC Section's owner paths;
-  any other source path returns REVISE before editing. For a W4
-  sub-wave it wires the kernel into the already-landed W3 union
-  substrate in the same commit. It produces a fresh Criterion capture
+  any other source path returns REVISE before editing. For a re-scoped W4
+  sub-wave it wires the kernel into an existing hot-path caller in the same
+  commit; the W3 union substrate is not a valid caller. It produces a fresh
+  Criterion capture
   with `RUSTFLAGS="-C target-cpu=native"`, measures against the SPEC
   Section's exit gate, and per `SKINNY-TRIUMVIRATE.md` §8 confirms the
   same-wave consumer call shows in the `samply` symbol path on the
@@ -194,28 +184,26 @@ Every wave — and every W4 sub-wave — is one triumvirate per
   — REDRESS entry with per-row Mbps measurement evidence + the
   reverted patch saved at `/tmp/skv9-wave{W}-rejected.patch`.
 
-A failed wave still produces three commits. The next wave starts fresh.
-For W4b-2 a per-row NEAR-FAIL / FAIL recorded honestly is not a wave
-reject — it is a measured admit of the codec primitive with the row's
-GO status withheld; see Falsifiability Gates.
+A failed wave still produces three commits. The next wave starts fresh. The
+old W4b-2 NEAR-FAIL / FAIL rule is historical until a fresh existing-substrate
+gate re-admits it.
 
 ## Falsifiability Gates
 
-Every wave's falsifiability gate is the exit gate stated in its SPEC
-section — `G-W1-TYPED-ADMISSION` (§4), `G-W2-RETAINED-PROOF` (§5),
-`G-W3-UNION-SUBSTRATE` (§6), `G-W4a-STRING-BLOCK` (§7.1),
-`G-W4b-1-CODEC-HARNESS` (§7.2.1), `G-W4b-2-CODEC` (§7.2.2),
-`G-W4b-3-CODEC-BINDINGS` (§7.2.3), `G-W4c-EOR3` (§7.3), `G-W4d-CTZ`
-(§7.4), `G-W5-CLOSE` (§8). The gates are not restated here; the SPEC
-is the single source. Each gate names corpus rows and Mbps thresholds;
-every threshold derives from the live `skinny/RESULTS.md` SK-V9-open
-baseline. An unmeasurable gate is a REVISE.
+Live or retired gates are recorded in the SPEC — `G-W1-TYPED-ADMISSION` (§4),
+`G-W2-RETAINED-PROOF` (§5), `G-W3-UNION-SUBSTRATE` (§6, retired by REDRESS 98),
+`G-W4a-STRING-BLOCK` (§7.1), `G-W4b-1-CODEC-HARNESS` (§7.2.1),
+`G-W4b-2-CODEC` (§7.2.2), `G-W4b-3-CODEC-BINDINGS` (§7.2.3),
+`G-W4c-EOR3` (§7.3), `G-W4d-CTZ` (§7.4), and `G-W5-CLOSE` (§8, superseded by
+Pass Alpha). The SPEC is the single source. Any future re-scoped wave must name
+corpus rows and Mbps thresholds from the live `skinny/RESULTS.md` baseline; an
+unmeasurable gate is a REVISE.
 
 Load-bearing gate facts the redress agent must carry into measurement:
 
 - **The W10b six-row block** (`canada` ≥ 15866, `citm_catalog` ≥
   28630, `instruments` ≥ 15865, `marine_ik` ≥ 11831, `mesh` ≥ 12186,
-  `numbers` ≥ 17596) is a binding maintain gate on W3 and on every W4
+  `numbers` ≥ 17596) remains a binding maintain gate on every re-scoped W4
   sub-wave that touches the parse loop or an aarch64 SIMD kernel. Each
   floor is `floor(today × 0.98)` or `ceil(sonic_strict / 1.10)`,
   whichever higher; the `today × 0.98` leg is floored uniformly across
@@ -224,29 +212,13 @@ Load-bearing gate facts the redress agent must carry into measurement:
   so `floor(today × 0.98)` = 15866 binds — there is no 15871 sonic
   floor; that figure was a stale SK-V8-era carryover and is corrected
   here. Any one row below its floor falsifies the wave.
-- **The codec admits zero rows alone — only W4b-2 moves rows.** P2-E
-  §6.4 is binding: the codec alone closes none of `unicode_escapes`,
-  `y_string_unicode`, `unicode_mixed`, `gsoc-2018`. W4b-1 (scalar
-  reference + checkasm harness) and W4b-3 (variable-width bindings +
-  codegen) carry no row gate. The row-moving sub-wave is **W4b-2**, and
-  it admits per-row, on measurement: `unicode_escapes` ≥ 16319
-  (NEAR-FAIL 94.5% projected), `y_string_unicode` ≥ 8270 (NEAR-FAIL
-  94.8%), `unicode_mixed` ≥ 12338 (FAIL 63.7% on the codec alone —
-  admits only on the *combined* W4a + W4b-2 measured Mbps), `gsoc-2018`
-  ≥ 21963 (no-regression basis, `ceil(live 22184 × 0.99)`). A row that
-  NEAR-MISSES stays `S / NO-GO`, its measured codec contribution is
-  recorded in REDRESS, and the sub-wave still admits the codec as a
-  checkasm-verified primitive. **W4 may close with zero strict
-  unicode-row admissions — that is an honest measured outcome, not a
-  paper-close.** W4b-2 is reverted wholesale only on a checkasm parity
-  failure or a W10b WIN-block regression.
-- **`gsoc-2018` does not bind W3.** W3 falsifies only if the
-  structural-rediscovery hot leaf does not drop to ≤ 5% self-time.
-- **The W3 must-improve rows** are the four GO-target structural-dense
-  rows: `twitter` ≥ 17685, `apache_builds` ≥ 14124, `update_center` ≥
-  14370 (`ceil(15806/1.10)`), `distinct_values` ≥ 15731 (each
-  `ceil(sonic_strict / 1.10)`), with `consume_structural` ≤ 5% and
-  `at_cursor` ≤ 1% self-time.
+- **The codec admits zero rows alone.** P2-E §6.4 remains evidence: the codec
+  alone closes none of `unicode_escapes`, `y_string_unicode`, `unicode_mixed`,
+  or `gsoc-2018`. Any future W4b-2 row-moving rule must be re-gated against an
+  existing unicode-unescape/sink caller and must keep the W10b maintain block.
+- **W3 is retired.** The prior W3 must-improve rows and self-time clauses are
+  retained as REDRESS 96/97 evidence, not as a live gate. Any attempt to reopen
+  the same union-substrate thesis is pre-blocked by REDRESS 98.
 
 ## Pre-Blocked Routes
 
@@ -259,16 +231,16 @@ and pass CHALLENGE before redress.
 The five material differentials each REDRESS-adjacent wave must clear
 (P3-E §3):
 
-- **W3 (union) vs REDRESS 92 + 50-72** — the union splits cursor and
-  class; the class column is the tape's own column at the existing
-  `emit_plain_offset` site, not a sidecar; the SIMD index is consumed
-  by move (Lock 1 cardinality stays at one). W3 implements the routed
-  precursor, gated behind the W2 proof.
+- **W3 (union) vs REDRESS 92 + 50-72** — retired by REDRESS 98. The prior
+  material differential (co-indexed class column, no `UnionTape`, SIMD index
+  consumed by move) was implemented and measured below every W3/W10b floor;
+  it is now pre-block evidence, not a route to redress.
 - **W4b (codec, W4b-1/W4b-2/W4b-3) vs REDRESS 82** — the 4-quartet
-  batched path is the union-substrate path, not a parser-owned
-  per-quartet classifier; `escape_codec_hex_unit` is a const-generic
-  primitive with five bindings; the gate is `parse_only` only. The
-  pre-block is cleared at the row-moving sub-wave W4b-2.
+  batched path may no longer cite the retired union substrate; any retained codec
+  plan must name an existing unicode-unescape/sink caller, keep
+  `escape_codec_hex_unit` as a const-generic primitive with five bindings, and
+  pass CHALLENGE before source redress. The old pre-block is not cleared until
+  the row-moving sub-wave W4b-2 is re-gated without W3.
 - **W4c (EOR3) vs REDRESS 88** — EOR3 is a 3-input bitwise XOR
   (1-cycle), not PMULL (4-cycle carryless multiply); it accelerates
   the scalar ladder REDRESS 88 *kept*, gated by `FEAT_SHA3`, scalar
@@ -289,8 +261,7 @@ The 13 hard pre-blocks no SK-V9 wave reopens under any framing
    differential is the only admissible path, Apache + CITM only.
 2. `canada/real_typed_struct` without full-fixture DirectBuild-vs-serde
    checksum proof (REDRESS 91, 80).
-3. W3 structural implementation without the W2 retained-grammar +
-   `ValueRef` proof accepted (REDRESS 92).
+3. W3 structural implementation under any union-substrate framing (REDRESS 98).
 4. W4 scalar-parent / parent-digest fold (REDRESS 93).
 5. REDRESS 73 helper-shape transfer across the generated/hand boundary.
 6. Sidecar / parallel-substrate class (REDRESS 50, 51, 53, 60-72, 92):
@@ -319,8 +290,8 @@ the implementation agent:
 - No primitive ships without a scalar reference, a checkasm
   differential test, and a same-wave hot-path consumer landed in the
   same commit. An orphan kernel is a REJECT — the SK-V5 failure shape.
-  For a W4 sub-wave the consumer is the already-landed W3 union
-  substrate, wired same-commit.
+  For a re-scoped W4 sub-wave the consumer is an existing hot-path caller,
+  wired same-commit.
 - No new outcome variant (the enum is the 10-identifier W0-admissible
   set `A C G I J K L M N-direct S`) and no new telemetry column (the
   schema is the 36-identifier P3-D set). A wave that adds either fails
@@ -334,9 +305,8 @@ the implementation agent:
   without a bench-row threshold is a paper-close (CH6).
 - Every generic-crate edit carries a CSS L4 / Sheets / BBNF-self
   non-JSON proof (SPEC §2.1).
-- Substrate cardinality stays at one across every wave; the W3 class
-  column is a co-indexed column on the existing offset tape, not a new
-  tape.
+- Substrate cardinality stays at one across every wave; REDRESS 98 blocks a new
+  union/event substrate in SK-V9.
 - Research, plan, CHALLENGE, redress, and close are distinct commits;
   same-commit role merger was the SK-V5 failure pattern.
 
@@ -354,23 +324,16 @@ to the user.
 
 ## Convergence And Escalation
 
-The SK-V9 bracket converges when every SPEC wave — W1, W2, W3, W4a,
-W4b-1, W4b-2, W4b-3, W4c, W4d, W5 — has admitted or rejected with
-measurement, the §0.1 close condition holds (including clause 6: W4
-may close with zero strict unicode-row admissions if every uncloseable
-row records NEAR-FAIL / FAIL honestly), and the five close documents
-agree (`SKINNY-TRIUMVIRATE.md` §3). Convergence triggers
-`G-ALPHA-SK-V9` and the Pass Alpha dispatch for the SK-V9 → SK-V10
-synthesis. The bracket is W0 + W1-W3 + the six W4 sub-waves + W5 = 11
-brackets, inside the ≤12 skinny-bracket ceiling.
+The SK-V9 bracket now converges by REDRESS 98 supersession: W0, W1, and W2 are
+closed; REDRESS 96 and REDRESS 97 reject the two faithful W3 implementations;
+CHALLENGE V4 rejects class-lane-only; REDRESS 98 retires W3 and supersedes the
+old W4/W5 cascade. The five close documents must agree that no further SK-V9
+W3 source redress is authorized and that Pass Alpha is the next live action.
 
-If a wave's redress fails, the wave records a measured REDRESS reject
-and the next wave starts fresh — a rejected wave is not a bracket
-stall. A W4b-2 per-row NEAR-FAIL / FAIL recorded honestly is a measured
-admit of the codec primitive, not a wave reject. If the SK-V9 bracket
-exceeds 12 waves without convergence, the orchestrator escalates to the
-user with `BLOCKED: skinny bracket V9 exceeded 12 waves; user adjudicate
-scope or abandon`.
+If a future re-scoped wave's redress fails, the wave records a measured REDRESS
+reject and the next wave starts fresh. A W4b-2 per-row NEAR-FAIL / FAIL
+recorded honestly remains a measured admit of the codec primitive only if the
+fresh existing-substrate gate says so.
 
 A wave whose falsifiability gate cannot be made measurable, or a
 goalset row no shortlist candidate can meet, escalates to the user as a

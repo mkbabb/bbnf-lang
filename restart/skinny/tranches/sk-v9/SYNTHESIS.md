@@ -8,6 +8,12 @@ G-Alpha, and only after `G-Alpha closed` can skinny passes begin. This Pass
 Alpha output deliberately does not create `SPEC.md` or `DISPATCH-PROMPT.md`;
 the Section 4.4 wave plan is downstream skinny pass work after G-Alpha.
 
+Post-implementation note (2026-05-19): SK-V9 W1 and W2 landed; W3 was
+falsified by REDRESS 96 and REDRESS 97, then retired by REDRESS 98 after
+CHALLENGE V4 rejected class-lane-only redress. This Alpha draft is historical
+provenance for the SK-V9 contract, not authority to force W3 again. The current
+next action is `research/alpha/alpha-G-dispatch-sk-v10.md`.
+
 Authority:
 
 - `restart/prompts/pass-contracts/PASS-ALPHA.md`

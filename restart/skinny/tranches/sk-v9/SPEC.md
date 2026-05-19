@@ -40,6 +40,17 @@ maintain floors are floored uniformly (`floor(today × 0.98)`) — `citm_catalog
 `28631 → 28630`, `numbers` `17597 → 17596`. The W4a + codec pairing is
 preserved: W4a pairs with W4b-2.
 
+## §0 V4 fold footer
+
+REDRESS 98 supersedes the original W3/W4 cascade contract. REDRESS 96 and
+REDRESS 97 measured two faithful, correctness-green W3 union-substrate
+implementations and both missed every W3 must-improve row plus every W10b
+maintain floor; CHALLENGE V4 rejected the class-lane-only fallback as
+non-admissible. `G-W3-UNION-SUBSTRATE` is retired as falsified, not blocked.
+W4 no longer inherits a W3 entry gate; any surviving W4 work must be re-planned
+against existing offset-tape, string-scanner, or unicode-unescape call sites.
+W5 is replaced by Pass Alpha dispatch for the SK-V9 -> SK-V10 contract.
+
 ---
 
 # SK-V9 SPEC — Recovery + Behavior Wave Plan
@@ -55,7 +66,9 @@ license; the real PMU table lives at `/tmp/skv9-xctrace-v3/pmu_rows.tsv`.
 S-P2 Research converged six-of-six lenses and handed six interventions
 to S-P3. S-P3 distilled them into the C1..C8 shortlist, sequenced them
 W1-W5, gated each wave, bound the telemetry schema, and ledgered the
-pre-blocked routes. This SPEC is the wave plan that lands them.
+pre-blocked routes. W1 and W2 landed. W3 was then tested to destruction and
+retired by REDRESS 98. This SPEC now records the original wave plan plus the
+REDRESS 98 supersession that dispatches Alpha instead of a fourth W3 attempt.
 
 Authority:
 
@@ -83,11 +96,11 @@ Dispatch lock:
 - W0 telemetry-lock is closed: `sk-v9-open:criterion-fnv64-cd1673844eeea12f`.
 - The S-P1 rerun converged; `G-S-P1-RERUN-CONVERGED` PASS is recorded
   in `HARDENING-S-P1-CONVERGED.md`.
-- S-P2 Research converged; the six interventions are dispatchable in
-  the dependency order of Section 2.
-- No behavior wave dispatches until its own entry gate passes. A wave
-  is dispatch authority only after `G-BEHAVIOR-RELEASE` and the
-  per-wave entry gate of Section 3+ both pass.
+- S-P2 Research converged; the original six interventions were sequenced in
+  Section 2. REDRESS 98 now retires the W3 intervention and invalidates every
+  old W4 entry gate that depends on W3.
+- No behavior wave dispatches until its current entry gate passes. Historical
+  W3 or cascade-lock entry gates are not dispatch authority after REDRESS 98.
 
 ## Section 0 — Close Condition And Goalset
 
@@ -100,19 +113,19 @@ SK-V9 closes only when all of these are true:
 2. The post-W0 S-P1 rerun converged on SK-V9-open evidence and named
    fresh PMU/cycles rows for every behavior candidate — recorded
    `G-S-P1-RERUN-CONVERGED` PASS.
-3. `G-BEHAVIOR-RELEASE` passed: every behavior wave has either
-   admitted by its named row gate or rejected with REDRESS measurement.
-4. The W2 retained-grammar proof is accepted under proof-first
-   CHALLENGE; the union reopen (W3) is unblocked by it.
+3. `G-BEHAVIOR-RELEASE` is superseded for the original W1-W5 bracket:
+   W1 and W2 are admitted; W3 has two measured REDRESS rejects plus a
+   CHALLENGE reject of the only remaining materially distinct route; REDRESS 98
+   retires the W3 gate.
+4. The W2 retained-grammar proof is accepted under proof-first CHALLENGE. It
+   remains a valid proof result, but it no longer authorizes a W3 union reopen.
 5. Strict admission remains strict-vs-strict on matching output planes
    only; no row admits on stale, permissive, lossy, absent, historical,
    sidecar-only, or view-boundary evidence.
 6. The four P1-named uncloseable rows (`unicode_escapes`,
-   `unicode_mixed`, `y_string_unicode`, `gsoc-2018`) either admit by
-   the W4b conditional same-wave-pairing rule or are recorded
-   NEAR-FAIL / FAIL with the honest projection in REDRESS. W4 may close
-   with zero strict unicode-row admissions; that is a measured outcome,
-   not a paper-close.
+   `unicode_mixed`, `y_string_unicode`, `gsoc-2018`) are carried to Alpha as
+   existing-substrate candidates only. The old W4b conditional same-wave-pairing
+   rule is historical until a fresh SK-V10 gate re-scopes it without W3.
 7. The W10b six-row regression block (`canada`, `citm_catalog`,
    `instruments`, `marine_ik`, `mesh`, `numbers`) holds its maintain
    floor at every wave and sub-wave that touches the parse loop or an
@@ -122,16 +135,19 @@ SK-V9 closes only when all of these are true:
 
 ### Section 0.2 — Goalset (carried from Pass Alpha + S-P1/S-P2 evidence)
 
-The convergent S-P1 verdict (`HARDENING-S-P1-CONVERGED.md` §"Load-bearing
-diagnoses"): bbnf's parse-plane losses are **substrate-bound, not
-kernel-bound**. Four diagnoses bind the goalset:
+The original convergent S-P1 verdict (`HARDENING-S-P1-CONVERGED.md`
+§"Load-bearing diagnoses") said bbnf's parse-plane losses were
+**substrate-bound, not kernel-bound**. REDRESS 96-98 are now the load-bearing
+implementation result: the substrate-ceiling thesis does not survive
+measurement on this M5 Max host. The table below is retained as diagnosis
+provenance; row 1 is retired as an intervention target.
 
 | # | S-P1 diagnosis | Goalset target | Owning wave |
 |---|---|---|---|
-| 1 | `scan_structurals` is 0.00% self-time on every row — the SIMD stage-1 index is discarded; the parser re-discovers structural bytes scalar. | `consume_structural` ≤ 5% self-time on `twitter`, `apache_builds`; `JsonNodeKind::at_cursor` ≤ 1%. | W3 |
-| 2 | String-scanner pair (`match_tiny_plain_string` + `match_string_at_quote`) reaches 47-67% self-time on dense-key losses. | 32-byte string-block widening lifts the string-dense losses. | W4a |
-| 3 | Unicode-escape codec (`read_hex_unit_scalar` + `hex_nibble`) = 38-44% on `y_string_unicode`. | `escape_codec_hex_unit` SIMD primitive, paired with the W4a scanner widening. | W4b (W4b-1/2/3) |
-| 4 | OLS fit `ns_per_byte ≈ 1.079·(q/B) + 0.184·(n/B) + 0.051`, R²=0.371. Four LOSS rows exceed 130-460% of the per-byte budget — delimiter-only intervention is insufficient. | The four uncloseable rows need the codec AND the scanner widening; neither closes them alone (P2-E §6.4). | W4a + W4b-2 paired |
+| 1 | `scan_structurals` is 0.00% self-time on every row — the SIMD stage-1 index is discarded; the parser re-discovers structural bytes scalar. | Retired by REDRESS 98; faithful union-substrate implementations regressed uniformly. | W3 retired |
+| 2 | String-scanner pair (`match_tiny_plain_string` + `match_string_at_quote`) reaches 47-67% self-time on dense-key losses. | 32-byte string-block widening may survive only at the existing string-scanner call site. | Replan |
+| 3 | Unicode-escape codec (`read_hex_unit_scalar` + `hex_nibble`) = 38-44% on `y_string_unicode`. | `escape_codec_hex_unit` may survive only through existing unicode-unescape call sites. | Replan |
+| 4 | OLS fit `ns_per_byte ≈ 1.079·(q/B) + 0.184·(n/B) + 0.051`, R²=0.371. Four LOSS rows exceed 130-460% of the per-byte budget — delimiter-only intervention is insufficient. | Carry as Alpha evidence; any unicode/string gate must be existing-substrate and measurable without W3. | Alpha |
 
 The cheapest GO-count lift is substrate-independent: Apache/CITM
 measured typed-row admission (P3-A C1, P2-C) is a mechanical
@@ -218,7 +234,8 @@ not read by `validate_schema_v3` (schema-v3 layer) or
 The behaviour-class fields carry per-wave values, not new columns:
 
 - `same_wave_consumer_class` — `gate_only` at W0/W1; `<kernel>→<consumer>`
-  at any wave landing a kernel (W3, W4a-d).
+  at any future re-scoped kernel wave (W4a-d). W3 values are REDRESS evidence
+  only after REDRESS 98.
 - `costfacts_*` triad — `none:pre-W1` through W0/W1/W2/W3 unless a
   wave's plan demonstrates a CostFacts-driven shape choice; the row-table
   wave (W1) is explicitly not such a wave (P2-C §2.4, Lock 14).
@@ -258,12 +275,10 @@ bump `schema-v3`; they bump the per-wave `wave_id` and mint a fresh
 - No new outcome variant — the enum is the 10-identifier W0-admissible
   set (§0.x).
 - No new telemetry column — the schema is the 36-identifier set (§0.y).
-- No `UnionTape`. The W3 union event-model is a co-indexed class
-  column on the existing offset tape, not a new tape type — Lock 1
-  substrate cardinality stays at one.
+- No `UnionTape`. No new union/event substrate dispatches in SK-V9 after
+  REDRESS 98; Lock 1 substrate cardinality stays at one.
 - No new substrate surface; no public substrate API.
-- No parser-owned structural cursor or parser-owned fact slot. The W3
-  SIMD index is a transient producer consumed by move.
+- No parser-owned structural cursor or parser-owned fact slot.
 - No parallel or sidecar substrate.
 - No JSON policy in generic crates. Every generic-crate edit carries a
   non-JSON proof (Section 2.1).
@@ -292,11 +307,23 @@ bump `schema-v3`; they bump the per-wave `wave_id` and mint a fresh
 
 ## Section 2 — Wave Manifest
 
-The dependency spine is fixed by `HARDENING-S-P2-CONVERGED.md`
-§"convergent picture" and the P2-F §7.4 inter-report graph: P2-B proof
-→ P2-A union → P2-D consumers; P2-E codec conditional; P2-C fully
-independent. P3-A §3 records the cascade-sequencing constraint and the
-C1..C8 dependency graph; P3-B §2 sequences the post-W0 behaviour waves.
+**REDRESS 98 supersession.** The original W3 union-substrate gate is retired
+as falsified. Any earlier clause in this SPEC that makes W4 conditional on
+`G-W3-UNION-SUBSTRATE` is superseded by this paragraph: W4 may dispatch only
+after a fresh plan re-scopes the candidate to existing offset-tape,
+string-scanner, or unicode-unescape call sites with its own scalar reference,
+checkasm requirement, same-wave consumer, W10b maintain gate, and REDRESS 98
+pre-block. W3 is no longer an entry gate for W4 because W3 is no longer a live
+candidate; W4 also does not inherit an automatic dispatch right from W3's
+retirement.
+
+The original dependency spine from `HARDENING-S-P2-CONVERGED.md`
+§"convergent picture" and P2-F §7.4 was P2-B proof → P2-A union → P2-D
+consumers, with P2-E codec conditional and P2-C independent. REDRESS 98
+replaces that spine for current dispatch: P2-B remains admitted proof, P2-A
+union is retired, P2-C typed-plane work is the live SOTA-bearing surface, and
+P2-D/P2-E kernel work must be re-planned against existing call sites rather
+than the dead union substrate.
 
 The post-W0 sequence is **five behaviour brackets** (W1-W5), with W4
 sub-waved into four sub-waves (W4a-d). This is inside the ≤12
@@ -307,14 +334,14 @@ skinny-bracket ceiling.
 | W0 | Section 3 | SK-V9-open Telemetry-Lock Recovery | — | — | Closed | telemetry/gate/report only | — | — |
 | W1 | Section 4 | Apache/CITM Measured Typed-Row Admission | C1 | P2-C | Dispatchable — independent, no substrate dependency | ~300 hand | LOW | ≤90 min |
 | W2 | Section 5 | Retained Class/Event Grammar + `ValueRef` Proof | C2 | P2-B | Conditional on W1 close + proof-first CHALLENGE | ~425 hand, 0 generated | LOW | ≤90 min |
-| W3 | Section 6 | Union Event-Model — Class-Column Substrate | C3 (+ C8 chain) | P2-A + P2-D §5 | Conditional on W2 proof acceptance | ~265 hand + ~120 regen + ~120-220 SIMD chain + ~30-60 VEXT + ~50-90 checkasm | HIGH (CHALLENGE-gated redress extension) | ≤90 min wall / redress 75-min target, ≤110-min CHALLENGE-gated extension |
-| W4a | Section 7.1 | 32-byte String-Block Widening | C5 | P2-D §4 | Conditional on W3 close (union substrate is the consumer base) | ~145-270 hand incl. ~40-70 checkasm | MEDIUM | ≤90 min wall / 75-min redress |
-| W4b-1 | Section 7.2.1 | `escape_codec` Scalar Reference + Checkasm Harness | C4 (S1/S6) | P2-E §7.1 + P2-D §3 | Conditional on W3 close — lands FIRST, blocks the W4b chain | ~450 hand incl. ~250 checkasm | MEDIUM | ≤90 min wall / 75-min redress |
-| W4b-2 | Section 7.2.2 | Fixed-Width Codec Bodies + JSON `unescape_four_unicode_escapes` Consumer | C4 (S2/S3/S5/S7/S8/S11) | P2-E §7.1 + P2-D §3 | PAIRED with W4a; conditional on W4b-1 close — the row-moving sub-wave | ~165 net incl. −215 deletion | MEDIUM-HIGH | ≤90 min wall / 75-min redress |
+| W3 | Section 6 | Union Event-Model — Class-Column Substrate | C3 (+ C8 chain) | P2-A + P2-D §5 | **Retired by REDRESS 98 — no further SK-V9 dispatch** | rejected patches archived | FALSIFIED | — |
+| W4a | Section 7.1 | 32-byte String-Block Widening | C5 | P2-D §4 | Replan required: existing string-scanner call site only; no W3 dependency | ~145-270 hand incl. ~40-70 checkasm | MEDIUM | ≤90 min wall / 75-min redress |
+| W4b-1 | Section 7.2.1 | `escape_codec` Scalar Reference + Checkasm Harness | C4 (S1/S6) | P2-E §7.1 + P2-D §3 | Replan required: existing unescape/codec substrate; lands FIRST if retained | ~450 hand incl. ~250 checkasm | MEDIUM | ≤90 min wall / 75-min redress |
+| W4b-2 | Section 7.2.2 | Fixed-Width Codec Bodies + JSON `unescape_four_unicode_escapes` Consumer | C4 (S2/S3/S5/S7/S8/S11) | P2-E §7.1 + P2-D §3 | PAIRED with existing-substrate W4a if retained; conditional on W4b-1 close | ~165 net incl. −215 deletion | MEDIUM-HIGH | ≤90 min wall / 75-min redress |
 | W4b-3 | Section 7.2.3 | Variable-Width Const-Generic Bindings + Codegen | C4 (S4/S9/S10) | P2-E §7.1 + P2-D §3 | Conditional on W4b-2 close | ~340 hand | MEDIUM | ≤90 min wall / 75-min redress |
-| W4c | Section 7.3 | SHA3 EOR3 Prefix-XOR Ladder | C6 | P2-D §5.3.1 | Conditional on W3 close | ~60-120 hand incl. ~20-40 checkasm | MEDIUM | ≤90 min wall / 75-min redress |
-| W4d | Section 7.4 | CSSC CTZ String-Mask Consumer | C7 | P2-D §4.4 | Conditional on W3 close + W4a close | ~15-35 hand | HIGH | ≤90 min wall / 75-min redress |
-| W5 | Section 8 | Close And Alpha Feedback | — | — | Conditional on W1-W4 dispositions | docs only | — | ≤90 min |
+| W4c | Section 7.3 | SHA3 EOR3 Prefix-XOR Ladder | C6 | P2-D §5.3.1 | Retired with W3 unless a future non-union consumer is specified | ~60-120 hand incl. ~20-40 checkasm | MEDIUM | ≤90 min wall / 75-min redress |
+| W4d | Section 7.4 | CSSC CTZ String-Mask Consumer | C7 | P2-D §4.4 | Replan required after W4a; no union-substrate consumer | ~15-35 hand | HIGH | ≤90 min wall / 75-min redress |
+| W5 | Section 8 | Close And Alpha Feedback | — | — | Superseded by Pass Alpha dispatch after REDRESS 98 | docs only | — | ≤90 min |
 
 The `Hard cap` column states the wave wall allowance and the binding
 redress sub-cap together: every behaviour wave and W4 sub-wave runs
@@ -347,22 +374,36 @@ crates are edited:
 - Grammar branch scan: no generic branch selects behavior by JSON
   grammar name, corpus name, object/array role, field name, or
   punctuation meaning.
-- Primitive/table scan: no generic primitive, SIMD table, or
-  classifier embeds JSON structural policy unless it is generated
-  byte-set data plus opaque class ordinals with a scalar reference
-  and a same-wave consumer. The W3 class column stores opaque class
-  ordinals; the structural-alphabet `class_table`
-  (`bbnf-simd/src/lib.rs:41`) is generated data.
-- Non-JSON proof: every generic-crate edit (the W3 SIMD chain + codegen
-  template, the W4a `string_block.rs`, the W4b `escape_codec`
-  primitive, the W4c EOR3 ladder, the W4d CTZ extract) carries a
-  CSS L4 / Sheets / BBNF-self proof — a named no-op dry run, focused
-  test, or unchanged-output audit. P2-A names the CSS L4 / Sheets /
-  BBNF-self union instances; P2-B names the Sheets `EventGrammar`
-  witness; P2-E names the five const-generic codec bindings (JSON-4,
-  CSS L4 variable, JS variable, TOML-4, TOML-8).
+- Primitive/table scan: no generic primitive, SIMD table, or classifier embeds
+  JSON structural policy unless it is generated byte-set data with a scalar
+  reference and a same-wave consumer. The rejected W3 class-column route is not
+  current dispatch authority.
+- Non-JSON proof: every generic-crate edit (a re-scoped W4a
+  `string_block.rs`, W4b `escape_codec` primitive, future non-union W4c body,
+  or W4d CTZ extract) carries a CSS L4 / Sheets / BBNF-self proof — a named
+  no-op dry run, focused test, or unchanged-output audit. P2-B names the Sheets
+  `EventGrammar` witness; P2-E names the five const-generic codec bindings
+  (JSON-4, CSS L4 variable, JS variable, TOML-4, TOML-8).
 
-### Section 2.2 — The Cascade-Lock, Disambiguated
+### Section 2.2 — The Cascade-Lock, Retired For SK-V9
+
+REDRESS 98 retires the cascade-lock as a dispatch constraint for SK-V9. The
+prior cascade-lock was a hypothesis-dependent contract: W4 consumers were to
+wire into the W3 union substrate because W3 was expected to turn the discarded
+SIMD structural index into the live parser substrate. REDRESS 96 and REDRESS
+97 measured that substrate and found uniform regression; CHALLENGE V4 rejected
+class-lane-only as a paper-close. Therefore no W4 sub-wave may cite "W3 closed"
+or "union substrate exists" as its entry gate.
+
+The surviving rule is the generic same-wave-consumer rule from Section 1:
+every primitive still needs a scalar reference, checkasm when applicable, and
+the real hot-path caller in the same commit. For W4a/W4b/W4d that caller must
+be an existing offset-tape, string-scanner, or unicode-unescape call site. W4c
+is retired with W3 unless a future Alpha/S-P3 contract names a non-union
+consumer for the prefix-XOR body.
+
+Historical cascade text below is retained only as provenance for REDRESS 98,
+not as current dispatch authority.
 
 P2-D §0 reads: a P2-D consumer kernel "may not be split" from the union
 substrate — "P2-A must land in the same wave as any of these P2-D
@@ -633,6 +674,14 @@ Pre-blocked routes (P3-E §2.3 / §3.2, verbatim):
 
 ## Section 6 — W3 Union Event-Model — Class-Column Substrate
 
+Status: **retired by REDRESS 98**. This section is historical and carries no
+current dispatch authority. REDRESS 96 and REDRESS 97 implemented the union
+substrate faithfully enough to measure the hypothesis; both correctness-green
+attempts missed every W3 must-improve row and every W10b maintain floor.
+CHALLENGE V4 rejected the remaining class-lane-only route as non-admissible.
+`G-W3-UNION-SUBSTRATE` is retired for SK-V9 and becomes a pre-block for
+Pass Alpha/SK-V10.
+
 Shortlist candidate C3, with the P2-D §5 dead-scanner structural-bitmap
 chain folded in per P3-A §1.1 (the §5 chain is the structural-bitmap
 producer body C3's union event-model consumes — the same kernel, the
@@ -679,13 +728,11 @@ Owner paths (P2-A §5 eight slices + the P2-D §5 chain):
 | `runtime/src/grammars/json/scan.rs` | A.7 | Regen: stop discarding the index; move-consume API. |
 | `runtime/tests/checkasm_scan_structurals.rs` (NEW) + `bbnf-bench/src/{parity,track2/json}.rs` | A.8 | JSON `scan_structurals` end-to-end parity + corpus-parity gate; class-column parity + structural-index move-consumed asserts. `track2/json.rs` is owned only to write benchmark-oracle class bytes after `at_cursor` switches to class reads. Lower primitive checkasm remains in the existing `bbnf-simd` harnesses. |
 
-Entry gate: W2 closed with `G-W2-RETAINED-PROOF` PASS — the proof
-unblocks the union reopen; the REDRESS 92 gating clause is discharged.
-The W3 plan names the eight slices, the per-slice revert, and the W10b
-regression block.
+Historical entry gate: W2 closed with `G-W2-RETAINED-PROOF` PASS. REDRESS 98
+now supersedes that authorization; the proof remains admitted, but it does not
+unblock a fourth W3 source attempt.
 
-Exit gate `G-W3-UNION-SUBSTRATE` passes only if (P3-C §2 W3,
-sonic-strict floors derived live from `skinny/RESULTS.md`):
+Historical exit gate `G-W3-UNION-SUBSTRATE` was:
 
 1. **Must-improve** — the seven GO-target structural-dense `parse_only`
    Track 1 rows cross the standard-parity floor `ceil(sonic_strict / 1.10)`:
@@ -732,16 +779,14 @@ a unicode-bearing residual; if it closes only partially that is the
 residual handed to W4, not a W3 falsification (P2-A §4.3). W3 falsifies
 only if the structural-rediscovery hot leaf does not drop to ≤ 5%.
 
-Revert protocol (P2-A §5): slices A.3/A.4/A.7 are regen output —
+Historical revert protocol (P2-A §5): slices A.3/A.4/A.7 are regen output —
 reverting the codegen-template commit (A.5) rolls back four downstream
 files; `generated.rs` returns to the `consume_structural` shape
 byte-identically. If the §4.2 W10b gate fires, revert the
 `assembler.rs` column-push and keep `classes` zero-length — the
-substrate compiles with an empty column. A full W3 revert blocks
-W4a-d: the union substrate is the cascade-locked consumer base. A
-*partial* W3 (class column lands, exit rows NEAR-MISS) does not block
-W4 — the substrate is the dependency, not the exit-gate Mbps (P3-C §2
-W3 revert).
+substrate compiles with an empty column. Under REDRESS 98, a full W3
+retirement blocks only the obsolete cascade-locked W4 plan; it does not block a
+fresh existing-substrate W4 plan.
 
 Pre-blocked routes (P3-E §2.4 / §3.2, verbatim):
 
@@ -765,18 +810,17 @@ Pre-blocked routes (P3-E §2.4 / §3.2, verbatim):
   `tape_vs_tape` production consumer, no `UnionTape`, no Tier B
   string-boundary work.
 
-## Section 7 — W4 aarch64 Substrate Consumers
+## Section 7 — W4 Existing-Substrate aarch64 Candidates
 
-W4 is the substrate-consumer bracket, sub-waved into six sub-waves —
-W4a, the three codec sub-waves W4b-1/W4b-2/W4b-3 (§7.2), W4c, and W4d.
-Each W4 sub-wave is a fresh triumvirate per `SKINNY-TRIUMVIRATE.md`
-§1 (research → plan → mandatory CHALLENGE → redress); each sub-wave's
-redress wires its kernel into the **already-landed W3 union substrate**
-in the same commit (the cascade-lock, §2.2); each row-moving sub-wave
-carries the W10b six-row maintain gate. The sub-wave structure is what
-keeps every redress inside the 75-min ceiling — a monolithic W4 would
-be ~1,595-1,860 LOC (§2.2), and the codec alone is ~1,045 net (hence
-the three-way W4b split).
+W4 is no longer a union-substrate consumer bracket. REDRESS 98 retires the
+W3 substrate that originally made W4 cascade-locked. The only W4 work that can
+survive in SK-V9/SK-V10 is existing-substrate work: string-block widening at
+the existing `match_string_at_quote_trusted_utf8` call site, the unicode escape
+codec at the existing `unescape_four_unicode_escapes`/JSON sink call sites,
+and any CTZ mask consumer only after W4a names a live non-union caller. Each
+retained W4 sub-wave must receive a fresh plan/CHALLENGE before source redress.
+The historical gates below are retained as starting material and REDRESS
+pre-block context; any `Entry gate: W3 closed` sentence is void under §2.2.
 
 ### Section 7.1 — W4a 32-byte String-Block Widening
 
@@ -800,10 +844,10 @@ Owner paths (P2-D §4.3):
 | `parse-that-regex/src/lib.rs:162` | `match_string_at_quote_trusted_utf8` producer-site rewire to the 32-byte block + scalar tail — the same-wave consumer. |
 | `bbnf-simd/tests/checkasm_string_block.rs` (NEW) | Differential parity gate over the 16-byte and 32-byte bodies (the C8 file REDRESS 83's rejected patch never landed). |
 
-Entry gate: W3 closed with `G-W3-UNION-SUBSTRATE` PASS — the union
-substrate exists (cascade-lock satisfied). The W4a plan names the
-32-byte body, the scalar oracle, and the checkasm gate; the checkasm
-file lands FIRST and blocks the wave.
+Entry gate: replan required after REDRESS 98. W4a may dispatch only if the
+plan names the existing `match_string_at_quote_trusted_utf8` producer/consumer
+path, the 32-byte body, the scalar oracle, and the checkasm gate; the checkasm
+file lands FIRST and blocks the wave. No W3 union substrate may be cited.
 
 Exit gate `G-W4a-STRING-BLOCK` passes only if:
 
@@ -895,10 +939,10 @@ Owner paths (P2-E §7.1 slices S1, S6, mod.rs):
 | `bbnf-simd/src/aarch64/escape_codec/mod.rs` (NEW) | Const-generic kernel surface + dispatcher; the five-binding parameter shape. |
 | `bbnf-simd/tests/checkasm_escape_codec.rs` (NEW) | Differential parity harness covering all five const-generic bindings; the gate every W4b-2/W4b-3 body must clear. |
 
-Entry gate: W3 closed with `G-W3-UNION-SUBSTRATE` PASS. The W4b-1 plan
-names the const-generic parameter set and the checkasm case enumeration
-(digit-count × alignment × terminator × validity, ~6,000 cases per
-binding, P2-E §7.3).
+Entry gate: replan required after REDRESS 98. W4b-1 may dispatch only if the
+plan scopes the codec to existing unescape/codec call sites and names the
+const-generic parameter set plus the checkasm case enumeration (digit-count ×
+alignment × terminator × validity, ~6,000 cases per binding, P2-E §7.3).
 
 Exit gate `G-W4b-1-CODEC-HARNESS` passes only if:
 
@@ -991,15 +1035,11 @@ admits **per-row, on measurement**:
 8. Section 2.1 generality scan passes — the fixed-width bodies embed no
    JSON structural policy.
 
-**The honest posture (P2-E §6.4, carried verbatim).** W4b-2 may close
-with **zero strict unicode-row admissions**. A NEAR-FAIL on
-`unicode_escapes` / `y_string_unicode` is the expected, honestly
-projected outcome — the row stays `S / NO-GO`, the measured codec
-contribution is recorded in REDRESS, the residual routes forward, and
-the sub-wave still admits the codec body as a checkasm-verified
-primitive. That is an honest measured outcome, **not a paper-close**.
-W4b-2 is reverted wholesale only on a checkasm parity failure or a
-W10b WIN-block regression — never on a per-row NEAR-MISS.
+**Historical honest posture (P2-E §6.4).** The old W4b-2 gate allowed
+zero strict unicode-row admissions if the codec contribution was measured
+honestly and rows stayed `S / NO-GO`. After REDRESS 98 this posture is
+candidate material only; any future W4b-2 admit must be re-gated against an
+existing unicode-unescape/sink caller and the W10b maintain block.
 
 Revert protocol (P2-E §7.1): the W4b-1 checkasm harness is the gate; if
 a NEON body fails parity, revert that body and the JSON consumer falls
@@ -1012,12 +1052,12 @@ W4c/W4d.
 Pre-blocked routes (P3-E §2.5 / §3.4, verbatim):
 
 - REDRESS 82 — material differential (five axes): not a parser-owned
-  per-quartet classifier (the 4-quartet batched path is the
-  union-substrate path; the single-quartet binding fires only on
-  pre-filter reject); the same-wave consumer is the already-wired x4
-  JSON path at `lib.rs:402`; `escape_codec_hex_unit` is a const-generic
-  primitive with five bindings; the evidence is post-V3 PMU self-time;
-  the falsification gate is `parse_only` only.
+  per-quartet classifier; after REDRESS 98 the 4-quartet batched path may not
+  cite the union substrate and must instead name the existing x4 JSON path at
+  `lib.rs:402` or another current unicode-unescape/sink caller;
+  `escape_codec_hex_unit` is a const-generic primitive with five bindings; the
+  evidence is post-V3 PMU self-time; the falsification gate is `parse_only`
+  only unless Alpha/S-P3 replaces it.
 - REDRESS 64 — no retained Unicode-escape run validator; the kernel is
   pure functional.
 - REDRESS 66-69 + 93 — W4b-2's gate is `parse_only` only; it does not
@@ -1103,8 +1143,9 @@ Owner paths (P2-D §5.3.1):
 | `bbnf-simd/src/aarch64/bitmap_prefix_xor_64.rs` | Vector `uint8x16_t` shift-XOR ladder with `veor3q_u8` 3-stage fold + Lock-16 `FEAT_SHA3` admissibility gate. The scalar shift-XOR ladder stays the unconditional fallback. |
 | `bbnf-simd/tests/checkasm_bitmap_prefix_xor_64.rs` (EXISTS) | Extend with the EOR3 path under a forced `FEAT_SHA3` mask — the vector-vs-scalar-vs-PMULL three-way differential. |
 
-Entry gate: W3 closed with `G-W3-UNION-SUBSTRATE` PASS — the
-structural-bitmap producer (the EOR3 ladder's only consumer) is live.
+Entry gate: retired with W3 unless a future Alpha/S-P3 contract names a
+non-union consumer for the prefix-XOR body. The old W3 structural-bitmap
+producer is not a dispatchable consumer after REDRESS 98.
 
 Exit gate `G-W4c-EOR3` passes only if:
 
@@ -1167,9 +1208,10 @@ W4d's correctness is exercised by W4a's `checkasm_string_block.rs` (the
 CTZ extract is a sub-step of the 32-byte block scanner's mask consumer);
 no separate checkasm file.
 
-Entry gate: W3 closed (the union-substrate string-mask consumer is the
-non-orphan condition) **and** W4a closed (the 32-byte block scanner the
-CTZ extracts from is live). W4d is the deepest sub-wave — it needs both.
+Entry gate: replan required after REDRESS 98 and after any existing-substrate
+W4a admission. The union-substrate string-mask consumer is dead; the only
+valid non-orphan condition is a live W4a 32-byte block scanner with the CTZ
+extract in its same-wave or successor hot-path caller.
 
 Exit gate `G-W4d-CTZ` passes only if:
 
@@ -1192,27 +1234,25 @@ Pre-blocked routes (P3-E §2.6 / §3.6, verbatim):
 - REDRESS 89 — material differential: different call site (the
   string-mask first-set extract, not the `bulk_emit_positions_64`
   structural-scan bulk consumer); different failure profile (LOSS rows
-  under guard, not the WIN-block numeric rows); same-wave consumer is
-  the union-substrate string-mask consumer (W3 + W4a scope). Binding
-  gate: the W10b six-row maintain gate is the hard blocking
-  precondition.
+  under guard, not the WIN-block numeric rows). After REDRESS 98 the
+  same-wave consumer must be an admitted existing-substrate W4a caller, not
+  the retired union substrate. Binding gate: the W10b six-row maintain gate is
+  the hard blocking precondition.
 - HANDOFF §5 "CTZ/bulk production rewires as default hot paths" —
   applies to default rewires; W4d is a host-capability-gated
   specialisation at a non-default call site.
 
 ## Section 8 — W5 Close And Alpha Feedback
 
-W5 is a reconciliation wave only, dispatched after W1-W4 dispositions
-are recorded. It carries zero source LOC and no CHALLENGE. It reconciles
-`skinny/RESULTS.md`, `skinny/REDRESS.md`, this SPEC, `DISPATCH-PROMPT.md`,
-`HANDOFF.md`, and any SK-V10 alpha inputs without hiding residual risk.
-It records, per uncloseable row, the honest W4b disposition (admit /
-NEAR-FAIL / FAIL with the measured contribution). It verifies the
-36-field schema renders identically across all admitted/rejected rows.
+W5 is superseded by Pass Alpha after REDRESS 98. The close/reconciliation
+payload is now the SK-V9 -> SK-V10 Alpha dispatch: W3 falsification, typed-plane
+wins, existing-substrate residual candidates, and the pre-blocked ledger must
+fold into the next contract rather than waiting for the obsolete W1-W4 bracket
+to complete.
 
-Exit gate `G-W5-CLOSE` passes only if the five documents agree, every
-W1-W4 wave and sub-wave has an admit or a measured reject in REDRESS,
-and the §0.1 close condition is satisfied.
+Exit gate `G-W5-CLOSE` is retired. The replacement close condition is Pass
+Alpha dispatch with REDRESS 98 recorded and the five SK-V9 documents agreeing
+that no further W3 source redress is authorized.
 
 ## Section N — G-Gate
 
@@ -1220,22 +1260,20 @@ and the §0.1 close condition is satisfied.
 
 1. `G-W0-TELEMETRY-LOCK` is recorded PASS.
 2. `G-S-P1-RERUN-CONVERGED` is recorded PASS.
-3. `G-BEHAVIOR-RELEASE` passed — W1-W4 (W4a, W4b-1/W4b-2/W4b-3, W4c,
-   W4d) each admitted or rejected with measurement.
-4. `G-W1-TYPED-ADMISSION`, `G-W2-RETAINED-PROOF`, `G-W3-UNION-SUBSTRATE`,
-   `G-W4a-STRING-BLOCK`, `G-W4b-1-CODEC-HARNESS`, `G-W4b-2-CODEC`,
-   `G-W4b-3-CODEC-BINDINGS`, `G-W4c-EOR3`, `G-W4d-CTZ`, and
-   `G-W5-CLOSE` each carry a recorded disposition (PASS or a measured
-   REDRESS reject).
-5. The §0.1 close condition holds in full — including clause 6: W4 may
-   close with zero strict unicode-row admissions if every uncloseable
-   row records NEAR-FAIL / FAIL honestly.
+3. `G-W1-TYPED-ADMISSION` and `G-W2-RETAINED-PROOF` are recorded PASS.
+4. REDRESS 96, REDRESS 97, CHALLENGE V4, and REDRESS 98 record the W3
+   falsification and retirement.
+5. The obsolete W4/W5 cascade gates are not treated as open work; their
+   surviving content is carried to Alpha as existing-substrate candidate
+   material.
 6. No pre-blocked REDRESS route was reopened without its citation,
    material-difference statement, and CHALLENGE acceptance.
-7. The five close documents agree.
+7. `SYNTHESIS.md`, `SPEC.md`, `DISPATCH-PROMPT.md`, `HANDOFF.md`, and
+   `skinny/REDRESS.md` agree that no further SK-V9 W3 source redress is
+   authorized and Pass Alpha is the next live action.
 
-On `G-ALPHA-SK-V9` close the orchestrator dispatches Pass Alpha for the
-SK-V9 → SK-V10 synthesis per `pass-contracts/PASS-ALPHA.md`.
+On this REDRESS 98 close posture, the orchestrator dispatches Pass Alpha for
+the SK-V9 → SK-V10 synthesis per `pass-contracts/PASS-ALPHA.md`.
 
 ---
 

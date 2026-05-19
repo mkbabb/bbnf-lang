@@ -2904,3 +2904,47 @@ perturbation.
   restored after saving the artifact. W3 remains rejected/open, the W3
   dependency remains unsatisfied, and all W4 sub-waves remain blocked until a
   materially different W3 substrate can pass the measured gate.
+
+## SK-V9 Wave 3 Union Event-Model Gate Retirement
+
+- Item 98 retires `G-W3-UNION-SUBSTRATE` for SK-V9. REDRESS 96 and REDRESS 97
+  are not local implementation misses; together they falsify the union
+  substrate thesis on this host. The thesis was that the parser discards a
+  SIMD structural index, re-discovers structural bytes scalar, and would gain
+  throughput if the index became the retained union substrate. Two faithful
+  implementations made that claim measurable and both regressed uniformly.
+- REDRESS 96 landed the full class-column substrate plus move-consumed
+  `scan_structurals` vector. It was correctness-green and parity-green before
+  measurement, but missed every W3 must-improve row and every W10b maintain
+  floor. REDRESS 97 removed the full vector and used an allocation-free
+  streaming cursor over the aarch64 scanner. It was also correctness-green and
+  parity-green before measurement, and again missed every W3 must-improve row
+  and every W10b maintain floor.
+- The remaining W3 V3 route, emit-site class-lane-only, was rejected by
+  CHALLENGE before source redress. It can prove a source-free retained
+  `JsonNodeKind::at_cursor`, but it leaves scalar delimiter discovery in place,
+  carries no same-wave structural producer, and cannot satisfy the current
+  parse-only producer gate. Dispatching it as W3 would be a paper-close.
+- The empirical finding is load-bearing: on the M5 Max wide-issue core, the
+  scalar `consume_structural`/delimiter path that profile attribution flagged
+  as structural rediscovery is cheaper than materializing or streaming a SIMD
+  structural cursor through retained parsing. The SIMD scan looked discarded
+  because consuming it adds memory traffic and cursor indirection that the
+  current branch-predictable, cache-hot scalar loop does not pay.
+- `G-W3-UNION-SUBSTRATE` is therefore retired, not merely blocked. No SK-V9
+  wave may force, amend, or split W3 to preserve the same union-substrate
+  hypothesis without first entering a new Alpha/S-P3 contract. W4's prior
+  cascade-lock dependency on a closed W3 union substrate is abrogated for
+  SK-V9; remaining W4 candidates may dispatch only if re-scoped to existing
+  offset-tape/string/unescape call sites with their own scalar reference,
+  checkasm, same-wave consumer, and W10b maintain gates.
+- The product-plane result that survives SK-V9 is W1: measured
+  `real_typed_struct` row admission. Apache/CITM were admitted with fresh
+  run-id/metadata evidence, and the typed plane is the SOTA-bearing surface.
+  Future SK-V9/SK-V10 work should prioritize typed-row generalization
+  (`github_events`, `gsoc-2018`, `instruments`) and existing-substrate
+  unicode/string kernels, not parse-only union substrate repair.
+- Pass Alpha is now the correct next synthesis step. It must fold this
+  falsification into the SK-V10 contract, retire W3 from the candidate
+  shortlist, carry REDRESS 96/97/98 as pre-blocks, and resequence around
+  typed-plane and existing-substrate work.

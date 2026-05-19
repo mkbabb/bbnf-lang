@@ -108,6 +108,10 @@ S-P2 consumes only fresh S-P1 evidence. It must ground:
 - parse-that/bbnf-simd primitive gaps tied to direct residual hot leaves;
 - grammar-neutral abstraction for CSS L4 / Sheets / BBNF-self.
 
+Pre-S-P3 micro-proofs are research artifacts, throwaway `/tmp` benches, or
+existing bench invocations. Durable micro-proof harness or production changes
+land only in the S-P3-authored wave packet.
+
 S-P3 then writes the SK-V11 `SPEC.md` and `DISPATCH-PROMPT.md`. It must not
 derive a wave plan directly from this Alpha-F draft without S-P1 and S-P2
 convergence.

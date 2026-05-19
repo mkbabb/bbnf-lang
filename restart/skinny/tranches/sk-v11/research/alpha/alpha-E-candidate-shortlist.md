@@ -107,7 +107,7 @@ Carry-forward maintain surface:
 ## Candidate 1 - Grammar-Neutral Measurement And Micro-Proof Harness
 
 Goal:
-Build the SK-V11 measurement substrate that makes the other candidates legal:
+Build the SK-V11 measurement harness that makes the other candidates legal:
 fresh direct residual row tables, non-JSON direct/typed benchmark rows, and
 same-host aarch64 micro-proof artefacts consumed by the gate. This is the
 only gate-only candidate in the shortlist; it is included because every
@@ -127,6 +127,9 @@ Owner path class:
 - `restart/skinny/tranches/sk-v11/research/p1/`,
   `restart/skinny/tranches/sk-v11/research/p2/`,
   `restart/skinny/tranches/sk-v11/research/p3/`
+
+The research roots above are pass artefact output roots, not behavior redress
+owner paths.
 
 Scalar reference status:
 N/A for behavior, but every micro-proof row must name a scalar baseline
@@ -434,9 +437,10 @@ Checkasm/microbench requirement:
   slices and one non-JSON string/identifier slice before production.
 
 Same-wave consumer:
-Current string scanner or generated SinkOnly direct string/key recognizer that
-already needs quote/backslash prefix state. Non-JSON consumer must be CSS L4
-string/identifier or Sheets quoted-string scanning.
+Generated SinkOnly direct/typed string/key recognizer or non-JSON
+string/identifier scanner that already needs quote/backslash prefix state.
+This cannot be a parse-only structural producer. Non-JSON consumer must be CSS
+L4 string/identifier or Sheets quoted-string scanning.
 
 Falsifiability gate:
 

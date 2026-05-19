@@ -57,7 +57,7 @@ Track 2, sonic-rs direct, and a strict 1.10x digest floor seeded from
 | `y_string_unicode` | 5067 | 3746 | 9211 | 8374 | 3307 | 4628 | `skinny/RESULTS.md:45` |
 
 The typed product plane is a guard and credibility surface for SK-V11, not
-the only frontier. Seven typed rows are already `A / GO`; five of the seven
+the only frontier. Seven typed rows are already `A / GO`; six of the seven
 beat sonic-rs strict outright, while `update_center` remains admitted under
 the existing 1.10x slack gate (`skinny/RESULTS.md:7`,
 `skinny/RESULTS.md:10`, `skinny/RESULTS.md:15`,
@@ -126,6 +126,9 @@ measurement.
   new caller-level micro-proof (`skinny/REDRESS.md:3159`).
 - W9 "already wired" production claim for an existing caller
   (`skinny/REDRESS.md:3200`).
+- PMULL-class prefix-XOR and CSSC/CTZ bulk-emission default hot paths. SK-V11
+  may only revisit EOR3 or first-set extraction as caller-local, feature-gated,
+  micro-proven direct/typed/non-JSON consumers with scalar fallback.
 - JSON-only policy in generic crates, codegen, runtime-outside-JSON,
   `bbnf-simd`, or `parse-that-regex`.
 - x86 work, including asmjson AVX-512 as an implementation target. It may be

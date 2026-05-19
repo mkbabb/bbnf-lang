@@ -233,7 +233,8 @@ If non-JSON rows enter `skinny/RESULTS.md`, the schema must name grammar
 domain and workload without weakening existing JSON consumers. If they land in
 a companion report, S-P3 must name the gate command and close condition. In
 both cases the gate rejects missing comparator/oracle, stale run id, missing
-Track 2 or equivalent independent oracle, and producer-only fields.
+Track 2 or equivalent independent oracle, and producer-only fields. W0 must
+freeze this report/gate binding before any non-JSON behavior wave dispatches.
 
 ## Section 4 - Pre-Blocked Routes
 
@@ -244,6 +245,9 @@ Track 2 or equivalent independent oracle, and producer-only fields.
 - Any direct or typed row admission by analogy.
 - W7 full-string production without new micro-proof and row gate.
 - W9 production claim for an already-wired caller.
+- PMULL-class prefix-XOR and CSSC/CTZ bulk-emission default hot paths. EOR3 or
+  first-set extraction may only re-enter as caller-local, feature-gated,
+  micro-proven direct/typed/non-JSON consumers with scalar fallback.
 - PMU, cycles, structural-scan, masking probes, Criterion slope, or sidecar
   freshness as behavior producers.
 - JSON policy in generic crates or runtime outside JSON.

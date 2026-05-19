@@ -18,12 +18,14 @@ root-typed proof with no row movement. REDRESS 105 admits W6 for
 `github_events/real_typed_struct`. REDRESS 107 admits W8 as proof-only C6
 evidence. REDRESS 108 rejects W9 production because the exact caller was
 already wired and direct row floors failed. REDRESS 109 admits W10 for
-`instruments/direct_to_struct` under the direct residual gate. No SK-V10 wave
-may reopen W3 through a rename.
+`instruments/direct_to_struct` under the direct residual gate. REDRESS 110
+closes SK-V10 under `G-CLOSE-SK-V10`. No SK-V10 wave may reopen W3 through a
+rename.
 
 ## 0. Close Condition And Goalset
 
-SK-V10 closes only when all of these are true:
+SK-V10 closes only when all of these are true. REDRESS 110 records this
+condition as satisfied:
 
 1. `G-ALPHA-SK-V10`, S-P1 Profile, S-P2 Research, and S-P3
    Synthesis-Plan are closed and committed.
@@ -190,7 +192,7 @@ block:
 | W8 | 11 | `C6` | Escape/Segment Micro-Proof | Closed - REDRESS 107 | Proof-only; C6 accepted | 90-260 proof LOC | HIGH | <=90 min |
 | W9 | 12 | proven `C6` | Existing-Call-Site Kernel Production | Rejected - REDRESS 108 | Direct/typed only | 220-420 source/bench/gate LOC | HIGH | <=90 min |
 | W10 | 13 | `C1` follow-on | Direct Residual Behavior Tranche | Closed - REDRESS 109 | `instruments` direct row admitted | 320 source/gate LOC; 420 only with CHALLENGE | HIGH | <=90 min |
-| Close | 14 | `C11`, docs | SK-V10 Close Accounting | Dispatchable | None | 80-160 docs/gate LOC | LOW | <=90 min |
+| Close | 14 | `C11`, docs | SK-V10 Close Accounting | Closed - REDRESS 110 | None | 80-160 docs/gate LOC | LOW | <=90 min |
 
 Manifest rules:
 
@@ -198,8 +200,8 @@ Manifest rules:
    under REDRESS 101, W3 is closed under REDRESS 102, W4 is rejected under
    REDRESS 103, W5 is closed under REDRESS 104, W6 is closed under REDRESS
    105, W7 is rejected under REDRESS 106, W8 is closed under REDRESS 107, and
-   W9 is rejected under REDRESS 108, and W10 is closed under REDRESS 109.
-   Close is the next dispatchable wave.
+   W9 is rejected under REDRESS 108, W10 is closed under REDRESS 109, and
+   Close is closed under REDRESS 110. SK-V10 is converged.
 2. W1 must exist before W2 or W10 can move direct rows. A direct row gate
    without W1 is a REVISE.
 3. W3 is a firewall, not the retired W3 implementation route.
@@ -776,6 +778,9 @@ Exit gate `G-CLOSE-SK-V10`:
   validation, W3 reopen, and parse-only SOTA evidence.
 - Omega receives the substrate-ceiling lock amendment route.
 - Totality receives CSS L4, Sheets, and BBNF-self generalization risk.
+
+Disposition: PASS under REDRESS 110. SK-V10 is converged inside the planned
+W0-W10 plus Close envelope.
 
 Revert protocol: close docs are reverted until the contradiction is resolved;
 accepted source and measurement commits are not reverted by close accounting.

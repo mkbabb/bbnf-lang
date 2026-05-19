@@ -16,7 +16,7 @@ full-string primitive micro-proof is rejected under REDRESS 106. W8 hex escape
 micro-proof is closed under REDRESS 107. W9 existing-call-site kernel
 production is rejected under REDRESS 108. SK-V10 implementation is dispatched
 by `SPEC.md` and `DISPATCH-PROMPT.md`. W10 direct residual admission is closed
-under REDRESS 109; Close is the next live wave.
+under REDRESS 109. Close is closed under REDRESS 110; SK-V10 is converged.
 
 ## Authority
 
@@ -36,7 +36,7 @@ under REDRESS 109; Close is the next live wave.
 - `restart/skinny/tranches/sk-v10/research/p2/p2g-candidate-ledger.md`
 - `restart/skinny/tranches/sk-v10/research/p2/hardening/HARDENING-S-P2-V1-CONSOLIDATED.md`
 - `skinny/RESULTS.md`
-- `skinny/REDRESS.md` entries 94-109
+- `skinny/REDRESS.md` entries 94-110
 
 ## Section 0 - Alpha Close Condition
 
@@ -86,7 +86,7 @@ every W3 must-improve row and every W10b maintain row. REDRESS 98 retires
 
 The typed product plane is validated under the current deferred/view-boundary
 typed-product gate. W1 measured real typed rows, and the largest live same-run
-typed comparator delta is `citm_catalog` at +59.1% versus sonic-rs typed
+typed comparator delta is `citm_catalog` at +63.8% versus sonic-rs typed
 strict. That is not a strict-admission claim for bbnf until `gate-json`
 consumes a measured-row strictness and validation-path change.
 
@@ -219,6 +219,11 @@ Mbps versus floor 7575, and `unicode_basic` 9030 / 8360 Mbps versus floor
 7841. The row is strict measured-row evidence consumed by `gate-json` under
 REDRESS 109.
 
+Close closed SK-V10 under REDRESS 110. No row moved in Close. The final result
+surface remains 17 parse `S / NO-GO`, 6 direct `A / GO`, 11 direct
+`N-direct / NO-GO`, and 7 typed `A / GO`; overall remains
+`N-direct / NoGo`.
+
 ## Section 7 - Micro-Prove-First Gate
 
 No substrate or kernel intervention reaches S-P3 wave-scoping until it has a
@@ -245,13 +250,12 @@ W3, profile-derived structural/substrate rewrites are pre-blocked unless the
 micro-prove-first gate survives on the same host and the output plane is a live
 close target.
 
-The totality track should dispatch a non-JSON T-P1 after SK-V10 Alpha closes.
+The totality track should dispatch a non-JSON T-P1 after SK-V10 closes.
 CSS L4 / Sheets / BBNF-self generalization is the unexercised thesis risk.
 
 ## Section 9 - Dispatch Boundary
 
 This file does not independently authorize source work. `G-ALPHA-SK-V10`, S-P1
-Profile, S-P2 Research, S-P3 Synthesis-Plan, W0, W1, W2, W3, W5, W6, W8, and
-W10 are closed; W4, W7, and W9 are rejected with measurement. Wave
-implementation proceeds only through the current `SPEC.md` and
-`DISPATCH-PROMPT.md` entry gates; Close is the next live wave.
+Profile, S-P2 Research, S-P3 Synthesis-Plan, W0, W1, W2, W3, W5, W6, W8,
+W10, and Close are closed; W4, W7, and W9 are rejected with measurement. Any
+new behavior work requires a new dispatch packet.

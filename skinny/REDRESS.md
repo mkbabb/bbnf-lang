@@ -3253,3 +3253,28 @@ perturbation.
   `sk_v9_open_delta=direct-residual`.
 - Overall remains `N-direct / NoGo`; eleven direct residual rows remain
   `N-direct / NO-GO`. Close is now dispatchable.
+
+## SK-V10 Close Accounting
+
+- Item 110 closes SK-V10 under `G-CLOSE-SK-V10`. The close wave is
+  documentation-only and changes no behavior source, generated parser output,
+  SIMD primitive, benchmark body, telemetry schema, or `RESULTS.md` row
+  disposition.
+- Final wave dispositions are complete: W0 REDRESS 99 closed, W1 REDRESS 100
+  closed, W2 REDRESS 101 admitted, W3 REDRESS 102 firewall-closed, W4 REDRESS
+  103 rejected, W5 REDRESS 104 proof-closed, W6 REDRESS 105 admitted, W7
+  REDRESS 106 rejected, W8 REDRESS 107 proof-closed, W9 REDRESS 108 rejected,
+  W10 REDRESS 109 admitted, and Close REDRESS 110 closed.
+- Final result authority is the W10 full native Criterion render under
+  `/tmp/skv10-w10-full-criterion`, run id
+  `sk-v9-open:criterion-fnv64-6f007527061ee26d`: 17 `parse_only` rows remain
+  `S / NO-GO`, `direct_to_struct` is 6 `A / GO` and 11 `N-direct / NO-GO`,
+  and `real_typed_struct` is 7 `A / GO`.
+- Overall remains `N-direct / NoGo`. That is the measured SK-V10 close state,
+  not an open implementation wave.
+- Evidence passed:
+  `CRITERION_HOME=/tmp/skv10-w10-full-criterion RUSTFLAGS="-C target-cpu=native" cargo run -p xtask -- gate-json --with-cost-facts --check-results`
+  and `git diff --check`.
+- Routed remainder: REDRESS 98 goes to Pass Omega as a substrate-ceiling lock
+  amendment route, and CSS L4 / Sheets / BBNF-self grammar generalization goes
+  to the totality track.

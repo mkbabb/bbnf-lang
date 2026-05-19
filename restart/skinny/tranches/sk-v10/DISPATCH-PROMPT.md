@@ -17,7 +17,8 @@ micro-proof is closed under REDRESS 107. W9 existing-call-site kernel
 production is rejected under REDRESS 108. Source work is authorized only
 wave-by-wave after the requested wave's SPEC entry gate passes. W10 direct
 residual admission is closed under REDRESS 109 for
-`instruments/direct_to_struct`; Close is the next live dispatch.
+`instruments/direct_to_struct`. Close is closed under REDRESS 110, and SK-V10
+is converged.
 
 REDRESS 96, 97, and 98 retire the W3 union/event/class-column substrate
 thesis. No implementation agent may reopen it through a renamed W3, a
@@ -75,8 +76,12 @@ Read in order:
     - `research/w10/w10-plan.md`.
     - `research/w10/hardening/CHALLENGE-W10-CONSOLIDATED.md`.
     - `research/w10/w10-redress.md`.
-18. `skinny/RESULTS.md`.
-19. `skinny/REDRESS.md`.
+18. The Close artefacts:
+    - `research/close/close-research.md`.
+    - `research/close/close-plan.md`.
+    - `research/close/close-redress.md`.
+19. `skinny/RESULTS.md`.
+20. `skinny/REDRESS.md`.
 
 ## Wave Manifest
 
@@ -93,7 +98,7 @@ Read in order:
 | W8 | Section 11 | Escape/Segment Micro-Proof | `C6` | Closed - REDRESS 107 | 90-260 proof LOC | <=90 min |
 | W9 | Section 12 | Existing-Call-Site Kernel Production | proven `C6` | Rejected - REDRESS 108 | 220-420 source/bench/gate LOC | <=90 min |
 | W10 | Section 13 | Direct Residual Behavior Tranche | `C1` follow-on | Closed - REDRESS 109 | 320 source/gate LOC; 420 only with CHALLENGE | <=90 min |
-| Close | Section 14 | SK-V10 Close Accounting | `C11`, docs | Dispatchable | 80-160 docs/gate LOC | <=90 min |
+| Close | Section 14 | SK-V10 Close Accounting | `C11`, docs | Closed - REDRESS 110 | 80-160 docs/gate LOC | <=90 min |
 
 The dependency order is firm. W1 must precede W2 and W10. W3 is a firewall
 only and never dispatches a W3 substrate. W4 rejected with measurement and no
@@ -105,8 +110,8 @@ proof-only micro wave and accepted C6 for `unescape_uxxxx_x4_neon` in
 REDRESS 108 because the exact caller was already wired and direct row floors
 failed. W10 admitted `instruments/direct_to_struct` under REDRESS 109. `C8`
 and `C9` cannot feed production without a future SPEC/CHALLENGE amendment.
-Close is dispatchable. A wave whose SPEC entry gate is not PASS must be refused
-with the reason recorded.
+Close is closed under REDRESS 110. SK-V10 is converged. Any post-close source
+work requires a new dispatch packet.
 
 ## Per-Wave Triumvirate Protocol
 
@@ -270,7 +275,7 @@ extension decision.
 
 ## Convergence And Escalation
 
-The SK-V10 bracket converges when W0-W10 and Close are admitted, proof-closed,
+The SK-V10 bracket is converged: W0-W10 and Close are admitted, proof-closed,
 or REDRESS-rejected with measurement; Section 0 close condition holds; and the
 close documents agree. The close route sends the REDRESS 98 substrate-ceiling
 lock amendment to Pass Omega and sends non-JSON generalization risk to the

@@ -17,8 +17,8 @@ closed under REDRESS 104. W6 `github_events` root typed row admission is closed
 under REDRESS 105. W7 full-string primitive micro-proof is rejected under
 REDRESS 106. W8 hex escape micro-proof is closed under REDRESS 107. W9
 existing-call-site kernel production is rejected under REDRESS 108. W10
-`instruments` direct residual admission is closed under REDRESS 109; Close is
-the next live dispatch.
+`instruments` direct residual admission is closed under REDRESS 109. Close is
+closed under REDRESS 110; SK-V10 is converged.
 
 ## 1. Read First
 
@@ -28,7 +28,7 @@ the next live dispatch.
 4. `restart/skinny/tranches/sk-v9/SPEC.md`
 5. `restart/skinny/tranches/sk-v9/DISPATCH-PROMPT.md`
 6. `skinny/RESULTS.md`
-7. `skinny/REDRESS.md` entries 94-109
+7. `skinny/REDRESS.md` entries 94-110
 8. `restart/skinny/tranches/sk-v10/SYNTHESIS.md`
 9. `restart/skinny/tranches/sk-v10/research/alpha/alpha-A-results-extraction.md`
 10. `restart/skinny/tranches/sk-v10/research/alpha/alpha-B-competitor-deltas.md`
@@ -99,6 +99,9 @@ the next live dispatch.
 75. `restart/skinny/tranches/sk-v10/research/w10/w10-plan.md`
 76. `restart/skinny/tranches/sk-v10/research/w10/hardening/CHALLENGE-W10-CONSOLIDATED.md`
 77. `restart/skinny/tranches/sk-v10/research/w10/w10-redress.md`
+78. `restart/skinny/tranches/sk-v10/research/close/close-research.md`
+79. `restart/skinny/tranches/sk-v10/research/close/close-plan.md`
+80. `restart/skinny/tranches/sk-v10/research/close/close-redress.md`
 
 ## 2. Current State
 
@@ -129,14 +132,11 @@ Current `skinny/RESULTS.md` state:
 
 ## 4. Next Move
 
-1. Dispatch Close, SK-V10 Close Accounting, from SPEC Section 14.
-2. Reconcile `RESULTS.md`, `REDRESS.md`, `SPEC.md`, `DISPATCH-PROMPT.md`,
-   `HANDOFF.md`, and `SYNTHESIS.md` against W0-W10 dispositions.
-3. Confirm `gate-json --with-cost-facts --check-results` still consumes the
-   W10 row and rejects W3 reopen, parse-only SOTA, missing comparator, missing
-   run-id, missing provenance, and Track 2 coupling failures.
-4. Route REDRESS 98 to Pass Omega and the CSS L4 / Sheets / BBNF-self
-   generalization risk to the totality track.
+1. Dispatch Pass Omega for the REDRESS 98 substrate-ceiling lock amendment.
+2. Dispatch the totality track for CSS L4 / Sheets / BBNF-self grammar
+   generalization risk.
+3. Start any further JSON behavior work only from a new dispatch packet; SK-V10
+   is closed.
 
 ## 5. Refusal Conditions
 
@@ -159,5 +159,5 @@ freeze, W1 direct contract, W2 direct reclamation, and W3 parse-only firewall
 are closed, W4 is rejected under REDRESS 103, W5 is closed under REDRESS 104,
 W6 is closed under REDRESS 105, W7 is rejected under REDRESS 106, W8 is closed
 under REDRESS 107, W9 is rejected under REDRESS 108, and W10 is closed under
-REDRESS 109. The next live work is Close accounting. No further direct row
-movement is authorized in SK-V10.
+REDRESS 109. Close is closed under REDRESS 110. No further direct row movement
+is authorized in SK-V10.

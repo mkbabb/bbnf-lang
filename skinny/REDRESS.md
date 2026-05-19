@@ -2846,3 +2846,61 @@ perturbation.
   not admitted, the W3 dependency remains open, and all W4 sub-waves remain
   blocked until a revised W3 plan lands a substrate without the measured
   parse-loop regression.
+
+## SK-V9 Wave 3 Union Event-Model Streaming-Cursor Redress
+
+- Item 97 rejects the W3 V2 streaming-cursor implementation. The revised
+  source patch was materially different from REDRESS 96: it removed the
+  full structural-position vector from `parse`, added an allocation-free
+  `JsonStructuralCursor` over the aarch64 block scanner, kept the class lane
+  co-indexed inside `runtime::tape`, changed `JsonNodeKind::at_cursor` to read
+  the class lane, updated codegen templates, added a runtime scan/cursor parity
+  harness, and taught Track 2/parity to write and compare class bytes.
+- Correctness checks were green before measurement:
+  `cargo test --manifest-path skinny/Cargo.toml -p runtime --test checkasm_scan_structurals -- --nocapture`,
+  `cargo test --manifest-path skinny/Cargo.toml -p runtime -- --nocapture`,
+  `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench parity -- --nocapture`,
+  `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench materialization -- --nocapture`,
+  `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench track2 -- --nocapture`,
+  `cargo test --manifest-path skinny/Cargo.toml -p codegen`, and
+  `cargo check --manifest-path skinny/Cargo.toml -p runtime --features proof`.
+  The V2 deletion invariants also held in the attempted patch:
+  `rg -n "consume_structural" skinny/crates/runtime/src skinny/crates/codegen/src`,
+  `rg -n "into_positions\\(|structural_positions" skinny/crates/runtime/src/grammars/json`,
+  and the value source-rediscovery grep returned no matches.
+- A full native
+  `RUSTFLAGS="-C target-cpu=native" CRITERION_HOME=/tmp/skv9-w3-v2-criterion cargo xtask bench-json --advisory`
+  run was started and stopped after the required gate rows had already
+  falsified and the run had moved into comparator/probe work. Binding gate
+  evidence was then captured with the targeted native Criterion command
+  `RUSTFLAGS="-C target-cpu=native" CRITERION_HOME=/tmp/skv9-w3-v2-target cargo bench -p bbnf-bench --bench json_parity -- 'json/(twitter|apache_builds|update_center|distinct_values|canada|citm_catalog|instruments|marine_ik|mesh|numbers)/track1_generated'`.
+  The filtered Criterion run emitted comparison-sample warnings for sibling
+  benches that were intentionally not selected; the `track1_generated`
+  estimates were written under `/tmp/skv9-w3-v2-target` and extracted with the
+  same `bytes * 8000 / ns` formula as `gate-json`.
+- The V2 implementation again falsified every W3 must-improve row and every
+  binding W10b maintain row:
+
+  | Row | Floor | Track 1 Mbps | Status |
+  |---|---:|---:|---|
+  | twitter | 17685 | 7520 | FAIL |
+  | apache_builds | 14124 | 6710 | FAIL |
+  | update_center | 14370 | 5534 | FAIL |
+  | distinct_values | 15731 | 5338 | FAIL |
+  | canada | 15866 | 8293 | FAIL |
+  | citm_catalog | 28630 | 9997 | FAIL |
+  | instruments | 15865 | 7305 | FAIL |
+  | marine_ik | 11831 | 5540 | FAIL |
+  | mesh | 12186 | 6835 | FAIL |
+  | numbers | 17596 | 9542 | FAIL |
+
+- The streaming cursor cleared the REDRESS 96 allocation critique but did not
+  clear the measured gate. The falsifier is still the integrated parse-loop
+  shape: scanning and cursor validation inside retained parsing costs more
+  than the removed structural rediscovery on the W3 rows and trips the full
+  W10b maintain block.
+- The rejected patch is saved at `/tmp/skv9-waveW3-v2-rejected.patch` (1572
+  patch lines, including the untracked checkasm test). The source tree was
+  restored after saving the artifact. W3 remains rejected/open, the W3
+  dependency remains unsatisfied, and all W4 sub-waves remain blocked until a
+  materially different W3 substrate can pass the measured gate.

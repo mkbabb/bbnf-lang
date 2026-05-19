@@ -179,6 +179,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             direct_outcome,
             direct_decision.w0_clamped,
             direct_decision.w2_reclaimed,
+            direct_decision.w10_residual,
             fixture.bytes.len() as u64,
             estimates.direct_track1,
             estimates.direct_track2,
@@ -211,6 +212,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         .with_sk_v8(direct_telemetry);
         if direct_decision.w2_reclaimed {
             mark_w2_direct_reclamation(&mut direct_row);
+        } else if direct_decision.w10_residual {
+            mark_w10_direct_residual(&mut direct_row);
         }
         report.rows.push(direct_row);
         if direct_outcome == Some(Outcome::NDirectProjectionFailure) {
@@ -803,6 +806,7 @@ fn direct_workload_signal(
     outcome: Option<Outcome>,
     w0_no_admission_clamp: bool,
     w2_reclaimed: bool,
+    w10_residual: bool,
     bytes: u64,
     track1_ns: Option<f64>,
     track2_ns: Option<f64>,
@@ -817,6 +821,17 @@ fn direct_workload_signal(
         let sonic = throughput_mbps(bytes, sonic_ns);
         return format!(
             "PASS W2 direct row reclamation; strict measured-row contract; Track 1 {}, Track 2 {}, sonic {} Mbps",
+            format_mbps(track1),
+            format_mbps(track2),
+            format_mbps(sonic)
+        );
+    }
+    if w10_residual {
+        let track1 = throughput_mbps(bytes, track1_ns);
+        let track2 = throughput_mbps(bytes, track2_ns);
+        let sonic = throughput_mbps(bytes, sonic_ns);
+        return format!(
+            "PASS W10 direct residual admission; strict measured-row contract; Track 1 {}, Track 2 {}, sonic {} Mbps",
             format_mbps(track1),
             format_mbps(track2),
             format_mbps(sonic)
@@ -853,6 +868,7 @@ struct DirectRowDecision {
     outcome: Option<Outcome>,
     w0_clamped: bool,
     w2_reclaimed: bool,
+    w10_residual: bool,
 }
 
 fn direct_row_decision(
@@ -863,26 +879,40 @@ fn direct_row_decision(
     track2_ns: Option<f64>,
 ) -> DirectRowDecision {
     let row_id = format!("json/{corpus}/direct_to_struct/main");
-    if classified.is_none()
-        && sk_v8_open_baseline(&row_id).is_some_and(|baseline| baseline.verdict == "NO-GO")
-    {
-        if w2_direct_reclamation_passes(corpus, bytes, track1_ns, track2_ns) {
+    if sk_v8_open_baseline(&row_id).is_some_and(|baseline| baseline.verdict == "NO-GO") {
+        if classified.is_none() && w2_direct_reclamation_passes(corpus, bytes, track1_ns, track2_ns)
+        {
             return DirectRowDecision {
                 outcome: None,
                 w0_clamped: false,
                 w2_reclaimed: true,
+                w10_residual: false,
             };
         }
-        return DirectRowDecision {
-            outcome: Some(Outcome::NDirectProjectionFailure),
-            w0_clamped: true,
-            w2_reclaimed: false,
-        };
+        if matches!(classified, None | Some(Outcome::NDirectProjectionFailure))
+            && w10_direct_residual_passes(corpus, bytes, track1_ns, track2_ns)
+        {
+            return DirectRowDecision {
+                outcome: None,
+                w0_clamped: false,
+                w2_reclaimed: false,
+                w10_residual: true,
+            };
+        }
+        if classified.is_none() {
+            return DirectRowDecision {
+                outcome: Some(Outcome::NDirectProjectionFailure),
+                w0_clamped: true,
+                w2_reclaimed: false,
+                w10_residual: false,
+            };
+        }
     }
     DirectRowDecision {
         outcome: classified,
         w0_clamped: false,
         w2_reclaimed: false,
+        w10_residual: false,
     }
 }
 
@@ -895,6 +925,27 @@ fn w2_direct_reclamation_passes(
     let Some(floor) = w2_direct_reclamation_floor(corpus) else {
         return false;
     };
+    direct_row_passes_floor(bytes, track1_ns, track2_ns, floor)
+}
+
+fn w10_direct_residual_passes(
+    corpus: &str,
+    bytes: u64,
+    track1_ns: Option<f64>,
+    track2_ns: Option<f64>,
+) -> bool {
+    let Some(floor) = w10_direct_residual_floor(corpus) else {
+        return false;
+    };
+    direct_row_passes_floor(bytes, track1_ns, track2_ns, floor)
+}
+
+fn direct_row_passes_floor(
+    bytes: u64,
+    track1_ns: Option<f64>,
+    track2_ns: Option<f64>,
+    floor: f64,
+) -> bool {
     let (Some(track1), Some(track2)) = (
         throughput_mbps(bytes, track1_ns),
         throughput_mbps(bytes, track2_ns),
@@ -912,6 +963,13 @@ fn w2_direct_reclamation_floor(corpus: &str) -> Option<f64> {
     }
 }
 
+fn w10_direct_residual_floor(corpus: &str) -> Option<f64> {
+    match corpus {
+        "instruments" => Some(11_086.0),
+        _ => None,
+    }
+}
+
 fn mark_w2_direct_reclamation(row: &mut TelemetryRow) {
     row.strictness = "strict".to_string();
     row.parse_utf8 = "measured-row".to_string();
@@ -923,6 +981,19 @@ fn mark_w2_direct_reclamation(row: &mut TelemetryRow) {
     row.sk_v8.redress_entry = "REDRESS-101".to_string();
     row.sk_v8.wave_id = "SK-V10-W2".to_string();
     row.sk_v8.sk_v9_open_delta = "direct-reclaimed".to_string();
+}
+
+fn mark_w10_direct_residual(row: &mut TelemetryRow) {
+    row.strictness = "strict".to_string();
+    row.parse_utf8 = "measured-row".to_string();
+    row.flaw_probe =
+        "generated Track 1 SinkOnly vs independent hand Track 2 SinkOnly; UTF-8 measured in row"
+            .to_string();
+    row.sk_v8.measured_validation_path = "measured-row".to_string();
+    row.sk_v8.same_wave_consumer_class = "gate_json_direct_contract".to_string();
+    row.sk_v8.redress_entry = "REDRESS-109".to_string();
+    row.sk_v8.wave_id = "SK-V10-W10".to_string();
+    row.sk_v8.sk_v9_open_delta = "direct-residual".to_string();
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1984,6 +2055,7 @@ mod tests {
                 outcome: None,
                 w0_clamped: false,
                 w2_reclaimed: true,
+                w10_residual: false,
             }
         );
         assert_eq!(
@@ -1992,6 +2064,7 @@ mod tests {
                 outcome: Some(Outcome::NDirectProjectionFailure),
                 w0_clamped: true,
                 w2_reclaimed: false,
+                w10_residual: false,
             }
         );
         assert_eq!(
@@ -2006,6 +2079,7 @@ mod tests {
                 outcome: None,
                 w0_clamped: false,
                 w2_reclaimed: false,
+                w10_residual: false,
             }
         );
         assert_eq!(
@@ -2020,6 +2094,50 @@ mod tests {
                 outcome: Some(Outcome::IParityOracleFail),
                 w0_clamped: false,
                 w2_reclaimed: false,
+                w10_residual: false,
+            }
+        );
+    }
+
+    #[test]
+    fn w10_direct_residual_admits_only_instruments_floor_pass_clamped_rows() {
+        assert_eq!(
+            direct_row_decision(
+                "instruments",
+                Some(Outcome::NDirectProjectionFailure),
+                1_000_000,
+                Some(700_000.0),
+                Some(720_000.0)
+            ),
+            DirectRowDecision {
+                outcome: None,
+                w0_clamped: false,
+                w2_reclaimed: false,
+                w10_residual: true,
+            }
+        );
+        assert_eq!(
+            direct_row_decision(
+                "instruments",
+                None,
+                1_000_000,
+                Some(700_000.0),
+                Some(730_000.0)
+            ),
+            DirectRowDecision {
+                outcome: Some(Outcome::NDirectProjectionFailure),
+                w0_clamped: true,
+                w2_reclaimed: false,
+                w10_residual: false,
+            }
+        );
+        assert_eq!(
+            direct_row_decision("random", None, 1_000_000, Some(700_000.0), Some(700_000.0)),
+            DirectRowDecision {
+                outcome: Some(Outcome::NDirectProjectionFailure),
+                w0_clamped: true,
+                w2_reclaimed: false,
+                w10_residual: false,
             }
         );
     }

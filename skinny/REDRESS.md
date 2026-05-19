@@ -3220,3 +3220,36 @@ perturbation.
 - W8 stays proof-only. W9 moves no rows and does not authorize future
   production reuse of the accepted proof without a new SPEC/CHALLENGE route
   naming a real source delta.
+
+## SK-V10 Wave 10 Instruments Direct Residual Admission
+
+- Item 109 admits W10 under `G-W10-DIRECT-RESIDUAL`. The wave moves exactly
+  one direct digest row, `instruments/direct_to_struct`; no parser runtime,
+  generated direct caller, SIMD primitive, generic crate, typed product row, or
+  W3-adjacent substrate path changed.
+- W10 extends the W2 direct reclamation gate with a W10-limited residual
+  predicate for `instruments` at the Section 0.2 floor of 11086 Mbps. It may
+  admit only a baseline `NO-GO` direct row classified as absent or `N-direct`
+  when Track 1 and independent Track 2 both clear the fixed floor. Hard
+  correctness failures still block admission.
+- The full coherent native Criterion capture under
+  `/tmp/skv10-w10-full-criterion` rendered run id
+  `sk-v9-open:criterion-fnv64-6f007527061ee26d`. `instruments/direct_to_struct`
+  measured Track 1 12040 Mbps, Track 2 11166 Mbps, sonic-rs direct 12674 Mbps,
+  and serde_json direct 9497 Mbps; both tracks clear the 11086 Mbps W10 floor.
+- Direct guards held in the same rendered report: `citm_catalog` 21595 / 20592
+  Mbps versus floor 18145, `marine_ik` 9066 / 9025 Mbps versus floor 7575, and
+  `unicode_basic` 9030 / 8360 Mbps versus floor 7841.
+- Evidence passed:
+  `RUSTFLAGS="-C target-cpu=native" cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench w10_direct -- --nocapture`,
+  `RUSTFLAGS="-C target-cpu=native" cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench direct_contract -- --nocapture`,
+  full native
+  `CARGO_TARGET_DIR=/tmp/skv10-w10-target CRITERION_HOME=/tmp/skv10-w10-full-criterion RUSTFLAGS="-C target-cpu=native" cargo run -p xtask -- bench-json --advisory`,
+  and
+  `CRITERION_HOME=/tmp/skv10-w10-full-criterion RUSTFLAGS="-C target-cpu=native" cargo run -p xtask -- gate-json --with-cost-facts --check-results`.
+- `gate-json` consumes the moved row as strict measured-row evidence with
+  `wave_id=SK-V10-W10`, `redress_entry=REDRESS-109`,
+  `same_wave_consumer_class=gate_json_direct_contract`, and
+  `sk_v9_open_delta=direct-residual`.
+- Overall remains `N-direct / NoGo`; eleven direct residual rows remain
+  `N-direct / NO-GO`. Close is now dispatchable.

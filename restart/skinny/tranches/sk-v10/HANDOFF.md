@@ -16,8 +16,9 @@ is rejected under REDRESS 103, and W5 root-type typed generalization proof is
 closed under REDRESS 104. W6 `github_events` root typed row admission is closed
 under REDRESS 105. W7 full-string primitive micro-proof is rejected under
 REDRESS 106. W8 hex escape micro-proof is closed under REDRESS 107. W9
-existing-call-site kernel production is rejected under REDRESS 108; W10 is the
-next live dispatch, subject to CHALLENGE.
+existing-call-site kernel production is rejected under REDRESS 108. W10
+`instruments` direct residual admission is closed under REDRESS 109; Close is
+the next live dispatch.
 
 ## 1. Read First
 
@@ -27,7 +28,7 @@ next live dispatch, subject to CHALLENGE.
 4. `restart/skinny/tranches/sk-v9/SPEC.md`
 5. `restart/skinny/tranches/sk-v9/DISPATCH-PROMPT.md`
 6. `skinny/RESULTS.md`
-7. `skinny/REDRESS.md` entries 94-108
+7. `skinny/REDRESS.md` entries 94-109
 8. `restart/skinny/tranches/sk-v10/SYNTHESIS.md`
 9. `restart/skinny/tranches/sk-v10/research/alpha/alpha-A-results-extraction.md`
 10. `restart/skinny/tranches/sk-v10/research/alpha/alpha-B-competitor-deltas.md`
@@ -94,6 +95,10 @@ next live dispatch, subject to CHALLENGE.
 71. `restart/skinny/tranches/sk-v10/research/w9/w9-plan.md`
 72. `restart/skinny/tranches/sk-v10/research/w9/hardening/CHALLENGE-W9-CONSOLIDATED.md`
 73. `restart/skinny/tranches/sk-v10/research/w9/w9-redress.md`
+74. `restart/skinny/tranches/sk-v10/research/w10/w10-research.md`
+75. `restart/skinny/tranches/sk-v10/research/w10/w10-plan.md`
+76. `restart/skinny/tranches/sk-v10/research/w10/hardening/CHALLENGE-W10-CONSOLIDATED.md`
+77. `restart/skinny/tranches/sk-v10/research/w10/w10-redress.md`
 
 ## 2. Current State
 
@@ -106,7 +111,7 @@ Current `skinny/RESULTS.md` state:
 | Family | State |
 |---|---|
 | `parse_only` | 17 `S / NO-GO` |
-| `direct_to_struct` | 5 `A / GO`, 12 `N-direct / NO-GO` |
+| `direct_to_struct` | 6 `A / GO`, 11 `N-direct / NO-GO`; W10 `instruments` admitted |
 | `real_typed_struct` | 7 `A / GO`; W4 `instruments` rejected by Track 2 floor miss, W6 `github_events` admitted |
 
 ## 3. Candidate Boundaries
@@ -124,13 +129,14 @@ Current `skinny/RESULTS.md` state:
 
 ## 4. Next Move
 
-1. Dispatch W10, Direct Residual Behavior Tranche, from SPEC Section 13.
-2. Select exactly one direct-output/control mechanism and at most three target
-   rows.
-3. Run CHALLENGE before redress and reject helper-transfer, scalar-parent fold,
-   W3, parse-only, and direct-vs-typed relabeling routes.
-4. Preserve direct guard rows, typed guard rows if report output is refreshed,
-   and leave parse-only rows `S / NO-GO`.
+1. Dispatch Close, SK-V10 Close Accounting, from SPEC Section 14.
+2. Reconcile `RESULTS.md`, `REDRESS.md`, `SPEC.md`, `DISPATCH-PROMPT.md`,
+   `HANDOFF.md`, and `SYNTHESIS.md` against W0-W10 dispositions.
+3. Confirm `gate-json --with-cost-facts --check-results` still consumes the
+   W10 row and rejects W3 reopen, parse-only SOTA, missing comparator, missing
+   run-id, missing provenance, and Track 2 coupling failures.
+4. Route REDRESS 98 to Pass Omega and the CSS L4 / Sheets / BBNF-self
+   generalization risk to the totality track.
 
 ## 5. Refusal Conditions
 
@@ -152,6 +158,6 @@ SK-V10 Alpha, S-P1 Profile, S-P2 Research, S-P3 Synthesis-Plan, W0 telemetry
 freeze, W1 direct contract, W2 direct reclamation, and W3 parse-only firewall
 are closed, W4 is rejected under REDRESS 103, W5 is closed under REDRESS 104,
 W6 is closed under REDRESS 105, W7 is rejected under REDRESS 106, W8 is closed
-under REDRESS 107, and W9 is rejected under REDRESS 108. The next live work is
-W10 direct residual behavior. No direct row movement is authorized unless it
-satisfies the REDRESS 100 contract and the Section 0.2 numeric floors.
+under REDRESS 107, W9 is rejected under REDRESS 108, and W10 is closed under
+REDRESS 109. The next live work is Close accounting. No further direct row
+movement is authorized in SK-V10.

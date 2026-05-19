@@ -17,8 +17,9 @@ Track 2 typed oracle missed the W4 floor. REDRESS 104 closes W5 as a
 root-typed proof with no row movement. REDRESS 105 admits W6 for
 `github_events/real_typed_struct`. REDRESS 107 admits W8 as proof-only C6
 evidence. REDRESS 108 rejects W9 production because the exact caller was
-already wired and direct row floors failed. No SK-V10 wave may reopen W3
-through a rename.
+already wired and direct row floors failed. REDRESS 109 admits W10 for
+`instruments/direct_to_struct` under the direct residual gate. No SK-V10 wave
+may reopen W3 through a rename.
 
 ## 0. Close Condition And Goalset
 
@@ -31,13 +32,14 @@ SK-V10 closes only when all of these are true:
    must state that explicitly.
 3. Every wave in Section 2 is admitted by its gate, rejected with measured
    REDRESS evidence, or routed out of SK-V10 by a close disposition.
-4. The six current `real_typed_struct A / GO` rows are preserved unless a
+4. The seven current `real_typed_struct A / GO` rows are preserved unless a
    same-wave gate records a measured REDRESS disposition: `twitter`,
-   `citm_catalog`, `apache_builds`, `update_center`, `mesh`, and `marine_ik`.
+   `citm_catalog`, `apache_builds`, `github_events`, `update_center`, `mesh`,
+   and `marine_ik`.
 5. The current `direct_to_struct A / GO` rows are preserved unless a same-wave
    direct gate records a measured REDRESS disposition: the three opening guard
    rows `citm_catalog`, `marine_ik`, and `unicode_basic`, plus the W2-admitted
-   `apache_builds` and `numbers` rows.
+   `apache_builds` and `numbers` rows, and the W10-admitted `instruments` row.
 6. Parse-only remains outside the SOTA close target while rows are
    `S / NO-GO`. Parse-only throughput, PMU, cycles, masking probes, and
    structural scans are diagnostic non-producers.
@@ -45,7 +47,7 @@ SK-V10 closes only when all of these are true:
    exists. A direct admission requires same-run strict direct comparator
    evidence, generated Track 1, independent Track 2/oracle, matching output
    plane, validation path, `gate-json` consumption, and both Track 1 and the
-   independent oracle meeting `ceil(sonic_direct / 1.10)`.
+   independent oracle meeting the Section 0.2 direct floor for that row.
 8. Typed rows move only with full generated/serde_json/sonic-rs/independent
    checksum parity over the full fixture, same-run typed comparator rows, and a
    typed output-plane gate. Digest evidence never admits typed product rows.
@@ -69,12 +71,14 @@ run id, `sk-v9-open:criterion-fnv64-a1e8a51ae806d386`. W6 then refreshed the
 native report over one coherent Criterion root with run id
 `sk-v9-open:criterion-fnv64-91b28e519f0fea1d`, retaining the inherited
 SK-V9-open run-id grammar for baseline rows while adding one `SK-V10-W6`
-typed row.
+typed row. W10 refreshed the report again over one coherent native Criterion
+root with run id `sk-v9-open:criterion-fnv64-6f007527061ee26d`, preserving
+the inherited run-id grammar while adding one `SK-V10-W10` direct row.
 
 | Family | Count | Current posture | SK-V10 role |
 |---|---:|---|---|
 | `parse_only` | 17 | all `S / NO-GO` | diagnostic only |
-| `direct_to_struct` | 17 | 5 `A / GO`, 12 `N-direct / NO-GO` | primary JSON frontier |
+| `direct_to_struct` | 17 | 6 `A / GO`, 11 `N-direct / NO-GO` | primary JSON frontier |
 | `real_typed_struct` | 7 | all `A / GO` | product-plane SOTA surface |
 
 ### 0.2 Shared Numeric Floors
@@ -116,6 +120,7 @@ Existing typed `A / GO` rows must preserve these typed Track 1 floors:
 | `twitter` | 14424 |
 | `citm_catalog` | 20053 |
 | `apache_builds` | 7373 |
+| `github_events` | 11541 |
 | `update_center` | 11365 |
 | `mesh` | 8428 |
 | `marine_ik` | 7369 |
@@ -184,8 +189,8 @@ block:
 | W7 | 10 | `C4` or `C5` | String Primitive Micro-Proof | Rejected - REDRESS 106 | Proof-only; no accepted proof | 90-260 proof LOC | MEDIUM-HIGH | <=90 min |
 | W8 | 11 | `C6` | Escape/Segment Micro-Proof | Closed - REDRESS 107 | Proof-only; C6 accepted | 90-260 proof LOC | HIGH | <=90 min |
 | W9 | 12 | proven `C6` | Existing-Call-Site Kernel Production | Rejected - REDRESS 108 | Direct/typed only | 220-420 source/bench/gate LOC | HIGH | <=90 min |
-| W10 | 13 | `C1` follow-on | Direct Residual Behavior Tranche | Dispatchable with CHALLENGE | Direct only, <=3 rows | 320 source/gate LOC; 420 only with CHALLENGE | HIGH | <=90 min |
-| Close | 14 | `C11`, docs | SK-V10 Close Accounting | Conditional on all dispatched waves | None | 80-160 docs/gate LOC | LOW | <=90 min |
+| W10 | 13 | `C1` follow-on | Direct Residual Behavior Tranche | Closed - REDRESS 109 | `instruments` direct row admitted | 320 source/gate LOC; 420 only with CHALLENGE | HIGH | <=90 min |
+| Close | 14 | `C11`, docs | SK-V10 Close Accounting | Dispatchable | None | 80-160 docs/gate LOC | LOW | <=90 min |
 
 Manifest rules:
 
@@ -193,8 +198,8 @@ Manifest rules:
    under REDRESS 101, W3 is closed under REDRESS 102, W4 is rejected under
    REDRESS 103, W5 is closed under REDRESS 104, W6 is closed under REDRESS
    105, W7 is rejected under REDRESS 106, W8 is closed under REDRESS 107, and
-   W9 is rejected under REDRESS 108. W10 is the next dispatchable wave, subject
-   to CHALLENGE. Close is conditional until its entry gate passes.
+   W9 is rejected under REDRESS 108, and W10 is closed under REDRESS 109.
+   Close is the next dispatchable wave.
 2. W1 must exist before W2 or W10 can move direct rows. A direct row gate
    without W1 is a REVISE.
 3. W3 is a firewall, not the retired W3 implementation route.
@@ -212,8 +217,8 @@ Manifest rules:
    rejected because the caller was already wired and row floors failed. `C8`
    digit/number and `C9` whitespace/class work do not have final SK-V10 proof
    waves and cannot feed production without a future SPEC/CHALLENGE amendment.
-7. W10 is direct residual work, not a route to REDRESS 73 helper-transfer,
-   REDRESS 93 scalar-parent folding, or W3.
+7. W10 is closed direct residual work, not a route to REDRESS 73
+   helper-transfer, REDRESS 93 scalar-parent folding, or W3.
 8. `C10` and `C13` are inventory-only on the Apple aarch64 host. `C14` and
    `C15` are rejected.
 

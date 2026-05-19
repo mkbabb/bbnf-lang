@@ -15,8 +15,9 @@ root-type typed generalization proof is closed under REDRESS 104. W6
 full-string primitive micro-proof is rejected under REDRESS 106. W8 hex escape
 micro-proof is closed under REDRESS 107. W9 existing-call-site kernel
 production is rejected under REDRESS 108. Source work is authorized only
-wave-by-wave after the requested wave's SPEC entry gate passes; W10 is the next
-live dispatch, subject to CHALLENGE.
+wave-by-wave after the requested wave's SPEC entry gate passes. W10 direct
+residual admission is closed under REDRESS 109 for
+`instruments/direct_to_struct`; Close is the next live dispatch.
 
 REDRESS 96, 97, and 98 retire the W3 union/event/class-column substrate
 thesis. No implementation agent may reopen it through a renamed W3, a
@@ -62,15 +63,20 @@ Read in order:
     - `research/w3/w3-research.md`.
     - `research/w3/w3-plan.md`.
     - `research/w3/w3-redress.md`.
-16. The W4-W7 close artefacts:
+16. The W4-W9 close artefacts:
     - `research/w4/w4-redress.md`.
     - `research/w5/w5-redress.md`.
     - `research/w6/w6-redress.md`.
     - `research/w7/w7-redress.md`.
     - `research/w8/w8-redress.md`.
     - `research/w9/w9-redress.md`.
-17. `skinny/RESULTS.md`.
-18. `skinny/REDRESS.md`.
+17. The W10 close artefacts:
+    - `research/w10/w10-research.md`.
+    - `research/w10/w10-plan.md`.
+    - `research/w10/hardening/CHALLENGE-W10-CONSOLIDATED.md`.
+    - `research/w10/w10-redress.md`.
+18. `skinny/RESULTS.md`.
+19. `skinny/REDRESS.md`.
 
 ## Wave Manifest
 
@@ -86,8 +92,8 @@ Read in order:
 | W7 | Section 10 | String Primitive Micro-Proof | `C4` or `C5` | Rejected - REDRESS 106 | 90-260 proof LOC | <=90 min |
 | W8 | Section 11 | Escape/Segment Micro-Proof | `C6` | Closed - REDRESS 107 | 90-260 proof LOC | <=90 min |
 | W9 | Section 12 | Existing-Call-Site Kernel Production | proven `C6` | Rejected - REDRESS 108 | 220-420 source/bench/gate LOC | <=90 min |
-| W10 | Section 13 | Direct Residual Behavior Tranche | `C1` follow-on | Dispatchable with CHALLENGE | 320 source/gate LOC; 420 only with CHALLENGE | <=90 min |
-| Close | Section 14 | SK-V10 Close Accounting | `C11`, docs | Conditional on W0-W10 dispositions | 80-160 docs/gate LOC | <=90 min |
+| W10 | Section 13 | Direct Residual Behavior Tranche | `C1` follow-on | Closed - REDRESS 109 | 320 source/gate LOC; 420 only with CHALLENGE | <=90 min |
+| Close | Section 14 | SK-V10 Close Accounting | `C11`, docs | Dispatchable | 80-160 docs/gate LOC | <=90 min |
 
 The dependency order is firm. W1 must precede W2 and W10. W3 is a firewall
 only and never dispatches a W3 substrate. W4 rejected with measurement and no
@@ -97,9 +103,10 @@ row. W6 admitted `github_events/real_typed_struct`. W7 rejected the
 proof-only micro wave and accepted C6 for `unescape_uxxxx_x4_neon` in
 `unescape_string` under REDRESS 107. W9 rejected production consumption under
 REDRESS 108 because the exact caller was already wired and direct row floors
-failed. `C8` and `C9` cannot feed production without a future SPEC/CHALLENGE
-amendment. A wave whose SPEC entry gate is not PASS must be refused with the
-reason recorded.
+failed. W10 admitted `instruments/direct_to_struct` under REDRESS 109. `C8`
+and `C9` cannot feed production without a future SPEC/CHALLENGE amendment.
+Close is dispatchable. A wave whose SPEC entry gate is not PASS must be refused
+with the reason recorded.
 
 ## Per-Wave Triumvirate Protocol
 

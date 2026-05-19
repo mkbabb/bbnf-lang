@@ -15,7 +15,8 @@ root-type typed generalization proof is closed under REDRESS 104. W6
 full-string primitive micro-proof is rejected under REDRESS 106. W8 hex escape
 micro-proof is closed under REDRESS 107. W9 existing-call-site kernel
 production is rejected under REDRESS 108. SK-V10 implementation is dispatched
-by `SPEC.md` and `DISPATCH-PROMPT.md`; W10 is the next live wave.
+by `SPEC.md` and `DISPATCH-PROMPT.md`. W10 direct residual admission is closed
+under REDRESS 109; Close is the next live wave.
 
 ## Authority
 
@@ -35,7 +36,7 @@ by `SPEC.md` and `DISPATCH-PROMPT.md`; W10 is the next live wave.
 - `restart/skinny/tranches/sk-v10/research/p2/p2g-candidate-ledger.md`
 - `restart/skinny/tranches/sk-v10/research/p2/hardening/HARDENING-S-P2-V1-CONSOLIDATED.md`
 - `skinny/RESULTS.md`
-- `skinny/REDRESS.md` entries 94-108
+- `skinny/REDRESS.md` entries 94-109
 
 ## Section 0 - Alpha Close Condition
 
@@ -54,26 +55,27 @@ Alpha closes only when:
 
 ## Section 1 - Current Measured State
 
-The current result authority is `skinny/RESULTS.md`, W2-rendered over the
-frozen `SK-V9-open` run id.
+The current result authority is `skinny/RESULTS.md`, W10-rendered over one
+coherent native Criterion root with run id
+`sk-v9-open:criterion-fnv64-6f007527061ee26d`.
 
 | Family | Count | State |
 |---|---:|---|
 | `parse_only` | 17 | all `S / NO-GO`; planning evidence only |
-| `direct_to_struct` | 17 | 5 `A / GO` digest rows, 12 `N-direct / NO-GO`; primary SK-V10 JSON frontier |
+| `direct_to_struct` | 17 | 6 `A / GO` digest rows, 11 `N-direct / NO-GO`; primary SK-V10 JSON frontier |
 | `real_typed_struct` | 7 | all `A / GO`; primary product-plane SOTA surface |
 
 Typed product rows:
 
 | Corpus | Track 1 Mbps | sonic typed Mbps | Delta |
 |---|---:|---:|---:|
-| `twitter` | 18302 | 15866 | +15.3% |
-| `citm_catalog` | 35102 | 22058 | +59.1% |
-| `apache_builds` | 8174 | 8110 | +0.8% |
-| `update_center` | 11847 | 12501 | -5.2%, still GO under 1.10 ns slack |
-| `mesh` | 10032 | 9270 | +8.2% |
-| `marine_ik` | 10728 | 8105 | +32.4% |
-| `github_events` | 12827 | 12695 | +1.0% |
+| `twitter` | 18241 | 15636 | +16.7% |
+| `citm_catalog` | 36135 | 22066 | +63.8% |
+| `apache_builds` | 8534 | 8321 | +2.5% |
+| `github_events` | 13137 | 12926 | +1.6% |
+| `update_center` | 12069 | 12727 | -5.2%, still GO under 1.10 ns slack |
+| `mesh` | 9690 | 9253 | +4.7% |
+| `marine_ik` | 12186 | 9322 | +30.7% |
 
 ## Section 2 - Corrected Diagnosis
 
@@ -90,15 +92,15 @@ consumes a measured-row strictness and validation-path change.
 
 The parse-plane SOTA target is retired for SK-V10. `parse_only` stays a
 diagnostic substrate-guard family while rows remain `S / NO-GO`; it is not a
-close target and cannot be used to claim SOTA. The direct plane is the largest
-remaining JSON pool with a plausible product boundary: 14 direct rows are still
-`N-direct / NO-GO`, while 3 digest rows already beat sonic strict.
+close target and cannot be used to claim SOTA. The direct plane remains the
+largest JSON frontier with a plausible product boundary: 11 direct rows are
+still `N-direct / NO-GO`, while 6 digest rows are `A / GO`.
 
 ## Section 3 - SK-V10 Goalset
 
-1. Preserve the six current typed `A / GO` rows and the three direct digest
-   `A / GO` guard rows.
-2. Profile and plan the `direct_to_struct` plane first. Its 14 NO-GO rows are
+1. Preserve the seven current typed `A / GO` rows and the six direct digest
+   `A / GO` rows.
+2. Profile and plan the `direct_to_struct` plane first. Its 11 NO-GO rows are
    the primary JSON frontier for SK-V10.
 3. Add typed product rows only through full generated/serde/sonic parity and
    same-run typed comparator gates.
@@ -167,7 +169,7 @@ comparator sources.
 
 W2 closed direct row-table reclamation. `apache_builds` and `numbers` moved to
 direct `A / GO` because both generated Track 1 and independent Track 2 cleared
-their Section 0.2 floors. The remaining twelve direct rows stay
+their Section 0.2 floors. At W2 close, the remaining twelve direct rows stayed
 `N-direct / NO-GO`.
 
 W3 closed as a parse-only firewall. No row moved. The active packet keeps W3
@@ -208,6 +210,15 @@ Section 0.2 floors: `unicode_escapes` 5207 / 5234 Mbps versus 12527, and
 `y_string_unicode` 5096 / 3723 Mbps versus 8027. No production caller or
 `RESULTS.md` row changed.
 
+W10 closed direct residual admission. `instruments/direct_to_struct` moved to
+direct `A / GO`: Track 1 12040 Mbps and independent Track 2 11166 Mbps both
+clear the fixed W10 floor of 11086 Mbps under the same-run sonic-rs direct
+comparator at 12674 Mbps. Direct guards held in the same report:
+`citm_catalog` 21595 / 20592 Mbps versus floor 18145, `marine_ik` 9066 / 9025
+Mbps versus floor 7575, and `unicode_basic` 9030 / 8360 Mbps versus floor
+7841. The row is strict measured-row evidence consumed by `gate-json` under
+REDRESS 109.
+
 ## Section 7 - Micro-Prove-First Gate
 
 No substrate or kernel intervention reaches S-P3 wave-scoping until it has a
@@ -240,7 +251,7 @@ CSS L4 / Sheets / BBNF-self generalization is the unexercised thesis risk.
 ## Section 9 - Dispatch Boundary
 
 This file does not independently authorize source work. `G-ALPHA-SK-V10`, S-P1
-Profile, S-P2 Research, S-P3 Synthesis-Plan, W0, W1, W2, W3, W5, and W6 are
-closed; W8 is proof-closed; W4, W7, and W9 are rejected with measurement. Wave
+Profile, S-P2 Research, S-P3 Synthesis-Plan, W0, W1, W2, W3, W5, W6, W8, and
+W10 are closed; W4, W7, and W9 are rejected with measurement. Wave
 implementation proceeds only through the current `SPEC.md` and
-`DISPATCH-PROMPT.md` entry gates.
+`DISPATCH-PROMPT.md` entry gates; Close is the next live wave.

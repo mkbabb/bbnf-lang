@@ -4,12 +4,11 @@ Date: 2026-05-20.
 
 Gate: G-Alpha.
 Tranche: SK-V12.
-Status: PENDING V4 HARDENING.
+Status: PASS.
 
-This presentation replaces the stale pre-pin/V2 presentation. It is not a
-`G-Alpha PASS` record yet. G-Alpha is presented only after the pin-aware Alpha
-packet and this presentation converge under hardening with no unresolved
-REVISE disposition.
+This presentation replaces the stale pre-pin/V2 presentation. The pin-aware
+Alpha packet and this presentation converged under V4 hardening with no
+unresolved REVISE disposition.
 
 ## Authority
 
@@ -125,7 +124,8 @@ SIMD primitives reject the wave.
 
 ## Gate Result
 
-PENDING V4 HARDENING.
+G-Alpha PASS.
 
-When hardening accepts this presentation, G-Alpha may authorize SK-V12 S-P1
-Profile under the user pin. Until then, no implementation wave is dispatchable.
+Next authority: SK-V12 S-P1 Profile under the user pin. No implementation wave
+is dispatchable until S-P1, S-P2, and S-P3 converge and downstream S-P3
+materializes replacement `SPEC.md` and `DISPATCH-PROMPT.md`.

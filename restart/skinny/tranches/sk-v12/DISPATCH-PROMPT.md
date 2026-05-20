@@ -5,7 +5,7 @@ SK-V12 under `USER-PIN-W1-CSS-L4-SOTA.md` (2026-05-20). It binds to the packet
 at `restart/skinny/tranches/sk-v12/`. Each wave is executed by one triumvirate
 per `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`.
 
-Status: PIN-V1 S-P3 draft. Dispatch authority exists only after S-P3
+Status: PIN-V2 S-P3 draft. Dispatch authority exists only after S-P3
 CHALLENGE converges and the orchestrator promotes this packet.
 
 ## Required Reading
@@ -70,16 +70,20 @@ Load-bearing user-pin rules:
 |---|---|---|---|---:|---:|
 | W0 | Section 3 | Pin Telemetry And Gate Revalidation | First after S-P3 convergence | <=160 docs/gate/test; medium | 20m research / 15m plan / 30m redress |
 | W1a | Section 4 | GrammarConfig + Lock 14 Legality Gate | Conditional on W0 | <=360 hand + generated named; high | 20m / 15m / 30m |
-| W1b | Section 5 | CSS L4 Generated Track 1 + Lightningcss Comparator | Conditional on W1a | <=620 hand + generated named; high | 20m / 15m / 30m |
-| W2 | Section 6 | `escape_mask_64` Correctness Prerequisite | Conditional on W1a; before SIMD admit | <=180 hand/test; high | 20m / 15m / 30m |
-| W3 | Section 7 | CSS-Local Same-Tape Union Attempt | Conditional on W1b measured CSS row + CHALLENGE | <=420 hand + generated named; high | 20m / 15m / 30m |
-| W4 | Section 8 | ASM-Gen CSS Consumer + AArch64 Orphan Disposition | Conditional on W1b + W2 + CHALLENGE | <=430 hand/test/gate; high | 20m / 15m / 30m |
-| W5 | Section 9 | Close And Alpha Feedback | Conditional on W0, W1a, W1b, W2, W3, and W4 disposition | <=140 docs/report/gate; medium | 20m / 15m / 30m |
+| W2 | Section 5 | `escape_mask_64` Correctness Prerequisite | Conditional on W1a; before SIMD admit | <=180 hand/test; high | 20m / 15m / 30m |
+| W1b-1 | Section 6 | CSS L4 Generated Track 1 + Independent Oracle Scaffold | Conditional on W1a; scalar-only unless W2 passed | <=360 hand + generated named; high | 20m / 15m / 30m |
+| W1b-2 | Section 7 | CSS L4 Lightningcss Comparator + Admission Gate | Conditional on W1b-1 | <=300 hand/gate + generated named; high | 20m / 15m / 30m |
+| W3 | Section 8 | CSS-Local Same-Tape Union Attempt | Conditional on W1b-2 measured CSS row + CHALLENGE | <=420 hand + generated named; high | 20m / 15m / 30m |
+| W4 | Section 9 | ASM-Gen CSS Consumer + AArch64 Orphan Disposition | Conditional on W1b-2 + W2 + CHALLENGE | <=430 hand/test/gate; high | 20m / 15m / 30m |
+| W5 | Section 10 | Close And Alpha Feedback | Conditional on W0, W1a, W2, W1b-1, W1b-2, W4, and conditional W3 disposition | <=140 docs/report/gate; medium | 20m / 15m / 30m |
 
-The order is firm. W1b cannot select Sheets or BBNF-self before a measured CSS
-redress attempt. W3 and W4 are required for a FIXPOINT close. If ADMIT is
-achieved before W3/W4, close still requires the orphan set to be zero and all
-close docs to agree.
+The order is firm. W2 is a correctness prerequisite after W1a and before any
+new SIMD/ASM admission; W1b-1 may run before W2 only if its accepted plan proves
+the CSS scaffold is scalar-only. W1b-1 and W1b-2 cannot select Sheets or
+BBNF-self before a measured CSS redress attempt. W3 and W4 are required for a
+FIXPOINT close. If ADMIT is achieved before W3, close may route W3 as
+not-required, but W4 must still produce zero-orphan disposition and all close
+docs must agree.
 
 ## Per-Wave Triumvirate Protocol
 
@@ -108,9 +112,9 @@ section.
 
 ### Phase 2.5 - CHALLENGE
 
-Mandatory for W1a, W1b, W2, W3, W4, and any W0/W5 plan that changes gate
-semantics. Six lenses review correctness, generality/Lock 14, regression and
-REDRESS, cost, hidden coupling, and anti-paper-close. REJECT or unresolved
+Mandatory for W1a, W2, W1b-1, W1b-2, W3, W4, and any W0/W5 plan that changes
+gate semantics. Six lenses review correctness, generality/Lock 14, regression
+and REDRESS, cost, hidden coupling, and anti-paper-close. REJECT or unresolved
 REVISE returns to plan.
 
 W3 CHALLENGE must explicitly adjudicate the material differential from REDRESS
@@ -138,17 +142,22 @@ The SPEC is the single source for detailed gates:
 
 - `G-W0-PIN-TELEMETRY` (SPEC Section 3)
 - `G-W1a-GRAMMARCONFIG-LOCK14` (SPEC Section 4)
-- `G-W1b-CSS-L4-COMPARATOR` (SPEC Section 5)
-- `G-W2-ESCAPE-MASK-CORRECTNESS` (SPEC Section 6)
-- `G-W3-CSS-UNION-ATTEMPT` (SPEC Section 7)
-- `G-W4-ASM-GEN-CONSUMER` (SPEC Section 8)
-- `G-W5-CLOSE` (SPEC Section 9)
+- `G-W2-ESCAPE-MASK-CORRECTNESS` (SPEC Section 5)
+- `G-W1b-1-CSS-L4-ORACLE` (SPEC Section 6)
+- `G-W1b-2-CSS-L4-LIGHTNINGCSS` (SPEC Section 7)
+- `G-W3-CSS-UNION-ATTEMPT` (SPEC Section 8)
+- `G-W4-ASM-GEN-CONSUMER` (SPEC Section 9)
+- `G-W5-CLOSE` (SPEC Section 10)
 
 Load-bearing facts:
 
 - W1a is legality, not performance close.
-- W1b creates and measures CSS L4. A strict-equal CSS row below
-  `lightningcss_mbps + 1` is a measured baseline, not ADMIT.
+- W1b-1 creates the exact CSS L4 generated row:
+  `css_l4/declaration_values/direct_to_struct/main`, output plane
+  `css_l4_declaration_value_fact_stream`, runtime path
+  `skinny/crates/runtime/src/grammars/css_l4_declaration_values/`.
+- W1b-2 adds lightningcss measurement and the admission gate. A strict-equal CSS
+  row below `lightningcss_mbps + 1` is a measured baseline, not ADMIT.
 - W2 is a correctness prerequisite. It moves no row by itself.
 - W3 may admit or reject, but a measured, materially differentiated reject
   counts as the union attempt required for FIXPOINT.
@@ -223,9 +232,9 @@ state. At the cap, halt and surface the decision point.
 
 ## Convergence And Escalation
 
-SK-V12 converges when W0, W1a, W1b, W2, W3, W4, and W5 have admitted,
-rejected, routed, or blocked with evidence, and SPEC Section 0 ADMIT or
-FIXPOINT holds. If neither
+SK-V12 converges when W0, W1a, W2, W1b-1, W1b-2, W4, W5, and W3 when required
+for FIXPOINT have admitted, rejected, routed, or blocked with evidence, and
+SPEC Section 0 ADMIT or FIXPOINT holds. If neither
 holds, W5 routes a Pass Alpha SK-V12 -> SK-V13 packet and the campaign
 continues.
 

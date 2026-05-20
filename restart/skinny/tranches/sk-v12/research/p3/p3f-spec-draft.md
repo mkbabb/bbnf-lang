@@ -1,6 +1,6 @@
 # SK-V12 P3-F: SPEC + Dispatch Draft
 
-Pass: S-P3 Synthesis-Plan. Cycle: PIN-V1.
+Pass: S-P3 Synthesis-Plan. Cycle: PIN-V2.
 Date: 2026-05-20.
 Scope: regenerate the SK-V12 wave SPEC and per-wave dispatch prompt under the
 2026-05-20 USER PIN, superseding the stale pre-pin V5 packet.
@@ -30,7 +30,7 @@ not prove CSS behavior. S-P2 narrows the selectable implementation pool:
 
 | Family | P2 status | S-P3 consequence |
 |---|---|---|
-| CSS L4 generated baseline/comparator | Required first target | W1b must create generated CSS Track 1, independent oracle/Track 2, and lightningcss same-plane comparator. |
+| CSS L4 generated baseline/comparator | Required first target | W1b-1 creates the exact generated CSS Track 1 row and independent oracle/Track 2; W1b-2 adds lightningcss same-plane comparator and admission gate. |
 | `GrammarConfig` / generated metadata | Required legality precondition | W1a lands before CSS emission can be legal. |
 | `escape_mask_64` correctness | Required before SIMD admission | W2 verifies and resolves the xorshift falsifier before W4 can admit SIMD/ASM. |
 | `class_mask64_transient`, generated FIRST/follow dispatch, bounded string, digit run, hex quartet | Conditional primitive candidates | May dispatch only with scalar reference, parity/checkasm where applicable, micro-proof, and same-wave CSS consumer. |
@@ -38,7 +38,7 @@ not prove CSS behavior. S-P2 narrows the selectable implementation pool:
 | ASM-gen / ARMv9.2 route | Category unblocked | W4 must attempt a CSS or JSON-guard consumed ASM-gen candidate if ADMIT is not already closed, and any close needs zero orphans. |
 
 The stale V5 packet treated non-JSON baseline admission and a 1% lift as the
-campaign close. PIN-V1 replaces that with an ADMIT/FIXPOINT close:
+campaign close. The pin-aware packet replaces that with an ADMIT/FIXPOINT close:
 
 - ADMIT: generated CSS L4 Track 1 > `lightningcss_mbps + 1`, strict and
   same-plane, with Lock 14/16, JSON guards, and zero orphan primitives.
@@ -65,16 +65,19 @@ Draft wave manifest:
 |---|---|---|---|---:|---|---:|
 | W0 | Section 3 | Pin Telemetry And Gate Revalidation | Dispatchable after S-P3 convergence | <=160 docs/gate/test; 0 behavior | medium | <=30 min |
 | W1a | Section 4 | GrammarConfig + Lock 14 Legality Gate | Conditional on W0 close | <=360 hand + generated named separately | high | <=30 min redress |
-| W1b | Section 5 | CSS L4 Generated Track 1 + Lightningcss Comparator | Conditional on W1a close | <=620 hand + generated named separately | high | <=30 min redress |
-| W2 | Section 6 | `escape_mask_64` Correctness Prerequisite | Conditional on W1a close; before any SIMD admit | <=180 hand/test | high | <=30 min redress |
-| W3 | Section 7 | CSS-Local Same-Tape Union Attempt | Conditional on W1b measured CSS row + CHALLENGE | <=420 hand + generated named separately | high | <=30 min redress |
-| W4 | Section 8 | ASM-Gen CSS Consumer + AArch64 Orphan Disposition | Conditional on W1b + W2 + CHALLENGE | <=430 hand/test/gate | high | <=30 min redress |
-| W5 | Section 9 | Close And Alpha Feedback | Conditional on W0, W1a, W1b, W2, W3, and W4 disposition | <=140 docs/report/gate | medium | <=30 min |
+| W2 | Section 5 | `escape_mask_64` Correctness Prerequisite | Conditional on W1a close; before any SIMD admit | <=180 hand/test | high | <=30 min redress |
+| W1b-1 | Section 6 | CSS L4 Generated Track 1 + Independent Oracle Scaffold | Conditional on W1a close; scalar-only unless W2 PASS | <=360 hand + generated named separately | high | <=30 min redress |
+| W1b-2 | Section 7 | CSS L4 Lightningcss Comparator + Admission Gate | Conditional on W1b-1 close | <=300 hand/gate + generated named separately | high | <=30 min redress |
+| W3 | Section 8 | CSS-Local Same-Tape Union Attempt | Conditional on W1b-2 measured CSS row + CHALLENGE | <=420 hand + generated named separately | high | <=30 min redress |
+| W4 | Section 9 | ASM-Gen CSS Consumer + AArch64 Orphan Disposition | Conditional on W1b-2 + W2 + CHALLENGE | <=430 hand/test/gate | high | <=30 min redress |
+| W5 | Section 10 | Close And Alpha Feedback | Conditional on W0, W1a, W2, W1b-1, W1b-2, W4, and conditional W3 disposition | <=140 docs/report/gate | medium | <=30 min |
 
-The wave count stays below the skinny ceiling. W3 and W4 are not optional for a
-FIXPOINT close. If W1b or another wave already reaches ADMIT, W4/W5 still must
-dispose the orphan set before close unless every production orphan is already
-gone by admission/removal/demotion evidence.
+The wave count stays below the skinny ceiling. W2 precedes any SIMD/ASM
+admission. W1b-1 may precede W2 only when its accepted plan proves the CSS
+scaffold is scalar-only. W3 and W4 are not optional for a FIXPOINT close. If
+W1b-2 or another wave already reaches ADMIT, W4/W5 still must dispose the orphan
+set before close unless every production orphan is already gone by
+admission/removal/demotion evidence.
 
 ## §3 - Falsifiability Binding
 
@@ -87,25 +90,33 @@ and JSON result seed without behavior changes.
 or are measured-disposition demoted, and a gate scan proves CSS emission is
 legal.
 
-`G-W1b-CSS-L4-COMPARATOR` passes only when generated CSS L4 Track 1, independent
-oracle/Track 2, and lightningcss all emit the same canonical CSS fact stream
-for the selected corpus. The gate records generated Track 1 Mbps,
-oracle/Track 2 Mbps, `lightningcss_mbps`, strict equality, provenance, sample
-count, run id, host, build flags, generated LOC/size, JSON guard state, and
-whether `track1_mbps > lightningcss_mbps + 1`. A measurable CSS row below that
-bar is a measured baseline, not close.
+`G-W1b-1-CSS-L4-ORACLE` passes only when the exact row
+`css_l4/declaration_values/direct_to_struct/main` compiles from generated CSS L4
+runtime under `skinny/crates/runtime/src/grammars/css_l4_declaration_values/`,
+emits the `css_l4_declaration_value_fact_stream` output plane, and matches an
+independent Track 2/oracle with gate-consumed provenance and finite Mbps. It is
+a scaffold/equality gate, not CSS ADMIT.
+
+`G-W1b-2-CSS-L4-LIGHTNINGCSS` passes only when lightningcss is added on the same
+corpus, same output plane, same host, and strict equality semantics. The gate
+records generated Track 1 Mbps, oracle/Track 2 Mbps, `lightningcss_mbps`, strict
+three-way equality, provenance, sample count, run id, host, build flags,
+generated LOC/size, JSON guard state, and whether
+`track1_mbps > lightningcss_mbps + 1`. A measurable CSS row below that bar is a
+measured baseline, not close.
 
 `G-W2-ESCAPE-MASK-CORRECTNESS` passes only when the `escape_mask_64` scalar
 reference, NEON body, and checkasm/corpus parity cover the xorshift falsifier
 `0xCAFEF00DBAADF00D` and boundary carry cases. Until this gate passes, no new
 SIMD/ASM admission is legal.
 
-`G-W3-CSS-UNION-ATTEMPT` passes only with CSS baseline evidence, a fresh profile
-or microbench naming a CSS hot leaf, CHALLENGE acceptance, REDRESS 96/97/98
-citations, a material differential from the class-column/streaming-cursor/
-class-lane historical attempts, single-substrate same-tape semantics, strict
-CSS equality, and JSON guards. The wave may admit if it beats lightningcss; it
-may reject honestly and still count as the required union attempt for FIXPOINT.
+`G-W3-CSS-UNION-ATTEMPT` passes only with W1b-2 CSS baseline evidence, a fresh
+profile or microbench naming a CSS hot leaf, CHALLENGE acceptance, REDRESS
+96/97/98 citations, a material differential from the class-column/
+streaming-cursor/class-lane historical attempts, single-substrate same-tape
+semantics, strict CSS equality, and JSON guards. The wave may close as CSS ADMIT
+only if the final CSS row beats lightningcss; it may reject honestly and still
+count as the required union attempt for FIXPOINT.
 
 `G-W4-ASM-GEN-CONSUMER` passes only with W2 correctness complete, CHALLENGE
 acceptance, a same-host microbench proving the selected ASM-gen candidate on a

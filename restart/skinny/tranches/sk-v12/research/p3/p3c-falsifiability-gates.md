@@ -1,6 +1,6 @@
 # SK-V12 P3-C: Falsifiability Gates
 
-Pass: S-P3 Synthesis-Plan. Cycle: PIN-V1.
+Pass: S-P3 Synthesis-Plan. Cycle: PIN-V2.
 Date: 2026-05-20.
 Scope: per-wave measurable gates for the SK-V12 USER-PIN CSS L4 admission,
 Lock 14/Lock 16 prerequisites, union-substrate attempt, ASM-gen attempt, guard
@@ -65,10 +65,11 @@ pin-aware SK-V12 wave plan.
 |---|---|---|---|
 | W0 | `G-W0-PIN-REVALIDATE` | Revalidate W0 telemetry/gate lock and guard surface. | Gate/report schema is consumed; opening JSON surface unchanged or measured; no behavior movement. |
 | W1a | `G-W1a-GRAMMARCONFIG-LOCK14` | Resolve the 7 Lock 14 leaks through `GrammarConfig` or equivalent generated metadata before CSS emission. | Generic-crate scan PASS, JSON guard parity PASS, CSS generated metadata compiles without JSON policy. No CSS row admission yet. |
-| W1b | `G-W1b-CSS-L4-LIGHTNINGCSS` | Generate CSS L4 row, independent oracle/Track 2, lightningcss comparator, strict equality, and report/gate consumption. | `generated_css_l4_track1_mbps > lightningcss_mbps + 1`; equality at `+1` is FAIL. |
 | W2 | `G-W2-ESCAPE-MASK-LOCK16` | Verify and resolve the `escape_mask_64` NEON correctness bug before any new SIMD admission. | Scalar/checkasm falsifier fixed; expanded parity PASS; no new SIMD admission can bypass this gate. |
-| W3 | `G-W3-CSS-LOCAL-UNION` | New measured union-substrate implementation attempt under USER PIN D3. | ADMIT only if it improves/maintains selected row under the CSS/guard comparator; FIXPOINT-credit if measured redress rejects with material differential and evidence. |
-| W4 | `G-W4-ARMV92-ASM-GEN-ORPHANS` | New measured ASM-gen attempt under USER PIN D4 plus zero-orphan aarch64 disposition. | ADMIT only if scalar/checkasm/microbench/same-wave consumer and row gate pass; FIXPOINT-credit if measured reject plus zero orphan disposition. |
+| W1b-1 | `G-W1b-1-CSS-L4-ORACLE` | Generate the exact CSS L4 Track 1 row and independent oracle/Track 2 equality scaffold. | Row `css_l4/declaration_values/direct_to_struct/main`, output plane `css_l4_declaration_value_fact_stream`, strict Track1-vs-oracle equality PASS, finite Mbps. |
+| W1b-2 | `G-W1b-2-CSS-L4-LIGHTNINGCSS` | Add lightningcss comparator, three-way strict equality, and report/gate consumption. | `generated_css_l4_track1_mbps > lightningcss_mbps + 1`; equality at `+1` is FAIL. |
+| W3 | `G-W3-CSS-LOCAL-UNION` | New measured union-substrate implementation attempt under USER PIN D3. | CSS ADMIT only if the final CSS row clears the lightningcss bar; otherwise behavior PASS/REJECT can provide FIXPOINT-credit evidence. |
+| W4 | `G-W4-ARMV92-ASM-GEN-ORPHANS` | New measured ASM-gen attempt under USER PIN D4 plus zero-orphan aarch64 disposition. | CSS ADMIT only if the final CSS row clears the lightningcss bar; otherwise behavior PASS/REJECT can provide FIXPOINT-credit evidence and orphan disposition. |
 | W5 | `G-W5-CLOSE-SK-V12` | Close or roll to next tranche. | ADMIT form or FIXPOINT form; all close docs and `RESULTS.md`/`REDRESS.md` agree. |
 
 ### 2.1 Global Measurability Rules
@@ -183,7 +184,7 @@ Exit PASS:
   outside generated output paths, and no generic JSON structural alphabet.
 - JSON check/regeneration and guard parity pass, or unchanged JSON output is
   proven by diff plus gate.
-- Generated CSS L4 metadata compiles far enough to prove W1b can emit from
+- Generated CSS L4 metadata compiles far enough to prove W1b-1 can emit from
   grammar facts without JSON provider policy.
 - No CSS L4 row is admitted in W1a. W1a is a legality gate, not the SOTA gate.
 
@@ -198,25 +199,47 @@ Revert protocol: revert GrammarConfig/codegen/runtime/gate/report edits as one
 slice, preserve failed scans/tests in REDRESS, and save
 `/tmp/skv12-waveW1a-rejected.patch`.
 
-### 3.3 W1b: `G-W1b-CSS-L4-LIGHTNINGCSS`
+### 3.3 W1b-1: `G-W1b-1-CSS-L4-ORACLE`
 
 Entry:
 
 - W1a PASS.
 - Selected row is CSS L4, not Sheets or BBNF-self. The expected row id is
-  `css_l4/declaration_values/{direct_to_struct|real_typed_struct}/main`, with
-  one canonical CSS fact stream shared by Track 1, independent Track 2/oracle,
-  and lightningcss.
+  `css_l4/declaration_values/direct_to_struct/main`.
+- Output plane is `css_l4_declaration_value_fact_stream`.
+- Generated runtime path is
+  `skinny/crates/runtime/src/grammars/css_l4_declaration_values/`.
+- W2 PASS unless the accepted W1b-1 plan proves the wave is scalar-only and
+  touches no `bbnf-simd` or ASM-backed helper.
 - Plan names generated Track 1 source/runtime, CSS fixture corpus, independent
-  oracle/Track 2, lightningcss comparator command, equality command, benchmark
-  command, gate command, and rollback slice.
+  oracle/Track 2, equality command, benchmark command, gate command, and
+  rollback slice.
 
-Exit ADMIT:
+Exit PASS:
 
 - Generated CSS L4 Track 1 compiles and executes from generated output, not a
   hand-only parser or stale witness.
 - Independent Track 2/oracle is same-plane, strict, same-host, fresh, and does
   not call generated Track 1 or hidden shared parser code.
+- Strict output equality passes between generated Track 1 and independent
+  Track 2/oracle on the canonical CSS fact stream.
+- Sample count is at least 30 for Track 1 and Track 2/oracle.
+- Gate consumes all provenance fields in §2.1.
+- No CSS ADMIT is recorded in W1b-1. It is a scaffold/equality wave.
+
+### 3.4 W1b-2: `G-W1b-2-CSS-L4-LIGHTNINGCSS`
+
+Entry:
+
+- W1b-1 PASS.
+- Row remains exactly `css_l4/declaration_values/direct_to_struct/main`.
+- Output plane remains `css_l4_declaration_value_fact_stream`.
+- Plan names lightningcss comparator command, version/build hash, output
+  artifact, equality command, benchmark command, gate command, and rollback
+  slice.
+
+Exit ADMIT:
+
 - lightningcss comparator is same corpus, same output plane, same host,
   strict semantics, and same run family.
 - Strict output equality passes among generated Track 1, independent
@@ -235,7 +258,7 @@ Exit ADMIT:
 Measured REJECT / BLOCKED:
 
 - If strict equality, comparator wiring, oracle independence, or throughput
-  misses, W1b records REDRESS with measured evidence and no hidden fallback to
+  misses, W1b-2 records REDRESS with measured evidence and no hidden fallback to
   Sheets/BBNF-self inside the same redress.
 - Sheets or BBNF-self may be considered only after the CSS L4 redress attempt
   is recorded.
@@ -243,13 +266,13 @@ Measured REJECT / BLOCKED:
 Revert protocol: revert generated CSS runtime, codegen, fixture, bench, oracle,
 report/gate, and `RESULTS.md` edits as one slice on equality miss, comparator
 miss, Track 1 threshold miss, Lock 14 regression, guard regression, stale run,
-or oracle coupling; save `/tmp/skv12-waveW1b-rejected.patch`.
+or oracle coupling; save `/tmp/skv12-waveW1b-2-rejected.patch`.
 
-### 3.4 W2: `G-W2-ESCAPE-MASK-LOCK16`
+### 3.5 W2: `G-W2-ESCAPE-MASK-LOCK16`
 
 Entry:
 
-- W1b has either admitted or recorded a measured CSS L4 redress attempt.
+- W1a PASS.
 - Any planned SIMD/string/escape work depends on this gate first.
 
 Exit PASS:
@@ -275,13 +298,13 @@ FAIL / REVISE:
 Revert protocol: revert SIMD/checkasm/report edits as one slice, preserve
 failing inputs in REDRESS, and save `/tmp/skv12-waveW2-rejected.patch`.
 
-### 3.5 W3: `G-W3-CSS-LOCAL-UNION`
+### 3.6 W3: `G-W3-CSS-LOCAL-UNION`
 
 Entry:
 
 - W2 PASS if W3 touches SIMD/string masks; otherwise W2 may be N/A only for a
   scalar-only union attempt.
-- A generated CSS L4 hot leaf exists from W1b, or W1b has recorded a measured
+- A generated CSS L4 hot leaf exists from W1b-2, or W1b-2 has recorded a measured
   CSS BLOCKED/REJECTED route and CHALLENGE selects a JSON guard hot leaf as the
   fallback consumer for fixpoint evidence.
 - Plan cites REDRESS 96/97/98, names the material differential, and passes
@@ -298,16 +321,19 @@ Material differential required:
 - The only legal shape is same-tape, caller-local, generated-policy metadata or
   transient facts consumed in the same loop and discarded.
 
-ADMIT exit:
+Behavior PASS / CSS ADMIT exit:
 
 - Scalar/reference model and equality/parity tests pass.
 - Same-host microbench proves the union route's local caller is faster than
   the scalar/reference caller by at least `ceil(reference_mbps * 1.01)`.
 - The same-wave consumer is a CSS L4 generated hot leaf if CSS is available, or
-  a JSON guard hot leaf only after W1b measured CSS redress is recorded.
+  a JSON guard hot leaf only after W1b-2 measured CSS redress is recorded.
 - If CSS is the consumer, strict CSS equality still passes and Track 1 remains
-  `> lightningcss_mbps + 1`; if JSON is the fallback consumer, the selected
-  JSON row must maintain its guard floor or record a measured demotion.
+  `> lightningcss_mbps + 1` before the wave can be called SK-V12 ADMIT. If the
+  CSS close bar is not met, record behavior PASS or measured reject evidence,
+  not ADMIT. If JSON is the fallback consumer, the selected JSON row must
+  maintain its guard floor or record a measured demotion; JSON evidence cannot
+  be SK-V12 ADMIT.
 - No substrate cardinality increase is observable in source or telemetry.
 
 FIXPOINT-credit measured reject:
@@ -323,7 +349,7 @@ Revert protocol: revert union/codegen/runtime/bench/report/gate/RESULTS edits
 on equality miss, microbench miss, row miss, guard regression, substrate leak,
 or REDRESS replay; save `/tmp/skv12-waveW3-rejected.patch`.
 
-### 3.6 W4: `G-W4-ARMV92-ASM-GEN-ORPHANS`
+### 3.7 W4: `G-W4-ARMV92-ASM-GEN-ORPHANS`
 
 Entry:
 
@@ -337,7 +363,7 @@ Entry:
 - If adjacent to REDRESS 88/89/90, plan cites the historical implementation
   and names the material differential.
 
-ADMIT exit:
+Behavior PASS / CSS ADMIT exit:
 
 - Scalar reference is executable.
 - checkasm/parity covers adversarial inputs, tails, alignment, feature masks,
@@ -346,10 +372,12 @@ ADMIT exit:
   standalone orphan: candidate caller throughput at least
   `ceil(reference_mbps * 1.01)`.
 - Same-wave consumer is generated CSS L4 if available, or a JSON guard hot leaf
-  only after W1b measured CSS redress is recorded.
+  only after W1b-2 measured CSS redress is recorded.
 - Strict equality/parity passes for the output plane.
-- CSS consumer keeps Track 1 `> lightningcss_mbps + 1`; JSON fallback
-  consumer keeps guard floors or records measured demotion.
+- CSS consumer keeps Track 1 `> lightningcss_mbps + 1` before the wave can be
+  called SK-V12 ADMIT. If the CSS close bar is not met, record behavior PASS or
+  measured reject evidence, not ADMIT. JSON fallback consumer keeps guard floors
+  or records measured demotion and cannot be SK-V12 ADMIT.
 - Feature fallback is present for hosts lacking the selected optional feature.
 - No x86 path is added.
 
@@ -378,12 +406,12 @@ edits on checkasm failure, microbench miss, equality miss, row miss, guard
 regression, orphan leak, feature fallback miss, or stale run; save
 `/tmp/skv12-waveW4-rejected.patch`.
 
-### 3.7 W5: `G-W5-CLOSE-SK-V12`
+### 3.8 W5: `G-W5-CLOSE-SK-V12`
 
 ADMIT close requires all of:
 
 - W1a PASS.
-- W1b ADMIT: generated CSS L4 Track 1 `> lightningcss_mbps + 1`, strict
+- W1b-2 ADMIT: generated CSS L4 Track 1 `> lightningcss_mbps + 1`, strict
   equality, independent oracle/Track 2, same-plane same-host lightningcss, and
   gate-consumed provenance.
 - W2 PASS before any SIMD admission.
@@ -395,7 +423,7 @@ ADMIT close requires all of:
 
 FIXPOINT close requires all of:
 
-- W1b has a measured CSS L4 redress attempt proving ADMIT uncloseable in the
+- W1b-2 has a measured CSS L4 redress attempt proving ADMIT uncloseable in the
   current tranche. Sheets/BBNF-self were not used before that attempt.
 - W3 records one new measured union-substrate implementation attempt with
   REDRESS 96/97/98 citation, material differential, fresh profile/caller
@@ -450,7 +478,7 @@ Category-unblocked but historically binding:
 | PMULL / CSSC CTZ / canary-adjacent ASM-gen | 88, 89, 90 | Narrow consumer or new caller, not default global body; scalar/checkasm, microbench, feature fallback, same-wave consumer, and measurement. |
 | String / escape proof-only SIMD | 28, 33, 82, 83, 106, 107, 108, 116, 117 | New source delta, strict parity, same-wave CSS/generated consumer, and row measurement. |
 | JSON numeric / container / digest residual | 80, 114, 115, 118, 119 | Fresh post-pin profile and material source differential; cannot substitute for CSS L4 close. |
-| Non-JSON report/baseline blockers | 111, 112, 113 | Report lane alone is not generated Track 1; W1b must create the CSS row and comparator evidence. |
+| Non-JSON report/baseline blockers | 111, 112, 113 | Report lane alone is not generated Track 1; W1b-1 must create the CSS row and W1b-2 must create comparator evidence. |
 
 ## §5 — Sources
 

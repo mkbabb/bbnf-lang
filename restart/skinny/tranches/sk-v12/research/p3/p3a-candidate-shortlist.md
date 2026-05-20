@@ -1,6 +1,6 @@
 # SK-V12 P3-A: Candidate Shortlist
 
-Pass: S-P3 Synthesis-Plan. Cycle: PIN-V1.
+Pass: S-P3 Synthesis-Plan. Cycle: PIN-V2.
 Date: 2026-05-20.
 Scope: regenerate the pin-aware candidate shortlist from the converged S-P2
 cohort, superseding the stale pre-pin V5 packet.
@@ -65,7 +65,7 @@ CSS redress attempt is measured.
 
 ### C1 - CSS L4 Generated Admission Row + Lightningcss Comparator
 
-- Owner paths: `grammar/css/l4/*.bbnf`,
+- Owner paths: `grammar/css/l4/{tokens,values,value-unit,properties}.bbnf`,
   `skinny/crates/codegen/src/lib.rs`,
   `skinny/crates/codegen/src/json_provider.rs`,
   `skinny/crates/codegen/src/json_templates/`,
@@ -73,16 +73,20 @@ CSS redress attempt is measured.
   `skinny/crates/runtime/src/lib.rs`,
   `skinny/crates/bbnf-bench/src/report.rs`,
   `skinny/crates/bbnf-bench/src/bin/gate.rs`,
-  `skinny/crates/bbnf-bench/benches/nonjson_baseline.rs`,
-  `skinny/crates/bbnf-bench/Cargo.toml`, and a CSS fixture/comparator module
-  under the SK-V12 research or bench-owned fixture path.
+  `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs`,
+  `skinny/crates/bbnf-bench/benches/nonjson_css_l4.rs`,
+  `skinny/crates/bbnf-bench/Cargo.toml`,
+  `restart/skinny/tranches/sk-v12/research/w1b/css_l4_declaration_values.css`,
+  and the companion report
+  `restart/skinny/tranches/sk-v12/research/w1b/skv12-W1b-css-l4-sota.json`.
 - Scalar/reference state: no admitted CSS Track 1 parser exists. The generated
   CSS parser is the Track 1 reference for the row, and it must be generated
   from CSS grammar metadata after C2, not hand-authored or cloned from JSON
   policy. The oracle/Track 2 must be same-plane, strict, independent, and fresh.
-- Checkasm/parity state: N/A unless C1 calls a SIMD helper. C1 parity is
-  strict CSS fact-stream equality between generated Track 1, independent
-  oracle/Track 2, and lightningcss-derived facts.
+- Checkasm/parity state: N/A for the scalar scaffold. If C1 calls any
+  SIMD/ASM-backed helper, C3 / W2 must already be green. C1 parity is strict CSS
+  fact-stream equality between generated Track 1, independent oracle/Track 2,
+  and lightningcss-derived facts.
 - Same-wave consumer: the `sk-v12-nonjson-generated-v1` companion gate and
   Criterion row consume the generated CSS runtime, the oracle, the lightningcss
   comparator, equality artifact, and provenance in the same wave.
@@ -91,8 +95,8 @@ CSS redress attempt is measured.
   must pass; oracle/Track 2 Mbps must be finite and same-run; sample count must
   be at least 30; host/build/feature/run/provenance fields must be gate
   consumed. `report.rs` currently still contains an intervention
-  `ceil(baseline * 1.01)` branch; C1 or P3-D/P3-F must replace or bypass that
-  for CSS admission with the lightningcss floor.
+  `ceil(baseline * 1.01)` branch; C1 must replace or bypass that for CSS
+  admission with the lightningcss floor.
 - LOC/risk: high, <=620 hand LOC if split after C2; generated LOC must be
   tracked with an O(N) grammar-size budget. Risk is high because it touches
   codegen/runtime/bench/gate and must preserve JSON guard rows.
@@ -313,11 +317,14 @@ baseline formula:
 | Gate family | Required row(s) | Threshold |
 |---|---|---|
 | CSS ADMIT | `css_l4/declaration_values/direct_to_struct/main` | generated Track 1 strictly `> lightningcss_mbps + 1`; strict equality PASS; same-plane independent oracle/Track 2 fresh and finite; sample count >= 30 |
-| CSS intervention maintain | same selected CSS row | still strictly `> lightningcss_mbps + 1`; caller-local microbench beats scalar/reference; no `ceil(baseline_mbps * 1.01)` close bar |
+| CSS intervention ADMIT | same selected CSS row | still strictly `> lightningcss_mbps + 1`; caller-local microbench beats scalar/reference; no `ceil(baseline_mbps * 1.01)` close bar |
+| CSS intervention FIXPOINT credit | same selected CSS row or post-CSS-redress guard row | measured source or microbench evidence, REDRESS material differential, strict equality/parity where wired, JSON guard disposition, and zero-orphan state where applicable; no ADMIT label unless the CSS lightningcss bar is met |
 | C2 legality | JSON direct and typed guard rows | current guard floors hold or REDRESS records measured demotion |
 | C3 correctness | checkasm/corpus parity | xorshift falsifier reproduced then fixed; `BBNF_SIMD_STRICT=1` PASS; 17-corpus JSON parity PASS |
-| C4 union attempt | selected CSS row + JSON guards | CSS row floor above; no retained side substrate; REDRESS 96/97/98 material differential recorded |
-| C5-C7 SIMD/ASM | selected CSS row + JSON guards | CSS row floor above; scalar reference/checkasm/microbench/same-wave consumer PASS; zero new orphans |
+| C4 union CSS ADMIT | selected CSS row + JSON guards | CSS row strictly `> lightningcss_mbps + 1`; no retained side substrate; REDRESS 96/97/98 material differential recorded |
+| C4 union FIXPOINT credit | selected CSS row or post-CSS-redress guard row | measured implementation or accepted microbench rejection, REDRESS 96/97/98 material differential, strict equality/parity evidence, and guard disposition; not ADMIT unless CSS clears the lightningcss bar |
+| C5-C7 SIMD/ASM CSS ADMIT | selected CSS row + JSON guards | CSS row strictly `> lightningcss_mbps + 1`; scalar reference/checkasm/microbench/same-wave consumer PASS; zero new orphans |
+| C5-C7 SIMD/ASM FIXPOINT credit | selected CSS row or post-CSS-redress guard row | measured implementation or accepted microbench rejection, REDRESS 88/89/90 differential when adjacent, scalar/checkasm/microbench/same-wave consumer evidence, and zero-orphan disposition; not ADMIT unless CSS clears the lightningcss bar |
 | C8 fallback | Sheets/BBNF-self row only after CSS redress | strict non-JSON generated gate PASS; does not close CSS ADMIT without pin amendment |
 
 JSON guard floors carried from the pin-aware SYNTHESIS:
@@ -364,7 +371,7 @@ Category-unblocked but still REDRESS-bound:
   of PMULL, CSSC CTZ, or adjacent bitmap support must cite REDRESS 88/89/90
   and name the local-consumer material differential.
 
-Dropped from the PIN-V1 shortlist:
+Dropped from the PIN-V2 shortlist:
 
 - LD4 interleaved classifier: no canonical interleaved stream, no scalar
   deinterleave oracle, and side-stream manufacturing would violate Lock 1.

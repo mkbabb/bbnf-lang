@@ -1,6 +1,6 @@
 # SK-V12 P3-B: Wave Sequencing
 
-Pass: S-P3 Synthesis-Plan. Cycle: PIN-V1.
+Pass: S-P3 Synthesis-Plan. Cycle: PIN-V2.
 Date: 2026-05-20.
 Scope: topologically sequence the pin-aware SK-V12 S-P2 survivor pool into a W0..Wn wave manifest.
 Output: this file.
@@ -24,21 +24,24 @@ policy, `OffsetFlags` meaning, and `JsonSink` methods. `GrammarConfig` or an
 equivalent generated metadata surface must land before CSS L4 emission is
 legal. W1a is that legality wave.
 
-W1b creates the first CSS L4 row. It must stand up generated Track 1, a
-canonical CSS fact stream, an independent oracle or Track 2, and a same-plane
-lightningcss comparator. W1b can close the admission target only if the measured
-row already clears `lightningcss_mbps + 1`, but W1b is still a valid baseline
-wave when it records strict equality, provenance, and the exact measured gap.
-
 SIMD and ASM work cannot precede the known correctness blocker. The
 `escape_mask_64` NEON falsifier (`0xCAFEF00DBAADF00D`) is a hard gate before
 any new SIMD admission. W2 resolves and verifies that correctness issue. It is
 not a throughput admission wave and must not be counted as an ASM-gen attempt
 unless it wires a new optimized consumer, which this sequence does not assume.
 
+The CSS baseline/comparator work is split because the first pin draft hid too
+much work inside one 30-minute redress. W1b-1 creates the CSS L4 generated
+Track 1 row and independent oracle/equality
+scaffold. W1b-2 adds the same-plane lightningcss comparator and admission gate.
+The selected row is fixed across the packet:
+`css_l4/declaration_values/direct_to_struct/main`, output plane
+`css_l4_declaration_value_fact_stream`, generated runtime path
+`skinny/crates/runtime/src/grammars/css_l4_declaration_values/`.
+
 The union category is unblocked by the user pin, but P2-D contributes no
 shortlist-ready tape primitive before a CSS baseline exists. W3 is therefore
-conditional on W1b's generated CSS baseline and fresh CSS hot-leaf evidence. It
+conditional on W1b-2's generated CSS baseline and fresh CSS hot-leaf evidence. It
 is the only legal union slot in this sequence: a same-tape CSS fact/fact-kind
 attempt, with REDRESS 96/97/98 cited as historical implementations and a
 material differential named. It may be skipped only if ADMIT is already
@@ -50,7 +53,7 @@ orphan-disposition wave. It selects at most one row-moving ASM/SIMD consumer
 from the S-P2 survivors (`a64_tbl_tbx_byte_class_mask64`,
 `a64_udot_digit_run_span`, `a64_wide_string_special_scan64`,
 `a64_hex_quartet_decode_x4`, or `a64_ascii_set_run_skip`), or a materially
-different narrow PMULL/CSSC support consumer if W1b/W3 evidence names it. It
+different narrow PMULL/CSSC support consumer if W1b-2/W3 evidence names it. It
 must also dispose the carried orphan set:
 `bitmap_prefix_xor_64`, `bitmap_next_set_bit`, `bulk_emit_positions_64`,
 `byte_context`, and `cache_hints`, by same-wave consumption, removal, or
@@ -59,7 +62,7 @@ close condition; it is the ASM-gen attempt required for FIXPOINT when ADMIT is
 uncloseable.
 
 W5 closes. It admits only under the CSS L4 > lightningcss bar. Otherwise it may
-record FIXPOINT only if W1b produced a measured CSS attempt, W3 produced a new
+record FIXPOINT only if W1b-2 produced a measured CSS attempt, W3 produced a new
 measured union attempt, W4 produced a new measured ASM-gen attempt, the orphan
 set is zero, and JSON guards are held or honestly demoted. If neither ADMIT nor
 FIXPOINT is satisfied, W5 synthesizes the routed remainder for SK-V13 rather
@@ -73,32 +76,35 @@ than paper-closing.
 |---|---|---|---|---|---:|---:|---|---|
 | W0 | Pin-aware SK-V12 telemetry/gate-lock revalidation | S-P3 converged; W0 commit `f788eb97` reachable; `skinny/RESULTS.md`, gate/report paths, and JSON guard floors readable | `skinny/RESULTS.md`; `skinny/crates/bbnf-bench/src/report.rs`; `skinny/crates/bbnf-bench/src/bin/gate.rs`; W0 research/redress docs | First, unconditional revalidation; redo only on measured drift | research 20 / plan 15 / redress 30 min | <=120 docs/gate LOC / low | Gate/report consumer must consume every required field; no producer-only telemetry | none |
 | W1a | `GrammarConfig` legality and Lock-14 non-JSON emission gate | W0 PASS; user pin active; seven Lock-14 leaks enumerated; JSON guard command available | `skinny/crates/runtime/src/tape/grammar_config.rs` or equivalent; `skinny/crates/runtime/src/tape/*`; `skinny/crates/codegen/src/*`; generated template providers; Lock-14 gate/report paths | Dispatchable after W0; CHALLENGE mandatory | research 20 / plan 15 / redress 30 min | <=360 hand LOC / high | Generated metadata must be consumed by JSON guard regeneration and CSS emission preflight in the same wave; no generic grammar-name branches | W0 |
-| W1b | CSS L4 generated baseline + lightningcss comparator | W1a PASS; CSS L4 corpus, output plane, canonical fact stream, independent oracle/Track 2, lightningcss adapter, equality command, benchmark command, and rollback slice named | `grammar/css/l4/*`; `skinny/crates/codegen/src/*`; `skinny/crates/runtime/src/grammars/css_l4/*` generated outputs; `skinny/crates/bbnf-bench/src/*`; comparator/oracle fixture paths; `skinny/RESULTS.md` or gate-consumed companion report | Dispatchable after W1a; CSS first, no Sheets/BBNF fallback inside this wave | research 20 / plan 15 / redress 30 min | <=620 hand LOC plus generated LOC budget / very high | Generated Track 1, independent oracle/Track 2, lightningcss comparator, strict equality, and report/gate consumption must land together | W1a |
-| W2 | `escape_mask_64` correctness unblock | W1b has a CSS measured row or measured CSS baseline failure; falsifier reproduction command named; no new SIMD admission has landed after the pin | `skinny/crates/bbnf-simd/src/*`; `skinny/crates/bbnf-simd/tests/checkasm_*`; `CHECKASM-REPORT.md`; corpus parity/gate paths | Mandatory before W4 or any SIMD-backed W3 plan; CHALLENGE mandatory because correctness-gate source may touch SIMD | research 20 / plan 15 / redress 30 min | <=180 hand LOC / high-correctness | Strict checkasm, xorshift falsifier reproduction, fixed carry-handoff proof, and JSON corpus parity are the consumer; no throughput row credit by itself | W1b |
-| W3 | CSS-local same-tape union/fact attempt | W1b produced CSS Track 1 + comparator evidence; fresh CSS profile/hot-leaf or W1b gap analysis names a retained/fact-stream consumer; micro-proof shows a same-host gain; REDRESS 96/97/98 material differential accepted by CHALLENGE | Existing `Tape`/`TapeBuilder`/fact stream/view paths; CSS generated runtime; CSS equality/visitor/comparator; bench/gate/report paths | Conditional for ADMIT; mandatory for FIXPOINT if W1b/W4 cannot admit | research 20 / plan 15 / redress 30 min | <=420 hand LOC / very high | CSS fact stream/equality or retained CSS visitor must consume the same-tape fact in the same commit; no side vector, no `UnionTape`, no public substrate API | W1b (and W2 if SIMD support is used) |
-| W4 | ARMv9.2 ASM-gen consumer + orphan disposition | W2 PASS; W1b CSS row exists; selected S-P2 ASM/SIMD candidate has scalar reference, strict checkasm plan, isolated micro-proof, same-wave CSS or JSON-guard consumer, and REDRESS 88/89/90 differential where adjacent | `skinny/crates/bbnf-simd/src/aarch64/*`; scalar refs/tests; `skinny/crates/parse-that-regex/src/*`; generated CSS runtime; bench/gate/report; orphan inventory docs | Mandatory before close; CHALLENGE mandatory | research 20 / plan 15 / redress 30 min | <=430 hand LOC / very high | One named generated consumer must call the primitive in the same commit, and all five carried orphans must be consumed, removed, or inventory-demoted with evidence | W1b + W2; W3 if the ASM consumer depends on union facts |
-| W5 | Close, Alpha feedback, and campaign disposition | W0, W1a, W1b, W2, W3, and W4 admitted, rejected, or routed with measurement; guard rows refreshed or demoted; orphan set disposition known | `restart/skinny/tranches/sk-v12/{SYNTHESIS,SPEC,HANDOFF,DISPATCH-PROMPT}.md`; `skinny/RESULTS.md`; `skinny/REDRESS.md`; close/campaign docs | Final; synthesizes SK-V13 if neither ADMIT nor FIXPOINT holds | research 20 / plan 15 / redress 30 min | <=160 docs/gate LOC / medium | Close gate must consume CSS Track 1/lightningcss numbers, oracle equality, Lock 14/16, union disposition, ASM-gen disposition, orphan state, and JSON guard state | W0, W1a, W1b, W2, W3, W4 |
+| W2 | `escape_mask_64` correctness unblock | W1a PASS; falsifier reproduction command named; no new SIMD admission has landed after the pin | `skinny/crates/bbnf-simd/src/lib.rs`; `skinny/crates/bbnf-simd/src/aarch64/*`; `skinny/crates/bbnf-simd/tests/checkasm_*.rs`; `skinny/crates/bbnf-simd/CHECKASM-REPORT.md`; corpus parity/gate paths | Mandatory before W4 or any SIMD-backed W1b-1/W3 plan; CHALLENGE mandatory because correctness-gate source may touch SIMD | research 20 / plan 15 / redress 30 min | <=180 hand LOC / high-correctness | Strict checkasm, xorshift falsifier reproduction, fixed carry-handoff proof, and JSON corpus parity are the consumer; no throughput row credit by itself | W1a |
+| W1b-1 | CSS L4 generated Track 1 + independent oracle scaffold | W1a PASS; W2 PASS unless plan proves scalar-only; exact row, output plane, runtime path, fixture, oracle, equality command, benchmark command, gate command, and rollback slice named | `grammar/css/l4/{tokens,values,value-unit,properties}.bbnf`; `skinny/crates/codegen/src/{lib.rs,json_provider.rs,json_templates/}`; `skinny/crates/runtime/src/grammars/css_l4_declaration_values/*`; `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs`; `skinny/crates/bbnf-bench/benches/nonjson_css_l4.rs`; `skinny/crates/bbnf-bench/Cargo.toml`; report/gate files; CSS fixture path | Dispatchable after W1a; scalar-only before W2; CSS first, no Sheets/BBNF fallback inside this wave | research 20 / plan 15 / redress 30 min | <=360 hand LOC plus generated LOC budget / high | Generated Track 1 and independent oracle/Track 2 must land with strict equality and gate consumption; no lightningcss admission yet | W1a (+ W2 for SIMD) |
+| W1b-2 | CSS L4 lightningcss comparator + admission gate | W1b-1 PASS; lightningcss command/version/artifact, equality command, benchmark command, gate command, and rollback slice named | `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs`; `skinny/crates/bbnf-bench/benches/nonjson_css_l4.rs`; `skinny/crates/bbnf-bench/Cargo.toml`; `skinny/crates/bbnf-bench/src/report.rs`; `skinny/crates/bbnf-bench/src/bin/gate.rs`; `restart/skinny/tranches/sk-v12/research/w1b/skv12-W1b-css-l4-sota.json`; `skinny/RESULTS.md` or gate-consumed companion report | Dispatchable after W1b-1; CSS first, no Sheets/BBNF fallback inside this wave | research 20 / plan 15 / redress 30 min | <=300 hand/gate LOC plus generated LOC budget / high | Generated Track 1, independent oracle/Track 2, lightningcss comparator, strict equality, and report/gate consumption must land together | W1b-1 |
+| W3 | CSS-local same-tape union/fact attempt | W1b-2 produced CSS Track 1 + comparator evidence; fresh CSS profile/hot-leaf or W1b-2 gap analysis names a retained/fact-stream consumer; micro-proof shows a same-host gain; REDRESS 96/97/98 material differential accepted by CHALLENGE | `skinny/crates/runtime/src/tape/*`; `skinny/crates/codegen/src/lower/*`; `skinny/crates/codegen/src/json_templates/*`; `skinny/crates/runtime/src/grammars/css_l4_declaration_values/*`; `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs`; bench/report/gate files | Conditional for ADMIT; mandatory for FIXPOINT if W1b-2/W4 cannot admit | research 20 / plan 15 / redress 30 min | <=420 hand LOC / very high | CSS fact stream/equality or retained CSS visitor must consume the same-tape fact in the same commit; no side vector, no `UnionTape`, no public substrate API | W1b-2 (and W2 if SIMD support is used) |
+| W4 | ARMv9.2 ASM-gen consumer + orphan disposition | W2 PASS; W1b-2 CSS row exists; selected S-P2 ASM/SIMD candidate has scalar reference, strict checkasm plan, isolated micro-proof, same-wave CSS or JSON-guard consumer, REDRESS 88/89/90 differential where adjacent, and five-row orphan accounting table | `skinny/crates/bbnf-simd/src/aarch64/*`; `skinny/crates/bbnf-simd/src/scalar/*`; `skinny/crates/bbnf-simd/tests/checkasm_*.rs`; `skinny/crates/parse-that-regex/src/*`; `skinny/crates/runtime/src/grammars/css_l4_declaration_values/*`; `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs`; bench/report/gate files; `restart/skinny/tranches/sk-v12/research/w4/orphan-disposition.md` | Mandatory before close; CHALLENGE mandatory | research 20 / plan 15 / redress 30 min | <=430 hand LOC / very high | One named generated consumer must call the primitive in the same commit; non-selected orphans can be inventory-demoted only with exact no-source-change proof | W1b-2 + W2; W3 if the ASM consumer depends on union facts |
+| W5 | Close, Alpha feedback, and campaign disposition | W0, W1a, W2, W1b-1, W1b-2, and W4 admitted, rejected, or routed with measurement; W3 disposition present if closing FIXPOINT or if no ADMIT path exists; guard rows refreshed or demoted; orphan set disposition known | `restart/skinny/tranches/sk-v12/{SYNTHESIS,SPEC,HANDOFF,DISPATCH-PROMPT}.md`; `skinny/RESULTS.md`; `skinny/REDRESS.md`; close/campaign docs | Final; synthesizes SK-V13 if neither ADMIT nor FIXPOINT holds | research 20 / plan 15 / redress 30 min | <=160 docs/gate LOC / medium | Close gate must consume CSS Track 1/lightningcss numbers, oracle equality, Lock 14/16, union disposition when required, ASM-gen disposition, orphan state, and JSON guard state | W0, W1a, W2, W1b-1, W1b-2, W4 (+ W3 for FIXPOINT) |
 
 ### Topological Order
 
-`W0 -> W1a -> W1b -> W2 -> W4 -> W5` is the minimum admission path when W1b or
-W4 achieves CSS L4 > lightningcss and W3 is not needed. `W3` inserts after W1b
-and before W5 when the CSS row misses and a same-tape fact/union attempt is
-needed for ADMIT or for FIXPOINT:
+`W0 -> W1a -> W2 -> W1b-1 -> W1b-2 -> W4 -> W5` is the minimum
+admission path when W1b-2 or W4 achieves CSS L4 > lightningcss and W3 is not
+needed. W1b-1 may run before W2 only if its accepted plan proves the CSS
+baseline is scalar-only. `W3` inserts after W1b-2 and before W5 when the CSS
+row misses and a same-tape fact/union attempt is needed for ADMIT or for
+FIXPOINT:
 
-`W0 -> W1a -> W1b -> W2 -> W3 -> W4 -> W5`.
+`W0 -> W1a -> W2 -> W1b-1 -> W1b-2 -> W3 -> W4 -> W5`.
 
 W2 precedes W4 because the pin forbids new SIMD admission until
 `escape_mask_64` is verified and resolved. W3 precedes W4 only when the chosen
 ASM consumer depends on W3's same-tape facts; otherwise W3 and W4 are
-topologically independent after W1b/W2, but the orchestrator should run them
+topologically independent after W1b-2/W2, but the orchestrator should run them
 serially to avoid shared generated-runtime, bench, and gate-file races. The
 manifest is seven wave identifiers at maximum, below the skinny <=12 ceiling.
 
 ### Fallback Order
 
-Sheets and BBNF-self are not W1/W2 alternatives in the opening plan. They may
-enter only after W2 records a measured CSS L4 redress attempt as BLOCKED or
+Sheets and BBNF-self are not W1b-1/W1b-2 alternatives in the opening plan. They may
+enter only after W1b-2 records a measured CSS L4 redress attempt as BLOCKED or
 REJECTED. If that happens, S-P3/SPEC must add an explicit fallback wave in the
 next folded cycle or next tranche; P3-B does not hide a Sheets/BBNF fallback
 inside CSS redress.
@@ -108,42 +114,44 @@ inside CSS redress.
 | Candidate family | First eligible wave | Sequencing reason |
 |---|---|---|
 | `GrammarConfig` / generated metadata surface | W1a | CSS emission is illegal until generic JSON policy moves into generated metadata/templates. |
-| CSS L4 generated runtime, canonical fact stream, oracle, lightningcss comparator | W1b | The pin's ADMIT bar cannot be evaluated until the CSS row exists and gate/report consumes the comparator. |
+| CSS L4 generated runtime, canonical fact stream, independent oracle | W1b-1 | The pin's ADMIT bar cannot be evaluated until the CSS row exists and strict oracle equality is executable. |
+| Lightningcss same-plane comparator and CSS SOTA gate | W1b-2 | Comparator, throughput, and gate consumption are separated from the generated-baseline scaffold. |
 | `ESCAPE_MASK_64_FIX_GATE` | W2 | Correctness prerequisite before any new SIMD-backed admission; not a row mover. |
-| Same-tape CSS fact/kind/retained-view union | W3 | P2-D has no pre-baseline selectable union; the material differential exists only after W1b creates CSS fact-stream/equality consumers. |
-| Byte-set/classifier/layout/FIRST dispatch (`C1`, `C6`, `pt_byte_set_run_skip`, generated FIRST/follow) | W4 unless used in scalar W1b | Needs generated CSS byte sets and same-wave caller; cannot ship as an orphan classifier. |
+| Same-tape CSS fact/kind/retained-view union | W3 | P2-D has no pre-baseline selectable union; the material differential exists only after W1b-2 creates CSS fact-stream/equality consumers. |
+| Byte-set/classifier/layout/FIRST dispatch (`C1`, `C6`, `pt_byte_set_run_skip`, generated FIRST/follow) | W4 unless used in scalar W1b-1 | Needs generated CSS byte sets and same-wave caller; cannot ship as an orphan classifier. |
 | Bounded string span, string-special scan, escaped segments, hex quartet x4 (`C4`, `C5`) | W4 | Needs W2 correctness for SIMD/string-region routes and CSS string/identifier/URL consumers. |
 | Digit-run/UDOT numeric span (`C3`) | W4 | Needs CSS number/dimension/percentage consumer and full digit-run checkasm beyond the smoke proof. |
 | PMULL prefix-XOR or CSSC CTZ narrow support (`C7`, `C8` support-only) | W4 only after CHALLENGE | Category-unblocked, but REDRESS 88/89 default-body routes remain historical rejects; only a narrow named consumer is eligible. |
-| Output-plane digest/fact reporting | W1b/W5 as oracle/report support only | Parser-candidate-ineligible by itself; cannot close without generated parser/equality/comparator evidence. |
-| Tape capacity, sparse flag lookup, retained cursor skip diagnostics | Not in PIN-V1 manifest unless W2 profile makes them hot | P2-D marks them diagnostic-only today. |
+| Output-plane digest/fact reporting | W1b-1/W1b-2/W5 as oracle/report support only | Parser-candidate-ineligible by itself; cannot close without generated parser/equality/comparator evidence. |
+| Tape capacity, sparse flag lookup, retained cursor skip diagnostics | Not in the PIN-V2 manifest unless a wave profile makes them hot | P2-D marks them diagnostic-only today. |
 
 ## §3 - Falsifiability Binding
 
 W0 revalidates the opening JSON and telemetry surface. It must keep the current
 family counts coherent: JSON `parse_only` remains diagnostic; JSON
 `direct_to_struct` is guard/routed ledger; JSON `real_typed_struct` is a guard
-surface; CSS L4 has no admitted row before W2.
+surface; CSS L4 has no admitted row before W1b-2.
 
-W1 passes only if:
+W1a passes only if:
 
 - `GrammarConfig` or equivalent generated metadata removes the seven named
   Lock-14 leaks from generic code paths;
 - generic-crate scan finds no grammar-name branch, public per-grammar generic
   API, or hand-written CSS/Sheets/BBNF runtime module outside generated output;
 - JSON direct and typed guard rows hold or measured demotion is recorded;
-- W2 can legally emit CSS L4 without JSON-only provider gates.
+- W1b-1 can legally emit CSS L4 without JSON-only provider gates.
 
-W1b passes its baseline gate only if the CSS L4 row records:
+W1b-1 passes its scaffold gate only if the CSS L4 row records:
 
 - generated Track 1 source path and Mbps;
 - independent Track 2/oracle path and Mbps;
-- lightningcss comparator command/artifact and `lightningcss_mbps`;
 - strict equality on the canonical CSS fact stream;
 - same corpus, output plane, host, build flags, feature mask, run id, sample
   count, generated LOC/module byte size, profile artifact, and gate result.
 
-W1b records ADMIT eligibility only when:
+W1b-2 passes its comparator gate only if it adds lightningcss command/artifact,
+`lightningcss_mbps`, strict three-way equality, and gate consumption for the
+same row. It records ADMIT eligibility only when:
 
 `generated_css_l4_track1_mbps > lightningcss_mbps + 1`.
 
@@ -165,7 +173,7 @@ W3 passes or rejects on measurement. Its gate must name:
 
 Any retained structural-position vector, parser-owned cursor list, whitespace
 bitmap, aux projection column, decoded-byte sidecar, public substrate API, or
-`UnionTape` falsifies W4 regardless of throughput.
+`UnionTape` falsifies W3 regardless of throughput.
 
 W4 passes or rejects on measurement. Its gate must name:
 
@@ -180,7 +188,7 @@ W4 passes or rejects on measurement. Its gate must name:
 An orphan production primitive remaining after W4 falsifies close even if the
 CSS row is faster than lightningcss.
 
-W5 admits only if the W1b/W3/W4 final CSS row clears
+W5 admits only if the W1b-2/W3/W4 final CSS row clears
 `generated_css_l4_track1_mbps > lightningcss_mbps + 1`, strict equality and
 oracle independence hold, Lock 14 and Lock 16 hold, zero-orphan disposition
 holds, and JSON guards hold or have measured REDRESS demotions.
@@ -242,8 +250,9 @@ Per-wave pre-block map:
 | Wave | Pre-blocked routes |
 |---|---|
 | W0 | No row movement by telemetry accounting alone; no W0-clamped JSON direct admission; no producer-only fields. |
-| W1 | No CSS emission while JSON policy remains in generic templates; no grammar-name branch or hand-written CSS runtime as a shortcut; no JSON guard demotion without measurement. |
-| W1b | No Sheets/BBNF fallback; no lightningcss-free comparator; no CSS baseline without independent oracle/Track 2; no generated-size overflow without tracing O(N) growth source. |
+| W1a | No CSS emission while JSON policy remains in generic templates; no grammar-name branch or hand-written CSS runtime as a shortcut; no JSON guard demotion without measurement. |
+| W1b-1 | No Sheets/BBNF fallback; no CSS baseline without independent oracle/Track 2; no generated-size overflow without tracing O(N) growth source. |
+| W1b-2 | No Sheets/BBNF fallback; no lightningcss-free comparator; no admission without strict three-way equality and gate consumption. |
 | W2 | No throughput credit; no SIMD admission on partial falsifier coverage; no waiver of strict checkasm/corpus parity. |
 | W3 | No retained side vector, class column, cursor list, whitespace bitmap, aux table, decoded sidecar, `UnionTape`, public substrate API, or unlabeled replay of REDRESS 96/97/98. |
 | W4 | No orphan kernel; no default PMULL prefix-XOR body as row movement; no global CSSC CTZ/bulk replacement; no UDOT/hex/string proof-only reuse; no cache hint as parser primitive. |

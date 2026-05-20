@@ -1,7 +1,7 @@
 # SK-V12 SPEC - Pin-Aware S-P3 Wave Plan
 
 Date: 2026-05-20.
-Status: PIN-V1 DRAFT. This packet supersedes the pre-pin V5 SPEC wherever it
+Status: PIN-V2 DRAFT. This packet supersedes the pre-pin V5 SPEC wherever it
 conflicts with `USER-PIN-W1-CSS-L4-SOTA.md`.
 
 Authority:
@@ -24,7 +24,8 @@ Authority:
 Dispatch lock:
 
 - No behavior wave dispatches until S-P3 converges under the user pin.
-- W0 is first; W1a/W1b/W2/W3/W4/W5 dispatch only after their entry gates pass.
+- W0 is first; W1a/W2/W1b-1/W1b-2/W3/W4/W5 dispatch only after their entry
+  gates pass.
 - Each wave is executed by the per-wave triumvirate: research, plan,
   CHALLENGE when required, and redress in distinct commits.
 
@@ -239,16 +240,17 @@ is unchanged. Guard misses require REDRESS disposition.
 |---|---|---|---|---:|---|---:|
 | W0 | Section 3 | Pin Telemetry And Gate Revalidation | Dispatchable after S-P3 convergence | <=160 docs/gate/test; 0 behavior | medium | <=30 min |
 | W1a | Section 4 | GrammarConfig + Lock 14 Legality Gate | Conditional on W0 close | <=360 hand; generated output named separately | high | <=30 min |
-| W1b | Section 5 | CSS L4 Generated Track 1 + Lightningcss Comparator | Conditional on W1a close | <=620 hand; generated output named separately | high | <=30 min |
-| W2 | Section 6 | `escape_mask_64` Correctness Prerequisite | Conditional on W1a close; blocks SIMD admission | <=180 hand/test | high | <=30 min |
-| W3 | Section 7 | CSS-Local Same-Tape Union Attempt | Conditional on W1b measured CSS row + CHALLENGE | <=420 hand; generated output named separately | high | <=30 min |
-| W4 | Section 8 | ASM-Gen CSS Consumer + AArch64 Orphan Disposition | Conditional on W1b + W2 + CHALLENGE | <=430 hand/test/gate | high | <=30 min |
-| W5 | Section 9 | Close And Alpha Feedback | Conditional on W0, W1a, W1b, W2, W3, and W4 disposition | <=140 docs/report/gate; 0 behavior | medium | <=30 min |
+| W2 | Section 5 | `escape_mask_64` Correctness Prerequisite | Conditional on W1a close; blocks SIMD admission | <=180 hand/test | high | <=30 min |
+| W1b-1 | Section 6 | CSS L4 Generated Track 1 + Independent Oracle Scaffold | Conditional on W1a close; scalar-only unless W2 PASS | <=360 hand; generated output named separately | high | <=30 min |
+| W1b-2 | Section 7 | CSS L4 Lightningcss Comparator + Admission Gate | Conditional on W1b-1 close | <=300 hand/gate; generated output named separately | high | <=30 min |
+| W3 | Section 8 | CSS-Local Same-Tape Union Attempt | Conditional on W1b-2 measured CSS row + CHALLENGE | <=420 hand; generated output named separately | high | <=30 min |
+| W4 | Section 9 | ASM-Gen CSS Consumer + AArch64 Orphan Disposition | Conditional on W1b-2 + W2 + CHALLENGE | <=430 hand/test/gate | high | <=30 min |
+| W5 | Section 10 | Close And Alpha Feedback | Conditional on W0, W1a, W2, W1b-1, W1b-2, W4, and conditional W3 disposition | <=140 docs/report/gate; 0 behavior | medium | <=30 min |
 
 Phase caps for the pinned campaign are tighter than earlier SK-V9/SK-V10
 packets: 20 min research, 15 min plan, 30 min redress. CHALLENGE remains
 mandatory for first-of-class, primitive, generic-crate, union, ASM-gen, and
-high-risk waves. W1a-W4 are CHALLENGE-mandatory.
+high-risk waves. W1a, W2, W1b-1, W1b-2, W3, and W4 are CHALLENGE-mandatory.
 
 At 0.9x cap the agent commits or records the blocking state. At the cap it
 halts. A wave may fail honestly; failure records REDRESS evidence and the next
@@ -346,59 +348,17 @@ Exit gate `G-W1a-GRAMMARCONFIG-LOCK14`:
 Revert protocol: revert generic/template/config changes and generated output;
 save rejected patch at `/tmp/skv12-waveW1a-rejected.patch` on FAIL.
 
-## Section 5 - W1b CSS L4 Generated Track 1 + Lightningcss Comparator
-
-Purpose: create the authoritative CSS L4 generated row and same-plane
-lightningcss comparator.
-
-Owner paths:
-
-- `grammar/css/l4/`
-- `skinny/crates/codegen/src/`
-- `skinny/crates/runtime/src/grammars/css/`
-- `skinny/crates/runtime/src/grammars/json/` only for regenerated guard output
-- `skinny/benches/`, `skinny/xtask/`, report/gate paths needed for CSS row
-- `skinny/RESULTS.md`, `skinny/REDRESS.md`
-
-Entry gate:
-
-- W1a PASS.
-- Plan names selected CSS corpus, canonical CSS fact stream, output plane,
-  independent oracle/Track 2, lightningcss comparator command, equality
-  command, benchmark command, gate command, generated paths, and rollback slice.
-- Sheets/BBNF-self are not selectable in W1b before a measured CSS redress
-  attempt.
-
-Tasks:
-
-- Generate CSS L4 Track 1 for the selected declaration-values row.
-- Build independent oracle/Track 2 and lightningcss same-plane comparator.
-- Emit canonical CSS fact stream for all three.
-- Run strict equality and throughput.
-- Record generated LOC/module size/O(N) guard and JSON guard state.
-
-Exit gate `G-W1b-CSS-L4-COMPARATOR`:
-
-- PASS-ADMIT-CANDIDATE: `track1_mbps > lightningcss_mbps + 1`, strict equality,
-  oracle independent, telemetry consumed, JSON guards held/demoted.
-- PASS-MEASURED-BASELINE: CSS row is measurable and strict-equal but does not
-  beat lightningcss; continue to W2/W3/W4.
-- BLOCKED/FAIL: CSS cannot be generated/measured inside the owner surface;
-  record REDRESS. Sheets/BBNF fallback requires a subsequent S-P3 or wave plan
-  revision after this measured CSS redress attempt.
-
-Revert protocol: revert CSS generated/runtime/bench/gate/report changes and
-save `/tmp/skv12-waveW1b-rejected.patch` when a patch was attempted.
-
-## Section 6 - W2 `escape_mask_64` Correctness Prerequisite
+## Section 5 - W2 `escape_mask_64` Correctness Prerequisite
 
 Purpose: resolve the known SIMD correctness blocker before any new SIMD/ASM
-admission.
+admission or SIMD-backed CSS path.
 
 Owner paths:
 
+- `skinny/crates/bbnf-simd/src/lib.rs`
 - `skinny/crates/bbnf-simd/src/aarch64/`
-- `skinny/crates/bbnf-simd/tests/` or checkasm harness paths
+- `skinny/crates/bbnf-simd/tests/checkasm_*.rs`
+- `skinny/crates/bbnf-simd/CHECKASM-REPORT.md`
 - `skinny/REDRESS.md`
 
 Entry gate:
@@ -418,27 +378,139 @@ Exit gate `G-W2-ESCAPE-MASK-CORRECTNESS`:
 
 - PASS: scalar reference and NEON body match across falsifier and adversarial
   cases; corpus parity passes.
-- FAIL: SIMD remains blocked; W4 cannot admit any SIMD/ASM primitive.
+- FAIL: SIMD remains blocked; W1b-1 must stay scalar-only and W4 cannot admit
+  any SIMD/ASM primitive.
 
 Revert protocol: revert SIMD/checkasm edits and save
 `/tmp/skv12-waveW2-rejected.patch`.
 
-## Section 7 - W3 CSS-Local Same-Tape Union Attempt
+## Section 6 - W1b-1 CSS L4 Generated Track 1 + Independent Oracle Scaffold
+
+Purpose: create the authoritative CSS L4 generated Track 1 row and independent
+oracle/equality scaffold without the lightningcss throughput gate.
+
+Owner paths:
+
+- `grammar/css/l4/{tokens,values,value-unit,properties}.bbnf`
+- `skinny/crates/codegen/src/lib.rs`
+- `skinny/crates/codegen/src/json_provider.rs`
+- `skinny/crates/codegen/src/json_templates/`
+- `skinny/crates/runtime/src/grammars/css_l4_declaration_values/`
+- `skinny/crates/runtime/src/grammars/json/` only for regenerated guard output
+- `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs`
+- `skinny/crates/bbnf-bench/benches/nonjson_css_l4.rs`
+- `skinny/crates/bbnf-bench/Cargo.toml`
+- `skinny/crates/bbnf-bench/src/report.rs`
+- `skinny/crates/bbnf-bench/src/bin/gate.rs`
+- `restart/skinny/tranches/sk-v12/research/w1b/css_l4_declaration_values.css`
+- `skinny/RESULTS.md`, `skinny/REDRESS.md`
+
+Entry gate:
+
+- W1a PASS.
+- W2 PASS unless the plan proves the entire wave is scalar-only and does not
+  touch `bbnf-simd`, aarch64 modules, or ASM-backed helpers.
+- The selected CSS row is exactly
+  `css_l4/declaration_values/direct_to_struct/main`.
+- Output plane is `css_l4_declaration_value_fact_stream`.
+- Generated runtime path is
+  `skinny/crates/runtime/src/grammars/css_l4_declaration_values/`.
+- Plan names generated Track 1 source/runtime, CSS fixture corpus, independent
+  oracle/Track 2, equality command, benchmark command, gate command, and
+  rollback slice.
+- Sheets/BBNF-self are not selectable in W1b-1 before a measured CSS redress
+  attempt from W1b-2.
+- No new SIMD helper is legal in W1b-1 unless W2 has already passed.
+
+Tasks:
+
+- Generate CSS L4 Track 1 for the selected declaration-values row.
+- Build independent oracle/Track 2 for the same canonical CSS fact stream.
+- Emit canonical CSS facts for Track 1 and Track 2/oracle.
+- Run strict equality and baseline throughput for Track 1 and Track 2/oracle.
+- Record generated LOC/module size/O(N) guard and JSON guard state.
+
+Exit gate `G-W1b-1-CSS-L4-ORACLE`:
+
+- PASS: generated Track 1 and independent Track 2/oracle compile, execute,
+  produce strict-equal `css_l4_declaration_value_fact_stream` output, and emit
+  finite Mbps plus generated-size telemetry.
+- BLOCKED/FAIL: CSS cannot be generated/measured inside the owner surface;
+  record REDRESS. Sheets/BBNF fallback requires a subsequent S-P3 or wave plan
+  revision after this measured CSS redress attempt.
+
+Revert protocol: revert CSS generated/runtime/bench/gate/report changes and
+save `/tmp/skv12-waveW1b-1-rejected.patch` when a patch was attempted.
+
+## Section 7 - W1b-2 CSS L4 Lightningcss Comparator + Admission Gate
+
+Purpose: add the same-plane lightningcss comparator, gate consumption, and CSS
+ADMIT measurement for the row scaffolded by W1b-1.
+
+Owner paths:
+
+- `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs`
+- `skinny/crates/bbnf-bench/benches/nonjson_css_l4.rs`
+- `skinny/crates/bbnf-bench/Cargo.toml`
+- `skinny/crates/bbnf-bench/src/report.rs`
+- `skinny/crates/bbnf-bench/src/bin/gate.rs`
+- `restart/skinny/tranches/sk-v12/research/w1b/css_l4_declaration_values.css`
+- `restart/skinny/tranches/sk-v12/research/w1b/skv12-W1b-css-l4-sota.json`
+- `skinny/RESULTS.md`, `skinny/REDRESS.md`
+
+Entry gate:
+
+- W1b-1 PASS.
+- Plan names lightningcss comparator command, version/build hash, equality
+  command, benchmark command, gate command, artifact paths, and rollback slice.
+- The row remains exactly
+  `css_l4/declaration_values/direct_to_struct/main` and output plane remains
+  `css_l4_declaration_value_fact_stream`.
+
+Tasks:
+
+- Build the lightningcss same-plane fact extractor for the selected fixture.
+- Run strict equality across generated Track 1, independent Track 2/oracle, and
+  lightningcss.
+- Run same-host throughput for generated Track 1, oracle/Track 2, and
+  lightningcss with sample count >= 30.
+- Consume all CSS, generated-size, comparator, oracle, and JSON guard fields in
+  the same-wave gate/report.
+
+Exit gate `G-W1b-2-CSS-L4-LIGHTNINGCSS`:
+
+- PASS-ADMIT-CANDIDATE: `track1_mbps > lightningcss_mbps + 1`, strict equality,
+  oracle independent, telemetry consumed, JSON guards held/demoted.
+- PASS-MEASURED-BASELINE: CSS row is strict-equal and measurable but does not
+  beat lightningcss; continue to W3/W4 or record FIXPOINT evidence later.
+- BLOCKED/FAIL: comparator, equality, oracle independence, generated-size,
+  throughput, or gate consumption fails; record REDRESS. Sheets/BBNF fallback
+  requires a subsequent S-P3 or wave plan revision after this measured CSS
+  redress attempt.
+
+Revert protocol: revert CSS bench/comparator/gate/report/result edits and save
+`/tmp/skv12-waveW1b-2-rejected.patch`.
+
+## Section 8 - W3 CSS-Local Same-Tape Union Attempt
 
 Purpose: satisfy the user-pin union route under a material differential and
 test whether a CSS-local same-tape union can move the CSS row.
 
 Owner paths:
 
-- `skinny/crates/runtime/src/`
-- `skinny/crates/codegen/src/`
-- generated CSS runtime paths
-- benchmark/gate paths for CSS row
+- `skinny/crates/runtime/src/tape/`
+- `skinny/crates/codegen/src/lower/`
+- `skinny/crates/codegen/src/json_templates/`
+- `skinny/crates/runtime/src/grammars/css_l4_declaration_values/`
+- `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs`
+- `skinny/crates/bbnf-bench/benches/nonjson_css_l4.rs`
+- `skinny/crates/bbnf-bench/src/report.rs`
+- `skinny/crates/bbnf-bench/src/bin/gate.rs`
 - `skinny/RESULTS.md`, `skinny/REDRESS.md`
 
 Entry gate:
 
-- W1b has a measured CSS row.
+- W1b-2 has a measured CSS row.
 - Fresh profile or same-host microbench identifies a CSS hot leaf that a
   same-tape union can consume.
 - CHALLENGE accepts the material differential from REDRESS 96/97/98.
@@ -453,15 +525,20 @@ Tasks:
 
 Exit gate `G-W3-CSS-UNION-ATTEMPT`:
 
-- ADMIT if CSS Track 1 beats `lightningcss_mbps + 1` and all close guards pass.
-- REJECT if equality passes but throughput misses or JSON guard regresses.
-- FIXPOINT-COUNTING REJECT if the attempt is measured, materially
-  differentiated, and REDRESS records the miss.
+- BEHAVIOR-PASS-CSS-ADMIT if CSS Track 1 beats `lightningcss_mbps + 1` and all
+  close guards pass.
+- BEHAVIOR-PASS-NONCLOSE if equality/parity and local caller measurement pass
+  but the CSS close bar is not met. This is evidence, not ADMIT.
+- MEASURED-REJECT if equality passes but throughput misses, microbench rejects
+  production wiring, or JSON guard regresses.
+- FIXPOINT-CREDIT if the attempt is measured or microbench-rejected before
+  production wiring under the accepted wave plan, materially differentiated,
+  and REDRESS records the miss.
 
 Revert protocol: revert union/runtime/codegen/generated/gate edits and save
 `/tmp/skv12-waveW3-rejected.patch`.
 
-## Section 8 - W4 ASM-Gen CSS Consumer + AArch64 Orphan Disposition
+## Section 9 - W4 ASM-Gen CSS Consumer + AArch64 Orphan Disposition
 
 Purpose: attempt a measured ASM-gen route and dispose the orphan production
 aarch64 set.
@@ -469,16 +546,21 @@ aarch64 set.
 Owner paths:
 
 - `skinny/crates/bbnf-simd/src/aarch64/`
-- `skinny/crates/bbnf-simd/tests/` or checkasm harness paths
-- `skinny/crates/runtime/src/`
-- `skinny/crates/codegen/src/`
-- generated CSS runtime paths
-- benchmark/gate/report paths
+- `skinny/crates/bbnf-simd/src/scalar/`
+- `skinny/crates/bbnf-simd/tests/checkasm_*.rs`
+- `skinny/crates/parse-that-regex/src/`
+- `skinny/crates/runtime/src/grammars/css_l4_declaration_values/`
+- `skinny/crates/codegen/src/json_templates/`
+- `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs`
+- `skinny/crates/bbnf-bench/benches/nonjson_css_l4.rs`
+- `skinny/crates/bbnf-bench/src/report.rs`
+- `skinny/crates/bbnf-bench/src/bin/gate.rs`
+- `restart/skinny/tranches/sk-v12/research/w4/orphan-disposition.md`
 - `skinny/RESULTS.md`, `skinny/REDRESS.md`
 
 Entry gate:
 
-- W1b has a measured CSS row.
+- W1b-2 has a measured CSS row.
 - W2 PASS if the candidate touches string/escape/SIMD correctness surfaces.
 - CHALLENGE accepts REDRESS adjacency and cost.
 - Same-host microbench proves the selected candidate on a CSS or JSON-guard hot
@@ -487,6 +569,10 @@ Entry gate:
   `a64_tbl_tbx_byte_class_mask64`, `a64_udot_digit_run_span`,
   `a64_wide_string_special_scan64`, `a64_hex_quartet_decode_x4`, or
   `a64_ascii_set_run_skip`.
+- Plan includes a five-row orphan accounting table. Non-selected orphans may
+  be `inventory_demoted_with_evidence` only when the plan proves no behavior
+  source change is needed. Any orphan requiring production consumption or
+  removal outside the selected primitive blocks close or requires a later wave.
 
 Tasks:
 
@@ -494,14 +580,18 @@ Tasks:
 - Wire the selected primitive into a same-wave CSS generated consumer or
   JSON-guard consumer.
 - Measure strict CSS equality/throughput and JSON guards.
-- Dispose all production orphans by consumption, removal, or inventory demotion
+- Dispose the selected primitive's orphan if applicable. Record the status of
+  all five production orphans by consumption, removal, or inventory demotion
   with evidence: `bitmap_prefix_xor_64`, `bitmap_next_set_bit`,
   `bulk_emit_positions_64`, `byte_context`, `cache_hints`.
 
 Exit gate `G-W4-ASM-GEN-CONSUMER`:
 
-- ADMIT if CSS Track 1 beats `lightningcss_mbps + 1`, strict equality passes,
-  JSON guards hold/demote, Lock 16 passes, and orphan count is zero.
+- BEHAVIOR-PASS-CSS-ADMIT if CSS Track 1 beats `lightningcss_mbps + 1`, strict
+  equality passes, JSON guards hold/demote, Lock 16 passes, and orphan count is
+  zero.
+- BEHAVIOR-PASS-NONCLOSE if scalar/checkasm/microbench/equality pass but the CSS
+  close bar is not met. This is evidence, not ADMIT.
 - MEASURED-REJECT if the selected candidate misses or regresses but scalar,
   checkasm, microbench, same-wave consumer, and REDRESS evidence are complete.
 - BLOCKED if W2 fails and no non-SIMD ASM-gen candidate can legally dispatch.
@@ -509,7 +599,7 @@ Exit gate `G-W4-ASM-GEN-CONSUMER`:
 Revert protocol: revert ASM/SIMD/runtime/codegen/generated/gate edits and save
 `/tmp/skv12-waveW4-rejected.patch`.
 
-## Section 9 - W5 Close And Alpha Feedback
+## Section 10 - W5 Close And Alpha Feedback
 
 Purpose: close SK-V12 honestly and prepare Pass Alpha if the campaign
 continues.
@@ -523,8 +613,10 @@ Owner paths:
 
 Entry gate:
 
-- W0, W1a, W1b, W2, W3, and W4 have admitted, rejected, routed, or blocked
-  with evidence.
+- W0, W1a, W2, W1b-1, W1b-2, and W4 have admitted, rejected, routed, or
+  blocked with evidence.
+- W3 has disposition only when closing as FIXPOINT or when no prior CSS row
+  satisfies ADMIT. W3 is not required on an already-admitted CSS path.
 
 Tasks:
 
@@ -544,7 +636,7 @@ Exit gate `G-W5-CLOSE`:
 
 Revert protocol: docs/report-only revert; no behavior patch exists.
 
-## Section 10 - Pre-Blocked And Reopened Routes
+## Section 11 - Pre-Blocked And Reopened Routes
 
 Still blocked:
 
@@ -574,11 +666,12 @@ Reopened at category level:
    micro-prove-first, scalar reference, checkasm/parity, same-wave consumer,
    JSON guard, and strict CSS/row gate evidence.
 
-## Section 11 - Convergence And Escalation
+## Section 12 - Convergence And Escalation
 
-SK-V12 converges when W0, W1a, W1b, W2, W3, W4, and W5 have dispositions and Section 0.1 ADMIT or FIXPOINT
-holds. If neither holds, W5 routes the exact remainder into Pass Alpha for
-SK-V13 and the campaign continues.
+SK-V12 converges when W0, W1a, W2, W1b-1, W1b-2, W4, W5, and W3 when required
+for FIXPOINT have dispositions and Section 0.1 ADMIT or FIXPOINT holds. If
+neither holds, W5 routes the exact remainder into Pass Alpha for SK-V13 and the
+campaign continues.
 
 Escalate immediately if:
 

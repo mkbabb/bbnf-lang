@@ -1,6 +1,6 @@
 # SK-V12 P3-D: Telemetry Schema Binding
 
-Pass: S-P3 Synthesis-Plan. Cycle: PIN-V1.
+Pass: S-P3 Synthesis-Plan. Cycle: PIN-V2.
 Date: 2026-05-20.
 Scope: bind the pin-aware SK-V12 telemetry schema and fail-closed gate rules for CSS L4 > lightningcss admission, JSON guard maintenance, Lock 14, Lock 16, union, ASM-gen, and aarch64 orphan disposition.
 Output: this file.
@@ -99,16 +99,16 @@ Required CSS L4 fields:
 | Field | Required value or shape | Gate rule |
 |---|---|---|
 | `schema_id` | `sk-v12-css-l4-sota-v1` | Unknown or legacy-only schemas fail admission. |
-| `row_id` | `css_l4/<corpus>/<workload>/main` | Stable join key; duplicates fail. |
+| `row_id` | `css_l4/declaration_values/direct_to_struct/main` | Stable join key; duplicates fail. |
 | `grammar_id` | `css_l4` | `json`, `sheets`, and `bbnf_self` cannot satisfy CSS ADMIT. |
 | `domain` | `css_l4_generated` | Generic non-JSON labels are insufficient for admission. |
-| `corpus_id` | SPEC-named CSS L4 corpus id | Must match input, oracle, lightningcss, bench, and profile artifacts. |
-| `workload` | generated direct or typed CSS fact-stream workload | `parse_only` fails. |
-| `output_plane` | canonical CSS fact stream or SPEC-named equivalent | Must match Track 1, oracle/Track 2, and lightningcss. |
+| `corpus_id` | `declaration_values` | Must match input, oracle, lightningcss, bench, and profile artifacts. |
+| `workload` | `direct_to_struct` | `parse_only` and typed substitutions fail this tranche's CSS row. |
+| `output_plane` | `css_l4_declaration_value_fact_stream` | Must match Track 1, oracle/Track 2, and lightningcss. |
 | `strictness` | `strict` | Permissive/lossy comparators are planning signals only. |
 | `outcome_id` / `verdict` | inherited enum plus `GO`/`NO-GO` | No new outcome variants. |
 | `generated_track1_source_path` | generated CSS parser/runtime source path | Hand-only witnesses fail. |
-| `generated_runtime_path` | runtime module loaded by the benchmark | Must be CSS L4, not generated JSON or `sheets_witness`. |
+| `generated_runtime_path` | `skinny/crates/runtime/src/grammars/css_l4_declaration_values/` plus benchmark symbol | Must be CSS L4, not generated JSON or `sheets_witness`. |
 | `generated_source_checksum` | checksum of generated files used for Track 1 | Must match build artifact. |
 | `grammar_source_path` / `grammar_checksum` | CSS L4 grammar source and checksum | Must be gate-consumed. |
 | `input_path` / `input_checksum` / `input_bytes` | fixture path, checksum, byte count | Must match all measured lanes. |
@@ -233,7 +233,7 @@ consume these fields:
 | `parity_or_equality_artifact` | Same-tape/equality proof | Scalar/checkasm/equality proof |
 | `consumer_path` | Existing tape/fact-stream/direct consumer, same wave | Same-wave generated CSS or guard-row consumer |
 | `substrate_cardinality` | Must remain `one` | Must not create side substrate |
-| `public_api_delta` | No new public substrate API unless SPEC explicitly authorizes under pin | No x86 or orphan API |
+| `public_api_delta` | No new public substrate API | D3/D4 reopen route categories only; public substrate/API surface stays blocked. |
 | `attempt_status` | admitted/rejected/blocked with REDRESS id | admitted/rejected/blocked with REDRESS id |
 
 ### §2.8 Aarch64 orphan disposition

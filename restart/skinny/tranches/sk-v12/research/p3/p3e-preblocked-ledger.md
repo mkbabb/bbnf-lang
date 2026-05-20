@@ -1,6 +1,6 @@
 # SK-V12 P3-E: Pre-Blocked Route Ledger
 
-Pass: S-P3 Synthesis-Plan. Cycle: PIN-V1.
+Pass: S-P3 Synthesis-Plan. Cycle: PIN-V2.
 Date: 2026-05-20.
 Scope: pin-aware per-wave REDRESS pre-block and category-unblock ledger for the SK-V12 synthesis-plan packet.
 Output: this file.
@@ -47,7 +47,7 @@ precondition for CSS emission, not an optimization.
 
 ### Global Route Disposition
 
-| Route family | Binding authority | PIN-V1 disposition |
+| Route family | Binding authority | PIN-V2 disposition |
 |---|---|---|
 | CSS L4 generated parser and comparator | USER PIN D1/D2; `SYNTHESIS.md` §0.1; `HANDOFF.md` §3/§7 | Required first target. Must use generated Track 1, independent oracle/Track 2, same-plane lightningcss comparator, strict equality, and gate-consumed provenance. |
 | Sheets / BBNF-self baseline | USER PIN D1; `HARDENING-S-P2-CONVERGED.md` load-bearing facts | Still blocked before measured CSS L4 redress. They are fallbacks only after CSS records measured BLOCKED/REJECTED evidence. |
@@ -72,15 +72,16 @@ pre-blocks.
 |---|---|---|---|
 | W0 telemetry / gate revalidation | Revalidate commit `f788eb97`, report/gate schema, current JSON guards, and pin-era profile authority. | Behavior source changes, row movement, docs-only admission, stale run-id rewrites, parse-only SOTA, W0-clamped direct reclamation, PMU/probe producer claims. | None. W0 is revalidation only. Drift returns to S-P3; it does not authorize behavior repair inside W0. |
 | W1a `GrammarConfig` legality | Resolve Lock-14 leaks through generated grammar metadata/config surface before CSS emission. | CSS hand fixture as parser proof; JSON template rename without policy extraction; generic `match grammar` arms; new directive/BIR/BackendShape/public substrate API; direct digest as typed/CSS proof. | A legal route keeps generic crates grammar-neutral and moves grammar policy into generated modules/config. JSON guards must be refreshed or measured-demoted if generator/runtime paths move. |
-| W1b CSS L4 baseline + lightningcss comparator | Generated CSS L4 Track 1, independent oracle/Track 2, same-plane lightningcss adapter, canonical CSS fact stream, strict equality, gate-consumed provenance. | Sheets/BBNF-self fallback before CSS redress; `ceil(baseline*1.01)` close; REDRESS 111 fixture/report as generated baseline; hiding REDRESS 112 JSON-provider blocker; REDRESS 113 intervention-before-baseline; parser-only or hand-only witness. | CSS may record BLOCKED/REJECTED only after a measured redress attempt. Only then may later S-P3 route Sheets/BBNF-self fallback. |
+| W1b-1 CSS L4 baseline scaffold | Generated CSS L4 Track 1, independent oracle/Track 2, canonical CSS fact stream, strict equality, gate-consumed provenance. | Sheets/BBNF-self fallback before CSS redress; REDRESS 111 fixture/report as generated baseline; hiding REDRESS 112 JSON-provider blocker; REDRESS 113 intervention-before-baseline; parser-only or hand-only witness; lightningcss-free admission. | This wave cannot record CSS ADMIT; it creates the measurable row and oracle scaffold for W1b-2. |
+| W1b-2 CSS L4 lightningcss comparator | Same-plane lightningcss adapter, strict three-way equality, CSS throughput report, `Track 1 > lightningcss_mbps + 1`, gate-consumed provenance. | Sheets/BBNF-self fallback before measured CSS redress; `ceil(baseline*1.01)` close; stale sidecar comparator; report-only row; hidden oracle coupling. | CSS may record BLOCKED/REJECTED only after this measured comparator attempt. Only then may later S-P3 route Sheets/BBNF-self fallback. |
 | W2 `escape_mask_64` correctness / SIMD unblock | Scalar spec for carry handoff, strict xorshift repro, fixed NEON parity, corpus/checkasm guard. | Any new SIMD admission before this closes; throughput-only waiver; production string-region SIMD that ignores the falsifier. | This wave can unblock SIMD but does not itself admit CSS throughput unless it also has a measured same-wave consumer under a SPEC gate. |
-| W3 CSS-local same-tape union attempt | Conditional post-W1b same-tape CSS fact/kind stream or opaque generated fact lane consumed by CSS equality/visitor/comparator. | REDRESS 96 class-column replay, REDRESS 97 streaming cursor replay, REDRESS 98 class-lane-only paper route; parser-owned cursor/list, retained structural vector, whitespace bitmap, side event vector, aux density/projection column, `UnionTape`, public substrate API. | Must cite REDRESS 96/97/98 and prove material differential: CSS fact-stream consumer, same tape, no second retained substrate, strict CSS equality, microbench/profile on CSS hot leaf, and JSON guard preservation. |
+| W3 CSS-local same-tape union attempt | Conditional post-W1b-2 same-tape CSS fact/kind stream or opaque generated fact lane consumed by CSS equality/visitor/comparator. | REDRESS 96 class-column replay, REDRESS 97 streaming cursor replay, REDRESS 98 class-lane-only paper route; parser-owned cursor/list, retained structural vector, whitespace bitmap, side event vector, aux density/projection column, `UnionTape`, public substrate API. | Must cite REDRESS 96/97/98 and prove material differential: CSS fact-stream consumer, same tape, no second retained substrate, strict CSS equality, microbench/profile on CSS hot leaf, and JSON guard preservation. |
 | W4 ARMv9.2 ASM-gen + orphan disposition | C1/C3/C4/C5/C6 or narrow PMULL/CSSC/UDOT/TBL/TBX consumer after W2. Also remove/demote any unconsumed orphan. | PMULL default `bitmap_prefix_xor_64` body from REDRESS 88; CTZ global next-bit/bulk consumer from REDRESS 89; canary as row movement from REDRESS 90; proof-only SIMD; orphan kernel; x86; SHA3/LD4/PRFM inventory as paper candidate. | Must cite REDRESS 88/89/90 when adjacent and prove new framing: narrow generated CSS or guard-row consumer, scalar reference, checkasm, feature-gated fallback, same-host microbench, same-wave row gate, and zero orphan outcome. |
 | W5 close / Alpha feedback | Reconcile admitted/rejected waves, `RESULTS.md`, `REDRESS.md`, SPEC, dispatch prompt, and campaign close criteria. | Row admission from prose, stale results, producer-only telemetry, mismatched close docs, orphan SIMD at close, missing union/ASM measured attempts if closing as FIXPOINT. | If ADMIT fails, close as FIXPOINT only when CSS redress exists, a new union attempt exists, a new ASM-gen attempt exists, zero-orphan state is evidenced, and REDRESS records every miss. |
 
 ### Candidate-Family Ledger
 
-| S-P2 family | REDRESS adjacency | PIN-V1 admissible framing |
+| S-P2 family | REDRESS adjacency | PIN-V2 admissible framing |
 |---|---|---|
 | `GrammarConfig` / generated metadata | REDRESS 111-113; Lock 14 leaks | Required legality precondition. Must extract structural alphabet, dispatch, string/escape, number, key/pair, flag, sink/view/kind policy into generated metadata/templates. Not a throughput admission alone. |
 | CSS fact stream / output plane | REDRESS 111 report-lane boundary; REDRESS 118 digest/host-sink block | Canonical row output shared by generated Track 1, independent oracle/Track 2, and lightningcss. Digest alone is not parser proof. |
@@ -90,7 +91,7 @@ pre-blocks.
 | Hex quartet / escape decode (`C5`) | REDRESS 82 single-quartet reject; REDRESS 107 proof-only x4; REDRESS 108 existing-consumer production reject; REDRESS 117 escaped-segment block | Fixed-width hex mechanics only. CSS escape width/context, JSON surrogate policy, Sheets/BBNF policy stay caller-owned. Same-wave generated CSS escape/color/string consumer required. |
 | Bitmap prefix / next-bit / bulk emit (`C7/C8` support) | REDRESS 88/89/90 | Category unblocked only for narrow consumer. No default PMULL/CTZ hot body, no retained cursor/side table, no canary row-movement claim. Must consume or demote/remove orphan. |
 | Byte context / movemask support (`C10` support) | REDRESS 83/106 adjacency; orphan audit | Support only inside C1/C4/C6-style scanner with scalar boundary oracle and same-wave consumer. Standalone row movement is pre-blocked. |
-| LD4 interleaved / SHA3 EOR3 / PRFM-STNP / BF16 / SVE2 inventory | P2-C inventory/drop; SIMD audit | Not selectable in PIN-V1. Future admissibility requires fresh profile naming the exact stream/expression/writer, scalar oracle, checkasm where semantic, and same-wave generated consumer. BF16/SVE2 are out of current tranche scope. |
+| LD4 interleaved / SHA3 EOR3 / PRFM-STNP / BF16 / SVE2 inventory | P2-C inventory/drop; SIMD audit | Not selected in the PIN-V2 opening manifest. Future admissibility requires fresh profile naming the exact stream/expression/writer, scalar oracle, checkasm where semantic, and same-wave generated consumer. BF16/SVE2 are out of current tranche scope. |
 | JSON direct residual companion | REDRESS 114-120 | Guard-only until CSS priority is resolved. Reopen requires fresh profile, material source delta beyond W3-W7, scalar/oracle proof, independent Track 2, strict same-run sonic direct floor, and same-wave gate consumption. |
 
 ## §3 — Falsifiability Binding
@@ -115,7 +116,7 @@ SOTA claims, or direct digest as typed/CSS proof fail closed.
 
 ## §4 — Pre-Blocked Routes
 
-Hard pre-blocks no SK-V12 PIN-V1 wave may reopen under current authority:
+Hard pre-blocks no SK-V12 PIN-V2 wave may reopen under current authority:
 
 1. CSS admission using `ceil(baseline_mbps * 1.01)` or any bar weaker than
    strict `Track 1 > lightningcss_mbps + 1`.
@@ -156,7 +157,7 @@ Hard pre-blocks no SK-V12 PIN-V1 wave may reopen under current authority:
 
 Routes that may admit only under different framing with fresh evidence:
 
-- Same-tape CSS-local union may admit only after W1b produces CSS generated
+- Same-tape CSS-local union may admit only after W1b-2 produces CSS generated
   Track 1/comparator/equality and a fresh CSS hot leaf, and only if it remains
   one substrate and cites REDRESS 96/97/98.
 - PMULL/CSSC/ASM-gen may admit only as a narrow same-wave CSS or guard-row

@@ -1,0 +1,51 @@
+# SK-V12 S-P2 CHALLENGE V2 — CH2 Generality
+
+Pass: S-P2 Research. Cycle: V2.
+Date: 2026-05-20.
+Lens: CH2 GENERALITY.
+Scope: verify that every remaining current candidate or support family has grammar-neutral framing, and that demoted inventory/diagnostic/oracle/accounting entries are not JSON-overfit parser candidates.
+Disposition: ACCEPT.
+
+## §1 — Basis
+
+CH2 applies the PASS-2 Lock 14 rule: every candidate must carry a P2-F grammar-neutral verdict and must work for CSS L4, Sheets, and BBNF-self, or be reframed as a per-grammar template surface (`restart/prompts/skinny/PASS-2-RESEARCH.md:99`; `restart/prompts/skinny/PASS-2-RESEARCH.md:107`). Lock 14 forbids grammar-specific code, grammar-name branches, grammar-specific public APIs, and hand-written per-grammar runtime files in generic crates (`restart/locks/LOCKS.md:78`). Lock 1 also remains binding because a grammar-neutral primitive cannot create a second retained substrate (`restart/locks/LOCKS.md:52`).
+
+The V1 consolidation accepted CH2 and required the V2 fold to preserve that framing while fixing other lenses: grammar metadata owns byte sets and policy, SIMD masks stay transient, and output digest remains oracle-only unless a real row-owned product consumes it (`restart/skinny/tranches/sk-v12/research/p2/hardening/HARDENING-S-P2-V1-CONSOLIDATED.md:13`; `restart/skinny/tranches/sk-v12/research/p2/hardening/HARDENING-S-P2-V1-CONSOLIDATED.md:41`; `restart/skinny/tranches/sk-v12/research/p2/hardening/HARDENING-S-P2-V1-CONSOLIDATED.md:47`).
+
+## §2 — Read Set
+
+- PASS-2 §3 and the S-P2 output schema.
+- All six current S-P2 artifacts: `p2a-sota-teardown.md`, `p2b-dav1d-process.md`, `p2c-arch-esoterica.md`, `p2d-substrate-tape.md`, `p2e-parse-that-gaps.md`, and `p2f-grammar-neutral.md`.
+- V1 hardening and consolidated fold.
+- `grammar/css/l4/tokens.bbnf`, `grammar/css/l4/values.bbnf`, `grammar/google-sheets/google-sheets.bbnf`, `grammar/bbnf/bbnf.bbnf`, and `grammar/bbnf/expressions.bbnf`.
+- `skinny/RESULTS.md`, `skinny/REDRESS.md`, `restart/locks/LOCKS.md`, `restart/skinny/tranches/sk-v12/HANDOFF.md`, S-P1 convergence, and the P1 hot-leaf/result-delta artifacts.
+
+## §3 — Findings
+
+1. **The V2 fold preserves the Lock 14 rule rather than widening it.** P2-F now carries an explicit F1-F8 table with scalar/checkasm/same-wave columns and eligibility labels. Six families are conditional parser/support candidates, F7 is oracle-only, and F8 is accounting-only (`restart/skinny/tranches/sk-v12/research/p2/p2f-grammar-neutral.md:25`; `restart/skinny/tranches/sk-v12/research/p2/p2f-grammar-neutral.md:31`; `restart/skinny/tranches/sk-v12/research/p2/p2f-grammar-neutral.md:39`; `restart/skinny/tranches/sk-v12/research/p2/p2f-grammar-neutral.md:40`). P2-F also states the current generator is still JSON-only at runtime emission, so these candidates are not admitted as generated non-JSON behavior yet (`restart/skinny/tranches/sk-v12/research/p2/p2f-grammar-neutral.md:16`).
+
+2. **P2-A C1-C7 are covered by P2-F and remain grammar-neutral only under generated policy.** C1 maps to F1, C2 to F2, C3 to F3, C4 to F4, C5/C7 to F6, and C6 to F7/F8 (`restart/skinny/tranches/sk-v12/research/p2/p2a-sota-teardown.md:29`; `restart/skinny/tranches/sk-v12/research/p2/p2a-sota-teardown.md:37`; `restart/skinny/tranches/sk-v12/research/p2/p2f-grammar-neutral.md:33`; `restart/skinny/tranches/sk-v12/research/p2/p2f-grammar-neutral.md:40`). P2-A's grammar-neutrality table keeps byte classes generated, string/escape/number policy caller-owned, output products row-owned, and FIRST/prefix dispatch in generated modules (`restart/skinny/tranches/sk-v12/research/p2/p2a-sota-teardown.md:139`; `restart/skinny/tranches/sk-v12/research/p2/p2a-sota-teardown.md:143`; `restart/skinny/tranches/sk-v12/research/p2/p2a-sota-teardown.md:149`).
+
+3. **P2-B's process gates are grammar-neutral support gates, not JSON semantics.** Byte-class, structural-terminator-as-class, string-special, hex-quartet, digit-span, bitmap, tail, movemask, and digest gates all require grammar-owned callers, transient masks, or output verification (`restart/skinny/tranches/sk-v12/research/p2/p2b-dav1d-process.md:38`; `restart/skinny/tranches/sk-v12/research/p2/p2b-dav1d-process.md:49`; `restart/skinny/tranches/sk-v12/research/p2/p2b-dav1d-process.md:57`; `restart/skinny/tranches/sk-v12/research/p2/p2b-dav1d-process.md:68`). The output digest gate is explicitly verification/reporting, not parser semantics (`restart/skinny/tranches/sk-v12/research/p2/p2b-dav1d-process.md:68`).
+
+4. **P2-C's V1 demotions close the two generality-adjacent hazards.** LD4 interleaved classification and SHA3 ternary boolean fold are now ISA inventory, not current candidates, because S-P1 does not name an existing interleaved stream or a concrete three-input boolean fold (`restart/skinny/tranches/sk-v12/research/p2/p2c-arch-esoterica.md:38`; `restart/skinny/tranches/sk-v12/research/p2/p2c-arch-esoterica.md:55`; `restart/skinny/tranches/sk-v12/research/p2/p2c-arch-esoterica.md:122`). The six current P2-C candidates are framed as generated byte-set masks, digit-run decode, byte-class string scans, fixed-width hex decode, generated layout/trivia skips, or transient-mask support (`restart/skinny/tranches/sk-v12/research/p2/p2c-arch-esoterica.md:44`; `restart/skinny/tranches/sk-v12/research/p2/p2c-arch-esoterica.md:67`; `restart/skinny/tranches/sk-v12/research/p2/p2c-arch-esoterica.md:78`; `restart/skinny/tranches/sk-v12/research/p2/p2c-arch-esoterica.md:100`; `restart/skinny/tranches/sk-v12/research/p2/p2c-arch-esoterica.md:111`).
+
+5. **P2-D no longer presents tape diagnostics as selectable parser candidates.** Its current selectable count is zero; offset capacity, sparse flags, and retained cursor skip are same-tape diagnostics/ineligible under current S-P1, while `structural_class_lane_union` is rejected (`restart/skinny/tranches/sk-v12/research/p2/p2d-substrate-tape.md:69`; `restart/skinny/tranches/sk-v12/research/p2/p2d-substrate-tape.md:76`; `restart/skinny/tranches/sk-v12/research/p2/p2d-substrate-tape.md:79`). The remaining diagnostic grammar-neutrality rules keep facts in generic tape accounting or generated per-grammar metadata and forbid grammar-name matches in generic crates (`restart/skinny/tranches/sk-v12/research/p2/p2d-substrate-tape.md:87`; `restart/skinny/tranches/sk-v12/research/p2/p2d-substrate-tape.md:102`; `restart/skinny/tranches/sk-v12/research/p2/p2d-substrate-tape.md:129`).
+
+6. **P2-E's parse-that gaps are grammar-neutral mechanical primitives.** The five candidates accept byte sets, delimiter/escape/control/UTF-8 policy, digit-run bounds, exact hex width, or escape tables from generated callers, and the common rule keeps syntax, policy, and output projection in generated grammar code (`restart/skinny/tranches/sk-v12/research/p2/p2e-parse-that-gaps.md:58`; `restart/skinny/tranches/sk-v12/research/p2/p2e-parse-that-gaps.md:108`; `restart/skinny/tranches/sk-v12/research/p2/p2e-parse-that-gaps.md:173`; `restart/skinny/tranches/sk-v12/research/p2/p2e-parse-that-gaps.md:235`; `restart/skinny/tranches/sk-v12/research/p2/p2e-parse-that-gaps.md:305`; `restart/skinny/tranches/sk-v12/research/p2/p2e-parse-that-gaps.md:370`). Its JSON guard wording does not admit JSON-only work because the same paragraph requires a same-wave generated consumer and P2-E's risk section keeps generated non-JSON priority ahead of JSON residuals (`restart/skinny/tranches/sk-v12/research/p2/p2e-parse-that-gaps.md:89`; `restart/skinny/tranches/sk-v12/research/p2/p2e-parse-that-gaps.md:376`).
+
+7. **The non-JSON grammar evidence is concrete enough for S-P2 generality.** CSS has identifiers, escaped selector identifiers, dual quoted strings, dimensions, functions, raw URLs, and value dispatch surfaces (`grammar/css/l4/tokens.bbnf:7`; `grammar/css/l4/tokens.bbnf:9`; `grammar/css/l4/values.bbnf:29`; `grammar/css/l4/values.bbnf:52`; `grammar/css/l4/values.bbnf:69`; `grammar/css/l4/values.bbnf:84`). Sheets has leading-dot/exponent numbers, doubled-quote strings, error literals, cell/range forms, operators, function calls, and array literals (`grammar/google-sheets/google-sheets.bbnf:6`; `grammar/google-sheets/google-sheets.bbnf:12`; `grammar/google-sheets/google-sheets.bbnf:34`; `grammar/google-sheets/google-sheets.bbnf:63`; `grammar/google-sheets/google-sheets.bbnf:97`; `grammar/google-sheets/google-sheets.bbnf:141`; `grammar/google-sheets/google-sheets.bbnf:159`). BBNF-self has identifiers, multiple literal delimiters, regex spans, comments, rule/directive dispatch, and numeric value expressions (`grammar/bbnf/bbnf.bbnf:9`; `grammar/bbnf/bbnf.bbnf:11`; `grammar/bbnf/bbnf.bbnf:15`; `grammar/bbnf/bbnf.bbnf:17`; `grammar/bbnf/bbnf.bbnf:56`; `grammar/bbnf/bbnf.bbnf:75`; `grammar/bbnf/expressions.bbnf:6`; `grammar/bbnf/expressions.bbnf:7`).
+
+8. **The admitted product/result boundary still prevents paper generality.** `skinny/RESULTS.md` remains `N-direct / NoGo`, with Track 1 and Track 2 still JSON runtime paths (`skinny/RESULTS.md:143`; `skinny/RESULTS.md:144`). REDRESS 111 admitted only a non-JSON report lane, REDRESS 112 rejected the generated non-JSON baseline, REDRESS 113 blocked the first generated CSS intervention, and REDRESS 120 routes SK-V12 to generated non-JSON baseline first (`skinny/REDRESS.md:3282`; `skinny/REDRESS.md:3311`; `skinny/REDRESS.md:3340`; `skinny/REDRESS.md:3531`; `skinny/REDRESS.md:3545`). S-P1 convergence repeats that JSON-only telemetry may nominate primitive families but does not prove CSS, Sheets, or BBNF-self behavior (`restart/skinny/tranches/sk-v12/research/p1/hardening/HARDENING-S-P1-CONVERGED.md:60`).
+
+## §4 — Revise List
+
+None for CH2.
+
+## §5 — Carry-Forward Guards
+
+- P2-C I1/I2 stay ISA inventory and are not S-P3 parser candidates under current S-P1.
+- P2-D same-tape entries stay diagnostics/ineligible unless a fresh profile names the exact movement locus.
+- P2-F F7/F8 stay oracle-only/accounting-only and parser-candidate-ineligible.
+- Any S-P3 shortlist must preserve generated metadata ownership of byte sets, delimiters, escapes, number policy, layout/trivia policy, FIRST/prefix tables, and output products.
+- No JSON-only direct residual, parse-only movement, retained structural sidecar, or generic-crate grammar-name branch is admitted by this ACCEPT.

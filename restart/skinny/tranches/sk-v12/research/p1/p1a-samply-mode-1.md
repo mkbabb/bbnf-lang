@@ -54,6 +54,12 @@ find /tmp/skv12-p1/parse-xctrace -path '*exports*' -type f | wc -l
 sed -n '1,80p' /tmp/skv12-p1/pmu/parse_pmu_rows.tsv
 ```
 
+Exact parse replay rows are enumerated in
+`restart/skinny/tranches/sk-v12/research/p1/skv12-p1-replay.tsv`. The block
+below is the readable command shape only; the TSV carries the concrete corpus,
+track, iteration count, cwd, output path, expected return-code policy, and full
+command for every row.
+
 Retained capture command shape:
 
 ```bash
@@ -94,7 +100,8 @@ Status facts from `/tmp/skv12-p1/pmu/capture_status.tsv`:
 
 The `rc=54` xctrace rows are retained 1000 ms time-limit traces, not missing
 captures; the logs say "Reached specified time limit" and "Output file saved
-as". The retained samply JSON metadata reports `symbolicated=false`, while the
+as". The retained samply lane is artifact-only because it uses `--save-only`;
+the retained samply JSON metadata reports `symbolicated=false`, while the
 matching `.json.syms.json` sidecars carry symbol maps. The V1 hardening fold
 exported all 34 parse Time Profiler bundles to
 `/tmp/skv12-p1/parse-xctrace/exports` and parsed them into

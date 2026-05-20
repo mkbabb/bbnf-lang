@@ -35,6 +35,32 @@ RUSTFLAGS="-C target-cpu=native" \
   cargo build --release -p bbnf-bench --bin xctrace_probe --bin profile_direct
 ```
 
+## Exact Replay Surface
+
+The repo-tracked replay ledger is
+`restart/skinny/tranches/sk-v12/research/p1/skv12-p1-replay.tsv`. It is the
+authoritative command surface for independent replay; command blocks below are
+readable recipes only.
+
+Replay rows:
+
+| Lane | Rows |
+|---|---:|
+| `pmu` | 82 |
+| `samply` | 82 |
+| `xctrace-cpu-counters` | 82 |
+| `xctrace-time-profiler-primary` | 82 |
+| `xctrace-time-profiler-export` | 34 |
+| `xctrace-time-profiler-export-primary` | 48 |
+| `xctrace-time-profiler-product-v2` | 48 |
+| `xctrace-time-profiler-product-v2-export` | 48 |
+
+Every row records lane, family, plane, corpus, mode, launch alias, iteration
+count, cwd, binary path, expected return-code policy, output artifact, status
+artifact, full command, and notes. The samply rows are retained artifact-only
+evidence because they use `--save-only`; self-time percentages are sourced from
+exported xctrace Time Profiler XML.
+
 ## Primary Capture
 
 Primary PMU/samply/xctrace status is
@@ -69,7 +95,7 @@ records the correction in `/tmp/skv12-p1/product_time_profile_v2_alias_fixes.tsv
 
 ## Self-Time Export
 
-Parse Time Profiler exports:
+Parse Time Profiler export command shape:
 
 ```bash
 for trace in /tmp/skv12-p1/parse-xctrace/time-profiler/*.trace; do
@@ -85,7 +111,8 @@ The original product Time Profiler exports under
 `/tmp/skv12-p1/direct-xctrace/exports/` are retained but are shallow for many
 rows because the target process exited before the sampler collected a useful
 hot-loop table. The V1 fold therefore recaptured product Time Profiler rows
-with a 2s time limit and 20,000 product iterations:
+with a 2s time limit and 20,000 product iterations. Exact per-row commands and
+the `update_center` launch alias are enumerated in `skv12-p1-replay.tsv`:
 
 ```bash
 cd /Users/mkbabb/Programming/bbnf-lang/skinny
@@ -134,6 +161,11 @@ Derived artifacts:
 - `/tmp/skv12-p1/time_profile_parse_table.md`
 - `/tmp/skv12-p1/time_profile_direct_table.md`
 - `/tmp/skv12-p1/time_profile_typed_table.md`
+
+The V2 hardening fold normalized xctrace line-zero frames to concrete current
+source anchors in those derived TSVs. The summary table has 82/82 rows with no
+`top_leaf_source` ending in `:0`; the detail table has 410/410 rows with no
+`source` ending in `:0` and no `UNRESOLVED_LINE_ZERO` markers.
 
 Top-family distribution by row:
 

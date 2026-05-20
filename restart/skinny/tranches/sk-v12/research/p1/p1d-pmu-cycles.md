@@ -44,7 +44,10 @@ RUSTFLAGS="-C target-cpu=native" \
 
 ## Section 1 - Method
 
-PMU row capture commands, parameterized by corpus and mode:
+Exact PMU replay rows are enumerated in
+`restart/skinny/tranches/sk-v12/research/p1/skv12-p1-replay.tsv`; that ledger
+also records the companion samply, xctrace Time Profiler, CPU Counter, and
+export commands. The block below is the readable PMU command shape:
 
 ```bash
 cd /Users/mkbabb/Programming/bbnf-lang/skinny

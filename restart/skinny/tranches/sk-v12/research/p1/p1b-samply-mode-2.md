@@ -44,8 +44,14 @@ RUSTFLAGS="-C target-cpu=native" \
 ## Section 1 - Method
 
 Fresh captures were already present under `/tmp/skv12-p1`; this artifact
-consumes those captures rather than re-recording them. Reproducible command
-shape:
+consumes those captures rather than re-recording them. Exact product replay rows
+are enumerated in
+`restart/skinny/tranches/sk-v12/research/p1/skv12-p1-replay.tsv`. The block
+below is the readable command shape only; the TSV carries concrete corpus,
+mode, launch alias, iteration count, cwd, output path, expected return-code
+policy, and full command for every row.
+
+Readable command shape:
 
 ```bash
 cd /Users/mkbabb/Programming/bbnf-lang/skinny
@@ -112,7 +118,9 @@ Method caveats:
   `skinny/crates/bbnf-bench/src/bin/profile_direct.rs:95`; the rows below are
   product hot-loop evidence, not cold Criterion admissions.
 - The samply profile JSONs record `symbolicated=false`; same-prefix
-  `.json.syms.json` sidecars exist for every direct and typed row. The original
+  `.json.syms.json` sidecars exist for every direct and typed row. This is a
+  retained artifact-only lane because it uses `--save-only`; product self-time
+  percentages come from exported xctrace Time Profiler XML. The original
   product Time Profiler exports were shallow for several rows because the target
   app exited before collecting a useful hot-loop table. The V1 hardening fold
   recaptured all 48 product Time Profiler rows under

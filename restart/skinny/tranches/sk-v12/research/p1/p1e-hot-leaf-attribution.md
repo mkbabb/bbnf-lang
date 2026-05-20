@@ -398,6 +398,8 @@ The fresh leaf exports resolve to the canonical primitive families:
 - Product PMU rows: `/tmp/skv12-p1/pmu/product_pmu_rows.tsv`.
 - Samply artifacts: `/tmp/skv12-p1/samply/{parse,direct,typed}/*.json.gz`
   and companion `.json.syms.json` files.
+- Exact replay ledger:
+  `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-replay.tsv`.
 - Xctrace artifacts:
   `/tmp/skv12-p1/{parse-xctrace,direct-xctrace}/{time-profiler,cpu-counters}/*.trace`.
 - Xctrace self-time exports:

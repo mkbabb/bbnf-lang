@@ -494,6 +494,7 @@ Candidates: C6 generated FIRST/prefix/lookahead dispatch; P2-D D1
 Owner paths:
 
 - `skinny/crates/codegen/src/lower/sink_only.rs`
+- `skinny/crates/codegen/src/sink_direct.rs`
 - `skinny/crates/codegen/src/json_templates/generated.rs`
 - `skinny/crates/runtime/src/grammars/json/generated.rs`
 - `skinny/crates/bbnf-bench/src/direct_struct.rs`
@@ -504,10 +505,10 @@ Owner paths:
 - `skinny/RESULTS.md`
 - `skinny/REDRESS.md`
 
-Entry gate: W3 admits or rejects with REDRESS; W2's non-JSON proof remains
-valid for generic edits; CHALLENGE selects exactly one scalar generated
-dispatch shape, at most three target rows, and proves no directive/BIR/
-substrate change.
+Entry gate: W3 admits or rejects with REDRESS; REDRESS 113's W2 non-JSON block
+is carried forward and is not generic-edit proof; CHALLENGE selects exactly one
+scalar generated dispatch shape, at most three target rows, and proves no
+directive/BIR/substrate change.
 
 Tasks:
 

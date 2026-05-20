@@ -1,6 +1,6 @@
 # SK-V12 P3-A: Candidate Shortlist
 
-Pass: S-P3 Synthesis-Plan. Cycle: V3.
+Pass: S-P3 Synthesis-Plan. Cycle: V4.
 Date: 2026-05-20.
 Scope: distil the converged S-P2 survivor pool into the SK-V12 implementation-candidate shortlist.
 Output: this file.

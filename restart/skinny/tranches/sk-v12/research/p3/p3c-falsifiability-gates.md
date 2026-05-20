@@ -1,6 +1,6 @@
 # SK-V12 P3-C: Falsifiability Gates
 
-Pass: S-P3 Synthesis-Plan. Cycle: V3.
+Pass: S-P3 Synthesis-Plan. Cycle: V4.
 Date: 2026-05-20.
 Scope: per-wave measurable gates for the SK-V12 generated non-JSON baseline, intervention, guard, and conditional JSON companion surface.
 Output: this file.
@@ -240,7 +240,7 @@ reopen, guard regression, stale run id, or oracle coupling; save
 
 ### 2.7 Close Gate: `G-W4-CLOSE`
 
-Exit gate succeeds only in one of two forms:
+Exit gate succeeds only in one of three forms:
 
 - Admit form: W1 admitted one generated non-JSON baseline, W2 admitted one
   measured intervention on that same row at

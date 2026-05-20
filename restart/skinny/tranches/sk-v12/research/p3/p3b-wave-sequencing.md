@@ -1,6 +1,6 @@
 # SK-V12 P3-B: Wave Sequencing
 
-Pass: S-P3 Synthesis-Plan. Cycle: V3.
+Pass: S-P3 Synthesis-Plan. Cycle: V4.
 Date: 2026-05-20.
 Scope: sequence the converged SK-V12 S-P2 survivor pool into a topological W0..Wn wave manifest.
 Output: this file.
@@ -69,7 +69,7 @@ the digest and tape/accounting families are not parser wave candidates
 | W0 | SK-V12-open telemetry and guard-floor lock | S-P3 converged; clean SK-V12 packet; `skinny/RESULTS.md` and gate/report lanes readable | `skinny/RESULTS.md`; `skinny/crates/bbnf-bench/src/report.rs`; `skinny/crates/bbnf-bench/src/bin/gate.rs`; SK-V12 research/w0 artifacts | First, unconditional | <=90 min wall, redress <=75 min | <=180 LOC / low-medium | `gate-json`/report consumer must consume every required SK-V12 field; no producer-only telemetry | none |
 | W1 | Generated non-JSON baseline | W0 PASS; selected grammar pre-gate passes for CSS L4 declaration values, else Sheets, else BBNF-self; generated emission seam or per-grammar runtime path named; independent oracle and fixtures named | `skinny/crates/codegen/src/lib.rs`; `skinny/crates/codegen/src/json_provider.rs` only to remove the JSON-only gate, or a grammar-neutral profile provider fed solely by grammar source/workspace metadata; `skinny/crates/runtime/src/grammars/{css_l4,sheets,bbnf_self}/`; selected grammar fixture/bench/report/gate owner paths; `skinny/RESULTS.md` or companion gate report | Dispatchable only after W0 | <=90 min wall, redress <=75 min | <=520 CSS / <=480 Sheets / <=460 BBNF-self LOC / high | Generated Track 1 direct or typed parser must be consumed by the same-wave benchmark/report gate with independent Track 2 or oracle and strict output equality | W0 |
 | W2 | Selected-baseline measured grammar-generalized intervention | W1 admits a baseline row with Track 1 >= 1 Mbps, oracle/Track 2 >= 1 Mbps, sample count >= 30, and recorded `baseline_mbps`; P3-A/P3-C select one S-P2 survivor matching that row; scalar reference and parity status named | Selected slice from `parse-that-regex`, `bbnf-simd`, `codegen`, generated runtime, fixture/bench/report/gate, and result/report output; exact files narrowed by W2 plan | Conditional on W1 admit | <=90 min wall, redress <=75 min | <=430 LOC / high | Same generated row from W1 must consume the intervention in the same commit; threshold is at least `ceil(baseline_mbps * 1.01)` on the same output plane | W1 |
-| W3 | Conditional JSON direct companion or residual fixpoint | W1+W2 priority admitted, or W1/W2 records a measured BLOCKED route; fresh material evidence beyond REDRESS 114-119 named for any JSON direct row reopen | JSON direct owner slice only if the entry gate names a legal row; otherwise `skinny/RESULTS.md`, `skinny/REDRESS.md`, and close/research accounting | Conditional; reject before non-JSON priority resolves | <=90 min wall, redress <=75 min | <=300 LOC / high | A reopened JSON row needs generated Track 1, independent Track 2, strict same-run sonic direct comparator, and gate/report consumption in the same wave; no docs-only admission | W1/W2 disposition |
+| W3 | Conditional JSON direct companion or residual fixpoint | W1+W2 priority admitted, or W1 admits and W2 records a measured reject, or W1/W2 records a measured BLOCKED route; fresh material evidence beyond REDRESS 114-119 named for any JSON direct row reopen | JSON direct owner slice only if the entry gate names a legal row; otherwise `skinny/RESULTS.md`, `skinny/REDRESS.md`, and close/research accounting | Conditional; reject before non-JSON priority resolves | <=90 min wall, redress <=75 min | <=300 LOC / high | A reopened JSON row needs generated Track 1, independent Track 2, strict same-run sonic direct comparator, and gate/report consumption in the same wave; no docs-only admission | W1/W2 disposition |
 | W4 | Close and Alpha feedback | W0-W3 have admitted, rejected, or blocked with measurement; guard rows reconciled; close docs agree | `restart/skinny/tranches/sk-v12/{SYNTHESIS,HANDOFF,SPEC,DISPATCH-PROMPT}.md`; `skinny/RESULTS.md`; `skinny/REDRESS.md`; close research artifact | Final | <=90 min wall, redress <=75 min | <=120 LOC / medium | Close report/gate must consume W1/W2 admit, measured reject, or measured BLOCKED route and guard-row disposition | W0-W3 |
 
 ### Topological Order
@@ -78,9 +78,10 @@ W0 locks the measured opening surface and guard-floor schema. W1 owns the first
 material behavior: exactly one generated non-JSON baseline. W2 is the first
 allowed primitive/intervention wave and must consume W1's selected baseline
 row. W3 is deliberately late and conditional: it is either a JSON direct
-companion after the generated priority succeeds or a residual-fixpoint record
-after the generated priority blocks. W4 closes the bracket and routes Alpha
-feedback. The bracket is five waves, below the <=12 skinny ceiling
+companion after the generated priority succeeds, after W2 records a measured
+reject, or a residual-fixpoint record after the generated priority blocks. W4
+closes the bracket and routes Alpha feedback. The bracket is five waves, below
+the <=12 skinny ceiling
 (`restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md:130`).
 
 The W1 fallback order is plan-time only, not three redress attempts hidden

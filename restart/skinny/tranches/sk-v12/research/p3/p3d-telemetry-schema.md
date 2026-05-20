@@ -1,6 +1,6 @@
 # SK-V12 P3-D: Telemetry Schema Binding
 
-Pass: S-P3 Synthesis-Plan. Cycle: V3.
+Pass: S-P3 Synthesis-Plan. Cycle: V4.
 Date: 2026-05-20.
 Scope: bind the SK-V12 telemetry schema, non-JSON companion report, and fail-closed gate rules before any SK-V12 wave dispatch.
 Output: this file.
@@ -249,7 +249,8 @@ For the intervention row, the gate must additionally prove:
    stricter floor;
 3. Track 1 on the intervention row meets or exceeds the threshold on the same
    output plane with strict equality still passing;
-4. Track 2/oracle independence remains valid and same-plane;
+4. Track 2/oracle Mbps remains >= 1, source-independent, same-plane, and
+   strict-equal;
 5. the selected primitive or runtime change names a same-wave consumer, not an
    orphan report field.
 

@@ -5,7 +5,7 @@ SK-V12. It binds to the SK-V12 packet at
 `restart/skinny/tranches/sk-v12/`. Each wave of the SK-V12 SPEC is executed by
 one triumvirate per `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`.
 
-Status: S-P3 V3 draft. Do not dispatch behavior waves until S-P3 CHALLENGE
+Status: S-P3 V4 draft. Do not dispatch behavior waves until S-P3 CHALLENGE
 converges and the orchestrator promotes this packet.
 
 ## Required Reading
@@ -118,7 +118,8 @@ Load-bearing gate facts:
   run/build/host/sample telemetry, and gate consumption.
 - W2 admits one measured intervention only on the W1 row. Track 1 must be >=
   `ceil(baseline_mbps * 1.01)`, where `baseline_mbps` is the W1 generated Track
-  1 Mbps.
+  1 Mbps. Oracle/Track 2 must remain >= 1 Mbps, independent, strict-equal, and
+  same-wave gate-consumed.
 - W3 has no default behavior authority. It dispatches only with fresh material
   evidence beyond REDRESS 114-119 and CHALLENGE acceptance.
 - parse_only rows never count as SK-V12 SOTA admission.

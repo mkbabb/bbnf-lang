@@ -1,6 +1,6 @@
 # SK-V12 P3-F: SPEC + Dispatch Draft
 
-Pass: S-P3 Synthesis-Plan. Cycle: V3.
+Pass: S-P3 Synthesis-Plan. Cycle: V4.
 Date: 2026-05-20.
 Scope: draft the SK-V12 wave SPEC and per-wave dispatch prompt from the
 converged S-P1/S-P2 evidence.
@@ -103,9 +103,9 @@ gate-consumed, and JSON guard floors must hold.
 
 W2 gate `G-W2-SELECTED-NONJSON-INTERVENTION` admits one measured intervention
 on the W1 row. Track 1 must be >= `ceil(baseline_mbps * 1.01)`;
-oracle/Track 2 must remain finite, independent, and equal; all JSON guard
-floors must hold; every primitive used by the intervention must have scalar
-reference, parity/checkasm where applicable, and a same-wave generated
+oracle/Track 2 must be >= 1 Mbps, independent, and strict-equal; all JSON
+guard floors must hold; every primitive used by the intervention must have
+scalar reference, parity/checkasm where applicable, and a same-wave generated
 consumer.
 
 W3 gate `G-W3-CONDITIONAL-JSON-COMPANION` is closed by default. To dispatch

@@ -2,12 +2,13 @@
 
 Date: 2026-05-20.
 
-Status: Pass Alpha SK-V11 -> SK-V12 is re-bracketed under
-`USER-PIN-W1-CSS-L4-SOTA.md`. The earlier SK-V12 packet remains useful
-historical context, but any clause that treats CSS/Sheets/BBNF-self as
-preflight-equivalent, sets the CSS close bar to a bbnf baseline lift, or blocks
-union/ASM-gen categories at the category level is superseded by the user pin
-and the updated `SYNTHESIS.md`.
+Status: ready-for-S-P2. Pass Alpha SK-V11 -> SK-V12 is re-bracketed under
+`USER-PIN-W1-CSS-L4-SOTA.md`, and pin-aware S-P1 Profile has converged under
+PIN-V6 + PIN-V7. The earlier SK-V12 packet remains useful historical context,
+but any clause that treats CSS/Sheets/BBNF-self as preflight-equivalent, sets
+the CSS close bar to a bbnf baseline lift, or blocks union/ASM-gen categories
+at the category level is superseded by the user pin and the updated
+`SYNTHESIS.md`.
 
 ## 1. Read First
 
@@ -102,10 +103,10 @@ baseline, or JSON result surface. Alpha-F does not authorize a W0 rewrite.
 
 ## 6. Required Pass Re-Derivation
 
-Next move after Alpha hardening converges: present G-Alpha, then run SK-V12
-S-P1 Profile, S-P2 Research, and S-P3 Synthesis-Plan under the user pin. The
-pre-pin S-P1/S-P2 artifacts may be cited only after fresh measured
-revalidation; they are not substitute pass convergence.
+Next move: run SK-V12 S-P2 Research under the user pin. G-Alpha and pin-aware
+S-P1 Profile have converged; the pre-pin S-P2 artifacts may be cited only
+after fresh measured revalidation against the pin S-P1 profile and user-pin
+goalset. They are not substitute pass convergence.
 
 The new S-P3 plan must:
 

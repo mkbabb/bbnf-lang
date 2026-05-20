@@ -1,28 +1,28 @@
-# SK-V12 S-P1 Hardening Status
+# SK-V12 S-P1 Hardening Converged
 
 Pass: S-P1 Profile.
 Date: 2026-05-20.
-Status: PRE-PIN CONVERGENCE SUPERSEDED; PIN CONVERGENCE IN PROGRESS.
+Status: CONVERGED UNDER USER PIN.
 
 ## Basis
 
-The original SK-V12 S-P1 hardening sequence converged before
-`USER-PIN-W1-CSS-L4-SOTA.md`. That convergence is retained as historical
-context only. It is not live S-P1 authority for the pinned campaign.
+The original SK-V12 S-P1 convergence predated
+`USER-PIN-W1-CSS-L4-SOTA.md` and is superseded. The pin-aware S-P1 profile
+rerun is the live authority surface for S-P2 and later passes.
 
-The pin-aware S-P1 profile rerun is the current authority surface. It has:
+| Cycle | CH1 | CH2 | CH3 | CH4 | CH5 | CH6 | Disposition |
+|---|---|---|---|---|---|---|---|
+| PIN-V1 | REVISE | ACCEPT | ACCEPT | REVISE | REVISE | REVISE | Folded stale authority, export semantics, Track 1/Track 2 aggregation, generated-size/O(N) routing, and pre-pin citations. |
+| PIN-V2 | REVISE | ACCEPT | ACCEPT | REVISE | ACCEPT | ACCEPT | Folded malformed samply replay modes, stdout-backed `rc=54` wording, and capture-source/current-head wording. |
+| PIN-V3 | REVISE | ACCEPT | ACCEPT | ACCEPT | ACCEPT | ACCEPT | Folded the two PMU parse `update_center` replay corpus keys and added a corpus-key sanity check. |
+| PIN-V4 | ACCEPT | ACCEPT | ACCEPT | ACCEPT | ACCEPT | ACCEPT | First all-ACCEPT cycle, later reset by PIN-V5. |
+| PIN-V5 | ACCEPT | ACCEPT | ACCEPT | ACCEPT | REVISE | ACCEPT | Folded stale pre-pin convergence and SPEC profile authority paths. |
+| PIN-V6 | ACCEPT | ACCEPT | ACCEPT | ACCEPT | ACCEPT | ACCEPT | First all-ACCEPT cycle after the PIN-V5 reset. |
+| PIN-V7 | ACCEPT | ACCEPT | ACCEPT | ACCEPT | ACCEPT | ACCEPT | Second consecutive all-ACCEPT cycle after the PIN-V5 reset. |
 
-- initial profile fold `b1043383`;
-- PIN-V1 fold `d4ef80b2`;
-- PIN-V2 fold `9559a2c4`;
-- PIN-V3 fold `1669c551`;
-- PIN-V4 fold `ecda8b13`, the first all-ACCEPT pin cycle;
-- PIN-V5 in review, with CH5 requiring this authority cleanup before a second
-  all-ACCEPT cycle can count.
-
-S-P1 remains in hardening until two consecutive pin cycles are all ACCEPT under
-`restart/prompts/ORCHESTRATOR.md` §3Z. After that fold, this file may be
-rewritten from status to final pin convergence.
+PIN-V6 and PIN-V7 are two consecutive six-of-six ACCEPT cycles with zero open
+critical defects and no unresolved REVISE. This satisfies
+`restart/prompts/ORCHESTRATOR.md` §3Z for S-P1.
 
 ## Pin Profile Authority
 
@@ -47,7 +47,7 @@ rewritten from status to final pin convergence.
   `/tmp/skv12-pin-p1/time_profile_hot_leaf_details.tsv`, derived from exported
   xctrace Time Profiler XML.
 
-## Accepted Pin Findings
+## Accepted Findings
 
 - Current surface remains overall `N-direct / NoGo`: `parse_only` is
   diagnostic, `direct_to_struct` is a JSON guard and routed ledger, and
@@ -77,6 +77,8 @@ rewritten from status to final pin convergence.
 
 ## Advancement
 
-S-P1 is not closed by the superseded pre-pin convergence. Advancement to S-P2
-requires the pin-aware hardening sequence to record two consecutive all-ACCEPT
-cycles with zero open critical defects and no orphan unresolved REVISE.
+S-P1 is closed. S-P2 may research interventions from this accepted profile
+surface, subject to the SK-V12 handoff: CSS L4 first, strict-vs-strict
+comparator discipline, scalar-reference/checkasm process, grammar-neutral
+abstraction, micro-prove-first for SIMD/substrate candidates, and the user-pin
+union plus ASM-gen reopen rules.

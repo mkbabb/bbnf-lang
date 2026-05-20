@@ -1,6 +1,6 @@
 # SK-V11 P3-A: Candidate Shortlist
 
-Pass: S-P3 Synthesis-Plan. Cycle: V3.
+Pass: S-P3 Synthesis-Plan. Cycle: V4.
 Date: 2026-05-20.
 Scope: distil the converged S-P2 candidate pool into row-gated SK-V11 candidate interventions.
 Output: this file.
@@ -351,7 +351,7 @@ Dropped as standalone candidates:
 - **Falsifiability gate:** JSON companion rows, if selected, must meet the
   direct floors `github_events >= 13403`, `update_center >= 10059`,
   `random >= 7878`, or `instruments >= 8969`. The non-JSON row is named
-  `css_l4/declaration_values/{direct,typed}` in V3, with fallback
+  `css_l4/declaration_values/{direct,typed}` in V4, with fallback
   `google_sheets/formula/{direct,typed}`. W1a creates the gate/report lane and
   W1b creates the baseline row; W2 admits only if the intervention reaches
   `ceil(W1b_css_baseline_mbps * 1.01)` with strict oracle equality.

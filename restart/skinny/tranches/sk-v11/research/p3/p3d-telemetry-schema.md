@@ -1,6 +1,6 @@
 # SK-V11 P3-D: Telemetry-Schema Binding
 
-Pass: S-P3 Synthesis-Plan. Cycle: V3.
+Pass: S-P3 Synthesis-Plan. Cycle: V4.
 Date: 2026-05-20.
 Scope: bind the SK-V11 RESULTS schema, gate-json consumption, non-JSON row
 policy, and producer-only rejection rules before any SK-V11 wave dispatch.
@@ -316,5 +316,5 @@ P3-D blocks telemetry relabeling for these routes:
   `gate-json`, `--check-results`, run-id, manifest, and CostFacts gate
   behavior.
 
-Self-verdict: ACCEPT for V3 challenge. No source files edited; no telemetry
+Self-verdict: ACCEPT for V4 challenge. No source files edited; no telemetry
 column added.

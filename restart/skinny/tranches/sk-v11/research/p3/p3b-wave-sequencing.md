@@ -1,6 +1,6 @@
 # SK-V11 P3-B: Wave Sequencing
 
-Pass: S-P3 Synthesis-Plan. Cycle: V3.
+Pass: S-P3 Synthesis-Plan. Cycle: V4.
 Date: 2026-05-20.
 Scope: order the accepted SK-V11 S-P2 candidate pool into a topological W0,
 W1a, W1b, W2-W9 wave plan.

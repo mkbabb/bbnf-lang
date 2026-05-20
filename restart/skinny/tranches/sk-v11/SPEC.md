@@ -1,15 +1,16 @@
 # SK-V11 SPEC
 
 Pass: S-P3 Synthesis-Plan.
-Cycle: V4 draft.
+Cycle: V4 accepted.
 Date: 2026-05-20.
-Status: DRAFT. S-P3 CHALLENGE must converge before this file becomes wave
+Status: ACTIVE. S-P3 converged under
+`research/p3/hardening/HARDENING-S-P3-V4-CONSOLIDATED.md`; this file is wave
 dispatch authority.
 
 This SPEC is the wave-sequenced implementation contract for SK-V11. It consumes
 the SK-V11 Pass Alpha goalset, the SK-V11-open profile, and the S-P2 V3
-accepted candidate pool. It authorizes no behavior source change until S-P3
-converges and a specific wave's entry gate passes.
+accepted candidate pool. It authorizes behavior source changes only inside the
+selected wave's owner paths after that wave's entry gate passes.
 
 ## 0. Close Condition And Goalset
 
@@ -804,7 +805,7 @@ before CHALLENGE. A narrower name is not a material differential.
 ## 14. G-Alpha And Dispatch Scope
 
 G-Alpha SK-V10 -> SK-V11 is presented by the SK-V11 opening packet. This V4
-SPEC is a draft until S-P3 converges. After convergence, dispatch scope is:
+SPEC is active after S-P3 convergence. Dispatch scope is:
 
 - W0 is closed unless the orchestrator explicitly invalidates the opening
   telemetry lock.

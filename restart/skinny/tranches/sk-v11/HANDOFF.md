@@ -5,13 +5,12 @@ Date: 2026-05-20.
 Status: G-Alpha is presented, W0 refreshed the SK-V11-open native baseline
 from HEAD `3ce75df4`, S-P1 Profile converged under
 `restart/skinny/tranches/sk-v11/research/p1/hardening/HARDENING-S-P1-CONVERGED.md`,
-and S-P2 Research converged under
-`restart/skinny/tranches/sk-v11/research/p2/hardening/HARDENING-S-P2-CONVERGED.md`.
-SK-V11 is ready for S-P3 Synthesis-Plan dispatch under
-`restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md`. This handoff still does not
-authorize behavior source work; S-P3 materializes `SPEC.md` and
-`DISPATCH-PROMPT.md`, and behavior changes land only in post-S-P3 wave
-triumvirates.
+S-P2 Research converged under
+`restart/skinny/tranches/sk-v11/research/p2/hardening/HARDENING-S-P2-CONVERGED.md`,
+and S-P3 Synthesis-Plan converged under
+`restart/skinny/tranches/sk-v11/research/p3/hardening/HARDENING-S-P3-V4-CONSOLIDATED.md`.
+`SPEC.md` and `DISPATCH-PROMPT.md` are active wave authority. Behavior source
+work may land only through the selected wave's entry gate and owner paths.
 
 ## 1. Read First
 
@@ -89,31 +88,18 @@ that S-P1/S-P2 identify on the JSON direct residual surface.
 
 ## 4. Next Move
 
-Next move: ready-for-S-P3.
+Next move: ready-for-wave-W1a.
 
-S-P1 and S-P2 have both converged with two consecutive six-of-six ACCEPT
-cycles. S-P3 must run full orchestration per
-`restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md`, consuming only the fresh
-S-P1/S-P2 accepted evidence:
+W0 is closed by S-P1/W0 authority in SPEC §3. The next behavior wave is W1a,
+the non-JSON gate/report schema lane. Dispatch W1a under
+`restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`, with CHALLENGE required
+before redress. W1a may edit only the SPEC §4 owner paths and must not move any
+JSON row or claim generated non-JSON baseline authority.
 
-- P3-A candidate shortlist drawn only from S-P2 V3 accepted candidates;
-- P3-B wave sequencing across direct-plane closure, grammar generalization, and
-  AArch64 SIMD/ASM;
-- P3-C falsifiability gates with strict same-run direct/typed/non-JSON
-  measurement;
-- P3-D telemetry schema / gate-json consumption;
-- P3-E pre-blocked route ledger carrying REDRESS and W3 falsification;
-- P3-F SPEC + DISPATCH-PROMPT draft, followed by CHALLENGE until convergence.
+## 5. Active Wave Packet
 
-S-P3 writes under `restart/skinny/tranches/sk-v11/research/p3/` and may
-materialize `restart/skinny/tranches/sk-v11/SPEC.md` and
-`restart/skinny/tranches/sk-v11/DISPATCH-PROMPT.md` only after its challenge
-converges. It edits no behavior source.
-
-## 5. S-P3 Expectations
-
-S-P3 consumes only fresh S-P1 and converged S-P2 evidence. The accepted S-P2
-pool is:
+The active S-P3 packet consumes only fresh S-P1 and converged S-P2 evidence. The
+accepted S-P2 pool is:
 
 - C1-C7 parser primitive pool: byte-set/class-table masking, bounded
   special-byte string scan, escape/hex segment decode, digit span/accumulate,
@@ -126,11 +112,11 @@ pool is:
   oracle, strict parity/checkasm, feature/fallback, same-wave consumer, and row
   gate.
 
-Pre-S-P3 micro-proofs are research artifacts, throwaway `/tmp` benches, or
-existing bench invocations. Durable micro-proof harness or production changes
-land only in the S-P3-authored wave packet.
+Pre-wave micro-proofs are research artifacts, throwaway `/tmp` benches, or
+existing bench invocations. Durable micro-proof harnesses or production changes
+land only in the selected S-P3-authored wave.
 
-S-P3 must not shortlist W3 union/event/class-column/streaming-cursor repair,
+No wave may reopen W3 union/event/class-column/streaming-cursor repair,
 parse-only SOTA movement, x86 implementation work, JSON-only generic policy, or
 non-JSON generality by prose. The live `json_provider` codegen path is a Lock 14
 gate before any CSS L4 / Sheets / BBNF-self generated-parser proof can admit.
@@ -139,7 +125,7 @@ gate before any CSS L4 / Sheets / BBNF-self generated-parser proof can admit.
 
 Refuse any dispatch that:
 
-- edits source before S-P3 converges;
+- edits source before the selected wave entry gate passes;
 - asks Alpha-F to create `SPEC.md` or `DISPATCH-PROMPT.md`;
 - reopens W3 union/event/class-column/streaming-cursor/class-lane/sidecar
   substrate;
@@ -159,5 +145,5 @@ Refuse any dispatch that:
 
 SK-V11 is born from the SK-V10 measured close, not from an untested W3 repair.
 The close target is direct plane `GO` or measured direct fixpoint plus one
-admitted non-JSON grammar intervention. The implementation packet does not
-exist yet; the immediate work is S-P2 Research with full orchestration.
+admitted non-JSON grammar intervention. The implementation packet is active;
+the immediate work is W1a with full triumvirate discipline.

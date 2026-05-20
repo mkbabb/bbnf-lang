@@ -1,7 +1,7 @@
 # SK-V12 SPEC - Pin-Aware S-P3 Wave Plan
 
 Date: 2026-05-20.
-Status: PIN-V4 DRAFT. This packet supersedes the pre-pin V5 SPEC wherever it
+Status: S-P3 CONVERGED. This packet supersedes the pre-pin V5 SPEC wherever it
 conflicts with `USER-PIN-W1-CSS-L4-SOTA.md`.
 
 Authority:
@@ -23,8 +23,8 @@ Authority:
 
 Dispatch lock:
 
-- No behavior wave dispatches until S-P3 converges under the user pin.
-- W0 is first; W1a/W2/W1b-1/W1b-2/W3/W4/W5 dispatch only after their entry
+- S-P3 has converged under the user pin; W0 is the first dispatchable wave.
+- W1a/W2/W1b-1/W1b-2/W3/W4/W5 dispatch only after their entry
   gates pass.
 - Each wave is executed by the per-wave triumvirate: research, plan,
   CHALLENGE when required, and redress in distinct commits.

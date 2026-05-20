@@ -5,8 +5,8 @@ SK-V12 under `USER-PIN-W1-CSS-L4-SOTA.md` (2026-05-20). It binds to the packet
 at `restart/skinny/tranches/sk-v12/`. Each wave is executed by one triumvirate
 per `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`.
 
-Status: PIN-V4 S-P3 draft. Dispatch authority exists only after S-P3
-CHALLENGE converges and the orchestrator promotes this packet.
+Status: S-P3 CONVERGED. Dispatch authority exists for W0 first; later waves
+dispatch only after their SPEC entry gates pass.
 
 ## Required Reading
 

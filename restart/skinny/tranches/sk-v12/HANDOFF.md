@@ -2,29 +2,31 @@
 
 Date: 2026-05-20.
 
-Status: ready-for-S-P2. Pass Alpha SK-V11 -> SK-V12 is re-bracketed under
-`USER-PIN-W1-CSS-L4-SOTA.md`, and pin-aware S-P1 Profile has converged under
-PIN-V6 + PIN-V7. The earlier SK-V12 packet remains useful historical context,
-but any clause that treats CSS/Sheets/BBNF-self as preflight-equivalent, sets
-the CSS close bar to a bbnf baseline lift, or blocks union/ASM-gen categories
-at the category level is superseded by the user pin and the updated
-`SYNTHESIS.md`.
+Status: ready-for-wave-W0. Pass Alpha SK-V11 -> SK-V12 has been re-bracketed
+under `USER-PIN-W1-CSS-L4-SOTA.md`; pin-aware S-P1 Profile, S-P2 Research, and
+S-P3 Synthesis-Plan have converged. The earlier Sheets-first SK-V12 packet is
+historical context only where it does not conflict with the user pin or the
+current `SPEC.md`.
 
 ## 1. Read First
 
-1. `restart/prompts/ORCHESTRATOR.md`
-2. `restart/prompts/pass-contracts/PASS-ALPHA.md`
-3. `restart/prompts/skinny/PASS-1-PROFILE.md`
-4. `restart/prompts/skinny/PASS-2-RESEARCH.md`
-5. `restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md`
-6. `restart/skinny/tranches/sk-v12/USER-PIN-W1-CSS-L4-SOTA.md`
-7. `restart/skinny/tranches/sk-v12/SYNTHESIS.md`
-8. `restart/skinny/tranches/sk-v12/research/alpha/alpha-F-contract-draft.md`
-9. `restart/skinny/tranches/sk-v12/SPEC.md` as pre-pin implementation context
-   only where it does not conflict with the user pin
-10. `skinny/RESULTS.md`
-11. `skinny/REDRESS.md` through REDRESS 120
-12. The six 2026-05-20 audits in `restart/skinny/tranches/sk-v12/research/`.
+1. `restart/skinny/tranches/sk-v12/USER-PIN-W1-CSS-L4-SOTA.md`
+2. `restart/prompts/ORCHESTRATOR.md`
+3. `restart/prompts/pass-contracts/PASS-ALPHA.md`
+4. `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`
+5. `restart/prompts/skinny/PASS-1-PROFILE.md`
+6. `restart/prompts/skinny/PASS-2-RESEARCH.md`
+7. `restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md`
+8. `restart/skinny/tranches/sk-v12/SYNTHESIS.md`
+9. `restart/skinny/tranches/sk-v12/SPEC.md`
+10. `restart/skinny/tranches/sk-v12/DISPATCH-PROMPT.md`
+11. `restart/skinny/tranches/sk-v12/research/p1/hardening/HARDENING-S-P1-CONVERGED.md`
+12. `restart/skinny/tranches/sk-v12/research/p2/hardening/HARDENING-S-P2-CONVERGED.md`
+13. `restart/skinny/tranches/sk-v12/research/p3/hardening/HARDENING-S-P3-CONVERGED.md`
+14. The six accepted S-P2 reports under `restart/skinny/tranches/sk-v12/research/p2/`
+15. The six 2026-05-20 audits under `restart/skinny/tranches/sk-v12/research/`
+16. `skinny/RESULTS.md`
+17. `skinny/REDRESS.md`
 
 ## 2. Current State
 
@@ -32,41 +34,33 @@ SK-V11 close remains the seed result surface:
 
 | Family | State | SK-V12 role |
 |---|---|---|
-| `parse_only` | 16 `S / NO-GO`, 1 `L / NO-GO` | diagnostic only |
-| `direct_to_struct` | 4 `A / GO`, 13 `N-direct / NO-GO` | JSON guard and routed ledger |
-| `real_typed_struct` | 7 `A / GO` | JSON typed guard surface |
+| `parse_only` | diagnostic-only concession | no SOTA admission target |
+| `direct_to_struct` | JSON guard plus routed ledger | guard second after CSS L4 |
+| `real_typed_struct` | JSON typed guard surface | guard second after CSS L4 |
 | CSS L4 generated parser | no admitted row | authoritative first target |
-| Sheets / BBNF-self | no admitted row | fallback only after CSS redress attempt |
-| Overall | `N-direct / NoGo` | seed outcome |
+| Sheets / BBNF-self | no admitted row | fallback only after measured CSS redress |
+| Overall | campaign still open | close by ADMIT or FIXPOINT |
 
-The direct residual rows remain recorded by REDRESS 119/120, but the pin moves
-the campaign target to generated CSS L4 > lightningcss and reopens union plus
-ASM-gen categories where a new material-differential plan can pass CHALLENGE.
-Local citations: `skinny/RESULTS.md:5-45` is the live row table,
-`skinny/RESULTS.md:143-146` records the unchanged overall outcome and Track 2
-independence notes, REDRESS 119 is `skinny/REDRESS.md:3495-3527`, and REDRESS
-120 is `skinny/REDRESS.md:3531-3553`.
+The pin moves the campaign target to generated CSS L4 > lightningcss and
+reopens union plus ASM-gen categories at category level. REDRESS 96/97/98 and
+88/89/90 remain measured historical implementations; any new adjacent wave
+must cite them, name the material differential, and pass CHALLENGE before
+redress.
 
 ## 3. SK-V12 Goalset
 
 SK-V12 priority order is binding:
 
-1. Admit a generated CSS L4 row with Track 1 throughput greater than
+1. Admit a generated CSS L4 row with Track 1 throughput strictly greater than
    `lightningcss_mbps + 1` on the same corpus, same output plane, same host,
    and strict equality semantics.
-   The selected output plane is one canonical CSS fact stream shared by
-   generated Track 1, independent Track 2/oracle, and lightningcss.
 2. Preserve JSON direct and typed guard rows, or record measured demotions in
    REDRESS. JSON guards are second priority after CSS L4 >SOTA.
-   Any generic runtime, codegen, generated-output, benchmark, report, or gate
-   change that can produce JSON requires a refreshed JSON guard run unless
-   `skinny/RESULTS.md` is proven unchanged.
 3. Keep `parse_only` diagnostic. No parse-only row can count as SOTA admission.
-4. Treat Sheets and BBNF-self as fallbacks only after a CSS L4 redress attempt
-   records measured BLOCKED or REJECTED evidence.
-5. Treat Rust union substrate and ASM-gen categories as unblocked at the
-   category level. Specific prior REDRESS entries remain measured historical
-   implementations that any new plan must cite and materially differentiate.
+4. Treat Sheets and BBNF-self as fallbacks only after W1b-2 records a measured
+   CSS L4 lightningcss comparator/admission redress.
+5. Treat Rust union substrate and ASM-gen categories as unblocked at category
+   level, with material-differential and CHALLENGE discipline intact.
 
 ## 4. Campaign Close
 
@@ -95,50 +89,36 @@ FIXPOINT:
   explicit inventory demotion;
 - REDRESS records every measured miss and all close docs agree.
 
-## 5. W0 Handling
+## 5. Wave Order
+
+| Wave | SPEC section | Title | Dispatch status |
+|---|---|---|---|
+| W0 | Section 3 | Pin Telemetry And Gate Revalidation | Dispatch now |
+| W1a | Section 4 | GrammarConfig + Lock 14 Legality Gate | After W0 close |
+| W2 | Section 5 | `escape_mask_64` Correctness Prerequisite | After W1a close |
+| W1b-1 | Section 6 | CSS L4 Generated Track 1 + Independent Oracle Scaffold | After W1a close; scalar-only unless W2 passed |
+| W1b-2 | Section 7 | CSS L4 Lightningcss Comparator + Admission Gate | After W1b-1 close |
+| W3 | Section 8 | CSS-Local Same-Tape Union Attempt | After W1b-2 measured CSS row plus CHALLENGE |
+| W4 | Section 9 | ASM-Gen CSS Consumer + AArch64 Orphan Disposition | After W1b-2 close, W2 close, and CHALLENGE |
+| W5 | Section 10 | Close And Alpha Feedback | After W0/W1a/W2/W1b-1/W1b-2/W4 and conditional W3 disposition |
+
+## 6. W0 Dispatch
 
 W0 telemetry/gate lock at commit `f788eb97` is revalidated, not redone. Treat
 it as valid unless revalidation shows drift in the gate/report surface, source
-baseline, or JSON result surface. Alpha-F does not authorize a W0 rewrite.
+baseline, or JSON result surface.
 
-## 6. Required Pass Re-Derivation
+W0 owner paths:
 
-Next move: run SK-V12 S-P2 Research under the user pin. G-Alpha and pin-aware
-S-P1 Profile have converged; the pre-pin S-P2 artifacts may be cited only
-after fresh measured revalidation against the pin S-P1 profile and user-pin
-goalset. They are not substitute pass convergence.
+- `restart/skinny/tranches/sk-v12/research/`
+- `restart/skinny/tranches/sk-v12/research/p1/`
+- `skinny/RESULTS.md` only if gate records unchanged state or measured
+  disposition
+- `skinny/REDRESS.md`
 
-The new S-P3 plan must:
-
-- select CSS L4 first;
-- name the exact CSS L4 row, output plane, generated Track 1 path, runtime
-  module, fixture/input source, independent oracle/Track 2, lightningcss
-  comparator, equality command, benchmark command, gate command, and rollback
-  slice;
-- use strict `generated_track1_mbps > lightningcss_mbps + 1` as the admission
-  floor; equality at `+1` is a miss;
-- land `GrammarConfig` or equivalent generated metadata before CSS L4 emission
-  can legally leave JSON-only templates;
-- record generated CSS runtime size before redress, including generated LOC,
-  module byte size, regen/check command, and an O(N) grammar-size guard;
-  overflow blocks W1b until the growth source is traced;
-- verify and resolve the `escape_mask_64` NEON correctness bug before any new
-  SIMD admission;
-- carry Sheets and BBNF-self only as post-CSS-redress fallbacks;
-- re-evaluate union and ASM-gen routes under the user pin, with REDRESS
-  citation and material differential.
-
-Seed wave split for S-P3 to adjudicate:
-
-| Seed | Role | Cap | Failure path |
-|---|---|---|---|
-| W0 | revalidate `f788eb97` telemetry/gate lock | docs-only, 20/15/30 | return to S-P3 on drift |
-| W1a | `GrammarConfig` legality / JSON parity | <=360 hand LOC | `/tmp/skv12-waveW1a-rejected.patch` |
-| W1b | CSS L4 generated baseline + lightningcss comparator | <=620 hand LOC | `/tmp/skv12-waveW1b-rejected.patch` |
-| W2 | `escape_mask_64` correctness | <=180 hand LOC | `/tmp/skv12-waveW2-rejected.patch`; SIMD remains blocked |
-| W3 | CSS-local same-tape union attempt | <=420 hand LOC | `/tmp/skv12-waveW3-rejected.patch` |
-| W4 | ARMv9.2 ASM-gen consumer + orphan disposition | <=430 hand LOC | `/tmp/skv12-waveW4-rejected.patch` |
-| W5 | close / Alpha feedback | docs-only | synthesize SK-V13 if close unmet |
+W0 does not authorize parser/scanner/SIMD/codegen behavior edits, generated
+runtime output changes, or benchmark behavior changes. Dispatch W0 through the
+research -> plan -> redress triumvirate with distinct commits.
 
 ## 7. Telemetry Binding
 
@@ -159,7 +139,6 @@ SIMD primitives fail closed.
 
 Refuse or return REVISE for any dispatch that:
 
-- asks this Alpha-F lane to edit `SPEC.md` or `DISPATCH-PROMPT.md`;
 - skips CSS L4 before a CSS redress attempt;
 - uses `ceil(baseline_mbps * 1.01)` as the CSS close bar;
 - treats REDRESS 96/97/98 or 88/89/90 as category-level blockers after the
@@ -172,7 +151,6 @@ Refuse or return REVISE for any dispatch that:
 
 ## 9. Dispatch Boundary
 
-This handoff authorizes no source work. It authorizes G-Alpha presentation and
-then the pin-aware S-P1 -> S-P2 -> S-P3 pass sequence. Downstream S-P3 packet
-text may update `SPEC.md` and `DISPATCH-PROMPT.md` in its own lane only after
-those passes converge.
+This handoff authorizes W0. Downstream behavior work is authorized only by the
+current `SPEC.md` wave entry gates and `DISPATCH-PROMPT.md` triumvirate
+protocol.

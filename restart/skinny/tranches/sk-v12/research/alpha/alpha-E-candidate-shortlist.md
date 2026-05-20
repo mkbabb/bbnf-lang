@@ -11,7 +11,8 @@ that treated Sheets as an equivalent fallback and used the old
 - `restart/prompts/pass-contracts/PASS-ALPHA.md`
 - `restart/skinny/tranches/sk-v12/USER-PIN-W1-CSS-L4-SOTA.md`
 - `restart/skinny/tranches/sk-v12/HANDOFF.md` Section 6.5 and Section 7
-- `restart/skinny/tranches/sk-v12/SPEC.md`
+- `restart/skinny/tranches/sk-v12/SPEC.md` as pre-pin context only where it
+  does not conflict with the user pin
 - Six 2026-05-20 audits:
   `skv12-W1-A7-sheets-execution-scout.md`,
   `skv12-aarch64-simd-coverage-audit.md`,
@@ -19,7 +20,8 @@ that treated Sheets as an equivalent fallback and used the old
   `skv12-value-api-audit.md`,
   `skv12-decision-engine-audit.md`,
   `skv12-totality-fold-scout.md`
-- S-P1/S-P2/S-P3 converged artifacts:
+- Pre-pin S-P1/S-P2/S-P3 converged artifacts, as context only after measured
+  revalidation under the user pin:
   `research/p1/hardening/HARDENING-S-P1-CONVERGED.md`,
   `research/p2/hardening/HARDENING-S-P2-CONVERGED.md`,
   `research/p3/hardening/HARDENING-S-P3-CONVERGED.md`
@@ -174,6 +176,10 @@ generated LOC and return REVISE on an unexplained O(N) increase.
     key/member policy, flag interpretation, and sink trait are supplied by
     generated grammar metadata or per-grammar generated modules
   - JSON generated output remains parity-green
+  - because W1a owns generic runtime, codegen, generated-output, benchmark,
+    report, and Lock 14 paths, direct/typed JSON guards refresh or record
+    measured REDRESS demotion unless no JSON-producing path moved and
+    `skinny/RESULTS.md` is proven unchanged
   - CSS generated-config smoke module compiles and is gate-consumed; W1b must
     later consume the same surface in the row-moving CSS baseline
 - LOC budget: <=360 handwritten LOC.

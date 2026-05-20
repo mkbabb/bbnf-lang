@@ -4,6 +4,11 @@ Date: 2026-05-20.
 Wave: W1a - GrammarConfig + Lock 14 Legality Gate.
 Phase: Plan.
 Gate: `G-W1a-GRAMMARCONFIG-LOCK14`.
+Status: Superseded by `PLAN-V2.md`.
+
+This V1 plan was rejected by W1a CHALLENGE as too broad and ambiguous. The
+binding redress plan is `PLAN-V2.md`; this file is retained as the rejected V1
+record.
 
 ## Selection
 

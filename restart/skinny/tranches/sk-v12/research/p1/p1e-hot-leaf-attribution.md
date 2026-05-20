@@ -1,423 +1,232 @@
 # SK-V12 P1-E: Hot-Leaf Attribution
 
-Pass: S-P1 Profile. Cycle: V12.
+Pass: S-P1 Profile. Cycle: V12 pin reprofile.
 Date: 2026-05-20.
-Scope: synthesize SK-V12-open hot-family attribution from fresh
-`/tmp/skv12-p1` PMU rows and xctrace Time Profiler self-time exports.
+Scope: synthesize hot-leaf attribution from fresh `/tmp/skv12-pin-p1`
+self-time artifacts.
 Output: this file.
-Baseline: SK-V12-open (`50bd1648`).
-Host triple: `aarch64-apple-darwin;arch=aarch64;cpu=Apple M5 Max`.
-Build flags: release profile with debug symbols; `RUSTFLAGS="-C target-cpu=native"`;
-target directory `/tmp/skv12-profile-target-50bd1648`.
-Profile tool: `samply 0.13.1`, retained `xctrace` Time Profiler / CPU Counters
-trace bundles, and `proc_pid_rusage` PMU rows under `/tmp/skv12-p1`.
-Corpus coverage: 17/17 parse rows, 17/17 direct rows, 7/7 typed rows.
+Baseline: SK-V12 pin-open inspection at `cf7848b2`.
+Host triple: `aarch64-apple-darwin`; Apple M5 Max.
+Build flags: release profile, `RUSTFLAGS="-C target-cpu=native"`, target root
+`/tmp/skv12-pin-profile-target-cf7848b2`.
+Profile tool: xctrace Time Profiler XML derived tables under
+`/tmp/skv12-pin-p1`; samply artifacts retained as companion evidence.
+Corpus coverage: JSON hot-leaf coverage 17/17 parse, 17/17 direct, 7/7 typed
+guard rows; CSS L4 0/0 because no generated skinny CSS L4 parser exists.
 
-Shared capture provenance:
+## Final Orchestrator Fold - 2026-05-20
 
-- Capture root: `/tmp/skv12-p1`.
-- Completion markers: PMU parse at `2026-05-20T06:34:59Z`, PMU product at
-  `2026-05-20T06:38:35Z`, samply at `2026-05-20T06:41:16Z`, and xctrace at
-  `2026-05-20T06:54:56Z`.
-- Host/toolchain observed during this synthesis:
-  `macOS 26.4.1; aarch64-apple-darwin; Apple M5 Max`;
-  `rustc 1.96.0-nightly (02c7f9bec 2026-04-10)`, LLVM 22.1.2.
-- Artifact count: 82 samply `.json.gz` files, 82 companion `.json.syms.json`
-  files, and 164 retained xctrace trace bundles across parse/direct/typed
-  lanes and Time Profiler / CPU Counters templates.
-- Result authority remains `skinny/RESULTS.md` plus REDRESS 119/120. PMU
-  throughput and cycles-per-byte are diagnostic planning facts, not row
-  admission facts.
+This fold supersedes the partial-capture blocker ledger below. Final hot-leaf
+authority:
+
+| Artifact | Coverage |
+|---|---:|
+| `/tmp/skv12-pin-p1/time_profile_hot_leaf_summary.tsv` | 82 data rows |
+| `/tmp/skv12-pin-p1/time_profile_hot_leaf_details.tsv` | 410 data rows |
+| `/tmp/skv12-pin-p1/time_profile_parse_table.md` | 34 parse rows |
+| `/tmp/skv12-pin-p1/time_profile_direct_table.md` | 34 direct rows |
+| `/tmp/skv12-pin-p1/time_profile_typed_table.md` | 14 typed rows |
+
+Validation: summary 82/82 and details 410/410 have no `:0`, `unknown`, or
+`none` source anchors in the load-bearing symbol/source fields.
+
+Top-family distribution:
+
+| Plane | Leading families |
+|---|---|
+| `parse` | `container_dispatch` 18 rows; `bounded_plain_string_scan` 12; `unicode_escape_hex_decode` 2; `number_digit_span` 1; `simd_movemask` 1 |
+| `direct` | `output_digest_hash` 17 rows; `runtime_support` 14; `string_escape_decode` 2; `allocation_support` 1 |
+| `typed` | `serde_json_oracle_read_parse` 7 rows; `typed_direct_projection` 6; `string_full_scan` 1 |
+
+CSS L4 remains intentionally absent from the hot-leaf ledger: the skinny
+runtime has no generated CSS L4 Track 1 parser or lightningcss comparator row
+yet. That absence is the S-P1 boundary S-P2/S-P3 must consume; it is not a
+fallback authorization to Sheets or BBNF-self.
 
 ## Section 1 - Method
 
 Read-only inputs:
 
 ```sh
-sed -n '1,300p' restart/prompts/skinny/PASS-1-PROFILE.md
-sed -n '1,340p' restart/skinny/tranches/sk-v12/SYNTHESIS.md
-sed -n '1,180p' restart/skinny/tranches/sk-v12/HANDOFF.md
-sed -n '1,90p' restart/skinny/tranches/sk-v12/research/g-alpha/G-ALPHA-SK-V12.md
-sed -n '1,180p' skinny/RESULTS.md
-sed -n '3280,3565p' skinny/REDRESS.md
-sed -n '1,420p' restart/skinny/tranches/sk-v11/research/p1/p1e-hot-leaf-attribution.md
-find restart/skinny/tranches/sk-v11/research/p1/hardening -type f | sort
-sed -n '1,220p' /tmp/skv12-p1/pmu/capture_status.tsv
-sed -n '1,120p' /tmp/skv12-p1/pmu/parse_pmu_rows.tsv
-sed -n '1,160p' /tmp/skv12-p1/pmu/product_pmu_rows.tsv
-sed -n '1,80p' /tmp/skv12-p1/pmu/capture_status.initial-product-cwd-fail.tsv
-find /tmp/skv12-p1 -maxdepth 4 -type f | sort
-find skinny/crates/runtime/src/grammars -maxdepth 3 -type f | sort
-rg -n "ensure_runtime_profile|emit_from_source|emit_typed_from_source" skinny/crates/codegen/src
-rg -n "skip_ascii_whitespace|match_string_at_quote_trusted_utf8|unescape_string|read_hex_unit_scalar|hex_nibble" skinny/crates/parse-that-regex/src/lib.rs
-rg -n "scan_digit_run|match_number_span_from_first|materialize_u64|materialize_f64" skinny/crates/parse-that-regex/src/number/mod.rs
-rg -n "dispatch_value|match_tiny_plain_string_with_cap|parse_array_element_at_direct|parse_object_value_at_direct" skinny/crates/runtime/src/grammars/json/generated.rs
+sed -n '1,240p' restart/prompts/skinny/PASS-1-PROFILE.md
+sed -n '1,260p' restart/skinny/tranches/sk-v12/USER-PIN-W1-CSS-L4-SOTA.md
+sed -n '1,260p' restart/skinny/tranches/sk-v12/research/p1/p1e-hot-leaf-attribution.md
+sed -n '1,260p' restart/skinny/tranches/sk-v12/research/p1/skv12-p1-capture-manifest.md
+sed -n '1,220p' skinny/RESULTS.md
+tail -n 260 skinny/REDRESS.md
+find /tmp/skv12-pin-p1 -maxdepth 4 -type f
+find /tmp/skv12-pin-p1 -maxdepth 5 -type d
+sed -n '1,240p' /tmp/skv12-pin-p1/pmu/capture_status.tsv
+sed -n '1,220p' /tmp/skv12-pin-p1/pmu/pmu-commands.sh
+find /tmp/skv12-pin-p1 -maxdepth 4 -type f -name '*time*' -o -name '*summary*' -o -name '*details*'
+pgrep -fl 'cargo|rustc|xctrace|samply|profile_direct|xctrace_probe'
 ```
 
-This artifact intentionally does not wait for sibling SK-V12 P1-A through P1-D
-documents, because those may be in progress. It uses raw `/tmp/skv12-p1`
-capture/status data, `skinny/RESULTS.md`, `skinny/REDRESS.md`, and the accepted
-SK-V11 P1-E/hardening source maps.
+P1-E did not run cargo, xctrace, samply, Criterion, or any benchmark binary.
+The parent owns capture. This artifact records the hot-leaf evidence boundary
+at P1-E inspection time and gives the patch-ready fold method for the next
+cycle once parent self-time exports exist.
 
-### Evidence Lanes
+The pre-pin P1-E at baseline `50bd1648` and capture root `/tmp/skv12-p1` is a
+format reference only. None of its hot-leaf rows are carried as fresh pin-era
+claims, because the user pin requires fresh JSON plus CSS L4 profiling and
+forbids anchoring on prior tranche prose.
 
-| Lane | Fresh SK-V12 authority | What it can prove here |
+## Section 2 - Fresh Artifact Inventory
+
+Observed fresh pin-root files at `/tmp/skv12-pin-p1`:
+
+| Artifact class | Observed state | P1-E consequence |
 |---|---|---|
-| PMU TSVs | `/tmp/skv12-p1/pmu/parse_pmu_rows.tsv`, `/tmp/skv12-p1/pmu/product_pmu_rows.tsv` | fresh cycles, instructions, c/B, CPI, and probe Mbps shape |
-| Capture status | `/tmp/skv12-p1/pmu/capture_status.tsv` | artifact coverage and return-code shape |
-| Samply profiles | `/tmp/skv12-p1/samply/{parse,direct,typed}/*.json.gz` plus `.syms.json` | retained sample/profile artifacts and source symbol maps |
-| Xctrace traces | `/tmp/skv12-p1/{parse-xctrace,direct-xctrace}/{time-profiler,cpu-counters}/*.trace` plus XML exports | retained trace bundles and fresh Time Profiler self-time tables |
-| Source attribution | SK-V12 xctrace leaf exports, with SK-V11 P1-E/hardening source vocabulary used only for canonical family names | grammar-neutral primitive family attribution plus exact top-leaf `% self-time` |
+| PMU status | `/tmp/skv12-pin-p1/pmu/capture_status.tsv` existed with 26 direct rows plus header at inspection. | Useful for P1-D/cost only; not a hot-leaf source. |
+| PMU commands | `/tmp/skv12-pin-p1/pmu/pmu-commands.sh` existed and enumerated JSON parse, direct, and typed PMU commands. | Replay surface only; not self-time attribution. |
+| Direct PMU logs | `/tmp/skv12-pin-p1/logs/pmu-direct-*.rerun.log.{out,err}` existed for the observed rows. | No symbol, percent, or source line. |
+| samply artifacts | No `/tmp/skv12-pin-p1/samply/` artifacts observed. | Hot-leaf claims unavailable. |
+| xctrace Time Profiler traces | No `/tmp/skv12-pin-p1/*time-profiler*` traces observed. | Hot-leaf claims unavailable. |
+| xctrace Time Profiler XML exports | No `*.time-profile.xml` exports observed. | Hot-leaf claims unavailable. |
+| derived self-time summary | No `/tmp/skv12-pin-p1/time_profile_hot_leaf_summary.tsv` observed. | Hot-leaf claims unavailable. |
+| derived self-time details | No `/tmp/skv12-pin-p1/time_profile_hot_leaf_details.tsv` observed. | Hot-leaf claims unavailable. |
+| CSS L4 target row | No CSS L4/lightningcss artifacts observed under `/tmp/skv12-pin-p1`. | P1-E cannot satisfy the pin-era grammar-generalization hot-leaf requirement. |
 
-The V1 hardening fold exported the retained parse Time Profiler bundles and
-recaptured product Time Profiler rows under
-`/tmp/skv12-p1/direct-xctrace/time-profiler-v2` because the original product
-exports were shallow launch/setup captures. The derived self-time authorities
-are `/tmp/skv12-p1/time_profile_hot_leaf_summary.tsv` and
-`/tmp/skv12-p1/time_profile_hot_leaf_details.tsv`; percentages below are over
-selected target-binary running samples after filtering dyld/startup frames.
-Replay details and the `update_center` / `update-center` alias correction are
-recorded in `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-capture-manifest.md`.
+Process reconciliation at inspection found an active parent-owned
+`profile_direct` process for a JSON direct PMU row. P1-E therefore treats the
+pin capture as in progress, not failed.
 
-## Section 2 - Fresh Measurement Facts
+## Section 3 - Blocker List
 
-Final capture status:
+P1-E cannot make any fresh hot-leaf attribution until the parent capture lands
+these artifacts:
 
-| Family | Rows | Status |
-|---|---:|---|
-| `pmu-parse` | 34 | PASS `rc=0` |
-| `pmu-direct` | 34 | PASS `rc=0` |
-| `pmu-typed` | 14 | PASS `rc=0` |
-| `samply-parse` | 34 | PASS `rc=0` |
-| `samply-direct` | 34 | PASS `rc=0` |
-| `samply-typed` | 14 | PASS `rc=0` |
-| `xctrace-time-profiler-parse` | 34 | PASS `rc=54` |
-| `xctrace-time-profiler-direct` | 34 | PASS `rc=54` |
-| `xctrace-time-profiler-typed` | 14 | PASS `rc=54` |
-| `xctrace-cpu-counters-parse` | 34 | PASS `rc=54` |
-| `xctrace-cpu-counters-direct` | 34 | PASS, 32 rows `rc=54`, 2 rows `rc=0` |
-| `xctrace-cpu-counters-typed` | 14 | PASS `rc=54` |
+1. `time_profile_hot_leaf_details.tsv` with one row per selected top leaf and
+   columns equivalent to: `plane`, `corpus`, `mode`, `rank`, `symbol`,
+   `percent_self`, `source`, `family`, `artifact`.
+2. `time_profile_hot_leaf_summary.tsv` with one summary row per corpus x
+   workload x track and columns equivalent to: `plane`, `corpus`, `mode`,
+   `top_leaf`, `top_leaf_percent`, `top_leaf_source`, `family`.
+3. Fresh xctrace Time Profiler XML exports or an equivalent symbolized
+   self-time source for all 17 JSON corpora across parse/direct/typed lanes.
+4. A CSS L4 target corpus self-time lane with the same symbol, percent, and
+   source-line contract as the JSON rows.
+5. A manifest update recording host triple, tool versions, build flags, run
+   ids, and any accepted xctrace return-code policy for the pin-root capture.
+6. Source-line normalization proof: no `:0` source anchors, no unresolved
+   frames, and no `UNRESOLVED_LINE_ZERO` markers in either derived table.
 
-The `rc=54` xctrace rows are retained time-limit trace captures, not failed
-status rows. Example logs show "Reached specified time limit" for parse
-captures and "Target app exited" for direct captures, followed by saved `.trace`
-bundles.
+Until those exist, every hot-leaf cell below is explicitly unavailable. No
+S-P2 primitive or S-P3 wave should cite this P1-E as hot-leaf antecedent for a
+kernel, union route, ASM-gen route, JSON guard route, or CSS L4 admission
+route.
 
-Initial product PMU capture had a cwd/fixture-location failure:
-`pmu-direct` 34/34 and `pmu-typed` 14/14 failed at `rc=134`, with
-`profile_direct` unable to locate fixtures from the initial working directory.
-The rerun rows in `capture_status.tsv` are the final authority and all product
-PMU rows pass at `rc=0`.
+## Section 4 - Patch-Ready Fold Method
 
-PMU aggregate shape:
+Once the parent supplies Time Profiler traces, export and derive self-time in
+this shape:
 
-| Plane | Rows | Aggregate c/B | Aggregate CPI |
-|---|---:|---:|---:|
-| parse | 34 | 2.920217 | 0.204887 |
-| direct | 34 | 4.290305 | 0.183717 |
-| typed guards | 14 | 3.123172 | 0.185056 |
+```sh
+find /tmp/skv12-pin-p1 -path '*time-profiler*' -name '*.trace' -print
 
-The PMU TSV schema exposes cycles, instructions, c/B, CPI, user ns, system ns,
-and checksums. It does not expose branch-miss, L1, or LLC columns. This P1-E
-does not infer missing counter classes.
+mkdir -p /tmp/skv12-pin-p1/time-profiler-exports
 
-### Fresh Self-Time Export Coverage
+xctrace export \
+  --input /tmp/skv12-pin-p1/<lane>/time-profiler/<row>.trace \
+  --xpath '/trace-toc/run[@number="1"]/data/table[@schema="time-profile"]' \
+  > /tmp/skv12-pin-p1/time-profiler-exports/<row>.time-profile.xml
+```
 
-| Plane | Rows | Sample rows | Selected rows | Selected target time |
-|---|---:|---:|---:|---:|
-| parse | 34 | 34,129 | 34,080 | 99.86% |
-| direct | 34 | 64,593 | 64,541 | 99.92% |
-| typed guards | 14 | 25,713 | 25,692 | 99.92% |
+The derivation step must:
 
-Leading self-time family distribution by row:
+1. Filter startup/dyld/system frames from the selected target-binary running
+   samples, but keep the retained denominator so coverage is auditable.
+2. Select top leaves per corpus x workload x track, preserving raw symbol
+   names, percent self-time, artifact path, and resolved file:line.
+3. Reject any row whose top leaf lacks a concrete source anchor.
+4. Map symbols to grammar-neutral families only after the raw symbol table is
+   retained. Family labels do not replace symbol evidence.
+5. Include CSS L4 as a first-class row. A JSON-only fold is not pin-converged.
+6. Preserve Track 1 / Track 2 separation. Comparator/oracle symbols never
+   prove generated Track 1 hot leaves.
+7. Mark parse-only rows diagnostic-only; they are not admission rows under the
+   user pin.
 
-| Plane | Leading families |
-|---|---|
-| parse | `bounded_plain_string_scan` 14 rows; `container_dispatch` 11; `unicode_escape_hex_decode` 4; `number_digit_span` 2; `simd_movemask` 2; `string_escape_decode` 1 |
-| direct | `output_digest_hash` 18 rows; `container_dispatch` 10; `string_escape_decode` 4; `bounded_plain_string_scan` 1; `number_digit_span` 1 |
-| typed guards | `serde_json_oracle_read_parse` 7 rows; `typed_direct_projection` 5; `number_digit_span` 2 |
+Acceptance checks for the fold:
 
-### Fresh c/B Tables
+```sh
+test -s /tmp/skv12-pin-p1/time_profile_hot_leaf_summary.tsv
+test -s /tmp/skv12-pin-p1/time_profile_hot_leaf_details.tsv
+rg -n ':0|UNRESOLVED_LINE_ZERO|unavailable|n/a' \
+  /tmp/skv12-pin-p1/time_profile_hot_leaf_summary.tsv \
+  /tmp/skv12-pin-p1/time_profile_hot_leaf_details.tsv
+```
 
-Parse c/B:
+The final `rg` must return no unresolved source anchors in admitted hot-leaf
+tables. If a lane is legitimately absent, document it in this file as an
+explicit blocker rather than leaving a silent blank.
 
-| Corpus | Track 1 / Track 2 c/B |
-|---|---:|
-| `twitter` | 2.214 / 2.845 |
-| `citm_catalog` | 1.123 / 1.653 |
-| `canada` | 1.933 / 2.076 |
-| `apache_builds` | 2.737 / 2.841 |
-| `github_events` | 2.281 / 2.657 |
-| `update_center` | 2.893 / 3.735 |
-| `mesh` | 2.653 / 2.803 |
-| `random` | 3.519 / 4.407 |
-| `gsoc-2018` | 1.481 / 1.572 |
-| `marine_ik` | 2.556 / 2.798 |
-| `instruments` | 2.028 / 2.933 |
-| `numbers` | 1.742 / 1.812 |
-| `unicode_mixed` | 4.297 / 3.893 |
-| `unicode_escapes` | 2.819 / 2.726 |
-| `unicode_basic` | 2.865 / 3.229 |
-| `distinct_values` | 3.585 / 5.684 |
-| `y_string_unicode` | 5.622 / 5.901 |
+## Section 5 - Hot-Leaf Claim Ledger
 
-Direct c/B:
+No fresh hot-leaf claims are available in the pin root. Each row is marked
+unavailable because P1-E found no fresh self-time artifact with all three
+required fields: symbol, percent self-time, and file:line.
 
-| Corpus | Track 1 / Track 2 c/B |
-|---|---:|
-| `twitter` | 2.950 / 3.200 |
-| `citm_catalog` | 1.612 / 1.717 |
-| `canada` | 3.254 / 3.366 |
-| `apache_builds` | 3.058 / 3.374 |
-| `github_events` | 2.830 / 3.092 |
-| `update_center` | 4.120 / 4.597 |
-| `mesh` | 3.956 / 3.832 |
-| `random` | 4.403 / 4.890 |
-| `gsoc-2018` | 2.336 / 2.427 |
-| `marine_ik` | 3.650 / 3.593 |
-| `instruments` | 2.863 / 3.099 |
-| `numbers` | 2.703 / 2.761 |
-| `unicode_mixed` | 7.454 / 7.663 |
-| `unicode_escapes` | 6.722 / 6.846 |
-| `unicode_basic` | 3.768 / 4.161 |
-| `distinct_values` | 5.469 / 6.209 |
-| `y_string_unicode` | 9.993 / 11.302 |
+| Corpus | parse hot leaf | direct hot leaf | typed hot leaf |
+|---|---|---|---|
+| `twitter` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact |
+| `citm_catalog` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact |
+| `canada` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no typed row in RESULT surface |
+| `apache_builds` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact |
+| `github_events` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact |
+| `update_center` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact |
+| `mesh` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact |
+| `random` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no typed row in RESULT surface |
+| `gsoc-2018` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no typed row in RESULT surface |
+| `marine_ik` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact |
+| `instruments` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no typed row in RESULT surface |
+| `numbers` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no typed row in RESULT surface |
+| `unicode_mixed` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no typed row in RESULT surface |
+| `unicode_escapes` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no typed row in RESULT surface |
+| `unicode_basic` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no typed row in RESULT surface |
+| `distinct_values` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no typed row in RESULT surface |
+| `y_string_unicode` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no typed row in RESULT surface |
 
-Typed c/B:
-
-| Corpus | Track 1 / Track 2 c/B |
-|---|---:|
-| `twitter` | 1.881 / 2.124 |
-| `citm_catalog` | 0.964 / 1.815 |
-| `apache_builds` | 4.088 / 6.081 |
-| `github_events` | 2.706 / 3.000 |
-| `update_center` | 2.798 / 3.515 |
-| `mesh` | 3.694 / 4.732 |
-| `marine_ik` | 2.932 / 3.396 |
-
-## Section 3 - Grammar-Neutral Primitive Map
-
-These names are the canonical, grammar-neutral family labels used to group the
-fresh xctrace leaf symbols. The source loci below are current SK-V12 paths; the
-row-level percentages and top leaf symbols live in
-`/tmp/skv12-p1/time_profile_hot_leaf_details.tsv`.
-
-| Canonical primitive | Evidence members and current source loci |
-|---|---|
-| `bounded_plain_string_scan` | generated tiny matcher `match_tiny_plain_string_with_cap::<16>` / `::<8>` at `skinny/crates/runtime/src/grammars/json/generated.rs:171`; Track 2 tiny matcher at `skinny/crates/bbnf-bench/src/track2/json.rs:314`; hand direct tiny string at `skinny/crates/bbnf-bench/src/direct_struct.rs:565`; typed tiny/plain helpers at `skinny/crates/bbnf-bench/src/generated_real_typed.rs:1811` and `:1825`; full-string scan support at `skinny/crates/parse-that-regex/src/lib.rs:162` and `:547` |
-| `string_escape_decode` | `validate_string_escape`, `validate_unicode_escape_run`, and `unescape_string` at `skinny/crates/parse-that-regex/src/lib.rs:284`, `:347`, and `:718` |
-| `unicode_escape_hex_decode` | `read_hex_unit_scalar` and `hex_nibble` at `skinny/crates/parse-that-regex/src/lib.rs:945` and `:959` |
-| `number_digit_span` | `match_number_span_from_first`, `scan_digit_run`, `parse_eight_digits`, `materialize_u64`, and `materialize_f64` at `skinny/crates/parse-that-regex/src/number/mod.rs:38`, `:106`, `:214`, `:247`, and `:261` |
-| `ascii_whitespace_skip` | `skip_ascii_whitespace` and `skip_ascii_spaces` at `skinny/crates/parse-that-regex/src/lib.rs:113` and `:128` |
-| `container_dispatch` | generated `dispatch_value`, `parse_value_at`, `consume_structural`, `consume_container_next`, `consume_array_next`, `parse_object_value_at_direct`, and `parse_array_element_at_direct` at `skinny/crates/runtime/src/grammars/json/generated.rs:47`, `:37`, `:292`, `:310`, `:348`, `:468`, and `:508`; Track 2 `parse_value_at`, `parse_key_colon`, and `consume_container_next` at `skinny/crates/bbnf-bench/src/track2/json.rs:53`, `:97`, and `:271` |
-| `simd_movemask` | `bbnf_simd::aarch64::movemask::movemask_u8x16` at `skinny/crates/bbnf-simd/src/aarch64/movemask.rs:4`; trailing-zero helpers remain core support evidence, not separate behavior authority |
-| `output_digest_hash` | `JsonDirectDigest::fold_string_scalar`, `hash_bytes`, and `mix`/`wrapping_add` support at `skinny/crates/bbnf-bench/src/direct_struct.rs:123`, `:717`, and `:739`; typed hash support `fold_opt_str`, `hash_str`, and `mix` at `skinny/crates/bbnf-bench/src/real_typed_struct.rs:687`, `:734`, and `:742` |
-| `memory_copy` / `runtime_support` | core copy, allocation, option, and arithmetic leaves when xctrace samples the generic leaf and the caller stack does not resolve to a narrower primitive family |
-
-## Section 4 - Row Attribution
-
-### Parse Diagnostic Rows
-
-All parse rows remain diagnostic only: 16 `S / NO-GO` and `canada` as
-`L / NO-GO`. No parse-only row can admit SK-V12 or reopen W3/parse-only
-routes. The table names the leading fresh self-time families; exact top leaf
-symbol, percent, and file:line for every parse row and track are in
-`/tmp/skv12-p1/time_profile_hot_leaf_details.tsv`.
-
-| Corpus | Fresh parse c/B T1/T2 | Leading primitive family | SK-V12 treatment |
-|---|---:|---|---|
-| `twitter` | 2.214 / 2.845 | `bounded_plain_string_scan`, `ascii_whitespace_skip`, `simd_movemask` | diagnostic string row |
-| `citm_catalog` | 1.123 / 1.653 | `ascii_whitespace_skip`, `bounded_plain_string_scan`, `container_dispatch` | diagnostic whitespace/string row |
-| `canada` | 1.933 / 2.076 | `number_digit_span`, `container_dispatch` | diagnostic `L / NO-GO` anomaly, not SOTA close |
-| `apache_builds` | 2.737 / 2.841 | `bounded_plain_string_scan`, `ascii_whitespace_skip`, `simd_movemask` | diagnostic short-string row |
-| `github_events` | 2.281 / 2.657 | `bounded_plain_string_scan`, `simd_movemask`, `ascii_whitespace_skip` | diagnostic tiny-string row |
-| `update_center` | 2.893 / 3.735 | `bounded_plain_string_scan`, `simd_movemask`, `container_dispatch` | diagnostic tiny-string row |
-| `mesh` | 2.653 / 2.803 | `number_digit_span`, `container_dispatch`, `ascii_whitespace_skip` | diagnostic numeric/dispatch row |
-| `random` | 3.519 / 4.407 | `bounded_plain_string_scan`, `ascii_whitespace_skip`, `container_dispatch` | diagnostic cold-sensitive string row |
-| `gsoc-2018` | 1.481 / 1.572 | `simd_movemask`, `bounded_plain_string_scan` | diagnostic SIMD string-scan row |
-| `marine_ik` | 2.556 / 2.798 | `container_dispatch`, `number_digit_span`, `ascii_whitespace_skip` | diagnostic numeric/dispatch row |
-| `instruments` | 2.028 / 2.933 | `bounded_plain_string_scan`, `ascii_whitespace_skip`, `container_dispatch` | diagnostic string/whitespace row |
-| `numbers` | 1.742 / 1.812 | `number_digit_span`, `container_dispatch` | diagnostic pure-number row |
-| `unicode_mixed` | 4.297 / 3.893 | `string_escape_decode`, `container_dispatch`, `bounded_plain_string_scan` | diagnostic unicode row |
-| `unicode_escapes` | 2.819 / 2.726 | `unicode_escape_hex_decode`, `string_escape_decode`, `bounded_plain_string_scan` | diagnostic unicode hex row |
-| `unicode_basic` | 2.865 / 3.229 | `bounded_plain_string_scan`, `simd_movemask`, `container_dispatch` | diagnostic UTF-8 string row |
-| `distinct_values` | 3.585 / 5.684 | `bounded_plain_string_scan`, `ascii_whitespace_skip` | diagnostic tiny-string dominant row |
-| `y_string_unicode` | 5.622 / 5.901 | `unicode_escape_hex_decode`, `string_escape_decode`, `bounded_plain_string_scan` | diagnostic sparse unicode row |
-
-### Direct Guard And Residual Rows
-
-Direct rows retain the SK-V11 close state. Four rows are admitted guards;
-thirteen are residual/pre-blocked `N-direct / NO-GO` rows. The fresh SK-V12 PMU
-and self-time shape does not itself satisfy the REDRESS 114-119 reopen rule.
-Exact top leaf symbol, percent, and file:line for every direct row and track
-are in `/tmp/skv12-p1/time_profile_hot_leaf_details.tsv`.
-
-| Corpus | SK-V12 state | Fresh direct c/B T1/T2 | Leading primitive family | SK-V12 treatment |
-|---|---|---:|---|---|
-| `twitter` | residual | 2.950 / 3.200 | `bounded_plain_string_scan`, `ascii_whitespace_skip`, `simd_movemask` | pre-blocked by W5/W7/W8 fixpoint |
-| `citm_catalog` | guard | 1.612 / 1.717 | `ascii_whitespace_skip`, `bounded_plain_string_scan`, `container_dispatch` | preserve direct guard |
-| `canada` | residual | 3.254 / 3.366 | `number_digit_span`, `container_dispatch` | pre-blocked by W3/W8 fixpoint |
-| `apache_builds` | guard | 3.058 / 3.374 | `output_digest_hash`, `bounded_plain_string_scan`, `ascii_whitespace_skip` | preserve strict measured-row guard |
-| `github_events` | residual | 2.830 / 3.092 | `bounded_plain_string_scan`, `simd_movemask`, `ascii_whitespace_skip` | pre-blocked by W5/W7/W8 fixpoint |
-| `update_center` | residual | 4.120 / 4.597 | `bounded_plain_string_scan`, `output_digest_hash`, `simd_movemask` | pre-blocked by W5/W7/W8 fixpoint |
-| `mesh` | residual | 3.956 / 3.832 | `number_digit_span`, `container_dispatch`, `ascii_whitespace_skip` | pre-blocked by REDRESS 114 |
-| `random` | residual | 4.403 / 4.890 | `bounded_plain_string_scan`, `ascii_whitespace_skip`, `output_digest_hash` | pre-blocked by REDRESS 115 plus W5/W7 |
-| `gsoc-2018` | residual | 2.336 / 2.427 | `simd_movemask`, `bounded_plain_string_scan` | pre-blocked by W5/W7/W8 fixpoint |
-| `marine_ik` | guard | 3.650 / 3.593 | `number_digit_span`, `container_dispatch`, `ascii_whitespace_skip` | preserve direct guard |
-| `instruments` | W0-clamped residual | 2.863 / 3.099 | `bounded_plain_string_scan`, `ascii_whitespace_skip`, `container_dispatch` | docs-only admission pre-blocked |
-| `numbers` | W0-clamped residual | 2.703 / 2.761 | `number_digit_span`, `container_dispatch` | W3 route rejected; no reopen |
-| `unicode_mixed` | W0-clamped residual | 7.454 / 7.663 | `string_escape_decode`, `bounded_plain_string_scan`, `container_dispatch` | W6 route blocked; no reopen |
-| `unicode_escapes` | residual | 6.722 / 6.846 | `string_escape_decode`, `unicode_escape_hex_decode`, `bounded_plain_string_scan` | pre-blocked by W5/W6 and proof-only limits |
-| `unicode_basic` | guard | 3.768 / 4.161 | `bounded_plain_string_scan`, `ascii_whitespace_skip`, `simd_movemask` | preserve direct guard |
-| `distinct_values` | residual | 5.469 / 6.209 | `bounded_plain_string_scan`, `ascii_whitespace_skip`, `output_digest_hash` | pre-blocked by W5/W7/W8 fixpoint |
-| `y_string_unicode` | residual | 9.993 / 11.302 | `unicode_escape_hex_decode`, `string_escape_decode` | pre-blocked by W5/W6/W8 fixpoint |
-
-The highest fresh direct c/B pressure is still unicode/string shaped:
-`y_string_unicode` at 9.993 / 11.302 c/B, `unicode_mixed` at
-7.454 / 7.663 c/B, and `unicode_escapes` at 6.722 / 6.846 c/B. That is a
-planning fact only. It is not fresh material evidence to dispatch a JSON
-unicode/string residual route before the non-JSON priority resolves.
-
-### Typed Guard Rows
-
-All typed rows remain guard rows. Track 1 is generated typed product evidence;
-Track 2 is independent oracle/comparator evidence and must not be folded into
-generated product attribution. Exact top leaf symbol, percent, and file:line
-for every typed guard row and track are in
-`/tmp/skv12-p1/time_profile_hot_leaf_details.tsv`.
-
-| Corpus | Fresh typed c/B T1/T2 | Leading primitive family | SK-V12 treatment |
-|---|---:|---|---|
-| `twitter` | 1.881 / 2.124 | `bounded_plain_string_scan`, `ascii_whitespace_skip`, typed state/hash support | preserve typed guard |
-| `citm_catalog` | 0.964 / 1.815 | `ascii_whitespace_skip`, `bounded_plain_string_scan`, typed skip-value support | preserve typed guard |
-| `apache_builds` | 4.088 / 6.081 | `bounded_plain_string_scan`, typed state compare, `output_digest_hash` support | preserve typed guard |
-| `github_events` | 2.706 / 3.000 | `bounded_plain_string_scan`, typed state/hash support | preserve typed guard |
-| `update_center` | 2.798 / 3.515 | `bounded_plain_string_scan`, UTF-8/string support, typed state/hash support | preserve typed guard |
-| `mesh` | 3.694 / 4.732 | `number_digit_span`, `ascii_whitespace_skip`, typed sequence support | preserve typed guard |
-| `marine_ik` | 2.932 / 3.396 | `number_digit_span`, `ascii_whitespace_skip`, typed sequence support | preserve typed guard |
-
-## Section 5 - SK-V12-Specific Planning Target
-
-The primary SK-V12 planning target is not a JSON hot leaf. It is the generated
-non-JSON baseline blocker carried by REDRESS 112/113 and made binding by
-REDRESS 120, `SYNTHESIS.md`, `HANDOFF.md`, and G-Alpha.
-
-Fresh inventory in the current tree still shows the blocker:
-
-- `skinny/crates/codegen/src/json_provider.rs:4` accepts runtime emission only
-  when `backend.grammar_name == "json"` and errors for any other grammar.
-- `skinny/crates/codegen/src/lib.rs:108` and `:146` call
-  `json_provider::ensure_runtime_profile` for direct and typed emission.
-- `skinny/crates/runtime/src/grammars/` contains generated `json` and
-  `sheets_witness`, but no generated `css_l4`, `css_l4_declaration_values`,
-  `sheets`, or `bbnf_self` runtime module.
-- `skinny/crates/bbnf-bench/src/report.rs` contains the accepted W1a non-JSON
-  report lane for `css_l4`, `sheets`, and `bbnf_self`, but that lane is report
-  consumption, not a generated Track 1 baseline.
-
-Therefore S-P2/S-P3 should plan around standing up exactly one generated
-non-JSON direct or typed baseline first, preferred order CSS L4 declaration
-values, Sheets, then BBNF-self. A JSON-only micro-wave before that priority
-succeeds or records a measured `BLOCKED` route would contradict SK-V12's
-opening contract.
-
-## Section 6 - REDRESS Pre-Blocks
-
-| Temptation from the hot-family map | Prior route status | Required SK-V12 treatment |
+| Non-JSON row | generated Track 1 hot leaf | comparator/oracle hot leaf |
 |---|---|---|
-| Structural rediscovery, retained classes, sidecar vectors, parser-owned cursors, streaming cursor, class column, or `UnionTape` | REDRESS 50, 51, 53, 96, 97, 98, 102, 114, 119, and 120 close or retire the W3/parse-only/substrate families | Do not reopen W3 or parse-only from `container_dispatch` / structural facts |
-| Parse-only throughput, structural scan, masking probes, sidecar freshness, or PMU/cycles | REDRESS 102 and SK-V12 Section 4 classify these as nonproducer evidence | Keep as diagnostics only |
-| Bounded string spans, decoded-byte source folds, single-quartet shortcut, StringBlock16, retained boundary collapse, or eager materialization | REDRESS 54, 55, 60-69, 72, 82, 83, 116, 117, and 119 block or constrain these families | `bounded_plain_string_scan`, `string_escape_decode`, and `unicode_escape_hex_decode` may guide research only after a legal row/oracle consumer exists |
-| Parser-control carry, object next-key carry, object-pair value-byte compaction | REDRESS 63, 65, and 84 constrain or reject these routes | Treat key/container symbols as attribution, not dispatch authority |
-| Generic numeric fallback or number slot reuse | REDRESS 80 and 114 reject the generic/numeric slot close route | `number_digit_span` stays a primitive family, not a reopened W3/W8 route |
-| PMULL/CTZ/bitmap body fill from movemask/trailing-zero pressure | REDRESS 88, 89, and 90 reject default rewires/body-fill routes | `simd_movemask` may be a micro-proof candidate only with a same-wave consumer |
-| Direct digest as typed proof or output host-sink retry | REDRESS 118 blocks the host-sink route; SK-V12 Section 4 bars direct digest as typed proof | `output_digest_hash` is guard/residual attribution only |
-| JSON direct residual row movement | REDRESS 114-119 give measured fixpoint proof; REDRESS 120 routes SK-V12 elsewhere | Reopen only with fresh material evidence beyond REDRESS 114-119 and only after non-JSON priority resolves |
-| Generated non-JSON report lane as generated baseline | REDRESS 111 admitted only the report/gate lane; REDRESS 112 rejected generated CSS L4 baseline; REDRESS 113 blocked the intervention | Treat the generated non-JSON runtime/codegen gap as the first planning target |
+| CSS L4 target corpus | unavailable: no fresh CSS L4 self-time artifact | unavailable: no fresh lightningcss/oracle self-time artifact |
+
+## Section 6 - REDRESS And Pin Boundaries
+
+This artifact proposes no intervention. It only records that P1-E lacks fresh
+self-time evidence. The following route boundaries remain load-bearing for any
+later P1-E fold:
+
+| Boundary | Treatment |
+|---|---|
+| User pin D1/D2 | CSS L4 is authoritative; the close bar is generated CSS L4 Track 1 strictly greater than `lightningcss_mbps + 1`. |
+| User pin D3/D4 | Union-substrate and ASM-gen categories are unblocked only for new material-differential implementations after CHALLENGE; prior REDRESS entries remain historical evidence. |
+| User pin D5 | Zero orphan aarch64 primitives at close; P1-E must not hide orphan evidence behind family labels. |
+| User pin D6 | Parse time and >SOTA are top priority, but parse-only remains diagnostic-only. |
+| REDRESS 112/113 | Pre-pin generated non-JSON baseline failure is historical and superseded by the CSS L4 pin, but it still explains why CSS L4 evidence must be generated Track 1, not report-only. |
+| REDRESS 114-120 | JSON direct residual rows and SK-V11 close remain guard/remainder evidence; a fresh pin-era route needs fresh profile plus material differential. |
 
 ## Section 7 - Delta vs SK-V11
 
-No `skinny/RESULTS.md` row moved between SK-V11 close and SK-V12-open. The
-SK-V12 seed result surface remains:
+Unavailable for hot-leaf purposes in this P1-E cycle. The current
+`skinny/RESULTS.md` surface still records JSON parse/direct/typed rows, but
+the pin-era P1-E delta cannot be computed from PMU logs alone. It requires the
+fresh self-time tables named in Section 3 plus the CSS L4 target lane.
 
-| Family | State | P1-E consequence |
-|---|---|---|
-| `parse_only` | 16 `S / NO-GO`, 1 `L / NO-GO` | diagnostic hot-family evidence only |
-| `direct_to_struct` | 4 `A / GO`, 13 `N-direct / NO-GO` | guard preservation plus pre-blocked residual ledger |
-| `real_typed_struct` | 7 `A / GO` | typed guard surface |
-| generated non-JSON parser | no admitted generated baseline | primary SK-V12 blocker and planning target |
-| overall | `N-direct / NoGo` | unchanged seed outcome |
+## Section 8 - Sources
 
-Fresh SK-V12 PMU and self-time rows are materially useful for cost shape, but
-they do not create new source-level material evidence against REDRESS 114-119.
-The fresh leaf exports resolve to the canonical primitive families:
-`bounded_plain_string_scan`, `string_escape_decode`,
-`unicode_escape_hex_decode`, `number_digit_span`, `ascii_whitespace_skip`,
-`container_dispatch`, `simd_movemask`, and `output_digest_hash`.
-
-## Section 8 - Anomalies And Hardening Caveats
-
-1. The original product Time Profiler exports were shallow launch/setup
-   captures for several rows. The authoritative product self-time lane is the
-   V1 fold recapture under `/tmp/skv12-p1/direct-xctrace/time-profiler-v2`.
-2. The top-leaf percentages are xctrace Time Profiler leaf samples, not PMU
-   counters. They name self-time attribution; row admission still belongs to
-   Criterion/`skinny/RESULTS.md`.
-3. Xctrace rows are retained trace bundles with mostly `rc=54` time-limit
-   return codes. P1-E treats them as artifacts, not as clean-exit percentage
-   exports.
-4. The initial product PMU run failed due fixture lookup from the wrong
-   directory; final rerun PMU rows are all `rc=0`. This is a provenance caveat,
-   not a row failure.
-5. PMU rows expose cycles/instructions/c/B/CPI only. Branch/L1/LLC claims are
-   absent and must not be inferred.
-6. Typed Track 2 leaves remain comparator/oracle evidence. They cannot prove a
-   generated typed Track 1 primitive or direct row.
-7. The largest fresh direct c/B rows remain unicode/string shaped, but SK-V12
-   explicitly routes away from JSON direct retries until the generated
-   non-JSON baseline priority succeeds or honestly blocks.
-8. Current non-JSON codegen/runtime inventory still matches REDRESS 112:
-   `json_provider` is JSON-only and no generated CSS L4 runtime exists.
-9. The capture manifest records the exact build flags, host/tool versions,
-   export commands, CWD policy, and product alias correction for replay.
-
-## Section 9 - Sources
-
-- S-P1 profile prompt: `restart/prompts/skinny/PASS-1-PROFILE.md`.
-- SK-V12 synthesis: `restart/skinny/tranches/sk-v12/SYNTHESIS.md`.
-- SK-V12 handoff: `restart/skinny/tranches/sk-v12/HANDOFF.md`.
-- G-Alpha: `restart/skinny/tranches/sk-v12/research/g-alpha/G-ALPHA-SK-V12.md`.
-- Result authority: `skinny/RESULTS.md`.
-- REDRESS ledger through REDRESS 120: `skinny/REDRESS.md`.
-- Accepted SK-V11 P1-E: `restart/skinny/tranches/sk-v11/research/p1/p1e-hot-leaf-attribution.md`.
-- Accepted SK-V11 hardening: `restart/skinny/tranches/sk-v11/research/p1/hardening/`.
-- PMU status: `/tmp/skv12-p1/pmu/capture_status.tsv`.
-- Initial product failure status:
-  `/tmp/skv12-p1/pmu/capture_status.initial-product-cwd-fail.tsv`.
-- Parse PMU rows: `/tmp/skv12-p1/pmu/parse_pmu_rows.tsv`.
-- Product PMU rows: `/tmp/skv12-p1/pmu/product_pmu_rows.tsv`.
-- Samply artifacts: `/tmp/skv12-p1/samply/{parse,direct,typed}/*.json.gz`
-  and companion `.json.syms.json` files.
-- Exact replay ledger:
-  `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-replay.tsv`.
-- Xctrace artifacts:
-  `/tmp/skv12-p1/{parse-xctrace,direct-xctrace}/{time-profiler,cpu-counters}/*.trace`.
-- Xctrace self-time exports:
-  `/tmp/skv12-p1/parse-xctrace/exports/*.time-profile.xml`,
-  `/tmp/skv12-p1/direct-xctrace/exports-v2/*.time-profile.xml`,
-  `/tmp/skv12-p1/time_profile_hot_leaf_summary.tsv`, and
-  `/tmp/skv12-p1/time_profile_hot_leaf_details.tsv`.
-- Capture manifest:
+- S-P1 profile contract: `restart/prompts/skinny/PASS-1-PROFILE.md`.
+- User pin: `restart/skinny/tranches/sk-v12/USER-PIN-W1-CSS-L4-SOTA.md`.
+- Pre-pin P1-E format reference:
+  `restart/skinny/tranches/sk-v12/research/p1/p1e-hot-leaf-attribution.md`
+  as tracked before this pin-aware rewrite.
+- Pre-pin capture manifest format reference:
   `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-capture-manifest.md`.
-- Codegen blocker: `skinny/crates/codegen/src/json_provider.rs` and
-  `skinny/crates/codegen/src/lib.rs`.
-- Runtime grammar inventory: `skinny/crates/runtime/src/grammars/`.
-- Runtime generated JSON source:
-  `skinny/crates/runtime/src/grammars/json/generated.rs`.
-- Track 2 JSON source: `skinny/crates/bbnf-bench/src/track2/json.rs`.
-- Direct digest source: `skinny/crates/bbnf-bench/src/direct_struct.rs`.
-- Generated typed source: `skinny/crates/bbnf-bench/src/generated_real_typed.rs`.
-- Typed digest source: `skinny/crates/bbnf-bench/src/real_typed_struct.rs`.
-- Parse primitive source: `skinny/crates/parse-that-regex/src/lib.rs` and
-  `skinny/crates/parse-that-regex/src/number/mod.rs`.
-- SIMD movemask source: `skinny/crates/bbnf-simd/src/aarch64/movemask.rs`.
+- Result authority: `skinny/RESULTS.md`.
+- REDRESS ledger through SK-V11 close and SK-V12 pin context:
+  `skinny/REDRESS.md`.
+- Fresh pin-root PMU status:
+  `/tmp/skv12-pin-p1/pmu/capture_status.tsv`.
+- Fresh pin-root PMU command ledger:
+  `/tmp/skv12-pin-p1/pmu/pmu-commands.sh`.

@@ -6,6 +6,36 @@ Scope: replayable manifest for the SK-V12-open profile capture and the V1
 hardening self-time export fold.
 Output: this file.
 
+## Pin-Aware Rerun Addendum
+
+The user-pin rerun at current head `cf7848b2` uses:
+
+- Capture root: `/tmp/skv12-pin-p1`.
+- Build root: `/tmp/skv12-pin-profile-target-cf7848b2`.
+- PMU authority: `/tmp/skv12-pin-p1/pmu/{parse_pmu_rows.tsv,product_pmu_rows.tsv,capture_status.tsv}`.
+- Samply authority: `/tmp/skv12-pin-p1/samply/capture_status.tsv`.
+- xctrace authority: `/tmp/skv12-pin-p1/xctrace/capture_status.tsv`.
+- Derived hot-leaf authority:
+  `/tmp/skv12-pin-p1/time_profile_hot_leaf_summary.tsv` and
+  `/tmp/skv12-pin-p1/time_profile_hot_leaf_details.tsv`.
+
+Final coverage:
+
+| Lane | Rows | Status |
+|---|---:|---|
+| PMU parse/direct/typed | 82 | PASS |
+| samply parse/direct/typed | 82 | PASS |
+| xctrace primary Time Profiler | 82 | PASS |
+| xctrace CPU Counters | 82 | PASS |
+| xctrace product-v2 Time Profiler | 48 | PASS |
+| Time Profiler XML exports | 82 | PASS |
+| hot-leaf summary/details | 82 / 410 data rows | PASS, no unresolved source anchors |
+
+CSS L4 remains unprofiled in the pin root because `skinny/` does not yet have
+a generated CSS L4 Track 1 runtime or lightningcss same-plane comparator row.
+Mode III remains absent; the pin root captures parse, direct, and typed JSON
+lanes only.
+
 ## Run Identity
 
 - Source baseline: `50bd1648` (`docs(sk-v12-g-alpha): present converged alpha

@@ -40,11 +40,12 @@ output_plane: css_l4_declaration_value_fact_bytes
 oracle: css_l4_decl_value_fact_oracle
 ```
 
-This follows R1/R2/R4/R6's narrowest admissible baseline recommendation. R5's
-typed CSS oracle is stronger semantically, but current skinny W1b cannot produce
-an admissible generated typed CSS Track 1 or add the dependency/manifest owners
-needed for that route. The direct route must still expose full stable fact bytes
-for strict equality; digest equality alone is not enough.
+This follows R1/R2/R4/R6's narrowest admissible baseline recommendation. R4's
+digest wording and R5's typed-oracle recommendation are superseded by this Phase
+2 selection. R5's typed CSS oracle is stronger semantically, but current skinny
+W1b cannot produce an admissible generated typed CSS Track 1 or add the
+dependency/manifest owners needed for that route. The direct route must expose
+full stable fact bytes for strict equality; digest equality alone is not enough.
 
 Do not render the W1b non-JSON row into `skinny/RESULTS.md`. The safe W1b shape
 is one generated companion report consumed by `bbnf-bench --bin gate`.
@@ -69,7 +70,9 @@ is one generated companion report consumed by `bbnf-bench --bin gate`.
    streams on the selected corpus.
 7. Baseline throughput is rendered with run id, host, build flags, feature mask,
    sample count, sample cost, output plane, Track 1 Mbps, Track 2/oracle Mbps,
-   profile artifact, oracle status, and oracle source artifact.
+   Track 1 source kind, Track 1 source artifact, generated input/output
+   artifacts, strict equality artifact, profile artifact, oracle status, and
+   oracle source artifact.
 8. The W1b gate consumes every emitted field. Unknown or producer-only fields
    fail closed.
 9. No JSON policy appears in generic crates or runtime outside generated
@@ -110,6 +113,13 @@ Required row fields:
 | `output_plane` | `css_l4_declaration_value_fact_bytes` |
 | `track1_mbps` | finite positive generated Track 1 Mbps |
 | `track2_mbps` | finite positive independent oracle/Track 2 Mbps |
+| `track1_source_kind` | `generated_non_json_direct` |
+| `track1_source_artifact` | generated Track 1 source path under a W1b owner path, never JSON or root hand runtime |
+| `generated_input_artifact` | selected CSS L4 grammar/schema input artifact used to generate Track 1 |
+| `generated_output_artifact` | selected generated CSS L4 direct output artifact used as Track 1 |
+| `strict_equality_status` | `fact_bytes_equal` |
+| `strict_equality_artifact` | same-run fact-byte comparison artifact or equality proof path |
+| `fact_bytes_mismatch_artifact` | `n/a` on pass; concrete mismatch artifact path on equality failure |
 | `competitors` | all JSON competitor fields `null` unless CHALLENGE names a same-plane non-JSON comparator |
 | `delta_vs_skv6` | `n/a` |
 | `delta_vs_sonic_strict` | `null` |
@@ -158,7 +168,7 @@ Required comparator/oracle fields:
 | `comparator_freshness` | `same-run-oracle` |
 | `sidecar_freshness` | `n/a` |
 | `value_mbps` | finite positive same-run oracle/Track 2 Mbps |
-| `source_artifact` | concrete W1b oracle source/profile path; never `oracle:w1a:*` |
+| `source_artifact` | concrete W1b oracle source/profile path in a reviewable W1b source module; never `oracle:w1a:*` or a Criterion-harness-only parser |
 
 ## Required Fixture Matrix
 
@@ -181,8 +191,9 @@ exact Rust test names may vary only if the failing class remains visible.
 | `w1b_rejects_row_id_mismatch` | Row id grammar/corpus/workload does not match row fields. | FAIL | Row identity is not display text. |
 | `w1b_rejects_unselected_workload` | Typed row or any non-selected direct row when direct was selected. | FAIL | Exactly one target is allowed. |
 | `w1b_rejects_missing_track1` | `track1_mbps = null`, zero, negative, NaN, or absent. | FAIL | Generated Track 1 throughput is required. |
+| `w1b_rejects_missing_track1_source_artifact` | `track1_source_kind`, `track1_source_artifact`, generated input, or generated output artifact absent. | FAIL | Track 1 source authority must be machine checked. |
 | `w1b_rejects_missing_track2_oracle` | `track2_mbps` or comparator `value_mbps` absent/non-finite. | FAIL | Baseline needs independent oracle measurement. |
-| `w1b_rejects_missing_strict_equality` | Equality status absent, mismatch artifact says unequal, or strictness not `strict`. | FAIL | W1b proves strict equality, not parse reach. |
+| `w1b_rejects_missing_strict_equality` | Equality status absent, equality artifact absent, mismatch artifact says unequal, or strictness not `strict`. | FAIL | W1b proves strict equality, not parse reach. |
 | `w1b_rejects_plane_mismatch` | Row plane `css_l4_declaration_value_fact_bytes`, comparator plane `digest` or `DOM`. | FAIL | Track 1 and oracle must compare the same output plane. |
 | `w1b_rejects_direct_digest_as_typed` | Digest row claims typed baseline or typed oracle proof. | FAIL | Digest evidence cannot masquerade as typed product facts. |
 | `w1b_rejects_parse_or_count_plane` | Acceptance, rule count, offsets, pretty CSS, canonical CSS string, or digest only. | FAIL | Output plane must be direct fact bytes. |
@@ -194,11 +205,20 @@ exact Rust test names may vary only if the failing class remains visible.
 | `w1b_rejects_unknown_producer_fields` | Extra report key such as `pmu_cycles`, `profile_slope`, or `baseline_authority` not consumed by validator. | FAIL | Producer-only telemetry is forbidden. |
 | `w1b_rejects_validator_only_requirement` | Validator requires a field not emitted by report. | FAIL | Gate and report schema move together. |
 | `w1b_rejects_json_comparator_fields` | sonic/simdjson/yyjson/serde_json comparators used as non-JSON oracle without same-plane proof. | FAIL | JSON comparators do not prove CSS output. |
+| `w1b_rejects_generated_track1_calling_oracle` | Oracle source imports or calls the selected generated Track 1 parser, serializer, fact projector, or output module. | FAIL | Oracle must be independent of Track 1. |
+| `w1b_rejects_generated_helper_oracle` | Oracle source calls generated SinkOnly helpers, generated typed helpers, or selected generated direct/typed code. | FAIL | Generated helpers cannot be the oracle. |
+| `w1b_rejects_generated_json_oracle` | Oracle or Track 1 proof uses generated JSON runtime or JSON bench Track 1. | FAIL | JSON reuse cannot prove non-JSON. |
+| `w1b_rejects_json_provider_oracle` | Oracle or generated baseline transits `json_provider::*` as generality evidence. | FAIL | JSON provider is not a Lock 14 proof. |
+| `w1b_rejects_root_css_runtime_oracle` | Track 1 or oracle authority uses root `crates/core` CSS runtime or `CssL4Parser`. | FAIL | Old hand runtime is not skinny generated Track 1. |
+| `w1b_rejects_benchmark_private_oracle` | Oracle parser/fact projection is hidden in the Criterion harness body. | FAIL | Oracle source must be a reviewable W1b module. |
+| `w1b_rejects_stale_sidecar_or_old_report` | Oracle value comes from checked-in expected bytes, stale sidecar, old report, or W1a sentinel. | FAIL | Oracle freshness must be same-run. |
 
 ## Oracle Independence Failure Matrix
 
 The gate must read both `track2_independence_status` and the oracle source
-artifact. A self-attested `independent_verified` string is not sufficient.
+artifact. A self-attested `independent_verified` string is not sufficient. Each
+failure class in this table is a required implementation test or fixture class,
+not advisory prose.
 
 | Failure | Reject when source or evidence shows |
 |---|---|
@@ -246,9 +266,9 @@ Every W1b field must have one gate predicate and at least one mutation failure.
 | Row identity | Validator checks `row_id`, `grammar_id`, `domain`, `corpus`, `workload`, and selected target. | grammar/domain/row mismatch |
 | Non-admission outcome | Validator requires `S / NO-GO` and baseline-only signal. | admission and parse-only claims |
 | Output plane | Validator checks row plane, comparator plane, and direct fact-byte boundary. | plane mismatch, direct-as-typed |
-| Track 1 | Validator reads positive `track1_mbps`, generated source path, and generated-input/output provenance. | missing Track 1, hand-patched generated output |
+| Track 1 | Validator reads positive `track1_mbps`, `track1_source_kind`, `track1_source_artifact`, and generated-input/output provenance. | missing Track 1, hand-patched generated output |
 | Track 2/oracle | Validator reads positive `track2_mbps`, comparator value, oracle id, strictness, freshness, source artifact, and independence proof. | missing oracle, stale/coupled/shared source |
-| Strict equality | Validator consumes equality status or fact-byte comparison artifact on the same plane. | parse/count/pretty-only proof, mismatch |
+| Strict equality | Validator consumes `strict_equality_status`, `strict_equality_artifact`, and mismatch artifact status on the same plane. | parse/count/pretty-only proof, mismatch |
 | Run/provenance | Validator checks profile artifact, sample cost/count, build flags, host triple, and feature mask. | missing profile/sample/host/build/feature |
 | JSON-policy boundary | Validator or tests prove selected path bypasses JSON provider/templates or leaves them untouched. | JSON-policy leak failures |
 | Diagnostic status | PMU/cycles/profile slopes remain non-producers unless same-wave gate consumes them. | producer-only telemetry |
@@ -261,7 +281,7 @@ Every W1b field must have one gate predicate and at least one mutation failure.
 | CH2 generality and Lock 14 | JSON provider, JSON templates, or old hand non-JSON runtime are treated as grammar-neutral generation. | Source-path audit must show selected non-JSON generated Track 1 and no generic JSON policy outside generated per-grammar modules. | Track 1 is JSON relabeling, root hand CSS runtime, or prose-only Lock 14 evidence. |
 | CH3 REDRESS regression/preblocks | W1b reopens coupled oracle, hidden substrate, W3, or row-admission routes. | Cross-check REDRESS 34, 35, 36, 37, 38, 48, 85, 86, 87, 92, 96, 97, 98, 100, 101, 102, 109, and 110. | Any stale sidecar, shared parser, generic JSON policy, hidden substrate, or baseline-as-admission route passes. |
 | CH4 cost and micro-proof adequacy | W1b turns into a broad generated CSS typed runtime or W2 intervention. | Keep source/test/gate LOC <=360, one target, one oracle, selected generated outputs only, and <=90 min redress. | The plan needs multiple workloads, broad Tailwind/full stylesheet parity, C1-C7 intervention, or unbounded generated output. |
-| CH5 hidden coupling and Lock 1 | Oracle shares Track 1 parser/projection logic or benchmark-private parser code. | Require source artifact separation and negative coupling fixtures for generated Track 1, generated helper, JSON provider, hand runtime, and stale sidecar reuse. | Gate trusts `independent_verified` without source provenance or cannot distinguish shared parser evidence. |
+| CH5 hidden coupling and Lock 1 | Oracle shares Track 1 parser/projection logic or benchmark-private parser code. | Require consumed Track 1 source/provenance fields plus negative coupling fixtures for generated Track 1, generated helper, generated JSON, JSON provider, hand runtime, benchmark-private parser, stale sidecar, and W1a sentinel reuse. | Gate trusts `independent_verified` without source provenance or cannot distinguish shared parser evidence. |
 | CH6 anti-paper-close and same-wave consumer | Report text claims W1b closes SK-V11 non-JSON intervention or lets W2 invent the first baseline. | Require `S / NO-GO`, generated baseline consumer class, W1b gate command, and explicit W2 seed wording. | Any `A / GO`, SK-V11 close, W2 intervention, parse-only SOTA, or unconsumed report passes. |
 
 ## Measurement And Verification Commands

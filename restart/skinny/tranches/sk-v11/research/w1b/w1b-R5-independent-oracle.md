@@ -6,8 +6,17 @@ Output: this file only.
 
 ## Finding
 
-Recommended oracle path: `css_l4/declaration_values/typed/main` with a same-run
-independent `lightningcss` declaration-value fact stream oracle.
+V2 supersession note: Phase 2 and CHALLENGE select
+`css_l4/declaration_values/direct/main` on
+`css_l4_declaration_value_fact_bytes`. The original R5 typed-route
+recommendation below is retained as oracle-strength research, but it is
+superseded for W1b dispatch because current skinny W1b cannot produce an
+admissible generated typed CSS Track 1 or add the required dependency/manifest
+owners. W1b's selected oracle is `css_l4_decl_value_fact_oracle` on direct
+fact bytes.
+
+Selected oracle path after Phase 2: `css_l4/declaration_values/direct/main`
+with a same-run independent `css_l4_decl_value_fact_oracle` fact-byte stream.
 
 The row should compare byte-identical canonical fact streams, not parser ASTs and
 not pretty-printed full stylesheets. Track 1 is the generated CSS L4 typed parser
@@ -19,11 +28,11 @@ not call `CssL4Parser::parse`, `CssL4Parser::stylesheet_prettify`,
 `runtime::css_l4::parse_with`, generated SinkOnly helpers, generated typed
 helpers, or old hand-only non-JSON runtime code.
 
-Use a typed output plane rather than a digest plane for W1b. A direct digest row
-is possible, but it adds hash/collision/sink coupling before W7's output-sink
-lane and can hide a typed mismatch behind a digest contract. A typed fact stream
-is smaller, stricter, easier for the gate to explain, and lines up with the
-preferred non-JSON target: CSS L4 declaration values.
+Use direct fact bytes rather than a digest plane for W1b. A direct digest row is
+possible, but it adds hash/collision/sink coupling before W7's output-sink lane
+and can hide a mismatch behind a digest contract. A direct fact-byte stream is
+smaller, stricter, easier for the gate to explain, and lines up with the
+selected non-JSON target: CSS L4 declaration values.
 
 ## Contract Read
 
@@ -56,7 +65,8 @@ identity is `css_l4/declaration_values/direct/main` or
 `css_l4/declaration_values/typed/main`, with `sheets` and `bbnf_self` fallbacks
 (`restart/skinny/tranches/sk-v11/research/w1a/w1a-R4-nonjson-row-shape.md:52-87`).
 The live W1a validator currently recognizes `css_l4/declaration_values`,
-`sheets/formula`, and `bbnf_self/grammar`, but only as schema-only W1a evidence
+`sheets/formula`, and `bbnf_self/grammar`, including direct and typed fixture
+identities, but only as schema-only W1a evidence
 (`skinny/crates/bbnf-bench/src/report.rs:1762-1837`).
 
 ## Available CSS L4 Surface
@@ -119,10 +129,10 @@ real generated non-JSON row.
 
 ## Candidate Oracle Routes
 
-1. CSS L4 typed declaration-value fact stream via `lightningcss` AST.
+1. CSS L4 direct declaration-value fact stream.
 
-   This is the recommended route. Track 1 serializes a small fact stream from the
-   generated CSS L4 typed output, for example:
+   This is the selected W1b route. Track 1 serializes a small fact stream from
+   the generated CSS L4 direct output, for example:
 
    ```text
    DeclFact {
@@ -134,21 +144,22 @@ real generated non-JSON row.
    }
    ```
 
-   The oracle parses the same corpus with `lightningcss::StyleSheet::parse`,
-   walks style rules and nested rule bodies, projects only the agreed subset
-   needed for the row, and emits the same `DeclFact` stream. The W1b corpus
-   should be curated to the intersection where both sides have a precise, stable
-   typed interpretation: color declarations, numeric dimensions, percentages,
-   unitless numbers, strings, identifiers/global keywords, and `!important`.
+   The oracle parses the same corpus through an independent W1b source module,
+   projects only the agreed subset needed for the row, and emits the same
+   `DeclFact` stream. The W1b corpus should be curated to the intersection where
+   both sides have a precise, stable interpretation: property names, important
+   flags, scalar values represented as exact fact bytes, and raw value spans when
+   the selected fact schema permits them.
    Avoid shorthand expansion, property canonical reordering, calc simplification,
    vendor-specific recovery, and declarations whose equality needs CSS cascade
    knowledge.
 
-   Strict equality is byte equality of the encoded fact streams. The gate records
-   `output_plane = typed direct`, `comparator_plane = typed direct`,
-   `comparator_id = lightningcss_decl_value_oracle`, `comparator_freshness =
-   same-run-oracle`, `sidecar_freshness = n/a`, and
-   `track2_independence_status = independent_verified`.
+   Strict equality is byte equality of the encoded fact streams. The gate
+   records `output_plane = css_l4_declaration_value_fact_bytes`,
+   `comparator_plane = css_l4_declaration_value_fact_bytes`, `comparator_id =
+   css_l4_decl_value_fact_oracle`, `comparator_freshness = same-run-oracle`,
+   `sidecar_freshness = n/a`, and `track2_independence_status =
+   independent_verified`.
 
 2. CSS L4 direct digest fact stream via `lightningcss`.
 
@@ -195,15 +206,16 @@ real generated non-JSON row.
 Create a W1b-specific oracle/report path, not a broad relaxation of JSON
 `gate-json`:
 
-- Row id: `css_l4/declaration_values/typed/main`.
-- Output plane: `typed direct`.
-- Track 1 source path: the selected generated CSS L4 typed parser row and its
-  serializer. In skinny this requires real generated non-JSON emission; do not
-  reuse old hand runtime as generated authority.
-- Oracle source path: a new non-generated `lightningcss` declaration-value oracle
-  module in the W1b owner surface, for example
-  `skinny/crates/bbnf-bench/src/track2/css_l4.rs` or a W1b companion test/oracle
-  module. It may import `lightningcss`; it must not import generated Track 1
+- Row id: `css_l4/declaration_values/direct/main`.
+- Output plane: `css_l4_declaration_value_fact_bytes`.
+- Track 1 source path: the selected generated CSS L4 direct parser row and its
+  fact-byte serializer. In skinny this requires real generated non-JSON
+  emission; do not reuse old hand runtime as generated authority.
+- Oracle source path: a new non-generated declaration-value fact oracle module in
+  the W1b owner surface, for example
+  `skinny/crates/bbnf-bench/benches/nonjson_oracles/css_l4_decl_value.rs`. The
+  Criterion bench may call this module, but parser and fact projection logic
+  must not be hidden in the benchmark body. It must not import generated Track 1
   modules.
 - Equality artifact: store or render both stable fact-stream hashes plus a
   mismatch dump path, but make the pass predicate byte equality of the fact
@@ -287,12 +299,13 @@ not broad CSS coverage.
 
 ## Verdict
 
-Use `css_l4/declaration_values/typed/main` and an independent
-`lightningcss_decl_value_oracle` that emits a stable declaration-value fact stream
-without calling generated Track 1. This is the narrowest path that satisfies W1b:
-it uses the preferred CSS L4 target, stays on a typed output plane, can prove
-strict byte equality, keeps oracle logic separate from generated Track 1, and
-creates a baseline W2 can consume without smuggling in an intervention.
+Use `css_l4/declaration_values/direct/main` and an independent
+`css_l4_decl_value_fact_oracle` that emits a stable declaration-value fact stream
+without calling generated Track 1. This is the selected W1b route after Phase 2:
+it uses the preferred CSS L4 target, stays inside the current owner surface, can
+prove strict byte equality if generated Track 1 exists, keeps oracle logic
+separate from generated Track 1, and creates only a baseline W2 can consume
+without smuggling in an intervention.
 
 Do not use full canonical CSS prettify, declaration counts, grammar-derived maps,
 old hand runtimes, or digest-only equality as the primary W1b oracle.
@@ -315,7 +328,6 @@ old hand runtimes, or digest-only equality as the primary W1b oracle.
 - `skinny/crates/codegen/src/lib.rs`
 - `skinny/crates/runtime/src/lib.rs`
 - `skinny/crates/bbnf-bench/src/report.rs`
-- `skinny/crates/bbnf-bench/src/track2/json.rs`
 - `crates/core/src/runtime/css_l4/mod.rs`
 - `crates/core/src/runtime/css_l4/document.rs`
 - `crates/core/src/runtime/css_l4/builder.rs`

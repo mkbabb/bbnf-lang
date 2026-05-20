@@ -14,12 +14,15 @@ selected target, and name blockers.
 
 Do not override CSS L4 for W1b yet.
 
-Select `css_l4/declaration_values/typed/main` as the W1b target if CHALLENGE can
-bound the corpus to strict declaration-value facts and the oracle remains a
-same-run `lightningcss` fact stream that does not call generated Track 1. CSS L4
-is still the best W1b seed because it is the preferred SPEC target, feeds W2's
-CSS intervention directly, already has an external comparator, and exercises the
-C1/C2/C3/C4/C5/C6 surfaces that SK-V11 needs to prove are non-JSON.
+V2 supersession note: Phase 2 and CHALLENGE select
+`css_l4/declaration_values/direct/main` on
+`css_l4_declaration_value_fact_bytes`. The original typed-route preference in
+this R2 research is superseded for W1b dispatch because current skinny W1b
+cannot produce an admissible generated typed CSS Track 1 or add the required
+dependency/manifest owners. CSS L4 is still the best W1b seed because it is the
+preferred SPEC target, feeds W2's CSS intervention directly, already has an
+external comparator surface, and exercises the C1/C2/C3/C4/C5/C6 surfaces that
+SK-V11 needs to prove are non-JSON.
 
 Fallback order if CSS fails CHALLENGE:
 
@@ -68,8 +71,8 @@ P2-F gives the grammar-neutrality map:
 
 ## CSS L4 Finding
 
-CSS L4 should remain selected if W1b narrows the output plane to typed
-declaration-value facts. The source grammar has the preferred declaration
+CSS L4 should remain selected if W1b narrows the output plane to direct
+declaration-value fact bytes. The source grammar has the preferred declaration
 surface:
 
 - `grammar/css/l4/properties.bbnf` dispatches property groups into typed
@@ -217,10 +220,10 @@ Recommended selected target:
 grammar_id: css_l4
 domain: css_l4_bench
 corpus: declaration_values
-workload: typed
-row_id: css_l4/declaration_values/typed/main
-output_plane: typed direct
-oracle: lightningcss_decl_value_oracle
+workload: direct
+row_id: css_l4/declaration_values/direct/main
+output_plane: css_l4_declaration_value_fact_bytes
+oracle: css_l4_decl_value_fact_oracle
 ```
 
 Recommended fallback targets:

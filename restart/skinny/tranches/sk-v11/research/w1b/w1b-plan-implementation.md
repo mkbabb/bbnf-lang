@@ -54,14 +54,19 @@ Positive gate predicates, if the preflight unexpectedly succeeds:
 - generated Track 1 source under `skinny/crates/runtime/src/grammars/css_l4/`
   or a generated bench module named for this target;
 - output plane: `css_l4_declaration_value_fact_bytes`;
-- independent oracle source path that does not import or call generated Track 1,
-  generated JSON, generated SinkOnly helpers, generated typed helpers,
-  benchmark-private parser code, runtime witness paths, or stale sidecars;
+- independent oracle source path in a reviewable W1b module under the existing
+  `skinny/crates/bbnf-bench/benches/` owner path; the Criterion harness may call
+  that module, but parser/oracle logic must not be hidden in the benchmark body;
+- the oracle module does not import or call generated Track 1, generated JSON,
+  generated SinkOnly helpers, generated typed helpers, benchmark-private parser
+  code, runtime witness paths, or stale sidecars;
 - strict byte equality between Track 1 fact bytes and oracle fact bytes on the
   selected corpus;
 - finite same-run Track 1 Mbps and oracle Mbps with run id, host, flags, sample
-  count, feature mask, output plane, oracle identity, oracle freshness, source
-  artifact, and `track2_independence_status` consumed by the gate;
+  count, feature mask, output plane, oracle identity, oracle freshness,
+  `track1_source_artifact`, `track1_source_kind`, generated input/output
+  artifacts, strict equality artifact, source artifact, and
+  `track2_independence_status` consumed by the gate;
 - `outcome_id = "S"` and `verdict = "NO-GO"` for baseline-only authority;
 - no `skinny/RESULTS.md` movement and no JSON parser row movement.
 
@@ -87,9 +92,8 @@ Allowed positive-route owner paths:
 - `skinny/crates/runtime/src/grammars/css_l4/`
 - `skinny/crates/bbnf-bench/src/report.rs`
 - `skinny/crates/bbnf-bench/src/bin/gate.rs`
-- `skinny/crates/bbnf-bench/src/track2/css_l4.rs`
-- `skinny/crates/bbnf-bench/src/track2/mod.rs`
 - `skinny/crates/bbnf-bench/benches/nonjson_baseline.rs`
+- `skinny/crates/bbnf-bench/benches/nonjson_oracles/css_l4_decl_value.rs`
 - `grammar/css/l4/`
 - `restart/skinny/tranches/sk-v11/research/w1b/reports/`
 - `restart/skinny/tranches/sk-v11/research/w1b/fixtures/`
@@ -137,7 +141,10 @@ Do not edit:
    `nonjson_baseline/css_l4_declaration_values/direct`.
    Track 1 emits stable fact bytes such as:
    `decl:<index>\tproperty:<raw>\tvalue:<raw-normalized-token-stream>\n`.
-   The oracle emits the same bytes from an independent source module.
+   The oracle emits the same bytes from
+   `skinny/crates/bbnf-bench/benches/nonjson_oracles/css_l4_decl_value.rs`.
+   The bench may call that module; it must not contain the oracle parser or fact
+   projection logic inline.
 
 5. Generate or consume exactly one W1b report:
    `restart/skinny/tranches/sk-v11/research/w1b/reports/nonjson-baseline-css-l4-direct.json`.
@@ -150,9 +157,17 @@ Focused `report.rs` tests:
 
 - `w1b_non_json_baseline_rejects_w1a_schema_only_fixture`
 - `w1b_non_json_baseline_rejects_missing_generated_track1`
+- `w1b_non_json_baseline_rejects_missing_track1_source_artifact`
+- `w1b_non_json_baseline_rejects_missing_generated_input_output_artifacts`
+- `w1b_non_json_baseline_rejects_missing_strict_equality_artifact`
 - `w1b_non_json_baseline_rejects_admission_claim`
 - `w1b_non_json_baseline_rejects_oracle_coupling`
 - `w1b_non_json_baseline_rejects_json_provider_source`
+- `w1b_non_json_baseline_rejects_generated_track1_or_helper_oracle`
+- `w1b_non_json_baseline_rejects_generated_json_oracle`
+- `w1b_non_json_baseline_rejects_root_css_runtime_oracle`
+- `w1b_non_json_baseline_rejects_benchmark_private_oracle`
+- `w1b_non_json_baseline_rejects_stale_sidecar_or_w1a_oracle`
 - `w1b_non_json_baseline_accepts_css_l4_direct_only_if_generated_and_equal`
 
 Focused `bin/gate.rs` tests:
@@ -166,7 +181,10 @@ that asserts:
 
 - selected target count is one;
 - Track 1 source path is generated and non-JSON;
+- Track 1 source kind, generated input artifact, generated output artifact, and
+  strict equality artifact are present and gate-consumed;
 - oracle source path is separate from Track 1;
+- oracle source path names a reviewable module, not the Criterion harness body;
 - strict fact-byte equality passes on the curated declaration corpus.
 
 ## Commands
@@ -228,8 +246,8 @@ crossing a blocked owner:
 
 - `report.rs`: <=150 LOC.
 - `bin/gate.rs`: <=55 LOC.
-- `track2/css_l4.rs`: <=85 LOC.
 - `benches/nonjson_baseline.rs`: <=70 LOC.
+- `benches/nonjson_oracles/css_l4_decl_value.rs`: <=85 LOC.
 - selected generated CSS L4 direct runtime output: only files under
   `skinny/crates/runtime/src/grammars/css_l4/`, produced from the named CSS L4
   declaration-values input; no generated JSON output movement.
@@ -272,13 +290,13 @@ Revert the W1b slice as one unit if any predicate weakens:
 Audit before reverting:
 
 ```sh
-git -C /Users/mkbabb/Programming/bbnf-lang diff -- skinny/crates/bbnf-bench/src/report.rs skinny/crates/bbnf-bench/src/bin/gate.rs skinny/crates/bbnf-bench/benches skinny/crates/bbnf-bench/src/track2 skinny/crates/runtime/src/grammars/css_l4 restart/skinny/tranches/sk-v11/research/w1b/fixtures restart/skinny/tranches/sk-v11/research/w1b/reports skinny/REDRESS.md
+git -C /Users/mkbabb/Programming/bbnf-lang diff -- skinny/crates/bbnf-bench/src/report.rs skinny/crates/bbnf-bench/src/bin/gate.rs skinny/crates/bbnf-bench/benches skinny/crates/runtime/src/grammars/css_l4 restart/skinny/tranches/sk-v11/research/w1b/fixtures restart/skinny/tranches/sk-v11/research/w1b/reports skinny/REDRESS.md
 ```
 
 Revert only the W1b slice:
 
 ```sh
-git -C /Users/mkbabb/Programming/bbnf-lang restore -- skinny/crates/bbnf-bench/src/report.rs skinny/crates/bbnf-bench/src/bin/gate.rs skinny/crates/bbnf-bench/benches skinny/crates/bbnf-bench/src/track2 skinny/crates/runtime/src/grammars/css_l4 restart/skinny/tranches/sk-v11/research/w1b/fixtures restart/skinny/tranches/sk-v11/research/w1b/reports
+git -C /Users/mkbabb/Programming/bbnf-lang restore -- skinny/crates/bbnf-bench/src/report.rs skinny/crates/bbnf-bench/src/bin/gate.rs skinny/crates/bbnf-bench/benches skinny/crates/runtime/src/grammars/css_l4 restart/skinny/tranches/sk-v11/research/w1b/fixtures restart/skinny/tranches/sk-v11/research/w1b/reports
 ```
 
 Do not use `git reset --hard`. Preserve the REDRESS record of the failed W1b

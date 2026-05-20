@@ -7,6 +7,12 @@ consumed by the W1a-established non-JSON gate lane, without moving
 
 ## Finding
 
+V2 supersession note: Phase 2 and CHALLENGE select
+`css_l4/declaration_values/direct/main` on
+`css_l4_declaration_value_fact_bytes`. Any R4 wording that described a digest
+output plane is superseded by this direct fact-byte selection; digest equality
+alone is not W1b authority.
+
 W1b should not render a non-JSON row into `skinny/RESULTS.md`. The safe shape is
 one companion generated baseline report under the W1b research tree, validated
 by `bbnf-bench --bin gate` through the non-JSON gate/report lane that W1a
@@ -34,7 +40,7 @@ and fixtures unchanged.
 
 Write exactly one generated report:
 
-`restart/skinny/tranches/sk-v11/research/w1b/reports/nonjson-baseline-css-l4-declaration-values.json`
+`restart/skinny/tranches/sk-v11/research/w1b/reports/nonjson-baseline-css-l4-direct.json`
 
 Preferred selected row:
 
@@ -50,8 +56,11 @@ Required report facts:
 - `corpus = "declaration_values"` and `workload = "direct"`
 - `outcome_id = "S"` and `verdict = "NO-GO"` so the baseline is non-admitting
 - `strictness = "strict"`, `parse_utf8 = "measured-row"`,
-  `escape_complete = "yes"`, `output_plane = "digest"`
+  `escape_complete = "yes"`,
+  `output_plane = "css_l4_declaration_value_fact_bytes"`
 - finite positive generated Track 1 Mbps and independent Track 2/oracle Mbps
+- gate-consumed Track 1 source kind, Track 1 source artifact, generated
+  input/output artifacts, and strict equality artifact
 - real Criterion profile/source artifacts, not `fixture:w1a:` sentinels
 - run id, host, build flags, feature mask, sample count, and sample cost from
   the same W1b Criterion capture
@@ -169,13 +178,13 @@ CRITERION_HOME=/tmp/skv11-w1b-nonjson-css-l4 RUSTFLAGS="-C target-cpu=native" ca
 Write the one generated companion report:
 
 ```sh
-CRITERION_HOME=/tmp/skv11-w1b-nonjson-css-l4 RUSTFLAGS="-C target-cpu=native" cargo run -p bbnf-bench --bin gate -- --write-w1b-non-json-baseline-report ../restart/skinny/tranches/sk-v11/research/w1b/reports/nonjson-baseline-css-l4-declaration-values.json
+CRITERION_HOME=/tmp/skv11-w1b-nonjson-css-l4 RUSTFLAGS="-C target-cpu=native" cargo run -p bbnf-bench --bin gate -- --write-w1b-non-json-baseline-report ../restart/skinny/tranches/sk-v11/research/w1b/reports/nonjson-baseline-css-l4-direct.json
 ```
 
 Consume the generated report through the gate:
 
 ```sh
-cargo run -p bbnf-bench --bin gate -- --w1b-non-json-baseline-report ../restart/skinny/tranches/sk-v11/research/w1b/reports/nonjson-baseline-css-l4-declaration-values.json
+cargo run -p bbnf-bench --bin gate -- --w1b-non-json-baseline-report ../restart/skinny/tranches/sk-v11/research/w1b/reports/nonjson-baseline-css-l4-direct.json
 ```
 
 Preserve W1a and JSON gates:
@@ -192,9 +201,8 @@ W1b owner paths needed for this R4 slice:
 
 - `skinny/crates/bbnf-bench/src/report.rs`
 - `skinny/crates/bbnf-bench/src/bin/gate.rs`
-- `skinny/crates/bbnf-bench/src/metadata.rs` only if non-JSON bench metadata
-  needs a helper; avoid changing `TrackTag` unless required
 - `skinny/crates/bbnf-bench/benches/nonjson_baseline.rs`
+- `skinny/crates/bbnf-bench/benches/nonjson_oracles/css_l4_decl_value.rs`
 - `restart/skinny/tranches/sk-v11/research/w1b/reports/`
 - selected generated parser/codegen owner paths from SPEC Section 5:
   `skinny/crates/codegen/src/lib.rs`,

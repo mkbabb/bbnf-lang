@@ -33,6 +33,12 @@ Output: this file only.
 
 ## Finding
 
+V2 supersession note: Phase 2 and CHALLENGE keep the R1-selected target
+`css_l4/declaration_values/direct/main`, but narrow the output plane to
+`css_l4_declaration_value_fact_bytes`. R1 wording that permits digest-only
+authority or `skinny/crates/bbnf-bench/src/track2/` ownership is superseded by
+the revised W1b plan.
+
 Recommended W1b baseline target: `css_l4/declaration_values/direct/main`.
 
 Typed declaration-value facts are the better semantic oracle plane, but they are
@@ -151,12 +157,11 @@ baseline schema/validator and a real generated Track 1 benchmark.
 
 | Choice | Viability | Main blocker | W1b recommendation |
 |---|---|---|---|
-| `css_l4/declaration_values/direct/main` | Best current W1b fit. | Still needs a generated non-JSON skinny Track 1 and a same-plane oracle/report. | Select for W1b. Keep the output as digest or stable direct fact bytes, with mismatch facts available. |
+| `css_l4/declaration_values/direct/main` | Best current W1b fit. | Still needs a generated non-JSON skinny Track 1 and a same-plane oracle/report. | Select for W1b. Keep the output as stable direct fact bytes; digest-only equality is not W1b authority. |
 | `css_l4/declaration_values/typed/main` | Best semantic oracle quality, poor W1b fit. | No skinny generated CSS typed parser/runtime exists; existing CSS typed stack is outside owner/preblocked proof; `typed_direct.rs` is JSON syntax. | Defer to W2 or require CHALLENGE to approve a much larger generated typed slice. |
 
 Direct should not be interpreted as "parse-only". The generated Track 1 must
-emit a strict direct output plane, such as stable declaration-value fact bytes
-or their digest, and the oracle must compare the same plane. If only acceptance,
+emit a strict direct output plane: stable declaration-value fact bytes. If only acceptance,
 rule counts, or source offsets are compared, the W1b gate should reject.
 
 Typed should not be interpreted as "use `CssL4Parser::parse` from the root
@@ -184,13 +189,13 @@ files up front:
 - `skinny/crates/bbnf-bench/benches/nonjson_baseline.rs`
 - `skinny/crates/bbnf-bench/src/report.rs`
 - `skinny/crates/bbnf-bench/src/bin/gate.rs`
-- `restart/skinny/tranches/sk-v11/research/w1b/reports/nonjson-baseline-css-l4-declaration-values.json`
+- `restart/skinny/tranches/sk-v11/research/w1b/reports/nonjson-baseline-css-l4-direct.json`
 
-If the oracle cannot live entirely inside the benchmark file without becoming
-opaque, CHALLENGE should explicitly add these bench-owner files before redress:
+If the oracle cannot live inside a reviewable module under the existing
+`skinny/crates/bbnf-bench/benches/` owner path without becoming opaque,
+CHALLENGE should reject the positive route. The revised W1b plan names:
 
-- `skinny/crates/bbnf-bench/src/track2/mod.rs`
-- `skinny/crates/bbnf-bench/src/track2/css_l4.rs`
+- `skinny/crates/bbnf-bench/benches/nonjson_oracles/css_l4_decl_value.rs`
 
 If the plan chooses typed despite this R1 viability finding, it must also name
 the typed-specific owner files and explain the budget expansion:

@@ -1,13 +1,24 @@
-# SK-V12 Wave W1 Plan: Sheets Generated Direct-Sink Baseline
+# SK-V12 Wave W1 Plan V2: Sheets Generated Direct-Sink Baseline
 
 Inputs:
 
-- `restart/skinny/tranches/sk-v12/SPEC.md:397` - W1 ordered target
-  selection, fallback rule, and single selected-target redress discipline.
-- `restart/skinny/tranches/sk-v12/SPEC.md:424` - exit gate
-  `G-W1-GENERATED-NONJSON-BASELINE`.
 - `restart/skinny/tranches/sk-v12/SPEC.md:112` - Section 0.4 telemetry
   fields that the non-JSON gate must consume.
+- `restart/skinny/tranches/sk-v12/SPEC.md:397` - W1 ordered target
+  selection, fallback rule, and single selected-target redress discipline.
+- `restart/skinny/tranches/sk-v12/SPEC.md:408` - W1 plan must name generated
+  Track 1 path, runtime module path, fixture corpus, oracle path, equality
+  command, gate command, and rollback slice.
+- `restart/skinny/tranches/sk-v12/SPEC.md:424` - exit gate
+  `G-W1-GENERATED-NONJSON-BASELINE`.
+- `skinny/crates/bbnf-bench/src/bin/gate.rs:37` - Lock 14 runs before the
+  SK-V12 non-JSON report lane.
+- `skinny/crates/bbnf-bench/src/lock14_baseline.rs:381` - Lock 14 frozen roots
+  include `crates/runtime/src` and `crates/codegen/src`.
+- `skinny/crates/bbnf-bench/src/lock14_baseline.rs:481` - parent-diff
+  authorization is subject-scoped and must name an accepted wave owner slice.
+- `skinny/crates/bbnf-bench/src/report.rs:171` - the current SK-V12 row struct
+  is `deny_unknown_fields` and must be extended for all Section 0.4 fields.
 - `restart/skinny/tranches/sk-v12/research/skv12-W1-A1-css-l4-preflight.md:10`
   - CSS has a concrete JSON-profiled codegen/runtime preflight failure.
 - `restart/skinny/tranches/sk-v12/research/skv12-W1-A1-css-l4-preflight.md:52`
@@ -17,13 +28,10 @@ Inputs:
   - Sheets is the legal fallback after CSS preflight failure.
 - `restart/skinny/tranches/sk-v12/research/skv12-W1-A2-sheets-preflight.md:17`
   - direct/sink is the selected Sheets output plane, not typed direct.
-- `restart/skinny/tranches/sk-v12/research/skv12-W1-A4-codegen-runtime-seam.md:29`
-  - W1 needs a selected non-JSON provider branch and generated runtime module,
-  not removal of the JSON guard alone.
-- `restart/skinny/tranches/sk-v12/research/skv12-W1-A5-bench-oracle-gate.md:37`
-  - companion report row shape for the W1 baseline.
-- `restart/skinny/tranches/sk-v12/research/skv12-W1-A6-redress-preblocks.md:45`
-  - W1 revert protocol.
+- `restart/skinny/tranches/sk-v12/research/skv12-W1-challenge.md:21` - CH1
+  requires exact paths, artifacts, commands, and Lock 14 citation.
+- `restart/skinny/tranches/sk-v12/research/skv12-W1-challenge.md:58` - CH4
+  requires a component LOC/time budget before redress.
 
 Intervention: Admit exactly one generated non-JSON baseline row by selecting
 the Sheets formula direct/sink route:
@@ -51,48 +59,92 @@ Once this plan is accepted, W1 redress attempts Sheets only. A Sheets failure
 records BLOCKED or REJECTED and cannot fall through to BBNF-self inside the
 same redress.
 
-## Owner Paths
+## Exact Redress Surface
 
-Redress is authorized to touch only:
+Generated Track 1 source path:
+
+- `skinny/crates/runtime/src/grammars/sheets/generated.rs`
+
+Runtime module path:
+
+- `skinny/crates/runtime/src/grammars/sheets/mod.rs`
+- `skinny/crates/runtime/src/lib.rs`
+
+Codegen path:
 
 - `skinny/crates/codegen/src/lib.rs`
-- `skinny/crates/codegen/src/json_provider.rs` only to preserve the JSON guard
-  while delegating selected non-JSON emission elsewhere
-- new selected provider/renderer files under `skinny/crates/codegen/src/`
-  for Sheets direct/sink generation
-- `skinny/crates/runtime/src/lib.rs`
-- `skinny/crates/runtime/src/grammars/sheets/`
-- `skinny/crates/bbnf-bench/`
-- selected Sheets fixtures and report artifacts under
-  `restart/skinny/tranches/sk-v12/research/w1/`
-- `skinny/RESULTS.md` only if W1 deliberately renders the admitted non-JSON
-  row there
+- `skinny/crates/codegen/src/sheets_direct.rs`
+- `skinny/crates/codegen/src/json_provider.rs` only if needed to preserve the
+  JSON guard while delegating selected non-JSON emission elsewhere
+
+Fixture corpus:
+
+- `restart/skinny/tranches/sk-v12/research/w1/fixtures/sheets-formulas.txt`
+
+Independent oracle / Track 2 path:
+
+- `skinny/crates/bbnf-bench/src/nonjson_sheets.rs`
+
+Benchmark path:
+
+- `skinny/crates/bbnf-bench/benches/nonjson_baseline.rs`
+- `skinny/crates/bbnf-bench/Cargo.toml`
+
+Gate/report path:
+
+- `skinny/crates/bbnf-bench/src/report.rs`
+- `skinny/crates/bbnf-bench/src/bin/gate.rs` only if needed for a printed gate
+  label or report dispatch change
+- `skinny/xtask/src/main.rs` only if the existing `--skv12-non-json-report`
+  passthrough must be extended
+- `skinny/crates/bbnf-bench/src/lock14_baseline.rs`
+
+Artifacts:
+
+- equality artifact:
+  `restart/skinny/tranches/sk-v12/research/w1/skv12-W1-sheets-equality.txt`
+- report artifact:
+  `restart/skinny/tranches/sk-v12/research/w1/skv12-W1-nonjson-baseline.json`
+- Criterion root:
+  `/tmp/skv12-w1-nonjson-criterion`
+- rejected patch path:
+  `/tmp/skv12-waveW1-rejected.patch`
+
+Result ledgers:
+
+- `skinny/RESULTS.md` only if W1 deliberately renders the admitted non-JSON row
+  there
 - `skinny/REDRESS.md` on admit, block, or reject
 
 No other source path is authorized without returning to plan/CHALLENGE.
 
 ## Required Redress Shape
 
-The implementation must:
+The selected implementation is a narrow generated formula digest baseline:
 
-1. Add a selected Sheets non-JSON provider path that emits a generated
-   direct/sink runtime module from Sheets formula facts. It must not remove the
-   JSON guard and route Sheets through JSON templates.
-2. Add the generated runtime module under
-   `skinny/crates/runtime/src/grammars/sheets/`, exported through
-   `skinny/crates/runtime/src/lib.rs`.
-3. Add a Sheets fixture corpus and an independent same-plane oracle/Track 2.
-4. Add a Criterion `nonjson_baseline` row for
-   `nonjson/sheets/formula`, sample count >= 30.
-5. Extend the SK-V12 companion schema/gate so it consumes every Section 0.4
-   field for W1, including `strictness`, `measured_validation_path`,
+1. `codegen::emit_from_source("sheets", SHEETS_FORMULA_SOURCE)` must route to
+   `sheets_direct.rs` and emit only the generated Sheets direct/sink runtime
+   files. The JSON profile remains guarded; Sheets must not pass through JSON
+   templates.
+2. `sheets_direct.rs` owns the selected Sheets formula facts and generated
+   renderer. It may support only the W1 fixture grammar surface: formula
+   prefix, identifiers, numbers, strings with doubled quote escape, cell refs,
+   ranges, function calls, parentheses, comma/semicolon separators, whitespace,
+   and common binary operators.
+3. `runtime/src/grammars/sheets/generated.rs` exposes the generated Track 1
+   direct/sink parser used by the benchmark. It must not import
+   `sheets_witness` or `generated_json`.
+4. `nonjson_sheets.rs` owns fixture loading, independent oracle digesting,
+   strict Track 1 vs oracle equality, report row construction, and test hooks.
+5. `nonjson_baseline.rs` benchmarks exactly `nonjson/sheets/formula` with
+   sample count >= 30 and writes/points to the same run id used by the report.
+6. `report.rs` extends `SkV12NonJsonRow` and validation to consume every
+   Section 0.4 field, especially `strictness`, `measured_validation_path`,
    `profile_artifact`, `scalar_reference_status`,
    `checkasm_or_parity_status`, and `comparator_set`.
-6. Add a W1-specific Lock 14 authorization/update for the selected
-   codegen/runtime/bench gate changes. This authorization must stay scoped to
-   the W1 owner paths and must not allow generic JSON policy drift.
-7. Produce an artifact-backed strict equality result, not only provenance
-   strings in the report.
+7. `lock14_baseline.rs` adds a W1-specific parent-diff authorization scoped to
+   this exact W1 owner set. It must not authorize JSON generated output or
+   generic policy changes.
 
 ## Falsifiability Gate
 
@@ -116,9 +168,15 @@ The report row must use:
 
 - `schema_id = sk-v12-nonjson-generated-v1`
 - `wave_id = SK-V12-W1`
+- `row_id = sheets/formula/direct_to_struct/main`
+- `grammar_id = sheets`
 - `domain = non_json_generated:sheets`
+- `corpus_or_workload = formula`
+- `workload = direct_to_struct`
 - `workload_class = baseline`
 - `output_plane = direct_sink`
+- `outcome_id = A`
+- `verdict = GO`
 - `strictness = strict`
 - `measured_validation_path = criterion+oracle+gate`
 - `track2_independence_status = independent_verified`
@@ -130,18 +188,34 @@ The report row must use:
 - `scalar_reference_status = generated_scalar_reference`
 - `checkasm_or_parity_status = strict_oracle_parity`
 - `comparator_set = independent_oracle`
+- `json_guard_state = not_refreshed:no_behavior_drift` unless refreshed JSON
+  guard evidence is produced
 
 ## Commands
 
-Expected redress validation commands, run from `skinny/` unless noted:
+Strict equality command:
+
+```sh
+RUSTFLAGS="-C target-cpu=native" cargo test -p bbnf-bench nonjson_sheets_strict_equality -- --nocapture
+```
+
+Benchmark command:
 
 ```sh
 CARGO_TARGET_DIR=/tmp/skv12-w1-target CRITERION_HOME=/tmp/skv12-w1-nonjson-criterion RUSTFLAGS="-C target-cpu=native" \
   cargo bench -p bbnf-bench --bench nonjson_baseline -- nonjson/sheets/formula
+```
 
+Gate command:
+
+```sh
 RUSTFLAGS="-C target-cpu=native" \
   cargo run -p xtask -- gate-json --skv12-non-json-report ../restart/skinny/tranches/sk-v12/research/w1/skv12-W1-nonjson-baseline.json
+```
 
+JSON guard commands:
+
+```sh
 cargo run -p xtask -- check-json
 cargo run -p xtask -- check-real-typed
 cargo run -p xtask -- check-conformance
@@ -154,19 +228,34 @@ If W1 deliberately renders the non-JSON row into `skinny/RESULTS.md`, the plan
 requires a refreshed gate command that consumes that row and a corresponding
 REDRESS entry naming the new result surface.
 
-## Hard Cap
+## Cost Table
 
-Redress cap: 75 minutes.
+The Sheets redress must stay under <=480 non-generated LOC and <=75 minutes.
+Generated `runtime/src/grammars/sheets/generated.rs`, Criterion output, JSON
+report output, equality output, and REDRESS prose are outside the LOC cap but
+inside the wall-clock cap.
 
-LOC budget: <=480 non-generated LOC for the Sheets route, excluding generated
-runtime output and measured artifacts. If the implementation cannot fit this
-budget, W1 records BLOCKED or returns to S-P3 for a split-wave revision before
-source work continues.
+| Component | Files | LOC cap | Time cap |
+|---|---|---:|---:|
+| Selected codegen route | `codegen/src/lib.rs`, `codegen/src/sheets_direct.rs` | 105 | 14 min |
+| Runtime module wrapper | `runtime/src/lib.rs`, `runtime/src/grammars/sheets/mod.rs` | 20 | 4 min |
+| Fixture/oracle/equality support | `bbnf-bench/src/nonjson_sheets.rs`, fixture file | 115 | 16 min |
+| Criterion bench registration | `bbnf-bench/benches/nonjson_baseline.rs`, `bbnf-bench/Cargo.toml` | 55 | 8 min |
+| Section 0.4 schema/gate extension | `bbnf-bench/src/report.rs`, focused tests | 105 | 14 min |
+| Lock 14 W1 authorization | `bbnf-bench/src/lock14_baseline.rs`, focused tests | 45 | 7 min |
+| Report/evidence plumbing | W1 report/equality artifact generation hooks | 25 | 4 min |
+| Measurement and JSON guard commands | command execution only | 0 | 8 min |
+| Total | selected W1 slice | 470 | 75 min |
+
+If the slice exceeds any component cap by more than 10 LOC before measurement,
+redress records BLOCKED and returns to S-P3 for a split-wave revision. It does
+not continue by dropping schema fields, oracle independence, Lock 14, or
+same-wave consumer evidence.
 
 ## Same-Wave Consumer
 
 The same-wave consumer is the generated Sheets direct/sink parser exercised by
-the `nonjson_baseline` Criterion row, the independent oracle equality check,
+the `nonjson_baseline` Criterion row, the independent oracle equality test,
 and `gate-json --skv12-non-json-report`.
 
 The gate report alone is not sufficient. The report must point to real

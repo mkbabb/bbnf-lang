@@ -1,67 +1,65 @@
-# SK-V12 S-P2 Hardening Status
+# SK-V12 S-P2 Hardening Converged
 
 Pass: S-P2 Research.
 Date: 2026-05-20.
-Status: PRE-PIN CONVERGENCE SUPERSEDED; PIN S-P2 HARDENING IN PROGRESS.
+Status: CONVERGED UNDER USER PIN.
 
-The pre-pin `HARDENING-S-P2-V2-CONSOLIDATED.md` and
-`HARDENING-S-P2-V3-CONSOLIDATED.md` accepted a research surface that is no
-longer authoritative after `USER-PIN-W1-CSS-L4-SOTA.md`. The pin-aware S-P2
-research cohort opened at commit `8017a90b`. PIN-V1 folded to Cycle V2 at
-`31859478`; PIN-V2 found one remaining CH4 accounting defect and is now folded
-to Cycle V3.
+The pre-pin S-P2 convergence is superseded by the 2026-05-20 user pin. The
+pin-aware S-P2 research cohort opened at commit `8017a90b`, folded PIN-V1 at
+`31859478`, folded PIN-V2 at `75233b2b`, recorded the first clean post-reset
+cycle at `b407583e`, and converged on PIN-V4.
 
-PIN-V1 disposition:
+## §3Z Disposition
 
-| Lens | Verdict | Score | Action |
-|---|---:|---:|---|
-| CH1 correctness | REVISE | 86 | Fold inventory/candidate split and fix resolving external anchors. |
-| CH2 generality / Lock 14 | ACCEPT | 96 | No required fold. |
-| CH3 regression / REDRESS | ACCEPT | 96 | No required fold. |
-| CH4 cost / scalar-reference / checkasm | REVISE | 78 | Fold per-row parity, consumer, micro-proof, and orphan disposition. |
-| CH5 hidden coupling / substrate | ACCEPT | 96 | No required fold. |
-| CH6 anti-paper-close | ACCEPT | 96 | No required fold. |
+| Cycle | CH1 | CH2 | CH3 | CH4 | CH5 | CH6 | Disposition |
+|---|---:|---:|---:|---:|---:|---:|---|
+| PIN-V1 | REVISE 86 | ACCEPT 96 | ACCEPT 96 | REVISE 78 | ACCEPT 96 | ACCEPT 96 | Folded to V2; clean counter reset. |
+| PIN-V2 | ACCEPT 96 | ACCEPT 97 | ACCEPT 97 | REVISE 89 | ACCEPT 96 | ACCEPT 97 | Folded to V3; clean counter reset. |
+| PIN-V3 | ACCEPT 96 | ACCEPT 97 | ACCEPT 96 | ACCEPT 97 | ACCEPT 96 | ACCEPT 97 | Clean cycle 1 of 2. |
+| PIN-V4 | ACCEPT 97 | ACCEPT 98 | ACCEPT 97 | ACCEPT 97 | ACCEPT 97 | ACCEPT 97 | Clean cycle 2 of 2; S-P2 converged. |
 
-PIN-V2 disposition:
+PIN-V3 and PIN-V4 are two consecutive clean cycles after the last REVISE. This
+satisfies `ORCHESTRATOR.md` §3Z and `PASS-2-RESEARCH.md` §4 for S-P2 under the
+user pin.
 
-| Lens | Verdict | Score | Action |
-|---|---:|---:|---|
-| CH1 correctness | ACCEPT | 96 | No required fold. |
-| CH2 generality / Lock 14 | ACCEPT | 97 | No required fold. |
-| CH3 regression / REDRESS | ACCEPT | 97 | No required fold. |
-| CH4 cost / scalar-reference / checkasm | REVISE | 89 | Fold explicit CH4 accounting into P2-B, P2-D, and P2-F. |
-| CH5 hidden coupling / substrate | ACCEPT | 96 | No required fold. |
-| CH6 anti-paper-close | ACCEPT | 97 | No required fold. |
+## Accepted Research Cohort
 
-Folded V3 surface:
+The accepted S-P2 research cohort is the Cycle V3 packet:
 
-- P2-A C1-C7 now carry per-row class, scalar reference, checkasm/parity,
-  micro-proof, same-wave consumer, `escape_mask_64`/Lock 16 prerequisite, and
-  orphan disposition columns. C6 is explicitly output-plane/oracle contract;
-  C7 is generated-template legality surface, not a standalone parser row mover.
-- P2-B keeps the scalar-oracle-first process, uses resolving dav1d `msac.c`
-  anchors for cloned-state and benchmark-process claims, and now carries
-  per-row micro-proof / explicit N/A plus orphan disposition columns.
-- P2-C now distinguishes selectable PIN-V1 candidates from
-  inventory/support/nonselectable ARM rows. The selectable set is C1, C3, C4,
-  C5, and C6. C2, C9, and C11 are inventory/drop in this cycle; C7, C8, C10,
-  and C12 are support-only until a same-wave consumer and required
-  `escape_mask_64`/REDRESS material differentials exist.
-- P2-D remains a no-shortlist substrate artifact and now carries explicit
-  checkasm/parity N/A or parity requirements for every diagnostic/rejected row.
-- P2-E now labels parser candidates separately from output-plane/oracle
-  accounting rows, with per-row checkasm/parity and orphan/Lock 16 disposition.
-- P2-F now states that inventory/drop, support-only, diagnostic-only, and
-  parser-candidate-ineligible rows are outside the current S-P3 candidate pool
-  unless a later folded pass adds fresh P1 evidence, scalar oracle, micro-proof,
-  and same-wave consumer; it also includes a CH4 accounting supplement for
-  support/oracle/accounting families.
+1. `restart/skinny/tranches/sk-v12/research/p2/p2a-sota-teardown.md`.
+2. `restart/skinny/tranches/sk-v12/research/p2/p2b-dav1d-process.md`.
+3. `restart/skinny/tranches/sk-v12/research/p2/p2c-arch-esoterica.md`.
+4. `restart/skinny/tranches/sk-v12/research/p2/p2d-substrate-tape.md`.
+5. `restart/skinny/tranches/sk-v12/research/p2/p2e-parse-that-gaps.md`.
+6. `restart/skinny/tranches/sk-v12/research/p2/p2f-grammar-neutral.md`.
 
-The next required action is PIN-V3 CHALLENGE over the folded V3 research
-packet. S-P2 is not converged under the user pin until §3Z records two
-consecutive clean challenge cycles after the last REVISE reset.
+Load-bearing facts for S-P3:
 
-PIN-V3 update: PIN-V3 accepted six of six and is recorded as the first clean
-cycle after the PIN-V2 reset. The next required action is PIN-V4 over the
-unchanged Cycle V3 packet. S-P2 remains not converged until PIN-V4 also accepts
-without REVISE/REJECT.
+- CSS L4 remains the authoritative first non-JSON target. Sheets and BBNF-self
+  are fallback-only after measured CSS L4 redress.
+- The close bar is generated CSS L4 Track 1 strictly greater than
+  `lightningcss_mbps + 1` on the same corpus, same output plane, same host, and
+  strict equality semantics.
+- JSON `parse_only` remains diagnostic. JSON rows nominate primitive families
+  and preserve guard context, but they cannot satisfy CSS L4 admission.
+- Selectable PIN S-P2 candidates are limited to the candidate rows that carry
+  pin S-P1 antecedents, scalar-reference status, checkasm/parity or explicit
+  N/A, micro-proof or explicit N/A, same-wave consumer/proof or ineligible
+  status, and orphan disposition.
+- P2-C selectable aarch64 rows are C1 `a64_tbl_tbx_byte_class_mask64`, C3
+  `a64_udot_digit_run_span`, C4 `a64_wide_string_special_scan64`, C5
+  `a64_hex_quartet_decode_x4`, and C6 `a64_ascii_set_run_skip`. C2, C9, and
+  C11 are inventory/drop in this cycle; C7, C8, C10, and C12 are support-only
+  until a later folded pass adds same-wave consumer evidence and prerequisites.
+- P2-D contributes no current shortlist-ready tape/union primitive. Any
+  same-tape CSS-local union route is conditional after generated CSS Track 1,
+  same-plane lightningcss comparator, strict equality, CSS hot-leaf attribution,
+  REDRESS 96/97/98 material differential, and CHALLENGE.
+- `escape_mask_64` remains a correctness prerequisite before new SIMD
+  admission.
+- USER PIN D3/D4 unblock union and ASM-gen categories only at the category
+  level. Historical REDRESS implementations remain material-differential
+  evidence, not implementation authority.
+- Zero orphan aarch64 production primitives remains a campaign close target.
+
+Next move: `ready-for-S-P3-synthesis-sk-v12`.

@@ -3,10 +3,11 @@
 Date: 2026-05-20.
 
 Status: Pass Alpha SK-V11 -> SK-V12 converged under V2 hardening and G-Alpha
-PASS. SK-V11 closed under REDRESS 120 as a measured fixpoint with unchanged
-overall `N-direct / NoGo`. SK-V12 starts from that evidence. This handoff does
-not create `SPEC.md` or `DISPATCH-PROMPT.md`; S-P3 owns those files after S-P1
-and S-P2 converge.
+PASS. SK-V12 S-P1 Profile converged under V5 hardening with two consecutive
+all-ACCEPT cycles. SK-V11 closed under REDRESS 120 as a measured fixpoint with
+unchanged overall `N-direct / NoGo`. SK-V12 starts from that evidence. This
+handoff does not create `SPEC.md` or `DISPATCH-PROMPT.md`; S-P3 owns those
+files after S-P2 converges.
 
 ## 1. Read First
 
@@ -19,13 +20,16 @@ and S-P2 converge.
 7. `restart/skinny/tranches/sk-v12/research/alpha/alpha-F-contract-draft.md`
 8. `restart/skinny/tranches/sk-v12/research/alpha-hardening/V2/CONSOLIDATED.md`
 9. `restart/skinny/tranches/sk-v12/research/g-alpha/G-ALPHA-SK-V12.md`
-10. `restart/skinny/tranches/sk-v11/research/close/close-redress.md`
-11. `restart/skinny/tranches/sk-v11/SYNTHESIS.md`
-12. `restart/skinny/tranches/sk-v11/HANDOFF.md`
-13. `restart/skinny/tranches/sk-v11/SPEC.md`
-14. `restart/skinny/tranches/sk-v11/DISPATCH-PROMPT.md`
-15. `skinny/RESULTS.md`
-16. `skinny/REDRESS.md` through REDRESS 120
+10. `restart/skinny/tranches/sk-v12/research/p1/hardening/HARDENING-S-P1-CONVERGED.md`
+11. `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-capture-manifest.md`
+12. `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-replay.tsv`
+13. `restart/skinny/tranches/sk-v11/research/close/close-redress.md`
+14. `restart/skinny/tranches/sk-v11/SYNTHESIS.md`
+15. `restart/skinny/tranches/sk-v11/HANDOFF.md`
+16. `restart/skinny/tranches/sk-v11/SPEC.md`
+17. `restart/skinny/tranches/sk-v11/DISPATCH-PROMPT.md`
+18. `skinny/RESULTS.md`
+19. `skinny/REDRESS.md` through REDRESS 120
 
 ## 2. Current State
 
@@ -126,12 +130,13 @@ Refuse any dispatch that:
 
 ## 7. Next Move
 
-Next move: ready-for-S-P1-profile-sk-v12.
+Next move: ready-for-S-P2-research-sk-v12.
 
-S-P1 should freeze the SK-V12-open surface, profile guard rows, treat
-`parse_only` and JSON direct residuals as diagnostic/pre-blocked, inventory the
-generated non-JSON codegen/runtime gap, audit the REDRESS 111 report lane, and
-name the first runnable generated non-JSON baseline candidate for S-P2/S-P3.
+S-P2 should consume the converged S-P1 profile, map every candidate primitive to
+a named hot-leaf antecedent, keep `parse_only` and JSON direct residuals
+diagnostic/pre-blocked, inventory the generated non-JSON codegen/runtime gap,
+audit the REDRESS 111 report lane, and name the first runnable generated
+non-JSON baseline candidate for S-P3.
 
 G-Alpha presentation seed: target one generated non-JSON baseline plus the
 same row's intervention delta; carry JSON direct residuals as pre-blocked

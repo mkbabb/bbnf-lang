@@ -1,24 +1,25 @@
-# SK-V12 W1a Plan V2 - GrammarConfig + Lock 14 Legality Gate
+# SK-V12 W1a Plan V3 - GrammarConfig + Lock 14 Legality Gate
 
 Date: 2026-05-20.
 Wave: W1a - GrammarConfig + Lock 14 Legality Gate.
-Phase: Plan revision after CHALLENGE.
+Phase: Plan revision after CHALLENGE V2.
 Gate: `G-W1a-GRAMMARCONFIG-LOCK14`.
-Prior disposition: W1a CHALLENGE V1 `REVISE`.
-Status: Superseded by `PLAN-V3.md` after W1a CHALLENGE V2 `REVISE`.
-
-This V2 plan is retained as the rejected V2 record. The binding redress plan is
-`PLAN-V3.md`.
+Prior disposition: W1a CHALLENGE V2 `REVISE`.
 
 ## Selection
 
-Select the narrow legality route, revised to answer CHALLENGE:
+Select the narrow legality route, revised to close every CHALLENGE V2 blocker:
 
 1. Add a codegen-private `GrammarProfile` / JSON-provider boundary.
 2. Emit generated JSON-local config metadata consumed by generated JSON code.
-3. Rename the JSON direct and typed renderers into JSON-owned codegen roots.
-4. Add a W1a-aware Lock 14 generic-crate scan consumed by `gate-json`.
-5. Prove SK-V12 JSON direct/typed guard floors with the checked-in
+3. Rename the JSON direct and typed renderers into JSON-owned codegen roots and
+   delete the old generic-name renderer files.
+4. Reclassify JSON `scan.rs` / `sink.rs` as JSON-owned source, not generated
+   output, and own the header/provenance edit.
+5. Remove the hardcoded JSON structural alphabet leak from the generic passes
+   root under a narrow recognizer-only edit.
+6. Add a W1a-aware Lock 14 generic-crate scan consumed by `gate-json`.
+7. Prove SK-V12 JSON direct/typed guard floors with the checked-in
    `verify-skv12-json-floors.awk` command after the refreshed guard run.
 
 W1a does not emit CSS L4, add a CSS benchmark row, compare against
@@ -35,18 +36,18 @@ Editable source paths:
 - `skinny/crates/codegen/src/json_provider.rs`
 - `skinny/crates/codegen/src/json_sink_direct.rs` (rename target)
 - `skinny/crates/codegen/src/json_typed_direct.rs` (rename target)
-- `skinny/crates/codegen/src/sink_direct.rs` (delete or leave a non-exported
-  compatibility stub only if tests require it)
-- `skinny/crates/codegen/src/typed_direct.rs` (delete or leave a non-exported
-  compatibility stub only if tests require it)
+- `skinny/crates/codegen/src/sink_direct.rs` (delete)
+- `skinny/crates/codegen/src/typed_direct.rs` (delete)
 - `skinny/crates/codegen/src/json_templates/config.rs` (new)
 - `skinny/crates/codegen/src/json_templates/generated.rs`
-- `skinny/crates/codegen/src/json_templates/mod.rs` if the template roster
-  requires it
 - `skinny/crates/codegen/src/json_templates/parser.rs`
 - `skinny/crates/codegen/src/json_templates/value.rs`
 - `skinny/crates/codegen/src/json_templates/view.rs`
 - `skinny/crates/codegen/src/json_templates/visitor.rs`
+- `skinny/crates/runtime/src/grammars/json/scan.rs`
+- `skinny/crates/runtime/src/grammars/json/sink.rs`
+- `skinny/crates/passes/src/lib.rs`, limited to the recognizer structural
+  alphabet derivation in `recognizers::derive_recognizers`
 - `skinny/crates/bbnf-bench/src/lock14_baseline.rs`
 - `skinny/RESULTS.md` only if rewritten by the native JSON guard refresh
 - `skinny/REDRESS.md` for REDRESS 121
@@ -62,17 +63,17 @@ Editable generated JSON outputs:
 - `skinny/crates/runtime/src/grammars/json/view.rs`
 - `skinny/crates/runtime/src/grammars/json/visitor.rs`
 - `skinny/crates/bbnf-bench/src/generated_real_typed.rs` only if
-  `check-real-typed` requires a deterministic regen change
+  `check-real-typed` requires deterministic regen
 
-Explicitly not owned by W1a V2:
+Explicitly not owned by W1a V3:
 
+- `skinny/crates/codegen/src/json_templates/mod.rs`
 - `skinny/crates/bbnf-bench/src/report.rs`
 - `skinny/crates/bbnf-bench/src/bin/gate.rs`
 - `skinny/xtask/src/main.rs`
 - `skinny/crates/ir/src/`
 - `skinny/crates/runtime/src/tape/`
 - `skinny/crates/runtime/src/lib.rs`
-- `skinny/crates/passes/src/`
 - `skinny/crates/grammar/src/`
 - `skinny/crates/bbnf-simd/`
 - CSS, Sheets, or BBNF-self runtime/generated/parser/benchmark files
@@ -80,13 +81,7 @@ Explicitly not owned by W1a V2:
 If redress discovers that a path outside the owned roster is required, W1a
 returns to plan before editing it.
 
-## Generated Roster And Scan/Sink Ownership
-
-W1a V2 resolves the `scan.rs` / `sink.rs` ambiguity by declaring them
-JSON-owned runtime source/template files, not generated outputs. They may remain
-under `skinny/crates/runtime/src/grammars/json/` and may be copied by
-`json_provider` for compatibility, but W1a must remove them from the generated
-roster checked by `check-json`.
+## Generated Roster And JSON-Owned Source
 
 The generated JSON roster after W1a is exactly:
 
@@ -99,40 +94,55 @@ The generated JSON roster after W1a is exactly:
 - `view.rs`
 - `visitor.rs`
 
-`scan.rs` and `sink.rs` remain JSON-owned grammar source files imported by
-`mod.rs`, with their generated headers removed or replaced by a JSON-owned
-source comment. This choice avoids copying 395 LOC into codegen templates and
-keeps the W1a redress inside the 30-minute cap. A future CSS provider must
-supply its own grammar-owned scan/sink implementation; it cannot reuse these
-JSON files through a generic root.
+`scan.rs` and `sink.rs` are JSON-owned source files imported by generated
+`mod.rs`. Redress removes or replaces their generated headers and stops
+`json_provider` from emitting or checking them as generated outputs. A future
+CSS provider must supply its own grammar-owned scan/sink implementation; it
+cannot reuse these JSON files through a generic root.
 
-`check-json` must become exact for the generated roster it owns: expected files
-must byte-match, missing expected files fail, and unexpected generated-roster
+`check-json` must be exact for the eight generated files it owns: expected
+files byte-match, missing expected files fail, and unexpected generated-roster
 files fail. It must not enforce exactness against source siblings such as
 `scan.rs` and `sink.rs`.
 
 ## Code Shape
 
-`grammar_profile.rs` may define only consumed, grammar-neutral metadata and
-provider descriptors. It must not carry inert policy fields and must not contain
+`grammar_profile.rs` may define only consumed, grammar-neutral provider metadata
+and helper functions. It must not carry inert policy fields and must not contain
 JSON/CSS/Sheets literals. Provider selection is a data-driven lookup: a
 provider id is matched to `backend.grammar_name`, and grammar-specific policy
 stays in provider-owned modules.
 
-`json_provider.rs` owns JSON-specific grammar literals, file roster, and
-templates. A non-JSON `backend.grammar_name` must fail before any JSON renderer
-or template can emit output.
+`json_provider.rs` owns JSON-specific grammar literals, generated file roster,
+and templates. A non-JSON `backend.grammar_name` must fail before
+`json_provider`, `json_sink_direct`, or `json_typed_direct` can emit output.
 
 `json_sink_direct.rs` and `json_typed_direct.rs` are mandatory containment.
-Generic emission code must not import or render `JsonSink`, `JsonNodeKind`,
-`JsonValue`, `JsonRoot`, `JsonVisitor`, JSON literals, JSON number/string
-helpers, or `serde_json`.
+The old `sink_direct.rs` and `typed_direct.rs` files are deleted; if redress
+proves deletion impossible, any retained compatibility stub must contain no
+JSON policy and must be included in the generic leak scan before CHALLENGE can
+accept the change.
 
-Generated JSON `config.rs` must be imported from `runtime/src/grammars/json/mod.rs`
-and consumed by generated JSON code in the same commit. Config fields are legal
-only when a generated consumer exists in `generated.rs`, `parser.rs`, `view.rs`,
-or the JSON direct/typed output path. A profile/config field without a same-wave
-consumer is an orphan and fails W1a.
+Generated JSON `config.rs` must be imported from
+`runtime/src/grammars/json/mod.rs` and consumed by generated JSON code in the
+same commit. Config fields are legal only when a generated consumer exists in
+`generated.rs`, `parser.rs`, `view.rs`, JSON direct output, or JSON typed
+output. A profile/config field without a same-wave consumer is an orphan and
+fails W1a.
+
+## Generic Passes Root
+
+`skinny/crates/passes/src/lib.rs` is owned only to remove the hardcoded JSON
+structural alphabet leak in `recognizers::derive_recognizers`. The legal edit
+is narrow: derive the recognizer alphabet from grammar literal/regex facts
+already present in `GrammarIr` without a JSON punctuation superset literal.
+No directive, BIR variant, `BackendShape`, public substrate API, or pass-wide
+policy expansion is authorized.
+
+The Lock 14 scan must reject production JSON structural alphabet literals in
+generic roots. Tests may contain JSON tokens only if the Rust scan deliberately
+excludes test-only code and the manual sanity command uses the same exclusion
+model. Raw `rg` over inline tests is not a W1a gate.
 
 ## Seven-Leak Closure Matrix
 
@@ -140,7 +150,7 @@ Redress must close this matrix executably:
 
 | Leak | Legal home after W1a | Same-wave consumer / proof |
 |---|---|---|
-| JSON structural alphabet | `json_provider` / generated JSON `config.rs` / JSON-owned `scan.rs` | Generated JSON code imports `super::config`; generic-root scan rejects structural JSON literals. |
+| JSON structural alphabet | `json_provider` / generated JSON `config.rs` / JSON-owned `scan.rs` | Generated JSON code imports `super::config`; generic-root scan rejects structural JSON literals, including the former `passes` leak. |
 | JSON value dispatch | JSON provider/templates/generated JSON modules | Provider selection rejects non-JSON before JSON output; generic-root scan rejects JSON dispatch names. |
 | JSON string quote/backslash policy | JSON provider/templates/generated JSON modules / JSON-owned scan/view | Generated JSON code consumes config string policy; generic-root scan rejects JSON string helper names. |
 | JSON number span policy | JSON provider/templates/generated JSON modules | Generated JSON/direct/typed code consumes config number policy; generic-root scan rejects number-policy helper names. |
@@ -150,6 +160,21 @@ Redress must close this matrix executably:
 
 The executable proof is a Lock 14 scan over generic roots plus positive tests
 that the same tokens remain legal in JSON-owned roots.
+
+## Orphan Field Checks
+
+W1a redress must add and pass named executable checks:
+
+- `cargo test -p codegen json_config_policy_fields_are_consumed -- --nocapture`
+  proves every generated JSON `config.rs` policy item used to satisfy the
+  seven-leak matrix has at least one consumer in emitted JSON runtime output or
+  generated JSON direct/typed output.
+- `cargo test -p codegen grammar_profile_fields_are_consumed -- --nocapture`
+  proves every `GrammarProfile` field is used by provider selection, generated
+  file routing, or the Lock 14 gate; inert profile fields fail.
+- `cargo test -p bbnf-bench lock14_baseline -- --nocapture` includes negative
+  fixtures for all seven forbidden generic leak classes and positive fixtures
+  proving the same tokens are legal in JSON-owned roots.
 
 ## Lock 14 Consumer
 
@@ -161,16 +186,16 @@ Scan only generic roots:
 
 - `crates/codegen/src/lib.rs`
 - `crates/codegen/src/grammar_profile.rs`
+- `crates/passes/src/lib.rs`
 - shared runtime grammar roots outside per-grammar subdirectories, if any
 - `crates/runtime/src/lib.rs`
 - `crates/runtime/src/tape/`
 - `crates/ir/src/`
-- `crates/passes/src/`
 - `crates/bbnf-simd/src/` only if touched
 
-Exclude per-grammar roots, JSON-owned provider/templates/renderers, tests, and
-`restart/` research/docs. The scan must include negative tests for the seven
-forbidden leak classes and positive allow tests for JSON-owned roots.
+Exclude per-grammar roots, JSON-owned provider/templates/renderers, test-only
+code, and `restart/` research/docs. The Rust scan and any manual sanity command
+must share the same test-exclusion semantics.
 
 The W0 frozen-root validator may be made W1a-aware only for this exact owner
 delta. It must not become a broad waiver. Parent-diff or dirty-root allowances
@@ -179,8 +204,7 @@ directive, BIR, `BackendShape`, public substrate, and unowned generic changes.
 
 ## Guard Floors
 
-W1a V2 replaces the rejected `lint-loc` dependency with a checked-in exact floor
-command:
+W1a V3 keeps the checked-in exact floor command:
 
 ```sh
 awk -f restart/skinny/tranches/sk-v12/research/w1a/verify-skv12-json-floors.awk skinny/RESULTS.md
@@ -197,6 +221,8 @@ Run from `/Users/mkbabb/Programming/bbnf-lang/skinny` unless noted:
 
 ```sh
 cargo test -p codegen
+cargo test -p codegen json_config_policy_fields_are_consumed -- --nocapture
+cargo test -p codegen grammar_profile_fields_are_consumed -- --nocapture
 cargo test -p runtime
 cargo run -p xtask -- check-json
 cargo run -p xtask -- check-real-typed
@@ -206,12 +232,6 @@ cargo test -p bbnf-bench direct_contract -- --nocapture
 cargo test -p bbnf-bench w6_typed_contract -- --nocapture
 cargo test -p bbnf-bench generated_ -- --nocapture
 cargo test -p bbnf-bench parity -- --nocapture
-```
-
-Generic-root scan sanity from the repo root:
-
-```sh
-rg -n 'grammar_name == "json"|STRUCTURAL_ALPHABET_JSON|b"\{\}\[\],:\\""|JsonSink|JsonNodeKind|JsonValue|JsonRoot|JsonVisitor|OffsetFlags::HAS_ESC|match_string_at_quote_trusted_utf8|match_number_span_from_first|serde_json|ExpectedColon|ExpectedCommaOr' skinny/crates/codegen/src/lib.rs skinny/crates/codegen/src/grammar_profile.rs skinny/crates/runtime/src/tape skinny/crates/runtime/src/lib.rs skinny/crates/ir/src skinny/crates/passes/src
 ```
 
 Native guard refresh:
@@ -228,8 +248,8 @@ Exact floor proof from repo root:
 awk -f restart/skinny/tranches/sk-v12/research/w1a/verify-skv12-json-floors.awk skinny/RESULTS.md
 ```
 
-Because W1a V2 still touches JSON-producing codegen/runtime paths, PASS requires
-`json_guard_state = refreshed:<run-id>:guards-pass`. A no-touch
+Because W1a V3 still touches JSON-producing codegen/runtime paths, PASS
+requires `json_guard_state = refreshed:<run-id>:guards-pass`. A no-touch
 `not_refreshed:no_behavior_drift` close is invalid for this route.
 
 ## Cost And Size Discipline
@@ -239,6 +259,7 @@ crate-level ceilings. REDRESS 121 must instead record:
 
 - hand LOC delta;
 - generated LOC delta for the eight-file generated JSON roster;
+- `scan.rs` / `sink.rs` source LOC delta;
 - `generated_real_typed.rs` LOC delta if it moves;
 - generated module byte totals;
 - `skinny/grammars/json.bbnf` byte count;
@@ -249,7 +270,7 @@ or re-plans instead of broadening the wave.
 
 ## Revert Protocol
 
-If redress fails, save only the V2 slice:
+If redress fails, save only the V3 slice:
 
 ```sh
 git diff --binary HEAD -- \
@@ -266,9 +287,12 @@ git diff --binary HEAD -- \
   skinny/crates/runtime/src/grammars/json/host.rs \
   skinny/crates/runtime/src/grammars/json/mod.rs \
   skinny/crates/runtime/src/grammars/json/parser.rs \
+  skinny/crates/runtime/src/grammars/json/scan.rs \
+  skinny/crates/runtime/src/grammars/json/sink.rs \
   skinny/crates/runtime/src/grammars/json/value.rs \
   skinny/crates/runtime/src/grammars/json/view.rs \
   skinny/crates/runtime/src/grammars/json/visitor.rs \
+  skinny/crates/passes/src/lib.rs \
   skinny/crates/bbnf-bench/src/generated_real_typed.rs \
   skinny/crates/bbnf-bench/src/lock14_baseline.rs \
   skinny/RESULTS.md \
@@ -279,17 +303,17 @@ git diff --binary HEAD -- \
 Inspect the path list before any revert. Do not use broad checkout or
 `git reset --hard`.
 
-## CHALLENGE V2 Questions
+## CHALLENGE V3 Questions
 
 The revised CHALLENGE must adjudicate:
 
-1. whether the exact owner and generated rosters are tight enough for redress;
-2. whether declaring `scan.rs` / `sink.rs` as JSON-owned source resolves the
-   provenance ambiguity without weakening Lock 14;
-3. whether mandatory `json_typed_direct.rs` containment closes the typed leak;
-4. whether `verify-skv12-json-floors.awk` is sufficient floor evidence when
-   paired with `gate-json --check-results`;
-5. whether the Lock 14 scan has an executable seven-leak matrix and orphan
-   field rejection;
-6. whether removing report/xtask/bin-gate/schema/outcome changes keeps W1a in
-   cap without paper-closing future CSS admission.
+1. whether adding `scan.rs` / `sink.rs` to source ownership and removing them
+   from generated output resolves the provenance ambiguity;
+2. whether the narrow `passes/src/lib.rs` ownership is enough to remove the
+   generic JSON structural alphabet leak without opening pass-wide policy;
+3. whether deleting `sink_direct.rs` / `typed_direct.rs` or scan-covering stubs
+   closes the renderer leak;
+4. whether the named orphan-field tests are executable enough for CH1;
+5. whether the Lock 14 scan and manual sanity model agree on test exclusion;
+6. whether W1a still avoids CSS/SOTA/fallback claims and broad report/xtask
+   plumbing.

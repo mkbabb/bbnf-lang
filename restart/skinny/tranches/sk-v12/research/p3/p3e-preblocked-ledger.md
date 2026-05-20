@@ -1,6 +1,6 @@
 # SK-V12 P3-E: Pre-Blocked Route Ledger
 
-Pass: S-P3 Synthesis-Plan. Cycle: V4.
+Pass: S-P3 Synthesis-Plan. Cycle: V5.
 Date: 2026-05-20.
 Scope: per-wave REDRESS pre-block ledger for the SK-V12 synthesis-plan packet.
 Output: this file.

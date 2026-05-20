@@ -1,6 +1,6 @@
 # SK-V12 P3-F: SPEC + Dispatch Draft
 
-Pass: S-P3 Synthesis-Plan. Cycle: V4.
+Pass: S-P3 Synthesis-Plan. Cycle: V5.
 Date: 2026-05-20.
 Scope: draft the SK-V12 wave SPEC and per-wave dispatch prompt from the
 converged S-P1/S-P2 evidence.

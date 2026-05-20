@@ -1,6 +1,6 @@
 # SK-V12 P3-C: Falsifiability Gates
 
-Pass: S-P3 Synthesis-Plan. Cycle: V4.
+Pass: S-P3 Synthesis-Plan. Cycle: V5.
 Date: 2026-05-20.
 Scope: per-wave measurable gates for the SK-V12 generated non-JSON baseline, intervention, guard, and conditional JSON companion surface.
 Output: this file.
@@ -55,7 +55,7 @@ facts.
 | W3 JSON direct companion, conditional | `G-W3-CONDITIONAL-JSON-COMPANION` | behavior dispatch against one named residual row, or routed block with no source/RESULTS movement | behavior clears selected residual floor on both tracks; routed block records material-reopen failure |
 | W4 close | `G-W4-CLOSE` | close packet agreement | W1+W2 admitted, W1 admitted + W2 measured reject, or generated-baseline BLOCKED with measurement; guards preserved |
 
-No W1 split is authorized by the V3 packet. If the selected W1 baseline cannot
+No W1 split is authorized by this packet. If the selected W1 baseline cannot
 fit in one redress, W1 records measured BLOCKED/REJECTED evidence or S-P3 must
 revise the manifest before dispatching any split wave.
 

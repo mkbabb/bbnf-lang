@@ -1,6 +1,6 @@
 # SK-V12 P3-B: Wave Sequencing
 
-Pass: S-P3 Synthesis-Plan. Cycle: V4.
+Pass: S-P3 Synthesis-Plan. Cycle: V5.
 Date: 2026-05-20.
 Scope: sequence the converged SK-V12 S-P2 survivor pool into a topological W0..Wn wave manifest.
 Output: this file.

@@ -1,6 +1,6 @@
 # SK-V12 P3-D: Telemetry Schema Binding
 
-Pass: S-P3 Synthesis-Plan. Cycle: V4.
+Pass: S-P3 Synthesis-Plan. Cycle: V5.
 Date: 2026-05-20.
 Scope: bind the SK-V12 telemetry schema, non-JSON companion report, and fail-closed gate rules before any SK-V12 wave dispatch.
 Output: this file.

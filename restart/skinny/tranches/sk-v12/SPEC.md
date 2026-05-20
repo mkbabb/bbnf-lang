@@ -2,11 +2,11 @@
 
 Date: 2026-05-20.
 
-Status: S-P3 V4 planning draft. This file is not implementation dispatch
+Status: S-P3 V5 planning draft. This file is not implementation dispatch
 authority until S-P3 CHALLENGE converges and the orchestrator promotes the
 packet. It folds the SK-V12 Pass Alpha goalset, converged S-P1 profile,
-converged S-P2 research, the P3-F draft, and the S-P3 V1 CHALLENGE hardening
-disposition into a W0-W4 wave plan.
+converged S-P2 research, the P3-F draft, and the S-P3 CHALLENGE hardening
+dispositions through V4 into a W0-W4 wave plan.
 
 Authority:
 
@@ -29,7 +29,7 @@ Authority:
 
 Dispatch lock:
 
-- No SK-V12 implementation wave dispatches from this S-P3 V4 draft.
+- No SK-V12 implementation wave dispatches from this S-P3 V5 draft.
 - W0-W4 become dispatchable only after S-P3 convergence under
   `restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md`.
 - Every behavior wave still requires its own wave-triumvirate research, plan,

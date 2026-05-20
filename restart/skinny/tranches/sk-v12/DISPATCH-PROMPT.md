@@ -5,7 +5,7 @@ SK-V12. It binds to the SK-V12 packet at
 `restart/skinny/tranches/sk-v12/`. Each wave of the SK-V12 SPEC is executed by
 one triumvirate per `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`.
 
-Status: S-P3 V4 draft. Do not dispatch behavior waves until S-P3 CHALLENGE
+Status: S-P3 V5 draft. Do not dispatch behavior waves until S-P3 CHALLENGE
 converges and the orchestrator promotes this packet.
 
 ## Required Reading

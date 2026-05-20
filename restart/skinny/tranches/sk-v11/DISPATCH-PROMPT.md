@@ -5,15 +5,17 @@ SK-V11. It binds to the SK-V11 packet at
 `restart/skinny/tranches/sk-v11/` and to the wave plan in
 `restart/skinny/tranches/sk-v11/SPEC.md`.
 
-Status: ACTIVE. S-P3 V4 converged under
-`research/p3/hardening/HARDENING-S-P3-V4-CONSOLIDATED.md`; behavior source
-work is authorized only through the selected wave's SPEC entry gate and owner
-paths.
+Status: CLOSED. S-P3 V4 converged under
+`research/p3/hardening/HARDENING-S-P3-V4-CONSOLIDATED.md`, W1a-W9 completed,
+and REDRESS 120 closed SK-V11 as a measured fixpoint. This file is retained as
+the SK-V11 dispatch contract and close record; it no longer authorizes SK-V11
+behavior source work.
 
 SK-V11 is not a W3 retry. REDRESS 96/97/98 retired the union/event/class-column
-substrate thesis, and REDRESS 102 firewalled parse-only SOTA claims. The live
-targets are product-plane direct closure or measured direct fixpoint, plus one
-admitted benchmarked non-JSON generated direct/typed parser intervention.
+substrate thesis, and REDRESS 102 firewalled parse-only SOTA claims. SK-V11
+closed with product-plane measured direct fixpoint, unchanged overall
+`N-direct / NoGo`, and a BLOCKED non-JSON generated-intervention axis. The next
+authority is Pass Alpha SK-V11 -> SK-V12.
 
 ## Required Reading
 
@@ -215,10 +217,11 @@ decision. At the cap it halts.
 
 ## Convergence And Escalation
 
-SK-V11 converges when W1a-W8 and W9 Close have admitted, proof-closed, or rejected
-with measurement; SPEC §0 close holds; and the close documents agree. Close may
-declare direct `GO` or measured direct fixpoint, but it cannot waive the
-non-JSON benchmarked-intervention axis without a `BLOCKED` verdict.
+SK-V11 converged when W1a-W8 and W9 Close admitted, proof-closed, blocked, or
+rejected with measurement; SPEC §0 close held through the measured-fixpoint
+route; and the close documents agreed. REDRESS 120 records the actual close:
+measured direct fixpoint, BLOCKED non-JSON generated-intervention axis, no
+`RESULTS.md` row movement, unchanged overall `N-direct / NoGo`.
 
 If a wave's falsifiability gate cannot be made measurable, or a goalset row no
 surviving candidate can meet, escalate as `BLOCKED` naming the unresolved gate.

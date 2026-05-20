@@ -2,15 +2,16 @@
 
 Date: 2026-05-20.
 
-Status: G-Alpha is presented, W0 refreshed the SK-V11-open native baseline
-from HEAD `3ce75df4`, S-P1 Profile converged under
+Status: SK-V11 is closed as a measured fixpoint under REDRESS 120. G-Alpha was
+presented, W0 refreshed the SK-V11-open native baseline from HEAD `3ce75df4`,
+S-P1 Profile converged under
 `restart/skinny/tranches/sk-v11/research/p1/hardening/HARDENING-S-P1-CONVERGED.md`,
 S-P2 Research converged under
 `restart/skinny/tranches/sk-v11/research/p2/hardening/HARDENING-S-P2-CONVERGED.md`,
 and S-P3 Synthesis-Plan converged under
 `restart/skinny/tranches/sk-v11/research/p3/hardening/HARDENING-S-P3-V4-CONSOLIDATED.md`.
-`SPEC.md` and `DISPATCH-PROMPT.md` are active wave authority. Behavior source
-work may land only through the selected wave's entry gate and owner paths.
+`SPEC.md` and `DISPATCH-PROMPT.md` are no longer behavior dispatch authority
+for SK-V11; the next authority is Pass Alpha SK-V11 -> SK-V12.
 
 ## 1. Read First
 
@@ -24,7 +25,7 @@ work may land only through the selected wave's entry gate and owner paths.
 8. `restart/skinny/tranches/sk-v11/research/alpha/alpha-F-contract-draft.md`
 9. `restart/skinny/tranches/sk-v10/research/close/close-redress.md`
 10. `skinny/RESULTS.md`
-11. `skinny/REDRESS.md` through REDRESS 119
+11. `skinny/REDRESS.md` through REDRESS 120
 12. `restart/skinny/tranches/sk-v9/research/p3/hardening/HARDENING-S-P3-CONVERGED.md`
 13. `restart/skinny/tranches/sk-v10/SYNTHESIS.md`
 14. `restart/skinny/tranches/sk-v10/HANDOFF.md`
@@ -88,7 +89,7 @@ that S-P1/S-P2 identify on the JSON direct residual surface.
 
 ## 4. Next Move
 
-Next move: ready-for-wave-W9-close.
+Next move: ready-for-pass-alpha-sk-v12.
 
 W0 is closed by S-P1/W0 authority in SPEC §3. W1a is admitted by REDRESS 111:
 the companion non-JSON gate/report lane exists and does not move JSON rows or
@@ -142,8 +143,14 @@ split, no gate schema or validator semantic change, and no `RESULTS.md` row
 movement; `git diff --exit-code -- skinny/RESULTS.md` and the SK-V11-open
 skinny gate advisory passed. All 13 direct residual rows now carry per-row
 uncloseable/fixpoint proofs tied to W3-W7 dispositions. W8 admits no direct row,
-no W0-clamped row, and no non-JSON generated intervention. W9 may close only as
-fixpoint + Alpha feedback, not overall direct `GO`.
+no W0-clamped row, and no non-JSON generated intervention.
+W9 closed SK-V11 as REDRESS 120 measured fixpoint and Alpha feedback: it made
+no source, generated runtime, benchmark, gate semantic, or `RESULTS.md` change;
+`git diff --exit-code -- skinny/RESULTS.md` and the SK-V11-open skinny gate
+advisory passed with unchanged `N-direct / NoGo`. The non-JSON
+generated-intervention axis remains BLOCKED by REDRESS 112 and 113. SK-V12
+must solve the generated non-JSON baseline first before spending another
+JSON-only micro-wave.
 
 ## 5. Active Wave Packet
 
@@ -192,7 +199,9 @@ Refuse any dispatch that:
 
 ## 7. Close Posture
 
-SK-V11 is born from the SK-V10 measured close, not from an untested W3 repair.
-The close target is direct plane `GO` or measured direct fixpoint plus one
-admitted non-JSON grammar intervention. The implementation packet is active;
-the immediate work is W1a with full triumvirate discipline.
+SK-V11 is born from the SK-V10 measured close, not from an untested W3 repair,
+and closes as a measured fixpoint rather than direct `GO`. The direct residual
+surface is exhausted inside SK-V11 by REDRESS 119; the non-JSON
+generated-intervention axis is blocked by REDRESS 112 and 113. The immediate
+work is Pass Alpha SK-V11 -> SK-V12 with the generated non-JSON baseline as the
+first material problem.

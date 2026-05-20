@@ -2,12 +2,12 @@
 
 Date: 2026-05-19.
 
-Status: G-Alpha is presented, W0 refreshed the SK-V11-open native baseline
-from HEAD `3ce75df4`, and S-P1 Profile converged under
-`restart/skinny/tranches/sk-v11/research/p1/hardening/HARDENING-S-P1-CONVERGED.md`.
-This file remains the goalset and contract surface for S-P2/S-P3. It is not
-source implementation authority. `SPEC.md` and `DISPATCH-PROMPT.md` are not
-created by this pass; S-P3 owns them after SK-V11 S-P2 converges.
+Status: SK-V11 is closed as a measured fixpoint under REDRESS 120. G-Alpha was
+presented, W0 refreshed the SK-V11-open native baseline from HEAD `3ce75df4`,
+S-P1 Profile, S-P2 Research, and S-P3 Synthesis-Plan converged, and W1a-W9
+completed with measurement, rejection, block, or close dispositions. This file
+is retained as the SK-V11 goalset plus close record; it is no longer source
+implementation authority.
 
 ## Authority
 
@@ -19,7 +19,7 @@ created by this pass; S-P3 owns them after SK-V11 S-P2 converges.
 - `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`
 - `restart/skinny/tranches/sk-v10/research/close/close-redress.md`
 - `skinny/RESULTS.md`
-- `skinny/REDRESS.md` through REDRESS 110
+- `skinny/REDRESS.md` through REDRESS 120
 - `restart/skinny/tranches/sk-v9/research/p3/hardening/HARDENING-S-P3-CONVERGED.md`
 - `restart/skinny/tranches/sk-v10/SYNTHESIS.md`
 - `restart/skinny/tranches/sk-v10/HANDOFF.md`
@@ -57,8 +57,10 @@ SK-V11 closes only when all of these are true:
 7. Grammar generalization is exercised, not asserted. At least one non-JSON
    grammar, preferred order CSS L4 declaration values then Sheets then
    BBNF-self, must carry an admitted and benchmarked SK-V11 intervention
-   through a generated direct or typed parser. A Lock 14 prose proof alone
-   does not satisfy close.
+   through a generated direct or typed parser, unless W9 closes with an
+   explicit `BLOCKED` grammar-generalization fixpoint. A Lock 14 prose proof
+   alone does not satisfy close. SK-V11 took the `BLOCKED` route under
+   REDRESS 120.
 8. ASM/SIMD work is aarch64 Apple Silicon only. x86 implementation work is
    out of scope for SK-V11. Any NEON TBL/TBX, CSSC CTZ, PMULL, UDOT, SHA3
    EOR3, wide-shift, or related ARMv9.2 primitive must pass micro-prove-first:
@@ -83,6 +85,12 @@ SK-V11 closes only when all of these are true:
 13. `skinny/RESULTS.md`, `skinny/REDRESS.md`, `SYNTHESIS.md`,
     `HANDOFF.md`, and the later S-P3-authored `SPEC.md` and
     `DISPATCH-PROMPT.md` agree at close.
+
+Close outcome: SK-V11 did not reach overall direct `GO` and did not admit a
+non-JSON generated intervention. It closed as a measured direct fixpoint:
+REDRESS 119 proves all 13 residual direct rows uncloseable inside SK-V11, and
+REDRESS 120 records the grammar-generalization axis as BLOCKED by REDRESS 112
+and 113. Pass Alpha SK-V11 -> SK-V12 inherits that routed remainder.
 
 ### 0.1 Current Result Surface
 

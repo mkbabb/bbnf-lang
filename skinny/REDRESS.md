@@ -3525,3 +3525,29 @@ perturbation.
   non-JSON generated intervention. The non-JSON axis remains BLOCKED from
   REDRESS 113 and is carried into W9 / Pass Alpha. W9 may close SK-V11 only as
   a measured fixpoint and Alpha-feedback packet, not as overall direct `GO`.
+
+## SK-V11 Wave 9 Close And Alpha Feedback
+
+- Item 120 closes SK-V11 under `G-W9-CLOSE-SK-V11` as a measured fixpoint, not
+  as overall direct `GO` and not as a grammar-generalization admission. W9 made
+  no behavior source, generated runtime, benchmark body, gate semantic, or
+  `skinny/RESULTS.md` change.
+- Verification passed: `git diff --exit-code -- skinny/RESULTS.md` showed no
+  row movement, and
+  `CRITERION_HOME=/tmp/skv11-open-criterion-3ce75df RUSTFLAGS="-C target-cpu=native" cargo run --manifest-path skinny/Cargo.toml -p bbnf-bench --bin gate -- --advisory`
+  passed with the unchanged `N-direct / NoGo` advisory surface.
+- Final SK-V11 result surface remains: `parse_only` 16 `S / NO-GO` and 1
+  `L / NO-GO`; `direct_to_struct` 4 `A / GO` and 13 `N-direct / NO-GO`;
+  `real_typed_struct` 7 `A / GO`; overall `N-direct / NoGo`.
+- REDRESS 119 is the direct row authority: every residual direct row has a
+  measured uncloseable/fixpoint proof tied to W3-W7 attempted or blocked
+  routes. W9 admits no direct row and no W0-clamped row.
+- The non-JSON generated-intervention axis remains BLOCKED by REDRESS 112 and
+  113. SK-V11 did not stand up a generated non-JSON baseline, and no W2+
+  intervention could create the first measurable baseline row and claim a
+  benchmarked grammar-generalization admission in the same wave.
+- Routed remainder for Pass Alpha SK-V12: solve the generated non-JSON
+  baseline first, treat the 13 SK-V11 direct residual rows as exhausted unless
+  a future pass names a material differential beyond REDRESS 114-119 with
+  fresh profile and micro-proof evidence, keep W0-clamped admission pre-blocked
+  by docs-only accounting, and preserve strict-vs-strict comparator discipline.

@@ -3,9 +3,11 @@
 Pass: S-P3 Synthesis-Plan.
 Cycle: V4 accepted.
 Date: 2026-05-20.
-Status: ACTIVE. S-P3 converged under
-`research/p3/hardening/HARDENING-S-P3-V4-CONSOLIDATED.md`; this file is wave
-dispatch authority.
+Status: CLOSED. S-P3 converged under
+`research/p3/hardening/HARDENING-S-P3-V4-CONSOLIDATED.md`, W1a-W9 completed,
+and REDRESS 120 closed SK-V11 as a measured fixpoint. This file is retained as
+the SK-V11 wave contract and close record; it is no longer behavior dispatch
+authority.
 
 This SPEC is the wave-sequenced implementation contract for SK-V11. It consumes
 the SK-V11 Pass Alpha goalset, the SK-V11-open profile, and the S-P2 V3
@@ -41,8 +43,10 @@ SK-V11 closes only when all of these are true:
    class lane, sidecar producer, parse-plane substrate repair, or cascade-lock
    through W3 may dispatch.
 8. At least one non-JSON grammar carries an admitted, benchmarked SK-V11
-   intervention through a generated direct or typed parser. Preferred order:
-   CSS L4 declaration values, then Sheets formulas, then BBNF-self.
+   intervention through a generated direct or typed parser, unless W9 escalates
+   an explicit `BLOCKED` grammar-generalization fixpoint. Preferred order:
+   CSS L4 declaration values, then Sheets formulas, then BBNF-self. SK-V11
+   closed through the `BLOCKED` route under REDRESS 120.
 9. AArch64 Apple Silicon is the only SK-V11 SIMD/ASM implementation target.
    x86 is comparator context only.
 10. Micro-prove-first holds for every kernel, substrate-adjacent, SIMD/ASM, or
@@ -58,6 +62,12 @@ SK-V11 closes only when all of these are true:
     field, report, or proof artifact can close a wave.
 14. Close docs agree: `skinny/RESULTS.md`, `skinny/REDRESS.md`, `SYNTHESIS.md`,
     `HANDOFF.md`, this `SPEC.md`, and `DISPATCH-PROMPT.md`.
+
+Close outcome: SK-V11 closed under REDRESS 120 with unchanged overall
+`N-direct / NoGo`. REDRESS 119 is the per-row direct fixpoint authority for all
+13 residual direct rows. REDRESS 112 and 113 block the generated non-JSON
+baseline/intervention axis; SK-V12 must solve that baseline before claiming
+grammar generalization.
 
 ### 0.1 Comparator Classes
 

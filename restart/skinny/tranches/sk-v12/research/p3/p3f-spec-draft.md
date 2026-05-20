@@ -1,6 +1,6 @@
 # SK-V12 P3-F: SPEC + Dispatch Draft
 
-Pass: S-P3 Synthesis-Plan. Cycle: V2.
+Pass: S-P3 Synthesis-Plan. Cycle: V3.
 Date: 2026-05-20.
 Scope: draft the SK-V12 wave SPEC and per-wave dispatch prompt from the
 converged S-P1/S-P2 evidence.
@@ -102,7 +102,7 @@ output equality must pass, generated source and runtime provenance must be
 gate-consumed, and JSON guard floors must hold.
 
 W2 gate `G-W2-SELECTED-NONJSON-INTERVENTION` admits one measured intervention
-on the W1 row. Track 1 must be >= `ceil(W1_baseline_track1_mbps * 1.01)`;
+on the W1 row. Track 1 must be >= `ceil(baseline_mbps * 1.01)`;
 oracle/Track 2 must remain finite, independent, and equal; all JSON guard
 floors must hold; every primitive used by the intervention must have scalar
 reference, parity/checkasm where applicable, and a same-wave generated
@@ -120,6 +120,11 @@ REDRESS evidence; `skinny/RESULTS.md`, `skinny/REDRESS.md`, `SYNTHESIS.md`,
 `HANDOFF.md`, SPEC, and dispatch prompt must agree.
 
 JSON guard floors carried into W1/W2/W3 are seeded from SK-V12 Alpha:
+
+Every behavior wave must either rerun and maintain all guard rows below or prove
+it did not touch JSON-producing paths and `skinny/RESULTS.md` stayed unchanged.
+Any guard miss fails unless recorded as an explicit measured demotion in
+REDRESS.
 
 | Guard row | Track 1 floor | Track 2/oracle floor |
 |---|---:|---:|

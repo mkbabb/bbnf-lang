@@ -2,7 +2,7 @@
 
 Date: 2026-05-20.
 
-Status: S-P3 V2 planning draft. This file is not implementation dispatch
+Status: S-P3 V3 planning draft. This file is not implementation dispatch
 authority until S-P3 CHALLENGE converges and the orchestrator promotes the
 packet. It folds the SK-V12 Pass Alpha goalset, converged S-P1 profile,
 converged S-P2 research, the P3-F draft, and the S-P3 V1 CHALLENGE hardening
@@ -29,7 +29,7 @@ Authority:
 
 Dispatch lock:
 
-- No SK-V12 implementation wave dispatches from this S-P3 V2 draft.
+- No SK-V12 implementation wave dispatches from this S-P3 V3 draft.
 - W0-W4 become dispatchable only after S-P3 convergence under
   `restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md`.
 - Every behavior wave still requires its own wave-triumvirate research, plan,
@@ -48,9 +48,11 @@ SK-V12 closes only when all of these are true:
    the accepted SK-V12 owner surface.
 3. If W1 admits a baseline, W2 admits one measured grammar-generalized
    intervention against that same baseline at >=
-   `ceil(W1_baseline_track1_mbps * 1.01)`, unless W2 records a measured reject.
-4. The 4 admitted JSON direct rows and 7 admitted JSON typed rows hold their
-   guard floors in every behavior wave that refreshes results.
+   `ceil(baseline_mbps * 1.01)`, unless W2 records a measured reject.
+4. Every behavior wave either reruns and maintains the 4 admitted JSON direct
+   rows and 7 admitted JSON typed rows, or proves no JSON-producing path was
+   touched and `skinny/RESULTS.md` stayed unchanged. Any guard miss fails unless
+   recorded as an explicit measured demotion in REDRESS.
 5. The 13 JSON direct residual rows remain pre-blocked unless W3's material
    reopen entry gate passes.
 6. `parse_only` remains diagnostic: no parse row supports SK-V12 SOTA admission.
@@ -183,7 +185,7 @@ W1 target candidates, in selection order:
 | 3 | `bbnf_self/grammar/{direct_to_struct|real_typed_struct}/main` | same gate if CSS and Sheets cannot fit/pass |
 
 W2 target is the exact W1 selected row, with Track 1 >=
-`ceil(W1_baseline_track1_mbps * 1.01)`.
+`ceil(baseline_mbps * 1.01)`.
 
 JSON direct guard floors:
 
@@ -398,6 +400,9 @@ Entry gate:
   exactly one selected target. A selected-target failure records REDRESS
   BLOCKED or REJECTED and cannot fall through to the next grammar inside the
   same redress.
+- No W1 split is authorized by this packet. If the selected baseline cannot fit
+  in one redress, W1 records measured BLOCKED/REJECTED evidence or S-P3 must
+  revise the manifest before dispatching a split wave.
 - The plan names generated Track 1 path, runtime module path, fixture corpus,
   independent oracle/Track 2 path, strict equality command, gate command, and
   rollback slice.
@@ -423,7 +428,9 @@ Exit gate `G-W1-GENERATED-NONJSON-BASELINE`:
 - Strict output equality passes.
 - The non-JSON gate consumes every required Section 0.4 field.
 - The selected generated runtime compiles from grammar facts.
-- All JSON guard floors in Section 0.5 hold if JSON results are refreshed.
+- JSON guard evidence satisfies the Section 0.5 rule: either all guard floors
+  hold in a refreshed JSON run, or the wave proves no JSON-producing path was
+  touched and `skinny/RESULTS.md` stayed unchanged.
 - Lock 14 and Section 2.1 pass.
 
 Same-wave consumer: the selected generated parser row and its oracle/Track 2
@@ -441,8 +448,8 @@ generated files for the selected grammar as one slice, save
 or measurement.
 
 Downstream effect: W1 admission unblocks W2. W1 rejection or measured block
-routes W2 and W3 to close/reroute unless CHALLENGE accepts a split baseline
-plan inside the bracket cap.
+routes W2 and W3 to close/reroute. Any split baseline plan requires a future
+S-P3 manifest revision before dispatch.
 
 ## Section 5 - W2 Selected-Baseline Measured Intervention
 
@@ -459,7 +466,8 @@ Owner paths:
 
 Entry gate:
 
-- W1 admitted a selected baseline row and recorded `W1_baseline_track1_mbps`.
+- W1 admitted a selected baseline row and recorded `baseline_mbps` (the W1
+  generated Track 1 Mbps).
 - W2 plan selects exactly one S-P2-surviving intervention family tied to the
   selected baseline hot leaf: byte-set/classifier/run-skip, bounded string
   span, escape/hex segment decode, digit-run span, layout/trivia skip, or
@@ -482,12 +490,14 @@ Tasks:
 3. Run microbench first; abort and record REDRESS if the caller-local movement
    is not positive or equality fails.
 4. Measure the selected baseline row against W1.
-5. Preserve JSON guard floors if results are refreshed.
+5. Satisfy the JSON guard rule: either preserve all guard floors in a refreshed
+   JSON run, or prove no JSON-producing path was touched and
+   `skinny/RESULTS.md` stayed unchanged.
 
 Exit gate `G-W2-SELECTED-NONJSON-INTERVENTION`:
 
-- Selected row Track 1 Mbps >= `ceil(W1_baseline_track1_mbps * 1.01)`.
-- Oracle/Track 2 remains finite, independent, and strict-equal.
+- Selected row Track 1 Mbps >= `ceil(baseline_mbps * 1.01)`.
+- Oracle/Track 2 remains >= 1 Mbps, independent, and strict-equal.
 - Every primitive has scalar reference and strict parity/checkasm where
   applicable.
 - The same-wave generated consumer appears in the sampled/profiled path or
@@ -525,12 +535,15 @@ Owner paths:
 Entry gate:
 
 - W1 and W2 have admitted, rejected, or routed.
-- The non-JSON priority has succeeded or is explicitly measured-blocked.
-- The W3 plan names one REDRESS 119 residual direct row, fresh material
-  evidence beyond REDRESS 114-119, scalar/oracle proof, same-host microbench,
-  independent Track 2, strict sonic direct floor, same-wave gate consumer, and
-  owner paths.
-- Mandatory CHALLENGE accepts the material differential.
+- The non-JSON priority has succeeded, recorded a measured W2 reject, or is
+  explicitly measured-blocked.
+- For behavior dispatch, the W3 plan names one REDRESS 119 residual direct row,
+  fresh material evidence beyond REDRESS 114-119, scalar/oracle proof,
+  same-host microbench, independent Track 2, strict sonic direct floor,
+  same-wave gate consumer, and owner paths; mandatory CHALLENGE accepts the
+  material differential.
+- Without behavior-dispatch evidence, W3 is a routed block with no
+  source/RESULTS movement and REDRESS evidence.
 
 Tasks:
 
@@ -545,8 +558,9 @@ Exit gate `G-W3-CONDITIONAL-JSON-COMPANION`:
 - If behavior dispatches, selected row Track 1 and Track 2 both clear the
   Section 0.5 floor and strict same-run sonic direct evidence is consumed.
 - If no behavior dispatches, W3 records why no current S-P2 candidate passes
-  material reopen and moves no source/RESULTS row.
-- All guard floors hold.
+  material reopen, moves no source/RESULTS row, and records REDRESS evidence.
+- All guard floors hold, or W3 proves no JSON-producing path was touched and
+  `skinny/RESULTS.md` stayed unchanged.
 - No pre-blocked route reopens.
 
 Same-wave consumer: selected direct row Track 1 plus independent Track 2, only
@@ -588,7 +602,8 @@ Tasks:
 Exit gate `G-W4-CLOSE`:
 
 - Every wave disposition is recorded.
-- W1/W2 success or W1/W2 measured block is stated without paper-close language.
+- W1/W2 success, W2 measured reject, or W1/W2 measured block is stated without
+  paper-close language.
 - JSON guard rows preserve their state or any demotion is explicitly measured.
 - No accepted source change lacks profile, row threshold, scalar/parity proof,
   Lock 14 proof, same-wave consumer, and REDRESS id.

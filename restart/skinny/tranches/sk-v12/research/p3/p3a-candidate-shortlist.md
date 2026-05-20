@@ -1,6 +1,6 @@
 # SK-V12 P3-A: Candidate Shortlist
 
-Pass: S-P3 Synthesis-Plan. Cycle: V2.
+Pass: S-P3 Synthesis-Plan. Cycle: V3.
 Date: 2026-05-20.
 Scope: distil the converged S-P2 survivor pool into the SK-V12 implementation-candidate shortlist.
 Output: this file.
@@ -89,7 +89,10 @@ Mbps used by the intervention gate.
   from the normal codegen template and no CSS policy leaks into generic crates.
 - Pre-block notes: clears only the REDRESS 112 blocker if a generated CSS
   runtime actually exists; it must not treat the REDRESS 111 report lane as a
-  parser baseline or reopen REDRESS 113's blocked intervention.
+  parser baseline, reopen REDRESS 113's blocked intervention, or use REDRESS
+  70/71 typed-output shortcuts: no hand-authored typed sink, direct digest
+  proof, hidden directive/BIR extension, hidden host schema, or
+  benchmark-private Track 1 parser.
 
 ### C2 - Generated Sheets Formula Baseline
 
@@ -117,7 +120,10 @@ Mbps used by the intervention gate.
   quote strings, numbers, operators, functions, and array delimiters; generic
   crates may expose templates only (`restart/skinny/tranches/sk-v12/research/p2/p2f-grammar-neutral.md:19`).
 - Pre-block notes: fallback only if C1's CSS owner/preflight blocks. It cannot
-  claim that the hand-only witness module satisfies the generated baseline gate.
+  claim that the hand-only witness module satisfies the generated baseline gate,
+  and it must not use REDRESS 70/71 typed-output shortcuts: no hand-authored
+  typed sink, direct digest proof, hidden directive/BIR extension, hidden host
+  schema, or benchmark-private Track 1 parser.
 
 ### C3 - Generated BBNF-Self Grammar Baseline
 
@@ -143,7 +149,10 @@ Mbps used by the intervention gate.
   comments, directives, and value-expression policy remain generated metadata or
   host declarations (`restart/skinny/tranches/sk-v12/research/p2/p2f-grammar-neutral.md:19`).
 - Pre-block notes: fallback after CSS and Sheets. It must not add a directive,
-  BIR variant, public substrate API, or hand-written per-grammar generic policy.
+  BIR variant, public substrate API, hand-written per-grammar generic policy, or
+  REDRESS 70/71 typed-output shortcut: no hand-authored typed sink, direct
+  digest proof, hidden directive/BIR extension, hidden host schema, or
+  benchmark-private Track 1 parser.
 
 ### C4 - Selected-Baseline Generated FIRST/Prefix Dispatch Template
 
@@ -159,7 +168,7 @@ Mbps used by the intervention gate.
 - Same-wave consumer: the admitted C1/C2/C3 row's generated parser dispatch in
   the same wave.
 - Falsifiability gate: same selected non-JSON row as the admitted baseline,
-  intervention Track 1 >= `ceil(baseline_track1_mbps * 1.01)`, oracle/Track 2
+  intervention Track 1 >= `ceil(baseline_mbps * 1.01)`, oracle/Track 2
   >= 1 Mbps, strict equality PASS, and all C1 JSON guard floors maintain.
 - Grammar-neutral verdict: passes only with generated tables and no generic
   grammar-name branch (`restart/skinny/tranches/sk-v12/research/p2/p2f-grammar-neutral.md:50`).
@@ -186,7 +195,7 @@ Mbps used by the intervention gate.
 - Same-wave consumer: selected-baseline layout/trivia skip, delimiter dispatch,
   string-interesting scan, or FIRST-set branch.
 - Falsifiability gate: selected non-JSON row intervention Track 1 >=
-  `ceil(baseline_track1_mbps * 1.01)`, oracle/Track 2 >= 1 Mbps, strict equality
+  `ceil(baseline_mbps * 1.01)`, oracle/Track 2 >= 1 Mbps, strict equality
   PASS, and all C1 JSON guard floors maintain.
 - Grammar-neutral verdict: passes only if byte sets/tables are generated
   metadata and masks are transient (`restart/skinny/tranches/sk-v12/research/p2/p2f-grammar-neutral.md:44`).
@@ -209,14 +218,16 @@ Mbps used by the intervention gate.
 - Same-wave consumer: selected-baseline generated string/literal/key scanner
   replacement.
 - Falsifiability gate: selected non-JSON row intervention Track 1 >=
-  `ceil(baseline_track1_mbps * 1.01)`, oracle/Track 2 >= 1 Mbps, strict equality
+  `ceil(baseline_mbps * 1.01)`, oracle/Track 2 >= 1 Mbps, strict equality
   PASS, and all C1 JSON guard floors maintain.
 - Grammar-neutral verdict: conditional PASS only when delimiter, escape,
   control, UTF-8, and cap policy are generated/caller-owned
   (`restart/skinny/tranches/sk-v12/research/p2/p2f-grammar-neutral.md:46`).
 - Pre-block notes: must not retry JSON tiny-string, StringBlock16 proof-only,
-  retained decoded-byte, or eager materialization routes; REDRESS 54/55/60-69,
-  72, 82, 83, 106, 116, 117, and 119 remain blocking.
+  retained decoded-byte, or eager materialization routes; REDRESS 28/33 active
+  TBL/NEON `match_tiny_plain_string` dispatch, REDRESS 54/55/60-69, 72, 82, 83,
+  106, 116, 117, and 119 remain blocking. REDRESS 72 scalar cap widening does
+  not authorize the REDRESS 28/33 active-dispatch kernel.
 
 ### C7 - Selected-Baseline Digit-Run Span / Accumulate
 
@@ -234,7 +245,7 @@ Mbps used by the intervention gate.
 - Same-wave consumer: selected-baseline generated number/literal parser or typed
   numeric field.
 - Falsifiability gate: selected non-JSON row intervention Track 1 >=
-  `ceil(baseline_track1_mbps * 1.01)`, oracle/Track 2 >= 1 Mbps, strict equality
+  `ceil(baseline_mbps * 1.01)`, oracle/Track 2 >= 1 Mbps, strict equality
   PASS, and all C1 JSON guard floors maintain.
 - Grammar-neutral verdict: conditional PASS because it scans ASCII digits only;
   sign, radix, exponent, suffix/unit, and materialization policy remain
@@ -261,7 +272,7 @@ Mbps used by the intervention gate.
   string/literal materialization consumer; no allocation-forcing generic
   materializer.
 - Falsifiability gate: selected non-JSON row intervention Track 1 >=
-  `ceil(baseline_track1_mbps * 1.01)`, oracle/Track 2 >= 1 Mbps, strict equality
+  `ceil(baseline_mbps * 1.01)`, oracle/Track 2 >= 1 Mbps, strict equality
   PASS, and all C1 JSON guard floors maintain.
 - Grammar-neutral verdict: conditional PASS if escape tables, hex width,
   surrogate/scalar validity, and output sink are caller-owned
@@ -299,7 +310,7 @@ exactly one row:
 `bbnf_self/grammar/{direct_to_struct|real_typed_struct}/main` for C3.
 
 Intervention candidates C4-C8 use the admitted baseline row as their named
-target. Their threshold is `ceil(baseline_track1_mbps * 1.01)` on the same row,
+target. Their threshold is `ceil(baseline_mbps * 1.01)` on the same row,
 with the same independent oracle/Track 2 >= 1 Mbps and strict equality PASS.
 The numeric floor becomes concrete in the wave packet after C1, C2, or C3
 records the baseline Mbps; a wave may not dispatch an intervention while that

@@ -1,6 +1,6 @@
 # SK-V12 P3-D: Telemetry Schema Binding
 
-Pass: S-P3 Synthesis-Plan. Cycle: V2.
+Pass: S-P3 Synthesis-Plan. Cycle: V3.
 Date: 2026-05-20.
 Scope: bind the SK-V12 telemetry schema, non-JSON companion report, and fail-closed gate rules before any SK-V12 wave dispatch.
 Output: this file.
@@ -118,7 +118,7 @@ Required report fields:
 
 | Field | Required shape | Gate binding |
 |---|---|---|
-| `schema_id` | `sk-v12-nonjson-generated-v1` | Reject unknown schema ids and SK-V11 W1a placeholder schemas for generated-baseline admission. |
+| `schema_id` | `sk-v12-nonjson-generated-v1` | Reject unknown schema ids and SK-V11 placeholder schemas for generated-baseline admission. |
 | `row_id` | `{grammar_id}/{corpus_or_workload}/{workload}/main` | Stable join key for baseline and intervention rows; reject duplicates. |
 | `grammar_id` | `css_l4`, `sheets`, or `bbnf_self` unless SPEC names another generated grammar | Reject `json` for the generated non-JSON close axis. |
 | `domain` | `non_json_generated` plus a grammar domain label | Reject generic `json_bench` for non-JSON rows. |
@@ -134,7 +134,7 @@ Required report fields:
 | `track1_artifact` | Criterion or equivalent benchmark artifact path | Must match the row/run id. |
 | `track2_or_oracle_source_path` | Independent Track 2 or oracle source | Must not call generated Track 1, generated SinkOnly helpers, generated runtime internals, or `runtime::generated_json::parse`. |
 | `track2_independence_status` | `independent_verified` or fail-closed reason | Reject coupled, shared-source, or self-attested-only independence. |
-| `track2_or_oracle_mbps` | measured Mbps; W1 baseline gate requires >= 1 Mbps, or `n/a` only for a pure equality oracle admitted by SPEC | Required when the gate compares throughput on both tracks. |
+| `track2_or_oracle_mbps` | measured Mbps; W1/W2 admission requires >= 1 Mbps | Required for admitting baseline and intervention rows; `n/a` is allowed only for non-admitting support reports. |
 | `strict_output_equality` | `pass` or structured failure | Baseline/intervention cannot admit without `pass`. |
 | `oracle_status` | same-plane, strict, independent, freshness marker | Reject comparator/oracle plane mismatch and stale or permissive anchors. |
 | `baseline_row_id` | `none` for baseline; row id for intervention | Intervention rows must reference an admitted baseline from the same SK-V12 bracket. |
@@ -144,7 +144,7 @@ Required report fields:
 | `host_triple` / `feature_mask` / `build_flags` | host/build/ISA provenance | Required for aarch64/SIMD and strict comparator claims. |
 | `sample_count` / `sample_cost` | positive sample count and c/B, ns/B, or equivalent tuple; W1 baseline gate requires sample count >= 30 | Reject zero/missing sample evidence. |
 | `benchmark_artifact_path` | concrete artifact path | Must resolve under the wave capture root or named external artifact root. |
-| `json_guard_state` | `not_refreshed` or a table of refreshed guard rows/floors/results | If JSON reports are refreshed, all 4 direct and 7 typed guards must carry measured maintain/lift/demotion status. |
+| `json_guard_state` | `not_refreshed` with no-touch proof, or a table of refreshed guard rows/floors/results | If JSON reports are refreshed, all 4 direct and 7 typed guards must carry measured maintain/lift/demotion status; otherwise the wave must prove no JSON-producing path was touched and `skinny/RESULTS.md` stayed unchanged. |
 | `wave_id` / `redress_entry` | wave id and `none`, `pending`, or `REDRESS-<id>` | Failed waves must record REDRESS evidence. |
 | `same_wave_consumer_class` | `companion_gate_generated_baseline`, `companion_gate_generated_intervention`, or SPEC-named consumer | Reject producer-only reports. |
 | `gate_status` | `pass`, `fail`, or structured blocked status | Must be written by the gate, not by the benchmark alone. |
@@ -202,9 +202,10 @@ to its semantic fields, plus these non-JSON-specific rules:
   strict output equality, finite Track 1 Mbps, run id, host/build/sample
   metadata, output plane, wave id, redress entry, same-wave consumer class, or
   gate status;
-- stale W1a placeholder evidence used as generated-baseline proof;
+- stale placeholder evidence used as generated-baseline proof;
 - `schema_id=sk-v11-w1a-nonjson-v1` used as SK-V12 admission evidence;
 - hand-only parser or stale witness module claimed as generated Track 1;
+- W1/W2 admitting row with `track2_or_oracle_mbps=n/a` or below 1 Mbps;
 - generated Track 1 and Track 2/oracle sharing source, helper calls, generated
   runtime internals, generated SinkOnly helpers, or benchmark digest shortcuts;
 - baseline row missing when an intervention row is claimed;
@@ -214,7 +215,7 @@ to its semantic fields, plus these non-JSON-specific rules:
   run ids, or host/build captures;
 - `json` grammar id used for the generated non-JSON close axis;
 - JSON guard refresh without all guard rows carrying maintain/lift/demotion
-  disposition;
+  disposition, or `json_guard_state=not_refreshed` without no-touch proof;
 - JSON direct residual movement before the generated non-JSON priority is
   satisfied or explicitly blocked by measurement;
 - parse-only, W3, sidecar substrate, or direct residual route claims embedded
@@ -286,7 +287,7 @@ name:
   `restart/skinny/tranches/sk-v12/SYNTHESIS.md:115`,
   `restart/skinny/tranches/sk-v12/SYNTHESIS.md:116`).
 - Direct digest evidence as typed proof or as a grammar-generalization proof.
-- Producer-only fields, stale report lanes, stale W1a placeholder rows, or
+- Producer-only fields, stale report lanes, stale placeholder rows, or
   companion reports without an executable same-wave gate.
 - JSON policy in generic crates or runtime outside generated per-grammar
   modules (`restart/skinny/tranches/sk-v12/SYNTHESIS.md:73`,

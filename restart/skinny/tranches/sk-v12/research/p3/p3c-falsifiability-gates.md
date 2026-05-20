@@ -1,6 +1,6 @@
 # SK-V12 P3-C: Falsifiability Gates
 
-Pass: S-P3 Synthesis-Plan. Cycle: V2.
+Pass: S-P3 Synthesis-Plan. Cycle: V3.
 Date: 2026-05-20.
 Scope: per-wave measurable gates for the SK-V12 generated non-JSON baseline, intervention, guard, and conditional JSON companion surface.
 Output: this file.
@@ -51,16 +51,13 @@ facts.
 |---|---|---|---|
 | W0 telemetry lock | `G-W0-SK-V12-OPEN` | JSON table, schema, run freshness, guard rows | full gate pass plus guard floors below |
 | W1 generated non-JSON baseline | `G-W1-GENERATED-NONJSON-BASELINE` | exactly one selected non-JSON direct or typed baseline row | Track 1 >= 1 Mbps, independent Track 2/oracle >= 1 Mbps, sample count >= 30 |
-| W2 selected-baseline intervention | `G-W2-SELECTED-NONJSON-INTERVENTION` | same grammar/workload/output plane as W1 | Track 1 >= `ceil(W1_baseline_track1_mbps * 1.01)` |
-| W3 JSON direct companion, conditional | `G-W3-CONDITIONAL-JSON-COMPANION` | one named JSON direct residual row only after non-JSON priority resolves | selected residual row floor below, both Track 1 and Track 2 |
-| W4 close | `G-W4-CLOSE` | close packet agreement | W1+W2 admitted, or generated-baseline BLOCKED with measurement; guards preserved |
+| W2 selected-baseline intervention | `G-W2-SELECTED-NONJSON-INTERVENTION` | same grammar/workload/output plane as W1 | Track 1 >= `ceil(baseline_mbps * 1.01)` |
+| W3 JSON direct companion, conditional | `G-W3-CONDITIONAL-JSON-COMPANION` | behavior dispatch against one named residual row, or routed block with no source/RESULTS movement | behavior clears selected residual floor on both tracks; routed block records material-reopen failure |
+| W4 close | `G-W4-CLOSE` | close packet agreement | W1+W2 admitted, W1 admitted + W2 measured reject, or generated-baseline BLOCKED with measurement; guards preserved |
 
-If W1 preflight cannot fit in a single redress, the legal split is:
-`G-W1a-GENERATOR-RUNTIME-UNBLOCK` followed by
-`G-W1b-GENERATED-NONJSON-BASELINE`. W1a may close only by compiling the
-selected generated runtime path and proving gate/report consumption; W1b still
-must satisfy the W1 baseline Mbps/equality/oracle thresholds. A W1a unblock
-without W1b throughput is not a baseline admission.
+No W1 split is authorized by the V3 packet. If the selected W1 baseline cannot
+fit in one redress, W1 records measured BLOCKED/REJECTED evidence or S-P3 must
+revise the manifest before dispatching any split wave.
 
 ### 2.2 Full-Table Maintain Budget
 
@@ -145,7 +142,7 @@ Exit gate:
 - Strict output equality passes between generated Track 1 and the
   independent Track 2/oracle on the selected fixture corpus.
 - Concrete throughput thresholds: generated Track 1 >= 1 Mbps, independent
-  Track 2/oracle >= 1 Mbps, sample count >= 30, finite benchmark artifact path
+  Track 2/oracle >= 1 Mbps, sample count >= 30, and benchmark artifact path
   present.
 - The selected row records grammar id, domain, corpus/workload, row id, output
   plane, workload class, run id, host triple, feature mask, build flags,
@@ -164,16 +161,16 @@ slice, preserve the failed proof in REDRESS, save
 ### 2.5 W2 Gate: `G-W2-SELECTED-NONJSON-INTERVENTION`
 
 Entry: W1 admitted one baseline row and recorded
-`W1_baseline_track1_mbps`, output plane, fixture corpus, oracle path, and row
-id. If any of those values is missing, W2 is unmeasurable and returns REVISE
-before source work.
+`baseline_mbps` (the W1 generated Track 1 Mbps), output plane, fixture corpus,
+oracle path, and row id. If any of those values is missing, W2 is unmeasurable
+and returns REVISE before source work.
 
 Exit gate:
 
 - The intervention consumes the same grammar, workload, fixture corpus, and
   output plane as W1. It may not create the first measurable non-JSON row.
 - The intervention target is
-  `ceil(W1_baseline_track1_mbps * 1.01)`. Track 1 must meet or exceed that
+  `ceil(baseline_mbps * 1.01)`. Track 1 must meet or exceed that
   integer Mbps threshold.
 - Independent Track 2/oracle remains >= 1 Mbps, remains independent, and
   strict output equality passes.
@@ -186,8 +183,9 @@ Exit gate:
 - All generic/codegen/runtime edits pass Lock 14: grammar facts are generated
   metadata, no generic crate branches on JSON/CSS/Sheets/BBNF-self names, and
   no new directive or BIR variant is added.
-- The guard floors in §2.2 hold if JSON reports are refreshed; otherwise
-  `skinny/RESULTS.md` must remain unchanged for JSON rows.
+- JSON guard evidence satisfies §2.2: either all guard floors hold in a
+  refreshed JSON run, or the wave proves it did not touch JSON-producing paths
+  and `skinny/RESULTS.md` remained unchanged for JSON rows.
 
 Revert protocol: revert intervention, parse-that/SIMD, codegen/runtime,
 bench/report/gate/RESULTS edits as one slice on target miss, oracle coupling,
@@ -197,12 +195,13 @@ Lock 14 leak; preserve W1 baseline evidence; save
 
 ### 2.6 Conditional W3 Gate: `G-W3-CONDITIONAL-JSON-COMPANION`
 
-Entry: W1 and W2 have admitted, or the generated non-JSON baseline priority is
-recorded as measured `BLOCKED`. CHALLENGE must also name fresh material
-evidence beyond REDRESS 114-119: new hot-leaf evidence, a source delta
-materially different from W3-W7, scalar/oracle proof, same-host microbench,
-independent Track 2, strict same-run sonic-rs direct floor, and same-wave gate
-consumption.
+Entry: W1 and W2 have admitted, W1 admitted and W2 recorded a measured reject,
+or the generated non-JSON baseline priority is recorded as measured `BLOCKED`.
+For behavior dispatch, CHALLENGE must also name fresh material evidence beyond
+REDRESS 114-119: new hot-leaf evidence, a source delta materially different
+from W3-W7, scalar/oracle proof, same-host microbench, independent Track 2,
+strict same-run sonic-rs direct floor, and same-wave gate consumption. Without
+that evidence, W3 is a routed block with no source/RESULTS movement.
 
 Residual row floors:
 
@@ -224,14 +223,15 @@ Residual row floors:
 
 Exit gate:
 
-- Exactly one residual direct row is selected and named.
-- Track 1 and Track 2 both meet or exceed that row's floor.
-- Strict output equality passes, Track 2 is independent, and sonic-rs direct is
-  same-run strict evidence.
-- The selected source delta is not a replay of numeric slot, container-tail,
+- Behavior form: exactly one residual direct row is selected and named; Track 1
+  and Track 2 both meet or exceed that row's floor; strict output equality
+  passes; Track 2 is independent; sonic-rs direct is same-run strict evidence;
+  the selected source delta is not a replay of numeric slot, container-tail,
   bounded string span, escaped segment, output digest host-sink, W3 union, or
-  W0-clamped docs-only admission.
-- The full guard floors in §2.2 hold.
+  W0-clamped docs-only admission; and the full guard floors in §2.2 hold.
+- Routed-block form: W3 records why no current candidate passes the material
+  reopen burden, moves no source or RESULTS row, preserves guard state, and
+  records REDRESS evidence for the routed block.
 
 Revert protocol: revert the JSON direct source/generated/bench/report/gate
 slice on row-floor miss, Track 2 miss, strict comparator miss, REDRESS route
@@ -244,9 +244,13 @@ Exit gate succeeds only in one of two forms:
 
 - Admit form: W1 admitted one generated non-JSON baseline, W2 admitted one
   measured intervention on that same row at
-  `ceil(W1_baseline_track1_mbps * 1.01)` or higher, guard floors hold, and all
+  `ceil(baseline_mbps * 1.01)` or higher, guard floors hold, and all
   close documents agree.
-- Block form: W1 or its legal split records a measured generated-baseline
+- Reject form: W1 admitted one generated non-JSON baseline, W2 recorded a
+  measured reject on that same row, W3 is adjudicated or routed, guard floors
+  are preserved or any demotion is explicitly measured in REDRESS, and all close
+  documents agree.
+- Block form: W1 records a measured generated-baseline
   `BLOCKED` verdict with executable preflight evidence, failed gate output,
   no JSON row movement, guard floors preserved, and a REDRESS route explaining
   why the accepted owner surface cannot create the baseline.
@@ -263,7 +267,7 @@ Concrete SK-V12 thresholds:
 - Non-JSON baseline: selected generated Track 1 >= 1 Mbps and independent
   Track 2/oracle >= 1 Mbps, same row, same output plane, strict equality PASS.
 - Non-JSON intervention: selected Track 1 >=
-  `ceil(W1_baseline_track1_mbps * 1.01)`, with the same independent
+  `ceil(baseline_mbps * 1.01)`, with the same independent
   Track 2/oracle/equality proof still present.
 - SIMD/ASM micro-proof: candidate primitive throughput >=
   `ceil(scalar_reference_mbps * 1.01)` on the named same-host representative

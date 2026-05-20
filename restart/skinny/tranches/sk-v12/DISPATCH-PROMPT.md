@@ -5,7 +5,7 @@ SK-V12. It binds to the SK-V12 packet at
 `restart/skinny/tranches/sk-v12/`. Each wave of the SK-V12 SPEC is executed by
 one triumvirate per `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`.
 
-Status: S-P3 V2 draft. Do not dispatch behavior waves until S-P3 CHALLENGE
+Status: S-P3 V3 draft. Do not dispatch behavior waves until S-P3 CHALLENGE
 converges and the orchestrator promotes this packet.
 
 ## Required Reading
@@ -49,6 +49,9 @@ one generated non-JSON baseline in this preference order: CSS L4 declaration
 values, Sheets formula, BBNF-self grammar. W2 consumes the W1 row and measures
 one grammar-generalized intervention on that row. W3 is conditional; it does
 not run JSON direct behavior unless the SPEC Section 6 entry gate passes.
+W1 fallback is plan-time only: redress attempts exactly one selected target and
+does not fall through to another grammar inside the same redress. No W1 split
+is dispatchable without a future S-P3 manifest revision.
 
 ## Per-Wave Triumvirate Protocol
 
@@ -114,12 +117,16 @@ Load-bearing gate facts:
   Track 1 >= 1 Mbps, oracle/Track 2 >= 1 Mbps, sample count >= 30, provenance,
   run/build/host/sample telemetry, and gate consumption.
 - W2 admits one measured intervention only on the W1 row. Track 1 must be >=
-  `ceil(W1_baseline_track1_mbps * 1.01)`.
+  `ceil(baseline_mbps * 1.01)`, where `baseline_mbps` is the W1 generated Track
+  1 Mbps.
 - W3 has no default behavior authority. It dispatches only with fresh material
   evidence beyond REDRESS 114-119 and CHALLENGE acceptance.
 - parse_only rows never count as SK-V12 SOTA admission.
 - All behavior waves preserve the 4 direct JSON guards and 7 typed JSON guards
-  named in SPEC Section 0.5.
+  named in SPEC Section 0.5: they either rerun and maintain all guards, or prove
+  no JSON-producing path was touched and `skinny/RESULTS.md` stayed unchanged.
+  Any guard miss fails unless recorded as an explicit measured demotion in
+  REDRESS.
 
 ## Pre-Blocked Routes
 

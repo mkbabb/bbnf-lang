@@ -1,111 +1,147 @@
 # SK-V12 Pass Alpha CH5 Hidden Coupling V2
 
-Pass: Alpha SK-V11 -> SK-V12 CHALLENGE V2.
+Pass: Alpha SK-V11 -> SK-V12 hardening V2 under `USER-PIN-W1-CSS-L4-SOTA.md`.
 Date: 2026-05-20.
 Lens: CH5 hidden coupling.
 Output: this file only.
 
 ## Disposition
 
-ACCEPT.
+REVISE.
 
-Critical findings: none.
+V2 folds most USER-PIN hidden-coupling requirements: CSS is first, the close
+plane is lightningcss-bound, Track 1 / Track 2 / oracle provenance is
+gate-consumed, E4 is fenced away from public substrate expansion, and the
+aarch64 orphan set is a close blocker. Two hidden-coupling defects remain before
+G-Alpha:
 
-The revised SK-V12 packet folds the V1 consolidated requirements without
-introducing hidden coupling. The new selected-grammar pre-gate, fallback
-intervention paths, Alpha cost/cap matrix, revert rules, and G-Alpha summary
-tighten the existing boundary rather than creating a hidden substrate, Track 1
-/ Track 2 shortcut, plane relabel, generic JSON-policy leak, or non-JSON oracle
-coupling.
+1. E2 can still shortcut JSON guard refresh while touching generic
+   runtime/codegen surfaces.
+2. Alpha-E still reads pre-pin SPEC/S-P artifacts as unqualified authority,
+   which can re-import the stale selected-baseline ordering and threshold model.
 
-## Materials Read
+## Blocking Findings
 
-- `restart/skinny/tranches/sk-v12/research/alpha-hardening/V1/CH5.md`.
-- `restart/skinny/tranches/sk-v12/research/alpha-hardening/V1/CONSOLIDATED.md`.
-- `restart/skinny/tranches/sk-v12/SYNTHESIS.md`.
-- `restart/skinny/tranches/sk-v12/HANDOFF.md`.
-- `restart/skinny/tranches/sk-v12/research/alpha/alpha-A-results-extraction.md`.
-- `restart/skinny/tranches/sk-v12/research/alpha/alpha-B-competitor-deltas.md`.
-- `restart/skinny/tranches/sk-v12/research/alpha/alpha-C-redress-digest.md`.
-- `restart/skinny/tranches/sk-v12/research/alpha/alpha-D-validated-invalidated.md`.
-- `restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md`.
-- `restart/skinny/tranches/sk-v12/research/alpha/alpha-F-contract-draft.md`.
+### CH5-1 - E2 leaves a JSON guard shortcut on generic codegen/runtime edits
 
-## V2 Fold Review
+Result: REVISE.
 
-| V2 fold | CH5 result |
-|---|---|
-| Replace unsupported numeric thresholds with finite positive throughput plus recorded sample count | ACCEPT: no coupling introduced; the threshold change affects admission sufficiency only and keeps generated Track 1, independent oracle/Track 2, strict equality, telemetry, and gate consumption required. |
-| Add local citations and formula provenance | ACCEPT: citations preserve result-surface and guard-floor authority; no row or plane is reclassified. |
-| Add selected-grammar executable baseline pre-gate | ACCEPT: the pre-gate requires a named generated-emission seam or generated per-grammar runtime path, runtime module build, fixture corpus, same-plane independent oracle, compile/equality smoke, and REDRESS 111 gate consumption. It blocks, rather than hides, the REDRESS 112 JSON-profiled runtime gap. |
-| Generalize intervention candidate across CSS, Sheets, or BBNF-self | ACCEPT: E4 remains selected-baseline-only and may run only after E1, E2, or E3 admits a concrete generated non-JSON baseline row and baseline Mbps. Fallbacks do not let an intervention create its own first baseline. |
-| Add Alpha cost/cap matrix and split triggers | ACCEPT: caps and split-before-dispatch rules constrain owner scope; they do not create sidecar behavior producers or producer-only telemetry. |
-| Raise E3 risk to medium-high | ACCEPT: risk relabel only; no hidden implementation authority added. |
-| Add candidate-local revert protocols | ACCEPT: revert paths preserve slice boundaries and dependent-wave blocking; they do not demote guards or admit rows. |
-| Add G-Alpha-ready summary | ACCEPT: the summary targets one selected non-JSON generated row and the same row's intervention delta while keeping JSON direct residuals as a reopen ledger. |
+The global contract correctly says any wave that changes generic runtime,
+codegen, generated-output, benchmark, report, or gate paths that can produce
+JSON must refresh JSON guards or record measured REDRESS demotion
+(`restart/skinny/tranches/sk-v12/SYNTHESIS.md:144-148`,
+`restart/skinny/tranches/sk-v12/HANDOFF.md:60-62`). V1 required the same fold
+(`restart/skinny/tranches/sk-v12/research/alpha-hardening/V1/CONSOLIDATED.md:59-61`).
 
-## Coupling Checks
+Alpha-E E2 owns exactly those generic/codegen/runtime paths:
+`skinny/crates/runtime/src/tape/grammar_config.rs`,
+`skinny/crates/runtime/src/tape/mod.rs`,
+`skinny/crates/runtime/src/tape/assembler.rs`,
+`skinny/crates/runtime/src/lib.rs`,
+`skinny/crates/codegen/src/lib.rs`,
+`skinny/crates/codegen/src/json_templates/generated.rs`, generated config/output,
+bench report paths, and lock14 report paths
+(`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:143-158`).
+But the E2 gate only requires JSON generated-output parity and a CSS
+generated-config compile smoke
+(`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:159-178`).
 
-### Hidden substrate / sidecar producer
+That is a hidden guard coupling: a generic `GrammarConfig`/template/runtime
+change could keep generated JSON parity green while still regressing the JSON
+direct/typed performance guard floors. E2 must inherit the full JSON guard rule
+locally: refreshed direct/typed JSON guard run, or measured REDRESS demotion,
+unless no JSON-producing path moved and `skinny/RESULTS.md` is proven unchanged.
 
-ACCEPT. The revised packet keeps REDRESS 96/97/98/102 binding and repeats the
-ban on W3 union/event/class-column/streaming-cursor/class-lane/sidecar
-substrates, `UnionTape`, retained structural vectors, parser-owned projections,
-parser-owned sidecar/fact slots, second retained substrates, public substrate
-APIs, and renamed routes. The selected-grammar pre-gate names only a generated
-emission seam or generated per-grammar runtime path plus fixture/oracle/build
-proof. It does not authorize a hidden parallel fact table, sidecar freshness
-producer, structural-scan producer, or parse-plane repair.
+### CH5-2 - Alpha-E still has stale pre-pin SPEC/artifact authority coupling
 
-### Track 1 / Track 2 coupling
+Result: REVISE.
 
-ACCEPT. V2 strengthens the independence requirement. Baselines must carry
-generated Track 1 source path, generated input provenance, independent Track 2
-or oracle source path, independence status, strict equality, finite same-run
-throughput, and same-wave gate consumption. The gate must fail closed on
-oracle coupling and generated Track 1 / Track 2 dishonesty. E1, E2, and E3
-each require same-plane independent oracles, while E4 consumes only the
-admitted selected baseline and preserves oracle independence.
+The folded top-level contract correctly demotes `SPEC.md` to pre-pin context
+only where it does not conflict with the USER PIN
+(`restart/skinny/tranches/sk-v12/SYNTHESIS.md:18-19`,
+`restart/skinny/tranches/sk-v12/HANDOFF.md:22-23`) and requires G-Alpha followed
+by fresh S-P1 -> S-P2 -> S-P3 under the pin
+(`restart/skinny/tranches/sk-v12/SYNTHESIS.md:237-254`,
+`restart/skinny/tranches/sk-v12/HANDOFF.md:103-125`). Alpha-F also states the
+existing implementation packet predates the pin and remains stale where it
+treats CSS/Sheets/BBNF-self as preflight-equivalent or blocks union/ASM-gen
+categories (`restart/skinny/tranches/sk-v12/research/alpha/alpha-F-contract-draft.md:11-16`,
+`restart/skinny/tranches/sk-v12/research/alpha/alpha-F-contract-draft.md:235-237`).
 
-### Plane relabel
+Alpha-E's authority section still lists `SPEC.md` and the S-P1/S-P2/S-P3
+converged artifacts without the same pre-pin/revalidation qualifier
+(`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:13-25`).
+That is not harmless: the stale SPEC still carries CSS/Sheets/BBNF-self
+selection order, fallback-on-CSS-preflight, and `ceil(baseline_mbps * 1.01)`
+threshold language (`restart/skinny/tranches/sk-v12/SPEC.md:181-190`,
+`restart/skinny/tranches/sk-v12/SPEC.md:501-502`). Under the USER PIN, CSS L4 is
+authoritative and fallback is legal only after a measured CSS redress attempt
+(`restart/skinny/tranches/sk-v12/USER-PIN-W1-CSS-L4-SOTA.md:18-24`,
+`restart/skinny/tranches/sk-v12/USER-PIN-W1-CSS-L4-SOTA.md:29-37`).
 
-ACCEPT. The packet continues to separate parse-only diagnostics, direct digest
-rows, typed direct product rows, and generated non-JSON rows. Direct residual
-work still requires sonic-rs strict direct evidence on the digest plane; typed
-admission from direct digest evidence is refused; E4 must improve the same
-generated non-JSON output plane as its selected baseline. The V2 guard-floor
-citations clarify formulas and do not move rows between planes.
+Alpha-E must demote SPEC and pre-pin S-P artifacts in its authority list using
+the same qualifier as SYNTHESIS/HANDOFF/Alpha-F, or stale pre-pin implementation
+authority can leak back into candidate selection.
 
-### Generic JSON policy leakage
+## Non-Blocking Checks
 
-ACCEPT. The V2 pre-gate explicitly rejects using
-`json_provider::ensure_runtime_profile` as generality proof and requires either
-a generated-emission seam or generated per-grammar runtime path for exactly one
-selected grammar. The revised packet continues to fail closed on JSON policy in
-generic crates or runtime outside generated per-grammar modules. This treats
-the REDRESS 112 JSON-profiled path as a blocker, not as hidden proof.
+### CSS Track 1 / Track 2 / lightningcss plane symmetry
 
-### Non-JSON oracle coupling
+PASS. The folded packet requires generated CSS Track 1 to beat
+`lightningcss_mbps + 1` on the same corpus, same output plane, and strict
+equality semantics (`restart/skinny/tranches/sk-v12/SYNTHESIS.md:42-53`,
+`restart/skinny/tranches/sk-v12/HANDOFF.md:53-58`,
+`restart/skinny/tranches/sk-v12/research/alpha/alpha-F-contract-draft.md:71-84`).
+Alpha-B and Alpha-E require one canonical CSS fact stream shared by generated
+Track 1, independent Track 2/oracle, and lightningcss
+(`restart/skinny/tranches/sk-v12/research/alpha/alpha-B-competitor-deltas.md:107-113`,
+`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:77-84`).
 
-ACCEPT. Non-JSON baseline candidates require independent same-plane oracles and
-same-wave non-JSON report/gate consumption. E1 specifically bars the oracle
-from calling generated Track 1, generated SinkOnly helpers, generated typed
-helpers, `sheets_witness`, or benchmark-private parser code; E2 rejects
-`sheets_witness` as generated authority; E3 requires an independent grammar-file
-oracle that does not share generated parser code. The telemetry section also
-requires oracle source path, independence status, comparator/oracle status,
-run/build/sample metadata, and fail-closed oracle-coupling checks.
+### Bbnf-only or comparator-only normalization
 
-### JSON direct companion coupling
+PASS. Alpha-B explicitly rejects a bbnf-only bridge or lightningcss-only
+normalization path and requires symmetric fact extraction from both generated
+bbnf and lightningcss parses
+(`restart/skinny/tranches/sk-v12/research/alpha/alpha-B-competitor-deltas.md:107-113`).
+Alpha-E's E1 oracle also bars calls into generated Track 1, generated CSS sink
+helpers, or report fixtures
+(`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:103-110`).
 
-ACCEPT. E5 remains conditional and lowest priority. It hard-rejects if
-scheduled before E4 admits or blocks the non-JSON priority and requires fresh
-non-JSON-proven material evidence beyond REDRESS 114-119 before any JSON direct
-row can reopen. Its same-wave `gate-json` consumer and one-row selection limit
-avoid coupling JSON residual work back into the first SK-V12 material target.
+### Public substrate leakage from E4
 
-## Result
+PASS. E4 is constrained to a generated, CSS-local, immediately consumed
+same-tape event projection and explicitly rejects a second retained substrate,
+public substrate API, parser-owned sidecar, retained structural vector, and
+parse-only scanner
+(`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:225-240`).
+Its owner list allows `event_grammar.rs` only for existing sealed/internal bounds
+and forbids exported public substrate additions
+(`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:241-249`).
+The E4 gate requires public API diff proof that no directive, BIR variant,
+BackendShape variant, `UnionTape`, generic event side vector, retained
+cursor/list, or parser-owned fact slot was added
+(`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:268-272`).
 
-CH5 accepts the revised SK-V12 Alpha packet for CHALLENGE V2. No REVISE or
-REJECT finding is open for hidden substrate, Track 1 / Track 2 coupling, plane
-relabel, generic JSON policy leakage, or non-JSON oracle coupling.
+### SIMD orphan loopholes
+
+PASS. The USER PIN names five orphan aarch64 primitives and makes zero orphan
+kernels a campaign target
+(`restart/skinny/tranches/sk-v12/USER-PIN-W1-CSS-L4-SOTA.md:71-79`).
+SYNTHESIS and HANDOFF require the set to be zero by admission, removal, or
+inventory demotion with evidence for ADMIT/FIXPOINT
+(`restart/skinny/tranches/sk-v12/SYNTHESIS.md:57-65`,
+`restart/skinny/tranches/sk-v12/SYNTHESIS.md:87-89`,
+`restart/skinny/tranches/sk-v12/HANDOFF.md:81-85`,
+`restart/skinny/tranches/sk-v12/HANDOFF.md:91-95`).
+Alpha-E E5 rejects dispatch-table-only/checkasm-only work as orphan and requires
+the carried orphan set to be zero or inventory-demoted with evidence
+(`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:318-339`).
+
+## Required Fold
+
+1. Add the full JSON guard refresh/demotion rule to Alpha-E E2/W1a because E2
+   touches generic runtime/codegen/generated-output paths.
+2. Qualify Alpha-E's SPEC and S-P1/S-P2/S-P3 authority reads as pre-pin context
+   only after measured revalidation, matching SYNTHESIS/HANDOFF/Alpha-F.
+
+CH5 remains REVISE until both folds land.

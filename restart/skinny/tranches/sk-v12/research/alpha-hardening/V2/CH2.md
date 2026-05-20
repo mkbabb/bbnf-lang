@@ -1,85 +1,96 @@
-# SK-V12 Pass Alpha CHALLENGE V2 - CH2 Generality / Lock 14
+# SK-V12 Pass Alpha Hardening V2 - CH2 Generality / Lock 14
 
 Date: 2026-05-20.
 Lens: CH2 generality / Lock 14.
-Scope: Pass Alpha SK-V11 -> SK-V12 alpha E/F and revised SK-V12
-SYNTHESIS/HANDOFF after commit `18f4b931`, checked against V1 CH2 and the V1
-consolidated fold requirements.
+Verdict: PASS.
 
-## Disposition
+Scope: V2-folded `SYNTHESIS.md`, `HANDOFF.md`, Alpha-B, Alpha-E, and
+Alpha-F under `USER-PIN-W1-CSS-L4-SOTA.md`, checked against PASS-ALPHA,
+V1 consolidated hardening, and `skv12-value-api-audit.md`.
 
-ACCEPT.
+## Standard
 
-V1 CH2 blocked on two gaps: fallback Sheets/BBNF-self baselines had no matching
-intervention path, and the known JSON-profiled codegen blocker was not yet an
-executable selected-grammar baseline pre-gate. The current packet folds both
-gaps. It also preserves the existing CH2 refusals: no JSON-policy leak into
-generic crates, no W1a/witness/prose-only generality claim, no parse-only SOTA
-movement, and no JSON direct retry before the non-JSON priority resolves.
+PASS-ALPHA defines CH2 as the Lock 14 review: the goalset must respect
+generality and work for non-JSON grammars, not only JSON
+(`restart/prompts/pass-contracts/PASS-ALPHA.md:33-40`).
 
-## Sources Read
+Under the USER PIN, that generality proof is not "any non-JSON grammar first."
+It is the executable CSS L4 path first: CSS L4 is authoritative,
+Sheets/BBNF-self are fallback-only after a measured CSS L4 redress attempt, and
+the CSS close bar is same-plane strict equality with generated Track 1
+`> lightningcss_mbps + 1`
+(`restart/skinny/tranches/sk-v12/USER-PIN-W1-CSS-L4-SOTA.md:18-34`).
+The pin also keeps the seven Lock 14 JSON leaks as W1 blockers before CSS L4
+emission is legal
+(`restart/skinny/tranches/sk-v12/USER-PIN-W1-CSS-L4-SOTA.md:90-103`).
 
-- `restart/skinny/tranches/sk-v12/research/alpha-hardening/V1/CH2.md`.
-- `restart/skinny/tranches/sk-v12/research/alpha-hardening/V1/CONSOLIDATED.md`.
-- `restart/skinny/tranches/sk-v12/SYNTHESIS.md`.
-- `restart/skinny/tranches/sk-v12/HANDOFF.md`.
-- `restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md`.
-- `restart/skinny/tranches/sk-v12/research/alpha/alpha-F-contract-draft.md`.
-- `git show 18f4b931 --` for the revised alpha E/F, SYNTHESIS, and HANDOFF
-  fold.
-- Targeted cross-checks against current alpha A-D, SK-V11 close-redress, and
-  `skinny/REDRESS.md` through REDRESS 120 for W1a/W1b/W2 authority.
+V1 required the V2 fold to isolate CSS L4 emission from the JSON-named generic
+template path, add a generic-crate branch scan, and bound union work away from
+new public substrate/directive/BIR/BackendShape expansion
+(`restart/skinny/tranches/sk-v12/research/alpha-hardening/V1/CONSOLIDATED.md:46-52`,
+`restart/skinny/tranches/sk-v12/research/alpha-hardening/V1/CONSOLIDATED.md:71-74`).
 
 ## Verification Matrix
 
 | Check | Result | Evidence |
 |---|---|---|
-| Selected-grammar executable baseline pre-gate | ACCEPT | V1 required generated emission or generated per-grammar runtime, build, same-plane oracle, equality smoke, and non-JSON gate consumption (`V1/CH2.md:71-97`; `V1/CONSOLIDATED.md:25-29`). Alpha-E now requires exactly one selected grammar to prove generated emission or per-grammar runtime path, avoid JSON-only `json_provider::ensure_runtime_profile`, run a fixture corpus and independent oracle, pass compile/equality smoke, and show REDRESS 111 gate consumption without producer-only telemetry (`alpha-E-candidate-shortlist.md:53-68`). Alpha-F and SYNTHESIS carry the same pre-gate before redress (`alpha-F-contract-draft.md:71-83`; `SYNTHESIS.md:35-46`; `HANDOFF.md:50-55`). |
-| Sheets/BBNF-self intervention variants | ACCEPT | V1 required a concrete second-stage intervention path for whichever baseline admits (`V1/CH2.md:46-69`, `:111-118`). Alpha-E changed E4 from CSS-only to selected-baseline intervention, with owner paths for CSS L4, Sheets, and BBNF-self runtimes, explicit Sheets and BBNF-self fallback variants, and a threshold keyed to `W1_selected_baseline_mbps` (`alpha-E-candidate-shortlist.md:225-284`). Alpha-F and SYNTHESIS now state that the intervention follows CSS L4, Sheets, or BBNF-self, whichever baseline row admits (`alpha-F-contract-draft.md:84-91`; `SYNTHESIS.md:47-53`, `:172-179`; `HANDOFF.md:56-60`). |
-| No JSON-policy leakage | ACCEPT | The baseline must have no JSON policy leak into generic crates or runtime outside generated per-grammar modules (`SYNTHESIS.md:35-46`; `alpha-F-contract-draft.md:71-83`). The gate fails missing fields, producer-only telemetry, oracle coupling, and JSON policy leakage (`SYNTHESIS.md:219-223`; `alpha-F-contract-draft.md:179-180`). Alpha-E blocks JSON-provider emission as generality proof for the pre-gate, baseline candidates, and intervention (`alpha-E-candidate-shortlist.md:58-65`, `:119-124`, `:220-223`, `:281-284`). JSON direct work remains conditional after the non-JSON priority and cannot become the Lock 14 proof surface. |
-| No W1a/witness/prose-only generality | ACCEPT | The revised packet keeps W1a as a non-admitting report lane only (`HANDOFF.md:66-71`; `alpha-F-contract-draft.md:38-42`). Alpha-E says W1a is schema consumption, not baseline authority, and forbids the CSS oracle from using `sheets_witness` or benchmark-private parser code (`alpha-E-candidate-shortlist.md:90-101`, `:119-123`). Sheets explicitly rejects `sheets_witness` inventory and witness-only admission (`alpha-E-candidate-shortlist.md:143-153`, `:170-173`). BBNF-self requires generated Track 1 and an independent oracle rather than prose (`alpha-E-candidate-shortlist.md:177-181`, `:193-200`). Alpha-F and SYNTHESIS refuse prose, hand-only parser code, stale witness modules, producer-only telemetry, and parse-only admissions (`alpha-F-contract-draft.md:182-186`, `:217-226`; `SYNTHESIS.md:59-72`, `:257-266`). |
+| Executable CSS L4 path proves grammar generality | PASS | `SYNTHESIS.md` requires G-Alpha -> S-P1/S-P2/S-P3 reconvergence under the pin, then a generated CSS L4 row with Track 1 strictly `> lightningcss_mbps + 1`, same corpus, same output plane, same host, strict equality, generated/runtime/oracle/comparator provenance, and `GrammarConfig` or equivalent before CSS emission (`restart/skinny/tranches/sk-v12/SYNTHESIS.md:39-57`). Alpha-E splits legality and row movement into W1a `GrammarConfig` followed by W1b CSS L4 generated baseline plus lightningcss comparator (`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:56-70`). E1 names generated CSS runtime paths, same-plane lightningcss oracle, equality artifact, gate consumer, and `G-W1b-CSS-L4-LIGHTNINGCSS-BASELINE` (`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:75-126`). Alpha-B supplies the required comparator floor, fields, and symmetric CSS fact stream (`restart/skinny/tranches/sk-v12/research/alpha/alpha-B-competitor-deltas.md:32-58`, `restart/skinny/tranches/sk-v12/research/alpha/alpha-B-competitor-deltas.md:84-113`). |
+| Sheets and BBNF-self remain fallback-only | PASS | `SYNTHESIS.md` makes CSS L4 the authoritative first target and says Sheets/BBNF-self are fallback candidates only after a CSS attempt records BLOCKED or REJECTED evidence (`restart/skinny/tranches/sk-v12/SYNTHESIS.md:77-78`, `restart/skinny/tranches/sk-v12/SYNTHESIS.md:173-180`). `HANDOFF.md` binds the priority order the same way and requires S-P3 to select CSS first while carrying Sheets/BBNF-self only as post-CSS-redress fallbacks (`restart/skinny/tranches/sk-v12/HANDOFF.md:51-65`, `restart/skinny/tranches/sk-v12/HANDOFF.md:110-124`). Alpha-F repeats that a CSS preflight-only miss cannot skip to Sheets (`restart/skinny/tranches/sk-v12/research/alpha/alpha-F-contract-draft.md:40-47`, `restart/skinny/tranches/sk-v12/research/alpha/alpha-F-contract-draft.md:105-110`). Alpha-E does not shortlist Sheets/BBNF-self and states they remain legal only after a recorded CSS L4 redress failure (`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:341-345`). |
+| Generic JSON policy leaks are forbidden | PASS | The value API audit identifies the seven leak classes in `json_templates/generated.rs`, runtime generated JSON, `OffsetFlags`, and `JsonSink`: structural alphabet, value dispatch, string/escape, number, key/member, flag semantics, and sink callbacks (`restart/skinny/tranches/sk-v12/research/skv12-value-api-audit.md:63-108`). V2 requires those policies to come from `GrammarConfig`, generated grammar metadata, or per-grammar generated modules before CSS emission can compile (`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:138-185`; `restart/skinny/tranches/sk-v12/research/alpha/alpha-F-contract-draft.md:85-88`; `restart/skinny/tranches/sk-v12/SYNTHESIS.md:54-57`). The gate fails generic grammar-name branches, producer-only telemetry, oracle coupling, parse-only admission, and missing lightningcss evidence (`restart/skinny/tranches/sk-v12/SYNTHESIS.md:202-204`; `restart/skinny/tranches/sk-v12/HANDOFF.md:141-151`; `restart/skinny/tranches/sk-v12/research/alpha/alpha-F-contract-draft.md:190-192`). |
+| `json_templates/generated.rs` is correctly constrained | PASS | Alpha-E owner paths permit `skinny/crates/codegen/src/json_templates/generated.rs` only to preserve or extract existing JSON parity; it may not become the polymorphic CSS provider and may not branch on CSS/JSON grammar names (`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:143-156`). The W1a gate rejects any generic branch on grammar name, corpus name, object/array role, field name, string role, or layout role, and requires structural alphabet, dispatch primary set, escape policy, number policy, key/member policy, flag interpretation, and sink trait to be supplied by generated metadata or per-grammar modules (`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:169-178`). This folds V1 CH2's `json_templates/generated.rs` blocker. |
+| No new directive/BIR/BackendShape/public substrate expansion | PASS | `SYNTHESIS.md` still blocks new directive, BIR variant, BackendShape variant, public substrate API, parser-owned sidecar, or x86 implementation work (`restart/skinny/tranches/sk-v12/SYNTHESIS.md:206-217`). `HANDOFF.md` refuses dispatches that add a directive, BIR variant, BackendShape variant, public substrate API, parser-owned sidecar, or x86 implementation target (`restart/skinny/tranches/sk-v12/HANDOFF.md:153-166`). Alpha-F repeats the same refusal (`restart/skinny/tranches/sk-v12/research/alpha/alpha-F-contract-draft.md:194-209`). Alpha-E bounds E4 to generated, CSS-local, output-plane-owned work consumed inside the CSS direct parser, allows tape/event files only for existing sealed/internal bounds, and requires public API diff proof that no directive, BIR variant, BackendShape variant, `UnionTape`, generic event side vector, retained cursor/list, or parser-owned fact slot was added (`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:225-272`). |
 
 ## Findings
 
-### CH2-1 - ACCEPT: V1 fallback-intervention gap is folded
+### CH2-1 - PASS: Generality is proven through the executable CSS L4 path
 
-The current E4 is no longer CSS-only. It is explicitly a selected-baseline
-intervention that may consume an admitted CSS L4, Sheets, or BBNF-self baseline.
-It binds the selected row, independent oracle, equality, same-wave gate
-consumer, and threshold `ceil(W1_selected_baseline_mbps * 1.01)`. This satisfies
-the V1 requirement that S-P3 not invent a fallback intervention outside the
-Alpha shortlist if E2 or E3 admits first.
+V2 no longer proves Lock 14 by prose, W1a report-only infrastructure, or a
+hand witness. The proof shape is executable and gate-consumed: W1a legalizes the
+grammar-derived metadata surface, W1b emits the generated CSS L4 row, and the
+row must compare against lightningcss with same-plane strict equality and full
+provenance. That satisfies the USER PIN's stricter CSS-first generality
+standard.
 
-### CH2-2 - ACCEPT: V1 executable pre-gate gap is folded
+### CH2-2 - PASS: Sheets/BBNF-self cannot displace CSS
 
-Alpha-E, Alpha-F, SYNTHESIS, and HANDOFF now put the known W1b blocker in the
-entry shape: the selected grammar must prove generated emission or a generated
-per-grammar runtime path, module build, runnable fixture/oracle, equality smoke,
-and REDRESS 111 gate consumption before behavior redress. If that cannot pass,
-the packet requires a generator/runtime unblock split or a measured `BLOCKED`
-route. That is an executable fail-closed shape, not a prose Lock 14 claim.
+The folded contract keeps Sheets and BBNF-self out of the Alpha-E shortlist and
+out of the first admission route. They are routed remainder only after a CSS L4
+redress attempt records measured BLOCKED or REJECTED evidence. A CSS preflight
+miss is explicitly not enough to skip to Sheets.
 
-### CH2-3 - ACCEPT: JSON policy remains quarantined
+### CH2-3 - PASS: JSON policy is quarantined from generic code
 
-The revised packet allows JSON work only as a later conditional companion after
-the non-JSON priority succeeds or honestly blocks. It does not route JSON role
-policy into generic crates, does not treat `json_provider` as generality proof,
-and makes JSON-policy leakage a gate/refusal failure.
+The value API audit's leak inventory is reflected in the V2 gates. CSS policy
+facts must originate in grammar source, generated metadata, or per-grammar
+generated modules. Generic crates cannot branch on grammar names, corpus names,
+JSON roles, CSS roles, or layout/string role policy. JSON guard rows remain guard
+state, not the CSS close route.
 
-### CH2-4 - ACCEPT: report-only and witness-only paths fail closed
+### CH2-4 - PASS: `json_templates/generated.rs` is not a polymorphic CSS provider
 
-The packet continues to demote W1a to infrastructure only, rejects
-`sheets_witness` as generated Track 1, requires a generated BBNF-self Track 1
-plus independent oracle, and refuses grammar generalization by prose,
-hand-only parser code, stale witnesses, parse-only rows, or producer-only
-telemetry.
+V2 constrains `json_templates/generated.rs` to JSON parity preservation or
+extraction. The legal CSS path is the grammar-neutral provider/config surface
+plus generated CSS runtime output. That is the specific V1 CH2 fold required for
+the seven Lock 14 leaks.
 
-## CH2 Verdict
+### CH2-5 - PASS: The union/ASM-gen unblocks do not expand public substrate
 
-ACCEPT. The revised SK-V12 Alpha packet now meets CH2 / Lock 14 for the
-selected-grammar pre-gate, fallback intervention variants, JSON-policy
-containment, and non-prose generality proof shape.
+The USER PIN unblocks architectural categories, not public substrate. V2 keeps
+that boundary: E4 is generated CSS-local or uses existing sealed/internal
+`EventGrammar` bounds, and the gate requires a public API diff proving no new
+directive, BIR variant, BackendShape variant, `UnionTape`, generic event side
+vector, retained cursor/list, parser-owned fact slot, sidecar class column, or
+public substrate API.
 
-Changed path:
+## Required Folds
+
+None. The V2 contract passes CH2 / Lock 14 under the USER PIN.
+
+Any later consolidation must preserve this CSS-first wording and must not revert
+to "selected non-JSON grammar" or "CSS/Sheets/BBNF-self preflight-equivalent"
+language. The pin-correct contract authority is the folded `SYNTHESIS.md`,
+`HANDOFF.md`, Alpha-B, Alpha-E, and Alpha-F lines cited above.
+
+## Changed Path
 
 - `restart/skinny/tranches/sk-v12/research/alpha-hardening/V2/CH2.md`

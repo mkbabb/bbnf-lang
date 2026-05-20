@@ -24,7 +24,7 @@ work may land only through the selected wave's entry gate and owner paths.
 8. `restart/skinny/tranches/sk-v11/research/alpha/alpha-F-contract-draft.md`
 9. `restart/skinny/tranches/sk-v10/research/close/close-redress.md`
 10. `skinny/RESULTS.md`
-11. `skinny/REDRESS.md` through REDRESS 113
+11. `skinny/REDRESS.md` through REDRESS 114
 12. `restart/skinny/tranches/sk-v9/research/p3/hardening/HARDENING-S-P3-CONVERGED.md`
 13. `restart/skinny/tranches/sk-v10/SYNTHESIS.md`
 14. `restart/skinny/tranches/sk-v10/HANDOFF.md`
@@ -88,7 +88,7 @@ that S-P1/S-P2 identify on the JSON direct residual surface.
 
 ## 4. Next Move
 
-Next move: ready-for-wave-W3-research.
+Next move: ready-for-wave-W4-research.
 
 W0 is closed by S-P1/W0 authority in SPEC §3. W1a is admitted by REDRESS 111:
 the companion non-JSON gate/report lane exists and does not move JSON rows or
@@ -99,7 +99,12 @@ JSON-profiled and no generated CSS L4 runtime exists. W2 may not create the
 first measurable non-JSON baseline row. W2 is therefore BLOCKED by REDRESS 113:
 the non-JSON generated-intervention axis has no measurable baseline in SK-V11,
 and direct-plane waves may continue only with that blocked route carried
-explicitly into W8/W9 close.
+explicitly into W8/W9 close. W3 is rejected by REDRESS 114: the scalar
+`number_span_emit_slot` implementation passed semantic/gate checks but
+Criterion measured `mesh/direct_to_struct` at 3835 Mbps Track 1 and 3614 Mbps
+Track 2 versus the 8675 Mbps W3 floor. The rejected source patch is saved at
+`/tmp/skv11-waveW3-rejected.patch`, no `RESULTS.md` row moved, and W4 now has a
+measured W3 disposition for its entry gate.
 
 ## 5. Active Wave Packet
 

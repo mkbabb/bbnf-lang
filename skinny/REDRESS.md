@@ -3353,3 +3353,29 @@ perturbation.
   with W2's non-JSON axis explicitly blocked. W9 close must either carry this
   BLOCKED route or be superseded by a later Alpha/Pass-Omega contract that
   creates a generated non-JSON baseline wave with explicit owner authority.
+
+## SK-V11 Wave 3 Numeric Direct Closure Rejection
+
+- Item 114 rejects W3 under `G-W3-NUMERIC-SEQUENCE-DIRECT`. The accepted plan
+  attempted the scalar `number_span_emit_slot` route: factor generated JSON
+  number emission through a const-generic slot helper, add generated direct
+  number semantic coverage, and consume W3 provenance in `gate-json`/`report`.
+- The rejected patch touched only the W3 owner surface and is saved at
+  `/tmp/skv11-waveW3-rejected.patch` (1874 patch lines). The source tree was
+  restored after saving the artifact; no W3 source change remains dirty.
+- Pre-measurement evidence passed:
+  `RUSTFLAGS="-C target-cpu=native" cargo run -p xtask -- check-json`,
+  `RUSTFLAGS="-C target-cpu=native" cargo test -p bbnf-bench --bin gate w3 -- --nocapture`,
+  `RUSTFLAGS="-C target-cpu=native" cargo test -p bbnf-bench generated_direct_number_slots_match_serde -- --nocapture`,
+  and
+  `RUSTFLAGS="-C target-cpu=native" cargo check -p runtime -p codegen`.
+- Probe evidence was mixed and did not justify widening the row set. `mesh`
+  probes stayed near 3.3-3.5 Gbps, and `numbers` showed a Track 1 improvement
+  in one probe while Track 2 regressed.
+- Criterion evidence under `/tmp/skv11-w3-criterion` falsified the selected
+  `mesh/direct_to_struct` floor of 8675 Mbps: Track 1 measured 3835 Mbps, Track
+  2 measured 3614 Mbps, sonic-rs direct measured 4413 Mbps, and serde_json
+  direct measured 3191 Mbps.
+- No `skinny/RESULTS.md` row moves. W3 is rejected with measurement. W4 may
+  dispatch under SPEC Section 8 with REDRESS 113's non-JSON axis block carried
+  forward.

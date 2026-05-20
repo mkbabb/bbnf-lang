@@ -6,32 +6,35 @@ Phase: Plan.
 
 ## Selection
 
-Select a narrow `skinny/RESULTS.md` unchanged-state reconciliation for
+Select a narrow generated-report exactness revalidation for
 `G-W0-PIN-TELEMETRY`.
 
-W0 will add SK-V12 pin revalidation context around the retained JSON telemetry
-manifest. It will not rewrite the gate-consumed `SK-V9-open` manifest rows or
-`sk-v9-open:criterion-fnv64-*` run ids because `gate-json --check-results`
-still consumes those fields as the frozen JSON seed authority.
+W0 will not edit `skinny/RESULTS.md`. Redress preflight proved that
+`RESULTS.md` is exact generated output: adding surrounding prose makes
+`gate-json --check-results` fail stale. The retained `SK-V9-open` manifest
+heading, rows, and `sk-v9-open:criterion-fnv64-*` run ids therefore remain
+the generated JSON seed authority. SK-V12 pin revalidation context is recorded
+in the W0 redress artifact, not inside the generated report.
 
 ## Owner Paths
 
 Editable:
 
-- `skinny/RESULTS.md`
 - `restart/skinny/tranches/sk-v12/research/w0-pin/REDRESS.md`
 
 Read/verify:
 
 - `restart/skinny/tranches/sk-v12/research/w0-pin/`
 - `restart/skinny/tranches/sk-v12/research/p1/`
+- `skinny/RESULTS.md`
 - `skinny/REDRESS.md`
 - `skinny/crates/bbnf-bench/src/bin/gate.rs`
 - `skinny/crates/bbnf-bench/src/report.rs`
 - `skinny/xtask/src/main.rs`
 
 No parser, scanner, SIMD/ASM, codegen behavior, generated runtime output,
-benchmark body, report schema, gate semantic, or row-data edit is selected.
+benchmark body, report schema, gate semantic, generated report, or row-data
+edit is selected.
 
 ## Entry Gate
 
@@ -47,7 +50,6 @@ benchmark body, report schema, gate semantic, or row-data edit is selected.
 
 - pin profile artifacts exist and are cited;
 - the JSON seed state is reconciled;
-- stale status prose no longer implies SK-V9 is the live tranche;
 - retained SK-V9-open manifest rows remain explicitly frozen seed evidence;
 - no behavior/source/gate/report-schema drift occurs;
 - `gate-json --check-results` and `gate-json --with-cost-facts --check-results`
@@ -62,8 +64,9 @@ The same-wave consumer is the existing `gate-json --check-results` result
 snapshot validator plus `gate-json --with-cost-facts --check-results`.
 
 The consumer intentionally requires the retained `SK-V9-open`/`sk-v9-open`
-manifest fields. W0 redress therefore adds SK-V12 pin context in surrounding
-prose and leaves consumed row fields unchanged.
+manifest fields and compares the generated report exactly. W0 redress
+therefore leaves `RESULTS.md` unchanged and records SK-V12 pin context in the
+wave redress artifact.
 
 ## CHALLENGE
 
@@ -76,16 +79,16 @@ gate semantics.
 
 Preserve every JSON row id, outcome, verdict, strictness, validation state,
 Mbps value, Track 1/Track 2 fact, sample count, sample cost, comparator
-evidence, hot-leaf signal, and guard status.
+evidence, hot-leaf signal, guard status, manifest heading, wave id, and run id.
 
 No fresh JSON or CSS admission is claimed. CSS L4 generation, oracle,
 lightningcss comparison, and admission remain W1b-1/W1b-2 work.
 
 ## Revert Protocol
 
-If redress fails, revert the `skinny/RESULTS.md` prose addition and the W0
-redress artifact. No behavior patch exists. Edit `skinny/REDRESS.md` only if a
-measured W0 failure or blocker must be recorded.
+If redress fails, revert the W0 redress artifact. No behavior or generated
+report patch exists. Edit `skinny/REDRESS.md` only if a measured W0 failure or
+blocker must be recorded.
 
 ## Verification
 

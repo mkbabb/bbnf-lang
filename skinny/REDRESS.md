@@ -3336,3 +3336,20 @@ perturbation.
   `rg -n "ensure_runtime_profile|runtime emission currently supports grammar profile|emit_from_source|emit_typed_from_source|json_provider::ensure_runtime_profile" skinny/crates/codegen/src/lib.rs skinny/crates/codegen/src/json_provider.rs`,
   and
   `test ! -e skinny/crates/runtime/src/grammars/css_l4 && test ! -e skinny/crates/runtime/src/grammars/css_l4_declaration_values`.
+
+## SK-V11 Wave 2 Generated CSS L4 Intervention Entry Block
+
+- Item 113 records W2 as `BLOCKED` before implementation dispatch. W2's SPEC
+  entry gate requires W1b to close and requires W2 to consume the W1b generated
+  non-JSON baseline; REDRESS 112 rejected W1b and admitted no
+  `W1b_css_baseline_mbps`.
+- W2 may not create the first measurable non-JSON row. Without the W1b
+  baseline, the W2 exit threshold `ceil(W1b_css_baseline_mbps * 1.01)` is
+  undefined and `G-W2-CSS-GENERATED-INTERVENTION` is not measurable.
+- No source patch, generated parser, SIMD kernel, benchmark row, gate schema,
+  or `skinny/RESULTS.md` row moved. The entry record is archived at
+  `restart/skinny/tranches/sk-v11/research/w2/entry/w2-entry-blocked.md`.
+- Downstream: W3-W8 may continue only as direct-plane closure/fixpoint waves
+  with W2's non-JSON axis explicitly blocked. W9 close must either carry this
+  BLOCKED route or be superseded by a later Alpha/Pass-Omega contract that
+  creates a generated non-JSON baseline wave with explicit owner authority.

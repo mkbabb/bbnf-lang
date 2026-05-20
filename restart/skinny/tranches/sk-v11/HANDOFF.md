@@ -24,7 +24,7 @@ work may land only through the selected wave's entry gate and owner paths.
 8. `restart/skinny/tranches/sk-v11/research/alpha/alpha-F-contract-draft.md`
 9. `restart/skinny/tranches/sk-v10/research/close/close-redress.md`
 10. `skinny/RESULTS.md`
-11. `skinny/REDRESS.md` through REDRESS 111
+11. `skinny/REDRESS.md` through REDRESS 113
 12. `restart/skinny/tranches/sk-v9/research/p3/hardening/HARDENING-S-P3-CONVERGED.md`
 13. `restart/skinny/tranches/sk-v10/SYNTHESIS.md`
 14. `restart/skinny/tranches/sk-v10/HANDOFF.md`
@@ -88,7 +88,7 @@ that S-P1/S-P2 identify on the JSON direct residual surface.
 
 ## 4. Next Move
 
-Next move: ready-for-wave-W2-entry-record.
+Next move: ready-for-wave-W3-research.
 
 W0 is closed by S-P1/W0 authority in SPEC §3. W1a is admitted by REDRESS 111:
 the companion non-JSON gate/report lane exists and does not move JSON rows or
@@ -96,8 +96,10 @@ claim generated non-JSON baseline authority. W1b is rejected by REDRESS 112:
 the accepted CSS L4 direct baseline target could not produce generated non-JSON
 Track 1 inside the W1b owner surface because skinny codegen/runtime remains
 JSON-profiled and no generated CSS L4 runtime exists. W2 may not create the
-first measurable non-JSON baseline row; its entry handling must record the
-blocked route before the direct-plane waves continue.
+first measurable non-JSON baseline row. W2 is therefore BLOCKED by REDRESS 113:
+the non-JSON generated-intervention axis has no measurable baseline in SK-V11,
+and direct-plane waves may continue only with that blocked route carried
+explicitly into W8/W9 close.
 
 ## 5. Active Wave Packet
 

@@ -3430,3 +3430,31 @@ perturbation.
   dispatch only through SPEC Section 10's independent segment-plan entry route:
   CHALLENGE must name a new source delta beyond the already-consuming
   `unescape_string` path, with REDRESS 113, 114, 115, and 116 carried forward.
+
+## SK-V11 Wave 6 Escaped Segment Entry Block
+
+- Item 117 records W6 as `BLOCKED` before implementation dispatch under
+  `G-W6-ESCAPE-SEGMENT-DIRECT`. W6 completed research, selected the
+  `unicode_mixed/direct_to_struct` escaped-segment digest-fold plan, and ran
+  mandatory six-lens CHALLENGE, but the plan did not converge.
+- CH2 accepted the generality frame because the plan carried REDRESS 113
+  forward and made no non-JSON close claim. CH1, CH4, CH5, and CH6 required
+  revision for correctness fixture coverage, repeated probe and guard binding,
+  source-method fail-closed coverage, Track 1 / Track 2 independence, sampled
+  same-wave consumer evidence, and a negative x4 proof clause.
+- CH3 is load-bearing: the proposed `JsonDigestSink::*_source` decoded-byte
+  fold reopens REDRESS 54. It uses the same sink seam, same current
+  `JsonDirectDigest` length/fingerprint output contract, and same
+  allocation-removal claim as the sink-local decoded stats/hash route already
+  rejected, with REDRESS 55/66/69 adjacency. The route is therefore not an
+  admissible W6 source redress.
+- No source patch was attempted. `/tmp/skv11-waveW6-rejected.patch` is an empty
+  marker; no behavior source, generated runtime, SIMD kernel, benchmark body,
+  gate/report schema, or `skinny/RESULTS.md` row moved. The entry record is
+  archived at
+  `restart/skinny/tranches/sk-v11/research/w6/redress/w6-redress-entry-blocked.md`.
+- W6 admits no escaped-segment primitive, no x4 production consumer, no
+  source-method digest fold, no non-JSON proof, and no rejected-but-reusable
+  scalar oracle. W7 may dispatch only through SPEC Section 11's output
+  digest / host-sink route with REDRESS 54/55/66/69, 64, 82, 107, 108, 113,
+  116, and 117 carried forward.

@@ -24,7 +24,7 @@ work may land only through the selected wave's entry gate and owner paths.
 8. `restart/skinny/tranches/sk-v11/research/alpha/alpha-F-contract-draft.md`
 9. `restart/skinny/tranches/sk-v10/research/close/close-redress.md`
 10. `skinny/RESULTS.md`
-11. `skinny/REDRESS.md` through REDRESS 116
+11. `skinny/REDRESS.md` through REDRESS 117
 12. `restart/skinny/tranches/sk-v9/research/p3/hardening/HARDENING-S-P3-CONVERGED.md`
 13. `restart/skinny/tranches/sk-v10/SYNTHESIS.md`
 14. `restart/skinny/tranches/sk-v10/HANDOFF.md`
@@ -88,7 +88,7 @@ that S-P1/S-P2 identify on the JSON direct residual surface.
 
 ## 4. Next Move
 
-Next move: ready-for-wave-W6-research.
+Next move: ready-for-wave-W7-research.
 
 W0 is closed by S-P1/W0 authority in SPEC §3. W1a is admitted by REDRESS 111:
 the companion non-JSON gate/report lane exists and does not move JSON rows or
@@ -114,9 +114,20 @@ measured W4 disposition into its entry gate. W5 is blocked by REDRESS 116 before
 source redress: CHALLENGE V2 accepted the release-mode opening-quote guard and
 floor-level probe trigger, but kept malformed-string parity and Track 2 cost at
 REVISE. No W5 source patch was attempted; `/tmp/skv11-waveW5-rejected.patch` is
-an empty marker, no `RESULTS.md` row moved, and W6 may dispatch only through
-SPEC Section 10's independent escaped-segment route with a new source delta
-beyond the already-consuming `unescape_string` path.
+an empty marker, no `RESULTS.md` row moved, and W6 dispatched only through SPEC
+Section 10's independent escaped-segment route with a new source delta beyond
+the already-consuming `unescape_string` path. W6 is blocked by REDRESS 117
+before source redress: the selected `unicode_mixed/direct_to_struct`
+escaped-segment digest-fold plan made no non-JSON close claim and CH2 accepted
+that frame, but CH3 found the proposed `JsonDigestSink::*_source` decoded-byte
+fold reopened REDRESS 54 with REDRESS 55/66/69 adjacency. CH1, CH4, CH5, and
+CH6 also required revisions around fixture parity, probe/guard binding,
+source-method fail-closed coverage, Track 1 / Track 2 independence, sampled
+consumer evidence, and negative x4 evidence. No W6 source patch was attempted;
+`/tmp/skv11-waveW6-rejected.patch` is an empty marker, no `RESULTS.md` row
+moved, and W7 may dispatch only through SPEC Section 11's output digest /
+host-sink route with REDRESS 54/55/66/69, 64, 82, 107, 108, 113, 116, and 117
+carried forward.
 
 ## 5. Active Wave Packet
 

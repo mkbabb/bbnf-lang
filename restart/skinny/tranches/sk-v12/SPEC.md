@@ -1,12 +1,15 @@
-# SK-V12 SPEC - S-P3 Wave Plan Draft
+# SK-V12 SPEC - S-P3 Wave Plan
 
 Date: 2026-05-20.
 
-Status: S-P3 V5 planning draft. This file is not implementation dispatch
-authority until S-P3 CHALLENGE converges and the orchestrator promotes the
-packet. It folds the SK-V12 Pass Alpha goalset, converged S-P1 profile,
+Status: S-P3 CONVERGED under V5 hardening. This file is implementation dispatch
+authority for the W0-W4 wave sequence after the orchestrator updates
+`HANDOFF.md` to `ready-for-wave-W0`. Every wave still requires its own SPEC
+entry gate and wave-triumvirate protocol.
+
+This SPEC folds the SK-V12 Pass Alpha goalset, converged S-P1 profile,
 converged S-P2 research, the P3-F draft, and the S-P3 CHALLENGE hardening
-dispositions through V4 into a W0-W4 wave plan.
+dispositions through V5 into a W0-W4 wave plan.
 
 Authority:
 
@@ -29,9 +32,8 @@ Authority:
 
 Dispatch lock:
 
-- No SK-V12 implementation wave dispatches from this S-P3 V5 draft.
-- W0-W4 become dispatchable only after S-P3 convergence under
-  `restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md`.
+- W0 is the first dispatchable SK-V12 implementation wave.
+- W1-W4 dispatch only after their dependency and entry gates pass.
 - Every behavior wave still requires its own wave-triumvirate research, plan,
   CHALLENGE when required, and redress per
   `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`.
@@ -674,7 +676,7 @@ Specific REDRESS blocks:
 
 ## Section 9 - G-Alpha And Dispatch Scope
 
-This draft presents the intended SK-V12 dispatch scope:
+This SPEC presents the SK-V12 dispatch scope:
 
 - W0 is first after S-P3 convergence.
 - W1 is the first behavior wave and must create exactly one generated non-JSON
@@ -685,5 +687,5 @@ This draft presents the intended SK-V12 dispatch scope:
   direct reopen gate passes.
 - W4 reconciles close and presents G-Alpha.
 
-No SK-V12 implementation dispatches from S-P3 alone. No wave may start unless
-its entry gate passes. No close occurs without measured W1/W2 disposition.
+No wave may start unless its entry gate passes. No close occurs without
+measured W1/W2 disposition.

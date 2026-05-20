@@ -5,10 +5,10 @@ Date: 2026-05-20.
 Status: Pass Alpha SK-V11 -> SK-V12 converged under V2 hardening and G-Alpha
 PASS. SK-V12 S-P1 Profile converged under V5 hardening with two consecutive
 all-ACCEPT cycles. SK-V12 S-P2 Research converged under V3 hardening with two
-consecutive all-ACCEPT cycles. SK-V11 closed under REDRESS 120 as a measured
-fixpoint with unchanged overall `N-direct / NoGo`. SK-V12 starts from that
-evidence. This handoff does not create `SPEC.md` or `DISPATCH-PROMPT.md`; S-P3
-owns those files after S-P3 converges.
+consecutive all-ACCEPT cycles. SK-V12 S-P3 Synthesis-Plan converged under V5
+hardening with two consecutive all-ACCEPT cycles and promoted `SPEC.md` plus
+`DISPATCH-PROMPT.md`. SK-V11 closed under REDRESS 120 as a measured fixpoint
+with unchanged overall `N-direct / NoGo`. SK-V12 starts from that evidence.
 
 ## 1. Read First
 
@@ -26,13 +26,16 @@ owns those files after S-P3 converges.
 12. `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-replay.tsv`
 13. `restart/skinny/tranches/sk-v12/research/p2/hardening/HARDENING-S-P2-CONVERGED.md`
 14. The six S-P2 research artefacts under `restart/skinny/tranches/sk-v12/research/p2/`
-15. `restart/skinny/tranches/sk-v11/research/close/close-redress.md`
-16. `restart/skinny/tranches/sk-v11/SYNTHESIS.md`
-17. `restart/skinny/tranches/sk-v11/HANDOFF.md`
-18. `restart/skinny/tranches/sk-v11/SPEC.md`
-19. `restart/skinny/tranches/sk-v11/DISPATCH-PROMPT.md`
-20. `skinny/RESULTS.md`
-21. `skinny/REDRESS.md` through REDRESS 120
+15. `restart/skinny/tranches/sk-v12/research/p3/hardening/HARDENING-S-P3-CONVERGED.md`
+16. `restart/skinny/tranches/sk-v12/SPEC.md`
+17. `restart/skinny/tranches/sk-v12/DISPATCH-PROMPT.md`
+18. `restart/skinny/tranches/sk-v11/research/close/close-redress.md`
+19. `restart/skinny/tranches/sk-v11/SYNTHESIS.md`
+20. `restart/skinny/tranches/sk-v11/HANDOFF.md`
+21. `restart/skinny/tranches/sk-v11/SPEC.md`
+22. `restart/skinny/tranches/sk-v11/DISPATCH-PROMPT.md`
+23. `skinny/RESULTS.md`
+24. `skinny/REDRESS.md` through REDRESS 120
 
 ## 2. Current State
 
@@ -133,13 +136,11 @@ Refuse any dispatch that:
 
 ## 7. Next Move
 
-Next move: ready-for-S-P3-synthesis-sk-v12.
+Next move: ready-for-wave-W0.
 
-S-P3 should consume the converged S-P1 profile plus converged S-P2 research,
-select the shortlist only from S-P2-surviving candidates, preserve the
-generated non-JSON baseline as the first material axis, and produce
-`SPEC.md` plus `DISPATCH-PROMPT.md` only after S-P3's own CHALLENGE
-converges.
+Dispatch SK-V12 W0 per `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`
+and `restart/skinny/tranches/sk-v12/SPEC.md` Section 3. W0 locks the
+SK-V12-open telemetry/report/gate surface before any behavior wave dispatches.
 
 G-Alpha presentation seed: target one generated non-JSON baseline plus the
 same row's intervention delta; carry JSON direct residuals as pre-blocked

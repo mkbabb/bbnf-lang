@@ -1,178 +1,214 @@
 # SK-V12 P2-C: Host-Arch ASM/SIMD Esoterica
 
-Pass: S-P2 Research. Cycle: V12.
+Pass: S-P2 Research. Cycle: V1.
 Date: 2026-05-20.
-Scope: AArch64/Apple Silicon instruction inventory for SK-V12 accepted P1 hot leaves; x86 is context only.
+Scope: aarch64/Apple Silicon only; inventory ARMv9.2-A/NEON/ASM candidates against the pin-era S-P1 hot leaves. x86 is out of scope.
 Output: this file.
 P1 hot-leaf antecedents: bounded_plain_string_scan; container_dispatch; unicode_escape_hex_decode; number_digit_span; simd_movemask; string_escape_decode; output_digest_hash; ascii_whitespace_skip; typed_direct_projection; serde_json_oracle_read_parse.
-Lock surface: Lock 1 + Lock 14.
+Lock surface: both - Lock 1 for transient masks versus retained substrate, Lock 14 for grammar-neutral generic crates; Lock 16 is the SIMD/ASM admission gate.
 
-## §1 — Findings (concrete; file:line on bbnf claims, citation on external claims)
+## §1 - Findings (concrete; file:line on bbnf claims, citation on external claims)
 
-1. S-P2 is a read-only research pass against source, and this artifact must name candidates without selecting waves or landing code. PASS-2 defines P2-C as the host-arch/ASM/SIMD lane and requires candidate shape, scalar-ref status, grammar-neutrality, risks, and primary sources (`restart/prompts/skinny/PASS-2-RESEARCH.md:15`, `restart/prompts/skinny/PASS-2-RESEARCH.md:21`, `restart/prompts/skinny/PASS-2-RESEARCH.md:55`).
+1. The live P1 authority for P2-C is the pin-aware SK-V12 S-P1 convergence file, not pre-pin prose. It records the Apple Silicon host/toolchain and native build flags (`restart/skinny/tranches/sk-v12/research/p1/hardening/HARDENING-S-P1-CONVERGED.md:27-48`), names the ten accepted hot-family antecedents (`restart/skinny/tranches/sk-v12/research/p1/hardening/HARDENING-S-P1-CONVERGED.md:60-64`), and explicitly says JSON-only profile telemetry can nominate S-P2 families but does not prove CSS L4, Sheets, or BBNF-self behavior (`restart/skinny/tranches/sk-v12/research/p1/hardening/HARDENING-S-P1-CONVERGED.md:73-76`).
 
-2. The live SK-V12 authority is still `N-direct / NoGo`: direct has only JSON product rows and typed has accepted rows, but generated non-JSON direct/typed baseline remains first priority before behavior waves (`restart/skinny/tranches/sk-v12/research/p1/hardening/HARDENING-S-P1-CONVERGED.md:41`, `restart/skinny/tranches/sk-v12/research/p1/hardening/HARDENING-S-P1-CONVERGED.md:44`, `restart/skinny/tranches/sk-v12/HANDOFF.md:55`). JSON-only telemetry may nominate primitive families but does not prove CSS/Sheets/BBNF-self generality (`restart/skinny/tranches/sk-v12/research/p1/hardening/HARDENING-S-P1-CONVERGED.md:60`).
+2. The top self-time families are split by Track 1/Track 2 so oracle work is not reused as generated parser evidence: parse Track 1 names bounded_plain_string_scan, container_dispatch, number_digit_span, simd_movemask, and unicode_escape_hex_decode; direct Track 1 is output_digest_hash; direct Track 2 carries string_escape_decode; typed Track 1 carries typed_direct_projection (`restart/skinny/tranches/sk-v12/research/p1/p1e-hot-leaf-attribution.md:32-45`). CSS L4 remains absent from the hot-leaf ledger because no generated CSS runtime or lightningcss same-plane comparator exists yet (`restart/skinny/tranches/sk-v12/research/p1/p1e-hot-leaf-attribution.md:47-50`).
 
-3. Accepted P1 antecedents for P2-C are the ten hot families listed in the converged P1 file; the same list also states that samply artifacts are retained as artifact-only while xctrace XML self-time is authority (`restart/skinny/tranches/sk-v12/research/p1/hardening/HARDENING-S-P1-CONVERGED.md:47`, `restart/skinny/tranches/sk-v12/research/p1/hardening/HARDENING-S-P1-CONVERGED.md:52`). P1E maps those families to local source anchors, including string scan, escape decode, unicode hex decode, number span, whitespace skip, container dispatch, movemask, and digest hashing (`restart/skinny/tranches/sk-v12/research/p1/p1e-hot-leaf-attribution.md:205`).
+3. USER PIN D3 and D4 reopen categories, not historical implementations. D3 rescinds the category-level union/substrate preblocks while preserving REDRESS 96/97/98 as measured-rejected variants and requiring a prior-REDRESS citation, material differential, scalar/parity/checkasm, same-wave consumer, and CHALLENGE pass for any new implementation (`restart/skinny/tranches/sk-v12/USER-PIN-W1-CSS-L4-SOTA.md:39-56`). D4 does the same for REDRESS 88 PMULL prefix-XOR, REDRESS 89 CSSC CTZ bulk consumer, and REDRESS 90 canary hardening-as-row-movement (`restart/skinny/tranches/sk-v12/USER-PIN-W1-CSS-L4-SOTA.md:58-69`).
 
-4. Lock 1 allows transient SIMD mask streams but forbids retained parallel substrates/sidecars; Lock 14 requires grammar-general generic crates; Lock 16 already admits generic aarch64 ideas for UDOT/SDOT, LD4+TBL classifier shape, and SHA3 ternary bitwise instructions, with scalar parity/corpus parity required for SIMD primitives (`restart/locks/LOCKS.md:52`, `restart/locks/LOCKS.md:78`, `restart/locks/LOCKS.md:92`, `restart/locks/LOCKS.md:112`).
+4. USER PIN D5 turns the aarch64 orphan set into a close criterion. The five carried orphans are `bitmap_prefix_xor_64`, `bitmap_next_set_bit`, `bulk_emit_positions_64`, `byte_context`, and `cache_hints`; each is wave-eligible only if a same-commit consumer wires it, and the campaign target is zero orphan kernels by SK-V12 close (`restart/skinny/tranches/sk-v12/USER-PIN-W1-CSS-L4-SOTA.md:71-78`). The handoff repeats the same zero-orphan ADMIT/FIXPOINT condition (`restart/skinny/tranches/sk-v12/HANDOFF.md:77-96`).
 
-5. Local aarch64 code already contains TBL/TBX-adjacent classifier material and TBL string/hex proofs: `classify_tbl4` builds a low6 table and uses `vqtbl4q_u8` for chunk/block classification (`skinny/crates/bbnf-simd/src/aarch64/classify_tbl4.rs:7`, `skinny/crates/bbnf-simd/src/aarch64/classify_tbl4.rs:22`, `skinny/crates/bbnf-simd/src/aarch64/classify_tbl4.rs:47`); `match_tiny_plain_string` uses a TBL probe but active tiny-string routes remain REDRESS-bound (`skinny/crates/bbnf-simd/src/aarch64/match_tiny_plain_string.rs:63`, `skinny/REDRESS.md:324`, `skinny/REDRESS.md:1973`); `unescape_uxxxx` has scalar, x1, and x4 NEON TBL decode bodies (`skinny/crates/bbnf-simd/src/aarch64/unescape_uxxxx.rs:40`, `skinny/crates/bbnf-simd/src/aarch64/unescape_uxxxx.rs:74`, `skinny/crates/bbnf-simd/src/aarch64/unescape_uxxxx.rs:125`).
+5. The `escape_mask_64` correctness bug is a hard prerequisite before any new SIMD admission. The pin requires verification and resolution before new SIMD admission (`restart/skinny/tranches/sk-v12/USER-PIN-W1-CSS-L4-SOTA.md:97-106`), the handoff makes W2 the correctness gate and says SIMD remains blocked on failure (`restart/skinny/tranches/sk-v12/HANDOFF.md:125-140`), and CHECKASM records the falsifier: xorshift seed `0xCAFEF00DBAADF00D`, iter 0, 128-byte JSON-pool buffer, with a state-handoff mismatch between `escape_mask_64`'s `new_carry` and `scan_json_tail`'s `escaped` argument (`skinny/crates/bbnf-simd/CHECKASM-REPORT.md:102-126`).
 
-6. Local movemask and wide-shift support is real but support-level: the shared movemask uses `vshrn_n_u16`, `vsri_n_u8`, `vzip1q_u8`, and scalar pack (`skinny/crates/bbnf-simd/src/aarch64/movemask.rs:4`); string boundary context uses `vextq_u8` (`skinny/crates/bbnf-simd/src/aarch64/byte_context.rs:3`); `string_block` currently has a 16-byte scalar reference and a NEON compare fan-out (`skinny/crates/bbnf-simd/src/aarch64/string_block.rs:31`, `skinny/crates/bbnf-simd/src/aarch64/string_block.rs:57`).
+6. Lock 1 allows transient SIMD masks but forbids parallel retained substrates: if structural offsets are retained, the projection is the tape (`restart/locks/LOCKS.md:52`). Lock 14 forbids grammar-name branches and grammar-specific code in generic crates including `bbnf-simd`, `parse-that`, runtime, codegen, and path crates (`restart/locks/LOCKS.md:78`). Lock 16 allows aarch64 TBL, movemask, loads/shifts, UDOT/SDOT, LD4-interleaved classification, SHA3 ternary bitwise, set-membership, and cache hints, but requires scalar parity and corpus parity for every primitive (`restart/locks/LOCKS.md:87-112`).
 
-7. Local UDOT/DotProd support exists only as a narrow four-digit primitive: `parse_4_digits` falls back to scalar unless `dotprod` is enabled, and the inline-asm body uses `udot` (`skinny/crates/bbnf-simd/src/aarch64/digit_mac.rs:5`, `skinny/crates/bbnf-simd/src/aarch64/digit_mac.rs:25`). ACLE defines `__ARM_FEATURE_DOTPROD` for dot-product data-manipulation instructions and maps `vdotq_u32` to A64 `UDOT` (E2, E3).
+7. The local aarch64 inventory is mixed: several useful kernels exist, but several are scalar delegates or support-only. `classify_tbl4` builds low-6 tables and uses `vqtbl4q_u8` plus movemask over four stripes (`skinny/crates/bbnf-simd/src/aarch64/classify_tbl4.rs:7-43`, `skinny/crates/bbnf-simd/src/aarch64/classify_tbl4.rs:47-65`). `byte_class_from_eq_set_64_neon` has a real NEON fan-out body (`skinny/crates/bbnf-simd/src/aarch64/byte_class_from_eq_set_64.rs:31-72`), while `byte_class_from_table_64_neon`, `bitmap_prefix_xor_64_neon`, `bitmap_next_set_bit_neon`, `bulk_emit_positions_64_neon`, and `eob_pad_clamp_neon` delegate to scalar (`skinny/crates/bbnf-simd/src/aarch64/byte_class_from_table_64.rs:1-4`, `skinny/crates/bbnf-simd/src/aarch64/bitmap_prefix_xor_64.rs:1-4`, `skinny/crates/bbnf-simd/src/aarch64/bitmap_next_set_bit.rs:1-4`, `skinny/crates/bbnf-simd/src/aarch64/bulk_emit_positions_64.rs:1-4`, `skinny/crates/bbnf-simd/src/aarch64/eob_pad_clamp.rs:1-6`).
 
-8. Local bitmap/mask primitives are scalar delegates on aarch64 today: table classification, next set bit, prefix xor, and bulk emit all call scalar bodies (`skinny/crates/bbnf-simd/src/aarch64/byte_class_from_table_64.rs:1`, `skinny/crates/bbnf-simd/src/aarch64/bitmap_next_set_bit.rs:1`, `skinny/crates/bbnf-simd/src/aarch64/bitmap_prefix_xor_64.rs:1`, `skinny/crates/bbnf-simd/src/aarch64/bulk_emit_positions_64.rs:1`). Existing checkasm tests already define scalar parity expectations for these shapes (`skinny/crates/bbnf-simd/tests/checkasm_byte_class_from_table_64.rs:13`, `skinny/crates/bbnf-simd/tests/checkasm_bitmap_next_set_bit.rs:5`, `skinny/crates/bbnf-simd/tests/checkasm_bitmap_prefix_xor_64.rs:5`, `skinny/crates/bbnf-simd/tests/checkasm_bulk_emit_positions_64.rs:5`).
+8. TBL/TBX is the strongest row-relevant Apple Silicon surface because it maps directly to byte-set classification, bounded string scanning, whitespace/layout skipping, and hex-nibble decode. In-tree TBL appears in `classify_tbl4` and `unescape_uxxxx` (`skinny/crates/bbnf-simd/src/aarch64/classify_tbl4.rs:29-43`, `skinny/crates/bbnf-simd/src/aarch64/unescape_uxxxx.rs:81-120`, `skinny/crates/bbnf-simd/src/aarch64/unescape_uxxxx.rs:123-166`). The official Arm Neon Intrinsics Reference maps `vqtbl4q_u8` to A64 `TBL` and `vqtbx4q_u8` to A64 `TBX` [ACLE-TBL-TBX].
 
-9. PMULL and CSSC CTZ are inventory items, not open default routes. REDRESS 88 rejects PMULL as the default `bitmap_prefix_xor_64` hot body after row regression; REDRESS 89 rejects CSSC CTZ bulk consumer/canary fold despite correctness and asm proof (`skinny/REDRESS.md:2510`, `skinny/REDRESS.md:2542`). ACLE maps `vmull_p64` to `PMULL`, and ACLE defines `__ARM_FEATURE_CSSC` as including CTZ (E4, E2).
+9. UDOT/DotProd is present only as a narrow four-digit proof. `parse_4_digits` validates bytes and dispatches to a `target_feature = "dotprod"` body when available; that body emits inline `udot` (`skinny/crates/bbnf-simd/src/aarch64/digit_mac.rs:4-49`). The current parser's digit-run scanner is still SWAR/scalar over 8/4/2-byte blocks and scalar tails (`skinny/crates/parse-that-regex/src/number/mod.rs:105-162`, `skinny/crates/parse-that-regex/src/number/mod.rs:164-223`). Arm ACLE maps `vdotq_u32` to A64 `UDOT` and defines the dotprod feature macro [ACLE-UDOT].
 
-10. Structured LD4 is not currently implemented in local aarch64 modules. `quad_load` uses `vld1q_u8_x4`, which loads four contiguous vectors, not interleaved `LD4` (`skinny/crates/bbnf-simd/src/aarch64/quad_load.rs:3`). ACLE maps `vld4q_u8` to `LD4 {Vt.16B - Vt4.16B},[Xn]`, so any LD4 path needs a fresh scalar deinterleave oracle and same-pass consumer proof (E5).
+10. Wide-shift and movemask support exists, but it is a support row unless consumed by a scanner. The movemask uses `vshrn_n_u16`, `vsri_n_u8`, and `vzip1q_u8` (`skinny/crates/bbnf-simd/src/aarch64/movemask.rs:3-25`); byte-context uses `vextq_u8` for cross-chunk one-byte context (`skinny/crates/bbnf-simd/src/aarch64/byte_context.rs:1-11`). Arm ACLE maps these to `SHRN`, `SRI`, `ZIP1`, and `EXT` families [ACLE-SHIFT-EXT].
 
-11. SHA3 ternary bitwise instructions are inventory/support only until a P1 hot leaf exposes a real three-input boolean fold. ACLE gates SHA3 intrinsics with `__ARM_FEATURE_SHA3` and maps `veor3q_u8` to `EOR3`; `vbcaxq_u8` maps to `BCAX` (E2, E6). No local aarch64 SHA3/EOR3/BCAX primitive body exists in the audited modules (`skinny/crates/bbnf-simd/src/aarch64/mod.rs:1`).
+11. LD4/interleaves are not implemented locally. `quad_load` is `vld1q_u8_x4`, a contiguous four-vector load, not structured `LD4` deinterleave (`skinny/crates/bbnf-simd/src/aarch64/quad_load.rs:1-6`). The official Arm Neon Intrinsics Reference maps `vld4q_u8` to `LD4 {Vt.16B - Vt4.16B},[Xn]` [ACLE-LD4]. A legal LD4 route needs a scalar deinterleave oracle and a real existing interleaved stream; manufacturing a second stream violates Lock 1.
 
-12. Secondary x86 is context only for SK-V12. The handoff explicitly refuses using x86 as the implementation target or as an excuse to defer Apple Silicon/aarch64 work (`restart/skinny/tranches/sk-v12/HANDOFF.md:116`, `restart/skinny/tranches/sk-v12/HANDOFF.md:128`).
+12. PMULL and CSSC CTZ are category-unblocked but historically blocked as default production routes. REDRESS 88 rejected PMULL as the default `bitmap_prefix_xor_64` hot body after parse regressions despite correctness and asm proof (`skinny/REDRESS.md:2510-2540`). REDRESS 89 rejected the CTZ/bulk consumer after correctness and asm proof because refreshed rows regressed (`skinny/REDRESS.md:2542-2585`). Under D4, new consumers may dispatch only if they are materially different from those defaults.
 
-## §2 — Candidate primitives (each: shape + scalar-ref status + arch + P1 antecedent)
+13. SHA3 `EOR3`/`BCAX`, CSSC extrema, CNT/ADDV popcount/reduction, PRFM/STNP cache hints, and BF16 matrix instructions are inventory until a P1 hot leaf and same-wave consumer exist. No local aarch64 SHA3 body exists in the module tree (`skinny/crates/bbnf-simd/src/aarch64/mod.rs:1-32`). `cache_hints` contains inline `prfm` and `stnp` (`skinny/crates/bbnf-simd/src/aarch64/cache_hints.rs:1-33`) but the coverage audit classifies it as orphan support with no same-wave consumer (`restart/skinny/tranches/sk-v12/research/skv12-aarch64-simd-coverage-audit.md:58-61`).
 
-Current candidate count: 6. ISA-inventory / non-selectable support count: 2.
-No wave is selected here. V1 CHALLENGE demoted LD4 interleaved
-classification and SHA3 ternary boolean fold from current SK-V12 candidates
-because S-P1 does not name an existing interleaved byte stream or concrete
-three-input boolean fold source line.
+## §2 - Candidate primitives (each: shape + scalar-ref status + arch + P1 antecedent)
 
-### C1. `a64_tbl_byte_class_mask64`
+### C1. `a64_tbl_tbx_byte_class_mask64`
 
-- Shape: grammar-supplied byte-set or 64-entry low6 table over a 64-byte block, using A64 TBL/TBX-family lookup plus equality recheck where needed, returning transient masks for caller-local scan/dispatch.
-- Scalar-ref status: current scalar refs exist for eq-set and table classification (`byte_class_from_eq_set_64_scalar`, `byte_class_from_table_64_scalar`); current aarch64 eq-set has a body, table path is still a scalar delegate (`skinny/crates/bbnf-simd/src/aarch64/byte_class_from_eq_set_64.rs:26`, `skinny/crates/bbnf-simd/src/scalar/byte_class_from_table_64.rs:1`, `skinny/crates/bbnf-simd/src/aarch64/byte_class_from_table_64.rs:1`).
-- Checkasm expectation: extend existing checkasm density/alignment/corpus coverage to prove table-body parity, high-bit behavior, nonmember preservation, and no retained sidecar (`skinny/crates/bbnf-simd/tests/checkasm_byte_class_from_eq_set_64.rs:156`, `skinny/crates/bbnf-simd/tests/checkasm_byte_class_from_table_64.rs:13`).
-- Arch/instruction: AArch64 TBL/TBX (`vqtbl4q_u8`, optionally `vqtbx4q_u8`) per ACLE (E1).
-- P1 antecedent: bounded_plain_string_scan; ascii_whitespace_skip; container_dispatch; simd_movemask.
-- Same-wave consumer: a generated byte-set caller such as layout skip,
-  delimiter dispatch, or string-special scan must consume the transient mask in
-  the same wave.
+- Shape: classify 16-byte or 64-byte windows from a grammar-supplied byte set/table using `TBL` low-6 lookup, equality recheck, and optional `TBX` default-preserve behavior; return transient masks only.
+- Scalar-ref status: `byte_class_from_eq_set_64_scalar` and `byte_class_from_table_64_scalar` are executable specs (`skinny/crates/bbnf-simd/src/scalar/byte_class_from_eq_set_64.rs:20-38`, `skinny/crates/bbnf-simd/src/scalar/byte_class_from_table_64.rs:1-10`). `classify_tbl4` and eq-set have NEON bodies; table64 currently delegates to scalar.
+- Arch: aarch64 NEON `TBL`/`TBX`; Apple Silicon only.
+- P1 antecedent: bounded_plain_string_scan; container_dispatch; simd_movemask; ascii_whitespace_skip.
+- Micro-proof need: strict checkasm over offsets, tails, low-6 collisions, high-bit bytes, empty/full sets, CSS/Sheets/BBNF byte sets, and corpus parity. Existing eq-set/table tests cover much of the shape (`skinny/crates/bbnf-simd/tests/checkasm_byte_class_from_eq_set_64.rs:156-216`, `skinny/crates/bbnf-simd/tests/checkasm_byte_class_from_table_64.rs:13-49`) but a real table64 NEON body would need refreshed parity.
+- Same-wave consumer: generated byte-set caller such as CSS L4 layout/trivia skip, delimiter dispatch, or bounded string special scan. Standalone classifier lift is proof-only.
 
-### I1. `a64_ld4_interleaved_classifier64x4` — ISA inventory, not current candidate
+### C2. `a64_ld4_interleaved_classifier64x4`
 
-- Shape: for a proven existing interleaved byte stream, use `vld4q_u8`/LD4 to deinterleave four channels, classify each channel with TBL/table/equality logic, and return four transient channel masks.
-- Scalar-ref status: no local LD4-specific scalar oracle exists; `quad_load` covers `vld1q_u8_x4`, not LD4 (`skinny/crates/bbnf-simd/src/aarch64/quad_load.rs:3`, `skinny/crates/bbnf-simd/tests/aarch64_primitives.rs:71`).
-- Checkasm expectation: add scalar `ld4_deinterleave_classify` oracle with alignment/tail/channel-order tests, then compare four masks against the scalar byte-table/equality refs. Must also prove the consumer reads one canonical stream and does not create sidecar storage.
-- Arch/instruction: AArch64 structured load LD4 (`vld4q_u8`) plus TBL/TBX as needed (E5, E1).
-- P1 antecedent: none sufficient for SK-V12 candidate eligibility. The broad
-  classifier leaves do not prove a hot canonical interleaved stream.
-- Same-wave consumer: non-selectable until a fresh profile names an existing
-  interleaved stream and the same wave supplies a scalar deinterleave oracle
-  plus generated consumer.
+- Shape: if a canonical stream is already naturally four-way interleaved, use `LD4` to deinterleave four channels, classify each channel, and return four transient masks.
+- Scalar-ref status: absent today. `quad_load` proves only contiguous `vld1q_u8_x4`, not LD4 deinterleave (`skinny/crates/bbnf-simd/src/aarch64/quad_load.rs:1-6`; smoke test at `skinny/crates/bbnf-simd/tests/aarch64_primitives.rs:71-82`).
+- Arch: aarch64 structured load `LD4` plus NEON classify; Apple Silicon only.
+- P1 antecedent: container_dispatch and simd_movemask are adjacent, but no S-P1 hot leaf proves a real interleaved source stream.
+- Micro-proof need: scalar deinterleave+classify oracle, channel-order checks, alignment and tail coverage, and a proof that no sidecar/intermediate retained stream is introduced.
+- Same-wave consumer: non-selectable until a generated parser or scanner already reads a canonical interleaved stream in the same loop. If a wave first creates the interleaving just to feed LD4, reject under Lock 1.
 
-### C3. `a64_udot_digit_span`
+### C3. `a64_udot_digit_run_span`
 
-- Shape: decode/validate fixed-size digit groups inside longer numeric spans using byte subtract/validation plus UDOT weighted accumulation; return consumed count and partial value/status, leaving overflow and grammar policy scalar/caller-owned.
-- Scalar-ref status: local `parse_4_digits` has scalar fallback and UDOT body; number-span scalar anchors live in parse-that-regex (`skinny/crates/bbnf-simd/src/aarch64/digit_mac.rs:5`, `skinny/crates/bbnf-simd/src/aarch64/digit_mac.rs:25`, `restart/skinny/tranches/sk-v12/research/p1/p1e-hot-leaf-attribution.md:205`).
-- Checkasm expectation: expand beyond current primitive tests to cover all non-digit offsets, mixed valid/invalid groups, tails, overflow boundaries, signed/unsigned policy separation, and canary/register guard parity (`skinny/crates/bbnf-simd/tests/aarch64_primitives.rs:168`, `skinny/crates/bbnf-simd/tests/checkasm_common.rs:50`).
-- Arch/instruction: AArch64 DotProd UDOT, gated by `__ARM_FEATURE_DOTPROD` (E2, E3).
+- Shape: validate and accumulate fixed-size ASCII digit groups with UDOT weights, returning consumed count, partial value, and status while sign, exponent, radix, suffix/unit, overflow, and materialization policy remain caller-owned.
+- Scalar-ref status: current `parse_4_digits` has a scalar fallback and UDOT body (`skinny/crates/bbnf-simd/src/aarch64/digit_mac.rs:4-49`). The larger digit-run oracle is parse-that-regex's scanner and accumulation path (`skinny/crates/parse-that-regex/src/number/mod.rs:31-162`).
+- Arch: aarch64 DotProd `UDOT`; feature-gated by dotprod.
 - P1 antecedent: number_digit_span; typed_direct_projection.
-- Same-wave consumer: a generated number/literal span consumer must use the
-  digit result in the same wave while leaving sign, radix, exponent, overflow,
-  and materialization policy in generated code.
+- Micro-proof need: exhaustive valid/invalid digit groups, non-digit offset sweeps, unaligned loads, tails, long runs, prefix accumulation/truncation, and JSON/CSS/Sheets/BBNF numeric slices. Current `aarch64_primitives` coverage is only a smoke test (`skinny/crates/bbnf-simd/tests/aarch64_primitives.rs:167-184`).
+- Same-wave consumer: parse-that Layer-1 digit-run primitive or generated number/literal consumer that replaces a real hot digit loop in the same wave. It must not reopen the JSON numeric slot route without fresh material evidence.
 
 ### C4. `a64_wide_string_special_scan64`
 
-- Shape: widen the 16-byte string-special block into a 64-byte transient scan returning masks or first offset for quote, backslash, control byte, and non-ASCII; use compare fan-out, TBL byte-class support, movemask, and wide-shift boundary handling.
-- Scalar-ref status: current scalar and NEON string block are 16-byte only (`skinny/crates/bbnf-simd/src/aarch64/string_block.rs:31`, `skinny/crates/bbnf-simd/src/aarch64/string_block.rs:57`).
-- Checkasm expectation: add 64-byte scalar oracle; exhaustively cover every special byte position, multi-hit priority, tails, misalignment, cross-block escape context, and corpus parity. Caller benchmark must report c/B and row Mbps deltas because REDRESS 61 rejected prior long-string production without row movement (`skinny/REDRESS.md:1382`).
-- Arch/instruction: AArch64 NEON compare, TBL, CNT/ADDV or movemask, EXT/SHRN/SRI/ZIP1 wide-shift support (E1, E7, E8, E9).
+- Shape: widen the current 16-byte string-special scanner to a 64-byte four-stripe result for terminator, escape, control, and non-ASCII masks; may use compare fan-out, TBL byte classes, movemask, `EXT` byte context, and first-interesting extraction.
+- Scalar-ref status: 16-byte scalar and NEON bodies exist (`skinny/crates/bbnf-simd/src/aarch64/string_block.rs:30-72`), with parity in `checkasm_parity` (`skinny/crates/bbnf-simd/tests/checkasm_parity.rs:617-640`). A 64-byte scalar oracle does not exist.
+- Arch: aarch64 NEON compare/TBL/wide-shift/movemask.
 - P1 antecedent: bounded_plain_string_scan; string_escape_decode; simd_movemask.
-- Same-wave consumer: a generated string/literal scanner must replace an
-  existing hot scalar span in the same wave, with strict equality and row
-  measurement.
+- Micro-proof need: new 64-byte scalar oracle, all special-byte positions, multi-hit priority, all alignments/tails, non-ASCII boundaries, cross-block escape context, and caller microbench. REDRESS 106 proved the old full-string proof was correctness-green but aggregate-slower (`skinny/REDRESS.md:3150-3170`).
+- Same-wave consumer: generated string/literal scanner that consumes the 64-byte result immediately and measures row impact. Reusing the previous full-string proof or adding an unused primitive is not admissible.
 
 ### C5. `a64_hex_quartet_decode_x4`
 
-- Shape: decode four `\uXXXX`/hex quartets with TBL nibble lookup, return four code units plus validity mask; surrogate joining and grammar-specific escape policy remain scalar/caller-owned.
-- Scalar-ref status: local scalar `unescape_uxxxx_scalar` and x1/x4 NEON bodies exist, but the current x4 test is smoke-level, not a full scalar-ref checkasm (`skinny/crates/bbnf-simd/src/aarch64/unescape_uxxxx.rs:40`, `skinny/crates/bbnf-simd/src/aarch64/unescape_uxxxx.rs:125`, `skinny/crates/bbnf-simd/tests/checkasm_utf8_block.rs:59`).
-- Checkasm expectation: add x4 scalar oracle covering invalid hex in each nibble, mixed valid/invalid quartets, surrogate pairs/nonpairs, alignment, and tails; require same-wave source delta before production use because prior proof-only/reuse routes were rejected (`skinny/REDRESS.md:2287`, `skinny/REDRESS.md:3174`, `skinny/REDRESS.md:3436`).
-- Arch/instruction: AArch64 TBL/TBX (E1).
+- Shape: decode four fixed-width hex quartets with TBL nibble lookup, returning code units plus validity; surrogate joining and escape policy remain grammar/caller-owned.
+- Scalar-ref status: x1 scalar oracle exists (`unescape_uxxxx_scalar`), and x1/x4 NEON bodies exist (`skinny/crates/bbnf-simd/src/aarch64/unescape_uxxxx.rs:33-166`). x4 parity is smoke-only (`skinny/crates/bbnf-simd/tests/checkasm_utf8_block.rs:58-68`).
+- Arch: aarch64 NEON `TBL`; optional `TBX` fallback if a generated hex policy benefits.
 - P1 antecedent: unicode_escape_hex_decode; string_escape_decode.
-- Same-wave consumer: a generated escape decoder must consume the x4 result in
-  the same wave; JSON surrogate policy and any CSS/Sheets/BBNF escape policy
-  stay outside `bbnf-simd`.
+- Micro-proof need: scalar x4 oracle that invokes x1 semantics lane-by-lane, invalid nibble in every position, mixed valid/invalid quartets, surrogate pair/nonpair policy handoff, alignment, boundary, and tails. Prior proof-only/reuse boundaries remain active (REDRESS 107/108 at `skinny/REDRESS.md:3172-3222`).
+- Same-wave consumer: generated escape/segment decoder or parse-that primitive consuming x4 output in the same wave. JSON `\uXXXX` production reuse alone is insufficient; CSS fixed/variable hex policy must stay generated.
 
 ### C6. `a64_ascii_set_run_skip`
 
-- Shape: skip runs of grammar-supplied ASCII layout/trivia bytes using 64-byte table/equality classification plus first-nonmember mask extraction; comments and grammar policy remain caller-owned.
-- Scalar-ref status: current whitespace skip anchors are scalar parse-that-regex functions, and generic 64-byte table/eq-set scalar refs exist (`restart/skinny/tranches/sk-v12/research/p1/p1e-hot-leaf-attribution.md:205`, `skinny/crates/bbnf-simd/src/scalar/byte_class_from_eq_set_64.rs:20`, `skinny/crates/bbnf-simd/src/scalar/byte_class_from_table_64.rs:1`).
-- Checkasm expectation: add generic byte-set run scalar oracle covering empty/full sets, high-bit bytes, all first-nonmember offsets, tails, and corpus parity across JSON/CSS/Sheets/BBNF-self fixtures. CTZ may be an implementation detail only if it does not reopen REDRESS 89.
-- Arch/instruction: AArch64 TBL/TBX, movemask, optional CSSC CTZ only as narrow scalar-equivalent support (E1, E2, E9).
+- Shape: skip a run of grammar-supplied ASCII layout/trivia bytes by classifying blocks and extracting the first nonmember; comments and broader trivia policy remain generated caller logic.
+- Scalar-ref status: parse-that-regex currently has JSON-shaped `skip_ascii_whitespace` and `skip_ascii_spaces` (`skinny/crates/parse-that-regex/src/lib.rs:112-147`); generic byte-set scalar refs exist in `bbnf-simd`.
+- Arch: aarch64 NEON TBL/TBX or eq-set fan-out plus movemask; optional CTZ only as a local first-set-bit support detail.
 - P1 antecedent: ascii_whitespace_skip; container_dispatch; simd_movemask.
-- Same-wave consumer: a generated layout/trivia or delimiter run skipper must
-  consume the first-nonmember result in the same wave; comments and grammar
-  trivia stay generated.
+- Micro-proof need: generic byte-set-run oracle over empty/full sets, first-nonmember at every offset, high-bit bytes, all alignments/tails, CSS/Sheets/BBNF layouts, and corpus parity.
+- Same-wave consumer: generated CSS L4 layout/trivia skipper, Sheets formula whitespace skipper, or BBNF-self layout skipper. A JSON-only whitespace speedup is guard context, not SK-V12 admission.
 
-### C7. `a64_mask_emit_next_support`
+### C7. `a64_pmull_prefix_xor_narrow_consumer`
 
-- Shape: support primitive for transient masks: next-set-bit and bulk position emission inside the same scan loop, with optional CSSC CTZ for next-bit extraction. It must not be a standalone retained structural cursor, side table, or default prefix-xor rewrite.
-- Scalar-ref status: scalar refs and checkasm already exist for next set bit, bulk emit positions, and prefix xor; current aarch64 bodies delegate to scalar (`skinny/crates/bbnf-simd/src/scalar/bitmap_next_set_bit.rs:1`, `skinny/crates/bbnf-simd/src/scalar/bulk_emit_positions_64.rs:1`, `skinny/crates/bbnf-simd/src/scalar/bitmap_prefix_xor_64.rs:1`, `skinny/crates/bbnf-simd/src/aarch64/bulk_emit_positions_64.rs:1`).
-- Checkasm expectation: preserve existing boundary/random parity; add asm expectation only for a narrow consumer-owned CTZ path. PMULL prefix-xor default route is blocked and must remain outside this candidate (`skinny/REDRESS.md:2510`, `skinny/REDRESS.md:2542`).
-- Arch/instruction: AArch64 CSSC CTZ support where available; PMULL inventory is REDRESS-blocked for default prefix xor (E2, E4).
-- P1 antecedent: simd_movemask; container_dispatch.
-- Same-wave consumer: support-only until a generated scan/dispatch loop uses
-  the next-bit or emitted-position result without retaining a cursor, vector,
-  or side table.
+- Shape: use PMULL/PMULL2 to compute a prefix-XOR/string-region mask only inside a newly named narrow consumer, not as the default `bitmap_prefix_xor_64` body.
+- Scalar-ref status: scalar prefix-XOR is executable and current aarch64 delegates to it (`skinny/crates/bbnf-simd/src/scalar/bitmap_prefix_xor_64.rs:1-14`, `skinny/crates/bbnf-simd/src/aarch64/bitmap_prefix_xor_64.rs:1-4`).
+- Arch: aarch64 NEON polynomial multiply `PMULL`/`PMULL2`; feature-gated where needed.
+- P1 antecedent: simd_movemask; bounded_plain_string_scan; string_escape_decode.
+- Micro-proof need: bit-exact scalar parity over all carry-in states, random masks, long backslash runs, `escape_mask_64` boundary cases, and caller-level microbench after W2 correctness is green.
+- Same-wave consumer: a specific generated string/escape scanner or CSS/string row that consumes the PMULL result in the same wave. Material differential from REDRESS 88: not the production-default `bitmap_prefix_xor_64` body and not a parse-only JSON default path; the consumer must be narrower, feature-gated, and row-measured.
 
-### I2. `a64_sha3_ternary_bool_fold` — ISA inventory, not current candidate
+### C8. `a64_cssc_ctz_mask_emit_narrow_consumer`
 
-- Shape: support primitive for three-input boolean folds over byte masks, using EOR3/BCAX when a measured hot leaf actually combines three masks in the same expression; examples include quote/escape/control fusion or digest-plane bit mixing, but only after scalar formula and consumer are named.
-- Scalar-ref status: no local aarch64 SHA3/EOR3/BCAX body exists; scalar ref would be an explicit boolean formula over three `uint8x16_t`-sized byte lanes or packed masks (`skinny/crates/bbnf-simd/src/aarch64/mod.rs:1`).
-- Checkasm expectation: exhaustive small-domain formula tests plus randomized vector tests, feature-gated with `__ARM_FEATURE_SHA3`, and corpus parity only through a same-wave consumer. No standalone telemetry-only admission.
-- Arch/instruction: AArch64 SHA3 ternary logical EOR3/BCAX (E2, E6).
-- P1 antecedent: none sufficient for SK-V12 candidate eligibility. The accepted
-  mask/digest/string leaves do not identify a hot three-input boolean fold
-  expression.
-- Same-wave consumer: non-selectable until a fresh profile names the exact
-  three-input expression and the same wave supplies the scalar boolean formula,
-  checkasm parity, and generated/runtime consumer.
+- Shape: use CSSC `CTZ` for first-set-bit or next-set-bit extraction inside a local mask-emission loop, without replacing the whole default bulk emit path.
+- Scalar-ref status: scalar `bitmap_next_set_bit_scalar` and `bulk_emit_positions_64_scalar` are executable refs; aarch64 delegates to them today (`skinny/crates/bbnf-simd/src/scalar/bitmap_next_set_bit.rs:1-13`, `skinny/crates/bbnf-simd/src/scalar/bulk_emit_positions_64.rs:1-13`, `skinny/crates/bbnf-simd/src/aarch64/bitmap_next_set_bit.rs:1-4`, `skinny/crates/bbnf-simd/src/aarch64/bulk_emit_positions_64.rs:1-4`).
+- Arch: aarch64 CSSC `CTZ`; compiler lowering or explicit asm only if equivalent intrinsic/lowering is unavailable and justified.
+- P1 antecedent: simd_movemask; container_dispatch; ascii_whitespace_skip.
+- Micro-proof need: existing boundary/random checkasm is a start (`skinny/crates/bbnf-simd/tests/checkasm_bitmap_next_set_bit.rs:5-29`, `skinny/crates/bbnf-simd/tests/checkasm_bulk_emit_positions_64.rs:29-60`); a new CTZ route needs asm visibility, all cursor states 0..64, zero/full masks, guard canary, and caller microbench.
+- Same-wave consumer: one generated scanner that consumes emitted positions or first-set-bit immediately. Material differential from REDRESS 89: no global default replacement of `bitmap_next_set_bit`/`bulk_emit_positions_64`, no canary-as-row-movement claim, and no retained cursor/side table.
 
-## §3 — Grammar-neutrality (each candidate: JSON-only or CSS/Sheets/BBNF-self generalisable)
+### C9. `a64_sha3_ternary_mask_fold`
 
-- C1 `a64_tbl_byte_class_mask64`: grammar-neutral if the lookup table or byte set is generated from grammar byte classes and the mask is transient. Generalises to CSS layout bytes, Sheets separators/operators, and BBNF-self punctuation. JSON-only tiny-string dispatch wiring remains blocked.
-- I1 `a64_ld4_interleaved_classifier64x4`: grammar-neutral only if a real canonical byte stream is already interleaved in memory or a same-loop consumer naturally touches four channels. It is not neutral if it creates a second scan stream or retained deinterleaved sidecar, and it is not a current SK-V12 candidate.
-- C3 `a64_udot_digit_span`: grammar-neutral for decimal digit-run decode where the grammar's numeric token accepts ASCII digits. JSON number policy, CSS numeric units, Sheets numeric literals, and BBNF-self numeric tokens can share the primitive while keeping token policy scalar.
-- C4 `a64_wide_string_special_scan64`: grammar-neutral for quoted/plain-string front ends that need quote/backslash/control/non-ASCII boundaries. Candidate must expose only byte-class masks or first offsets, not JSON-specific escape state.
-- C5 `a64_hex_quartet_decode_x4`: grammar-neutral for any grammar with fixed-width ASCII hex escape/quartet decode. JSON `\uXXXX` semantics, CSS escapes, or other escape policies must remain caller-owned.
-- C6 `a64_ascii_set_run_skip`: grammar-neutral when the skipped set is generated from grammar layout/trivia bytes. It must not assume JSON whitespace only.
-- C7 `a64_mask_emit_next_support`: grammar-neutral only as an internal support primitive over a transient mask produced by the active scanner. It must not persist positions or introduce a structural sidecar.
-- I2 `a64_sha3_ternary_bool_fold`: grammar-neutral as a boolean algebra helper over caller-supplied masks. It is not admissible as a grammar-specific hash/digest shortcut, and it is not a current SK-V12 candidate without a measured three-input expression.
+- Shape: replace a proven hot three-input byte-mask boolean expression with `EOR3` or `BCAX`; examples are quote/escape/control fusion or caller-owned mask blending, but only if the exact formula is named.
+- Scalar-ref status: absent today. Scalar reference would be an explicit boolean formula over three byte vectors or packed masks; no local aarch64 SHA3 module exists.
+- Arch: aarch64 SHA3 extension `EOR3`/`BCAX`.
+- P1 antecedent: none sufficient today. bounded/string/movemask leaves are adjacent but do not name a hot three-input formula.
+- Micro-proof need: feature gate, exhaustive small-domain formula proof, randomized vector parity, and caller-level parity. No corpus/bench claim without a real consumer.
+- Same-wave consumer: non-selectable until a generated scanner/source line names the exact three-input expression and consumes it in the same wave.
 
-## §4 — Risks (REDRESS entries any candidate must NOT re-open)
+### C10. `a64_wide_shift_movemask_context_support`
 
-- REDRESS 28/33/72: TBL tiny-string and cap16 work proved correctness but active tiny-string dispatch/regression boundaries remain; C1/C4/C5 must not reuse tiny-string wiring as a shortcut (`skinny/REDRESS.md:324`, `skinny/REDRESS.md:1973`).
-- REDRESS 50/51/53: side tables, byte-class whitespace/event cursors, and parser-local structural-mask cursors are rejected; C1/C2/C6/C7 must keep masks transient and same-loop (`skinny/REDRESS.md:715`, `skinny/REDRESS.md:742`, `skinny/REDRESS.md:784`).
-- REDRESS 61/106/107/108: string/escape microproofs without row movement or real source delta are insufficient; C4/C5 need scalar parity, source delta, and row-level evidence before any production admission (`skinny/REDRESS.md:1382`, `skinny/REDRESS.md:3152`, `skinny/REDRESS.md:3174`, `skinny/REDRESS.md:3200`).
-- REDRESS 64/82/83/84: retained unicode/string/object-pair metadata routes are rejected; C4/C5 must not retain run validators, StringBlock16 probes, or object-pair compaction (`skinny/REDRESS.md:1584`, `skinny/REDRESS.md:2287`, `skinny/REDRESS.md:2320`, `skinny/REDRESS.md:2360`).
-- REDRESS 88/89/90: PMULL default prefix-xor and CSSC CTZ bulk consumer/canary fold are rejected; C7 can only use CTZ as a narrow scalar-equivalent support detail, and PMULL remains REDRESS-blocked unless a future distinct narrow consumer proves itself (`skinny/REDRESS.md:2510`, `skinny/REDRESS.md:2542`, `skinny/REDRESS.md:2589`).
-- REDRESS 111/112/119/120: SK-V12 still lacks a generated non-JSON baseline and direct residual JSON rows are exhausted; every candidate needs a CSS/Sheets/BBNF-self generalizable consumer path, not another JSON-only proof (`skinny/REDRESS.md:3284`, `skinny/REDRESS.md:3313`, `skinny/REDRESS.md:3497`, `skinny/REDRESS.md:3531`).
-- Handoff refusal surface: do not use source edits in S-P2, W3/parse-only/JSON residual reopen, telemetry-only primitive proofs, generic-crate JSON policy, or x86 implementation target (`restart/skinny/tranches/sk-v12/HANDOFF.md:116`).
+- Shape: support primitive for cross-chunk context and mask packing: `EXT` for previous/current/next byte context, `SHRN`/`SRI`/`ZIP1` for movemask, `CNT`/`ADDV` for reductions.
+- Scalar-ref status: no standalone scalar ref because this is an implementation detail; any consuming candidate must define its own scalar oracle. Existing `byte_context` has no dedicated scalar/checkasm and is one of the five orphans (`restart/skinny/tranches/sk-v12/research/skv12-aarch64-simd-coverage-audit.md:53-56`).
+- Arch: aarch64 NEON wide shifts/reductions.
+- P1 antecedent: simd_movemask; bounded_plain_string_scan; ascii_whitespace_skip.
+- Micro-proof need: boundary parity over adjacent chunks, all alignments, first/last byte handoffs, and consumer-specific scalar oracle. Cannot ship as standalone support.
+- Same-wave consumer: C1/C4/C6-style scanner. Zero-orphan rule requires either same-wave consumption or inventory demotion/removal.
 
-## §5 — Sources (every external citation — comparator source, ISA manual, prior tranche)
+### C11. `a64_prfm_stnp_output_stream_hint`
 
-Local tranche and repo sources:
+- Shape: prefetch or non-temporal pair-store hints for output-plane writes, digest/oracle buffers, or tape-like streams.
+- Scalar-ref status: no-op/no-hint path must be the reference; `cache_hints` has asm bodies but no scalar/checkasm or consumer (`skinny/crates/bbnf-simd/src/aarch64/cache_hints.rs:1-33`).
+- Arch: aarch64 `PRFM` and `STNP` asm; Apple Silicon only.
+- P1 antecedent: output_digest_hash, but P1 marks this as generated Track 1 direct output work, not a parser primitive.
+- Micro-proof need: identical-output fallback, cache-counter or same-host microbench if available, and no JSON-only digest proof. Previous SK-V11 hardening demoted cache hints to inventory-only absent fresh behavior evidence.
+- Same-wave consumer: output-plane writer or generated CSS fact-stream sink, not a parser scanner. If no consumer is wired, demote/remove to satisfy zero-orphan close.
 
-- PASS-2 contract: `restart/prompts/skinny/PASS-2-RESEARCH.md:15`, `restart/prompts/skinny/PASS-2-RESEARCH.md:21`, `restart/prompts/skinny/PASS-2-RESEARCH.md:55`.
-- SK-V12 handoff: `restart/skinny/tranches/sk-v12/HANDOFF.md:46`, `restart/skinny/tranches/sk-v12/HANDOFF.md:55`, `restart/skinny/tranches/sk-v12/HANDOFF.md:116`, `restart/skinny/tranches/sk-v12/HANDOFF.md:133`.
-- SK-V12 P1 artifacts read-set: `restart/skinny/tranches/sk-v12/research/p1/p1a-samply-mode-1.md:112`, `restart/skinny/tranches/sk-v12/research/p1/p1b-samply-mode-2.md:143`, `restart/skinny/tranches/sk-v12/research/p1/p1c-samply-mode-3.md:214`, `restart/skinny/tranches/sk-v12/research/p1/p1d-pmu-cycles.md:90`, `restart/skinny/tranches/sk-v12/research/p1/p1e-hot-leaf-attribution.md:205`, `restart/skinny/tranches/sk-v12/research/p1/p1f-results-delta.md:77`, `restart/skinny/tranches/sk-v12/research/p1/hardening/HARDENING-S-P1-CONVERGED.md:41`.
-- Capture/replay authority: `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-capture-manifest.md:11`, `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-capture-manifest.md:47`, `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-replay.tsv:1`.
-- Current result/redress/lock authority: `skinny/RESULTS.md:1`, `skinny/REDRESS.md:324`, `skinny/REDRESS.md:715`, `skinny/REDRESS.md:1382`, `skinny/REDRESS.md:2510`, `skinny/REDRESS.md:3284`, `restart/locks/LOCKS.md:52`, `restart/locks/LOCKS.md:78`, `restart/locks/LOCKS.md:92`, `restart/locks/LOCKS.md:112`.
-- Local aarch64 SIMD modules/tests: `skinny/crates/bbnf-simd/src/aarch64/classify_tbl4.rs:7`, `skinny/crates/bbnf-simd/src/aarch64/match_tiny_plain_string.rs:63`, `skinny/crates/bbnf-simd/src/aarch64/movemask.rs:4`, `skinny/crates/bbnf-simd/src/aarch64/unescape_uxxxx.rs:40`, `skinny/crates/bbnf-simd/src/aarch64/string_block.rs:31`, `skinny/crates/bbnf-simd/src/aarch64/digit_mac.rs:5`, `skinny/crates/bbnf-simd/src/aarch64/byte_class_from_eq_set_64.rs:26`, `skinny/crates/bbnf-simd/src/aarch64/quad_load.rs:3`, `skinny/crates/bbnf-simd/tests/aarch64_primitives.rs:23`, `skinny/crates/bbnf-simd/tests/checkasm_byte_class_from_eq_set_64.rs:156`, `skinny/crates/bbnf-simd/tests/checkasm_byte_class_from_table_64.rs:13`, `skinny/crates/bbnf-simd/tests/checkasm_bitmap_next_set_bit.rs:5`, `skinny/crates/bbnf-simd/tests/checkasm_bitmap_prefix_xor_64.rs:5`, `skinny/crates/bbnf-simd/tests/checkasm_bulk_emit_positions_64.rs:5`, `skinny/crates/bbnf-simd/tests/checkasm_utf8_block.rs:59`.
-- Prior tranche context only: `restart/skinny/tranches/sk-v11/research/p2/p2c-arch-esoterica.md:1`.
+### C12. `a64_utf8_ascii_fast_block`
 
-External primary Arm ISA/ACLE sources:
+- Shape: classify ASCII/non-ASCII over a 16-byte block and fall back to scalar UTF-8 validation only when needed.
+- Scalar-ref status: `validate_block_scalar` exists; NEON body only fast-paths all-ASCII then stores and calls scalar for non-ASCII (`skinny/crates/bbnf-simd/src/aarch64/utf8/validate_block.rs:76-112`).
+- Arch: aarch64 NEON compare plus movemask.
+- P1 antecedent: bounded_plain_string_scan; string_escape_decode.
+- Micro-proof need: existing UTF-8 block parity covers representative cases (`skinny/crates/bbnf-simd/tests/checkasm_utf8_block.rs:11-56`); production expansion would need full boundary/corpus proof and caller microbench.
+- Same-wave consumer: generated string scanner that requires UTF-8 validation. It must not shift UTF-8 policy out of generated grammar/view boundaries.
 
-- E1. Arm Neon Intrinsics Reference, table lookup intrinsics: `vqtbl4q_u8` maps to A64 `TBL` and `vqtbx4q_u8` maps to A64 `TBX` (https://arm-software.github.io/acle/neon_intrinsics/advsimd.html, lines 15815-15821 and 16139-16147).
-- E2. Arm C Language Extensions: `__ARM_FEATURE_DOTPROD`, `__ARM_FEATURE_CSSC`, and `__ARM_FEATURE_SHA3` feature macros and selection/dependency text (https://arm-software.github.io/acle/main/acle.html, lines 1694-1697, 1754-1758, 1815-1817, 1911-1913, 1945).
-- E3. Arm Neon Intrinsics Reference, dot product intrinsics: `vdotq_u32` maps to A64 `UDOT` (https://arm-software.github.io/acle/neon_intrinsics/advsimd.html, lines 18087-18092).
-- E4. Arm Neon Intrinsics Reference, polynomial multiply: `vmull_p64` maps to `PMULL` and `vmull_high_p64` maps to `PMULL2` (https://arm-software.github.io/acle/neon_intrinsics/advsimd.html, lines 16597-16605). Arm A64 CTZ instruction page: https://developer.arm.com/documentation/ddi0602/2025-12/Base-Instructions/CTZ--Count-trailing-zeros- .
-- E5. Arm Neon Intrinsics Reference, structured loads: `vld4q_u8` maps to `LD4 {Vt.16B - Vt4.16B},[Xn]` (https://arm-software.github.io/acle/neon_intrinsics/advsimd.html, lines 11909-11916).
-- E6. Arm Neon Intrinsics Reference, SHA3 ternary logical: `veor3q_u8` maps to `EOR3`; `vbcaxq_u8` maps to `BCAX` (https://arm-software.github.io/acle/neon_intrinsics/advsimd.html, lines 18256-18263 and 18322-18329).
-- E7. Arm Neon Intrinsics Reference, EXT: `vextq_u8` maps to A64 `EXT` (https://arm-software.github.io/acle/neon_intrinsics/advsimd.html, lines 10104-10115).
-- E8. Arm Neon Intrinsics Reference, wide shift/narrow support: `vshrn_n_u16` maps to `SHRN`; `vsriq_n_u8` maps to `SRI` (https://arm-software.github.io/acle/neon_intrinsics/advsimd.html, lines 5943-5946 and 6365-6370).
-- E9. Arm Neon Intrinsics Reference, reductions/bit count: `vaddvq_u8` maps to `ADDV`; `vcntq_u8` maps to `CNT` (https://arm-software.github.io/acle/neon_intrinsics/advsimd.html, lines 3885-3886 and 8720-8726).
+## §3 - Grammar-neutrality (each candidate: JSON-only or CSS/Sheets/BBNF-self generalisable)
+
+- C1 `a64_tbl_tbx_byte_class_mask64`: grammar-neutral when byte sets/tables are generated from grammar metadata. CSS delimiters/layout bytes, Sheets operators/separators, and BBNF metasyntax fit. JSON structural alphabets may not be hardcoded into `bbnf-simd`.
+- C2 `a64_ld4_interleaved_classifier64x4`: grammar-neutral only if a canonical interleaved stream already exists independent of the optimization. Creating an interleaved side stream is not neutral and violates Lock 1.
+- C3 `a64_udot_digit_run_span`: grammar-neutral for ASCII decimal digit runs; JSON number policy, CSS units, Sheets exponent forms, and BBNF numeric syntax remain generated caller policy.
+- C4 `a64_wide_string_special_scan64`: grammar-neutral if terminator, escape byte, control limit, and UTF-8 mode are parameters. It becomes JSON-only if fixed to quote/backslash/control<0x20.
+- C5 `a64_hex_quartet_decode_x4`: neutral only as fixed-width hex decode. JSON `\uXXXX` surrogate rules, CSS variable-width escapes, Sheets doubled quotes, and BBNF literal/regex policy stay outside the primitive.
+- C6 `a64_ascii_set_run_skip`: grammar-neutral for grammar-supplied byte sets. CSS comments/layout and BBNF comments require generated policy around the byte-set primitive.
+- C7 `a64_pmull_prefix_xor_narrow_consumer`: neutral only as a bitmask prefix operation over caller-supplied masks. It must not encode JSON string/escape semantics.
+- C8 `a64_cssc_ctz_mask_emit_narrow_consumer`: neutral as first/next-set-bit extraction over transient masks. It is not neutral if it persists a structural-position vector or cursor list.
+- C9 `a64_sha3_ternary_mask_fold`: neutral as boolean algebra over caller masks, but currently ineligible because no hot three-input formula is named.
+- C10 `a64_wide_shift_movemask_context_support`: neutral only as implementation detail under a neutral scanner. Support-only modules must be consumed or demoted for zero-orphan close.
+- C11 `a64_prfm_stnp_output_stream_hint`: not a parser grammar primitive. It can be grammar-neutral only as an optional host/output sink hint with no semantic visibility.
+- C12 `a64_utf8_ascii_fast_block`: neutral if validation mode is caller-selected. It cannot move UTF-8 acceptance/rejection policy into a generic scanner.
+
+## §4 - Risks (REDRESS entries any candidate must NOT re-open)
+
+1. Do not admit any new SIMD/ASM route until W2 verifies and resolves `escape_mask_64`. The bug is correctness, not performance; a throughput microbench cannot waive it (`skinny/crates/bbnf-simd/CHECKASM-REPORT.md:102-126`, `restart/skinny/tranches/sk-v12/HANDOFF.md:125-140`).
+
+2. REDRESS 88/89/90 are category-unblocked but historically binding. The material differentials required by USER PIN D4 are:
+
+   | Historical route | Blocked implementation | Required differential for any new C7/C8 route |
+   |---|---|---|
+   | REDRESS 88 PMULL | default PMULL body for `bitmap_prefix_xor_64`, production parse rows regressed (`skinny/REDRESS.md:2510-2540`) | narrow consumer, not default body; scalar parity + `escape_mask_64` boundary proof; feature-gated fallback; same-wave generated CSS/non-JSON or guard-row consumer with measured non-regression |
+   | REDRESS 89 CSSC CTZ | global next-bit/bulk-emitter replacement, rows regressed (`skinny/REDRESS.md:2542-2585`) | local first/next-bit support inside one consumer; no retained cursor/side table; no global dispatch rewrite; same-wave row measurement |
+   | REDRESS 90 canary | canary hardening was admitted only as integrity hardening, not bitmap body admission (`skinny/REDRESS.md:2587-2604`) | canary remains checkasm integrity only; it cannot be claimed as row movement or primitive admission |
+
+3. REDRESS 96/97/98 are category-unblocked by D3 but still define the material differentials for any Lock 1-adjacent arch route:
+
+   | Historical route | Blocked implementation | Required differential for any new route |
+   |---|---|---|
+   | REDRESS 96 | co-indexed class column plus move-consumed structural index; every must-improve row failed (`skinny/REDRESS.md:2795-2848`) | no retained class column; transient masks consumed in the same loop; one tape remains the substrate |
+   | REDRESS 97 | allocation-free streaming structural cursor; every must-improve row failed (`skinny/REDRESS.md:2850-2906`) | no parser-owned cursor/list; no second scan stream; same-wave consumer must be source-visible and measured |
+   | REDRESS 98 | class-lane-only proof retired as paper-close (`skinny/REDRESS.md:2910-2950`) | no source-free proof-only route; producer and consumer must both land in the same wave |
+
+4. Do not repackage string/escape proof-only work as production. REDRESS 106 rejected the full string primitive micro-proof after a 0.774x aggregate caller result (`skinny/REDRESS.md:3150-3170`); REDRESS 107 admitted x4 escape decode only as proof, and REDRESS 108 rejected production reuse without a new source delta (`skinny/REDRESS.md:3172-3222`).
+
+5. Do not use JSON direct residuals as the SK-V12 close target. REDRESS 119/120 close direct residuals as guard/routed evidence, while the pin close target is generated CSS L4 strictly greater than lightningcss on the same plane (`skinny/REDRESS.md:3495-3553`, `restart/skinny/tranches/sk-v12/SYNTHESIS.md:35-70`).
+
+6. Do not leave production aarch64 support orphans. C7/C8/C10/C11 are exactly the danger zone: if they are not consumed in a same commit, they must be explicitly inventory-demoted or removed before close (`restart/skinny/tranches/sk-v12/research/skv12-aarch64-simd-coverage-audit.md:34-61`).
+
+7. Do not use LD4, PRFM/STNP, SHA3 ternary, CSSC extrema, BF16, or other ARMv9.2-A esoterica as paper candidates. Without a P1 antecedent, scalar reference, micro-proof, and same-wave consumer, they are inventory only.
+
+## §5 - Sources (every external citation - comparator source, ISA manual, prior tranche)
+
+- `restart/prompts/skinny/PASS-2-RESEARCH.md:48-85`, `:95-123`, `:237-251`: S-P2/P2-C contract, output schema, and candidate admissibility gates.
+- `restart/prompts/ORCHESTRATOR.md:74-122`: CH1-CH6 challenge lenses and §3Z convergence.
+- `restart/skinny/tranches/sk-v12/USER-PIN-W1-CSS-L4-SOTA.md:39-120`: D3/D4 category unblocks, D5 zero-orphan, x86 out of scope, Lock 16/escape-mask prerequisite, and REDRESS disposition table.
+- `restart/skinny/tranches/sk-v12/HANDOFF.md:71-180`: close criteria, zero-orphan surface, W2/W4 seed split, telemetry binding, and refusal conditions.
+- `restart/skinny/tranches/sk-v12/SYNTHESIS.md:35-95`, `:170-226`, `:260-276`: ADMIT/FIXPOINT requirements, union/ASM-gen material differential, telemetry binding, and W4 ARMv9.2 route.
+- `restart/skinny/tranches/sk-v12/research/p1/hardening/HARDENING-S-P1-CONVERGED.md:27-84`: pin S-P1 authority and hot-family antecedents.
+- `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-capture-manifest.md:1-120`: capture root, host/toolchain, replay surface, and hot-leaf table authority.
+- `restart/skinny/tranches/sk-v12/research/p1/p1a-samply-mode-1.md`, `p1b-samply-mode-2.md`, `p1c-samply-mode-3.md`, `p1d-pmu-cycles.md`, `p1e-hot-leaf-attribution.md`, `p1f-results-delta.md`: six P1 artifacts consumed for hot-leaf, PMU, Mode III absence, and RESULTS-delta boundaries.
+- `restart/skinny/tranches/sk-v12/research/skv12-aarch64-simd-coverage-audit.md:10-199`: active aarch64 primitive table, orphan list, Lock 16 compliance check, and recommendation matrix.
+- `skinny/RESULTS.md:5-45`, `:143-146`: live JSON result rows and unchanged `N-direct / NoGo` outcome.
+- `skinny/REDRESS.md:2508-2604`: REDRESS 88/89/90 PMULL, CSSC CTZ, and canary hardening history.
+- `skinny/REDRESS.md:2795-2950`: REDRESS 96/97/98 union substrate measured failures and retirement.
+- `skinny/REDRESS.md:3150-3222`: REDRESS 106/107/108 string and escape proof boundaries.
+- `skinny/REDRESS.md:3282-3355`, `:3495-3553`: non-JSON baseline blocker, direct residual fixpoint, and SK-V11 close routing.
+- `skinny/crates/bbnf-simd/CHECKASM-REPORT.md:50-126`: deterministic checkasm harness and `escape_mask_64` falsifier.
+- `skinny/crates/bbnf-simd/src/aarch64/*.rs`, `skinny/crates/bbnf-simd/src/scalar/*.rs`, and `skinny/crates/bbnf-simd/tests/checkasm_*.rs`: local aarch64/scalar/test inventory cited inline above.
+- `skinny/crates/parse-that-regex/src/lib.rs:112-147`, `:302-459`, `:461-585`; `skinny/crates/parse-that-regex/src/number/mod.rs:31-223`: current whitespace, string, Unicode escape, and number scalar surfaces.
+- [ACLE-TBL-TBX] Arm Neon Intrinsics Reference, table lookup `vqtbl4q_u8`/`vqtbx4q_u8`: https://arm-software.github.io/acle/neon_intrinsics/advsimd.html
+- [ACLE-UDOT] Arm Neon Intrinsics Reference and Arm C Language Extensions dotprod feature macro: https://arm-software.github.io/acle/neon_intrinsics/advsimd.html and https://arm-software.github.io/acle/main/acle.html
+- [ACLE-SHIFT-EXT] Arm Neon Intrinsics Reference for `vextq_u8`, `vshrn_n_u16`, `vsriq_n_u8`, `vaddvq_u8`, and `vcntq_u8`: https://arm-software.github.io/acle/neon_intrinsics/advsimd.html
+- [ACLE-LD4] Arm Neon Intrinsics Reference structured load `vld4q_u8`: https://arm-software.github.io/acle/neon_intrinsics/advsimd.html
+- [ACLE-PMULL-CSSC-SHA3] Arm Neon Intrinsics Reference and Arm C Language Extensions for PMULL, CSSC feature macro, SHA3 `EOR3`/`BCAX`: https://arm-software.github.io/acle/neon_intrinsics/advsimd.html and https://arm-software.github.io/acle/main/acle.html

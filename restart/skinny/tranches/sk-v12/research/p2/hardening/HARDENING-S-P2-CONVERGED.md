@@ -1,41 +1,46 @@
-# SK-V12 S-P2 Converged
+# SK-V12 S-P2 Hardening Status
 
 Pass: S-P2 Research.
 Date: 2026-05-20.
-Status: CONVERGED.
+Status: PRE-PIN CONVERGENCE SUPERSEDED; PIN S-P2 HARDENING IN PROGRESS.
 
-S-P2 converged under `ORCHESTRATOR.md` §3Z and `PASS-2-RESEARCH.md` §4:
+The pre-pin `HARDENING-S-P2-V2-CONSOLIDATED.md` and
+`HARDENING-S-P2-V3-CONSOLIDATED.md` accepted a research surface that is no
+longer authoritative after `USER-PIN-W1-CSS-L4-SOTA.md`. The pin-aware S-P2
+research cohort opened at commit `8017a90b` and is now folded to Cycle V2 after
+PIN-V1 CHALLENGE.
 
-- V2 CHALLENGE: 6/6 ACCEPT, no REJECT, no REVISE, no open critical defects
-  (`restart/skinny/tranches/sk-v12/research/p2/hardening/HARDENING-S-P2-V2-CONSOLIDATED.md`).
-- V3 CHALLENGE: 6/6 ACCEPT, no REJECT, no REVISE, no open critical defects
-  (`restart/skinny/tranches/sk-v12/research/p2/hardening/HARDENING-S-P2-V3-CONSOLIDATED.md`).
+PIN-V1 disposition:
 
-The accepted S-P2 research cohort is:
+| Lens | Verdict | Score | Action |
+|---|---:|---:|---|
+| CH1 correctness | REVISE | 86 | Fold inventory/candidate split and fix resolving external anchors. |
+| CH2 generality / Lock 14 | ACCEPT | 96 | No required fold. |
+| CH3 regression / REDRESS | ACCEPT | 96 | No required fold. |
+| CH4 cost / scalar-reference / checkasm | REVISE | 78 | Fold per-row parity, consumer, micro-proof, and orphan disposition. |
+| CH5 hidden coupling / substrate | ACCEPT | 96 | No required fold. |
+| CH6 anti-paper-close | ACCEPT | 96 | No required fold. |
 
-1. `restart/skinny/tranches/sk-v12/research/p2/p2a-sota-teardown.md`
-2. `restart/skinny/tranches/sk-v12/research/p2/p2b-dav1d-process.md`
-3. `restart/skinny/tranches/sk-v12/research/p2/p2c-arch-esoterica.md`
-4. `restart/skinny/tranches/sk-v12/research/p2/p2d-substrate-tape.md`
-5. `restart/skinny/tranches/sk-v12/research/p2/p2e-parse-that-gaps.md`
-6. `restart/skinny/tranches/sk-v12/research/p2/p2f-grammar-neutral.md`
+Folded V2 surface:
 
-Load-bearing facts for S-P3:
+- P2-A C1-C7 now carry per-row class, scalar reference, checkasm/parity,
+  micro-proof, same-wave consumer, `escape_mask_64`/Lock 16 prerequisite, and
+  orphan disposition columns. C6 is explicitly output-plane/oracle contract;
+  C7 is generated-template legality surface, not a standalone parser row mover.
+- P2-B keeps the scalar-oracle-first process and now uses resolving dav1d
+  `msac.c` anchors for cloned-state and benchmark-process claims.
+- P2-C now distinguishes selectable PIN-V1 candidates from
+  inventory/support/nonselectable ARM rows. The selectable set is C1, C3, C4,
+  C5, and C6. C2, C9, and C11 are inventory/drop in this cycle; C7, C8, C10,
+  and C12 are support-only until a same-wave consumer and required
+  `escape_mask_64`/REDRESS material differentials exist.
+- P2-E now labels parser candidates separately from output-plane/oracle
+  accounting rows, with per-row checkasm/parity and orphan/Lock 16 disposition.
+- P2-F now states that inventory/drop, support-only, diagnostic-only, and
+  parser-candidate-ineligible rows are outside the current S-P3 candidate pool
+  unless a later folded pass adds fresh P1 evidence, scalar oracle, micro-proof,
+  and same-wave consumer.
 
-- P2-A C1-C7 are comparator-grounded candidate shapes only under explicit
-  scalar-reference, checkasm/parity, and same-wave-consumer floors.
-- P2-B defines the scalar-oracle-first and checkasm admission process.
-- P2-C has six current AArch64 candidates; LD4 interleaved classification and
-  SHA3 ternary boolean fold are ISA inventory only.
-- P2-D contributes no current selectable tape-substrate candidate from SK-V12
-  S-P1; same-tape capacity/flag/cursor ideas are diagnostics/ineligible, and
-  `structural_class_lane_union` remains rejected.
-- P2-E contributes five parse-that primitive gaps with scalar sketches and
-  same-wave consumer requirements.
-- P2-F maps the pool to six conditional parser/support families, one
-  oracle-only family, and one accounting-only family under Lock 14.
-- Generated non-JSON baseline work remains first priority; JSON direct
-  residual and parse-only work remain diagnostic/pre-blocked unless a later
-  packet supplies fresh material evidence and passes CHALLENGE.
-
-Next move: `ready-for-S-P3-synthesis-sk-v12`.
+The next required action is PIN-V2 CHALLENGE over the folded V2 research
+packet. S-P2 is not converged under the user pin until §3Z records two
+consecutive clean challenge cycles after the last REVISE reset.

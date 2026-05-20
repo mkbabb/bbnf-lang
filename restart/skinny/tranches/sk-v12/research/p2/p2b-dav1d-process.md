@@ -1,6 +1,6 @@
 # SK-V12 P2-B: DAV1D/FFmpeg ASM Process
 
-Pass: S-P2 Research. Cycle: V1.
+Pass: S-P2 Research. Cycle: V2.
 Date: 2026-05-20.
 Scope: scalar-oracle-first ASM/SIMD admission process from dav1d, FFmpeg, and VLC checkasm, mapped onto bbnf-simd.
 Output: this file.
@@ -95,7 +95,7 @@ Admission process S-P3 gates against:
 - [VLC2] VideoLAN checkasm history: standalone checkasm was forked from dav1d's internal copy, which derived from FFmpeg/x264-style checkasm variants. https://www-test.videolan.org/projects/checkasm/ (lines 189-201 as rendered by web open 2026-05-20).
 - [FF1] FFmpeg `tests/checkasm/checkasm.h`: `check_func`, `call_ref`, and checked `call_new` wrappers with stack clobber/signal handling. https://www.ffmpeg.org/doxygen/8.0/checkasm_8h_source.html (source lines 189-245).
 - [FF2] FFmpeg trunk `tests/checkasm/checkasm.h`: `bench` macro uses repeated timed calls and drops high outliers by the `t * count <= sum * 4` rule. https://ffmpeg.org/doxygen/trunk/checkasm_8h_source.html (source lines 396-423).
-- [D1] dav1d `tests/checkasm/msac.c`: cloned C/ASM state, `call_ref`, `call_new`, return/state/CDF comparison, and `bench_new`. https://github.com/videolan/dav1d/blob/master/tests/checkasm/msac.c#L1127-L1227.
+- [D1] dav1d `tests/checkasm/msac.c`: cloned C/ASM state, `call_ref`, `call_new`, return/state/CDF comparison, and `bench_new`. Relevant current anchors: https://github.com/videolan/dav1d/blob/master/tests/checkasm/msac.c#L115-L136, https://github.com/videolan/dav1d/blob/master/tests/checkasm/msac.c#L156-L175, https://github.com/videolan/dav1d/blob/master/tests/checkasm/msac.c#L184-L195, https://github.com/videolan/dav1d/blob/master/tests/checkasm/msac.c#L203-L215, and https://github.com/videolan/dav1d/blob/master/tests/checkasm/msac.c#L228-L250.
 - Local process authorities: `restart/prompts/skinny/PASS-2-RESEARCH.md`; `restart/prompts/ORCHESTRATOR.md`; `restart/skinny/tranches/sk-v12/USER-PIN-W1-CSS-L4-SOTA.md`; `restart/skinny/tranches/sk-v12/HANDOFF.md`; `restart/skinny/tranches/sk-v12/SYNTHESIS.md`; `restart/locks/LOCKS.md`.
 - P1 authorities read: `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-capture-manifest.md`; `p1a-samply-mode-1.md`; `p1b-samply-mode-2.md`; `p1c-samply-mode-3.md`; `p1d-pmu-cycles.md`; `p1e-hot-leaf-attribution.md`; `p1f-results-delta.md`; `research/p1/hardening/HARDENING-S-P1-CONVERGED.md`.
 - bbnf-simd authorities read: `skinny/crates/bbnf-simd/CHECKASM-REPORT.md`; `skinny/crates/bbnf-simd/tests/checkasm_common.rs`; `checkasm_parity.rs`; `checkasm_byte_class_from_table_64.rs`; `checkasm_byte_class_from_eq_set_64.rs`; `checkasm_bitmap_prefix_xor_64.rs`; `checkasm_bitmap_next_set_bit.rs`; `checkasm_bulk_emit_positions_64.rs`; `checkasm_eob_pad_clamp.rs`; `checkasm_structural_terminator_64.rs`; `checkasm_utf8_block.rs`; scalar modules under `skinny/crates/bbnf-simd/src/scalar/`.

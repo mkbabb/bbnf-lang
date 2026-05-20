@@ -1,6 +1,6 @@
 # SK-V12 P2-C: Host-Arch ASM/SIMD Esoterica
 
-Pass: S-P2 Research. Cycle: V1.
+Pass: S-P2 Research. Cycle: V2.
 Date: 2026-05-20.
 Scope: aarch64/Apple Silicon only; inventory ARMv9.2-A/NEON/ASM candidates against the pin-era S-P1 hot leaves. x86 is out of scope.
 Output: this file.
@@ -35,7 +35,28 @@ Lock surface: both - Lock 1 for transient masks versus retained substrate, Lock 
 
 13. SHA3 `EOR3`/`BCAX`, CSSC extrema, CNT/ADDV popcount/reduction, PRFM/STNP cache hints, and BF16 matrix instructions are inventory until a P1 hot leaf and same-wave consumer exist. No local aarch64 SHA3 body exists in the module tree (`skinny/crates/bbnf-simd/src/aarch64/mod.rs:1-32`). `cache_hints` contains inline `prfm` and `stnp` (`skinny/crates/bbnf-simd/src/aarch64/cache_hints.rs:1-33`) but the coverage audit classifies it as orphan support with no same-wave consumer (`restart/skinny/tranches/sk-v12/research/skv12-aarch64-simd-coverage-audit.md:58-61`).
 
-## §2 - Candidate primitives (each: shape + scalar-ref status + arch + P1 antecedent)
+## §2 - Candidate primitives and inventory disposition
+
+PIN-V1 split: only C1, C3, C4, C5, and C6 are selectable S-P3
+candidates from the pin S-P1 evidence. C2 and C7-C12 remain in this
+artifact because D4/D5 require the arch inventory and orphan disposition,
+but they are inventory/support unless a later CSS-local profile and
+same-wave consumer make them measurable.
+
+| Candidate | PIN-V1 disposition | Reason |
+|---|---|---|
+| C1 `a64_tbl_tbx_byte_class_mask64` | Selectable candidate | P1 antecedents name byte classification, movemask, layout skip, and bounded string scan; scalar references/checkasm exist. |
+| C2 `a64_ld4_interleaved_classifier64x4` | Inventory/drop for current S-P2 | No P1 hot leaf proves a real interleaved stream, no scalar deinterleave oracle exists, and manufacturing the stream would violate Lock 1. |
+| C3 `a64_udot_digit_run_span` | Selectable candidate | P1 names `number_digit_span`; UDOT helper exists but needs full digit-run scalar/checkasm and caller proof. |
+| C4 `a64_wide_string_special_scan64` | Selectable candidate | P1 names bounded string/string escape/movemask leaves; prior string proof means caller movement, not primitive-only speed, is binding. |
+| C5 `a64_hex_quartet_decode_x4` | Selectable candidate | P1 names unicode hex/string escape leaves; x4 path exists but needs strict scalar x4 parity and CSS/generated consumer. |
+| C6 `a64_ascii_set_run_skip` | Selectable candidate | P1 names whitespace/container/movemask; CSS layout/trivia skipper is a same-wave consumer candidate. |
+| C7 `a64_pmull_prefix_xor_narrow_consumer` | Support-only until W2 + named caller | REDRESS 88 material differential and `escape_mask_64` resolution are prerequisites; no default body admission. |
+| C8 `a64_cssc_ctz_mask_emit_narrow_consumer` | Support-only until named caller | REDRESS 89 blocks global bulk/next-bit replacement; only local first-bit support inside a measured caller is eligible. |
+| C9 `a64_sha3_ternary_mask_fold` | Inventory/drop for current S-P2 | No P1 hot leaf names a concrete hot three-input formula and no local SHA3 body exists. |
+| C10 `a64_wide_shift_movemask_context_support` | Support inventory | `byte_context` is an orphan; eligible only as same-wave support under C1/C4/C6-style scanners. |
+| C11 `a64_prfm_stnp_output_stream_hint` | Inventory/drop for current S-P2 | Cache hints have no parser primitive semantics, no scalar/checkasm route, and no P1 writer hot leaf sufficient for admission. |
+| C12 `a64_utf8_ascii_fast_block` | Support inventory | Eligible only under a generated string scanner that requires UTF-8 validation and preserves grammar-owned policy. |
 
 ### C1. `a64_tbl_tbx_byte_class_mask64`
 
@@ -207,8 +228,8 @@ Lock surface: both - Lock 1 for transient masks versus retained substrate, Lock 
 - `skinny/crates/bbnf-simd/CHECKASM-REPORT.md:50-126`: deterministic checkasm harness and `escape_mask_64` falsifier.
 - `skinny/crates/bbnf-simd/src/aarch64/*.rs`, `skinny/crates/bbnf-simd/src/scalar/*.rs`, and `skinny/crates/bbnf-simd/tests/checkasm_*.rs`: local aarch64/scalar/test inventory cited inline above.
 - `skinny/crates/parse-that-regex/src/lib.rs:112-147`, `:302-459`, `:461-585`; `skinny/crates/parse-that-regex/src/number/mod.rs:31-223`: current whitespace, string, Unicode escape, and number scalar surfaces.
-- [ACLE-TBL-TBX] Arm Neon Intrinsics Reference, table lookup `vqtbl4q_u8`/`vqtbx4q_u8`: https://arm-software.github.io/acle/neon_intrinsics/advsimd.html
-- [ACLE-UDOT] Arm Neon Intrinsics Reference and Arm C Language Extensions dotprod feature macro: https://arm-software.github.io/acle/neon_intrinsics/advsimd.html and https://arm-software.github.io/acle/main/acle.html
-- [ACLE-SHIFT-EXT] Arm Neon Intrinsics Reference for `vextq_u8`, `vshrn_n_u16`, `vsriq_n_u8`, `vaddvq_u8`, and `vcntq_u8`: https://arm-software.github.io/acle/neon_intrinsics/advsimd.html
-- [ACLE-LD4] Arm Neon Intrinsics Reference structured load `vld4q_u8`: https://arm-software.github.io/acle/neon_intrinsics/advsimd.html
-- [ACLE-PMULL-CSSC-SHA3] Arm Neon Intrinsics Reference and Arm C Language Extensions for PMULL, CSSC feature macro, SHA3 `EOR3`/`BCAX`: https://arm-software.github.io/acle/neon_intrinsics/advsimd.html and https://arm-software.github.io/acle/main/acle.html
+- [ACLE-TBL-TBX] Arm Neon Intrinsics Reference, AdvSIMD table lookup section: `vqtbl4q_u8` maps to A64 `TBL`; `vqtbx4q_u8` maps to A64 `TBX`. https://arm-software.github.io/acle/neon_intrinsics/advsimd.html
+- [ACLE-UDOT] Arm Neon Intrinsics Reference, AdvSIMD dot-product section: `vdotq_u32` maps to A64 `UDOT`; Arm C Language Extensions defines `__ARM_FEATURE_DOTPROD`. https://arm-software.github.io/acle/neon_intrinsics/advsimd.html and https://arm-software.github.io/acle/main/acle.html
+- [ACLE-SHIFT-EXT] Arm Neon Intrinsics Reference for shift/extract/reduction sections: `vextq_u8`, `vshrn_n_u16`, `vsriq_n_u8`, `vaddvq_u8`, and `vcntq_u8`. https://arm-software.github.io/acle/neon_intrinsics/advsimd.html
+- [ACLE-LD4] Arm Neon Intrinsics Reference, structured-load section: `vld4q_u8` maps to `LD4 {Vt.16B - Vt4.16B},[Xn]`. https://arm-software.github.io/acle/neon_intrinsics/advsimd.html
+- [ACLE-PMULL-CSSC-SHA3] Arm Neon Intrinsics Reference and Arm C Language Extensions: polynomial multiply entries `vmull_p64`/`vmull_high_p64`, CSSC feature macro `__ARM_FEATURE_CSSC`, SHA3 feature macro `__ARM_FEATURE_SHA3`, and SHA3 ternary bitwise intrinsics `EOR3`/`BCAX`. https://arm-software.github.io/acle/neon_intrinsics/advsimd.html and https://arm-software.github.io/acle/main/acle.html

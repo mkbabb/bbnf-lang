@@ -1,13 +1,13 @@
 # SK-V12 P2-F: Grammar-Neutral Abstraction
 
-Pass: S-P2 Research. Cycle: V1.
+Pass: S-P2 Research. Cycle: V2.
 Date: 2026-05-20.
 Scope: grammar-neutral verdicts for every candidate primitive family surfaced by pin-aware S-P1 plus current P2-B/C/D/E.
 Output: this file.
 P1 hot-leaf antecedents: bounded_plain_string_scan; container_dispatch; unicode_escape_hex_decode; number_digit_span; simd_movemask; string_escape_decode; output_digest_hash; ascii_whitespace_skip; typed_direct_projection; serde_json_oracle_read_parse.
 Lock surface: Lock 1 and Lock 14 are load-bearing; Lock 16 is binding for SIMD/ASM scalar-reference, checkasm, corpus parity, and same-wave consumer admission.
 
-Current P2-B/C/D/E outputs are present and were read. This is therefore a current fold, not a placeholder V1 synthesis. A later CHALLENGE fold may still revise dispositions, especially around CSS L4 row selection, GrammarConfig implementation shape, and Lock 16 orphan disposition.
+Current P2-B/C/D/E candidate and inventory outputs are present and were read. This is therefore a current fold, not a placeholder V1 synthesis. A later CHALLENGE fold may still revise dispositions, especially around CSS L4 row selection, GrammarConfig implementation shape, and Lock 16 orphan disposition.
 
 ## §1 — Findings
 
@@ -25,7 +25,7 @@ Current P2-B/C/D/E outputs are present and were read. This is therefore a curren
 
 7. Lock 16 blocks SIMD/ASM admission until scalar reference, strict checkasm/parity, corpus parity, and same-wave consumer are present. The `escape_mask_64` NEON correctness bug with falsifier seed `0xCAFEF00DBAADF00D` must be verified and resolved before any new SIMD admission. The carried orphan set is `bitmap_prefix_xor_64`, `bitmap_next_set_bit`, `bulk_emit_positions_64`, `byte_context`, and `cache_hints` (`restart/skinny/tranches/sk-v12/research/skv12-totality-fold-scout.md:72`, `restart/skinny/tranches/sk-v12/research/skv12-aarch64-simd-coverage-audit.md:36`, `restart/skinny/tranches/sk-v12/HANDOFF.md:83`).
 
-8. The P2-B/C/D/E candidate surface collapses into four verdict classes: grammar-neutral byte-set/classifier/tape/fact-stream operations; per-grammar generated template surfaces; support-only inventory that cannot move a row without a consumer; and JSON-overfit/drop routes. Candidate admission belongs to S-P3; P2-F only names legality.
+8. The P2-B/C/D/E candidate and inventory surface collapses into four verdict classes: grammar-neutral byte-set/classifier/tape/fact-stream operations; per-grammar generated template surfaces; support-only inventory that cannot move a row without a consumer; and JSON-overfit/drop routes. Candidate admission belongs to S-P3; P2-F only names legality. Rows whose verdict starts `Inventory/drop`, `Support inventory`, `Support-only`, `Diagnostic-only`, or `Parser-candidate-ineligible` are outside the current S-P3 candidate pool unless a later folded pass adds a fresh P1 antecedent, scalar oracle, micro-proof, and same-wave consumer.
 
 ## §2 — Candidate primitives
 
@@ -100,7 +100,7 @@ GrammarConfig resolves the leak surface by making grammar-specific policy data, 
 - `restart/skinny/tranches/sk-v12/USER-PIN-W1-CSS-L4-SOTA.md`: CSS L4 authoritative target, union/ASM-gen category unblocks, orphan SIMD set, GrammarConfig and `escape_mask_64` blockers.
 - `restart/skinny/tranches/sk-v12/HANDOFF.md` and `restart/skinny/tranches/sk-v12/SYNTHESIS.md`: SK-V12 close/admit/fixpoint conditions, telemetry binding, refusal conditions.
 - `restart/skinny/tranches/sk-v12/research/p1/`: P1-A through P1-F, capture manifest, replay ledger, and `hardening/HARDENING-S-P1-CONVERGED.md`.
-- `restart/skinny/tranches/sk-v12/research/p2/p2a-sota-teardown.md`, `p2b-dav1d-process.md`, `p2c-arch-esoterica.md`, `p2d-substrate-tape.md`, `p2e-parse-that-gaps.md`: current S-P2 sibling candidate surface.
+- `restart/skinny/tranches/sk-v12/research/p2/p2a-sota-teardown.md`, `p2b-dav1d-process.md`, `p2c-arch-esoterica.md`, `p2d-substrate-tape.md`, `p2e-parse-that-gaps.md`: current S-P2 sibling candidate and inventory surface.
 - `restart/skinny/tranches/sk-v12/research/skv12-value-api-audit.md`: GrammarConfig, ValueRef/Tape, and Lock 14 leak inventory.
 - `restart/skinny/tranches/sk-v12/research/skv12-totality-fold-scout.md`: Lock 14/16 fold gaps, `escape_mask_64` bug, BackendShape state.
 - `restart/skinny/tranches/sk-v12/research/skv12-decision-engine-audit.md`: hardcoded decision-engine and recognizer risks.

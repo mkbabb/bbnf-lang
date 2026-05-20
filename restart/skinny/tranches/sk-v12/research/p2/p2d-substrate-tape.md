@@ -1,5 +1,5 @@
 # SK-V12 P2-D: Substrate + Tape Design
-Pass: S-P2 Research. Cycle: V1.
+Pass: S-P2 Research. Cycle: V2.
 Date: 2026-05-20.
 Scope: Interrogate the offset-tape substrate, logical-vs-allocated tape ratios, lazy materialisation, and same-tape CSS-local union eligibility under the SK-V12 user pin.
 Output: this file.

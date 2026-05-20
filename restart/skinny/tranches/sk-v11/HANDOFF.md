@@ -24,7 +24,7 @@ work may land only through the selected wave's entry gate and owner paths.
 8. `restart/skinny/tranches/sk-v11/research/alpha/alpha-F-contract-draft.md`
 9. `restart/skinny/tranches/sk-v10/research/close/close-redress.md`
 10. `skinny/RESULTS.md`
-11. `skinny/REDRESS.md` through REDRESS 118
+11. `skinny/REDRESS.md` through REDRESS 119
 12. `restart/skinny/tranches/sk-v9/research/p3/hardening/HARDENING-S-P3-CONVERGED.md`
 13. `restart/skinny/tranches/sk-v10/SYNTHESIS.md`
 14. `restart/skinny/tranches/sk-v10/HANDOFF.md`
@@ -88,7 +88,7 @@ that S-P1/S-P2 identify on the JSON direct residual surface.
 
 ## 4. Next Move
 
-Next move: ready-for-wave-W8-research.
+Next move: ready-for-wave-W9-close.
 
 W0 is closed by S-P1/W0 authority in SPEC §3. W1a is admitted by REDRESS 111:
 the companion non-JSON gate/report lane exists and does not move JSON rows or
@@ -136,7 +136,14 @@ can plausibly clear both Track 1 and Track 2 floors through
 REVISE without new oracle/gate evidence. No W7 source patch was attempted;
 `/tmp/skv11-waveW7-rejected.patch` is an empty marker, no `RESULTS.md` row
 moved, and W8 may dispatch only through SPEC Section 12's direct residual
-fixpoint and row reclamation route with W2-W7 dispositions carried forward.
+fixpoint and row reclamation route with W2-W7 dispositions carried forward. W8
+closed as REDRESS 119 measured direct fixpoint: it selected no source, no W8a
+split, no gate schema or validator semantic change, and no `RESULTS.md` row
+movement; `git diff --exit-code -- skinny/RESULTS.md` and the SK-V11-open
+skinny gate advisory passed. All 13 direct residual rows now carry per-row
+uncloseable/fixpoint proofs tied to W3-W7 dispositions. W8 admits no direct row,
+no W0-clamped row, and no non-JSON generated intervention. W9 may close only as
+fixpoint + Alpha feedback, not overall direct `GO`.
 
 ## 5. Active Wave Packet
 

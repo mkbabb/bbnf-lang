@@ -1,277 +1,253 @@
-# SK-V12 Pass Alpha CHALLENGE V1 - CH6 Next-Tranche Impact
+# SK-V12 Pass Alpha CHALLENGE V1 - CH6 Anti-Paper-Close / Next-Tranche Impact
 
-Pass: Pass Alpha SK-V11 -> SK-V12.
+Pass: Pass Alpha SK-V11 -> SK-V12 re-bracket.
 Cycle: V1.
-Lens: CH6 - Next-Tranche Impact / anti-paper-close.
+Lens: CH6 - Anti-paper-close / next-tranche impact.
 Date: 2026-05-20.
 Disposition: REVISE.
 
 ## Scope
 
-This review checks whether the SK-V12 Alpha packet is ready to hand the next
-tranche to G-Alpha and then S-P1/S-P2/S-P3 without paper-close, role merger, or
-unbounded implementation drift. The reviewed axes are revert protocol coverage,
-hard caps, triumvirate discipline, measurable close conditions, G-Alpha
-presentation readiness, and S-P1/S-P2/S-P3 dispatch clarity.
+This review evaluates the pin-aware Alpha A-F packet against the USER PIN and
+Pass Alpha CH6 duties. It asks whether SK-V12 can be presented at G-Alpha
+without a paper close, without future-phase CSS promises, and without a
+relinquish gap between Alpha and the next skinny passes.
 
-Primary authorities:
+Authorities read:
 
-- `restart/prompts/pass-contracts/PASS-ALPHA.md` Section 3 and Sections 7-10.
+- `restart/prompts/ORCHESTRATOR.md` Section 3W and Section 3Z.
+- `restart/prompts/pass-contracts/PASS-ALPHA.md` Section 3 and Section 7.
 - `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`.
-- `restart/prompts/ORCHESTRATOR.md`.
+- `restart/skinny/tranches/sk-v12/USER-PIN-W1-CSS-L4-SOTA.md`.
+- Alpha A-F under `restart/skinny/tranches/sk-v12/research/alpha/`.
 - `restart/skinny/tranches/sk-v12/SYNTHESIS.md`.
 - `restart/skinny/tranches/sk-v12/HANDOFF.md`.
-- `restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md`.
-- `restart/skinny/tranches/sk-v12/research/alpha/alpha-F-contract-draft.md`.
-- `restart/skinny/tranches/sk-v11/research/close/close-redress.md`.
+- `skinny/RESULTS.md`.
+- `skinny/REDRESS.md` through REDRESS 120.
 
 ## Disposition Summary
 
 | Axis | Disposition | Blocking? |
 |---|---|---|
-| Revert protocol coverage | REVISE | yes |
-| Hard caps | REVISE | yes |
-| Triumvirate discipline | ACCEPT | no |
-| Measurable close conditions | ACCEPT | no |
-| G-Alpha presentation readiness | REVISE | yes, inherits hard-cap/revert gaps |
-| S-P1/S-P2/S-P3 dispatch clarity | ACCEPT | no |
+| No paper CSS close | ACCEPT | no |
+| No future-phase CSS promise | ACCEPT | no |
+| ADMIT / FIXPOINT measurability | REVISE | yes, comparator inequality mismatch |
+| G-Alpha presentation seed | REVISE | yes |
+| S-P3 next move / no relinquish gap | REVISE | yes |
+| Rollback protocols | REVISE | yes, incomplete rejected-patch coverage |
+| Triumvirate boundary | ACCEPT | no |
 
-Overall CH6 disposition is REVISE. There is no REJECT: the contract's next
-tranche direction is coherent and bench-bound, but G-Alpha is not presentation
-ready until the two critical folds below are added.
+Overall CH6 disposition is REVISE. The pin-aware Alpha packet correctly
+replaces the obsolete Sheets-first route with CSS L4 and blocks future-phase
+CSS promises, but it is not ready for G-Alpha because it still leaves concrete
+next-tranche control gaps.
 
 ## Critical Findings
 
-### CH6-1 - Candidate-local revert protocol is missing
+### CH6-1 - The next move skips the required skinny pass sequence
 
 Disposition: REVISE.
 
-`PASS-ALPHA` asks CH6 to verify whether the SK-V{N+1} contract specifies
-revert protocol per intervention (`restart/prompts/pass-contracts/PASS-ALPHA.md:47`).
-It also says S-P3's wave plan must carry a revert protocol for each wave
-(`restart/prompts/pass-contracts/PASS-ALPHA.md:114`-
-`restart/prompts/pass-contracts/PASS-ALPHA.md:120`). The triumvirate plan
-schema is explicit: each selected intervention needs owner paths,
-falsifiability gate, hard cap, revert protocol, same-wave consumer, and
-pre-blocked routes (`restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md:55`-
-`restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md:62`). Redress failure
-must revert, record evidence, and save the rejected patch
-(`restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md:67`-
-`restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md:75`).
+`PASS-ALPHA.md` says that after G-Alpha closes, the orchestrator can dispatch
+SK-V{N+1} P1, the first skinny pass of the new iteration
+(`restart/prompts/pass-contracts/PASS-ALPHA.md:167`-`178`). The per-wave
+triumvirate contract also places wave execution beneath S-P3, after the skinny
+P1/P2/P3 track has produced `SPEC.md`
+(`restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md:3`-`5`). The current
+pin-aware packet instead repeatedly states that the next move is S-P3:
 
-Alpha-E gives owner paths, scalar/oracle status, same-wave consumers,
-falsifiability gates, LOC budgets, risk, and pre-blocked adjacency for E1-E5
-(`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:37`-
-`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:297`).
-It does not name a revert protocol for any candidate. Alpha-F and the public
-contract do add fail-closed refusal conditions, but they do not say what is
-rolled back when a generated runtime/report/bench row lands and the gate fails
-(`restart/skinny/tranches/sk-v12/research/alpha/alpha-F-contract-draft.md:175`-
-`restart/skinny/tranches/sk-v12/research/alpha/alpha-F-contract-draft.md:197`;
-`restart/skinny/tranches/sk-v12/SYNTHESIS.md:217`-
-`restart/skinny/tranches/sk-v12/SYNTHESIS.md:230`).
+- `alpha-F-contract-draft.md:203`
+- `SYNTHESIS.md:207`-`222`
+- `HANDOFF.md:91`-`109`
+- `HANDOFF.md:140`-`144`
 
-This is critical because E1/E2/E3 cross first-of-class codegen/runtime/report
-surfaces, and E4/E5 are explicitly conditional on prior row evidence. Without a
-candidate-local failure protocol, S-P3 can still write one later, but G-Alpha
-cannot honestly present the current Alpha packet as CH6-complete.
+That is a next-tranche relinquish gap. It lets SK-V12 jump straight to W1
+planning even though the user pin requires fresh CSS L4 profile/research
+authority before S-P3 scopes the wave. It also risks reusing pre-pin S-P1/P2
+facts as if they were CSS-targeted gate evidence.
 
 Required fold:
 
-- Add a `Revert protocol` field to each Alpha-E candidate, or add an equivalent
-  SK-V12 Alpha revert matrix consumed by `SYNTHESIS.md` / `HANDOFF.md`.
-- Each protocol must name the rollback slice for source, generated runtime
-  output, benchmark/report/gate edits, `skinny/RESULTS.md`, and `skinny/REDRESS.md`.
-- Each protocol must state whether the failure blocks dependent candidates
-  such as E4 after E1 failure or E5 without E4 evidence.
-- Each failed implementation wave must save `/tmp/skv12-wave{W}-rejected.patch`
-  and record the REDRESS entry, matching triumvirate redress discipline.
+- Replace "Next move: S-P3 re-derives W1 under the pin" with the pass-order
+  sequence: G-Alpha -> SK-V12 S-P1 Profile under the pin -> S-P2 Research under
+  the pin -> S-P3 Synthesis-Plan under the pin -> wave triumvirates.
+- S-P3 may still own the W1 plan, but only after S-P1 and S-P2 either rerun or
+  record explicit pin-aware revalidation evidence with fresh CSS L4 profile,
+  lightningcss comparator, JSON guard, union, and ASM-gen inputs.
+- If the orchestrator chooses to reuse any pre-pin S-P1/P2 artifact, the reuse
+  must be a measured revalidation decision, not an implicit shortcut.
 
-### CH6-2 - Hard caps are not present at candidate or G-Alpha depth
+### CH6-2 - Candidate hard caps are still absent
 
 Disposition: REVISE.
 
-`PASS-ALPHA` makes hard caps part of the CH6 review question
-(`restart/prompts/pass-contracts/PASS-ALPHA.md:47`) and part of the G-Alpha
-presentation summary (`restart/prompts/pass-contracts/PASS-ALPHA.md:169`-
-`restart/prompts/pass-contracts/PASS-ALPHA.md:174`). `ORCHESTRATOR.md` also
-requires every dispatch to carry an explicit minute cap and halt/escalate at
-the cap (`restart/prompts/ORCHESTRATOR.md:224`-
-`restart/prompts/ORCHESTRATOR.md:226`).
+`PASS-ALPHA.md` assigns CH6 to verify revert protocols, hard caps,
+triumvirate discipline, and bench-verifiable goalsets
+(`restart/prompts/pass-contracts/PASS-ALPHA.md:33`-`49`). The G-Alpha
+presentation must include rows targeted, interventions, LOC budget, hard caps,
+and pre-blocked routes (`restart/prompts/pass-contracts/PASS-ALPHA.md:167`-
+`174`). `ORCHESTRATOR.md` requires every dispatch to carry an explicit minute
+cap and halt/escalate at the cap (`restart/prompts/ORCHESTRATOR.md:218`-`227`).
 
-Alpha-E names LOC budgets for E1-E5
-(`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:79`,
-`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:129`,
-`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:176`,
-`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:225`,
-`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:287`),
-but those are not minute hard caps. `SYNTHESIS.md` and `HANDOFF.md` correctly
-defer the detailed wave plan to S-P3
-(`restart/skinny/tranches/sk-v12/SYNTHESIS.md:5`-
-`restart/skinny/tranches/sk-v12/SYNTHESIS.md:8`;
-`restart/skinny/tranches/sk-v12/HANDOFF.md:5`-
-`restart/skinny/tranches/sk-v12/HANDOFF.md:8`), but neither file supplies the
-hard-cap summary that G-Alpha must present.
-
-This is critical because the highest-risk candidates are first-of-class
-runtime/codegen work and can otherwise become an open-ended "stand up the
-baseline" effort before S-P3 has constrained the wave.
+Alpha-E now has useful LOC and risk data for E1-E5
+(`alpha-E-candidate-shortlist.md:52`-`60`), and each candidate repeats a LOC
+budget later (`alpha-E-candidate-shortlist.md:112`-`120`,
+`159`-`163`, `196`-`200`, `246`-`251`, `302`-`306`). It still does not state
+candidate-level minute caps. Alpha-F's G-Alpha seed likewise omits hard caps
+(`alpha-F-contract-draft.md:194`-`205`).
 
 Required fold:
 
-- Add candidate-level maximum wall-clock caps for S-P3 planning and redress
-  intent, or state a binding default that S-P3 must preserve unless it escalates
-  to the user.
-- Make the G-Alpha summary able to present both LOC budgets and minute caps for
-  E1-E5.
-- Mark E1/E4 first-of-class and therefore challenge-mandatory before redress
-  under the triumvirate rule
-  (`restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md:112`-
-  `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md:125`).
+- Add a hard-cap matrix for E1-E5. It can use the current campaign default
+  caps if that is the selected policy, but the minute numbers must be explicit.
+- Carry those caps into the G-Alpha seed with LOC, risk, and pre-blocked-route
+  summary.
+- State that S-P3 cannot widen a candidate cap without an explicit extension
+  decision.
 
-### CH6-3 - G-Alpha presentation is not yet ready
+### CH6-3 - The CSS admission inequality is inconsistent
 
 Disposition: REVISE.
 
-The G-Alpha boundary is present: no SK-V12 dispatch occurs before G-Alpha or
-user pin (`restart/skinny/tranches/sk-v12/SYNTHESIS.md:27`-
-`restart/skinny/tranches/sk-v12/SYNTHESIS.md:29`;
-`restart/skinny/tranches/sk-v12/HANDOFF.md:102`-
-`restart/skinny/tranches/sk-v12/HANDOFF.md:109`). `ORCHESTRATOR.md` makes
-G-Alpha mandatory and requires explicit user confirmation before advancing
-(`restart/prompts/ORCHESTRATOR.md:163`-
-`restart/prompts/ORCHESTRATOR.md:172`).
+The USER PIN raises the CSS close target to generated CSS L4 Track 1 beating
+`lightningcss_mbps + 1`. Alpha-F and SYNTHESIS use the strict form:
 
-However, `PASS-ALPHA` says the user-facing G-Alpha presentation must include a
-summary of rows targeted, interventions, LOC budget, hard caps, and pre-blocked
-routes, plus the predicted close state
-(`restart/prompts/pass-contracts/PASS-ALPHA.md:169`-
-`restart/prompts/pass-contracts/PASS-ALPHA.md:174`). The current materials have
-the pieces for rows, interventions, LOC budgets, telemetry, pre-blocks, and
-close target, but the missing hard caps and revert protocols above leave the
-presentation incomplete. The packet also does not yet provide one concise
-G-Alpha-ready summary surface tying the Alpha-A/B current deltas to the
-Alpha-E/F predicted SK-V12 close state.
+- `alpha-F-contract-draft.md:70`-`73`
+- `SYNTHESIS.md:39`-`41`
+- `HANDOFF.md:67`-`69`
+
+Alpha-E's candidate gates use `>= lightningcss_mbps + 1` for E1, E4, and E5
+(`alpha-E-candidate-shortlist.md:101`-`107`,
+`236`-`243`, `294`-`301`). That mismatch can admit a borderline row under the
+candidate gate while the contract-level close condition would not admit it.
 
 Required fold:
 
-- Add a G-Alpha summary section or artifact that enumerates E1-E5 with target
-  rows, LOC budget, minute hard cap, pre-blocked routes, and failure/revert
-  action.
-- Include the predicted close state explicitly: "baseline + intervention
-  admitted", "measured BLOCKED generated baseline", or "revise/escalate" with
-  the evidence needed for each.
+- Normalize every CSS L4 candidate gate to the exact close expression:
+  `generated_track1_mbps > lightningcss_mbps + 1`.
+- If S-P3 wants an integer floor interpretation instead, it must state the
+  rounding rule once and make Alpha-E, SYNTHESIS, HANDOFF, RESULTS, and the
+  gate consumer use the same rule.
+
+### CH6-4 - Rollback coverage is present but not uniform enough for redress
+
+Disposition: REVISE.
+
+The earlier revert-protocol gap is materially improved: Alpha-E now names a
+rollback slice for each candidate. E1 and E4 explicitly include source,
+generated output, report/gate/RESULTS/REDRESS, and a rejected-patch path
+(`alpha-E-candidate-shortlist.md:118`-`120`,
+`249`-`251`). E2, E3, and E5 describe rollback, but do not uniformly require
+the failed-wave rejected patch artifact (`alpha-E-candidate-shortlist.md:162`-
+`163`, `199`-`200`, `304`-`306`).
+
+The triumvirate failure protocol requires a REDRESS entry with measurement
+evidence and the reverted patch saved at
+`/tmp/skv{N}-wave{W}-rejected.patch`
+(`restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md:65`-`75`).
+
+Required fold:
+
+- Every E1-E5 candidate must say that a failed redress saves
+  `/tmp/skv12-waveW{n}-rejected.patch` or the exact wave-specific equivalent.
+- E2 must state whether a Lock 14 failure rolls back E1 generated CSS output
+  and blocks CSS emission until replanned.
+- E3 must state that failure keeps all later SIMD/ASM candidates blocked.
+- E5 must state whether a parity-pass / row-miss result removes the native body,
+  demotes it to inventory, or records an admitted non-orphan consumer.
+
+### CH6-5 - The G-Alpha presentation seed is too thin
+
+Disposition: REVISE.
+
+Alpha-F has the right high-level G-Alpha seed: CSS L4 target, `lightningcss + 1`
+floor, fallback discipline, W0 revalidation, and fixpoint requirements
+(`alpha-F-contract-draft.md:194`-`205`). SYNTHESIS repeats the ADMIT/FIXPOINT
+summary (`SYNTHESIS.md:224`-`231`). But `PASS-ALPHA.md` requires the
+presentation to include targeted rows, interventions, LOC budget, hard caps,
+pre-blocked routes, and predicted close state
+(`restart/prompts/pass-contracts/PASS-ALPHA.md:169`-`174`).
+
+The current G-Alpha seed does not list E1-E5 with LOC, hard cap, pre-blocked
+REDRESS adjacency, rollback action, or predicted close outcome. That makes it
+impossible to present a complete G-Alpha packet without the orchestrator
+assembling extra unstated context.
+
+Required fold:
+
+- Add a compact G-Alpha table covering E1-E5: target row, role, LOC, minute
+  cap, REDRESS adjacency, close contribution, and failure action.
+- Name the predicted close state explicitly:
+  `ADMIT if E1/E2 close CSS L4 > lightningcss`, or `FIXPOINT only after CSS,
+  union-substrate, and ASM-gen measured attempts plus zero orphan primitives`.
+- State that stale `SPEC.md` / `DISPATCH-PROMPT.md` are not dispatch authority
+  until S-P3 regenerates them under the pin.
 
 ## Accepted Findings
 
-### CH6-4 - Triumvirate role separation is preserved
+### CH6-6 - The packet does not paper-close CSS L4
 
 Disposition: ACCEPT.
 
-The packet does not merge Alpha, S-P1/S-P2/S-P3, and wave redress roles.
-`SYNTHESIS.md` says Alpha is not behavior implementation authority and does not
-create `SPEC.md` or `DISPATCH-PROMPT.md` because S-P3 owns the later wave plan
-after S-P1/S-P2 convergence (`restart/skinny/tranches/sk-v12/SYNTHESIS.md:5`-
-`restart/skinny/tranches/sk-v12/SYNTHESIS.md:8`). It also refuses source edits
-before a selected S-P3 wave entry gate exists and passes
-(`restart/skinny/tranches/sk-v12/SYNTHESIS.md:217`-
-`restart/skinny/tranches/sk-v12/SYNTHESIS.md:223`). `HANDOFF.md` repeats that
-S-P3 owns `SPEC.md` / `DISPATCH-PROMPT.md`
-(`restart/skinny/tranches/sk-v12/HANDOFF.md:5`-
-`restart/skinny/tranches/sk-v12/HANDOFF.md:8`) and refuses source edits before
-the implementation packet exists
-(`restart/skinny/tranches/sk-v12/HANDOFF.md:83`-
-`restart/skinny/tranches/sk-v12/HANDOFF.md:100`).
+Alpha-A says there is no current generated CSS L4 row, no lightningcss number,
+and no generated CSS runtime (`alpha-A-results-extraction.md:52`-`72`,
+`229`-`237`). Alpha-B makes the CSS competitor delta `UNMEASURED` until the
+same-host lightningcss fields exist (`alpha-B-competitor-deltas.md:79`-`99`).
+Alpha-C blocks report-only and future-phase closes
+(`alpha-C-redress-digest.md:120`-`130`, `230`-`246`). Alpha-F's ADMIT route
+requires generated Track 1, strict equality, gate-consumed provenance, Lock 14,
+Lock 16, and JSON guard state (`alpha-F-contract-draft.md:66`-`91`).
 
-This aligns with the load-bearing triumvirate rule that research, plan, and
-redress commits stay separate and that redress cannot dispatch without an
-antecedent plan (`restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md:190`-
-`restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md:200`).
+That is not a paper close. The packet names the absence honestly and makes the
+bench row load-bearing.
 
-### CH6-5 - The close condition is measurable and bench-bound
+### CH6-7 - Future-phase CSS promises are blocked
 
 Disposition: ACCEPT.
 
-SK-V12 close is not a prose claim. The contract requires G-Alpha/S-P1/S-P2/S-P3
-convergence, a fresh S-P1 baseline, exactly one generated non-JSON baseline
-before JSON-only work, one grammar-generalized intervention clearing
-`ceil(baseline_mbps * 1.01)`, guard-row preservation, parse-only diagnostics
-only, and same-wave gate consumption
-(`restart/skinny/tranches/sk-v12/SYNTHESIS.md:25`-
-`restart/skinny/tranches/sk-v12/SYNTHESIS.md:70`). The close target refuses
-another JSON-only cycle first
-(`restart/skinny/tranches/sk-v12/SYNTHESIS.md:72`-
-`restart/skinny/tranches/sk-v12/SYNTHESIS.md:76`).
+The packet correctly demotes Sheets and BBNF-self to post-CSS-redress fallbacks:
+Alpha-C says CSS L4 must be attempted first and future-phase CSS promises stay
+blocked (`alpha-C-redress-digest.md:123`-`130`); Alpha-D invalidates the
+pre-pin Sheets plan (`alpha-D-validated-invalidated.md:124`-`138`);
+Alpha-E excludes Sheets and BBNF-self from the shortlist until after CSS
+redress (`alpha-E-candidate-shortlist.md:308`-`316`); HANDOFF refuses skipping
+CSS L4 before a CSS redress attempt (`HANDOFF.md:125`-`138`).
 
-Alpha-E supplies measurable candidate gates: generated non-JSON baseline rows
-must have finite Track 1 and independent oracle/Track 2 Mbps, strict equality,
-and sample counts (`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:67`-
-`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:78`,
-`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:118`-
-`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:128`,
-`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:164`-
-`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:175`).
-The first intervention must clear the baseline by at least 1%
-(`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:214`-
-`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:224`).
-The conditional JSON companion has named direct floors and is lowest priority
-(`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:235`-
-`restart/skinny/tranches/sk-v12/research/alpha/alpha-E-candidate-shortlist.md:297`).
+### CH6-8 - FIXPOINT is measurable, not rhetorical
 
-### CH6-6 - SK-V11 close feedback is carried forward correctly
+Disposition: ACCEPT, subject to CH6-1/CH6-2/CH6-3 folds.
+
+The FIXPOINT route requires a measured CSS L4 redress attempt, a new measured
+union-substrate implementation attempt, a new measured ASM-gen attempt, fresh
+profile/microbench/parity/consumer evidence, zero orphan production primitives,
+and REDRESS entries for misses (`alpha-F-contract-draft.md:92`-`112`;
+`SYNTHESIS.md:61`-`80`; `HANDOFF.md:75`-`83`). This satisfies the user pin's
+campaign-fixpoint structure. It remains blocked only because the pass sequence,
+hard-cap, and inequality defects above must be folded.
+
+### CH6-9 - Triumvirate boundaries are preserved
 
 Disposition: ACCEPT.
 
-The SK-V11 close authority says W9 made no behavior, generated runtime,
-benchmark, gate, or `skinny/RESULTS.md` change and preserved the unchanged
-`N-direct / NoGo` surface (`restart/skinny/tranches/sk-v11/research/close/close-redress.md:10`-
-`restart/skinny/tranches/sk-v11/research/close/close-redress.md:28`). It also
-states that every residual direct row has a per-row fixpoint proof under
-REDRESS 119 and that SK-V12 should solve the generated non-JSON baseline before
-another JSON-only micro-wave
-(`restart/skinny/tranches/sk-v11/research/close/close-redress.md:46`-
-`restart/skinny/tranches/sk-v11/research/close/close-redress.md:82`).
+Alpha-F correctly refuses to edit `SPEC.md` or `DISPATCH-PROMPT.md` and marks
+them stale until downstream S-P3 rewrites them
+(`alpha-F-contract-draft.md:207`-`209`). SYNTHESIS and HANDOFF say the current
+Alpha packet authorizes no source work and leaves implementation authority to
+the later S-P3/wave packet (`SYNTHESIS.md:207`-`222`; `HANDOFF.md:140`-`144`).
 
-SK-V12 inherits that posture. Its direct residual table is marked as a reopen
-ledger, not the first target, and it requires fresh material evidence before
-any JSON direct row reopens
-(`restart/skinny/tranches/sk-v12/SYNTHESIS.md:57`-
-`restart/skinny/tranches/sk-v12/SYNTHESIS.md:64`;
-`restart/skinny/tranches/sk-v12/SYNTHESIS.md:90`-
-`restart/skinny/tranches/sk-v12/SYNTHESIS.md:129`).
+The boundary is correct; the required fold is to put S-P1 and S-P2 back in
+front of S-P3 rather than dispatching S-P3 directly.
 
-### CH6-7 - S-P1/S-P2/S-P3 dispatch clarity is sufficient
+## Required V2 Fold
 
-Disposition: ACCEPT.
+Pass Alpha V1 cannot converge under CH6. V2 must:
 
-The next move is S-P1 Profile, not implementation. `SYNTHESIS.md` tells S-P1 to
-freeze the SK-V12-open surface, profile guard rows, inventory the generated
-non-JSON blocker, audit the W1a report lane, identify the smallest runnable
-generated non-JSON baseline, keep JSON direct data diagnostic unless the
-REDRESS 114-119 reopen rule is met, and separate microbench inventory from
-dispatch authority (`restart/skinny/tranches/sk-v12/SYNTHESIS.md:240`-
-`restart/skinny/tranches/sk-v12/SYNTHESIS.md:259`). `HANDOFF.md` repeats the
-same next move and instructs S-P1 to name the first runnable generated non-JSON
-baseline candidate for S-P2/S-P3
-(`restart/skinny/tranches/sk-v12/HANDOFF.md:102`-
-`restart/skinny/tranches/sk-v12/HANDOFF.md:109`).
+1. Reword the next-tranche sequence to G-Alpha -> S-P1 -> S-P2 -> S-P3 -> waves.
+2. Add explicit minute hard caps for E1-E5 and carry them into G-Alpha.
+3. Normalize CSS admission gates to the same strict `> lightningcss_mbps + 1`
+   expression, or define one rounding rule consumed by every gate document.
+4. Make rollback/rejected-patch evidence uniform for all E1-E5 candidates.
+5. Expand the G-Alpha seed into a presentation-ready intervention table.
 
-S-P2 and S-P3 are also bounded: S-P1/S-P2/S-P3 convergence is required in the
-close condition (`restart/skinny/tranches/sk-v12/SYNTHESIS.md:27`-
-`restart/skinny/tranches/sk-v12/SYNTHESIS.md:29`), Alpha-F only names candidate
-space for S-P1 to profile and S-P2 to ground
-(`restart/skinny/tranches/sk-v12/SYNTHESIS.md:155`-
-`restart/skinny/tranches/sk-v12/SYNTHESIS.md:167`), and S-P3 later authors the
-implementation packet (`restart/skinny/tranches/sk-v12/SYNTHESIS.md:261`-
-`restart/skinny/tranches/sk-v12/SYNTHESIS.md:267`).
-
-## Required Folds Before G-Alpha
-
-1. Add candidate-level revert protocols for E1-E5 or an equivalent Alpha-level
-   revert matrix.
-2. Add minute hard caps for E1-E5 and expose them in the G-Alpha summary.
-3. Add or update a G-Alpha-ready summary tying Alpha-A/B current deltas to the
-   Alpha-E/F predicted SK-V12 close state.
-
-After those folds, CH6 should be able to move to ACCEPT if no new candidate
-adds an unmeasurable gate, role merger, or hidden implementation dispatch.
+Until those folds land, any G-Alpha presentation would require unstated
+orchestrator interpretation and would fail CH6 anti-paper-close discipline.

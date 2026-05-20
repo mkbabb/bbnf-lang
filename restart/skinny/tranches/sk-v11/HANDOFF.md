@@ -24,7 +24,7 @@ work may land only through the selected wave's entry gate and owner paths.
 8. `restart/skinny/tranches/sk-v11/research/alpha/alpha-F-contract-draft.md`
 9. `restart/skinny/tranches/sk-v10/research/close/close-redress.md`
 10. `skinny/RESULTS.md`
-11. `skinny/REDRESS.md` through REDRESS 110
+11. `skinny/REDRESS.md` through REDRESS 111
 12. `restart/skinny/tranches/sk-v9/research/p3/hardening/HARDENING-S-P3-CONVERGED.md`
 13. `restart/skinny/tranches/sk-v10/SYNTHESIS.md`
 14. `restart/skinny/tranches/sk-v10/HANDOFF.md`
@@ -88,13 +88,14 @@ that S-P1/S-P2 identify on the JSON direct residual surface.
 
 ## 4. Next Move
 
-Next move: ready-for-wave-W1a.
+Next move: ready-for-wave-W1b.
 
-W0 is closed by S-P1/W0 authority in SPEC §3. The next behavior wave is W1a,
-the non-JSON gate/report schema lane. Dispatch W1a under
+W0 is closed by S-P1/W0 authority in SPEC §3. W1a is admitted by REDRESS 111:
+the companion non-JSON gate/report lane exists and does not move JSON rows or
+claim generated non-JSON baseline authority. The next behavior wave is W1b, the
+generated non-JSON baseline and oracle lane. Dispatch W1b under
 `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`, with CHALLENGE required
-before redress. W1a may edit only the SPEC §4 owner paths and must not move any
-JSON row or claim generated non-JSON baseline authority.
+before redress.
 
 ## 5. Active Wave Packet
 

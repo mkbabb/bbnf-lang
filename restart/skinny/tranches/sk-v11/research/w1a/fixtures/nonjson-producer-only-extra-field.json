@@ -1,0 +1,7 @@
+{
+  "schema_version": "sk-v11-w1a-nonjson-v1",
+  "wave_id": "SK-V11-W1a",
+  "run_id": "sk-v11-w1a:fixture-fnv64-0123456789abcdef",
+  "pmu_cycles": 42,
+  "rows": []
+}

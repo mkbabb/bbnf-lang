@@ -1,0 +1,73 @@
+{
+  "schema_version": "sk-v11-w1a-nonjson-v1",
+  "wave_id": "SK-V11-W1a",
+  "run_id": "sk-v11-w1a:fixture-fnv64-0123456789abcdef",
+  "rows": [
+    {
+      "corpus": "declaration_values",
+      "workload": "direct",
+      "outcome_id": "S",
+      "verdict": "NO-GO",
+      "strictness": "strict",
+      "parse_utf8": "measured-row",
+      "escape_complete": "yes",
+      "flaw_probe": "none",
+      "output_plane": "digest",
+      "track1_mbps": 1000.0,
+      "track2_mbps": 1000.0,
+      "competitors": {
+        "sonic_strict_mbps": null,
+        "sonic_lossy_mbps": null,
+        "simdjson_dom_mbps": null,
+        "simdjson_ondemand_mbps": null,
+        "yyjson_default_mbps": null,
+        "asmjson_swar_mbps": null,
+        "asmjson_avx512_mbps": null,
+        "rapidjson_default_mbps": null,
+        "serde_json_mbps": null
+      },
+      "delta_vs_skv6": "n/a",
+      "delta_vs_sonic_strict": null,
+      "delta_vs_simdjson_dom": null,
+      "delta_vs_yyjson": null,
+      "hot_leaf": "fixture:w1a:css_l4/declaration_values/direct/main",
+      "signal": "W1a schema-only non-JSON evidence; no row movement",
+      "sk_v8": {
+        "row_id": "css_l4/declaration_values/direct/main",
+        "grammar_id": "css_l4",
+        "domain": "css_l4_bench",
+        "measured_validation_path": "schema-only",
+        "profile_artifact": "fixture:w1a:css_l4/declaration_values/direct/main",
+        "sample_cost": "ns_per_byte=1.000000;bytes=1024",
+        "sample_count": 1,
+        "build_flags": "profile=bench;rustflags=-C target-cpu=native;target_cpu=native",
+        "host_triple": "aarch64-apple-darwin;arch=aarch64;cpu=Apple M5 Max",
+        "feature_mask": "arch=aarch64;os=macos;simd=Scalar;target_cpu=native",
+        "costfacts_rule_id": "none:w1a-schema",
+        "costfacts_chosen_shape": "none:w1a-schema",
+        "costfacts_rejected_alternative_ids": ["none:w1a-schema"],
+        "redress_entry": "none:w1a-schema-only",
+        "wave_id": "SK-V11-W1a",
+        "run_id": "sk-v11-w1a:fixture-fnv64-0123456789abcdef",
+        "sk_v9_open_delta": "nonjson-schema-only",
+        "substrate_surface": "digest",
+        "structural_projection_status": "n/a",
+        "substrate_cardinality": "zero_or_inert",
+        "same_wave_consumer_class": "non_json_gate_schema_only",
+        "track2_independence_status": "independent_verified",
+        "diagnostic_nonproducer_status": "pmu+cycles+profiles:nonproducer",
+        "comparators": [
+          {
+            "comparator_id": "internal_oracle",
+            "comparator_plane": "digest",
+            "comparator_strictness": "strict",
+            "comparator_freshness": "same-run-oracle",
+            "sidecar_freshness": "n/a",
+            "value_mbps": 1000.0,
+            "source_artifact": "oracle:w1a:css_l4:declaration_values:direct:digest"
+          }
+        ]
+      }
+    }
+  ]
+}

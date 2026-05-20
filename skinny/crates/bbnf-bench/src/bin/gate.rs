@@ -3,7 +3,8 @@ use bbnf_bench::lock14_baseline;
 use bbnf_bench::materialization::track_stats;
 use bbnf_bench::metadata::{current_peak_rss_bytes, RowMetadata, TrackTag};
 use bbnf_bench::report::{
-    sk_v8_open_baseline, ComparatorSet, Report, SkV8ComparatorEvidence, SkV8Telemetry, TelemetryRow,
+    sk_v8_open_baseline, ComparatorSet, NonJsonEvidenceReport, Report, SkV8ComparatorEvidence,
+    SkV8Telemetry, TelemetryRow,
 };
 use serde_json::Value;
 use std::collections::BTreeSet;
@@ -32,6 +33,15 @@ fn main() -> Result<(), Box<dyn Error>> {
             "--include-volatile-probes cannot be combined with --update-results or --write-results"
                 .into(),
         );
+    }
+    if let Some(path) = w1a_non_json_report_path(&args[1..])? {
+        let text = fs::read_to_string(&path)?;
+        let report = NonJsonEvidenceReport::from_json_str(&text)
+            .and_then(|report| report.validate_w1a_non_json_gate().map(|_| report))
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        println!("G-W1a-NONJSON-GATE PASS {}", path.display());
+        drop(report);
+        return Ok(());
     }
 
     let criterion_root = criterion_root();
@@ -389,6 +399,33 @@ fn exit_code_for_verdict(verdict: Verdict) -> i32 {
         Verdict::Invalid => 2,
         Verdict::NoGo => 5,
     }
+}
+
+fn w1a_non_json_report_path(args: &[String]) -> Result<Option<PathBuf>, Box<dyn Error>> {
+    let Some(flag_index) = args.iter().position(|arg| arg == "--w1a-non-json-report") else {
+        return Ok(None);
+    };
+    if args.iter().any(|arg| {
+        matches!(
+            arg.as_str(),
+            "--update-results" | "--write-results" | "--include-volatile-probes"
+        )
+    }) {
+        return Err(
+            "--w1a-non-json-report cannot be combined with JSON result update/probe flags".into(),
+        );
+    }
+    if args
+        .iter()
+        .filter(|arg| *arg == "--w1a-non-json-report")
+        .count()
+        != 1
+        || args.len() != flag_index + 2
+        || flag_index != 0
+    {
+        return Err("--w1a-non-json-report expects exactly one path argument".into());
+    }
+    Ok(Some(PathBuf::from(&args[flag_index + 1])))
 }
 
 fn w0_parse_non_admission(outcome: Outcome) -> Outcome {
@@ -2004,6 +2041,31 @@ fn criterion_root() -> PathBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn w1a_non_json_report_arg_extracts_single_path() {
+        let args = vec![
+            "--w1a-non-json-report".to_string(),
+            "../restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-pass-css-l4.json"
+                .to_string(),
+        ];
+        assert_eq!(
+            w1a_non_json_report_path(&args).unwrap(),
+            Some(PathBuf::from(
+                "../restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-pass-css-l4.json"
+            ))
+        );
+    }
+
+    #[test]
+    fn w1a_non_json_report_arg_rejects_update_results_combination() {
+        let args = vec![
+            "--w1a-non-json-report".to_string(),
+            "nonjson-pass-css-l4.json".to_string(),
+            "--update-results".to_string(),
+        ];
+        assert!(w1a_non_json_report_path(&args).is_err());
+    }
 
     #[test]
     fn w0_parse_non_admission_preserves_hard_failures() {

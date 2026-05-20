@@ -9,6 +9,7 @@ pub const SCHEMA_V3_HEADER: &str = "| Corpus | Workload | Outcome | Verdict | St
 const SCHEMA_V3_ALIGN: &str = "|---|---|---:|---|---|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---:|---:|---:|---|---|";
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct Report {
     pub title: String,
     pub rows: Vec<TelemetryRow>,
@@ -17,6 +18,7 @@ pub struct Report {
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct ComparatorSet {
     pub sonic_strict_mbps: Option<f64>,
     pub sonic_lossy_mbps: Option<f64>,
@@ -30,6 +32,7 @@ pub struct ComparatorSet {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct SkV8ComparatorEvidence {
     pub comparator_id: String,
     pub comparator_plane: String,
@@ -41,6 +44,7 @@ pub struct SkV8ComparatorEvidence {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct SkV8Telemetry {
     pub row_id: String,
     pub grammar_id: String,
@@ -69,6 +73,7 @@ pub struct SkV8Telemetry {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct TelemetryRow {
     pub corpus: String,
     pub workload: String,
@@ -92,6 +97,7 @@ pub struct TelemetryRow {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct ProbeReportRow {
     pub corpus: String,
     pub probe: String,
@@ -99,6 +105,55 @@ pub struct ProbeReportRow {
     pub ns_per_iter: Option<f64>,
     pub vs_track1: Option<f64>,
     pub signal: String,
+}
+
+pub const W1A_NON_JSON_REPORT_SCHEMA: &str = "sk-v11-w1a-nonjson-v1";
+const W1A_RUN_ID_PREFIX: &str = "sk-v11-w1a:fixture-fnv64-";
+pub type NonJsonEvidenceRow = TelemetryRow;
+pub type NonJsonOracleEvidence = SkV8ComparatorEvidence;
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct NonJsonEvidenceReport {
+    pub schema_version: String,
+    pub wave_id: String,
+    pub run_id: String,
+    pub rows: Vec<NonJsonEvidenceRow>,
+}
+
+impl NonJsonEvidenceReport {
+    pub fn from_json_str(text: &str) -> Result<Self, String> {
+        serde_json::from_str(text).map_err(|error| format!("invalid W1a non-JSON report: {error}"))
+    }
+
+    pub fn validate_w1a_non_json_gate(&self) -> Result<(), String> {
+        if self.schema_version != W1A_NON_JSON_REPORT_SCHEMA {
+            return Err(format!("unsupported W1a schema {}", self.schema_version));
+        }
+        if self.wave_id != "SK-V11-W1a" {
+            return Err(format!("{} cannot claim W1a authority", self.wave_id));
+        }
+        if !is_w1a_run_id(&self.run_id) {
+            return Err(format!("invalid W1a run id {}", self.run_id));
+        }
+        if self.rows.is_empty() {
+            return Err("W1a non-JSON report has no rows".to_string());
+        }
+        let mut seen = BTreeSet::new();
+        for row in &self.rows {
+            if row.sk_v8.wave_id != self.wave_id || row.sk_v8.run_id != self.run_id {
+                return Err(format!(
+                    "{} does not match report identity",
+                    row.sk_v8.row_id
+                ));
+            }
+            if !seen.insert(row.sk_v8.row_id.as_str()) {
+                return Err(format!("duplicate W1a row {}", row.sk_v8.row_id));
+            }
+            validate_w1a_non_json_row(row)?;
+        }
+        Ok(())
+    }
 }
 
 impl TelemetryRow {
@@ -1684,6 +1739,197 @@ fn parse_row_id(row_id: &str) -> Result<(&str, &str), String> {
     Ok((corpus.unwrap(), workload.unwrap()))
 }
 
+fn is_w1a_run_id(run_id: &str) -> bool {
+    let Some(suffix) = run_id.strip_prefix(W1A_RUN_ID_PREFIX) else {
+        return false;
+    };
+    suffix.len() == 16
+        && suffix
+            .bytes()
+            .all(|byte| matches!(byte, b'0'..=b'9' | b'a'..=b'f'))
+}
+
+macro_rules! require_w1a_text {
+    ($id:expr; $($name:literal = $value:expr),+ $(,)?) => {
+        $(
+            if $value.trim().is_empty() {
+                return Err(format!("{} missing {}", $id, $name));
+            }
+        )+
+    };
+}
+
+fn validate_w1a_non_json_row(row: &NonJsonEvidenceRow) -> Result<(), String> {
+    let t = &row.sk_v8;
+    require_w1a_text!(
+        t.row_id;
+        "corpus" = row.corpus,
+        "workload" = row.workload,
+        "outcome_id" = row.outcome_id,
+        "verdict" = row.verdict,
+        "strictness" = row.strictness,
+        "parse_utf8" = row.parse_utf8,
+        "escape_complete" = row.escape_complete,
+        "flaw_probe" = row.flaw_probe,
+        "output_plane" = row.output_plane,
+        "signal" = row.signal,
+        "row_id" = t.row_id,
+        "grammar_id" = t.grammar_id,
+        "domain" = t.domain,
+        "measured_validation_path" = t.measured_validation_path,
+        "profile_artifact" = t.profile_artifact,
+        "sample_cost" = t.sample_cost,
+        "build_flags" = t.build_flags,
+        "host_triple" = t.host_triple,
+        "feature_mask" = t.feature_mask,
+        "costfacts_rule_id" = t.costfacts_rule_id,
+        "costfacts_chosen_shape" = t.costfacts_chosen_shape,
+        "redress_entry" = t.redress_entry,
+        "sk_v9_open_delta" = t.sk_v9_open_delta,
+        "substrate_surface" = t.substrate_surface,
+        "structural_projection_status" = t.structural_projection_status,
+        "substrate_cardinality" = t.substrate_cardinality,
+        "same_wave_consumer_class" = t.same_wave_consumer_class,
+        "track2_independence_status" = t.track2_independence_status,
+        "diagnostic_nonproducer_status" = t.diagnostic_nonproducer_status,
+    );
+    let (grammar, corpus, workload) = parse_w1a_non_json_row_id(&t.row_id)?;
+    if grammar != t.grammar_id || corpus != row.corpus || workload != row.workload {
+        return Err(format!("{} does not match row identity fields", t.row_id));
+    }
+    if t.domain != w1a_domain_for_grammar(&t.grammar_id)? {
+        return Err(format!("{} has unsupported domain {}", t.row_id, t.domain));
+    }
+    if !matches!(
+        (t.grammar_id.as_str(), row.corpus.as_str()),
+        ("css_l4", "declaration_values") | ("sheets", "formula") | ("bbnf_self", "grammar")
+    ) {
+        return Err(format!("{} is not a W1a non-JSON row", t.row_id));
+    }
+    let expected_plane = match row.workload.as_str() {
+        "direct" => "digest",
+        "typed" => "typed direct",
+        _ => return Err(format!("{} has unsupported workload", t.row_id)),
+    };
+    if row.outcome_id != "S" || row.verdict != "NO-GO" {
+        return Err(format!("{} attempts W1a row admission", t.row_id));
+    }
+    if row.strictness != "strict"
+        || row.parse_utf8 != "measured-row"
+        || row.escape_complete != "yes"
+        || row.output_plane != expected_plane
+        || t.measured_validation_path != "schema-only"
+        || t.same_wave_consumer_class != "non_json_gate_schema_only"
+        || t.track2_independence_status != "independent_verified"
+        || t.diagnostic_nonproducer_status != "pmu+cycles+profiles:nonproducer"
+    {
+        return Err(format!("{} has unsupported W1a semantics", t.row_id));
+    }
+    if !positive_optional(row.track1_mbps)
+        || !positive_optional(row.track2_mbps)
+        || t.sample_count == 0
+        || !t.sample_cost.contains("ns_per_byte=")
+    {
+        return Err(format!("{} missing W1a measurement context", t.row_id));
+    }
+    validate_w1a_structured_context(row)?;
+    validate_w1a_oracle(row)?;
+    Ok(())
+}
+
+fn parse_w1a_non_json_row_id(row_id: &str) -> Result<(&str, &str, &str), String> {
+    let mut parts = row_id.split('/');
+    let grammar = parts.next();
+    let corpus = parts.next();
+    let workload = parts.next();
+    let suffix = parts.next();
+    if parts.next().is_some() || corpus.is_none() || workload.is_none() || suffix != Some("main") {
+        return Err(format!("{row_id} is not a valid W1a row id"));
+    }
+    let grammar = grammar.unwrap_or_default();
+    if !matches!(grammar, "css_l4" | "sheets" | "bbnf_self") {
+        return Err(format!("{row_id} has unsupported grammar"));
+    }
+    Ok((grammar, corpus.unwrap(), workload.unwrap()))
+}
+
+fn w1a_domain_for_grammar(grammar: &str) -> Result<&'static str, String> {
+    match grammar {
+        "css_l4" => Ok("css_l4_bench"),
+        "sheets" => Ok("sheets_bench"),
+        "bbnf_self" => Ok("bbnf_self_bench"),
+        _ => Err(format!("{grammar} is not a W1a grammar")),
+    }
+}
+
+fn validate_w1a_oracle(row: &NonJsonEvidenceRow) -> Result<(), String> {
+    let t = &row.sk_v8;
+    let [oracle] = t.comparators.as_slice() else {
+        return Err(format!("{} must carry one W1a oracle", t.row_id));
+    };
+    if oracle.comparator_id != "internal_oracle"
+        || oracle.comparator_plane != row.output_plane
+        || oracle.comparator_strictness != "strict"
+        || oracle.comparator_freshness != "same-run-oracle"
+        || oracle.sidecar_freshness != "n/a"
+        || !oracle.value_mbps.is_some_and(positive_finite)
+    {
+        return Err(format!("{} has unsupported oracle evidence", t.row_id));
+    }
+    validate_w1a_oracle_source(row)
+}
+
+fn validate_w1a_oracle_source(row: &NonJsonEvidenceRow) -> Result<(), String> {
+    let plane = row.output_plane.replace(' ', "_");
+    let expected = format!(
+        "oracle:w1a:{}:{}:{}:{}",
+        row.sk_v8.grammar_id, row.corpus, row.workload, plane
+    );
+    let oracle = &row.sk_v8.comparators[0];
+    if oracle.source_artifact == expected {
+        Ok(())
+    } else {
+        Err(format!(
+            "{} has non-independent oracle source",
+            row.sk_v8.row_id
+        ))
+    }
+}
+
+fn validate_w1a_structured_context(row: &NonJsonEvidenceRow) -> Result<(), String> {
+    let t = &row.sk_v8;
+    if t.costfacts_rule_id != "none:w1a-schema"
+        || t.costfacts_chosen_shape != "none:w1a-schema"
+        || t.costfacts_rejected_alternative_ids != ["none:w1a-schema"]
+        || t.redress_entry != "none:w1a-schema-only"
+        || t.sk_v9_open_delta != "nonjson-schema-only"
+        || t.substrate_surface != row.output_plane
+        || t.structural_projection_status != "n/a"
+        || t.substrate_cardinality != "zero_or_inert"
+        || !t.profile_artifact.starts_with("fixture:w1a:")
+        || !t.build_flags.contains("profile=bench")
+        || !t.build_flags.contains("rustflags=-C target-cpu=native")
+        || !t.build_flags.contains("target_cpu=native")
+        || !t.host_triple.contains("arch=")
+        || !t.host_triple.contains("cpu=")
+        || !t.feature_mask.contains("arch=")
+        || !t.feature_mask.contains("os=")
+        || !t.feature_mask.contains("simd=")
+        || !t.feature_mask.contains("target_cpu=native")
+    {
+        return Err(format!("{} has incomplete W1a context", t.row_id));
+    }
+    Ok(())
+}
+
+fn positive_optional(value: Option<f64>) -> bool {
+    value.is_some_and(positive_finite)
+}
+
+fn positive_finite(value: f64) -> bool {
+    value.is_finite() && value > 0.0
+}
+
 fn format_comparator_evidence(comparators: &[SkV8ComparatorEvidence]) -> String {
     comparators
         .iter()
@@ -1917,6 +2163,19 @@ mod tests {
         format!("{profile};hot-leaf=criterion-slope-profile;row={row_id}")
     }
 
+    fn w1a_report() -> NonJsonEvidenceReport {
+        NonJsonEvidenceReport::from_json_str(include_str!(
+            "../../../../restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-pass-css-l4.json"
+        ))
+        .unwrap()
+    }
+
+    fn w1a_reject(mut mutate: impl FnMut(&mut NonJsonEvidenceReport)) {
+        let mut report = w1a_report();
+        mutate(&mut report);
+        assert!(report.validate_w1a_non_json_gate().is_err());
+    }
+
     fn opening_report() -> Report {
         let mut report = Report::new("Skinny JSON Bench");
         for baseline in SK_V8_OPEN_BASELINE {
@@ -2011,6 +2270,69 @@ mod tests {
         row.sk_v8.redress_entry = "REDRESS-105".into();
         row.sk_v8.wave_id = "SK-V10-W6".into();
         row.sk_v8.sk_v9_open_delta = "typed-row-added".into();
+    }
+
+    #[test]
+    fn w1a_non_json_report_accepts_css_l4_schema_fixture() {
+        assert!(w1a_report().validate_w1a_non_json_gate().is_ok());
+    }
+
+    #[test]
+    fn w1a_non_json_report_rejects_identity_domain_and_row_id_mismatch() {
+        w1a_reject(|report| report.rows[0].sk_v8.domain = "json_bench".into());
+        w1a_reject(|report| {
+            report.rows[0].sk_v8.row_id = "json/declaration_values/direct/main".into()
+        });
+        w1a_reject(|report| report.rows[0].corpus = "wrong".into());
+    }
+
+    #[test]
+    fn w1a_non_json_report_rejects_missing_required_context() {
+        w1a_reject(|report| report.run_id = "sk-v11-w1a:test".into());
+        w1a_reject(|report| report.rows[0].sk_v8.sample_count = 0);
+        w1a_reject(|report| report.rows[0].sk_v8.build_flags = "profile=bench".into());
+    }
+
+    #[test]
+    fn w1a_non_json_report_rejects_oracle_plane_source_and_coupling() {
+        w1a_reject(|report| {
+            report.rows[0].sk_v8.comparators[0].comparator_plane = "typed direct".into()
+        });
+        w1a_reject(|report| {
+            report.rows[0].sk_v8.track2_independence_status = "coupled_to_track1".into()
+        });
+        w1a_reject(|report| {
+            report.rows[0].sk_v8.comparators[0].source_artifact =
+                "criterion:json_twitter/track1_generated/new/estimates.json".into()
+        });
+        let coupled = NonJsonEvidenceReport::from_json_str(include_str!(
+            "../../../../restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-track2-coupled.json"
+        ))
+        .unwrap();
+        assert!(coupled.validate_w1a_non_json_gate().is_err());
+        let shared_source = NonJsonEvidenceReport::from_json_str(include_str!(
+            "../../../../restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-track2-shared-source.json"
+        ))
+        .unwrap();
+        assert!(shared_source.validate_w1a_non_json_gate().is_err());
+    }
+
+    #[test]
+    fn w1a_non_json_report_rejects_gate_only_and_admission_claims() {
+        w1a_reject(|report| report.rows[0].sk_v8.same_wave_consumer_class = "gate_only".into());
+        let admission = NonJsonEvidenceReport::from_json_str(include_str!(
+            "../../../../restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-admission-claim.json"
+        ))
+        .unwrap();
+        assert!(admission.validate_w1a_non_json_gate().is_err());
+    }
+
+    #[test]
+    fn w1a_non_json_report_rejects_unknown_producer_fields() {
+        assert!(NonJsonEvidenceReport::from_json_str(include_str!(
+            "../../../../restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-producer-only-extra-field.json"
+        ))
+        .is_err());
     }
 
     #[test]

@@ -3278,3 +3278,32 @@ perturbation.
 - Routed remainder: REDRESS 98 goes to Pass Omega as a substrate-ceiling lock
   amendment route, and CSS L4 / Sheets / BBNF-self grammar generalization goes
   to the totality track.
+
+## SK-V11 Wave 1a Non-JSON Gate/Report Schema Lane
+
+- Item 111 admits W1a under `G-W1a-NONJSON-GATE`. The wave adds a companion
+  non-JSON evidence report lane consumed by `bbnf-bench --bin gate` via
+  `--w1a-non-json-report`; it does not relax the JSON schema-v3/W0 validator,
+  update `skinny/RESULTS.md`, create generated non-JSON baseline authority, or
+  move any parser row.
+- The accepted report schema is `sk-v11-w1a-nonjson-v1`. It requires exact
+  grammar/domain/row identity for `css_l4`, `sheets`, or `bbnf_self`, strict
+  non-admitting `S / NO-GO` semantics, finite Track 1 and Track 2 placeholder
+  Mbps, structured run/build/host/feature context, and an
+  `internal_oracle` source sentinel owned by W1a.
+- CH5's hidden-coupling revise is closed in the implementation: source
+  provenance is validated separately from `track2_independence_status`, and
+  `nonjson-track2-shared-source.json` fails even when it self-attests
+  `independent_verified`.
+- Evidence passed:
+  `cargo test -p bbnf-bench report::tests::w1a -- --nocapture`,
+  `cargo test -p bbnf-bench --bin gate w1a -- --nocapture`,
+  `cargo run -p bbnf-bench --bin gate -- --w1a-non-json-report ../restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-pass-css-l4.json`,
+  the four required negative fixture checks for producer-only telemetry,
+  coupled Track 2, shared source, and admission claim, and
+  `CRITERION_HOME=/tmp/skv11-open-criterion-3ce75df RUSTFLAGS="-C target-cpu=native" cargo run -p xtask -- gate-json --with-cost-facts --check-results`.
+- Guard evidence passed: `git diff --exit-code -- skinny/RESULTS.md`,
+  `git diff --exit-code -- skinny/crates/codegen skinny/crates/runtime skinny/crates/bbnf-simd`,
+  and `git diff --check`.
+- Downstream: W1b may now dispatch the first generated non-JSON baseline and
+  oracle lane against the W1a gate/report contract.

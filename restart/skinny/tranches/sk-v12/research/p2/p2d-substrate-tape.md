@@ -45,8 +45,8 @@ Lock surface: Lock 1 and Lock 14. Tape remains the single retained substrate; st
 
    | Tape-shape pressure | Code that moves first | P1 hot leaf moved? | Disposition |
    | --- | --- | --- | --- |
-   | Offset capacity / reserve policy | `TapeBuilder::new`, `push_plain_offset`, `reserve_offsets_cold`, `offset_capacity_bytes` | Not yet. P1 did not name builder reserve/allocation as hot. | Guarded candidate only for high allocated/input rows. |
-   | Sparse flag lookup / representation | `Tape::flags_at`, `JsonString::as_str`, `patch_flags` | Not for current parse/direct hot leaves. It can touch `string_escape_decode` only in retained lazy-view profiles. | Guarded candidate; requires fresh view evidence. |
+   | Offset capacity / reserve policy | `TapeBuilder::new`, `push_plain_offset`, `reserve_offsets_cold`, `offset_capacity_bytes` | Not yet. P1 did not name builder reserve/allocation as hot. | Diagnostic/ineligible under current S-P1; requires fresh builder-capacity evidence. |
+   | Sparse flag lookup / representation | `Tape::flags_at`, `JsonString::as_str`, `patch_flags` | Not for current parse/direct hot leaves. It can touch `string_escape_decode` only in retained lazy-view profiles. | Diagnostic/ineligible under current S-P1; requires fresh view evidence. |
    | Stored node-kind or class bits | `JsonNodeKind::at_cursor`, `next_sibling_cursor`, token iteration | Retained-view code first. If pushed into parse, it tries to move `container_dispatch` from source-byte rediscovery into scanner/cursor state. | Pre-blocked by W3 falsification unless materially new evidence exists. |
    | Sibling skip or subtree skip projection | `next_sibling_cursor`, `span_for_value`, array/object iterators | Retained-view traversal only; current P1 hot leaves are parse/direct/typed guards, not retained view walks. | Diagnostic only; no shortlist without a fresh hot leaf. |
 
@@ -66,22 +66,21 @@ Lock surface: Lock 1 and Lock 14. Tape remains the single retained substrate; st
 
 ## §2 — Candidate primitives
 
-Candidate count: 4 total. Three are guarded research candidates inside the
-existing tape substrate; one is explicitly rejected/flagged because it is a
-parallel-substrate resurrection.
+Current selectable candidate count from SK-V12 S-P1: 0. Same-tape diagnostic
+count: 3. Rejected parallel-substrate route count: 1. V1 CHALLENGE requires
+these entries to stay diagnostic/ineligible unless a fresh profile names the
+exact movement locus.
 
-| Candidate | Shape | Scalar-reference status | Arch surface | P1-grounding | Disposition |
-| --- | --- | --- | --- | --- | --- |
-| `offset_tape_capacity_policy` | Tune grammar-neutral initial capacity and growth for the existing offset vector, using the published logical-vs-allocated counters as the research input. No extra retained vector. | Existing `TapeBuilder::new` plus `reserve_offsets_cold` is the scalar reference. The proof target is equal offset stream, equal flags, equal payload counters. | None. This is allocator/capacity policy, not SIMD. | High offset-count rows and high allocated/input rows: `mesh`, `marine_ik`, `y_string_unicode`, `unicode_basic`, `random`, plus `container_dispatch`/`number_digit_span` writers. | Guarded candidate. It may only advance if fresh S-P3 evidence names builder capacity/reserve cost or proves allocation reduction without regressing row gates. |
-| `sparse_flag_lookup_policy` | Keep sparse flags inside `Tape`, but research an in-tape encoding or lookup policy that avoids harmful binary-search/view overhead on escape-heavy rows. No sidecar flag column. | Current ordered `flag_cursors`/`flag_values` and `Tape::flags_at` are the scalar reference. Equal `HAS_ESC` semantics and zero payload writes remain mandatory. | None initially; optional table/bit packing is scalar unless separately proven. | `string_escape_decode` and `unicode_escape_hex_decode` on `unicode_mixed`, `unicode_escapes`, and `y_string_unicode`; `RESULTS.md` shows large sparse flag bytes on those rows. | Guarded candidate. It does not close current parse/direct rows unless retained lazy-view profiles expose `flags_at` or lazy decode as hot. |
-| `retained_cursor_skip_projection` | If retained traversal becomes hot, encode subtree/sibling skip facts as generated tape facts or same-tape metadata, never as a second structural index. | Current `JsonNodeKind::at_cursor`, `span_for_value`, and `next_sibling_cursor` source-derived walk remain the oracle. | None unless a later generated grammar proves a grammar-neutral cursor plan. | Related to `container_dispatch`, but current P1 evidence is parse/direct dispatch, not retained view traversal. | Diagnostic/flagged candidate. It is concrete but not selectable from SK-V12 P1 alone. It needs fresh retained-view hot-leaf evidence and must stay within one tape. |
-| `structural_class_lane_union` | Add a class column, structural-position vector, streaming structural cursor, `UnionTape`, parser-owned projection, or event sidecar to avoid source-byte rediscovery. | No admissible scalar reference under Lock 1. Prior W3 versions were parity green and measured negative. | SIMD structural producer plus retained parser consumer. | Tempted by `container_dispatch` and structural rediscovery at `consume_structural`/delimiter paths. | Rejected. REDRESS 96, 97, and 98 falsified and retired this route; Lock 1 forbids it as a parallel substrate. |
+| Item | Shape | Scalar-reference status | Checkasm/parity status | Same-wave consumer/proof note | P1-grounding | Disposition |
+| --- | --- | --- | --- | --- | --- | --- |
+| `offset_tape_capacity_policy` | Tune grammar-neutral initial capacity and growth for the existing offset vector, using the published logical-vs-allocated counters as the research input. No extra retained vector. | Existing `TapeBuilder::new` plus `reserve_offsets_cold` is the scalar reference. The proof target is equal offset stream, equal flags, equal payload counters. | Checkasm N/A; allocator/capacity policy is scalar. Any later table/packing helper would need its own parity proof before use. | Needs a same-wave throughput or allocation proof tied to a fresh builder-capacity hot leaf. Reduced allocated bytes alone is not a parser-row consumer. | Current S-P1 did not name builder reserve/allocation as hot. | Diagnostic/ineligible under current S-P1. |
+| `sparse_flag_lookup_policy` | Keep sparse flags inside `Tape`, but research an in-tape encoding or lookup policy that avoids harmful binary-search/view overhead on escape-heavy rows. No sidecar flag column. | Current ordered `flag_cursors`/`flag_values` and `Tape::flags_at` are the scalar reference. Equal `HAS_ESC` semantics and zero payload writes remain mandatory. | Checkasm N/A unless optional bit/table packing is introduced; any such body needs equality against `Tape::flags_at` and zero-payload invariants. | Needs a same-wave retained-view or lazy-decode consumer proven hot by fresh profile. It does not close current parse/direct rows. | Current S-P1 did not name `flags_at` or lazy retained-view decode as a parse/direct hot leaf. | Diagnostic/ineligible under current S-P1. |
+| `retained_cursor_skip_projection` | If retained traversal becomes hot, encode subtree/sibling skip facts as generated tape facts or same-tape metadata, never as a second structural index. | Current `JsonNodeKind::at_cursor`, `span_for_value`, and `next_sibling_cursor` source-derived walk remain the oracle. | Checkasm N/A; this is retained-view metadata unless a future SIMD helper is proposed separately. | Needs fresh retained-view hot-leaf evidence and a same-wave retained-view consumer. It is not selectable from parse/direct/typed S-P1 evidence. | Related to `container_dispatch`, but current S-P1 evidence is parse/direct dispatch, not retained view traversal. | Diagnostic/ineligible under current S-P1. |
+| `structural_class_lane_union` | Add a class column, structural-position vector, streaming structural cursor, `UnionTape`, parser-owned projection, or event sidecar to avoid source-byte rediscovery. | No admissible scalar reference under Lock 1. Prior W3 versions were parity green and measured negative. | Rejected before parity; correctness-green prior W3 attempts still regressed. | No legal same-wave consumer exists because the retained sidecar itself violates Lock 1 and REDRESS 96/97/98. | Tempted by `container_dispatch` and structural rediscovery at `consume_structural`/delimiter paths. | Rejected. REDRESS 96, 97, and 98 falsified and retired this route. |
 
-No wave selection is made here. The two implementable-looking items are
-capacity policy and sparse-flag lookup, but both are only research candidates
-until a legal S-P3 packet supplies fresh measurement authority. The retained
-cursor-skip item is a future retained-view diagnostic, not a JSON direct close
-route. The structural class-lane/union route is closed.
+No wave selection is made here. Capacity policy, sparse-flag lookup, and
+retained cursor-skip are same-tape diagnostics only under the current SK-V12
+S-P1 authority. The structural class-lane/union route is closed.
 
 ## §3 — Grammar-neutrality
 
@@ -114,9 +113,9 @@ route. The structural class-lane/union route is closed.
 ## §4 — Risks
 
 1. Capacity tuning could be a paper close if it only reduces allocated bytes.
-   P2-D can nominate it, but S-P3 must show row-relevant behavior movement or a
-   fresh hot leaf in builder reserve/allocation. Logical tape ratio alone is not
-   a throughput proof.
+   P2-D can preserve it as a diagnostic, but S-P3 must show row-relevant
+   behavior movement or a fresh hot leaf in builder reserve/allocation. Logical
+   tape ratio alone is not a throughput proof.
 
 2. Sparse-flag work can accidentally become eager materialisation work. The
    guard is strict: zero payload bytes/writes/allocations must remain true, and

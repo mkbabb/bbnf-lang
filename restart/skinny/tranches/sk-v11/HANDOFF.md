@@ -88,14 +88,16 @@ that S-P1/S-P2 identify on the JSON direct residual surface.
 
 ## 4. Next Move
 
-Next move: ready-for-wave-W1b.
+Next move: ready-for-wave-W2-entry-record.
 
 W0 is closed by S-P1/W0 authority in SPEC §3. W1a is admitted by REDRESS 111:
 the companion non-JSON gate/report lane exists and does not move JSON rows or
-claim generated non-JSON baseline authority. The next behavior wave is W1b, the
-generated non-JSON baseline and oracle lane. Dispatch W1b under
-`restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`, with CHALLENGE required
-before redress.
+claim generated non-JSON baseline authority. W1b is rejected by REDRESS 112:
+the accepted CSS L4 direct baseline target could not produce generated non-JSON
+Track 1 inside the W1b owner surface because skinny codegen/runtime remains
+JSON-profiled and no generated CSS L4 runtime exists. W2 may not create the
+first measurable non-JSON baseline row; its entry handling must record the
+blocked route before the direct-plane waves continue.
 
 ## 5. Active Wave Packet
 

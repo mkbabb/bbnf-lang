@@ -3307,3 +3307,32 @@ perturbation.
   and `git diff --check`.
 - Downstream: W1b may now dispatch the first generated non-JSON baseline and
   oracle lane against the W1a gate/report contract.
+
+## SK-V11 Wave 1b Generated Non-JSON Baseline Rejection
+
+- Item 112 rejects W1b under `G-W1b-NONJSON-BASELINE`. The selected target was
+  `css_l4/declaration_values/direct/main` on
+  `css_l4_declaration_value_fact_bytes`; no baseline report was admitted.
+- The blocker is structural in the accepted W1b owner surface: skinny codegen
+  still routes both direct and typed emission through
+  `json_provider::ensure_runtime_profile`, which accepts only
+  `backend.grammar_name == "json"`, and
+  `skinny/crates/runtime/src/grammars/` contains generated JSON plus
+  `sheets_witness`, not generated CSS L4 under `css_l4` or
+  `css_l4_declaration_values`.
+- Because generated CSS L4 Track 1 is absent, the independent oracle path is not
+  admitted. W2 remains blocked from creating the first measurable non-JSON row.
+- No source patch was attempted. `/tmp/skv11-waveW1b-rejected.patch` is an empty
+  marker; no behavior source, generated runtime, benchmark body, gate/report
+  schema, or `skinny/RESULTS.md` row moved.
+- Evidence passed:
+  `cargo test -p codegen --lib -- --nocapture`,
+  `cargo test -p bbnf-bench report::tests::w1a -- --nocapture`,
+  `cargo test -p bbnf-bench --bin gate w1a -- --nocapture`,
+  `cargo run -p bbnf-bench --bin gate -- --w1a-non-json-report ../restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-pass-css-l4.json`,
+  `CRITERION_HOME=/tmp/skv11-open-criterion-3ce75df RUSTFLAGS="-C target-cpu=native" cargo run -p xtask -- gate-json --with-cost-facts --check-results`,
+  `git diff --exit-code -- skinny/RESULTS.md`,
+  `find skinny/crates/runtime/src/grammars -maxdepth 3 -type f | sort`,
+  `rg -n "ensure_runtime_profile|runtime emission currently supports grammar profile|emit_from_source|emit_typed_from_source|json_provider::ensure_runtime_profile" skinny/crates/codegen/src/lib.rs skinny/crates/codegen/src/json_provider.rs`,
+  and
+  `test ! -e skinny/crates/runtime/src/grammars/css_l4 && test ! -e skinny/crates/runtime/src/grammars/css_l4_declaration_values`.

@@ -214,10 +214,10 @@ Track split summary:
 
 ## Section 3 - Delta vs Prior PMU Surface
 
-The prior pre-pin SK-V12 P1-D artifact was captured at commit `50bd1648`
-under `/tmp/skv12-p1`. Capture source commit `cf7848b2` was reprofiled under
-the user pin. The fresh aggregate c/B is slightly higher on all three JSON
-families; this is profile drift, not row movement.
+The prior pre-pin SK-V12 P1-D artifact is retained as a historical comparator.
+Capture source commit `cf7848b2` was reprofiled under the user pin. The fresh
+aggregate c/B is slightly higher on all three JSON families; this is profile
+drift, not row movement.
 
 | Family | Fresh c/B | Prior pre-pin c/B | c/B delta | Fresh CPI | Prior pre-pin CPI | CPI delta |
 | --- | --- | --- | --- | --- | --- | --- |

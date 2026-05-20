@@ -72,10 +72,9 @@ P1-E did not run cargo, xctrace, samply, Criterion, or any benchmark binary.
 The parent owns capture. This artifact records the final hot-leaf evidence
 boundary after the parent replay completed under `/tmp/skv12-pin-p1`.
 
-The pre-pin P1-E at baseline `50bd1648` and capture root `/tmp/skv12-p1` is a
-format reference only. None of its hot-leaf rows are carried as fresh pin-era
-claims, because the user pin requires fresh JSON plus CSS L4 profiling and
-forbids anchoring on prior tranche prose.
+The pre-pin P1-E artifact is a format reference only. None of its hot-leaf rows
+are carried as fresh pin-era claims, because the user pin requires fresh JSON
+plus CSS L4 profiling and forbids anchoring on prior tranche prose.
 
 ## Section 2 - Fresh Artifact Inventory
 

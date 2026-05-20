@@ -2,14 +2,16 @@
 
 Date: 2026-05-20.
 
-Status: S-P3 CONVERGED under V5 hardening. This file is implementation dispatch
-authority for the W0-W4 wave sequence after the orchestrator updates
-`HANDOFF.md` to `ready-for-wave-W0`. Every wave still requires its own SPEC
-entry gate and wave-triumvirate protocol.
+Status: PRE-PIN S-P3 CONVERGED; PIN S-P3 RE-DERIVATION REQUIRED. This file is
+retained as pre-pin implementation context and pre-block source until the
+pin-aware S-P1 -> S-P2 -> S-P3 sequence rewrites it. Every wave still requires
+its own SPEC entry gate and wave-triumvirate protocol.
 
-This SPEC folds the SK-V12 Pass Alpha goalset, converged S-P1 profile,
-converged S-P2 research, the P3-F draft, and the S-P3 CHALLENGE hardening
-dispositions through V5 into a W0-W4 wave plan.
+This SPEC originally folded the pre-pin SK-V12 Pass Alpha goalset, S-P1
+profile, S-P2 research, the P3-F draft, and the S-P3 CHALLENGE hardening
+dispositions through V5 into a W0-W4 wave plan. Under the user pin, clauses
+that conflict with `USER-PIN-W1-CSS-L4-SOTA.md` or `HANDOFF.md` are historical
+until pin-aware S-P3 replacement.
 
 Authority:
 
@@ -17,7 +19,7 @@ Authority:
 - `restart/skinny/tranches/sk-v12/HANDOFF.md`
 - `restart/skinny/tranches/sk-v12/research/p1/hardening/HARDENING-S-P1-CONVERGED.md`
 - `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-capture-manifest.md`
-- `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-replay.tsv`
+- `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-pin-replay.tsv`
 - `restart/skinny/tranches/sk-v12/research/p2/hardening/HARDENING-S-P2-CONVERGED.md`
 - `restart/skinny/tranches/sk-v12/research/p2/p2a-sota-teardown.md`
 - `restart/skinny/tranches/sk-v12/research/p2/p2b-dav1d-process.md`
@@ -345,9 +347,11 @@ Entry gate:
 
 Tasks:
 
-1. Bind the SK-V12-open source baseline `50bd1648`, capture root
-   `/tmp/skv12-p1`, replay TSV, and self-time TSVs into the gate/report
-   surface.
+1. Bind the pin-aware SK-V12-open capture source `cf7848b2`, capture root
+   `/tmp/skv12-pin-p1`, build root
+   `/tmp/skv12-pin-profile-target-cf7848b2`, tracked replay TSV
+   `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-pin-replay.tsv`, and
+   pin self-time TSVs into the gate/report surface.
 2. Verify current `skinny/RESULTS.md` remains the SK-V11 close result surface:
    17 parse diagnostic rows, 4 direct `A / GO`, 13 direct `N-direct / NO-GO`,
    and 7 typed `A / GO`.

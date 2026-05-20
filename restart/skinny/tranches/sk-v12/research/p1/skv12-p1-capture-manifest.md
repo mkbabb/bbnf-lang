@@ -48,9 +48,8 @@ RUSTFLAGS="-C target-cpu=native" \
   cargo build --release -p bbnf-bench --bin xctrace_probe --bin profile_direct
 ```
 
-The pre-pin manifest/replay surface at `/tmp/skv12-p1`,
-`/tmp/skv12-profile-target-50bd1648`, and `skv12-p1-replay.tsv` is historical
-only. It is not pin-era replay authority.
+The pre-pin manifest/replay surface is historical only. It is not pin-era
+replay authority.
 
 ## Replay Surface
 

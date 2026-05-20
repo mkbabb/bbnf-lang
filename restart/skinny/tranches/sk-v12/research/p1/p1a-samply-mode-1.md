@@ -77,8 +77,8 @@ find skinny/crates/runtime/src/grammars -maxdepth 3 -type f | sort
 
 The completed pin replay supplies PMU, samply, xctrace Time Profiler, xctrace
 CPU Counters, and derived hot-leaf evidence under `/tmp/skv12-pin-p1`. The
-pre-pin `skv12-p1-replay.tsv` remains historical only; pin replay authority is
-the pin command ledgers under `/tmp/skv12-pin-p1/{pmu,samply}/`, the
+pre-pin replay ledger remains historical only; pin replay authority is the pin
+command ledgers under `/tmp/skv12-pin-p1/{pmu,samply}/`, the
 `/tmp/skv12-pin-p1/xctrace/capture_status.tsv` status rows, the tracked
 `skv12-p1-pin-replay.tsv` ledger, and the pin replay manifest addendum.
 
@@ -190,8 +190,6 @@ equality.
 - `restart/prompts/skinny/PASS-1-PROFILE.md`
 - `restart/skinny/tranches/sk-v12/USER-PIN-W1-CSS-L4-SOTA.md`
 - `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-capture-manifest.md`
-- `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-replay.tsv`
-  (historical pre-pin replay reference only)
 - `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-pin-replay.tsv`
 - `skinny/RESULTS.md`
 - `skinny/REDRESS.md`

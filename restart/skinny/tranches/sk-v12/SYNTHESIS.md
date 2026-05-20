@@ -2,10 +2,11 @@
 
 Date: 2026-05-20.
 
-Status: Pass Alpha SK-V11 -> SK-V12 alpha-F draft. This file is the SK-V12
-opening synthesis and goalset. It is not behavior implementation authority and
-does not create `SPEC.md` or `DISPATCH-PROMPT.md`; S-P3 owns the later wave
-plan after S-P1 and S-P2 converge.
+Status: Pass Alpha SK-V11 -> SK-V12 converged under V2 hardening and G-Alpha
+PASS. This file is the SK-V12 opening synthesis and goalset. It is not
+behavior implementation authority and does not create `SPEC.md` or
+`DISPATCH-PROMPT.md`; S-P3 owns the later wave plan after S-P1 and S-P2
+converge.
 
 ## Authority
 
@@ -19,6 +20,8 @@ plan after S-P1 and S-P2 converge.
 - `skinny/RESULTS.md`
 - `skinny/REDRESS.md` through REDRESS 120
 - `restart/skinny/tranches/sk-v12/research/alpha/alpha-F-contract-draft.md`
+- `restart/skinny/tranches/sk-v12/research/alpha-hardening/V2/CONSOLIDATED.md`
+- `restart/skinny/tranches/sk-v12/research/g-alpha/G-ALPHA-SK-V12.md`
 
 ## Section 0 - Close Condition And Goalset
 

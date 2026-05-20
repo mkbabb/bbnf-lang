@@ -2,10 +2,11 @@
 
 Date: 2026-05-20.
 
-Status: Pass Alpha SK-V11 -> SK-V12 alpha-F draft is open. SK-V11 closed under
-REDRESS 120 as a measured fixpoint with unchanged overall `N-direct / NoGo`.
-SK-V12 starts from that evidence. This handoff does not create `SPEC.md` or
-`DISPATCH-PROMPT.md`; S-P3 owns those files after S-P1 and S-P2 converge.
+Status: Pass Alpha SK-V11 -> SK-V12 converged under V2 hardening and G-Alpha
+PASS. SK-V11 closed under REDRESS 120 as a measured fixpoint with unchanged
+overall `N-direct / NoGo`. SK-V12 starts from that evidence. This handoff does
+not create `SPEC.md` or `DISPATCH-PROMPT.md`; S-P3 owns those files after S-P1
+and S-P2 converge.
 
 ## 1. Read First
 
@@ -16,13 +17,15 @@ SK-V12 starts from that evidence. This handoff does not create `SPEC.md` or
 5. `restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md`
 6. `restart/skinny/tranches/sk-v12/SYNTHESIS.md`
 7. `restart/skinny/tranches/sk-v12/research/alpha/alpha-F-contract-draft.md`
-8. `restart/skinny/tranches/sk-v11/research/close/close-redress.md`
-9. `restart/skinny/tranches/sk-v11/SYNTHESIS.md`
-10. `restart/skinny/tranches/sk-v11/HANDOFF.md`
-11. `restart/skinny/tranches/sk-v11/SPEC.md`
-12. `restart/skinny/tranches/sk-v11/DISPATCH-PROMPT.md`
-13. `skinny/RESULTS.md`
-14. `skinny/REDRESS.md` through REDRESS 120
+8. `restart/skinny/tranches/sk-v12/research/alpha-hardening/V2/CONSOLIDATED.md`
+9. `restart/skinny/tranches/sk-v12/research/g-alpha/G-ALPHA-SK-V12.md`
+10. `restart/skinny/tranches/sk-v11/research/close/close-redress.md`
+11. `restart/skinny/tranches/sk-v11/SYNTHESIS.md`
+12. `restart/skinny/tranches/sk-v11/HANDOFF.md`
+13. `restart/skinny/tranches/sk-v11/SPEC.md`
+14. `restart/skinny/tranches/sk-v11/DISPATCH-PROMPT.md`
+15. `skinny/RESULTS.md`
+16. `skinny/REDRESS.md` through REDRESS 120
 
 ## 2. Current State
 
@@ -123,7 +126,7 @@ Refuse any dispatch that:
 
 ## 7. Next Move
 
-Next move: ready-for-S-P1-profile-sk-v12 after G-Alpha presentation or user pin.
+Next move: ready-for-S-P1-profile-sk-v12.
 
 S-P1 should freeze the SK-V12-open surface, profile guard rows, treat
 `parse_only` and JSON direct residuals as diagnostic/pre-blocked, inventory the

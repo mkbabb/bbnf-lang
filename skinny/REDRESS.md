@@ -3407,3 +3407,26 @@ perturbation.
 - No row moves. W4 is rejected with measurement. W5 may dispatch under SPEC
   Section 9 with the REDRESS 113 non-JSON block, REDRESS 114 numeric reject,
   and REDRESS 115 container-tail reject carried forward.
+
+## SK-V11 Wave 5 Bounded String Span Entry Block
+
+- Item 116 records W5 as `BLOCKED` before implementation dispatch under
+  `G-W5-STRING-SPAN-DIRECT`. W5 completed research, Plan V1, CHALLENGE V1,
+  Plan V2, and CHALLENGE V2, but SPEC Section 9 requires CHALLENGE to select an
+  accepted scalar span shape before behavior redress.
+- CHALLENGE V2 did not converge. CH1 accepted the release-mode opening-quote
+  guard but kept malformed-input parity at REVISE because the plan did not
+  require the malformed string/key/value/array fixture set to reject across
+  generated Track 1, independent Track 2, `serde_json`, and `sonic-rs`. CH4
+  accepted the floor-level probe trigger but kept cost at REVISE because the
+  plan still had no plausible independent Track 2 cost mechanism for lifting
+  `random/direct_to_struct` from 6949 Mbps to the 7878 Mbps floor.
+- No source patch was attempted. `/tmp/skv11-waveW5-rejected.patch` is an empty
+  marker; no behavior source, generated runtime, SIMD kernel, benchmark body,
+  gate/report schema, or `skinny/RESULTS.md` row moved. The entry record is
+  archived at
+  `restart/skinny/tranches/sk-v11/research/w5/redress/w5-redress-entry-blocked.md`.
+- W5 admits no span API and no rejected-but-reusable scalar proof. W6 may
+  dispatch only through SPEC Section 10's independent segment-plan entry route:
+  CHALLENGE must name a new source delta beyond the already-consuming
+  `unescape_string` path, with REDRESS 113, 114, 115, and 116 carried forward.

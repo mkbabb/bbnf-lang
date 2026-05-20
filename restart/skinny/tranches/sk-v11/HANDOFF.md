@@ -24,7 +24,7 @@ work may land only through the selected wave's entry gate and owner paths.
 8. `restart/skinny/tranches/sk-v11/research/alpha/alpha-F-contract-draft.md`
 9. `restart/skinny/tranches/sk-v10/research/close/close-redress.md`
 10. `skinny/RESULTS.md`
-11. `skinny/REDRESS.md` through REDRESS 115
+11. `skinny/REDRESS.md` through REDRESS 116
 12. `restart/skinny/tranches/sk-v9/research/p3/hardening/HARDENING-S-P3-CONVERGED.md`
 13. `restart/skinny/tranches/sk-v10/SYNTHESIS.md`
 14. `restart/skinny/tranches/sk-v10/HANDOFF.md`
@@ -88,7 +88,7 @@ that S-P1/S-P2 identify on the JSON direct residual surface.
 
 ## 4. Next Move
 
-Next move: ready-for-wave-W5-research.
+Next move: ready-for-wave-W6-research.
 
 W0 is closed by S-P1/W0 authority in SPEC §3. W1a is admitted by REDRESS 111:
 the companion non-JSON gate/report lane exists and does not move JSON rows or
@@ -109,8 +109,14 @@ scalar `container_tail_next` implementation passed malformed-tail, parity,
 gate/report, and compile checks, but probe-first measurement falsified
 `random/direct_to_struct` before Criterion at 3518 Mbps Track 1 and 3498 Mbps
 Track 2 versus the 7878 Mbps W4 floor. The rejected source patch is saved at
-`/tmp/skv11-waveW4-rejected.patch`, no `RESULTS.md` row moved, and W5 now has a
-measured W4 disposition for its entry gate.
+`/tmp/skv11-waveW4-rejected.patch`, no `RESULTS.md` row moved, and W5 carried a
+measured W4 disposition into its entry gate. W5 is blocked by REDRESS 116 before
+source redress: CHALLENGE V2 accepted the release-mode opening-quote guard and
+floor-level probe trigger, but kept malformed-string parity and Track 2 cost at
+REVISE. No W5 source patch was attempted; `/tmp/skv11-waveW5-rejected.patch` is
+an empty marker, no `RESULTS.md` row moved, and W6 may dispatch only through
+SPEC Section 10's independent escaped-segment route with a new source delta
+beyond the already-consuming `unescape_string` path.
 
 ## 5. Active Wave Packet
 

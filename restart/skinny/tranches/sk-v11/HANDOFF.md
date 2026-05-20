@@ -1,14 +1,17 @@
 # Handoff SK-V11
 
-Date: 2026-05-19.
+Date: 2026-05-20.
 
 Status: G-Alpha is presented, W0 refreshed the SK-V11-open native baseline
-from HEAD `3ce75df4`, and S-P1 Profile converged under
-`restart/skinny/tranches/sk-v11/research/p1/hardening/HARDENING-S-P1-CONVERGED.md`.
-SK-V11 is ready for S-P2 Research dispatch under
-`restart/prompts/skinny/PASS-2-RESEARCH.md`. This handoff does not authorize
-source work and does not create `SPEC.md` or `DISPATCH-PROMPT.md`; S-P3 owns
-those files after S-P2 converges.
+from HEAD `3ce75df4`, S-P1 Profile converged under
+`restart/skinny/tranches/sk-v11/research/p1/hardening/HARDENING-S-P1-CONVERGED.md`,
+and S-P2 Research converged under
+`restart/skinny/tranches/sk-v11/research/p2/hardening/HARDENING-S-P2-CONVERGED.md`.
+SK-V11 is ready for S-P3 Synthesis-Plan dispatch under
+`restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md`. This handoff still does not
+authorize behavior source work; S-P3 materializes `SPEC.md` and
+`DISPATCH-PROMPT.md`, and behavior changes land only in post-S-P3 wave
+triumvirates.
 
 ## 1. Read First
 
@@ -86,39 +89,51 @@ that S-P1/S-P2 identify on the JSON direct residual surface.
 
 ## 4. Next Move
 
-Next move: ready-for-S-P2.
+Next move: ready-for-S-P3.
 
-S-P1 converged with two consecutive six-of-six ACCEPT cycles. S-P2 must run
-full orchestration per `PASS-2-RESEARCH.md`:
+S-P1 and S-P2 have both converged with two consecutive six-of-six ACCEPT
+cycles. S-P3 must run full orchestration per
+`restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md`, consuming only the fresh
+S-P1/S-P2 accepted evidence:
 
-- P2-A strict SOTA comparator teardown;
-- P2-B dav1d/FFmpeg scalar-oracle and checkasm process;
-- P2-C aarch64 instruction inventory and REDRESS-blocked routes;
-- P2-D substrate/tape audit preserving Lock 1 and refusing W3;
-- P2-E parse-that/bbnf-simd primitive gaps tied to direct residual hot leaves;
-- P2-F grammar-neutral abstraction for CSS L4 / Sheets / BBNF-self;
-- CHALLENGE CH1-CH6, folded until convergence per ORCHESTRATOR Section 3Z.
+- P3-A candidate shortlist drawn only from S-P2 V3 accepted candidates;
+- P3-B wave sequencing across direct-plane closure, grammar generalization, and
+  AArch64 SIMD/ASM;
+- P3-C falsifiability gates with strict same-run direct/typed/non-JSON
+  measurement;
+- P3-D telemetry schema / gate-json consumption;
+- P3-E pre-blocked route ledger carrying REDRESS and W3 falsification;
+- P3-F SPEC + DISPATCH-PROMPT draft, followed by CHALLENGE until convergence.
 
-S-P2 writes under `restart/skinny/tranches/sk-v11/research/p2/` and edits no
-source.
+S-P3 writes under `restart/skinny/tranches/sk-v11/research/p3/` and may
+materialize `restart/skinny/tranches/sk-v11/SPEC.md` and
+`restart/skinny/tranches/sk-v11/DISPATCH-PROMPT.md` only after its challenge
+converges. It edits no behavior source.
 
-## 5. S-P2/S-P3 Expectations
+## 5. S-P3 Expectations
 
-S-P2 consumes only fresh S-P1 evidence. It must ground:
+S-P3 consumes only fresh S-P1 and converged S-P2 evidence. The accepted S-P2
+pool is:
 
-- SOTA comparator teardown for strict direct and typed comparators;
-- dav1d/FFmpeg-style scalar-reference and checkasm discipline;
-- aarch64 instruction candidates only, with x86 marked out of scope;
-- substrate/tape audit that preserves the single substrate and refuses W3;
-- parse-that/bbnf-simd primitive gaps tied to direct residual hot leaves;
-- grammar-neutral abstraction for CSS L4 / Sheets / BBNF-self.
+- C1-C7 parser primitive pool: byte-set/class-table masking, bounded
+  special-byte string scan, escape/hex segment decode, digit span/accumulate,
+  byte-set layout skip, generated FIRST/prefix/lookahead dispatch, and
+  movemask/bitmap support only with a same-wave C1/C2/C6 consumer.
+- C8 output digest/hash oracle or per-product host sink only.
+- C9 Lock-1/output-plane accounting only.
+- `HEX_QUARTET_X4_PROOF`, PRFM/STNP/cache hints, PMULL/CTZ, and EOR3/BCAX as
+  proof/support/inventory only until a wave names a full source delta, scalar
+  oracle, strict parity/checkasm, feature/fallback, same-wave consumer, and row
+  gate.
 
 Pre-S-P3 micro-proofs are research artifacts, throwaway `/tmp` benches, or
 existing bench invocations. Durable micro-proof harness or production changes
 land only in the S-P3-authored wave packet.
 
-S-P3 then writes the SK-V11 `SPEC.md` and `DISPATCH-PROMPT.md`. It must not
-derive a wave plan directly from this Alpha-F draft without S-P2 convergence.
+S-P3 must not shortlist W3 union/event/class-column/streaming-cursor repair,
+parse-only SOTA movement, x86 implementation work, JSON-only generic policy, or
+non-JSON generality by prose. The live `json_provider` codegen path is a Lock 14
+gate before any CSS L4 / Sheets / BBNF-self generated-parser proof can admit.
 
 ## 6. Refusal Conditions
 

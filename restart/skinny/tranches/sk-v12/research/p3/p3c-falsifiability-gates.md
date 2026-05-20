@@ -1,71 +1,102 @@
 # SK-V12 P3-C: Falsifiability Gates
 
-Pass: S-P3 Synthesis-Plan. Cycle: V5.
+Pass: S-P3 Synthesis-Plan. Cycle: PIN-V1.
 Date: 2026-05-20.
-Scope: per-wave measurable gates for the SK-V12 generated non-JSON baseline, intervention, guard, and conditional JSON companion surface.
+Scope: per-wave measurable gates for the SK-V12 USER-PIN CSS L4 admission,
+Lock 14/Lock 16 prerequisites, union-substrate attempt, ASM-gen attempt, guard
+surface, and close/fixpoint forms.
 Output: this file.
-Pass Alpha goalset: admit exactly one generated non-JSON direct or typed parser baseline, admit one measured grammar-generalized intervention on that same row at `ceil(baseline_mbps * 1.01)` or higher, preserve the 4 direct and 7 typed JSON guard rows, keep `parse_only` diagnostic, and keep JSON direct residuals pre-blocked unless the REDRESS 114-119 reopen bar is met.
+Pass Alpha goalset: ADMIT when generated CSS L4 Track 1 throughput is strictly
+greater than `lightningcss_mbps + 1` on the same corpus, same output plane,
+same host, strict equality, with independent oracle/Track 2, gate-consumed
+provenance, Lock 14 clean, Lock 16 clean where applicable, JSON guards held or
+measured-disposition demoted, and zero production aarch64 orphans. FIXPOINT
+when CSS L4 redress proves ADMIT uncloseable and the closing tranche records
+both a new measured union-substrate attempt and a new measured ASM-gen attempt.
 Candidate pool: research/p2/ post-CHALLENGE survivors.
 
 ## §1 — Synthesis
 
-SK-V12 has one material close axis: create a generated non-JSON direct or typed
-baseline first, then consume that same row with one measured intervention. The
-opening contract forbids a JSON-direct retry before that axis succeeds or
-blocks, and it requires gate consumption for every new row or field
-(`restart/skinny/tranches/sk-v12/SYNTHESIS.md:38`,
-`restart/skinny/tranches/sk-v12/SYNTHESIS.md:50`,
-`restart/skinny/tranches/sk-v12/HANDOFF.md:60`,
-`restart/skinny/tranches/sk-v12/HANDOFF.md:66`).
+The 2026-05-20 user pin supersedes the pre-pin SK-V12 P3 gate shape. CSS L4 is
+the authoritative first generated grammar target; Sheets and BBNF-self are
+fallbacks only after a measured CSS L4 redress attempt. The CSS admission
+threshold is not `ceil(baseline_mbps * 1.01)`, not a local baseline lift, and
+not a JSON parse-only result. The only SK-V12 ADMIT close target is:
 
-The current JSON surface is a guard surface, not the primary target:
-`direct_to_struct` has 4 `A / GO` guards and 13 `N-direct / NO-GO` residuals;
-`real_typed_struct` has 7 `A / GO` guards; `parse_only` is 16 `S / NO-GO`
-plus `canada` as `L / NO-GO` and remains diagnostic only
-(`restart/skinny/tranches/sk-v12/SYNTHESIS.md:92`,
-`skinny/RESULTS.md:143`). REDRESS 119/120 close the JSON direct residual rows
-as a measured fixpoint and route SK-V12 to the generated non-JSON baseline
-(`skinny/REDRESS.md:3497`, `skinny/REDRESS.md:3531`).
+`generated_css_l4_track1_mbps > lightningcss_mbps + 1`
 
-The S-P2 pool supports that direction. P2-F names six conditional
-parser/support families that can generalize only through generated metadata and
-same-wave consumers: byte-set/classifier/movemask, bounded string span,
-escape/hex decode, digit span, layout skip, and FIRST/prefix dispatch
-(`restart/skinny/tranches/sk-v12/research/p2/p2f-grammar-neutral.md:31`).
-P2-D contributes no selectable substrate candidate and keeps class-lane/union
-substrates rejected
-(`restart/skinny/tranches/sk-v12/research/p2/p2d-substrate-tape.md:78`).
-P2-B/P2-C make scalar reference, strict parity/checkasm, microbench, feature
-fallback, and same-wave consumer mandatory for any SIMD/ASM body
-(`restart/skinny/tranches/sk-v12/research/p2/p2b-dav1d-process.md:20`,
-`restart/skinny/tranches/sk-v12/research/p2/p2c-arch-esoterica.md:48`).
+on the same corpus, same output plane, same host, strict equality semantics,
+and a same-run independent oracle/Track 2.
+
+The live profile/research basis is pin-aware S-P1 and S-P2. S-P1 converged
+under PIN-V6/PIN-V7, with JSON telemetry admitted only as nomination evidence
+for candidate families, not CSS proof. S-P2 converged under PIN-V3/PIN-V4 and
+limits selectable aarch64 rows to C1 `a64_tbl_tbx_byte_class_mask64`, C3
+`a64_udot_digit_run_span`, C4 `a64_wide_string_special_scan64`, C5
+`a64_hex_quartet_decode_x4`, and C6 `a64_ascii_set_run_skip`. P2-D contributes
+no current shortlist-ready tape/union primitive, but USER PIN D3 requires that
+the campaign/fixpoint surface include at least one new material-differential
+union-substrate attempt if ADMIT is uncloseable. USER PIN D4 likewise unblocks
+ASM-gen at the category level and makes one new measured ASM-gen attempt part
+of the FIXPOINT close.
+
+The gate set therefore has two layers:
+
+1. Mandatory CSS admission gates: `GrammarConfig`/Lock 14 before CSS emission,
+   CSS L4 generated Track 1 plus lightningcss comparator, and strict
+   provenance/equality consumption.
+2. Campaign-fixpoint gates: `escape_mask_64` Lock 16 correctness before any
+   new SIMD admission, then one materially new union route and one materially
+   new ASM-gen route, each measured against a CSS L4 hot leaf or, if CSS L4 is
+   blocked after redress, a JSON guard hot leaf.
+
+`parse_only` remains diagnostic-only in every form. A gate that attempts to
+close on `parse_only`, stale `ceil(baseline_mbps * 1.01)`, a hand-only CSS
+parser, a stale witness, a producer-only telemetry field, an orphan SIMD
+kernel, or a generic-crate JSON policy leak is unmeasurable and returns REVISE
+before redress.
 
 ## §2 — Deliverable
 
-### 2.1 Gate Names And Wave Set
+P3-B/P3-F may rename waves, but the measurable gates below are binding for the
+pin-aware SK-V12 wave plan.
 
-P3-B may rename waves, but the falsifiability surface must preserve these gate
-facts.
-
-| Likely wave | Gate | Measurable target | Required threshold |
+| Wave | Gate | Gate role | Admission / disposition threshold |
 |---|---|---|---|
-| W0 telemetry lock | `G-W0-SK-V12-OPEN` | JSON table, schema, run freshness, guard rows | full gate pass plus guard floors below |
-| W1 generated non-JSON baseline | `G-W1-GENERATED-NONJSON-BASELINE` | exactly one selected non-JSON direct or typed baseline row | Track 1 >= 1 Mbps, independent Track 2/oracle >= 1 Mbps, sample count >= 30 |
-| W2 selected-baseline intervention | `G-W2-SELECTED-NONJSON-INTERVENTION` | same grammar/workload/output plane as W1 | Track 1 >= `ceil(baseline_mbps * 1.01)` |
-| W3 JSON direct companion, conditional | `G-W3-CONDITIONAL-JSON-COMPANION` | behavior dispatch against one named residual row, or routed block with no source/RESULTS movement | behavior clears selected residual floor on both tracks; routed block records material-reopen failure |
-| W4 close | `G-W4-CLOSE` | close packet agreement | W1+W2 admitted, W1 admitted + W2 measured reject, or generated-baseline BLOCKED with measurement; guards preserved |
+| W0 | `G-W0-PIN-REVALIDATE` | Revalidate W0 telemetry/gate lock and guard surface. | Gate/report schema is consumed; opening JSON surface unchanged or measured; no behavior movement. |
+| W1a | `G-W1a-GRAMMARCONFIG-LOCK14` | Resolve the 7 Lock 14 leaks through `GrammarConfig` or equivalent generated metadata before CSS emission. | Generic-crate scan PASS, JSON guard parity PASS, CSS generated metadata compiles without JSON policy. No CSS row admission yet. |
+| W1b | `G-W1b-CSS-L4-LIGHTNINGCSS` | Generate CSS L4 row, independent oracle/Track 2, lightningcss comparator, strict equality, and report/gate consumption. | `generated_css_l4_track1_mbps > lightningcss_mbps + 1`; equality at `+1` is FAIL. |
+| W2 | `G-W2-ESCAPE-MASK-LOCK16` | Verify and resolve the `escape_mask_64` NEON correctness bug before any new SIMD admission. | Scalar/checkasm falsifier fixed; expanded parity PASS; no new SIMD admission can bypass this gate. |
+| W3 | `G-W3-CSS-LOCAL-UNION` | New measured union-substrate implementation attempt under USER PIN D3. | ADMIT only if it improves/maintains selected row under the CSS/guard comparator; FIXPOINT-credit if measured redress rejects with material differential and evidence. |
+| W4 | `G-W4-ARMV92-ASM-GEN-ORPHANS` | New measured ASM-gen attempt under USER PIN D4 plus zero-orphan aarch64 disposition. | ADMIT only if scalar/checkasm/microbench/same-wave consumer and row gate pass; FIXPOINT-credit if measured reject plus zero orphan disposition. |
+| W5 | `G-W5-CLOSE-SK-V12` | Close or roll to next tranche. | ADMIT form or FIXPOINT form; all close docs and `RESULTS.md`/`REDRESS.md` agree. |
 
-No W1 split is authorized by this packet. If the selected W1 baseline cannot
-fit in one redress, W1 records measured BLOCKED/REJECTED evidence or S-P3 must
-revise the manifest before dispatching any split wave.
+### 2.1 Global Measurability Rules
 
-### 2.2 Full-Table Maintain Budget
+Every gate that emits or consumes row telemetry must consume these fields in
+`gate-json`, `gate`, or the same-wave non-JSON companion gate:
 
-Every behavior wave must either rerun and maintain the JSON guard table or
-prove it did not touch JSON-producing paths and that `skinny/RESULTS.md` did
-not change. A wave that refreshes JSON reports must measure these 11 guard
-rows on the same host/run family as the wave. Any single miss is a wave FAIL
-unless the wave records an explicit measured demotion in REDRESS.
+| Field family | Required consumed fields |
+|---|---|
+| Identity | `schema_id`, `row_id`, `grammar_id`, `domain`, `workload`, `output_plane`, `strictness` |
+| Generated parser | generated source path, generated runtime path, generated module checksum, grammar checksum, generated LOC, generated module byte size, O(N) grammar-size status |
+| Input/provenance | fixture path, fixture checksum, corpus byte count, selected output-plane definition |
+| Oracle/comparator | independent oracle or Track 2 path, independence status, lightningcss command, lightningcss artifact, lightningcss Mbps, comparator strictness, comparator output plane |
+| Measurement | Track 1 Mbps, Track 2/oracle Mbps, sample count, sample cost, benchmark artifact, run id, host triple, feature mask, build flags, profile artifact |
+| Correctness | strict equality result, measured validation path, Lock 14 status, Lock 16 status where applicable, scalar-reference status, checkasm/parity status |
+| Wave accounting | same-wave consumer class, JSON guard state, aarch64 orphan state, gate status, wave id, REDRESS id |
+
+Any missing consumed field, stale run id, mixed-run comparator, oracle coupling,
+producer-only telemetry, parse-only admission, x86 implementation path, or
+permissive/lossy comparator fails closed.
+
+### 2.2 JSON Guard Floors
+
+JSON guards are secondary to CSS L4 ADMIT, but they remain binding unless a
+wave records a measured REDRESS demotion. A behavior wave that touches generic
+runtime, codegen, generated output, parse-that, SIMD/ASM, benchmark, report, or
+gate code must either rerun the guard surface or prove no JSON-producing path
+moved and `skinny/RESULTS.md` JSON rows are unchanged.
 
 Direct guard floors:
 
@@ -78,7 +109,7 @@ Direct guard floors:
 
 Typed guard floors:
 
-| Row | Track 1 maintain | Track 2 oracle guard |
+| Row | Track 1 maintain | Track 2/oracle maintain |
 |---|---:|---:|
 | `twitter/real_typed_struct` | 17385 | 15593 |
 | `citm_catalog/real_typed_struct` | 29928 | 17321 |
@@ -88,251 +119,347 @@ Typed guard floors:
 | `mesh/real_typed_struct` | 9214 | 7739 |
 | `marine_ik/real_typed_struct` | 11552 | 9894 |
 
-Full-table surface budget:
+The inherited JSON shape remains 16 `parse_only S / NO-GO`, one
+`parse_only L / NO-GO`, four direct `A / GO`, thirteen direct
+`N-direct / NO-GO`, seven typed `A / GO`, and overall `N-direct / NoGo`
+unless a same-wave measured disposition changes it. `parse_only` cannot admit
+SK-V12.
 
-- The existing JSON surface remains 16 `parse_only S / NO-GO`, one
-  `parse_only L / NO-GO`, 4 direct `A / GO`, 13 direct
-  `N-direct / NO-GO`, and 7 typed `A / GO` unless a same-wave measured
-  disposition changes it.
-- `parse_only` rows cannot contribute to SK-V12 close or SOTA admission.
-- W0-clamped rows (`instruments`, `numbers`, `unicode_mixed`) cannot admit by
-  documentation-only accounting.
-- New non-JSON rows must be consumed by the non-JSON companion gate or by
-  `gate-json`/`gate` in the same wave; producer-only rows fail closed.
+## §3 — Falsifiability Binding
 
-### 2.3 W0 Gate: `G-W0-SK-V12-OPEN`
+### 3.1 W0: `G-W0-PIN-REVALIDATE`
 
-Entry: S-P1 and S-P2 are converged, and the source baseline is the SK-V12
-opening baseline `50bd1648`.
+Entry:
 
-Exit gate:
+- Pin-aware S-P1 and S-P2 are converged.
+- W0 telemetry/gate lock at commit `f788eb97` is available for revalidation.
+- Current `skinny/RESULTS.md` and `skinny/REDRESS.md` are readable.
 
-- `gate-json --with-cost-facts --check-results` passes.
-- The 10-outcome enum remains exactly `A C G I J K L M N-direct S`.
-- The schema-v3 required identifiers remain validator-consumed; no emitted
-  field is producer-only.
-- The JSON main table matches the full-table surface budget above.
-- The direct and typed guard floors in §2.2 hold if W0 rerenders JSON rows.
-- If W0 does not rerender JSON rows, it records the inherited SK-V11/SK-V12
-  freshness rebinding and no behavior row movement; W1+ behavior gates may not
-  cite the inherited `SK-V9-open` row id as fresh wave evidence.
-- Stale-run rejection: any new or moved row with a stale run id, mixed run ids
-  across Track 1/Track 2/oracle/comparator, missing host triple, missing
-  `RUSTFLAGS="-C target-cpu=native"`, or missing sample count fails closed.
+Exit PASS:
 
-Revert protocol: revert report/gate/result edits as one slice; preserve the
-failed gate output in REDRESS and save `/tmp/skv12-waveW0-rejected.patch` if
+- `gate-json`/report schema consumes the SK-V12 non-JSON companion fields and
+  still validates the JSON table.
+- No behavior source, parser, scanner, SIMD/ASM, codegen behavior, generated
+  runtime output, benchmark body, or row semantics move.
+- Outcome enum remains the current admissible set; no new outcome variant is
+  introduced by W0.
+- JSON guard shape in §2.2 is unchanged, or the wave records a measured
+  guard-disposition demotion.
+- W0 records profile/gate freshness and rejects stale inherited row ids as
+  behavior-wave evidence.
+
+FAIL / REVISE:
+
+- Any W0 source movement that changes behavior.
+- Any emitted row/field not consumed by a gate.
+- Any attempt to admit a CSS, JSON direct, typed, or parse-only row by
+  telemetry accounting alone.
+
+Revert protocol: revert W0 report/gate/result edits as one slice, preserve the
+failed gate output in REDRESS, and save `/tmp/skv12-waveW0-rejected.patch` if
 source/report code changed.
 
-### 2.4 W1 Gate: `G-W1-GENERATED-NONJSON-BASELINE`
+### 3.2 W1a: `G-W1a-GRAMMARCONFIG-LOCK14`
 
-Entry: W0 closed. CHALLENGE selects exactly one baseline target in this order:
+Entry:
 
-1. `css_l4/declaration_values/{direct_to_struct|real_typed_struct}/main`
-2. `sheets/formula/{direct_to_struct|real_typed_struct}/main`
-3. `bbnf_self/grammar/{direct_to_struct|real_typed_struct}/main`
+- W0 PASS.
+- Owner plan names the generic/runtime/codegen paths that currently carry the
+  seven Lock 14 leaks from `skv12-value-api-audit.md`.
 
-Exit gate:
+Exit PASS:
 
-- Exactly one selected generated non-JSON baseline row is emitted.
-- Generated Track 1 source path and generated runtime path are named.
-- Independent Track 2 or oracle source path is named and marked
-  `independent_verified`; it must not call generated Track 1, generated
-  SinkOnly helpers, generated typed helpers, or hidden shared parser code.
-- Strict output equality passes between generated Track 1 and the
-  independent Track 2/oracle on the selected fixture corpus.
-- Concrete throughput thresholds: generated Track 1 >= 1 Mbps, independent
-  Track 2/oracle >= 1 Mbps, sample count >= 30, and benchmark artifact path
-  present.
-- The selected row records grammar id, domain, corpus/workload, row id, output
-  plane, workload class, run id, host triple, feature mask, build flags,
-  sample cost, sample count, baseline/provenance, same-wave consumer class,
-  and fail-closed gate status.
-- The accepted REDRESS 111 non-JSON gate/report lane consumes the row, or a
-  same-wave replacement gate consumes an equivalent field set.
-- No JSON policy appears in generic crates or runtime outside generated
-  per-grammar modules.
-- No JSON direct or typed row moves in this wave except guard maintain evidence.
+- `GrammarConfig` or equivalent generated metadata surface exists for
+  structural alphabet, FIRST/follow tables, layout/trivia policy, string/escape
+  policy, number policy, flag interpretation, sink/view/kind templates, and
+  output-plane configuration.
+- The seven leaks are removed from generic behavior:
+  structural alphabet hardcoding, value dispatch hardcoding, JSON backslash
+  string policy, JSON number policy, quoted-key/object-pair assumption,
+  JSON-tied `OffsetFlags` semantics, and `JsonSink` method hardcoding.
+- Generic-crate scan is negative for grammar-name behavior branches:
+  no generic `match grammar`, no `JsonParser`/`CssL4Parser`/`GoogleSheetsParser`
+  public API in generic crates, no handwritten CSS/Sheets/BBNF runtime modules
+  outside generated output paths, and no generic JSON structural alphabet.
+- JSON check/regeneration and guard parity pass, or unchanged JSON output is
+  proven by diff plus gate.
+- Generated CSS L4 metadata compiles far enough to prove W1b can emit from
+  grammar facts without JSON provider policy.
+- No CSS L4 row is admitted in W1a. W1a is a legality gate, not the SOTA gate.
 
-Revert protocol: revert the selected codegen/runtime/bench/report/gate/RESULTS
-slice, preserve the failed proof in REDRESS, save
-`/tmp/skv12-waveW1-rejected.patch`, and block W2 until a baseline row admits.
+FAIL / REVISE:
 
-### 2.5 W2 Gate: `G-W2-SELECTED-NONJSON-INTERVENTION`
+- CSS codegen still depends on JSON provider policy.
+- Generic crates branch on grammar names or encode JSON-only behavior.
+- The wave tries to claim Lock 14 by prose, compile-only stubs, or hand-only
+  witness modules.
 
-Entry: W1 admitted one baseline row and recorded
-`baseline_mbps` (the W1 generated Track 1 Mbps), output plane, fixture corpus,
-oracle path, and row id. If any of those values is missing, W2 is unmeasurable
-and returns REVISE before source work.
+Revert protocol: revert GrammarConfig/codegen/runtime/gate/report edits as one
+slice, preserve failed scans/tests in REDRESS, and save
+`/tmp/skv12-waveW1a-rejected.patch`.
 
-Exit gate:
+### 3.3 W1b: `G-W1b-CSS-L4-LIGHTNINGCSS`
 
-- The intervention consumes the same grammar, workload, fixture corpus, and
-  output plane as W1. It may not create the first measurable non-JSON row.
-- The intervention target is
-  `ceil(baseline_mbps * 1.01)`. Track 1 must meet or exceed that
-  integer Mbps threshold.
-- Independent Track 2/oracle remains >= 1 Mbps, remains independent, and
-  strict output equality passes.
-- Any SIMD/ASM body has an executable scalar reference, strict
-  differential/checkasm parity, scalar/no-op fallback, and same-host
-  microbench evidence. The microbench must show candidate throughput at least
-  `ceil(scalar_reference_mbps * 1.01)` on the named representative slice.
-- The same-wave consumer is the generated non-JSON parser/product path, not a
-  telemetry-only primitive. Primitive-only speed fails closed.
-- All generic/codegen/runtime edits pass Lock 14: grammar facts are generated
-  metadata, no generic crate branches on JSON/CSS/Sheets/BBNF-self names, and
-  no new directive or BIR variant is added.
-- JSON guard evidence satisfies §2.2: either all guard floors hold in a
-  refreshed JSON run, or the wave proves it did not touch JSON-producing paths
-  and `skinny/RESULTS.md` remained unchanged for JSON rows.
+Entry:
 
-Revert protocol: revert intervention, parse-that/SIMD, codegen/runtime,
-bench/report/gate/RESULTS edits as one slice on target miss, oracle coupling,
-strict equality failure, guard regression, checkasm failure, stale run id, or
-Lock 14 leak; preserve W1 baseline evidence; save
-`/tmp/skv12-waveW2-rejected.patch`.
+- W1a PASS.
+- Selected row is CSS L4, not Sheets or BBNF-self. The expected row id is
+  `css_l4/declaration_values/{direct_to_struct|real_typed_struct}/main`, with
+  one canonical CSS fact stream shared by Track 1, independent Track 2/oracle,
+  and lightningcss.
+- Plan names generated Track 1 source/runtime, CSS fixture corpus, independent
+  oracle/Track 2, lightningcss comparator command, equality command, benchmark
+  command, gate command, and rollback slice.
 
-### 2.6 Conditional W3 Gate: `G-W3-CONDITIONAL-JSON-COMPANION`
+Exit ADMIT:
 
-Entry: W1 and W2 have admitted, W1 admitted and W2 recorded a measured reject,
-or the generated non-JSON baseline priority is recorded as measured `BLOCKED`.
-For behavior dispatch, CHALLENGE must also name fresh material evidence beyond
-REDRESS 114-119: new hot-leaf evidence, a source delta materially different
-from W3-W7, scalar/oracle proof, same-host microbench, independent Track 2,
-strict same-run sonic-rs direct floor, and same-wave gate consumption. Without
-that evidence, W3 is a routed block with no source/RESULTS movement.
+- Generated CSS L4 Track 1 compiles and executes from generated output, not a
+  hand-only parser or stale witness.
+- Independent Track 2/oracle is same-plane, strict, same-host, fresh, and does
+  not call generated Track 1 or hidden shared parser code.
+- lightningcss comparator is same corpus, same output plane, same host,
+  strict semantics, and same run family.
+- Strict output equality passes among generated Track 1, independent
+  Track 2/oracle, and lightningcss canonical fact stream.
+- Sample count is at least 30 for Track 1, Track 2/oracle, and lightningcss.
+- Gate consumes all provenance fields in §2.1.
+- Throughput satisfies strict inequality:
 
-Residual row floors:
+  `generated_css_l4_track1_mbps > lightningcss_mbps + 1`
 
-| Row | Track 1 | Track 2 | sonic direct | floor |
-|---|---:|---:|---:|---:|
-| `twitter/direct_to_struct` | 11613 | 10816 | 15113 | 13740 |
-| `canada/direct_to_struct` | 10316 | 9819 | 11700 | 10637 |
-| `github_events/direct_to_struct` | 11918 | 10596 | 14743 | 13403 |
-| `update_center/direct_to_struct` | 8187 | 7474 | 11064 | 10059 |
-| `mesh/direct_to_struct` | 8561 | 8652 | 9542 | 8675 |
-| `random/direct_to_struct` | 7693 | 6949 | 8665 | 7878 |
-| `gsoc-2018/direct_to_struct` | 2665 | 2578 | 4110 | 3737 |
-| `instruments/direct_to_struct` | 11569 | 10736 | 9865 | 8969 |
-| `numbers/direct_to_struct` | 4479 | 2366 | 2667 | 2425 |
-| `unicode_mixed/direct_to_struct` | 3753 | 2427 | 2846 | 2588 |
-| `unicode_escapes/direct_to_struct` | 1345 | 1341 | 3785 | 3441 |
-| `distinct_values/direct_to_struct` | 1750 | 1625 | 2923 | 2658 |
-| `y_string_unicode/direct_to_struct` | 1983 | 1029 | 4344 | 3950 |
+  Equality at `lightningcss_mbps + 1` is FAIL. A threshold based on
+  `ceil(baseline_mbps * 1.01)` is stale and cannot admit the row.
+- JSON guard floors in §2.2 hold, or any demotion is explicitly measured and
+  recorded in REDRESS.
 
-Exit gate:
+Measured REJECT / BLOCKED:
 
-- Behavior form: exactly one residual direct row is selected and named; Track 1
-  and Track 2 both meet or exceed that row's floor; strict output equality
-  passes; Track 2 is independent; sonic-rs direct is same-run strict evidence;
-  the selected source delta is not a replay of numeric slot, container-tail,
-  bounded string span, escaped segment, output digest host-sink, W3 union, or
-  W0-clamped docs-only admission; and the full guard floors in §2.2 hold.
-- Routed-block form: W3 records why no current candidate passes the material
-  reopen burden, moves no source or RESULTS row, preserves guard state, and
-  records REDRESS evidence for the routed block.
+- If strict equality, comparator wiring, oracle independence, or throughput
+  misses, W1b records REDRESS with measured evidence and no hidden fallback to
+  Sheets/BBNF-self inside the same redress.
+- Sheets or BBNF-self may be considered only after the CSS L4 redress attempt
+  is recorded.
 
-Revert protocol: revert the JSON direct source/generated/bench/report/gate
-slice on row-floor miss, Track 2 miss, strict comparator miss, REDRESS route
-reopen, guard regression, stale run id, or oracle coupling; save
-`/tmp/skv12-waveW3-rejected.patch`.
+Revert protocol: revert generated CSS runtime, codegen, fixture, bench, oracle,
+report/gate, and `RESULTS.md` edits as one slice on equality miss, comparator
+miss, Track 1 threshold miss, Lock 14 regression, guard regression, stale run,
+or oracle coupling; save `/tmp/skv12-waveW1b-rejected.patch`.
 
-### 2.7 Close Gate: `G-W4-CLOSE`
+### 3.4 W2: `G-W2-ESCAPE-MASK-LOCK16`
 
-Exit gate succeeds only in one of three forms:
+Entry:
 
-- Admit form: W1 admitted one generated non-JSON baseline, W2 admitted one
-  measured intervention on that same row at
-  `ceil(baseline_mbps * 1.01)` or higher, guard floors hold, and all
-  close documents agree.
-- Reject form: W1 admitted one generated non-JSON baseline, W2 recorded a
-  measured reject on that same row, W3 is adjudicated or routed, guard floors
-  are preserved or any demotion is explicitly measured in REDRESS, and all close
-  documents agree.
-- Block form: W1 records a measured generated-baseline
-  `BLOCKED` verdict with executable preflight evidence, failed gate output,
-  no JSON row movement, guard floors preserved, and a REDRESS route explaining
-  why the accepted owner surface cannot create the baseline.
+- W1b has either admitted or recorded a measured CSS L4 redress attempt.
+- Any planned SIMD/string/escape work depends on this gate first.
 
-Close fails on a prose-only Lock 14 claim, stale witness module, hand-only
-non-JSON parser, producer-only telemetry, stale run id, oracle coupling,
-generic JSON policy leak, parse-only SOTA claim, W3 substrate reopen, or any
-unconsumed result field.
+Exit PASS:
 
-## §3 — Falsifiability binding
+- The `escape_mask_64` falsifier is present as a regression case: xorshift seed
+  `0xCAFEF00DBAADF00D`, iter 0, 128-byte JSON-pool buffer.
+- Scalar reference and aarch64 NEON implementation agree on the falsifier, long
+  backslash runs, cross-block carry-in/carry-out, all boundary positions,
+  random corpus windows, CSS string/identifier escape windows where available,
+  and existing JSON guard windows.
+- `CHECKASM-REPORT.md` or the same-wave checkasm artifact records PASS.
+- No new SIMD primitive is admitted only because this correctness fix lands.
+  W2 is a correctness prerequisite; row movement requires W3/W4 or another
+  behavior gate with a same-wave consumer.
+- JSON guards hold or measured demotion is recorded.
 
-Concrete SK-V12 thresholds:
+FAIL / REVISE:
 
-- Non-JSON baseline: selected generated Track 1 >= 1 Mbps and independent
-  Track 2/oracle >= 1 Mbps, same row, same output plane, strict equality PASS.
-- Non-JSON intervention: selected Track 1 >=
-  `ceil(baseline_mbps * 1.01)`, with the same independent
-  Track 2/oracle/equality proof still present.
-- SIMD/ASM micro-proof: candidate primitive throughput >=
-  `ceil(scalar_reference_mbps * 1.01)` on the named same-host representative
-  slice, plus strict parity/checkasm and same-wave consumer.
-- Direct guard floors: `citm_catalog` 18191/17431,
-  `apache_builds` 11028/9996, `marine_ik` 8759/9248,
-  `unicode_basic` 2253/2182.
-- Typed guard floors: `twitter` 17385/15593, `citm_catalog` 29928/17321,
-  `apache_builds` 8308/6754, `github_events` 11633/12029,
-  `update_center` 11613/10150, `mesh` 9214/7739,
-  `marine_ik` 11552/9894.
-- Conditional JSON direct floors are the 13-row table in §2.6. Both Track 1 and
-  Track 2 must meet the selected row floor.
+- Any remaining scalar/NEON divergence.
+- Any SIMD admission before the W2 checkasm gate is green.
+- Any attempt to waive the falsifier with throughput evidence.
 
-Fail-closed rejection rules:
+Revert protocol: revert SIMD/checkasm/report edits as one slice, preserve
+failing inputs in REDRESS, and save `/tmp/skv12-waveW2-rejected.patch`.
 
-- Unmeasurable gate: missing baseline Mbps, missing selected row id, missing
-  output plane, missing strict equality result, or missing independent
-  Track 2/oracle source returns REVISE before redress.
-- Stale-run gate: new or moved rows must not reuse inherited `SK-V9-open`
-  telemetry as behavior evidence; mixed run ids across Track 1/Track 2/oracle,
-  missing host/build/sample fields, or non-native build flags fail closed.
-- Oracle-coupling gate: Track 2/oracle cannot call generated Track 1,
-  generated direct/typed helpers, hidden shared parser code, or direct digest
-  as typed proof.
-- Producer-only gate: every emitted field, non-JSON report, companion table,
-  cost fact, or telemetry cell must be consumed by `gate-json` or the same-wave
-  non-JSON gate. Emit-now-consume-later fails.
-- Full-table gate: guard rows cannot silently demote; parse-only cannot close
-  SK-V12; W0-clamped residuals cannot admit by accounting.
+### 3.5 W3: `G-W3-CSS-LOCAL-UNION`
 
-## §4 — Pre-blocked routes
+Entry:
 
-The gates above reject these route families before behavior redress unless the
-SPEC records a material differential and CHALLENGE accepts it:
+- W2 PASS if W3 touches SIMD/string masks; otherwise W2 may be N/A only for a
+  scalar-only union attempt.
+- A generated CSS L4 hot leaf exists from W1b, or W1b has recorded a measured
+  CSS BLOCKED/REJECTED route and CHALLENGE selects a JSON guard hot leaf as the
+  fallback consumer for fixpoint evidence.
+- Plan cites REDRESS 96/97/98, names the material differential, and passes
+  CHALLENGE.
 
-- REDRESS 111-113: non-JSON report lane is not a generated baseline; CSS L4
-  baseline/intervention remain blocked until W1 creates a generated runtime
-  row.
-- REDRESS 114-119: JSON direct residual numeric, container-tail, bounded
-  string, escaped segment, output digest, and fixpoint routes are pre-blocked.
-- REDRESS 96-98, 102: W3 union/event/class-column/streaming-cursor/class-lane,
-  retained structural vectors, sidecars, and `UnionTape` remain closed.
-- REDRESS 50, 51, 53, 60-72, 82-84: parser-owned sidecars, retained metadata,
-  decoded-byte/string materialization shortcuts, StringBlock16 retreads, and
-  object-pair/control compaction remain blocked.
-- REDRESS 80, 88-90: numeric fallback/mantissa routes, PMULL default
-  prefix-XOR, and CTZ/bulk consumer rewires remain blocked unless narrowed to a
-  new scalar-equivalent same-wave consumer.
-- REDRESS 118: output digest/host-sink work is an oracle/report surface, not a
-  parser primitive and not typed proof.
-- Global: parse-only SOTA claims, PMU/cycles/structural-scan/masking as
-  behavior producers, new directives, new BIR variants, public substrate APIs,
-  second retained substrates, generic-crate JSON policy, and x86 targets are
-  rejected.
+Material differential required:
+
+- Not REDRESS 96 class-column substrate.
+- Not REDRESS 97 streaming structural cursor.
+- Not REDRESS 98 class-lane proof-only route.
+- No public substrate API, `UnionTape`, parser-owned sidecar, retained
+  structural-position vector, aux density table, whitespace bitmap, cursor
+  list, or parallel projection.
+- The only legal shape is same-tape, caller-local, generated-policy metadata or
+  transient facts consumed in the same loop and discarded.
+
+ADMIT exit:
+
+- Scalar/reference model and equality/parity tests pass.
+- Same-host microbench proves the union route's local caller is faster than
+  the scalar/reference caller by at least `ceil(reference_mbps * 1.01)`.
+- The same-wave consumer is a CSS L4 generated hot leaf if CSS is available, or
+  a JSON guard hot leaf only after W1b measured CSS redress is recorded.
+- If CSS is the consumer, strict CSS equality still passes and Track 1 remains
+  `> lightningcss_mbps + 1`; if JSON is the fallback consumer, the selected
+  JSON row must maintain its guard floor or record a measured demotion.
+- No substrate cardinality increase is observable in source or telemetry.
+
+FIXPOINT-credit measured reject:
+
+- W3 still counts for FIXPOINT only if source was implemented and measured (or
+  microbench-rejected before production wiring under the wave plan), REDRESS
+  records the material differential, fresh profile/caller evidence, scalar
+  reference, parity/equality result, microbench result, and why the route is
+  uncloseable.
+- A plan-time statement that "union is bad" is not W3 FIXPOINT evidence.
+
+Revert protocol: revert union/codegen/runtime/bench/report/gate/RESULTS edits
+on equality miss, microbench miss, row miss, guard regression, substrate leak,
+or REDRESS replay; save `/tmp/skv12-waveW3-rejected.patch`.
+
+### 3.6 W4: `G-W4-ARMV92-ASM-GEN-ORPHANS`
+
+Entry:
+
+- W2 PASS for any new SIMD admission.
+- Plan selects one ARMv9.2-A/aarch64 implementation attempt from the S-P2
+  survivor/inventory surface and passes CHALLENGE:
+  TBL/TBX byte-class mask, UDOT digit-run span, wide string special scan,
+  hex-quartet x4 decode, ASCII set run skip, PMULL narrow consumer, CSSC CTZ
+  narrow consumer, EOR3/BCAX ternary mask fold, or another named ARMv9.2-A
+  primitive with scalar reference and same-wave consumer.
+- If adjacent to REDRESS 88/89/90, plan cites the historical implementation
+  and names the material differential.
+
+ADMIT exit:
+
+- Scalar reference is executable.
+- checkasm/parity covers adversarial inputs, tails, alignment, feature masks,
+  random corpus windows, and the selected CSS/JSON caller windows.
+- Same-host microbench proves the primitive under the actual caller, not a
+  standalone orphan: candidate caller throughput at least
+  `ceil(reference_mbps * 1.01)`.
+- Same-wave consumer is generated CSS L4 if available, or a JSON guard hot leaf
+  only after W1b measured CSS redress is recorded.
+- Strict equality/parity passes for the output plane.
+- CSS consumer keeps Track 1 `> lightningcss_mbps + 1`; JSON fallback
+  consumer keeps guard floors or records measured demotion.
+- Feature fallback is present for hosts lacking the selected optional feature.
+- No x86 path is added.
+
+Zero-orphan exit:
+
+Each carried orphan from the user pin must be one of `consumed`,
+`removed`, or `inventory_demoted_with_evidence` by W4 close:
+
+| Orphan | Required W4 disposition |
+|---|---|
+| `bitmap_prefix_xor_64` | consumed by a same-wave string/escape caller, removed, or inventory-demoted; PMULL default body replay fails. |
+| `bitmap_next_set_bit` | consumed by a local first/next-bit caller, removed, or inventory-demoted; global CTZ bulk replay fails. |
+| `bulk_emit_positions_64` | consumed into the canonical tape/fact stream, removed, or inventory-demoted; side-vector emission fails. |
+| `byte_context` | consumed by a chunk-spanning string/comment/layout caller, removed, or inventory-demoted. |
+| `cache_hints` | consumed by a measured fact-stream/tape/output writer with identical output, removed, or inventory-demoted. |
+
+FIXPOINT-credit measured reject:
+
+- W4 counts for FIXPOINT if the selected ASM-gen implementation attempt is
+  measured, rejected with scalar/checkasm/microbench/equality evidence, and
+  REDRESS records material differential against relevant historical entries.
+- Production orphans at close invalidate FIXPOINT.
+
+Revert protocol: revert ASM/SIMD/parse-that/codegen/runtime/bench/report/gate
+edits on checkasm failure, microbench miss, equality miss, row miss, guard
+regression, orphan leak, feature fallback miss, or stale run; save
+`/tmp/skv12-waveW4-rejected.patch`.
+
+### 3.7 W5: `G-W5-CLOSE-SK-V12`
+
+ADMIT close requires all of:
+
+- W1a PASS.
+- W1b ADMIT: generated CSS L4 Track 1 `> lightningcss_mbps + 1`, strict
+  equality, independent oracle/Track 2, same-plane same-host lightningcss, and
+  gate-consumed provenance.
+- W2 PASS before any SIMD admission.
+- W3/W4 dispositions recorded if they ran; W4 zero-orphan target satisfied by
+  admission, removal, or inventory demotion.
+- JSON guards hold or have measured-disposition demotions.
+- `skinny/RESULTS.md`, `skinny/REDRESS.md`, `SYNTHESIS.md`, `SPEC.md`,
+  `HANDOFF.md`, and `DISPATCH-PROMPT.md` agree.
+
+FIXPOINT close requires all of:
+
+- W1b has a measured CSS L4 redress attempt proving ADMIT uncloseable in the
+  current tranche. Sheets/BBNF-self were not used before that attempt.
+- W3 records one new measured union-substrate implementation attempt with
+  REDRESS 96/97/98 citation, material differential, fresh profile/caller
+  evidence, scalar/reference proof, equality/parity result, and microbench or
+  row measurement.
+- W4 records one new measured ASM-gen implementation attempt with REDRESS
+  88/89/90 citation where adjacent, material differential, scalar reference,
+  checkasm/parity, microbench, equality, and same-wave consumer evidence.
+- Production aarch64 orphan count is zero by consumption, removal, or explicit
+  inventory demotion.
+- JSON guards hold or have measured demotions.
+- REDRESS names every measured miss and routed remainder, and close docs agree.
+
+Close FAIL:
+
+- CSS close based on `ceil(baseline_mbps * 1.01)`.
+- `parse_only` admission.
+- Missing lightningcss comparator.
+- Missing independent oracle/Track 2.
+- Lock 14 prose-only proof.
+- SIMD admission with unresolved `escape_mask_64`.
+- Any production aarch64 orphan at close.
+- Union or ASM-gen category skipped in a FIXPOINT close.
+- Future-phase promise instead of measurement.
+
+## §4 — Pre-Blocked Routes
+
+Global pre-blocks that still bind every wave:
+
+- `parse_only` SOTA admission. Parse-only is diagnostic-only.
+- CSS L4 admission against `ceil(baseline_mbps * 1.01)`, a bbnf baseline lift,
+  a hand-only parser, stale witness module, missing lightningcss comparator, or
+  missing strict equality.
+- Sheets or BBNF-self before a measured CSS L4 redress attempt.
+- Generic-crate JSON policy, grammar-name branches, handwritten per-grammar
+  runtime modules outside generated output, or Lock 14 prose-only claims.
+- New directive, BIR variant, BackendShape expansion, public substrate API,
+  parser-owned sidecar, retained structural vector, or x86 implementation.
+- SIMD/ASM admission before `escape_mask_64` correctness is verified and
+  resolved.
+- Orphan primitive admission: scalar/checkasm success without same-wave
+  consumer is proof-only.
+- Direct JSON residual row movement as a close target. REDRESS 119/120 remain
+  routed guard evidence unless a later wave names fresh material evidence and
+  measures both Track 1 and Track 2.
+
+Category-unblocked but historically binding:
+
+| Category | Historical REDRESS | Fresh attempt must prove |
+|---|---|---|
+| Union / substrate | 96, 97, 98 | Material differential, same-tape/non-sidecar shape, scalar/reference proof, same-wave CSS or guard consumer, and measurement. |
+| PMULL / CSSC CTZ / canary-adjacent ASM-gen | 88, 89, 90 | Narrow consumer or new caller, not default global body; scalar/checkasm, microbench, feature fallback, same-wave consumer, and measurement. |
+| String / escape proof-only SIMD | 28, 33, 82, 83, 106, 107, 108, 116, 117 | New source delta, strict parity, same-wave CSS/generated consumer, and row measurement. |
+| JSON numeric / container / digest residual | 80, 114, 115, 118, 119 | Fresh post-pin profile and material source differential; cannot substitute for CSS L4 close. |
+| Non-JSON report/baseline blockers | 111, 112, 113 | Report lane alone is not generated Track 1; W1b must create the CSS row and comparator evidence. |
 
 ## §5 — Sources
 
-- `restart/prompts/ORCHESTRATOR.md`
-- `restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md`
+- `restart/skinny/tranches/sk-v12/USER-PIN-W1-CSS-L4-SOTA.md`
 - `restart/skinny/tranches/sk-v12/SYNTHESIS.md`
 - `restart/skinny/tranches/sk-v12/HANDOFF.md`
+- `restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md`
+- `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`
 - `restart/skinny/tranches/sk-v12/research/p1/hardening/HARDENING-S-P1-CONVERGED.md`
-- `restart/skinny/tranches/sk-v12/research/p1/p1e-hot-leaf-attribution.md`
-- `restart/skinny/tranches/sk-v12/research/p1/p1f-results-delta.md`
 - `restart/skinny/tranches/sk-v12/research/p2/hardening/HARDENING-S-P2-CONVERGED.md`
 - `restart/skinny/tranches/sk-v12/research/p2/p2a-sota-teardown.md`
 - `restart/skinny/tranches/sk-v12/research/p2/p2b-dav1d-process.md`
@@ -340,6 +467,14 @@ SPEC records a material differential and CHALLENGE accepts it:
 - `restart/skinny/tranches/sk-v12/research/p2/p2d-substrate-tape.md`
 - `restart/skinny/tranches/sk-v12/research/p2/p2e-parse-that-gaps.md`
 - `restart/skinny/tranches/sk-v12/research/p2/p2f-grammar-neutral.md`
-- `restart/skinny/tranches/sk-v11/SPEC.md`
+- `restart/skinny/tranches/sk-v12/research/skv12-aarch64-simd-coverage-audit.md`
+- `restart/skinny/tranches/sk-v12/research/skv12-profile-truth-audit.md`
+- `restart/skinny/tranches/sk-v12/research/skv12-value-api-audit.md`
+- `restart/skinny/tranches/sk-v12/research/skv12-decision-engine-audit.md`
+- `restart/skinny/tranches/sk-v12/research/skv12-totality-fold-scout.md`
 - `skinny/RESULTS.md`
 - `skinny/REDRESS.md`
+- `/tmp/skv12-pin-p1/pmu/capture_status.tsv`
+- `/tmp/skv12-pin-p1/samply/capture_status.tsv`
+- `/tmp/skv12-pin-p1/xctrace/capture_status.tsv`
+- `/tmp/skv12-pin-p1/time_profile_hot_leaf_summary.tsv`
